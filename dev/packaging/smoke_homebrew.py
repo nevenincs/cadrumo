@@ -19,7 +19,7 @@ from typing import Final, override
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
-if not __package__:
+if not (__package__ is not None and __package__):
     __package__ = "dev.packaging"
 
 REPO_ROOT = importlib.import_module("dev._paths").REPO_ROOT

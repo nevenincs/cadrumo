@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
+from dataclasses import replace
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Protocol, cast
@@ -13,6 +14,8 @@ from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, ValidationError
+
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.hashing import sha256_hex
 from ....core.operations import OperationEffect, profile_operation_subject
@@ -32,7 +35,6 @@ from ...operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from ...user_profile.access_contracts import AccessAction, Availability
 from .. import m145_communication_execution as m145_operation
 from .._ports import FicheroBoeRecordRenderer
 from ..m145_communication_contracts import (
@@ -248,7 +250,7 @@ class _CancellationFence:
         self.active = False
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         self.active = True
         try:
             yield
@@ -373,7 +375,7 @@ async def test_export_cancellation_waits_for_started_guarded_append_and_keeps_up
     assert operands.values[0].result.effect is OperationEffect.UPDATED
 
 
-def test_five_registrations_are_cli_only_secure_and_require_all_periods() -> None:
+def test_five_registrations_are_secure_and_require_all_periods_and_two_are_open_to_external_client() -> None:
     definitions, registrations = _definition_set()
     registry = OperationRegistry(definitions=definitions, public_registrations=registrations)
     assert len(registry.public_registrations) == 5
@@ -387,9 +389,6 @@ def test_five_registrations_are_cli_only_secure_and_require_all_periods() -> Non
 
     assert {definition.definition_id for definition in definitions} == expected_ids
     assert {registration.contract.definition_id for registration in registrations} == expected_ids
-    assert all(
-        definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI}) for definition in definitions
-    )
     assert all(
         definition.capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
         and definition.capabilities.sensitive_input is OperationSensitiveInputPolicy.SECURE_REFERENCE
@@ -482,3 +481,67 @@ def test_record_not_found_refusal_uses_the_new_correlated_refusal_error() -> Non
 
     assert error.code.code == "REFUSED_M145_COMMUNICATION_RECORD_NOT_FOUND"
     assert error.code.category.value == "REFUSED"
+
+
+def _create_request(values: dict[str, str]) -> OperationRequest[BaseModel]:
+    return OperationRequest[BaseModel](
+        definition_id=M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=M145CommunicationCreateRequest.from_command(
+            profile_id=_PROFILE,
+            command=M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            actor="M145 operator",
+        ),
+    )
+
+
+_SIGNED_BLOCK_VALUES = {"comunicacion.firma-lugar": "1", "acuse-recibo.empresa-entidad": "1"}
+
+
+@pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.START, AccessAction.RESULT])
+def test_every_frontend_resolves_each_command_to_the_same_access(action: AccessAction) -> None:
+    """A draft that fills the signed blocks of the form is one of the requests every frontend sends alike."""
+    _definitions, registrations = _definition_set()
+    record = {"profile_id": _PROFILE, "communication_record_id": "a" * 64}
+    requests: dict[str, BaseModel] = {
+        M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID: M145CommunicationValidateRequest(**record),
+        M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID: M145CommunicationExportRequest(
+            **record, actor="M145 operator"
+        ),
+        M145_COMMUNICATION_MARK_DELIVERED_OPERATION_DEFINITION_ID: M145CommunicationMarkDeliveredRequest(
+            **record, actor="M145 operator"
+        ),
+        M145_COMMUNICATION_MARK_COMPLETED_OPERATION_DEFINITION_ID: M145CommunicationMarkCompletedRequest(
+            **record, actor="M145 operator"
+        ),
+    }
+    cases = [
+        _create_request(_VALUES),
+        _create_request({**_VALUES, **_SIGNED_BLOCK_VALUES}),
+        *(
+            OperationRequest[BaseModel](
+                definition_id=definition_id, subject_ref=profile_operation_subject(str(_PROFILE)), payload=payload
+            )
+            for definition_id, payload in requests.items()
+        ),
+    ]
+    assert {case.definition_id for case in cases} == {item.contract.definition_id for item in registrations}
+
+    for request in cases:
+        registration = next(item for item in registrations if item.contract.definition_id == request.definition_id)
+        resolver = registration.access_resolver
+        assert resolver is not None
+        context = OperationAccessContext(
+            profile_id=_PROFILE,
+            destination_id=uuid4(),
+            action=action,
+            frontend=OperationFrontendProjection.CLI,
+            contract=registration.contract,
+            published_authority=Availability.AVAILABLE,
+        )
+        on_cli = resolver(request, context)
+        assert not on_cli.policy.requires_human, request.definition_id
+        for frontend in OperationFrontendProjection:
+            on_frontend = resolver(request, replace(context, frontend=frontend))
+            assert on_frontend.policy == on_cli.policy, (request.definition_id, frontend)
+            assert on_frontend.request == on_cli.request.model_copy(update={"frontend": frontend})

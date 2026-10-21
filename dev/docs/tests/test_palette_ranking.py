@@ -147,7 +147,10 @@ def _build_glossary_site(out: Path) -> Path:
     src.mkdir(parents=True)
     generate_glossary_reference(src)
     (src / "conf.py").write_text(
-        'project = "cadrumo-palette"\nextensions = []\nhtml_theme = "basic"\n',
+        'project = "cadrumo-palette"\nextensions = []\nhtml_theme = "basic"\n'
+        "from dev.docs.section_anchors import register\n"
+        "def setup(app):\n"
+        "    register(app)\n",
         encoding="utf-8",
     )
     (src / "index.rst").write_text(

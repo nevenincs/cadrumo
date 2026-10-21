@@ -145,7 +145,7 @@ def _resolve_language(concept: dict[str, object], locale: str, *, concept_id: st
             ``concept_id`` as a fallback label.
     """
     languages = _as_str_object_dict(concept.get("language"))
-    if not languages:
+    if not (languages is not None and languages):
         raise CorpusSearchInputError(
             reason="concept_declares_no_language_sections",
             context={"concept_id": concept_id},

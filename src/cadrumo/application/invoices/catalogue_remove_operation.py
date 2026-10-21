@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
@@ -18,10 +20,8 @@ from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .catalogue_lifecycle import remove_catalogue_invoice
 from .catalogue_lifecycle_ports import CatalogueLifecyclePortsFactory
@@ -51,7 +51,7 @@ class InvoiceRemoveResult(BaseModel):
         if (
             not self.invoice_id.strip()
             or not self.invoice.invoice_id.startswith(self.invoice_id.strip())
-            or (self.invoice.bucket_id is not None and str(self.invoice.bucket_id) != str(self.profile_id))
+            or (self.invoice.bucket_id is not None and self.invoice.bucket_id != str(self.profile_id))
         ):
             raise ValueError("removed invoice differs from requested identity")
         return self
@@ -97,11 +97,11 @@ def build_invoice_remove_definition(factory: CatalogueLifecyclePortsFactory) -> 
     return build_single_phase_definition(
         definition_id=INVOICE_REMOVE_OPERATION_DEFINITION_ID,
         request_type=InvoiceRemoveRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=InvoiceRemoveResult,
         executor_type=InvoiceRemoveExecutor,
         build=lambda: InvoiceRemoveExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

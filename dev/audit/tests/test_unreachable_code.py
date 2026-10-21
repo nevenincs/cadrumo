@@ -13,11 +13,13 @@ from __future__ import annotations
 
 import ast
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
 
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
+from dev.first_party_source import SOURCE_PACKAGES
 
 from ..unreachable_code import scan_unreachable_code
 from ..unreachable_models import Confidence, ModuleReach, SymbolKind, UnreachableCodeOutcome, UnreachableCodeResult
@@ -174,7 +176,6 @@ def test_run():
 """
 
 _DEV = """
-import pkg.dead.b
 from pkg.used import UNUSED_CONST
 
 
@@ -234,7 +235,7 @@ def _build_tree(root: Path) -> ShippedTreeSpec:
     return ShippedTreeSpec(
         repo_root=root,
         src_root=root / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         module_roots=("pkg.tool.__main__",),
         exclude_globs=_EXCLUDES,
@@ -279,11 +280,18 @@ def test_a_module_execution_entrypoint_is_a_walk_root(result: UnreachableCodeRes
 
 
 def test_repository_discovers_its_module_execution_roots() -> None:
-    """The real tree's package and guarded module surfaces are derived."""
+    """Every audited package contributes its own ``python -m`` surfaces, and only those."""
+    from ..unreachable_tree import is_module_execution_surface
+
     spec = ShippedTreeSpec.from_repository(REPO_ROOT)
 
-    assert "cadrumo.entrypoints.tui.__main__" in spec.module_roots
-    assert "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap" in spec.module_roots
+    assert "cadrumo.adapters.persistence.storage.custody._kdf_worker" in spec.module_roots
+    assert "cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap" in spec.module_roots
+    assert "cadrumo_runtime.host.frontend.tui.__main__" in spec.module_roots
+    assert all(spec.audits(module) for module in spec.module_roots)
+    for module in spec.module_roots:
+        path = REPO_ROOT / "src" / Path(*module.split("."))
+        assert is_module_execution_surface(path.with_suffix(".py"))
 
 
 def test_module_execution_surface_requires_a_file_role_or_top_level_exact_guard(tmp_path: Path) -> None:
@@ -306,14 +314,14 @@ def test_module_execution_surface_requires_a_file_role_or_top_level_exact_guard(
 
 
 def test_wholly_unreachable_package_collapses_to_one_labelled_folder(result: UnreachableCodeResult) -> None:
-    """``pkg.dead`` is reported once, spanning three modules, with its dev/test use as a label."""
+    """``pkg.dead`` is reported once, spanning three modules, with its test use as a label."""
     dead = next(finding for finding in result.modules if finding.module == "pkg.dead")
 
     assert dead.reach is ModuleReach.UNREACHABLE
     assert dead.is_package
     assert dead.path == "src/pkg/dead/"
     assert dead.spanned_modules == 3
-    assert dead.used_by == ("dev", "tests")
+    assert dead.used_by == ("tests",)
     assert not any(finding.module in {"pkg.dead.a", "pkg.dead.b"} for finding in result.modules)
 
 
@@ -669,7 +677,7 @@ def test_clean_tree_is_green(tmp_path: Path) -> None:
     spec = ShippedTreeSpec(
         repo_root=tmp_path,
         src_root=tmp_path / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         exclude_globs=_EXCLUDES,
     )
@@ -689,7 +697,7 @@ def test_development_tests_cannot_clear_a_product_member(tmp_path: Path) -> None
     spec = ShippedTreeSpec(
         repo_root=tmp_path,
         src_root=tmp_path / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         outside=(OutsideCorpus(label="dev", root=tmp_path / "dev"),),
     )
@@ -726,7 +734,7 @@ def test_outside_relative_import_is_credited_at_every_nesting_depth(tmp_path: Pa
     spec = ShippedTreeSpec(
         repo_root=tmp_path,
         src_root=tmp_path / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         exclude_globs=_EXCLUDES,
         outside=(
@@ -749,7 +757,7 @@ def test_unparseable_shipped_module_is_an_error_not_a_verdict(tmp_path: Path) ->
     spec = ShippedTreeSpec(
         repo_root=tmp_path,
         src_root=tmp_path / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         exclude_globs=_EXCLUDES,
     )
@@ -768,7 +776,7 @@ def test_missing_entry_point_module_is_an_error(tmp_path: Path) -> None:
     spec = ShippedTreeSpec(
         repo_root=tmp_path,
         src_root=tmp_path / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.absent", "main"),),
         exclude_globs=_EXCLUDES,
     )
@@ -791,7 +799,7 @@ def test_console_report_and_json_carry_the_same_findings(result: UnreachableCode
     )
     assert "roots: pkg.cli:main" in report
     assert "4 data-shaped member(s) cleared" in report
-    assert "package  src/pkg/dead/  (3 modules)  [used by: dev, tests]" in report
+    assert "package  src/pkg/dead/  (3 modules)  [used by: tests]" in report
     assert "module   src/pkg/loner.py  [used by: tests]" in report
     assert f"{orphan_line}  [exact]" in report
     assert "method      Widget.hidden  [no use anywhere]  [name-match]" in report
@@ -829,14 +837,15 @@ def test_repository_spec_reads_the_console_scripts_from_pyproject() -> None:
     """Roots come from ``[project.scripts]``, never from a restated list."""
     spec = ShippedTreeSpec.from_repository(REPO_ROOT)
 
-    assert spec.package == "cadrumo"
-    # `aeat` is the only console script the product declares; the full-screen
-    # session is reached through `aeat app tui`, which starts the module-execution
-    # surface below rather than a second console entry.
-    assert "cadrumo.entrypoints.cli.bootstrap:main" in {entry.spec for entry in spec.entry_points}
-    assert "cadrumo.entrypoints.tui.__main__" in spec.module_roots
+    pyproject = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    declared = set(pyproject["project"]["scripts"].values())
+
+    assert spec.packages == tuple(PurePosixPath(root).name for root in SOURCE_PACKAGES)
+    assert {entry.spec for entry in spec.entry_points} == declared
     assert any(glob.endswith("tests/**") for glob in spec.exclude_globs)
     assert {corpus.label for corpus in spec.outside} == {"tests", "dev"}
+    # Every audited package's own tests are read, so their labels name real use.
+    assert {corpus.root for corpus in spec.outside if corpus.test_modules_only} == set(spec.package_roots)
     assert spec.data_globs
 
 
@@ -844,10 +853,10 @@ def test_extra_roots_join_the_declared_console_scripts() -> None:
     """A ``python -m`` surface can be admitted as a root for one run without editing packaging."""
     spec = ShippedTreeSpec.from_repository(
         REPO_ROOT,
-        extra_roots=("cadrumo.entrypoints.tui.components.form_screen:run_form_tui",),
+        extra_roots=("cadrumo_runtime.host.frontend.tui.launcher:run_module",),
     )
 
-    assert spec.entry_points[-1] == EntryPoint("cadrumo.entrypoints.tui.components.form_screen", "run_form_tui")
+    assert spec.entry_points[-1] == EntryPoint("cadrumo_runtime.host.frontend.tui.launcher", "run_module")
 
 
 def test_entry_point_parse_rejects_malformed_specs() -> None:
@@ -876,7 +885,7 @@ def _spawn_tree(root: Path, *, flag: str) -> ShippedTreeSpec:
     return ShippedTreeSpec(
         repo_root=root,
         src_root=root / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         module_roots=("pkg.session.__main__",),
         exclude_globs=_EXCLUDES,
@@ -924,7 +933,7 @@ def _importer_tree(root: Path) -> ShippedTreeSpec:
     return ShippedTreeSpec(
         repo_root=root,
         src_root=root / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         exclude_globs=_EXCLUDES,
     )
@@ -960,7 +969,7 @@ def test_importers_exclude_a_findings_own_span(tmp_path: Path) -> None:
     spec = ShippedTreeSpec(
         repo_root=root,
         src_root=root / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         exclude_globs=_EXCLUDES,
     )
@@ -1057,7 +1066,7 @@ def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(
     spec = ShippedTreeSpec(
         repo_root=tmp_path,
         src_root=tmp_path / "src",
-        package="cadrumo",
+        packages=("cadrumo",),
         entry_points=(),
         data_globs=("_data/registry/**/*.json",),
     )

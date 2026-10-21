@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime
 from types import SimpleNamespace
@@ -86,7 +86,7 @@ def test_service_fetches_only_after_legal_guard_and_persists_under_fresh_fence(
     monkeypatch.setattr(service, "persist_document", persist_document)
 
     @asynccontextmanager
-    async def guard() -> AsyncIterator[None]:
+    async def guard() -> AsyncGenerator[None]:
         events.append("commit-enter")
         try:
             yield
@@ -133,7 +133,7 @@ def test_registered_pull_owns_process_and_projects_dedup_receipt(monkeypatch: py
 
     class Cancellation:
         @asynccontextmanager
-        async def irreversible_section(self) -> AsyncIterator[None]:
+        async def irreversible_section(self) -> AsyncGenerator[None]:
             events.append("commit-enter")
             try:
                 yield

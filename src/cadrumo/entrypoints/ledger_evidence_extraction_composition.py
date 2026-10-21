@@ -249,7 +249,6 @@ def _invoice_read_text(
                 )
             return TextInvoiceFieldExtractor(
                 provider=provider,
-                model=settings.cadrumo_llm_cloud_text_model,
                 operation=pinned,
                 settings=settings,
                 authority_values=authority_values,
@@ -309,7 +308,6 @@ def _invoice_transcribe_vision(
             return transcribe_document_images(inputs, source_content_sha256=source_content_sha256, settings=settings)
         return LocalVisionDocumentTranscriber(
             provider=provider,
-            model=settings.cadrumo_llm_cloud_vision_model,
             settings=settings,
             consent_token=_invoice_require_llm_consent_token(consent_token),
             client=(

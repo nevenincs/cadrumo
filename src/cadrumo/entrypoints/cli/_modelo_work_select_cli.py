@@ -6,7 +6,6 @@ import typer
 
 from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work_list
 from ...core.external_constants import OutputLanguage
-from ._modelo_payloads import WorkSelectResult
 from ._modelo_rendering import work_unit_list_lines, work_unit_payload
 from .common import (
     activate_subcommand_output_language,
@@ -14,7 +13,8 @@ from .common import (
     emit_envelope,
     resolve_lifecycle_continuation_notice,
 )
-from .runtime_modelo_work_inventory import read_modelo_work_inventory
+from .modelo_results import WorkSelectResult
+from .operation_modelo_work_inventory import read_modelo_work_inventory
 
 __all__ = ["work_select"]
 

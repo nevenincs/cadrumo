@@ -53,9 +53,8 @@ from dev.first_party_source import (
     DEPENDENCY_DECLARATION_ROOTS,
     DEVELOPMENT_TOOLING,
     FIRST_PARTY_ROOTS,
-    HARNESS_PACKAGE,
     PACKAGING_HOOKS,
-    PRODUCT_PACKAGE,
+    SOURCE_PACKAGES,
     is_production_source,
 )
 from dev.quality.suite import GATES
@@ -66,7 +65,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _AUTHORITY_MODULE: Final[str] = "dev.first_party_source"
 _AUTHORITY_PATH: Final[str] = f"{DEVELOPMENT_TOOLING}/first_party_source.py"
 
-_PACKAGE_ROOTS: Final[frozenset[str]] = frozenset({PRODUCT_PACKAGE, HARNESS_PACKAGE})
+_PACKAGE_ROOTS: Final[frozenset[str]] = frozenset(SOURCE_PACKAGES)
 _PACKAGE_CHAIN_TAILS: Final[frozenset[tuple[str, ...]]] = frozenset(tuple(root.split("/")) for root in _PACKAGE_ROOTS)
 _TOOL_ROOTS: Final[frozenset[str]] = frozenset({DEVELOPMENT_TOOLING, PACKAGING_HOOKS})
 _ROOT_SPELLINGS: Final[frozenset[str]] = frozenset(FIRST_PARTY_ROOTS) | {f"{root}/" for root in _PACKAGE_ROOTS}
@@ -182,7 +181,10 @@ def _imports_authority(tree: ast.Module, module: str) -> bool:
             if node.level:
                 anchor = package.split(".")
                 base = anchor[: len(anchor) - (node.level - 1)]
-                if ".".join([*base, *([node.module] if node.module else [])]) == _AUTHORITY_MODULE:
+                if (
+                    ".".join([*base, *([node.module] if (node.module is not None and node.module) else [])])
+                    == _AUTHORITY_MODULE
+                ):
                     return True
     return False
 
@@ -298,14 +300,14 @@ def test_vulture_excludes_exactly_what_the_authority_rejects() -> None:
     def excluded(path: str) -> bool:
         return any(fnmatch(str(REPO_ROOT / path), pattern) for pattern in patterns)
 
-    assert _misclassified(_python_files(PRODUCT_PACKAGE), excluded) == []
+    assert _misclassified(_python_files(*SOURCE_PACKAGES), excluded) == []
 
 
 def test_semgrepignore_excludes_exactly_what_the_authority_rejects() -> None:
     """``.semgrepignore`` follows gitignore semantics over repository-relative paths."""
     rules = pathspec.GitIgnoreSpec.from_lines((REPO_ROOT / ".semgrepignore").read_text(encoding=UTF_8).splitlines())
 
-    assert _misclassified(_python_files(PRODUCT_PACKAGE), rules.match_file) == []
+    assert _misclassified(_python_files(*SOURCE_PACKAGES), rules.match_file) == []
 
 
 def test_deptry_excludes_exactly_what_the_authority_rejects() -> None:

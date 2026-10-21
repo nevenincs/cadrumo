@@ -44,3 +44,22 @@ async def test_status_bar_spinner_is_visible_only_while_the_tone_is_progress() -
         bar.show_error("Failed")
         await pilot.pause()
         assert not spinner.display
+
+
+@pytest.mark.asyncio
+async def test_status_bar_spinner_refreshes_only_while_the_tone_is_progress() -> None:
+    """A hidden spinner must not keep an idle screen waking on its frame timer."""
+    app = _StatusHarness()
+    async with app.run_test(size=(80, 24)) as pilot:
+        bar = app.query_one("#status", PinnedStatusBar)
+        spinner = bar.query_one(LoadingIndicator)
+        await pilot.pause()
+        assert spinner.auto_refresh is None, "an idle bar must schedule no spinner frames"
+
+        bar.show_progress("Working")
+        await pilot.pause()
+        assert spinner.auto_refresh is not None, "progress must animate the spinner"
+
+        bar.show_success("Done")
+        await pilot.pause()
+        assert spinner.auto_refresh is None, "an outcome must stop the spinner's frames"

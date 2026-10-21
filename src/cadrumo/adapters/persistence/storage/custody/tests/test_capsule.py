@@ -649,6 +649,99 @@ def test_uncommitted_or_identity_mixed_capsules_are_not_usable(tmp_path: Path) -
         load_committed_profile_password_material(_PROFILE_ID, settings=settings)
 
 
+def test_password_read_opens_marker_once_and_detects_a_changed_identity_on_next_call(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    envelope = _password_envelope()
+    capsule = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=uuid4(),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+        data_files={},
+        settings=settings,
+    )
+    marker = capsule / "profile.commit.v1.json"
+    for _ in range(2):
+        material = load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+        assert sum(op.operation == "open" and op.path == marker for op in material.access_trace) == 1
+        assert material.envelope == envelope
+
+    marker.write_bytes(
+        ProfileCustodyCommit.create(
+            profile_id=uuid4(),
+            transaction_id=uuid4(),
+            publication_kind=ProfilePublicationKind.ENROLL,
+        ).canonical_json_bytes()
+    )
+    with pytest.raises(ProfileCustodyRecordError, match="commit UUID"):
+        load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+
+
+def test_password_read_keeps_one_generation_during_a_real_directory_swap(tmp_path: Path) -> None:
+    """Recognition and material reads must retain the same capsule identity."""
+    settings = _settings(tmp_path / "current")
+    original_envelope = _password_envelope()
+    replacement_envelope = _password_envelope(dek_epoch=base64.b64encode(b"r" * 16).decode("ascii"))
+
+    def publish(target: Settings, envelope: ProfileCustodyEnvelope) -> Path:
+        return publish_profile_custody_capsule(
+            profile_id=_PROFILE_ID,
+            transaction_id=uuid4(),
+            publication_kind=ProfilePublicationKind.ENROLL,
+            password_envelope=envelope,
+            sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+            data_files={},
+            settings=target,
+        )
+
+    original = publish(settings, original_envelope)
+    original_commit = parse_profile_custody_commit((original / "profile.commit.v1.json").read_bytes())
+    replacement = publish(_settings(tmp_path / "replacement"), replacement_envelope)
+    parked = original.parent / ".parked"
+    attempted = False
+    swapped = False
+    refused: list[OSError] = []
+
+    def swap_after_marker(frame: object, event: str, argument: object) -> None:
+        nonlocal attempted, swapped
+        if (
+            attempted
+            or event != "return"
+            or getattr(frame, "f_code", None) is not parse_profile_custody_commit.__code__
+        ):
+            return
+        attempted = True
+        try:
+            original.rename(parked)
+            try:
+                replacement.rename(original)
+            except OSError:
+                parked.rename(original)
+                raise
+        except OSError as exc:
+            refused.append(exc)
+        else:
+            swapped = True
+
+    previous = sys.getprofile()
+    sys.setprofile(swap_after_marker)
+    try:
+        material = load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+    finally:
+        sys.setprofile(previous)
+    assert attempted and (swapped or refused)
+    assert material.commit == original_commit
+    assert material.envelope == original_envelope
+    assert material.sentinel.dek_epoch == original_envelope.dek_epoch
+
+    # Handles are released at return; the next call must read the new capsule.
+    if not swapped:
+        original.rename(parked)
+        replacement.rename(original)
+    assert load_committed_profile_password_material(_PROFILE_ID, settings=settings).envelope == replacement_envelope
+
+
 def test_absent_capsule_ancestry_is_not_committed_but_linked_ancestry_is_refused(tmp_path: Path) -> None:
     """Nothing can exist below an absent directory; a linked one is never walked through."""
     settings = _settings(tmp_path)

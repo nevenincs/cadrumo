@@ -33,7 +33,7 @@ def _record(when: datetime, *, caller: str, prompt_id: str, request_id: str) -> 
         prompt_id=prompt_id,
         caller=caller,
         text="Casilla 03 records cumulative net revenue for the period.",
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         model="claude-opus-4-7",
         input_tokens=137,
         output_tokens=64,

@@ -59,7 +59,7 @@ def _calculation_owner_observation(*, ports: CalculationActionPorts) -> tuple[st
 
 
 def _calculation_capture_coordinate(calculation_revision_id: CalculationRevisionId) -> dict[str, object]:
-    return {"calculation_revision_id": content_hash_hex({"id": str(calculation_revision_id)})}
+    return {"calculation_revision_id": content_hash_hex({"id": calculation_revision_id})}
 
 
 def capture_modelo_calculation(

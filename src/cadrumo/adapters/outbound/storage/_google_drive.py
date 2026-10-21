@@ -1169,7 +1169,7 @@ class GoogleDriveProvider:
                 seen_tokens=seen_tokens,
                 action="iter_namespaces",
             )
-            if not page_token:
+            if not (page_token is not None and page_token):
                 return
 
     def iter_objects(self, namespace: str) -> Iterator[ProviderObjectMetadata]:
@@ -1242,7 +1242,7 @@ class GoogleDriveProvider:
                 seen_tokens=seen_tokens,
                 action="iter_objects",
             )
-            if not page_token:
+            if not (page_token is not None and page_token):
                 return
 
     def probe(self, *, read_only: bool = False) -> ProviderProbeReport:
@@ -1261,7 +1261,7 @@ class GoogleDriveProvider:
         Every storage failure mode is encoded in the returned
         :class:`ProviderProbeReport`. A stored sign-in that Google no longer
         honours is not a storage condition and is raised as
-        :exc:`adapters.outbound.google.errors.GoogleAuthSignInRequiredError`.
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthSignInRequiredError`.
 
         Args:
             read_only: When ``True``, skip the sentinel write round-trip and

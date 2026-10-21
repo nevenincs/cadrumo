@@ -29,8 +29,9 @@ from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInput
 from .....core.config import load_settings
 from .....core.config_support import LLMProvider
 from .....core.field_origin import FieldOrigin
+from .....core.model_catalogue import ModelRole
 from .....core.operator_action_enums import NoRecoveryOutcome
-from ..errors import LLMConfigError, LLMValidationError
+from ..errors import LLMValidationError
 from ..evidence_draft_text import (
     TextInvoiceFieldExtractor,
     build_text_field_extraction_prompt,
@@ -367,7 +368,7 @@ class TestExtractorPinsTheHostByDefault:
     provenance stamp read ``configured`` because no model was pinned.
 
     Both were written when carrying no override looked like neutrality. It is
-    not neutral: ``cadrumo_llm_provider`` defaults to a cloud vendor, so pinning
+    not neutral: the provider setting then defaulted to a cloud vendor, so pinning
     NOTHING meant a taxpayer's invoice text left the host by default, with no
     consent gate, no default-off posture, and nothing at the call site saying
     so. The tests asserted exactly the property that produced that exposure, and
@@ -406,41 +407,24 @@ class TestExtractorPinsTheHostByDefault:
         assert extractor._build_request("Invoice 42").model_override is not None
         assert not extractor.decided_by.startswith("llm:local-text-extract:configured:")
 
-    def test_a_cloud_provider_naming_no_model_is_refused(self, *, operation: PinnedAuthorityOperation) -> None:
-        """A refusal, not merely a default, so configuration cannot silently bypass it.
+    def test_an_agent_read_names_no_model_and_states_its_role(self, *, operation: PinnedAuthorityOperation) -> None:
+        """Off-host, the agent service picks the lane and model for the role.
 
-        Mirrors the vision reader's guard. A pin can be overridden; a refusal
-        cannot be reached around by setting an environment variable, which is
-        what makes this the stronger half of the fix.
-        """
-        with pytest.raises(LLMConfigError) as raised:
-            TextInvoiceFieldExtractor(provider=LLMProvider.ANTHROPIC, settings=load_settings(), operation=operation)
-        verdict = raised.value.terminal_precondition_verdict
-        assert verdict is not None
-        assert verdict.failed_condition_id == "llm.off_host_model.named"
-        assert verdict.evidence[0].values == {
-            "off_host_model_named": False,
-            "provider": LLMProvider.ANTHROPIC.value,
-        }
-
-    def test_an_explicitly_named_cloud_provider_and_model_is_still_honoured(
-        self, *, operation: PinnedAuthorityOperation
-    ) -> None:
-        """Positive control, and it protects a sanctioned route.
-
-        The measurement corpus is public, synthetic and explicitly cleared for a
-        cloud engine. A fix that made every off-host read impossible would break
-        that, and a refusal-only suite would not notice -- a reader that refused
-        everything satisfies the case above.
+        The reader therefore sends no model of its own -- a local model id
+        forwarded off-host would ask a lane for a model it does not serve -- and
+        names the role, which is what the service resolves against.
         """
         extractor = TextInvoiceFieldExtractor(
-            provider=LLMProvider.ANTHROPIC,
-            model="claude-test-model",
+            provider=LLMProvider.AGENT,
+            model="ignored-local-model",
             settings=load_settings(),
             operation=operation,
         )
 
         request = extractor._build_request("Invoice 42")
 
-        assert request.provider_override is LLMProvider.ANTHROPIC
-        assert request.model_override == "claude-test-model"
+        assert request.provider_override is LLMProvider.AGENT
+        assert request.model_override is None
+        assert request.model_role is ModelRole.TEXT_EXTRACTION
+        assert request.expects_json is True
+        assert extractor.decided_by.startswith("llm:agent-text-extract:configured:")

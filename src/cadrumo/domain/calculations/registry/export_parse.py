@@ -266,13 +266,13 @@ def _xml_dictionary_source(
         raise RegistryValidationError(f"XML export layout {layout.id!r} has no dictionary source")
     if sources is None or source_payloads is None:
         raise RegistryValidationError(f"XML export layout {layout.id!r} requires published sources and source payloads")
-    source = sources.get(str(layout.dictionary_source_ref))
+    source = sources.get(layout.dictionary_source_ref)
     if source is None:
         raise RegistryValidationError(
             f"XML export layout {layout.id!r} has unresolved dictionary source {layout.dictionary_source_ref!r}",
         )
     try:
-        return source, source_payloads[str(source.id)]
+        return source, source_payloads[source.id]
     except KeyError as exc:
         raise RegistryValidationError(
             f"XML export layout {layout.id!r} has no published payload for dictionary source {source.id!r}"
@@ -757,7 +757,7 @@ def _parse_xml_boolean(data_type: str, raw: str) -> bool | None:
     normalized = data_type.upper()
     tokens = _XML_BOOLEAN_TOKENS.get(normalized)
     if tokens is None:
-        raise RegistryValidationError(f"unsupported XML dictionary boolean data type {str(data_type)!r}")
+        raise RegistryValidationError(f"unsupported XML dictionary boolean data type {data_type!r}")
     token = raw.strip().lower()
     try:
         return tokens[token]

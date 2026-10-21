@@ -1293,7 +1293,7 @@ cli:
             local observation store before exporting (annual roll-ups, prior-quarter
             carry-forward etc.)
           root_folder_required: No Drive folder has been created for this profile;
-            run `aeat config google login` first
+            run `cadrumo-runtime config google login` first
           snapshot_failure: Cannot build the snapshot of the modelo definitions for
             modelo {modelo} ({period} {year}).
         push_help: Export the calculation of a modelo and period, as set in the modelo
@@ -1315,7 +1315,7 @@ cli:
         actor_help: Actor responsible for the action (free-text label up to 64 chars)
         actor_too_long: The --by label must be at most {limit} characters; received
           {length}. It names the actor on the audit event this command records, so
-          give a short name for yourself or the agent.
+          give a short name for yourself.
         allow_not_applicable_help: Create the declaration even when the modelo does
           not apply to the active profile's taxpayer type.
         amend_help: Build a correction of a return filed outside Cadrumo. Requires
@@ -1381,8 +1381,11 @@ cli:
         bucket_id_help: Profile the declaration belongs to
         calculate_help: Save a new draft calculation for the declaration. This command
           calculates only from the values given to it. Values entered earlier in the
-          full-screen interface (aeat app tui) are not kept unless you give them again
-          here; the full-screen interface keeps them.
+          full-screen interface are not kept unless you give them again here; the
+          full-screen interface keeps them.
+        calculate_reused_sealed: 'These inputs match calculation %{revision_id} (state:
+          %{state}). No new draft was created. Select this saved calculation by its
+          revision ID, or change the inputs.'
         calculate_saved: 'Saved as draft calculation revision %{revision_id} (state:
           %{state}). It is persisted and can be resumed later.'
         calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
@@ -1792,6 +1795,23 @@ cli:
       app_help: 'Run the full local modelo filing chain in one command: readiness
         -> create -> calculate -> check -> export. Build and export only; never submits
         to AEAT'
+  censo_auth:
+    certificate: Certificate file path (blank keeps saved value)
+    configure_help: Set up or edit saved AEAT authentication before pulling the census
+      (interactive terminal).
+    console_required: 'Authentication editing needs an interactive terminal: {command}.
+      Required: {requirements}.'
+    field: '{field} (blank keeps saved value)'
+    field_failed: Could not save {field}. Check its format and try again; fields saved
+      earlier are retained.
+    method: Authentication method
+    offer: Set up AEAT authentication before synchronizing?
+    password: Password (blank keeps saved value)
+    required: 'AEAT synchronization requires: {requirements}. Set or edit authentication
+      here: {command}.'
+    route: Cl@ve Móvil route
+    saved: Authentication settings saved.
+    still_missing: '{field} is still missing.'
   common:
     errors:
       invalid_iso_date: 'Invalid date format for %{label}: %{raw}. ISO 8601 (YYYY-MM-DD)
@@ -1807,6 +1827,8 @@ cli:
         (quarters), 0A (annual), 01-12 (months), and supply the year with --year (e.g.
         --period 1T --year 2024).'
   config:
+    activity:
+      help: Record activity for the signed-in profile without requesting a password.
     app_help: Set up and repair the local profile, credentials, storage and Google
       link.
     auth:
@@ -1816,8 +1838,8 @@ cli:
         clear_help: Retire the apoderado configuration
         configure:
           no_console_hint: 'Interactive apoderado configuration needs a console. Configure
-            non-interactively with: aeat config auth apoderado configure --represented-nif
-            NIF --scope SCOPE.'
+            non-interactively with: cadrumo-runtime config auth apoderado configure
+            --represented-nif NIF --scope SCOPE.'
           represented_nif_help: NIF of the represented party
           scope_help: Scope tokens (can be repeated)
           scope_required: 'No scope provided. Pass --scope with one or more of: %{codes}.'
@@ -1902,7 +1924,7 @@ cli:
       status_summary_ready: Authentication is configured and a live session is available.
       status_summary_unconfigured: Authentication is not configured yet.
       test_help: Check local authentication readiness
-      unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
+      unknown_provider: 'Unknown authentication provider: %{provider}. Run ''cadrumo-runtime
         config auth --help'' for valid ids.'
     check:
       available: available
@@ -1914,6 +1936,8 @@ cli:
       missing: missing
       preflight_label: Preflight check
       profile_label: profile
+      setup_unavailable: Setup could not be checked because Cadrumo's background service
+        did not answer.
     collab:
       help: Manage trusted recipients for review-package collaboration.
       recipient:
@@ -2021,8 +2045,20 @@ cli:
         to activate a registered profile.
       profile_session_absent: You are not logged in. Run `aeat config login` to unlock
         your profile.
+      profile_session_custody_changed: This profile's password or recovery settings
+        changed. Run `aeat config login` to sign in again.
       profile_session_expired: Your profile session has expired. Run `aeat config
         login` to sign in again.
+      profile_session_login_mismatch: Your saved sign-in belongs to another session
+        on this computer. Run `aeat config login` to sign in here.
+      profile_session_logout_unproven: Cadrumo can't prove this sign-out without a
+        usable saved sign-in. Run `aeat config login`, then sign out again.
+      profile_session_outdated: Your saved sign-in was made by another version of
+        Cadrumo and can't be used. Run `aeat config login` to sign in again.
+      profile_session_signed_out: You were signed out of this profile elsewhere. Run
+        `aeat config login` to sign in again.
+      profile_session_unreadable: Your saved sign-in could not be verified, so it
+        was not used. Run `aeat config login` to sign in again.
     google:
       detail:
         sync_push_limit_requires_dry_run: Google sync push cannot use --limit unless
@@ -2041,7 +2077,7 @@ cli:
           but this command was run non-interactively: {detail}'
         profile_unbound: No active profile. Run aeat config login NAME or pass --profile.
         scope_insufficient: The access granted for Google is missing required permissions.
-          Run `aeat config google login` and accept every permission.
+          Run `cadrumo-runtime config google login` and accept every permission.
         storage: 'Could not reach Google Drive storage: {detail}'
         unsecured_mode: Google access is blocked while the secret store runs in unsecured
           mode for a profile with a real NIF.
@@ -2058,6 +2094,7 @@ cli:
       probe_help: Probe the profile's Google Drive folder for read/write access
       probe_read_only_help: Probe Google Drive in read-only mode (no writes attempted)
       status_help: Show the current Google OAuth session state for the active profile
+    help: Manage sign-in, profile access and local authentication settings.
     list:
       help: List every registered profile and mark the active one
     login:
@@ -2072,12 +2109,26 @@ cli:
           applies to this process only; supply it again to the next process.
         session_not_persisted: No usable OS keychain found, so this command authenticated
           only its own process; supply profile authentication again to the next process.
+        session_not_persisted_logon: 'Signed in for this command only: Windows Credential
+          Manager refused this logon session (error 1312) because it holds no Windows
+          credentials, so no process in it can keep or follow a sign-in, and later
+          commands cannot use it. Run Cadrumo from your Windows desktop sign-in, or
+          pass the profile password to each command with --profile-secrets-stdin.'
+        session_not_persisted_no_backend: 'Signed in for this command only: no OS
+          keychain is available to this process, so the sign-in cannot be kept for
+          later commands. Enable the system keychain for this account, or pass the
+          profile password to each command with --profile-secrets-stdin.'
+        session_not_persisted_unconfirmed: 'Signed in for this command only: the runtime
+          did not keep this sign-in, although this process can use the OS keychain.
+          Either the sign-in changed while this login completed, or the runtime runs
+          in a logon that cannot use the keychain. Sign in again; if this repeats,
+          start the runtime from the same logon as this command.'
       passphrase_channel_absent: No passphrase channel is available. Run this verb
         at a terminal, or pass --secrets-stdin or --secrets-fd.
       passphrase_prompt: 'Profile passphrase: '
     logout:
-      help: Sign out of this profile across human sessions on this device. Agent access
-        and AEAT sessions stay active.
+      help: Sign out of this profile across human sessions on this device. AEAT sessions
+        stay active.
       notices:
         already_logged_out: No profile is selected; there is nothing to sign out.
     passphrase:
@@ -2153,8 +2204,9 @@ cli:
           help: Request rotation, renewal or a scope change for an existing API grant.
           kind_help: 'The grant change: rotate, renew or change_scope.'
         create:
-          help: Request an API grant and receive its credential in protected storage
-            after separate human approval.
+          help: Issue an API key from a full proposal supplied through --secrets-stdin
+            or --secrets-fd. The key reaches protected storage after your separate
+            approval.
         decline:
           digest_help: Exact review digest shown by inspect.
           help: Decline the exact reviewed request.
@@ -2165,6 +2217,16 @@ cli:
           target_help: Key or grant UUID for a targeted denial.
           target_mismatch: A key or grant denial requires its target UUID; all does
             not accept a target.
+        disclosures:
+          expected_digest_help: The digest an earlier page printed; the read is refused
+            if the list changed since.
+          help: Count one grant's or pending request's disclosures by category and
+            print one page of the full list.
+          invalid_page: Give --offset as a whole number of zero or more and --expected-digest
+            as a digest an earlier page printed.
+          offset_help: The entry to start the page at; pass the next_offset of the
+            previous page.
+          target_help: The grant ID or pending request ID whose disclosures to read.
         help: Manage automation access for this profile.
         inspect:
           help: Show the exact reviewed automation request.
@@ -2238,8 +2300,8 @@ cli:
       create_guidance_unavailable: The profile was created successfully, but the next-step
         notices could not be prepared. Check 'config profile status' to see what remains.
       create_help: Create a profile protected by a passphrase. At a terminal it then
-        offers an optional recovery code; skip it, or add it later with 'aeat config
-        profile recovery enable'.
+        offers an optional recovery code; skip it, or add it later with 'cadrumo-runtime
+        config profile recovery enable'.
       create_login_required: Profile '{profile}' was created, but you do not have
         a session open on it yet. Sign in with the command 'config login {profile}'
         to unlock its data before continuing.
@@ -2293,6 +2355,12 @@ cli:
         list_help: List descendants declared on the active profile.
         remove_help: Remove one descendant by 0-based index from the active profile.
         remove_index_help: 0-based index of the descendant to remove.
+      disclosures:
+        help: Count this session's disclosures by category and print one page of the
+          full list.
+        offset_help: The entry to start the page at; pass the next_offset of the previous
+          page. Each run of the command is a session of its own, so its entries name
+          that session as their destination.
       edit_help: Re-run the wizard against an existing profile and update values in
         place
       edit_row:
@@ -2418,64 +2486,91 @@ cli:
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
     provision:
+      approval_needed: This needs your approval. Run the command again with --yes
+        to approve the plan above.
+      approve_prompt: Download and set these up now?
       browser:
-        help: Download the Chromium build that AEAT browser automation launches. Does
-          nothing when it is already installed.
-      help: 'Manage what runs on this computer: the browser build for AEAT automation,
-        and the local document reader''s runtime status, install, start, model pull,
-        load, verify and remove, or set everything up in one run.'
-      install:
-        confirm_help: Agree to download and run the package-manager install. Without
-          it nothing is installed.
-        help: Install the local runtime with the platform package manager (winget
-          on Windows, Homebrew on macOS). Does nothing when it is already installed;
-          on Linux, installing it is left to you.
+        help: Set up the browser Cadrumo uses for the tax agency website. Shows the
+          plan and asks first.
+      complete: Cadrumo is set up.
+      fix: 'To fix it, run: %{command}'
+      hardware_limited: This computer does not have enough memory for the local AI.
+      help: 'Set up and check what Cadrumo needs on this computer: the browser for
+        the tax agency website and the local AI, its program and models. Each command
+        runs in your signed-in profile.'
+      incomplete: Some components are not ready yet.
       load:
-        help: Load models into the local runtime's memory so the first read does not
-          wait for a cold start, every reader role's model unless --role or --model
-          narrows it. Refuses before loading when memory is short; a model that is
-          already loaded is left as it is.
-        model_help: Runtime identifier of the model to load. It must already be downloaded.
-          Defaults to the model selected for the role.
+        help: Load models into memory so the first read does not wait, every role's
+          model unless --role or --model narrows it. Refuses before loading when memory
+          is short.
+        model_help: Name of the model to load. It must already be downloaded. Defaults
+          to the model chosen for the role.
+      outcome:
+        cancelled: You cancelled the setup.
+        completed: Setup finished.
+        interrupted: Setup was interrupted before it finished. Run the command again
+          to resume.
+        not_enough_space: There is not enough free disk space, so nothing was downloaded.
+        nothing_to_do: Everything is already set up.
+        plan_changed: The plan changed after you approved it, so nothing was downloaded.
+          Run the command again to see the new plan.
+        rejected: Nothing was downloaded.
+      plan:
+        destination: '  Stored in %{path}'
+        entry: '%{name}: %{size} from %{hosts}'
+        heading: 'Cadrumo will set up:'
+        installs_program: '  This installs a program on this computer. Its installer
+          may ask for your permission.'
+        part: '    %{name}: %{size}'
+        shared: '  Uses the same download as %{name}.'
+        size_unknown: size not known yet
+        total: 'Total download: %{size}.'
+        total_unknown: 'Total download: at least %{size}. Some sizes are only known
+          once the download starts.'
       probe:
-        help: Check the text model's fitness now instead of reading the verdict recorded
-          by `aeat config provision verify`, and report the local reader with that
-          result. Loads the model; records nothing.
+        help: 'Check every component fully: reach the download servers, open the browser
+          and try each model. Downloads nothing.'
+      progress: '%{name}: %{step}'
+      progress_bytes: '%{name}: downloading %{done} of %{total} (%{percent}%)'
       pull:
-        help: Download models into the local runtime, every reader role's model unless
-          --role or --model narrows it. Refuses before downloading when a model could
-          not be loaded.
-        model_help: Runtime identifier of the model to download. Defaults to the model
-          selected for the role.
+        help: 'Set up the local AI: install its program when it is missing, then download
+          every role''s model. Shows the plan and asks first; the program''s installer
+          may also ask for your permission.'
+        model_help: Name of a catalogue model to use instead of the one Cadrumo chooses.
       remove:
-        help: Delete a model Cadrumo selected from the local runtime's store and report
-          the space reclaimed.
-        model_help: Runtime identifier of the model to delete. Only models Cadrumo
-          selected can be deleted.
+        help: Delete a model Cadrumo chose from this computer and report the space
+          freed.
+        model_help: Name of the model to delete. Only models Cadrumo chose can be
+          deleted.
       report:
-        help: Report measured hardware, the model selected per role, and whether it
-          can be loaded now.
+        help: Report this computer's memory, the model chosen for each role, and whether
+          it can be loaded now.
       role_help: Model role to act on (vision transcription, text extraction, tabular
         mapping, supply-nature proposal). Defaults to every role.
       setup:
-        confirm_help: Agree to download and run the package-manager install if the
-          runtime is missing. Without it setup stops at the install step instead of
-          installing.
-        help: 'Set up the local reader in one run: install the runtime (only with
-          --confirm), start it, download every role''s model, load them and verify
-          them. Steps that are already done are reported unchanged; the first step
-          that fails stops the run.'
+        help: Set up every component that is not ready yet. Shows what will be downloaded,
+          how large it is and where it is stored, and asks before anything is downloaded.
+      size:
+        gigabytes: '%{value} GB'
+        megabytes: '%{value} MB'
       start:
-        help: Start the installed local runtime when the configured local endpoint
-          is not answering. Does nothing when it already answers.
+        help: Start the installed local AI program when it is not answering. Does
+          nothing when it already answers.
       status:
-        help: Report whether the local runtime is installed and answering, and whether
-          each reader role's model is installed. Reads only.
+        help: Show whether each component is ready, from what this computer already
+          has. Quick; downloads nothing.
+      step:
+        cleanup: tidying up
+        download: downloading
+        install: installing
+        plan: planning
+        preflight: checking the connection
+        verify: checking that it works
       verify:
-        help: Verify models load and answer a trivial prompt within a time bound,
-          every reader role's model unless --role or --model narrows it.
-        model_help: Runtime identifier of the model to verify. Defaults to the model
-          selected for the role.
+        help: Check one component fully, or every component when none is named. Downloads
+          nothing.
+        item_help: 'Component to check: browser or local_ai. Defaults to every component.'
+      yes_help: Approve the plan the command shows, without asking.
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
       help: Diagnose and repair local configuration, modelo definitions, profile,
@@ -2507,6 +2602,8 @@ cli:
       reset_progress_requires_yes: This operation is destructive. Re-run with --yes
         to confirm or pass --dry-run to see what would be cleared.
       reset_progress_yes_help: Confirm clearing saved interrupted-command progress
+      setup_status_hint: Setup is shown by the status command below once you're signed
+        in.
       yes_help: Confirm repair.
     reset:
       help: Start, inspect, or resume the irreversible reset of all locally stored
@@ -2751,7 +2848,7 @@ cli:
         invalid_date: '{option} needs a date as YYYY-MM-DD.'
         nothing_to_update: 'Nothing to change on {account}: name a detail or send
           account fields through the secret channel.'
-      none: 'No own accounts yet. Add one with: aeat app ledger account add'
+      none: No own accounts yet.
       prompts:
         bank_address: 'Bank address: '
         bank_city: 'Bank city: '
@@ -3082,6 +3179,8 @@ cli:
       period_help: 'Import only rows whose value date (or booking date) falls in this
         AEAT period: 1T-4T (quarters), 0A (annual), 01-12 (months). Requires --year.'
       provider_help: Statement format provider.
+      statement_refused: 'Statement refused: {file} has an entry that is not a valid
+        transaction, so nothing was imported.'
       verbose_help: Show detailed information during import
       verify_help: Check entries after import
       verify_source_help: Original file used to check imported rows.
@@ -3611,9 +3710,28 @@ cli:
       applicability_evidence_disagreement: Your profile answer and your recorded invoices
         disagree on whether these obligations apply; the rows stay visible until you
         correct one of the two.
+      art109_activity_income_withholding_ge_70pct_unset: Your profile does not yet
+        record whether at least 70% of your business or professional income is subject
+        to withholding.
+      estimacion_objetiva_unset: Your profile does not yet record which income-tax
+        assessment regime applies to your activity.
+      has_employees_unset: Your profile does not yet record whether you employ staff.
+      intracomunitario_unset: Your profile does not yet record whether you buy or
+        sell goods or services across EU borders.
+      iva_regime_unset: Your profile does not yet record which VAT regime applies
+        to your activity.
       m303_simplificado_forfait_unavailable: Modelo 303 is applicable, but the regimen
         simplificado forfait calculation engine is not yet available; review the simplified-regime
         casillas before filing.
+      retencion_arrendamientos_unset: Your profile does not yet record whether you
+        pay rent and withhold tax from the rent.
+      retencion_capital_unset: Your profile does not yet record whether you pay investment
+        income subject to withholding.
+      retencion_profesionales_unset: Your profile does not yet record whether you
+        pay professionals and withhold tax from their fees.
+      terceros_threshold_unset: Your profile does not yet record whether transactions
+        with any one customer or supplier exceed the annual reporting threshold for
+        Modelo 347.
     year_help: Filing year for --period (e.g. 2024).
   review:
     app_help: 'Your review queue: triage transactions in your records, supporting

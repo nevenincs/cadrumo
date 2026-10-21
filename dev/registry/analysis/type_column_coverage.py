@@ -85,7 +85,7 @@ class RevisionTypeColumnCoverage:
 
     def render(self) -> str:
         """Return one greppable report line."""
-        tail = f" {self.reason}" if self.reason else ""
+        tail = f" {self.reason}" if (self.reason is not None and self.reason) else ""
         return f"{self.coverage.value.upper()} {self.subject}{tail}"
 
 

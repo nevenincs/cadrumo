@@ -1,3 +1,4 @@
+import { openPanelTab } from "../support/panel";
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -71,12 +72,76 @@ const SURFACES: {
   unchecked?: readonly string[];
 }[] = [
   {
+    name: "the Censo review",
+    scenario: "censo-ready",
+    reach: async (target) => {
+      await target
+        .locator(".rail")
+        .getByRole("button", {
+          name: label("desktop.profile.title"),
+          exact: true,
+        })
+        .click();
+      await target
+        .getByRole("button", {
+          name: label("desktop.profile.censo.title"),
+          exact: true,
+        })
+        .click();
+      await target
+        .getByRole("dialog")
+        .getByRole("button", {
+          name: label("desktop.profile.censo.pull"),
+          exact: true,
+        })
+        .click();
+      await expect(target.getByRole("dialog")).toContainText("Calle Nueva 1");
+    },
+  },
+  {
+    name: "Google authentication in the profile menu",
+    scenario: "google-account",
+    extra: "&setup=ready",
+    reach: async (target) => {
+      await target
+        .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+        .click();
+      await expect(
+        target.getByRole("region", { name: label("desktop.google.title") }),
+      ).toBeVisible();
+    },
+  },
+  {
     name: "the sign-in dialog",
     scenario: "signed-out",
     reach: async (target) => {
       await expect(target.locator(".sign-in")).toBeVisible();
     },
   },
+  ...[false, true].map((editing) => ({
+    name: editing ? "the user profile editor" : "the user profile page",
+    scenario: "aeat-setup",
+    reach: async (target: Page) => {
+      await target
+        .locator(".rail")
+        .getByRole("button", {
+          name: label("desktop.profile.title"),
+          exact: true,
+        })
+        .click();
+      await expect(target.locator(".user-profile-page")).toContainText(
+        "Soler Vidal",
+      );
+      if (editing)
+        await target
+          .locator(".user-profile-page")
+          .getByRole("button", {
+            name: label("desktop.profile.edit_field", { field: "Given name" }),
+            exact: true,
+          })
+          .click();
+    },
+  })),
   {
     name: "a refused sign-in",
     scenario: "wrong-password",
@@ -95,12 +160,40 @@ const SURFACES: {
       await expect(target.locator(".sign-in")).toBeVisible();
       await target.keyboard.press("Escape");
       await expect(target.locator(".sign-in")).toHaveCount(0);
+      const search = target.getByRole("button", {
+        name: label("desktop.rail.search"),
+        exact: true,
+      });
+      await search.focus();
+      await expect(target.getByRole("tooltip")).toBeVisible();
+      await expect(search).toHaveAccessibleDescription(/.+/);
+      // The landmark owns the description, while the popup still paints
+      // outside the narrow, scrolling rail.
+      await expect
+        .poll(() =>
+          target.getByRole("tooltip").evaluate((tooltip) => {
+            const bounds = tooltip.getBoundingClientRect();
+            return tooltip.contains(
+              document.elementFromPoint(
+                bounds.x + bounds.width / 2,
+                bounds.y + bounds.height / 2,
+              ),
+            );
+          }),
+        )
+        .toBe(true);
     },
   },
   {
     name: "the shell",
     scenario: "signed-in",
     reach: async (target) => {
+      await target
+        .getByRole("button", {
+          name: label("desktop.rail.tui"),
+          exact: true,
+        })
+        .click();
       await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
     },
   },
@@ -112,9 +205,16 @@ const SURFACES: {
         .getByRole("button", { name: label("desktop.rail.search") })
         .click();
       await expect(target.locator(".palette")).toBeVisible();
-      await target.locator(".palette [role=combobox]").fill("sign");
+      await target
+        .locator(".palette")
+        .getByRole("combobox", { name: label("desktop.palette.label") })
+        .fill("sign");
       await expect(
-        target.locator(".palette").getByRole("option").first(),
+        target
+          .locator(".palette")
+          .getByRole("listbox")
+          .getByRole("option")
+          .first(),
       ).toBeVisible();
     },
   },
@@ -126,7 +226,11 @@ const SURFACES: {
         .getByRole("button", { name: label("desktop.rail.search") })
         .click();
       await expect(
-        target.locator(".palette").getByRole("option").first(),
+        target
+          .locator(".palette")
+          .getByRole("listbox")
+          .getByRole("option")
+          .first(),
       ).toBeVisible();
     },
   },
@@ -137,7 +241,10 @@ const SURFACES: {
       await target
         .getByRole("button", { name: label("desktop.rail.search") })
         .click();
-      await target.locator(".palette [role=combobox]").fill("zzzzzz");
+      await target
+        .locator(".palette")
+        .getByRole("combobox", { name: label("desktop.palette.label") })
+        .fill("zzzzzz");
       await expect(target.locator(".palette-note")).toContainText("zzzzzz");
     },
   },
@@ -145,10 +252,7 @@ const SURFACES: {
     name: "a record's menu",
     scenario: "signed-in",
     reach: async (target) => {
-      await target
-        .getByRole("navigation", { name: label("desktop.rail.label") })
-        .getByRole("button", { name: label("desktop.rail.logs") })
-        .click();
+      await openPanelTab(target, "logs");
       await target.locator(".record").first().click({ button: "right" });
       await expect(target.getByRole("menu")).toBeVisible();
     },
@@ -161,10 +265,7 @@ const SURFACES: {
     name: "an empty log",
     scenario: "empty",
     reach: async (target) => {
-      await target
-        .getByRole("navigation", { name: label("desktop.rail.label") })
-        .getByRole("button", { name: label("desktop.rail.logs") })
-        .click();
+      await openPanelTab(target, "logs");
       await expect(target.locator(".logview-list")).toContainText(
         label("desktop.logs.empty"),
       );
@@ -175,7 +276,10 @@ const SURFACES: {
     scenario: "signed-in",
     reach: async (target) => {
       await target
-        .getByRole("button", { name: label("desktop.rail.settings") })
+        .getByRole("button", {
+          name: label("desktop.rail.settings"),
+          exact: true,
+        })
         .click();
       await expect(target.locator(".settings")).toBeVisible();
     },
@@ -221,6 +325,7 @@ const SURFACES: {
     name: "the filing calendar as a list",
     scenario: "signed-in",
     reach: async (target) => {
+      await target.setViewportSize({ width: 720, height: 900 });
       await target
         .getByRole("navigation", { name: label("desktop.rail.label") })
         .getByRole("button", { name: label("desktop.calendar.title") })
@@ -273,7 +378,7 @@ const SURFACES: {
     },
   },
   {
-    name: "settings and the calendar with a locked profile",
+    name: "the account menu and the calendar with a locked profile",
     scenario: "profile-locked",
     reach: async (target) => {
       await expect(target.locator(".sign-in")).toBeVisible();
@@ -283,9 +388,9 @@ const SURFACES: {
         .getByRole("button", { name: label("desktop.calendar.title") })
         .click();
       await target
-        .getByRole("button", { name: label("desktop.rail.settings") })
+        .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
         .click();
-      await expect(target.locator(".settings")).toContainText(
+      await expect(target.locator(".account-menu")).toContainText(
         label("desktop.signin.refused.profile_locked"),
       );
     },
@@ -309,10 +414,7 @@ const SURFACES: {
     name: "the log view",
     scenario: "signed-in",
     reach: async (target) => {
-      await target
-        .getByRole("navigation", { name: label("desktop.rail.label") })
-        .getByRole("button", { name: label("desktop.rail.logs") })
-        .click();
+      await openPanelTab(target, "logs");
       await expect(target.locator(".record").first()).toBeVisible();
     },
   },
@@ -322,10 +424,7 @@ const SURFACES: {
     reach: async (target) => {
       await expect(target.locator(".sign-in")).toBeVisible();
       await target.keyboard.press("Escape");
-      await target
-        .getByRole("navigation", { name: label("desktop.rail.label") })
-        .getByRole("button", { name: label("desktop.rail.logs") })
-        .click();
+      await openPanelTab(target, "logs");
       await expect(target.locator(".source-banner")).toBeVisible();
     },
   },
@@ -383,8 +482,8 @@ const SURFACES: {
     },
   },
   {
-    name: "a profile just created, to sign in to",
-    scenario: "first-run",
+    name: "a created profile whose acknowledgement was lost, to sign in to",
+    scenario: "create-lands-unanswered",
     reach: async (target) => {
       const fields = target.locator(".create-profile input");
       await fields.nth(0).fill("Marta Ruiz Ferrer");

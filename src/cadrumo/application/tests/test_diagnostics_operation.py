@@ -6,7 +6,7 @@ claims native acceptance.
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime, timedelta
 from types import SimpleNamespace
@@ -15,6 +15,16 @@ from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, ValidationError
+
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -47,19 +57,10 @@ from ..operations.models import OperationIdentity, OperationRequest, OperationTe
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationFrontendProjection, OperationRegistry
 from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
@@ -133,7 +134,7 @@ class _Commit:
         self.refuse = False
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         if self.refuse:
             raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
         assert not self.active
@@ -214,7 +215,6 @@ def _registry() -> OperationRegistry:
 def test_real_registration_compiles_closed_nested_schemas() -> None:
     registry = _registry()
     read = registry.lookup_public_contract(DIAGNOSTICS_READ_OPERATION_DEFINITION_ID)
-    assert read.permitted_frontends == frozenset(OperationFrontendProjection)
     assert read.result_schema is not None
     assert read.request_schema.schema_version == read.result_schema.schema_version == 1
 
@@ -453,7 +453,7 @@ def _policy_decision(
 
 
 @pytest.mark.parametrize("consent", ["exact", "missing", "wrong_destination", "restricted_periods"])
-def test_mcp_report_result_uses_actual_disclosure_and_all_period_policy(consent: str) -> None:
+def test_external_client_report_result_uses_actual_disclosure_and_all_period_policy(consent: str) -> None:
     registry = _registry()
     destination = uuid4()
     contract = registry.lookup_public_contract(DIAGNOSTICS_READ_OPERATION_DEFINITION_ID)
@@ -469,7 +469,7 @@ def test_mcp_report_result_uses_actual_disclosure_and_all_period_policy(consent:
             profile_id=_PROFILE,
             destination_id=destination,
             action=AccessAction.RESULT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=contract,
             published_authority=Availability.AVAILABLE,
             authority_operation=_PIN,
@@ -482,7 +482,7 @@ def test_mcp_report_result_uses_actual_disclosure_and_all_period_policy(consent:
             profile_id=_PROFILE,
             destination_id=destination,
             action=AccessAction.OBSERVE,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=contract,
             published_authority=Availability.AVAILABLE,
             authority_operation=_PIN,

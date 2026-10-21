@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.auth_provider import AuthProviderKind
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -15,20 +17,15 @@ from ..operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
     bind_operation_access_profile,
-    require_declared_frontend_and_action,
+    require_declared_action,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.registry import OperationFrontendProjection
 from ..operator_actions.models import PreconditionVerdict
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .operation_definitions import AUTH_CONFIGURE_OPERATION_DEFINITION_ID, AuthConfigureOperationRequest
 from .operator_result_projections import incomplete_auth_configuration_verdict
 from .operator_results import AuthConfigureResult
 
-_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
 AUTH_CONFIGURE_RESULT_SCHEMA_ID = AUTH_CONFIGURE_OPERATION_DEFINITION_ID + ".result"
 
 
@@ -85,7 +82,7 @@ def resolve_auth_configure_access(
     if request.subject_ref != profile_operation_subject(str(context.profile_id)):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     access_profile = HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS
-    require_declared_frontend_and_action(context, frontends=_FRONTENDS, actions=access_profile.actions)
+    require_declared_action(context, actions=access_profile.actions)
     return bind_operation_access_profile(
         context, access_profile, profile_id=context.profile_id, definition_id=request.definition_id, periods=frozenset()
     )

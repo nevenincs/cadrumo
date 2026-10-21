@@ -42,7 +42,7 @@ def _operator_account_candidates() -> list[str]:
     # variable, not AEAT-prefixed config, so it is read from the environment
     # rather than from Settings.
     userdomain = os.environ.get(_USERDOMAIN_ENV_VAR)
-    return [f"{userdomain}\\{username}", username] if userdomain else [username]
+    return [f"{userdomain}\\{username}", username] if (userdomain is not None and userdomain) else [username]
 
 
 def _dacl_of(descriptor: PySECURITY_DESCRIPTOR) -> PyACL | None:

@@ -18,7 +18,7 @@ target_casillas = [
 #   https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
 #     DR_100_199/DR_Modelo_184_2025.pdf
 #   saved at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/
-#     01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf
+#     01-184-ejercicio-2025-y-siguientes-modificados-p.pdf
 # Registro de tipo 1, positions 5-8: "EJERCICIO"
 #   "Las cuatro cifras del ejercicio fiscal al que corresponde la declaración"
 # The printed field name is the bare word "EJERCICIO"; informativa justificantes render

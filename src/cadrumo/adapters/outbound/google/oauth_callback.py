@@ -10,9 +10,9 @@ import webbrowser
 from collections.abc import Callable
 from urllib.parse import parse_qs, urlsplit
 
-from ....application.runtime.contracts import RuntimeRefusalError
-from ...local_runtime.windows_desktop_logon import current_windows_desktop_logon
-from .errors import GoogleAuthLoopbackBindError, GoogleAuthValidationError
+from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.contracts.google_auth import GoogleAuthLoopbackBindError, GoogleAuthValidationError
+from cadrumo_client.transport.windows_desktop_logon import current_windows_desktop_logon
 
 LOOPBACK_HOST = "127.0.0.1"
 _MAX_REQUEST_BYTES = 16_384
@@ -122,7 +122,7 @@ def _require_browser_desktop() -> None:
         return
     try:
         current_windows_desktop_logon()
-    except RuntimeRefusalError:
+    except RefusalError:
         raise webbrowser.Error("OS browser launcher requires the user's interactive desktop") from None
 
 

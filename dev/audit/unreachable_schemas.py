@@ -34,7 +34,7 @@ def schema_member_uses(
         for statement in ast.walk(module.tree):
             if isinstance(statement, ast.ImportFrom):
                 base = resolve_relative_import(name, module.is_package, statement.level, statement.module)
-                if base:
+                if base is not None and base:
                     for alias in statement.names:
                         candidates.setdefault(alias.asname or alias.name, set()).add(f"{base}.{alias.name}")
         # Ambiguous local bindings cannot prove a qualified consumer.

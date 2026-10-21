@@ -34,7 +34,7 @@ def _read_prior_file(path: Path) -> dict[str, dict[str, str]]:
     state = _PriorFileState()
     for raw in path.read_text(encoding="utf-8").split("\n"):
         _read_prior_line(path, raw.strip(), state)
-    if state.number:
+    if state.number is not None and state.number:
         state.attributes[state.number] = state.current
     return state.attributes
 
@@ -69,7 +69,7 @@ def _begin_prior_row(path: Path, state: _PriorFileState) -> None:
         # An array that never closed leaves the field unset and the row takes the
         # wave default without a word. Refuse it with the affected prior row.
         raise GenerationRefusedError(f"{path.name}: {open_array} array for casilla {state.number!r} is never closed")
-    if state.number:
+    if state.number is not None and state.number:
         state.attributes[state.number] = state.current
     state.current, state.number = {"_caption": state.pending}, None
     state.collecting_legal_refs = None

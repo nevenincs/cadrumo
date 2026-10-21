@@ -51,7 +51,7 @@ def _sale(
             taxable_base=Decimal("50"),
             iva_rate=Decimal(0),
             iva_amount=Decimal(0),
-            exemption_article=require_iva_exemption_article(article) if article else None,
+            exemption_article=require_iva_exemption_article(article) if (article is not None and article) else None,
         )
     if excluded:
         data["art_104_tres_exclusion"] = Art104TresExclusion("non_habitual_real_estate_or_financial")

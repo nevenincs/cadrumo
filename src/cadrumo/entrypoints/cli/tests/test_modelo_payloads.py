@@ -23,13 +23,6 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from .._modelo_payloads import (
-    CalculationRevisionPayload,
-    CasillaObservationPayload,
-    DeltaRowPayload,
-    FindingPayload,
-    WorkCalculateResult,
-)
 from .._modelo_revision_payload_parts import (
     CalculationRevisionProjectionFields,
     DetailRowPayload,
@@ -38,6 +31,13 @@ from .._modelo_revision_payload_parts import (
 )
 from .._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
 from .._modelo_work_wizard_payloads import WorkWizardResult
+from ..modelo_results import (
+    CalculationRevisionPayload,
+    CasillaObservationPayload,
+    DeltaRowPayload,
+    FindingPayload,
+    WorkCalculateResult,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

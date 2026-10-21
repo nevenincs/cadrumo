@@ -23,7 +23,9 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.export.calculation_review_xlsx_operation import (
     CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
     CalculationReviewXlsxRequest,
@@ -63,7 +65,6 @@ from ....application.modelo.work_verification_contracts import ModeloWorkVerifyR
 from ....application.modelo.workbench_operations import ModeloEditApplyPrerequisiteV1
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.models import OperationRequest
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import output_language
@@ -314,9 +315,9 @@ class ModeloWorkspaceLifecycleDoor:
                     or result.work_unit_id != self.work_unit_id
                     or result.profile_id != self.profile_id
                 ):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
                 return result
-            except (RuntimeRefusalError, RuntimeFrontendRefusedError):
+            except (RefusalError, FrontendRefusedError):
                 return None
         if (
             self.read_export_result is None
@@ -327,7 +328,7 @@ class ModeloWorkspaceLifecycleDoor:
             return None
         try:
             return await self.read_export_result(projection)
-        except (RuntimeRefusalError, RuntimeFrontendRefusedError):
+        except (RefusalError, FrontendRefusedError):
             return None
 
     def _require_renewal(self) -> Callable[[ModeloEditBaselineV1], ModeloEditRenewalResultV1]:
@@ -349,11 +350,11 @@ class ModeloWorkspaceLifecycleDoor:
         controller = await self.submit_operation(request)
         try:
             await controller.start()
-        except (RuntimeRefusalError, RuntimeFrontendRefusedError) as refusal:
+        except (RefusalError, FrontendRefusedError) as refusal:
             # Admission may have succeeded before its acknowledgement was lost.
             # Keep the submitted identity without inferring rollback or retry.
             raise ModeloLifecycleActionUnavailableError(
-                refusal.reason.value if isinstance(refusal, RuntimeRefusalError) else refusal.reason,
+                refusal.reason.value if isinstance(refusal, RefusalError) else refusal.reason,
                 context={
                     "operation_id": controller.operation_id,
                     "effect": OperationEffect.UNKNOWN.value,

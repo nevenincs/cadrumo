@@ -37,6 +37,16 @@ async def test_embedded_widgets_emit_palette_colors_and_preserve_editing(monkeyp
         assert app.screen.query_one(Input).value == "unsaved edit!"
 
 
+async def test_embedded_no_color_uses_terminal_defaults_instead_of_black_rgb(monkeypatch: pytest.MonkeyPatch) -> None:
+    """NO_COLOR remains legible when the desktop installs its ANSI theme."""
+    monkeypatch.setenv("TERM_PROGRAM", "cadrumo")
+    monkeypatch.setenv("NO_COLOR", "1")
+    output = await render_sample()
+    assert "Existing content" in output
+    assert not re.search(r"\x1b\[[\d;]*(?:38|48);[25];", output)
+    assert re.search(r"\x1b\[(?:\d+;)*39;49m", output)
+
+
 async def test_standalone_tui_retains_its_own_theme_toggle(monkeypatch: pytest.MonkeyPatch) -> None:
     """Ordinary terminals are not bound to the desktop's private palette."""
     monkeypatch.setenv("TERM_PROGRAM", "WindowsTerminal")

@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.config import override_settings
 from ...core.external_constants import OutputLanguage
 from ...core.identity.hex_ids import WorkUnitId
@@ -26,10 +28,8 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_work_unit_payload
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
@@ -124,11 +124,11 @@ def build_modelo_work_wizard_context_definition(factory: ActiveWorkLifecyclePort
     return build_single_phase_definition(
         definition_id=MODELO_WORK_WIZARD_CONTEXT_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkWizardContextRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field("work_unit_id"),
         result_type=ModeloWorkWizardContextProjection,
         executor_type=ModeloWorkWizardContextExecutor,
         build=lambda: ModeloWorkWizardContextExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

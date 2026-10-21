@@ -39,9 +39,9 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.schema import IvaCategory
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import category_components
 from ....domain.iva.invoice_classification import invoice_line_to_iva_observation
+from ....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

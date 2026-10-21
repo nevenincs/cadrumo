@@ -35,6 +35,12 @@ fn native_failure() -> io::Error {
 }
 
 struct Library(*mut c_void);
+// SAFETY: dlopen returns a process-wide loader reference, not thread-local state.
+// Library owns one reference and may move with its function pointers to another
+// thread; Drop releases it exactly once after its owner stops using those pointers.
+// This does not grant shared access (Sync); Process also retains its Cell !Sync.
+unsafe impl Send for Library {}
+
 impl Drop for Library {
     fn drop(&mut self) {
         // SAFETY: the uniquely owned handle came from dlopen.
@@ -175,6 +181,16 @@ pub struct Process {
     exited: Cell<bool>,
 }
 
+impl std::fmt::Debug for Process {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("Process")
+            .field("identity", &self.identity)
+            .field("exited", &self.exited.get())
+            .finish_non_exhaustive()
+    }
+}
+
 impl Process {
     pub fn open(pid: u32) -> io::Result<Self> {
         // SAFETY: geteuid has no arguments and cannot fail.
@@ -310,5 +326,135 @@ impl Process {
         } else {
             result
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{
+        os::unix::process::ExitStatusExt,
+        process::{Child, Command, Stdio},
+    };
+
+    struct InputChild(Child);
+    impl Drop for InputChild {
+        fn drop(&mut self) {
+            drop(self.0.stdin.take());
+            self.0.wait().unwrap();
+        }
+    }
+
+    #[test]
+    fn native_signal_capability_targets_only_its_owned_test_child() {
+        for signal in [libc::SIGTERM, libc::SIGKILL] {
+            let mut child = InputChild(
+                Command::new("/bin/cat")
+                    .stdin(Stdio::piped())
+                    .stdout(Stdio::null())
+                    .spawn()
+                    .unwrap(),
+            );
+            let held = Process::open(child.0.id()).unwrap();
+            assert_eq!(held.signal(signal).unwrap(), SignalDelivery::Delivered);
+            assert_eq!(child.0.wait().unwrap().signal(), Some(signal));
+            assert!(held.exited().unwrap());
+            assert_eq!(held.signal(signal).unwrap(), SignalDelivery::Gone);
+        }
+    }
+
+    #[test]
+    fn process_custody_can_move_to_the_supervisor_thread() {
+        let held = Process::open(std::process::id()).unwrap();
+        std::thread::spawn(move || {
+            assert_eq!(held.identity().unwrap().incarnation.pid, std::process::id());
+            assert!(!held.exited().unwrap());
+        })
+        .join()
+        .unwrap();
+    }
+}
+
+/// A wait on one process's exit that blocks in kqueue instead of polling.
+#[derive(Debug)]
+pub struct ExitWatch(OwnedFd);
+
+impl ExitWatch {
+    /// Register NOTE_EXIT for `pid`; `NotFound` when it has already ended.
+    pub fn open(pid: u32) -> io::Result<Self> {
+        // SAFETY: kqueue creates a distinct descriptor without pointer arguments.
+        let raw = unsafe { libc::kqueue() };
+        if raw < 0 {
+            return Err(io::Error::last_os_error());
+        }
+        // SAFETY: kqueue transferred this descriptor; every later failure closes it.
+        let queue = unsafe { OwnedFd::from_raw_fd(raw) };
+        // SAFETY: the held descriptor is live and must not survive exec.
+        if unsafe { libc::fcntl(queue.as_raw_fd(), libc::F_SETFD, libc::FD_CLOEXEC) } < 0 {
+            return Err(io::Error::last_os_error());
+        }
+        let change = libc::kevent {
+            ident: pid as libc::uintptr_t,
+            filter: libc::EVFILT_PROC,
+            flags: libc::EV_ADD | libc::EV_ENABLE | libc::EV_ONESHOT,
+            fflags: libc::NOTE_EXIT,
+            data: 0,
+            udata: ptr::null_mut(),
+        };
+        // SAFETY: one initialized change record, no output records.
+        let count = unsafe {
+            libc::kevent(
+                queue.as_raw_fd(),
+                &change,
+                1,
+                ptr::null_mut(),
+                0,
+                ptr::null(),
+            )
+        };
+        if count < 0 {
+            let error = io::Error::last_os_error();
+            return Err(if error.raw_os_error() == Some(libc::ESRCH) {
+                io::ErrorKind::NotFound.into()
+            } else {
+                error
+            });
+        }
+        Ok(Self(queue))
+    }
+
+    /// Block until the process has ended.
+    pub fn wait(&self) -> io::Result<()> {
+        loop {
+            // SAFETY: kevent is a plain output record; zeroed fields are valid input storage.
+            let mut event: libc::kevent = unsafe { std::mem::zeroed() };
+            // SAFETY: one output record and no timeout, so the call blocks until an event.
+            let count = unsafe {
+                libc::kevent(
+                    self.0.as_raw_fd(),
+                    ptr::null(),
+                    0,
+                    &mut event,
+                    1,
+                    ptr::null(),
+                )
+            };
+            if count < 0 {
+                let error = io::Error::last_os_error();
+                if error.kind() == io::ErrorKind::Interrupted {
+                    continue;
+                }
+                return Err(error);
+            }
+            if count == 1
+                && event.filter == libc::EVFILT_PROC
+                && event.fflags & libc::NOTE_EXIT != 0
+            {
+                return Ok(());
+            }
+            if event.flags & libc::EV_ERROR != 0 {
+                return Err(io::ErrorKind::InvalidData.into());
+            }
+        }
     }
 }

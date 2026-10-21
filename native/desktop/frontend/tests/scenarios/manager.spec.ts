@@ -89,7 +89,7 @@ test("availability reads recover the sign-in form after one manager dispatch", a
 
 for (const [scenario, code] of [
   ["manager-failed", "spawn_failed"],
-  ["manager-unmanaged", "manager_unmanaged"],
+  ["manager-unmanaged", "manager_unavailable"],
   ["manager-unsupported", "manager_unsupported"],
 ] as const) {
   test(`manager refusal ${code} remains visible and permits a later request`, async ({
@@ -98,7 +98,10 @@ for (const [scenario, code] of [
     await open(page, scenario);
     await start(page).click();
     await page.clock.runFor(10);
-    await expect(page.locator(".sign-in")).toContainText(code);
+    await expect(page.locator(".sign-in")).toContainText(
+      label("desktop.signin.refused.manager"),
+    );
+    await expect(page.locator(".sign-in")).not.toContainText(code);
     await expect(start(page)).toBeVisible();
     await expect(start(page)).not.toHaveAttribute("aria-busy", "true");
     expect(await calls(page, "startManager")).toBe(1);
@@ -175,7 +178,10 @@ test("repeated retry clicks share the pending manager dispatch", async ({
   await open(page, "manager-retry-delayed");
   await start(page).click();
   await page.clock.runFor(4_500);
-  await expect(page.locator(".sign-in")).toContainText("spawn_failed");
+  await expect(page.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.manager"),
+  );
+  await expect(page.locator(".sign-in")).not.toContainText("spawn_failed");
   expect(await calls(page, "startManager")).toBe(1);
 
   await start(page).click();
@@ -207,7 +213,10 @@ test("a rejected readiness read preserves the previously unavailable runtime", a
   await expect(page.locator(".sign-in").getByRole("heading")).toHaveText(
     label("desktop.account.services_down"),
   );
-  await expect(page.locator(".sign-in")).toContainText("timed_out");
+  await expect(page.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.other"),
+  );
+  await expect(page.locator(".sign-in")).not.toContainText("timed_out");
   await expect(start(page)).toBeVisible();
   await expect(page.locator('[data-slot="account-loading"]')).toHaveCount(0);
 });
@@ -219,7 +228,138 @@ test("an initial unreadable status keeps the existing unknown-state form", async
   await expect(
     page.getByLabel(label("desktop.signin.password"), { exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".sign-in")).toContainText("timed_out");
+  await expect(page.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.other"),
+  );
+  await expect(page.locator(".sign-in")).not.toContainText("timed_out");
   expect(await calls(page, "startManager")).toBe(0);
   expect(await calls(page, "signIn")).toBe(0);
+});
+
+const password = (page: Page) =>
+  page.getByLabel(label("desktop.signin.password"), { exact: true });
+
+async function observedClock(page: Page) {
+  const time = new Date("2026-10-11T00:00:00Z");
+  await page.clock.install({ time });
+  await page.clock.pauseAt(time);
+}
+
+test("identical observations preserve pending and completed profile reads", async ({
+  page,
+}) => {
+  await observedClock(page);
+  await page.goto(
+    "/scenarios.html?scenario=account-duplicate-observation&latency=1000",
+  );
+  await expect.poll(() => calls(page, "profiles")).toBe(1);
+  await page.clock.runFor(200);
+  expect(await calls(page, "profiles")).toBe(1);
+  await page.clock.runFor(2000);
+  expect(await calls(page, "profiles")).toBe(1);
+  expect(await calls(page, "signInStatus")).toBe(1);
+  await expect(page.locator("form.create-profile")).toBeVisible();
+  // A refusal change is significant even when presence/profile are equal.
+  await page.clock.runFor(400);
+  expect(await calls(page, "profiles")).toBe(2);
+});
+
+test("supervisor loss gates signed-in views without focus and ready waits for fresh authentication", async ({
+  page,
+}) => {
+  await observedClock(page);
+  await page.goto(
+    "/scenarios.html?scenario=manager-observed-recovery&latency=0",
+  );
+  await expect(page.locator('[data-slot="account-loading"]')).toHaveCount(0);
+  await page.clock.runFor(1);
+  const privateBadge = page
+    .getByRole("button", {
+      name: new RegExp(`^${label("desktop.rail.messages")}(?:,|$)`),
+    })
+    .locator('[data-slot="badge"]');
+  await expect(privateBadge).toBeVisible();
+  await page.clock.runFor(1_100);
+  await expect(privateBadge).toHaveCount(0);
+  const profileLoading = page.locator(
+    '.pane-docs [data-slot="account-loading"]',
+  );
+  await expect(profileLoading).toContainText(
+    label("desktop.signin.recovering_services"),
+  );
+  await expect(password(page)).toHaveCount(0);
+  await page.clock.runFor(1_000);
+  await expect(profileLoading).toBeVisible();
+  await page.clock.runFor(1_000);
+  await expect(password(page)).toHaveCount(0);
+  expect(await calls(page, "managerAuthResolved")).toBe(0);
+  await page.clock.runFor(2_000);
+  await expect(password(page)).toBeVisible();
+  expect(await calls(page, "signIn")).toBe(0);
+});
+
+test("supervisor observation failure gates private access without exposing internal codes", async ({
+  page,
+}) => {
+  await observedClock(page);
+  await page.goto(
+    "/scenarios.html?scenario=manager-observation-failed&latency=0",
+  );
+  await page.clock.runFor(1_100);
+  await expect(password(page)).toHaveCount(0);
+  await expect(page.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.manager"),
+  );
+  await expect(page.locator(".sign-in")).not.toContainText("read_failed");
+  await expect(page.locator("body")).not.toContainText(
+    "private supervisor path",
+  );
+  expect(await calls(page, "signIn")).toBe(0);
+});
+
+test("a new auth observation re-arms a failed recovery read without trusting its queued snapshot", async ({
+  page,
+}) => {
+  await observedClock(page);
+  await page.goto("/scenarios.html?scenario=manager-auth-read-retry&latency=0");
+  await page.clock.runFor(2_100);
+  await expect(password(page)).toHaveCount(0);
+  const reads = await calls(page, "signInStatus");
+  await page.clock.runFor(1_000);
+  await expect(password(page)).toBeVisible();
+  expect(await calls(page, "signInStatus")).toBeGreaterThan(reads);
+  await expect(page.locator("body")).not.toContainText("Old queued profile");
+});
+
+test("a delayed accepted submission cannot revive authentication after supervisor loss", async ({
+  page,
+}) => {
+  await observedClock(page);
+  await page.goto("/scenarios.html?scenario=manager-late-submission&latency=0");
+  await password(page).fill("synthetic presentation password");
+  await page
+    .locator(".sign-in")
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await page.clock.runFor(5_000);
+  expect(await calls(page, "signIn")).toBe(1);
+  await expect(password(page)).toHaveCount(0);
+  await expect(
+    page.locator('.pane-docs [data-slot="account-loading"]'),
+  ).toBeVisible();
+});
+
+test("replacing a host unsubscribes and rejects its late supervisor signal", async ({
+  page,
+}) => {
+  await observedClock(page);
+  await page.goto("/scenarios.html?scenario=manager-late-host&latency=0");
+  await page.locator(".scenario-bar").click();
+  await page
+    .getByRole("button", { name: "Runtime unavailable", exact: true })
+    .click();
+  await page.clock.runFor(4_000);
+  expect(await calls(page, "managerUnsubscribe")).toBe(1);
+  await expect(page.locator("body")).not.toContainText("spawn_failed");
+  await expect(password(page)).toHaveCount(0);
 });

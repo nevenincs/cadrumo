@@ -415,6 +415,18 @@ async def _ensure_authenticated_aeat_session_locked(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         operator_scope_ports=operator_scope_ports,
     )
+    if provider_kind is AuthProviderKind.CLAVE_PERMANENTE:
+        from .credentials import active_auth_projection_span
+
+        with active_auth_projection_span(
+            settings=settings,
+            requested_provider=provider_kind.value,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_scope_ports=operator_scope_ports,
+        ) as snapshot:
+            settings = settings.model_copy(
+                update={"cadrumo_clave_permanente_password": snapshot.clave_permanente_password}
+            )
     settings, expected_identity = _prepare_clave_auth(
         settings,
         provider_kind,
@@ -592,8 +604,8 @@ def _resolve_provider_kind(
     """Resolve the provider this session should authenticate through.
 
     Delegates to :func:`resolve_active_provider_kind` so the live-read
-    bring-up reads the SAME selection ``aeat config auth configure``
-    persisted that ``aeat config auth login`` reads. Reading only
+    bring-up reads the SAME selection ``cadrumo-runtime config auth configure``
+    persisted that the authentication login command reads. Reading only
     :class:`Settings` here made the live path default to the certificate
     provider while the operator had configured another one, so the refusal
     named a certificate the operator had never chosen to use.
@@ -1110,12 +1122,12 @@ def _active_profile_auth_facts(
         # model selector still owns that identity; fold it onto the
         # canonical path so the shared reader sees one shape.
         selector_values = record_to_values(record, schema=repository.session.profile_decode_context.schema)
-        path_values[_PROFILE_TAX_ID_PATH] = str(selector_values.get("tax.id") or "")
+        path_values[_PROFILE_TAX_ID_PATH] = selector_values.get("tax.id") or ""
     return clave_auth_facts_from_profile_values(path_values, profile_setup_state=record.setup_state)
 
 
 def _assert_session_identity_matches_expected(session_identity: str, expected_identity: str | None) -> None:
-    if not expected_identity:
+    if not (expected_identity is not None and expected_identity):
         return
     session_identity = _normalise_tax_identity(session_identity)
     # A blank session identity means there is nothing to check, and that stays

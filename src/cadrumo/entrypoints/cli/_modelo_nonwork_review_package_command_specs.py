@@ -2,7 +2,19 @@ from __future__ import annotations
 
 from typing import Final
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._modelo_nonwork_command_spec_policies import (
@@ -15,18 +27,6 @@ from ._modelo_nonwork_common_command_parameters import (
     CALCULATION_REVISION_SELECTOR_OPTIONS,
     FILING_ELECTION_OPTIONS,
 )
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-    ValueContract,
-)
-from .command_spec import CommandSpec, InvocationSpec
 
 _REVIEW_PACKAGE_INPUT: Final[ArgumentSpec] = ArgumentSpec(
     name="package",
@@ -128,11 +128,11 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_CALCULATION_WRITE,
         handler=LazyBinding.available(
-            DeferredTarget("._modelo_review_package_cli", "review_package_build", __package__)
+            DeferredTarget(".modelo_review_package_commands", "review_package_build", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_review_package_payloads", "ModeloReviewPackageBuildResult", __package__),
+            DeferredTarget(".modelo_review_package_results", "ModeloReviewPackageBuildResult", __package__),
             identity="modelo.review_package.build",
         ),
     ),
@@ -147,11 +147,11 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(_REVIEW_PACKAGE_INPUT,),
         policy=_CRYPTO_READ,
         handler=LazyBinding.available(
-            DeferredTarget("._modelo_review_package_cli", "review_package_verify", __package__)
+            DeferredTarget(".modelo_review_package_commands", "review_package_verify", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_review_package_payloads", "ModeloReviewPackageVerifyResult", __package__),
+            DeferredTarget(".modelo_review_package_results", "ModeloReviewPackageVerifyResult", __package__),
             identity="modelo.review_package.verify",
         ),
     ),
@@ -183,11 +183,11 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_CRYPTO_PROFILE_WRITE,
         handler=LazyBinding.available(
-            DeferredTarget("._modelo_review_package_cli", "review_package_sign", __package__)
+            DeferredTarget(".modelo_review_package_commands", "review_package_sign", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_review_package_payloads", "ModeloReviewPackageSignResult", __package__),
+            DeferredTarget(".modelo_review_package_results", "ModeloReviewPackageSignResult", __package__),
             identity="modelo.review_package.sign",
         ),
     ),
@@ -216,11 +216,11 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_CRYPTO_READ,
         handler=LazyBinding.available(
-            DeferredTarget("._modelo_review_package_cli", "review_package_verify_signature", __package__)
+            DeferredTarget(".modelo_review_package_commands", "review_package_verify_signature", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_review_package_payloads", "ModeloReviewPackageVerifySignatureResult", __package__),
+            DeferredTarget(".modelo_review_package_results", "ModeloReviewPackageVerifySignatureResult", __package__),
             identity="modelo.review_package.verify_signature",
         ),
     ),
@@ -264,11 +264,11 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_CRYPTO_PROFILE_WRITE,
         handler=LazyBinding.available(
-            DeferredTarget("._modelo_review_package_cli", "review_package_counter_sign", __package__)
+            DeferredTarget(".modelo_review_package_commands", "review_package_counter_sign", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_review_package_payloads", "ModeloReviewPackageCounterSignResult", __package__),
+            DeferredTarget(".modelo_review_package_results", "ModeloReviewPackageCounterSignResult", __package__),
             identity="modelo.review_package.counter_sign",
         ),
     ),
@@ -316,11 +316,11 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_CRYPTO_READ,
         handler=LazyBinding.available(
-            DeferredTarget("._modelo_review_package_cli", "review_package_verify_receipt", __package__)
+            DeferredTarget(".modelo_review_package_commands", "review_package_verify_receipt", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_review_package_payloads", "ModeloReviewPackageVerifyReceiptResult", __package__),
+            DeferredTarget(".modelo_review_package_results", "ModeloReviewPackageVerifyReceiptResult", __package__),
             identity="modelo.review_package.verify_receipt",
         ),
     ),
@@ -385,12 +385,12 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_CRYPTO_PROFILE_WRITE,
         handler=LazyBinding.available(
-            DeferredTarget("._modelo_review_package_cli", "review_package_encrypt_for_recipient", __package__)
+            DeferredTarget(".modelo_review_package_commands", "review_package_encrypt_for_recipient", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             DeferredTarget(
-                "._modelo_review_package_payloads",
+                ".modelo_review_package_results",
                 "ModeloReviewPackageEncryptForRecipientResult",
                 __package__,
             ),
@@ -433,11 +433,11 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_CRYPTO_PROFILE_WRITE,
         handler=LazyBinding.available(
-            DeferredTarget("._modelo_review_package_cli", "review_package_decrypt", __package__)
+            DeferredTarget(".modelo_review_package_commands", "review_package_decrypt", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_review_package_payloads", "ModeloReviewPackageDecryptResult", __package__),
+            DeferredTarget(".modelo_review_package_results", "ModeloReviewPackageDecryptResult", __package__),
             identity="modelo.review_package.decrypt",
         ),
     ),
@@ -537,11 +537,11 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_CRYPTO_FACT_FILE_WRITE,
         handler=LazyBinding.available(
-            DeferredTarget("._modelo_review_package_cli", "review_package_encrypt_feedback", __package__)
+            DeferredTarget(".modelo_review_package_commands", "review_package_encrypt_feedback", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_review_package_payloads", "ModeloReviewPackageEncryptFeedbackResult", __package__),
+            DeferredTarget(".modelo_review_package_results", "ModeloReviewPackageEncryptFeedbackResult", __package__),
             identity="modelo.review_package.encrypt_feedback",
         ),
     ),
@@ -598,11 +598,11 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_CRYPTO_PROFILE_WRITE,
         handler=LazyBinding.available(
-            DeferredTarget("._modelo_review_package_cli", "review_package_import_feedback", __package__)
+            DeferredTarget(".modelo_review_package_commands", "review_package_import_feedback", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_review_package_payloads", "ModeloReviewPackageImportFeedbackResult", __package__),
+            DeferredTarget(".modelo_review_package_results", "ModeloReviewPackageImportFeedbackResult", __package__),
             identity="modelo.review_package.import_feedback",
         ),
     ),

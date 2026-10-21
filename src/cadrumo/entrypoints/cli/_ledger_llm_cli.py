@@ -7,6 +7,16 @@ from typing import TYPE_CHECKING, Literal, TypedDict
 import typer
 from pydantic import ValidationError
 
+from cadrumo_client.commands.profile_binding import bound_profile_client
+from cadrumo_client.commands.registered_operation import run_registered_operation
+from cadrumo_client.commands.registered_operation_contracts import (
+    RegisteredOperationCompletion,
+    RegisteredOperationReviewCompletion,
+    RegisteredOperationReviewHandler,
+)
+from cadrumo_client.commands.registered_operation_errors import invalid_completion_error, submitted_operation_error
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ...application.ledger.actions_common import display_decimal
 from ...application.ledger.classify_result_contracts import (
     LedgerClassifyOperationResult,
@@ -24,27 +34,16 @@ from ...application.ledger.operator_iva_contracts import (
     LedgerOperatorIvaResult,
 )
 from ...application.operations.schema_identity import OperationSchemaIdentityV1
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.provenance_stamp import provenance_stamp_transport
 from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BusinessClassification
-from ._ledger_support import (
-    ledger_validation_bad,
-    parse_decimal_option,
-)
+from ._decimal_parsing import parse_optional_fraction
+from ._ledger_support import ledger_validation_bad
 from .common import bad, emit_envelope
-from .registered_operation_contracts import (
-    RegisteredOperationCompletion,
-    RegisteredOperationReviewCompletion,
-    RegisteredOperationReviewHandler,
-)
-from .registered_operation_errors import invalid_completion_error, submitted_operation_error
-from .runtime_ledger_classify import run_ledger_operator_iva
-from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation
+from .operation_ledger_classify import run_ledger_operator_iva
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -76,7 +75,7 @@ def _run_review(
 ) -> LedgerLlmReviewProjection | LedgerLlmOperationResult:
     """Use the canonical reviewed-operation driver and correlate the settled proposal."""
     client = bound_profile_client(ctx)
-    percentage = parse_decimal_option(business_pct, label="business-pct") if apply else None
+    percentage = parse_optional_fraction(business_pct, label="business-pct") if apply else None
     try:
         request = LedgerLlmReviewRequest(
             profile_id=client.profile_id,
@@ -99,7 +98,7 @@ def _run_review(
 
     def decide(projection: LedgerLlmReviewProjection) -> Literal["apply", "reject"] | None:
         if request.preview or not matches(projection):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         reviewed_projections.append(projection)
         return "reject" if reject else "apply" if apply else None
 
@@ -128,7 +127,7 @@ def _run_review(
     if isinstance(completed, RegisteredOperationReviewCompletion):
         raise submitted_operation_error(
             completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
+            RefusalCode.INVALID_FRAME.value,
             terminal_condition=None,
             effect=completed.effect,
         )
@@ -142,7 +141,7 @@ def emit_llm_rejection(ctx: typer.Context, result: LedgerLlmOperationResult) -> 
     from ._ledger_llm_payloads import LedgerClassifyLlmRejectResult
 
     if result.outcome != "rejected" or result.suggestion_kind is None or result.bucket_event_id is None:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     payload = LedgerClassifyLlmRejectResult.model_validate(
         {
             "llm": True,
@@ -174,11 +173,11 @@ def _emit_llm_single_classify(
     ctx: typer.Context, result: LedgerClassifyOperationResult, *, extra_lines: tuple[str, ...] = ()
 ) -> None:
     """Render the worker's admitted single-transaction classify quintet."""
-    from ._ledger_payloads import LedgerClassifySingleResult, TransactionPayload
+    from .ledger_results import LedgerClassifySingleResult, TransactionPayload
 
     transaction, review_status = result.transaction, result.review_status
     if transaction is None or review_status is None or result.outcome != "classified":
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     payload = LedgerClassifySingleResult.model_validate(
         {
             "bucket_id": str(result.profile_id),
@@ -202,12 +201,12 @@ def _emit_llm_single_classify(
 def _render_autosplit_preview(ctx: typer.Context, review: LedgerLlmReviewProjection) -> None:
     """Render the same split or lone-child preview from admitted wire facts."""
     from ._ledger_llm_payloads import LedgerClassifyLlmSuggestResult
-    from ._ledger_payloads import LedgerSplitResult
+    from .ledger_results import LedgerSplitResult
 
     suggestion = review.suggestion
     child = next(iter(suggestion.children), None)
     if child is None:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     if len(suggestion.children) > 1:
         children = _autosplit_child_payloads(suggestion)
         payload = LedgerSplitResult.model_validate(
@@ -259,7 +258,7 @@ def _render_settled(ctx: typer.Context, result: LedgerLlmOperationResult, *, sat
     if result.outcome == "rejected":
         emit_llm_rejection(ctx, result)
     elif result.outcome == "split":
-        from ._ledger_payloads import LedgerSplitResult
+        from .ledger_results import LedgerSplitResult
 
         payload = LedgerSplitResult.model_validate(
             {
@@ -281,7 +280,7 @@ def _render_settled(ctx: typer.Context, result: LedgerLlmOperationResult, *, sat
     else:
         classified = result.classification
         if classified is None or classified.transaction is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         extra = (
             (f"{tr('cli.ledger.labels.iva_category')}\t{classified.transaction.iva_category or ''}",)
             if saturated
@@ -336,7 +335,7 @@ def split_recommendation_notice(transaction_id: str) -> Notice:
 
 def _autosplit_child_payloads(suggestion: LedgerLlmSuggestionProjection) -> list[object]:
     """Project a split suggestion's children to the shared proposal payload."""
-    from ._ledger_payloads import LedgerSplitChildProposalPayload
+    from .ledger_results import LedgerSplitChildProposalPayload
 
     return [
         LedgerSplitChildProposalPayload.model_validate(
@@ -426,7 +425,7 @@ def _render_classify_llm_preview(
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
         f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification}",
-        f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category if suggestion.category else ''}",
+        f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category or ''}",
         f"{tr('cli.ledger.classify.llm_confidence_label')}\t{suggestion.confidence}",
         f"{tr('cli.ledger.classify.llm_reason_label')}\t{suggestion.reason}",
         tr("cli.ledger.classify.llm_review_hint"),
@@ -474,7 +473,7 @@ def _render_saturate_llm_preview(
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
         f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification}",
-        f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category if suggestion.category else ''}",
+        f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category or ''}",
         f"{tr('cli.ledger.labels.iva_category')}\t{iva_category_value or ''}",
     ]
     if suggestion.rate_derivable:
@@ -697,11 +696,11 @@ def _emit_operator_iva_result(
     derivation: LedgerOperatorIvaResult,
 ) -> None:
     """Emit the canonical single-result envelope for operator IVA derivation."""
-    from ._ledger_payloads import LedgerClassifySingleResult
+    from .ledger_results import LedgerClassifySingleResult
 
     result = derivation.classification
     if result is None or result.transaction is None or result.review_status is None:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     transaction_payload = result.transaction
     review_status = result.review_status
     classify_result = LedgerClassifySingleResult.model_validate(

@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
@@ -29,7 +31,6 @@ from ..operations.models import (
 from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filed_history_operation import FiledHistoryBrowserResourcesFactory, FiledHistoryProviderPreflight
 from .justificante import JustificanteCaptureSnapshotService, capture_justificante_snapshot_outcome
@@ -115,7 +116,7 @@ def _project_capture(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
     require_succeeded_terminal_receipt(
         receipt,
         definition_id=JUSTIFICANTE_CAPTURE_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(projection.bucket_id)),
+        subject_ref=profile_operation_subject(projection.bucket_id),
         effect=OperationEffect.UPDATED if report.local_write_performed else OperationEffect.NONE,
         message=_RECEIPT_CONTRADICTION,
     )
@@ -173,7 +174,7 @@ class JustificanteCaptureExecutor:
             )
         snapshot = outcome.snapshot
         if (
-            str(snapshot.bucket_id) != bucket_id
+            snapshot.bucket_id != bucket_id
             or snapshot.modelo != payload.modelo
             or snapshot.filing_year != payload.year
             or snapshot.period != period

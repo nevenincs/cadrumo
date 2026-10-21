@@ -35,10 +35,10 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.iva.classification import IvaTerritorialScope
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
 from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from ....domain.iva.schema import IvaTerritorialScope
 from ._ledger_value_fixtures import repository
 
 __all__ = ["repository"]

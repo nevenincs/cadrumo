@@ -133,8 +133,8 @@ def _schema_identity(snapshot: RegistrySnapshot) -> ModeloEditSchemaIdentityV1:
         schema_id=f"modelo-{snapshot.modelo.id}-{revision.id}".lower(),
         schema_fingerprint=content_hash_hex(
             {
-                "casilla_ids": sorted(str(casilla.id) for casilla in revision.casillas),
-                "binding_ids": sorted(str(binding.id) for binding in revision.bindings),
+                "casilla_ids": sorted(casilla.id for casilla in revision.casillas),
+                "binding_ids": sorted(binding.id for binding in revision.bindings),
             }
         ),
         completeness_manifest_digest=content_hash_hex(
@@ -227,11 +227,11 @@ def _permitted_surface(snapshot: RegistrySnapshot) -> tuple[ModeloEditPermittedS
 
     def address_key(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[str, str]:
         if isinstance(entry, (ModeloEditWritableScalarSurfaceEntryV1, ModeloEditNonWritableScalarSurfaceEntryV1)):
-            return "scalar", str(entry.casilla_id)
+            return "scalar", entry.casilla_id
         if isinstance(
             entry, (ModeloEditWritableBindingOverrideSurfaceEntryV1, ModeloEditNonWritableBindingOverrideSurfaceEntryV1)
         ):
-            return "binding", str(entry.binding_id)
+            return "binding", entry.binding_id
         raise TypeError("the admission producer emitted an unsupported edit surface entry")
 
     return tuple(sorted(entries, key=address_key))

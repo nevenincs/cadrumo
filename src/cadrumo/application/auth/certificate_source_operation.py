@@ -6,6 +6,16 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
+
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -28,20 +38,11 @@ from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import OperationRequest, OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationResultProjector,
 )
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-)
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .certificate_source_contracts import (
     CERTIFICATE_SOURCE_CHECK_OPERATION_DEFINITION_ID,
@@ -74,9 +75,6 @@ from .operator_results import (
     CertificateSourceMutationResult,
 )
 
-_HUMAN_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
-
-
 _READ_ACTIONS = frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT})
 
 
@@ -106,6 +104,7 @@ def _definition(
     return OperationDefinition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_factory=OperationExecutorFactory(
             request_type=request_type,
@@ -132,7 +131,6 @@ def _definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=_HUMAN_FRONTENDS,
     )
 
 
@@ -255,8 +253,6 @@ def _require_certificate_source_access_request(
 
 
 def _require_certificate_source_action(context: OperationAccessContext, *, mutation: bool) -> frozenset[AccessAction]:
-    if context.frontend not in _HUMAN_FRONTENDS:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
     actions = _MUTATION_ACTIONS if mutation else _READ_ACTIONS
     if context.action not in actions:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)

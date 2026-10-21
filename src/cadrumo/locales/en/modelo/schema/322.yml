@@ -646,6 +646,18 @@ modelo:
         modelo-322-papel-actividades:
           field:
             title: Activities
+        modelo-322-printed-disclosure-arithmetic-2008-2022:
+          field:
+            title: 'Modelo 322: totals the form prints, 2008 to 2022'
+        modelo-322-printed-disclosure-arithmetic-2023:
+          field:
+            title: 'Modelo 322: totals the form prints, 2023'
+        modelo-322-printed-disclosure-arithmetic-2024-2025:
+          field:
+            title: 'Modelo 322: totals the form prints, 2024 and 2025'
+        modelo-322-printed-disclosure-arithmetic-2026-y-siguientes:
+          field:
+            title: 'Modelo 322: totals the form prints, 2026 onwards'
       field:
         official_name: Modelo 322. Value Added Tax. Group of entities. Individual
           form. Monthly self-assessment.

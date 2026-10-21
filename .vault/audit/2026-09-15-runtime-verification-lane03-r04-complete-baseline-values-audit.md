@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-verification'
 date: '2026-09-15'
-modified: '2026-09-15'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:ac29fde6c5646c0730bf5c2548e9effa978eda3797a25e896a73e7614c1dc7bc'
+body_hash: 'sha256:8e07c2e4cbcc315585134169c3e3b8c8f62d2a8ca2cddf4611fceb3a99271d2a'
 related:
   - "[[2026-09-15-runtime-verification-lane03-r03-binding-value-audit]]"
 ---
@@ -206,7 +206,7 @@ sys.exit(exit_code)
 Exit code: 0. No stderr. Complete emitted output:
 
 ```text
-{"descriptor": "Y:\\code\\cadrumo-worktrees\\main\\src\\cadrumo\\_data\\registry\\authority\\authority.current.json", "descriptor_logical_generation": "2bdbfabc832b91e9ec77345b342abc08a7416e6e84f6ceb4aa85f79af8222c66", "logical_generation": "2bdbfabc832b91e9ec77345b342abc08a7416e6e84f6ceb4aa85f79af8222c66", "matches_r03_generation": true, "reader_incarnation": "fb65343ea0118b9c763a2a731e8ea3dd267cc82772bede139449f4031bd888b7", "stage": "operation-pin"}
+{"descriptor": "src/cadrumo/_data/registry/authority/authority.current.json", "descriptor_logical_generation": "2bdbfabc832b91e9ec77345b342abc08a7416e6e84f6ceb4aa85f79af8222c66", "logical_generation": "2bdbfabc832b91e9ec77345b342abc08a7416e6e84f6ceb4aa85f79af8222c66", "matches_r03_generation": true, "reader_incarnation": "fb65343ea0118b9c763a2a731e8ea3dd267cc82772bede139449f4031bd888b7", "stage": "operation-pin"}
 {"revision": "2013-y-siguientes", "stage": "selected-revision"}
 {"binding_ids": ["modelo-720-prior-year-cuentas-valoracion-baseline"], "source_casilla": "cuentas.valoracion", "stage": "binding-candidates"}
 {"binding_ids": ["modelo-720-prior-year-valores-valoracion-baseline"], "source_casilla": "valores.valoracion", "stage": "binding-candidates"}

@@ -187,7 +187,7 @@ def _probe_declared_period(
         period=period,
         filing_year=filing_year,
         resolved=resolved,
-        refusal=None if resolved else refusal,
+        refusal=None if (resolved is not None and resolved) else refusal,
         year_alone_ambiguous=year_alone_ambiguous,
     )
 

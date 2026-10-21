@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import typer
 
+from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
+from cadrumo_client.contracts.contracts import RefusalCode
+
 from ...application.modelo.work_addressing import (
     ModeloWorkRegistryYearMismatchError,
     law_selected_revision_for_work_target,
@@ -15,7 +18,6 @@ from ...application.modelo.work_lifecycle import (
     lifecycle_continuation_for_work_list,
     lifecycle_continuation_for_work_status,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ...core.i18n.render import tr
@@ -32,7 +34,6 @@ from ._modelo_behavior_support import (
 from ._modelo_cli_support import (
     resolve_default_actor,
 )
-from ._modelo_payloads import WorkCreateResult, WorkDiscardResult, WorkListResult, WorkRenameResult, WorkStatusResult
 from ._modelo_rendering import advisory_notice, work_unit_lines, work_unit_list_lines, work_unit_payload
 from .common import (
     activate_subcommand_output_language,
@@ -40,10 +41,10 @@ from .common import (
     emit_envelope,
     resolve_lifecycle_continuation_notice,
 )
-from .registered_operation_errors import submitted_operation_error
-from .runtime_modelo_metadata import discard_modelo_work, read_modelo_work_unit, rename_modelo_work
-from .runtime_modelo_work_create import create_modelo_work
-from .runtime_modelo_work_inventory import read_modelo_work_inventory
+from .modelo_results import WorkCreateResult, WorkDiscardResult, WorkListResult, WorkRenameResult, WorkStatusResult
+from .operation_modelo_metadata import discard_modelo_work, read_modelo_work_unit, rename_modelo_work
+from .operation_modelo_work_create import create_modelo_work
+from .operation_modelo_work_inventory import read_modelo_work_inventory
 from .state_projection_support import authority_operation
 
 
@@ -55,7 +56,7 @@ def _validate_filing_year(year: int) -> None:
 
 
 def guard_unsupported_work_modelo(modelo: str) -> None:
-    from .errors import CliRefusedBoundaryError
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
     modelo_code = modelo.strip()
     locale_key = modelo_work_create_refusal_locale_key(modelo_code)
@@ -203,7 +204,7 @@ def work_create(
     except Exception:
         raise submitted_operation_error(
             creation.completion.operation_id,
-            RuntimeRefusalCode.UNAVAILABLE.value,
+            RefusalCode.UNAVAILABLE.value,
             terminal_condition=creation.completion.terminal_condition,
             effect=creation.completion.effect,
         ) from None

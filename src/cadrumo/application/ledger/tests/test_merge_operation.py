@@ -14,6 +14,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -35,7 +37,6 @@ from ...operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from ...user_profile.access_contracts import AccessAction, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import merge_operation as operation
 from ..action_ports import LedgerActionPorts
@@ -215,7 +216,6 @@ def test_registration_is_secure_and_requires_exact_profile_commit() -> None:
     definition = registry.lookup(operation.LEDGER_MERGE_OPERATION_DEFINITION_ID)
     assert definition.capabilities.request_storage.value == "secure_reference"
     assert definition.capabilities.sensitive_input.value == "secure_reference"
-    assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
     assert AccessAction.COMMIT in resolved.policy.actions
     with pytest.raises(ProfileAccessRefusedError):
         resolve_operation_access(

@@ -90,7 +90,6 @@ function Page({
               lead={t("desktop.calendar.signed_out")}
               quiet
               onSignIn={noop}
-              onOpenTui={noop}
             />
           )
         }

@@ -131,7 +131,7 @@ def _derive_base_iva(
         return (base, rate, _q(native_amount_abs - base))
     if mode == "net_is_cash":
         base = native_amount_abs
-        iva = _q(base * rate) if rate and rate > 0 else Decimal("0.00")
+        iva = _q(base * rate) if (rate is not None and rate) and rate > 0 else Decimal("0.00")
         return (base, rate, iva)
     raise AssertionError(f"unknown base_mode {mode!r}")
 

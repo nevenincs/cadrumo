@@ -782,8 +782,8 @@ def demonstration_producer(case: DemoCase) -> FilingProducerSnapshot | None:
         }.get(case.modelo, "12345678Z"),
         taxpayer_identity=TaxpayerIdentityFacts(
             legal_name=entity_name,
-            given_name=None if entity_name else "Ana",
-            surnames=None if entity_name else "Ejemplo",
+            given_name=None if (entity_name is not None and entity_name) else "Ana",
+            surnames=None if (entity_name is not None and entity_name) else "Ejemplo",
             full_name=entity_name or "Ana Ejemplo",
         ),
         presenter=PresenterIdentity(tax_id="00000000T", full_name="Presentador ficticio"),

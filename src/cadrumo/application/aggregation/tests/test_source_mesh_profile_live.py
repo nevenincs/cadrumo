@@ -332,5 +332,5 @@ def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> Non
     assert resolution.provenance
     primary = tuple(item for item in resolution.provenance if item.lineage_role is CalculationSourceLineageRole.PRIMARY)
     assert len(primary) == 1
-    assert primary[0].fingerprint
+    assert primary[0].fingerprint is not None and primary[0].fingerprint
     assert all(item.parent_source_ref == primary[0].source_ref for item in resolution.provenance[1:])

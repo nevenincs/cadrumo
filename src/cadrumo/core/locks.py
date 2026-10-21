@@ -98,7 +98,7 @@ if sys.platform == "win32":  # pragma: no cover - branch covered on Windows only
         except OSError:
             return False
 
-    def _release_lock(fd: int) -> None:
+    def _release_lock(fd: int, *, log_events: bool = True) -> None:
         """Release the exclusive lock previously acquired via :func:`_try_lock`."""
         # Best-effort: the OS already releases the lock when the
         # descriptor is closed. Avoid raising during teardown.
@@ -106,7 +106,8 @@ if sys.platform == "win32":  # pragma: no cover - branch covered on Windows only
             os.lseek(fd, 0, os.SEEK_SET)
             msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
         except OSError:
-            _log.debug("exclusive_file_lock: Windows lock release failed for fd %s", fd, exc_info=True)
+            if log_events:
+                _log.debug("exclusive_file_lock: Windows lock release failed for fd %s", fd, exc_info=True)
 
 else:  # POSIX
     import fcntl
@@ -118,11 +119,12 @@ else:  # POSIX
         except OSError:
             return False
 
-    def _release_lock(fd: int) -> None:
+    def _release_lock(fd: int, *, log_events: bool = True) -> None:
         try:
             fcntl.flock(fd, fcntl.LOCK_UN)
         except OSError:
-            _log.debug("exclusive_file_lock: POSIX lock release failed for fd %s", fd, exc_info=True)
+            if log_events:
+                _log.debug("exclusive_file_lock: POSIX lock release failed for fd %s", fd, exc_info=True)
 
 
 def _resolved_lock_budget(
@@ -165,7 +167,9 @@ def _open_lock_fd(target: Path) -> tuple[int, Path]:
     return os.open(lock_path, open_flags, 0o600), lock_path
 
 
-def _lock_acquired_before_deadline(fd: int, lock_path: Path, *, deadline: float, timeout: float) -> bool:
+def _lock_acquired_before_deadline(
+    fd: int, lock_path: Path, *, deadline: float, timeout: float, log_events: bool = True
+) -> bool:
     """Attempt one non-blocking acquire; refuse once the deadline has passed.
 
     Returns ``True`` when the lock is held and ``False`` when the caller
@@ -176,11 +180,12 @@ def _lock_acquired_before_deadline(fd: int, lock_path: Path, *, deadline: float,
     if _try_lock(fd):
         return True
     if time.monotonic() >= deadline:
-        _log.warning(
-            "exclusive_file_lock: timed out waiting for %s after %.2fs",
-            lock_path,
-            timeout,
-        )
+        if log_events:
+            _log.warning(
+                "exclusive_file_lock: timed out waiting for %s after %.2fs",
+                lock_path,
+                timeout,
+            )
         raise LockAcquisitionError(
             f"failed to acquire exclusive lock on {lock_path} within {timeout:.2f}s",
         )
@@ -193,6 +198,7 @@ def exclusive_file_lock(
     *,
     timeout: float | _DefaultLockTimeout = DEFAULT_LOCK_TIMEOUT,
     retry_backoff: float | _DefaultLockTimeout = _DEFAULT_RETRY_BACKOFF,
+    log_events: bool = True,
 ) -> Generator[Path]:
     """Acquire an OS-level exclusive lock on a sidecar lock file.
 
@@ -226,6 +232,8 @@ def exclusive_file_lock(
             Must be strictly positive, matching the ``gt=0`` bound on the
             :class:`~core.config.Settings` field that supplies its default.
             Tests may shorten this; defaults to ``0.05``.
+        log_events: Emit lock diagnostics. Logging sinks disable this to avoid
+            recursively writing to the resource whose lock they are acquiring.
 
     Yields:
         The :class:`Path` of the acquired lock sidecar.
@@ -243,13 +251,17 @@ def exclusive_file_lock(
     fd, lock_path = _open_lock_fd(target)
     try:
         deadline = time.monotonic() + timeout
-        while not _lock_acquired_before_deadline(fd, lock_path, deadline=deadline, timeout=timeout):
+        while not _lock_acquired_before_deadline(
+            fd, lock_path, deadline=deadline, timeout=timeout, log_events=log_events
+        ):
             time.sleep(retry_backoff)
-        _log.debug("exclusive_file_lock: acquired %s", lock_path)
+        if log_events:
+            _log.debug("exclusive_file_lock: acquired %s", lock_path)
         try:
             yield lock_path
         finally:
-            _release_lock(fd)
-            _log.debug("exclusive_file_lock: released %s", lock_path)
+            _release_lock(fd, log_events=log_events)
+            if log_events:
+                _log.debug("exclusive_file_lock: released %s", lock_path)
     finally:
         os.close(fd)

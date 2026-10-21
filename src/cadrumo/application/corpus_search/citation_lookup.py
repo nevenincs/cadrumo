@@ -128,13 +128,13 @@ class _OperationCitationLookup(CitationLookup):
     @override
     def _verbatim_text(self, reference: LegalReference) -> str:
         try:
-            evidence = self._operation.legal_evidence(str(reference.id))
+            evidence = self._operation.legal_evidence(reference.id)
         except (AuthorityComponentCodecError, LookupError) as exc:
             raise CorpusSearchInputError(
                 reason="citation_extracted_text_absent",
                 context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
             ) from exc
-        if evidence.legal_reference_id != str(reference.id):
+        if evidence.legal_reference_id != reference.id:
             raise CorpusSearchInputError(
                 reason="citation_extracted_text_absent",
                 context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},

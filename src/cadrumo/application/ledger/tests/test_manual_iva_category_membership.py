@@ -29,9 +29,10 @@ from ....domain.transactions.models import LedgerDatePartition, Transaction, Tra
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ..action_ports import LedgerActionPorts
 from ..actions_classification import bulk_classify_from_csv
-from ..actions_manual import create_manual_transaction, update_manual_transaction_fields
+from ..actions_manual import update_manual_transaction_fields
 from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from ..persistence_ports import LedgerPersistenceConflictError
+from .manual_transaction_support import create_manual_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

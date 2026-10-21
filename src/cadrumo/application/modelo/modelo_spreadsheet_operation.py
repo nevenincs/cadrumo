@@ -18,7 +18,7 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
-from ..operations.registry import OperationFrontendProjection
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .modelo_spreadsheet_executor import ModeloSpreadsheetExecutor
 from .modelo_spreadsheet_operation_contracts import (
     MODELO_SPREADSHEET_OPERATION_CONTRACTS,
@@ -38,6 +38,7 @@ def build_modelo_spreadsheet_definitions(
             build_single_phase_definition(
                 definition_id=definition_id,
                 request_type=request_type,
+                subject_reference=OperationSubjectReferenceV1.profile(),
                 result_type=ModeloSpreadsheetExecutionResult,
                 executor_type=ModeloSpreadsheetExecutor,
                 build=lambda: ModeloSpreadsheetExecutor(factory),
@@ -54,7 +55,6 @@ def build_modelo_spreadsheet_definitions(
                     permitted_effects=effects,
                     close_policy=OperationClosePolicy.DETACH_ALLOWED,
                 ),
-                permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
                 refusal_detail_codes=frozenset({"REFUSED_MODELO_EXPORT_OUTPUT_PATH"}),
             )
         )

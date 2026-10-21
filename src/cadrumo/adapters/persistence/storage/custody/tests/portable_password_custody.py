@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import contextmanager
 from typing import override
@@ -84,7 +84,7 @@ class _JoinedKdfWorker(_SupervisedKdfWorker):
 
 
 @contextmanager
-def portable_password_custody() -> Iterator[None]:
+def portable_password_custody() -> Generator[None]:
     """Keep real password cryptography observable without starting an OS child."""
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(kdf_supervision, "_SupervisedKdfWorker", _JoinedKdfWorker)

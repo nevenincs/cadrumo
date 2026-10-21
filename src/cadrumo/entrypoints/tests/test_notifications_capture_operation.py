@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -13,6 +13,9 @@ from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -45,7 +48,6 @@ from ...application.operations.persistence.journal import OperationPersistedSnap
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.operations import (
     OperationEffect,
@@ -104,7 +106,7 @@ class _Cancellation:
         self.refuse = refuse
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         self.events.append("guard-enter")
         if self.refuse:
             raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
@@ -123,7 +125,7 @@ class _ExecutionAuthority:
         self.events.append(f"require:{action.value}")
 
     @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncIterator[None]:
+    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
         assert identity is not None
         self.events.append("guard-enter")
         try:
@@ -378,7 +380,7 @@ def test_supervisor_settles_capture_with_fresh_commit_and_dedup_receipts(
             profile_id=profile_id,
             destination_id=uuid4(),
             action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=registration.contract,
             published_authority=Availability.AVAILABLE,
         )

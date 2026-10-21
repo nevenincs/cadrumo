@@ -11,6 +11,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ..classification_origin import ClassificationOrigin
 from ..enums import BusinessClassification, TransactionDirection
 from ..errors import TransactionCatalogueError
 from ..models import Transaction, TransactionCatalogue
@@ -123,6 +124,7 @@ def test_set_classification_returns_new_catalogue_without_mutating_original() ->
         classification=BusinessClassification.MIXED,
         business_pct=Decimal("0.5"),
         classified_by="manual",
+        origin=ClassificationOrigin.PERSON,
     )
 
     before = original.get(transaction.transaction_id)
@@ -150,6 +152,7 @@ def test_set_classification_raises_typed_error_for_invalid_business_pct() -> Non
             classification=BusinessClassification.BUSINESS,
             business_pct=Decimal("0.5"),
             classified_by="manual",
+            origin=ClassificationOrigin.PERSON,
         )
 
 
@@ -189,6 +192,7 @@ def test_set_classification_appends_one_history_entry_on_first_transition() -> N
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="manual",
+        origin=ClassificationOrigin.PERSON,
     )
     result = updated.get(transaction.transaction_id)
     assert result is not None
@@ -209,6 +213,7 @@ def test_set_classification_does_not_append_when_signature_is_byte_identical() -
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="manual",
+        origin=ClassificationOrigin.PERSON,
         reason="client invoice",
     )
     twice = set_classification(
@@ -216,6 +221,7 @@ def test_set_classification_does_not_append_when_signature_is_byte_identical() -
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="manual",
+        origin=ClassificationOrigin.PERSON,
         reason="client invoice",
     )
     first_result = once.get(transaction.transaction_id)
@@ -235,6 +241,7 @@ def test_set_classification_appends_when_only_reason_changes() -> None:
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="manual",
+        origin=ClassificationOrigin.PERSON,
         reason="initial",
     )
     twice = set_classification(
@@ -242,6 +249,7 @@ def test_set_classification_appends_when_only_reason_changes() -> None:
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="manual",
+        origin=ClassificationOrigin.PERSON,
         reason="revised after review",
     )
     result = twice.get(transaction.transaction_id)
@@ -260,12 +268,14 @@ def test_set_classification_skips_append_on_pure_timestamp_drift() -> None:
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="manual",
+        origin=ClassificationOrigin.PERSON,
     )
     twice = set_classification(
         once,
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="manual",
+        origin=ClassificationOrigin.PERSON,
     )
     first_result = once.get(transaction.transaction_id)
     second_result = twice.get(transaction.transaction_id)
@@ -316,6 +326,7 @@ def test_set_classification_manual_path_defaults_confidence_to_one() -> None:
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="manual",
+        origin=ClassificationOrigin.PERSON,
         reason="obvious client payment",
     )
 
@@ -334,6 +345,7 @@ def test_set_classification_rule_path_preserves_explicit_confidence() -> None:
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="rule:vendor-map",
+        origin=ClassificationOrigin.AUTOMATIC,
         reason="matched vendor catalogue",
         confidence=Decimal("0.42"),
     )
@@ -353,6 +365,7 @@ def test_set_classification_rule_path_without_confidence_leaves_none() -> None:
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="rule:vendor-map",
+        origin=ClassificationOrigin.AUTOMATIC,
         reason="matched vendor",
     )
 
@@ -372,6 +385,7 @@ def test_set_classification_rejects_confidence_above_one() -> None:
             transaction.transaction_id,
             classification=BusinessClassification.BUSINESS,
             classified_by="manual",
+            origin=ClassificationOrigin.PERSON,
             reason="out-of-range test",
             confidence=Decimal("1.5"),
         )
@@ -387,6 +401,7 @@ def test_set_classification_propagates_confidence_into_history_on_reclassificati
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="rule:vendor-map",
+        origin=ClassificationOrigin.AUTOMATIC,
         reason="first match",
         confidence=Decimal("0.4"),
     )
@@ -395,6 +410,7 @@ def test_set_classification_propagates_confidence_into_history_on_reclassificati
         transaction.transaction_id,
         classification=BusinessClassification.PERSONAL,
         classified_by="manual",
+        origin=ClassificationOrigin.PERSON,
         reason="human overrode the rule",
     )
 
@@ -425,6 +441,7 @@ def test_set_classification_accepts_llm_classifier_identity_shape() -> None:
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="llm:gpt-4",
+        origin=ClassificationOrigin.PERSON,
         reason="LLM classified as business supplies",
         confidence=Decimal("0.45"),
     )
@@ -452,6 +469,7 @@ def test_set_classification_normalises_classified_by_whitespace_for_idempotence(
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="manual",
+        origin=ClassificationOrigin.PERSON,
         reason="first",
     )
     second = set_classification(
@@ -459,6 +477,7 @@ def test_set_classification_normalises_classified_by_whitespace_for_idempotence(
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="  manual  ",
+        origin=ClassificationOrigin.PERSON,
         reason="first",
     )
 
@@ -477,6 +496,7 @@ def test_confidence_survives_json_round_trip(tmp_path: Path) -> None:
         transaction.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="rule:llm",
+        origin=ClassificationOrigin.AUTOMATIC,
         reason="reasoned rule match",
         confidence=Decimal("0.73"),
     )

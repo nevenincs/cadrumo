@@ -175,7 +175,7 @@ class NotificationDocumentRecord(BaseModel):
         notification owns exactly one row rather than accumulating
         near-duplicates of the same served document.
         """
-        return str(self.certificado_id)
+        return self.certificado_id
 
 
 class NotificationDocumentCustody(BaseModel):
@@ -252,8 +252,8 @@ def _diverging_persisted_fields(
     silently.
     """
     incoming: dict[str, object] = {
-        "certificado_id": str(row.certificado_id),
-        "bucket_id": str(bucket_id),
+        "certificado_id": row.certificado_id,
+        "bucket_id": bucket_id,
         "document_sha256": document.pdf_sha256,
         "byte_size": len(document.pdf_bytes),
         "source_url": str(document.source_url),
@@ -346,25 +346,25 @@ class NotificationDocumentService:
                 certificado and the incoming one disagrees with it.
         """
         self._content_guard(row)
-        if str(document.certificado_id) != str(row.certificado_id):
+        if document.certificado_id != row.certificado_id:
             raise LiveApplicationInputError(
                 translated_message="application.live.notifications.errors.document_row_mismatch",
                 context={
-                    "row_certificado_id": str(row.certificado_id),
-                    "document_certificado_id": str(document.certificado_id),
+                    "row_certificado_id": row.certificado_id,
+                    "document_certificado_id": document.certificado_id,
                 },
                 precondition_verdict=live_read_no_recovery_verdict(
                     LiveReadPrecondition.NOTIFICATION_DOCUMENT_MATCHES_ROW,
                     facts={
-                        "row_certificado_id": str(row.certificado_id),
-                        "document_certificado_id": str(document.certificado_id),
+                        "row_certificado_id": row.certificado_id,
+                        "document_certificado_id": document.certificado_id,
                         "matches_row": False,
                     },
                 ),
             )
 
         repository = self._repository_factory(bucket_id)
-        existing = _record_in_custody(repository, str(row.certificado_id))
+        existing = _record_in_custody(repository, row.certificado_id)
         if existing is not None:
             diverging = _diverging_persisted_fields(
                 existing,
@@ -376,7 +376,7 @@ class NotificationDocumentService:
                 raise LiveApplicationInputError(
                     translated_message="application.live.notifications.errors.document_conflict",
                     context={
-                        "certificado_id": str(row.certificado_id),
+                        "certificado_id": row.certificado_id,
                         "diverging_fields": ", ".join(diverging),
                         "stored_document_sha256": existing.document_sha256,
                         "incoming_document_sha256": document.pdf_sha256,
@@ -400,7 +400,7 @@ class NotificationDocumentService:
                 bucket_id=bucket_id,
                 source_command=_SOURCE_COMMAND,
                 metadata={
-                    "certificado_id": str(row.certificado_id),
+                    "certificado_id": row.certificado_id,
                     "tipo": row.tipo,
                     "fecha_emision": row.fecha_emision.isoformat(),
                 },

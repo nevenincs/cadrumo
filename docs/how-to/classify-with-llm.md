@@ -40,8 +40,10 @@ To set up everything in one run, use:
 Setup installs the runtime with the platform package manager (winget on
 Windows, Homebrew on macOS), starts it, downloads a model for each reader
 role, loads the models, and verifies them. On Linux, install the runtime
-yourself. Without `--confirm`, setup stops before it installs anything. Steps
-that are already done are reported as unchanged. See
+yourself. Setup prints its download and installation plan before proceeding.
+The `--yes` option approves that plan; omit it to review and answer at the
+terminal. Non-interactive setup without `--yes` stops before installing
+anything. Steps that are already done are reported as unchanged. See
 [Install Cadrumo](../workstation-setup.md) for the whole sequence.
 
 Text reads use the `qwen3:1.7b` model by default. Scanned and image reads use
@@ -254,13 +256,14 @@ This holds for the default endpoint: if you point `CADRUMO_LLM_OLLAMA_CHAT_URL`
 at a runtime on another host, reads go to that host.
 
 One command can send a document off your machine:
-`aeat app ledger evidence extract --off-host-provider <provider>`. It reads
-invoice fields, not classifications, and it is off by default. It runs only
-when the deployment permits off-host reads, the profile's
-`cloud_evidence_upload` capability is on, and you pass
-`--acknowledge-off-host` for that one read. Gestor deployments never allow it.
-Reading with the Anthropic API also needs the `anthropic` extra. Treat the
-document as taxpayer data before you use it. The settings that govern it are
+`aeat app ledger evidence extract --off-host-provider AGENT`. It reads
+invoice fields, not classifications, and it is off by default. The agent
+service reads the document with a provider you set up for the signed-in
+profile, and `aeat` holds no model key for it. It runs only when the
+deployment permits off-host reads, the profile's `cloud_evidence_upload`
+capability is on, and you pass `--acknowledge-off-host` for that one read.
+Gestor deployments never allow it. Treat the document as taxpayer data before
+you use it. The settings that govern it are
 in the [environment overrides reference](../reference/environment-overrides.md).
 
 ## Next steps

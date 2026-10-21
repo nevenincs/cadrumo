@@ -5,7 +5,7 @@ The helpers keep raw Typer values out of the application layer by converting
 strict backend create-command DTO.
 
 See Also:
-    :mod:`~entrypoints.cli._modelo_m145_cli`
+    :mod:`~entrypoints.cli.modelo_m145_commands`
         Typer command group that calls these parsing helpers.
     :class:`~application.modelo.m145_communication_records.M145CommunicationCreateCommand`
         Backend DTO produced by :func:`m145_create_command_from_cli`.
@@ -46,7 +46,7 @@ def m145_field_values_from_cli(
     parse_casilla_override: ParseCasillaOverride,
 ) -> dict[CasillaId, str]:
     """Parse repeated ``--casilla ID=VALUE`` tokens for the backend service."""
-    if not casilla_specs:
+    if not (casilla_specs is not None and casilla_specs):
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.m145.errors.casilla_required",

@@ -16,23 +16,27 @@ from typing import Final
 import pytest
 from typer.testing import CliRunner
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind, CommandWriteRoute
-
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
-from ....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
-from .._command_runtime import GOVERNED_FACT_SCOPE_CAPABILITIES, build_command_app, runs_in_governed_fact_scope
-from ..command_graph import CommandSpecGraph
-from ..command_shared_contracts import (
-    Capability,
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
+from cadrumo_client.commands.compiler import (
+    GOVERNED_FACT_SCOPE_CAPABILITIES,
+    build_command_app,
+    runs_in_governed_fact_scope,
+)
+from cadrumo_client.commands.graph import CommandSpecGraph
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
-    PerformanceClass,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
 )
-from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import Capability, CommandNodeKind, CommandWriteRoute, PerformanceClass
+
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
+from ..command_lifecycle import dispatch_cli_behavior
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -96,13 +100,14 @@ def _graph() -> CommandSpecGraph:
             _leaf("registry-read", _policy("registry", "local-io")),
             _leaf("state-free-read", _policy("state-free", "metadata")),
         ),
+        resolver=resolve_deferred_target,
     )
 
 
 def _scope_seen_by(token: str) -> GovernedFactSource | None:
     _SEEN.clear()
     with outside_governed_fact_validation():
-        result = CliRunner().invoke(build_command_app(_graph()), [token])
+        result = CliRunner().invoke(build_command_app(_graph(), dispatcher=dispatch_cli_behavior), [token])
     assert result.exit_code == 0, result.output
     assert len(_SEEN) == 1
     return _SEEN[0]

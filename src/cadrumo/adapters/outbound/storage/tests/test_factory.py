@@ -16,6 +16,8 @@ from pathlib import Path
 import pytest
 from google.oauth2.credentials import Credentials as OAuthCredentials
 
+from cadrumo_client.contracts.google_auth import GoogleAuthClientMetadataUnavailableError, GoogleAuthSignInRequiredError
+
 from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
 from .....core.i18n.render import tr
@@ -23,7 +25,6 @@ from .....core.operator_action_enums import ActionConditionality, ActionEvidence
 from .....tests.audited_process import run_audited_process
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...google import root_folder
-from ...google.errors import GoogleAuthClientMetadataUnavailableError, GoogleAuthSignInRequiredError
 from ...google.records import DriveConfig, OAuthToken
 from ...google.tests.installation_client_support import (
     SYNTHETIC_CLIENT_CREDENTIAL,

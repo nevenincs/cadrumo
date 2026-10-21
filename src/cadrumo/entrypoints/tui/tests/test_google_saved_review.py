@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
+import math
 from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -17,7 +19,10 @@ from textual.app import App
 from textual.pilot import Pilot
 from textual.widgets import Button, Link, Static
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.operation_controller import OperationController
+
 from ....application.export.google_review_operation_contracts import (
     GOOGLE_REVIEW_OPERATION_DEFINITION_ID,
     GoogleReviewProjection,
@@ -43,7 +48,6 @@ from ....application.operations.frontend_requests import (
 from ....application.operations.models import OperationIdentity
 from ....application.operations.persistence.replay import OperationReplayStatus
 from ....application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
-from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import output_language
 from ....core.operations import (
@@ -56,7 +60,6 @@ from ...operation_composition import build_production_operation_registry
 from ...review_publication_labels import GoogleReviewLabels
 from ..google_saved_review import GoogleSavedReviewModal, GoogleSavedReviewScreen, validate_saved_google_review
 from ..operations.interactions import OperationModalReviewInteractionV1
-from ..operations.runtime_controller import RuntimeOperationController
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -89,6 +92,31 @@ def _review(request: GoogleReviewRequest) -> GoogleReviewProjection:
     )
 
 
+class _Cued:
+    """The runtime's operation cue: it wakes only when the operation's response changes."""
+
+    def __init__(self, changed: asyncio.Event) -> None:
+        self._changed = changed
+        self.armed = False
+
+    def arm(self) -> None:
+        self.armed = True
+        self._changed.clear()
+
+    async def wait(self, timeout: float) -> None:
+        with contextlib.suppress(TimeoutError):
+            await asyncio.wait_for(self._changed.wait(), timeout if math.isfinite(timeout) else None)
+
+    def close(self) -> None:
+        self.armed = False
+
+    def __enter__(self) -> _Cued:
+        return self
+
+    def __exit__(self, *_exc: object) -> None:
+        self.close()
+
+
 class _Controller:
     operation_id = _OPERATION
     actor_ref = "operator:test-human"
@@ -98,12 +126,26 @@ class _Controller:
         self.review = _review(request)
         self.defect = defect
         self.client = client
-        self.response: str | None = None
+        self.changed = asyncio.Event()
+        self._response: str | None = None
         self.starts = self.applies = self.rejects = self.reads = 0
+
+    @property
+    def response(self) -> str | None:
+        return self._response
+
+    @response.setter
+    def response(self, value: str | None) -> None:
+        # A response is the one committed change this script's operation makes.
+        self._response = value
+        self.changed.set()
 
     async def start(self) -> str:
         self.starts += 1
         return self.operation_id
+
+    def operation_changes(self) -> _Cued:
+        return _Cued(self.changed)
 
     async def observe(self, after_cursor: int, *, page_limit: int = 256) -> OperationObservationSuccessV1:
         contracts = _contracts()
@@ -266,10 +308,10 @@ async def test_installed_screen_requires_exact_human_review_before_showing_regis
         )
         controller = _Controller(payload, defect=defect, client=client)
         controllers.append(controller)
-        return cast(RuntimeOperationController, controller)
+        return cast(OperationController, controller)
 
-    monkeypatch.setattr(RuntimeOperationController, "submit", submit)
-    screen = GoogleSavedReviewScreen(cast(RuntimeFrontendClient, client), "c" * 64, filing_record_id="6" * 64)
+    monkeypatch.setattr(OperationController, "submit", submit)
+    screen = GoogleSavedReviewScreen(cast(FrontendClient, client), "c" * 64, filing_record_id="6" * 64)
     app: App[None] = App()
     async with app.run_test(size=(120, 45)) as pilot:
         app.push_screen(screen)
@@ -335,7 +377,7 @@ def test_native_disclosure_refuses_selection_or_payload_expansion(defect: str) -
             "payload_categories": (ReadablePayloadCategory.CALCULATION, ReadablePayloadCategory.ORIGINAL_ATTACHMENT)
         },
     }
-    with pytest.raises(RuntimeRefusalError):
+    with pytest.raises(RefusalError):
         validate_saved_google_review(request, review.model_copy(update=updates[defect]), operation_id=_OPERATION)
 
 
@@ -352,7 +394,7 @@ async def test_delayed_first_observation_does_not_offer_an_unverified_response()
             return await super().observe(after_cursor, page_limit=page_limit)
 
     controller = DelayedController(request, defect="none", client=SimpleNamespace(session_id=UUID(int=3)))
-    modal = GoogleSavedReviewModal(cast(RuntimeOperationController, controller), request, lambda _: None)
+    modal = GoogleSavedReviewModal(cast(OperationController, controller), request, lambda _: None)
     app: App[None] = App()
     async with app.run_test() as pilot:
         app.push_screen(modal)
@@ -385,10 +427,10 @@ async def test_prepublication_cleanup_rejects_only_original_untouched_review(
     async def submit(_client, *, definition_id, subject_ref, payload, expected_session_id):
         controller = _Controller(payload, defect="none", client=client)
         controllers.append(controller)
-        return cast(RuntimeOperationController, controller)
+        return cast(OperationController, controller)
 
-    monkeypatch.setattr(RuntimeOperationController, "submit", submit)
-    screen = GoogleSavedReviewScreen(cast(RuntimeFrontendClient, client), "c" * 64)
+    monkeypatch.setattr(OperationController, "submit", submit)
+    screen = GoogleSavedReviewScreen(cast(FrontendClient, client), "c" * 64)
     app: App[None] = App()
     async with app.run_test() as pilot:
         app.push_screen(screen)
@@ -404,7 +446,7 @@ async def test_prepublication_cleanup_rejects_only_original_untouched_review(
             assert await screen.reject_pending_prepublication()
             assert not await screen.reject_pending_prepublication()
         else:
-            with pytest.raises(RuntimeRefusalError):
+            with pytest.raises(RefusalError):
                 await screen.reject_pending_prepublication()
         assert controller.applies == controller.reads == 0
         assert controller.rejects == (1 if defect == "none" else 0)

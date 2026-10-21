@@ -1,22 +1,17 @@
 from __future__ import annotations
 
+import inspect
 from dataclasses import replace
 
 import pytest
 from click import IntRange
 from typer.testing import CliRunner
 
-from cadrumo.application.operator_surface.command_ports import (
-    CommandNodeKind,
-    CommandWriteRoute,
-)
-
-from ....core.i18n.render import tr
-from .._command_runtime import _parameter, build_command_app
-from .._command_target import resolve_deferred_target
-from ..command_graph import CommandSpecGraph
-from ..command_parameter_contracts import ArgumentSpec, OptionSpec
-from ..command_shared_contracts import (
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
+from cadrumo_client.commands.compiler import build_command_app
+from cadrumo_client.commands.graph import CommandSpecGraph
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -26,7 +21,10 @@ from ..command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind, CommandWriteRoute
+
+from ....core.i18n.render import tr
 from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -112,7 +110,18 @@ def _graph() -> CommandSpecGraph:
             identity="root.greet",
         ),
     )
-    return CommandSpecGraph((root, leaf))
+    return CommandSpecGraph((root, leaf), resolver=resolve_deferred_target)
+
+
+def _compiled_parameter(parameter: ArgumentSpec | OptionSpec) -> inspect.Parameter:
+    """Compile ``parameter`` as the greet leaf's only parameter and read back what the built command declares."""
+    graph = CommandSpecGraph(
+        tuple(replace(spec, parameters=(parameter,)) if spec.key == "greet" else spec for spec in _graph().specs),
+        resolver=resolve_deferred_target,
+    )
+    callback = build_command_subtree(graph, "greet").registered_commands[0].callback
+    assert callback is not None
+    return inspect.signature(callback).parameters[parameter.name]
 
 
 def test_runtime_preflights_and_invokes_a_synthetic_graph_behavior() -> None:
@@ -129,6 +138,30 @@ def test_runtime_schema_projection_and_public_target_boundary() -> None:
     assert build_command_subtree(_graph(), "greet").registered_commands[0].name == "greet"
 
 
+def test_runtime_uses_the_graph_owner_for_parameters_and_behavior() -> None:
+    requested: list[DeferredTarget] = []
+    seen: list[str] = []
+
+    def greet(ctx: object, *, name: str) -> None:
+        del ctx
+        seen.append(name)
+
+    def resolve(target: DeferredTarget) -> object:
+        requested.append(target)
+        if target == DeferredTarget("builtins", "str"):
+            return str
+        assert target.qualname == "public_behavior"
+        return greet
+
+    graph = replace(_graph(), resolver=resolve)
+    assert requested == []
+    result = CliRunner().invoke(build_command_app(graph), ["greet", "--name", "Ada"])
+    assert result.exit_code == 0, result.output
+    assert seen == ["Ada"]
+    assert DeferredTarget("builtins", "str") in requested
+    assert requested[-1].qualname == "public_behavior"
+
+
 def test_runtime_preserves_an_option_with_no_help_text() -> None:
     graph = _graph()
     leaf = graph.by_key()["greet"]
@@ -138,7 +171,8 @@ def test_runtime_preserves_an_option_with_no_help_text() -> None:
         tuple(
             replace(spec, parameters=(replace(option, help_key=None),)) if spec.key == "greet" else spec
             for spec in graph.specs
-        )
+        ),
+        resolver=resolve_deferred_target,
     )
 
     result = CliRunner().invoke(build_command_app(exact_graph), ["greet", "--help"])
@@ -158,7 +192,8 @@ def test_runtime_compiles_spec_owned_choices_without_a_handler_enum() -> None:
             if spec.key == "greet"
             else spec
             for spec in graph.specs
-        )
+        ),
+        resolver=resolve_deferred_target,
     )
 
     accepted = CliRunner().invoke(build_command_app(exact_graph), ["greet", "--name", "Ada"])
@@ -193,7 +228,8 @@ def test_runtime_preserves_repeated_options_as_a_list_of_items() -> None:
             if spec.key == "greet"
             else spec
             for spec in graph.specs
-        )
+        ),
+        resolver=resolve_deferred_target,
     )
     _SEEN_MULTIPLE.clear()
 
@@ -206,36 +242,20 @@ def test_runtime_preserves_repeated_options_as_a_list_of_items() -> None:
     assert _SEEN_MULTIPLE == [["Ada", "Grace"]]
 
 
-@pytest.mark.parametrize(
-    ("value", "expected_parser", "expected_click_type"),
-    (
-        (
-            ValueContract(
-                DeferredTarget("builtins", "str"),
-                parser=DeferredTarget(
-                    ".test_command_runtime",
-                    "public_parser",
-                    __package__,
-                ),
-            ),
-            public_parser,
-            None,
-        ),
-        (
-            ValueContract(
-                DeferredTarget("builtins", "int"),
-                click_type=DeferredTarget("click", "IntRange"),
-            ),
-            None,
-            IntRange,
-        ),
-    ),
-)
+@pytest.mark.parametrize("use_parser", [True, False])
 def test_runtime_materializes_shared_value_and_constraint_kwargs_for_arguments_and_options(
-    value: ValueContract,
-    expected_parser: object | None,
-    expected_click_type: type[IntRange] | None,
+    use_parser: bool,
 ) -> None:
+    value = (
+        ValueContract(
+            DeferredTarget("builtins", "str"),
+            parser=DeferredTarget(".test_command_runtime", "public_parser", __package__),
+        )
+        if use_parser
+        else ValueContract(DeferredTarget("builtins", "int"), click_type=DeferredTarget("click", "IntRange"))
+    )
+    expected_parser = public_parser if use_parser else None
+    expected_click_type = None if use_parser else IntRange
     constraint = ParameterConstraint(
         minimum=1,
         maximum=3,
@@ -272,8 +292,8 @@ def test_runtime_materializes_shared_value_and_constraint_kwargs_for_arguments_a
         hidden=True,
         constraint=constraint,
     )
-    argument = _parameter(argument_spec).default
-    option = _parameter(option_spec).default
+    argument = _compiled_parameter(argument_spec).default
+    option = _compiled_parameter(option_spec).default
 
     for parameter, spec in ((argument, argument_spec), (option, option_spec)):
         assert spec.help_key is not None
@@ -310,22 +330,22 @@ def test_runtime_materializes_factory_defaults_for_arguments_and_options() -> No
         )
     )
     value = ValueContract(DeferredTarget("builtins", "str"))
-    argument = _parameter(
+    argument = _compiled_parameter(
         ArgumentSpec(
             name="item",
             value=value,
             default=default,
             help_key=None,
-        )
+        ),
     ).default
-    option = _parameter(
+    option = _compiled_parameter(
         OptionSpec(
             name="item",
             declarations=("--item",),
             value=value,
             default=default,
             help_key=None,
-        )
+        ),
     ).default
 
     for parameter in (argument, option):
@@ -369,7 +389,7 @@ def test_runtime_materializes_and_exercises_option_only_hooks() -> None:
         is_flag=True,
         flag_value=True,
     )
-    materialized = _parameter(name_option).default
+    materialized = _compiled_parameter(name_option).default
     assert name_option.prompt_key is not None
     assert name_option.confirmation_prompt_key is not None
     assert materialized.param_decls == name_option.declarations
@@ -397,7 +417,8 @@ def test_runtime_materializes_and_exercises_option_only_hooks() -> None:
             if spec.key == "greet"
             else spec
             for spec in graph.specs
-        )
+        ),
+        resolver=resolve_deferred_target,
     )
     _SEEN_OPTION_RUNTIME.clear()
 

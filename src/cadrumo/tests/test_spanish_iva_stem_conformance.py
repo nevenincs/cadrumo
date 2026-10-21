@@ -26,7 +26,6 @@ _EXTERNAL_IDENTITY_TOKENS = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"vat", "vatid"}),
     # A word printed on a foreign-language invoice, not a Cadrumo identifier.
     "application/ledger/invoice_label_vocabulary.py": frozenset({"vat"}),
-    "entrypoints/cli/config/tests/test_apoderado_scopes_payload.py": frozenset({"VAT"}),
 }
 _EXTERNAL_VAT_PROSE_VALUES = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"vat"}),
@@ -57,7 +56,6 @@ _EXTERNAL_VAT_PROSE_VALUES = {
             "reduced vat rate 13,5%",
         },
     ),
-    "entrypoints/cli/config/tests/test_apoderado_scopes_payload.py": frozenset({"VAT"}),
     # The rendered English operator label for the Modelo 349 operator identifier.
     "entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py": frozenset({"EU VAT number"}),
     "tests/fixtures/justificantes/_generate_modelo_390_english.py": frozenset(
@@ -234,7 +232,7 @@ def stem_scan() -> _StemScan:
 
 
 def test_python_paths_and_identifiers_use_the_canonical_iva_stem(stem_scan: _StemScan) -> None:
-    assert list(stem_scan.path_and_identifier) == []
+    assert list(stem_scan.path_and_identifier) == [], "\n".join(stem_scan.path_and_identifier)
 
 
 def test_non_python_package_paths_use_the_canonical_iva_stem() -> None:
@@ -247,15 +245,15 @@ def test_non_python_package_paths_use_the_canonical_iva_stem() -> None:
             or _DUPLICATED_IVA.search(relative)
         )
     ]
-    assert violations == []
+    assert violations == [], "\n".join(violations)
 
 
 def test_internal_identity_tokens_use_the_canonical_iva_stem(stem_scan: _StemScan) -> None:
-    assert list(stem_scan.identity_tokens) == []
+    assert list(stem_scan.identity_tokens) == [], "\n".join(stem_scan.identity_tokens)
 
 
 def test_internal_prose_does_not_duplicate_or_alias_the_iva_stem(stem_scan: _StemScan) -> None:
-    assert list(stem_scan.prose) == []
+    assert list(stem_scan.prose) == [], "\n".join(stem_scan.prose)
     assert stem_scan.used_external_values == {
         (relative, value) for relative, values in _EXTERNAL_VAT_PROSE_VALUES.items() for value in values
     }

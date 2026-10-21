@@ -4,9 +4,10 @@
 //! terminal bytes, is never requested from the snapshot.
 use super::{
     format::Level,
-    record::{Entry, ProcessRef},
+    record::{Entry, LogSourceState, ProcessRef, SourceKind},
 };
-use cadrumo_application::diagnostics::{DiagnosticSource, Diagnostics, Event, EventKind};
+use cadrumo_application::diagnostics::{DiagnosticSource, Diagnostics, Event};
+use cadrumo_application::error::application::{ErrorCode, Operation};
 use serde::Serialize;
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -21,21 +22,81 @@ const LOGGER: &str = "desktop";
 #[derive(Default)]
 pub struct HostEvents {
     after: u64,
+    pub dropped: u64,
+    write_failure: Option<(ErrorCode, Operation, Option<i32>)>,
 }
 
 impl HostEvents {
     pub fn poll(&mut self, diagnostics: &Diagnostics) -> Vec<Entry> {
         // A cursor past every output chunk keeps captured output out.
-        let events = diagnostics.snapshot(u64::MAX).events;
-        let fresh = events
+        let snapshot = diagnostics.snapshot(u64::MAX);
+        let events = snapshot.events;
+        let mut fresh: Vec<Entry> = events
             .iter()
             .filter(|event| event.sequence > self.after)
             .map(entry)
             .collect();
+        if let Some(first) = events.iter().find(|event| event.sequence > self.after) {
+            let omitted = first.sequence.saturating_sub(self.after + 1);
+            if omitted != 0 {
+                self.dropped += omitted;
+                let mut gap = entry(first);
+                gap.level = Some(Level::Warning);
+                gap.message = format!("host_log_gap: {omitted} records are no longer retained");
+                gap.process = Some(ProcessRef {
+                    role: LOGGER.into(),
+                    pid: first.host_pid,
+                });
+                gap.context = BTreeMap::from([("dropped_records".into(), Value::from(omitted))]);
+                fresh.insert(0, gap);
+            }
+        }
         if let Some(last) = events.last() {
             self.after = last.sequence;
         }
+        let failure = snapshot
+            .log_failure
+            .as_ref()
+            .map(|error| (error.code, error.operation, error.os_code));
+        if failure != self.write_failure {
+            if let (Some(error), Some(last)) = (snapshot.log_failure, events.last()) {
+                let mut notice = last.clone();
+                notice.kind = cadrumo_application::diagnostics::EventKind::Failure;
+                notice.failure = Some(error);
+                notice.status = None;
+                notice.role = None;
+                notice.process = None;
+                notice.stage = None;
+                notice.lifecycle = None;
+                notice.service = None;
+                notice.helper_timing = None;
+                notice.helper_result = None;
+                notice.webview_failure = None;
+                notice.outcome = None;
+                notice.host_exit_code = None;
+                notice.panic = None;
+                fresh.push(entry(&notice));
+            }
+            self.write_failure = failure;
+        }
         fresh
+    }
+}
+
+pub fn source(diagnostics: &Diagnostics) -> LogSourceState {
+    let snapshot = diagnostics.snapshot(u64::MAX);
+    LogSourceState {
+        kind: if snapshot.log_failure.is_some() {
+            SourceKind::Unreadable
+        } else {
+            SourceKind::Available
+        },
+        detail: snapshot.paths.map_or_else(
+            || "desktop diagnostics (memory)".into(),
+            |paths| paths.current.display().to_string(),
+        ),
+        failure: snapshot.log_failure,
+        rejected: 0,
     }
 }
 
@@ -50,6 +111,7 @@ pub(super) fn entry(event: &Event) -> Entry {
     let (source, logger) = match event.source {
         DiagnosticSource::Desktop => (SOURCE, LOGGER),
         DiagnosticSource::Manager => ("manager", "manager"),
+        DiagnosticSource::Installer => ("installer", "installer"),
     };
     let process = event.status.as_ref().map_or_else(
         || ProcessRef {
@@ -97,12 +159,27 @@ pub(super) fn entry(event: &Event) -> Entry {
         if let Some(code) = failure.os_code {
             context.insert("os_code".into(), Value::from(code));
         }
+        failure_chain_context(failure, &mut context);
     }
     if let Some(fact) = event.lifecycle {
         super::manager::lifecycle_context(fact, &mut context);
     }
     if let Some(fact) = event.webview_failure {
         webview_context(fact, &mut context);
+    }
+    if let Some(fact) = &event.panic {
+        // Location and thread only: the hook never retains the panic message.
+        if let Some(file) = &fact.file {
+            context.insert("panic_file".into(), Value::from(file.clone()));
+        }
+        for (name, value) in [("panic_line", fact.line), ("panic_column", fact.column)] {
+            if let Some(value) = value {
+                context.insert(name.into(), Value::from(value));
+            }
+        }
+        context.insert("panic_thread".into(), Value::from(fact.thread.clone()));
+        context.insert("panic_thread_id".into(), Value::from(fact.thread_id));
+        context.insert("panic_category".into(), Value::from(token(fact.category)));
     }
     if let Some(fact) = event.helper_timing {
         context.insert("helper_kind".into(), Value::from(token(fact.helper_kind)));
@@ -121,7 +198,87 @@ pub(super) fn entry(event: &Event) -> Entry {
             context.insert(name.into(), elapsed.map_or(Value::Null, Value::from));
         }
     }
+    if let Some(fact) = &event.helper_result {
+        if let Some(trace) = &fact.trace_id {
+            context.insert("trace_id".into(), Value::from(trace.clone()));
+        }
+        context.insert("command".into(), Value::from(fact.command));
+        context.insert("executable".into(), Value::from(token(fact.executable)));
+        context.insert(
+            "envelope_decode".into(),
+            Value::from(token(fact.envelope_decode)),
+        );
+        context.insert("stdout_bytes".into(), Value::from(fact.stdout_bytes));
+        context.insert("stderr_bytes".into(), Value::from(fact.stderr_bytes));
+        for (name, value) in [
+            ("code", &fact.code),
+            ("reason", &fact.reason),
+            ("exception_type", &fact.exception_type),
+            ("raised_at", &fact.raised_at),
+            ("native_subject", &fact.native_subject),
+        ] {
+            if let Some(value) = value {
+                context.insert(name.into(), Value::from(value.clone()));
+            }
+        }
+    }
+    if let Some(fact) = event.service {
+        let encoded = serde_json::to_value(fact).expect("closed service fact serializes");
+        for (key, value) in encoded.as_object().expect("service fact is an object") {
+            let name = match key.as_str() {
+                "gatewayPort" => "gateway_port",
+                "delayMs" => "delay_ms",
+                "prepareMs" => "prepare_ms",
+                "spawnMs" => "spawn_ms",
+                "packageAbi" => "package_abi",
+                "logLevel" => "log_level",
+                "logLevelOverridden" => "log_level_overridden",
+                name => name,
+            };
+            context.insert(format!("service_{name}"), value.clone());
+        }
+        if let cadrumo_application::diagnostics::service::ServiceFact::AgentReady {
+            gateway_port,
+            ..
+        } = fact
+        {
+            context.insert("endpoint_transport".into(), Value::from("http"));
+            context.insert("endpoint_host".into(), Value::from("127.0.0.1"));
+            context.insert("endpoint_port".into(), Value::from(gateway_port));
+        }
+    }
     let mut message = token(event.kind);
+    if let Some(fact) = &event.panic {
+        message.push_str(&format!(": {}", token(fact.category)));
+        if let (Some(file), Some(line)) = (&fact.file, fact.line) {
+            message.push_str(&format!(" at {file}:{line}"));
+        }
+        message.push_str(&format!(" on thread {}", fact.thread));
+    }
+    if let Some(fact) = event.service {
+        let encoded = serde_json::to_value(fact).expect("closed service fact serializes");
+        message = encoded["event"]
+            .as_str()
+            .unwrap_or("service_event")
+            .to_owned();
+        if let cadrumo_application::diagnostics::service::ServiceFact::AgentReady {
+            gateway_port,
+            ..
+        } = fact
+        {
+            message.push_str(&format!(" at http://127.0.0.1:{gateway_port}"));
+        }
+        if let cadrumo_application::diagnostics::service::ServiceFact::AgentStartupTiming {
+            prepare_ms,
+            spawn_ms,
+            ..
+        } = fact
+        {
+            message.push_str(&format!(
+                ": preparation {prepare_ms} ms, process launch {spawn_ms} ms"
+            ));
+        }
+    }
     if let Some(fact) = event.lifecycle {
         let encoded = serde_json::to_value(fact).expect("closed lifecycle fact serializes");
         if let Some(name) = encoded["event"].as_str() {
@@ -158,20 +315,11 @@ pub(super) fn entry(event: &Event) -> Entry {
                 .unwrap_or_default(),
             failure.message
         ));
-    }
-    let level = match event.kind {
-        EventKind::Failure => Level::Error,
-        EventKind::ChildTerminated => Level::Warning,
-        EventKind::ChildExited
-            if event
-                .status
-                .as_ref()
-                .is_some_and(|status| status.exit_code != Some(0)) =>
-        {
-            Level::Warning
+        if let Some(chain) = failure.chain_summary() {
+            message.push_str(&format!(" [{chain}]"));
         }
-        _ => Level::Info,
-    };
+    }
+    let level = super::severity::level(event);
     Entry {
         source,
         timestamp: utc(event.timestamp_ms),
@@ -182,6 +330,27 @@ pub(super) fn entry(event: &Event) -> Entry {
         detail: None,
         process: Some(process),
         context,
+    }
+}
+
+/// The failure's check reason and each cause as payload-free context.
+pub(super) fn failure_chain_context(
+    failure: &cadrumo_application::error::application::ApplicationError,
+    context: &mut BTreeMap<String, Value>,
+) {
+    if let Some(reason) = &failure.reason {
+        context.insert("failure_reason".into(), Value::from(reason.to_string()));
+    }
+    if !failure.causes.is_empty() {
+        let chain: Vec<String> = failure.causes.iter().map(|cause| cause.summary()).collect();
+        context.insert("causes".into(), Value::from(chain.join(" <- ")));
+    }
+    let trace = failure.causes.iter().find_map(|cause| match cause {
+        cadrumo_application::error::application::Cause::Child(refusal) => refusal.trace_id.clone(),
+        _ => None,
+    });
+    if let Some(trace) = trace {
+        context.insert("trace_id".into(), Value::from(trace));
     }
 }
 
@@ -261,10 +430,220 @@ fn utc(epoch_ms: u64) -> String {
 mod tests {
     use super::*;
     use cadrumo_application::{
+        diagnostics::EventKind,
         diagnostics::helper::{HelperKind, HelperOutcome, HelperTiming},
         error::application::{ApplicationError, ErrorCode, Operation},
         process::status::{ProcessPhase, ProcessRole, Stream},
     };
+
+    #[cfg(windows)]
+    #[test]
+    fn helper_envelope_failure_reaches_persisted_logs_and_view_without_private_payloads() {
+        use crate::shell::sign_in::process::Children;
+        use cadrumo_application::diagnostics::helper::{HelperExecutable, HelperIdentity};
+        use std::sync::Arc;
+        let identity = HelperIdentity {
+            command: "config.login",
+            executable: HelperExecutable::Cli,
+        };
+        let powershell = |script: &str| {
+            let mut command = std::process::Command::new(
+                std::path::Path::new(&std::env::var_os("SystemRoot").unwrap())
+                    .join("System32/WindowsPowerShell/v1.0/powershell.exe"),
+            );
+            command.args([
+                "-NoLogo",
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                script,
+            ]);
+            // A test's children never open a console on the person's screen.
+            std::os::windows::process::CommandExt::creation_flags(&mut command, 0x0800_0000);
+            command
+        };
+        use cadrumo_application::diagnostics::helper::HelperDecode;
+        let directory = std::env::temp_dir().join(format!(
+            "cadrumo-helper-diagnostics-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir(&directory).unwrap();
+        let diagnostics = Arc::new(Diagnostics::default());
+        diagnostics.configure(&directory, 64 * 1024, 1).unwrap();
+        let children = Children::new(diagnostics.clone());
+        let envelope = serde_json::json!({
+            "schema_version":"2", "command":"config.login", "status":"error",
+            "active_profile":"PRIVATE-PROFILE-CANARY",
+            "error":{"code":"INTERNAL", "message":"PRIVATE-MESSAGE-CANARY",
+                "trace_id":"0123456789abcdef0123456789abcdef",
+                "context":{"reason":"unexpected_failure", "exception_type":"AttributeError",
+                    "raised_at":"cadrumo_runtime.host.connection:submit:42",
+                    "private":"PRIVATE-CONTEXT-CANARY"}}
+        });
+        let script = format!(
+            "[Console]::Out.Write('PRIVATE-STDOUT-CANARY'); [Console]::Error.Write('{envelope}'); exit 1"
+        );
+        let output = children.run(identity, powershell(&script), None).unwrap();
+        let snapshot = diagnostics.snapshot(0);
+        let event = snapshot
+            .events
+            .iter()
+            .find(|event| event.helper_result.is_some())
+            .unwrap();
+        let fact = event.helper_result.as_ref().unwrap();
+        assert_eq!(fact.envelope_decode, HelperDecode::Refused);
+        assert_eq!(fact.code.as_deref(), Some("INTERNAL"));
+        assert_eq!(fact.exception_type.as_deref(), Some("AttributeError"));
+        assert_eq!(
+            fact.raised_at.as_deref(),
+            Some("cadrumo_runtime.host.connection:submit:42")
+        );
+        assert_eq!(
+            fact.trace_id.as_deref(),
+            Some("0123456789abcdef0123456789abcdef")
+        );
+        assert_eq!(fact.stdout_bytes, output.stdout.len() as u64);
+        assert_eq!(fact.stderr_bytes, output.stderr.len() as u64);
+        assert_eq!(event.process, Some(snapshot.processes[0].id));
+        assert_eq!(
+            event.status.as_ref().unwrap().pid,
+            snapshot.processes[0].pid
+        );
+        assert_eq!(
+            event.status.as_ref().unwrap().stderr_bytes,
+            fact.stderr_bytes
+        );
+        assert!(snapshot.output.is_empty());
+        let records = HostEvents::default().poll(&diagnostics);
+        let record = records
+            .iter()
+            .find(|entry| entry.context.contains_key("envelope_decode"))
+            .unwrap();
+        assert_eq!(record.level, Some(Level::Error));
+        assert_eq!(record.context["command"], "config.login");
+        assert_eq!(record.context["executable"], "cli");
+        assert_eq!(record.context["exception_type"], "AttributeError");
+        assert_eq!(
+            record.context["trace_id"],
+            "0123456789abcdef0123456789abcdef"
+        );
+        assert_eq!(record.context["stderr_bytes"], fact.stderr_bytes);
+        let persisted = std::fs::read_to_string(snapshot.paths.unwrap().current).unwrap();
+        for text in [
+            persisted,
+            serde_json::to_string(&snapshot.events).unwrap(),
+            format!("{records:?}"),
+        ] {
+            assert!(
+                !text.contains("CANARY"),
+                "private helper output reached diagnostics"
+            );
+            assert!(text.contains("AttributeError"));
+        }
+        let malformed = children
+            .read(
+                identity,
+                powershell("[Console]::Error.Write('PRIVATE-MALFORMED-CANARY'); exit 1"),
+            )
+            .unwrap();
+        let snapshot = diagnostics.snapshot(0);
+        let fact = snapshot
+            .events
+            .iter()
+            .rev()
+            .find_map(|event| event.helper_result.as_ref())
+            .unwrap();
+        assert_eq!(fact.envelope_decode, HelperDecode::Malformed);
+        assert_eq!(fact.stderr_bytes, malformed.stderr.len() as u64);
+        assert!(fact.code.is_none() && fact.raised_at.is_none());
+        let success = serde_json::json!({"schema_version":"2","command":"config.login","status":"success","result":{"private":"PRIVATE-RESULT-CANARY"}});
+        children
+            .read(
+                identity,
+                powershell(&format!("[Console]::Out.Write('{success}')")),
+            )
+            .unwrap();
+        let records = HostEvents::default().poll(&diagnostics);
+        assert_eq!(
+            records
+                .iter()
+                .rev()
+                .find(|record| record
+                    .context
+                    .get("envelope_decode")
+                    .is_some_and(|v| v == "success"))
+                .unwrap()
+                .level,
+            Some(Level::Debug)
+        );
+        assert!(!format!("{records:?}").contains("CANARY"));
+        children.stop().unwrap();
+        let process_count = diagnostics.snapshot(0).processes.len();
+        let error = children
+            .read(identity, powershell("throw 'PRIVATE-UNREACHED-CANARY'"))
+            .err()
+            .unwrap();
+        assert_eq!(error.code, ErrorCode::SessionUnavailable);
+        let snapshot = diagnostics.snapshot(0);
+        assert_eq!(snapshot.processes.len(), process_count);
+        let event = snapshot
+            .events
+            .iter()
+            .rev()
+            .find(|event| event.helper_result.is_some())
+            .unwrap();
+        assert!(event.process.is_none());
+        assert_eq!(
+            event.failure.as_ref().unwrap().code,
+            ErrorCode::SessionUnavailable
+        );
+        assert_eq!(
+            event.helper_result.as_ref().unwrap().command,
+            "config.login"
+        );
+        let records = HostEvents::default().poll(&diagnostics);
+        let record = records
+            .iter()
+            .rev()
+            .find(|record| {
+                record
+                    .context
+                    .get("command")
+                    .is_some_and(|value| value == "config.login")
+            })
+            .unwrap();
+        assert_eq!(record.context["reason_code"], "session_unavailable");
+        assert_eq!(record.context["envelope_decode"], "unavailable");
+        let persisted =
+            std::fs::read_to_string(diagnostics.snapshot(0).paths.unwrap().current).unwrap();
+        assert!(!persisted.contains("CANARY"));
+        std::fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn agent_startup_durations_are_visible_and_project_as_closed_scalars() {
+        let diagnostics = Diagnostics::default();
+        diagnostics.service(
+            None,
+            cadrumo_application::diagnostics::service::ServiceFact::AgentStartupTiming {
+                generation: 2,
+                prepare_ms: 2400,
+                spawn_ms: 350,
+            },
+        );
+        let entries = HostEvents::default().poll(&diagnostics);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0].message,
+            "agent_startup_timing: preparation 2400 ms, process launch 350 ms"
+        );
+        assert_eq!(entries[0].context["service_prepare_ms"], 2400);
+        assert_eq!(entries[0].context["service_spawn_ms"], 350);
+    }
 
     #[test]
     fn helper_phase_durations_project_as_closed_scalars_without_child_output() {
@@ -363,8 +742,11 @@ mod tests {
         ));
         let second = host.poll(&diagnostics);
         assert_eq!(second.len(), 2);
-        assert_eq!(second[0].message, "child_exited: tui pid 4242, exit code 3");
-        assert_eq!(second[0].level, Some(Level::Warning));
+        assert_eq!(
+            second[0].message,
+            "child_exited: tui pid 4242, exit code 3: child_failed during launch: The child process exited unsuccessfully"
+        );
+        assert_eq!(second[0].level, Some(Level::Error));
         assert_eq!(
             second[0].process,
             Some(ProcessRef {
@@ -391,7 +773,10 @@ mod tests {
         for pid in 0..600 {
             diagnostics.start(pid, ProcessRole::Cli);
         }
-        assert_eq!(host.poll(&diagnostics).len(), 512);
+        let records = host.poll(&diagnostics);
+        assert_eq!(records.len(), 513);
+        assert_eq!(records[0].level, Some(Level::Warning));
+        assert!(records[0].context["dropped_records"].as_u64().unwrap() > 0);
         diagnostics.start(9_999, ProcessRole::Cli);
         let fresh = host.poll(&diagnostics);
         assert_eq!(fresh.len(), 1);
@@ -421,7 +806,10 @@ mod tests {
         for _ in 0..600 {
             diagnostics.host_outcome(HostStage::Manager, HostOutcome::AlreadyRunning);
         }
-        assert_eq!(host.poll(&diagnostics).len(), 512);
+        let records = host.poll(&diagnostics);
+        assert_eq!(records.len(), 513);
+        assert_eq!(records[0].level, Some(Level::Warning));
+        assert!(records[0].context["dropped_records"].as_u64().unwrap() > 0);
         diagnostics.host_outcome(HostStage::Manager, HostOutcome::AlreadyRunning);
         assert_eq!(host.poll(&diagnostics).len(), 1);
     }

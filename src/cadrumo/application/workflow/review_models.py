@@ -74,7 +74,7 @@ class InvoiceReviewRecord(BaseModel):
     @field_validator("fields")
     @classmethod
     def _normalise_fields(cls, value: dict[str, str]) -> dict[str, str]:
-        return {normalise_key(str(key)): str(raw).strip() for key, raw in value.items()}
+        return {normalise_key(key): raw.strip() for key, raw in value.items()}
 
 
 __all__ = ["InvoiceReviewRecord", "LedgerReviewRecord", "WorkflowEvent"]

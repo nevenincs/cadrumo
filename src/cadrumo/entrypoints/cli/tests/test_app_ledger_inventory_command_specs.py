@@ -4,6 +4,15 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LiteralValue,
+    ParameterDefault,
+    TranslationKey,
+    ValueContract,
+)
+
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .._app_ledger_inventory_analysis_command_specs import LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS
 from .._app_ledger_inventory_command_specs import LEDGER_INVENTORY_COMMAND_SPECS
@@ -12,8 +21,6 @@ from ..app_ledger_inventory_common_command_parameters import (
     INVENTORY_ACTIVIDAD_ID_OPTION,
     INVENTORY_YEAR_OPTION,
 )
-from ..command_parameter_contracts import ArgumentSpec, OptionSpec
-from ..command_shared_contracts import DeferredTarget, LiteralValue, ParameterDefault, TranslationKey, ValueContract
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

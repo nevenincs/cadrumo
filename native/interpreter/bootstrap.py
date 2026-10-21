@@ -1,4 +1,4 @@
-"""Install the assembler's native-module map without site or .pth execution."""
+"""Install the assembler's native-module map and declared package paths."""
 
 import hashlib
 import importlib
@@ -14,6 +14,7 @@ from typing import override
 _cadrumo_native = importlib.import_module("_cadrumo_native")
 
 LAYOUT = {}
+PACKAGE_FIXED_ENVIRONMENT_NAMES = ()
 
 
 def _inside(root, relative):
@@ -96,26 +97,55 @@ def _delegated_inventory(root, manifest):
     return inventory
 
 
-def verify(full=False):
-    """Refuse mixed builds and missing/damaged runtime inputs; optionally hash every file."""
-    root = (Path(sys.executable).parent / LAYOUT["package_root_from_executable"]).resolve()
-    files = LAYOUT["files"]
-    manifest = json.loads(_inside(root, files["package_manifest"]).read_text(encoding="utf-8"))
-    identity = manifest["build"]
-    for key in ("version", "build_number", "build_date"):
-        if str(identity[key]) != str(vars(sys)["cadrumo_build"][key]):
+def _require_build(identity):
+    # The package record names the interpreter hosts' own build, which this image compiled in.
+    compiled = vars(sys)["cadrumo_build"]
+    hosts = identity["interpreter"]
+    if str(identity["version"]) != str(compiled["version"]):
+        raise ImportError("Incompatible CADRUMO package build: version")
+    for key in ("build_number", "build_id", "build_date"):
+        if str(hosts[key]) != str(compiled[key]):
             raise ImportError(f"Incompatible CADRUMO package build: {key}")
     if identity["python"] != ".".join(map(str, sys.version_info[:3])):
         raise ImportError("Incompatible CADRUMO CPython version")
+
+
+def _package_root():
+    """Return the package root of this interpreter image.
+
+    The generic interpreter and its console entrypoints run with the package's interpreter as
+    ``sys.executable``; a bundled-distribution image runs as itself from the native directory.
+    """
+    executable = Path(sys.executable)
+    directory = executable.parent
+    bundled = {f"{name}{LAYOUT['entrypoint_suffix']}" for name in LAYOUT.get("bundled_images", {})}
+    if executable.name in bundled:
+        for _ in Path(LAYOUT["paths"]["native"]).parts:
+            directory = directory.parent
+    return (directory / LAYOUT["package_root_from_executable"]).resolve()
+
+
+def verify(full=False):
+    """Refuse a mixed build at every start; with ``full``, check and hash the whole package.
+
+    Every Cadrumo Python process starts here, so a start reads only the small build record. The
+    assembled package is the build's guarantee; listing, hashing or parsing its whole inventory
+    belongs to ``python.exe --check-package``, not to each interpreter start.
+    """
+    root = _package_root()
+    files = LAYOUT["files"]
+    if not full:
+        _require_build(json.loads(_inside(root, files["build_metadata"]).read_text(encoding="utf-8")))
+        return
+    manifest = json.loads(_inside(root, files["package_manifest"]).read_text(encoding="utf-8"))
+    _require_build(manifest["build"])
     _present(root, manifest["files"])
-    inventory = _delegated_inventory(root, manifest) if full else manifest["files"]
-    if full:
-        observed = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
-        expected = set(inventory) | {files["package_manifest"]}
-        if observed != expected:
-            raise ImportError(f"Unexpected package files: {observed - expected}")
-    required = inventory if full else manifest["startup_files"]
-    for relative in required:
+    inventory = _delegated_inventory(root, manifest)
+    observed = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
+    expected = set(inventory) | {files["package_manifest"]}
+    if observed != expected:
+        raise ImportError(f"Unexpected package files: {observed - expected}")
+    for relative in inventory:
         path = _inside(root, relative)
         if not path.is_file():
             raise ImportError(f"Missing bundled file: {relative}")
@@ -162,8 +192,9 @@ def run_entrypoint(name):
 
 def install():
     """Apply explicit wheel paths and retain native search handles until exit."""
-    root = (Path(sys.executable).parent / LAYOUT["package_root_from_executable"]).resolve()
+    root = _package_root()
     verify()
+    vars(sys)["cadrumo_build"]["fixed_environment_names"] = PACKAGE_FIXED_ENVIRONMENT_NAMES
     manifest = json.loads(_inside(root, LAYOUT["files"]["native_manifest"]).read_text(encoding="utf-8"))
     _cadrumo_native.prepare(root, manifest)
     path_file = _inside(root, LAYOUT["files"]["path_file"])

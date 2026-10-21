@@ -283,7 +283,7 @@ def _append_structural_endpoint_lineage_failures(
 ) -> None:
     boundary = "end" if side == "source" else "begin"
     for lineage in lineages:
-        key = (side, str(endpoint.id), str(lineage))
+        key = (side, endpoint.id, lineage)
         if key in owned:
             failures.append(prefix + f"overlapping {side} ownership for {lineage!r}")
         owned.add(key)

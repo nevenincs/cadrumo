@@ -243,8 +243,21 @@ def configure_operator_auth(
                     expected_revision=expected_profile_revision,
                     expected_content_digest=expected_profile_digest,
                 )
-                operational_changed = current_state.auth.provider != listing.id or (
-                    certificate_path is not None and current_state.auth.certificate_path != str(certificate_path)
+                from .certificate_sources import active_certificate_source, register_certificate_source
+
+                selected_source = active_certificate_source(current_state)
+                source_update = (
+                    (selected_source, certificate_path)
+                    if listing.id == AuthProviderKind.CERTIFICATE.value
+                    and certificate_path is not None
+                    and selected_source is not None
+                    and selected_source.certificate_path != str(certificate_path)
+                    else None
+                )
+                operational_changed = (
+                    source_update is not None
+                    or current_state.auth.provider != listing.id
+                    or (certificate_path is not None and current_state.auth.certificate_path != str(certificate_path))
                 )
                 changed = preference_changed or operational_changed
                 if not changed:
@@ -258,6 +271,14 @@ def configure_operator_auth(
                     action="auth.provider.configured",
                     object_id=listing.id,
                 )
+                if source_update is not None:
+                    selected_source, selected_path = source_update
+                    next_state = register_certificate_source(
+                        next_state,
+                        name=selected_source.name,
+                        certificate_path=selected_path,
+                        friendly_name=selected_source.friendly_name,
+                    )
                 events = _build_bucket_events(
                     bucket_id=bucket_id,
                     events=(
@@ -277,7 +298,12 @@ def configure_operator_auth(
         state=next_state,
         provider=listing.id,
         certificate_path=(
-            certificate_path or (Path(next_state.auth.certificate_path) if next_state.auth.certificate_path else None)
+            certificate_path
+            or (
+                Path(next_state.auth.certificate_path)
+                if (next_state.auth.certificate_path is not None and next_state.auth.certificate_path)
+                else None
+            )
         ),
         changed=changed,
     )
@@ -624,9 +650,7 @@ def _build_live_auth_preflight_report(
                 operator_probe_ports=operator_probe_ports,
             ),
             certificate_path_configured=certificate_path is not None,
-            certificate_file_present=bool(
-                certificate_path is not None and certificate_path.is_file(),
-            ),
+            certificate_file_present=certificate_path is not None and certificate_path.is_file(),
             persisted_session_present=probe.persisted_session_present,
             persisted_session_expired=probe.persisted_session_expired,
             persisted_session_state=probe.persisted_session_state,
@@ -702,6 +726,9 @@ async def login_operator_auth(
             guarded_read_context=guarded_read_context,
         )
 
+        resolved_settings = resolved_settings.model_copy(
+            update={"cadrumo_clave_permanente_password": snapshot.clave_permanente_password}
+        )
         certificate_credentials = snapshot.certificate_credentials
 
         # Provider-specific local-readiness preconditions. A certificate
@@ -1039,7 +1066,11 @@ def _logout_event_provider_ids(
     return tuple(
         dict.fromkeys(
             (
-                *((current_provider,) if clears_session_state and current_provider else ()),
+                *(
+                    (current_provider,)
+                    if clears_session_state and (current_provider is not None and current_provider)
+                    else ()
+                ),
                 *intent.session_provider_ids,
             ),
         ),
@@ -1301,7 +1332,7 @@ def _append_bucket_event(
     # Auth flows can run before a profile is bound (e.g. `auth configure`
     # during initial setup). Falling back to the literal "default" silently
     # pools the unbound-session event into any operator's bucket that
-    # happens to be named "default" — agent-audited as CRIT bucket-isolation
+    # happens to be named "default" — automation-audited as CRIT bucket-isolation
     # leak. Use a clearly system-scoped sentinel that cannot collide with
     # a real profile UUID so repair surfaces can spot + clear these.
     bucket_id = state.active_profile_bucket_id() or "__unbound_session__"

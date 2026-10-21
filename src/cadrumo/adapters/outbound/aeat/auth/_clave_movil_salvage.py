@@ -105,7 +105,7 @@ class _ClaveMovilSessionSalvageMixin(abc.ABC):
         Returns:
             The observed URL when it is an authenticated AEAT landing, else ``None``.
         """
-        if not observed_url:
+        if not (observed_url is not None and observed_url):
             return None
         if not self._is_authenticated_aeat_landing(landing_url=observed_url, target_path=target_path):
             return None

@@ -36,11 +36,11 @@ from .....application.modelo.reconciliation import (
     ModeloReconciliationCommand,
     PreparedModeloReconciliation,
 )
+from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from .....application.modelo.reconciliation_records import (
     ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
     ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationRecord,
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,

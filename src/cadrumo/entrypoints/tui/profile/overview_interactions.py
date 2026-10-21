@@ -49,6 +49,9 @@ class ProfileOverviewInteractionMixin:
     async def on_button_pressed(self: ProfileManagerScreen, event: Button.Pressed) -> None:
         """Route setup, section, and acquisition buttons in their established order."""
         button_id = event.button.id or ""
+        if button_id == "manager-auth-edit":
+            self._edit_aeat_auth()
+            return
         if await _handle_setup_button(self, button_id):
             return
         if _handle_section_button(self, button_id):
@@ -313,7 +316,7 @@ class ProfileOverviewInteractionMixin:
         self.app.push_screen(
             FieldEditScreen(
                 field,
-                prompt=tr("wizard.setup.profile.output-language.prompt"),
+                prompt_key="wizard.setup.profile.output-language.prompt",
                 choice_labels={
                     choice.value: tr(
                         f"wizard.setup.profile.output-language.choices.{choice.value}.label",

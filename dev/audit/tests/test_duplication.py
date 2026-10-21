@@ -18,6 +18,7 @@ from pathlib import Path
 import pytest
 
 from dev._paths import REPO_ROOT
+from dev.first_party_source import SOURCE_PACKAGES
 from dev.source_tree import repository_files
 
 from ..duplication import (
@@ -47,7 +48,8 @@ def test_command_passes_a_posix_source_path() -> None:
     """
     command = jscpd_command("npx")
 
-    assert "src/cadrumo" in command
+    assert set(SOURCE_PACKAGES) <= set(command), "every package under src/ is one jscpd scope"
+    assert {"src/cadrumo_harness", "src/cadrumo_agent_service"} <= set(command)
     assert not any("\\" in arg for arg in command), f"a backslash path reached jscpd: {command}"
 
 
@@ -320,7 +322,7 @@ def test_the_corpus_refuses_a_module_it_cannot_parse(tmp_path: pathlib.Path) -> 
 
     A silently skipped module hid its duplicates from all of them at once, and
     nothing downstream reports a corpus size, so a short corpus and a clean one
-    looked identical. Measured against the shipped tree there are 2103 source
+    looked identical. Measured against the src/ packages there are 3544 source
     files and none unparsable, which is why the defect is proven here on a
     constructed one.
     """
@@ -332,7 +334,7 @@ def test_the_corpus_refuses_a_module_it_cannot_parse(tmp_path: pathlib.Path) -> 
     (package / "broken.py").write_text("def (:" + chr(10), encoding="utf-8")
 
     with pytest.raises(SystemExit, match="could not be parsed"):
-        _load_modules(package)
+        _load_modules((package,))
 
 
 def test_the_corpus_refuses_a_module_it_cannot_read(tmp_path: pathlib.Path) -> None:
@@ -354,7 +356,7 @@ def test_the_corpus_refuses_a_module_it_cannot_read(tmp_path: pathlib.Path) -> N
     (package / "vanished.py").mkdir()
 
     with pytest.raises(SystemExit, match="could not be read"):
-        _load_modules(package)
+        _load_modules((package,))
 
 
 def test_the_two_corpus_refusals_do_not_answer_for_each_other(tmp_path: pathlib.Path) -> None:
@@ -369,9 +371,9 @@ def test_the_two_corpus_refusals_do_not_answer_for_each_other(tmp_path: pathlib.
     (unreadable / "vanished.py").mkdir()
 
     with pytest.raises(SystemExit) as parsed:
-        _load_modules(unparsable)
+        _load_modules((unparsable,))
     with pytest.raises(SystemExit) as read:
-        _load_modules(unreadable)
+        _load_modules((unreadable,))
 
     assert "could not be parsed" in str(parsed.value)
     assert "could not be read" not in str(parsed.value)
@@ -391,7 +393,7 @@ def test_an_empty_corpus_refuses_rather_than_reporting_clean(tmp_path: pathlib.P
     empty.mkdir()
 
     with pytest.raises(SystemExit, match="no production modules"):
-        _load_modules(empty)
+        _load_modules((empty,))
 
 
 def test_a_readable_corpus_still_loads(tmp_path: pathlib.Path) -> None:
@@ -402,7 +404,7 @@ def test_a_readable_corpus_still_loads(tmp_path: pathlib.Path) -> None:
     package.mkdir()
     (package / "sound.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
 
-    assert [module.relative for module in _load_modules(package)] == ["sound.py"]
+    assert [module.relative for module in _load_modules((package,))] == ["cadrumo/sound.py"]
 
 
 @pytest.mark.parametrize(

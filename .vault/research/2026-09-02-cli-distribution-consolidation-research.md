@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#cli-distribution-consolidation'
 date: '2026-09-02'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:6cfaf664e857b0ee7da98f11bf70d41cfa5a4c26ca072a8e848b4297c8626a58'
+body_hash: 'sha256:cfb3f79e8f0341b723e35b47d35e12b197c3f3d8971d888d7133d7fa0e36972f'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -867,6 +867,6 @@ Nothing outstanding for this decision.
   `pypdfium2`, `pillow`, `lxml`, `rtoml` and `pydantic-core`, read from their
   respective `https://pypi.org/pypi/<name>/json` endpoints
 - The canonical runner-fleet manifest and the two sibling publish workflows are read
-  from sibling checkouts outside this repository, at `Y:/code/ci-fleet/fleet.yml`,
-  `Y:/code/vaultspec-core-worktrees/main/.github/workflows/publish.yml` and
-  `Y:/code/vaultspec-core-worktrees/main/.github/workflows/release-please.yml`.
+  from sibling checkouts outside this repository, at `<code-root>/ci-fleet/fleet.yml`,
+  `<vaultspec-core-repo>/.github/workflows/publish.yml` and
+  `<vaultspec-core-repo>/.github/workflows/release-please.yml`.

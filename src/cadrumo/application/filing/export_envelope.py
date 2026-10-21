@@ -210,8 +210,8 @@ def _declared_envelope_period_token(
     if (
         envelope is None
         or modelo.value != "369"
-        or str(envelope.source_ref) != "aeat-dr-369-2021"
-        or str(envelope.source_sha256) != "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
+        or envelope.source_ref != "aeat-dr-369-2021"
+        or envelope.source_sha256 != "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
         or envelope.record_identity != "T3690 Estruc. gral"
         or envelope.product_identity_requirement is not None
         or tuple(field.role for field in envelope.prefix_fields)
@@ -402,7 +402,7 @@ def _envelope_prefix_identity_value(
     if role is FilingEnvelopePrefixRole.DEVELOPER_TAX_ID:
         if product_software_identity is None:
             raise FilingExportValidationError("developer tax ID requires explicit software identity")
-        return str(product_software_identity.developer_tax_id)
+        return product_software_identity.developer_tax_id
     if role is FilingEnvelopePrefixRole.DECLARANT_TAX_ID:
         if declarant_tax_id is None:
             raise FilingExportValidationError("declarant tax ID requires the approved filing subject")

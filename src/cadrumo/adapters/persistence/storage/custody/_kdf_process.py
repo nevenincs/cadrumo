@@ -8,9 +8,10 @@ import subprocess
 import sys
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Final, cast
 
 from .....core.child_console import child_console_creation_flags
+from .....core.package_interpreter import interpreter_command
 from .....core.storage_environment import ChildEnvironmentProfile, child_environment
 from ._kdf_refusals import supervision_refusal as _supervision_refusal
 from ._kdf_windows_job import _WindowsJob
@@ -19,18 +20,23 @@ from ._kdf_worker_limits import (
     PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES,
 )
 
+#: ABOVE_NORMAL_PRIORITY_CLASS, spelled as a literal so the value is defined on every platform.
+WINDOWS_ABOVE_NORMAL_PRIORITY_CLASS: Final = 0x00008000
+
 
 def launch_worker(
     *,
     neutral_root: Path,
     request_read: int,
     result_write: int,
-) -> tuple[subprocess.Popen[bytes], _WindowsJob | None]:
+) -> tuple[subprocess.Popen[bytes], _WindowsJob | None, frozenset[str]]:
+    """Launch one contained worker; also name the environment it was given, for its attestation."""
     command, launch_kwargs = worker_command(
         neutral_root=neutral_root,
         request_read=request_read,
         result_write=result_write,
     )
+    environment_keys = _environment_keys(launch_kwargs)
     if sys.platform == "win32":
         job = _WindowsJob.create()
         process: subprocess.Popen[bytes] | None = None
@@ -47,9 +53,18 @@ def launch_worker(
             raise
         finally:
             clear_worker_handle_inheritance(request_read=request_read, result_write=result_write)
-        return process, job
+        return process, job, environment_keys
     process = _launch_worker_process(command, launch_kwargs)
-    return process, None
+    return process, None, environment_keys
+
+
+def _environment_keys(launch_kwargs: dict[str, object]) -> frozenset[str]:
+    # Native hosts pin these package-declared names after receiving our neutral
+    # environment. The bootstrap projects names only, never publisher values.
+    fixed = getattr(sys, "cadrumo_build", {}).get("fixed_environment_names", ())
+    if not isinstance(fixed, tuple) or not all(isinstance(name, str) for name in fixed):
+        raise _supervision_refusal()
+    return frozenset(cast("dict[str, str]", launch_kwargs["env"])) | frozenset(cast("tuple[str, ...]", fixed))
 
 
 def _launch_worker_process(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
@@ -81,7 +96,7 @@ def worker_command(
     result_write: int,
 ) -> tuple[list[str], dict[str, object]]:
     neutral_cwd = str(neutral_root.resolve())
-    command = [sys.executable, "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker"]
+    command = [*worker_interpreter(), "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker"]
     environment = worker_environment(neutral_root=neutral_root)
     common: dict[str, object] = {
         "close_fds": True,
@@ -103,7 +118,12 @@ def worker_command(
         common["startupinfo"] = startupinfo
         # A supervised runtime's stop is a console Ctrl+C; its own console keeps
         # the worker out of that event so the runtime alone decides its end.
-        common["creationflags"] = child_console_creation_flags()
+        # Argon2 lanes meet at a barrier on every slice, so on a host saturated
+        # by normal-priority work each pass waits on its most-starved lane and a
+        # sub-second derivation stretches to tens of seconds. The person is
+        # waiting on this one bounded child, so it is scheduled ahead of
+        # background work; its Job Object CPU-time limit still bounds it.
+        common["creationflags"] = child_console_creation_flags() | WINDOWS_ABOVE_NORMAL_PRIORITY_CLASS
         command.extend(("--request-handle", str(request_handle), "--result-handle", str(result_handle)))
     else:
         descriptor_bound = os.sysconf("SC_OPEN_MAX")
@@ -121,6 +141,28 @@ def worker_command(
             )
         )
     return command, common
+
+
+def worker_interpreter() -> tuple[str, ...]:
+    """Return the interpreter argv prefix that starts the worker.
+
+    On Windows the child receives its import roots through PYTHONPATH (see
+    :func:`worker_environment`), so it runs the base CPython directly and
+    without ``site``: a virtual environment's ``python.exe`` is a launcher
+    that starts the base interpreter as a second process, and the
+    site-packages ``.pth`` hooks import modules the child never uses. Both are
+    pure start-up cost on every wrap and unwrap. Elsewhere the interpreter
+    itself resolves the environment, so it is kept as is. A process the Cadrumo
+    binary hosts starts the binary's interpreter role, also without ``site``.
+    """
+    command = interpreter_command()
+    if len(command) > 1:
+        return (*command, "-S")
+    if sys.platform != "win32":
+        return command
+    base = getattr(sys, "_base_executable", None)
+    executable = base if isinstance(base, str) and base and Path(base).is_file() else sys.executable
+    return (executable, "-S")
 
 
 def worker_environment(*, neutral_root: Path) -> dict[str, str]:
@@ -177,10 +219,12 @@ def terminate_process_tree(process: subprocess.Popen[bytes], job: _WindowsJob | 
 
 
 __all__ = [
+    "WINDOWS_ABOVE_NORMAL_PRIORITY_CLASS",
     "apply_posix_worker_limits",
     "clear_worker_handle_inheritance",
     "launch_worker",
     "terminate_process_tree",
     "worker_command",
     "worker_environment",
+    "worker_interpreter",
 ]

@@ -29,6 +29,8 @@ from ..directory_scan import iter_directory
 from ..errors.hierarchy import CoreValidationError
 from ..storage_environment import STORAGE_ROOT
 from ..storage_materialization import ensure_storage_tree
+from ..storage_taxonomy import StorageCategory
+from ..storage_taxonomy_locations import storage_location, storage_path, storage_tree_targets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -142,36 +144,38 @@ def test_existing_explicit_directory_is_preserved_while_defaults_are_created(tmp
     assert (root / "cache" / "llm-cache").is_dir()
 
 
-def test_missing_explicit_runtime_namespace_is_not_provisioned(tmp_path: Path) -> None:
-    """The private default policy does not take ownership of an operator override."""
+def test_a_missing_explicit_runtime_namespace_is_neither_required_nor_created(tmp_path: Path) -> None:
+    """An operator-selected connection namespace belongs to the runtime, which creates and checks it."""
     root = tmp_path / "state"
     namespace = tmp_path / "operator-runtime"
-    with (
-        override_settings(cadrumo_local_storage_root=root, cadrumo_runtime_socket_dir=namespace),
-        pytest.raises(CoreValidationError) as refusal,
-    ):
-        ensure_storage_tree()
-    assert refusal.value.context is not None
-    assert refusal.value.context["state_directory_target"] == str(namespace)
-    assert refusal.value.context["explicit_override"] is True
+    with override_settings(cadrumo_local_storage_root=root, cadrumo_connection_socket_dir=namespace):
+        assert ensure_storage_tree() == root
+    assert root.is_dir()
     assert not namespace.exists()
-    assert not root.exists()
 
 
-@pytest.mark.skipif(os.name == "nt", reason="POSIX directory permission contract")
-def test_fresh_runtime_namespace_is_private_and_existing_permissions_are_preserved(tmp_path: Path) -> None:
-    """Fresh defaults admit a private endpoint; old insecure state stays visible to its guard."""
+def test_the_client_tree_never_creates_the_runtime_namespace_or_coordination_directory(tmp_path: Path) -> None:
+    """A client materialises its own tree only; the runtime alone creates what it owns."""
     root = tmp_path / "state"
     with override_settings(cadrumo_local_storage_root=root):
         ensure_storage_tree()
-        namespace = root / "runtime"
-        assert stat.S_IMODE(namespace.stat().st_mode) == 0o700
-        namespace.chmod(0o755)
-        sentinel = namespace / "sentinel"
-        sentinel.write_bytes(b"operator state")
         ensure_storage_tree()
-        assert stat.S_IMODE(namespace.stat().st_mode) == 0o755
-        assert sentinel.read_bytes() == b"operator state"
+    assert root.is_dir()
+    assert not (root / "runtime").exists(), "a client created the runtime's connection namespace"
+    assert not (root / ".runtime").exists(), "a client created the runtime's coordination directory"
+
+
+def test_the_runtime_owned_members_are_declared_and_left_out_of_the_client_tree() -> None:
+    """The runtime's namespace and ``.runtime/`` records are declared runtime-owned and never a client target."""
+    owned = {category for category in StorageCategory if storage_location(category).runtime_owned}
+    assert owned == {
+        StorageCategory.CONNECTION_SOCKETS,
+        StorageCategory.RUNTIME_COORDINATION,
+        StorageCategory.RUNTIME_INSTALLATION_RECORD,
+        StorageCategory.RUNTIME_INSTALLATION_LOCK,
+    }
+    settings = load_settings()
+    assert storage_path(StorageCategory.CONNECTION_SOCKETS, settings=settings) not in storage_tree_targets(settings)
 
 
 def test_the_root_mode_is_the_declared_owner_only_mode() -> None:

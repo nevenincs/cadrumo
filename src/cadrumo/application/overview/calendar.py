@@ -882,7 +882,7 @@ def calendar_events_from_modelo_records(
                 reference_id=record.filing_record_id,
                 summary=f"Modelo {record.modelo} {record.period} filing record",
                 modelo=str(record.modelo),
-                filing_year=int(record.filing_year),
+                filing_year=record.filing_year,
                 period=record.period,
                 status=f"{evidence.local_filing_state.value}:{record.status.value}",
                 aeat_submission_state=evidence.aeat_submission_state,
@@ -930,11 +930,11 @@ def holiday_coverage_statement(coverage: _DeadlineHolidayCoverage, territory: st
     if coverage is _DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY:
         if territory is None:
             return _tr("application.overview.calendar.holiday_coverage.national_and_territory_without_name")
-        return _tr("application.overview.calendar.holiday_coverage.national_and_territory", territory=str(territory))
+        return _tr("application.overview.calendar.holiday_coverage.national_and_territory", territory=territory)
     if coverage is _DeadlineHolidayCoverage.TERRITORY_UNVERIFIED:
         if territory is None:
             return _tr("application.overview.calendar.holiday_coverage.territory_unverified_without_name")
-        return _tr("application.overview.calendar.holiday_coverage.territory_unverified", territory=str(territory))
+        return _tr("application.overview.calendar.holiday_coverage.territory_unverified", territory=territory)
     if coverage is _DeadlineHolidayCoverage.NATIONAL_ONLY:
         return _tr("application.overview.calendar.holiday_coverage.national_only")
     if coverage is _DeadlineHolidayCoverage.NOT_SHIFTED:
@@ -991,9 +991,7 @@ def _calendar_entry_from_obligation(
                     "error_type": type(exc).__name__,
                 },
             )
-    censo_enrolment_state = (
-        None if censo_enrolment_states is None else censo_enrolment_states.get(obligation.modelo)
-    )
+    censo_enrolment_state = None if censo_enrolment_states is None else censo_enrolment_states.get(obligation.modelo)
     if censo_enrolment_state is None:
         censo_enrolment_state = _calendar_censo_enrolment_state(
             modelo=obligation.modelo,

@@ -1,13 +1,13 @@
 # Python API overview
 
-This page covers the Cadrumo Python package boundary for contributors: which
-layers exist, what each one owns, and where to start reading before following
-a link into the generated module reference. It is part of the full
+This page covers the first-party Python package boundaries for contributors:
+which layers exist, what each one owns, and where to start reading before
+following a link into the generated module reference. It is part of the full
 documentation build only; taxpayer-facing builds exclude the API tree.
 
 Cadrumo is a hexagonal application. Dependencies point inward: adapters and
 entry points depend on the application and domain layers, never the reverse.
-The generated reference mirrors the package tree, so the curated map below is
+The generated reference mirrors each package tree, so the curated map below is
 the fastest way to land in the right subpackage.
 
 ## Layers
@@ -41,12 +41,18 @@ service composes. Every public symbol has one defining module, and consumers
 import it from that module; package `__init__` files are inert namespace
 markers that export nothing.
 
-The complete generated tree starts at the {doc}`cadrumo package root
-<cadrumo>`. Every full documentation build generates the module pages from
-the source tree, so they are never committed or edited by hand.
+The application API starts at the {doc}`cadrumo package root <cadrumo>`. The
+neutral client contracts, installed runtime, MCP harness, and separate agent
+service each have their own generated package root. Every full documentation
+build generates these module pages from the canonical first-party source roots,
+so they are never committed or edited by hand.
 
 ```{toctree}
 :hidden:
 
 cadrumo
+cadrumo_client
+cadrumo_runtime
+cadrumo_harness
+cadrumo_agent_service
 ```

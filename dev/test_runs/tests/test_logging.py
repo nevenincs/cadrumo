@@ -69,7 +69,7 @@ def _top_level_environment() -> dict[str, str]:
     run_root = environment.pop("CADRUMO_TEST_RUN_ROOT", None)
     environment.pop("CADRUMO_TEST_RUN_SCRATCH", None)
     configured_logs = environment.get("CADRUMO_LOG_DIR", "").strip()
-    if run_root and configured_logs:
+    if (run_root is not None and run_root) and configured_logs:
         # The parent logger exports its generated per-process product-log path.
         # Drop that derived value with the run-root binding so an independent
         # child can mint a fresh run; explicit overrides remain untouched.
@@ -373,9 +373,8 @@ def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path
     run_root = Path(paths["run_root"]).resolve()
     scratch = Path(paths["scratch"]).resolve()
     assert Path(paths["cache"]).resolve() == run_root / "cache" / "pytest"
-    # Third-party tool caches are shared below configured Cadrumo storage.
-    assert paths["tool_cache_home"] == os.environ["XDG_CACHE_HOME"]
-    assert paths["tool_cache_home"] != str(ambient_cache)
+    # The child inherits machine-managed tool paths unchanged.
+    assert paths["tool_cache_home"] == str(ambient_cache)
     assert paths["log_dir"] == str(configured_storage / "diagnostic-logs")
     assert Path(paths["basetemp"]).resolve() == scratch / "pytest"
     assert Path(paths["stdlib_temp"]).resolve() == scratch

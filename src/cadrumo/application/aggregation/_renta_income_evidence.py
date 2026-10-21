@@ -20,8 +20,8 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import round_to_cents
 from ...domain.invoices.decomposition import decompose_invoice
 from ...domain.invoices.models import InvoiceCatalogue
-from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.components import category_cuota_is_zero_by_law
+from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.irpf_categories import has_activity_irpf_category
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.retencion_facts import (

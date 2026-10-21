@@ -14,12 +14,16 @@ from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import REPO_ROOT
 from dev.packaging.runtime_wheelhouse_contract import SUPPORTED_TARGETS
 
+from .build_directory import require_enrolled_output
+
 PREVIEW_NAME_SUFFIX = " Preview"
 """User-facing suffix that separates the preview installation family from stable."""
 MANAGER_NAME_SUFFIX = " Background Services"
 """User-facing suffix that names the per-user runtime manager after the channel's name."""
 MANAGER_COMPONENT = "manager"
 """Reverse-DNS component under the channel's application identifier for the runtime manager."""
+WINDOWS_DEVELOPMENT_PUBLISHER_SUFFIX = " Development"
+"""Separates a developer-registered package identity from every distributed one."""
 
 
 @dataclass(frozen=True)
@@ -41,6 +45,11 @@ class DistributionIdentity:
     upgrade_code: str
     manager_id: str
     manager_name: str
+    windows_package_name: str
+    windows_package_publisher: str
+    windows_package_development_publisher: str
+    windows_package_application: str
+    windows_package_version: str
 
 
 def validate_native_version(version: str) -> None:
@@ -50,6 +59,13 @@ def validate_native_version(version: str) -> None:
     major, minor, patch = map(int, version.split("."))
     if major > 255 or minor > 255 or patch > 65535:
         raise ValueError("Version exceeds the MSI ProductVersion limits (255.255.65535)")
+
+
+def _publisher_subject(common_name: str) -> str:
+    """Render a certificate subject whose common name needs no distinguished-name escaping."""
+    if common_name != common_name.strip() or not common_name or set(common_name) & set(',+"\\<>;=#'):
+        raise ValueError(f"Publisher {common_name!r} is not a plain certificate common name")
+    return f"CN={common_name}"
 
 
 def identity(target: str, channel: str = "stable", *, project_file: Path | None = None) -> DistributionIdentity:
@@ -65,7 +81,7 @@ def identity(target: str, channel: str = "stable", *, project_file: Path | None 
     suffix = "" if channel == "stable" else f".{channel}"
     app_id = PRODUCT_IDENTITY.application_id + suffix
     author = project["authors"][0]
-    name = PRODUCT_IDENTITY.display_name + ("" if channel == "stable" else PREVIEW_NAME_SUFFIX)
+    name = PRODUCT_IDENTITY.prose_name + ("" if channel == "stable" else PREVIEW_NAME_SUFFIX)
     return DistributionIdentity(
         name=name,
         application_id=app_id,
@@ -82,6 +98,13 @@ def identity(target: str, channel: str = "stable", *, project_file: Path | None 
         upgrade_code=str(uuid5(NAMESPACE_DNS, f"{app_id}/{platform.name}/machine")).upper(),
         manager_id=f"{app_id}.{MANAGER_COMPONENT}",
         manager_name=name + MANAGER_NAME_SUFFIX,
+        windows_package_name=app_id,
+        windows_package_publisher=_publisher_subject(author["name"]),
+        windows_package_development_publisher=_publisher_subject(
+            PRODUCT_IDENTITY.prose_name + WINDOWS_DEVELOPMENT_PUBLISHER_SUFFIX
+        ),
+        windows_package_application=PRODUCT_IDENTITY.prose_name,
+        windows_package_version=f"{version}.0",
     )
 
 
@@ -101,7 +124,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target", required=True, choices=[item.name for item in SUPPORTED_TARGETS])
     parser.add_argument("--channel", default="stable", choices=("stable", "preview"))
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=require_enrolled_output, required=True)
     args = parser.parse_args()
     value = identity(args.target, args.channel)
     args.output.mkdir(parents=True, exist_ok=True)

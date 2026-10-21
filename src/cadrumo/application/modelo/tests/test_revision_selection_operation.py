@@ -12,6 +12,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
+
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -35,7 +38,6 @@ from ...operations.models import OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessRequest
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import work_addressing
 from ..external_import_actions import build_external_filing_record
@@ -57,6 +59,27 @@ _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _REVISION_ID = "a" * 64
 _REPORT_ID = "b" * 64
+
+
+@pytest.mark.parametrize(
+    "coordinates",
+    [{}, {"modelo": "130"}, {"modelo": "130", "period": {"filing_year": 2026, "code": "1T"}}],
+)
+def test_incomplete_saved_return_address_explains_how_to_read_it(coordinates: dict[str, object]) -> None:
+    with pytest.raises(ValidationError, match=r"period\.filing_year does not replace year"):
+        ModeloWorkRevisionRequest.model_validate({"profile_id": _PROFILE, **coordinates})
+
+
+@pytest.mark.parametrize(
+    "coordinates",
+    [
+        {"work_unit_id": "a" * 64},
+        {"calculation_revision_id": "b" * 64},
+        {"modelo": "130", "year": 2026, "period": {"filing_year": 2026, "code": "1T"}},
+    ],
+)
+def test_saved_return_address_accepts_existing_exact_and_natural_routes(coordinates: dict[str, object]) -> None:
+    ModeloWorkRevisionRequest.model_validate({"profile_id": _PROFILE, **coordinates})
 
 
 def _unit() -> WorkUnit:
@@ -326,6 +349,54 @@ def test_each_fresh_boundary_derives_period_from_selected_persisted_unit(
     assert refused.value.reason is AccessDenialCode.OPERATION_DENIED
     assert work_loads == 2
     assert calculation_loads == ([authority_operation, authority_operation] if positional_work_id else [])
+
+
+def test_revision_selection_is_admitted_on_the_external_client_frontend_without_a_commit_door(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    unit = _unit()
+
+    class WorkRepository:
+        bucket_id = str(_PROFILE)
+
+        def load(self) -> WorkUnitCatalogue:
+            return WorkUnitCatalogue(work_units={unit.work_unit_id: unit})
+
+    def bundle(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+        assert profile_id == str(_PROFILE)
+        assert operation is authority_operation
+        return cast(
+            VerificationRepositoryBundle,
+            cast(
+                object,
+                SimpleNamespace(work_unit=WorkRepository(), calculation=SimpleNamespace(bucket_id=str(_PROFILE))),
+            ),
+        )
+
+    definition = build_modelo_work_revision_definition(bundle)
+    registration = build_modelo_work_revision_registration(definition, bundle)
+    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=OperationRequest[BaseModel](
+            definition_id=MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(str(_PROFILE)),
+            payload=ModeloWorkRevisionRequest(profile_id=_PROFILE, work_unit_id=unit.work_unit_id),
+        ),
+        context=OperationAccessContext(
+            profile_id=_PROFILE,
+            destination_id=uuid4(),
+            action=AccessAction.SUBMIT,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
+            contract=registration.contract,
+            published_authority=Availability.AVAILABLE,
+            authority_operation=authority_operation,
+        ),
+    )
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
+    assert resolved.request.periods == frozenset({unit.period})
+    assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 def test_fresh_submission_without_authority_pin_refuses_before_repository_creation() -> None:

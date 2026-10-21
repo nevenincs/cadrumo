@@ -176,12 +176,12 @@ def _revision_dependency_inventory_items(
     for period in periods:
         # A symbolic or administrative selector covers filings without
         # naming one, so it has no single filing snapshot to inspect.
-        if not is_filing_period_token(str(period)):
+        if not is_filing_period_token(period):
             continue
         snapshot = operation.snapshot(
             modelo_id,
             filing_year=filing_year,
-            period=str(period),
+            period=period,
             revision_id=revision_id,
         )
         dependencies = cross_period_dependency_requirements(snapshot)
@@ -189,8 +189,8 @@ def _revision_dependency_inventory_items(
             continue
         items.append(
             CrossPeriodDependencyInventoryItem(
-                target_modelo=str(snapshot.modelo.id),
-                target_revision_id=str(snapshot.revision.id),
+                target_modelo=snapshot.modelo.id,
+                target_revision_id=snapshot.revision.id,
                 target_filing_year=snapshot.filing_year,
                 target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
                 dependencies=dependencies,
@@ -228,14 +228,14 @@ def cross_period_dependency_inventory(
             # Dependency inventory is a filing-readiness surface. Applicability-
             # and calculation-grade revisions cannot lawfully produce the filing
             # snapshot consumed below, and therefore cannot own filing blockers.
-            revision_payload = operation.revision(modelo_id, str(revision.id))
+            revision_payload = operation.revision(modelo_id, revision.id)
             if revision_payload.effective_authority_grade is not RegistryAuthorityGrade.FILING:
                 continue
             items.extend(
                 _revision_dependency_inventory_items(
                     operation,
                     modelo_id=modelo_id,
-                    revision_id=str(revision.id),
+                    revision_id=revision.id,
                     filing_year=filing_year,
                     periods=revision.period_selector.periods_for_year(filing_year),
                 )
@@ -758,7 +758,7 @@ def evaluate_cross_period_clean_state(
     )
     return CrossPeriodCleanStateVerdict(
         bucket_id=bucket_id,
-        target_modelo=str(snapshot.modelo.id),
+        target_modelo=snapshot.modelo.id,
         target_filing_year=snapshot.filing_year,
         target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
         dependencies=_clean_state_dependencies(
@@ -782,7 +782,7 @@ def _requirement_scoped_by_zero_value_previous_filing(
     requirement: CrossPeriodDependencyRequirement,
     zero_value_previous_filing_binding_ids: frozenset[str] | None,
 ) -> bool:
-    if not zero_value_previous_filing_binding_ids:
+    if not (zero_value_previous_filing_binding_ids is not None and zero_value_previous_filing_binding_ids):
         return False
     return requirement.origin is CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING and all(
         origin_id in zero_value_previous_filing_binding_ids for origin_id in requirement.origin_ids
@@ -914,7 +914,9 @@ def _aeat_register_provenance_blockers(
         blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
 
     authenticated_identity = metadata.get("authenticated_identity", "")
-    if expected_tax_id and not same_tax_identifier(authenticated_identity, expected_tax_id):
+    if (expected_tax_id is not None and expected_tax_id) and not same_tax_identifier(
+        authenticated_identity, expected_tax_id
+    ):
         blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
     return blockers
 
@@ -1378,7 +1380,11 @@ def _last_member_revision_state(
     results: tuple[_FilingHistory, ...],
 ) -> CalculationRevisionState | None:
     return next(
-        (result.calculation_revision_state for result in reversed(results) if result.calculation_revision_state),
+        (
+            result.calculation_revision_state
+            for result in reversed(results)
+            if (result.calculation_revision_state is not None and result.calculation_revision_state)
+        ),
         None,
     )
 
@@ -1386,7 +1392,14 @@ def _last_member_revision_state(
 def _last_member_verification_status(
     results: tuple[_FilingHistory, ...],
 ) -> VerificationCompletenessStatus | None:
-    return next((result.verification_status for result in reversed(results) if result.verification_status), None)
+    return next(
+        (
+            result.verification_status
+            for result in reversed(results)
+            if (result.verification_status is not None and result.verification_status)
+        ),
+        None,
+    )
 
 
 def _last_member_aeat_acceptance(results: tuple[_FilingHistory, ...]) -> bool | None:
@@ -1397,7 +1410,11 @@ def _last_member_external_evidence_kind(
     results: tuple[_FilingHistory, ...],
 ) -> ExternalEvidenceKind | None:
     return next(
-        (result.external_evidence_kind for result in reversed(results) if result.external_evidence_kind),
+        (
+            result.external_evidence_kind
+            for result in reversed(results)
+            if (result.external_evidence_kind is not None and result.external_evidence_kind)
+        ),
         None,
     )
 

@@ -119,7 +119,7 @@ def test_no_recorded_operator_line_is_rewritten_unless_it_carries_an_identity() 
             if emitted == line:
                 continue
             for span in recover_replaced_spans(line, emitted):
-                if span in redacted_tokens or _admitting_authority(span):
+                if span in redacted_tokens or bool(_admitting_authority(span)):
                     redacted_tokens.add(span)
                     continue
                 violations.append(f"{funnel_name}: {line!r} -> {emitted!r} (hashed {span!r})")

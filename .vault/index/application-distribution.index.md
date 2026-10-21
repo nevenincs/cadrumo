@@ -4,15 +4,21 @@ tags:
   - '#index'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-04'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b64438e2c31abbaa699784caa89f79daf87b533df4bc164b52822e5a513737e'
+body_hash: 'sha256:da0a1bb504e80cc1fa7af8d6c02b5ff33660365298cd869e6ab304f3b9092e2a'
 related:
   - '[[2026-10-04-application-distribution-adr]]'
   - '[[2026-10-04-application-distribution-audit]]'
   - '[[2026-10-04-application-distribution-ledger]]'
   - '[[2026-10-04-application-distribution-plan]]'
   - '[[2026-10-04-application-distribution-research]]'
+  - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
+  - '[[2026-10-08-application-distribution-darwin-versioned-installation-adr]]'
+  - '[[2026-10-08-application-distribution-darwin-versioned-installation-research]]'
+  - '[[2026-10-13-application-distribution-native-bundle-llm-extra-adr]]'
+  - '[[2026-10-16-application-distribution-windows-package-identity-adr]]'
+  - '[[2026-10-16-application-distribution-windows-package-identity-research]]'
 ---
 
 # `application-distribution` feature index
@@ -24,6 +30,10 @@ Auto-generated index of all documents tagged with `#application-distribution`.
 ### adr
 
 - `2026-10-04-application-distribution-adr` - `application-distribution` adr: canonical identity and native installation | (**status:** `accepted`)
+- `2026-10-07-application-distribution-windows-versioned-msi-adr` - `application-distribution` adr: `Windows immutable version products and stable registration` | (**status:** `accepted`)
+- `2026-10-08-application-distribution-darwin-versioned-installation-adr` - `application-distribution` adr: `Darwin scoped native packages and version publication` | (**status:** `proposed`)
+- `2026-10-13-application-distribution-native-bundle-llm-extra-adr` - `application-distribution` adr: `Native bundle installs the llm extra` | (**status:** `accepted`)
+- `2026-10-16-application-distribution-windows-package-identity-adr` - `application-distribution` adr: `Windows package identity: one registered Cadrumo application` | (**status:** `superseded`)
 
 ### audit
 
@@ -40,3 +50,5 @@ Auto-generated index of all documents tagged with `#application-distribution`.
 ### research
 
 - `2026-10-04-application-distribution-research` - `application-distribution` research: multiplatform identity and installation
+- `2026-10-08-application-distribution-darwin-versioned-installation-research` - Darwin scoped installation and receipt authority
+- `2026-10-16-application-distribution-windows-package-identity-research` - `application-distribution` research: `Windows package identity for one Task Manager entry`

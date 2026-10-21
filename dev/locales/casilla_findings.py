@@ -81,7 +81,9 @@ def _record_casilla_glossary_artifacts(
     found.glossary_artifacts[locale] = (
         ()
         if artifact is None
-        else tuple(sorted(key for key, value in leaves.items() if value and artifact.search(value)))
+        else tuple(
+            sorted(key for key, value in leaves.items() if (value is not None and value) and artifact.search(value))
+        )
     )
 
 
@@ -94,7 +96,7 @@ def _record_casilla_truncation(
         sorted(
             key
             for key, value in leaves.items()
-            if value
+            if (value is not None and value)
             and _TRUNCATED.search(value)
             and value not in SOURCE_TRUNCATED_SPANISH
             and not (sources.get(key, frozenset()) & SOURCE_TRUNCATED_SPANISH)
@@ -107,7 +109,11 @@ def _record_casilla_whitespace(
 ) -> None:
     """Record casilla whitespace."""
     found.irregular_whitespace[locale] = tuple(
-        sorted(key for key, value in leaves.items() if value and _IRREGULAR_WHITESPACE.search(value))
+        sorted(
+            key
+            for key, value in leaves.items()
+            if (value is not None and value) and _IRREGULAR_WHITESPACE.search(value)
+        )
     )
 
 

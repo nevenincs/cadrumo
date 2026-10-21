@@ -1,13 +1,24 @@
-//! Short-lived canonical CLI invocations. No runtime connection or credential is retained.
-mod process;
-mod wire;
+//! Short-lived canonical CLI invocations for sign-in acts, and one pushed
+//! status observation. No runtime connection or credential is retained here.
+mod observation;
+mod watch;
+// The child runner and the envelope decoder are also the provider settings'
+// channel: one set of lanes, one deadline, one output bound, one settlement.
+pub(crate) mod process;
+pub(crate) mod wire;
+use observation::{
+    __cmd__sign_in_subscribe, __cmd__sign_in_unsubscribe, __tauri_command_name_sign_in_subscribe,
+    __tauri_command_name_sign_in_unsubscribe, sign_in_subscribe, sign_in_unsubscribe,
+};
 
 use crate::environment::Launch;
 use cadrumo_application::{
     binary::{self, BinaryExpectation},
     child::ChildConfiguration,
+    diagnostics::helper::{HelperExecutable, HelperIdentity},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
     package::PackageManifest,
+    role::Role,
     value::RelativePath,
 };
 use serde::Deserialize;
@@ -20,6 +31,7 @@ use tauri::{
 use zeroize::Zeroizing;
 
 use process::Children;
+pub(crate) use wire::Presence;
 use wire::{ProfileCreateResult, ProfileList, SignInResult, SignInStatus, SignOutResult};
 
 /// The header that names a profile by its label, percent-encoded as UTF-8:
@@ -33,44 +45,48 @@ const LABEL_LIMIT: usize = 160;
 /// package created `%USERNAME% y Cia` as the user's name followed by "y Cia"
 /// and `Taller [2025]` as the name of a file beside it. A label holding one
 /// would name another profile, so it is not passed at all.
-const REWRITTEN: [char; 5] = ['*', '?', '[', '%', '$'];
+pub(crate) const REWRITTEN: [char; 5] = ['*', '?', '[', '%', '$'];
 
 /// One command under `config`: its words, the name its answer must carry,
-/// whether it only reads, and whether it uses the enrollment deadline.
+/// whether it only reads, its owning image, and its enrollment deadline.
 struct Call {
     words: &'static [&'static str],
     leaf: &'static str,
     reads: bool,
+    runtime: bool,
     slow: bool,
+    command: &'static str,
 }
-const STATUS: Call = Call {
-    words: &["sign-in-status"],
-    leaf: "sign-in-status",
-    reads: true,
-    slow: false,
-};
 const LOGIN: Call = Call {
     words: &["login"],
     leaf: "login",
+    command: "config.login",
     reads: false,
+    runtime: false,
     slow: false,
 };
 const LOGOUT: Call = Call {
     words: &["logout"],
     leaf: "logout",
+    command: "config.logout",
     reads: false,
+    runtime: false,
     slow: false,
 };
 const LIST: Call = Call {
     words: &["profile", "list"],
     leaf: "profile.list",
+    command: "config.profile.list",
     reads: true,
+    runtime: false,
     slow: false,
 };
 const CREATE: Call = Call {
     words: &["profile", "create", "--quiet"],
     leaf: "profile.create",
+    command: "config.profile.create",
     reads: false,
+    runtime: false,
     slow: true,
 };
 
@@ -100,15 +116,123 @@ struct Files {
 
 pub struct SignIn {
     child: Result<ChildConfiguration>,
+    runtime: Result<ChildConfiguration>,
+    service: Result<ChildConfiguration>,
     pub children: Children,
+    observation: observation::Observer,
+    watch: watch::Watch,
+    // The one person session this window holds; each consumer keeps it alive
+    // only while it uses it.
+    person: std::sync::Mutex<std::sync::Weak<std::sync::Mutex<crate::agent::person::Person>>>,
+    // What every person session of this window was pushed, whichever is held.
+    person_events: crate::agent::person::PersonEvents,
 }
 
 impl SignIn {
     pub fn new(launch: &Launch) -> Self {
+        let runtime = resolve_image(launch, "cadrumo-runtime");
         Self {
             child: resolve_cli(launch),
+            watch: watch::Watch::new(runtime.clone()),
+            runtime,
+            service: resolve_image(launch, "cadrumo-agent-service"),
             children: Children::new(launch.diagnostics.clone()),
+            observation: observation::Observer::default(),
+            person: std::sync::Mutex::new(std::sync::Weak::new()),
+            person_events: tokio::sync::broadcast::channel(16).0,
         }
+    }
+
+    /// The window's person session for `profile_id`, shared by every consumer
+    /// so one person holds one runtime session. A closed bridge or another
+    /// profile's session is replaced by a fresh hold.
+    pub(crate) fn person(&self, profile_id: &str) -> Result<crate::agent::person::HeldPerson> {
+        let mut cached = self.person.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(held) = cached.upgrade() {
+            let mut person = held.lock().unwrap_or_else(|e| e.into_inner());
+            if person.identity["profile_id"] == profile_id && person.is_open() {
+                drop(person);
+                return Ok(held);
+            }
+        }
+        let mut person = crate::agent::person::Person::hold(self.runtime()?.command(), profile_id)?;
+        person.observe_events(self.person_events.clone())?;
+        let held = Arc::new(std::sync::Mutex::new(person));
+        *cached = Arc::downgrade(&held);
+        Ok(held)
+    }
+
+    /// Every later push to whichever person session this window holds.
+    pub(crate) fn person_events(
+        &self,
+    ) -> tokio::sync::broadcast::Receiver<crate::agent::person::PersonEvent> {
+        self.person_events.subscribe()
+    }
+
+    /// Resolves at the next sign-in observation after this call; create it
+    /// before reading the status, so an observation meanwhile is not missed.
+    pub(crate) fn observation_changed(&self) -> impl Future<Output = ()> + Send + 'static {
+        self.watch.changed()
+    }
+
+    pub(crate) fn runtime(&self) -> Result<ChildConfiguration> {
+        self.runtime.clone()
+    }
+    pub(crate) fn service(&self) -> Result<ChildConfiguration> {
+        self.service.clone()
+    }
+
+    /// The private identity of the profile `label` names, from the current
+    /// observation; another selected profile or a stale observation names none.
+    pub(crate) fn profile_id(&self, label: &str) -> Result<String> {
+        let observed = self.watch.latest()?;
+        if observed.status.active_profile.as_deref() != Some(label) {
+            return Err(
+                failure(ErrorCode::ReadFailed).with_reason("profile_identity_other_profile")
+            );
+        }
+        observed
+            .profile_id
+            .ok_or_else(|| failure(ErrorCode::ReadFailed).with_reason("profile_identity_absent"))
+    }
+
+    /// The current status if one is already known and fresh; never waits.
+    pub(crate) fn current_observation(&self) -> Result<SignInStatus> {
+        Ok(self.watch.latest()?.status)
+    }
+
+    pub(crate) async fn read_status(self: &Arc<Self>) -> Result<SignInStatus> {
+        if !supported() {
+            return Ok(SignInStatus::unsupported());
+        }
+        Ok(self.watch.current().await?.status)
+    }
+
+    pub async fn stop(&self) -> Result<()> {
+        self.observation.close();
+        let result = self.children.stop();
+        let joined = self.observation.join().await;
+        let watch = self.watch.clone();
+        super::blocking(move || {
+            watch.close();
+            Ok(())
+        })
+        .await?;
+        result?;
+        joined
+    }
+
+    /// Notes the person's input through the session this window holds, so a
+    /// report starts no process and never waits on the credential lanes.
+    fn record_activity(&self) -> Result<()> {
+        let profile_id =
+            self.watch.latest()?.profile_id.ok_or_else(|| {
+                failure(ErrorCode::ReadFailed).with_reason("activity_profile_absent")
+            })?;
+        let held = self.person(&profile_id)?;
+        let mut person = held.lock().unwrap_or_else(|e| e.into_inner());
+        person.exchange(serde_json::json!({"action": "activity"}))?;
+        Ok(())
     }
 
     fn run(
@@ -126,15 +250,29 @@ impl SignIn {
         label: Option<&str>,
         secret: Option<Zeroizing<Vec<u8>>>,
     ) -> Result<process::Output> {
-        let mut command = self.child.as_ref().map_err(Clone::clone)?.command();
+        let _mutation = (!call.reads).then(|| self.watch.mutation());
+        let image = if call.runtime {
+            &self.runtime
+        } else {
+            &self.child
+        };
+        let mut command = image.as_ref().map_err(Clone::clone)?.command();
         command.args(arguments(call, label, secret.is_some()));
+        let identity = HelperIdentity {
+            command: call.command,
+            executable: if call.runtime {
+                HelperExecutable::Runtime
+            } else {
+                HelperExecutable::Cli
+            },
+        };
         if call.reads {
-            self.children.read(command)
+            self.children.read(identity, command)
         } else if call.slow {
             self.children
-                .run_within(command, secret, process::CREATION_DEADLINE)
+                .run_within(identity, command, secret, process::CREATION_DEADLINE)
         } else {
-            self.children.run(command, secret)
+            self.children.run(identity, command, secret)
         }
     }
 }
@@ -158,18 +296,29 @@ fn arguments(call: &Call, label: Option<&str>, secret: bool) -> Vec<String> {
 }
 
 fn resolve_cli(launch: &Launch) -> Result<ChildConfiguration> {
+    resolve_image(launch, "aeat")
+}
+
+fn resolve_image(launch: &Launch, entrypoint: &str) -> Result<ChildConfiguration> {
     let contract: Contract =
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
             .map_err(|_| failure(ErrorCode::PackageUnavailable))?;
     let layout = contract.layout;
-    if !layout.entrypoints.contains_key("aeat") {
+    if !layout.entrypoints.contains_key(entrypoint) {
         return Err(failure(ErrorCode::PackageUnavailable));
     }
-    let relative = RelativePath::new(format!(
-        "{}/aeat{}",
-        layout.paths.native.as_str(),
-        layout.entrypoint_suffix
-    ))
+    // The desktop runs a console script that a role hosts as that role of its own
+    // binary, so the helper stays in the window's process tree.
+    let role = Role::hosting(entrypoint).filter(|_| cfg!(windows));
+    let relative = match role {
+        Some(_) => RelativePath::new(format!("cadrumo{}", std::env::consts::EXE_SUFFIX)),
+        None => RelativePath::new(format!(
+            "{}/{}{}",
+            layout.paths.native.as_str(),
+            entrypoint,
+            layout.entrypoint_suffix
+        )),
+    }
     .map_err(|_| failure(ErrorCode::PackageUnavailable))?;
     let manifest = PackageManifest::read(&launch.package_root, &layout.files.package_manifest)
         .map_err(|_| failure(ErrorCode::PackageUnavailable))?;
@@ -184,12 +333,16 @@ fn resolve_cli(launch: &Launch) -> Result<ChildConfiguration> {
         BinaryExpectation::host().map_err(|_| failure(ErrorCode::PackageUnavailable))?,
     )
     .map_err(|_| failure(ErrorCode::PackageUnavailable))?;
-    ChildConfiguration::new(
+    let child = ChildConfiguration::new(
         executable,
         launch.working_directory.clone(),
         launch.child.environment().clone(),
     )
-    .map_err(|_| failure(ErrorCode::EnvironmentFailed))
+    .map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
+    Ok(match role {
+        Some(role) => child.in_role(role),
+        None => child,
+    })
 }
 
 // The CLI currently exposes no GNOME binding capability. Until that projection
@@ -201,11 +354,26 @@ fn supported() -> bool {
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
     crate::app::commands![
         sign_in_status,
+        sign_in_activity,
+        sign_in_subscribe,
+        sign_in_unsubscribe,
         sign_in_submit,
         sign_out,
         profile_list,
         profile_create
     ]
+}
+
+#[tauri::command]
+pub async fn sign_in_activity(
+    state: State<'_, Arc<SignIn>>,
+) -> std::result::Result<(), wire::CommandFailure> {
+    if !supported() {
+        return Err(failure(ErrorCode::UnsupportedPlatform).into());
+    }
+    let state = state.inner().clone();
+    super::blocking(move || state.record_activity()).await?;
+    Ok(())
 }
 
 #[tauri::command]
@@ -218,9 +386,21 @@ pub async fn sign_in_status(
     }
     // Dispatch completion is not runtime readiness. The canonical CLI below
     // remains the only authority on availability and authentication.
-    let _ = manager.start(false).await;
-    let state = state.inner().clone();
-    super::blocking(move || wire::status(state.run(&STATUS, None, None)?)).await
+    let started = manager.start(false).await;
+    status_after_manager(started, state.inner().read_status().await)
+}
+
+fn status_after_manager(
+    started: Result<crate::manager::StartOutcome>,
+    observed: Result<SignInStatus>,
+) -> Result<SignInStatus> {
+    let status = observed?;
+    // A working runtime remains authoritative even if manager dispatch failed.
+    // When it is unavailable, retain the preceding startup failure as the cause.
+    if !status.runtime_available {
+        started?;
+    }
+    Ok(status)
 }
 
 #[tauri::command]
@@ -367,6 +547,80 @@ fn encoded(body: &InvokeBody, confirmed: bool) -> Result<Zeroizing<Vec<u8>>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn status_observation(available: bool) -> Result<SignInStatus> {
+        Ok(SignInStatus {
+            supported: true,
+            state: if available {
+                wire::Presence::Absent
+            } else {
+                wire::Presence::Unknown
+            },
+            active_profile: Some("Test profile".into()),
+            runtime_available: available,
+            refusal: (!available).then(|| wire::Refusal {
+                code: "runtime_unavailable".into(),
+                retry_after_seconds: None,
+            }),
+        })
+    }
+
+    #[test]
+    fn unavailable_runtime_preserves_the_preceding_manager_failure_and_safe_context() {
+        let denied = if cfg!(windows) { 5 } else { 13 };
+        let error = ApplicationError::new(ErrorCode::ManagerDispatchFailed, Operation::Manager)
+            .caused_by(std::io::Error::from_raw_os_error(denied));
+        let failure = status_after_manager(Err(error), status_observation(false)).unwrap_err();
+        let document = serde_json::to_value(failure).unwrap();
+        assert_eq!(document["code"], "manager_dispatch_failed");
+        assert_eq!(document["operation"], "manager");
+        assert_eq!(document["ioKind"], "PermissionDenied");
+        assert_eq!(document["osCode"], denied);
+
+        let private = ApplicationError::new(ErrorCode::PackageUnavailable, Operation::Manager)
+            .caused_by(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "private installation path and exception payload",
+            ));
+        let failure = status_after_manager(Err(private), status_observation(false)).unwrap_err();
+        let document = serde_json::to_value(failure).unwrap();
+        assert_eq!(document["code"], "package_unavailable");
+        assert_eq!(document["operation"], "manager");
+        assert_eq!(document["ioKind"], "NotFound");
+        assert!(!document.to_string().contains("private"));
+    }
+
+    #[test]
+    fn a_working_runtime_remains_available_after_a_manager_dispatch_failure() {
+        let failure = ApplicationError::new(ErrorCode::PackageUnavailable, Operation::Manager);
+        let status = status_after_manager(Err(failure), status_observation(true)).unwrap();
+        assert!(status.runtime_available);
+        assert_eq!(status.state, wire::Presence::Absent);
+        assert_eq!(status.active_profile.as_deref(), Some("Test profile"));
+        assert!(status.refusal.is_none());
+    }
+
+    #[test]
+    fn successful_or_unsupported_dispatch_never_claims_runtime_readiness() {
+        fn check(outcome: crate::manager::StartOutcome) {
+            let status = status_after_manager(Ok(outcome), status_observation(false)).unwrap();
+            assert!(!status.runtime_available);
+            assert_eq!(status.refusal.unwrap().code, "runtime_unavailable");
+        }
+        check(crate::manager::StartOutcome::Dispatched);
+        #[cfg(not(windows))]
+        check(crate::manager::StartOutcome::Unsupported);
+    }
+
+    #[test]
+    fn an_unreadable_cli_status_retains_its_own_failure() {
+        let manager = ApplicationError::new(ErrorCode::PackageUnavailable, Operation::Manager);
+        let cli = ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli);
+        let failure = status_after_manager(Err(manager), Err(cli)).unwrap_err();
+        assert_eq!(failure.code, ErrorCode::ReadFailed);
+        assert_eq!(failure.operation, Operation::Cli);
+    }
+
     #[test]
     fn secret_is_raw_utf8_and_bounded_after_json_encoding() {
         let encoded = secret(&InvokeBody::Raw("á\"\n漢".as_bytes().to_vec())).unwrap();
@@ -503,10 +757,6 @@ mod tests {
             ["--format", "json", "config", "profile", "list"]
         );
         assert_eq!(
-            arguments(&STATUS, None, false),
-            ["--format", "json", "config", "sign-in-status"]
-        );
-        assert_eq!(
             arguments(&LOGOUT, None, false),
             ["--format", "json", "config", "logout"]
         );
@@ -535,7 +785,7 @@ mod tests {
         std::fs::create_dir_all(&own).unwrap();
         let mut pinned = 0;
         for (_, value) in &mut parent.environment {
-            if PathBuf::from(&*value) == shared {
+            if std::path::Path::new(&*value) == shared {
                 *value = own.clone().into_os_string();
                 pinned += 1;
             }

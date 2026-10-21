@@ -10,16 +10,18 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .errors import (
     InventoryActividadConflictError,
@@ -75,13 +77,27 @@ _SERVICE_INPUT_REASONS: dict[str, str] = {
 }
 
 
+_RUNTIME_ACTOR = "runtime"
+
+
 class InventoryOperationExecutor:
     """Run one inventory service call under the supervisor's profile custody."""
 
-    def __init__(self, ports_factory: InventoryServicePortsFactory, *, definition_id: str) -> None:
+    def __init__(
+        self,
+        ports_factory: InventoryServicePortsFactory,
+        *,
+        definition_id: str,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Bind the exact operation type to the bucket service factory."""
         self._ports_factory = ports_factory
         self._definition_id = definition_id
+        self._execution_caller_reader = execution_caller_reader
+
+    def _recorded_actor(self, context: OperationExecutorContext) -> str:
+        """Name the session of an automation, and the runtime for the person's frontends."""
+        return execution_actor_label(self._execution_caller_reader, context, supplied=_RUNTIME_ACTOR)
 
     def _service(self, profile_id: UUID) -> InventoryService:
         profile = str(profile_id)
@@ -188,6 +204,8 @@ class InventoryOperationExecutor:
         profile_id: UUID,
         profile: str,
     ) -> str | OperationRefusalEvidence:
+        actor = self._recorded_actor(context)
+
         def create() -> InventoryLedgerResult:
             return self._service(profile_id).create(
                 bucket_id=profile,
@@ -195,7 +213,7 @@ class InventoryOperationExecutor:
                 year=request.year,
                 valuation_method=request.valuation_method,
                 opening_stock=Decimal(request.opening_stock.decimal),
-                actor="runtime",
+                actor=actor,
             )
 
         return await self._mutate(
@@ -232,6 +250,8 @@ class InventoryOperationExecutor:
                 request=request,
             )
 
+        actor = self._recorded_actor(context)
+
         def add_movement() -> InventoryLedgerResult:
             with validating_governed_facts(context.authority_operation):
                 return self._service(profile_id).movement_add(
@@ -239,7 +259,7 @@ class InventoryOperationExecutor:
                     actividad_id=request.actividad_id,
                     year=request.year,
                     movement=movement,
-                    actor="runtime",
+                    actor=actor,
                 )
 
         return await self._mutate(
@@ -258,12 +278,14 @@ class InventoryOperationExecutor:
         profile_id: UUID,
         profile: str,
     ) -> str | OperationRefusalEvidence:
+        actor = self._recorded_actor(context)
+
         def preview() -> InventoryValuationPreviewResult:
             return self._service(profile_id).valuation_preview(
                 bucket_id=profile,
                 actividad_id=request.actividad_id,
                 year=request.year,
-                actor="runtime",
+                actor=actor,
             )
 
         return await self._mutate(
@@ -282,8 +304,11 @@ class InventoryOperationExecutor:
         profile_id: UUID,
         profile: str,
     ) -> str | OperationRefusalEvidence:
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=request.authority_record.decision.actor
+        )
         try:
-            authority_record = request.authority_record.to_domain()
+            authority_record = request.authority_record.to_domain(actor=actor)
         except (ValidationError, InventoryLedgerError):
             return await _record_precommit_validation_refusal(
                 context,
@@ -475,7 +500,7 @@ def _effect_for_success(result: InventoryOperationExecutionResult) -> OperationE
     if result.operation_id == "list":
         return OperationEffect.NONE
     if result.operation_id == "closing-authority.record":
-        return OperationEffect.UPDATED if result.closing_changed else OperationEffect.NONE
+        return OperationEffect.UPDATED if (result.closing_changed is True) else OperationEffect.NONE
     if result.operation_id == "valuation.preview":
         if result.valuation_result is None:
             raise ValueError("inventory valuation result is missing")

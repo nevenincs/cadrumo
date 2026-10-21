@@ -366,7 +366,7 @@ def _require_registered_modelo(
         raise OverviewExplainError(
             translated_message="errors.fail.overview_explain",
             context={
-                "modelo": str(modelo),
+                "modelo": modelo,
                 "unmodeled_description": unmodeled_description,
                 "coverage": "registry_unmodeled",
                 "recognized_aeat_obligation": True,
@@ -379,7 +379,7 @@ def _require_registered_modelo(
     raise OverviewExplainError(
         translated_message="errors.fail.overview_explain",
         context={
-            "modelo": str(modelo),
+            "modelo": modelo,
             "filing_year": str(filing_year),
             "modelo_registered": False,
         },
@@ -545,7 +545,7 @@ def _scheduling_rationale(
         raise OverviewExplainError(
             translated_message="errors.fail.overview_explain",
             context={
-                "modelo": str(modelo),
+                "modelo": modelo,
                 "filing_year": str(year),
                 "evaluation_error_type": type(exc).__name__,
             },

@@ -1,6 +1,19 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    FLAG_VALUE,
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._modelo_nonwork_command_spec_policies import (
@@ -20,19 +33,6 @@ from ._modelo_nonwork_common_command_parameters import (
     _required_text_option,
     _required_whole_number_option,
 )
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
-    FLAG_VALUE,
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-    ValueContract,
-)
-from .command_spec import CommandSpec, InvocationSpec
 
 MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -51,10 +51,10 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _boolean_flag_option("explain", ("--explain",), "cli.app.modelo.formulas.explain_help"),
         ),
         policy=_REGISTRY_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "formulas", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_discovery_commands", "formulas", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "FormulasResult", __package__),
+            DeferredTarget("...application.reference_catalogue_contracts", "FormulasResult", __package__),
             identity="modelo.formulas",
         ),
     ),
@@ -68,10 +68,10 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(),
         policy=_REGISTRY_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "support_matrix", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_discovery_commands", "support_matrix", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_support_matrix_payloads", "ModeloSupportMatrixResult", __package__),
+            DeferredTarget("...application.reference_catalogue_contracts", "ModeloSupportMatrixResult", __package__),
             identity="modelo.support_matrix",
         ),
     ),
@@ -109,10 +109,10 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_CALCULATION_WRITE,
-        handler=LazyBinding.available(DeferredTarget("._modelo_aggregate_cli", "aggregate_modelo", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_aggregate_commands", "aggregate_modelo", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "ModeloAggregateResult", __package__),
+            DeferredTarget(".modelo_results", "ModeloAggregateResult", __package__),
             identity="modelo.aggregate",
         ),
     ),
@@ -155,10 +155,10 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_HANDOFF,
-        handler=LazyBinding.available(DeferredTarget("._modelo_export_cli", "modelo_export_verb", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_export_commands", "modelo_export_verb", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "ModeloExportPayload", __package__),
+            DeferredTarget(".modelo_results", "ModeloExportPayload", __package__),
             identity="modelo.export",
         ),
     ),

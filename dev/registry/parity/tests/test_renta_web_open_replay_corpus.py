@@ -117,7 +117,9 @@ def test_bundled_replay_corpus_captures_are_internally_self_consistent(
         assert payload.verdict == ParityVerdictKind.MATCH, (
             f"{payload.payload_name}: {payload.narrative}; fields={payload.fields}"
         )
-        assert payload.raw_evidence_locator, f"{payload.payload_name} replayed with no evidence provenance"
+        assert payload.raw_evidence_locator is not None and payload.raw_evidence_locator, (
+            f"{payload.payload_name} replayed with no evidence provenance"
+        )
 
 
 def test_every_autonomous_community_capture_checks_its_own_autonomic_minimo(

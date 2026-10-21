@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import os
 import subprocess
 import sys
@@ -67,6 +68,44 @@ def test_run_command_returns_nonzero_result_without_synthesising_a_success(tmp_p
     assert execution.stderr == "refusal\n"
 
 
+def test_run_command_inherited_output_reaches_the_parent_streams_in_order(
+    tmp_path: Path, capfd: pytest.CaptureFixture[str]
+) -> None:
+    """A streamed build step writes through the parent's descriptors after the parent's earlier lines."""
+    print("before", flush=False)
+    execution = run_command(
+        (sys.executable, "-c", "import sys; print('out'); print('err', file=sys.stderr); raise SystemExit(3)"),
+        cwd=tmp_path,
+        inherit_output=True,
+    )
+
+    assert execution.returncode == 3
+    assert (execution.stdout, execution.stderr) == ("", "")
+    captured = capfd.readouterr()
+    assert captured.out.splitlines() == ["before", "out"]
+    assert captured.err.splitlines() == ["err"]
+
+
+def test_inherited_output_falls_back_to_the_process_streams_when_sys_streams_have_no_descriptor(
+    tmp_path: Path, capfd: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An in-memory replacement of sys.stdout and sys.stderr still lets a child inherit real streams."""
+    replaced = io.StringIO()
+    monkeypatch.setattr(sys, "stdout", replaced)
+    monkeypatch.setattr(sys, "stderr", replaced)
+    execution = run_command(
+        (sys.executable, "-c", "import sys; print('out'); print('err', file=sys.stderr)"),
+        cwd=tmp_path,
+        inherit_output=True,
+    )
+
+    assert execution.returncode == 0
+    assert replaced.getvalue() == ""
+    captured = capfd.readouterr()
+    assert captured.out.splitlines() == ["out"]
+    assert captured.err.splitlines() == ["err"]
+
+
 def test_run_command_propagates_a_real_timeout_without_inventing_an_exit_status(tmp_path: Path) -> None:
     """A process that did not exit cannot truthfully become a command transcript."""
     with pytest.raises(subprocess.TimeoutExpired):
@@ -82,6 +121,8 @@ import pathlib, subprocess, sys, time
 
 grandchild = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(120)"])
 pathlib.Path(sys.argv[1]).write_text(str(grandchild.pid))
+print('native-phase-entered', file=sys.stderr, flush=True)
+print('native-before-timeout', flush=True)
 time.sleep(120)
 """
 
@@ -94,11 +135,15 @@ def test_run_command_timeout_kills_the_grandchild_holding_the_captured_stream(tm
     """
     pid_file = tmp_path / "grandchild.pid"
     started = time.monotonic()
-    with pytest.raises(subprocess.TimeoutExpired):
+    with pytest.raises(subprocess.TimeoutExpired) as caught:
         run_command(
             (sys.executable, "-c", _SPAWN_A_GRANDCHILD_HOLDING_STDOUT, str(pid_file)), cwd=tmp_path, timeout_seconds=5
         )
     elapsed = time.monotonic() - started
+    assert caught.value.stderr is not None
+    assert caught.value.output is not None
+    assert caught.value.stderr.splitlines() == [b"native-phase-entered"]
+    assert caught.value.output.splitlines() == [b"native-before-timeout"]
 
     grandchild_pid = int(pid_file.read_text())
     try:

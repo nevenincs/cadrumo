@@ -2,7 +2,19 @@ from __future__ import annotations
 
 from typing import Final
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    ValueContract,
+)
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ._app_live_command_spec_support import (
     _ENCRYPTED_LOCAL_READ_POLICY,
@@ -12,18 +24,6 @@ from ._app_live_command_spec_support import (
     _PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
     NO_RESULT_SCHEMA,
 )
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    ValueContract,
-)
-from .command_shared_contracts import translation_key as _key
-from .command_spec import CommandSpec
 
 _VERIFY_EXPECTED_OPTION: Final[OptionSpec] = OptionSpec(
     name="expected",
@@ -84,10 +84,10 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_verify_cli", "verify_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_verify_commands", "verify_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_verify_payloads", "VerifyListResult", __package__),
+            target=DeferredTarget(".app_live_verify_results", "VerifyListResult", __package__),
             identity="app.live.verify.list",
         ),
     ),
@@ -109,10 +109,10 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_verify_cli", "verify_show", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_verify_commands", "verify_show", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_verify_payloads", "VerifyViewResult", __package__),
+            target=DeferredTarget(".app_live_verify_results", "VerifyViewResult", __package__),
             identity="app.live.verify.view",
         ),
     ),
@@ -149,10 +149,10 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_verify_cli", "verify_latest", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_verify_commands", "verify_latest", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_verify_payloads", "VerifyLatestResult", __package__),
+            target=DeferredTarget(".app_live_verify_results", "VerifyLatestResult", __package__),
             identity="app.live.verify.latest",
         ),
     ),
@@ -175,10 +175,10 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _VERIFY_EXPECTED_OPTION,
         ),
         policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_verify_cli", "verify_nif_iva", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_verify_commands", "verify_nif_iva", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_verify_payloads", "VerifyNifIvaResult", __package__),
+            target=DeferredTarget(".app_live_verify_results", "VerifyNifIvaResult", __package__),
             identity="app.live.verify.nif_iva",
         ),
     ),
@@ -201,10 +201,10 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _VERIFY_EXPECTED_OPTION,
         ),
         policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_verify_cli", "verify_tgvi", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_verify_commands", "verify_tgvi", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_verify_payloads", "VerifyTgviResult", __package__),
+            target=DeferredTarget(".app_live_verify_results", "VerifyTgviResult", __package__),
             identity="app.live.verify.tgvi",
         ),
     ),

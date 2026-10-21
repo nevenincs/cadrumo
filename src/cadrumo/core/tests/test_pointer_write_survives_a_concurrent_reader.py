@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import os
 import threading
 from pathlib import Path
 
 import pytest
 
-from ..bucket_pointer import BucketPointer, read_pointer, write_pointer
+from ..bucket_pointer import BucketPointer, _open_pointer_descriptor, pointer_path, read_pointer, write_pointer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -43,6 +44,20 @@ def test_a_profile_switch_is_not_refused_by_a_peer_reading_the_pointer(tmp_path:
 
     assert seen["present"] > 0, "the reader never observed a selected pointer; the race did not overlap"
     assert seen["absent"] > 0, "the reader never observed a tombstone; the race did not overlap"
+
+
+def test_a_reader_finishes_its_open_pointer_snapshot_during_a_profile_switch(tmp_path: Path) -> None:
+    """A live reader keeps its complete old snapshot while a writer replaces the path."""
+    previous = BucketPointer.selected(bucket_id="0" * 32, transition_revision=1)
+    replacement = BucketPointer.absent(transition_revision=2)
+    write_pointer(tmp_path, previous)
+    descriptor = _open_pointer_descriptor(pointer_path(tmp_path))
+    try:
+        write_pointer(tmp_path, replacement)
+        assert os.read(descriptor, 1024) == previous.to_toml().encode("utf-8")
+        assert read_pointer(tmp_path) == replacement
+    finally:
+        os.close(descriptor)
 
 
 def test_a_writer_still_reports_an_unreplaceable_target(tmp_path: Path) -> None:

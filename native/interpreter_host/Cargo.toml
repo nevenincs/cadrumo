@@ -1,0 +1,22 @@
+[package]
+name = "cadrumo-interpreter-host"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.96"
+publish = false
+
+[lib]
+name = "cadrumo_interpreter_host"
+
+[build-dependencies]
+cc = "1.2"
+
+[target.'cfg(windows)'.dependencies]
+cadrumo-launch-guard = { path = "../launch_guard" }
+cadrumo-platform = { path = "../platform" }
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+all = "deny"

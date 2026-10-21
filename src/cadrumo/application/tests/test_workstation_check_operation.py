@@ -12,6 +12,14 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
+
 from ...core.capabilities import ServiceCapability
 from ...core.config import override_settings
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -36,14 +44,6 @@ from ..operations.registry import OperationFrontendProjection, OperationRegistry
 from ..operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ..preflight import HealthSeverity, PreflightCheck
 from ..provisioning import DependencyStatus
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenied,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..user_profile.capabilities import CapabilityDecision, CapabilitySource
 from ..workstation_check import WorkstationCheckReport
@@ -190,7 +190,6 @@ def test_real_registration_compiles_closed_cli_only_read_contract() -> None:
     registration = build_workstation_check_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     assert registry.lookup_public_registration(definition.definition_id).contract.result_schema is not None
-    assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
     assert definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
 
 
@@ -395,10 +394,12 @@ def test_real_policy_is_period_independent_exact_destination_profile_values(
         registry=registry, request=_request(), context=replace(context, action=AccessAction.OBSERVE)
     )
     assert {row.category for row in observed.policy.disclosures} == {DisclosureCategory.OPERATION_METADATA}
-    with pytest.raises(ProfileAccessRefusedError):
-        resolve_operation_access(
-            registry=registry, request=_request(), context=replace(context, frontend=OperationFrontendProjection.MCP)
+    for frontend in OperationFrontendProjection:
+        on_frontend = resolve_operation_access(
+            registry=registry, request=_request(), context=replace(context, frontend=frontend)
         )
+        assert on_frontend.policy == resolved.policy, frontend
+        assert on_frontend.request == resolved.request.model_copy(update={"frontend": frontend}), frontend
 
 
 def test_receipt_projector_refuses_mutation_or_foreign_identity() -> None:

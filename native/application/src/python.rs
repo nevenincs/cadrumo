@@ -175,7 +175,7 @@ async fn run(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .kill_on_drop(true);
-    let mut child = command.spawn()?;
+    let mut child = crate::process::creation::run(|| command.spawn())?;
     let mut stdin = child.stdin.take().ok_or(Error::ProbeFailed)?;
     let stdout = child.stdout.take().ok_or(Error::ProbeFailed)?;
     let stderr = child.stderr.take().ok_or(Error::ProbeFailed)?;

@@ -17,6 +17,24 @@ struct Fixture {
     contract: DiscoveryContract,
     source: PathBuf,
 }
+
+#[test]
+fn existing_maintenance_verification_never_creates_a_lock() {
+    let mut fixture = Fixture::new();
+    let prefix = fixture.prefix("existing-maintenance");
+    fixture.version(&prefix, "1.0.0");
+    let store = fixture.native(&prefix);
+    store.initialize().unwrap();
+    let path = prefix.join("data/installation-state/maintenance.lock");
+    assert!(store.existing_exclusive_maintenance().is_err());
+    assert!(!path.exists());
+    let owner = store.exclusive_maintenance().unwrap();
+    assert!(store.existing_exclusive_maintenance().is_err());
+    drop(owner);
+    let verified = store.existing_exclusive_maintenance().unwrap();
+    assert!(store.exclusive_maintenance().is_err());
+    drop(verified);
+}
 impl Fixture {
     fn new() -> Self {
         #[cfg(windows)]
@@ -73,7 +91,8 @@ impl Fixture {
             "layout": {"abi": 1, "platform": self.contract.layout.platform}, "python": "fixture", "distributions": {},
             "files": {(member.as_str()): format!("{:x}", Sha256::digest(fs::read(&self.source).unwrap())),
                 "python.zip": format!("{:x}", Sha256::digest(b"inventoried fixture dependency"))},
-            "user_docs": {"directory": "docs/user", "bundled": false}
+            "user_docs": {"directory": "docs/user", "bundled": false},
+            "startup_files": [member.as_str(), "python.zip"]
         })).unwrap()).unwrap();
         package
     }
@@ -232,9 +251,18 @@ fn native_publication_identity_and_path_must_match_the_catalogue() {
 
 #[test]
 fn committed_registration_absence_is_positive_evidence_and_releases_anchors_atomically() {
+    verify_independent_registration_absence(false);
+}
+
+#[test]
+fn single_product_features_keep_independent_registration_absence_and_anchors() {
+    verify_independent_registration_absence(true);
+}
+
+fn verify_independent_registration_absence(single_product: bool) {
     use cadrumo_application::{
         installation::maintenance::{
-            NativeContext, NativeOwner, NativeProductInventory, RegistrationPhase,
+            NativeContext, NativeFeature, NativeOwner, NativeProductInventory, RegistrationPhase,
         },
         value::Sha256Digest,
     };
@@ -261,12 +289,26 @@ fn committed_registration_absence_is_positive_evidence_and_releases_anchors_atom
         prefix.clone(),
     )
     .unwrap();
+    let owner = if single_product {
+        owner.with_feature(NativeFeature::Version)
+    } else {
+        owner
+    };
     let registration = NativeOwner::new(
-        "22345678-1234-1234-1234-123456789abc".into(),
+        if single_product {
+            owner.product_code().into()
+        } else {
+            "22345678-1234-1234-1234-123456789abc".into()
+        },
         NativeContext::Machine,
         prefix,
     )
     .unwrap();
+    let registration = if single_product {
+        registration.with_feature(NativeFeature::Registration)
+    } else {
+        registration
+    };
     let writer = store
         .prepare("1.0.0", owner.clone(), manifest.clone())
         .unwrap();
@@ -538,6 +580,7 @@ fn install_rollback_restores_only_prior_verified_ready_state_and_forgets_proved_
     let fresh = store
         .prepare_transaction("1.0.0", owner.clone(), manifest.clone())
         .unwrap();
+    assert_eq!(fresh.fresh_rollback_owner().unwrap(), Some(owner.clone()));
     assert_eq!(
         fresh
             .rollback(&fixture.contract, &Inventory(false))
@@ -548,11 +591,13 @@ fn install_rollback_restores_only_prior_verified_ready_state_and_forgets_proved_
     let fresh = store
         .prepare_transaction("1.0.0", owner.clone(), manifest.clone())
         .unwrap();
+    assert_eq!(fresh.fresh_rollback_owner().unwrap(), Some(owner.clone()));
     assert!(fresh.rollback(&fixture.contract, &Inventory(true)).is_err());
     assert!(store.acquire("1.0.0", &manifest).is_err());
     let interrupted = store
         .prepare_transaction("1.0.0", owner.clone(), manifest.clone())
         .unwrap();
+    assert_eq!(interrupted.fresh_rollback_owner().unwrap(), None);
     assert_eq!(
         interrupted
             .rollback(&fixture.contract, &Inventory(true))
@@ -564,6 +609,7 @@ fn install_rollback_restores_only_prior_verified_ready_state_and_forgets_proved_
     let repair = store
         .prepare_transaction("1.0.0", owner.clone(), manifest.clone())
         .unwrap();
+    assert_eq!(repair.fresh_rollback_owner().unwrap(), None);
     assert!(store.acquire("1.0.0", &manifest).is_err());
     assert_eq!(
         repair
@@ -908,7 +954,18 @@ fn verified_this_user_registration_precedes_newer_machine_and_local_versions() {
             older_user
         );
     }
+    // A launch hashes nothing: changed bytes in a present file are the installer's to find.
     fs::write(older_user.join("python.zip"), b"corrupted user package").unwrap();
+    assert_eq!(
+        fixture
+            .contract
+            .discover(&machine_entry, &hints)
+            .unwrap()
+            .package,
+        older_user
+    );
+    // A user package missing a file every start needs is passed over for the machine one.
+    fs::remove_file(older_user.join("python.zip")).unwrap();
     assert_eq!(
         fixture
             .contract

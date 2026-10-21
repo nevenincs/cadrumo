@@ -554,6 +554,7 @@ def _require_filing_preconditions(
     raise_if_deductible_iva_evidence_missing(
         target,
         error_type=ModeloFilingEvidenceMissingError,
+        operation=operation,
     )
     require_profile_ready_for_work_unit(
         work_unit,

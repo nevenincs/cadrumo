@@ -1,0 +1,118 @@
+"""Real-entrypoint coverage for signed-in commands on a host with no usable keychain.
+
+A profile session is resumed from the OS keychain. On a host without one, a
+command that needs the profile refuses unless the passphrase reaches it.
+Provisioning checks are registered operations in that signed-in profile, even
+when their dependencies live outside profile storage. The child runs the real console script with a failing
+keyring backend and no console, so no passphrase prompt can be reached.
+"""
+
+from __future__ import annotations
+
+import json
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.core.config import load_settings, override_settings
+
+from .config.tests.isolated_storage_fixture import native_profile_view_server
+from .fresh_process import run_fresh_cli
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_NO_KEYCHAIN = {"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"}
+_CLOSED_RUNTIME = "http://127.0.0.1:1/api/chat"
+
+
+def _passphrase() -> str:
+    return load_settings().cadrumo_dev_test_database_password.get_secret_value()
+
+
+def _run(storage_root: Path, *args: str, stdin_payload: str | None = None) -> subprocess.CompletedProcess[str]:
+    # Profile-bound leaves submit to the keychainless runtime that serves the root.
+    with native_profile_view_server(storage_root, keychain_backend=_NO_KEYCHAIN["PYTHON_KEYRING_BACKEND"]):
+        return run_fresh_cli(
+            args,
+            settings={
+                "cadrumo_local_storage_root": str(storage_root),
+                "cadrumo_secret_passphrase": _passphrase(),
+                "cadrumo_output_language": "en",
+                "cadrumo_llm_ollama_chat_url": _CLOSED_RUNTIME,
+            },
+            env_strip_prefixes=("AEAT_", "PYTEST_"),
+            extra_env=_NO_KEYCHAIN,
+            stdin_payload=stdin_payload,
+        ).completed
+
+
+@pytest.fixture
+def active_profile_root(tmp_path: Path) -> Path:
+    """Register a profile and leave it selected, as an operator's last login would."""
+    with override_settings(
+        cadrumo_local_storage_root=tmp_path,
+        cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
+        cadrumo_active_profile=None,
+    ):
+        profile_id = register_cli_profile(label="keychainless", log_in=False)
+        from cadrumo.adapters.persistence.storage.sql.engine import dispose_engines_for_bucket
+
+        dispose_engines_for_bucket(profile_id)
+    return tmp_path
+
+
+def _combined(result: subprocess.CompletedProcess[str]) -> str:
+    return f"{result.stdout}\n{result.stderr}"
+
+
+def test_provision_status_requires_sign_in_without_a_keychain(active_profile_root: Path) -> None:
+    result = _run(active_profile_root, "--format", "json", "config", "provision", "status")
+
+    assert result.returncode == 2, _combined(result)
+    assert result.stdout == "", _combined(result)
+    envelope = json.loads(result.stderr)
+    assert envelope["error"]["code"] == "REFUSED_CLI_BOUNDARY", result.stderr
+    assert envelope["error"]["action"]["failed_condition_id"] == "profile.session.logged_in"
+    assert envelope["error"]["context"] == {"reason": "absent", "sign_in_reason": "absent"}
+
+
+def test_provision_verify_requires_sign_in_without_a_keychain(active_profile_root: Path) -> None:
+    result = _run(active_profile_root, "--format", "json", "config", "provision", "verify", "--item", "browser")
+
+    assert result.returncode == 2, _combined(result)
+    assert result.stdout == "", _combined(result)
+    envelope = json.loads(result.stderr)
+    assert envelope["error"]["code"] == "REFUSED_CLI_BOUNDARY", result.stderr
+    assert envelope["error"]["action"]["failed_condition_id"] == "profile.session.logged_in"
+    assert envelope["error"]["context"] == {"reason": "absent", "sign_in_reason": "absent"}
+
+
+def test_a_profile_bound_command_still_refuses_without_a_keychain_or_a_console(active_profile_root: Path) -> None:
+    """An encrypted profile read refuses through the same sign-in boundary."""
+    result = _run(active_profile_root, "--format", "json", "config", "profile", "view", "keychainless")
+
+    assert result.returncode != 0, _combined(result)
+    envelope = json.loads(result.stderr)
+    # The profile was never unlocked in a process that could keep its session,
+    # so the gate answers with the login action rather than reading anything.
+    assert envelope["error"]["code"] == "REFUSED_CLI_BOUNDARY", result.stderr
+    assert envelope["error"]["action"]["failed_condition_id"] == "profile.session.logged_in"
+
+
+def test_a_profile_bound_command_runs_when_the_passphrase_is_supplied(active_profile_root: Path) -> None:
+    """Positive control for the refusal above: the same leaf authenticates for this invocation."""
+    result = _run(
+        active_profile_root,
+        "--profile-secrets-stdin",
+        "config",
+        "profile",
+        "view",
+        "keychainless",
+        stdin_payload=json.dumps({"profile_passphrase": _passphrase()}),
+    )
+
+    assert result.returncode == 0, _combined(result)
+    assert "display_name\tkeychainless" in result.stdout
+    assert _passphrase() not in _combined(result)

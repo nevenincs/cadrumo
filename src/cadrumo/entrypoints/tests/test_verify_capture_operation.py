@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -12,6 +12,8 @@ from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel
+
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -40,7 +42,6 @@ from ...application.operations.persistence.journal import OperationPersistedSnap
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.user_profile.access_contracts import AccessAction, Availability
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.identity_check_verdict import IdentityCheckVerdict
 from ...core.operations import (
@@ -73,7 +74,7 @@ class _ExecutionAuthority:
         self.events.append(f"require:{action.value}")
 
     @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncIterator[None]:
+    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
         assert identity is not None
         self.guard_calls += 1
         guard_number = self.guard_calls

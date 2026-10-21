@@ -91,6 +91,15 @@ fn inspect_at(root: &Path) -> Result<Readiness, Error> {
 #[test]
 fn relocated_deep_package_is_rechecked_after_every_tamper() {
     let mut fixture = Fixture::new();
+    // Cross multiple bounded verification batches, including a partial final
+    // batch. Every member remains an actual manifest-bound file.
+    fs::create_dir(fixture.root.join("batch")).unwrap();
+    for index in 0..65 {
+        let member = format!("batch/member-{index:02}.bin");
+        fs::write(fixture.root.join(&member), &fixture.payload).unwrap();
+        fixture.manifest["files"][member] = json!(digest(&fixture.payload));
+    }
+    fixture.write_manifest();
     assert_eq!(fixture.inspect().unwrap(), Readiness::Ready);
     let destination = fixture.directory.path().join("relocated 漢字 and spaces");
     let resolved_directory = fs::canonicalize(fixture.directory.path()).unwrap();
@@ -106,6 +115,26 @@ fn relocated_deep_package_is_rechecked_after_every_tamper() {
     );
     fs::rename(&fixture.root, &destination).unwrap();
     fixture.root = destination;
+    assert_eq!(fixture.inspect().unwrap(), Readiness::Ready);
+    let last = "batch/member-64.bin";
+    fs::write(fixture.root.join(last), b"changed batch member").unwrap();
+    assert_eq!(
+        fixture.inspect().unwrap(),
+        Readiness::Incompatible(last.into())
+    );
+    fs::write(fixture.root.join(last), &fixture.payload).unwrap();
+    assert_eq!(fixture.inspect().unwrap(), Readiness::Ready);
+    // Keep relocation functional after a namespace refusal with pending work.
+    // Windows delete sharing means rename itself is not a settlement witness.
+    fs::write(fixture.root.join("batch/unexpected.bin"), b"unexpected").unwrap();
+    assert!(matches!(
+        fixture.inspect().unwrap(),
+        Readiness::Incompatible(_)
+    ));
+    fs::remove_file(fixture.root.join("batch/unexpected.bin")).unwrap();
+    let second = fixture.directory.path().join("second relocated package");
+    fs::rename(&fixture.root, &second).unwrap();
+    fixture.root = second;
     assert_eq!(fixture.inspect().unwrap(), Readiness::Ready);
     // The final byte lies past the streaming buffer's first 64 KiB.
     let mut tampered = fixture.payload.clone();

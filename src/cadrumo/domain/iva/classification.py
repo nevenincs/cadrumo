@@ -68,12 +68,14 @@ from .errors import IvaValidationError
 from .place_of_supply import IvaPlaceOfSupplyRule
 from .schema import (
     EUMemberState,
+    InvoiceKind,
     IvaArt69DosService,
     IvaCategory,
     IvaExemptionArticle,
     IvaRateKind,
     IvaRateRecord,
     IvaStrictFrozen,
+    IvaTerritorialScope,
 )
 
 if TYPE_CHECKING:
@@ -92,10 +94,6 @@ class _RegistryProjectedToken(StrictRegistryToken):
     __slots__ = ()
 
     _refusal_error = IvaValidationError
-
-
-class IvaTerritorialScope(_RegistryProjectedToken):
-    """Registry-projected territorial scope token for an invoice party."""
 
 
 class PartyFact(StrEnum):
@@ -134,26 +132,6 @@ class PartyFact(StrEnum):
 
     IVA_IDENTIFICATION_STATE = "iva_identification_state"
     TERRITORIAL_ESTABLISHMENT = "territorial_establishment"
-
-
-class InvoiceKind(StrEnum):
-    """Whether the autónomo issued or received the invoice.
-
-    Single canonical enum spanning both the substrate classifier
-    (``IvaInvoiceClassificationCriteria.direction``) and ledger / invoice
-    records (``Invoice.kind``). Replaces the prior split between
-    ``InvoiceDirection`` (substrate) and :class:`InvoiceKind` (invoices)
-    that carried identical semantics with mismatched lowercase / uppercase
-    string values. Values are lowercase to align with TOML registry selectors
-    (``invoice_direction = "issued"``).
-
-    Attributes:
-        ISSUED: The autónomo is the issuer (sale).
-        RECEIVED: The autónomo is the recipient (purchase).
-    """
-
-    ISSUED = "issued"
-    RECEIVED = "received"
 
 
 class CustomerTaxStatus(_RegistryProjectedToken):
@@ -329,7 +307,7 @@ _CUSTOMER_STATUS_ALIAS_NAMES = frozenset(
 )
 
 
-def _classification_vocabulary_group[T: _RegistryProjectedToken](
+def _classification_vocabulary_group[T: StrictRegistryToken](
     entries: Mapping[str, str],
     *,
     prefix: str,
@@ -864,13 +842,11 @@ def classify_iva(
 
 __all__ = [
     "CustomerTaxStatus",
-    "InvoiceKind",
     "IvaClassificationCatalogue",
     "IvaClassificationInputs",
     "IvaClassificationResult",
     "IvaClassificationRule",
     "IvaInvoiceClassificationCriteria",
-    "IvaTerritorialScope",
     "PartyFact",
     "TransactionKind",
     "TransactionKindCatalogue",

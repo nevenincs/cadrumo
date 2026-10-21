@@ -8,17 +8,18 @@ from textual.app import ComposeResult
 from textual.widgets import DataTable, Static
 
 from ....core.i18n.render import tr
+from ..components.language import localized
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
+    DeclarationsProjectionScreen,
     DeclarationsWorkspaceController,
-    DeclarationsWorkspaceScreen,
     natural_address,
     revision_state_label,
     timestamp_label,
 )
 
 
-class DeclarationsRevisionsScreen(DeclarationsWorkspaceScreen):
+class DeclarationsRevisionsScreen(DeclarationsProjectionScreen):
     """Distinguish calculation revision identity from registry revision vocabulary."""
 
     def __init__(self, controller: DeclarationsWorkspaceController) -> None:
@@ -28,15 +29,21 @@ class DeclarationsRevisionsScreen(DeclarationsWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.declarations.revisions.title"), classes="cadrumo-banner", markup=False)
+        yield localized(
+            Static(tr("tui.declarations.revisions.title"), classes="cadrumo-banner", markup=False),
+            "tui.declarations.revisions.title",
+        )
         with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
             yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
-            yield Static(tr("tui.declarations.revisions.explanation"), markup=False)
+            yield localized(
+                Static(tr("tui.declarations.revisions.explanation"), markup=False),
+                "tui.declarations.revisions.explanation",
+            )
             yield ContentDataTable[str](id="declarations-revisions", cursor_type="row", zebra_stripes=True)
-            yield Static(id="declarations-empty", classes="declarations-empty", markup=False)
-            yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)
+            yield from self.compose_notices()
 
-    def on_mount(self) -> None:
+    @override
+    def _populate_view(self) -> None:
         """Populate calculation revisions from the safe projection."""
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#declarations-revisions", DataTable))

@@ -4,29 +4,19 @@ from __future__ import annotations
 
 from typing import Final
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ..command_parameter_contracts import ArgumentSpec, OptionSpec
-from ..command_shared_contracts import (
+from cadrumo_client.commands.execution_policies import GOOGLE_READ, GOOGLE_WRITE, state_free_group_spec
+from cadrumo_client.commands.leaf_specs import ModuleLeafBuilder
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
-    DeferredTarget,
-    LazyBinding,
     LiteralValue,
     ParameterConstraint,
     ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
     ValueContract,
 )
-from ..command_shared_contracts import translation_key as _key
-from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
-from ._spec_policies import (
-    GOOGLE_DESTRUCTIVE,
-    GOOGLE_READ,
-    GOOGLE_WRITE,
-    state_free_group_spec,
-)
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+
+from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.
 # The path used to be built with an f-string, which meant no static reader -- grep,
@@ -35,22 +25,11 @@ from ._spec_policies import (
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
     "_google": ".google",
-    "_google_folder": "._google_folder",
-    "_google_folder_payloads": "._google_folder_payloads",
-    "_google_payloads": "._google_payloads",
+    "_google_folder": ".google_folder_commands",
+    "_google_folder_payloads": ".google_folder_results",
+    "_google_payloads": "cadrumo_client.commands.google_payloads",
 }
-
-
-def _handler(module: str, name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name, __package__))
-
-
-def _schema(module: str, name: str, identity: str) -> ResultSchemaSpec:
-    return ResultSchemaSpec(
-        SchemaState.TARGET,
-        target=DeferredTarget(_HANDLER_MODULES[module], name, __package__),
-        identity=identity,
-    )
+_leaf = ModuleLeafBuilder(_HANDLER_MODULES, __package__).leaf
 
 
 def _option(
@@ -85,70 +64,8 @@ def _option(
     )
 
 
-def _leaf(
-    key: str,
-    parent: str,
-    token: str,
-    help_key: str,
-    module: str,
-    handler: str,
-    schema_module: str,
-    schema_name: str,
-    policy: ExecutionPolicySpec,
-    parameters: tuple[ArgumentSpec | OptionSpec, ...] = (),
-    *,
-    identity: str | None = None,
-) -> CommandSpec:
-    return CommandSpec(
-        key=key,
-        parent_key=parent,
-        token=token,
-        kind=CommandNodeKind.LEAF,
-        help_key=_key(help_key),
-        short_help_key=None,
-        invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=parameters,
-        policy=policy,
-        handler=_handler(module, handler),
-        result_schema=_schema(schema_module, schema_name, identity or key.replace("_", ".")),
-    )
-
-
 GOOGLE_COMMAND_SPECS = (
     state_free_group_spec("config_google", "config", "google", "cli.config.google.help"),
-    _leaf(
-        "config_google_login",
-        "config_google",
-        "login",
-        "cli.config.google.login_help",
-        "_google",
-        "google_login",
-        "_google_payloads",
-        "GoogleLoginResult",
-        GOOGLE_WRITE,
-    ),
-    _leaf(
-        "config_google_status",
-        "config_google",
-        "status",
-        "cli.config.google.status_help",
-        "_google",
-        "google_status",
-        "_google_payloads",
-        "GoogleStatusResult",
-        GOOGLE_READ,
-    ),
-    _leaf(
-        "config_google_logout",
-        "config_google",
-        "logout",
-        "cli.config.google.logout_help",
-        "_google",
-        "google_logout",
-        "_google_payloads",
-        "GoogleLogoutResult",
-        GOOGLE_DESTRUCTIVE,
-    ),
     state_free_group_spec("config_google_folder", "config_google", "folder", "cli.config.google.folder.help"),
     _leaf(
         "config_google_folder_view",

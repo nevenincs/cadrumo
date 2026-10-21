@@ -37,7 +37,10 @@ async def render_sample() -> str:
         lines = app.screen._compositor.render_strips()
         return "\x1b[2J\x1b[H" + "".join(
             f"\x1b[{row + 1};1H"
-            + "".join(segment.style.render(segment.text) if segment.style else segment.text for segment in line)
+            + "".join(
+                segment.style.render(segment.text) if (segment.style is not None and segment.style) else segment.text
+                for segment in line
+            )
             for row, line in enumerate(lines)
         )
 

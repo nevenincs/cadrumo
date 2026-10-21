@@ -8,6 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.config_support import LLMProvider
 from ...core.hex import Hex64Str
@@ -20,15 +22,13 @@ from ..operations.access_resolution import OperationAccessContext, ResolvedOpera
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
+from ..operations.person_acts import is_persons_frontend
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .evidence import PurchaseInvoiceEvidenceService
 from .invoice_confirmation import (
@@ -242,11 +242,11 @@ def build_ledger_evidence_extract_definition(
     return build_single_phase_definition(
         definition_id=LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
         request_type=LedgerEvidenceExtractRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerEvidenceExtractExecutionResult,
         executor_type=LedgerEvidenceExtractExecutor,
         build=lambda: LedgerEvidenceExtractExecutor(ports_factory),
         capabilities=invoice_evidence_operation_capabilities(mutates=False, off_host_optional=True),
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 
@@ -278,6 +278,9 @@ def _resolve_extract_access(
         or type(request.payload) is not LedgerEvidenceExtractRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if request.payload.off_host_provider is not None and not is_persons_frontend(context.frontend):
+        # The acknowledgement is the person's consent to send the document off this machine; no automation gives it.
+        raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
     resolve = resolve_ledger_read_access if request.payload.off_host_provider is None else resolve_ledger_commit_access
     return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
@@ -293,7 +296,7 @@ def build_ledger_evidence_extract_registration(
         ),
         result_schema=OperationSchemaBindingV1.bind(
             schema_id=definition.definition_id + ".result",
-            schema_version=2,
+            schema_version=3,
             model_type=LedgerEvidenceExtractProjection,
         ),
         result_projector=_project_extract,

@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period, PeriodError
 from ...domain.buckets.event import bucket_event_order_key
@@ -26,10 +28,8 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .history import assemble_modelo_lifecycle_history
 from .history_ports import ModeloHistoryPortsFactory
@@ -117,11 +117,11 @@ def build_modelo_history_definition(factory: ModeloHistoryPortsFactory) -> Opera
     return build_single_phase_definition(
         definition_id=MODELO_HISTORY_OPERATION_DEFINITION_ID,
         request_type=ModeloHistoryOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloHistoryOperationProjection,
         executor_type=ModeloHistoryExecutor,
         build=lambda: ModeloHistoryExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

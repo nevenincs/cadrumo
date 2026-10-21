@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-verification'
 date: '2026-09-15'
-modified: '2026-09-15'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:af83f1572f77b6342de51d624bcbf2ba4bf7a08d71e7e6cf84d3d90cb4ff9887'
+body_hash: 'sha256:5f7e754986460aa791b14e07192ff50c4ad67c48227101868d257ba9b880bc6c'
 related:
   - "[[2026-09-15-runtime-verification-lane01-r01-cli-reachability-audit]]"
 ---
@@ -14,7 +14,7 @@ related:
 
 ## Scope
 
-Session `lane01-r02-revision-view-repair`. Implementation was authorized to repair the runtime revision-view validation defect `L01-R01-F02` from the linked lane01-r01 audit. Commit, push, and authority rebuild or publication were not authorized, and none happened. Checkout: worktree `Y:/code/cadrumo-worktrees/main`, branch `main`, HEAD `6574d6e553`. The touched production files had no uncommitted changes at session start. Execution 2026-09-15 17:10–17:37 +02:00, Windows 11, PowerShell. The coordinator ran the whole session; no subagent was dispatched.
+Session `lane01-r02-revision-view-repair`. Implementation was authorized to repair the runtime revision-view validation defect `L01-R01-F02` from the linked lane01-r01 audit. Commit, push, and authority rebuild or publication were not authorized, and none happened. Checkout: worktree `<repo-root>`, branch `main`, HEAD `6574d6e553`. The touched production files had no uncommitted changes at session start. Execution 2026-09-15 17:10–17:37 +02:00, Windows 11, PowerShell. The coordinator ran the whole session; no subagent was dispatched.
 
 Selected repair: a `ModeloDefinition` selected from a published `ModeloRevisionDirectory` resolves cross-revision identity references against the directory's complete revision identity set. A complete modelo keeps its existing validation unchanged. The published authority artifact is untouched.
 

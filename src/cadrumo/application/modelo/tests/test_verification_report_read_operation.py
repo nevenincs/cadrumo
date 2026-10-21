@@ -12,6 +12,14 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    OperationAccessRequest,
+)
+
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -35,13 +43,6 @@ from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitSt
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    OperationAccessRequest,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import verification_report_read_capture as capture_module
 from ..verification_report_public_facts import ModeloVerificationReportProjection
@@ -235,12 +236,13 @@ def _context(
     action: AccessAction = AccessAction.SUBMIT,
     admitted: OperationAccessRequest | None = None,
     profile_id: UUID = _PROFILE,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=action,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
         authority_operation=operation,
@@ -415,6 +417,40 @@ def test_access_scopes_filtered_reads_and_tax_value_disclosure_to_exact_profile_
                 context=_context(list_registration, operation=operation, profile_id=_OTHER_PROFILE),
             )
         assert mismatch.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def test_report_reads_are_admitted_on_the_external_client_frontend_without_a_commit_door() -> None:
+    with bundled_indexed_authority().operation() as operation:
+        revision, unit = _revision_and_unit(operation, "1T")
+        report = _report(revision, ordinal=5, run_at=_NOW, blocking=True)
+        bundle = _bundle((revision,), (unit,), (report,))
+        _factory, definitions, registrations, registry = _setup(bundle)
+        requests = (
+            ModeloVerificationReportListRequest(
+                profile_id=_PROFILE, calculation_revision_id=revision.calculation_revision_id
+            ),
+            ModeloVerificationReportListRequest(profile_id=_PROFILE),
+            ModeloVerificationReportViewRequest(
+                profile_id=_PROFILE, verification_report_id=report.verification_report_id
+            ),
+        )
+        owners = (
+            (definitions[0], registrations[0]),
+            (definitions[0], registrations[0]),
+            (definitions[1], registrations[1]),
+        )
+
+        for payload, (definition, registration) in zip(requests, owners, strict=True):
+            resolved = resolve_operation_access(
+                registry=registry,
+                request=_request(definition_id=definition.definition_id, payload=payload),
+                context=_context(
+                    registration, operation=operation, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
+                ),
+            )
+            assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
+            assert resolved.request.profile_id == _PROFILE
+            assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 def test_executor_captures_on_worker_and_publishes_one_complete_projection() -> None:

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-08'
+modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:33539ad73914e95c7f6f4a6088ec2999b7779a6b43f10c1a216e66e99378eb1f'
+body_hash: 'sha256:81b5ff207bedd1ffd1f9d5771ba74b4f42570b5d2e0d259ab302ecf93e170de9'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -322,6 +322,122 @@ related:
 - `S05` `verify:` `Native Mac frozen-builder multilingual 404 regressions 8 tests` -> `pass`
 - `S05` `verify:` `Scoped Ruff formatting ty and git diff checks` -> `pass`
 - `S05` `verify:` `Independent multilingual link source review` -> `pass`
+- `S05` `verify:` `frozen Mac full native-installer docs Modelo390 runtime connection` -> `fail`
+- `S05` `verify:` `unchanged Mac retained-sandbox Modelo390 sequence and settled cleanup` -> `pass`
+- `S05` `by:` `root`
+- `S05` `A` `dev/packaging/native/docs_input_identity.py`
+- `S05` `A` `dev/packaging/native/tests/test_docs_input_identity.py`
+- `S05` `M` `dev/packaging/native/tests/test_docs_input_publication.py`
+- `S05` `M` `native/cmake/Docs.cmake`
+- `S05` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S05` `M` `dev/quality/metadata/import_load_targets.json`
+- `S05` `verify:` `cmake --build build/windows-installers-x64 --config Debug --target user_docs_driver_test --parallel 2 (34 tests)` -> `pass`
+- `S05` `verify:` `focused Ruff format and ty (worker evidence)` -> `pass`
+- `S05` `verify:` `review portable docs identity and CMake fixture enrollment` -> `pass`
+- `S05` `M` `native/platforms/macos-arm64.json`
+- `S05` `M` `dev/packaging/native/tests/test_platform_enrollment.py`
+- `S05` `verify:` `focused platform enrollment22 tests` -> `pass`
+- `S05` `verify:` `focused Ruff format and ty` -> `pass`
+- `S05` `verify:` `native52-image dependency inspection against Apple SDK stubs` -> `pass`
+- `S05` `verify:` `native isolated relocation: 52 images, 138 tool commands and strict ad-hoc verification` -> `pass`
+- `S05` `verify:` `native platform enrollment: 22 tests` -> `pass`
+- `S05` `verify:` `frozen Windows full CMake native-build-404-fixed` -> `fail`
+- `S05` `verify:` `frozen Windows import-diagnostics observer` -> `pass`
+- `S05` `verify:` `frozen Windows all 13 bank-import scenarios with payload-free observer` -> `pass`
+- `S05` `verify:` `WSL actual CMake strict user_docs_build` -> `pass`
+- `S05` `verify:` `manylinux actual CMake verified portable docs cache consumption` -> `pass`
+- `S05` `verify:` `Mac full native-installer attempt74299` -> `fail`
+- `S05` `verify:` `Mac isolated modelo349 diagnostic` -> `pass`
+- `S05` `verify:` `manylinux native desktop release compile` -> `pass`
+- `S05` `verify:` `manylinux full package dependency closure` -> `fail`
+- `S15` `M` `.vault/adr/2026-10-04-application-distribution-adr.md`
+- `S15` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S15` `verify:` `Linux dependency-policy coverage and bounded crossref review` -> `pass`
+- `S15` `by:` `root`
+- `S15` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S15` `verify:` `Debian12 native desktop dpkg-shlibdeps static symbol/provider proof` -> `pass`
+- `S15` `A` `dev/packaging/native/linux_desktop_runtime.py`
+- `S15` `A` `dev/packaging/native/tests/test_linux_desktop_runtime.py`
+- `S15` `M` `dev/packaging/native/assemble.py`
+- `S15` `M` `dev/packaging/native/generate.py`
+- `S15` `M` `dev/packaging/native/installation.py`
+- `S15` `M` `dev/packaging/native/linux_packages.py`
+- `S15` `M` `dev/packaging/native/platforms/linux.py`
+- `S15` `M` `dev/packaging/tests/test_native_installation.py`
+- `S15` `M` `native/cmake/Contract.cmake`
+- `S15` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S15` `M` `native/platforms/linux-aarch64.json`
+- `S15` `M` `native/platforms/linux-x86-64.json`
+- `S15` `verify:` `S15 owning106 and focused22 Python tests` -> `pass`
+- `S15` `verify:` `S15 native DEB RPM fixture inspection2tests` -> `pass`
+- `S15` `verify:` `S15 CMake contract cache input enrollment` -> `pass`
+- `S15` `verify:` `S15 both target distribution CMake projection` -> `pass`
+- `S15` `verify:` `S15 scoped Ruff format ty` -> `pass`
+- `S15` `verify:` `S15 independent source review` -> `pass`
+- `S15` `verify:` `S15 actual51ELF isolated relocation` -> `pass`
+- `S15` `M` `native/CONTRACT.md`
+- `S15` `verify:` `Linux prerequisite reference source reconciliation and diff check` -> `pass`
+- `S16` `M` `.vault/adr/2026-10-07-application-distribution-windows-versioned-msi-adr.md`
+- `S16` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S16` `verify:` `S09 recovery and exact-registration no-op coverage review` -> `pass`
+- `S16` `by:` `root`
+- `S05` `verify:` `Frozen Windows strict full docs compile4578s` -> `pass`
+- `S05` `verify:` `Frozen Windows native-installer docs reconstruction` -> `fail`
+- `S05` `verify:` `All1316 mismatches exclusively CRLF-LF` -> `pass`
+- `S05` `verify:` `Actual pagefind indexing line ending regression2tests` -> `pass`
+- `S16` `M` `dev/packaging/native/windows_msi.py`
+- `S16` `M` `dev/packaging/native/windows_msi_build.py`
+- `S16` `M` `dev/packaging/tests/test_windows_msi.py`
+- `S16` `M` `native/application/src/installation/maintenance.rs`
+- `S16` `M` `native/application/tests/installation.rs`
+- `S16` `M` `native/installer/Cargo.toml`
+- `S16` `M` `native/installer/Cargo.lock`
+- `S16` `M` `native/installer/src/lib.rs`
+- `S16` `M` `native/installer/src/windows.rs`
+- `S16` `M` `native/installer/src/runner.rs`
+- `S16` `A` `native/installer/src/registration.rs`
+- `S16` `A` `native/installer/src/runner/already_installed.rs`
+- `S16` `A` `native/installer/src/runner/already_installed/observation_tests.rs`
+- `S16` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S16` `verify:` `Rust1.96 installer26tests all-targetClippy unsignedRelease` -> `pass`
+- `S16` `verify:` `Shared application installation21tests` -> `pass`
+- `S16` `verify:` `MSI28tests with actual WiX compile-decompile` -> `pass`
+- `S16` `verify:` `Owning Python Ruff format ty` -> `pass`
+- `S15` `verify:` `Linux full CMake native-installer1169s` -> `pass`
+- `S15` `verify:` `Actual full desktop DEB and RPM inspection` -> `pass`
+- `S15` `verify:` `Exact rebuilt desktop strict Debian provider-symbol proof` -> `pass`
+- `S15` `verify:` `WSL strict docs producer and verified manylinux cache consumption` -> `pass`
+- `S05` `verify:` `Mac native-installer and hdiutil integrity` -> `pass`
+- `S05` `verify:` `Windows full MSI cabinet compilation` -> `fail`
+- `S05` `verify:` `Windows post-build complete input verification` -> `pass`
+- `S05` `M` `dev/packaging/native/windows_msi.py`
+- `S05` `M` `dev/packaging/tests/test_windows_msi.py`
+- `S05` `verify:` `WiX ordinary versus extended long-path reproduction` -> `pass`
+- `S05` `verify:` `Owning 39 tests plus corrected native long-source regression` -> `pass`
+- `S05` `verify:` `Ruff format check and ty` -> `pass`
+- `S03` `A` `.vault/research/2026-10-08-application-distribution-darwin-versioned-installation-research.md`
+- `S03` `A` `.vault/adr/2026-10-08-application-distribution-darwin-versioned-installation-adr.md`
+- `S03` `M` `.vault/index/application-distribution.index.md`
+- `S03` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S03` `verify:` `Native Mac read-only receipt-domain tooling and account binding` -> `pass`
+- `S03` `verify:` `Distribution feature validation` -> `pass`
+- `S03` `by:` `root`
+- `S05` `verify:` `Full Windows CMake native-package and msi-verify` -> `pass`
+- `S05` `verify:` `Full Windows before-after payload and source verification` -> `pass`
+- `S05` `verify:` `Frozen Windows strict full documentation retry` -> `fail`
+- `S05` `verify:` `Fresh censo and annual Modelo390 observed fixtures` -> `pass`
+- `S05` `M` `native/interpreter/python.c`
+- `S05` `M` `native/interpreter/bootstrap.py`
+- `S05` `M` `native/cmake/platforms/Posix.cmake`
+- `S05` `A` `native/cmake/PythonDistribution.cmake`
+- `S05` `M` `dev/packaging/native/assemble.py`
+- `S05` `M` `dev/packaging/native/platforms/windows_verify.py`
+- `S05` `M` `native/tests/package_smoke.py`
+- `S05` `A` `native/tests/interpreter_smoke.py`
+- `S05` `verify:` `CMake python and python_d builds` -> `pass`
+- `S05` `verify:` `standalone interpreter CTest and development smoke` -> `pass`
+- `S05` `verify:` `package inventory and 18 focused tests` -> `pass`
+- `S05` `verify:` `Ruff and ty` -> `pass`
 
 ## Notes
 
@@ -353,3 +469,23 @@ related:
 - `S14` Native failed filing boundary and completegoldencheck now pass with ordinary fixture cleanup. Observer sees28cleanfutures/drainreceipt1/zero missing-uncontained-unsettled and releasedtrue. Earlier intermittent runtime connection loss remains unresolved; full installer and lifecycle gates stay open.
 - `S05` Targeted diagnostic passed with normal cleanup and retained workspace; prior full strict documentation failure remains unexplained. Frozen Windows native-installer full docs gate and Mac full build remain running. Neither machine is disposable; installation and login/session-ending acceptance remain excluded.
 - `S05` Full Mac build failed nine translated 404 cross-root links after HTML compile success. Reviewed two-file overlay is verified and full CMake build relaunched; no complete DMG or native installation acceptance yet. Concurrent Windows frozen inputs unchanged.
+- `S05` Failure logs retained before one unchanged-input full retry. Diagnostic passed 27 connection futures and complete cleanup in 198.84s; original connection failure remains unexplained. No DMG or lifecycle acceptance claimed.
+- `S05` S05 remains open. Portable documentation identity retains canonical enrollment, selected authority roles, languages, mutation fences and output inventory. Actual generated Windows inputs include all six previously excluded fixture helper modules. WSL/manylinux native producer handoff remains pending; active Windows/Mac builds retain frozen inputs.
+- `S05` Mac full attempt28180 completed strict four-language docs in3112s, then failed package relocation: eight actual Apple system install-names absent from canonical allowlist. Exact SDK-corroborated entries added; ambient paths and undeclared versions remain refused. Original failure log SHA2567af45fdc2d8fe1df6467c0af787aebf2047975d2ed966a7099234c5c858dfe68 preserved. Native relocation and full installer retry pending; no DMG acceptance claim.
+- `S05` Committed 04a0faa151 was applied with before/after hashes to the stopped Mac snapshot after preserving failure evidence. All 52 original stage image hashes were unchanged by isolated relocation. Full CMake native-installer retry 74299 is running; native platform JSON changes correctly invalidate the enrolled documentation input graph. Windows 55091 and WSL 91625 retain independent frozen sources. No signing credentials, product installation or acceptance claimed.
+- `S05` Original full-build `runtime_deadline_exceeded` remains unexplained; isolated passes establish clean observed timing/cleanup, not remediation or installer acceptance. Exact frozen source and authority hashes unchanged.
+- `S05` Full native packaging remains separate and in progress; no product installation or native lifecycle acceptance performed.
+- `S05` S05 remains open. Native failures and isolated diagnostics are distinct; preserve host state and existing installation gates. Linux desktop delivery boundary needs explicit refinement.
+- `S15` Accepted dependency refinement under existing all-code/build authorization; implementation and minimum-runtime/native package verification pending.
+- `S15` Static provider proof exposes WebKit2.42 and stronger package minima; no product execution/installation or minimum graphical-host claim. Darwin publication candidate research remains unaccepted.
+- `S15` S15 remains open for full product packaging evidence; native graphical minimum-host and installation acceptance remain separate gates. Windows-native-tool skips covered by isolated DEB/RPM fixture run.
+- `S15` Reference now states archive/this-user prerequisites and artifact versus host glibc boundary. Full frozen Linux build lane delegated after source/native fixture and ELF checks.
+- `S16` Existing recovery/rollback/owner-loss implementations retain native acceptance gaps. S16 adds actual resource verification before a no-op success; missing legacy/resource evidence and damaged anchored repair stay refused.
+- `S05` Original outcome preserved. Existing committed pagefind fix narrowly overlaid into isolated source with hashes. CMake retry18081 pending, gates unchanged.
+- `S16` Root integrated source review PASS; installed native product registry and interactive acceptance unproven, gates unchanged. Evidence in audit and worker verification handoff.
+- `S15` Hash-verified local artifacts and full provenance in linux-s15-final-handoff. Native installation gates unchanged; graphical lifecycle and ARM64 acceptance unproven.
+- `S05` DMG built and copied; separate Mac live qualification failed. Windows long-source cabinet defect reproduced; no native installations.
+- `S05` Full-payload retry pending; installation gates retained.
+- `S03` Proposed only; authenticated package preflight, positive receipt classification and complete scope discovery remain unresolved.
+- `S05` Four gated full MSIs published. Separate full documentation failures remain unexplained; targeted passes do not replace qualification.
+- `S05` User requested normal site initialization and standalone Python with python.zip in the shared stage layout. Broader S05 remains open.

@@ -9,6 +9,9 @@ from dataclasses import replace
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessPolicy
+
 from ...core.period import Period
 from ...domain.calculations.registry.relations import relation_source_requirements
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -16,7 +19,6 @@ from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationRequest
 from ..operations.profile_guard import require_access_request_profile_payload
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .modelo_spreadsheet_operation_contracts import (
     MODELO_SPREADSHEET_OPERATION_CONTRACTS,

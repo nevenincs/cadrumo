@@ -37,6 +37,9 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
     verdict = getattr(current, "terminal_precondition_verdict", None)
     if isinstance(verdict, PreconditionVerdict):
         return verdict
+    registry_verdict = _calculation_registry_verdict(current)
+    if registry_verdict is not None:
+        return registry_verdict
     if isinstance(current, MissingOptionalExtraError):
         return cli_exception_no_recovery_verdict(
             CliExceptionPrecondition.OPTIONAL_EXTRA_IMPORTABLE,
@@ -56,6 +59,21 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
             facts={"section": "aeat.pre303", "valid": False},
         )
     return None
+
+
+def _calculation_registry_verdict(current: CadrumoError) -> PreconditionVerdict | None:
+    """Resolve a registry error's domain classification through the calculation policy.
+
+    The registry names only the failed condition and its facts. Resolving them
+    here, rather than at one frontend's boundary, lets a supervised operation
+    record the same verdict for every frontend that reads its error detail.
+    """
+    from ..domain.calculations.registry.errors import RegistryError
+    from .calculations.registry_preconditions import calculation_registry_failure_verdict
+
+    if not isinstance(current, RegistryError) or current.registry_failure is None:
+        return None
+    return calculation_registry_failure_verdict(current.registry_failure)
 
 
 def _nested_exception_links(current: BaseException) -> Iterator[BaseException]:

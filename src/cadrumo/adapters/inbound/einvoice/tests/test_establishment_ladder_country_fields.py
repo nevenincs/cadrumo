@@ -6,8 +6,9 @@ import pytest
 
 from cadrumo.adapters.inbound.einvoice.parsers import ParsedEInvoice, parse_einvoice_document
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.iva.classification import IvaTerritorialScope
 from cadrumo.domain.iva.establishment import territorial_scope_for_spanish_postal_code
+
+from .....domain.iva.schema import IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

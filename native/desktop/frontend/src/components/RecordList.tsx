@@ -1,3 +1,5 @@
+import { RecordRow } from "./records/RecordRow";
+import { RecordToolbar } from "./records/RecordToolbar";
 import {
   useCallback,
   memo,
@@ -11,23 +13,19 @@ import {
 } from "react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/components/ui/cn";
-import { Empty, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
+import { IconButton } from "@/components/ui/icon-button";
+import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
-import { Spinner } from "@/components/ui/spinner";
-import type { LogLevel, LogRecord, LogSourceStates } from "../ipc/contract";
+import type { LogRecord, LogSourceStates } from "../ipc/contract";
 import { useMetric } from "../shell/metrics";
 import { fromPointer } from "../shell/pointer";
 import {
   DEFAULT_FILTERS,
-  LEVELS,
-  recordContext,
+  levelRank,
   recordLine,
-  recordTime,
-  shortLogger,
+  recordOrigin,
+  matchesOrigin,
+  recordsText,
   type RecordFilters,
 } from "../shell/records";
 import type { MenuAnchor } from "./ContextMenu";
@@ -42,8 +40,6 @@ export type RecordMenuRequest = {
   visible: LogRecord[];
 };
 
-const rank = (level: LogLevel | null) => (level ? LEVELS.indexOf(level) : 1);
-
 // How many of the newest matching records are in the document at once. The
 // log holds up to ten thousand; drawing them all costs every scroll and every
 // keystroke in the filter. Reaching the top brings in the next span.
@@ -53,161 +49,81 @@ const WINDOW = 400;
 const MAX_SPAN = 5 * WINDOW;
 // How many views from an edge of the drawn span the next span is brought in.
 const SPAN_MARGIN = 3;
+// Records are drawn in blocks of this many sequence numbers. A batch changes
+// the last block, and the keyboard the one or two it moves between; every
+// other block is passed over whole. Under a busy log the drawn span runs to
+// thousands of rows and a batch can come every few tens of milliseconds.
+const BLOCK = 64;
 
-const LEVEL_TONE: Partial<Record<LogLevel, string>> = {
-  WARNING: "text-warning",
-  ERROR: "text-destructive",
-  CRITICAL: "text-destructive",
+type RowHandlers = {
+  toggle: (seq: number) => void;
+  current: (seq: number) => void;
+  menu: (event: MouseEvent<HTMLElement>, record: LogRecord) => void;
 };
 
-// One record. Memoized, so a new batch renders only its own rows: the list
-// holds thousands, and a batch arrives up to ten times a second.
-const Row = memo(function Row({
-  record,
-  open,
+type BlockProps = {
+  selected: string;
+  selection: ReadonlySet<number>;
+  records: LogRecord[];
+  /** The records of this block whose detail is open, as their numbers. */
+  opened: string;
+  expanded: ReadonlySet<number>;
+  /** The current record and the tab stop, where they are in this block. */
+  current: number | null;
+  tabStop: number | undefined;
+  pythonLabel: string;
+  hostLabel: string;
+  detailsLabel: string;
+  handlers: RowHandlers;
+};
+
+const sameBlock = (a: BlockProps, b: BlockProps) =>
+  a.selected === b.selected &&
+  a.opened === b.opened &&
+  a.current === b.current &&
+  a.tabStop === b.tabStop &&
+  a.pythonLabel === b.pythonLabel &&
+  a.hostLabel === b.hostLabel &&
+  a.detailsLabel === b.detailsLabel &&
+  a.handlers === b.handlers &&
+  a.records.length === b.records.length &&
+  a.records.every((record, at) => record === b.records[at]);
+
+// The rows of one block, side by side with every other block's in the list:
+// a fragment, so each row is still a child of the list itself.
+const RecordBlock = memo(function RecordBlock({
+  selection,
+  records,
+  expanded,
   current,
   tabStop,
-  sourceLabel,
+  pythonLabel,
+  hostLabel,
   detailsLabel,
-  onToggle,
-  onCurrent,
-  onMenu,
-}: {
-  record: LogRecord;
-  open: boolean;
-  /** The row the keyboard is on, or the one its menu was opened for. */
-  current: boolean;
-  /** The one row Tab lands on; the arrow keys reach the others. */
-  tabStop: boolean;
-  /** The name of the record's source, in the chrome language. */
-  sourceLabel: string;
-  detailsLabel: string;
-  onToggle: (seq: number) => void;
-  onCurrent: (seq: number) => void;
-  onMenu: (event: MouseEvent<HTMLElement>, record: LogRecord) => void;
-}) {
-  const level = (record.level ?? "none").toLowerCase();
-  const failed = record.level === "ERROR" || record.level === "CRITICAL";
-  const context = recordContext(record);
-  const hasContext = Object.keys(context).length > 0;
-  const hasDetails = !!record.detail || hasContext;
-  const summary = [
-    context.stage,
-    context.startup_phase,
-    context.phase,
-    context.outcome,
-    context.reason_code,
-  ]
-    .filter((value): value is string => typeof value === "string")
-    .join(" · ");
-  return (
-    <div
-      className={cn(
-        `record level-${level} source-${record.source}`,
-        // The current row carries an ink bar as well as the hover wash: its
-        // faint text has no contrast to spare for a stronger surface.
-        "border-l-2 hover:bg-accent focus-visible:-outline-offset-2 aria-[current=true]:border-ring aria-[current=true]:bg-accent",
-        failed ? "border-destructive" : "border-transparent",
-      )}
-      data-seq={record.seq}
-      aria-current={current || undefined}
-      tabIndex={tabStop ? 0 : -1}
-      onFocus={() => onCurrent(record.seq)}
-      onContextMenu={(event) => {
-        event.preventDefault();
-        onMenu(event, record);
-      }}
-    >
-      <div className="grid grid-cols-[7.5em_5.5em_minmax(8em,16em)_1fr] gap-x-3 px-3 py-px @max-xl:grid-cols-[7.5em_5.5em_1fr]">
-        <time
-          className="text-muted-foreground"
-          dateTime={record.timestampMs === null ? undefined : record.timestamp}
-          title={record.timestamp}
-        >
-          {recordTime(record)}
-        </time>
-        <span
-          className={cn(
-            "font-semibold tracking-wide",
-            (record.level && LEVEL_TONE[record.level]) ||
-              "text-muted-foreground",
-          )}
-        >
-          {/* A level is said in words wherever there is one; a host line
-              without one says where it came from instead. */}
-          {record.level ?? (record.source === "host" ? sourceLabel : "—")}
-        </span>
-        <span
-          className="truncate text-muted-foreground @max-xl:hidden"
-          title={record.logger ?? undefined}
-        >
-          {record.logger
-            ? shortLogger(record.logger)
-            : record.level || record.source !== "host"
-              ? sourceLabel
-              : ""}
-        </span>
-        <span
-          className={cn(
-            "min-w-0 wrap-anywhere @max-xl:col-span-3",
-            record.level === "DEBUG" && "text-muted-foreground",
-          )}
-        >
-          {record.message}
-          {hasDetails && (
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              className="-my-1 ml-1 align-middle"
-              // Reached from its row, by Enter: the log stays one tab stop.
-              tabIndex={-1}
-              aria-expanded={open}
-              aria-label={detailsLabel}
-              onClick={() => onToggle(record.seq)}
-            >
-              <Icon
-                name="forward"
-                size="xs"
-                className={cn("transition-transform", open && "rotate-90")}
-              />
-            </Button>
-          )}
-          {(record.process ||
-            summary ||
-            typeof context.diagnostic_id === "string") && (
-            <span className="ml-2 inline-flex flex-wrap gap-x-2 text-xs text-muted-foreground">
-              {record.process && (
-                <span className="record-process">
-                  {record.process.role}:{record.process.pid}
-                </span>
-              )}
-              {summary && (
-                <span className="record-context-summary" title={summary}>
-                  {summary}
-                </span>
-              )}
-              {typeof context.diagnostic_id === "string" && (
-                <span
-                  className="record-correlation max-w-field truncate"
-                  title={context.diagnostic_id}
-                >
-                  {context.diagnostic_id}
-                </span>
-              )}
-            </span>
-          )}
-        </span>
-      </div>
-      {open && (
-        <pre className="mx-3 mt-0.5 mb-1.5 overflow-x-auto rounded-md bg-accent px-2.5 py-1.5 text-xs whitespace-pre-wrap text-muted-foreground">
-          {record.detail}
-          {record.detail && hasContext && "\n\n"}
-          {hasContext && JSON.stringify(context, null, 2)}
-        </pre>
-      )}
-    </div>
-  );
-});
+  handlers,
+}: BlockProps) {
+  return records.map((record) => (
+    <RecordRow
+      key={record.seq}
+      record={record}
+      selected={selection.has(record.seq)}
+      open={expanded.has(record.seq)}
+      current={record.seq === current}
+      tabStop={record.seq === tabStop}
+      sourceLabel={
+        record.source === "python"
+          ? pythonLabel
+          : record.source === "host"
+            ? hostLabel
+            : record.source
+      }
+      detailsLabel={detailsLabel}
+      onToggle={handlers.toggle}
+      onCurrent={handlers.current}
+      onMenu={handlers.menu}
+    />
+  ));
+}, sameBlock);
 
 // Read-only view of the host's log batches. A missing or unreadable source is
 // never presented as an empty log, and an unknown source renders by name.
@@ -220,8 +136,12 @@ export const RecordList = memo(function RecordList({
   sourceStates,
   dropped,
   filters,
+  defaultFilters = DEFAULT_FILTERS,
   setFilters,
   onMenu,
+  onCopy,
+  onExport,
+  onReveal,
   shown,
 }: {
   /** null until the host's subscription answers. */
@@ -229,14 +149,19 @@ export const RecordList = memo(function RecordList({
   sourceStates: LogSourceStates | "unavailable" | null;
   dropped: number;
   filters: RecordFilters;
+  defaultFilters?: RecordFilters;
   setFilters: (filters: RecordFilters) => void;
   onMenu: (request: RecordMenuRequest) => void;
+  onCopy?: (text: string) => void;
+  onExport?: (text: string) => void;
+  onReveal?: () => void;
   shown: boolean;
 }) {
   const t = useStrings();
   const followSlack = useMetric("--log-follow-slack", 24);
   const list = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
+  const [selectedRecords, setSelected] = useState<LogRecord[]>([]);
   const [follow, setFollow] = useState(true);
   // While the log follows its end, the newest span is drawn. Once a reader
   // has left the end the span is pinned to its first record instead, so the
@@ -262,22 +187,34 @@ export const RecordList = memo(function RecordList({
   // The record the keyboard is on, to notice when it leaves the drawn span.
   const focused = useRef<string | null>(null);
   const all = useMemo(() => records ?? [], [records]);
-
-  const sources = useMemo(() => {
-    const seen = new Set(["python", "host"]);
-    for (const record of all) seen.add(record.source);
-    return [...seen];
-  }, [all]);
+  const counts = useMemo(
+    () => ({
+      errors: all.filter(
+        (record) => record.level === "ERROR" || record.level === "CRITICAL",
+      ).length,
+      warnings: all.filter((record) => record.level === "WARNING").length,
+    }),
+    [all],
+  );
+  const selected = useMemo(() => {
+    const retained = new Set(all);
+    return selectedRecords.filter((record) => retained.has(record));
+  }, [all, selectedRecords]);
+  const selection = useMemo(
+    () => new Set(selected.map((record) => record.seq)),
+    [selected],
+  );
 
   const visible = useMemo(() => {
     const text = filters.text.trim().toLowerCase();
     return all.filter(
       (record) =>
         !filters.hiddenSources.includes(record.source) &&
-        rank(record.level) >= filters.minLevel &&
+        levelRank(record.level) >= filters.minLevel &&
         (!filters.logger || record.logger === filters.logger) &&
+        matchesOrigin(record, filters.origin) &&
         (!text ||
-          `${recordLine(record)} ${record.detail ?? ""}`
+          `${recordOrigin(record)} ${recordLine(record)} ${record.detail ?? ""}`
             .toLowerCase()
             .includes(text)),
     );
@@ -289,6 +226,7 @@ export const RecordList = memo(function RecordList({
   // the old view's place is carried into it.
   const [drawnFor, setDrawnFor] = useState(filters);
   if (drawnFor !== filters) {
+    setSelected([]);
     setDrawnFor(filters);
     const kept = follow ? null : anchor.current;
     let at =
@@ -480,17 +418,6 @@ export const RecordList = memo(function RecordList({
     return () => observer.disconnect();
   }, []);
 
-  const counts = useMemo(() => {
-    let warnings = 0;
-    let errors = 0;
-    for (const record of all) {
-      if (record.level === "WARNING") warnings += 1;
-      else if (record.level === "ERROR" || record.level === "CRITICAL")
-        errors += 1;
-    }
-    return { warnings, errors };
-  }, [all]);
-
   const sourceLabel = (source: string) =>
     source === "python"
       ? t("desktop.logs.source_python")
@@ -679,51 +606,23 @@ export const RecordList = memo(function RecordList({
     }
   };
 
+  // The drawn records by block of sequence numbers, in order.
+  const blocks: LogRecord[][] = [];
+  for (const record of drawn) {
+    const last = blocks.at(-1);
+    if (
+      last?.[0] &&
+      Math.floor(last[0].seq / BLOCK) === Math.floor(record.seq / BLOCK)
+    )
+      last.push(record);
+    else blocks.push([record]);
+  }
+
   const loading = records === null && sourceStates === null;
   const empty =
     states.length > 0 &&
     states.every(([, state]) => state.kind === "available") &&
     visible.length === 0;
-  const chip = "shrink-0 rounded-full";
-  // Follow stands where each shape of the bar wants it: last in a wide bar,
-  // after the level in a narrow one, and first in the one-row bar of a short
-  // panel, where it also stays put while the rest scrolls sideways under it.
-  // It is drawn once in each place and shown in one, so the keyboard reaches
-  // it in the order the eye does.
-  const followButton = (place: string) => (
-    <Button
-      variant="outline"
-      size="sm"
-      className={cn(chip, place)}
-      data-follow=""
-      aria-pressed={follow}
-      title={t("desktop.logs.follow_hint")}
-      // The bar has changed shape under the keyboard and this place is no
-      // longer the one shown: focus goes to the one that is.
-      onBlur={(event) => {
-        const left = event.currentTarget;
-        if (event.relatedTarget || left.getClientRects().length > 0) return;
-        [
-          ...(left
-            .closest(".logview")
-            ?.querySelectorAll<HTMLElement>("[data-follow]") ?? []),
-        ]
-          .find((place) => place.getClientRects().length > 0)
-          ?.focus();
-      }}
-      onClick={() => {
-        if (follow) leaveEnd();
-        else {
-          anchor.current = null;
-          setFirst(null);
-          setFollow(true);
-        }
-      }}
-    >
-      {t("desktop.logs.follow")}
-    </Button>
-  );
-
   return (
     <div
       className="logview @container flex min-h-0 flex-1 flex-col bg-background"
@@ -732,108 +631,76 @@ export const RecordList = memo(function RecordList({
       id="panel-logs"
       aria-labelledby="tab-logs"
     >
-      {/* One row where there is room. In a narrow panel: the filter, the
-          level and Follow on a first row, and everything else on a second
-          that scrolls sideways, so the bar is never taller than two rows.
-          In a panel near its floor it is one row again, all of it scrolling
-          sideways, so the records keep their room. */}
-      <div className="flex shrink-0 flex-col gap-1.5 border-b px-2.5 py-1.5 @4xl:flex-row @4xl:items-center panel-short:flex-row panel-short:items-center panel-short:scroll-cue-x panel-short:overflow-x-auto panel-short:[scrollbar-width:none] panel-short:[&::-webkit-scrollbar]:hidden">
-        <div className="flex min-w-0 items-center gap-1.5 @4xl:contents panel-short:contents panel-short:*:shrink-0">
-          {followButton(
-            "sticky left-0 z-(--layer-separator) hidden bg-background panel-short:inline-flex",
+      <RecordToolbar
+        all={all}
+        visible={visible}
+        filters={filters}
+        defaultFilters={defaultFilters}
+        setFilters={setFilters}
+        filterInput={filterInput}
+        follow={follow}
+        onFollow={() => {
+          if (follow) leaveEnd();
+          else {
+            anchor.current = null;
+            setFirst(null);
+            setFollow(true);
+          }
+        }}
+        onSelectAll={() => {
+          setSelected(visible);
+          list.current?.focus({ preventScroll: true });
+        }}
+        onCopy={onCopy}
+        onExport={onExport}
+        onReveal={onReveal}
+      />
+      <div className="flex shrink-0 flex-wrap items-center gap-x-3 px-3 py-1 text-xs text-muted-foreground panel-short:hidden">
+        <span>
+          {t("desktop.logs.visible_count", {
+            visible: visible.length,
+            total: all.length,
+          })}
+        </span>
+        {states.length > 0 &&
+          states.every(([, state]) => state.kind === "available") && (
+            <span>{t("desktop.logs.state_available")}</span>
           )}
-          <Input
-            ref={filterInput}
-            className="filter-text min-w-20 flex-1 @4xl:w-field @4xl:flex-none panel-short:w-field panel-short:flex-none"
-            controlSize="sm"
-            type="search"
-            placeholder={t("desktop.logs.filter")}
-            aria-label={t("desktop.logs.filter")}
-            value={filters.text}
-            onChange={(event) =>
-              setFilters({ ...filters, text: event.target.value })
-            }
-          />
-          <NativeSelect
-            className="min-w-0 shrink panel-short:shrink-0"
-            controlSize="sm"
-            aria-label={t("desktop.logs.minimum_level")}
-            value={filters.minLevel}
-            onChange={(event) =>
-              setFilters({ ...filters, minLevel: Number(event.target.value) })
-            }
-          >
-            <option value={0}>{t("desktop.logs.level_all")}</option>
-            <option value={1}>{t("desktop.logs.level_info")}</option>
-            <option value={2}>{t("desktop.logs.level_warning")}</option>
-            <option value={3}>{t("desktop.logs.level_error")}</option>
-          </NativeSelect>
-          {followButton("@4xl:hidden panel-short:hidden")}
-        </div>
-        <div className="flex min-w-0 items-center gap-1.5 scroll-cue-x overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden @4xl:contents panel-short:contents">
-          <div
-            className="flex shrink-0 gap-1"
-            role="group"
-            aria-label={t("desktop.logs.sources")}
-          >
-            {sources.map((source) => (
-              <Button
-                key={source}
-                variant="outline"
-                size="sm"
-                className={chip}
-                aria-pressed={!filters.hiddenSources.includes(source)}
-                onClick={() =>
-                  setFilters({
-                    ...filters,
-                    hiddenSources: filters.hiddenSources.includes(source)
-                      ? filters.hiddenSources.filter((s) => s !== source)
-                      : [...filters.hiddenSources, source],
-                  })
-                }
-              >
-                {sourceLabel(source)}
-              </Button>
-            ))}
-          </div>
-          {filters.logger && (
-            <Button
-              variant="outline"
-              size="sm"
-              className={chip}
-              aria-pressed="true"
-              aria-label={`${t("desktop.logs.clear_logger")}: ${shortLogger(filters.logger)}`}
-              title={t("desktop.logs.clear_logger")}
+        {filters.origin && <span>{filters.origin}</span>}
+        {filters.logger && (
+          <>
+            <span className="max-w-field truncate" title={filters.logger}>
+              {filters.logger}
+            </span>
+            <IconButton
+              label={`${t("desktop.logs.clear_logger")}: ${filters.logger}`}
               onClick={() => {
                 setFilters({ ...filters, logger: null });
-                // The chip goes with its filter: the keyboard goes to the
-                // filter field, not to nothing.
                 filterInput.current?.focus();
               }}
             >
-              {shortLogger(filters.logger)}
-              <Icon name="close" size="xs" />
-            </Button>
-          )}
-          <span className="flex-1" />
-          {states.length > 0 &&
-            states.every(([, state]) => state.kind === "available") && (
-              <span className="shrink-0 text-xs text-faint">
-                {t("desktop.logs.state_available")}
-              </span>
-            )}
-          {counts.errors > 0 && (
-            <Badge variant="danger" className="shrink-0">
-              {t("desktop.logs.errors", { count: counts.errors })}
-            </Badge>
-          )}
-          {counts.warnings > 0 && (
-            <Badge variant="warning" className="shrink-0">
-              {t("desktop.logs.warnings", { count: counts.warnings })}
-            </Badge>
-          )}
-          {followButton("hidden @4xl:inline-flex panel-short:hidden!")}
-        </div>
+              <Icon name="close" />
+            </IconButton>
+          </>
+        )}
+        <span>
+          {["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"][filters.minLevel]}+
+        </span>
+        {counts.errors > 0 && (
+          <Badge variant="danger">
+            {t("desktop.logs.errors", { count: counts.errors })}
+          </Badge>
+        )}
+        {counts.warnings > 0 && (
+          <Badge variant="warning">
+            {t("desktop.logs.warnings", { count: counts.warnings })}
+          </Badge>
+        )}
+        {selected.length > 0 && (
+          <span role="status">
+            {t("desktop.logs.selected", { count: selected.length })}
+          </span>
+        )}
       </div>
       {sourceStates === "unavailable" && (
         <Alert
@@ -897,6 +764,32 @@ export const RecordList = memo(function RecordList({
         aria-live="off"
         tabIndex={tabStop === undefined && drawn.length > 0 ? 0 : -1}
         onKeyDown={key}
+        onKeyDownCapture={(event) => {
+          if (
+            (event.metaKey || event.ctrlKey) &&
+            !event.altKey &&
+            event.key.toLowerCase() === "a"
+          ) {
+            event.preventDefault();
+            event.stopPropagation();
+            setSelected(visible);
+          } else if (
+            (event.metaKey || event.ctrlKey) &&
+            !event.altKey &&
+            event.key.toLowerCase() === "c" &&
+            selected.length &&
+            onCopy
+          ) {
+            event.preventDefault();
+            event.stopPropagation();
+            onCopy(recordsText(selected));
+          } else if (event.key === "Escape" && selected.length) {
+            event.preventDefault();
+            event.stopPropagation();
+            setSelected([]);
+          }
+        }}
+        onPointerDownCapture={() => setSelected([])}
         // A menu asked for off any record has no record to be about: none
         // is shown, the browser's own included.
         onContextMenu={(event) => {
@@ -982,10 +875,12 @@ export const RecordList = memo(function RecordList({
         }}
       >
         {loading && (
-          <Empty role="status" className="min-h-full font-sans">
-            <Spinner />
-            <EmptyDescription>{t("desktop.logs.loading")}</EmptyDescription>
-          </Empty>
+          <EmptyState
+            role="status"
+            className="min-h-full font-sans"
+            busy
+            description={t("desktop.logs.loading")}
+          />
         )}
         {dropped > 0 && drawn.length > 0 && drawn[0] === visible[0] && (
           <p className="px-3 py-2 font-sans text-faint">
@@ -993,43 +888,57 @@ export const RecordList = memo(function RecordList({
           </p>
         )}
         {empty && (
-          <Empty role="status" className="min-h-full font-sans">
-            <EmptyMedia>
-              <Icon name="logs" />
-            </EmptyMedia>
-            <EmptyDescription>
-              {all.length
-                ? t("desktop.logs.no_match")
-                : t("desktop.logs.empty")}
-            </EmptyDescription>
+          <EmptyState
+            role="status"
+            className="min-h-full font-sans"
+            icon="logs"
+            description={
+              all.length ? t("desktop.logs.no_match") : t("desktop.logs.empty")
+            }
+          >
             {all.length > 0 && (
-              <Button
+              <IconButton
                 variant="outline"
                 size="sm"
+                label={t("desktop.action.logs_reset")}
                 onClick={() => {
-                  setFilters(DEFAULT_FILTERS);
+                  setFilters(defaultFilters);
                   filterInput.current?.focus();
                 }}
               >
-                {t("desktop.action.logs_reset")}
-              </Button>
+                <Icon name="reset" />
+              </IconButton>
             )}
-          </Empty>
+          </EmptyState>
         )}
-        {drawn.map((record) => (
-          <Row
-            key={record.seq}
-            record={record}
-            open={expanded.has(record.seq)}
-            current={record.seq === current}
-            tabStop={record.seq === tabStop}
-            sourceLabel={sourceLabel(record.source)}
-            detailsLabel={t("desktop.logs.details")}
-            onToggle={handlers.toggle}
-            onCurrent={handlers.current}
-            onMenu={handlers.menu}
-          />
-        ))}
+        {blocks.map((records) => {
+          const seqs = new Set(records.map((record) => record.seq));
+          const first = records[0]?.seq ?? 0;
+          return (
+            <RecordBlock
+              key={Math.floor(first / BLOCK)}
+              records={records}
+              selection={selection}
+              selected={records
+                .filter((record) => selection.has(record.seq))
+                .map((record) => record.seq)
+                .join(",")}
+              opened={records
+                .filter((record) => expanded.has(record.seq))
+                .map((record) => record.seq)
+                .join(",")}
+              expanded={expanded}
+              current={current !== null && seqs.has(current) ? current : null}
+              tabStop={
+                tabStop !== undefined && seqs.has(tabStop) ? tabStop : undefined
+              }
+              pythonLabel={t("desktop.logs.source_python")}
+              hostLabel={t("desktop.logs.source_host")}
+              detailsLabel={t("desktop.logs.details")}
+              handlers={handlers}
+            />
+          );
+        })}
       </div>
     </div>
   );

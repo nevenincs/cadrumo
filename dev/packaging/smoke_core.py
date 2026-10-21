@@ -18,7 +18,7 @@ from dev._paths import UTF_8
 from ._distribution_names import normalise_distribution_name
 from .dependency_contract import assert_wheel_metadata_matches_pyproject, validate_frozen_exports, wheel_metadata
 from .hashing import sha256_path
-from .installed_tax_oracle import run_installed_tax_oracle
+from .installed_runtime import run_installed_tax_oracle_with_runtime as run_installed_tax_oracle
 from .lane_verification_core import (
     assert_attachment_and_llm_surfaces,
     assert_cli_smoke,
@@ -49,7 +49,7 @@ def _wheel_identity(wheel: Path) -> tuple[str, str]:
     metadata = read_wheel_metadata(wheel)
     name = metadata.get("Name")
     version = metadata.get("Version")
-    if not name or not version:
+    if not (name is not None and name) or not (version is not None and version):
         raise SystemExit(f"wheel metadata is missing Name or Version: {wheel}")
     return normalise_distribution_name(name), version
 
@@ -189,7 +189,7 @@ def main(argv: list[str] | None = None) -> int:
         "fresh uv virtualenv install",
         "installed bundled data resources",
         "attachment storage round-trip",
-        "core LLM missing-extra boundary",
+        "core LLM agent dispatch refuses without a service",
         "installed CLI config/profile smoke",
         "installed grounded Modelo 200 tax-work oracle",
     ]

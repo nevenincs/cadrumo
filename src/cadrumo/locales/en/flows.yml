@@ -280,8 +280,8 @@ flows:
       cancel_button: Cancel
       confirm_button: I have written it down
       offer_consequence: 'Without it, a forgotten password means the data cannot be
-        recovered. You can also set it up later with: aeat config profile recovery
-        enable'
+        recovered. You can also set it up later with: cadrumo-runtime config profile
+        recovery enable'
       offer_explanation: A recovery code lets you set a new password if you forget
         it. It is shown once; write it down and keep it apart from this computer.
       offer_heading: Set up a recovery code?

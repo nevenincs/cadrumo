@@ -49,8 +49,8 @@ def test_reviewed_legal_reference_requires_typed_provenance(review_status: str) 
         LegalReference.model_validate(payload)
 
 
-def test_agent_review_supplies_filing_grade_authority() -> None:
-    """Agent review satisfies the review gate; only the absence of review does not.
+def test_automation_review_supplies_filing_grade_authority() -> None:
+    """automation review satisfies the review gate; only the absence of review does not.
 
     This asserts the opposite of what it once did. Demanding
     ``operator_reviewed`` specifically made filing-grade authority
@@ -67,7 +67,7 @@ def test_agent_review_supplies_filing_grade_authority() -> None:
         | {
             "review_status": "agent_reviewed",
             "reviewed_at": date(2026, 8, 1),
-            "reviewed_by": "agent-review",
+            "reviewed_by": "automation-review",
         },
     )
 

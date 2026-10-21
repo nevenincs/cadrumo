@@ -83,10 +83,10 @@ filing and reconcile, which close the quarter, follow as examples that are not r
 ```
 
 The figures show the year so far: 1000 earned, 500 spent, and an instalment
-of 20 percent on the net. Box (casilla) `03` (rendimiento neto) is 500.00 and
-box `04` (the instalment) is 100.00. Box `19` (the final result) is
-0.00 because the minoración for low net income, box `13` (100.00),
-absorbs the whole instalment.
+of 20 percent on the net. The net income in {term}`box <casilla>` `03` is 500.00,
+and the instalment in {term}`box <casilla>` `04` is 100.00. The low-income minoración
+in {term}`box <casilla>` `13` is 100.00 and absorbs the whole instalment, leaving
+a final result of 0.00 in {term}`box <casilla>` `19`.
 
 The check reports `completeness_status complete` and
 `granted_verificado_completo true` (the sequence above asserts this). `export`

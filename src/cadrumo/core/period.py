@@ -447,13 +447,13 @@ class Period(BaseModel):
         rather than a
         structured :class:`Period`.
         """
-        return str(self.code)
+        return self.code
 
     @property
     def standard_code(self) -> StandardPeriodCode | None:
         """Return the :class:`StandardPeriodCode` member, or ``None`` for extended forms."""
         try:
-            return StandardPeriodCode(str(self.code))
+            return StandardPeriodCode(self.code)
         except ValueError:
             return None
 
@@ -478,7 +478,7 @@ class Period(BaseModel):
     @property
     def kind(self) -> PeriodKind:
         """Return the cadence class derived from the period code."""
-        return _period_kind_for_code(str(self.code))
+        return _period_kind_for_code(self.code)
 
     def has_date_span(self) -> bool:
         """Return whether the period maps to an inclusive calendar date span.
@@ -498,7 +498,7 @@ class Period(BaseModel):
             PeriodError: When the period has no calendar span
                 (:meth:`has_date_span` is ``False``).
         """
-        code = str(self.code)
+        code = self.code
         if code in _QUARTER_SPAN_MONTHS:
             return date(self.filing_year, _QUARTER_SPAN_MONTHS[code][0], 1)
         if code == "0A":
@@ -515,7 +515,7 @@ class Period(BaseModel):
             PeriodError: When the period has no calendar span
                 (:meth:`has_date_span` is ``False``).
         """
-        code = str(self.code)
+        code = self.code
         if code in _QUARTER_SPAN_MONTHS:
             end_month = _QUARTER_SPAN_MONTHS[code][1]
             return date(self.filing_year, end_month, calendar.monthrange(self.filing_year, end_month)[1])
@@ -547,11 +547,11 @@ class Period(BaseModel):
 
     @override
     def __repr__(self) -> str:
-        return f"Period(filing_year={self.filing_year}, code={str(self.code)!r})"
+        return f"Period(filing_year={self.filing_year}, code={self.code!r})"
 
     @override
     def __hash__(self) -> int:
-        return hash((self.filing_year, str(self.code)))
+        return hash((self.filing_year, self.code))
 
 
 __all__ = [

@@ -17,13 +17,14 @@ from pydantic import BaseModel, ValidationError
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from cadrumo.domain.iva_compensation.balance import IvaWalletBalanceReport
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..iva_wallet_balance_operation import (
     MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
@@ -157,6 +158,24 @@ def test_access_is_bound_to_exact_profile_and_whole_history() -> None:
             replace(context, profile_id=_OTHER_PROFILE),
         )
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def test_balance_read_is_admitted_on_the_external_client_frontend_without_a_commit_door() -> None:
+    _definition, registration = _definition_and_registration()
+    context = OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=uuid4(),
+        action=AccessAction.SUBMIT,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
+        contract=registration.contract,
+        published_authority=Availability.AVAILABLE,
+    )
+
+    resolved = resolve_modelo_iva_wallet_balance_access(cast(OperationRequest[BaseModel], _request()), context)
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
+    assert resolved.request.profile_id == _PROFILE
+    assert resolved.request.period_independent
+    assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 def _executor_context(events: _Events, operands: _Operands) -> OperationExecutorContext:

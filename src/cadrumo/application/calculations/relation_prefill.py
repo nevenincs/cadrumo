@@ -307,7 +307,7 @@ def _not_applicable_source_modelos_for_bucket(
     if has_economic_activity is None:
         return frozenset[str]()
 
-    estimation_regime = str(values.get("irpf.estimation_regime") or "").strip()
+    estimation_regime = (values.get("irpf.estimation_regime") or "").strip()
     if estimation_regime in {
         irpf_estimation_regime_directa_normal_token(),
         irpf_estimation_regime_directa_simplificada_token(),
@@ -333,14 +333,14 @@ def _parse_canonical_decimal(raw: str | None) -> Decimal | None:
     numeric meaning is not what it appears. Fractional digits stay uncapped: a
     projection value may legitimately carry sub-cent precision.
     """
-    if not raw:
+    if not (raw is not None and raw):
         return None
     return try_parse_canonical_decimal(raw)
 
 
 def _entity_type_from_token(raw: str | None) -> EntityType | None:
     """Map a raw ``taxpayer_type.entity_type`` token to :class:`EntityType`, or ``None``."""
-    if not raw:
+    if not (raw is not None and raw):
         return None
     from ...domain.calculations.registry.entity_type import require_entity_type
     from ...domain.calculations.registry.errors import RegistryValidationError
@@ -846,7 +846,7 @@ def _absent_bound_carry_diagnostics(
     always do. It deliberately does not tell them to capture or file the source
     period, because whether that is possible depends on the source modelo: the
     declarations register does not serve every modelo, and Sociedades in
-    particular. An instruction an agent-operator will follow and cannot satisfy is
+    particular. An instruction an automation-operator will follow and cannot satisfy is
     worse than no instruction, so the capture route is omitted here rather than
     asserted, and stating what AEAT does or does not offer is left to whoever
     measures it rather than inferred from this registry's own silence.
@@ -983,7 +983,7 @@ def _unresolved_relation_ids(
             requirements_by_relation=requirements_by_relation,
             taxpayer_filed_source_modelos=taxpayer_filed_source_modelos,
             modelo_id=modelo_id,
-            revision_id=str(snapshot.revision.id),
+            revision_id=snapshot.revision.id,
         ),
     )
 
@@ -1068,7 +1068,7 @@ def _is_actionable_unresolved_bound_relation(
     return not is_iva_wallet_owned_carry_target(
         modelo_id=modelo_id,
         revision_id=revision_id,
-        binding_id=str(relation_id),
+        binding_id=relation_id,
     )
 
 
@@ -1125,7 +1125,7 @@ def _unresolved_relation_diagnostics(
         # elision cuts into the trailing relation-id listing rather than the
         # facts themselves; `relation_ids` above is the full, un-elided,
         # machine-readable membership regardless of what the prose keeps.
-        facts_text = ", ".join(sorted({str(requirement.source_casilla_ids[0]) for _, requirement in members}))
+        facts_text = ", ".join(sorted({requirement.source_casilla_ids[0] for _, requirement in members}))
         relation_ids_text = ", ".join(member_relation_ids)
         diagnostics.append(
             CalculationSourceDiagnostic(
@@ -1174,7 +1174,7 @@ def _relation_prefill_context_inputs(
     operation: PinnedAuthorityOperation,
     profile_path_values_reader: ProfilePathValuesReadPort,
 ) -> _RelationPrefillContextInputs:
-    bucket_id = str(context.bucket_id)
+    bucket_id = context.bucket_id
     return _RelationPrefillContextInputs(
         activity_start_date=activity_start_date_for_bucket(
             bucket_id,
@@ -1190,7 +1190,7 @@ def _relation_prefill_context_inputs(
             profile_path_values_reader=profile_path_values_reader,
         ),
         modelo_202_first_year_cuota=(
-            str(context.modelo) == str(Modelo("200"))
+            context.modelo == str(Modelo("200"))
             and _first_year_modalidad_cuota_no_m202(
                 bucket_id,
                 filing_year=context.filing_year,
@@ -1245,7 +1245,7 @@ def _relation_prefill_resolution(
         snapshot,
         relation_values=relation_values,
         requirements_by_relation=requirements_by_relation,
-        modelo_id=str(context.modelo),
+        modelo_id=context.modelo,
     )
     # The fold slot IS the binding now, so the resolved map is already the
     # binding-value map: no second materialisation step can disagree with it.
@@ -1253,8 +1253,8 @@ def _relation_prefill_resolution(
     binding_values = {
         **_modelo_202_first_period_previous_payment_defaults(
             snapshot.revision,
-            modelo=str(context.modelo),
-            filing_year=int(snapshot.filing_year),
+            modelo=context.modelo,
+            filing_year=snapshot.filing_year,
             period=context.period.registry_token,
             operation=operation,
         ),

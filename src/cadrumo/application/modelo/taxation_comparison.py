@@ -472,7 +472,7 @@ def compare_taxation_for_work_unit(
     # engine can inject 1 or 2 independently for each run.
     decl_binding = _declaration_type_binding_id(snapshot)
     resolution = ProfileSourceResolver(
-        caller_binding_ids=({decl_binding} if decl_binding else set()),
+        caller_binding_ids=({decl_binding} if (decl_binding is not None and decl_binding) else set()),
         registry_snapshot=snapshot,
         operation=operation,
     ).resolve(

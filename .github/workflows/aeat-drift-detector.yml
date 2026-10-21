@@ -6,13 +6,17 @@
 # the GROI driver — the project oracle's selectors must be updated.
 #
 # Required secrets (GitHub repo settings -> Secrets and variables ->
-# Actions):
-#   AEAT_CLAVE_MOVIL_DNI_NIE          User identity for cl@ve-movil
-#   AEAT_CLAVE_MOVIL_DNI_FECHA        Identity verification date
-#   AEAT_CLAVE_MOVIL_NIE_SOPORTE      Identity card support number
-#   AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH   Set to "1" to enable headless
-#                                     authentication
-#   AEAT_CLAVE_PREFER_NON_QR          Set to "true" to skip QR flow
+# Actions), each exported to the test step under the name the product reads:
+#   AEAT_CLAVE_MOVIL_DNI_NIE          CADRUMO_CLAVE_MOVIL_DNI_NIE: user
+#                                     identity for cl@ve-movil
+#   AEAT_CLAVE_MOVIL_DNI_FECHA        CADRUMO_CLAVE_MOVIL_DNI_FECHA: identity
+#                                     verification date
+#   AEAT_CLAVE_MOVIL_NIE_SOPORTE      CADRUMO_CLAVE_MOVIL_NIE_SOPORTE: identity
+#                                     card support number
+#   AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH   CADRUMO_CLAVE_MOVIL_FULL_LIVE_AUTH: set
+#                                     to "1" to enable headless authentication
+#   AEAT_CLAVE_PREFER_NON_QR          CADRUMO_CLAVE_PREFER_NON_QR: set to
+#                                     "true" to skip QR flow
 #
 # Use a dedicated cl@ve-movil identity for this workflow — never the
 # project owner's personal credentials. Identity rotation should be
@@ -75,12 +79,12 @@ jobs:
       - name: Run GROI live drift tests
         env:
           CADRUMO_LIVE_TESTS_ENABLED: '1'
-          AEAT_AUTH_PROVIDER: clave-movil
-          AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH: ${{ secrets.AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH }}
-          AEAT_CLAVE_PREFER_NON_QR: ${{ secrets.AEAT_CLAVE_PREFER_NON_QR }}
-          AEAT_CLAVE_MOVIL_DNI_NIE: ${{ secrets.AEAT_CLAVE_MOVIL_DNI_NIE }}
-          AEAT_CLAVE_MOVIL_DNI_FECHA: ${{ secrets.AEAT_CLAVE_MOVIL_DNI_FECHA }}
-          AEAT_CLAVE_MOVIL_NIE_SOPORTE: ${{ secrets.AEAT_CLAVE_MOVIL_NIE_SOPORTE }}
+          CADRUMO_AUTH_PROVIDER: clave_movil
+          CADRUMO_CLAVE_MOVIL_FULL_LIVE_AUTH: ${{ secrets.AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH }}
+          CADRUMO_CLAVE_PREFER_NON_QR: ${{ secrets.AEAT_CLAVE_PREFER_NON_QR }}
+          CADRUMO_CLAVE_MOVIL_DNI_NIE: ${{ secrets.AEAT_CLAVE_MOVIL_DNI_NIE }}
+          CADRUMO_CLAVE_MOVIL_DNI_FECHA: ${{ secrets.AEAT_CLAVE_MOVIL_DNI_FECHA }}
+          CADRUMO_CLAVE_MOVIL_NIE_SOPORTE: ${{ secrets.AEAT_CLAVE_MOVIL_NIE_SOPORTE }}
         # No junit artifact (zero Actions-artifact posture); the verbose
         # per-test verdicts live in the job log.
         run: |

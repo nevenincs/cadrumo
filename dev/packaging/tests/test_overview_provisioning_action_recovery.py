@@ -162,7 +162,7 @@ def _run_provisioning_matrix(*, work_dir: Path, python: Path, state_name: str) -
                     "extra_available": optional_extra_available(LLM_EXTRA),
                     "matrix": matrix,
                 }},
-                ensure_ascii=False,
+                ensure_ascii=True,
                 sort_keys=True,
             )
         )

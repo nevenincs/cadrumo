@@ -15,7 +15,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ...iva.classification import InvoiceKind
+from ...iva.schema import InvoiceKind
 from ..business_premises import (
     BusinessPremisesLease,
     SituacionInmueble,

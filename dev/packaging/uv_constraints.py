@@ -21,6 +21,7 @@ pinned.
 from __future__ import annotations
 
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
 
 from cadrumo.core.toml import parse_toml
@@ -90,7 +91,7 @@ def _pinned_export_rows(output: str) -> tuple[str, ...]:
     return tuple(lines)
 
 
-def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
+def export_runtime_constraints(*, repo_root: Path, extras: Sequence[str] = ()) -> tuple[str, ...]:
     """Return the pinned third-party runtime requirement lines from ``uv.lock``.
 
     Each returned line is a fully version-pinned PEP 508 requirement (``name==
@@ -100,6 +101,9 @@ def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
     The product is one distribution carrying both console scripts, so its own
     closure is the whole runtime surface the installers need — the agent
     server's requirements are cadrumo's requirements.
+
+    ``extras`` widens the closure by those optional extras of the product, for
+    an artifact that ships them; installers that pin the core install pass none.
     """
     lock = repo_root / "uv.lock"
     if not lock.is_file():
@@ -120,6 +124,8 @@ def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
         "--no-header",
         "--no-emit-project",
     ]
+    for extra in extras:
+        command.extend(("--extra", extra))
     for package in local_product_packages(repo_root=repo_root):
         command.extend(("--no-emit-package", package))
     result = run_command(

@@ -8,7 +8,7 @@ first and collide with.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterator, Mapping
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 
@@ -27,7 +27,7 @@ DEFAULT_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 
 
 @contextmanager
-def sealing_test_profile_session(bucket_id: str) -> Iterator[str]:
+def sealing_test_profile_session(bucket_id: str) -> Generator[str]:
     """Open the test profile session and seal the session this entry bound.
 
     ``open_test_profile_session`` unbinds its session on exit but does not

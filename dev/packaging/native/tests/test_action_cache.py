@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
 
-from ..action_cache import completed, current
+from ..action_cache import completed, current, modified_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -87,3 +88,18 @@ def test_sdk_link_escape_or_cycle_cannot_complete_or_reuse(tmp_path: Path, defec
     assert not current(cache, "identity")
     with pytest.raises(ValueError, match=r"escapes the selected SDK|directory link cycle"):
         completed(cache, "identity")
+
+
+def test_modified_inputs_names_edited_and_removed_inputs_only(tmp_path: Path) -> None:
+    steady, edited, removed, extra = (tmp_path / name for name in ("steady", "edited", "removed", "extra"))
+    for path in (steady, edited, removed, extra):
+        path.write_text("before", encoding="utf-8")
+    listing = tmp_path / "inputs.txt"
+    listing.write_text("\n".join(str(path) for path in (steady, edited, removed)), encoding="utf-8")
+    started = steady.stat().st_mtime_ns + 1_000_000_000
+    os.utime(steady, ns=(started - 1, started - 1))
+    os.utime(extra, ns=(started - 1, started - 1))
+    edited.write_text("after", encoding="utf-8")
+    os.utime(edited, ns=(started, started))
+    removed.unlink()
+    assert modified_inputs(listing, (extra,), started) == [edited, removed]

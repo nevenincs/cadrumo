@@ -20,7 +20,6 @@ from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_c
 from ...domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.components import (
     category_components,
     registry_category_projection,
@@ -43,6 +42,7 @@ from ...domain.iva.flow import (
 from ...domain.iva.lookup import rate_table_covers_any_positive_tier
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import (
+    InvoiceKind,
     IvaCashAccountingTreatment,
     IvaCategory,
     IvaExemptionArticle,

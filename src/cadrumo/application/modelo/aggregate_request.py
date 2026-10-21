@@ -45,7 +45,7 @@ class ModeloAggregateOperationRequest(BaseModel):
         command: PerModeloAggregationCommand,
         ledger_payment: LedgerPaymentWithholdingEvidenceRequest | None = None,
     ) -> Self:
-        """Keep the exact typed CLI/TUI/MCP operands in the encrypted request store."""
+        """Keep the exact typed CLI/TUI/external client operands in the encrypted request store."""
         return cls(
             profile_id=profile_id,
             command=PublicModeloAggregateCommand.from_domain(command),

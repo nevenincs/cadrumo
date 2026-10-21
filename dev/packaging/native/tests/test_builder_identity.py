@@ -15,11 +15,14 @@ from dev._paths import REPO_ROOT
 from ...command_execution import run_command
 from ..action_cache import completed, current, fingerprint
 from ..build_toolchain import builder_inputs, sysroot_inventory, write_sysroot_inventory
+from .cmake_build_fixture import build_manifest_cmake, enrolled_cmake_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_configured_toolchain_and_sdk_content_drive_cache_admission(tmp_path: Path) -> None:
+def test_configured_toolchain_and_sdk_content_drive_cache_admission(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     compiler = tmp_path / "compiler"
     wrapper = tmp_path / "linker-wrapper"
     toolchain = tmp_path / "toolchain.cmake"
@@ -28,12 +31,13 @@ def test_configured_toolchain_and_sdk_content_drive_cache_admission(tmp_path: Pa
     header = sysroot / "target.h"
     for path in (compiler, wrapper, toolchain, header):
         path.write_text(f"selected {path.name}", encoding="utf-8")
-    project = tmp_path / "project"
-    project.mkdir()
+    # The sysroot inventory is a declared build output, so configure inside an enrolled build.
+    project, binary = enrolled_cmake_root(tmp_path, monkeypatch)
     output = project / "build-toolchain.json"
     (project / "CMakeLists.txt").write_text(
         "cmake_minimum_required(VERSION 4.4)\nproject(BuilderIdentity LANGUAGES NONE)\n"
-        'set(build_toolchain "{}")\n'
+        + build_manifest_cmake()
+        + 'set(build_toolchain "{}")\n'
         f'set(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")\n'
         f'set(CMAKE_C_COMPILER "{compiler.as_posix()}")\n'
         f'set(CMAKE_TOOLCHAIN_FILE "{toolchain.as_posix()}")\n'
@@ -47,7 +51,7 @@ def test_configured_toolchain_and_sdk_content_drive_cache_admission(tmp_path: Pa
     assert cmake is not None
 
     def configure() -> dict[str, Any]:
-        result = run_command([cmake, "-S", str(project), "-B", str(tmp_path / "cmake")], cwd=tmp_path)
+        result = run_command([cmake, "-S", str(project), "-B", str(binary)], cwd=tmp_path)
         assert result.returncode == 0, result.stderr
         observed = json.loads(output.read_text(encoding="utf-8"))
         assert isinstance(observed, dict)

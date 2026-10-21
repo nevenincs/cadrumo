@@ -23,7 +23,7 @@ For calculation consumers, the service resolves provisional candidates through t
 
 Registered execution validates the request class, operation ID, subject reference, current profile bucket, and worker identity. Reads load under a thread and finish cancellation cleanup before returning. Mutations preflight before the irreversible section, mark the effect unknown before the write begins, then perform the repository mutation and persist either a successful snapshot or a typed refusal. Successful updates report `UPDATED`; list and refusals report `NONE`. Exact-profile executor (`src/cadrumo/application/prorrata_register/executor.py`), preflight and mutation separation (`src/cadrumo/application/prorrata_register/executor.py`), irreversible commit section (`src/cadrumo/application/prorrata_register/executor.py`)
 
-Private results retain the full canonical register; public projections are closed, strict snapshots with canonical decimal strings and finite refusal codes. Projectors revalidate result shape, bind definition and profile identity to the terminal receipt, require a successful update receipt for mutation success and a no-effect refusal receipt for refusal, and check the returned entry or sector is actually present in the committed register. Seed projections preserve source revision, year, period, and casilla identity; seed findings preserve stamped and selected revisions. Projection contracts (`src/cadrumo/application/prorrata_register/projection_contracts.py`), private result shape (`src/cadrumo/application/prorrata_register/result_contracts.py`), receipt-bound mutation projection (`src/cadrumo/application/prorrata_register/result_projections.py`)
+Private results retain the full canonical register; public projections are closed, strict snapshots with canonical decimal strings and finite refusal codes. Projectors revalidate result shape, bind definition and profile identity to the terminal receipt, require a successful update receipt for mutation success and a no-effect refusal receipt for refusal, and check the returned entry or sector is actually present in the committed register. Seed projections preserve source revision, year, period, and casilla identity; seed findings preserve stamped and selected revisions. Projection contracts (`src/cadrumo/application/prorrata_register/projection_command_ports.py`), private result shape (`src/cadrumo/application/prorrata_register/result_command_ports.py`), receipt-bound mutation projection (`src/cadrumo/application/prorrata_register/result_projections.py`)
 
 ## Knowledge, security, and implementation assessment
 
@@ -49,9 +49,9 @@ All 13 assigned files were read fully across pages 1–6; no portions remain unr
 - prorrata_register/mutation_steps.py (`src/cadrumo/application/prorrata_register/mutation_steps.py`)
 - prorrata_register/operation_requests.py (`src/cadrumo/application/prorrata_register/operation_requests.py`)
 - prorrata_register/ports.py (`src/cadrumo/application/prorrata_register/ports.py`)
-- prorrata_register/projection_contracts.py (`src/cadrumo/application/prorrata_register/projection_contracts.py`)
+- prorrata_register/projection_command_ports.py (`src/cadrumo/application/prorrata_register/projection_command_ports.py`)
 - prorrata_register/registered_operations.py (`src/cadrumo/application/prorrata_register/registered_operations.py`)
-- prorrata_register/result_contracts.py (`src/cadrumo/application/prorrata_register/result_contracts.py`)
+- prorrata_register/result_command_ports.py (`src/cadrumo/application/prorrata_register/result_command_ports.py`)
 - prorrata_register/result_projections.py (`src/cadrumo/application/prorrata_register/result_projections.py`)
 - prorrata_register/sector_lifecycle.py (`src/cadrumo/application/prorrata_register/sector_lifecycle.py`)
 - prorrata_register/seed.py (`src/cadrumo/application/prorrata_register/seed.py`)

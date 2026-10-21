@@ -53,7 +53,7 @@ def _record(days_ago: int, *, request_id: str, anchor: datetime) -> UsageRecord:
         prompt_id="translation_v1",
         caller="cadrumo.application.ledger.llm_classification",
         text="usage probe",
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         model="claude-sonnet-4-6",
         input_tokens=10,
         output_tokens=2,

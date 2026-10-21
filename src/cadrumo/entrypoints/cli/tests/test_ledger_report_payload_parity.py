@@ -26,7 +26,7 @@ from ....application.ledger.models import (
     LedgerTransactionRemovalReport,
 )
 from ....core.json_contract import strict_round_trip
-from .._ledger_payloads import LedgerRemoveResult, LedgerResetResult
+from ..ledger_results import LedgerRemoveResult, LedgerResetResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

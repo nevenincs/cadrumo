@@ -283,9 +283,9 @@ def _restore_failed_activation(
     previous: dict[str, Any] | None,
 ) -> None:
     """Restore the prior version and routes before reraising an activation failure."""
-    if previous_version:
+    if previous_version is not None and previous_version:
         restore_version(account, previous_version)
     _restore_routes(account, zone, before)
-    if previous:
+    if previous is not None and previous:
         _await_release_served(previous["release"])
         _verify_public_delivery(previous["release"])

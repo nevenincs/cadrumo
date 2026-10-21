@@ -145,57 +145,15 @@ def _refuse_a_label_already_taken(label: str) -> None:
         )
 
 
-def register_profile_with_credentials(
+def _create_profile_capsule(
     *,
     label: str,
     passphrase: str,
-    facts: tuple[UserProfileFact, ...] = (),
+    facts: tuple[UserProfileFact, ...],
     profile_create_context: ProfileCreateContext,
     profile_decode_context: ProfileDecodeContext,
-) -> ProfileRegistrationOutcome:
-    """Create a profile from a label and a passphrase, and unlock it.
-
-    The profile is born :attr:`ProfileSetupState.INCOMPLETE`: it is a
-    real, writable record from this moment, and the operator completes it
-    afterwards against a live profile rather than through a gated wizard.
-
-    Recovery is not part of creation. A profile is born with its passphrase
-    as its only door; the operator may enrol a recovery code afterwards
-    through :func:`~cadrumo.application.user_profile.recovery_custody.enroll_profile_recovery`,
-    and every surface that creates a profile offers that step as an explicit,
-    skippable follow-up rather than a precondition.
-
-    Args:
-        label: Operator-chosen display name. Must be non-blank and must not
-            collide with an existing profile's label.
-        passphrase: The credential protecting the bucket. Must satisfy the
-            canonical profile-password contract; never logged, never echoed,
-            and held only for the duration of the create span.
-        facts: Optional initial facts. Empty by default — the whole point of
-            this door is that a profile needs no tax data to exist.
-        profile_create_context: Schema context pinned for the new record.
-        profile_decode_context: Schema context pinned for the authenticated
-            record session. It must share the authority generation with
-            ``profile_create_context``.
-
-    The created profile is left unlocked for this process: its live bucket
-    session and record authority are published exactly as a login publishes
-    them. The operator has just chosen and proven this passphrase, so asking
-    for it again before the profile can be used answers a question they have
-    already answered.
-
-    Returns:
-        A :class:`ProfileRegistrationOutcome` for the newly-live profile.
-
-    Raises:
-        ProfileRegistrationError: When the label is blank or the passphrase
-            does not satisfy the canonical profile-password contract.
-        ProfileRegistrationError: When the label is already bound.
-        ProfileSchemaValidationError: When an initial fact names an unknown or
-            engine-derived path, or carries a value its field will not take.
-            Missing filing fields are not refused: the profile is born
-            incomplete on purpose.
-    """
+) -> tuple[UUID, str, bytes]:
+    """Commit a new capsule and its first record; return its identity, label and unlocked key."""
     if (
         profile_create_context.schema != profile_decode_context.schema
         or profile_create_context.generation != profile_decode_context.generation
@@ -284,7 +242,7 @@ def register_profile_with_credentials(
         except ProfileCustodyTransactionConflictError as exc:
             # Caught AFTER its duplicate-label subclass: this is the
             # stale-witness conflict, which a repeat of the identical call
-            # can win. Reporting it as "that label is taken" tells an agent
+            # can win. Reporting it as "that label is taken" tells an automation
             # operator to pick a different name for a profile that does not
             # exist.
             raise ProfileRegistrationConflictError(
@@ -292,18 +250,11 @@ def register_profile_with_credentials(
             ) from exc
     finally:
         session.close()
+    return identity, resolved_label, dek
 
-    # Publish before the best-effort snapshots below, not after: they write
-    # through the profile's encrypted store, so they need the session this
-    # call binds. Registration is also the moment the operator's credential
-    # has just been proven, and leaving the profile locked until they retype
-    # it is the defect this closes.
-    publish_created_profile_session(
-        bucket_id=str(identity),
-        dek=dek,
-        profile_decode_context=profile_decode_context,
-    )
 
+def _record_creation_snapshots(identity: UUID) -> None:
+    """Record that a brand-new profile has filed nothing and has no known open case."""
     # Record that this profile has filed NOTHING, rather than leaving the fact
     # absent. The two states are not the same: an empty recorded snapshot says
     # the filing owner was asked and answered, while an absent one says nobody
@@ -337,6 +288,108 @@ def register_profile_with_credentials(
         observed_at=_utc_now(),
     )
 
+
+def register_profile_with_credentials(
+    *,
+    label: str,
+    passphrase: str,
+    facts: tuple[UserProfileFact, ...] = (),
+    profile_create_context: ProfileCreateContext,
+    profile_decode_context: ProfileDecodeContext,
+) -> ProfileRegistrationOutcome:
+    """Create a profile from a label and a passphrase, and unlock it.
+
+    The profile is born :attr:`ProfileSetupState.INCOMPLETE`: it is a
+    real, writable record from this moment, and the operator completes it
+    afterwards against a live profile rather than through a gated wizard.
+
+    Recovery is not part of creation. A profile is born with its passphrase
+    as its only door; the operator may enrol a recovery code afterwards
+    through :func:`~cadrumo.application.user_profile.recovery_custody.enroll_profile_recovery`,
+    and every surface that creates a profile offers that step as an explicit,
+    skippable follow-up rather than a precondition.
+
+    Args:
+        label: Operator-chosen display name. Must be non-blank and must not
+            collide with an existing profile's label.
+        passphrase: The credential protecting the bucket. Must satisfy the
+            canonical profile-password contract; never logged, never echoed,
+            and held only for the duration of the create span.
+        facts: Optional initial facts. Empty by default — the whole point of
+            this door is that a profile needs no tax data to exist.
+        profile_create_context: Schema context pinned for the new record.
+        profile_decode_context: Schema context pinned for the authenticated
+            record session. It must share the authority generation with
+            ``profile_create_context``.
+
+    The created profile is left unlocked for this process: its live bucket
+    session and record authority are published exactly as a login publishes
+    them. The operator has just chosen and proven this passphrase, so asking
+    for it again before the profile can be used answers a question they have
+    already answered.
+
+    Returns:
+        A :class:`ProfileRegistrationOutcome` for the newly-live profile.
+
+    Raises:
+        ProfileRegistrationError: When the label is blank or the passphrase
+            does not satisfy the canonical profile-password contract.
+        ProfileRegistrationError: When the label is already bound.
+        ProfileSchemaValidationError: When an initial fact names an unknown or
+            engine-derived path, or carries a value its field will not take.
+            Missing filing fields are not refused: the profile is born
+            incomplete on purpose.
+    """
+    identity, resolved_label, dek = _create_profile_capsule(
+        label=label,
+        passphrase=passphrase,
+        facts=facts,
+        profile_create_context=profile_create_context,
+        profile_decode_context=profile_decode_context,
+    )
+    # Publish before the best-effort snapshots below, not after: they write
+    # through the profile's encrypted store, so they need the session this
+    # call binds. Registration is also the moment the operator's credential
+    # has just been proven, and leaving the profile locked until they retype
+    # it is the defect this closes.
+    publish_created_profile_session(
+        bucket_id=str(identity),
+        dek=dek,
+        profile_decode_context=profile_decode_context,
+    )
+
+    _record_creation_snapshots(identity)
+    return ProfileRegistrationOutcome(
+        profile_id=str(identity),
+        bucket_id=str(identity),
+        label=resolved_label,
+        setup_state=ProfileSetupState.INCOMPLETE,
+    )
+
+
+def create_profile_signed_out(
+    *,
+    label: str,
+    passphrase: str,
+    facts: tuple[UserProfileFact, ...] = (),
+    profile_create_context: ProfileCreateContext,
+    profile_decode_context: ProfileDecodeContext,
+) -> ProfileRegistrationOutcome:
+    """Create a profile from a label and a passphrase, and leave it selected and signed out.
+
+    The same creation as :func:`register_profile_with_credentials`, refused
+    and committed the same way, for the runtime that hosts creation on a
+    frontend's behalf: it binds no session in the creating process, so the
+    person signs in to the new profile as to any other.
+    """
+    identity, resolved_label, _dek = _create_profile_capsule(
+        label=label,
+        passphrase=passphrase,
+        facts=facts,
+        profile_create_context=profile_create_context,
+        profile_decode_context=profile_decode_context,
+    )
+    _record_creation_snapshots(identity)
     return ProfileRegistrationOutcome(
         profile_id=str(identity),
         bucket_id=str(identity),
@@ -348,5 +401,6 @@ def register_profile_with_credentials(
 __all__ = [
     "ProfileRegistrationError",
     "ProfileRegistrationOutcome",
+    "create_profile_signed_out",
     "register_profile_with_credentials",
 ]

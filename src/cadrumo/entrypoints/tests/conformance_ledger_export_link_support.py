@@ -32,7 +32,7 @@ from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from .conformance_family_contract import (
     ConformanceFamily,
     ConformanceFamilyContext,
@@ -193,7 +193,7 @@ def _prepare_link(context: ConformanceFamilyContext) -> ConformancePreparation:
                 bucket_id=bucket_id,
                 transaction_id=transaction_id,
                 invoice_id=invoice.invoice_id,
-                # No actor in the request: link_operation.py `_apply_link` defaults to "operator".
+                # No actor in the request: link_operation.py `_supplied_link_actor` defaults to "operator".
                 actor="operator",
                 bucket_event_ids=(event.event_id,),
                 review_status=canonical.review_status,

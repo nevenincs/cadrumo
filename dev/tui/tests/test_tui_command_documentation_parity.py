@@ -81,7 +81,7 @@ def _registered_command_names() -> frozenset[str]:
         callback = command.callback
         if callback is None:
             continue
-        if command.name:
+        if command.name is not None and command.name:
             names.add(command.name)
             continue
         callback_name = getattr(callback, "__name__", None)

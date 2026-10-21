@@ -12,8 +12,7 @@ import { useStrings } from "../shell/strings";
 import { failureCode } from "../errors";
 import { terminalFont } from "../shell/terminalFont";
 import { terminalRenderer } from "../shell/terminalRenderer";
-import { Empty, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
-import { Icon } from "@/components/ui/icon";
+import { EmptyState } from "@/components/ui/empty";
 
 export type TerminalStatus =
   | { phase: "starting" }
@@ -33,10 +32,14 @@ export type TerminalApi = {
 
 const DIM = "\x1b[2m";
 const RESET = "\x1b[0m";
+// ConPTY may pass OSC ahead of its buffered screen repaint. Keep the cover
+// until output has settled, then wait for xterm to render that buffer.
+const TUI_PAINT_SETTLE_MS = 100;
 
 type Props = {
   host: Host;
   kind: TerminalKind;
+  target?: import("../ipc/contract").TerminalTarget;
   shown: boolean;
   theme: ITheme;
   fontSize: number;
@@ -53,6 +56,7 @@ type Props = {
 export function TerminalPane({
   host,
   kind,
+  target,
   shown,
   theme,
   fontSize,
@@ -95,6 +99,7 @@ export function TerminalPane({
     shown,
   };
   const [unavailable, setUnavailable] = useState(false);
+  const [loading, setLoading] = useState(kind === "tui");
   const [fontFamily, setFontFamily] = useState<string | null>(null);
 
   useEffect(() => {
@@ -113,7 +118,9 @@ export function TerminalPane({
     const element = container.current;
     if (!element) return;
     const term = new Terminal({
-      cursorBlink: true,
+      // A blinking cursor redraws on a timer for as long as the pane has focus, which the
+      // TUI pane keeps while the window sits idle.
+      cursorBlink: false,
       fontFamily,
       fontSize: live.current.fontSize,
       lineHeight: 1,
@@ -139,17 +146,50 @@ export function TerminalPane({
     let disposed = false;
     let session: TerminalSession | null = null;
     let exited = false;
+    let ready = kind !== "tui";
+    let readyReceived = false;
+    let revealAfterRender = false;
+    let revealTimer = 0;
     let mouseTracking = false;
     let queue = Promise.resolve();
+    let openingInput: Uint8Array[] = [];
+    const clearOpeningInput = () => {
+      for (const bytes of openingInput) bytes.fill(0);
+      openingInput = [];
+    };
     const status = (next: TerminalStatus) => {
-      if (!disposed) live.current.onStatus(kind, next);
+      if (disposed) return;
+      if (next.phase === "exited" || next.phase === "failed") {
+        window.clearTimeout(revealTimer);
+        readyReceived = false;
+        revealAfterRender = false;
+        ready = true;
+        setLoading(false);
+      }
+      live.current.onStatus(kind, next);
+    };
+    const settlePresentation = () => {
+      if (!readyReceived || ready || disposed || exited) return;
+      revealAfterRender = false;
+      window.clearTimeout(revealTimer);
+      revealTimer = window.setTimeout(() => {
+        revealAfterRender = true;
+        term.refresh(0, term.rows - 1);
+      }, TUI_PAINT_SETTLE_MS);
     };
 
     // Input is queued in order and never dropped: the host's write queue
     // applies backpressure, so even a very large paste arrives whole.
     const send = (bytes: Uint8Array) => {
       const target = session;
-      if (!target || disposed) return;
+      if (disposed || exited) return;
+      if (!target) {
+        // ConPTY can request the cursor position before terminal_open returns.
+        // Keep xterm's reply until the session can accept it, or Windows may
+        // leave the child waiting for console initialization indefinitely.
+        openingInput.push(bytes);
+        return;
+      }
       queue = queue
         .then(() => target.write(bytes))
         .catch((error: unknown) =>
@@ -158,44 +198,66 @@ export function TerminalPane({
     };
 
     const start = () => {
+      clearOpeningInput();
       exited = false;
+      ready = kind !== "tui";
+      readyReceived = false;
+      window.clearTimeout(revealTimer);
+      revealAfterRender = false;
+      setLoading(!ready);
       term.reset();
       status({ phase: "starting" });
       host
-        .openTerminal(kind, { cols: term.cols, rows: term.rows }, (event) => {
-          if (disposed) return;
-          if (event.type === "data") {
-            // Acknowledge only what xterm has drawn: the host pauses the PTY
-            // instead of dropping output when the view falls behind.
-            term.write(event.bytes, event.drawn);
-          } else if (event.type === "started") {
-            status({ phase: "running" });
-          } else if (event.type === "exited") {
-            session = null;
-            exited = true;
-            mouseTracking = false;
-            term.write(
-              `\r\n${DIM}${live.current.t("desktop.session.exit_line", { code: event.code ?? "?" })}${RESET}\r\n`,
-            );
-            status({ phase: "exited", code: event.code });
-          } else {
-            session = null;
-            exited = true;
-            term.write(
-              `\r\n${DIM}${live.current.t("desktop.session.failed", { reason: event.message })}${RESET}\r\n`,
-            );
-            status({ phase: "failed", message: event.message });
-          }
-        })
+        .openTerminal(
+          target ?? kind,
+          { cols: term.cols, rows: term.rows },
+          (event) => {
+            if (disposed) return;
+            if (event.type === "data") {
+              // Acknowledge only what xterm has drawn: the host pauses the PTY
+              // instead of dropping output when the view falls behind.
+              term.write(event.bytes, () => {
+                event.drawn();
+                settlePresentation();
+              });
+            } else if (event.type === "started") {
+              // A spawned process may still be resuming sign-in or composing
+              // its first screen. Only the TUI's drawn readiness reveals it.
+              if (kind !== "tui") status({ phase: "running" });
+            } else if (event.type === "exited") {
+              clearOpeningInput();
+              session = null;
+              exited = true;
+              mouseTracking = false;
+              term.write(
+                `\r\n${DIM}${live.current.t("desktop.session.exit_line", { code: event.code ?? "?" })}${RESET}\r\n`,
+              );
+              status({ phase: "exited", code: event.code });
+            } else {
+              clearOpeningInput();
+              session = null;
+              exited = true;
+              term.write(
+                `\r\n${DIM}${live.current.t("desktop.session.failed", { reason: event.message })}${RESET}\r\n`,
+              );
+              status({ phase: "failed", message: event.message });
+            }
+          },
+        )
         .then((opened) => {
-          if (disposed) {
+          if (disposed || exited) {
+            clearOpeningInput();
             void opened.close();
             return;
           }
           session = opened;
+          const pending = openingInput;
+          openingInput = [];
+          for (const bytes of pending) send(bytes);
           void opened.resize(term.cols, term.rows);
         })
         .catch((error: unknown) => {
+          clearOpeningInput();
           if (error instanceof HostUnavailable) {
             setUnavailable(true);
             status({ phase: "unavailable" });
@@ -208,8 +270,8 @@ export function TerminalPane({
 
     const encoder = new TextEncoder();
     const input = term.onData((data) => {
-      if (session) send(encoder.encode(data));
-      else if (exited && data === "\r") start();
+      if (exited && data === "\r") start();
+      else send(encoder.encode(data));
     });
     const binary = term.onBinary((data) =>
       send(Uint8Array.from(data, (char) => char.charCodeAt(0))),
@@ -232,9 +294,33 @@ export function TerminalPane({
       },
     );
     const appearance = term.parser.registerOscHandler(777, (data) => {
-      if (kind !== "tui" || data !== "cadrumo;appearance;toggle") return false;
-      live.current.onAppearanceToggle();
-      return true;
+      if (kind !== "tui") return false;
+      if (data === "cadrumo;appearance;toggle") {
+        live.current.onAppearanceToggle();
+        return true;
+      }
+      if (data === "cadrumo;presentation;loading") {
+        window.clearTimeout(revealTimer);
+        readyReceived = false;
+        revealAfterRender = false;
+        ready = false;
+        term.blur();
+        setLoading(true);
+        status({ phase: "starting" });
+        return true;
+      }
+      if (data === "cadrumo;presentation;ready") {
+        readyReceived = true;
+        return true;
+      }
+      return false;
+    });
+    const rendered = term.onRender(() => {
+      if (!revealAfterRender || disposed || exited) return;
+      revealAfterRender = false;
+      ready = true;
+      setLoading(false);
+      status({ phase: "running" });
     });
     const resized = term.onResize(
       ({ cols, rows }) => void session?.resize(cols, rows),
@@ -249,13 +335,16 @@ export function TerminalPane({
 
     live.current.register(kind, {
       focus: () => {
-        if (live.current.shown && element.offsetParent !== null) term.focus();
+        if (ready && live.current.shown && element.offsetParent !== null)
+          term.focus();
       },
       selection: () => term.getSelection(),
       hasSelection: () => term.hasSelection(),
       selectAll: () => term.selectAll(),
       clear: () => term.clear(),
-      paste: (text) => term.paste(text),
+      paste: (text) => {
+        if (ready) term.paste(text);
+      },
     });
 
     let frame = 0;
@@ -271,14 +360,17 @@ export function TerminalPane({
 
     return () => {
       disposed = true;
+      window.clearTimeout(revealTimer);
       observer.disconnect();
       cancelAnimationFrame(frame);
       element.removeEventListener("contextmenu", menu);
       input.dispose();
+      clearOpeningInput();
       binary.dispose();
       modes.dispose();
       modesOff.dispose();
       appearance.dispose();
+      rendered.dispose();
       resized.dispose();
       // Close at once: closing stops any write still waiting on the host's
       // queue, so it cannot hold the session open.
@@ -287,7 +379,7 @@ export function TerminalPane({
       term.dispose();
       terminal.current = null;
     };
-  }, [host, kind, activated, fontFamily]);
+  }, [host, kind, target, activated, fontFamily]);
 
   useEffect(() => {
     if (terminal.current) terminal.current.term.options.theme = theme;
@@ -312,6 +404,7 @@ export function TerminalPane({
       style={{ background: theme.background }}
       aria-label={label}
       data-terminal={kind}
+      aria-busy={loading && !unavailable}
       // Named, so it needs a role: the TUI's frame is a group, a panel
       // terminal the tab panel of its tab.
       role={tabPanel ? "tabpanel" : "group"}
@@ -323,17 +416,25 @@ export function TerminalPane({
       <div
         className="terminal-host absolute inset-y-1.5 right-1 left-3"
         ref={container}
-        style={unavailable ? { visibility: "hidden" } : undefined}
+        style={unavailable || loading ? { visibility: "hidden" } : undefined}
+        inert={unavailable || loading}
       />
+      {loading && !unavailable && (
+        <EmptyState
+          role="status"
+          className="absolute inset-0"
+          busy
+          description={t("desktop.startup.workspace")}
+        />
+      )}
       {unavailable && (
-        <Empty role="status" className="absolute inset-0">
-          <EmptyMedia>
-            <Icon name="unplug" />
-          </EmptyMedia>
-          <EmptyDescription className="terminal-note">
-            {t("desktop.host.unavailable")}
-          </EmptyDescription>
-        </Empty>
+        <EmptyState
+          role="status"
+          className="absolute inset-0"
+          icon="unplug"
+          descriptionClassName="terminal-note"
+          description={t("desktop.host.unavailable")}
+        />
       )}
     </div>
   );

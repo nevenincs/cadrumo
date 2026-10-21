@@ -23,6 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _PROBE = """
 import json, logging, sys
+from contextlib import nullcontext
 from pathlib import Path
 
 removal = sys.argv[3]
@@ -42,7 +43,7 @@ if removal != "native":
 from cadrumo.core import logging as project_logging
 
 mode = sys.argv[2]
-if mode in {"deferred", "late"}:
+if mode in {"deferred", "late", "document-deferred"}:
     project_logging.defer_logging_configuration()
 logger = project_logging.get_logger("cadrumo.tests.first_record")
 log_file = Path(sys.argv[1]) / "cadrumo.log"
@@ -52,11 +53,16 @@ if mode == "overflow":
         logger.info("held record %d", index)
     project_logging.configure_logging()
 else:
-    logger.info("info record %s", "before-warning")
+    with project_logging.operator_document_output() if mode == "document-deferred" else nullcontext():
+        logger.info("info record %s", "before-warning")
+        if mode == "document-deferred":
+            logger.warning("first record %s", "probe")
 after_info = {"exists": log_file.exists(), "configured": project_logging._configured}
-if mode == "late":
+if mode in {"late", "document-deferred"}:
     project_logging.resume_logging_configuration()
     project_logging.configure_logging()
+    if mode == "document-deferred":
+        logger.warning("outside document scope")
 elif mode != "overflow":
     logger.warning("first record %s", "probe")
 logging.shutdown()
@@ -64,7 +70,7 @@ print(json.dumps({"before": before, "after_info": after_info, "configured": proj
 """
 
 _STAMP = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z"
-_CONTEXT = r' \| \{"process_id":\d+,"process_role":"python"\}'
+_CONTEXT = r' \| \{"process_id":\d+,"process_role":"python","thread_id":\d+,"thread_name":"MainThread"\}'
 _INFO_LINE = rf"{_STAMP} \[INFO\] cadrumo\.tests\.first_record: info record before-warning{_CONTEXT}\n"
 _WARNING_LINE = rf"{_STAMP} \[WARNING\] cadrumo\.tests\.first_record: first record probe{_CONTEXT}\n"
 
@@ -76,6 +82,8 @@ def _run_probe(tmp_path: Path, mode: str, *, removal: str = "native") -> tuple[d
         "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "root"),
         "CADRUMO_LOG_DIR": str(log_dir),
     }
+    if mode == "document-deferred":
+        env["CADRUMO_LOG_STDERR_LEVEL"] = "WARNING"
     completed = run_audited_process(
         [sys.executable, "-c", _PROBE, str(log_dir), mode, removal],
         env=env,
@@ -138,3 +146,20 @@ def test_a_deferred_process_keeps_the_log_file_closed_and_reports_on_stderr(tmp_
     assert report["configured"] is False
     assert not log_file.exists()
     assert "first record probe" in stderr
+
+
+def test_document_diagnostics_defer_without_stderr_and_replay_after_scope_exit(tmp_path: Path) -> None:
+    """A fresh JSON process preserves early diagnostics without falling back to stderr."""
+    report, stderr, log_file = _run_probe(tmp_path, "document-deferred")
+
+    assert report["after_info"] == {"exists": False, "configured": False}
+    assert report["configured"] is True
+    assert "first record probe" not in stderr
+    assert "info record before-warning" not in stderr
+    assert "outside document scope" in stderr
+    assert re.fullmatch(
+        _INFO_LINE
+        + _WARNING_LINE
+        + rf"{_STAMP} \[WARNING\] cadrumo\.tests\.first_record: outside document scope{_CONTEXT}\n",
+        log_file.read_text(encoding="utf-8"),
+    )

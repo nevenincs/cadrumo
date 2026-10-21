@@ -71,7 +71,7 @@ def test_the_override_gets_its_own_language_back_when_the_scope_exits() -> None:
         assert output_language() == "es"
         assert "cadrumo_output_language" in explicit.model_fields_set
 
-    with override_settings(cadrumo_strict_security=False) as unset:
+    with override_settings(cadrumo_log_level="") as unset:
         # The ambient environment may set the language explicitly; the
         # override must neither add nor drop that explicit choice.
         explicit_before = "cadrumo_output_language" in unset.model_fields_set

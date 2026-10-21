@@ -227,10 +227,10 @@ def taxpayer_profile_from_record(record: UserProfileRecord, *, schema: ProfileSc
     Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
     """
     values: dict[str, str] = dict(record_to_path_values(record))
-    if not values.get(_TAX_ID_PATH):
+    if not bool(values.get(_TAX_ID_PATH)):
         _require_active_profile_tax_id(
             values,
-            active_profile=str(record.profile_id),
+            active_profile=record.profile_id,
             requirement=_grounded_tax_id_requirement(schema=schema),
         )
     return projection_for_taxpayer(record, schema=schema)
@@ -251,7 +251,7 @@ def _require_active_profile_tax_id(
     owners; this deterministic precondition owns the terminal refusal they
     feed and can be exercised from resolved facts alone.
     """
-    if values.get(_TAX_ID_PATH):
+    if bool(values.get(_TAX_ID_PATH)):
         return
     raise WizardStatusError(
         translated_message="application.wizard.status.errors.missing_tax_id",

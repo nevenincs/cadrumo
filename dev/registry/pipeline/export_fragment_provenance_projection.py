@@ -61,6 +61,7 @@ _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
         "source_refs",
         "part",
         "required_with",
+        "requirement",
     },
 )
 
@@ -302,6 +303,7 @@ def _normalise_semantic_map_entry(payload: Mapping[str, object]) -> dict[str, ob
         # Digested only when declared, so a map without parts keeps its digest.
         **({"part": payload["part"]} if payload["part"] is not None else {}),
         **({"required_with": payload["required_with"]} if payload["required_with"] is not None else {}),
+        **({"requirement": payload["requirement"]} if payload["requirement"] is not None else {}),
     }
 
 

@@ -2,7 +2,7 @@
 
 The existing lifecycle service records an operator's prior external filing;
 these operations never file with AEAT. Full human results retain the existing
-receipt identifier and note. Agent queries contain closed lifecycle facts and
+receipt identifier and note. automation queries contain closed lifecycle facts and
 presence indicators, excluding those raw strings. The canonical declaration
 and event write remains one atomic persistence unit.
 """
@@ -16,6 +16,8 @@ from typing import Annotated, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.identity.digest import ContentDigest
@@ -37,7 +39,7 @@ from ..operations.access_resolution import (
     OperationAccessProfile,
     ResolvedOperationAccess,
     bind_operation_access_profile,
-    require_declared_frontend_and_action,
+    require_declared_action,
     require_period_independent_replay_or_authority,
 )
 from ..operations.capabilities import (
@@ -54,13 +56,9 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
 )
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .m036_lifecycle import (
     M036DeclarationCommand,
@@ -75,8 +73,6 @@ from .m036_operation_ports import M036OperationPorts, M036OperationPortsFactory
 M036_READ_OPERATION_DEFINITION_ID = "modelo.036.read"
 M036_QUERY_OPERATION_DEFINITION_ID = "modelo.036.query"
 M036_RECORD_OPERATION_DEFINITION_ID = "modelo.036.record"
-_HUMAN_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
-_RECORD_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
 type M036ReadKind = Literal["list", "view"]
 
 
@@ -145,7 +141,7 @@ class M036ReadProjection(BaseModel):
 
 
 class M036QueryProjection(BaseModel):
-    """Reviewed agent list/view with one immutable profile identity."""
+    """Reviewed automation list/view with one immutable profile identity."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -183,7 +179,7 @@ class M036ReadExecutionResult(BaseModel):
 
 
 class M036QueryExecutionResult(BaseModel):
-    """Encrypted agent retention already excludes raw human evidence."""
+    """Encrypted automation retention already excludes raw human evidence."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     projection: M036QueryProjection
@@ -399,8 +395,8 @@ def resolve_m036_operation_access(
         payload_type=M036RecordRequest if recording else M036ReadRequest,
         access_profile_id=context.profile_id,
     )
-    frontends, access_profile = _m036_access_policy(recording=recording, query=query)
-    require_declared_frontend_and_action(context, frontends=frontends, actions=access_profile.actions)
+    access_profile = _m036_access_policy(recording=recording, query=query)
+    require_declared_action(context, actions=access_profile.actions)
     require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
     return bind_operation_access_profile(
         context, access_profile, profile_id=payload.profile_id, definition_id=expected, periods=frozenset()
@@ -417,20 +413,12 @@ def _m036_access_mode(expected: str) -> tuple[bool, bool]:
     return expected == M036_RECORD_OPERATION_DEFINITION_ID, expected == M036_QUERY_OPERATION_DEFINITION_ID
 
 
-def _m036_access_policy(
-    *,
-    recording: bool,
-    query: bool,
-) -> tuple[frozenset[OperationFrontendProjection], OperationAccessProfile]:
-    frontends = _RECORD_FRONTENDS if recording else ALL_OPERATION_FRONTENDS if query else _HUMAN_FRONTENDS
-    access_profile = (
-        HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
-        if recording
-        else RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
-        if query
-        else HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
-    )
-    return frontends, access_profile
+def _m036_access_policy(*, recording: bool, query: bool) -> OperationAccessProfile:
+    if recording:
+        return HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
+    if query:
+        return RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
+    return HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
 
 
 def project_m036_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
@@ -466,25 +454,25 @@ def build_m036_operation_definitions(factory: M036OperationPortsFactory) -> tupl
         build_single_phase_definition(
             definition_id=definition_id,
             request_type=M036ReadRequest,
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=result_type,
             executor_type=M036ReadExecutor,
             build=lambda query=query: M036ReadExecutor(factory, query=query),
             capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES,
-            permitted_frontends=frontends,
         )
-        for definition_id, result_type, query, frontends in (
-            (M036_READ_OPERATION_DEFINITION_ID, M036ReadExecutionResult, False, _HUMAN_FRONTENDS),
-            (M036_QUERY_OPERATION_DEFINITION_ID, M036QueryExecutionResult, True, ALL_OPERATION_FRONTENDS),
+        for definition_id, result_type, query in (
+            (M036_READ_OPERATION_DEFINITION_ID, M036ReadExecutionResult, False),
+            (M036_QUERY_OPERATION_DEFINITION_ID, M036QueryExecutionResult, True),
         )
     )
     recording = build_single_phase_definition(
         definition_id=M036_RECORD_OPERATION_DEFINITION_ID,
         request_type=M036RecordRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=M036RecordExecutionResult,
         executor_type=M036RecordExecutor,
         build=lambda: M036RecordExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=_RECORD_FRONTENDS,
     )
     return (*reads, recording)
 

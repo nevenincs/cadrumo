@@ -1,5 +1,5 @@
-@setup aeat config auth apoderado configure --represented-nif 11111111H --scope IVA --scope PAGOSF
+@setup cadrumo-runtime config auth apoderado configure --represented-nif 11111111H --scope IVA --scope PAGOSF
 @step Remove the local apoderado record when the representation ends.
-@result aeat --format json config auth apoderado clear
+@result cadrumo-runtime --format json config auth apoderado clear
 @expect result.cleared == true
 @expect exit_code == 0

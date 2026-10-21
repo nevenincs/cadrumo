@@ -170,8 +170,10 @@ def test_m130_casilla_15_definition_and_target_match_reference(
     for language in OutputLanguage:
         label = m130_casilla_15.descriptions.get(language)
         help_text = m130_casilla_15.localized_help.get(language.value)
-        assert label and label.strip(), f"M130/casilla 15 has no {language.value} label"
-        assert help_text and help_text.strip(), f"M130/casilla 15 has no {language.value} help"
+        assert (label is not None and label) and label.strip(), f"M130/casilla 15 has no {language.value} label"
+        assert (help_text is not None and help_text) and help_text.strip(), (
+            f"M130/casilla 15 has no {language.value} help"
+        )
         localized = render_casilla_reference(_REPO_ROOT, records=records, language=language)
         localized_page = next(entry for entry in localized.pages if entry.modelo == "130")
         assert anchor in localized_page.anchors

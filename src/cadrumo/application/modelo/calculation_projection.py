@@ -26,6 +26,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import CasillaObservation, CasillaObservationValueKind
 from ...domain.calculations.registry.ids import FormulaId, LegalRefId, SourceRefId
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..operations.public_period import PublicPeriod
 from ..operations.public_scalar import PublicDecimal, PublicNamedScalar
@@ -112,6 +113,18 @@ class ModeloCalculationDetailSnapshot(BaseModel):
     index: int
     row_type: str
     fields: tuple[ModeloCalculationDetailField, ...]
+
+    @classmethod
+    def from_row(cls, index: int, row: ModeloDetailRow) -> Self:
+        """Project one typed row, keyed only by the field names its own model declares."""
+        return cls(
+            index=index,
+            row_type=str(row.row_type),
+            fields=tuple(
+                ModeloCalculationDetailField(key=key, value=None if value is None else str(value))
+                for key, value in row.model_dump(mode="json", exclude={"row_type"}).items()
+            ),
+        )
 
     @model_validator(mode="after")
     def _unique_fields(self) -> Self:
@@ -214,14 +227,7 @@ class ModeloCalculationSnapshot(BaseModel):
                 else ()
             ),
             detail_rows=tuple(
-                ModeloCalculationDetailSnapshot(
-                    index=index,
-                    row_type=str(row.row_type),
-                    fields=tuple(
-                        ModeloCalculationDetailField(key=key, value=None if value is None else str(value))
-                        for key, value in row.model_dump(mode="json", exclude={"row_type"}).items()
-                    ),
-                )
+                ModeloCalculationDetailSnapshot.from_row(index, row)
                 for index, row in enumerate(revision.detail_rows, start=1)
             ),
             source_provenance=tuple(
@@ -302,11 +308,10 @@ def _validate_snapshot_summary_and_rows(snapshot: ModeloCalculationSnapshot) -> 
 def _decimal_facts(values: Mapping[CasillaId, Decimal]) -> tuple[PublicNamedScalar, ...]:
     """Give visible Decimal facts a deterministic immutable order."""
     return tuple(
-        PublicNamedScalar(key=str(key), value=PublicDecimal(decimal=str(value)))
-        for key, value in sorted(values.items())
+        PublicNamedScalar(key=key, value=PublicDecimal(decimal=str(value))) for key, value in sorted(values.items())
     )
 
 
 def _text_facts(values: Mapping[str, str]) -> tuple[PublicNamedScalar, ...]:
     """Give typed input spellings a deterministic immutable order."""
-    return tuple(PublicNamedScalar(key=str(key), value=value) for key, value in sorted(values.items()))
+    return tuple(PublicNamedScalar(key=key, value=value) for key, value in sorted(values.items()))

@@ -185,7 +185,7 @@ class CalculationSourceLineageRole(StrEnum):
     """Upstream fact linked to, but never substituting for, a primary object."""
 
 
-# The docstring is a pydantic JSON-schema description, published to MCP clients
+# The docstring is a pydantic JSON-schema description, published to external client clients
 # with every verb that carries a binding source, so the design rationale lives here.
 #
 # The single canonical closed set of binding/source-mesh tokens.

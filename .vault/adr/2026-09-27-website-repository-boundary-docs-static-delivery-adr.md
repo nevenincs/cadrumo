@@ -8,15 +8,15 @@ related:
   - '[[2026-10-01-website-repository-boundary-static-delivery-grounding-reference]]'
 supersedes:
   - '2026-09-23-website-repository-boundary-docs-cloudflare-delivery-adr'
-modified: '2026-09-30'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:85ca5c8a30827b9854a30513cc00571e229041e493e94575aec8b8a5baaf99e6'
+body_hash: 'sha256:05e8c238eaac3f1c581efdd501ede4014bdaa821d4cee6ce9eb6e7dd33ad1320'
 ---
 # `website-repository-boundary` adr: `static documentation with versioned search objects` | (**status:** `accepted`)
 
 ## Problem Statement
 
-Remove documentation delivery from the shared executable Worker allowance and make publication recoverable. Evidence: the account and deployment audits in `Y:/code/portfolio2026-worktrees/main/.vault/audit/2026-09-27-workers-audit-cadrumo-audit.md` and `2026-09-26-workers-audit-audit.md`.
+Remove documentation delivery from the shared executable Worker allowance and make publication recoverable. Evidence: the account and deployment audits in `<portfolio-repo>/.vault/audit/2026-09-27-workers-audit-cadrumo-audit.md` and `2026-09-26-workers-audit-audit.md`.
 
 ## Considerations
 

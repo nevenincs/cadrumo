@@ -28,9 +28,10 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo_client.commands.parameters import ParameterSpec
+from cadrumo_client.commands.spec import CommandSpecNode
+
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ..command_parameter_contracts import ParameterSpec
-from ..command_spec import CommandSpecNode
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

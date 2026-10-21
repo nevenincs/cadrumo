@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import ast
+import importlib.util
+from collections.abc import Sequence
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from dev.first_party_source import FIRST_PARTY_ROOTS
 
 
 class ApiDocsError(RuntimeError):
@@ -50,10 +55,14 @@ class DriftResult:
         return not self.missing_stubs and not self.orphan_stubs and not self.stale_stubs
 
 
-#: Directory name of the source package this generator documents, under
-#: ``src/``. The incremental docs planner reads it rather than repeating
-#: the literal, so a package rename cannot leave the planner addressing a
-#: tree that no longer exists.
+#: Every shipped first-party Python package, as declared by the canonical
+#: source-root inventory. Development tooling and packaging hooks remain
+#: outside the public product API reference.
+API_SOURCE_ROOTS: tuple[str, ...] = tuple(root for root in FIRST_PARTY_ROOTS if root.startswith("src/"))
+
+#: Primary tax application package; its command subtree has a separately
+#: generated reference and the authored API overview starts its reading path
+#: here. Keep this semantic owner explicit rather than relying on root order.
 API_SOURCE_PACKAGE: str = "cadrumo"
 
 #: Package-relative subtree documented through the generated command
@@ -69,10 +78,10 @@ CLI_REFERENCE_SUBTREE: tuple[str, ...] = ("entrypoints", "cli")
 #: caught by that derivation rather than by a committed copy of the output.
 EXCLUDED_PACKAGE_SEGMENTS: frozenset[str] = frozenset({"tests", "_data"})
 
-#: Package-relative subtrees excluded from autodoc stubs. The CLI is documented
-#: through the generated command reference rather than autodoc; importing the
-#: cli command/payload modules under autodoc also fails on pydantic model
-#: construction, so the cli implementation is not stubbed.
+#: Primary-application package-relative subtrees excluded from autodoc stubs.
+#: The application CLI is documented through the generated command reference
+#: rather than autodoc; importing its command/payload modules under autodoc also
+#: fails on pydantic model construction, so that implementation is not stubbed.
 EXCLUDED_SUBTREES: frozenset[tuple[str, ...]] = frozenset({CLI_REFERENCE_SUBTREE})
 
 #: Filenames excluded from stub coverage even inside included packages.
@@ -83,25 +92,67 @@ EXCLUDED_FILENAME_PREFIXES: tuple[str, ...] = ("test_", "_test_")
 
 _UTF_8: str = UTF_8_ENCODING
 
-# PEP 695 aliases do not produce Python-domain objects when ``automodule``
-# enumerates members.  These aliases are nevertheless intentional public API
-# and are referenced throughout the API prose and generated annotations.  Keep
-# the small ownership table here, beside the stub generator, so each alias gets
-# exactly one canonical ``py:data`` target at the module that RESOLVES it.
-#
-# ``py:data`` fabricates a target whether or not the object exists, so a key
-# naming a module that no longer resolves the name publishes a reference to
-# nothing while leaving the real alias undocumented.  Every entry therefore
-# re-derives its own condition against the imported module in
-# ``tests/test_manager.py`` rather than being trusted because it was written.
-_PUBLIC_DATA_ALIASES: dict[str, tuple[str, ...]] = {
-    "cadrumo.core.casilla_id": ("CasillaId",),
-    "cadrumo.core.identity.digest": ("ContentDigest",),
-    "cadrumo.core.identity.tax_id": ("TaxIdIdentityToken",),
-    "cadrumo.domain.calculations.registry.tax_id_format": ("SubjectTaxId",),
-}
 _PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {}
 
+_TYPE_ALIAS_FACTORIES = frozenset(
+    {
+        "Annotated",
+        "AsyncIterator",
+        "Awaitable",
+        "Callable",
+        "Collection",
+        "Iterable",
+        "Iterator",
+        "Literal",
+        "Mapping",
+        "MutableMapping",
+        "NewType",
+        "Protocol",
+        "Sequence",
+        "TypeAliasType",
+    }
+)
+_TYPE_ALIAS_FACTORY_MODULES: dict[str, frozenset[str]] = {
+    "typing": _TYPE_ALIAS_FACTORIES,
+    "typing_extensions": _TYPE_ALIAS_FACTORIES,
+    "collections.abc": frozenset(
+        {
+            "AsyncIterator",
+            "Awaitable",
+            "Callable",
+            "Collection",
+            "Iterable",
+            "Iterator",
+            "Mapping",
+            "MutableMapping",
+            "Sequence",
+        }
+    ),
+}
+_TYPE_ALIAS_CALL_FACTORIES: dict[str, frozenset[str]] = {
+    "typing": frozenset({"NewType", "TypeAliasType"}),
+    "typing_extensions": frozenset({"NewType", "TypeAliasType"}),
+}
+_BUILTIN_GENERIC_FACTORIES = frozenset({"dict", "frozenset", "list", "set", "tuple", "type"})
+_BUILTIN_TYPE_EXPRESSIONS = frozenset(
+    {
+        "bool",
+        "bytearray",
+        "bytes",
+        "complex",
+        "dict",
+        "float",
+        "frozenset",
+        "int",
+        "list",
+        "memoryview",
+        "object",
+        "set",
+        "str",
+        "tuple",
+        "type",
+    }
+)
 # Pydantic materialises generic bases on each concrete consumer with the
 # defining class's original ``__module__``/``__qualname__``.  Autodoc would
 # consequently index the defining object (and its fields) again from every
@@ -120,14 +171,429 @@ _NON_OWNER_GENERIC_IMPORTS: dict[str, tuple[str, ...]] = {
 }
 
 
-def _public_data_aliases(module_name: str) -> list[str]:
-    """Render canonical Python-domain targets for public type aliases."""
+def _type_alias_expression(
+    value: ast.expr,
+    path: Path | None = None,
+    seen: frozenset[tuple[Path, str]] = frozenset(),
+) -> bool:
+    """Return whether *value* is a source expression that defines a type alias."""
+    if isinstance(value, ast.Subscript):
+        return _type_expression_factory(value.value, path, _TYPE_ALIAS_FACTORY_MODULES, seen)
+    if isinstance(value, ast.BinOp):
+        return (
+            isinstance(value.op, ast.BitOr)
+            and _union_operand_is_type(value.left, path, seen)
+            and _union_operand_is_type(value.right, path, seen)
+        )
+    if isinstance(value, ast.Call):
+        return _type_expression_factory(
+            value.func,
+            path,
+            _TYPE_ALIAS_CALL_FACTORIES,
+            seen,
+            allow_source_type_factory=False,
+        )
+    return False
+
+
+def _dotted_expression(value: ast.expr) -> tuple[str, ...] | None:
+    """Return the dotted components of a name or attribute expression."""
+    parts: list[str] = []
+    while isinstance(value, ast.Attribute):
+        parts.append(value.attr)
+        value = value.value
+    if not isinstance(value, ast.Name):
+        return None
+    return (value.id, *reversed(parts))
+
+
+@lru_cache(maxsize=4096)
+def _module_import_context(
+    path: Path,
+    modified_ns: int,
+    size: int,
+) -> tuple[tuple[tuple[str, str, str | None, bool], ...], frozenset[str]]:
+    """Cache direct imports and shadowed names from one source module."""
+    del modified_ns, size  # The stat values participate in the cache key.
+    try:
+        tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return (), frozenset[str]()
+
+    imports: list[tuple[str, str, str | None, bool]] = []
+    shadowed: set[str] = set()
+
+    def add_target_names(target: ast.expr) -> None:
+        if isinstance(target, ast.Name):
+            shadowed.add(target.id)
+        elif isinstance(target, (ast.Tuple, ast.List)):
+            for item in target.elts:
+                add_target_names(item)
+
+    for statement in tree.body:
+        if isinstance(statement, ast.Import):
+            for alias in statement.names:
+                local_name = alias.asname or alias.name.split(".", maxsplit=1)[0]
+                module_name = alias.name if alias.asname is not None else alias.name.split(".", maxsplit=1)[0]
+                imports.append((local_name, module_name, None, alias.asname is not None))
+        elif isinstance(statement, ast.ImportFrom):
+            source_root = _source_root(path)
+            package = _module_name(source_root, path) if source_root is not None else ""
+            package = package if path.name == "__init__.py" else package.rpartition(".")[0]
+            if statement.module is None:
+                module_name = package
+            else:
+                try:
+                    module_name = importlib.util.resolve_name(f"{'.' * statement.level}{statement.module}", package)
+                except ImportError:
+                    continue
+            for alias in statement.names:
+                if alias.name != "*":
+                    imports.append((alias.asname or alias.name, module_name, alias.name, True))
+        elif isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            shadowed.add(statement.name)
+        elif isinstance(statement, ast.Assign | ast.AnnAssign) and (
+            isinstance(statement, ast.Assign) or statement.value is not None
+        ):
+            targets = statement.targets if isinstance(statement, ast.Assign) else (statement.target,)
+            for target in targets:
+                add_target_names(target)
+        elif isinstance(statement, (ast.For, ast.AsyncFor)):
+            add_target_names(statement.target)
+        elif isinstance(statement, (ast.With, ast.AsyncWith)):
+            for item in statement.items:
+                if item.optional_vars is not None:
+                    add_target_names(item.optional_vars)
+
+    return tuple(imports), frozenset(shadowed)
+
+
+def _source_import_binding(path: Path, name: str) -> tuple[str, str, str | None, bool] | None:
+    """Resolve an unshadowed top-level name to its import statement."""
+    try:
+        stat = path.stat()
+    except OSError:
+        return None
+    imports, shadowed = _module_import_context(path, stat.st_mtime_ns, stat.st_size)
+    if name in shadowed:
+        return None
+    matches = {binding for binding in imports if binding[0] == name}
+    return next(iter(matches)) if len(matches) == 1 else None
+
+
+def _is_type_checking_guard(test: ast.expr, path: Path) -> bool:
+    """Return whether *test* names an unshadowed canonical TYPE_CHECKING import."""
+    if isinstance(test, ast.Name):
+        binding = _source_import_binding(path, test.id)
+        return binding is not None and binding[1:3] in {
+            ("typing", "TYPE_CHECKING"),
+            ("typing_extensions", "TYPE_CHECKING"),
+        }
+
+    parts = _dotted_expression(test)
+    if parts is None or len(parts) != 2 or parts[1] != "TYPE_CHECKING":
+        return False
+    binding = _source_import_binding(path, parts[0])
+    return binding is not None and binding[1] in {"typing", "typing_extensions"} and binding[2] is None
+
+
+def _type_expression_factory(
+    factory: ast.expr,
+    path: Path | None,
+    canonical_modules: dict[str, frozenset[str]],
+    seen: frozenset[tuple[Path, str]],
+    *,
+    allow_source_type_factory: bool = True,
+) -> bool:
+    """Accept only canonical or source-resolved generic type factories."""
+    if path is None:
+        return False
+    if isinstance(factory, ast.Name):
+        name = factory.id
+        if allow_source_type_factory and name in _BUILTIN_GENERIC_FACTORIES:
+            try:
+                stat = path.stat()
+            except OSError:
+                return False
+            _, shadowed = _module_import_context(path, stat.st_mtime_ns, stat.st_size)
+            if name not in shadowed:
+                return True
+        binding = _source_import_binding(path, name)
+        if binding is not None:
+            _, module_name, imported_name, _ = binding
+            if imported_name is not None and imported_name in canonical_modules.get(module_name, ()):
+                return True
+        if not allow_source_type_factory:
+            return False
+        return _module_symbol_is_type(path, name, seen)
+
+    parts = _dotted_expression(factory)
+    if parts is None:
+        return False
+    binding = _source_import_binding(path, parts[0])
+    if binding is None:
+        return False
+    _, module_name, imported_name, has_alias = binding
+    if imported_name is not None:
+        return False
+    qualified = ".".join((module_name, *parts[1:])) if has_alias else ".".join(parts)
+    for owner, names in canonical_modules.items():
+        prefix = f"{owner}."
+        if qualified.startswith(prefix) and qualified[len(prefix) :] in names:
+            return True
+    return False
+
+
+def _source_name_is_shadowed(path: Path, name: str) -> bool:
+    """Return whether a top-level declaration shadows an imported or builtin name."""
+    try:
+        stat = path.stat()
+    except OSError:
+        return False
+    _, shadowed = _module_import_context(path, stat.st_mtime_ns, stat.st_size)
+    return name in shadowed
+
+
+def _union_operand_is_type(
+    value: ast.expr,
+    path: Path | None,
+    seen: frozenset[tuple[Path, str]] = frozenset(),
+) -> bool:
+    """Recognize operands of PEP 604 type unions without treating value unions as types."""
+    if isinstance(value, ast.Constant):
+        return value.value is None
+    if isinstance(value, ast.Name):
+        is_source_type = path is not None and _module_symbol_is_type(path, value.id, seen)
+        is_unshadowed_builtin = value.id in _BUILTIN_TYPE_EXPRESSIONS and (
+            path is None or not _source_name_is_shadowed(path, value.id)
+        )
+        return is_source_type or is_unshadowed_builtin
+    if isinstance(value, ast.Subscript):
+        return _type_alias_expression(value, path, seen) or _union_operand_is_type(value.value, path, seen)
+    if isinstance(value, ast.BinOp):
+        return _type_alias_expression(value, path, seen)
+    return False
+
+
+def _source_root(path: Path) -> Path | None:
+    """Find the ``src/<package>`` root containing *path*, including fixtures."""
+    return next((parent for parent in path.parents if parent.parent.name == "src"), None)
+
+
+def _module_name(source_root: Path, path: Path) -> str:
+    """Return the importable module name for a Python source path."""
+    relative = path.relative_to(source_root).with_suffix("")
+    parts = relative.parts[:-1] if relative.name == "__init__" else relative.parts
+    return ".".join((source_root.name, *parts))
+
+
+def _module_source_path(source_root: Path, module_name: str) -> Path | None:
+    """Resolve a module inside the source cohort containing *source_root*."""
+    module_path = source_root.parent.joinpath(*module_name.split("."))
+    source_path = module_path.with_suffix(".py")
+    package_path = module_path / "__init__.py"
+    if source_path.is_file():
+        return source_path
+    if package_path.is_file():
+        return package_path
+    return None
+
+
+def _module_symbol_is_type(path: Path, symbol: str, seen: frozenset[tuple[Path, str]] = frozenset()) -> bool:
+    """Follow an imported symbol to confirm it is a class or source type alias."""
+    key = (path.resolve(), symbol)
+    if key in seen:
+        return False
+    seen = seen | {key}
+    try:
+        source = path.read_text(encoding=_UTF_8)
+        tree = ast.parse(source, filename=str(path))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return False
+
+    for statement in reversed(tree.body):
+        if not _statement_binds_name(statement, symbol):
+            continue
+        if isinstance(statement, ast.ClassDef):
+            return True
+        if isinstance(statement, ast.TypeAlias):
+            return True
+        if isinstance(statement, ast.AnnAssign):
+            return isinstance(statement.annotation, ast.Name) and statement.annotation.id == "TypeAlias"
+        if isinstance(statement, ast.Assign):
+            if _type_alias_expression(statement.value, path, seen):
+                return True
+            if isinstance(statement.value, ast.Name):
+                return _module_symbol_is_type(path, statement.value.id, seen)
+            return False
+        if isinstance(statement, (ast.ImportFrom, ast.Import)):
+            return _imported_symbol_is_type(path, tree, symbol, seen, statement)
+        return False
+    return _imported_symbol_is_type(path, tree, symbol, seen)
+
+
+def _target_binds_name(target: ast.expr, symbol: str) -> bool:
+    """Return whether an assignment target binds *symbol*."""
+    if isinstance(target, ast.Name):
+        return target.id == symbol
+    if isinstance(target, (ast.Tuple, ast.List)):
+        return any(_target_binds_name(item, symbol) for item in target.elts)
+    return False
+
+
+def _statement_binds_name(statement: ast.stmt, symbol: str) -> bool:
+    """Return whether a module-level statement binds *symbol*."""
+    if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+        return statement.name == symbol
+    if isinstance(statement, ast.TypeAlias):
+        return statement.name.id == symbol
+    if isinstance(statement, ast.Assign):
+        return any(_target_binds_name(target, symbol) for target in statement.targets)
+    if isinstance(statement, ast.AnnAssign):
+        return statement.value is not None and _target_binds_name(statement.target, symbol)
+    if isinstance(statement, (ast.For, ast.AsyncFor)):
+        return _target_binds_name(statement.target, symbol)
+    if isinstance(statement, (ast.With, ast.AsyncWith)):
+        return any(
+            item.optional_vars is not None and _target_binds_name(item.optional_vars, symbol)
+            for item in statement.items
+        )
+    if isinstance(statement, ast.Import):
+        return any((alias.asname or alias.name.split(".", maxsplit=1)[0]) == symbol for alias in statement.names)
+    if isinstance(statement, ast.ImportFrom):
+        return any((alias.asname or alias.name) == symbol for alias in statement.names)
+    return False
+
+
+def _imported_symbol_is_type(
+    path: Path,
+    tree: ast.Module,
+    symbol: str,
+    seen: frozenset[tuple[Path, str]] = frozenset(),
+    binding_statement: ast.stmt | None = None,
+) -> bool:
+    """Return whether a module imports *symbol* from a class or alias owner."""
+    source_root = _source_root(path)
+    if source_root is None:
+        return False
+    module_name = _module_name(source_root, path)
+    package = module_name if path.name == "__init__.py" else module_name.rpartition(".")[0]
+    statements = (binding_statement,) if binding_statement is not None else tuple(tree.body)
+    for statement in statements:
+        if not isinstance(statement, ast.ImportFrom):
+            continue
+        for imported in statement.names:
+            local_name = imported.asname or imported.name
+            if local_name != symbol:
+                continue
+            try:
+                imported_module = f"{'.' * statement.level}{statement.module or ''}"
+                module_name = importlib.util.resolve_name(imported_module, package)
+            except ImportError:
+                continue
+            imported_path = _module_source_path(source_root, module_name)
+            if imported_path is not None and _module_symbol_is_type(imported_path, imported.name, seen):
+                return True
+    return False
+
+
+def _type_alias_declarations(path: Path) -> tuple[tuple[str, str], ...]:
+    """Return public top-level type alias declarations from *path*."""
+    source = path.read_text(encoding=_UTF_8)
+    tree = ast.parse(source, filename=str(path))
+    aliases: dict[str, str] = {}
+
+    def target_names(target: ast.expr) -> set[str]:
+        if isinstance(target, ast.Name):
+            return {target.id}
+        if isinstance(target, (ast.Tuple, ast.List)):
+            return {name for item in target.elts for name in target_names(item)}
+        return set()
+
+    def bound_names(statement: ast.stmt) -> set[str]:
+        if isinstance(statement, ast.TypeAlias):
+            return {statement.name.id}
+        if isinstance(statement, ast.Assign | ast.AugAssign | ast.Delete):
+            targets = statement.targets if isinstance(statement, ast.Assign | ast.Delete) else (statement.target,)
+            return {name for target in targets for name in target_names(target)}
+        if isinstance(statement, ast.AnnAssign) and statement.value is not None:
+            return target_names(statement.target)
+        if isinstance(statement, ast.Import):
+            return {alias.asname or alias.name.split(".", maxsplit=1)[0] for alias in statement.names}
+        if isinstance(statement, ast.ImportFrom):
+            return {alias.asname or alias.name for alias in statement.names if alias.name != "*"}
+        if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            return {statement.name}
+        if isinstance(statement, (ast.For, ast.AsyncFor)):
+            return target_names(statement.target)
+        if isinstance(statement, (ast.With, ast.AsyncWith)):
+            return {
+                target
+                for item in statement.items
+                if item.optional_vars is not None
+                for target in target_names(item.optional_vars)
+            }
+        return set()
+
+    def collect_statement(statement: ast.stmt) -> None:
+        for name in bound_names(statement):
+            aliases.pop(name, None)
+
+        if isinstance(statement, ast.TypeAlias):
+            if not statement.name.id.startswith("_"):
+                declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
+                aliases[statement.name.id] = declaration
+            return
+
+        if (
+            isinstance(statement, ast.AnnAssign)
+            and statement.value is not None
+            and isinstance(statement.target, ast.Name)
+            and isinstance(statement.annotation, ast.Name)
+            and statement.annotation.id == "TypeAlias"
+            and not statement.target.id.startswith("_")
+        ):
+            declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
+            aliases[statement.target.id] = declaration
+            return
+
+        if not isinstance(statement, ast.Assign):
+            return
+
+        targets = tuple(target.id for target in statement.targets if isinstance(target, ast.Name))
+        public_targets = tuple(name for name in targets if not name.startswith("_"))
+        if not public_targets:
+            return
+
+        value = statement.value
+        is_type_expression = _type_alias_expression(value, path)
+        is_referenced_type_alias = isinstance(value, ast.Name) and _module_symbol_is_type(path, value.id)
+        if is_type_expression or is_referenced_type_alias:
+            declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
+            aliases.update((name, declaration) for name in public_targets)
+
+    for statement in tree.body:
+        if isinstance(statement, ast.If) and _is_type_checking_guard(statement.test, path):
+            for guarded_statement in statement.body:
+                collect_statement(guarded_statement)
+            continue
+        collect_statement(statement)
+
+    return tuple(sorted(aliases.items()))
+
+
+def _public_type_aliases(module_name: str, source_path: Path) -> list[str]:
+    """Render type-alias targets and source declarations from their owner module."""
     lines: list[str] = []
-    for alias in _PUBLIC_DATA_ALIASES.get(module_name, ()):
+    for alias, declaration in _type_alias_declarations(source_path):
         lines.extend(
             (
-                f".. py:data:: {alias}",
+                f".. py:type:: {alias}",
                 f"   :module: {module_name}",
+                "",
+                "   Declared in source::",
+                "",
+                *(f"      {line}" for line in declaration.splitlines()),
                 "",
             )
         )
@@ -190,15 +656,45 @@ class ApiStubManager:
       without writing anything.
     """
 
-    def __init__(self, src_cadrumo: Path, docs_api: Path) -> None:
-        """Initialise the manager with the source root and the docs API directory.
+    def __init__(
+        self,
+        src_cadrumo: Path,
+        docs_api: Path,
+        *,
+        source_roots: Sequence[Path] | None = None,
+    ) -> None:
+        """Initialise with one fixture/source root or an explicit package cohort.
 
         Args:
-            src_cadrumo: Absolute path to ``src/cadrumo/``.
+            src_cadrumo: The primary application package root. Kept as the
+                one-root seam for hermetic tests and existing callers.
             docs_api: Absolute path to ``docs/api/``.
+            source_roots: Optional package roots to document together. When
+                omitted, only ``src_cadrumo`` is scanned; repository builds use
+                :meth:`for_repository` to require the canonical five-root set.
         """
         self.src_cadrumo = src_cadrumo
+        self.source_roots = tuple(source_roots) if source_roots is not None else (src_cadrumo,)
+        if not self.source_roots:
+            raise ApiDocsError("At least one API source root must be configured")
+        if len({root.parent.resolve() for root in self.source_roots}) != 1:
+            raise ApiDocsError("API source roots must share one src/ parent directory")
         self.docs_api = docs_api
+
+    @classmethod
+    def for_repository(cls, repo_root: Path, docs_api: Path) -> ApiStubManager:
+        """Create a manager for every configured first-party package under ``src/``.
+
+        Missing canonical roots are a configuration error rather than an
+        invitation to publish a partial API tree.
+        """
+        source_roots = tuple(repo_root.joinpath(*Path(root).parts) for root in API_SOURCE_ROOTS)
+        missing = [root for root in source_roots if not root.is_dir()]
+        if missing:
+            missing_paths = ", ".join(str(root) for root in missing)
+            raise ApiDocsError(f"Configured first-party API roots are missing: {missing_paths}")
+        primary_source_root = repo_root / "src" / API_SOURCE_PACKAGE
+        return cls(src_cadrumo=primary_source_root, docs_api=docs_api, source_roots=source_roots)
 
     # ── Discovery ────────────────────────────────────────────────────────────
 
@@ -212,12 +708,15 @@ class ApiStubManager:
         deleted path can still be classified.
 
         Args:
-            path: An absolute ``Path`` to a Python file under ``src_cadrumo``.
+            path: An absolute ``Path`` to a Python file under a configured source root.
 
         Returns:
             True when the file should be skipped.
         """
-        relative = path.relative_to(self.src_cadrumo)
+        source_root = next((root for root in self.source_roots if path.is_relative_to(root)), None)
+        if source_root is None:
+            raise ValueError(f"API source path is outside configured roots: {path}")
+        relative = path.relative_to(source_root)
         parts = relative.parts
 
         filename = path.name
@@ -226,14 +725,15 @@ class ApiStubManager:
         if filename in EXCLUDED_FILENAMES:
             return True
 
-        for prefix in EXCLUDED_SUBTREES:
-            if parts[: len(prefix)] == prefix:
-                return True
+        if source_root.name == API_SOURCE_PACKAGE:
+            for prefix in EXCLUDED_SUBTREES:
+                if parts[: len(prefix)] == prefix:
+                    return True
 
         return any(part in EXCLUDED_PACKAGE_SEGMENTS for part in parts)
 
     def discover_modules(self) -> list[tuple[str, bool]]:
-        """Walk ``src_cadrumo`` and collect ``(dotted_module_name, is_package)`` pairs.
+        """Walk configured source roots and collect module/package pairs.
 
         Returns:
             Sorted list of ``(dotted_name, is_package)`` tuples.
@@ -241,22 +741,23 @@ class ApiStubManager:
         """
         results: list[tuple[str, bool]] = []
 
-        for py_file in scan_directory(self.src_cadrumo, pattern="*.py", recursive=True):
-            if self.excludes_source(py_file):
-                continue
+        for source_root in self.source_roots:
+            for py_file in scan_directory(source_root, pattern="*.py", recursive=True):
+                if self.excludes_source(py_file):
+                    continue
 
-            relative = py_file.relative_to(self.src_cadrumo.parent)
-            parts = list(relative.parts)
+                relative = py_file.relative_to(source_root.parent)
+                parts = list(relative.parts)
 
-            if parts[-1] == "__init__.py":
-                dotted = ".".join(parts[:-1])
-                results.append((dotted, True))
-            else:
-                parts[-1] = parts[-1][: -len(".py")]
-                dotted = ".".join(parts)
-                results.append((dotted, False))
+                if parts[-1] == "__init__.py":
+                    dotted = ".".join(parts[:-1])
+                    results.append((dotted, True))
+                else:
+                    parts[-1] = parts[-1][: -len(".py")]
+                    dotted = ".".join(parts)
+                    results.append((dotted, False))
 
-        return results
+        return sorted(results)
 
     # ── Content builders ─────────────────────────────────────────────────────
 
@@ -356,6 +857,8 @@ class ApiStubManager:
             Complete RST source for the stub file.
         """
         title = f"{pkg_name} package"
+        source_path = self._source_path(pkg_name)
+        excluded_members = [alias for alias, _ in _type_alias_declarations(source_path)]
         lines: list[str] = [
             self._heading(title),
             "",
@@ -363,9 +866,11 @@ class ApiStubManager:
             "   :members:",
             "   :show-inheritance:",
             "   :ignore-module-all:",
-            "",
         ]
-        lines.extend(_public_data_aliases(pkg_name))
+        if excluded_members:
+            lines.append(f"   :exclude-members: {','.join(excluded_members)}")
+        lines.append("")
+        lines.extend(_public_type_aliases(pkg_name, source_path))
         lines.extend(_public_function_aliases(pkg_name))
 
         if sub_packages:
@@ -377,8 +882,7 @@ class ApiStubManager:
         lines.append("")
         return "\n".join(lines)
 
-    @staticmethod
-    def _module_stub(mod_name: str) -> str:
+    def _module_stub(self, mod_name: str) -> str:
         """Generate RST content for a leaf-module stub.
 
         Every symbol is documented exactly once, at the module that defines it
@@ -397,6 +901,7 @@ class ApiStubManager:
             Complete RST source for the stub file.
         """
         title = f"{mod_name} module"
+        source_path = self._source_path(mod_name)
         lines: list[str] = [
             f"{title}\n{'=' * len(title)}",
             "",
@@ -405,13 +910,29 @@ class ApiStubManager:
             "   :show-inheritance:",
             "   :ignore-module-all:",
         ]
-        excluded_generics = _NON_OWNER_GENERIC_IMPORTS.get(mod_name, ())
-        if excluded_generics:
-            lines.append(f"   :exclude-members: {','.join(excluded_generics)}")
+        excluded_members = sorted(
+            {
+                *_NON_OWNER_GENERIC_IMPORTS.get(mod_name, ()),
+                *(alias for alias, _ in _type_alias_declarations(source_path)),
+            }
+        )
+        if excluded_members:
+            lines.append(f"   :exclude-members: {','.join(excluded_members)}")
         lines.append("")
-        lines.extend(_public_data_aliases(mod_name))
+        lines.extend(_public_type_aliases(mod_name, source_path))
         lines.extend(_public_function_aliases(mod_name))
         return "\n".join(lines)
+
+    def _source_path(self, module_name: str) -> Path:
+        """Return the source file for a discovered module name."""
+        for source_root in self.source_roots:
+            package_name = source_root.name
+            if module_name != package_name and not module_name.startswith(package_name + "."):
+                continue
+            parts = module_name.split(".")[1:]
+            module_path = source_root.joinpath(*parts)
+            return module_path / "__init__.py" if module_path.is_dir() else module_path.with_suffix(".py")
+        raise ValueError(f"API module is outside configured source roots: {module_name}")
 
     def _expected_stub_contents(self, all_modules: list[tuple[str, bool]] | None = None) -> dict[str, str]:
         """Return canonical stub content keyed by stub filename.
@@ -420,7 +941,7 @@ class ApiStubManager:
             all_modules: Optional discovery result to reuse.
 
         Returns:
-            Mapping of ``cadrumo.some.module.rst`` filenames to their generated RST.
+            Mapping of ``some_package.some.module.rst`` filenames to generated RST.
         """
         modules = self.discover_modules() if all_modules is None else all_modules
         expected: dict[str, str] = {}

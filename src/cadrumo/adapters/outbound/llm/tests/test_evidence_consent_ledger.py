@@ -20,9 +20,10 @@ Four properties, each proved against a real encrypted secure-object backend
   primed entry, so the confound above is absent: only a failing ledger
   distinguishes the refused call from the cache hit the call before it served.
 
-The provider adapter is a recording subclass replacing exactly one thing: the
-vendor call. Nothing else in the dispatch path is substituted -- the settings,
-the gate, the token, the ledger and the storage are all real -- because what is
+The agent service behind the model-run port is a recording stand-in, replacing
+exactly one thing: the model run. Nothing else in the dispatch path is
+substituted -- the settings, the gate, the token, the ledger, the storage and the
+agent adapter are all real -- because what is
 under test is the ORDER of the real steps, and a substituted step cannot be
 ordered against. The one exception is the last test's deliberately-failing
 ledger, which is the injected collaborator whose failure IS the property.
@@ -40,6 +41,7 @@ import pytest
 from .....core.config import Settings
 from .....core.config_support import LLMProvider
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.model_catalogue import ModelRole
 from .....domain.evidence_consent.record import EvidenceConsentLedgerEntry
 from ....persistence.llm import consent_ledger as consent_ledger_module
 from ....persistence.llm.consent_ledger import EvidenceConsentLedger
@@ -50,7 +52,8 @@ from ..client import LLMClient
 from ..consent import EvidenceConsentToken
 from ..errors import LLMConsentError
 from ..models import LLMRequest
-from ..providers.base import ProviderAdapter, ProviderCompletion, ProviderRequest
+from ..providers.agent import lane_model_label
+from .model_run_support import DEFAULT_LANE, RecordingModelRuns
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -60,23 +63,8 @@ _PROMPT = "Read the invoice total from this document, DISTINCTIVE-PROMPT-TOKEN."
 _COMPLETION_TEXT = "DISTINCTIVE-RESPONSE-TOKEN: 1.234,56 EUR"
 
 
-class _CapturingAdapter(ProviderAdapter):
-    """An off-host adapter that records the dispatch instead of calling a vendor."""
-
-    provider = LLMProvider.ANTHROPIC
-    supports_images = True
-
-    def __init__(self) -> None:
-        self.dispatched: list[ProviderRequest] = []
-
-    @override
-    async def complete(self, request: ProviderRequest) -> ProviderCompletion:
-        self.dispatched.append(request)
-        return ProviderCompletion(text=_COMPLETION_TEXT, model=request.model, input_tokens=11, output_tokens=7)
-
-
 class _CapturingClient(LLMClient):
-    """``LLMClient`` with only the vendor call replaced."""
+    """``LLMClient`` whose agent service is a recording stand-in; everything else is real."""
 
     def __init__(
         self,
@@ -84,19 +72,9 @@ class _CapturingClient(LLMClient):
         settings: Settings | None = None,
         consent_ledger: EvidenceConsentLedger | None = None,
     ) -> None:
-        """Forward the two dependencies the cases here vary.
-
-        Named rather than forwarded through ``**kwargs: object``, which erased
-        every argument and needed a suppression to reach the base constructor
-        at all -- so nothing checked that these tests were configuring the
-        client the way production does.
-        """
-        super().__init__(settings=settings, consent_ledger=consent_ledger)
-        self.adapter = _CapturingAdapter()
-
-    @override
-    def _build_adapter(self, provider: LLMProvider) -> ProviderAdapter:
-        return self.adapter
+        """Forward the two dependencies the cases here vary, and bind the recording service."""
+        self.service = RecordingModelRuns(replies=(_COMPLETION_TEXT,))
+        super().__init__(settings=settings, consent_ledger=consent_ledger, model_runs=self.service)
 
 
 def _consented_settings() -> Settings:
@@ -109,8 +87,8 @@ def _consented_settings() -> Settings:
 def _evidence_request() -> LLMRequest:
     return LLMRequest(
         prompt=_PROMPT,
-        provider_override=LLMProvider.ANTHROPIC,
-        model_override="claude-sonnet-4-6",
+        provider_override=LLMProvider.AGENT,
+        model_role=ModelRole.TEXT_EXTRACTION,
         evidence_derived=True,
         consent_token=EvidenceConsentToken(surface=_SURFACE, evidence_content_address=_ADDRESS),
     )
@@ -128,15 +106,15 @@ def test_a_consented_off_host_dispatch_reaches_the_adapter_and_lands_one_entry(
     """The positive control: consent working means the transmission DOES happen."""
     response = asyncio.run(client.complete(_evidence_request()))
 
-    assert len(client.adapter.dispatched) == 1, "the positive control must actually transmit"
+    assert len(client.service.runs) == 1, "the positive control must actually transmit"
     assert response.text == _COMPLETION_TEXT
 
     entries = EvidenceConsentLedger().load_entries()
     assert len(entries) == 1
     entry = entries[0]
     assert entry.evidence_content_address == _ADDRESS
-    assert entry.provider == LLMProvider.ANTHROPIC.value
-    assert entry.model == "claude-sonnet-4-6"
+    assert entry.provider == LLMProvider.AGENT.value
+    assert entry.model == lane_model_label(DEFAULT_LANE)
     assert entry.surface == _SURFACE
     assert entry.profile_bucket_id
 
@@ -157,7 +135,7 @@ def test_save_custody_surrounds_the_real_append_and_ends_before_dispatch(
 
     assert observed == [("before", None), ("after", True)]
     assert len(EvidenceConsentLedger().load_entries()) == 1
-    assert len(client.adapter.dispatched) == 1
+    assert len(client.service.runs) == 1
 
 
 def test_save_failure_reports_unknown_extent_and_refuses_dispatch(
@@ -186,7 +164,7 @@ def test_save_failure_reports_unknown_extent_and_refuses_dispatch(
         asyncio.run(client.complete(_evidence_request()))
 
     assert observed == [("before", None), ("after", False)]
-    assert client.adapter.dispatched == []
+    assert client.service.runs == []
 
 
 def test_save_custody_requires_both_callbacks() -> None:
@@ -196,9 +174,13 @@ def test_save_custody_requires_both_callbacks() -> None:
 
 def test_an_on_host_or_unmarked_request_records_nothing(client: _CapturingClient) -> None:
     """The ledger records off-host EVIDENCE dispatches, not every completion."""
-    asyncio.run(client.complete(LLMRequest(prompt=_PROMPT, provider_override=LLMProvider.ANTHROPIC)))
+    asyncio.run(
+        client.complete(
+            LLMRequest(prompt=_PROMPT, provider_override=LLMProvider.AGENT, model_role=ModelRole.TEXT_EXTRACTION)
+        )
+    )
 
-    assert len(client.adapter.dispatched) == 1
+    assert len(client.service.runs) == 1
     assert EvidenceConsentLedger().load_entries() == ()
 
 
@@ -237,9 +219,7 @@ def test_a_failed_append_refuses_the_dispatch_and_the_adapter_is_never_reached(
         asyncio.run(client.complete(_evidence_request()))
 
     assert "audit trail" in str(excinfo.value), "the refusal must be the ledger's, not a downstream storage guard's"
-    assert client.adapter.dispatched == [], (
-        "a dispatch whose consent entry could not be appended must not reach the provider"
-    )
+    assert client.service.runs == [], "a dispatch whose consent entry could not be appended must not reach the provider"
 
 
 class _FailingLedger(EvidenceConsentLedger):
@@ -274,14 +254,14 @@ def test_a_failed_append_refuses_even_a_cache_hit(secure_object_test_profile: ob
     primed = _CapturingClient(settings=settings)
     first = asyncio.run(primed.complete(_evidence_request()))
     assert first.cache_hit is False
-    assert len(primed.adapter.dispatched) == 1
+    assert len(primed.service.runs) == 1
 
     served = _CapturingClient(settings=settings)
     cache_hit = asyncio.run(served.complete(_evidence_request()))
     assert cache_hit.cache_hit is True, "the positive control must show the entry really is served from cache"
-    assert served.adapter.dispatched == []
+    assert served.service.runs == []
 
     refused = _CapturingClient(settings=settings, consent_ledger=_FailingLedger())
     with pytest.raises(LLMConsentError):
         asyncio.run(refused.complete(_evidence_request()))
-    assert refused.adapter.dispatched == []
+    assert refused.service.runs == []

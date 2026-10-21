@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-10-19 12:17+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -640,50 +640,51 @@ msgstr ""
 #: ../../how-to/classify-with-llm.md:256
 msgid ""
 "One command can send a document off your machine: `aeat app ledger "
-"evidence extract --off-host-provider <provider>`. It reads invoice "
-"fields, not classifications, and it is off by default. It runs only when "
-"the deployment permits off-host reads, the profile's "
-"`cloud_evidence_upload` capability is on, and you pass `--acknowledge-"
-"off-host` for that one read. Gestor deployments never allow it. Reading "
-"with the Anthropic API also needs the `anthropic` extra. Treat the "
-"document as taxpayer data before you use it. The settings that govern it "
-"are in the [environment overrides reference](../reference/environment-"
-"overrides.md)."
+"evidence extract --off-host-provider AGENT`. It reads invoice fields, not"
+" classifications, and it is off by default. The agent service reads the "
+"document with a provider you set up for the signed-in profile, and `aeat`"
+" holds no model key for it. It runs only when the deployment permits off-"
+"host reads, the profile's `cloud_evidence_upload` capability is on, and "
+"you pass `--acknowledge-off-host` for that one read. Gestor deployments "
+"never allow it. Treat the document as taxpayer data before you use it. "
+"The settings that govern it are in the [environment overrides "
+"reference](../reference/environment-overrides.md)."
 msgstr ""
 "Egy parancs küldhet dokumentumot a gépedről: `aeat app ledger evidence "
-"extract --off-host-provider <provider>`. Számlamezőket olvas, nem "
-"besorolásokat, és alapértelmezés szerint ki van kapcsolva. Csak akkor "
-"fut, ha a telepítés engedélyezi a gépen kívüli olvasást, a profil "
-"`cloud_evidence_upload` képessége be van kapcsolva, és az adott "
-"olvasáshoz megadod az `--acknowledge-off-host` kapcsolót. A gestor "
-"telepítések ezt soha nem engedélyezik. Az Anthropic API-val való "
-"olvasáshoz az `anthropic` extra is kell. Használat előtt kezeld a "
+"extract --off-host-provider AGENT`. Számlamezőket olvas, nem "
+"besorolásokat, és alapértelmezés szerint ki van kapcsolva. Az ügynök "
+"szolgáltatás egy olyan szolgáltatóval olvassa a dokumentumot, amelyet a "
+"bejelentkezett profilhoz beállítottál, és az `aeat` nem tárol hozzá "
+"modellkulcsot. Csak akkor fut, ha a telepítés engedélyezi a gépen kívüli "
+"olvasást, a profil `cloud_evidence_upload` képessége be van kapcsolva, és"
+" az adott olvasáshoz megadod az `--acknowledge-off-host` kapcsolót. A "
+"gestor telepítések ezt soha nem engedélyezik. Használat előtt kezeld a "
 "dokumentumot adózói adatként. A szabályozó beállítások a [környezeti "
 "felülbírálások referenciájában](../reference/environment-overrides.md) "
 "találhatók."
 
-#: ../../how-to/classify-with-llm.md:266
+#: ../../how-to/classify-with-llm.md:267
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/classify-with-llm.md:268
+#: ../../how-to/classify-with-llm.md:269
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Tranzakciók besorolása](classify-transactions.md)"
 
-#: ../../how-to/classify-with-llm.md:269
+#: ../../how-to/classify-with-llm.md:270
 msgid "[Attach invoices and receipts to transactions](ledger-evidence.md)"
 msgstr "[Számlák és bizonylatok csatolása a tranzakciókhoz](ledger-evidence.md)"
 
-#: ../../how-to/classify-with-llm.md:270
+#: ../../how-to/classify-with-llm.md:271
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
-#: ../../how-to/classify-with-llm.md:271
+#: ../../how-to/classify-with-llm.md:272
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[A számítási bemenetek áttekintése és megadása](review-calculation-"
 "values.md)"
 
-#: ../../how-to/classify-with-llm.md:272
+#: ../../how-to/classify-with-llm.md:273
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"

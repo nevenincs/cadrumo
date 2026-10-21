@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import fields, replace
 from types import SimpleNamespace
@@ -11,6 +11,14 @@ from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, ValidationError
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -21,13 +29,6 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import projection_operation
 from ..calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
@@ -116,7 +117,7 @@ def test_closed_public_contracts_and_all_period_commit_access(authority_operatio
         assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
-def test_mcp_result_access_requires_exact_destination_and_tax_values(
+def test_external_client_result_access_requires_exact_destination_and_tax_values(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     registry = _public_registry()
@@ -127,7 +128,6 @@ def test_mcp_result_access_requires_exact_destination_and_tax_values(
     ):
         request = _request(payload)
         contract = registry.lookup_public_contract(request.definition_id)
-        assert OperationFrontendProjection.MCP in contract.permitted_frontends
         assert contract.result_schema is not None
         resolved = resolve_operation_access(
             registry=registry,
@@ -136,7 +136,7 @@ def test_mcp_result_access_requires_exact_destination_and_tax_values(
                 profile_id=_PROFILE,
                 destination_id=destination,
                 action=AccessAction.RESULT,
-                frontend=OperationFrontendProjection.MCP,
+                frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
                 contract=contract,
                 published_authority=Availability.AVAILABLE,
                 authority_operation=authority_operation,
@@ -267,7 +267,7 @@ class _Fence:
     active = False
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         assert not self.active
         self.active = True
         try:

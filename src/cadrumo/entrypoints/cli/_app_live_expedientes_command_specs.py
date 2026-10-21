@@ -1,6 +1,18 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import ArgumentSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    ValueContract,
+)
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ._app_live_command_spec_support import (
     _ENCRYPTED_LOCAL_READ_POLICY,
@@ -14,18 +26,6 @@ from ._app_live_command_spec_support import (
     _PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
     NO_RESULT_SCHEMA,
 )
-from .command_parameter_contracts import ArgumentSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    ValueContract,
-)
-from .command_shared_contracts import translation_key as _key
-from .command_spec import CommandSpec
 
 LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -56,10 +56,12 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _OPTIONAL_YEAR_TO_OPTION,
         ),
         policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_expedientes_cli", "expedientes_pull", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".app_live_expedientes_commands", "expedientes_pull", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_expedientes_payloads", "ExpedientesCaptureResult", __package__),
+            target=DeferredTarget(".app_live_expedientes_results", "ExpedientesCaptureResult", __package__),
             identity="app.live.expedientes.pull",
         ),
     ),
@@ -73,10 +75,12 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=_LEAF_INVOCATION,
         parameters=(),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_expedientes_cli", "expedientes_list", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".app_live_expedientes_commands", "expedientes_list", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_expedientes_payloads", "ExpedientesListResult", __package__),
+            target=DeferredTarget(".app_live_expedientes_results", "ExpedientesListResult", __package__),
             identity="app.live.expedientes.list",
         ),
     ),
@@ -98,10 +102,12 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_expedientes_cli", "expedientes_show", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".app_live_expedientes_commands", "expedientes_show", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_expedientes_payloads", "ExpedientesViewResult", __package__),
+            target=DeferredTarget(".app_live_expedientes_results", "ExpedientesViewResult", __package__),
             identity="app.live.expedientes.view",
         ),
     ),
@@ -115,10 +121,12 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=_LEAF_INVOCATION,
         parameters=(),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_expedientes_cli", "expedientes_latest", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".app_live_expedientes_commands", "expedientes_latest", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_expedientes_payloads", "ExpedientesLatestResult", __package__),
+            target=DeferredTarget(".app_live_expedientes_results", "ExpedientesLatestResult", __package__),
             identity="app.live.expedientes.latest",
         ),
     ),

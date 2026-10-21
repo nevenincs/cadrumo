@@ -8,6 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -35,10 +37,8 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .dependency_projection import DependencyCleanStateSnapshot, DependencyInventoryItemSnapshot
 from .dependency_read_ports import DependencyReadPorts, DependencyReadPortsFactory
@@ -234,11 +234,11 @@ def build_modelo_dependency_definition(factory: DependencyReadPortsFactory) -> O
     return build_single_phase_definition(
         definition_id=MODELO_DEPENDENCY_OPERATION_DEFINITION_ID,
         request_type=ModeloDependencyRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloDependencyResult,
         executor_type=ModeloDependencyExecutor,
         build=lambda: ModeloDependencyExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

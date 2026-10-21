@@ -54,7 +54,7 @@ class ProfileKey(BaseModel):
     @pydantic_validation_boundary
     def _validate_conditional_requirement(cls, value: str | None) -> str | None:
         """Reject blank or padded conditional requirement values."""
-        if value and value.strip() != value:
+        if (value is not None and value) and value.strip() != value:
             raise ProfileValidationError("conditional requirement fields must not be padded")
         if value == "":
             raise ProfileValidationError("conditional requirement fields must not be empty")

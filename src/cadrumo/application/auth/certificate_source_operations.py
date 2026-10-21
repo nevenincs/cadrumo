@@ -5,7 +5,7 @@ transformations with the same active-bucket gating, secure-object
 persistence, and typed bucket-event emission that
 :func:`~application.auth.operator.configure_operator_auth` uses, so registering,
 listing, selecting, or removing a named certificate source is exposed
-through ``aeat config auth certificate ...`` with identical safety
+through ``cadrumo-runtime config auth certificate ...`` with identical safety
 guarantees.
 
 :func:`~application.auth.certificate_source_operations.check_operator_certificate_sources` extends the registry with

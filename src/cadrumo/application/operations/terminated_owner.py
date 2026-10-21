@@ -11,7 +11,7 @@ from .persistence.events import OperationReconciliationEvent, OperationTerminalE
 from .persistence.journal import OperationJournal, OperationLeaseRepository
 from .persistence.leases import OperationLeaseObservationDisposition, operation_conflict_scope_reference
 from .registry import OperationRegistry
-from .settlement_snapshot import settlement_successor
+from .settlement_snapshot import log_settlement, settlement_successor
 
 
 async def settle_terminated_operation(
@@ -87,4 +87,5 @@ async def settle_terminated_operation(
     # Journal revision and complete lease are checked in one exclusion before
     # terminal persistence and release. A raced takeover cannot be deleted.
     await journal.commit_settlement(successor, expected_revision=snapshot.revision, lease=lease)
+    log_settlement(receipt, cause="owner_terminated")
     return True

@@ -8,7 +8,12 @@ Cadrumo is organized around a local profile and a pinned tax-authority generatio
 flowchart TD
   H[Human operator] --> CLI[Typer CLI]
   H --> TUI[Textual workbench]
-  A[Scoped agent client] --> MCP[MCP harness]
+  H --> DESK[Native desktop: verified person frontend]
+  DESK --> AS[Separate agent service]
+  AS --> AG[cadrumo-agent]
+  AS --> IPC
+  DESK --> IPC
+  A[Scoped agent client] --> MCP[Separate MCP harness]
   CLI --> IPC[Native local IPC]
   TUI --> IPC
   MCP --> IPC
@@ -25,6 +30,8 @@ flowchart TD
 The diagram shows execution and data relationships, not permission to import across layer boundaries.
 
 ## Authority and execution
+
+`src/cadrumo` owns the deterministic tax/profile application and AEAT CLI. `src/cadrumo_runtime` owns process hosting, native peer admission, login state, session authority and authentication administration. `src/cadrumo_client` owns the shared typed client API and native transport mechanisms. The tax application and client package never import `cadrumo_runtime`; the host composes the tax application through its public defining modules. AEAT retains direct profile login, logout and creation; all other authentication commands belong to the `cadrumo-runtime` executable. None of these packages owns agent/provider/harness orchestration. `src/cadrumo_agent_service` owns agent processes, provider policy, credentials interpretation, stores and conversations; it has no login authority. `src/cadrumo_harness` owns the separate MCP product, protocol projection and client admission translation. The desktop supervises the service, and the service supervises cadrumo-agent. Service admission requires exact packaged image/module/invocation and kernel peer evidence plus the exact runtime session; a common Python executable, declared client ID or JSON PID cannot grant it.
 
 CLI, TUI and MCP submit through registered operations. Command declarations, UI state and agent prompts cannot grant authority. Native peer/login evidence anchors admission; client-supplied IDs alone do not. Bind boot, frontend, native client, exact profile, session/lease and authority generation, and recheck current authority at private submission, effects, interaction responses and disclosure.
 
@@ -46,7 +53,7 @@ Keep integration authority and evidentiary grade separate: AEAT browser reads ca
 
 ## Code discipline
 
-This rule uses import linting, Ruff lint and formatting checks, type checking, and strict type checking. Use `just check-import-boundaries`, `just check-style`, `just check-format` and `just check-types` for their configured scopes. The type runner uses `ty` across `src` and `pyrefly`/`basedpyright` for the configured strict production subset; do not weaken those scopes to make a change pass.
+This rule uses import linting, Ruff lint and formatting checks, type checking, and strict type checking. Use `uv run --no-sync lint-imports --config .importlinter --no-cache`, `just check-style`, `just check-format` and `just check-types` for their configured scopes. The type runner uses `ty` across `src` and `pyrefly`/`basedpyright` for the configured strict production subset; do not weaken those scopes to make a change pass.
 
 Use relative imports within the actual module/package boundaries, importing from the defining module. Relative syntax must not escape configured package roots or bypass dependency contracts. All rules must be respected when working.
 
@@ -76,3 +83,20 @@ Use the filesystem inclusion policy, explicitly supplied source trees and build 
 - Use the owning worktree and project environment. Preserve unrelated edits, re-read shared files before patching, and coordinate overlapping writers. Do not stash, reset, clean or overwrite concurrent work to obtain a clean baseline. Verify exact resolved paths before destructive filesystem operations.
 - Run focused checks before broader gates; obtain final exit status and confirm the intended tests ran. A tool wait timeout is not process failure. Isolate shared outputs when running checks concurrently, and keep source and compiler inputs stable when proving transformations.
 - Author governance in `.vaultspec/rules` and `.vaultspec/skills`; provider copies are generated. Preserve installation-owned builtins. Keep rules concise and stable, optional procedures in skill references, and agent workflow metadata out of product code and user documentation. Describe scoped inspection findings as observations requiring current-code verification, not accepted exceptions to an invariant.
+
+## Package and responsibility ownership
+
+### Rule
+
+Keep CLI and TUI inside the `cadrumo` tax product, keep generic runtime authority in `cadrumo_runtime`, and classify tests and gates by the contract they assert before repairing imports or moving files.
+
+### Why
+
+The user-confirmed ownership correction in `2026-07-01-import-centralization-adr` supersedes the October 14 TUI placement amendment. A frontend's use of runtime projections does not make it runtime authority; a fixture dependency does not transfer a product assertion's ownership. Tax storage path construction, runtime installation/session layout and distribution inclusion are separate contracts.
+
+### How
+
+- Place Textual operator behavior under `cadrumo.entrypoints.tui`; reach the separately owned runtime through public client contracts and transport.
+- Keep tax CLI/TUI assertions with their product owner. Keep concrete runtime fixture composition and lifetime at the host or repository orchestration seam; use explicit typed fixture interfaces rather than source imports that bypass dependency contracts.
+- Limit a package-local storage provenance gate to its owner's sources and producers. Put cross-package inclusion, wheel/native bundling and installation checks with their declared tooling or runtime owner.
+- When a failing import crosses roles, establish the canonical defining module and asserted responsibility, repair all callers atomically, and verify both the dependency boundary and behavior. Do not move ownership merely to silence collection.

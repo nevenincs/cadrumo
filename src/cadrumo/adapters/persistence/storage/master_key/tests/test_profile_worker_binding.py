@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from os import stat_result
 from pathlib import Path
 from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ..bucket_session import BucketSession
 from ..profile_worker_binding import ProfileWorkerBindingOwner
@@ -103,5 +104,47 @@ def test_replacing_the_root_directory_does_not_preserve_its_identity(tmp_path: P
         root.mkdir()
         with pytest.raises(AutomationCustodyError):
             owner.require_session(active)
+    finally:
+        active.close()
+
+
+def test_canonical_session_skips_resolution_but_checks_physical_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path.resolve()
+    owner, target = ProfileWorkerBindingOwner(), identity()
+    owner.bind(target, storage_root=root)
+    active = session(target, root)
+    original_stat = Path.stat
+    checked: list[Path] = []
+
+    def no_resolution(self: Path, *, strict: bool = False) -> Path:
+        raise AssertionError("canonical session must not repeat native path traversal")
+
+    def stat(self: Path, *, follow_symlinks: bool = True) -> stat_result:
+        checked.append(self)
+        return original_stat(self, follow_symlinks=follow_symlinks)
+
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(Path, "resolve", no_resolution)
+            patch.setattr(Path, "stat", stat)
+            for _ in range(3):
+                owner.require_session(active)
+            assert checked == [root, root, root]
+    finally:
+        active.close()
+
+
+def test_noncanonical_session_still_resolves_its_root(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    child = root / "child"
+    child.mkdir()
+    owner, target = ProfileWorkerBindingOwner(), identity()
+    owner.bind(target, storage_root=root)
+    active = session(target, child / "..")
+    try:
+        owner.require_session(active)
     finally:
         active.close()

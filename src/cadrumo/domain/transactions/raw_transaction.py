@@ -235,7 +235,7 @@ class RawTransaction(BaseModel):
     @pydantic_validation_boundary
     def _freeze_raw_fields(cls, value: Mapping[str, str]) -> Mapping[str, str]:
         """Freeze ``raw_fields`` into an immutable mapping with stringified entries."""
-        return MappingProxyType({str(key): str(raw) for key, raw in value.items()})
+        return MappingProxyType(dict(value))
 
     @field_serializer("raw_fields")
     def _serialize_raw_fields(self, value: Mapping[str, str]) -> dict[str, str]:

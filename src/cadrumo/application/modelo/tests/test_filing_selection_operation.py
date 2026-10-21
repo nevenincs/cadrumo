@@ -11,6 +11,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
+
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -26,7 +29,6 @@ from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitSt
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessRequest
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..amendment_context_operation import (
     MODELO_WORK_AMENDMENT_CONTEXT_OPERATION_DEFINITION_ID,
@@ -151,13 +153,17 @@ def _request(record: ModeloRecord, *, profile_id: UUID = _PROFILE) -> OperationR
 
 
 def _access_context(
-    registration, *, operation: PinnedAuthorityOperation | None, profile_id: UUID = _PROFILE
+    registration,
+    *,
+    operation: PinnedAuthorityOperation | None,
+    profile_id: UUID = _PROFILE,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
         authority_operation=operation,
@@ -251,6 +257,24 @@ def test_filing_reader_scopes_submission_to_exact_profile_record_and_period(
     )
     assert result_binding.identity == registration.contract.result_schema
     assert result_binding.model_type is ModeloWorkFilingRecordProjection
+
+
+def test_filing_reader_is_admitted_on_the_external_client_frontend_without_a_commit_door(
+    *, operation: PinnedAuthorityOperation
+) -> None:
+    unit, record = _source()
+    _definition, registration, registry = _build(_bundle(unit=unit, record=record))
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(record),
+        context=_access_context(
+            registration, operation=operation, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
+        ),
+    )
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
+    assert resolved.request.periods == frozenset({unit.period})
+    assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 @pytest.mark.parametrize(

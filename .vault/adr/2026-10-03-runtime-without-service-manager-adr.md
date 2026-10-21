@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-without-service-manager'
 date: '2026-10-03'
-modified: '2026-10-04'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:b38ec14df5e713f091f8f8d2b09d071f7ddad2f11da0258d3fc9314cf5aaa16a'
+body_hash: 'sha256:7c2b010e2fefba13aadda17b183641ba4bba8b839fdef33a36fdf339d48f3b38'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-adr]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
@@ -27,7 +27,7 @@ On 2026-10-03 the operator explicitly authorized amending the runtime and relate
 
 The existing runtime already has a standalone entrypoint and verified endpoint. Its sealed interpreter, single-owner exclusion, profile admission, custody and worker containment do not require runtime administration controls. Evidence is in 2026-09-26-mcp-purpose-authentication-reference and 2026-10-03-runtime-manager-architecture-research. Those records retain historical observations; they do not authorize management implementation.
 
-The code inspection identified management in `src/cadrumo/adapters/local_runtime/startup.py`, `runtime_manager_composition.py`, the platform manager adapters, CLI runtime commands, TUI management screens, and owner-control/status transport requests. Removing only registration would leave health management in place and would not implement the operator's instruction.
+The code inspection identified management in `src/cadrumo_client/transport/startup.py`, `runtime_manager_composition.py`, the platform manager adapters, CLI runtime commands, TUI management screens, and owner-control/status transport requests. Removing only registration would leave health management in place and would not implement the operator's instruction.
 
 ## Considered options
 
@@ -43,7 +43,7 @@ Preserve the runtime executable, isolated bootstrap, verified local IPC and hand
 
 Transient worker containment remains part of runtime safety, including native Job Objects and Linux transient worker scopes. Login observation remains an admission input. Neither authorizes persistent runtime registration or a health-management interface.
 
-Scheduled tasks are unsupported, including temporary testing, authentication, desktop-session bridges and recovery workarounds. Do not create, register, run or recreate them. There is no provisioned runtime application at present; developers manage the runtime manually for testing. Missing desktop access is reported, never bridged through scheduled tasks or services. An unavailable runtime is the per-user manager's to recover.
+There is no provisioned runtime application at present; developers manage the runtime manually for testing. Missing desktop access is reported, never bridged through services. An unavailable runtime is the per-user manager's to recover.
 
 Management controls on the runtime transport stay excluded. The runtime hosts only the private supervisor contract in `2026-10-04-runtime-manager-architecture-supervisor-contract-adr`. Product lifecycle management, including login registration, belongs to the per-user manager in `2026-10-04-runtime-manager-architecture-adr`. Clients connect to a verified runtime and report typed unavailability when no verified endpoint exists; they never start one.
 
@@ -69,4 +69,4 @@ The runtime remains the shared execution and custody authority. Clients require 
 
 The earlier service-installation and health-management approach is withdrawn. Management is deferred, not permanently prohibited: reconsider it only with application bundling, building and provisioning. Acceptance records the operator-authorized scope; code removal and cross-platform verification must be reported separately.
 
-Amendment accepted 2026-10-04 under the operator's approval of `2026-10-04-runtime-manager-architecture-adr`. That record resolves the launch and management deferral. The removal of the old scheduled-task management, the development session override and the test-owned lifetimes stand unchanged.
+Amendment accepted 2026-10-04 under the operator's approval of `2026-10-04-runtime-manager-architecture-adr`. That record resolves the launch and management deferral. The removal of the old ad hoc launcher, the development session override and the test-owned lifetimes stand unchanged.

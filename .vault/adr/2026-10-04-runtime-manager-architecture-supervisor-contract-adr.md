@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-04'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:1909a4297942f215019e762c283e94f428e302c9df0dad7d8b08cc4f39c2c8a3'
+body_hash: 'sha256:1e9ec4b84947f2f45f626fffc7a99ab6dad1b4f98126b0461d29f134413aca27'
 related:
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
@@ -96,13 +96,25 @@ The supervisor must not widen authority. The MCP adapter "must not stop a shared
 Unconfirmed work keeps its lease until normal expiry. The settle must fit inside the platform's session-end budget (*hypothesis*: 3 s).
 
 **Exit reasons.**
-- The table is owned by `src/cadrumo/application/runtime/contracts.py` and projected to Rust through the contract generator.
+- The table is owned by `src/cadrumo_client/contracts/contracts.py` and projected to Rust through the contract generator.
 - It reserves Python's `1`, argparse's `2`, CPython's `120`, the native host's `120`-`124`, `STATUS_CONTROL_C_EXIT` and other NTSTATUS crash codes, and POSIX signal exits.
 - CPython's own configuration and argv paths can exit with `1` or `2` before the runtime runs. The supervisor reads those as launch failures, never as runtime-defined reasons.
 
 **Elevation.** A supervised runtime refuses a full UAC-elevated token (`TokenElevationTypeFull`). Accounts with UAC disabled are not refused. The packaged binary is `asInvoker`, so this applies only when its parent is already elevated.
 
 **Readiness.** Client readiness remains the authenticated handshake. A `ready` line is the launched process's own assertion and never stands in for client readiness.
+
+### 2026-10-09 authorized admission amendment
+
+The user explicitly removed desktop/logon launch-context admission. Earlier requirements to reject Session 0, missing desktop witnesses, or elevated launch contexts are superseded within Windows manager/runtime operation. A verified same-account native process and its actual token logon may authenticate without a desktop. Desktop lock observation remains applicable when a desktop is positively bound; a native non-desktop logon has no screen-lock surface. Passwords, receipts and approved exact-profile MCP grants remain required. Native peer identity, executable verification, storage ownership, credential revocation and process ownership are unchanged. Runtime recovery follows the owning manager lifetime until explicit stop or session-end, rather than requiring an active WTS desktop. Evidence and implementation: `2026-10-09-runtime-process-lifecycle-plan`.
+
+### 2026-10-10 authorized Windows optional-installation amendment
+
+The user's explicit continuation accepts the revised topology in 2026-10-04-runtime-manager-architecture-adr: optional machine installation owns an automatic SCM lifecycle broker, user installation owns unprivileged login startup, and a running GUI hosts the shared manager core when no installed manager owns its session. This supersedes earlier no-service, mandatory-installation and separate-manager-only statements within Windows product startup. The boot broker launches only verified machine-installed manager workers using genuine per-user logon tokens and owns no taxpayer runtime or credentials as SYSTEM. Native authentication, profile/session binding, runtime supervisor framing, operation custody and connect-only CLI/TUI/MCP remain unchanged. Registered service existence is distinct from running state and authenticated runtime readiness. Actual boot/login/service acceptance must be reported independently from authored metadata and command-only package fallback evidence.
+
+### 2026-10-17 authorized idle heartbeat amendment
+
+The user accepted the recommendation that the heartbeat follow the work the runtime reports ("go with rexommedstion", 2026-10-17). After a fresh heartbeat whose in-flight operation count is exactly zero, the next ping is due 60 s later. A nonzero or unknown count, or a reply whose accept-loop tick is not fresh, keeps the 5 s interval. After an idle heartbeat the hang bound starts from that later ping, so the runtime keeps 25 s past an unanswered ping to answer fresh: a busy runtime counts as hung 30 s after its last fresh heartbeat, as before, and an idle one 85 s after. A hang that begins while the runtime is idle, or as work starts within the idle interval, is therefore found within 85 s rather than 30 s. The ping and heartbeat lines, accept-loop freshness, stop escalation and restart classes are unchanged. Evidence: `2026-10-16-idle-churn-audit`, finding idle-supervisor-heartbeat. Implementation: `2026-10-16-idle-churn-plan` S20.
 
 ## Implementation
 

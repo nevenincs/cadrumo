@@ -44,10 +44,10 @@ def _layouts() -> tuple[FormLayoutDefinition, ...]:
 def _named_headings(layout: FormLayoutDefinition) -> Iterator[tuple[str, str]]:
     """Yield every heading key the layout declares together with the official words it names."""
     for page in layout.pages:
-        if page.official_ref:
+        if page.official_ref is not None and page.official_ref:
             yield page.heading_key, page.official_ref
         for section in page.sections:
-            if section.official_heading:
+            if section.official_heading is not None and section.official_heading:
                 yield section.heading_key, section.official_heading
             for block in section.blocks:
                 if isinstance(block, FormGridBlock):
@@ -62,7 +62,7 @@ def test_every_shared_column_is_translated(locale: str) -> None:
     missing = sorted(
         key
         for key in SHARED_COLUMN_KEYS
-        if not lookup_translation(f"{SHARED_COLUMN_HEADING_KEY_PREFIX}.{key}", locale=locale)
+        if not bool(lookup_translation(f"{SHARED_COLUMN_HEADING_KEY_PREFIX}.{key}", locale=locale))
     )
     assert missing == []
 
@@ -75,7 +75,7 @@ def test_every_named_heading_of_the_most_filed_modelos_is_translated(locale: str
             key
             for layout in _layouts()
             for key, _official in _named_headings(layout)
-            if lookup_translation(key, locale=locale)
+            if bool(lookup_translation(key, locale=locale))
         }
     )
     assert missing == []

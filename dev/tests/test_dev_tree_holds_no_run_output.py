@@ -70,6 +70,7 @@ _RESOLUTION_DEPTH: Final[int] = 6
 #: Adding a run's output to this mapping is the mistake the gate exists to stop
 #: -- send it to `.logs/` through `allocate_run_directory` instead.
 _CURATED_DEV_DESTINATIONS: Final[dict[str, str]] = {
+    "dev/agent_eval/live/package_host.py": "the authored package-side host script the copied interpreter executes",
     "dev/ci/python-runtime-matrix.json": "the pinned interpreter matrix the runtime gates read",
     "dev/docs/terminology/evaluation/held-out-queries.json": "the committed query set a sweep is measured against",
     "dev/docs/terminology/ratification/synonym-candidates.json": "the reviewed synonym queue; mining preserves review",

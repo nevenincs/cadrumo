@@ -1,6 +1,6 @@
 # Identity and naming
 
-The Agencia Estatal de AdministraciÃ³n Tributaria (AEAT) is the external tax
+The Agencia Estatal de Administración Tributaria (AEAT) is the external tax
 authority. CLI means command-line interface. MCP means Model Context Protocol.
 
 ## Canonical product identity

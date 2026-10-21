@@ -53,8 +53,12 @@ def test_145_family_tables_preserve_each_record_slot_and_disclose_historical_sco
     assert len(layout.placements) == len(revision.casillas) == 56
     control = next(p for p in layout.placements if p.casilla_id == "comunicacion.pagina-complementaria")
     assert control.workbook_exclusion == "transport_control"
-    assert control.workbook_exclusion_reason and "byte 10" in control.workbook_exclusion_reason
+    assert (
+        control.workbook_exclusion_reason is not None and control.workbook_exclusion_reason
+    ) and "byte 10" in control.workbook_exclusion_reason
     assert all(p.box_number is None for p in layout.placements)
     assert layout.review.state.value == "generated"
-    assert layout.review.notes and "not a verified current payer communication" in layout.review.notes
+    assert (
+        layout.review.notes is not None and layout.review.notes
+    ) and "not a verified current payer communication" in layout.review.notes
     assert {str(s.source_ref) for s in layout.design_sources} == {"aeat-dr-145-v20"}

@@ -13,9 +13,9 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 
 from ....core.aggregation import IntracomOperationType
 from ...calculations.registry.authority import bundled_indexed_authority
-from ...iva.classification import InvoiceKind, TransactionKind
+from ...iva.classification import TransactionKind
 from ...iva.oss import OssIossRegime
-from ...iva.schema import EUMemberState, IvaCategory, IvaRateKind
+from ...iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind
 from ..enums import (
     InvoiceClass,
     InvoiceLegalMention,

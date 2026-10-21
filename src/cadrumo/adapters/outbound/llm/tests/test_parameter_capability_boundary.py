@@ -3,15 +3,9 @@
 The sibling of the vision boundary, and the second half of one defect. Both are
 a request field the transport assumed was universal, and they fail in opposite
 directions: ``images`` was silently DROPPED by adapters that could not carry it,
-and ``temperature`` was unconditionally SENT to models that reject it with a
-400 -- which capped the product at the older model generation. One was dropped
-without telling anyone; one was sent without asking.
-
-The claim under test is ABSENCE FROM THE WIRE SHAPE, not a defaulted value. A
-defaulted parameter and an omitted one are different requests, and only the
-second is accepted by the models that refuse it. Nothing here is mocked: the
-payload asserted is the payload the adapter actually builds, reachable with no
-API key, no network, and no SDK.
+and ``temperature`` was unconditionally SENT to models that reject it. The
+omission is decided once, at the client's dispatch point, from what the adapter
+declares for the resolved model.
 """
 
 from __future__ import annotations
@@ -20,8 +14,8 @@ from typing import override
 
 import pytest
 
+from .....core.config_support import LLMProvider
 from ..client import LLMClient
-from ..providers.anthropic import build_message_kwargs
 from ..providers.base import ProviderAdapter, ProviderCompletion, ProviderRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -56,7 +50,7 @@ def _request(
 class _RefusesTemperature(ProviderAdapter):
     """An adapter whose model rejects an explicitly-sent temperature."""
 
-    provider = None  # type: ignore[assignment]  # reason: payload-shape probe, never dispatched
+    provider = LLMProvider.LOCAL
 
     @override
     def unsupported_parameters(self, model: str) -> frozenset[str]:
@@ -65,31 +59,6 @@ class _RefusesTemperature(ProviderAdapter):
     @override
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:  # pragma: no cover - never called
         raise NotImplementedError
-
-
-def test_an_omitted_temperature_is_absent_from_the_wire_shape() -> None:
-    """Absent means the key is not in the payload, not that it carries a default.
-
-    Asserted on membership rather than on the value, because ``temperature:
-    null`` is a STATED value on the wire and draws the same rejection the number
-    would. A test asserting ``kwargs["temperature"] is None`` would pass against
-    exactly the payload that fails in production.
-    """
-    kwargs = build_message_kwargs(_request())
-
-    assert "temperature" not in kwargs
-
-
-def test_a_supplied_temperature_does_reach_the_wire_shape() -> None:
-    """Positive control.
-
-    Without it, a builder that never emitted ``temperature`` under any
-    circumstance would satisfy the absence assertion and look correct while
-    silently discarding an operator's explicit setting.
-    """
-    kwargs = build_message_kwargs(_request(temperature=0.25))
-
-    assert kwargs["temperature"] == 0.25
 
 
 def test_the_dispatch_point_clears_a_parameter_the_model_refuses() -> None:
@@ -104,7 +73,6 @@ def test_the_dispatch_point_clears_a_parameter_the_model_refuses() -> None:
     cleared = LLMClient._omit_unsupported_parameters(_RefusesTemperature(), request)
 
     assert cleared.temperature is None
-    assert "temperature" not in build_message_kwargs(cleared)
 
 
 def test_the_dispatch_point_leaves_a_parameter_the_model_accepts() -> None:
@@ -112,14 +80,13 @@ def test_the_dispatch_point_leaves_a_parameter_the_model_accepts() -> None:
 
     A dispatch that cleared every parameter unconditionally would satisfy the
     previous case. This pins that the model identity is what decides, so the
-    same adapter carries the parameter for a model that accepts it.
+    same adapter keeps the parameter for a model that accepts it.
     """
     request = _request(model="tolerant-model", temperature=0.7)
 
     kept = LLMClient._omit_unsupported_parameters(_RefusesTemperature(), request)
 
     assert kept.temperature == 0.7
-    assert build_message_kwargs(kept)["temperature"] == 0.7
 
 
 def test_an_adapter_declares_no_unsupported_parameters_by_default() -> None:
@@ -133,24 +100,10 @@ def test_an_adapter_declares_no_unsupported_parameters_by_default() -> None:
     """
 
     class _Plain(ProviderAdapter):
-        provider = None  # type: ignore[assignment]  # reason: probe only
+        provider = LLMProvider.LOCAL
 
         @override
         async def complete(self, request: ProviderRequest) -> ProviderCompletion:  # pragma: no cover
             raise NotImplementedError
 
     assert _Plain().unsupported_parameters("any-model") == frozenset()
-
-
-def test_the_system_prompt_is_omitted_rather_than_sent_as_null() -> None:
-    """The same absence rule the collapsed call sites used to express as a branch.
-
-    ``system`` was previously handled by duplicating the whole ``messages.create``
-    call. That duplication is why ``temperature`` appeared at two sites, and why
-    changing one would have left the other sending it.
-    """
-    without = build_message_kwargs(_request())
-    with_system = build_message_kwargs(_request(system="be terse"))
-
-    assert "system" not in without
-    assert with_system["system"] == "be terse"

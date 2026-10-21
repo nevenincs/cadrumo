@@ -20,6 +20,12 @@
 {% block extrahead %}
   {{ super() }}
   <meta name="cadrumo-docs-site-prefix" content="{{ cadrumo_docs_site_prefix | default('', true) }}">
+  {% if cadrumo_web_icons %}
+  <link rel="icon" href="{{ pathto('_static/cadrumo-favicon.ico', 1) }}" sizes="32x32">
+  <link rel="icon" href="{{ pathto('_static/cadrumo-favicon.svg', 1) }}" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="{{ pathto('_static/cadrumo-icon-square-180.png', 1) }}">
+  <link rel="manifest" href="{{ pathto('_static/cadrumo.webmanifest', 1) }}">
+  {% endif %}
 {% endblock extrahead %}
 
 {# Sphinx loads its own interface strings from _static/translations.js and adds

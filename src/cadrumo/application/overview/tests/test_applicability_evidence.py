@@ -41,7 +41,7 @@ from ....domain.deadlines.models import (
 )
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...invoices.source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts
 from ...user_profile.projections import projection_for_taxpayer

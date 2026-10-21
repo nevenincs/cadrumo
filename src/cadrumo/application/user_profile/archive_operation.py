@@ -15,6 +15,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -36,7 +38,7 @@ from ..operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
     bind_operation_access_profile,
-    require_declared_frontend_and_action,
+    require_declared_action,
     require_period_independent_replay_or_authority,
 )
 from ..operations.capabilities import (
@@ -52,12 +54,9 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
 )
-from .access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .access_errors import ProfileAccessRefusedError
 from .archive_operation_ports import (
     ProfileArchiveOperationPorts,
@@ -65,12 +64,11 @@ from .archive_operation_ports import (
     ProfileArchivePushReport,
 )
 from .bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportReconcileFailure
-from .capsule_archive import ProfileCapsuleArchiveReceipt
+from .capsule_archive import ProfileCapsuleArchiveReceipt, refuse_unwritable_profile_capsule_archive_target
 
 PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID = "profile.archive.export"
 PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID = "profile.archive.push"
 PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID = "profile.archive.reconcile"
-_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
 
 
 class ProfileArchiveExportRequest(BaseModel):
@@ -224,6 +222,9 @@ def _execute_archive_work[T: BaseModel](
 ) -> _ProfileArchiveExecutionResult:
     require_operation_profile(request, context, payload.profile_id)
     if isinstance(payload, ProfileArchiveExportRequest):
+        # Refused here for every client alike: a caller that submits this
+        # operation directly gets the refusal a command gives before it submits.
+        refuse_unwritable_profile_capsule_archive_target(payload.target)
         receipt = ports.export(payload.target, write=tracker.call_writer)
         snapshot = ProfileArchiveExportReceiptSnapshot.model_validate(receipt.model_dump())
         return ProfileArchiveExportExecutionResult(
@@ -411,13 +412,12 @@ def resolve_profile_archive_operation_access(
         str(payload.profile_id)
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    frontends = _FRONTENDS
     access_profile = (
         HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
         if mutation
         else HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
     )
-    require_declared_frontend_and_action(context, frontends=frontends, actions=access_profile.actions)
+    require_declared_action(context, actions=access_profile.actions)
     require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
     return bind_operation_access_profile(
         context, access_profile, profile_id=payload.profile_id, definition_id=expected, periods=frozenset()
@@ -513,22 +513,26 @@ def _capabilities(effects: frozenset[OperationEffect]) -> OperationCapabilities:
 def build_profile_archive_operation_definitions(
     factory: ProfileArchiveOperationPortsFactory,
 ) -> tuple[OperationDefinition, ...]:
-    """Register the complete existing human archive family without agent escalation."""
+    """Register the complete existing human archive family without automation escalation."""
     return (
         build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID,
             request_type=ProfileArchiveExportRequest,
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=ProfileArchiveExportExecutionResult,
             executor_type=ProfileArchiveExportExecutor,
             build=lambda: ProfileArchiveExportExecutor(factory),
             capabilities=_capabilities(
                 frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN})
             ),
-            permitted_frontends=_FRONTENDS,
+            # A refused destination names the suffix the path needs, which a
+            # client can only act on if the refusal's detail reaches it.
+            public_error_detail=True,
         ),
         build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID,
             request_type=ProfileArchivePushRequest,
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=ProfileArchivePushExecutionResult,
             executor_type=ProfileArchivePushExecutor,
             build=lambda: ProfileArchivePushExecutor(factory),
@@ -537,16 +541,15 @@ def build_profile_archive_operation_definitions(
             capabilities=_capabilities(
                 frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN})
             ),
-            permitted_frontends=_FRONTENDS,
         ),
         build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID,
             request_type=ProfileArchiveReconcileRequest,
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=ProfileArchiveReconcileExecutionResult,
             executor_type=ProfileArchiveReconcileExecutor,
             build=lambda: ProfileArchiveReconcileExecutor(factory),
             capabilities=_capabilities(frozenset(OperationEffect)),
-            permitted_frontends=_FRONTENDS,
         ),
     )
 

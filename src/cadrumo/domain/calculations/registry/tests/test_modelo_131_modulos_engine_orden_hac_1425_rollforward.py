@@ -131,7 +131,7 @@ def _run_hac_1425_engine(
         "131", filing_year=_ORDEN_HAC_1425_2025_EXERCISE, period="1T", grade=RegistryAuthorityGrade.CALCULATION
     )
     assert snapshot.filing_period is not None
-    text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
+    text_inputs = {"modulos-epigrafe": epigrafe} if (epigrafe is not None and epigrafe) else {}
     result = calculate_registry_snapshot(
         snapshot,
         inputs={

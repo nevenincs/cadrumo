@@ -38,7 +38,7 @@ def _raising_filter(error: BaseException) -> logging.Filter:
 
 def _logger() -> tuple[logging.Logger, _Capture]:
     get_logger("cadrumo.tests.startup_phase_log")
-    logger = logging.Logger("cadrumo.tests.startup_phase_log", level=logging.INFO)
+    logger = logging.Logger("cadrumo.tests.startup_phase_log", level=logging.DEBUG)
     logger.propagate = False
     capture = _Capture()
     logger.addHandler(capture)
@@ -59,7 +59,7 @@ def test_enter_record_has_fixed_message_and_extras() -> None:
     log_startup_phase(logger, "manager_start", "enter", 0.0)
 
     (record,) = capture.records
-    assert record.levelno == logging.INFO
+    assert record.levelno == logging.DEBUG
     assert record.name == "cadrumo.tests.startup_phase_log"
     assert record.getMessage() == "runtime_startup phase=manager_start transition=enter elapsed_seconds=0.000000"
     assert _fields(record) == ("manager_start", "enter", 0.0)
@@ -121,7 +121,7 @@ def test_context_manager_propagates_body_error_as_the_primary() -> None:
 
     assert raised.value is primary
     assert [_fields(r)[:2] for r in capture.records] == [("manager_inspect", "enter"), ("manager_inspect", "leave")]
-    assert capture.records[-1].levelno == logging.WARNING
+    assert capture.records[-1].levelno == logging.ERROR
     assert capture.records[-1].__dict__["outcome"] == "failed"
     assert capture.records[-1].__dict__["error_type"] == "ValueError"
     assert "body failure" not in capture.records[-1].getMessage()
@@ -139,8 +139,65 @@ def test_context_manager_keeps_body_error_when_leave_logging_is_interrupted() ->
     assert [_fields(r)[1] for r in capture.records] == ["enter"]
 
 
+@pytest.mark.parametrize("expected", [True, False])
+def test_expected_refusal_preserves_the_error_without_reporting_a_startup_crash(expected: bool) -> None:
+    logger, capture = _logger()
+    primary = PermissionError("private password refusal")
+    with (
+        pytest.raises(PermissionError) as raised,
+        startup_phase(logger, "worker_human_proof", expected_refusals=(PermissionError,) if expected else ()),
+    ):
+        raise primary
+    assert raised.value is primary
+    record = capture.records[-1]
+    assert record.__dict__["outcome"] == ("refused" if expected else "failed")
+    assert record.levelno == (logging.DEBUG if expected else logging.ERROR)
+    assert record.__dict__["error_type"] == "PermissionError"
+    assert "private password refusal" not in record.getMessage()
+
+
 def test_context_manager_raises_leave_interruption_without_a_body_error() -> None:
     logger, _ = _logger()
 
     with pytest.raises(_Interrupted), startup_phase(logger, "existing_connect"):
         logger.addFilter(_raising_filter(_Interrupted()))
+
+
+class _RefusedError(Exception):
+    reason = "SESSION_REVOKED"
+
+
+class _UnavailableError(Exception):
+    pass
+
+
+def test_failed_leave_names_the_wrapped_refusal_without_messages() -> None:
+    logger, capture = _logger()
+
+    with pytest.raises(_UnavailableError), startup_phase(logger, "tui_workbench_load"):
+        try:
+            raise _RefusedError("synthetic-refusal-text")
+        except _RefusedError as refusal:
+            raise _UnavailableError("synthetic-wrapper-text") from refusal
+
+    leave = capture.records[-1]
+    assert leave.levelno == logging.ERROR
+    assert leave.__dict__["reason"] == "SESSION_REVOKED"
+    chain = leave.__dict__["error_chain"]
+    assert isinstance(chain, str)
+    assert chain.startswith("cadrumo.core.tests.test_startup_phase_log._UnavailableError@")
+    assert leave.__dict__["root_cause"].startswith(
+        "cadrumo.core.tests.test_startup_phase_log._RefusedError[SESSION_REVOKED]@"
+    )
+    assert "synthetic-" not in chain
+
+
+def test_failed_leave_without_a_cause_carries_no_chain() -> None:
+    logger, capture = _logger()
+
+    with pytest.raises(_UnavailableError), startup_phase(logger, "tui_workbench_load"):
+        raise _UnavailableError("wrapper message")
+
+    leave = capture.records[-1]
+    assert "error_chain" not in leave.__dict__
+    assert "reason" not in leave.__dict__

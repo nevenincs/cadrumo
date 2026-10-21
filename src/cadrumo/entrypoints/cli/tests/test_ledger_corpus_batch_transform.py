@@ -1,37 +1,41 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 
-from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend
-from ._ledger_corpus_support import (
-    _import_corpus,
-    _invoke,
-    _list_payload,
-    _match,
-    _oracle_rules,
-    _set_group,
+from ...tests.ledger_corpus_support import (
+    import_ledger_corpus,
+    invoke_corpus_cli,
+    list_corpus_ledger_payload,
+    load_corpus_oracle_rules,
+    match_corpus_rule,
+    set_corpus_transaction_group,
 )
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .profile_world_fixtures import recorded_fx_isolated_backend
 
 __all__ = ["recorded_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def test_batch_transform_recategorize_relabel_reallocate_at_scale(tmp_path: Path) -> None:
-    _import_corpus()
+def test_batch_transform_recategorize_relabel_reallocate_at_scale(
+    tmp_path: Path, invoke_cli: Callable[..., Result]
+) -> None:
+    import_ledger_corpus(invoke_cli=invoke_cli)
     rows = _list_rows()
-    rules = _oracle_rules()
+    rules = load_corpus_oracle_rules()
 
     lines = ["transaction_id,classification,category_id"]
     targeted: dict[str, str] = {}
     for row in rows:
         tx_id = row["transaction_id"]
         assert isinstance(tx_id, str)
-        rule = _match(row["description"], rules)
+        rule = match_corpus_rule(row["description"], rules)
         if rule is None or rule["classification"] != "BUSINESS":
             continue
         cat_raw = rule.get("category_id")
@@ -42,7 +46,9 @@ def test_batch_transform_recategorize_relabel_reallocate_at_scale(tmp_path: Path
 
     recat_csv = tmp_path / "recategorize.csv"
     recat_csv.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    res = _invoke(["--format", "json", "app", "ledger", "classify", "--file", str(recat_csv)])
+    res = invoke_corpus_cli(
+        ["--format", "json", "app", "ledger", "classify", "--file", str(recat_csv)], invoke_cli=invoke_cli
+    )
     assert res.exit_code == 0, res.output
     payload = json.loads(res.output)["result"]
     assert payload["applied"] == len(targeted), payload
@@ -52,8 +58,8 @@ def test_batch_transform_recategorize_relabel_reallocate_at_scale(tmp_path: Path
 
     slice_ids = list(targeted)[:60]
     for tx_id in slice_ids:
-        _set_group(tx_id, "Cierre 2025")
-    grouped = _list_payload("--group", "Cierre 2025")
+        set_corpus_transaction_group(tx_id, "Cierre 2025", invoke_cli=invoke_cli)
+    grouped = list_corpus_ledger_payload("--group", "Cierre 2025", invoke_cli=invoke_cli)
     assert {row["transaction_id"] for row in grouped["rows"]} == set(slice_ids)
 
     mixed_ids = slice_ids[:20]
@@ -61,7 +67,9 @@ def test_batch_transform_recategorize_relabel_reallocate_at_scale(tmp_path: Path
     realloc += [f"{tx_id},MIXED,0.60" for tx_id in mixed_ids]
     realloc_csv = tmp_path / "reallocate.csv"
     realloc_csv.write_text("\n".join(realloc) + "\n", encoding="utf-8")
-    res2 = _invoke(["--format", "json", "app", "ledger", "classify", "--file", str(realloc_csv)])
+    res2 = invoke_corpus_cli(
+        ["--format", "json", "app", "ledger", "classify", "--file", str(realloc_csv)], invoke_cli=invoke_cli
+    )
     assert res2.exit_code == 0, res2.output
     payload2 = json.loads(res2.output)["result"]
     assert payload2["applied"] == len(mixed_ids), payload2

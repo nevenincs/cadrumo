@@ -20,7 +20,14 @@ use std::path::{Path, PathBuf};
 #[derive(Deserialize)]
 struct Contract {
     desktop_defaults: Defaults,
-    storage_environment_allowlist: Vec<String>,
+    application_environment: ApplicationEnvironment,
+}
+
+/// The storage root and the member locations an operator may relocate.
+#[cfg(windows)]
+#[derive(Deserialize)]
+struct ApplicationEnvironment {
+    location_names: Vec<String>,
 }
 
 #[cfg(windows)]
@@ -35,28 +42,34 @@ struct Defaults {
 /// A refused location records only the safe typed failure and remains buffered.
 pub fn configure(parent: &Parent, diagnostics: &Diagnostics) {
     #[cfg(windows)]
-    {
-        let outcome: Result<()> = (|| {
-            let contract: Contract =
-                serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
-                    .map_err(|error| unavailable().caused_by(error))?;
-            let executable =
-                std::env::current_exe().map_err(|error| unavailable().caused_by(error))?;
-            if let Some(directory) = location(&executable, parent, &contract)? {
-                diagnostics.configure(
-                    &directory,
-                    contract.desktop_defaults.log_max_bytes,
-                    contract.desktop_defaults.log_backups,
-                )?;
-            }
-            Ok(())
-        })();
-        if let Err(error) = outcome {
-            diagnostics.failure(error);
-        }
+    match std::env::current_exe() {
+        Ok(executable) => configure_for(&executable, parent, diagnostics),
+        Err(error) => diagnostics.failure(unavailable().caused_by(error)),
     }
     #[cfg(not(windows))]
     let _ = (parent, diagnostics);
+}
+
+/// Configure startup logging for the host at `executable`, whose location decides
+/// whether it is installed or a development build.
+#[cfg(windows)]
+fn configure_for(executable: &Path, parent: &Parent, diagnostics: &Diagnostics) {
+    let outcome: Result<()> = (|| {
+        let contract: Contract =
+            serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
+                .map_err(|error| unavailable().caused_by(error))?;
+        if let Some(directory) = location(executable, parent, &contract)? {
+            diagnostics.configure(
+                &directory,
+                contract.desktop_defaults.log_max_bytes,
+                contract.desktop_defaults.log_backups,
+            )?;
+        }
+        Ok(())
+    })();
+    if let Err(error) = outcome {
+        diagnostics.failure(error);
+    }
 }
 
 #[cfg(windows)]
@@ -71,11 +84,15 @@ fn location(executable: &Path, parent: &Parent, contract: &Contract) -> Result<O
         storage::{detect_mode, resolve_storage_root_with, validated_absolute_path},
     };
     if parent.environment.iter().any(|(key, value)| {
-        contract.storage_environment_allowlist.iter().any(|name| {
-            key.to_string_lossy().eq_ignore_ascii_case(name)
-                && !name.eq_ignore_ascii_case(ROOT_VARIABLE)
-                && !value.to_string_lossy().trim().is_empty()
-        })
+        contract
+            .application_environment
+            .location_names
+            .iter()
+            .any(|name| {
+                key.to_string_lossy().eq_ignore_ascii_case(name)
+                    && !name.eq_ignore_ascii_case(ROOT_VARIABLE)
+                    && !value.to_string_lossy().trim().is_empty()
+            })
     }) {
         return Ok(None);
     }
@@ -143,17 +160,25 @@ mod tests {
         }
     }
 
+    /// A development host inside a scratch checkout, so mode detection never depends on
+    /// where the test binary itself was built.
+    fn development_host(scratch: &Scratch) -> PathBuf {
+        let checkout = scratch.0.join("checkout");
+        fs::create_dir_all(&checkout).unwrap();
+        fs::write(checkout.join(cadrumo_platform::MODE_CHECKOUT_MARKER), "").unwrap();
+        checkout.join("target").join("debug").join("cadrumo.exe")
+    }
+
     #[test]
     fn a_projection_failure_is_written_before_the_projection_can_run() {
         let scratch = Scratch::new();
+        let host = development_host(&scratch);
         let parent = parent(&scratch.0.join("storage"));
         let diagnostics = Diagnostics::default();
         diagnostics.event(EventKind::HostStarted, None, None);
-        configure(&parent, &diagnostics);
+        configure_for(&host, &parent, &diagnostics);
         let paths = diagnostics.snapshot(u64::MAX).paths.unwrap();
-        let expected = location(&std::env::current_exe().unwrap(), &parent, &contract())
-            .unwrap()
-            .unwrap();
+        let expected = location(&host, &parent, &contract()).unwrap().unwrap();
         assert_eq!(paths.current.parent(), Some(expected.as_path()));
         diagnostics.failure(
             ApplicationError::new(ErrorCode::EnvironmentFailed, Operation::Environment)
@@ -162,7 +187,7 @@ mod tests {
         let log = fs::read_to_string(&paths.current).unwrap();
         assert!(log.contains("environment_failed"));
         assert!(!log.contains("synthetic-private-projection-output"));
-        configure(&parent, &diagnostics);
+        configure_for(&host, &parent, &diagnostics);
         assert_eq!(fs::read_to_string(paths.current).unwrap(), log);
     }
 

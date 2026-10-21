@@ -313,7 +313,7 @@ def _scan_modelos(
     for modelo_dir in sorted(modelos_dir.iterdir()):
         if not modelo_dir.is_dir():
             continue
-        if only_modelo and modelo_dir.name != only_modelo:
+        if (only_modelo is not None and only_modelo) and modelo_dir.name != only_modelo:
             continue
         model_findings, model_revisions, model_citations = _scan_modelo(modelo_dir, windows, legal, known)
         findings.extend(model_findings)

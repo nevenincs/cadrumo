@@ -336,7 +336,7 @@ class _AuthorityCheckProof:
         self.review_tier = review_tier
 
 
-_AGENT_REVIEWED_PROOF = _AuthorityCheckProof(RevisionReviewStatus.AGENT_REVIEWED)
+_AGENT_REVIEWED_PROOF = _AuthorityCheckProof(RevisionReviewStatus.AUTOMATION_REVIEWED)
 _OPERATOR_REVIEWED_PROOF = _AuthorityCheckProof(RevisionReviewStatus.OPERATOR_REVIEWED)
 
 #: Every proof this module may issue. Identity membership is the forgery guard.
@@ -345,7 +345,7 @@ _AUTHORITY_CHECK_PROOFS: frozenset[_AuthorityCheckProof] = frozenset(
 )
 
 _PROOF_BY_TIER: dict[RevisionReviewStatus, _AuthorityCheckProof] = {
-    RevisionReviewStatus.AGENT_REVIEWED: _AGENT_REVIEWED_PROOF,
+    RevisionReviewStatus.AUTOMATION_REVIEWED: _AGENT_REVIEWED_PROOF,
     RevisionReviewStatus.OPERATOR_REVIEWED: _OPERATOR_REVIEWED_PROOF,
 }
 

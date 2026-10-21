@@ -109,7 +109,7 @@ def pending_orden_vocabulary(*, authority: GovernedFactSource | None = None) -> 
 
 def _publication_year_message(filing_year: int, expected_publication_year: int) -> str:
     template = pending_orden_vocabulary().get("publication_year_error.template")
-    if not template:
+    if not (template is not None and template):
         raise RegistryValidationError("registry vocabulary is missing a publication-year declaration message")
     return template.format(
         filing_year=filing_year,

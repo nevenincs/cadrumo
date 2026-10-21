@@ -80,7 +80,9 @@ def _write_fresh_process_injector(directory: Path, body: str) -> Path:
 
 def _injector_env(directory: Path) -> dict[str, str]:
     inherited = os.environ.get("PYTHONPATH")
-    value = str(directory) if not inherited else os.pathsep.join((str(directory), inherited))
+    value = (
+        str(directory) if not (inherited is not None and inherited) else os.pathsep.join((str(directory), inherited))
+    )
     return {"PYTHONPATH": value}
 
 

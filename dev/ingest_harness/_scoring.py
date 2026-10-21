@@ -254,7 +254,7 @@ def _as_finite_decimal(value: str) -> Decimal | None:
     return parsed if parsed.is_finite() else None
 
 
-def _values_agree(truth: Any, emitted: Any, *, tolerance_cents: int) -> bool:
+def _values_agree(truth: object, emitted: object, *, tolerance_cents: int) -> bool:
     """Compare one leaf or composite, dispatching on the TRUTH's shape.
 
     The truth decides the comparison because the truth is the authority; letting

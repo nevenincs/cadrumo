@@ -9,6 +9,10 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability, DisclosureCategory
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ..core.async_cleanup import await_cancellation_complete
 from ..core.external_constants import OutputLanguage
 from ..core.hashing import canonical_json_bytes
@@ -28,13 +32,11 @@ from .operations.models import CredentialFreeOperationRequest, OperationIdentity
 from .operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .operations.owner import OperationExecutorContext
 from .operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from .runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
-from .user_profile.access_contracts import AccessDenialCode, Availability, DisclosureCategory
+from .operations.subject_reference import OperationSubjectReferenceV1
 from .user_profile.access_errors import ProfileAccessRefusedError
 from .workbench_generation_contracts import WorkbenchGenerationV1
 from .workbench_generation_projection import WorkbenchGenerationOperationProjection, project_workbench_generation
@@ -129,6 +131,7 @@ def build_workbench_generation_operation_definition(
     return OperationDefinition(
         definition_id=WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
         request_type=WorkbenchGenerationOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=WorkbenchGenerationOperationProjection,
         executor_factory=OperationExecutorFactory(
             request_type=WorkbenchGenerationOperationRequest,
@@ -139,7 +142,6 @@ def build_workbench_generation_operation_definition(
         interaction_kinds=frozenset(),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 
@@ -159,7 +161,7 @@ def build_workbench_generation_operation_registration(
 def resolve_workbench_generation_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Require live human CLI/TUI authority for both profile and tax values."""
+    """Require a live human session's authority for both profile and tax values."""
     payload = request.payload
     if type(payload) is not WorkbenchGenerationOperationRequest:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)

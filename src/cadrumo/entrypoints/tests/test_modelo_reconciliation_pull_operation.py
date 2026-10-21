@@ -21,6 +21,7 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationPersistence
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ...application.modelo.reconciliation_import_operation import ModeloReconciliationImportProjection
 from ...application.modelo.reconciliation_list_operation import ModeloReconciliationListEntryProjection
 from ...application.modelo.reconciliation_pull_operation import (
@@ -28,11 +29,11 @@ from ...application.modelo.reconciliation_pull_operation import (
     ModeloReconciliationPullRequest,
 )
 from ...application.modelo.reconciliation_records import (
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationRecord,
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
 )
+from ...application.operations.composition import compose_operation_services
 from ...core.casilla_value_kind import CasillaValueKind
 from ...core.config import override_settings
 from ...core.hashing import sha256_hex
@@ -46,7 +47,7 @@ from ...tests.aeat_literal_fixtures import (
 )
 from ..justificante_composition import build_justificante_capture_service
 from . import modelo_operation_test_support
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 from .test_modelo_reconciliation_import_operation import _CommitWitness
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -73,7 +74,7 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
 ) -> None:
     """A foreign profile cannot read the capture; the correct worker guards its atomic write."""
     witness = _CommitWitness(MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID)
-    original_compose = conformance.compose_operation_services
+    original_compose = compose_operation_services
     monkeypatch.setattr(
         conformance,
         "compose_operation_services",
@@ -94,7 +95,9 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
 
     monkeypatch.setattr(ModeloReconciliationPersistence, "persist_with_event", guarded_persist)
 
-    with conformance._runtime(tmp_path / "modelo-reconciliation-pull", cleanup=conformance._CloseWitness()) as (
+    with conformance.conformance_operation_runtime(
+        tmp_path / "modelo-reconciliation-pull", cleanup=conformance.OperationRuntimeCloseWitness()
+    ) as (
         driver,
         registry,
         profile_id,

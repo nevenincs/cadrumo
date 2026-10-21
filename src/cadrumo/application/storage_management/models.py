@@ -77,6 +77,13 @@ class StorageAreaInventoryReport(_StorageReport):
     storage_root: Path
     rows: tuple[StorageAreaInventoryRow, ...]
 
+    def row_for(self, area: StorageArea) -> StorageAreaInventoryRow:
+        """Return the single aggregate row for ``area``."""
+        for row in self.rows:
+            if row.area is area:
+                return row
+        raise KeyError(f"storage area {area.value!r} has no aggregate")
+
 
 class StorageTreeIssueKind(StrEnum):
     """The ways the materialised tree can disagree with its declaration."""
@@ -85,6 +92,15 @@ class StorageTreeIssueKind(StrEnum):
     FILE_WHERE_DIRECTORY_EXPECTED = "file_where_directory_expected"
     DIRECTORY_WHERE_FILE_EXPECTED = "directory_where_file_expected"
     ROOT_PERMISSIONS_DRIFTED = "root_permissions_drifted"
+
+    @property
+    def public_kind(self) -> StorageCheckIssueKind:
+        """Collapse this internal diagnosis into the topology-neutral kind an operator sees."""
+        if self is StorageTreeIssueKind.MISSING_DIRECTORY:
+            return StorageCheckIssueKind.MISSING_PATH
+        if self is StorageTreeIssueKind.ROOT_PERMISSIONS_DRIFTED:
+            return StorageCheckIssueKind.PERMISSIONS_DRIFTED
+        return StorageCheckIssueKind.PATH_TYPE_MISMATCH
 
 
 class StorageTreeIssue(_StorageReport):

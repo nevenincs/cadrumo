@@ -134,6 +134,72 @@ def summary_inventory(*, root: Path | None = None) -> ProfileSummaryInventory:
     return inventory
 
 
+class ProfileListingRow(BaseModel):
+    """One committed profile as a listing shows it: its label, its identity, and whether it is selected."""
+
+    model_config = _SUMMARY_MODEL_CONFIG
+
+    name: ProfileLabel
+    bucket_id: ProfileId
+    active: bool
+
+
+class ProfileListingResult(BaseModel):
+    """What a profile listing answers with: the selected profile's label and every row."""
+
+    model_config = _SUMMARY_MODEL_CONFIG
+
+    active_profile: ProfileLabel | None = None
+    profiles: tuple[ProfileListingRow, ...] = ()
+
+
+class ProfileListing(BaseModel):
+    """One listing observation joined to one read of the active-profile selection."""
+
+    model_config = _SUMMARY_MODEL_CONFIG
+
+    inventory: ProfileSummaryInventory
+    active_profile_id: str | None = None
+
+    def result(self) -> ProfileListingResult:
+        """Join the summaries to the selection and order them for display.
+
+        The join happens here, in memory, so nothing that renders a row can
+        reach storage a second time. Rows are ordered by casefolded label so a
+        listing reads alphabetically, with the profile id as the tie-break so
+        two profiles sharing a casefolded label keep one order between runs.
+        """
+        rows = tuple(
+            ProfileListingRow(
+                name=summary.label, bucket_id=summary.profile_id, active=summary.profile_id == self.active_profile_id
+            )
+            for summary in sorted(self.inventory.summaries, key=lambda item: (item.label.casefold(), item.profile_id))
+        )
+        return ProfileListingResult(active_profile=next((row.name for row in rows if row.active), None), profiles=rows)
+
+
+def selected_profile_id(*, root: Path | None = None) -> str | None:
+    """Read which profile is selected: the process override, or one pointer read.
+
+    The pointer read is of the storage root the caller names, so a caller that
+    names a root never answers from another root's pointer.
+    """
+    from ...core.bucket_pointer import read_pointer_selection
+    from ...core.config import load_settings
+
+    override = (load_settings().cadrumo_active_profile or "").strip()
+    return override or read_pointer_selection(effective_storage_root(root)).bucket_id
+
+
+def profile_listing(*, root: Path | None = None) -> ProfileListing:
+    """Observe the committed profiles and the selected one, each exactly once."""
+    resolved_root = effective_storage_root(root)
+    return ProfileListing(
+        inventory=summary_inventory(root=resolved_root),
+        active_profile_id=selected_profile_id(root=resolved_root),
+    )
+
+
 def _observe_summary_inventory(root: Path) -> ProfileSummaryInventory:
     try:
         witnesses = profile_custody_port().list_committed_capsule_summaries(root=root)
@@ -172,9 +238,14 @@ def _summary_of(witness: ProfileCustodyCapsuleSummaryWitnessPort) -> ProfileSumm
 
 
 __all__ = [
+    "ProfileListing",
+    "ProfileListingResult",
+    "ProfileListingRow",
     "ProfileSummary",
     "ProfileSummaryInventory",
+    "profile_listing",
     "require_summaries",
+    "selected_profile_id",
     "summary_inventory",
     "summary_inventory_snapshot",
 ]

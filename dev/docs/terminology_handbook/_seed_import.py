@@ -313,7 +313,7 @@ def parse_iate_tbx(
 def _tbx_subject_fields(term_entry: XmlElement[str]) -> frozenset[str]:
     fields: set[str] = set()
     for descrip in term_entry.iter("descrip"):
-        if descrip.get("type") == "subjectField" and descrip.text:
+        if descrip.get("type") == "subjectField" and (descrip.text is not None and descrip.text):
             fields.add(descrip.text.strip().lower())
     return frozenset(fields)
 
@@ -343,7 +343,7 @@ def _lang_set_code(lang_set: XmlElement[str]) -> str:
 
 def _tbx_reliability(tig: XmlElement[str]) -> int | None:
     for descrip in tig.iter("descrip"):
-        if descrip.get("type") == "reliabilityCode" and descrip.text:
+        if descrip.get("type") == "reliabilityCode" and (descrip.text is not None and descrip.text):
             try:
                 return int(descrip.text.strip())
             except ValueError:
@@ -353,7 +353,7 @@ def _tbx_reliability(tig: XmlElement[str]) -> int | None:
 
 def _tbx_term_status(tig: XmlElement[str]) -> TermStatus:
     for termnote in tig.iter("termNote"):
-        if termnote.get("type") == "termType" and termnote.text:
+        if termnote.get("type") == "termType" and (termnote.text is not None and termnote.text):
             value = termnote.text.strip().lower()
             if value in ("fullform", "full-form", "main"):
                 return TermStatus.PREFERRED
@@ -608,7 +608,14 @@ def _new_section_from_seed(
     # value, never invented prose). A bare placeholder keeps the section a
     # visible curation marker when neither exists.
     preferred = next((term for term in seed_terms if term.term_status is TermStatus.PREFERRED), seed_terms[0])
-    short = next((term.short_description for term in seed_terms if term.short_description), None)
+    short = next(
+        (
+            term.short_description
+            for term in seed_terms
+            if (term.short_description is not None and term.short_description)
+        ),
+        None,
+    )
     short_description = short or preferred.label
     terms = tuple(TermSection(label=term.label, term_status=term.term_status) for term in _dedupe_terms(seed_terms))
     section = LanguageSection(

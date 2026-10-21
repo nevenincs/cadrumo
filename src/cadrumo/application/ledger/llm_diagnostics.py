@@ -248,7 +248,7 @@ def _aggregate_usage(records: Sequence[LlmUsageDiagnosticRecord]) -> tuple[LlmUs
             input_tokens=input_tokens[provider],
             output_tokens=output_tokens[provider],
             total_tokens=input_tokens[provider] + output_tokens[provider],
-            cost_estimate_usd=None if unpriced.get(provider) else cost.get(provider, Decimal("0")),
+            cost_estimate_usd=None if bool(unpriced.get(provider)) else cost.get(provider, Decimal("0")),
             unpriced_calls=unpriced.get(provider, 0),
         )
         for provider in sorted(calls)

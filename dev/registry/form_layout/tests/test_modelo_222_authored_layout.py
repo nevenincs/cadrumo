@@ -69,4 +69,4 @@ def test_222_consolidated_form_preserves_group_adjustments_and_four_rates() -> N
     } <= keys
     assert not any(key.startswith("m202.") for key in keys)
     assert layout.review.state.value == "generated"
-    assert layout.review.notes and "Part 2" in layout.review.notes
+    assert (layout.review.notes is not None and layout.review.notes) and "Part 2" in layout.review.notes

@@ -717,13 +717,13 @@ def test_manifest_refuses_legacy_shapes_schema_drift_duplicate_outputs_and_unsaf
     with pytest.raises(ValidationError, match="must refer to a generated TOML file"):
         ExportFragmentOutputDigest(relative_path="export.provenance.json", sha256="d" * 64)
     with pytest.raises(ValidationError, match="must not contain duplicate relative paths"):
-        ExportFragmentProvenanceManifest(
-            **(manifest.model_dump() | {"output_files": manifest.output_files + manifest.output_files}),
+        ExportFragmentProvenanceManifest.model_validate(
+            manifest.model_dump() | {"output_files": manifest.output_files + manifest.output_files},
         )
     for obsolete_parser_schema_version in (1, 2):
         with pytest.raises(ValidationError, match="parser schema drift"):
-            ExportFragmentProvenanceManifest(
-                **(manifest.model_dump() | {"parser_schema_version": obsolete_parser_schema_version}),
+            ExportFragmentProvenanceManifest.model_validate(
+                manifest.model_dump() | {"parser_schema_version": obsolete_parser_schema_version},
             )
     without_render_profile = manifest.model_dump()
     without_render_profile.pop("render_profile_schema_version")

@@ -113,12 +113,8 @@ class XlsxProvider(FinancialProvider):
                 # teardown must run unconditionally.
                 try:
                     workbook.close()
-                except Exception as close_exc:
-                    _logger.debug(
-                        "xlsx provider: workbook.close() after validate_source failed (%s)",
-                        close_exc,
-                        exc_info=True,
-                    )
+                except Exception:
+                    _logger.debug("xlsx provider: workbook.close() after validate_source failed")
         warnings: list[str] = []
         if layout is None:
             return ProviderValidation(
@@ -130,7 +126,7 @@ class XlsxProvider(FinancialProvider):
                 is_valid=False,
                 warnings=(f"{layout.bank_name} worksheet has no data rows after the header",),
             )
-        if not find_column(header_lookup(header_row), layout.columns.currency):
+        if not bool(find_column(header_lookup(header_row), layout.columns.currency)):
             warnings.append(
                 f"{layout.bank_name} worksheet has no currency column; falling back to {default_currency()}",
             )
@@ -278,12 +274,8 @@ def _close_workbook_during_teardown(workbook: Workbook) -> None:
     """
     try:
         workbook.close()
-    except Exception as close_exc:
-        _logger.debug(
-            "xlsx provider: workbook.close() during parse-error teardown failed (%s)",
-            close_exc,
-            exc_info=True,
-        )
+    except Exception:
+        _logger.debug("xlsx provider: workbook.close() during parse-error teardown failed")
 
 
 def _materialize_selected_rows_or_refuse_formula_cells(

@@ -17,6 +17,9 @@ from pathlib import Path
 from typing import Any, override
 from uuid import UUID
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.contracts import RefusalError
+
 from ..adapters.inbound.notificacion.document_reader import NotificationDocumentReader
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ..adapters.outbound.aeat.sede.declarations import (
@@ -24,7 +27,6 @@ from ..adapters.outbound.aeat.sede.declarations import (
     open_declarations_register,
     shared_playwright,
 )
-from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ..adapters.outbound.aeat.sede.errors import SedeError, SedeNavigationError, SedeParseError
 from ..adapters.outbound.aeat.sede.filed_data_capture_port import (
     SedeFiledDataCapturePort,
@@ -77,14 +79,17 @@ from ..adapters.persistence.storage.runtime_repository import secure_object_repo
 from ..adapters.persistence.storage.secure_object_namespaces import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
-from ..application.auth.operator import build_live_auth_preflight_report
+from ..application.auth.operator_results import AuthLoginPreconditionError
 from ..application.auth.operator_scope_ports import OperatorScopePorts
 from ..application.auth.protocols import BrowserSessionFactoryPort
 from ..application.auth.session_types import AeatSession
 from ..application.auth.sessions import AuthenticatedAeatSessionResult
+from ..application.auth.sync_readiness import build_auth_sync_readiness
+from ..application.auth.sync_requirement_text import sync_requirement_reason
 from ..application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ..application.calculations.observations_repository import iva_wallet_decision_key
 from ..application.live.errors import LiveApplicationError, LiveApplicationInputError
+from ..application.live.expedientes_ports import ExpedientesDeclaration
 from ..application.live.filed_data_capture import capture_report_path
 from ..application.live.filed_data_ports import FiledDataCapturePort, FiledEffectGuard
 from ..application.live.filed_history_events import FiledHistoryEventSink
@@ -124,11 +129,8 @@ from ..application.live.remote_state_models import (
 from ..application.live.remote_state_outcomes import evidence_ref
 from ..application.live.session import SessionWriteReporter, active_verified_session, ensure_live_authenticated_session
 from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from ..application.runtime.contracts import RuntimeRefusalError
 from ..application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
-from ..application.user_profile.automation_custody_port import AutomationCustodyError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import CadrumoError
@@ -159,15 +161,22 @@ def preflight_filed_history_provider(profile_id: UUID, operation: PinnedAuthorit
     from .auth_read_composition import compose_auth_read_ports
 
     ports = compose_auth_read_ports(profile_id)
-    report = build_live_auth_preflight_report(
+    report = build_auth_sync_readiness(
         certificate_secret_backend_factory=ports.certificate_secret_backend_factory,
         operator_probe_ports=ports.operator_probe_ports,
         operator_scope_ports=ports.operator_scope_ports,
-        read_ports=ports.read_ports,
-        operation=operation,
     )
-    if not report.configured or not report.available:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
+    if not report.ready:
+        missing = tuple(item for item in report.requirements if not item.satisfied)
+        raise AuthLoginPreconditionError(
+            translated_message="application.auth.sync.errors.requirements_missing",
+            context={
+                "provider": report.provider,
+                "route": report.route,
+                "required_fields": ", ".join(item.field for item in missing),
+                "reasons": "; ".join(sync_requirement_reason(item.reason) for item in missing),
+            },
+        )
 
 
 class _SedeNotificationSnapshotQuery(NotificationSnapshotQueryProtocol):
@@ -570,7 +579,7 @@ class AppIvaRemoteStatePort:
                         )
                     declarations = await register.walk(modelo=Modelo("303").value, ejercicio=year)
                     for candidate in latest_declarations_by_period(declarations):
-                        if not isinstance(candidate, Declaracion):
+                        if not isinstance(candidate, ExpedientesDeclaration):
                             raise LiveApplicationError(
                                 translated_message="application.live.filed_observations.errors.registry_enrollment_failed",
                                 context={
@@ -902,7 +911,7 @@ __all__ = [
 
 async def _capture_one_iva_history_declaration(
     register: DeclaracionesRegisterSession,
-    declaration: Declaracion,
+    declaration: ExpedientesDeclaration,
     store: FiledObservationPersistencePort,
     persist_artefact: Callable[
         [tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes], FiledDeclaracionArtefact
@@ -931,7 +940,7 @@ async def _capture_one_iva_history_declaration(
                 capture_deferred_sede_observation(register, declaration),
                 timeout=capture_timeout,
             )
-        except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+        except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
             raise
         except (TimeoutError, CadrumoError, OSError) as exc:
             failures.append(
@@ -946,7 +955,7 @@ async def _capture_one_iva_history_declaration(
 
 
 def _stage_iva_history_declaration_progress(
-    progress_context: dict[str, object] | None, declaration: Declaracion
+    progress_context: dict[str, object] | None, declaration: ExpedientesDeclaration
 ) -> None:
     """Publish the current declaration immediately before its capture begins."""
     if progress_context is not None:

@@ -212,7 +212,7 @@ def test_the_displaced_three_name_probe_passes_the_same_install() -> None:
     """
     import tempfile
 
-    records = _live_registry_records()
+    records = (*_live_registry_records(), ("anthropic", "anthropic"))
     present = [name for _extra, name in records if name not in {"ofxtools", "pynvml"}]
 
     with tempfile.TemporaryDirectory() as raw:

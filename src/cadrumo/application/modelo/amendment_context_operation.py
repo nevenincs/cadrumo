@@ -11,6 +11,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import profile_operation_subject
@@ -35,10 +37,8 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_projection import ModeloCalculationSnapshot
 from .filing_projection import ModeloFilingRecordSnapshot
@@ -198,11 +198,11 @@ def build_modelo_work_amendment_context_definition(factory: VerificationReposito
     return build_single_phase_definition(
         definition_id=MODELO_WORK_AMENDMENT_CONTEXT_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkAmendmentContextRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloWorkAmendmentContextProjection,
         executor_type=ModeloWorkAmendmentContextExecutor,
         build=lambda: ModeloWorkAmendmentContextExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

@@ -283,7 +283,9 @@ def _borrador_revision_id_payload(
 ) -> dict[str, object]:
     """Build the optional borrador snapshot / sourced-binding payload keys."""
     parts: dict[str, object] = {}
-    normalized_borrador_snapshot_id = borrador_snapshot_id.strip() if borrador_snapshot_id else None
+    normalized_borrador_snapshot_id = (
+        borrador_snapshot_id.strip() if (borrador_snapshot_id is not None and borrador_snapshot_id) else None
+    )
     normalized_borrador_bindings = tuple(
         sorted(
             _validated_binding_id(item, surface="bindings_sourced_from_borrador")
@@ -311,7 +313,7 @@ def _source_issues_revision_id_payload(
                 issue.source_ref or "",
                 issue.resolver_id or "",
                 issue.message,
-                *(() if issue.casilla_id is None else (str(issue.casilla_id),)),
+                *(() if issue.casilla_id is None else (issue.casilla_id,)),
             )
             for issue in source_issues
         )
@@ -373,7 +375,7 @@ def _relation_overrides_revision_id_payload(
     relation_overrides: Mapping[RelationId, str] | None,
 ) -> dict[str, object]:
     """Build the optional canonical relation-override payload."""
-    if not relation_overrides:
+    if not (relation_overrides is not None and relation_overrides):
         return {}
     return {
         "relation_overrides": dict(

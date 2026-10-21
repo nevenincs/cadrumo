@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.modelo.filing_chain_reconciliation import FilingReconciliationOutcome
+from ....application.modelo.historical_filing_projection import project_historical_filing_content
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
@@ -22,8 +23,8 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from .._filing_chain_payloads import FilingReconciliationPayload, ObservationLayersPayload
-from .._modelo_payloads import FilingRecordImportResult, ModeloRecordShowResult, WorkAmendResult, WorkFileResult
 from .._modelo_rendering import filing_record_lines, filing_record_payload
+from ..modelo_results import FilingRecordImportResult, ModeloRecordShowResult, WorkAmendResult, WorkFileResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -94,7 +95,11 @@ def test_filing_record_payload_renders_chain_evidence_and_amends() -> None:
     assert evidence.imported_at == _IMPORTED_AT
     payload_dict = payload.model_dump(mode="python")
     show_result = ModeloRecordShowResult.model_validate(
-        {**payload_dict, "observation_layers": ObservationLayersPayload()},
+        {
+            **payload_dict,
+            "observation_layers": ObservationLayersPayload(),
+            "historical_content": project_historical_filing_content(record, None),
+        },
     )
     import_result = FilingRecordImportResult.model_validate(
         {**payload_dict, "reconciliation": _reconciliation(record)},
@@ -106,6 +111,8 @@ def test_filing_record_payload_renders_chain_evidence_and_amends() -> None:
         {"amendment_kind": "complementaria", "m303_rectificativa_motive": None, **payload_dict},
     )
     assert show_result.external_evidence is not None
+    assert show_result.historical_content.availability == "missing"
+    assert show_result.historical_content.calculation_revision_id == record.calculation_revision_id
     assert amend_result.external_evidence is not None
 
 

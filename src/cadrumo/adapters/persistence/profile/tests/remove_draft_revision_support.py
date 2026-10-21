@@ -8,8 +8,8 @@ from decimal import Decimal
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from .....application.ledger.actions_manual import create_manual_transaction
 from .....application.ledger.models import ManualLedgerTransactionCommand
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation

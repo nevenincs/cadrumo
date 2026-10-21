@@ -6,10 +6,11 @@ from typing import Final
 
 import pytest
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.spec import CommandSpec
+
 from .._app_ledger_prorrata_command_specs import LEDGER_PRORRATA_COMMAND_SPECS
-from .._command_target import resolve_deferred_target
-from ..command_parameter_contracts import OptionSpec
-from ..command_spec import CommandSpec
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

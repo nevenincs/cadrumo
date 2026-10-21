@@ -7,7 +7,7 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import ClassVar, override
+from typing import ClassVar, Final, override
 
 from ....application.evidence.models import EvidenceBundle
 from ....application.evidence.ports import (
@@ -29,7 +29,8 @@ class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle], EvidenceBu
     namespace: ClassVar[str] = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.namespace
     sensitivity: ClassVar = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.schema_version
-    payload_type: ClassVar[type[EvidenceBundle]] = EvidenceBundle
+    # Final: a constant narrowing of the base's mutable ``ClassVar[type[BaseModel]]``.
+    payload_type: Final[type[EvidenceBundle]] = EvidenceBundle
 
     def __init__(self, *, objects: SecureObjectRepository) -> None:
         """Bind an already-composed secure-object store."""

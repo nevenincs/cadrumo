@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncGenerator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager, contextmanager
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
@@ -65,7 +65,6 @@ from cadrumo.application.operations.persistence.journal import OperationPersiste
 from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.core.operations import (
@@ -78,6 +77,8 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.justificante.schema import Justificante
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -364,7 +365,7 @@ def test_supervisor_binds_source_capture_to_exact_profile_and_projects_reconcili
             assert on_session_write is not None
 
             @asynccontextmanager
-            async def tracked_guard() -> AsyncIterator[None]:
+            async def tracked_guard() -> AsyncGenerator[None]:
                 nonlocal guard_depth, guard_entries
                 async with effect_guard():
                     guard_depth += 1

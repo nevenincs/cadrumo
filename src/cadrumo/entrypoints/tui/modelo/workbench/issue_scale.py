@@ -281,8 +281,8 @@ def unentered_boxes(form: ModeloWorkForm, level: IssueLevel) -> UnenteredBoxes |
     keys = tuple(address_key(field.address) for field in fields)
     return UnenteredBoxes(
         level=level,
-        boxes=tuple(field.box for field in fields if field.box),
-        unnumbered=sum(1 for field in fields if not field.box),
+        boxes=tuple(field.box for field in fields if (field.box is not None and field.box)),
+        unnumbered=sum(1 for field in fields if not (field.box is not None and field.box)),
         keys=keys,
         sections=_unentered_sections(form, frozenset(keys)),
     )

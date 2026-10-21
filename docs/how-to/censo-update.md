@@ -150,7 +150,11 @@ the second records:
 ```
 
 The command previews the census facts the certificate carries without writing
-anything. Add `--apply` to record them onto the active profile.
+anything. Add `--apply` to record them onto the active profile. The same
+preview and record is the registered operation
+`user-profile.censo-certificate-import`, which the full-screen app lists under
+**Operations** and an agent runs with `execute`; give it the certificate's
+absolute path.
 
 Facts recorded this way carry a marker saying they are not official AEAT data:
 they came from a document you supplied, not from an AEAT-confirmed read, so

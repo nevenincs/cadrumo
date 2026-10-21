@@ -145,7 +145,7 @@ def prepare_environment(repository: Path) -> None:
     """Mint the controller run before any production import can bind logging."""
     global _ACTIVE
     inherited_root = os.environ.get("CADRUMO_TEST_RUN_ROOT")
-    if inherited_root:
+    if inherited_root is not None and inherited_root:
         root = Path(inherited_root).resolve()
         global _INHERITED_RUN
         _INHERITED_RUN = True
@@ -162,8 +162,8 @@ def _apply_run_environment(root: Path, scratch: Path) -> None:
 
     Logs, artifacts and pytest's own cache live in the run directory; temporary
     files live in the run's short scratch, which the run directory is too deep
-    to host. External tool caches stay shared under the configured Cadrumo
-    development cache root, outside the per-run logs.
+    to host. Machine-managed tool cache and home variables remain inherited
+    unchanged from the invoking environment.
     """
     artifacts = root / "artifacts"
     cache = root / "cache"

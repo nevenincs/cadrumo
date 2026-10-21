@@ -1,692 +1,692 @@
 [[revisions.2025-y-siguientes.export_layouts]]
-id = 'generated-modelo-184-2025-y-siguientes-fichero'
+id = "generated-modelo-184-2025-y-siguientes-fichero"
 
 [[revisions.2025-y-siguientes.export_layouts.records]]
-id = 'm184-socio'
-record_type = 'socio'
+id = "m184-socio"
+record_type = "socio"
 order = 2
-encoding = 'iso-8859-1'
-line_ending = 'crlf'
+encoding = "iso-8859-1"
+line_ending = "crlf"
 required = true
-repeat = 'binding_rows'
-binding_record = 'miembro'
+repeat = "binding_rows"
+binding_record = "miembro"
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f001'
+id = "m184-2025.socio.f001"
 offset = 1
 length = 1
-kind = 'literal'
-literal = '2'
-data_type = 'text'
+kind = "literal"
+literal = "2"
+data_type = "text"
 required = true
-padding = 'none'
-justification = 'none'
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f002'
+id = "m184-2025.socio.f002"
 offset = 2
 length = 3
-kind = 'literal'
-literal = '184'
-data_type = 'text'
+kind = "literal"
+literal = "184"
+data_type = "text"
 required = true
-padding = 'none'
-justification = 'none'
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f003'
+id = "m184-2025.socio.f003"
 offset = 5
 length = 4
-kind = 'draft'
-draft_attribute = 'filing_year'
-data_type = 'integer'
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "integer"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = 'four-digit-year'
+value_policy = "four-digit-year"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f004'
+id = "m184-2025.socio.f004"
 offset = 9
 length = 9
-kind = 'header'
-producer_key = 'taxpayer.tax_id'
-data_type = 'text'
+kind = "header"
+producer_key = "taxpayer.tax_id"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f005'
+id = "m184-2025.socio.f005"
 offset = 18
 length = 9
-kind = 'binding'
-binding = 'modelo-184-member-row-nif'
-data_type = 'text'
+kind = "binding"
+binding = "modelo-184-member-row-nif"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f006'
+id = "m184-2025.socio.f006"
 offset = 27
 length = 9
-kind = 'casilla'
-casilla_id = 'tipo3.representante-fiscal-nif'
-data_type = 'text'
+kind = "casilla"
+casilla_id = "tipo3.representante-fiscal-nif"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f007'
+id = "m184-2025.socio.f007"
 offset = 36
 length = 40
-kind = 'binding'
-binding = 'modelo-184-member-row-name'
-data_type = 'text'
+kind = "binding"
+binding = "modelo-184-member-row-name"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f008'
+id = "m184-2025.socio.f008"
 offset = 76
 length = 1
-kind = 'literal'
-literal = 'S'
-data_type = 'text'
+kind = "literal"
+literal = "S"
+data_type = "text"
 required = true
-padding = 'none'
-justification = 'none'
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f009'
+id = "m184-2025.socio.f009"
 offset = 77
 length = 2
-kind = 'binding'
-binding = 'modelo-184-member-row-codigo-provincia'
-data_type = 'text'
+kind = "binding"
+binding = "modelo-184-member-row-codigo-provincia"
+data_type = "text"
 required = false
-padding = 'none'
-justification = 'none'
+padding = "none"
+justification = "none"
 signed = false
-value_policy = 'digit-string'
+value_policy = "digit-string"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f010'
+id = "m184-2025.socio.f010"
 offset = 79
 length = 2
-kind = 'casilla'
-casilla_id = 'tipo3.clave-pais'
-data_type = 'text'
+kind = "casilla"
+casilla_id = "tipo3.clave-pais"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f011'
+id = "m184-2025.socio.f011"
 offset = 81
 length = 1
-kind = 'casilla'
-casilla_id = 'tipo3.clave-tipo-participe'
-data_type = 'text'
+kind = "casilla"
+casilla_id = "tipo3.clave-tipo-participe"
+data_type = "text"
 required = false
-padding = 'none'
-justification = 'none'
+padding = "none"
+justification = "none"
 signed = false
-value_policy = 'digit-string'
+value_policy = "digit-string"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f012'
+id = "m184-2025.socio.f012"
 offset = 82
 length = 1
-kind = 'binding'
-binding = 'modelo-184-member-row-miembro-a-31-diciembre'
-data_type = 'text'
+kind = "binding"
+binding = "modelo-184-member-row-miembro-a-31-diciembre"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f013'
+id = "m184-2025.socio.f013"
 offset = 83
 length = 3
-kind = 'binding'
-binding = 'modelo-184-member-row-dias-miembro'
-data_type = 'integer'
+kind = "binding"
+binding = "modelo-184-member-row-dias-miembro"
+data_type = "integer"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = "unsigned-integer"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f014'
+id = "m184-2025.socio.f014"
 offset = 86
 length = 3
-kind = 'binding'
-binding = 'modelo-184-member-row-share'
-data_type = 'integer'
+kind = "binding"
+binding = "modelo-184-member-row-share"
+data_type = "integer"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = 'integer-part'
+value_policy = "integer-part"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f015'
+id = "m184-2025.socio.f015"
 offset = 89
 length = 4
-kind = 'binding'
-binding = 'modelo-184-member-row-share'
-data_type = 'integer'
+kind = "binding"
+binding = "modelo-184-member-row-share"
+data_type = "integer"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = 'fractional-digits'
+value_policy = "fractional-digits"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f016'
+id = "m184-2025.socio.f016"
 offset = 93
 length = 1
-kind = 'binding'
-binding = 'modelo-184-member-row-clave'
-data_type = 'text'
+kind = "binding"
+binding = "modelo-184-member-row-clave"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f017'
+id = "m184-2025.socio.f017"
 offset = 94
 length = 2
-kind = 'binding'
-binding = 'modelo-184-member-row-subclave'
-data_type = 'text'
+kind = "binding"
+binding = "modelo-184-member-row-subclave"
+data_type = "text"
 required = false
-padding = 'none'
-justification = 'none'
+padding = "none"
+justification = "none"
 signed = false
-value_policy = 'digit-string'
+value_policy = "digit-string"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f018'
+id = "m184-2025.socio.f018"
 offset = 96
 length = 13
-kind = 'binding'
-binding = 'modelo-184-member-row-base-assigned'
-data_type = 'text'
+kind = "binding"
+binding = "modelo-184-member-row-base-assigned"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f019'
+id = "m184-2025.socio.f019"
 offset = 109
 length = 9
-kind = 'binding'
-binding = 'modelo-184-member-row-reduccion'
-data_type = 'integer'
+kind = "binding"
+binding = "modelo-184-member-row-reduccion"
+data_type = "integer"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = 'integer-part'
+value_policy = "integer-part"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f020'
+id = "m184-2025.socio.f020"
 offset = 118
 length = 2
-kind = 'binding'
-binding = 'modelo-184-member-row-reduccion'
-data_type = 'integer'
+kind = "binding"
+binding = "modelo-184-member-row-reduccion"
+data_type = "integer"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = 'fractional-digits'
+value_policy = "fractional-digits"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f021'
+id = "m184-2025.socio.f021"
 offset = 120
 length = 40
-kind = 'binding'
-binding = 'modelo-184-member-row-domicilio-fiscal'
-data_type = 'text'
+kind = "binding"
+binding = "modelo-184-member-row-domicilio-fiscal"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f022'
+id = "m184-2025.socio.f022"
 offset = 160
 length = 12
-kind = 'casilla'
-casilla_id = 'tipo3.provisiones-gastos-dificil-justificacion'
-data_type = 'decimal'
+kind = "casilla"
+casilla_id = "tipo3.provisiones-gastos-dificil-justificacion"
+data_type = "decimal"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 decimals = 2
 signed = false
-value_policy = 'implied-decimal'
+value_policy = "implied-decimal"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f023'
+id = "m184-2025.socio.f023"
 offset = 172
 length = 1
-kind = 'binding'
-binding = 'modelo-184-member-row-naturaleza-inmueble'
-data_type = 'text'
+kind = "binding"
+binding = "modelo-184-member-row-naturaleza-inmueble"
+data_type = "text"
 required = false
-padding = 'none'
-justification = 'none'
+padding = "none"
+justification = "none"
 signed = false
-value_policy = 'digit-string'
+value_policy = "digit-string"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f024'
+id = "m184-2025.socio.f024"
 offset = 173
 length = 1
-kind = 'binding'
-binding = 'modelo-184-member-row-situacion-inmueble'
-data_type = 'text'
+kind = "binding"
+binding = "modelo-184-member-row-situacion-inmueble"
+data_type = "text"
 required = false
-padding = 'none'
-justification = 'none'
+padding = "none"
+justification = "none"
 signed = false
-value_policy = 'digit-string'
+value_policy = "digit-string"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f025'
+id = "m184-2025.socio.f025"
 offset = 174
 length = 20
-kind = 'binding'
-binding = 'modelo-184-member-row-referencia-catastral'
-data_type = 'text'
+kind = "binding"
+binding = "modelo-184-member-row-referencia-catastral"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f026'
+id = "m184-2025.socio.f026"
 offset = 194
 length = 1
-kind = 'binding'
-binding = 'modelo-184-member-row-clave-declarado'
-data_type = 'text'
+kind = "binding"
+binding = "modelo-184-member-row-clave-declarado"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f027'
+id = "m184-2025.socio.f027"
 offset = 195
 length = 5
-kind = 'binding'
-binding = 'modelo-184-member-row-porcentaje-titularidad-inmueble'
-data_type = 'decimal'
+kind = "binding"
+binding = "modelo-184-member-row-porcentaje-titularidad-inmueble"
+data_type = "decimal"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 decimals = 2
 signed = false
-value_policy = 'implied-decimal'
+value_policy = "implied-decimal"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f028'
+id = "m184-2025.socio.f028"
 offset = 200
 length = 3
-kind = 'binding'
-binding = 'modelo-184-member-row-dias-arrendamiento'
-data_type = 'integer'
+kind = "binding"
+binding = "modelo-184-member-row-dias-arrendamiento"
+data_type = "integer"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = 'unsigned-integer'
+value_policy = "unsigned-integer"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f029'
+id = "m184-2025.socio.f029"
 offset = 203
 length = 11
-kind = 'binding'
-binding = 'modelo-184-member-row-rendimiento-neto-previo-eo'
-data_type = 'integer'
+kind = "binding"
+binding = "modelo-184-member-row-rendimiento-neto-previo-eo"
+data_type = "integer"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = 'integer-part'
+value_policy = "integer-part"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f030'
+id = "m184-2025.socio.f030"
 offset = 214
 length = 2
-kind = 'binding'
-binding = 'modelo-184-member-row-rendimiento-neto-previo-eo'
-data_type = 'integer'
+kind = "binding"
+binding = "modelo-184-member-row-rendimiento-neto-previo-eo"
+data_type = "integer"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 signed = false
-value_policy = 'fractional-digits'
+value_policy = "fractional-digits"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f031'
+id = "m184-2025.socio.f031"
 offset = 216
 length = 14
-kind = 'binding'
-binding = 'modelo-184-member-row-rendimiento-neto-minorado-agricola-eo'
-data_type = 'decimal'
+kind = "binding"
+binding = "modelo-184-member-row-rendimiento-neto-minorado-agricola-eo"
+data_type = "decimal"
 required = false
-padding = 'left_zero'
-justification = 'right'
+padding = "left_zero"
+justification = "right"
 decimals = 2
 signed = false
-value_policy = 'implied-decimal'
+value_policy = "implied-decimal"
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm184-2025.socio.f032'
+id = "m184-2025.socio.f032"
 offset = 230
 length = 271
-kind = 'filler'
-data_type = 'text'
+kind = "filler"
+data_type = "text"
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = [
-    'orden-hap-2250-2015:art-1',
-    'orden-hap-2250-2015:art-3',
-    'ley-35-2006:art-86',
-    'ley-35-2006:art-88',
-    'ley-58-2003:art-93',
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-88",
+    "ley-58-2003:art-93",
 ]
-source_refs = ['aeat-dr-184-2025']
+source_refs = ["aeat-dr-184-2025"]
 
 [revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]
-base_imponible_assigned = 'tipo3.importe'
-clave = 'tipo3.clave'
-clave_declarado = 'tipo3.clave-declarado'
-codigo_provincia = 'tipo3.codigo-provincia'
-dias_arrendamiento = 'tipo3.dias-arrendamiento'
-dias_miembro = 'tipo3.dias-miembro'
-domicilio_fiscal = 'tipo3.domicilio-fiscal'
-member_legal_name = 'tipo3.miembro-nombre'
-member_tax_id = 'tipo3.miembro-nif'
-miembro_a_31_diciembre = 'tipo3.miembro-a-31-diciembre'
-naturaleza_inmueble = 'tipo3.naturaleza-inmueble'
-porcentaje_titularidad_inmueble = 'tipo3.porcentaje-titularidad-inmueble'
-reduccion = 'tipo3.reduccion'
-referencia_catastral = 'tipo3.referencia-catastral'
-rendimiento_neto_minorado_agricola_eo = 'tipo3.rendimiento-neto-minorado-agricola-eo'
-rendimiento_neto_previo_eo = 'tipo3.rendimiento-neto-previo-eo'
-share_percentage = 'tipo3.porcentaje-participacion'
-situacion_inmueble = 'tipo3.situacion-inmueble'
-subclave = 'tipo3.subclave'
+base_imponible_assigned = "tipo3.importe"
+clave = "tipo3.clave"
+clave_declarado = "tipo3.clave-declarado"
+codigo_provincia = "tipo3.codigo-provincia"
+dias_arrendamiento = "tipo3.dias-arrendamiento"
+dias_miembro = "tipo3.dias-miembro"
+domicilio_fiscal = "tipo3.domicilio-fiscal"
+member_legal_name = "tipo3.miembro-nombre"
+member_tax_id = "tipo3.miembro-nif"
+miembro_a_31_diciembre = "tipo3.miembro-a-31-diciembre"
+naturaleza_inmueble = "tipo3.naturaleza-inmueble"
+porcentaje_titularidad_inmueble = "tipo3.porcentaje-titularidad-inmueble"
+reduccion = "tipo3.reduccion"
+referencia_catastral = "tipo3.referencia-catastral"
+rendimiento_neto_minorado_agricola_eo = "tipo3.rendimiento-neto-minorado-agricola-eo"
+rendimiento_neto_previo_eo = "tipo3.rendimiento-neto-previo-eo"
+share_percentage = "tipo3.porcentaje-participacion"
+situacion_inmueble = "tipo3.situacion-inmueble"
+subclave = "tipo3.subclave"

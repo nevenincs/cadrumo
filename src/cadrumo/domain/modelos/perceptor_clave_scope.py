@@ -127,7 +127,7 @@ def _scope_entries(resolved: ResolvedMappingFact) -> dict[str, str]:
 
 def _required_scope_entry(entries: Mapping[str, str], key: str) -> str:
     value = entries.get(key)
-    if not value:
+    if not (value is not None and value):
         raise RegistryValidationError(f"perceptor clave scope is missing {key!r}")
     return value
 
@@ -165,7 +165,7 @@ def row_field_value_bindings(revision: ModeloRevision) -> dict[CasillaId, Bindin
             if record.binding_record is None:
                 continue
             for row_field, casilla_id in record.row_field_casilla_ids.items():
-                casilla_by_record_field[(str(record.binding_record), str(row_field))] = casilla_id
+                casilla_by_record_field[(record.binding_record, row_field)] = casilla_id
     bindings: dict[CasillaId, BindingId] = {}
     for binding in revision.bindings:
         record = getattr(binding.provider, "record", None)

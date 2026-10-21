@@ -1,4 +1,4 @@
-"""Agent-safe Modelo lifecycle timeline over the canonical encrypted history."""
+"""automation-safe Modelo lifecycle timeline over the canonical encrypted history."""
 
 from __future__ import annotations
 
@@ -9,6 +9,9 @@ from typing import Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory, DisclosurePermission
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import Hex64Str
@@ -25,8 +28,8 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_payload, require_operation_profile
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, DisclosureCategory, DisclosurePermission
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .history import assemble_modelo_lifecycle_history
 from .history_ports import ModeloHistoryPortsFactory
@@ -71,7 +74,7 @@ class ModeloTimelineEvent(BaseModel):
 
 
 class ModeloHistoryTimelineProjection(BaseModel):
-    """Closed agent result preserving full event count and canonical order."""
+    """Closed automation result preserving full event count and canonical order."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -136,15 +139,15 @@ class ModeloHistoryTimelineExecutor:
 
 
 def build_modelo_history_timeline_definition(factory: ModeloHistoryPortsFactory) -> OperationDefinition:
-    """Declare a metadata-only agent timeline with no domain write capability."""
+    """Declare a metadata-only automation timeline with no domain write capability."""
     return build_single_phase_definition(
         definition_id=MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID,
         request_type=ModeloHistoryTimelineRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloHistoryTimelineProjection,
         executor_type=ModeloHistoryTimelineExecutor,
         build=lambda: ModeloHistoryTimelineExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.MCP}),
     )
 
 

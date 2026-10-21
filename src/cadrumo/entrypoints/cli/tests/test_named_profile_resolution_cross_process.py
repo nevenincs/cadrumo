@@ -35,16 +35,21 @@ regression at all.
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
+import subprocess
+import sys
+from collections.abc import Generator
+from pathlib import Path
 
 import pytest
 from pydantic import TypeAdapter
 
-from ....tests.os_keychain_hook import require_os_credential_store
-from .test_cold_start_wizard_registration import _register_profile_for_cold_run, _run_cli_cold
-
-if TYPE_CHECKING:
-    from pathlib import Path
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.core.config import load_settings
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
+from cadrumo.tests.installed_process_ports import InstalledProcessWorld
+from cadrumo.tests.os_keychain_hook import require_os_credential_store
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -61,6 +66,64 @@ _FACTS = {
 _DOCUMENT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
 
+def _run_cli_cold(
+    storage_root: Path,
+    argv: list[str],
+    *,
+    stdin_payload: str | None = None,
+    installed_process_world: InstalledProcessWorld,
+) -> subprocess.CompletedProcess[str]:
+    """Run the real runtime frontend in a new interpreter without ambient custody."""
+    environment = installed_process_world.environment(
+        storage_root=storage_root, authority_root=bundled_authority_descriptor_path().parent
+    )
+    return subprocess.run(  # noqa: S603 -- Exact interpreter and test-authored CLI arguments; no shell.
+        [
+            sys.executable,
+            "-c",
+            "from cadrumo_runtime.host.frontend.cli.bootstrap import main; main()",
+            *argv,
+        ],
+        input=stdin_payload,
+        capture_output=True,
+        text=True,
+        env=environment,
+        check=False,
+    )
+
+
+@pytest.fixture
+def cold_profile(tmp_path: Path, *, installed_process_world: InstalledProcessWorld) -> Generator[tuple[Path, str]]:
+    """Keep a real runtime and native credential-store receipt across CLI processes."""
+    require_os_credential_store()
+    scripts = Path(sys.prefix) / ("Scripts" if sys.platform == "win32" else "bin")
+    executable = scripts / ("aeat.exe" if sys.platform == "win32" else "aeat")
+    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+        environment = installed_process_world.environment(
+            storage_root=root, authority_root=bundled_authority_descriptor_path().parent
+        )
+        with installed_process_world.runtime(executable, environment, tmp_path / "caller-owned-runtime.log"):
+            profile_id = register_cli_profile(label=_LABEL, facts=_FACTS, log_in=False)
+            close_active_bucket_session()
+            login = _run_cli_cold(
+                root,
+                ["--format", "json", "config", "login", _LABEL, "--secrets-stdin"],
+                stdin_payload=json.dumps(
+                    {"passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()}
+                ),
+                installed_process_world=installed_process_world,
+            )
+            try:
+                assert login.returncode == 0, login.stderr
+                assert _envelope_result(login.stdout)["session_persisted"] is True
+                yield root, profile_id
+            finally:
+                logout = _run_cli_cold(
+                    root, ["--format", "json", "config", "logout"], installed_process_world=installed_process_world
+                )
+                assert logout.returncode == 0, logout.stderr
+
+
 def _envelope_result(stdout: str) -> dict[str, object]:
     """Return the success envelope's result payload from a cold-run stdout."""
     document = _DOCUMENT_ADAPTER.validate_python(json.loads(stdout))
@@ -68,17 +131,22 @@ def _envelope_result(stdout: str) -> dict[str, object]:
 
 
 @pytest.mark.os_keychain  # cross-process resumption needs a minted acceleration receipt
-def test_a_named_profile_resolves_in_a_process_that_did_not_write_it(tmp_path: Path) -> None:
+def test_a_named_profile_resolves_in_a_process_that_did_not_write_it(
+    cold_profile: tuple[Path, str], *, installed_process_world: InstalledProcessWorld
+) -> None:
     """``config profile view NAME`` finds a record another process persisted.
 
     The failing observation this closes: the record is present on disk with
     its keys, and the named-profile path reported ``missing_profile_record``
     because nothing had bound a custody session serving that bucket.
     """
-    require_os_credential_store()
-    _register_profile_for_cold_run(tmp_path, _LABEL, **_FACTS)
+    storage_root, _profile_id = cold_profile
 
-    shown = _run_cli_cold(tmp_path, ["--format", "json", "config", "profile", "view", _LABEL])
+    shown = _run_cli_cold(
+        storage_root,
+        ["--format", "json", "config", "profile", "view", _LABEL],
+        installed_process_world=installed_process_world,
+    )
 
     assert shown.returncode == 0, f"named-profile show failed in a cold process: {shown.stdout}\n{shown.stderr}"
     result = _envelope_result(shown.stdout)
@@ -110,7 +178,9 @@ def test_a_named_profile_resolves_in_a_process_that_did_not_write_it(tmp_path: P
 
 
 @pytest.mark.os_keychain  # cross-process resumption needs a minted acceleration receipt
-def test_the_named_and_active_paths_agree_about_the_same_record(tmp_path: Path) -> None:
+def test_the_named_and_active_paths_agree_about_the_same_record(
+    cold_profile: tuple[Path, str], *, installed_process_world: InstalledProcessWorld
+) -> None:
     """The two resolution paths report the same record, not two answers.
 
     The defect was never that one path was wrong in isolation -- each was
@@ -118,11 +188,16 @@ def test_the_named_and_active_paths_agree_about_the_same_record(tmp_path: Path) 
     disk, so which answer an operator got depended on whether they named the
     profile or relied on the active pointer.
     """
-    require_os_credential_store()
-    profile_id = _register_profile_for_cold_run(tmp_path, _LABEL, **_FACTS)
+    storage_root, profile_id = cold_profile
 
-    by_name = _run_cli_cold(tmp_path, ["--format", "json", "config", "profile", "view", _LABEL])
-    by_active = _run_cli_cold(tmp_path, ["--format", "json", "config", "profile", "view"])
+    by_name = _run_cli_cold(
+        storage_root,
+        ["--format", "json", "config", "profile", "view", _LABEL],
+        installed_process_world=installed_process_world,
+    )
+    by_active = _run_cli_cold(
+        storage_root, ["--format", "json", "config", "profile", "view"], installed_process_world=installed_process_world
+    )
 
     assert by_name.returncode == 0, f"{by_name.stdout}\n{by_name.stderr}"
     assert by_active.returncode == 0, f"{by_active.stdout}\n{by_active.stderr}"

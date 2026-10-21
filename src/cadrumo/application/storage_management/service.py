@@ -76,7 +76,7 @@ RECLAIMABLE_LIFECYCLES: Final[frozenset[StorageLifecycle]] = frozenset(
 )
 """Declared lifecycle classes whose contents ``reclaim`` may delete.
 
-The complement is :attr:`~cadrumo.core.StorageLifecycle.UNBOUNDED_BY_DESIGN`,
+The complement is :attr:`~cadrumo.core.storage_taxonomy.StorageLifecycle.UNBOUNDED_BY_DESIGN`,
 which is the encrypted substrate, the key material, the audit trail, and the
 durable filing outputs. Those are not caches that grew too large; their growth
 is the record. Deriving the permitted set from the declared axis rather than
@@ -224,7 +224,8 @@ def inspect_storage_tree(*, settings: Settings | None = None) -> StorageTreeChec
     for category, location in STORAGE_TAXONOMY.items():
         if location.scope is not StorageScope.ROOT or location.settings_field is None:
             continue
-        if uses_external_transport(location, resolved):
+        # The runtime creates what it owns when it starts; with none running its absence is no gap in the tree.
+        if location.runtime_owned or uses_external_transport(location, resolved):
             continue
         if getattr(resolved, location.settings_field, None) is None:
             continue

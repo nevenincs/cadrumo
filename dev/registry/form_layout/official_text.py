@@ -70,7 +70,7 @@ def description_path(description: str | None) -> DescriptionPath:
     row, and the rest the section. With two, the first is the section and the
     second the field. A single segment names only the field.
     """
-    if not description:
+    if not (description is not None and description):
         return DescriptionPath((), None, None)
     stripped = _BOX.sub(" ", _FORMULA.sub(" ", clean_official_text(description)))
     segments = tuple(

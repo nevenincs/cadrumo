@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-08'
+modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:b0716341dc5b2bde051d75973a7e323336da96b7582b2059ac6684ac6ffffd53'
+body_hash: 'sha256:4db12cba8d0c89cc4e312a2da79a4aa44cca21b88cbd35ccabcb6a8e98f69f78'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -669,6 +669,115 @@ related:
 - `S19` `verify:` `corrected transport Pyrefly and BasedPyright Windows Linux Darwin` -> `pass`
 - `S19` `verify:` `corrected native Mac Python 59 and Linux Python 29 tests` -> `pass`
 - `S19` `verify:` `corrective source review and unchanged generated Rust contract` -> `pass`
+- `S19` `M` `native/manager/src/session/instance.rs`
+- `S19` `verify:` `Darwin instance native Mac manager 83 and platform 32 tests` -> `pass`
+- `S19` `verify:` `Darwin instance native Mac all-target manager and platform Clippy` -> `pass`
+- `S19` `verify:` `Darwin instance Windows manager all-target Clippy` -> `pass`
+- `S19` `verify:` `Darwin instance independent source review rustfmt and diff check` -> `pass`
+- `S19` `M` `native/manager/src/macos/process.rs`
+- `S19` `M` `native/manager/src/supervision/stop.rs`
+- `S19` `verify:` `native Mac check8 platform32 manager90 tests and both Clippy` -> `pass`
+- `S19` `verify:` `configured Windows manager all-target Clippy` -> `pass`
+- `S19` `verify:` `native task-name audit-token and owned-child signal probes` -> `pass`
+- `S19` `A` `native/manager/src/macos/activity.rs`
+- `S19` `verify:` `Mac check9: platform32 manager93 tests and both Clippy` -> `pass`
+- `S19` `verify:` `configured Windows manager148 tests and Clippy` -> `pass`
+- `S19` `verify:` `scoped Rustfmt edition2024 and integrated source review` -> `pass`
+- `S19` `M` `native/manager/src/macos/activity.rs`
+- `S19` `verify:` `Mac check10: platform32 manager93 tests and both Clippy` -> `pass`
+- `S19` `verify:` `canonical-module corrective review and scoped Rustfmt` -> `pass`
+- `S19` `A` `native/manager/src/lifecycle.rs`
+- `S19` `M` `native/manager/src/windows_lifecycle.rs`
+- `S19` `M` `native/manager/src/cutover_coordinator.rs`
+- `S19` `verify:` `Mac check11: platform32 manager93 tests and both Clippy` -> `pass`
+- `S19` `verify:` `configured Windows manager148 tests and Clippy` -> `pass`
+- `S19` `verify:` `scoped Rustfmt and integrated lifecycle extraction review` -> `pass`
+- `S19` `A` `native/manager/src/successor.rs`
+- `S19` `R` `native/manager/src/cutover_child.rs` -> `native/manager/src/successor/windows.rs`
+- `S19` `M` `native/manager/src/background.rs`
+- `S19` `M` `native/manager/src/startup.rs`
+- `S19` `M` `native/manager/src/lifecycle.rs`
+- `S19` `M` `native/manager/src/installation_watch.rs`
+- `S19` `M` `native/manager/src/main.rs`
+- `S19` `verify:` `Mac check12 platform 32 manager 94 tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `Windows manager 148 tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `scoped rustfmt and diff check` -> `pass`
+- `S19` `verify:` `Mac check13 platform32 manager98 tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `Windows manager152 tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `scoped rustfmt and diff check` -> `pass`
+- `S19` `verify:` `independent nonblocking settlement review` -> `pass`
+- `S19` `A` `native/manager/src/macos/lifecycle.rs`
+- `S19` `A` `native/manager/src/macos/lifecycle/appkit.rs`
+- `S19` `verify:` `Mac check14 native manager100 tests` -> `pass`
+- `S19` `verify:` `Mac check14 manager Clippy unnecessary unsafe` -> `fail`
+- `S19` `verify:` `Mac check15 platform32 manager100 tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `Windows manager154 tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `independent inactive AppKit host source review` -> `pass`
+- `S19` `verify:` `scoped rustfmt and diff check` -> `pass`
+- `S19` `verify:` `isolated Linux platform25 and manager90 library tests` -> `pass`
+- `S19` `verify:` `isolated Linux platform and manager all-target release Clippy` -> `pass`
+- `S19` `M` `native/manager/src/macos/lifecycle/appkit.rs`
+- `S19` `A` `native/manager/src/macos/menu.rs`
+- `S19` `A` `native/manager/src/macos/menu/appkit.rs`
+- `S19` `A` `native/manager/src/macos/menu/tests.rs`
+- `S19` `verify:` `Native Mac 108 manager library tests` -> `pass`
+- `S19` `verify:` `Native Mac all-target Clippy warnings denied` -> `pass`
+- `S19` `verify:` `Edition 2024 format and diff checks` -> `pass`
+- `S28` `A` `native/manager/src/invocation.rs`
+- `S28` `M` `native/manager/src/admission.rs`
+- `S28` `M` `native/manager/src/installation.rs`
+- `S28` `M` `native/manager/src/lib.rs`
+- `S28` `M` `native/manager/src/main.rs`
+- `S28` `M` `native/manager/src/windows_lifecycle.rs`
+- `S28` `M` `native/manager/tests/entrypoint.rs`
+- `S28` `A` `.vault/audit/2026-10-09-runtime-manager-architecture-windows-admission-recovery-audit.md`
+- `S28` `verify:` `configured Rust 1.96 Windows x64 manager tests frozen snapshot default 167 tests` -> `pass`
+- `S28` `verify:` `configured Rust 1.96 Windows x64 manager tests frozen snapshot fixture-test-mode final 205 tests` -> `pass`
+- `S28` `verify:` `cargo fmt --manifest-path native/manager/Cargo.toml -- --check` -> `pass`
+- `S28` `verify:` `configured Clippy with ambient driver first attempt E0514` -> `fail`
+- `S28` `verify:` `configured Rust 1.96 Clippy all-targets fixture-test-mode warnings denied final` -> `pass`
+- `S28` `verify:` `git diff --check -- native/manager` -> `pass`
+- `S29` `M` `dev/packaging/native/cmake_build.py`
+- `S29` `M` `dev/packaging/native/tests/test_cargo_toolchain.py`
+- `S29` `M` `.vault/audit/2026-10-09-runtime-manager-architecture-windows-admission-recovery-audit.md`
+- `S29` `verify:` `focused pytest cargo_toolchain and build_timing 8 tests` -> `pass`
+- `S29` `verify:` `scoped Ruff lint and format` -> `pass`
+- `S29` `verify:` `scoped configured ty linux win32 darwin` -> `pass`
+- `S29` `verify:` `configured Rust 1.96 manager Clippy original command without PATH override` -> `pass`
+- `S29` `verify:` `scoped git diff --check` -> `pass`
+- `S30` `A` `native/manager/src/activation_probe.rs`
+- `S30` `A` `native/manager/tests/activation_probe.rs`
+- `S30` `M` `native/manager/src/installation.rs`
+- `S30` `M` `native/manager/src/invocation.rs`
+- `S30` `M` `native/manager/src/lib.rs`
+- `S30` `M` `native/manager/src/main.rs`
+- `S30` `M` `native/manager/tests/entrypoint.rs`
+- `S30` `M` `native/manager/tests/fixture/runtime.rs`
+- `S30` `M` `native/CONTRACT.md`
+- `S30` `M` `.vault/audit/2026-10-09-runtime-manager-architecture-windows-admission-recovery-audit.md`
+- `S30` `verify:` `frozen configured Rust 1.96 manager suite fixture-test-mode initial supervision2 failures` -> `fail`
+- `S30` `verify:` `frozen configured Rust 1.96 native manager preceding suites168 tests` -> `pass`
+- `S30` `verify:` `frozen configured Rust 1.96 supervision serial37 tests` -> `pass`
+- `S30` `verify:` `frozen configured Rust 1.96 termination and version-resource4 tests` -> `pass`
+- `S30` `verify:` `frozen configured Rust 1.96 clippy all-targets fixture-test-mode warnings denied` -> `pass`
+- `S30` `verify:` `configured native manager cargo fmt` -> `pass`
+- `S30` `verify:` `scoped git diff --check` -> `pass`
+- `S31` `M` `native/desktop/src-tauri/src/manager.rs`
+- `S31` `M` `native/desktop/src-tauri/src/manager/tests.rs`
+- `S31` `M` `native/desktop/src-tauri/src/python/manager_dispatch.py`
+- `S31` `A` `dev/packaging/native/tests/test_manager_dispatch.py`
+- `S31` `M` `.vault/audit/2026-10-09-runtime-manager-architecture-windows-admission-recovery-audit.md`
+- `S31` `verify:` `configured Rust 1.96 corrected integrated desktop manager22 tests` -> `pass`
+- `S31` `verify:` `configured Rust 1.96 isolated recovery staging manager21 tests with copied timestamps refreshed` -> `pass`
+- `S31` `verify:` `configured Rust 1.96 desktop clippy all-targets warnings denied` -> `pass`
+- `S31` `verify:` `adapter pytest8 tests final` -> `pass`
+- `S31` `verify:` `adapter/test scoped Ruff lint and format` -> `pass`
+- `S31` `verify:` `adapter/test ty win32 linux darwin` -> `pass`
+- `S31` `verify:` `configured Rust 1.96 desktop cargo fmt` -> `pass`
+- `S31` `verify:` `scoped git diff --check` -> `pass`
+- `S31` `verify:` `feature vault check errors0 warnings2` -> `pass`
+- `S31` `verify:` `plan check expected phase-order warning` -> `pass`
+- `S31` `verify:` `repository-wide vault check all two unrelated record errors and47warnings` -> `fail`
 
 ## Notes
 
@@ -720,3 +829,22 @@ related:
 - `S19` Accepted transport-only exception under explicit all-code/build advance authorization; source implementation and native verification pending, S19 remains open. Bounded crossref used as advisory, not complete corpus proof.
 - `S19` S19 remains open for platform activation/lifecycle/registration and acceptance. Frozen package builds unchanged; non-disposable hosts used only for isolated tests/builds and read-only native probes.
 - `S19` Transport-specific findings repaired; remaining full type diagnostic belongs to concurrently edited worker cleanup test. S19 remains open.
+- `S19` S19 remains open; isolated synthetic native evidence only, no main activation or host product/login/session transitions. Shared capability concurrent binding race corrected before native verification.
+- `S19` S19 remains open. Task-name rights corroborate held process UID/PID/pidversion; private admitted session is revalidated against target and current manager before exact-incarnation signaling. Adopted exit remains Unknown. ASID validation is bounded, not atomic with signal. check6 compilation failure and check7 transient lock failure retained; native probes corroborated CLOEXEC descriptor inheritance during concurrent spawn. Tests prove local capability release before bounded reacquisition; product locking unchanged. Main activation, lifecycle, registration and graphical acceptance remain gated. check8 source archive SHA256 22977a56b82453a28f714cb128379a1ac9a7a75dff095e90034374e9f1964fb5.
+- `S19` S19 remains open. Public caller-scoped Quartz activity is bracketed by retained kernel UID/ASID and full initial graphical admission; typed unavailable evidence never grants start/restart eligibility. It does not prove unlocked state or session end. GUI switch/logout acceptance and manager activation remain gated. Custody test post-drop wait now accounts for independently reproduced transient inherited descriptors; live-owner refusal unchanged. Native snapshot SHA256 c3b6e2a4bd66634f8ca3a9d44543b4bced0c5c1afa8d7c8a29510a6e081c6484.
+- `S19` Moved Activity and its implementations into the canonical activity module instead of adding a public re-export; private FFI ownership and behavior unchanged. Windows verification from check9 remains applicable to unchanged Windows paths. Native snapshot SHA256 4ceb74ad9fa2c3669d1b530149decd17cca53b986c9b7eb4444d9143c68d8b5b. S19 remains open.
+- `S19` S19 prerequisite only: existing lifecycle/cutover traits now have canonical shared definitions consumed by actual Windows host/coordinator. Existing defaults, Background Windows gating and concrete cancellation/claims/settlement behavior remain unchanged; no new native host adapter or activation. Snapshot SHA256 e3c711a1bafd6388909a91d9e9a74b051b43101394f2dbc696f77dfd25a140b9.
+- `S19` Shared lifecycle prerequisite only; native activation and versioned macOS installation remain incomplete. Non-disposable hosts received only isolated tests.
+- `S19` Errors now retain Running ownership rather than discarding it; Effects::Unknown unchanged. Native host activation and graphical acceptance remain open.
+- `S19` Check14 warning corrected by using typed safe API; no suppression. Main activation remains gated; no GUI loop, host signal policy, login or session-ending tests performed.
+- `S19` Direct native verification using configured toolchain with current canonical generated Linux contract; no CMake package acceptance or production host activation.
+- `S19` Inactive menu source; native installation/login/cutover and interactive acceptance remain gates.
+- `S28` Concurrent desktop-service-installation session owns installer/bootstrap and desktop retry flag integration; only native/manager source changed by this Step.
+- `S28` Semantic code service unavailable; named-file inspection and accepted vault decision discovery used.
+- `S28` Interactive installed and cross-release acceptance remains pending on a disposable interactive host; current process is Session 0.
+- `S29` GPT-6.1 Sol medium worker owns build-helper source; root confirms configured actual compiler check. External installer/desktop changes preserved.
+- `S30` 209 distinct manager cases pass across the scoped checks. Two initial unchanged short-bound supervision cases failed during concurrent Tauri compilation and passed without source/expectation changes in subsequent serial37 suite; original failure retained.
+- `S30` Probe affirms metadata grammar only. Historical managers unsupported by it retain tray Retry; installed and cross-release graphical acceptance remains pending.
+- `S31` User released desktop files; external installer/bootstrap baseline preserved. Commit only recovery semantic blobs and tests without capturing external uncommitted bootstrap hunks; both isolated and integrated source variants verified.
+- `S31` Interactive installation/GUI/COM/logout/cross-release acceptance remains pending on a disposable interactive host. Current machine product/login state untouched.
+- `S31` Global vault errors belong to desktop-frontend-coherence placeholder and git-free-tooling missing grounding, outside the recovery scope. Feature check remains errors0; no unrelated records changed.

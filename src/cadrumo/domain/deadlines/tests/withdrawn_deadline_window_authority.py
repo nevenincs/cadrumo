@@ -21,7 +21,7 @@ content.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 
 from ....core.hashing import content_hash_hex
@@ -77,7 +77,7 @@ def _without_year(
 
 
 @contextmanager
-def withdrawn_deadline_window_operation(*, modelo_id: str, filing_year: int) -> Iterator[PinnedAuthorityOperation]:
+def withdrawn_deadline_window_operation(*, modelo_id: str, filing_year: int) -> Generator[PinnedAuthorityOperation]:
     """Lease the published generation with every window ``modelo_id`` declares for ``filing_year`` withdrawn.
 
     Raises:

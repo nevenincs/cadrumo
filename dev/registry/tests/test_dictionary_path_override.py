@@ -162,8 +162,8 @@ def test_a_fixed_width_layout_may_not_declare_an_override() -> None:
     layout = next(layout for revision in modelos_by_id["303"].revisions.values() for layout in revision.export_layouts)
 
     with pytest.raises(ValidationError, match="reads no dictionary"):
-        ExportLayoutDefinition(
-            **layout.model_dump()
+        ExportLayoutDefinition.model_validate(
+            layout.model_dump()
             | {
                 "dictionary_path_overrides": (
                     XmlDictionaryPathOverride(

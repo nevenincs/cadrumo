@@ -8,6 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
@@ -32,11 +34,10 @@ from ..operations.operation_definition import OperationDefinition, OperationExec
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .iva_wallet_mutation import bind_iva_wallet_profile_ports
 from .iva_wallet_seed_ports import ModeloIvaWalletSeedPortsFactory
@@ -200,6 +201,7 @@ def build_modelo_iva_wallet_balance_definition(
     return OperationDefinition(
         definition_id=MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
         request_type=ModeloIvaWalletBalanceRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloIvaWalletBalanceOperationReport,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloIvaWalletBalanceRequest,
@@ -210,7 +212,6 @@ def build_modelo_iva_wallet_balance_definition(
         interaction_kinds=frozenset(),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 

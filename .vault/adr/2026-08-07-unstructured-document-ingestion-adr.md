@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:553a0cdd3089985196efba2a9d27c7bc2b05f4115a0346b52afac884eed809ed'
+body_hash: 'sha256:88b7aed2a9a48d49550e3bb39a5a7f4da15bb422f2956ed8c6f6020d1c49b4ba'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -107,7 +107,7 @@ This pipeline begins where exact reading is impossible.
   grounded-revalidation discipline is correct and is kept; what it lacks is
   anchoring (nothing ties a grounded value to the document's own text), lines,
   retención, and any measurement.
-- **The corpus is a stage-separated instrument.** `Y:\code\llm-invoice-smoke\corpus`,
+- **The corpus is a stage-separated instrument.** `<code-root>/llm-invoice-smoke\corpus`,
   302 documents in three populations — 30 generated, 66 acquired-real, 206
   operator-corpus (merged at corpus v4) — key `GROUND_TRUTH.json` v5 sha256
   `e2db6a499f6f0ffafa4cf44084f433962dd3f8a0f6f0a65facaf7df07bb38593`

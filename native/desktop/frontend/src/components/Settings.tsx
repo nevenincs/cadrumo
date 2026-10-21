@@ -1,7 +1,9 @@
 import { useId, useRef, useState, type ReactNode } from "react";
+import { identity } from "virtual:desktop-content";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { NativeSelect } from "@/components/ui/native-select";
+import { LanguageSelect, type LanguageControl } from "./LanguageSelect";
 import {
   Popover,
   PopoverAnchor,
@@ -11,11 +13,8 @@ import {
   SegmentedControl,
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
-import {
-  FOLLOW_LANGUAGE,
-  TERMINAL_FONT_SIZES,
-  type Prefs,
-} from "../shell/layout";
+import { TERMINAL_FONT_SIZES, type Prefs } from "../shell/layout";
+import { versionLine, type AboutState } from "../shell/about";
 import { terminalFontPx } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
 
@@ -53,40 +52,30 @@ function Choice<T extends string>({
   );
 }
 
-/** A language's own name for itself, as the platform spells it. */
-function languageName(code: string): string {
-  try {
-    const name = new Intl.DisplayNames([code], { type: "language" }).of(code);
-    return name ? name.charAt(0).toLocaleUpperCase(code) + name.slice(1) : code;
-  } catch {
-    return code;
-  }
-}
-
-/**
- * The settings popover, opened from the rail. Everything in it is a
- * preference of this window, kept in the browser's storage: it writes no
- * Cadrumo setting and reaches no backend. Account uses the dedicated sign-in
- * commands.
- */
+/** Window presentation settings and the shared output language; above them,
+ * while Cadrumo is not fully set up, the one line that leads into setup. */
 export function Settings({
   prefs,
   setPrefs,
-  languages,
+  language,
   onReset,
   close,
-  account,
+  advisory,
+  about,
 }: {
   prefs: Prefs;
   setPrefs: (prefs: Prefs) => void;
-  /** The languages the documentation is bundled in. */
-  languages: readonly string[];
+  language: LanguageControl;
   onReset: () => void;
   close: () => void;
-  account: ReactNode;
+  /** The setup advisory, first under the title; absent, or rendering
+   * nothing, when there is nothing to finish. */
+  advisory?: ReactNode;
+  /** The installation's version row, which opens the About dialog; absent
+   * where the host cannot say what is installed. */
+  about?: { state: AboutState | null; onOpen: () => void };
 }) {
   const t = useStrings();
-  const languageId = useId();
   const windowId = useId();
   const content = useRef<HTMLDivElement>(null);
   // Closing returns focus to where settings was opened from.
@@ -132,7 +121,7 @@ export function Settings({
         }}
       >
         <h2 className="font-serif text-lg">{t("desktop.settings.title")}</h2>
-        {account}
+        {advisory}
         <section className="grid gap-3" aria-labelledby={windowId}>
           <h3
             id={windowId}
@@ -186,34 +175,7 @@ export function Settings({
             )}
             onChange={(fontSize) => setPrefs({ ...prefs, fontSize })}
           />
-          {languages.length > 1 && (
-            <Field>
-              <FieldLabel htmlFor={languageId}>
-                {t("desktop.settings.language")}
-              </FieldLabel>
-              <NativeSelect
-                id={languageId}
-                controlSize="sm"
-                value={
-                  languages.includes(prefs.language)
-                    ? prefs.language
-                    : FOLLOW_LANGUAGE
-                }
-                onChange={(event) =>
-                  setPrefs({ ...prefs, language: event.target.value })
-                }
-              >
-                <option value={FOLLOW_LANGUAGE}>
-                  {t("desktop.settings.follow_cadrumo")}
-                </option>
-                {languages.map((code) => (
-                  <option key={code} value={code} lang={code}>
-                    {languageName(code)}
-                  </option>
-                ))}
-              </NativeSelect>
-            </Field>
-          )}
+          <LanguageSelect {...language} />
           <Button
             variant="outline"
             size="sm"
@@ -223,6 +185,30 @@ export function Settings({
             {t("desktop.settings.reset_layout")}
           </Button>
         </section>
+        {about && (
+          <button
+            type="button"
+            data-about-open
+            className="flex min-w-0 items-center justify-between gap-2 rounded-md px-1 py-1 text-left text-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            title={t("desktop.about.settings_hint")}
+            onClick={about.onOpen}
+          >
+            <span className="min-w-0 break-words">
+              {t("desktop.about.version_row", {
+                version:
+                  (about.state?.status === "ready"
+                    ? versionLine(about.state.info)
+                    : null) ?? identity.version,
+              })}
+            </span>
+            {about.state?.status === "ready" &&
+              about.state.info.build_type === "debug" && (
+                <Badge variant="warning">
+                  {t("desktop.about.debug_badge")}
+                </Badge>
+              )}
+          </button>
+        )}
       </PopoverContent>
     </Popover>
   );

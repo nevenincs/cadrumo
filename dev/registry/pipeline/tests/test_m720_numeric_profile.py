@@ -154,7 +154,9 @@ def test_complete_source_renders_two_500_position_records_with_exact_contact_and
         assert all(field.offset is not None and field.length is not None for field in record.fields)
         assert record.line_ending == "crlf"
         boundary_values: dict[tuple[BindingId, int | None], object] = {
-            (field.binding, None): int(field.allowed_values[0]) if field.allowed_values else None
+            (field.binding, None): int(field.allowed_values[0])
+            if (field.allowed_values is not None and field.allowed_values)
+            else None
             for field in record.fields
             if field.binding is not None
         }

@@ -51,7 +51,7 @@ All 24 assigned files were read completely through pages 1–9; no portions were
 - financial_operand.py (`src/cadrumo/application/operations/financial_operand.py`)
 - financial_operand_custody.py (`src/cadrumo/application/operations/financial_operand_custody.py`)
 - financial_operand_submission.py (`src/cadrumo/application/operations/financial_operand_submission.py`)
-- frontend_contracts.py (`src/cadrumo/application/operations/frontend_contracts.py`)
+- frontend_command_ports.py (`src/cadrumo/application/operations/frontend_command_ports.py`)
 - frontend_projection.py (`src/cadrumo/application/operations/frontend_projection.py`)
 - frontend_requests.py (`src/cadrumo/application/operations/frontend_requests.py`)
 - interactions.py (`src/cadrumo/application/operations/interactions.py`)

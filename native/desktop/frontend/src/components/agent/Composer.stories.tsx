@@ -1,0 +1,226 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { ComponentProps, ReactNode } from "react";
+import { Specimen } from "@/dev/catalogue/Frame";
+import { FIXTURE_CATALOG } from "@/dev/fixtures/agentCatalog";
+import {
+  FIXTURE_SKILLS,
+  MANY_FIXTURE_SKILLS,
+} from "@/dev/fixtures/agentSkills";
+import { catalogChoices, offeredSelection } from "../../shell/agentCatalog";
+import { SOURCE_LOCALE, translator } from "../../shell/strings";
+import { Composer } from "./Composer";
+import type {
+  AgentSelection,
+  ModelOption,
+  ProviderOption,
+  StagedAttachment,
+} from "./types";
+
+// Appearance only. Every value below is fixed specimen data: nothing is
+// uploaded, sent or answered, and no progress moves. The handlers given do
+// nothing, so a control that has one is drawn as available.
+
+/** The note every agent story carries, saying what it does not prove. */
+export const APPEARANCE_NOTE =
+  "Appearance only: fixed specimen data, no host. Nothing here uploads, sends or answers, and no progress moves.";
+
+export const NOOP = () => undefined;
+
+/** Keeps a draft in place: the specimen never sends it. */
+export const KEEP_DRAFT = () => false;
+
+// The specimen's providers and models are the scenario host's catalog, as
+// the column deduces its choices from it: every model in it is made up and
+// named as a fixture.
+const CHOICES = catalogChoices(translator(SOURCE_LOCALE), FIXTURE_CATALOG);
+
+export const PROVIDERS: ProviderOption[] = CHOICES.providers;
+
+export const MODELS: Record<string, ModelOption[]> = CHOICES.models;
+
+export const SELECTION: AgentSelection = offeredSelection(CHOICES, null) ?? {
+  providerId: "",
+  wayId: "",
+  modelId: "",
+};
+
+// Pictures for image tiles, drawn inline: no request leaves the catalogue.
+function picture(body: string): string {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>${body}</svg>`,
+  )}`;
+}
+
+export const RECEIPT_PICTURE = picture(
+  "<rect width='64' height='64' fill='gainsboro'/><rect x='18' y='8' width='28' height='48' fill='white'/><path d='M23 18h18M23 25h14M23 32h18M23 39h10' stroke='gray' stroke-width='2'/>",
+);
+export const INVOICE_PICTURE = picture(
+  "<rect width='64' height='64' fill='lightsteelblue'/><rect x='12' y='10' width='40' height='44' fill='white'/><path d='M18 20h16M18 28h28M18 34h28M18 40h20' stroke='slategray' stroke-width='2'/>",
+);
+
+export const READY_FILES: StagedAttachment[] = [
+  {
+    id: "a1",
+    name: "factura-2026-031.pdf",
+    extension: "pdf",
+    sizeBytes: 182_400,
+    kind: "document",
+    state: "ready",
+  },
+  {
+    id: "a2",
+    name: "ticket-gasolinera.jpg",
+    extension: "jpg",
+    sizeBytes: 1_240_000,
+    kind: "image",
+    state: "ready",
+    thumbnailUrl: RECEIPT_PICTURE,
+  },
+  {
+    id: "a3",
+    name: "extracto-tercer-trimestre.xlsx",
+    extension: "xlsx",
+    sizeBytes: 48_900,
+    kind: "sheet",
+    state: "ready",
+  },
+];
+
+export const UPLOADING_FILES: StagedAttachment[] = [
+  ...READY_FILES.slice(0, 1),
+  {
+    id: "u1",
+    name: "facturas-septiembre.zip",
+    extension: "zip",
+    sizeBytes: 8_400_000,
+    kind: "archive",
+    state: "uploading",
+    progress: 0.4,
+    memberCount: 23,
+  },
+  {
+    id: "u2",
+    name: "notas.txt",
+    extension: "txt",
+    sizeBytes: 2_100,
+    kind: "text",
+    state: "queued",
+  },
+];
+
+type Args = ComponentProps<typeof Composer>;
+
+function Column({ children }: { children: ReactNode }) {
+  return (
+    <div className="grid w-(--agent-w) gap-3">
+      <Specimen title="Composer" note={APPEARANCE_NOTE}>
+        <div className="w-full">{children}</div>
+      </Specimen>
+    </div>
+  );
+}
+
+const meta = {
+  title: "Shell/Agent/Composer",
+  excludeStories: /^[A-Z][A-Z_]*$/,
+  parameters: {
+    surface: "chrome",
+    docs: { description: { component: APPEARANCE_NOTE } },
+  },
+  args: {
+    locale: "en",
+    attachments: [],
+    providers: PROVIDERS,
+    models: MODELS,
+    selection: SELECTION,
+    onSend: KEEP_DRAFT,
+    onStop: NOOP,
+    onAddFiles: NOOP,
+    onSelectionChange: NOOP,
+    onRemoveAttachment: NOOP,
+    onRemoveAllAttachments: NOOP,
+    onShowAllAttachments: NOOP,
+  },
+  render: (args: Args, { globals }) => (
+    <Column>
+      <Composer
+        key={args.defaultDraft ?? ""}
+        {...args}
+        locale={String(globals.locale)}
+      />
+    </Column>
+  ),
+} satisfies Meta<Args>;
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Empty: Story = { name: "Empty: Send held back" };
+
+export const WithText: Story = {
+  args: {
+    defaultDraft:
+      "What is left to file for the third quarter, and when is the 303 due?",
+  },
+};
+
+export const WithAttachments: Story = {
+  args: { defaultDraft: "Classify these for me.", attachments: READY_FILES },
+};
+
+export const UploadsInProgress: Story = {
+  name: "Uploads in progress: Send held back",
+  args: {
+    defaultDraft: "Read these when they arrive.",
+    attachments: UPLOADING_FILES,
+  },
+};
+
+const BUNDLED_SKILLS = () => Promise.resolve(FIXTURE_SKILLS);
+const HUNDREDS_OF_SKILLS = () => Promise.resolve(MANY_FIXTURE_SKILLS);
+
+export const SlashSkills: Story = {
+  name: "Slash: skills and commands",
+  args: { defaultDraft: "/", skills: BUNDLED_SKILLS, onSkillCommand: NOOP },
+};
+
+export const SlashFiltered: Story = {
+  name: "Slash: filtered",
+  args: {
+    defaultDraft: "Revisa /fact",
+    skills: BUNDLED_SKILLS,
+    onSkillCommand: NOOP,
+  },
+};
+
+export const SlashHundreds: Story = {
+  name: "Slash: hundreds of skills scroll",
+  args: { defaultDraft: "/", skills: HUNDREDS_OF_SKILLS },
+};
+
+export const SlashCommandArgument: Story = {
+  name: "Slash: a command asks for its skill",
+  args: {
+    defaultDraft: "/skill-verify ",
+    skills: BUNDLED_SKILLS,
+    onSkillCommand: NOOP,
+  },
+};
+
+export const Running: Story = {
+  name: "Running: Stop",
+  args: { running: true },
+};
+
+export const EveryActionUnavailable: Story = {
+  args: {
+    defaultDraft: "Nothing here can act yet.",
+    attachments: READY_FILES,
+    onSend: undefined,
+    onStop: undefined,
+    onAddFiles: undefined,
+    onSelectionChange: undefined,
+    onRemoveAttachment: undefined,
+    onRemoveAllAttachments: undefined,
+    onShowAllAttachments: undefined,
+  },
+};

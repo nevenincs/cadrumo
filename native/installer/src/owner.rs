@@ -48,12 +48,14 @@ pub enum Operation {
 pub enum Role {
     Version,
     Registration,
+    Application,
 }
 impl Role {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Version => "version",
             Self::Registration => "registration",
+            Self::Application => "application",
         }
     }
 }
@@ -84,6 +86,7 @@ impl Callback {
         }
         let value: Self = serde_json::from_slice(bytes).map_err(|_| Refusal::InvalidRequest)?;
         if value.schema != 2
+            || value.claim.role == Role::Application
             || value.identity.application_id.is_empty()
             || value.identity.channel.is_empty()
             || value.identity.platform != "windows-x64"

@@ -10,6 +10,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.identity.digest import ContentDigest
 from ...core.identity.profile import canonical_profile_bucket_id
@@ -18,7 +20,6 @@ from ...core.time.clock import now
 from ..operations.capabilities import OperationOwnedResource
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .session import LiveSessionWriteReceipt
 

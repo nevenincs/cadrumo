@@ -27,6 +27,7 @@ from ..components.widgets import (
     SourceActionCard,
     SourceActionDescriptor,
 )
+from .aeat_auth_setup import readiness_text
 from .overview_contracts import (
     _ABSENT_GLYPH,
     _COMPLETE_SETUP_KEY,
@@ -102,9 +103,14 @@ class ProfileOverviewRenderingMixin:
         for source in known_profile_acquisition_sources():
             posture = self._credential_postures.get(source.key)
             credential_ready = posture is None or not posture.requires_aeat_authentication or posture.credential_held
-            button = self.query_one(f"#source-{source.key.value}", SourceActionCard).query_one(Button)
-            button.display = door_ready
-            button.disabled = not (door_ready and credential_ready)
+            if self._aeat_auth_setup is not None and source.requires_aeat_authentication:
+                credential_ready = self._auth_readiness is not None and self._auth_readiness.ready
+            # A saved profile can rebuild the source cards while a readiness
+            # read settles. The redraw calls this again after mounting them.
+            for card in self.query(SourceActionCard).filter(f"#source-{source.key.value}"):
+                for button in card.query(Button):
+                    button.display = door_ready
+                    button.disabled = not (door_ready and credential_ready)
 
     async def _redraw(self: ProfileManagerScreen) -> None:
         """Rebuild the profile context and every schema section table.
@@ -113,7 +119,7 @@ class ProfileOverviewRenderingMixin:
         It is what ``on_mount`` needs, and what an action returning a fresh
         overview needs, because either can hand the page a structurally
         different profile. A single-field edit goes through
-        :meth:`_apply_overview` instead, which repaints only the cells whose
+        :meth:`apply_overview` instead, which repaints only the cells whose
         content actually moved — the same page, at a fraction of the work.
         """
         async with self._render_lock:
@@ -129,6 +135,11 @@ class ProfileOverviewRenderingMixin:
         await sources.remove_children()
         showing_sources = not self._onboarding or self._setup_stage is ProfileSetupStage.GET_DATA
         if showing_sources:
+            if self._aeat_auth_setup is not None:
+                await sources.mount(
+                    Static(readiness_text(self._auth_readiness), id="manager-auth-readiness", markup=False),
+                    Button(tr("tui.aeat_auth.edit"), id="manager-auth-edit", compact=True),
+                )
             await sources.mount_all(self._source_cards())
         if showing_sources and self._open_document_reader is not None:
             await sources.mount(
@@ -191,7 +202,9 @@ class ProfileOverviewRenderingMixin:
             )
         return self._section_title(section)
 
-    async def _apply_overview(self: ProfileManagerScreen, updated: ProfileOverview) -> None:
+    async def apply_overview(
+        self: ProfileManagerScreen, updated: ProfileOverview, *, refresh_auth: bool = True
+    ) -> None:
         """Show ``updated`` by repainting only what differs from the page on screen.
 
         Most edits leave the row SET alone: the overview is projected by
@@ -214,6 +227,8 @@ class ProfileOverviewRenderingMixin:
         full rebuild rather than writing into coordinates the new page no
         longer has.
         """
+        if refresh_auth and self._aeat_auth_setup is not None:
+            self.run_worker(self._refresh_auth(), group="profile-auth-readiness", exclusive=True)
         async with self._render_lock:
             previous = self.overview
             self.overview = updated

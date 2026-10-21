@@ -9,8 +9,9 @@ import pytest
 
 from cadrumo.adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID, EcbReferenceRateProvider
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.tests.ecb_stub import ecb_csv_fetch
+
+from .....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
 

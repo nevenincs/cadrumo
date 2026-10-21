@@ -3,23 +3,24 @@
 from __future__ import annotations
 
 import ast
-import importlib
 import inspect
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
+from cadrumo_client.commands.graph import CommandSpecGraph
+from cadrumo_client.commands.shared_contracts import DefaultKind, SchemaState
+
 from ..._root_command_specs import ROOT_COMMAND_SPECS
-from ...command_graph import CommandSpecGraph
-from ...command_shared_contracts import DefaultKind, SchemaState
 from ..command_specs import CONFIG_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_complete_config_graph_is_unique_connected_and_runtime_derived() -> None:
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS), resolver=resolve_deferred_target)
     config_nodes = tuple(node for node in graph.nodes() if node.path[:2] == ("aeat", "config"))
 
     assert config_nodes
@@ -35,16 +36,16 @@ def test_every_config_handler_and_schema_target_resolves() -> None:
             assert spec.result_schema.state is SchemaState.NOT_SUPPORTED
             continue
         assert spec.handler.target is not None
-        handler = getattr(importlib.import_module(spec.handler.target.module), spec.handler.target.qualname)
+        handler = resolve_deferred_target(spec.handler.target)
         assert callable(handler)
-        assert not handler.__name__.startswith("_")
+        assert hasattr(handler, "__name__")
+        handler_name: object = handler.__name__
+        assert isinstance(handler_name, str)
+        assert not handler_name.startswith("_")
         assert spec.result_schema.state is SchemaState.TARGET
         assert spec.result_schema.target is not None
         assert spec.result_schema.identity is not None
-        schema = getattr(
-            importlib.import_module(spec.result_schema.target.module),
-            spec.result_schema.target.qualname,
-        )
+        schema = resolve_deferred_target(spec.result_schema.target)
         assert inspect.isclass(schema)
 
 
@@ -58,7 +59,7 @@ def test_profile_schema_identities_preserve_compound_command_tokens() -> None:
     """
     from ..profile_command_specs import PROFILE_COMMAND_SPECS
 
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS), resolver=resolve_deferred_target)
     leaf_keys = {spec.key for spec in PROFILE_COMMAND_SPECS if spec.result_schema.identity is not None}
     identities = {
         node.spec.key: (node.path, node.spec.result_schema.identity)
@@ -81,7 +82,8 @@ def test_plain_handler_defaults_match_specs_except_variadic_wizard_boundary() ->
     for spec in CONFIG_COMMAND_SPECS:
         if spec.handler is None or spec.handler.target is None:
             continue
-        handler = getattr(importlib.import_module(spec.handler.target.module), spec.handler.target.qualname)
+        handler = resolve_deferred_target(spec.handler.target)
+        assert callable(handler)
         signature = inspect.signature(handler)
         if any(parameter.kind is inspect.Parameter.VAR_KEYWORD for parameter in signature.parameters.values()):
             assert spec.key in {"config_profile_create", "config_profile_edit"}
@@ -99,12 +101,13 @@ def test_plain_handler_defaults_match_specs_except_variadic_wizard_boundary() ->
 
 def test_handler_modules_carry_no_typer_structural_authority() -> None:
     modules = {
-        spec.handler.target.module
+        inspect.getmodule(resolve_deferred_target(spec.handler.target))
         for spec in CONFIG_COMMAND_SPECS
         if spec.handler is not None and spec.handler.target is not None
     }
-    for module_name in modules:
-        module = importlib.import_module(module_name)
+    for module in modules:
+        assert module is not None
+        module_name = module.__name__
         module_file = Path(inspect.getfile(module))
         source = module_file.read_text(encoding="utf-8")
         tree = ast.parse(source)
@@ -157,28 +160,32 @@ def test_fiscal_residency_reaches_the_handler_as_the_documented_token(token: str
     ("token", "parameters", "identity"),
     [
         ("load", ("model", "role"), "config.provision.load"),
-        ("setup", ("confirm",), "config.provision.setup"),
+        ("setup", ("yes",), "config.provision.setup"),
     ],
 )
 def test_provision_load_and_setup_extend_the_provision_cluster(
     token: str, parameters: tuple[str, ...], identity: str
 ) -> None:
     from .._provision_command_specs import CONFIG_PROVISION_COMMAND_SPECS
-    from .._spec_policies import NETWORK_WRITE
 
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS), resolver=resolve_deferred_target)
     (node,) = (node for node in graph.nodes() if node.path == ("aeat", "config", "provision", token))
     spec = node.spec
 
     assert spec in CONFIG_PROVISION_COMMAND_SPECS
     assert spec.parent_key == "config_provision"
     assert tuple(parameter.name for parameter in spec.parameters) == parameters
-    assert spec.policy == NETWORK_WRITE
+    # Both submit a registered operation in the signed-in profile's session, so
+    # they declare installation storage beside the network they write through.
+    assert spec.policy.capabilities == frozenset({"local-storage", "network"})
+    assert spec.policy.side_effects == frozenset({"network", "local-state"})
+    assert spec.policy.performance == "external-io"
+    assert not spec.policy.destructive
     assert spec.result_schema.identity == identity
     assert not any(path[:3] == ("aeat", "config", "llm") for path in (n.path for n in graph.nodes()))
 
 
-def test_setup_installs_only_with_an_explicit_confirm_flag() -> None:
+def test_setup_answers_its_review_only_with_an_explicit_yes_flag() -> None:
     from typer._click.core import Context
 
     from ...tests.cli_runner import cadrumo_click_command
@@ -190,8 +197,8 @@ def test_setup_installs_only_with_an_explicit_confirm_flag() -> None:
         assert child is not None, name
         context = Context(child, parent=context, info_name=name)
         command = child
-    confirm = next(parameter for parameter in command.params if parameter.name == "confirm")
+    yes = next(parameter for parameter in command.params if parameter.name == "yes")
 
-    assert confirm.is_flag
-    assert confirm.default is False
-    assert confirm.opts == ["--confirm"]
+    assert yes.is_flag
+    assert yes.default is False
+    assert yes.opts == ["--yes"]

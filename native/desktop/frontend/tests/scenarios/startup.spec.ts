@@ -47,7 +47,7 @@ test("settings remain usable during startup", async ({ page }) => {
   await page.goto("/scenarios.html?scenario=runtime-starting&latency=0");
   await expect(ghost(page).first()).toBeVisible();
   await page
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   await expect(page.locator(".settings")).toBeVisible();
   expect(await calls(page, "signIn")).toBe(0);
@@ -58,13 +58,50 @@ test("a failed initial readiness read exposes recovery without claiming readines
   page,
 }) => {
   await page.goto("/scenarios.html?scenario=runtime-startup-failed&latency=0");
-  await expect(page.locator(".sign-in")).toContainText("timed_out");
+  await expect(page.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.other"),
+  );
+  await expect(page.locator(".sign-in")).not.toContainText("timed_out");
   await expect(ghost(page)).toHaveCount(0);
   await expect(
     page.getByLabel(label("desktop.signin.password"), { exact: true }),
   ).toHaveCount(0);
   expect(await calls(page, "profiles")).toBe(0);
   expect(await calls(page, "startManager")).toBe(0);
+});
+
+test("automatic startup failure stays actionable without internal codes through later status reads", async ({
+  page,
+}) => {
+  await page.goto(
+    "/scenarios.html?scenario=manager-installation-failed&latency=0",
+  );
+  const failure = page.locator(".sign-in");
+  await expect(ghost(page)).toHaveCount(0);
+  await expect(failure).toContainText(
+    label("desktop.signin.refused.manager", { code: "package_unavailable" }),
+  );
+  await expect(failure.locator("code")).toHaveCount(0);
+  await expect(failure).not.toContainText(/package_unavailable|NotFound/);
+  await expect(failure).not.toContainText("private installation path");
+  await expect(failure).not.toContainText("exception payload");
+  await expect(
+    page.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    failure.getByRole("button", {
+      name: label("desktop.signin.start_services"),
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.clock.runFor(91_000);
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(failure).toContainText(label("desktop.signin.refused.manager"));
+  await expect(failure.locator("code")).toHaveCount(0);
+  await expect(failure).not.toContainText(/package_unavailable|NotFound/);
+  expect(await calls(page, "startManager")).toBe(0);
+  expect(await calls(page, "signIn")).toBe(0);
+  expect(await calls(page, "profiles")).toBe(0);
 });
 
 test("leaving startup cancels its timer and status polling", async ({

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -39,7 +39,6 @@ from cadrumo.application.operations.persistence.journal import OperationPersiste
 from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.config import Settings
 from cadrumo.core.operations import (
@@ -50,6 +49,8 @@ from cadrumo.core.operations import (
 )
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -87,7 +88,7 @@ class _SyntheticIvaRemoteStatePort:
         self.local_persistence_guarded = False
 
     @contextmanager
-    def active_storage_span(self) -> Iterator[None]:
+    def active_storage_span(self) -> Generator[None]:
         self.events.append("storage-span")
         yield
 
@@ -159,7 +160,7 @@ class _ResourceScope:
         self.close_calls = 0
 
     @contextmanager
-    def activate(self) -> Iterator[None]:
+    def activate(self) -> Generator[None]:
         self.activation_depth += 1
         try:
             yield
@@ -223,7 +224,7 @@ def test_supervisor_admits_exact_profile_and_projects_guarded_wallet_capture(tmp
             profile_id=profile_id,
             destination_id=uuid4(),
             action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=registration.contract,
             published_authority=Availability.AVAILABLE,
         )

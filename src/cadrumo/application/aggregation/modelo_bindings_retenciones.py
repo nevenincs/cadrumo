@@ -146,7 +146,7 @@ class RetencionesAggregationSourceResolver:
         """Resolve the retenciones binding values for the declared modelo context."""
         try:
             observations = self.load_calculation_observations(
-                modelo=str(context.modelo),
+                modelo=context.modelo,
                 period=context.period,
                 revision=context.revision,
             )
@@ -160,14 +160,14 @@ class RetencionesAggregationSourceResolver:
         if observations is None:
             return empty_source_resolution(self.resolver_id, self.owned_sources)
         if not observations:
-            is_m115 = str(context.modelo) == Modelo("115").value
+            is_m115 = context.modelo == Modelo("115").value
             is_m115_no_relevant_payment = is_m115 and is_m115_no_relevant_payment_period(
                 filing_year=context.filing_year,
                 period_token=context.period.registry_token,
                 attested_periods=self._m115_no_relevant_payment_periods,
             )
             if is_m115_no_relevant_payment:
-                aggregation = self.aggregate(str(context.modelo), (), period=context.period)
+                aggregation = self.aggregate(context.modelo, (), period=context.period)
                 return CalculationSourceResolution(
                     resolver_id=self.resolver_id,
                     owned_sources=self.owned_sources,
@@ -193,7 +193,7 @@ class RetencionesAggregationSourceResolver:
             # that path, following the Modelo 180 precedent of carrying the flag
             # in the message. The typed action channel cannot express it -- the
             # wizard setup command projects no inputs to bind against.
-            is_m111 = str(context.modelo) == Modelo("111").value
+            is_m111 = context.modelo == Modelo("111").value
             message = tr(
                 "aggregation.retenciones.errors.m111_no_retenciones_attestation_missing"
                 if is_m111
@@ -202,7 +202,7 @@ class RetencionesAggregationSourceResolver:
             # ``Translatable`` carries only the key; the renderer interpolates
             # from this context, so the attestation period travels there.
             refusal_context: dict[str, object] = {
-                "modelo": str(context.modelo),
+                "modelo": context.modelo,
                 "filing_year": str(context.filing_year),
                 "period": context.period.registry_token,
                 "source_kind": "retenciones_aggregation",
@@ -222,7 +222,7 @@ class RetencionesAggregationSourceResolver:
                     },
                 ),
             )
-        aggregation = self.aggregate(str(context.modelo), tuple(observations), period=context.period)
+        aggregation = self.aggregate(context.modelo, tuple(observations), period=context.period)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,

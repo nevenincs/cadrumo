@@ -253,7 +253,7 @@ def landed_origin(landed_url: str | None) -> str | None:
     A recorded URL is a claim about where a read happened, and a read whose
     host cannot be established has no such claim to make.
     """
-    if not landed_url:
+    if not (landed_url is not None and landed_url):
         return None
     landed = urlsplit(landed_url)
     if not landed.scheme or not landed.netloc:

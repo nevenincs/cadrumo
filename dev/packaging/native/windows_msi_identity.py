@@ -65,3 +65,22 @@ def msi_identity(value: DistributionIdentity, scope: InstallationScope, role: Pr
         root_directory="LocalAppDataFolder" if scope == "user" else "ProgramFiles64Folder",
         version_directory=load_layout("windows-x64")["installation"]["versions"],
     )
+
+
+def release_identity(value: DistributionIdentity, role: ProductRole) -> MsiIdentity:
+    """One scope-aware MSI identity, with independently owned release features."""
+    if value.target != "windows-x86-64" or role not in {"version", "registration"}:
+        raise ValueError("A release MSI requires the canonical Windows target and ownership role")
+    validate_native_version(value.version)
+    namespace = uuid5(NAMESPACE_DNS, f"{value.application_id}/{value.target}/msi/release")
+    return MsiIdentity(
+        role=role,
+        scope="user",
+        version=value.version,
+        product_code=str(uuid5(namespace, f"product/{value.version}")).upper(),
+        upgrade_code=str(namespace).upper(),
+        install_scope="perUserOrMachine",
+        registry_root="HKMU",
+        root_directory="LocalAppDataFolder",
+        version_directory=load_layout("windows-x64")["installation"]["versions"],
+    )

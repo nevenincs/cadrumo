@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..adapters.persistence.profile.apoderado import build_apoderado_config_repository
 from ..adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
 from ..application.auth.apoderado_execution import ApoderadoOperationPorts
 from ..application.auth.diagnostic_report_operation import AuthDiagnosticReportPorts
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import load_settings

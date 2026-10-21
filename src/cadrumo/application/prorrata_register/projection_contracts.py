@@ -102,7 +102,11 @@ class ProrrataEntryProjection(BaseModel):
             sector_id=entry.sector_id,
             interrupted=entry.interrupted,
             provisional_percentage=_public_decimal(entry.provisional_percentage),
-            provisional_provenance=(entry.provisional_provenance.value if entry.provisional_provenance else None),
+            provisional_provenance=(
+                entry.provisional_provenance.value
+                if (entry.provisional_provenance is not None and entry.provisional_provenance)
+                else None
+            ),
             authorisation_reference=entry.authorisation_reference,
             definitive_percentage=_public_decimal(entry.definitive_percentage),
             definitive_volume_con_derecho=_public_decimal(entry.definitive_volume_con_derecho),
@@ -188,7 +192,7 @@ class ProrrataSeedSourceProjection(BaseModel):
             modelo=seed.source_modelo,
             filing_year=seed.source_filing_year,
             period=seed.source_period,
-            casilla_id=str(seed.source_casilla_id),
+            casilla_id=seed.source_casilla_id,
             stamped_revision_id=seed.stamped_revision_id,
         )
 
@@ -232,7 +236,7 @@ class ProrrataListProjection(BaseModel):
 
 
 class ProrrataMutationProjection(BaseModel):
-    """Closed CLI/MCP/TUI projection for one prorrata mutation or its refusal."""
+    """Closed CLI/external client/TUI projection for one prorrata mutation or its refusal."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 

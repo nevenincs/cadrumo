@@ -6,15 +6,12 @@ from collections.abc import Callable
 from pathlib import Path
 from threading import Lock
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from .....application.user_profile.access_contracts import (
     ProfileAccessBinding,
 )
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-    NativeSecretBackend,
-)
+from .....application.user_profile.automation_custody_port import AutomationSecretStore, NativeSecretBackend
 from .automation_native_identity import automation_native_account
 
 

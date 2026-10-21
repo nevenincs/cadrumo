@@ -13,7 +13,7 @@ declare a ledger ready without looking at part of it.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -136,7 +136,7 @@ def _read_ports(*, one_sided_link: bool = False) -> InvoiceCatalogueReadPorts:
 
 
 @contextmanager
-def _stored(*transactions: Transaction) -> Iterator[TransactionCatalogue]:
+def _stored(*transactions: Transaction) -> Generator[TransactionCatalogue]:
     """Build the deterministic catalogue consumed by the application query."""
     yield TransactionCatalogue.from_transactions(transactions)
 

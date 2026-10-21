@@ -141,9 +141,9 @@ def test_verification_report_lines_preserve_persisted_findings_without_recovery_
         VerificationReport,
         derive_verification_report_id,
     )
-    from .._modelo_payloads import VerificationReportListResult, VerificationReportShowResult
     from .._modelo_rendering import verification_report_lines as _verification_report_lines
     from .._modelo_rendering import verification_report_payload as _verification_report_payload
+    from ..modelo_results import VerificationReportListResult, VerificationReportShowResult
 
     run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
     calc_id = "a" * 64
@@ -324,13 +324,13 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
         VerificationReport,
         derive_verification_report_id,
     )
-    from .._modelo_payloads import VerificationReportShowResult
     from .._modelo_rendering import (
         verification_report_lines as _verification_report_lines,
     )
     from .._modelo_rendering import (
         verification_report_payload as _verification_report_payload,
     )
+    from ..modelo_results import VerificationReportShowResult
 
     run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
     calc_id = "c" * 64
@@ -399,13 +399,13 @@ def test_verification_report_view_lists_missing_required_casillas() -> None:
         VerificationReport,
         derive_verification_report_id,
     )
-    from .._modelo_payloads import VerificationReportShowResult
     from .._modelo_rendering import (
         verification_report_lines as _verification_report_lines,
     )
     from .._modelo_rendering import (
         verification_report_payload as _verification_report_payload,
     )
+    from ..modelo_results import VerificationReportShowResult
 
     run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
     calc_id = "d" * 64
@@ -509,12 +509,12 @@ def test_the_projected_completeness_status_is_the_canonical_enum_not_a_free_stri
 
 def test_a_completeness_status_outside_the_closed_set_is_refused() -> None:
     """Anti-vacuity: the narrowing rejects a value the bare string accepted."""
-    from .._modelo_payloads import (
+    from .._modelo_rendering import verification_report_payload
+    from ..modelo_results import (
         VerificationReportPayload,
         VerificationReportShowResult,
         WorkVerifyResult,
     )
-    from .._modelo_rendering import verification_report_payload
 
     fields = verification_report_payload(_blocked_report()).model_dump(mode="python")
 

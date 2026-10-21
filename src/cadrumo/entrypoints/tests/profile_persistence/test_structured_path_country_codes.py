@@ -56,7 +56,6 @@ from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from cadrumo.domain.iva.establishment import country_code_for_stated_country_code, territorial_scope_for_country
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.entrypoints.adapter_composition import build_ledger_evidence_ports
@@ -74,6 +73,7 @@ from ....adapters.persistence.profile.tests.evidence_test_support import (
     make_svc as _make_svc,
 )
 from ....adapters.persistence.profile.tests.evidence_test_support import runtime_profile as runtime_profile
+from ....domain.iva.schema import InvoiceKind, IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 __all__ = ["isolated_settings", "repository", "runtime_profile", "secure_objects"]

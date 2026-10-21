@@ -141,8 +141,7 @@ def _client(
     retry_policy: LLMRetryPolicy | None = None,
 ) -> LLMClient:
     settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model=_CATALOGUED_MODEL,
+        cadrumo_llm_ollama_text_model=_CATALOGUED_MODEL,
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -344,7 +343,7 @@ def test_an_off_host_dispatch_is_not_headroom_checked(tmp_path: Path) -> None:
     # Would refuse on-host with these readings; must be silent off-host.
     with pytest.raises(LLMContentionError):
         client._require_load_headroom(LLMProvider.LOCAL, _CATALOGUED_MODEL)
-    client._require_load_headroom(LLMProvider.OPENAI, _CATALOGUED_MODEL)
+    client._require_load_headroom(LLMProvider.AGENT, _CATALOGUED_MODEL)
 
 
 def test_an_uncatalogued_model_is_not_assessed(tmp_path: Path) -> None:

@@ -78,7 +78,7 @@ from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residen
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.invoices.enums import invoice_class_simplificada
 from ...domain.invoices.models import Invoice
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 
 _DOMESTIC_COUNTRY_CODE = "ES"
 

@@ -27,23 +27,11 @@ from cadrumo.application.user_profile.access_administration import (
 )
 from cadrumo.application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
-    AccessAction,
-    AccessAllowed,
-    AccessDecision,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
     LoginEligibility,
-    OperationAccessPolicy,
-    OperationAccessRequest,
     OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
@@ -65,6 +53,17 @@ from cadrumo.application.user_profile.operations import (
 )
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
 from cadrumo.core.period import Period
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDecision, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 NOW = datetime(2026, 9, 26, 12, tzinfo=UTC)
@@ -198,7 +197,7 @@ def scenario() -> Scenario:
         profile_id=binding.profile_id,
         definition_id=PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         periods=frozenset({PERIOD}),
         period_independent=False,
         destination_id=uuid4(),
@@ -628,6 +627,13 @@ def test_attended_expiry_and_independent_password_access(scenario: Scenario) -> 
         grant=changed(scenario.grant, unattended=False, allow_os_lock=False),
     )
     assert isinstance(attended_subject.evaluate(), AccessAllowed)
+    native_login = changed(scenario.context.login_contexts[0], lock_state=OsLockState.NOT_APPLICABLE)
+    native_context = changed(scenario.context, login_contexts=(native_login,))
+    assert isinstance(replace(attended_subject, context=native_context).evaluate(), AccessAllowed)
+    assert_denied(
+        replace(attended_subject, context=native_context, ancestors=(changed(human, state=SessionState.REVOKED),)),
+        AccessDenialCode.SESSION_INACTIVE,
+    )
     assert_denied(
         replace(attended_subject, ancestors=(changed(human, expires_at=NOW + timedelta(minutes=1)),)),
         AccessDenialCode.PRIVILEGE_EXPANSION,
@@ -641,7 +647,10 @@ def test_attended_expiry_and_independent_password_access(scenario: Scenario) -> 
         login = changed(scenario.context.login_contexts[0], lock_state=lock_state)
         locked = changed(scenario.context, login_contexts=(login,))
         assert isinstance(replace(scenario, context=locked).evaluate(), AccessAllowed)
-        assert_denied(replace(attended_subject, context=locked), AccessDenialCode.OS_LOCKED)
+        expected = (
+            AccessDenialCode.OS_SESSION_UNAVAILABLE if lock_state is OsLockState.UNKNOWN else AccessDenialCode.OS_LOCKED
+        )
+        assert_denied(replace(attended_subject, context=locked), expected)
         assert_denied(
             replace(scenario, context=locked, grant=changed(scenario.grant, allow_os_lock=False)),
             AccessDenialCode.OS_LOCKED,
@@ -652,10 +661,10 @@ def test_attended_expiry_and_independent_password_access(scenario: Scenario) -> 
     )
 
 
-def test_contracts_are_strict_frozen_and_do_not_accept_agent_identity(scenario: Scenario) -> None:
+def test_contracts_are_strict_frozen_and_reject_untrusted_identity_claims(scenario: Scenario) -> None:
     for model in (scenario.session, scenario.grant, scenario.key, scenario.profile):
         with pytest.raises(ValidationError):
-            changed(model, agent_name="owner", api_secret=uuid4().hex)
+            changed(model, untrusted_identity_claim="owner", api_secret=uuid4().hex)
         with pytest.raises(ValidationError):
             model.__setattr__(next(iter(type(model).model_fields)), "replacement")
     for invalid in (datetime(2026, 9, 26), NOW.astimezone(timezone(timedelta(hours=2)))):
@@ -778,23 +787,8 @@ def test_global_unlock_requires_selected_grant_reactivation(scenario: Scenario) 
     assert selected.grant.scope == scenario.grant.scope
 
 
-def test_frontend_and_registered_result_projection_are_enforced(scenario: Scenario) -> None:
+def test_the_registered_result_projection_is_enforced_alike_on_every_frontend(scenario: Scenario) -> None:
     original = scenario.registry.lookup(scenario.request.definition_id)
-    definition = changed(original, permitted_frontends=frozenset({OperationFrontendProjection.CLI}))
-    registry = OperationRegistry(
-        definitions=(definition,), public_registrations=build_user_profile_operation_registrations((definition,))
-    )
-    subject = replace(
-        scenario,
-        registry=registry,
-        policy=changed(
-            scenario.policy,
-            definition_contract_digest=registry.lookup_public_contract(
-                definition.definition_id
-            ).definition_contract_digest,
-        ),
-    )
-    assert_denied(subject, AccessDenialCode.FRONTEND_DENIED)
     # Enroll the real executor's existing result model in an isolated registry to
     # exercise the generic result door without claiming this production exposure.
     assert original.result_type is not None
@@ -828,11 +822,13 @@ def test_frontend_and_registered_result_projection_are_enforced(scenario: Scenar
         grant=changed(scenario.grant, scope=scope),
         session=changed(scenario.session, scope=scope),
     )
-    assert isinstance(subject.evaluate(), AccessAllowed)
-    assert_denied(
-        replace(subject, policy=changed(subject.policy, transaction_authority_required=True)),
-        AccessDenialCode.TRANSACTION_AUTHORITY_REQUIRED,
-    )
+    for frontend in OperationFrontendProjection:
+        on_frontend = replace(subject, request=changed(subject.request, frontend=frontend))
+        assert isinstance(on_frontend.evaluate(), AccessAllowed), frontend
+        assert_denied(
+            replace(on_frontend, policy=changed(on_frontend.policy, transaction_authority_required=True)),
+            AccessDenialCode.TRANSACTION_AUTHORITY_REQUIRED,
+        )
     assert_denied(
         replace(subject, request=changed(subject.request, action=AccessAction.RESPOND)),
         AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED,

@@ -35,6 +35,8 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
@@ -42,7 +44,6 @@ from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.meses_trabajo import serialise_meses_trabajo
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
-from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._profile_support import require_active_profile_pointer as _active_profile_pointer
 
 if TYPE_CHECKING:
@@ -251,10 +252,10 @@ def descendiente_door(
 
 def _run_descendant_door(ctx: typer.Context) -> None:
     """Drive the descendant application flow through its line-mode frontend."""
-    from .runtime_descendant_door import run_runtime_descendant_door
+    from .operation_descendant_door import run_descendant_door
 
     pointer = _active_profile_pointer()
-    rows = run_runtime_descendant_door(ctx)
+    rows = run_descendant_door(ctx)
     _emit_descendiente_list(ctx, pointer, rows)
 
 
@@ -281,12 +282,13 @@ def descendiente_add(
 
     from pydantic import ValidationError
 
+    from cadrumo_client.commands.profile_binding import require_profile_client
+
     from ....core.errors.hierarchy import ProfileAnswerTypeError
     from ....domain.contribuyente.descendant_facts import parse_descendiente_flag
-    from ..runtime_profile_binding import require_profile_client
     from ..state_projection_support import authority_operation
-    from ._runtime_profile_mutation import mutation_deadline
-    from .runtime_descendants import read_runtime_descendants, replace_runtime_descendants
+    from ._profile_mutation import mutation_deadline
+    from .operation_descendants import read_descendants, replace_descendants
 
     _activate_subcommand_output_language(ctx, output_language)
     pointer = _active_profile_pointer()
@@ -296,7 +298,7 @@ def descendiente_add(
     authority = authority_operation(ctx)
     client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
     deadline = mutation_deadline()
-    baseline, existing = read_runtime_descendants(client, operation=authority, deadline=deadline)
+    baseline, existing = read_descendants(client, operation=authority, deadline=deadline)
 
     new_rows: list[DescendantInfo] = []
     for raw in descendiente:
@@ -342,7 +344,7 @@ def descendiente_add(
             ) from exc
 
     combined = (*existing, *new_rows)
-    committed = replace_runtime_descendants(
+    committed = replace_descendants(
         client,
         baseline=baseline,
         descendants=combined,
@@ -380,14 +382,15 @@ def descendiente_list(
     from time import monotonic
     from uuid import UUID
 
-    from ..runtime_profile_binding import require_profile_client
+    from cadrumo_client.commands.profile_binding import require_profile_client
+
     from ..state_projection_support import authority_operation
-    from .runtime_descendants import read_runtime_descendants
+    from .operation_descendants import read_descendants
 
     _activate_subcommand_output_language(ctx, output_language)
     pointer = _active_profile_pointer()
     client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
-    _baseline, rows = read_runtime_descendants(client, operation=authority_operation(ctx), deadline=monotonic() + 60)
+    _baseline, rows = read_descendants(client, operation=authority_operation(ctx), deadline=monotonic() + 60)
     _emit_descendiente_list(ctx, pointer, rows)
 
 
@@ -399,9 +402,10 @@ def descendiente_remove(
     """Remove the descendant at ``index`` and re-index the remaining rows."""
     from uuid import UUID
 
-    from ..runtime_profile_binding import require_profile_client
-    from ._runtime_profile_mutation import mutation_deadline
-    from .runtime_descendants import read_runtime_descendants, replace_runtime_descendants
+    from cadrumo_client.commands.profile_binding import require_profile_client
+
+    from ._profile_mutation import mutation_deadline
+    from .operation_descendants import read_descendants, replace_descendants
 
     _activate_subcommand_output_language(ctx, output_language)
     from ..state_projection_support import authority_operation
@@ -412,14 +416,14 @@ def descendiente_remove(
     authority = authority_operation(ctx)
     client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
     deadline = mutation_deadline()
-    baseline, existing = read_runtime_descendants(client, operation=authority, deadline=deadline)
+    baseline, existing = read_descendants(client, operation=authority, deadline=deadline)
     if index < 0 or index >= len(existing):
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.descendiente.index_out_of_range",
             context={"index": str(index), "total": str(len(existing))},
         )
     remaining = tuple(d for i, d in enumerate(existing) if i != index)
-    committed = replace_runtime_descendants(
+    committed = replace_descendants(
         client,
         baseline=baseline,
         descendants=remaining,

@@ -13,6 +13,10 @@ Two policy gates fire before any network IO happens:
 2. :func:`adapters.outbound.google.oauth_flow.require_resolvable_profile_record`
    refuses a profile whose canonical record session cannot be opened.
 
+Before the command line answers the consent review, the interactive gate
+:func:`cadrumo_client.contracts.google_auth.require_interactive_terminal`
+requires a controlling terminal, so a person is there to finish the consent.
+
 See Also:
     :func:`adapters.outbound.google.oauth_flow.run_login_flow` executes the login
     path, :func:`adapters.outbound.google.oauth_flow.credentials_to_records`
@@ -25,10 +29,26 @@ See Also:
 from __future__ import annotations
 
 import secrets
-from collections.abc import Callable, Mapping
+import socket
+import ssl
+import webbrowser
+from collections.abc import Callable, Iterable, Mapping
 from contextlib import nullcontext
 from datetime import datetime
 from typing import TYPE_CHECKING, NoReturn, Protocol, cast
+
+from cadrumo_client.contracts.google_auth import (
+    GoogleAuthBrowserOpenError,
+    GoogleAuthLoopbackBindError,
+    GoogleAuthNetworkError,
+    GoogleAuthPreconditionCondition,
+    GoogleAuthProfileUnboundError,
+    GoogleAuthScopeInsufficientError,
+    GoogleAuthSignInRequiredError,
+    GoogleAuthValidationError,
+    google_auth_no_action_verdict,
+    require_interactive_terminal,
+)
 
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....application.user_profile.google_configuration_operation_ports import (
@@ -38,22 +58,9 @@ from ....application.user_profile.google_configuration_operation_ports import (
 from ....core.config_google_client import OAuthClient
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.time.clock import now
-from ....core.tty import stdin_is_tty
 from ....domain.user_profile.errors import ProfileNotFoundError
-from .errors import (
-    GoogleAuthBrowserOpenError,
-    GoogleAuthLoopbackBindError,
-    GoogleAuthNetworkError,
-    GoogleAuthNonInteractiveError,
-    GoogleAuthPreconditionCondition,
-    GoogleAuthProfileUnboundError,
-    GoogleAuthScopeInsufficientError,
-    GoogleAuthSignInRequiredError,
-    GoogleAuthValidationError,
-    google_auth_no_action_verdict,
-)
 from .oauth_callback import LOOPBACK_HOST, OAuthCallbackBindError, OAuthConsentDeclinedError, receive_authorization_code
-from .records import REQUIRED_SCOPES, OAuthMetadata, OAuthToken
+from .records import REQUIRED_SCOPES, OAuthMetadata, OAuthToken, scope_grant_mismatch
 
 if TYPE_CHECKING:
     from google_auth_oauthlib.flow import OAuthCredentials
@@ -65,35 +72,6 @@ if TYPE_CHECKING:
 # behind ``require_interactive_terminal``: even when a TTY is present the
 # flow must not block indefinitely if the operator abandons consent.
 _CONSENT_WAIT_TIMEOUT_SECONDS = 300
-
-
-def require_interactive_terminal() -> None:
-    """Refuse the consent flow when no controlling terminal can drive it.
-
-    The Desktop OAuth flow opens the consent screen in the operator's
-    browser and then blocks a loopback HTTP receiver until consent
-    completes. In a non-interactive invocation (piped, redirected, cron,
-    or another agent) ``stdin`` is not a TTY, no operator can complete the
-    flow, and the receiver would block forever. This guard eliminates that
-    silent-hang failure mode before
-    :func:`adapters.outbound.google.oauth_flow.run_login_flow` calls the local receiver.
-
-    Raises:
-        :exc:`adapters.outbound.google.errors.GoogleAuthNonInteractiveError`:
-            When ``sys.stdin`` is not attached to a terminal.
-    """
-    if not stdin_is_tty():
-        raise GoogleAuthNonInteractiveError(
-            "google OAuth refused: interactive browser consent requires a controlling terminal",
-            context={"reason": "stdin_not_a_tty"},
-            translated_message="adapters.google.oauth_flow.errors.non_interactive",
-            precondition_verdict=google_auth_no_action_verdict(
-                condition=GoogleAuthPreconditionCondition.INTERACTIVE_TERMINAL_AVAILABLE,
-                facts={"interactive_terminal_available": False},
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                outcome=NoRecoveryOutcome.SAFETY,
-            ),
-        )
 
 
 def require_resolvable_profile_record(profile_id: str, *, operation: PinnedAuthorityOperation | None = None) -> None:
@@ -114,7 +92,7 @@ def require_resolvable_profile_record(profile_id: str, *, operation: PinnedAutho
         operation: Retained authority pin; ordinary callers use the bundled pin.
 
     Raises:
-        :exc:`adapters.outbound.google.errors.GoogleAuthProfileUnboundError`:
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthProfileUnboundError`:
             When the profile bucket pointer or the canonical profile-record
             session cannot be resolved.
     """
@@ -198,14 +176,39 @@ def credentials_to_records(
         :data:`adapters.outbound.google.records.REQUIRED_SCOPES` member.
 
     Raises:
-        :exc:`adapters.outbound.google.errors.GoogleAuthScopeInsufficientError`:
-            When ``granted_scopes`` omits any required scope. Re-raised
-            separately from the pydantic ``ValidationError`` so the CLI can
-            surface a concrete remediation hint.
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthScopeInsufficientError`:
+            When ``granted_scopes`` is not exactly the required set, by
+            :func:`require_exact_scope_grant`. Raised separately from the
+            pydantic ``ValidationError`` so the CLI can surface a concrete
+            remediation hint.
     """
-    missing = tuple(scope for scope in REQUIRED_SCOPES if scope not in granted_scopes)
-    if missing:
-        from .errors import GoogleScopeFailure
+    require_exact_scope_grant(granted_scopes, account_email=account_email)
+    token = OAuthToken(refresh_token=refresh_token, client_id=client_id, token_uri=token_uri)
+    metadata = OAuthMetadata(
+        account_email=account_email,
+        granted_scopes=tuple(granted_scopes),
+        issued_at=issued_at,
+    )
+    return token, metadata
+
+
+def require_exact_scope_grant(granted_scopes: Iterable[str], *, account_email: str | None) -> None:
+    """Refuse a grant that is not exactly :data:`~adapters.outbound.google.records.REQUIRED_SCOPES`.
+
+    This is the one scope rule of every sign-in boundary
+    (:func:`~adapters.outbound.google.records.scope_grant_mismatch`). A grant
+    that lacks scopes names them, with the account, once the account is
+    known; any other mismatch is refused without naming what Google added.
+
+    Raises:
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthScopeInsufficientError`:
+            When the grant lacks a required scope or carries another one.
+    """
+    missing, unexpected = scope_grant_mismatch(granted_scopes)
+    if not missing and not unexpected:
+        return
+    if missing and account_email is not None:
+        from cadrumo_client.contracts.google_auth import GoogleScopeFailure
 
         raise GoogleAuthScopeInsufficientError(
             f"consent screen returned without granting required scopes: {missing!r}",
@@ -219,13 +222,16 @@ def credentials_to_records(
                 outcome=NoRecoveryOutcome.SAFETY,
             ),
         )
-    token = OAuthToken(refresh_token=refresh_token, client_id=client_id, token_uri=token_uri)
-    metadata = OAuthMetadata(
-        account_email=account_email,
-        granted_scopes=tuple(granted_scopes),
-        issued_at=issued_at,
+    raise GoogleAuthScopeInsufficientError(
+        "Google did not confirm the exact required scope grant",
+        translated_message="errors.auth.auth_google_scope_insufficient",
+        precondition_verdict=google_auth_no_action_verdict(
+            condition=GoogleAuthPreconditionCondition.REQUIRED_SCOPES_GRANTED,
+            facts={"required_scopes_granted": False},
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.SAFETY,
+        ),
     )
-    return token, metadata
 
 
 def run_login_flow(
@@ -243,7 +249,7 @@ def run_login_flow(
     against ``accounts.google.com``. The flow checks profile state with
     :func:`adapters.outbound.google.oauth_flow.require_resolvable_profile_record`,
     requires
-    :func:`adapters.outbound.google.oauth_flow.require_interactive_terminal`,
+    :func:`cadrumo_client.contracts.google_auth.require_interactive_terminal`,
     then maps the resulting credential fields through
     :func:`adapters.outbound.google.oauth_flow.credentials_to_records`.
 
@@ -263,7 +269,7 @@ def run_login_flow(
         persistence.
 
     Raises:
-        :exc:`adapters.outbound.google.errors.GoogleAuthError`: Any
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthError`: Any
             typed OAuth refusal with concrete remediation context.
     """
     if operation is None:
@@ -302,7 +308,7 @@ def _run_local_server(
 
     Imports ``google_auth_oauthlib`` lazily so the failure mode of a
     missing transitive dependency surfaces as a typed
-    :exc:`adapters.outbound.google.errors.GoogleAuthNetworkError` rather than
+    :exc:`cadrumo_client.contracts.google_auth.GoogleAuthNetworkError` rather than
     an opaque ``ImportError``.
     """
     try:
@@ -394,10 +400,27 @@ def _consent_declined_refusal() -> GoogleAuthSignInRequiredError:
     )
 
 
+def _is_endpoint_failure(exc: BaseException) -> bool:
+    """Whether ``exc`` is a failure to reach Google's endpoint, judged by type and never by message.
+
+    A bare :class:`TimeoutError` is the consent receiver's own deadline: nobody
+    finished the consent, which says nothing about whether Google was reachable.
+    """
+    if type(exc) is TimeoutError:
+        return False
+    if isinstance(exc, (ConnectionError, ssl.SSLError, socket.gaierror)):
+        return True
+    try:
+        from google.auth.exceptions import TransportError
+        from requests import RequestException
+    except ImportError:
+        return False
+    return isinstance(exc, (TransportError, RequestException))
+
+
 def _raise_local_server_error(exc: Exception) -> NoReturn:
-    """Translate upstream local-server OAuth failures into the Google auth hierarchy."""
-    message = str(exc).lower()
-    if "browser" in message or "webbrowser" in message:
+    """Translate upstream local-server OAuth failures into the Google auth hierarchy by exception type."""
+    if isinstance(exc, webbrowser.Error):
         raise GoogleAuthBrowserOpenError(
             "OS browser launcher refused",
             translated_message="adapters.google.oauth_flow.errors.browser_launcher_refused",
@@ -408,7 +431,7 @@ def _raise_local_server_error(exc: Exception) -> NoReturn:
                 outcome=NoRecoveryOutcome.SAFETY,
             ),
         ) from None
-    if "transport" in message or "connect" in message or "network" in message:
+    if _is_endpoint_failure(exc):
         raise GoogleAuthNetworkError(
             "OAuth endpoint unreachable",
             translated_message="adapters.google.oauth_flow.errors.endpoint_unreachable",
@@ -478,10 +501,10 @@ def _decode_email_from_id_token(
         The verified email address extracted from the ID token payload.
 
     Raises:
-        :exc:`adapters.outbound.google.errors.GoogleAuthScopeInsufficientError`:
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthScopeInsufficientError`:
             When the credential carries no ``id_token`` or the verified payload
             has no ``email`` claim.
-        :exc:`adapters.outbound.google.errors.GoogleAuthNetworkError`: When
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthNetworkError`: When
             ``google.oauth2.id_token`` is not importable or the verification
             HTTP fetch fails.
     """
@@ -565,7 +588,7 @@ def _decode_email_from_id_token(
 
 __all__ = [
     "credentials_to_records",
-    "require_interactive_terminal",
+    "require_exact_scope_grant",
     "require_resolvable_profile_record",
     "run_login_flow",
 ]
@@ -610,17 +633,8 @@ def _oauth_loopback_records(
             ),
         )
     granted_scopes = tuple(credentials.granted_scopes or ())
-    if set(granted_scopes) != set(REQUIRED_SCOPES):
-        raise GoogleAuthScopeInsufficientError(
-            "Google did not confirm the exact required scope grant",
-            translated_message="errors.auth.auth_google_scope_insufficient",
-            precondition_verdict=google_auth_no_action_verdict(
-                condition=GoogleAuthPreconditionCondition.REQUIRED_SCOPES_GRANTED,
-                facts={"required_scopes_granted": False},
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                outcome=NoRecoveryOutcome.SAFETY,
-            ),
-        )
+    # The account is not verified yet, so a mismatch is refused without naming it.
+    require_exact_scope_grant(granted_scopes, account_email=None)
     return (
         refresh_token,
         client.token_uri,

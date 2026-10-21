@@ -9,7 +9,7 @@ import pytest
 
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ....domain.invoices.errors import InvoiceValidationError
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from .. import invoice_confirmation as confirmation
 from ..invoice_draft_records import InvoiceDraft
 from ..structured_invoice_ports import StructuredInvoiceClassification, StructuredInvoiceClassificationKind

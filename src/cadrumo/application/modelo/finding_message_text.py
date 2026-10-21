@@ -235,7 +235,7 @@ def _date(value: FindingFactValue, language: OutputLanguage) -> str:
 def _box(value: FindingFactValue, box_words: Mapping[str, str], language: OutputLanguage) -> str:
     text = str(value)
     words = box_words.get(text)
-    if words:
+    if words is not None and words:
         return words
     if _BOX_NUMBER.fullmatch(text):
         return text
@@ -305,7 +305,7 @@ def finding_message_text(
     otherwise as a box without a number, never as its id.
     """
     words = box_words or {}
-    own_box = None if finding.casilla_id is None else words.get(str(finding.casilla_id))
+    own_box = None if finding.casilla_id is None else words.get(finding.casilla_id)
     facts: dict[str, str] = {}
     for name, value in finding.message_facts.items():
         text = fact_text(

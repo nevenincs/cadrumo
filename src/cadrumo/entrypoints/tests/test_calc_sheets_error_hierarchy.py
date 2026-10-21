@@ -12,7 +12,8 @@ from __future__ import annotations
 
 import pytest
 
-from ...adapters.outbound.google.errors import GoogleAuthError, GoogleAuthValidationError
+from cadrumo_client.contracts.google_auth import GoogleAuthError, GoogleAuthValidationError
+
 from ...adapters.persistence.storage.bucket.errors import BucketError, BucketValidationError
 from ...application.storage.calc_sheets.errors import (
     CalcSheetsEngineError,

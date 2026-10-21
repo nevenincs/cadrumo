@@ -24,6 +24,7 @@ from ._distribution_names import normalise_distribution_name
 from .authority_staging import stage_published_authority
 from .command_execution import CommandResult, run_command
 from .evidence import PackagingSmokeManifest
+from .google_oauth import build_client_json, stage_build_client
 from .proof_ledger import (
     ProofContractError,
     record_proof,
@@ -36,8 +37,7 @@ _UTF_8: Final[str] = UTF_8
 
 
 _REPRESENTATIVE_DATA_LEAVES = (
-    "registry/aeat/modelos/036/manifest.toml",
-    "registry/cadrumo/user_profile/schema.toml",
+    "registry/authority/authority.current.json",
     "corpus/aeat_official/disenos_registro/modelo_100/manifest.json",
 )
 
@@ -66,8 +66,9 @@ def build_root_snapshot(repo_root: Path, work_dir: Path) -> Path:
     concurrent edit to ``repo_root`` cannot land inside a build already in
     flight.
 
-    The enumeration omits the published registry authority, which is gitignored
-    generated output, so it is staged separately; see
+    The enumeration omits the published registry authority and publisher OAuth
+    metadata, so both are staged separately. The metadata is frozen into the
+    snapshot without copying the checkout's private dotenv. See
     :mod:`dev.packaging.authority_staging` for why that is the enumeration
     behaving correctly rather than a gap to patch in the seam itself.
     """
@@ -75,6 +76,7 @@ def build_root_snapshot(repo_root: Path, work_dir: Path) -> Path:
     destination = work_dir / "source"
     snapshot(repo_root, repository_files(repo_root), destination)
     stage_published_authority(repo_root, destination)
+    stage_build_client(destination, build_client_json(repo_root))
     return destination
 
 
@@ -92,10 +94,11 @@ def run_checked(
     cwd: Path,
     env: dict[str, str] | None = None,
     expected: set[int] | None = None,
+    input_text: str | None = None,
 ) -> CommandResult:
     """Run a subprocess and replay output only when the return code is unexpected."""
     expected_codes = {0} if expected is None else expected
-    completed = run_command(argv, cwd=cwd, environment=env)
+    completed = run_command(argv, cwd=cwd, environment=env, input_text=input_text)
     if completed.returncode not in expected_codes:
         command = " ".join(argv)
         sys.stderr.write(f"\ncommand failed ({completed.returncode}): {command}\n")
@@ -368,6 +371,8 @@ def assert_installed_data(work_dir: Path, venv_path: Path) -> None:
     leaves_literal = repr(list(_REPRESENTATIVE_DATA_LEAVES))
     code = f"""
 from importlib.resources import files
+import hashlib
+import json
 
 root = files("cadrumo").joinpath("_data")
 missing = []
@@ -376,6 +381,13 @@ for rel in {leaves_literal}:
         missing.append(rel)
 if missing:
     raise SystemExit(f"missing installed bundled data leaves: {{missing!r}}")
+authority_root = root.joinpath("registry", "authority")
+descriptor = json.loads(authority_root.joinpath("authority.current.json").read_text(encoding="utf-8"))
+database = authority_root.joinpath(descriptor["database"])
+if not database.is_file():
+    raise SystemExit("missing installed published authority database")
+if hashlib.sha256(database.read_bytes()).hexdigest() != descriptor["database_sha256"]:
+    raise SystemExit("installed published authority database digest mismatch")
 print(root)
 """
     runtime_root = work_dir / "installed-data-state"
@@ -392,6 +404,7 @@ def assert_attachment_and_llm_surfaces(work_dir: Path, venv_path: Path) -> None:
     code = f"""
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import os
 from datetime import UTC, datetime, timedelta
@@ -399,20 +412,19 @@ from pathlib import Path
 
 from cadrumo.adapters.outbound.llm.client import LLMClient
 from cadrumo.adapters.outbound.llm.errors import LLMConfigError
-from cadrumo.adapters.outbound.llm.models import LLMProvider
+from cadrumo.adapters.outbound.llm.models import LLMProvider, LLMRequest
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.master_key.active_session import activate_session
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
-from cadrumo.adapters.persistence.storage.sql import SecureObjectRepository, dispose_engine, get_engine
+from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.core.config import Settings
-from cadrumo.domain.attachments import (
+from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
+from cadrumo.domain.attachments.service import (
     AttachmentBytesContent,
     AttachmentIngestionRequest,
-    AttachmentKind,
-    AttachmentSource,
     add_attachment,
-    list_attachments,
-    load_attachment,
 )
 
 root = Path({runtime_root_literal})
@@ -453,23 +465,28 @@ try:
             raise SystemExit(f"attachment digest mismatch: {{attachment.attachment_id}} != {{expected}}")
         if store.read_bytes(attachment.attachment_id) != payload:
             raise SystemExit("attachment bytes did not round-trip")
-        loaded = load_attachment(store, attachment.attachment_id)
+        loaded = store.load_manifest(attachment.attachment_id)
         if loaded.attachment_id != attachment.attachment_id:
             raise SystemExit("attachment manifest did not round-trip")
-        listed = tuple(list_attachments(store))
+        listed = tuple(store.iter_manifests())
         if [item.attachment_id for item in listed] != [attachment.attachment_id]:
             raise SystemExit(f"unexpected attachment listing: {{listed!r}}")
 finally:
     session.close()
     dispose_engine(settings)
 
+agent_request = LLMRequest(
+    prompt="packaging smoke",
+    provider_override=LLMProvider.AGENT,
+    model_role=ModelRole.TEXT_EXTRACTION,
+)
 try:
-    LLMClient(settings=Settings(cadrumo_local_storage_root=root / "llm-state"))._build_adapter(LLMProvider.ANTHROPIC)
+    asyncio.run(LLMClient(settings=Settings(cadrumo_local_storage_root=root / "llm-state")).complete(agent_request))
 except LLMConfigError as exc:
-    if exc.suggestion != "pip install cadrumo[anthropic]":
-        raise SystemExit(f"unexpected Anthropic install hint: {{exc.suggestion!r}}")
+    if (exc.context or dict()).get("model_run_refusal") != "service_unavailable":
+        raise SystemExit("an agent dispatch outside an operation refused for the wrong reason")
 else:
-    raise SystemExit("Anthropic adapter unexpectedly built in a core wheel install")
+    raise SystemExit("an agent dispatch outside an operation reached a model")
 
 print("attachment-and-llm-surfaces-ok")
 """
@@ -478,11 +495,21 @@ print("attachment-and-llm-surfaces-ok")
         [str(venv_python_path(venv_path)), "-c", code], cwd=work_dir, env=env, marker="attachment-and-llm-surfaces-ok"
     )
     record_proof("attachment storage round-trip")
-    record_proof("core LLM missing-extra boundary")
+    record_proof("core LLM agent dispatch refuses without a service")
 
 
 def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
     """Run installed CLI smoke checks against the clean wheel venv."""
+    from .installed_runtime import installed_cli_runtime
+    from .installed_tax_oracle import (
+        ISOLATION_NOTICE_CODES,
+        PROFILE_CREATION_NOTICE_CODES,
+        InstalledTaxOracleError,
+        assert_no_diagnostic_notices,
+        profile_authentication_secrets,
+        profile_creation_secrets,
+    )
+
     cadrumo = str(venv_cadrumo_path(venv_path))
     version = run_checked(
         [cadrumo, "--version"],
@@ -497,26 +524,22 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
         [cadrumo, "--format", "json", "config", "check"],
         cwd=work_dir,
         env=default_env,
-        expected={1, 2},
+        expected={2},
     )
-    default_payload = _json_payload(default_check.stdout)
-    if default_payload.get("status") != "success" or default_payload.get("result", {}).get("ok") is not False:
-        raise SystemExit(
-            f"default config check did not report typed missing-dependency diagnostics: {default_payload!r}"
-        )
+    default_payload = _json_payload(default_check.stderr)
+    if (
+        default_payload.get("status") != "error"
+        or default_payload.get("error", {}).get("code") != "REFUSED_CLI_BOUNDARY"
+        or default_payload["error"]["action"]["action"]["action_id"] != "operator.profile.create"
+    ):
+        raise SystemExit(f"default config check did not report the typed profile creation remedy: {default_payload!r}")
 
     storage_root = work_dir / "profile-root"
     storage_root.mkdir(parents=True, exist_ok=True)
+    passphrase = secrets.token_urlsafe(24)
     env = {
         **installed_product_env(storage_root, venv_path),
         "CADRUMO_OUTPUT_LANGUAGE": "en",
-        "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(24),
-        # Headless custody: the AUTO backend writes to the OS keychain, which
-        # a self-hosted runner's service session refuses (macOS launchd has no
-        # unlocked login keychain - AUTH_STORAGE_KEYRING_UNAVAILABLE on the
-        # first run on a fresh macOS host). The passphrase-backed file backend is the
-        # smoke's posture everywhere, and keeps smoke runs from writing real
-        # keys into any host keychain.
     }
     create = run_checked(
         [
@@ -546,18 +569,38 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
             "--accept-defaults",
             "--no-llm-vision",
             "--no-google-export",
+            "--secrets-stdin",
         ],
         cwd=work_dir,
         env=env,
+        input_text=profile_creation_secrets(passphrase),
     )
     create_payload = _json_payload(create.stdout)
-    if create_payload.get("status") != "success":
+    assert_no_diagnostic_notices(
+        create_payload,
+        command="config.profile.create",
+        error=InstalledTaxOracleError,
+        excused_codes=PROFILE_CREATION_NOTICE_CODES,
+    )
+    if create_payload.get("result", {}).get("profile_name") != "packaging-smoke":
         raise SystemExit(f"profile create did not succeed: {create_payload!r}")
 
-    ready = run_checked([cadrumo, "--format", "json", "config", "check"], cwd=work_dir, env=env)
+    with installed_cli_runtime(Path(cadrumo), env, work_dir / "config-check-runtime.log"):
+        ready = run_checked(
+            [cadrumo, "--format", "json", "--profile-secrets-stdin", "config", "check"],
+            cwd=work_dir,
+            env=env,
+            input_text=profile_authentication_secrets(passphrase),
+        )
     ready_payload = _json_payload(ready.stdout)
+    assert_no_diagnostic_notices(
+        ready_payload,
+        command="config.check",
+        error=InstalledTaxOracleError,
+        excused_codes=ISOLATION_NOTICE_CODES,
+    )
     result = ready_payload.get("result", {})
-    if ready_payload.get("status") != "success" or result.get("ok") is not True or result.get("issues") != []:
+    if result.get("ok") is not True or result.get("issues") != []:
         raise SystemExit(f"opted-out config check did not pass cleanly: {ready_payload!r}")
     record_proof("installed CLI config/profile smoke")
 

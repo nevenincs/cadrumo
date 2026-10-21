@@ -11,7 +11,7 @@ from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.invoices.errors import InvoiceValidationError
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ..catalogue_intake_refusal import (
     INVOICE_WIZARD_FIELD_ERRORS_TRANSLATION,
     MAX_INVOICE_WIZARD_FIELD_REASON_CHARACTERS,

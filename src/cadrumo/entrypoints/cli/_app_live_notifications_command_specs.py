@@ -2,7 +2,19 @@ from __future__ import annotations
 
 from typing import Final
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import ArgumentSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    ValueContract,
+)
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ._app_live_command_spec_support import (
     _ENCRYPTED_LOCAL_READ_POLICY,
@@ -12,18 +24,6 @@ from ._app_live_command_spec_support import (
     _PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
     NO_RESULT_SCHEMA,
 )
-from .command_parameter_contracts import ArgumentSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    ValueContract,
-)
-from .command_shared_contracts import translation_key as _key
-from .command_spec import CommandSpec
 
 _NOTIFICATION_CERTIFICADO_ID_ARGUMENT: Final[ArgumentSpec] = ArgumentSpec(
     name="certificado_id",
@@ -58,11 +58,11 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(),
         policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
         handler=LazyBinding.available(
-            DeferredTarget("._app_live_notifications_cli", "notifications_pull", __package__)
+            DeferredTarget(".app_live_notifications_commands", "notifications_pull", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_notifications_payloads", "NotificationsCaptureResult", __package__),
+            target=DeferredTarget(".app_live_notifications_results", "NotificationsCaptureResult", __package__),
             identity="app.live.notifications.pull",
         ),
     ),
@@ -77,11 +77,11 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(
-            DeferredTarget("._app_live_notifications_cli", "notifications_list", __package__)
+            DeferredTarget(".app_live_notifications_commands", "notifications_list", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_notifications_payloads", "NotificationsListResult", __package__),
+            target=DeferredTarget(".app_live_notifications_results", "NotificationsListResult", __package__),
             identity="app.live.notifications.list",
         ),
     ),
@@ -104,11 +104,11 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(
-            DeferredTarget("._app_live_notifications_cli", "notifications_show", __package__)
+            DeferredTarget(".app_live_notifications_commands", "notifications_show", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_notifications_payloads", "NotificationsViewResult", __package__),
+            target=DeferredTarget(".app_live_notifications_results", "NotificationsViewResult", __package__),
             identity="app.live.notifications.view",
         ),
     ),
@@ -123,11 +123,11 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(
-            DeferredTarget("._app_live_notifications_cli", "notifications_latest", __package__)
+            DeferredTarget(".app_live_notifications_commands", "notifications_latest", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_notifications_payloads", "NotificationsLatestResult", __package__),
+            target=DeferredTarget(".app_live_notifications_results", "NotificationsLatestResult", __package__),
             identity="app.live.notifications.latest",
         ),
     ),
@@ -155,11 +155,11 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(_NOTIFICATION_CERTIFICADO_ID_ARGUMENT,),
         policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
         handler=LazyBinding.available(
-            DeferredTarget("._app_live_notifications_cli", "notifications_document_pull", __package__)
+            DeferredTarget(".app_live_notifications_commands", "notifications_document_pull", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_notifications_payloads", "NotificationDocumentPullResult", __package__),
+            target=DeferredTarget(".app_live_notifications_results", "NotificationDocumentPullResult", __package__),
             identity="app.live.notifications.document.pull",
         ),
     ),
@@ -174,11 +174,11 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(_NOTIFICATION_CERTIFICADO_ID_ARGUMENT,),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(
-            DeferredTarget("._app_live_notifications_cli", "notifications_document_view", __package__)
+            DeferredTarget(".app_live_notifications_commands", "notifications_document_view", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_notifications_payloads", "NotificationDocumentViewResult", __package__),
+            target=DeferredTarget(".app_live_notifications_results", "NotificationDocumentViewResult", __package__),
             identity="app.live.notifications.document.view",
         ),
     ),
@@ -193,13 +193,11 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(
-            DeferredTarget("._app_live_notifications_cli", "notifications_document_history", __package__)
+            DeferredTarget(".app_live_notifications_commands", "notifications_document_history", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(
-                "._app_live_notifications_payloads", "NotificationDocumentHistoryResult", __package__
-            ),
+            target=DeferredTarget(".app_live_notifications_results", "NotificationDocumentHistoryResult", __package__),
             identity="app.live.notifications.document.history",
         ),
     ),

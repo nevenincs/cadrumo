@@ -50,9 +50,9 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.iva.classification import IvaTerritorialScope
 
 from ..establishment import territorial_scope_for_country
+from ..schema import IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

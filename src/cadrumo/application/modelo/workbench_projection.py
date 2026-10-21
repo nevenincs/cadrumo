@@ -2,7 +2,7 @@
 
 The workbench form is an owner read model: a password-authenticated human CLI
 or TUI session may receive it through the verified local transport, and no
-agent or off-host destination may. Its canonical models are not all shaped for
+automation or off-host destination may. Its canonical models are not all shaped for
 a registered operation result -- a modelo code and a period customise their
 core schema, a field's scalar value reads a decimal back as text through strict
 JSON, a verification finding serialises its facts -- so exactly those nodes are

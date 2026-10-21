@@ -1,7 +1,7 @@
 # Pinned public conformance-vector declaration for Modelo 200 revision
 # 2025-y-siguientes.
 #
-# Only the generation MANIFEST digest is pinned, not the 135 output digests it
+# Only the generation MANIFEST digest is pinned, not the output digests it
 # already contains. The manifest enumerates every generated output with its own
 # sha256, so any change to any output changes the manifest and therefore this
 # digest: one pin carries the identical fail-closed property. The pin stays
@@ -11,7 +11,7 @@
 
 authority_id = "dev.registry.filing-export-conformance"
 mechanism_source_ref = "generated-provenance/200/2025-y-siguientes"
-generation_manifest_sha256 = "cc7a7dbb9590b101a92ebe63016a7c4dc850b1d61e1b5d6d03e49c19515c7b69"
+generation_manifest_sha256 = "11e964e74877013d10750c58cc6ca03f3bb6c4470fc80e5d26144dc80648b807"
 filing_year = 2025
 period_code = "0A"
 

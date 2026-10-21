@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import secrets
 from collections.abc import Mapping
+from contextlib import AbstractContextManager, nullcontext
 from dataclasses import asdict, dataclass
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -117,6 +118,7 @@ def run_iva_multirate_cli_journey(
     storage_root: Path,
     artifact_root: Path,
     year: int,
+    runtime_scope: AbstractContextManager[object] | None = None,
 ) -> IvaMultirateCliJourneyReceipt:
     """Run a fresh ``year``/1T M303 case with 21% and 10% issued lines.
 
@@ -128,127 +130,98 @@ def run_iva_multirate_cli_journey(
     if storage_root.exists() and any(storage_root.iterdir()):
         raise IvaCliJourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
-    artifact_root.mkdir(parents=True, exist_ok=True)
-    artifact = artifact_root / "synthetic-multirate-purchase.pdf"
-    artifact.write_bytes(b"%PDF-1.4\n% synthetic acceptance purchase evidence\n")
+    with runtime_scope if runtime_scope is not None else nullcontext():
+        artifact_root.mkdir(parents=True, exist_ok=True)
+        artifact = artifact_root / "synthetic-multirate-purchase.pdf"
+        artifact.write_bytes(b"%PDF-1.4\n% synthetic acceptance purchase evidence\n")
 
-    cli = InstalledCli(
-        executable,
-        storage_root=storage_root,
-        authority_root=authority_root,
-        passphrase=secrets.token_urlsafe(32),
-    )
-    receipts: list[SanitizedCommandReceipt] = []
-    _create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
+        cli = InstalledCli(
+            executable,
+            storage_root=storage_root,
+            authority_root=authority_root,
+            passphrase=secrets.token_urlsafe(32),
+        )
+        receipts: list[SanitizedCommandReceipt] = []
+        _create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
 
-    evidence_id = _add_purchase_evidence(cli=cli, receipts=receipts, artifact=artifact)
-    general_transaction_id = _add_transaction(
-        cli=cli,
-        receipts=receipts,
-        artifact=artifact,
-        journey_year=journey_year,
-        amount="121.00",
-        description="Synthetic multirate IVA sale at 21 percent",
-        taxable_base=_GENERAL_BASE,
-        iva_rate="0.21",
-        iva_amount=_GENERAL_IVA,
-        iva_category="domestic_general",
-        idempotency_key=f"iva-acceptance-multirate-general-{year}-1t",
-    )
-    reduced_transaction_id = _add_transaction(
-        cli=cli,
-        receipts=receipts,
-        artifact=artifact,
-        journey_year=journey_year,
-        amount="55.00",
-        description="Synthetic multirate IVA sale at 10 percent",
-        taxable_base=_REDUCED_BASE,
-        iva_rate="0.10",
-        iva_amount=_REDUCED_IVA,
-        iva_category="domestic_reduced",
-        idempotency_key=f"iva-acceptance-multirate-reduced-{year}-1t",
-    )
-    issued_invoice_id = _add_issued_invoice(
-        cli=cli,
-        receipts=receipts,
-        artifact=artifact,
-        journey_year=journey_year,
-    )
-    for transaction_id in (general_transaction_id, reduced_transaction_id):
+        evidence_id = _add_purchase_evidence(cli=cli, receipts=receipts, artifact=artifact)
+        general_transaction_id = _add_transaction(
+            cli=cli,
+            receipts=receipts,
+            artifact=artifact,
+            journey_year=journey_year,
+            amount="121.00",
+            description="Synthetic multirate IVA sale at 21 percent",
+            taxable_base=_GENERAL_BASE,
+            iva_rate="0.21",
+            iva_amount=_GENERAL_IVA,
+            iva_category="domestic_general",
+            idempotency_key=f"iva-acceptance-multirate-general-{year}-1t",
+        )
+        reduced_transaction_id = _add_transaction(
+            cli=cli,
+            receipts=receipts,
+            artifact=artifact,
+            journey_year=journey_year,
+            amount="55.00",
+            description="Synthetic multirate IVA sale at 10 percent",
+            taxable_base=_REDUCED_BASE,
+            iva_rate="0.10",
+            iva_amount=_REDUCED_IVA,
+            iva_category="domestic_reduced",
+            idempotency_key=f"iva-acceptance-multirate-reduced-{year}-1t",
+        )
+        issued_invoice_id = _add_issued_invoice(
+            cli=cli,
+            receipts=receipts,
+            artifact=artifact,
+            journey_year=journey_year,
+        )
+        for transaction_id in (general_transaction_id, reduced_transaction_id):
+            _run(
+                cli,
+                receipts,
+                artifact,
+                ("app", "ledger", "link", transaction_id, "--invoice-id", issued_invoice_id),
+                result_keys=(),
+            )
+
+        purchase_transaction_id = _add_purchase_transaction(
+            cli=cli,
+            receipts=receipts,
+            artifact=artifact,
+            evidence_id=evidence_id,
+            journey_year=journey_year,
+        )
+        purchase_invoice_id = _add_purchase_invoice(
+            cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year
+        )
         _run(
             cli,
             receipts,
             artifact,
-            ("app", "ledger", "link", transaction_id, "--invoice-id", issued_invoice_id),
+            ("app", "ledger", "link", purchase_transaction_id, "--invoice-id", purchase_invoice_id),
             result_keys=(),
         )
 
-    purchase_transaction_id = _add_purchase_transaction(
-        cli=cli,
-        receipts=receipts,
-        artifact=artifact,
-        evidence_id=evidence_id,
-        journey_year=journey_year,
-    )
-    purchase_invoice_id = _add_purchase_invoice(
-        cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year
-    )
-    _run(
-        cli,
-        receipts,
-        artifact,
-        ("app", "ledger", "link", purchase_transaction_id, "--invoice-id", purchase_invoice_id),
-        result_keys=(),
-    )
-
-    transaction_ids = (general_transaction_id, reduced_transaction_id, purchase_transaction_id)
-    reopened = InstalledCli(
-        cli.executable,
-        storage_root=storage_root,
-        authority_root=authority_root,
-        passphrase=cli.passphrase,
-    )
-    issued_invoice_lines, issued_links = _assert_reopened_persistence(
-        cli=reopened,
-        receipts=receipts,
-        artifact=artifact,
-        transaction_ids=transaction_ids,
-        invoice_ids=(issued_invoice_id, purchase_invoice_id),
-        issued_invoice_id=issued_invoice_id,
-        issued_transaction_ids=(general_transaction_id, reduced_transaction_id),
-        evidence_id=evidence_id,
-    )
-
-    _run(
-        reopened,
-        receipts,
-        artifact,
-        (
-            "app",
-            "modelo",
-            "iva-wallet",
-            "seed",
-            "--filing-year",
-            str(year),
-            "--period",
-            _PERIOD,
-            "--amount",
-            "0.00",
-            "--confirm",
-        ),
-        result_keys=(),
-    )
-    created = _result(
-        _run(
-            reopened,
-            receipts,
-            artifact,
-            ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(year), "--period", _PERIOD),
-            result_keys=("work_unit_id",),
+        transaction_ids = (general_transaction_id, reduced_transaction_id, purchase_transaction_id)
+        reopened = InstalledCli(
+            cli.executable,
+            storage_root=storage_root,
+            authority_root=authority_root,
+            passphrase=cli.passphrase,
         )
-    )
-    work_unit_id = _required_id(created, "work_unit_id")
-    calculated = _result(
+        issued_invoice_lines, issued_links = _assert_reopened_persistence(
+            cli=reopened,
+            receipts=receipts,
+            artifact=artifact,
+            transaction_ids=transaction_ids,
+            invoice_ids=(issued_invoice_id, purchase_invoice_id),
+            issued_invoice_id=issued_invoice_id,
+            issued_transaction_ids=(general_transaction_id, reduced_transaction_id),
+            evidence_id=evidence_id,
+        )
+
         _run(
             reopened,
             receipts,
@@ -256,78 +229,108 @@ def run_iva_multirate_cli_journey(
             (
                 "app",
                 "modelo",
-                "work",
-                "calculate",
-                work_unit_id,
-                "--no-joint-return-elected",
+                "iva-wallet",
+                "seed",
+                "--filing-year",
+                str(year),
+                "--period",
+                _PERIOD,
+                "--amount",
+                "0.00",
+                "--confirm",
             ),
-            result_keys=("calculation_revision_id",),
+            result_keys=(),
         )
-    )
-    if calculated.get("saved") is not True:
-        raise IvaCliJourneyError("Modelo 303 calculate did not confirm a saved revision")
-    calculation_revision_id = _required_id(calculated, "calculation_revision_id")
-    iva_resultado = _decimal_field(calculated, "iva.resultado")
-    if iva_resultado != _EXPECTED_RESULT:
-        raise IvaCliJourneyError(
-            f"independent multi-rate IVA oracle mismatch: expected {_EXPECTED_RESULT:.2f}, got {iva_resultado:.2f}"
+        created = _result(
+            _run(
+                reopened,
+                receipts,
+                artifact,
+                ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(year), "--period", _PERIOD),
+                result_keys=("work_unit_id",),
+            )
         )
-    rate_observations = _rate_observations(calculated=calculated)
+        work_unit_id = _required_id(created, "work_unit_id")
+        calculated = _result(
+            _run(
+                reopened,
+                receipts,
+                artifact,
+                (
+                    "app",
+                    "modelo",
+                    "work",
+                    "calculate",
+                    work_unit_id,
+                    "--no-joint-return-elected",
+                ),
+                result_keys=("calculation_revision_id",),
+            )
+        )
+        if calculated.get("saved") is not True:
+            raise IvaCliJourneyError("Modelo 303 calculate did not confirm a saved revision")
+        calculation_revision_id = _required_id(calculated, "calculation_revision_id")
+        iva_resultado = _decimal_field(calculated, "iva.resultado")
+        if iva_resultado != _EXPECTED_RESULT:
+            raise IvaCliJourneyError(
+                f"independent multi-rate IVA oracle mismatch: expected {_EXPECTED_RESULT:.2f}, got {iva_resultado:.2f}"
+            )
+        rate_observations = _rate_observations(calculated=calculated)
 
-    verification_cli = InstalledCli(
-        cli.executable,
-        storage_root=storage_root,
-        authority_root=authority_root,
-        passphrase=cli.passphrase,
-    )
-    verification = _result(
-        _run(
-            verification_cli,
-            receipts,
-            artifact,
-            ("app", "modelo", "work", "verify", calculation_revision_id),
-            result_keys=("verification_report_id", "calculation_revision_id"),
+        verification_cli = InstalledCli(
+            cli.executable,
+            storage_root=storage_root,
+            authority_root=authority_root,
+            passphrase=cli.passphrase,
         )
-    )
-    verification_report_id = _required_id(verification, "verification_report_id")
-    verification_status = _required_text(verification, "completeness_status")
-    if verification.get("calculation_revision_id") != calculation_revision_id:
-        raise IvaCliJourneyError("Modelo 303 verify returned a different calculation revision")
-    if verification.get("granted_verificado_completo") is not True:
-        raise IvaCliJourneyError(
-            "Modelo 303 verify did not grant complete verification: "
-            f"status={verification_status}; findings={verification.get('finding_count')}"
+        verification = _result(
+            _run(
+                verification_cli,
+                receipts,
+                artifact,
+                ("app", "modelo", "work", "verify", calculation_revision_id),
+                result_keys=("verification_report_id", "calculation_revision_id"),
+            )
         )
+        verification_report_id = _required_id(verification, "verification_report_id")
+        verification_status = _required_text(verification, "completeness_status")
+        if verification.get("calculation_revision_id") != calculation_revision_id:
+            raise IvaCliJourneyError("Modelo 303 verify returned a different calculation revision")
+        if verification.get("granted_verificado_completo") is not True:
+            raise IvaCliJourneyError(
+                "Modelo 303 verify did not grant complete verification: "
+                f"status={verification_status}; findings={verification.get('finding_count')}"
+            )
 
-    descriptor = authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME
-    return IvaMultirateCliJourneyReceipt(
-        schema_version="iva-01-installed-cli-multirate-journey-v2",
-        acceptance_ids=(f"IVA-CLI-MULTIRATE-{year}-1T",),
-        filing_year=year,
-        executable=str(cli.executable),
-        executable_sha256=_sha256_path(cli.executable),
-        source_identity=_checkout_source_identity(),
-        package_identity=_installed_package_identity(),
-        authority_generation=authority_generation(authority_root),
-        authority_descriptor_sha256=_sha256_path(descriptor),
-        storage_root=str(storage_root.resolve()),
-        purchase_artifact=_PRIVATE_ARTIFACT_PLACEHOLDER,
-        transaction_ids=transaction_ids,
-        issued_invoice_id=issued_invoice_id,
-        purchase_invoice_id=purchase_invoice_id,
-        issued_invoice_line_rates=issued_invoice_lines,
-        issued_invoice_linked_transaction_ids=issued_links,
-        evidence_id=evidence_id,
-        work_unit_id=work_unit_id,
-        calculation_revision_id=calculation_revision_id,
-        iva_resultado=f"{iva_resultado:.2f}",
-        rate_observations=rate_observations,
-        verification_report_id=verification_report_id,
-        verification_status=verification_status,
-        verification_granted=True,
-        export_status="not_attempted_product_software_identity_pending",
-        commands=tuple(receipts),
-    )
+        descriptor = authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME
+        return IvaMultirateCliJourneyReceipt(
+            schema_version="iva-01-installed-cli-multirate-journey-v2",
+            acceptance_ids=(f"IVA-CLI-MULTIRATE-{year}-1T",),
+            filing_year=year,
+            executable=str(cli.executable),
+            executable_sha256=_sha256_path(cli.executable),
+            source_identity=_checkout_source_identity(),
+            package_identity=_installed_package_identity(),
+            authority_generation=authority_generation(authority_root),
+            authority_descriptor_sha256=_sha256_path(descriptor),
+            storage_root=str(storage_root.resolve()),
+            purchase_artifact=_PRIVATE_ARTIFACT_PLACEHOLDER,
+            transaction_ids=transaction_ids,
+            issued_invoice_id=issued_invoice_id,
+            purchase_invoice_id=purchase_invoice_id,
+            issued_invoice_line_rates=issued_invoice_lines,
+            issued_invoice_linked_transaction_ids=issued_links,
+            evidence_id=evidence_id,
+            work_unit_id=work_unit_id,
+            calculation_revision_id=calculation_revision_id,
+            iva_resultado=f"{iva_resultado:.2f}",
+            rate_observations=rate_observations,
+            verification_report_id=verification_report_id,
+            verification_status=verification_status,
+            verification_granted=True,
+            export_status="not_attempted_product_software_identity_pending",
+            commands=tuple(receipts),
+        )
 
 
 def _create_profile(

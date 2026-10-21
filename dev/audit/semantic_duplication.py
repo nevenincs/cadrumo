@@ -45,16 +45,18 @@ import json
 import sys
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
-from dev.first_party_source import PRODUCT_PACKAGE, is_production_source
+from dev.first_party_source import SOURCE_PACKAGES, is_production_source
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
-#: Scope is the shipped product tree, matching the sibling duplication runner: the
-#: duplication that matters is duplicate AUTHORITY in shipped code. ``dev/`` is
-#: scannable on demand by passing a different root, not by widening the default.
-_PRODUCT_SOURCE_ROOT = _REPO_ROOT / PRODUCT_PACKAGE
+#: Scope is every package under ``src/``, matching the sibling duplication runner:
+#: the duplication that matters is duplicate AUTHORITY in shipped code, and one
+#: corpus across the packages lets a rule restated in another package collide.
+#: ``dev/`` is scannable on demand by passing different roots, not by widening the
+#: default.
+_SOURCE_ROOTS = tuple(_REPO_ROOT / package for package in SOURCE_PACKAGES)
 
 #: Literals too common to carry meaning. Excluded by VALUE rather than by frequency
 #: so the exclusion is auditable: a frequency cut-off would silently drop a genuinely
@@ -133,41 +135,52 @@ def _closed_enum_names(modules: Sequence[Module]) -> frozenset[str]:
     return frozenset(names)
 
 
-def _load_modules(root: Path) -> list[Module]:
-    """Parse every production module once; every detector reads these.
+def _load_modules(roots: Sequence[Path]) -> list[Module]:
+    """Parse every production module under ``roots`` once; every detector reads these.
+
+    A module is named relative to its root's parent, so each site carries its
+    package (``cadrumo/...``, ``cadrumo_runtime/...``) and two packages' modules
+    can never share a name. Each root must yield a module: a root that yields
+    none is refused, so a lost package cannot shrink the corpus unnoticed.
 
     A module that does not parse is REFUSED rather than dropped. This list is
     the corpus for every detector in this file, so a silently skipped module
     hides its duplicates from all of them at once - and nothing downstream
     reports a corpus size, so a short corpus and a clean one look identical.
 
-    Measured against the shipped tree: 2103 source files, none unparsable, so
+    Measured against the src/ packages: 3544 source files, none unparsable, so
     refusing costs nothing today and says so immediately if that changes.
     """
     modules: list[Module] = []
-    for path in _iter_source_files(root):
-        try:
-            source = path.read_text(encoding="utf-8")
-        except OSError as error:
-            # A module the walk listed and the read could not reach shortens the
-            # corpus exactly as an unparsable one does, and a raw traceback names
-            # neither the loss nor its size. Refused for its own reason, so a
-            # caller matching on one cause cannot be satisfied by the other.
-            raise SystemExit(
-                f"{path} could not be read, so the duplication corpus would be short "
-                f"by exactly the module nobody can analyse: {error}"
-            ) from error
-        try:
-            tree = ast.parse(source)
-        except (SyntaxError, UnicodeDecodeError) as error:
-            raise SystemExit(
-                f"{path} could not be parsed, so the duplication corpus would be short "
-                f"by exactly the module nobody can analyse: {error}"
-            ) from error
-        modules.append(Module(path=path, relative=path.relative_to(root).as_posix(), tree=tree))
-    if not modules:
-        raise SystemExit(f"no production modules found under {root}; every detector would report clean")
+    for root in roots:
+        loaded = [_load_module(path, root) for path in _iter_source_files(root)]
+        if not loaded:
+            raise SystemExit(f"no production modules found under {root}; every detector would report clean")
+        modules.extend(loaded)
     return modules
+
+
+def _load_module(path: Path, root: Path) -> Module:
+    """Read and parse one module, refusing rather than dropping one that cannot be analysed."""
+    try:
+        source = path.read_text(encoding="utf-8")
+    except OSError as error:
+        # A module the walk listed and the read could not reach shortens the
+        # corpus exactly as an unparsable one does, and a raw traceback names
+        # neither the loss nor its size. Refused for its own reason, so a
+        # caller matching on one cause cannot be satisfied by the other.
+        raise SystemExit(
+            f"{path} could not be read, so the duplication corpus would be short "
+            f"by exactly the module nobody can analyse: {error}"
+        ) from error
+    try:
+        tree = ast.parse(source)
+    except (SyntaxError, UnicodeDecodeError) as error:
+        raise SystemExit(
+            f"{path} could not be parsed, so the duplication corpus would be short "
+            f"by exactly the module nobody can analyse: {error}"
+        ) from error
+    return Module(path=path, relative=path.relative_to(root.parent).as_posix(), tree=tree)
 
 
 def _populate(modules: Sequence[Module], enum_names: frozenset[str]) -> None:
@@ -253,7 +266,7 @@ def _call_fingerprint(node: ast.FunctionDef | ast.AsyncFunctionDef) -> frozenset
         if isinstance(inner, ast.Call):
             func = inner.func
             name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
-            if name:
+            if name is not None and name:
                 marks.add(f"call:{name}/{len(inner.args)}")
         elif isinstance(inner, ast.Constant) and _meaningful_literal(inner):
             marks.add(f"lit:{inner.value!r}")
@@ -424,9 +437,9 @@ _DETECTORS = {
 }
 
 
-def run(root: Path, detectors: Sequence[str]) -> list[Candidate]:
-    """Run the named detectors over ``root`` and return candidates, heaviest first."""
-    modules = _load_modules(root)
+def run(roots: Sequence[Path], detectors: Sequence[str]) -> list[Candidate]:
+    """Run the named detectors over one corpus of ``roots`` and return candidates, heaviest first."""
+    modules = _load_modules(roots)
     _populate(modules, _closed_enum_names(modules))
     found: list[Candidate] = []
     for name in detectors:
@@ -455,13 +468,19 @@ def _render(candidates: Sequence[Candidate], limit: int) -> str:
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the semantic-duplication scan."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=_PRODUCT_SOURCE_ROOT)
+    parser.add_argument(
+        "--root",
+        type=Path,
+        action="append",
+        default=None,
+        help="A source root to scan; repeat for several. Defaults to every package under src/.",
+    )
     parser.add_argument("--detector", action="append", choices=sorted(_DETECTORS), default=None)
     parser.add_argument("--limit", type=int, default=12)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
-    candidates = run(args.root, args.detector or sorted(_DETECTORS))
+    candidates = run(args.root or _SOURCE_ROOTS, args.detector or sorted(_DETECTORS))
     if args.json:
         json.dump([candidate.as_dict() for candidate in candidates], sys.stdout, indent=2)
         sys.stdout.write("\n")
@@ -502,7 +521,7 @@ def _populate_reference_node(node: ast.AST, module: Module, enum_names: frozense
         module.enum_members.setdefault(node.value.id, set()).add(node.attr)
     elif isinstance(node, ast.Constant) and _meaningful_literal(node):
         module.literals.add(node.value)
-    elif isinstance(node, ast.ImportFrom) and node.module:
+    elif isinstance(node, ast.ImportFrom) and (node.module is not None and node.module):
         module.first_party_imports.add(f"{'.' * (node.level or 0)}{node.module}")
 
 
@@ -542,7 +561,7 @@ def _append_import_overlap(left: Module, right: Module, candidates: list[Candida
 
 def _accumulate_package_fingerprints(module: Module, by_package: dict[str, set[frozenset[str]]]) -> None:
     """Accumulate package fingerprints."""
-    package = str(Path(module.relative).parent)
+    package = PurePosixPath(module.relative).parent.as_posix()
     for node in ast.walk(module.tree):
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             fingerprint = _call_fingerprint(node)

@@ -5,10 +5,11 @@ from __future__ import annotations
 import pytest
 from typer.testing import CliRunner
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
+from cadrumo_client.commands.graph import CommandSpecGraph
+
 from .._app_quickfile_command_specs import QUICKFILE_COMMAND_SPECS
-from .._command_target import resolve_deferred_target
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_graph import CommandSpecGraph
 from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -25,7 +26,7 @@ def test_quickfile_is_one_executable_group_with_resolvable_targets() -> None:
 
 
 def test_quickfile_runtime_preserves_explicit_m303_elections_without_plaintext_evidence_file() -> None:
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *QUICKFILE_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *QUICKFILE_COMMAND_SPECS), resolver=resolve_deferred_target)
     result = CliRunner().invoke(build_command_subtree(graph, "app_quickfile"), ["--help"])
 
     assert result.exit_code == 0, result.output

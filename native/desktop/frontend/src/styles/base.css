@@ -1,0 +1,71 @@
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: var(--ring);
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  /* The window never scrolls, not even to bring a focused control into view:
+     every area that can overflow scrolls inside itself. */
+  html,
+  body {
+    overflow: clip;
+  }
+  body {
+    background: var(--chrome);
+    color: var(--foreground);
+    font-family: var(--font-stack);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+  }
+  /* One focus treatment for every control: a ring in the accent, drawn only
+     for keyboard focus. A component may move it inward, never restyle it. */
+  :focus-visible {
+    outline: var(--focus-ring) solid var(--ring);
+    outline-offset: var(--focus-ring);
+  }
+  kbd {
+    font-family: inherit;
+  }
+
+  /* Scrollbars and text selection take the theme, like every other part. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--brand) 28%, transparent);
+  }
+
+  /* While a splitter is dragged, nothing underneath selects text, shows its
+     own cursor or, for a frame, takes the pointer. */
+  body[data-resizing],
+  body[data-resizing] * {
+    user-select: none;
+  }
+  body[data-resizing="vertical"] * {
+    cursor: col-resize !important;
+  }
+  body[data-resizing="horizontal"] * {
+    cursor: row-resize !important;
+  }
+  body[data-resizing] iframe {
+    pointer-events: none;
+  }
+
+  /* Motion is decoration here, never information: with reduced motion asked
+     for, every transition and animation ends at once. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: var(--motion-reduced) !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: var(--motion-reduced) !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

@@ -24,9 +24,9 @@ from ....domain.bienes_inversion.register import (
 )
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.calculations.registry.iva_deduction_catalogue import is_iva_deduction_kind
-from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.deduction_facts import validate_iva_deduction_fact
 from ....domain.iva.flow import derive_flow_for_classification
+from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.dates import transaction_filing_date
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.errors import LedgerStorageError, StoredTransactionDriftError, TransactionValidationError
@@ -722,6 +722,12 @@ class TransactionCatalogueRepository:
             )
         self._objects.apply_batch((*writes, *extra_writes), deletions)
         try:
+            if old_id == new_id and IndexedTransactionDates.for_transaction(
+                current
+            ) == IndexedTransactionDates.for_transaction(replacement):
+                # A non-routing edit leaves this derived cache unchanged. Do not
+                # decrypt the whole ledger again merely to reproduce its dates.
+                return
             self._sync_date_index(self.load())
         except Exception:
             # The index is a rebuildable routing cache. The guarded financial

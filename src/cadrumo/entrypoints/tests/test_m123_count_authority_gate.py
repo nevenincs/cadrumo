@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
@@ -105,7 +105,7 @@ def _seed_ready_profile(objects: SecureObjectRepository) -> None:
 
 
 @contextmanager
-def _m123_bucket(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> Iterator[_Bucket]:
+def _m123_bucket(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> Generator[_Bucket]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M123 count authority") as profile:
         objects: SecureObjectRepository = profile.repository
         _seed_ready_profile(objects)

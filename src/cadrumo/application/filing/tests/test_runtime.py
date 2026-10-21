@@ -82,7 +82,7 @@ def test_refs_survive_projection(
     collection = provider.get_collection(_TEST_MODELO)
     schemas = collection.all()
 
-    casillas_with_refs = [s for s in schemas if source.get(s.casilla_id)]
+    casillas_with_refs = [s for s in schemas if bool(source.get(s.casilla_id))]
     assert casillas_with_refs, f"No casillas with {attribute} found in modelo {_TEST_MODELO} — test would be vacuous"
 
     for schema in schemas:

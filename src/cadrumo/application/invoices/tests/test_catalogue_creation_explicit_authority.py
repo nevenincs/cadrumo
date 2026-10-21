@@ -15,7 +15,7 @@ import pytest
 
 from ....core.aggregation import IntracomOperationType
 from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ...exchange_rate_provider import exchange_rate_provider
 from ..catalogue_creation import build_catalogue_invoice
 

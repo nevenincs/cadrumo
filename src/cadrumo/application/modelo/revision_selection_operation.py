@@ -7,11 +7,14 @@ Core types: :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevi
 from __future__ import annotations
 
 from functools import partial
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -41,23 +44,25 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .action_errors import VerificationOutcomeIncompleteError
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .selectors import (
     ModeloCalculationRevisionDefault,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorError,
+    ModeloCalculationRevisionSelectorNotFoundError,
     resolve_modelo_calculation_revision_pick,
 )
 from .verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
 from .work_addressing import (
+    ModeloWorkAddress,
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
     ModeloWorkSelectorError,
+    calculation_revision_work_unit_target_error,
     resolve_modelo_work_unit_for_operator_target,
 )
 from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
@@ -79,6 +84,21 @@ class ModeloWorkRevisionRequest(CredentialFreeOperationRequest):
     revision: RevisionId | None = None
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT
     default_for: ModeloCalculationRevisionDefault | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_work_address(self) -> Self:
+        if self.work_unit_id is not None:
+            return self
+        if self.calculation_revision_id is not None and _selects_exact_calculation(self):
+            return self
+        if self.modelo is None or self.year is None or self.period is None:
+            raise ValueError(
+                "Select a saved return with work_unit_id from modelo.work.list, or supply modelo, year and period "
+                "together. period.filing_year does not replace year. An exact calculation_revision_id alone is "
+                "also supported."
+            )
+        return self
 
 
 class ModeloWorkRevisionProjection(BaseModel):
@@ -219,6 +239,11 @@ def _filed_amendment_without_grant(revision: CalculationRevision, granting: tupl
     )
 
 
+def _verification_left_incomplete(revision: CalculationRevision, granting: tuple[VerificationReport, ...]) -> bool:
+    """Recognize a verification that saved its grant and stopped before locking the revision."""
+    return len(granting) == 1 and revision.state is CalculationRevisionState.BORRADOR and revision.verified_at is None
+
+
 def _require_selected_revision_grant_evidence(
     revision: CalculationRevision,
     unit: WorkUnit,
@@ -252,15 +277,32 @@ def _capture(
     selected_id = payload.calculation_revision_id
     if selected_id is not None and selected_id == unit.work_unit_id and calculations.get(selected_id) is None:
         selected_id = None
-    selection = resolve_modelo_calculation_revision_pick(
-        unit,
-        selector=payload.selector,
-        calculation_revision_id=selected_id,
-        default_for=payload.default_for,
-        calculation_repository=bundle.calculation,
-        operation=operation.authority_operation,
-        calculation_catalogue=calculations,
-    )
+    try:
+        selection = resolve_modelo_calculation_revision_pick(
+            unit,
+            selector=payload.selector,
+            calculation_revision_id=selected_id,
+            default_for=payload.default_for,
+            calculation_repository=bundle.calculation,
+            operation=operation.authority_operation,
+            calculation_catalogue=calculations,
+        )
+    except ModeloCalculationRevisionSelectorNotFoundError as error:
+        # A positional work-unit id with nothing to select keeps the recovery
+        # verify and file declare for it: calculate the unit first.
+        if selected_id is not None or payload.calculation_revision_id is None:
+            raise
+        recovery = calculation_revision_work_unit_target_error(
+            error=error,
+            calculation_revision_id=payload.calculation_revision_id,
+            address=ModeloWorkAddress(),
+            default_for=payload.default_for,
+            catalogue=bundle.work_unit.load(),
+            resolved_bucket_id=str(payload.profile_id),
+        )
+        if recovery is error:
+            raise
+        raise recovery from error
     revision = selection.revision
     if payload.default_for in {"verify", "file"}:
         require_revision_parent_active(
@@ -276,6 +318,16 @@ def _capture(
         bundle.verification.load(operation=operation.authority_operation), operation=operation.authority_operation
     ).for_calculation_revision(revision.calculation_revision_id)
     granting = tuple(report for report in reports if report.granted_verificado_completo)
+    if _verification_left_incomplete(revision, granting):
+        # The revision is the caller's own and its outcome is not known to have
+        # completed, so this is not an access denial. Verification settles it by
+        # running again on the draft; every other use is told that outcome.
+        if payload.default_for != "verify":
+            raise VerificationOutcomeIncompleteError(
+                translated_message="errors.error.error_modelo_verification_outcome_incomplete",
+                context={"calculation_revision_id": revision.calculation_revision_id},
+            )
+        granting = ()
     _require_selected_revision_grant_evidence(revision, unit, bundle, payload.profile_id, granting)
     return ModeloWorkRevisionProjection(
         profile_id=payload.profile_id,
@@ -322,11 +374,14 @@ def build_modelo_work_revision_definition(factory: VerificationRepositoryBundleF
     return build_single_phase_definition(
         definition_id=MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkRevisionRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloWorkRevisionProjection,
         executor_type=ModeloWorkRevisionExecutor,
         build=lambda: ModeloWorkRevisionExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        # Every command that selects a revision stops here first, so the
+        # selection refusal's own message, context and verdict reach every frontend.
+        public_error_detail=True,
     )
 
 

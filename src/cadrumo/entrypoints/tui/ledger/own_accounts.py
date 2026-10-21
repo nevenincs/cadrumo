@@ -29,6 +29,7 @@ from ....core.iban import mask_iban
 from ....core.parsing.dates import require_iso8601_date, require_iso8601_date_unless_blank
 from ....domain.transactions.own_accounts import OwnAccountHolding, OwnAccountRole, OwnBankAccountDetails
 from ..account import AccountSessionExpiredError
+from ..components.language import localized
 from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
@@ -129,68 +130,143 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.ledger.own_accounts.title"), classes="cadrumo-banner")
+        yield localized(
+            Static(tr("tui.ledger.own_accounts.title"), classes="cadrumo-banner"), "tui.ledger.own_accounts.title"
+        )
         with ledger_workspace_page() as navigation:
             yield navigation
-            yield Static(tr("tui.ledger.own_accounts.prompt"), markup=False)
+            yield localized(
+                Static(tr("tui.ledger.own_accounts.prompt"), markup=False), "tui.ledger.own_accounts.prompt"
+            )
             yield ContentDataTable[str](id="ledger-own-accounts", cursor_type="row", zebra_stripes=True)
             yield Static("", id="own-account-detail", markup=False)
             # The reviewed request, its decision and its outcome sit above the
             # form, so the operator never has to scroll to see what will be sent.
             yield Static("", id="own-account-staged", markup=False)
             with Horizontal(id="own-account-decision", classes="own-account-actions"):
-                yield Button(
-                    tr("tui.ledger.own_accounts.confirm"), id="own-account-confirm", variant="primary", disabled=True
+                yield localized(
+                    Button(
+                        tr("tui.ledger.own_accounts.confirm"),
+                        id="own-account-confirm",
+                        variant="primary",
+                        disabled=True,
+                    ),
+                    "tui.ledger.own_accounts.confirm",
                 )
-                yield Button(tr("tui.ledger.own_accounts.cancel"), id="own-account-cancel", disabled=True)
+                yield localized(
+                    Button(tr("tui.ledger.own_accounts.cancel"), id="own-account-cancel", disabled=True),
+                    "tui.ledger.own_accounts.cancel",
+                )
             yield Static("", id="ledger-flow-status", markup=False)
             yield Static("", id="ledger-refusal", classes="ledger-refusal", markup=False)
             yield Static("", id="own-account-mode", classes="cadrumo-heading", markup=False)
-            yield Button(tr("tui.ledger.own_accounts.new"), id="own-account-new")
-            yield Static(tr("tui.ledger.own_accounts.field.label"), markup=False)
+            yield localized(
+                Button(tr("tui.ledger.own_accounts.new"), id="own-account-new"), "tui.ledger.own_accounts.new"
+            )
+            yield localized(
+                Static(tr("tui.ledger.own_accounts.field.label"), markup=False), "tui.ledger.own_accounts.field.label"
+            )
             yield Input(id="own-account-label")
-            yield Static(tr("tui.ledger.own_accounts.field.holding"), markup=False)
+            yield localized(
+                Static(tr("tui.ledger.own_accounts.field.holding"), markup=False),
+                "tui.ledger.own_accounts.field.holding",
+            )
             yield Select[str](
                 tuple((tr(f"tui.ledger.own_accounts.holding.{item.value}"), item.value) for item in OwnAccountHolding),
                 value=OwnAccountHolding.TITULAR.value,
                 allow_blank=False,
                 id="own-account-holding",
             )
-            yield Static(tr("tui.ledger.own_accounts.field.iban"), markup=False)
-            yield Input(password=True, id="own-account-iban")
-            yield Static(tr("tui.ledger.own_accounts.field.swift_bic"), markup=False)
-            yield Input(password=True, id="own-account-bic")
-            yield Static(tr("tui.ledger.own_accounts.field.bank_block"), markup=False)
-            yield Input(placeholder=tr("tui.ledger.own_accounts.field.bank_name"), id="own-account-bank-name")
-            yield Input(placeholder=tr("tui.ledger.own_accounts.field.bank_address"), id="own-account-bank-address")
-            yield Input(placeholder=tr("tui.ledger.own_accounts.field.bank_city"), id="own-account-bank-city")
-            yield Input(
-                placeholder=tr("tui.ledger.own_accounts.field.bank_country"),
-                max_length=2,
-                id="own-account-bank-country",
+            yield localized(
+                Static(tr("tui.ledger.own_accounts.field.iban"), markup=False), "tui.ledger.own_accounts.field.iban"
             )
-            yield Static(tr("tui.ledger.own_accounts.field.currency"), markup=False)
+            yield Input(password=True, id="own-account-iban")
+            yield localized(
+                Static(tr("tui.ledger.own_accounts.field.swift_bic"), markup=False),
+                "tui.ledger.own_accounts.field.swift_bic",
+            )
+            yield Input(password=True, id="own-account-bic")
+            yield localized(
+                Static(tr("tui.ledger.own_accounts.field.bank_block"), markup=False),
+                "tui.ledger.own_accounts.field.bank_block",
+            )
+            yield localized(
+                Input(placeholder=tr("tui.ledger.own_accounts.field.bank_name"), id="own-account-bank-name"),
+                "tui.ledger.own_accounts.field.bank_name",
+            )
+            yield localized(
+                Input(placeholder=tr("tui.ledger.own_accounts.field.bank_address"), id="own-account-bank-address"),
+                "tui.ledger.own_accounts.field.bank_address",
+            )
+            yield localized(
+                Input(placeholder=tr("tui.ledger.own_accounts.field.bank_city"), id="own-account-bank-city"),
+                "tui.ledger.own_accounts.field.bank_city",
+            )
+            yield localized(
+                Input(
+                    placeholder=tr("tui.ledger.own_accounts.field.bank_country"),
+                    max_length=2,
+                    id="own-account-bank-country",
+                ),
+                "tui.ledger.own_accounts.field.bank_country",
+            )
+            yield localized(
+                Static(tr("tui.ledger.own_accounts.field.currency"), markup=False),
+                "tui.ledger.own_accounts.field.currency",
+            )
             yield Input(placeholder="EUR", max_length=3, id="own-account-currency")
-            yield Static(tr("tui.ledger.own_accounts.field.opened_on"), markup=False)
-            yield Input(placeholder=tr("tui.ledger.own_accounts.field.date_placeholder"), id="own-account-opened-on")
+            yield localized(
+                Static(tr("tui.ledger.own_accounts.field.opened_on"), markup=False),
+                "tui.ledger.own_accounts.field.opened_on",
+            )
+            yield localized(
+                Input(placeholder=tr("tui.ledger.own_accounts.field.date_placeholder"), id="own-account-opened-on"),
+                "tui.ledger.own_accounts.field.date_placeholder",
+            )
             with Horizontal(classes="own-account-actions"):
-                yield Button(tr("tui.ledger.own_accounts.review"), id="own-account-review")
-            yield Static(tr("tui.ledger.own_accounts.field.closed_on"), markup=False)
-            yield Input(placeholder=tr("tui.ledger.own_accounts.field.date_placeholder"), id="own-account-closed-on")
+                yield localized(
+                    Button(tr("tui.ledger.own_accounts.review"), id="own-account-review"),
+                    "tui.ledger.own_accounts.review",
+                )
+            yield localized(
+                Static(tr("tui.ledger.own_accounts.field.closed_on"), markup=False),
+                "tui.ledger.own_accounts.field.closed_on",
+            )
+            yield localized(
+                Input(placeholder=tr("tui.ledger.own_accounts.field.date_placeholder"), id="own-account-closed-on"),
+                "tui.ledger.own_accounts.field.date_placeholder",
+            )
             with Horizontal(classes="own-account-actions"):
-                yield Button(tr("tui.ledger.own_accounts.review_close"), id="own-account-review-close")
-                yield Button(tr("tui.ledger.own_accounts.review_remove"), id="own-account-review-remove")
-            yield Static(tr("tui.ledger.own_accounts.field.role"), markup=False)
+                yield localized(
+                    Button(tr("tui.ledger.own_accounts.review_close"), id="own-account-review-close"),
+                    "tui.ledger.own_accounts.review_close",
+                )
+                yield localized(
+                    Button(tr("tui.ledger.own_accounts.review_remove"), id="own-account-review-remove"),
+                    "tui.ledger.own_accounts.review_remove",
+                )
+            yield localized(
+                Static(tr("tui.ledger.own_accounts.field.role"), markup=False), "tui.ledger.own_accounts.field.role"
+            )
             yield Select[str](
                 tuple((_role_label(role), role.value) for role in OwnAccountRole),
                 value=OwnAccountRole.CHARGE.value,
                 allow_blank=False,
                 id="own-account-role",
             )
-            yield Input(placeholder=tr("tui.ledger.own_accounts.field.modelo"), max_length=3, id="own-account-modelo")
+            yield localized(
+                Input(placeholder=tr("tui.ledger.own_accounts.field.modelo"), max_length=3, id="own-account-modelo"),
+                "tui.ledger.own_accounts.field.modelo",
+            )
             with Horizontal(classes="own-account-actions"):
-                yield Button(tr("tui.ledger.own_accounts.review_designate"), id="own-account-review-designate")
-                yield Button(tr("tui.ledger.own_accounts.review_undesignate"), id="own-account-review-undesignate")
+                yield localized(
+                    Button(tr("tui.ledger.own_accounts.review_designate"), id="own-account-review-designate"),
+                    "tui.ledger.own_accounts.review_designate",
+                )
+                yield localized(
+                    Button(tr("tui.ledger.own_accounts.review_undesignate"), id="own-account-review-undesignate"),
+                    "tui.ledger.own_accounts.review_undesignate",
+                )
 
     def on_mount(self) -> None:
         """Show headings, then read the register without blocking the UI."""

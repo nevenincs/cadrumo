@@ -11,7 +11,7 @@ import pytest
 from ...command_execution import CommandResult
 from ..layout import load_layout
 from ..platforms import posix, windows_verify
-from ..verification_paths import relocated_verification_package
+from ..verification_paths import relocated_verification_package, verification_destination
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -40,6 +40,38 @@ def test_relocated_package_refuses_linked_directory_aliases(tmp_path: Path) -> N
         pytest.skip("This host cannot create directory links")
     with pytest.raises(ValueError, match="linked directories"):
         relocated_verification_package(link / "app", owner)
+
+
+def test_verification_destinations_are_fresh_and_owned_by_the_cmake_output_root(tmp_path: Path) -> None:
+    owner = tmp_path / "build/testing"
+    owner.mkdir(parents=True)
+    selected = owner / "capture"
+    assert verification_destination(selected, owner) == selected
+    outside = tmp_path / "outside"
+    with pytest.raises(ValueError, match="beneath its owning build output directory"):
+        verification_destination(outside, owner)
+    selected.mkdir()
+    with pytest.raises(ValueError, match="fresh destination"):
+        verification_destination(selected, owner)
+
+
+def test_verification_destinations_refuse_linked_output_parents(tmp_path: Path) -> None:
+    owner = tmp_path / "build/testing"
+    owner.mkdir(parents=True)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    link = owner / "linked"
+    try:
+        link.symlink_to(outside, target_is_directory=True)
+    except OSError:
+        pytest.skip("This host cannot create directory links")
+    with pytest.raises(ValueError, match="linked directories"):
+        verification_destination(link / "capture", owner)
+
+
+def test_windows_verification_does_not_invent_an_ambient_build_root(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="owning build output directory"):
+        windows_verify.verify(tmp_path / "package", build_root=None)
 
 
 def test_windows_acceptance_reaches_existing_executable_without_copying(

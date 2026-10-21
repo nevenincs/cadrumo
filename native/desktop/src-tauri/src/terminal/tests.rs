@@ -53,6 +53,9 @@ impl Settle for Scripted {
             Err(failure(ErrorCode::CleanupFailed))
         }
     }
+    fn settle_ended(&mut self) -> bool {
+        self.settles.load(Ordering::SeqCst)
+    }
 }
 
 fn scripted(
@@ -129,19 +132,49 @@ fn closing_all_attempts_every_kind_when_one_fails() {
     );
     assert_eq!(failures.len(), 1);
     assert_eq!(failures[0].code, ErrorCode::CleanupFailed);
-    // The failed session stays owned and is retried, not forgotten.
-    assert_eq!(registry.occupied(), [Kind::Console]);
-    assert!(registry.session(console).is_ok());
-    assert_eq!(
-        registry
-            .open(Kind::Console, scripted(&settles, &attempts))
-            .unwrap_err()
-            .code,
-        ErrorCode::CleanupFailed
-    );
+    // The failed session stays owned and is retried, not forgotten, but its
+    // kind can start again.
+    assert!(registry.occupied().is_empty());
+    assert_eq!(registry.lingering(), 1);
+    assert!(registry.session(console).is_err());
+    registry
+        .open(Kind::Console, scripted(&settles, &attempts))
+        .unwrap();
+    assert_eq!(registry.lingering(), 1);
     stuck.store(true, Ordering::SeqCst);
     assert!(registry.close_all().is_empty());
     assert!(registry.occupied().is_empty());
+    assert_eq!(registry.lingering(), 0);
+}
+
+/// A stopped session that misses its settlement bound must not keep its kind
+/// from starting again; it stays owned and settles once its workers end.
+#[test]
+fn a_session_that_cannot_settle_does_not_block_its_kind() {
+    let stuck = Arc::new(AtomicBool::new(false));
+    let settles = Arc::new(AtomicBool::new(true));
+    let attempts = Arc::new(AtomicUsize::new(0));
+    let mut registry = Registry::default();
+    let first = registry
+        .open(Kind::Tui, scripted(&stuck, &attempts))
+        .unwrap();
+    registry.session(first).unwrap().live = false;
+    let second = registry
+        .open(Kind::Tui, scripted(&settles, &attempts))
+        .unwrap();
+    assert!(second > first);
+    assert_eq!(attempts.load(Ordering::SeqCst), 1);
+    assert_eq!(registry.lingering(), 1);
+    assert!(registry.session(first).is_err());
+    stuck.store(true, Ordering::SeqCst);
+    registry
+        .open(Kind::Console, scripted(&settles, &attempts))
+        .unwrap();
+    assert_eq!(
+        registry.lingering(),
+        0,
+        "an ended session settles on the next open"
+    );
 }
 
 #[test]
@@ -346,7 +379,7 @@ fn an_open_for_a_replaced_document_is_refused_and_its_session_settled() {
 /// A session that misses its settlement bound stays owned, and the open
 /// reports the settlement failure rather than the refusal.
 #[test]
-fn a_stale_session_that_cannot_settle_stays_owned() {
+fn a_stale_session_that_cannot_settle_lingers_owned() {
     let stuck = Arc::new(AtomicBool::new(false));
     let attempts = Arc::new(AtomicUsize::new(0));
     let registry = Mutex::new(Registry::default());
@@ -358,15 +391,17 @@ fn a_stale_session_that_cannot_settle_stays_owned() {
     })
     .unwrap_err();
     assert_eq!(error.code, ErrorCode::CleanupFailed);
-    assert_eq!(registry.lock().unwrap().occupied(), [Kind::Tui]);
+    assert!(registry.lock().unwrap().occupied().is_empty());
+    assert_eq!(registry.lock().unwrap().lingering(), 1);
     stuck.store(true, Ordering::SeqCst);
     assert!(registry.lock().unwrap().close_all().is_empty());
+    assert_eq!(registry.lock().unwrap().lingering(), 0);
 }
 
 /// A launch whose sessions cannot start: every path is absolute and the
 /// interpreter does not exist, so an open that is wrongly admitted fails to
 /// spawn rather than starting a process.
-fn unit_launch() -> crate::environment::Launch {
+pub(crate) fn unit_launch() -> crate::environment::Launch {
     let directory = std::fs::canonicalize(std::env::temp_dir()).unwrap();
     let contract: serde_json::Value =
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap();
@@ -382,12 +417,43 @@ fn unit_launch() -> crate::environment::Launch {
         diagnostics: Arc::new(Diagnostics::default()),
         console_workspace: directory.clone(),
         package_root: directory.clone(),
-        docs_root: directory.clone(),
-        docs_manifest: directory.join("manifest.json"),
+        docs: crate::environment::PackagedDocs::Bundled(crate::environment::DocsLocation {
+            root: directory.clone(),
+            manifest: directory.join("manifest.json"),
+        }),
         log_file: directory.join("cadrumo.log"),
         manager_log_file: directory.join("cadrumo-manager.log"),
         log_format: String::new(),
         output_language: "en".into(),
+        log_level: crate::logs::Level::Info,
+    }
+}
+
+#[test]
+fn aeat_setup_has_a_separate_slot_and_only_an_exact_profile_argument() {
+    let launch = unit_launch();
+    let profile = "5aa00000-0000-4000-8000-0000000000aa";
+    let program = Program::for_aeat_setup(&launch, profile).unwrap();
+    assert_eq!(
+        program.arguments,
+        [
+            "-I",
+            "-m",
+            "cadrumo_runtime.host.frontend.tui",
+            "--aeat-auth-profile",
+            profile
+        ]
+        .map(OsString::from)
+        .to_vec()
+    );
+    assert_ne!(Kind::Tui.slot(), Kind::AeatSetup.slot());
+    for invalid in [
+        "",
+        "../profile",
+        "00000000-0000-0000-0000-000000000000",
+        "5aa00000-0000-4000-8000-0000000000aa?secret=x",
+    ] {
+        assert!(Program::for_aeat_setup(&launch, invalid).is_err());
     }
 }
 
@@ -541,6 +607,37 @@ fn chatty_program() -> Program {
     }
 }
 
+/// Runs `program` to its exit and returns what it printed, answering the cursor
+/// position queries a Windows pseudo console sends before it releases output.
+fn printed(program: Program) -> String {
+    let captured = Arc::new(Mutex::new(Vec::new()));
+    let output = captured.clone();
+    let sink: Sink = Arc::new(move |frame| {
+        if frame.first() == Some(&0) {
+            output.lock().unwrap().extend_from_slice(&frame[1..]);
+        }
+        Ok(())
+    });
+    let mut session =
+        Session::start(program, 80, 24, sink, Arc::new(Diagnostics::default())).unwrap();
+    let began = Instant::now();
+    let mut answered = 0;
+    while session.live() && began.elapsed() < Duration::from_secs(10) {
+        let bytes = captured.lock().unwrap();
+        let queries = bytes.windows(4).filter(|window| *window == b"[6n").count();
+        session.acknowledge(bytes.len() as u64).unwrap();
+        drop(bytes);
+        while answered < queries {
+            session.write(b"[1;1R").unwrap();
+            answered += 1;
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    assert!(!session.live(), "terminal probe did not exit");
+    session.stop().unwrap();
+    String::from_utf8_lossy(&captured.lock().unwrap()).into_owned()
+}
+
 #[test]
 fn only_the_dedicated_tui_receives_the_desktop_palette_identity() {
     for role in [ProcessRole::Tui, ProcessRole::Console, ProcessRole::Repl] {
@@ -561,36 +658,7 @@ fn only_the_dedicated_tui_receives_the_desktop_palette_identity() {
             vec!["-c", "printf '%s' \"$TERM_PROGRAM\""]
         };
         program.arguments = arguments.into_iter().map(OsString::from).collect();
-        let captured = Arc::new(Mutex::new(Vec::new()));
-        let output = captured.clone();
-        let sink: Sink = Arc::new(move |frame| {
-            if frame.first() == Some(&0) {
-                output.lock().unwrap().extend_from_slice(&frame[1..]);
-            }
-            Ok(())
-        });
-        let mut session =
-            Session::start(program, 80, 24, sink, Arc::new(Diagnostics::default())).unwrap();
-        let began = Instant::now();
-        let mut answered = 0;
-        while session.live() && began.elapsed() < Duration::from_secs(10) {
-            let bytes = captured.lock().unwrap();
-            let queries = bytes
-                .windows(4)
-                .filter(|window| *window == b"\x1b[6n")
-                .count();
-            session.acknowledge(bytes.len() as u64).unwrap();
-            drop(bytes);
-            while answered < queries {
-                session.write(b"\x1b[1;1R").unwrap();
-                answered += 1;
-            }
-            std::thread::sleep(Duration::from_millis(20));
-        }
-        assert!(!session.live(), "terminal identity probe did not exit");
-        session.stop().unwrap();
-        let bytes = captured.lock().unwrap();
-        let text = String::from_utf8_lossy(&bytes);
+        let text = printed(program);
         if role == ProcessRole::Tui {
             assert!(!text.contains("cadrumo-shell"), "{text:?}");
         }
@@ -603,6 +671,216 @@ fn only_the_dedicated_tui_receives_the_desktop_palette_identity() {
             "{text:?}"
         );
     }
+}
+
+#[test]
+fn tui_readiness_and_screen_reach_the_view_through_the_real_pty() {
+    let mut program = chatty_program();
+    program.role = ProcessRole::Tui;
+    if cfg!(windows) {
+        let root = std::env::var_os("SystemRoot").expect("SystemRoot");
+        program.executable =
+            PathBuf::from(root).join("System32/WindowsPowerShell/v1.0/powershell.exe");
+        program.arguments = [
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            "[Console]::Write('ready-screen' + [char]27 + ']777;cadrumo;presentation;ready' + [char]27 + '\\')",
+        ].into_iter().map(OsString::from).collect();
+    } else {
+        program.arguments = [
+            "-c",
+            "printf 'ready-screen\\033]777;cadrumo;presentation;ready\\033\\\\'",
+        ]
+        .into_iter()
+        .map(OsString::from)
+        .collect();
+    }
+    let text = printed(program);
+    assert!(
+        text.contains("ready-screen"),
+        "screen was not delivered: {text:?}"
+    );
+    // Windows can forward OSC before its buffered text repaint. The view
+    // must settle and render the following output before uncovering it.
+    assert!(
+        text.contains("\x1b]777;cadrumo;presentation;ready"),
+        "readiness was not delivered: {text:?}"
+    );
+}
+
+#[test]
+fn an_inherited_colour_switch_never_reaches_a_terminal_child() {
+    for role in [ProcessRole::Tui, ProcessRole::Console, ProcessRole::Repl] {
+        let mut program = chatty_program();
+        program.role = role;
+        program
+            .environment
+            .insert("NO_COLOR".into(), "false".into());
+        program
+            .environment
+            .insert("cadrumo_force_color".into(), "1".into());
+        program
+            .environment
+            .insert("CADRUMO_OUTPUT_LANGUAGE".into(), "es".into());
+        let arguments = if cfg!(windows) {
+            vec![
+                "/d",
+                "/c",
+                "if defined NO_COLOR (echo colour-inherited) else if defined CADRUMO_FORCE_COLOR (echo colour-inherited) else if defined CADRUMO_OUTPUT_LANGUAGE (echo colour-owned)",
+            ]
+        } else {
+            vec![
+                "-c",
+                "if [ -n \"${NO_COLOR+x}${cadrumo_force_color+x}\" ]; then echo colour-inherited; elif [ -n \"$CADRUMO_OUTPUT_LANGUAGE\" ]; then echo colour-owned; fi",
+            ]
+        };
+        program.arguments = arguments.into_iter().map(OsString::from).collect();
+        let text = printed(program);
+        assert!(text.contains("colour-owned"), "{role:?}: {text:?}");
+        assert!(!text.contains("colour-inherited"), "{role:?}: {text:?}");
+    }
+}
+
+/// The input writer blocks without a timeout; a child that exits on its own
+/// must still wake it, or the finisher could never join it and settle.
+#[test]
+fn a_child_that_exits_while_input_is_idle_settles_the_session() {
+    let mut program = chatty_program();
+    let arguments: &[&str] = if cfg!(windows) {
+        &["/d", "/c", "ping", "-n", "2", "127.0.0.1"]
+    } else {
+        &["-c", "sleep 1"]
+    };
+    program.arguments = arguments.iter().map(OsString::from).collect();
+    let captured = Arc::new(Mutex::new(Vec::new()));
+    let output = captured.clone();
+    let sink: Sink = Arc::new(move |frame| {
+        if frame.first() == Some(&0) {
+            output.lock().unwrap().extend_from_slice(&frame[1..]);
+        }
+        Ok(())
+    });
+    let mut session =
+        Session::start(program, 80, 24, sink, Arc::new(Diagnostics::default())).unwrap();
+    let began = Instant::now();
+    let mut answered = 0;
+    while session.live() && began.elapsed() < Duration::from_secs(10) {
+        // ConPTY asks for the cursor position before the child runs; answering
+        // is the only input this session ever receives.
+        let bytes = captured.lock().unwrap();
+        let queries = bytes.windows(4).filter(|window| *window == b"[6n").count();
+        session.acknowledge(bytes.len() as u64).unwrap();
+        drop(bytes);
+        while answered < queries {
+            session.write(b"[1;1R").unwrap();
+            answered += 1;
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    assert!(
+        !session.live(),
+        "the idle input writer kept the session open"
+    );
+    session.stop().unwrap();
+}
+
+/// A webview may disappear before it answers ConPTY's initial cursor query.
+/// Closing that session must still reap the child and join its workers.
+#[cfg(windows)]
+#[test]
+fn a_terminal_closed_before_the_cursor_reply_settles() {
+    let (sent, received) = std::sync::mpsc::channel();
+    let sink: Sink = Arc::new(move |frame| {
+        if frame.first() == Some(&0) {
+            let _ = sent.send(frame[1..].to_vec());
+        }
+        Ok(())
+    });
+    let mut session = Session::start(
+        chatty_program(),
+        80,
+        24,
+        sink,
+        Arc::new(Diagnostics::default()),
+    )
+    .unwrap();
+    let deadline = Instant::now() + Duration::from_secs(5);
+    let mut output = Vec::new();
+    while !output.windows(4).any(|bytes| bytes == b"\x1b[6n") {
+        output.extend(
+            received
+                .recv_timeout(deadline.saturating_duration_since(Instant::now()))
+                .unwrap(),
+        );
+    }
+    session
+        .stop()
+        .expect("closing an unanswered cursor query must settle");
+}
+
+#[cfg(windows)]
+#[test]
+fn terminal_cleanup_is_independent_of_concurrent_helpers() {
+    use std::{
+        os::windows::process::CommandExt,
+        process::{Command, Stdio},
+    };
+    let mut failures = 0;
+    for attempt in 0..24 {
+        let program = chatty_program();
+        let barrier = Arc::new(std::sync::Barrier::new(2));
+        let spawning = barrier.clone();
+        let helper = std::thread::spawn(move || {
+            spawning.wait();
+            std::thread::sleep(Duration::from_millis(attempt % 8));
+            cadrumo_application::process::creation::run(|| {
+                Command::new(std::env::current_exe().unwrap())
+                    .args([
+                        "--ignored",
+                        "--exact",
+                        "terminal::tests::terminal_pipe_holder_child",
+                    ])
+                    .stdin(Stdio::piped())
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .creation_flags(0x0800_0000)
+                    .spawn()
+            })
+            .unwrap()
+        });
+        barrier.wait();
+        let mut session = Session::start(
+            program,
+            80,
+            24,
+            Arc::new(|_| Ok(())),
+            Arc::new(Diagnostics::default()),
+        )
+        .unwrap();
+        let mut helper = helper.join().unwrap();
+        assert!(helper.try_wait().unwrap().is_none());
+        let stopped = session.stop();
+        let _ = helper.kill();
+        helper.wait().unwrap();
+        if stopped.is_err() {
+            failures += 1;
+            session
+                .stop()
+                .expect("helper exit must release any inherited PTY pipe");
+        }
+    }
+    assert_eq!(
+        failures, 0,
+        "an unrelated helper inherited the terminal's output pipe"
+    );
+}
+
+#[cfg(windows)]
+#[test]
+#[ignore = "subprocess fixture for terminal handle inheritance"]
+fn terminal_pipe_holder_child() {
+    std::io::copy(&mut std::io::stdin(), &mut std::io::sink()).unwrap();
 }
 
 /// When frames stop reaching the webview the session stops itself: the child
@@ -641,6 +919,15 @@ fn a_session_whose_frames_cannot_be_delivered_stops_itself() {
                 .as_ref()
                 .is_some_and(|error| error.code == ErrorCode::WriteFailed)
     }));
+    // portable-pty's Windows killer answers a successful termination with an
+    // error; the session must not report it as a cleanup failure.
+    assert!(
+        snapshot.events.iter().all(|event| event
+            .failure
+            .as_ref()
+            .is_none_or(|error| error.code != ErrorCode::CleanupFailed)),
+        "a successful termination was reported as a cleanup failure"
+    );
     assert!(snapshot.output.is_empty());
     // The refused started frame ends delivery; later output is discarded.
     assert_eq!(attempts.load(Ordering::SeqCst), 1);
@@ -691,7 +978,12 @@ fn every_kind_uses_workspace_and_bundled_command_search_path() {
     let bin = console::package_bin(launch.child.executable()).unwrap();
     let python = launch.child.executable().parent().unwrap();
     for kind in Kind::ALL {
-        let program = Program::for_kind(&launch, kind).unwrap();
+        let program = if kind == Kind::AeatSetup {
+            Program::for_aeat_setup(&launch, "5aa00000-0000-4000-8000-0000000000aa")
+        } else {
+            Program::for_kind(&launch, kind)
+        }
+        .unwrap();
         assert_eq!(program.directory, launch.console_workspace);
         let (_, value) = program
             .environment
@@ -705,4 +997,36 @@ fn every_kind_uses_workspace_and_bundled_command_search_path() {
         }
         assert_eq!(paths.iter().filter(|path| *path == &bin).count(), 1);
     }
+}
+
+#[test]
+fn shutdown_refuses_new_children_and_retains_failed_cleanup_for_retry() {
+    let settles = Arc::new(AtomicBool::new(false));
+    let attempts = Arc::new(AtomicUsize::new(0));
+    let mut registry = Registry::default();
+    registry
+        .open(Kind::Tui, scripted(&settles, &attempts))
+        .unwrap();
+    assert_eq!(registry.shutdown().len(), 1);
+    assert!(registry.occupied().is_empty());
+    assert_eq!(registry.lingering(), 1);
+    for kind in Kind::ALL {
+        assert_eq!(
+            registry
+                .open(kind, || panic!("shutdown must refuse spawning"))
+                .unwrap_err()
+                .code,
+            ErrorCode::SessionUnavailable
+        );
+    }
+    settles.store(true, Ordering::SeqCst);
+    assert!(registry.shutdown().is_empty());
+    assert_eq!(registry.lingering(), 0);
+    assert_eq!(
+        registry
+            .open(Kind::Tui, || panic!("shutdown is permanent"))
+            .unwrap_err()
+            .code,
+        ErrorCode::SessionUnavailable
+    );
 }

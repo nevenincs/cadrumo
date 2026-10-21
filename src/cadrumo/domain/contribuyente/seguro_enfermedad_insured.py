@@ -232,7 +232,7 @@ def seguro_enfermedad_insured_counts_from_facts(
     """
     from .descendant_facts import descendant_list_from_facts
 
-    stored_facts = {str(path): str(value) for path, value in fact_index.items() if value is not None}
+    stored_facts = {path: str(value) for path, value in fact_index.items() if value is not None}
     selected_authority = require_governed_fact_authority(authority, subject="insurance fact projection")
     descendientes = descendant_list_from_facts(stored_facts, authority=selected_authority)
     return count_seguro_enfermedad_insured(

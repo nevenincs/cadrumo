@@ -12,6 +12,7 @@ persistence.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -37,6 +38,13 @@ from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.invoices.errors import InvoiceLinkError
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
 from ...domain.iva.schema import EUMemberState, IvaCategory
+from ...domain.transactions.classification_origin import (
+    CLASSIFICATION_DECISION_FIELDS,
+    ClassificationOrigin,
+    resolved_classification_origin,
+    with_classification_origin,
+    written_classification_origin,
+)
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
@@ -51,6 +59,8 @@ from ...domain.transactions.models import (
 )
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..aggregation.currency_predicates import effective_eur_amount, is_non_eur_without_conversion
+from ..aggregation.ledger_filing_snapshot import row_fingerprint
+from ..operations.execution_actor import actor_label_is_automation
 from ..review.filter import LedgerReviewStatus
 from .action_ports import LedgerActionPorts
 from .actions_common import (
@@ -58,10 +68,12 @@ from .actions_common import (
     blocking_modelo_references,
     build_ledger_bucket_event,
     build_manual_ledger_result,
+    command_changes_no_ledger_value,
     command_matches_current,
     derive_evidence_event_ids,
     display_decimal,
     is_evidence_only_command,
+    ledger_values_differing_from_stored,
     merge_identifier_tuple,
     mutation_signature,
     normalise_attachment_patch_ids,
@@ -103,9 +115,11 @@ from .models import (
 )
 from .preflight import preflight_ledger_tax_readiness
 from .protocols import (
+    BucketEventHistoryCoCommitWriterProtocol,
     RevisionGuardedTransactionCatalogueCoCommitWriterProtocol,
     TransactionCatalogueCoCommitWriterProtocol,
 )
+from .read_ports import LedgerReadPorts
 from .review_projection import ledger_transaction_review_status, project_ledger_review_query
 from .usage_ratio_repository import UsageRatioProfileLoader
 
@@ -128,18 +142,33 @@ _EVIDENCE_PATCH_FIELDS = frozenset({"purchase_invoice_evidence_id", "attachment_
 _SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset({"investment_asset_id", "own_account_id"})
 
 
-def create_manual_transaction(
+@dataclass(frozen=True, slots=True)
+class PreparedManualTransaction:
+    """A manual add that passed every refusal and has not written anything yet."""
+
+    command: ManualLedgerTransactionCommand
+    repository: TransactionCatalogueCoCommitWriterProtocol
+    event_repository: BucketEventHistoryCoCommitWriterProtocol
+    catalogue: TransactionCatalogue
+    catalogue_revision: str | None
+    transaction: Transaction
+    event: BucketEvent
+
+
+def prepare_manual_transaction(
     command: ManualLedgerTransactionCommand,
     *,
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
     currency_normalizer: CurrencyNormalizationService | None = None,
     require_revision_guard: bool = False,
-) -> ManualLedgerTransactionResult:
-    """Persist one manual ledger transaction in the command's bucket.
+) -> PreparedManualTransaction | ManualLedgerTransactionResult:
+    """Run every refusal of a manual add without writing, so a caller can tell a refusal from a write.
 
-    Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`
-    with the created transaction and associated bucket event.
+    Building the domain row is where its own invariants refuse (an IVA rate
+    given as a percentage, a gross that is not base plus cuota), so a refusal
+    raised here has provably written nothing. An idempotent retry of a stored
+    row returns its unchanged result instead of a preparation.
     """
     now = normalise_timestamp(occurred_at)
     repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=ports.transaction_repository)
@@ -212,15 +241,33 @@ def create_manual_transaction(
         currency_normalizer=currency_normalizer,
         evidence_records=ports.purchase_invoice_evidence_records,
     )
-    save_transaction_catalogue_and_events(
-        transaction_repository=repository,
+    return PreparedManualTransaction(
+        command=command,
+        repository=repository,
         event_repository=event_repository,
-        catalogue=upsert_transaction(catalogue, transaction),
-        events=(event,),
-        expected_catalogue_revision=catalogue_revision,
+        catalogue=catalogue,
+        catalogue_revision=catalogue_revision,
+        transaction=transaction,
+        event=event,
+    )
+
+
+def commit_manual_transaction(
+    prepared: PreparedManualTransaction,
+    *,
+    ports: LedgerActionPorts,
+) -> ManualLedgerTransactionResult:
+    """Write a prepared manual add: the row and its event co-commit, then the attachment back-references."""
+    transaction = prepared.transaction
+    save_transaction_catalogue_and_events(
+        transaction_repository=prepared.repository,
+        event_repository=prepared.event_repository,
+        catalogue=upsert_transaction(prepared.catalogue, transaction),
+        events=(prepared.event,),
+        expected_catalogue_revision=prepared.catalogue_revision,
     )
     _record_attachment_back_references(transaction, attachment_store=ports.attachment_store)
-    return build_manual_ledger_result(command.bucket_id, transaction, (event.event_id,))
+    return build_manual_ledger_result(prepared.command.bucket_id, transaction, (prepared.event.event_id,))
 
 
 def attach_manual_transaction_evidence(
@@ -247,7 +294,7 @@ def attach_manual_transaction_evidence(
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
-    normalized_purchase_evidence_id = purchase_invoice_evidence_id.strip() if purchase_invoice_evidence_id else None
+    normalized_purchase_evidence_id = (purchase_invoice_evidence_id or "").strip() or None
     normalized_attachment_ids = normalise_attachment_patch_ids(attachment_ids)
     if normalized_purchase_evidence_id is None and not normalized_attachment_ids:
         raise TransactionValidationError(
@@ -447,7 +494,7 @@ def get_manual_transaction(
 def list_manual_transactions(
     *,
     bucket_id: str,
-    ports: LedgerActionPorts,
+    ports: LedgerReadPorts,
     catalogue: TransactionCatalogue | None = None,
 ) -> tuple[ManualLedgerTransactionResult, ...]:
     """Return every transaction in a bucket, sorted by effective date and id.
@@ -476,7 +523,7 @@ def list_manual_transactions(
 def query_ledger_review_rows(
     query: LedgerReviewQuery,
     *,
-    ports: LedgerActionPorts,
+    ports: LedgerReadPorts,
     catalogue: TransactionCatalogue | None = None,
 ) -> LedgerReviewQueryResult:
     """Return review rows for bucket-local ledger transactions.
@@ -787,6 +834,7 @@ def update_manual_transaction(
     occurred_at: datetime | None = None,
     catalogue: TransactionCatalogue | None = None,
     expected_current: Transaction | None = None,
+    decides_classification: bool = False,
     _evidence_authority: bool = False,
 ) -> ManualLedgerTransactionResult:
     """Replace one manual ledger transaction from a validated command payload.
@@ -794,6 +842,11 @@ def update_manual_transaction(
     The replacement is built from
     :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionCommand` and saved
     as a new :class:`~cadrumo.domain.transactions.models.Transaction` revision.
+
+    ``decides_classification`` says the caller set a tax-bearing fact of the
+    row, whether or not its value moved. A person who restates what a rule, a
+    model or an automation gave the row has accepted it: the row becomes theirs,
+    and that alone is a change this service writes and records.
 
     ``_evidence_authority`` is a private flag threaded only by the evidence
     attach authority (:func:`attach_manual_transaction_evidence`) and the
@@ -838,6 +891,9 @@ def update_manual_transaction(
         previous_transaction_id=transaction_id,
         now=now,
         ports=ports,
+        decides_classification=decides_classification,
+        finalized_blockers=blockers,
+        evidence_only=evidence_only,
     )
     if prepared is None:
         raise TransactionValidationError(
@@ -909,14 +965,9 @@ def _manual_update_preconditions(
     # export evidence refusal would itself be blocked by the calculation that
     # raised it. The cited revisions are reported back as stale so the operator
     # is told to recalculate; the exemption never widens past evidence fields.
-    evidence_only = is_evidence_only_command(command, current)
-    if blockers and not evidence_only:
-        raise_finalized_modelo_blocked(
-            operation="ledger transaction update",
-            transaction_ids=transaction_modelo_source_ids(current),
-            blockers=blockers,
-        )
-    return blockers, evidence_only
+    # The guard itself is held where the replacement is built, because what
+    # it protects is read from the replacement.
+    return blockers, is_evidence_only_command(command, current)
 
 
 def _require_expected_current_transaction(
@@ -977,17 +1028,40 @@ def _prepare_manual_transaction_update(
     now: datetime,
     currency_normalizer: CurrencyNormalizationService | None = None,
     ports: LedgerActionPorts,
+    decides_classification: bool = False,
+    finalized_blockers: tuple[LedgerRemovalBlocker, ...] = (),
+    evidence_only: bool = False,
 ) -> tuple[Transaction, tuple[BucketEvent, ...]] | None:
     """Build a replacement transaction and bucket events for one in-memory edit.
 
-    Returns ``None`` when the command is a field-for-field no-op (the caller
-    decides whether that is an error or a skip). Verifies evidence and usage-ratio
+    Returns ``None`` when the command is a field-for-field no-op that also
+    leaves whose decision the classification is as it was (the caller decides
+    whether that is an error or a skip). A person restating the classification
+    another party gave the row changes that, so it is built and recorded with
+    a classification event. Verifies evidence and usage-ratio
     references but performs **no** persistence and **no** catalogue load - the
     caller owns a single load/save so a batch re-encrypts the catalogue once
     rather than per row (the ``bulk_classify_from_csv`` load-once/save-once
-    contract). Lifecycle and blocking-modelo guards remain the caller's
-    responsibility before invoking this builder.
+    contract). The lifecycle guard remains the caller's responsibility before
+    invoking this builder.
+
+    ``finalized_blockers`` are the finalized revisions the caller found citing
+    the row. A write that would disturb one is refused here, for single and
+    bulk writes alike, once the replacement it would store is known.
+
+    A write whose every value compares equal to the stored one stores the
+    stored row itself, with only the origin and the stamp of the
+    restatement replaced. Equal values can be written differently (``500``
+    for ``500.00``), a finalized revision's fingerprint hashes the written
+    form, and a confirmation must not make a sealed revision read as stale.
     """
+    if finalized_blockers and not evidence_only and not command_changes_no_ledger_value(command, current):
+        # A command that differs from the stored row in a value is a changed write, refused
+        # before anything is built from it. One that compares equal is not admitted on that:
+        # it is judged below, on the row it would store.
+        _refuse_write_to_a_sealed_row(
+            current, finalized_blockers, changed_fields=ledger_values_differing_from_stored(command, current)
+        )
     _require_declared_iva_category(command, ports=ports)
     replacement = _transaction_from_command(
         command,
@@ -1005,10 +1079,18 @@ def _prepare_manual_transaction_update(
         created_at=current.created_at,
         modified_at=now,
         evidence_records=ports.purchase_invoice_evidence_records,
+        classification_predecessor=current,
+        classification_decided=decides_classification,
     )
     replacement = _carry_forward_invoice_link(current, _carry_forward_fx(current, replacement))
-    if mutation_signature(current) == mutation_signature(replacement):
+    restated = mutation_signature(current) == mutation_signature(replacement)
+    if restated and not _origin_changed(current, replacement):
         return None
+    if restated:
+        replacement = _stored_row_restated(current, replacement)
+    _require_finalized_revisions_undisturbed(
+        current, replacement, blockers=finalized_blockers, evidence_only=evidence_only, restated=restated
+    )
     verify_evidence_references(
         command,
         transaction_id=replacement.transaction_id,
@@ -1062,8 +1144,70 @@ def _prepare_manual_transaction_update(
         created_at=current.created_at,
         modified_at=now,
         evidence_records=ports.purchase_invoice_evidence_records,
+        classification_predecessor=current,
+        classification_decided=decides_classification,
     )
-    return _carry_forward_invoice_link(current, _carry_forward_fx(current, replacement)), events
+    replacement = _carry_forward_invoice_link(current, _carry_forward_fx(current, replacement))
+    if restated:
+        replacement = _stored_row_restated(current, replacement)
+    return replacement, events
+
+
+_RESTATEMENT_RECORD_FIELDS = (
+    "classification_origin",
+    "classified_by",
+    "classified_at",
+    "classification_reason",
+    "classification_confidence",
+    "edit_lineage",
+    "modified_at",
+)
+"""What a write that moves no value records on the row: who decided, the stamp, and the edit."""
+
+
+def _stored_row_restated(current: Transaction, rebuilt: Transaction) -> Transaction:
+    """Return the stored row carrying what the restatement records and nothing else of ``rebuilt``.
+
+    Every value keeps the object and the written form it was stored with.
+    """
+    return current.model_copy(update={field: getattr(rebuilt, field) for field in _RESTATEMENT_RECORD_FIELDS})
+
+
+def _require_finalized_revisions_undisturbed(
+    current: Transaction,
+    replacement: Transaction,
+    *,
+    blockers: tuple[LedgerRemovalBlocker, ...],
+    evidence_only: bool,
+    restated: bool,
+) -> None:
+    """Refuse a write to a row a finalized revision cites, unless it leaves what the revision sealed.
+
+    A restatement is admitted when the row it would store keeps the identity
+    the revision cites and the fingerprint the revision sealed: that is what
+    this guard protects, so that is what the exemption is read from. Every
+    other write but an evidence-only one is refused.
+    """
+    if not blockers or evidence_only:
+        return
+    if (
+        restated
+        and replacement.transaction_id == current.transaction_id
+        and row_fingerprint(replacement) == row_fingerprint(current)
+    ):
+        return
+    _refuse_write_to_a_sealed_row(current, blockers)
+
+
+def _refuse_write_to_a_sealed_row(
+    current: Transaction, blockers: tuple[LedgerRemovalBlocker, ...], *, changed_fields: tuple[str, ...] = ()
+) -> None:
+    raise_finalized_modelo_blocked(
+        operation="ledger transaction update",
+        transaction_ids=transaction_modelo_source_ids(current),
+        blockers=blockers,
+        changed_fields=changed_fields,
+    )
 
 
 def update_manual_transaction_fields(
@@ -1135,10 +1279,14 @@ def update_manual_transaction_fields(
     # field-for-field-identical commands originating from a ``business_classification`` patch as
     # confirmed no-ops rather than errors (the deliberate direction chosen for this guard).
     # When ``reaffirm`` is True the operator explicitly requests re-application; skip the guard.
+    # A person restating a classification another party decided is not a no-op: it makes the
+    # row theirs, so it goes on to be written.
+    decides_classification = bool(_fields_set_to_a_value(patch) & CLASSIFICATION_DECISION_FIELDS)
     if (
         not reaffirm
         and "business_classification" in patch.model_fields_set
         and command_matches_current(command, current)
+        and not _unchanged_write_takes_the_row(current, command, decides_classification=decides_classification)
     ):
         return build_manual_ledger_result(bucket_id, current, ())
     return update_manual_transaction(
@@ -1148,8 +1296,43 @@ def update_manual_transaction_fields(
         occurred_at=occurred_at,
         catalogue=catalogue,
         expected_current=expected_current,
+        decides_classification=decides_classification,
         _evidence_authority=_evidence_authority,
     )
+
+
+def _fields_set_to_a_value(patch: ManualLedgerTransactionPatch) -> set[str]:
+    """Return the fields ``patch`` sets, less a purchase evidence link set to nothing.
+
+    A link that names no evidence links nothing, so it decides nothing about
+    how the row is taxed.
+    """
+    fields = set(patch.model_fields_set)
+    if patch.purchase_invoice_evidence_id is None:
+        fields.discard("purchase_invoice_evidence_id")
+    return fields
+
+
+def _written_origin(command: ManualLedgerTransactionCommand) -> ClassificationOrigin:
+    """Return whose decision a classification written by ``command`` is."""
+    return written_classification_origin(
+        by_automation=actor_label_is_automation(command.actor),
+        classified_by=command.classified_by_override or CLASSIFIED_BY_MANUAL,
+    )
+
+
+def _origin_changed(current: Transaction, replacement: Transaction) -> bool:
+    return resolved_classification_origin(current) is not resolved_classification_origin(replacement)
+
+
+def _unchanged_write_takes_the_row(
+    current: Transaction, command: ManualLedgerTransactionCommand, *, decides_classification: bool
+) -> bool:
+    """Return whether a write of ``command`` that moves no value still changes whose row it is."""
+    restated = with_classification_origin(
+        current, replaces=current, written=_written_origin(command), decided=decides_classification
+    )
+    return _origin_changed(current, restated)
 
 
 def _command_from_patch(
@@ -1345,20 +1528,19 @@ def _update_event_specs(
                 {**common_payload, "mutation_kind": "edit"},
             ),
         )
+    classification_spec: EventSpec = (
+        BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
+        BucketEventObjectType.LEDGER_TRANSACTION,
+        replacement.transaction_id,
+        {
+            **common_payload,
+            "classification": replacement.business_classification.value,
+            "category_id": replacement.category_id or "",
+            "mutation_kind": "classification",
+        },
+    )
     if _classification_changed(current, replacement):
-        specs.append(
-            (
-                BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
-                BucketEventObjectType.LEDGER_TRANSACTION,
-                replacement.transaction_id,
-                {
-                    **common_payload,
-                    "classification": replacement.business_classification.value,
-                    "category_id": replacement.category_id or "",
-                    "mutation_kind": "classification",
-                },
-            ),
-        )
+        specs.append(classification_spec)
     if _allocation_changed(current, replacement):
         specs.append(
             (
@@ -1375,6 +1557,10 @@ def _update_event_specs(
             ),
         )
     specs.extend(_evidence_event_specs(current=current, replacement=replacement, common_payload=common_payload))
+    if not specs and _origin_changed(current, replacement):
+        # Nothing moved but whose decision the classification is: the person accepted what the
+        # row carried, and the history shows that as the classification it is.
+        specs.append(classification_spec)
     if not specs:
         specs.append(
             (
@@ -1555,6 +1741,8 @@ def _transaction_from_command(
     modified_at: datetime | None = None,
     currency_normalizer: CurrencyNormalizationService | None = None,
     evidence_records: tuple[PurchaseInvoiceEvidence, ...] = (),
+    classification_predecessor: Transaction | None = None,
+    classification_decided: bool = False,
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_transaction_id or _provider_transaction_id(command, occurred_at=occurred_at),
@@ -1639,7 +1827,14 @@ def _transaction_from_command(
     # reaches the modelo at all.
     payload.update(_fx_conversion_fields(raw, currency_normalizer))
     payload.update(_classification_fields(command, occurred_at=occurred_at))
-    return Transaction.model_validate(payload)
+    # The stamp above is rewritten by every write to a classified row. Whose
+    # decision the classification is changes only when this write changes it.
+    return with_classification_origin(
+        Transaction.model_validate(payload),
+        replaces=classification_predecessor,
+        written=_written_origin(command),
+        decided=classification_decided,
+    )
 
 
 def _fx_conversion_fields(
@@ -1780,8 +1975,12 @@ def _raw_field_values(command: ManualLedgerTransactionCommand) -> dict[str, str]
         "irpf_category": command.irpf_category or "",
         "usage_ratio_id": command.usage_ratio_id or "",
         "prorrata_reference": command.prorrata_reference or "",
-        "art_104_tres_exclusion": command.art_104_tres_exclusion.value if command.art_104_tres_exclusion else "",
-        "input_classification": command.input_classification.value if command.input_classification else "",
+        "art_104_tres_exclusion": command.art_104_tres_exclusion.value
+        if (command.art_104_tres_exclusion is not None and command.art_104_tres_exclusion)
+        else "",
+        "input_classification": command.input_classification.value
+        if (command.input_classification is not None and command.input_classification)
+        else "",
         "prorrata_sector_id": command.prorrata_sector_id or "",
         "purchase_invoice_evidence_id": command.purchase_invoice_evidence_id or "",
         "attachment_ids": ",".join(command.attachment_ids),
@@ -1809,8 +2008,9 @@ command_from_patch = _command_from_patch
 prepare_manual_transaction_update = _prepare_manual_transaction_update
 
 __all__ = [
+    "PreparedManualTransaction",
     "attach_manual_transaction_evidence",
-    "create_manual_transaction",
+    "commit_manual_transaction",
     "detach_manual_transaction_attachments",
     "get_manual_transaction",
     "ledger_transaction_payload",
@@ -1819,6 +2019,7 @@ __all__ = [
     "ledger_transaction_tracking_payload",
     "link_manual_transaction_invoice",
     "list_manual_transactions",
+    "prepare_manual_transaction",
     "query_ledger_review_rows",
     "summarize_manual_transactions",
     "update_manual_transaction",

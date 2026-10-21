@@ -6,18 +6,11 @@ verification, export, or local filing lets deductible input IVA proceed.
 
 from __future__ import annotations
 
-from decimal import Decimal
 from enum import Enum, StrEnum, auto
 from typing import Final
 
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...domain.iva.components import registry_category_projection
-from ...domain.iva.flow import (
-    IvaFlowDirection,
-    derive_flow_for_classification,
-    flow_direction_for_invoice_kind,
-    is_deducible_flow,
-)
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow
@@ -27,7 +20,11 @@ from ...domain.transactions.enums import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ..aggregation.invoice_kind import invoice_kind_for_direction
+from ..aggregation.evidence_advisory import (
+    calculation_revision_claims_ledger_iva,
+    deductible_iva_evidence_gap,
+    iva_evidence_flow,
+)
 from .action_errors import ModeloPreconditionErrorMixin
 from .preconditions import build_modelo_precondition_failure
 
@@ -131,22 +128,11 @@ def _row_has_linked_evidence(row: LedgerEvidenceRow) -> bool:
     return bool(row.purchase_invoice_evidence_id) or bool(row.invoice_id) or bool(row.attachment_ids)
 
 
-def _row_flow(row: LedgerEvidenceRow, *, direction: TransactionDirection) -> IvaFlowDirection | None:
-    invoice_kind = invoice_kind_for_direction(direction)
-    if invoice_kind is None:
-        return None
-    category = _enum_or_none(IvaCategory, row.iva_category)
-    if category is None:
-        return flow_direction_for_invoice_kind(invoice_kind)
-    if category in registry_category_projection("evidence_exempt"):
-        return None
-    return derive_flow_for_classification(
-        category=category,
-        invoice_direction=invoice_kind,
-    )
-
-
-def ledger_evidence_row_missing_deductible_iva_evidence(row: LedgerEvidenceRow) -> bool:
+def ledger_evidence_row_missing_deductible_iva_evidence(
+    row: LedgerEvidenceRow,
+    *,
+    revision_claims_ledger_iva: bool,
+) -> bool:
     """Return whether an evidence row claims deductible IVA without linked proof.
 
     ``lifecycle_state``, ``business_classification``, ``direction`` and
@@ -168,10 +154,22 @@ def ledger_evidence_row_missing_deductible_iva_evidence(row: LedgerEvidenceRow) 
     actually have decided the answer.
 
     An absent ``iva_amount`` on a row that reaches the last line is a gap, not
-    a zero. By then the row is active, business-bearing, on the deducible side
-    and carrying no evidence of any kind; a deduction-side claim whose cuota
-    was never captured is exactly the missing-input state
+    a zero, when the revision claims IVA (``revision_claims_ledger_iva``). By
+    then the row is active, business-bearing, on the deducible side and
+    carrying no evidence of any kind; a deduction-side claim whose cuota was
+    never captured is exactly the missing-input state
     ``no-silent-under-declaration`` keeps distinct from a proven zero.
+
+    A revision with no IVA ledger bindings -- an IRPF return -- makes no IVA
+    claim at any amount, so no row of it is judged at all, not even one this
+    build cannot read: there is no deduction for it to vouch for.
+
+    The flow and the cuota rule are not restated here: they are
+    :func:`~application.aggregation.evidence_advisory.iva_evidence_flow` and
+    :func:`~application.aggregation.evidence_advisory.deductible_iva_evidence_gap`,
+    the same evaluation verification blocks on, so verify cannot grant a
+    revision this gate then refuses. This function owns only the parse order
+    over the bundle's stored strings and the bundle's evidence test.
 
     ``iva_category`` alone is still read through :func:`_enum_or_none`, because
     its absence is a real state — an unclassified domestic row — and both
@@ -185,6 +183,8 @@ def ledger_evidence_row_missing_deductible_iva_evidence(row: LedgerEvidenceRow) 
     evidence over unchanged facts without moving its content address, so a row
     refused here can be answered by attaching the document and recapturing.
     """
+    if not revision_claims_ledger_iva:
+        return False
     lifecycle_state = _enum_or_unparseable(TransactionLifecycleState, row.lifecycle_state)
     if lifecycle_state is _UNPARSEABLE:
         return True
@@ -198,26 +198,45 @@ def ledger_evidence_row_missing_deductible_iva_evidence(row: LedgerEvidenceRow) 
     direction = _enum_or_unparseable(TransactionDirection, row.direction)
     if direction is _UNPARSEABLE:
         return True
-    flow = _row_flow(row, direction=direction)
-    if flow is None or not is_deducible_flow(flow):
-        return False
-    if _row_has_linked_evidence(row):
-        return False
-    return row.iva_amount is None or row.iva_amount > Decimal("0")
+    flow = iva_evidence_flow(
+        lifecycle_state=lifecycle_state,
+        business_classification=business_classification,
+        direction=direction,
+        iva_category=_enum_or_none(IvaCategory, row.iva_category),
+    )
+    return deductible_iva_evidence_gap(
+        flow=flow,
+        iva_amount=row.iva_amount,
+        has_deduction_evidence=_row_has_linked_evidence(row),
+        revision_claims_ledger_iva=revision_claims_ledger_iva,
+    )
 
 
-def deductible_iva_evidence_gap_transaction_ids(revision: CalculationRevision) -> tuple[str, ...]:
+def deductible_iva_evidence_gap_transaction_ids(
+    revision: CalculationRevision,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[str, ...]:
     """Return ledger transaction ids whose bundled evidence cannot support deduction.
 
     Args:
         revision: :class:`CalculationRevision` carrying the ledger filing
             evidence rows to inspect.
+        operation: Pinned authority operation that reads whether the
+            revision's registry revision claims IVA.
     """
     evidence = revision.ledger_filing_evidence
-    if evidence is None:
+    if evidence is None or not evidence.rows:
+        return ()
+    claims_ledger_iva = calculation_revision_claims_ledger_iva(revision, operation=operation)
+    if not claims_ledger_iva:
         return ()
     return tuple(
-        sorted(row.transaction_id for row in evidence.rows if ledger_evidence_row_missing_deductible_iva_evidence(row)),
+        sorted(
+            row.transaction_id
+            for row in evidence.rows
+            if ledger_evidence_row_missing_deductible_iva_evidence(row, revision_claims_ledger_iva=claims_ledger_iva)
+        ),
     )
 
 
@@ -225,6 +244,7 @@ def raise_if_deductible_iva_evidence_missing(
     revision: CalculationRevision,
     *,
     error_type: type[ModeloPreconditionErrorMixin],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Raise a typed file refusal when a finalized revision has unsupported input IVA.
 
@@ -233,8 +253,10 @@ def raise_if_deductible_iva_evidence_missing(
             checked before the lifecycle finish line.
         error_type: Precondition-carrying modelo error class raised when
             deductible IVA lacks evidence.
+        operation: Pinned authority operation that reads whether the
+            revision's registry revision claims IVA.
     """
-    transaction_ids = deductible_iva_evidence_gap_transaction_ids(revision)
+    transaction_ids = deductible_iva_evidence_gap_transaction_ids(revision, operation=operation)
     if not transaction_ids:
         return
     raise error_type(

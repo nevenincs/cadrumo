@@ -16,11 +16,12 @@ from functools import wraps
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ....core.config_support import LLMProvider
+from ....core.config_support import LLMProvider, RetiredLLMProvider
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.hashing import sha256_hex
 from ....core.identity.digest import ContentDigest
 from ....core.image_media_type import ImageMediaType
+from ....core.model_catalogue import ModelRole
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from .consent import EvidenceConsentToken
@@ -28,6 +29,14 @@ from .errors import LLMValidationError
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 _PROMPT_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
+
+type RecordedLLMProvider = LLMProvider | RetiredLLMProvider
+"""A provider identity a response, cache entry or usage record may carry, including retired vendors.
+
+Records written before the agent path keep the vendor they name, and the
+identity of the row they sit in is derived from it, so they stay readable and
+prunable. Dispatch only ever selects an :class:`LLMProvider`.
+"""
 
 
 def _pydantic_llm_validator[ValidationResultT](
@@ -147,6 +156,22 @@ class LLMRequest(BaseModel):
         exclude=True,
         description="Per-invocation off-host consent proof; never persisted and never cached.",
     )
+    model_role: ModelRole | None = Field(
+        default=None,
+        exclude=True,
+        description=(
+            "The job this request does. The agent service selects the lane and model for it, "
+            "so a request dispatched to the agent must name one."
+        ),
+    )
+    expects_json: bool = Field(
+        default=False,
+        exclude=True,
+        description=(
+            "Whether the reply must contain one JSON object. An agent reply without one is "
+            "asked for once more before the request refuses."
+        ),
+    )
 
     @field_validator("prompt")
     @classmethod
@@ -202,7 +227,7 @@ class LLMResponse(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     text: str = Field(description="Generated text returned by the provider.")
-    provider: LLMProvider = Field(description="Provider that produced the response.")
+    provider: RecordedLLMProvider = Field(description="Provider that produced the response.")
     model: str = Field(description="Resolved model identifier.")
     input_tokens: int = Field(ge=0, description="Prompt-side token count.")
     output_tokens: int = Field(ge=0, description="Completion-side token count.")
@@ -327,7 +352,7 @@ class CachedEntry(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    provider: LLMProvider = Field(description="Provider used for the original call.")
+    provider: RecordedLLMProvider = Field(description="Provider used for the original call.")
     model: str = Field(description="Resolved provider model.")
     prompt_hash: str = Field(description="Hash of rendered prompt text.")
     args_hash: str = Field(description="Hash of request-side arguments.")
@@ -343,7 +368,7 @@ class UsageRecord(BaseModel):
     prompt_id: str = Field(description="Prompt id associated with the call.")
     caller: str = Field(description="Logical caller that initiated the request.")
     text: str = Field(description="Generated text returned by the provider.")
-    provider: LLMProvider = Field(description="Provider used for the call.")
+    provider: RecordedLLMProvider = Field(description="Provider used for the call.")
     model: str = Field(description="Resolved model identifier.")
     input_tokens: int = Field(ge=0, description="Prompt-side token count.")
     output_tokens: int = Field(ge=0, description="Completion-side token count.")
@@ -360,7 +385,7 @@ class CacheKey(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    provider: LLMProvider = Field(description="Provider namespace for the cache entry.")
+    provider: RecordedLLMProvider = Field(description="Provider namespace for the cache entry.")
     model: str = Field(description="Resolved model namespace for the cache entry.")
     prompt_hash: str = Field(description="Hash of rendered prompt text.")
     args_hash: str = Field(description="Hash of request arguments.")

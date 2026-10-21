@@ -540,12 +540,12 @@ def import_binding_map(tree: ast.AST) -> dict[str, str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                if alias.asname:
+                if alias.asname is not None and alias.asname:
                     bindings[alias.asname] = alias.name
                 else:
                     root = alias.name.split(".", 1)[0]
                     bindings[root] = root
-        elif isinstance(node, ast.ImportFrom) and node.module and not node.level:
+        elif isinstance(node, ast.ImportFrom) and (node.module is not None and node.module) and not node.level:
             for alias in node.names:
                 bindings[alias.asname or alias.name] = f"{node.module}.{alias.name}"
 

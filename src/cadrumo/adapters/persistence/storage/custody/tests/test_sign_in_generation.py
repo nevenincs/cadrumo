@@ -10,9 +10,10 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from ......application.storage_management.service import storage_lifecycle_permits_reclaim
 from ......application.user_profile.access_contracts import ProfileAccessBinding
-from ......application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ......core.config import Settings
 from ......core.identity.profile import canonical_profile_bucket_id
 from ......core.profile_publication import ProfilePublicationKind

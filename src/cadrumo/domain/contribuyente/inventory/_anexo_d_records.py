@@ -235,7 +235,7 @@ def resolve_inventory_authoritative_closing(
     authority: PinnedAuthorityOperation | None = None,
 ) -> InventoryClosingResolution:
     """Resolve closing authority while retaining any physical/movement conflict."""
-    _resolve_anexo_d_registry_declarations(filing_year=int(ledger.year), authority=authority)
+    _resolve_anexo_d_registry_declarations(filing_year=ledger.year, authority=authority)
     _validate_closing_decision_coordinate(ledger, decision)
     derived = _derive_inventory_closing_value(ledger)
     prior_closing_link = _require_prior_closing_continuity(ledger, prior_closing_link)

@@ -159,7 +159,7 @@ def test_every_declared_status_action_resolves_against_the_live_command_surface(
             continue
         resolved = _action(notice)
         assert resolved.action.action_id.startswith("operator.")
-        assert resolved.action.cli_path
+        assert resolved.action.cli_path is not None and resolved.action.cli_path
         assert all(not token.startswith("-") for token in resolved.action.cli_path)
 
 

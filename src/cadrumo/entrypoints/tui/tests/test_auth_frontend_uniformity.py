@@ -13,7 +13,10 @@ from ....application.auth.operation_definitions import (
     AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
     AuthConfigureOperationRequest,
 )
-from ....application.operations.frontend_requests import OperationObservationRequestV1, OperationObservationSuccessV1
+from ....application.operations.frontend_requests import (
+    OperationObservationRequestV1,
+    OperationObservationSuccessV1,
+)
 from ....application.operations.models import OperationRequest
 from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.profile_record_repository import ProfileRecordRepository

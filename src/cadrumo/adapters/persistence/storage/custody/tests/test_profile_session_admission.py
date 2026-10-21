@@ -10,7 +10,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.user_profile.login_session import ProfileLoginOutcome, authenticate_profile_for_invocation
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.user_profile.session_admission import (
     ProfileCredentialRequestV1,
@@ -18,6 +18,7 @@ from cadrumo.application.user_profile.session_admission import (
     admit_profile_session,
 )
 from cadrumo.core.errors.hierarchy import InternalInvariantError
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 
 pytestmark = [
     pytest.mark.integration,

@@ -59,26 +59,14 @@ def test_isolated_cli_runtime_profile_releases_its_bucket_session(tmp_path: Path
 def test_isolated_profile_storage_root_reaps_a_discovered_bucket_key(tmp_path: Path) -> None:
     """Leaving the isolated context revokes the credential a mint custodied.
 
-    The helper yields the storage root's LOCATION, not a materialised
-    directory: it exists for tests that drive profile creation, and creation is
-    what brings the root into being. This case skips creation and mints
-    directly, so it has to stand the root up itself -- exactly as the custody
-    siblings under ``user_profile`` and the CLI session-lifecycle tests do.
-
-    Without that, the mint never ran. Custody anchors every component of the
-    directory it is about to write into and refuses an absent one, so the
-    walk's final component -- the root itself -- refused before any credential
-    was written, and the case failed on setup rather than on its subject. That
-    refusal is correct: the anchor is deliberately not a recursive mkdir,
-    because a recursive walk restores the check-then-create window it exists to
-    close, and production never reaches a mint through an absent root anyway --
-    the password envelope, the open bucket session and the handover journal all
-    live under it and are all required first.
+    The isolated root helper creates the connection-socket directory beneath
+    the storage root before yielding, so the root already exists. This case
+    mints directly, after publishing its profile capsule, and relies on that
+    initialized storage layout.
     """
     require_os_credential_store()
     profile_id = UUID("11111111-1111-4111-8111-111111111111")
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        storage_root.mkdir(parents=True)
         # A mint stamps the sign-in generation of committed custody, so the
         # profile capsule has to exist first.
         publish_test_profile_capsule(profile_id, label="Reaped receipt profile", root=storage_root)

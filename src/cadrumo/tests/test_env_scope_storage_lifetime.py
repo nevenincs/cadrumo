@@ -206,7 +206,7 @@ def test_the_sweep_spares_a_root_whose_owning_process_is_still_running(tmp_path:
     """The load-bearing guarantee: a live session's store is never reclaimed.
 
     Many pytest sessions share one temp directory on this box -- xdist workers
-    plus several agents at once -- so a startup sweep that mistook a running
+    plus several delegated clients at once -- so a startup sweep that mistook a running
     session for an abandoned one would fail that session's tests rather than
     tidy up after it. This root is named for a process that is definitively
     alive (this one), and is old enough that the abandonment grace has long

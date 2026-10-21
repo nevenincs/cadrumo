@@ -83,7 +83,7 @@ def _catalogue_counts(po_path: Path) -> tuple[int, int, str]:
     for message in catalogue:
         if not message.id:
             continue
-        if not message.string:
+        if not (message.string is not None and message.string):
             untranslated += 1
         if message.fuzzy:
             fuzzy += 1
@@ -154,7 +154,7 @@ def test_translations_introduce_no_machine_text_dashes(language: str) -> None:
         with po_path.open("rb") as handle:
             catalogue = read_po(handle)
         for message in catalogue:
-            if not message.id or not message.string:
+            if not message.id or not (message.string is not None and message.string):
                 continue
             source = sum(str(message.id).count(dash) for dash in dashes)
             translated = sum(str(message.string).count(dash) for dash in dashes)

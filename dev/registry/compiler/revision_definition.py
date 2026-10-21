@@ -90,7 +90,7 @@ def _validated_modelo_input(
     modelo_id = modelo_table.get("id")
     modelo_id_for_context = modelo_id if isinstance(modelo_id, str) else source_path.as_posix()
     declared_revisions = _as_toml_table(data.get("revisions"))
-    if not declared_revisions:
+    if not (declared_revisions is not None and declared_revisions):
         raise RegistryLoadError(f"{source_path}: missing [revisions.<id>] tables")
     return modelo_table, modelo_id_for_context, declared_revisions
 

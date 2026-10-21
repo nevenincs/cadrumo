@@ -7,14 +7,15 @@ is installation identity, never a profile credential or an operator prompt.
 
 from __future__ import annotations
 
-from ....core.config import load_settings
-from ....core.config_google_client import OAuthClient, decode_desktop_client
-from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from .errors import (
+from cadrumo_client.contracts.google_auth import (
     GoogleAuthClientMetadataUnavailableError,
     GoogleAuthPreconditionCondition,
     google_auth_no_action_verdict,
 )
+
+from ....core.config import load_settings
+from ....core.config_google_client import OAuthClient, decode_desktop_client
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 
 
 def load_installation_client() -> OAuthClient:
@@ -24,7 +25,7 @@ def load_installation_client() -> OAuthClient:
         The validated publisher client.
 
     Raises:
-        :exc:`adapters.outbound.google.errors.GoogleAuthClientMetadataUnavailableError`:
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthClientMetadataUnavailableError`:
             When the installation carries no client file, or carries one that
             is not a Google Desktop client. Neither is recoverable by the
             operator from inside the product.

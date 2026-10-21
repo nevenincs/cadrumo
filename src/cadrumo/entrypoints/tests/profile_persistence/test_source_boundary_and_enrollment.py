@@ -413,7 +413,7 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
         schema=published_profile_schema(),
     ).label
     assert expected_label != missing_path, "label collapsed to the raw path; the assertion below is vacuous"
-    assert expected_label in str(context.get("missing", "")), context
+    assert expected_label in str(context.get("profile_requirements", "")), context
     assert context.get("modelo") == "184"
 
 

@@ -34,7 +34,7 @@ class SanitizationError(Exception):
             context: Structured detail safe to render — never a source path,
                 a cleartext identity value, or a full digest.
         """
-        if message:
+        if message is not None and message:
             super().__init__(message)
         else:
             super().__init__()

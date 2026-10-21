@@ -1,0 +1,259 @@
+"""Review-package build/verify CLI payload schemas.
+
+Strict :class:`~core.json_contract.OutputSchema` subclasses referenced
+as deferred public schema targets through production-authored CommandSpec for the ``aeat app
+modelo review-package build`` and ``aeat app modelo review-package verify``
+verbs. Kept in its own module (mirroring the ``_modelo_aux_payloads`` split
+for the evidence-bundle audit payloads) so the review-package CLI surface has
+one dedicated payload home.
+
+See Also:
+    :mod:`~entrypoints.cli.modelo_review_package_commands`
+        CLI transport that populates these result payloads.
+    :func:`~application.modelo.review_package.build_review_package`
+        Application build primitive represented by
+        :class:`ModeloReviewPackageBuildResult`.
+    :func:`~application.modelo.review_package_signing.sign_review_package`
+        Application signing primitive represented by
+        :class:`ModeloReviewPackageSignResult`.
+    :func:`~application.modelo.review_package_recipient_encryption.encrypt_review_package_for_recipient`
+        Recipient-sealing primitive represented by
+        :class:`ModeloReviewPackageEncryptForRecipientResult`.
+    :func:`~application.modelo.review_package_feedback.import_feedback_package`
+        Feedback-import primitive represented by
+        :class:`ModeloReviewPackageImportFeedbackResult`.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+
+from ...application.modelo.review_package import ReviewPackageActor
+from ...application.modelo.review_package_text import ReviewFeedbackNote, ReviewPackageNote
+from ...core.filing_year import FilingYear
+from ...core.hex import Hex64Str
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
+from ...core.json_contract import OutputSchema
+from ...core.period import Period
+from ...core.text_bounds import NonEmptyStr, PositiveCount
+from ...domain.modelos.codes import ModeloCode
+
+
+class ModeloReviewPackageBuildResult(OutputSchema):
+    """Review-package build result (path reference only — no raw bytes in envelope).
+
+    Identity, count, and timestamp fields mirror
+    :class:`~cadrumo.application.modelo.review_package.ReviewPackageManifest` /
+    :class:`~cadrumo.application.modelo.review_package.ReviewPackageBuildResult` so a
+    malformed manifest field is refused at the CLI boundary too.
+    """
+
+    operation: str = "modelo.review_package.build"
+    bucket_id: BucketId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    modelo: ModeloCode
+    filing_year: FilingYear
+    period: Period
+    revision_state: NonEmptyStr
+    has_ledger_evidence: bool
+    output_path: str
+    member_count: PositiveCount
+    built_by: ReviewPackageActor
+    built_at: datetime
+
+
+class ModeloReviewPackageVerifyResult(OutputSchema):
+    """Review-package integrity-verification result.
+
+    ``is_clean`` summarises ``missing`` / ``unexpected`` / ``mismatched``
+    (empty across all three iff clean). This is an INTEGRITY check only —
+    it does not assert who built the package; cryptographic signing and
+    counter-sign verification are surfaced by the sibling ``sign`` /
+    ``verify-signature`` / ``counter-sign`` / ``verify-receipt`` verbs.
+    Identity and timestamp fields mirror
+    :class:`~cadrumo.application.modelo.review_package.ReviewPackageManifest`.
+    """
+
+    operation: str = "modelo.review_package.verify"
+    package_path: str
+    is_clean: bool
+    missing: list[str]
+    unexpected: list[str]
+    mismatched: list[str]
+    bucket_id: BucketId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    modelo: ModeloCode
+    filing_year: FilingYear
+    period: Period
+    revision_state: NonEmptyStr
+    has_ledger_evidence: bool
+    built_by: ReviewPackageActor
+    built_at: datetime
+
+
+class ModeloReviewPackageSignResult(OutputSchema):
+    """Review-package signing result.
+
+    Carries only the exportable public half of the signer's keypair and the
+    path to the written signature envelope — the private key never appears
+    in this payload (it stays inside the encrypted per-bucket keystore; see
+    :func:`~application.modelo.review_package_signing.ensure_review_package_signing_keypair`).
+    Identity, digest, and timestamp fields mirror
+    :class:`~cadrumo.application.modelo.review_package_signing.SignedReviewPackage`.
+    """
+
+    operation: str = "modelo.review_package.sign"
+    package_path: str
+    signature_path: str
+    bucket_id: BucketId
+    calculation_revision_id: CalculationRevisionId
+    manifest_sha256: Hex64Str
+    signer_public_key_hex: Hex64Str
+    signed_at: datetime
+
+
+class ModeloReviewPackageVerifySignatureResult(OutputSchema):
+    """Review-package Ed25519 signature-verification result (authenticity check)."""
+
+    operation: str = "modelo.review_package.verify_signature"
+    package_path: str
+    signature_path: str
+    signer_public_key_hex: Hex64Str
+    is_valid: bool
+
+
+class ModeloReviewPackageCounterSignResult(OutputSchema):
+    """Review-package accountant counter-sign result.
+
+    Carries only the exportable public half of the counter-signer's keypair
+    and the path to the written receipt envelope — the private key never
+    appears in this payload. Digest and timestamp fields mirror
+    :class:`~cadrumo.application.modelo.review_package_counter_sign.CounterSignedReceipt`.
+    """
+
+    operation: str = "modelo.review_package.counter_sign"
+    package_path: str
+    signature_path: str
+    receipt_path: str
+    bucket_id: BucketId
+    note: ReviewPackageNote = ""
+    counter_signer_public_key_hex: Hex64Str
+    counter_signed_at: datetime
+
+
+class ModeloReviewPackageVerifyReceiptResult(OutputSchema):
+    """Review-package counter-signed receipt verification result (both layers)."""
+
+    operation: str = "modelo.review_package.verify_receipt"
+    package_path: str
+    receipt_path: str
+    operator_public_key_hex: Hex64Str
+    counter_signer_public_key_hex: Hex64Str
+    is_valid: bool
+
+
+class ModeloReviewPackageEncryptForRecipientResult(OutputSchema):
+    """Review-package encrypt-for-recipient result.
+
+    The private ephemeral sender key never appears in this payload (it exists
+    only transiently in process memory for the duration of the call, per
+    :func:`~application.modelo.review_package_recipient_encryption.encrypt_review_package_for_recipient`).
+    ``valid_until`` is ``None`` when the sealed package never expires.
+    Timestamp fields mirror
+    :class:`~cadrumo.application.modelo.recipient_encryption.RecipientEncryptedPackage`.
+    """
+
+    operation: str = "modelo.review_package.encrypt_for_recipient"
+    package_path: str
+    output_path: str
+    recipient_id: NonEmptyStr
+    recipient_public_key_hex: Hex64Str
+    review_only: bool
+    issued_at: datetime
+    valid_until: datetime | None = None
+
+
+class ModeloReviewPackageDecryptResult(OutputSchema):
+    """Review-package decrypt (recipient side) result.
+
+    The recipient's own private key never appears in this payload (it is
+    minted-or-loaded from encrypted secure storage and used only transiently
+    to decrypt, per
+    :func:`~application.modelo.review_package_recipient_encryption.ensure_recipient_encryption_keypair`).
+    ``review_only`` asserts the recovered package carries no filing authority
+    -- see :func:`~application.modelo.review_package_recipient_encryption.decrypt_review_package_for_recipient`.
+    """
+
+    operation: str = "modelo.review_package.decrypt"
+    envelope_path: str
+    output_path: str
+    bucket_id: BucketId
+    review_only: bool
+
+
+class ModeloReviewPackageEncryptFeedbackResult(OutputSchema):
+    """Feedback-package encrypt (recipient side) result.
+
+    The recipient (accountant/gestor) seals structured feedback back to the
+    originator (taxpayer) so only the originator's private key can open it,
+    reusing the same X25519 ECIES construction as the forward direction (see
+    :func:`~application.modelo.review_package_feedback.encrypt_feedback_package_for_originator`).
+    Only the exportable originator public key appears here; no private key of
+    either party is ever surfaced. ``has_counter_sign`` reports whether a
+    counter-signed receipt was bundled with the note. Identity and timestamp
+    fields mirror :class:`~cadrumo.application.modelo.recipient_encryption.RecipientEncryptedPackage`.
+    """
+
+    operation: str = "modelo.review_package.encrypt_feedback"
+    output_path: str
+    originator_id: NonEmptyStr
+    originator_public_key_hex: Hex64Str
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    has_counter_sign: bool
+    issued_at: datetime
+    valid_until: datetime | None = None
+
+
+class ModeloReviewPackageImportFeedbackResult(OutputSchema):
+    """Feedback-package import (originator side) result.
+
+    The originator mints-or-loads their own X25519 keypair to decrypt the
+    feedback envelope, and -- when the feedback carries a counter-signed
+    receipt -- re-verifies BOTH signature layers against their locally-held
+    review-package archive before accepting it and attaching the verified
+    countersignature to their own approval journal
+    (:func:`~application.modelo.review_package_feedback.import_feedback_package`,
+    :func:`~application.modelo.review_package_collab_audit.emit_collab_feedback_countersign_attached_event`).
+    No private key of either party appears in this payload.
+    ``counter_signature_verified`` is ``None`` when the feedback carried no
+    formal sign-off, ``True`` when a bundled receipt verified clean. Identity
+    fields mirror :class:`~cadrumo.application.modelo.review_package_feedback.FeedbackPackage`.
+    """
+
+    operation: str = "modelo.review_package.import_feedback"
+    envelope_path: str
+    bucket_id: BucketId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    note: ReviewFeedbackNote = ""
+    submitted_by: ReviewPackageActor
+    counter_signature_verified: bool | None = None
+    attached_to_journal: bool = False
+
+
+__all__ = [
+    "ModeloReviewPackageBuildResult",
+    "ModeloReviewPackageCounterSignResult",
+    "ModeloReviewPackageDecryptResult",
+    "ModeloReviewPackageEncryptFeedbackResult",
+    "ModeloReviewPackageEncryptForRecipientResult",
+    "ModeloReviewPackageImportFeedbackResult",
+    "ModeloReviewPackageSignResult",
+    "ModeloReviewPackageVerifyReceiptResult",
+    "ModeloReviewPackageVerifyResult",
+    "ModeloReviewPackageVerifySignatureResult",
+]

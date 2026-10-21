@@ -112,6 +112,8 @@ test("the production build contains no development scenario code", () => {
     "Simulated TUI session",
     "development fixture",
     "Simulated host",
+    "titlebar-proposal-bar",
+    "titlebar-profile-menu",
   ])
     for (const file of loaded)
       expect(

@@ -11,6 +11,15 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    Availability,
+    DisclosureCategory,
+    OperationAccessRequest,
+)
+
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
@@ -20,16 +29,9 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    Availability,
-    DisclosureCategory,
-    OperationAccessRequest,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import reconciliation_list_operation as operation_module
+from ..reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ..reconciliation_list_operation import (
     MAX_MODELO_RECONCILIATION_SOURCE_PATH_LENGTH,
     MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID,
@@ -44,7 +46,6 @@ from ..reconciliation_records import (
     ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
     ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationHistoryEntry,
     ModeloReconciliationVerdict,
 )
@@ -236,14 +237,11 @@ def test_access_resolves_whole_profile_disclosure_and_requires_all_periods() -> 
     resolved = resolve_operation_access(
         registry=registry,
         request=_access_request(request),
-        context=_context(registration, frontend=OperationFrontendProjection.MCP),
+        context=_context(registration, frontend=OperationFrontendProjection.EXTERNAL_CLIENT),
     )
     assert resolved.request.profile_id == _PROFILE
     assert resolved.request.period_independent and not resolved.request.periods
     assert resolved.policy.allow_period_independent and resolved.policy.requires_all_periods
-    assert definition.permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-    )
 
     result_admission = OperationAccessRequest(
         profile_id=_PROFILE,

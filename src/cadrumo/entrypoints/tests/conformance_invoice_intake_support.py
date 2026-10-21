@@ -18,7 +18,7 @@ from ...application.invoices.catalogue_intake_contracts import (
 )
 from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from .conformance_family_contract import (
     ConformanceFamily,
     ConformanceFamilyContext,

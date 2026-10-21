@@ -37,7 +37,7 @@ def _absolute_import_roots(tree: ast.AST) -> set[str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             roots.update(alias.name.partition(".")[0] for alias in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and (node.module is not None and node.module):
             roots.add(node.module.partition(".")[0])
     return roots
 

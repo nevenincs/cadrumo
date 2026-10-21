@@ -1,8 +1,8 @@
 """A machine-channel secrets refusal names the keys it would have accepted.
 
 ``--secrets-stdin`` and ``--secrets-fd`` are the channels a caller with NO
-terminal must use, and for this CLI that caller is the ordinary one: an
-autonomous agent cannot be prompted. Both refused a malformed payload with
+terminal must use, and for this CLI that caller is the ordinary one: a
+script cannot be prompted. Both refused a malformed payload with
 "not a valid JSON object" and stopped there, which tells the one operator who
 cannot be prompted nothing it can act on.
 
@@ -21,8 +21,8 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ConfigDict, SecretStr
 
-from ...errors import CliRefusedBoundaryError
-from ..secure_input import validate_secrets_payload
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.secure_input import validate_secrets_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

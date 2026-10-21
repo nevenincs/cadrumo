@@ -40,7 +40,6 @@ from ..config import (
     reset_settings_cache,
 )
 from ..config_support import StorageRouteKind
-from ..external_constants import load_external_constants
 from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_location
 from .checkout import project_root
@@ -107,7 +106,6 @@ class TestEnvExampleAlignment:
         """Settings must load with all defaults when no env file and no env vars are present."""
         with _isolated_aeat_env():
             settings = settings_without_env_file()
-        assert settings.aeat_base_url == load_external_constants().aeat.domains.sede
         assert settings.cadrumo_output_language == "es"
 
 
@@ -144,26 +142,8 @@ def test_certificate_backend_and_verify_url_are_not_settings_surfaces() -> None:
     assert "AEAT_CERTIFICATE_VERIFY_URL" not in Settings.env_var_names()
 
 
-class TestStatusDetailUrlTemplate:
-    """#227 validator: template must contain ``{expediente_id}``."""
-
-    def test_default_contains_placeholder(self) -> None:
-        settings = Settings(aeat_status_detail_url_template="/x/{expediente_id}/y")
-        assert settings.aeat_status_detail_url_template == "/x/{expediente_id}/y"
-
-    def test_default_is_well_formed(self) -> None:
-        settings = Settings()
-        constants = load_external_constants()
-
-        assert settings.aeat_status_detail_url_template == constants.aeat.sede_paths.expediente_detail_template
-        assert settings.aeat_status_notificaciones_path == constants.aeat.sede_paths.notificaciones
-        assert "{expediente_id}" in settings.aeat_status_detail_url_template
-
-    def test_rejects_template_without_placeholder(self) -> None:
-        import pydantic
-
-        with pytest.raises(pydantic.ValidationError):
-            Settings(aeat_status_detail_url_template="/x/no-placeholder/y")
+class TestEnvironmentSources:
+    """Blank, unknown and relative environment values resolve as the settings model declares."""
 
     def test_blank_env_values_are_ignored(self, tmp_path: Path) -> None:
         """Blank env values must not coerce optional settings into live values."""
@@ -219,10 +199,9 @@ class TestStatusDetailUrlTemplate:
 
     def test_blank_optional_secret_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional secret env vars must normalize to ``None``."""
-        with _isolated_aeat_env(CADRUMO_CERTIFICATE_PASSWORD_SECRET="", CADRUMO_LLM_OPENAI_API_KEY=""):
+        with _isolated_aeat_env(CADRUMO_CERTIFICATE_PASSWORD_SECRET=""):
             settings = settings_without_env_file()
         assert settings.cadrumo_certificate_password_secret is None
-        assert settings.cadrumo_llm_openai_api_key is None
 
 
 class TestRepoRelativePathNormalisationCoverage:

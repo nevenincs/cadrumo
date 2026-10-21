@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import hooks from "eslint-plugin-react-hooks";
 import globals from "globals";
+import designSystem from "./dev/eslint/design-system.mjs";
 
 // Import boundaries. One rule holds one list per file, so each group of files
 // below gets the whole list that applies to it.
@@ -13,6 +14,30 @@ const host = {
   group: ["@tauri-apps/**"],
   message: "Host access goes through the Host port.",
 };
+const composition = {
+  group: ["@/App", "**/App"],
+  message:
+    "Components and shell modules do not import application composition.",
+};
+const paneStates = {
+  group: ["**/ui/empty"],
+  importNames: ["Empty", "EmptyMedia", "EmptyTitle", "EmptyDescription"],
+  message: "Use EmptyState so pane status layout stays canonical.",
+};
+const aboveShared = {
+  group: [
+    "@/shell/**",
+    "@/ipc/**",
+    "@/components/**",
+    "@/App",
+    "**/shell/**",
+    "**/ipc/**",
+    "**/components/**",
+    "**/App",
+  ],
+  message:
+    "Shared helpers stay independent of components, shell policy and IPC.",
+};
 const aboveAPrimitive = [
   {
     group: ["@/shell/**", "@/ipc/**", "@/App", "**/shell/**", "**/ipc/**"],
@@ -21,6 +46,11 @@ const aboveAPrimitive = [
   {
     regex: "^@/components/(?!ui/)",
     message: "A primitive imports no product component.",
+  },
+  {
+    group: ["../**"],
+    message:
+      "A primitive's relative imports stay inside the primitive directory.",
   },
 ];
 const restricted = (...patterns) => ({
@@ -32,6 +62,7 @@ const primitives = ["src/components/ui/**"];
 // The Tauri adapter, the entry that selects it and the contract's types.
 const adapter = [
   "src/shell/tauriHost.ts",
+  "src/shell/tauriStartup.ts",
   "src/shell/tauriTerminal.ts",
   "src/shell/hostCall.ts",
   "src/main.tsx",
@@ -48,10 +79,20 @@ export default tseslint.config(
   },
   {
     files: ["src/**/*.{ts,tsx}"],
-    plugins: { "react-hooks": hooks },
+    plugins: { "react-hooks": hooks, "design-system": designSystem },
     rules: {
+      "design-system/token-styles": "error",
+      "design-system/component-names": "error",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "error",
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ExportAllDeclaration, ExportNamedDeclaration[source]",
+          message:
+            "Import from the defining module instead of adding re-exports.",
+        },
+      ],
     },
   },
   {
@@ -59,11 +100,15 @@ export default tseslint.config(
     // reaches the host API.
     files: ["src/**/*.{ts,tsx}"],
     ignores: [...tooling, ...primitives, ...adapter],
-    rules: restricted(development, host),
+    rules: restricted(development, host, composition, paneStates),
   },
   {
     files: adapter,
     rules: restricted(development),
+  },
+  {
+    files: ["src/shared/**/*.{ts,tsx}"],
+    rules: restricted(development, host, aboveShared),
   },
   {
     // Layers point downward: a primitive imports nothing above it.

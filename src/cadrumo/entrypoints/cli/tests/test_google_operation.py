@@ -14,6 +14,8 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
 from ....adapters.persistence.operations.journal import OperationJournalRepository
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -40,9 +42,8 @@ from ....core.operations import (
     OperationTerminalCondition,
 )
 from ...operation_composition import compose_operation_dependencies
-from .._modelo_spreadsheet_payloads import ModeloSpreadsheetPushResult
-from ..errors import CliRefusedBoundaryError
-from ..runtime_modelo_spreadsheet_push import google_operation_error
+from ..modelo_spreadsheet_results import ModeloSpreadsheetPushResult
+from ..operation_modelo_spreadsheet_push import google_operation_error
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -195,7 +196,9 @@ def test_google_export_owner_and_composition_keep_one_hexagonal_apply_plus_prove
     owner_imports = tuple(node.module or "" for node in ast.walk(owner_tree) if isinstance(node, ast.ImportFrom))
     assert not any(module.startswith("adapters") or module.startswith("entrypoints") for module in owner_imports)
 
-    composition_source = (Path(__file__).parents[2] / "operation_composition.py").read_text(encoding="utf-8")
+    composition_source = (Path(__file__).parents[2] / "google_export_operation_composition.py").read_text(
+        encoding="utf-8"
+    )
     composition_tree = ast.parse(composition_source)
     direct_calls = {
         node.func.id
@@ -220,15 +223,16 @@ def test_google_export_owner_and_composition_keep_one_hexagonal_apply_plus_prove
 
 def test_cli_push_uses_bound_profile_and_registered_export_contract(monkeypatch) -> None:
     """The CLI forwards its admitted profile and exact request to the registered runtime route."""
-    from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+    from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+    from cadrumo_client.transport.frontend_client import FrontendClient
+
     from ....application.operations.models import OperationId
     from ....core.operations import profile_operation_subject
     from .. import modelo_spreadsheet_cli as cli_module
-    from .. import runtime_modelo_spreadsheet_push as push_runtime
-    from ..registered_operation_contracts import RegisteredOperationCompletion
+    from .. import operation_modelo_spreadsheet_push as push_operation
 
     profile_id = UUID("12345678-1234-4234-8234-123456789abc")
-    client = cast(RuntimeFrontendClient, cast(object, SimpleNamespace(profile_id=profile_id)))
+    client = cast(FrontendClient, cast(object, SimpleNamespace(profile_id=profile_id)))
     public_result = GoogleSheetsExportPublicResultV1(
         profile_id=profile_id,
         modelo="130",
@@ -265,7 +269,7 @@ def test_cli_push_uses_bound_profile_and_registered_export_contract(monkeypatch)
         submitted.update(client=actual_client, request=request, **kwargs)
         return completion
 
-    monkeypatch.setattr(push_runtime, "run_registered_operation", complete)
+    monkeypatch.setattr(push_operation, "run_registered_operation", complete)
     monkeypatch.setattr(cli_module, "bound_profile_client", lambda _ctx: client)
     monkeypatch.setattr(
         cli_module,

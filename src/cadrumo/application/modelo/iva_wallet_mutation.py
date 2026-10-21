@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import Field
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -14,7 +16,6 @@ from ..operations.models import (
     OperationTerminalReceipt,
     require_succeeded_terminal_receipt,
 )
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .iva_wallet_seed_ports import ModeloIvaWalletSeedPorts, ModeloIvaWalletSeedPortsFactory
 

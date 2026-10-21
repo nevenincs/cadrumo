@@ -13,6 +13,7 @@ from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.identity.transaction_ids import TransactionId
+from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
 from .controller import (
     LedgerReviewRequested,
@@ -46,12 +47,15 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.ledger.review.title"), classes="cadrumo-banner")
+        yield localized(Static(tr("tui.ledger.review.title"), classes="cadrumo-banner"), "tui.ledger.review.title")
         with ledger_workspace_page() as navigation:
             yield navigation
-            yield Static(
-                tr("tui.ledger.review.filter_all"),
-                markup=False,
+            yield localized(
+                Static(
+                    tr("tui.ledger.review.filter_all"),
+                    markup=False,
+                ),
+                "tui.ledger.review.filter_all",
             )
             # The entry names itself with its date and description, and it is
             # the one cell here the operator cannot reconstruct from the
@@ -62,14 +66,27 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
             yield review_table
             yield Static(id="ledger-empty", classes="ledger-empty", markup=False)
             if self.controller.can_exclude():
-                yield Static(tr("tui.ledger.review.exclude_hint"), classes="ledger-empty", markup=False)
+                yield localized(
+                    Static(tr("tui.ledger.review.exclude_hint"), classes="ledger-empty", markup=False),
+                    "tui.ledger.review.exclude_hint",
+                )
                 yield Static("", id="ledger-exclusion-question", markup=False)
-                yield Button(tr("tui.ledger.review.exclude_confirm"), id="ledger-exclusion-confirm")
-                yield Button(tr("tui.ledger.review.exclude_cancel"), id="ledger-exclusion-cancel")
+                yield localized(
+                    Button(tr("tui.ledger.review.exclude_confirm"), id="ledger-exclusion-confirm"),
+                    "tui.ledger.review.exclude_confirm",
+                )
+                yield localized(
+                    Button(tr("tui.ledger.review.exclude_cancel"), id="ledger-exclusion-cancel"),
+                    "tui.ledger.review.exclude_cancel",
+                )
                 yield Static("", id="ledger-flow-status", markup=False)
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
     def on_mount(self) -> None:
+        """Populate the initial review."""
+        self._populate_view()
+
+    def _populate_view(self) -> None:
         """Populate the filter disclosure and canonical review rows."""
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#ledger-review", DataTable))
@@ -92,6 +109,18 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
             table=table,
             transaction_id=self.controller.restored_transaction_id(),
         )
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword review rows while retaining an open exclusion confirmation."""
+        await super().refresh_language()
+        controls = {
+            widget: widget.display
+            for widget in self.query("#ledger-exclusion-question, #ledger-exclusion-confirm, #ledger-exclusion-cancel")
+        }
+        repaint_tables(self, self._populate_view)
+        for widget, visible in controls.items():
+            widget.display = visible
 
     def _show_exclusion_controls(self, *, open_: bool) -> None:
         if not self.controller.can_exclude():

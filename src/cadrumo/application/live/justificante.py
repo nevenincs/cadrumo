@@ -872,7 +872,7 @@ def _expected_tax_id_for_filing_record(
                 ),
             ) from exc
         values = record_to_values(record, schema=profile_decode_context.schema)
-    tax_id = tax_id_identity_token(str(values.get("identity.tax_id") or values.get("tax.id") or ""))
+    tax_id = tax_id_identity_token(values.get("identity.tax_id") or values.get("tax.id") or "")
     if not tax_id:
         raise LiveApplicationInputError(
             translated_message="application.live.justificante.errors.filing_identity_unresolved",

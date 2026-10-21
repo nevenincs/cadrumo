@@ -16,9 +16,9 @@ related:
   - '[[2026-08-13-profile-bucket-lifecycle-successor-adr]]'
   - '[[2026-06-03-m303-cross-period-carry-continuity-adr]]'
   - '[[2026-09-09-facts-registry-governed-fact-catalogue-adr]]'
-modified: '2026-10-08'
+modified: '2026-10-13'
 body_schema: body-v2
-body_hash: 'sha256:3645a1f92a55d65417a9b4eba3d953741044c4d38edc88b17eb38052bf437c47'
+body_hash: 'sha256:1fd7b9e9085adfdc16ce1d16d1bf14102f986896629af0a9ccdccca865dac728'
 ---
 
 # `modelo-runtime-performance` plan
@@ -53,9 +53,7 @@ S09 completion-policy coverage expands under the same explicit user direction: r
 
 S09 exact inventory identifies 105 ordinary pytest timeout markers across 51 files, with no marker itself proving pytest-timeout behavior. Remove those enclosing markers and their obsolete policy prose; six explicit scanner/CLI/receipt timeout feature bodies remain unchanged. The Sphinx correctness-test wrappers also contain generic 1200-second child ceilings that would replace the removed pytest limit with another host-derived limit. Remove those test-only child arguments/constants in the shared Sphinx build harness and its four owning build/sweep/compile/desktop tests. Test bodies, Sphinx warning contracts, resource ownership, production developer-tool deadlines and product IPC/custody contracts remain authoritative.
 
-
 S09 final completion-policy inventory extends beyond enclosing pytest markers and Sphinx wrappers: remaining direct child-result caps and test-only wrapper defaults would still impose machine-derived ordinary correctness deadlines. Remove those classified ordinary subprocess/communicate/join caps across first-party tests and their test-only helpers, including three registry and five pytest-harness owners identified separately. Preserve deliberate scanner/CLI/calibration/process-timeout feature inputs and assertions, native resource cleanup/reaping/custody/product deadlines, and race/expiry stimuli. Production/developer-tool command runner contracts remain unchanged. Test-only helpers may accept optional None/default None where omission would otherwise inherit another generic ceiling; explicit positive/zero/negative caller-timeout behavior remains authoritative. Root owns source application after exact preimage/AST review, staging and all shared checks; workers produce read-only classified inventories and root-apply artifacts under the existing team workflow.
-
 
 S13 follows the existing production-performance authorization and the accepted optional-hint/logging contracts. Four actual default-worker main-thread stacks are sampled in language-hint DEBUG handling during fixture composition (file flush or public redaction admission). The optional hint reader currently emits a full exception traceback for ordinary FileNotFoundError. A pure counted-dispatch probe preserves None and shows ten absent reads generate ten DEBUG records and eighty authority-admission attempts, whereas a separate FileNotFoundError normal-absence branch generates none. Its 44.27ms versus 0.134ms median per ten reads excludes imports, authority database I/O and file flush, so it is not an end-to-end runtime improvement claim. Insert only the missing-file branch; present supported values and unexpected PermissionError/NotADirectoryError/ELOOP/other errors retain current fallback and complete diagnostics. No redaction/filter/cache/masking, crypto, authority freshness, deadline or protocol change. Root owns implementation and all native/gate/vault/Git writes. The existing native failures remain unresolved until successful reruns establish their actual behavior.
 
@@ -125,8 +123,6 @@ Final S12 verification replaces the metadata/witness criteria: assert exactly tw
 
 S09 marker-policy coverage requires a classified exact marker inventory, no remaining generic enclosing pytest elapsed deadlines in that inventory, focused syntax/style checks for all touched test owners and applicable full blocking gate evidence. Existing completed behavioral results remain applicable when only enclosing timer markers change; do not replay native/financial fixtures solely for decorator removal. Deliberate timer-plugin or caller-expiry proofs retain their behavioral timers. Current native corpus failures remain actual required repair work.
 
-
 S09 remaining-child-cap verification requires exact per-call classification/preimage hashes, syntax/style/type checks for affected owners and optional-None test helpers, and preservation of all test assertion/feature-timer ASTs except deliberately removed ordinary completion caps. Exercise owning optional-None helper behavior and retained explicit expiry/refusal contracts. Reuse completed behavior proofs where only an enclosing cap is removed. Never treat lower native pool concurrency or retained diagnostic instrumentation as proof of product resilience; preserve actual default-worker failure evidence and finish required native checks.
-
 
 S13 verifies actual missing leaf and missing parent return None without optional-hint DEBUG traceback work; supported present values remain unchanged, while unexpected read errors still return None and emit the original exception-bearing diagnostic. Run owning hint and upstream language/error diagnostic tests, scoped configured type/style checks, final all blocking gates and required default-worker native/corpus checks. Pure counted authority-dispatch evidence is a mechanism measurement only, not proof that all observed transport/KDF/custody refusals are solved.

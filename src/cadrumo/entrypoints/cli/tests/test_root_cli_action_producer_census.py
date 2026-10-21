@@ -9,9 +9,9 @@ from types import ModuleType
 
 import pytest
 
-from .. import _app_diagnostics as diagnostics_module
-from .. import _app_live as live_module
 from .. import _log_levels as log_levels_module
+from .. import app_diagnostics_commands as diagnostics_module
+from .. import app_live_commands as live_module
 from ..config import archive_reconcile as maintenance_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -28,7 +28,7 @@ _MODULES: tuple[ModuleType, ...] = (
 # deliberately has a dynamic code argument; its four callers are asserted
 # separately so a new notice cannot hide behind that one shared constructor.
 _NOTICE_PRODUCERS: dict[str, set[tuple[str, str, str | None]]] = {
-    "cadrumo.entrypoints.cli._app_diagnostics": {
+    "cadrumo.entrypoints.cli.app_diagnostics_commands": {
         ("_llm_no_run_data_notice", "code", "operator.ledger.classify"),
         ("diagnostics_run_health", "'diagnostics.run_health.session_stale'", None),
         ("diagnostics_run_health", "'diagnostics.run_health.no_session'", None),
@@ -39,7 +39,7 @@ _NOTICE_PRODUCERS: dict[str, set[tuple[str, str, str | None]]] = {
         ("_reconcile_notices", "'config.profile.archive.reconcile.cleared'", None),
         ("_reconcile_notices", "'config.profile.archive.reconcile.failures'", "operator.profile.archive.reconcile"),
     },
-    "cadrumo.entrypoints.cli._app_live": {
+    "cadrumo.entrypoints.cli.app_live_commands": {
         ("_filed_discover_notices", "'live.filed.discover.register_options_scope_unconfirmed'", None),
         ("_filed_discover_notices", "'live.filed.discover.no_taxpayer_specific_denominator'", None),
         ("_limit_reached_notice", "'live.filed.limit_reached'", "operator.live.filed.pull_all"),

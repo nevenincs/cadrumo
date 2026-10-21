@@ -81,7 +81,11 @@ def _restoration_identity_orders(
     identity = spec.storage_identity if spec.section == CASILLAS_FAMILY else spec.identity
     stated_members = _edition_delta_source._members(raw, spec.section)
     materialised_members = getattr(revision, spec.section, None)
-    if identity is None or not stated_members or not isinstance(materialised_members, list | tuple):
+    if (
+        identity is None
+        or not (stated_members is not None and stated_members)
+        or not isinstance(materialised_members, list | tuple)
+    ):
         return None
     stated = [str(family_identity_value(member, identity)) for member in stated_members]
     materialised = [str(family_identity_value(member, identity)) for member in materialised_members]

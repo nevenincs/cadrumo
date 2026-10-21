@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from ...calculations.registry.authority import bundled_indexed_authority
-from ...iva.classification import InvoiceKind
+from ...iva.schema import InvoiceKind
 from ...transactions.enums import BusinessClassification, TransactionDirection
 from ...transactions.models import Transaction, TransactionCatalogue
 from ...transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

@@ -32,6 +32,7 @@ from .....application.modelo.work_form_models import (
 from .....application.modelo.work_form_service import ModeloFormValueChangeV1
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
+from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
 from ...components.widgets import ContentDataTable
 from .casilla_list_models import AddressKey, CasillaListEntry
@@ -177,13 +178,22 @@ class WorkbenchResultScreen(ModalScreen[AddressKey | None]):
             if count
         )
         with Container(id="result-backdrop"), Vertical(id="result-panel"):
-            yield Static(
-                tr("tui.modelo.workbench.result_diff.title", count=len(self._lines)), id="result-title", markup=False
+            yield localized(
+                Static(
+                    tr("tui.modelo.workbench.result_diff.title", count=len(self._lines)),
+                    id="result-title",
+                    markup=False,
+                ),
+                "tui.modelo.workbench.result_diff.title",
+                count=len(self._lines),
             )
             yield Static(summary, id="result-summary", markup=False)
             yield ContentDataTable[str](id="result-table", cursor_type="row", zebra_stripes=True)
             with Horizontal(id="result-actions"):
-                yield Button(tr("tui.modelo.workbench.result_diff.close"), id="result-close", variant="primary")
+                yield localized(
+                    Button(tr("tui.modelo.workbench.result_diff.close"), id="result-close", variant="primary"),
+                    "tui.modelo.workbench.result_diff.close",
+                )
 
     def on_resize(self, event: events.Resize) -> None:
         """Take the whole width on a narrow terminal."""
@@ -220,6 +230,10 @@ class WorkbenchResultScreen(ModalScreen[AddressKey | None]):
     def action_close(self) -> None:
         """Return to the workbench where it was."""
         self.dismiss(None)
+
+    async def refresh_language(self) -> None:
+        """Reword the open dialog without changing its inputs or decision."""
+        refresh_localized_widgets(self)
 
 
 __all__ = ["ResultGroup", "ResultLine", "WorkbenchResultScreen", "result_lines"]

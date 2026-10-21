@@ -1,6 +1,7 @@
 # Build the native format from the exact payload produced by this source graph.
 # The distribution project owns package layout, native tools and installation gates.
 include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/BuildLog.cmake")
 set(distribution_source "${PROJECT_SOURCE_DIR}/native/cmake/distribution")
 file(READ "${distribution_source}/CMakePresets.json" distribution_presets)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
@@ -27,6 +28,7 @@ cmake_path(NORMAL_PATH distribution_binary)
 
 set(distribution_arguments
   "-DCADRUMO_PAYLOAD:PATH=${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
+  "-DCADRUMO_PAYLOAD_BUILD:PATH=${PROJECT_BINARY_DIR}"
   "-DCADRUMO_DEV_PYTHON:FILEPATH=${CADRUMO_DEV_PYTHON}"
   "-DCADRUMO_CHANNEL:STRING=${CADRUMO_CHANNEL}")
 set(distribution_desktop "")
@@ -34,8 +36,7 @@ if(image_count GREATER 0)
   math(EXPR distribution_image_last "${image_count} - 1")
   foreach(index RANGE ${distribution_image_last})
     string(JSON desktop GET "${application_images}" ${index} desktop)
-    string(JSON staged GET "${application_images}" ${index} staged)
-    if(desktop AND staged)
+    if(desktop)
       string(JSON distribution_desktop GET "${application_images}" ${index} package_path)
     endif()
   endforeach()
@@ -43,7 +44,7 @@ endif()
 # Always pass the empty value too: a previous desktop build must not leak into a
 # later runtime-only package through the distribution CMake cache.
 list(APPEND distribution_arguments "-DCADRUMO_DESKTOP_EXECUTABLE:STRING=${distribution_desktop}")
-set(distribution_dependencies bundle)
+set(distribution_dependencies app-payload)
 if(WIN32)
   list(APPEND distribution_dependencies rust_installer)
   foreach(variable CADRUMO_MSI_ADAPTER CADRUMO_MSI_RUNNER)
@@ -81,10 +82,25 @@ foreach(command distribution_configure distribution_build)
 endforeach()
 set(distribution_script_path "${PROJECT_BINARY_DIR}/native-installer-$<CONFIG>.cmake")
 file(GENERATE OUTPUT "${distribution_script_path}" CONTENT "${distribution_script}")
+cadrumo_build_step(installer_comment native-installer GROUP package
+  SUMMARY "configure the ${distribution_preset} distribution preset on this payload and build its native package"
+  OUTPUTS "${distribution_binary}")
 add_custom_target(native-installer
   COMMAND "${CMAKE_COMMAND}" -P "${distribution_script_path}"
   DEPENDS ${distribution_dependencies}
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" USES_TERMINAL VERBATIM)
-# The script is generated build-system state. The nested preset owns package
-# outputs and cleanup; this target has no independently removable artifacts.
-cadrumo_register_clean(TARGET native-installer)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${installer_comment}" USES_TERMINAL VERBATIM)
+# The nested preset owns MSI outputs. Desktop bootstrap delivery also writes
+# beside this source graph's assembled payload, so this target owns its cleanup.
+if(WIN32 AND distribution_desktop)
+  file(READ "${PROJECT_SOURCE_DIR}/native/package-layout.json" installer_layout)
+  string(JSON bootstrap_directory GET "${installer_layout}" installation bootstrap directory)
+  # A desktop bundle must carry the provisioning artifacts its startup consumes.
+  add_dependencies(bundle native-installer)
+  install(DIRECTORY "${CADRUMO_PATH_STAGE}/$<CONFIG>/${bootstrap_directory}/"
+    DESTINATION "${bootstrap_directory}" USE_SOURCE_PERMISSIONS)
+  cadrumo_register_clean(TARGET native-installer
+    PATHS "${CADRUMO_PATH_STAGE}/$<CONFIG>/${bootstrap_directory}"
+      "${PROJECT_BINARY_DIR}/generated/action-msi-bootstrap-kit-$<CONFIG>.json")
+else()
+  cadrumo_register_clean(TARGET native-installer)
+endif()

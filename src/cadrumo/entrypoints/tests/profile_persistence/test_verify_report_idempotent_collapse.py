@@ -3,7 +3,7 @@
 The content-pinned verification report id keys on the verification *outcome*
 (calculation revision, completeness status, findings, actor) rather than the
 wall-clock ``run_at``. This makes a non-granting ``modelo verify`` retry-safe
-for the autonomous-agent operator: re-running an identical verify collapses
+for the autonomous-automation operator: re-running an identical verify collapses
 onto one persisted report instead of accumulating a fresh time-stamped report
 per attempt, while a genuinely distinct outcome (here a different actor) still
 produces a distinct report. Exercises the real ``verify_modelo_revision_with_preconditions`` path

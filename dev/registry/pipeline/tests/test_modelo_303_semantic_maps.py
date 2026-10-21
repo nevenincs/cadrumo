@@ -27,11 +27,14 @@ from typing import Final, Literal
 import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.core.period import Period
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, render_fixed_width_export_field
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from ...analysis.m303_semantic_census import (
     M303_SEMANTIC_CENSUS_EXPECTATIONS,
@@ -794,29 +797,76 @@ _DESIGN_EPOCHS: Final[tuple[str, ...]] = _discovered_design_epochs()
 #: move the tree out of; asking it to load here would make map verification wait
 #: on an operator attestation it has no bearing on.
 @cache
-def _compiled_modelo():
+def _compiled_modelo() -> tuple[ModeloDefinition, RegistryCatalogues]:
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
     return next(modelo for modelo in modelos if str(modelo.id) == _MODELO), catalogues
 
 
 def _resolve_owning_inspection(source_ref: str) -> tuple[RegistryRevisionInspection, int]:
-    """Resolve the revision owning one record-design source, from its own declaration.
+    """Resolve one record-design source across its first declared filing periods.
 
-    The revision is found BY the design source it declares, never by feeding a
-    stored revision id into resolution, and its filing year is read from that
-    revision's own published period selector.
+    A design source may be cited by adjacent revisions that share its bytes,
+    and a date alone cannot choose between monthly and quarterly schedules.
+    The source start date and each owning revision's period selector identify
+    the first fully covered periods; the canonical resolver must select one
+    source-declaring revision for all those coordinates.
     """
     modelo, catalogues = _compiled_modelo()
-    owners = tuple(revision for revision in modelo.revisions.values() if source_ref in revision.source_refs)
-    if len(owners) != 1:
+    source = catalogues.sources.get(source_ref)
+    if source is None:
         raise AssertionError(
-            f"record-design source {source_ref!r} must be declared by exactly one Modelo 303 revision, "
-            f"found {tuple(revision.id for revision in owners)!r}",
+            f"record-design source {source_ref!r} is absent from the compiled source catalogue",
         )
-    revision = owners[0]
-    selector = revision.period_selector
-    filing_year = selector.years[0] if selector.years else selector.year_from
-    assert filing_year is not None
+    if source.kind != "record_design" or source.record_design_epoch is None:
+        raise AssertionError(f"source {source_ref!r} is not an epoch-bearing record design")
+    if source.applies_from is None:
+        raise AssertionError(f"record-design source {source_ref!r} has no applicability start date")
+    owners = tuple(revision for revision in modelo.revisions.values() if source_ref in revision.source_refs)
+    if not owners:
+        raise AssertionError(f"record-design source {source_ref!r} is not declared by any Modelo 303 revision")
+    filing_year = source.applies_from.year
+    start_periods = {
+        str(period_code)
+        for owner in owners
+        for period_code in owner.period_selector.periods_for_year(filing_year)
+        if (period := Period.from_year_and_code(filing_year, str(period_code))).start_date == source.applies_from
+        and (source.applies_to is None or period.end_date <= source.applies_to)
+        and (
+            source.period_selector is None
+            or (
+                source.period_selector.includes_year(filing_year)
+                and period_code in source.period_selector.periods_for_year(filing_year)
+            )
+        )
+    }
+    if not start_periods:
+        raise AssertionError(
+            f"record-design source {source_ref!r} has no fully covered declared filing period beginning "
+            f"at its applicability start date {source.applies_from}",
+        )
+    selected_revisions: dict[str, ModeloRevision] = {}
+    for period_code in sorted(start_periods):
+        revision = select_revision(
+            modelo,
+            filing_year=filing_year,
+            period=period_code,
+        )
+        if source_ref not in revision.source_refs:
+            raise AssertionError(
+                f"revision {revision.id!r} selected for period {period_code!r} does not declare "
+                f"record-design source {source_ref!r}",
+            )
+        selected_revisions[str(revision.id)] = revision
+    if len(selected_revisions) != 1:
+        raise AssertionError(
+            f"record-design source {source_ref!r} must resolve to one revision across its first filing "
+            f"periods {tuple(sorted(start_periods))!r}, found {tuple(sorted(selected_revisions))!r}",
+        )
+    revision = next(iter(selected_revisions.values()))
+    if source_ref not in revision.source_refs:
+        raise AssertionError(f"selected revision {revision.id!r} does not declare record-design source {source_ref!r}")
+    if not _SOURCE_ROOT.is_dir():
+        raise AssertionError(f"record-design source root is unavailable: {_SOURCE_ROOT}")
     inspection = RegistryRevisionInspection.from_revision(
         modelo=modelo,
         revision=revision,
@@ -825,7 +875,7 @@ def _resolve_owning_inspection(source_ref: str) -> tuple[RegistryRevisionInspect
         legal_ref_ids=frozenset(catalogues.legal),
     )
     assert str(inspection.revision_id) == str(revision.id)
-    return inspection, int(filing_year)
+    return inspection, filing_year
 
 
 @cache
@@ -840,33 +890,33 @@ def _bundled_design_note_forms() -> tuple[_NoteBearingForm, ...]:
     """
     modelo, _catalogues = _compiled_modelo()
     epochs_by_form: dict[tuple[str, str], set[str]] = {}
-    for revision in modelo.revisions.values():
-        design_refs = tuple(ref for ref in revision.source_refs if str(ref).startswith(_DESIGN_SOURCE_PREFIX))
-        if not design_refs:
-            continue
-        inspection, selector_year = _resolve_owning_inspection(str(design_refs[0]))
+    design_refs = sorted(
+        {
+            ref
+            for revision in modelo.revisions.values()
+            for ref in revision.source_refs
+            if str(ref).startswith(_DESIGN_SOURCE_PREFIX)
+        }
+    )
+    for design_ref in design_refs:
+        inspection, filing_year = _resolve_owning_inspection(str(design_ref))
         assert inspection.source_root is not None
-        for design_ref in design_refs:
-            source = inspection.sources[str(design_ref)]
-            assert source.record_design_epoch is not None
-            assert source.applies_from is not None
-            # A revision may open years before the design it currently declares
-            # applies (the 2022 span carries the 2022 design), so
-            # the probe year is the later of the two rather than the revision's.
-            intermediate = load_record_design_intermediate(
-                inspection.source_root,
-                inspection.sources,
-                source_ref=str(design_ref),
-                filing_year=max(selector_year, source.applies_from.year),
-                design_epoch=source.record_design_epoch,
-            )
-            for sheet in intermediate.sheets:
-                for field in sheet.fields:
-                    content = " ".join((field.content or "").split())
-                    if not content or _NOTE_TOKEN.search(content) is None:
-                        continue
-                    key = (content, field.aeat_type.strip())
-                    epochs_by_form.setdefault(key, set()).add(source.record_design_epoch)
+        source = inspection.sources[str(design_ref)]
+        assert source.record_design_epoch is not None
+        intermediate = load_record_design_intermediate(
+            inspection.source_root,
+            inspection.sources,
+            source_ref=str(design_ref),
+            filing_year=filing_year,
+            design_epoch=source.record_design_epoch,
+        )
+        for sheet in intermediate.sheets:
+            for field in sheet.fields:
+                content = " ".join((field.content or "").split())
+                if not content or _NOTE_TOKEN.search(content) is None:
+                    continue
+                key = (content, field.aeat_type.strip())
+                epochs_by_form.setdefault(key, set()).add(source.record_design_epoch)
     return tuple(
         _NoteBearingForm(content=content, aeat_type=aeat_type, design_epochs=frozenset(epochs))
         for (content, aeat_type), epochs in sorted(epochs_by_form.items())

@@ -17,7 +17,7 @@ import yaml
 from ....adapters.outbound.llm.consent import OffHostEvidenceReadOutcome, classify_off_host_evidence_read
 from ....core.config_support import LLMProvider
 from ....core.i18n.render import tr
-from .._ledger_evidence_cli import _OFF_HOST_REFUSAL_LOCALE_KEYS, _validate_extract_consent_options
+from ..ledger_evidence_commands import _OFF_HOST_REFUSAL_LOCALE_KEYS, _validate_extract_consent_options
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -76,7 +76,7 @@ def test_neither_flag_supplied_accepts_the_on_host_default() -> None:
         (None, True),
         (LLMProvider.LOCAL, True),
         (LLMProvider.LOCAL, False),
-        (LLMProvider.ANTHROPIC, False),
+        (LLMProvider.AGENT, False),
     ],
     ids=["acknowledged_without_provider", "local_acknowledged", "local_unacknowledged", "off_host_unacknowledged"],
 )
@@ -103,7 +103,7 @@ def test_an_incomplete_off_host_request_is_refused(provider: LLMProvider | None,
 def test_an_explicit_remote_request_requires_a_stored_evidence_reference() -> None:
     """Acknowledgement alone cannot authorize unnamed evidence."""
     with pytest.raises(typer.BadParameter) as raised:
-        _validate(provider=LLMProvider.ANTHROPIC, acknowledged=True, evidence_id=None)
+        _validate(provider=LLMProvider.AGENT, acknowledged=True, evidence_id=None)
 
     message = str(raised.value)
     assert "--evidence-id" in message or "evidence" in message.lower()
@@ -111,7 +111,7 @@ def test_an_explicit_remote_request_requires_a_stored_evidence_reference() -> No
 
 def test_the_explicit_remote_pair_and_reference_reach_worker_validation() -> None:
     """A complete request is admitted for the worker's independent consent gate."""
-    assert _validate(provider=LLMProvider.ANTHROPIC, acknowledged=True, evidence_id="e" * 16) is None
+    assert _validate(provider=LLMProvider.AGENT, acknowledged=True, evidence_id="e" * 16) is None
 
 
 @pytest.mark.parametrize(
@@ -120,8 +120,8 @@ def test_the_explicit_remote_pair_and_reference_reach_worker_validation() -> Non
         (None, False, OffHostEvidenceReadOutcome.ON_HOST_DEFAULT),
         (None, True, OffHostEvidenceReadOutcome.ACKNOWLEDGEMENT_WITHOUT_PROVIDER),
         (LLMProvider.LOCAL, True, OffHostEvidenceReadOutcome.PROVIDER_READS_ON_HOST),
-        (LLMProvider.ANTHROPIC, False, OffHostEvidenceReadOutcome.PROVIDER_WITHOUT_ACKNOWLEDGEMENT),
-        (LLMProvider.ANTHROPIC, True, OffHostEvidenceReadOutcome.OFF_HOST_CONSENTED),
+        (LLMProvider.AGENT, False, OffHostEvidenceReadOutcome.PROVIDER_WITHOUT_ACKNOWLEDGEMENT),
+        (LLMProvider.AGENT, True, OffHostEvidenceReadOutcome.OFF_HOST_CONSENTED),
     ],
     ids=lambda value: getattr(value, "name", str(value)),
 )

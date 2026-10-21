@@ -19,6 +19,7 @@ from cadrumo.tests.env_scope import scoped_env_var
 from dev.cache_root import DEV_CACHE_ROOT_ENV
 
 from ..compiler.identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
+from ..compiler.validation_verdict_cache import VERDICT_CACHE_DIR_ENV
 from ..compiler.verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
@@ -36,26 +37,24 @@ from ..compiler.verdict_cache import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_CACHE_DIR_ENV = "CADRUMO_REGISTRY_VERDICT_CACHE_DIR"
-
 
 def test_the_default_verdict_store_is_in_the_configured_development_cache_bucket() -> None:
     """Without cache overrides, derived output follows the configured storage root."""
-    with scoped_env_var(_CACHE_DIR_ENV, None), scoped_env_var(DEV_CACHE_ROOT_ENV, None):
+    with scoped_env_var(VERDICT_CACHE_DIR_ENV, None), scoped_env_var(DEV_CACHE_ROOT_ENV, None):
         storage_root = load_settings().cadrumo_local_storage_root
         assert default_verdict_cache_dir() == storage_root / "development" / "cache" / "registry-verdict"
 
 
 def test_the_shared_cache_root_relocates_the_verdict_store(tmp_path: Path) -> None:
     """One variable moves every development cache, the per-cache override moves one."""
-    with scoped_env_var(_CACHE_DIR_ENV, None), scoped_env_var(DEV_CACHE_ROOT_ENV, str(tmp_path / "caches")):
+    with scoped_env_var(VERDICT_CACHE_DIR_ENV, None), scoped_env_var(DEV_CACHE_ROOT_ENV, str(tmp_path / "caches")):
         assert default_verdict_cache_dir() == tmp_path / "caches" / "registry-verdict"
 
 
 def test_an_explicit_verdict_store_wins_and_holds_the_verdict_file(tmp_path: Path) -> None:
     root = tmp_path / "registry" / "aeat"
     with (
-        scoped_env_var(_CACHE_DIR_ENV, str(tmp_path / "verdicts")),
+        scoped_env_var(VERDICT_CACHE_DIR_ENV, str(tmp_path / "verdicts")),
         scoped_env_var(DEV_CACHE_ROOT_ENV, str(tmp_path / "shared-caches")),
     ):
         path = verdict_cache_path(root)
@@ -65,7 +64,7 @@ def test_an_explicit_verdict_store_wins_and_holds_the_verdict_file(tmp_path: Pat
 
 
 def test_distinct_roots_get_distinct_verdict_files(tmp_path: Path) -> None:
-    with scoped_env_var(_CACHE_DIR_ENV, str(tmp_path / "verdicts")):
+    with scoped_env_var(VERDICT_CACHE_DIR_ENV, str(tmp_path / "verdicts")):
         first = verdict_cache_path(tmp_path / "registry-a" / "aeat")
         second = verdict_cache_path(tmp_path / "registry-b" / "aeat")
     assert first != second
@@ -126,7 +125,7 @@ def test_certify_then_matching_key_is_certified(tmp_path: Path) -> None:
         source_evidence_fingerprints=(("b.pdf", 3, 4),),
         package_version="1.2.3",
     )
-    with scoped_env_var(_CACHE_DIR_ENV, str(tmp_path / "verdicts")):
+    with scoped_env_var(VERDICT_CACHE_DIR_ENV, str(tmp_path / "verdicts")):
         written = certify_registry_validation(root, verdict_key=key, package_version="1.2.3")
         assert written.is_file()
         assert registry_validation_is_certified(root, verdict_key=key, identity=identity) is True
@@ -135,7 +134,7 @@ def test_certify_then_matching_key_is_certified(tmp_path: Path) -> None:
 def test_mismatched_key_is_not_certified_and_deletes_the_stale_verdict(tmp_path: Path) -> None:
     root = tmp_path / "registry" / "aeat"
     identity = _walked_identity((("a.toml", 1, 2, "digest-a"),))
-    with scoped_env_var(_CACHE_DIR_ENV, str(tmp_path / "verdicts")):
+    with scoped_env_var(VERDICT_CACHE_DIR_ENV, str(tmp_path / "verdicts")):
         written = certify_registry_validation(root, verdict_key="stored-key", package_version="1.2.3")
         assert written.is_file()
         assert registry_validation_is_certified(root, verdict_key="different-key", identity=identity) is False
@@ -222,5 +221,5 @@ def test_a_shipped_verdict_cannot_certify_a_walked_tree(tmp_path: Path) -> None:
     )
     assert shipped.is_file(), "the planted verdict must exist, or this proves nothing"
 
-    with scoped_env_var(_CACHE_DIR_ENV, str(tmp_path / "verdicts")):
+    with scoped_env_var(VERDICT_CACHE_DIR_ENV, str(tmp_path / "verdicts")):
         assert registry_validation_is_certified(root, verdict_key="unmatched", identity=identity) is False

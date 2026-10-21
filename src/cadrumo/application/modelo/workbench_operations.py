@@ -3,7 +3,7 @@
 The workbench screen holds no repository, registry or custody. Every read it
 needs runs here, inside the profile worker under the pinned authority, as a
 recorded read-only operation whose typed result only a password-authenticated
-human CLI or TUI session may receive:
+human session may receive, on any frontend:
 
 - ``modelo.work.form`` reads the editor form, admitting the edit baseline the
   session's parses and applies are judged against;
@@ -25,6 +25,16 @@ from typing import Annotated, Final, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
@@ -49,19 +59,10 @@ from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionRegistrationV1,
 )
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-)
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .casilla_help import ModeloCasillaHelpCardV1
 from .edit_admission import ModeloEditRenewedV1, renew_modelo_edit_baseline
@@ -475,8 +476,8 @@ class ModeloEditApplyPrerequisiteExecutor:
 
 
 _READ_CAPABILITIES = RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
-#: Owner reads for a human at a password-authenticated CLI or TUI; never an agent or off-host destination.
-_HUMAN_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
+#: Four of the reads name their declaration directly; the renewal names it inside the baseline it renews.
+_WORK_UNIT_SUBJECT = OperationSubjectReferenceV1.payload_field("work_unit_id")
 #: Each read's public request and result models, in registration order.
 _SCHEMAS: Final[Mapping[str, tuple[type[BaseModel], type[BaseModel]]]] = MappingProxyType(
     {
@@ -495,6 +496,7 @@ _SCHEMAS: Final[Mapping[str, tuple[type[BaseModel], type[BaseModel]]]] = Mapping
 def _definition(
     definition_id: str,
     request_type: type[CredentialFreeOperationRequest],
+    subject_reference: OperationSubjectReferenceV1,
     result_type: type[BaseModel],
     executor_type: type[object],
     build: Callable[[], object],
@@ -502,6 +504,7 @@ def _definition(
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=subject_reference,
         result_type=result_type,
         executor_type=executor_type,
         build=build,
@@ -513,7 +516,6 @@ def _definition(
         transient_financial_operand=modelo_edit_financial_operand(None)
         if definition_id == MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
         else None,
-        permitted_frontends=_HUMAN_FRONTENDS,
     )
 
 
@@ -528,6 +530,7 @@ def build_modelo_workbench_operation_definitions(
         _definition(
             MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
             ModeloWorkbenchFormRequest,
+            _WORK_UNIT_SUBJECT,
             ModeloWorkbenchFormProjectionV1,
             ModeloWorkbenchFormExecutor,
             lambda: ModeloWorkbenchFormExecutor(ports_factory=ports_factory, contracts=contracts),
@@ -535,6 +538,7 @@ def build_modelo_workbench_operation_definitions(
         _definition(
             MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID,
             ModeloCasillaHelpRequest,
+            _WORK_UNIT_SUBJECT,
             ModeloCasillaHelpProjectionV1,
             ModeloCasillaHelpExecutor,
             lambda: ModeloCasillaHelpExecutor(ports_factory=ports_factory),
@@ -542,6 +546,7 @@ def build_modelo_workbench_operation_definitions(
         _definition(
             MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
             ModeloEditRenewRequest,
+            OperationSubjectReferenceV1.payload_field("baseline", "work_unit_id"),
             ModeloEditRenewalProjectionV1,
             ModeloEditRenewExecutor,
             lambda: ModeloEditRenewExecutor(ports_factory=ports_factory, contracts=contracts),
@@ -549,6 +554,7 @@ def build_modelo_workbench_operation_definitions(
         _definition(
             MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
             ModeloEditPreflightRequestV2,
+            _WORK_UNIT_SUBJECT,
             ModeloEditPreflightProjectionV1,
             ModeloEditPreflightExecutor,
             lambda: ModeloEditPreflightExecutor(ports_factory=ports_factory),
@@ -556,6 +562,7 @@ def build_modelo_workbench_operation_definitions(
         _definition(
             MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
             ModeloEditApplyPrerequisiteRequest,
+            _WORK_UNIT_SUBJECT,
             ModeloEditApplyPrerequisiteProjectionV1,
             ModeloEditApplyPrerequisiteExecutor,
             lambda: ModeloEditApplyPrerequisiteExecutor(ports_factory=ports_factory, store=prerequisites),

@@ -168,11 +168,6 @@ def _build_fact_registry() -> tuple[dict[str, _FactKind], dict[str, frozenset[st
 _FACT_KINDS, _FACT_ENUM_VALUES = _build_fact_registry()
 
 
-def profile_fact_names() -> frozenset[str]:
-    """Return every valid :class:`TaxpayerProfile` fact name a predicate may cite."""
-    return frozenset(_FACT_KINDS)
-
-
 class ProfileFactPredicate(BaseModel):
     """A single conjunct: a :class:`TaxpayerProfile` fact matched a stated way."""
 
@@ -324,5 +319,4 @@ __all__ = [
     "WorkflowPhase",
     "parse_skill_frontmatter",
     "parse_skill_metadata",
-    "profile_fact_names",
 ]

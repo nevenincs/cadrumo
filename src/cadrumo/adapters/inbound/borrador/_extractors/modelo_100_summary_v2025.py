@@ -196,7 +196,13 @@ def _profile_coverage(
         return None
     coverage = Decimal(len(matched_targets)) / Decimal(len(extraction_profile.target_casillas))
     if coverage < extraction_profile.min_coverage:
-        missing_ids = tuple(sorted(target_casilla_ids - matched_targets if target_casilla_ids else set()))
+        missing_ids = tuple(
+            sorted(
+                target_casilla_ids - matched_targets
+                if (target_casilla_ids is not None and target_casilla_ids)
+                else set()
+            )
+        )
         raise BorradorParseError(
             "registry extraction profile coverage below minimum: "
             f"profile={extraction_profile.id!r} coverage={coverage} "

@@ -9,9 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.compiler import build_command_app
+from cadrumo_client.commands.shared_contracts import SchemaState, TranslationKey
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
-from .._command_runtime import _behavior_wrapper
 from .._modelo_nonwork_bindings_command_specs import (
     _AS_OF_OPTION,
     _BINDINGS_INVOCATION,
@@ -54,7 +55,6 @@ from .._modelo_nonwork_review_package_command_specs import (
     MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS,
 )
 from .._modelo_nonwork_work_amend_command_specs import MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS
-from ..command_shared_contracts import SchemaState, TranslationKey
 from ..command_specs import COMMAND_GRAPH
 from ..modelo_work_command_specs import _ADDRESS, _LANGUAGE, _a, _o
 
@@ -322,11 +322,11 @@ def test_work_amend_wizard_parameters_reuse_the_canonical_work_kernel() -> None:
     assert all(actual is expected for actual, expected in zip(wizard.parameters[1:6], _ADDRESS, strict=True))
     assert wizard.policy is _INTERACTIVE_MODEL_WRITE
     assert wizard.handler is not None and wizard.handler.target is not None
-    assert wizard.handler.target.module == "cadrumo.entrypoints.cli._modelo_amend_wizard_cli"
+    assert wizard.handler.target.module == "cadrumo.entrypoints.cli.modelo_amend_wizard_commands"
     assert wizard.handler.target.qualname == "work_amend_wizard"
     assert wizard.result_schema.state is SchemaState.TARGET
     assert wizard.result_schema.target is not None
-    assert wizard.result_schema.target.module == "cadrumo.entrypoints.cli._modelo_amend_wizard_payloads"
+    assert wizard.result_schema.target.module == "cadrumo.entrypoints.cli.modelo_amend_wizard_results"
     assert wizard.result_schema.target.qualname == "WorkAmendWizardResult"
     assert wizard.result_schema.identity == "modelo.work.amend_wizard"
     assert COMMAND_GRAPH.resolve_path(("aeat", "app", "modelo", "work", "amend-wizard")) is wizard
@@ -581,7 +581,7 @@ def test_every_nonwork_target_is_public_resolvable_and_runtime_materializable() 
         else:
             behavior_parameters = {name for name in signature.parameters if name != "ctx"}
         assert behavior_parameters == {parameter.name for parameter in spec.parameters}
-        _behavior_wrapper(COMMAND_GRAPH, spec)
+    build_command_app(COMMAND_GRAPH)
 
 
 def test_nonwork_handlers_and_schemas_have_no_legacy_authority() -> None:

@@ -34,8 +34,8 @@ def _require_npx() -> None:
     The sanctioned convention for external-binary integration tests in this
     repo is to assert the tool is present, not to self-skip when it is absent
     (see ``dev/release/tests/test_justfile_release_guidance.py`` and
-    ``dev/packaging/tests/test_smoke_split_install_sequence.py``). ``skipif`` is
-    forbidden by ``test_no_skip_xfail`` for tests outside the source tree.
+    ``dev/packaging/tests/test_smoke_split_install_sequence.py``). The project
+    forbids ``skipif`` as a shortcut.
     """
     assert shutil.which("npx") is not None, "npx is required to run the real jscpd duplication scan"
 
@@ -43,13 +43,14 @@ def _require_npx() -> None:
 def test_real_clean_subtree_scan_observes_zero() -> None:
     """A real zero-clone jscpd run over a real clone-free tree is observed_zero.
 
-    ``dev/audit`` is genuinely clone-free, so this is the only honest route to
-    the green state: a real subprocess that really looked at real files.
+    The security runner is a real, clone-free source file. The complete audit
+    subtree also contains shared scanner idioms, so it cannot witness zero.
+    This still requires a real subprocess to inspect nonempty source.
     """
     _require_npx()
-    result = run_duplication_scan(REPO_ROOT, source_root=Path("dev/audit"))
+    result = run_duplication_scan(REPO_ROOT, source_roots=(Path("dev/audit/security.py"),))
 
-    assert result.outcome is DuplicationOutcome.OBSERVED_ZERO
+    assert result.outcome is DuplicationOutcome.OBSERVED_ZERO, result.headline()
     assert result.is_green is True
     assert result.clone_count == 0
     assert result.files_analyzed > 0, "a green verdict must prove files were analysed"
@@ -58,7 +59,22 @@ def test_real_clean_subtree_scan_observes_zero() -> None:
 def test_real_bad_source_path_is_unavailable_not_green() -> None:
     """A real scan of a path that matches nothing must refuse to claim cleanliness."""
     _require_npx()
-    result = run_duplication_scan(REPO_ROOT, source_root=Path("src/cadrumo/no-such-directory"))
+    result = run_duplication_scan(REPO_ROOT, source_roots=(Path("src/cadrumo/no-such-directory"),))
+
+    assert result.outcome is DuplicationOutcome.UNAVAILABLE
+    assert result.is_green is False
+
+
+def test_a_missing_root_beside_a_real_one_is_unavailable_not_a_smaller_scope() -> None:
+    """One lost package must not let the surviving roots pose as the whole scope.
+
+    The real root alone observes zero (see above), so the unavailable verdict
+    here is attributable to the missing root alone.
+    """
+    _require_npx()
+    result = run_duplication_scan(
+        REPO_ROOT, source_roots=(Path("dev/audit/security.py"), Path("src/cadrumo/no-such-directory"))
+    )
 
     assert result.outcome is DuplicationOutcome.UNAVAILABLE
     assert result.is_green is False

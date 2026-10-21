@@ -22,6 +22,9 @@ impl Strings {
         Ok(Self(selected))
     }
     pub fn get(&self, key: &str) -> &str {
+        // Adoption is partial control while its bounded drain/relaunch runs.
+        // Present the existing startup label, never the healthy Running label.
+        let key = if key == "adopted" { "starting" } else { key };
         // A missing generated key is a build contract defect, not translated UI text.
         self.0
             .get(&format!("common.manager.{key}"))
@@ -49,5 +52,14 @@ mod tests {
             Strings::for_language(Some("invalid")).unwrap().get("quit"),
             Strings::for_language(None).unwrap().get("quit")
         );
+    }
+
+    #[test]
+    fn adopted_partial_control_uses_the_starting_label_in_every_locale() {
+        for language in ["en", "es", "ca", "hu"] {
+            let strings = Strings::for_language(Some(language)).unwrap();
+            assert_eq!(strings.get("adopted"), strings.get("starting"));
+            assert_ne!(strings.get("adopted"), strings.get("running"));
+        }
     }
 }

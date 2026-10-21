@@ -8,7 +8,7 @@ Exercised against real SQLite persistence in an isolated profile, no mocks.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -149,7 +149,7 @@ def _events_of(events: BucketEventHistoryRepository, event_type: BucketEventType
 def _workflow_ports(
     repository: TransactionCatalogueRepository,
     events: BucketEventHistoryRepository,
-) -> Iterator[tuple[LedgerActionPorts, LLMClassificationPorts, Settings]]:
+) -> Generator[tuple[LedgerActionPorts, LLMClassificationPorts, Settings]]:
     """Yield canonical ledger and LLM ports for one isolated profile action."""
     with ledger_ports_for_test(
         bucket_id=repository.bucket_id,

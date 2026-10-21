@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Mapping
 from datetime import datetime
-from typing import ClassVar, override
+from typing import ClassVar, Final, override
 
 from pydantic import BaseModel, Field
 
@@ -67,7 +67,8 @@ class RetencionObservationRepositoryAdapter(
     namespace: ClassVar[str] = RETENCION_OBSERVATIONS_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = RETENCION_OBSERVATIONS_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = RETENCION_OBSERVATIONS_NAMESPACE.schema_version
-    payload_type: ClassVar[type[_RetencionObservationEnvelopePayload]] = _RetencionObservationEnvelopePayload
+    # Final: a constant narrowing of the base's mutable ``ClassVar[type[BaseModel]]``.
+    payload_type: Final[type[_RetencionObservationEnvelopePayload]] = _RetencionObservationEnvelopePayload
 
     def __init__(self, *, objects: SecureObjectRepository) -> None:
         """Bind an already-composed secure-object store."""

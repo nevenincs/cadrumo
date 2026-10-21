@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from typing import Final
 
-from ...application.ledger.operator_input_contracts import OperatorInputContract
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
     DeferredTarget,
@@ -17,7 +16,9 @@ from .command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from .command_spec import InvocationSpec
+from cadrumo_client.commands.spec import InvocationSpec
+
+from ...application.ledger.operator_input_contracts import OperatorInputContract
 
 _GROUP_INVOCATION: Final[InvocationSpec] = InvocationSpec(
     invoke_without_command=False,

@@ -45,6 +45,11 @@ entries = [
   { key = "record_design.2025.source_ref", value = "aeat-dr-303-2025" },
   { key = "record_design.2025.content_digest", value = "6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6" },
   { key = "record_design.2025.epoch", value = "2025" },
+  # January/Q1 keeps the prior printed annex but owns the same 2026 record design.
+  # DP30303 fields 35-36 carry both motives, including these early-period filings.
+  { key = "record_design.2026-hasta-01-y-1t.source_ref", value = "aeat-dr-303-2026" },
+  { key = "record_design.2026-hasta-01-y-1t.content_digest", value = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b" },
+  { key = "record_design.2026-hasta-01-y-1t.epoch", value = "2026" },
   { key = "record_design.2026-y-siguientes.source_ref", value = "aeat-dr-303-2026" },
   { key = "record_design.2026-y-siguientes.content_digest", value = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b" },
   { key = "record_design.2026-y-siguientes.epoch", value = "2026" },

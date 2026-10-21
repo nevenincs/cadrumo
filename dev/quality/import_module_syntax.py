@@ -95,7 +95,7 @@ def resolve_from(importer: str, importer_is_package: bool, level: int, module: s
         return None
     if strip:
         base = base[: len(base) - strip]
-    if module:
+    if module is not None and module:
         return ".".join((*base, *module.split(".")))
     return ".".join(base) if base else None
 
@@ -106,5 +106,5 @@ def qualified_name(node: ast.AST) -> str | None:
         return node.id
     if isinstance(node, ast.Attribute):
         base = qualified_name(node.value)
-        return f"{base}.{node.attr}" if base else node.attr
+        return f"{base}.{node.attr}" if (base is not None and base) else node.attr
     return None

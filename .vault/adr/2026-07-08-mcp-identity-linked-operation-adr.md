@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#mcp-identity-linked-operation'
 date: '2026-07-08'
-modified: '2026-09-26'
-body_hash: 'sha256:e31ce705c6d9f4c8d8e80d8632e9b29db22130ea3f47544c39eaabf834c807f6'
+modified: '2026-10-12'
+body_hash: 'sha256:a049e3215105957260c7fec91b5d8c4462958faf8ef0adc843371f9206e0d0a5'
 related:
   - "[[2026-07-08-mcp-identity-linked-operation-research]]"
   - "[[2026-07-08-mcp-console-review-audit]]"
@@ -227,3 +227,7 @@ Accepted under the operator's instruction to continue the presented mcp-purpose-
 Identity/status tools observe a proven profile session; reading them cannot create authorization. Every private read, mutation and result/resource access validates the immutable profile binding, credential/grant, session and current revocation state. A human profile switch cannot retarget an agent. The label remains a human display value, not a security identifier; envelope and confirmation labels derive from the operation's captured binding rather than the ambient profile at emit time.
 
 I1's accessible identity orientation, I3's shared envelope presentation, I4's clear target echo and applicable redaction rules remain. Their old fixed tool counts and observation-before-mutation ordering are not replacement implementation constraints. Direct and execute-style paths share application admission. The new accepted records own that policy; this record does not duplicate it.
+
+## Amendment 2026-10-12: confirmation is not a gate
+
+Accepted under `2026-10-11-mcp-parity-full-parity-adr`. The CONFIRM elicitation that I4 has name the active profile label no longer gates any operation on MCP. Where a client shows a confirmation, or the result echoes its target, the label still derives from the operation's captured binding, as the 2026-09-26 amendment says.

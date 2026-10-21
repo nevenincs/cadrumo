@@ -12,9 +12,9 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_v
 from ....core.aggregation import BindingSourceKind
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.time.clock import today_madrid
-from ...iva.classification import InvoiceKind, TransactionKind, require_transaction_kind
+from ...iva.classification import TransactionKind, require_transaction_kind
 from ...iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
-from ...iva.schema import EUMemberState, IvaRateKind
+from ...iva.schema import EUMemberState, InvoiceKind, IvaRateKind
 from ._ledger_binding_resolution import (
     resolve_ledger_family_binding_values,
     unsupported_ledger_family_observations,

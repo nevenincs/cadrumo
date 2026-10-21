@@ -66,6 +66,11 @@ If the path does not exist or is not readable, the command refuses cleanly and
 names the path (`Invalid value for '--file': the path ... does not exist or is
 not a readable file.`); fix the path and run it again.
 
+The command line resolves a relative path from the directory you run it in. The
+terminal interface and MCP run the same operation (`ledger.import`) and need the
+absolute path of the statement file. The same holds for the destination of
+`ledger export` (`ledger.export`).
+
 ## Save imported rows with diagnostics
 
 Add `--verify` when you want import diagnostics alongside the save:

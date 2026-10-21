@@ -32,7 +32,9 @@ def test_recipient_sections_preserve_revision_fields_and_official_numbering(
     assert len(layout.placements) == field_count
     assert {p.casilla_id for p in layout.placements} == {c.id for c in revision.casillas}
     assert all(p.kind.value == "on_form" for p in layout.placements)
-    numbered = {str(p.casilla_id): p.box_number for p in layout.placements if p.box_number}
+    numbered = {
+        str(p.casilla_id): p.box_number for p in layout.placements if (p.box_number is not None and p.box_number)
+    }
     if revision_id == "2025-y-siguientes":
         assert numbered == {}
         assert [s.source_ref for s in layout.design_sources] == [source]

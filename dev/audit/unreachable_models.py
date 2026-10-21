@@ -184,6 +184,7 @@ class UnreachableCodeResult:
 
     outcome: UnreachableCodeOutcome
     roots: tuple[str, ...] = ()
+    packages: tuple[str, ...] = ()
     shipped_modules: int = 0
     reachable_modules: int = 0
     modules: tuple[ModuleFinding, ...] = ()
@@ -221,6 +222,7 @@ class UnreachableCodeResult:
         roots: tuple[str, ...],
         shipped_modules: int,
         reachable_modules: int,
+        packages: tuple[str, ...] = (),
         data_cleared: int = 0,
         dev_cleared: int = 0,
     ) -> UnreachableCodeResult:
@@ -228,6 +230,7 @@ class UnreachableCodeResult:
         return cls(
             outcome=UnreachableCodeOutcome.CLEAN,
             roots=roots,
+            packages=packages,
             shipped_modules=shipped_modules,
             reachable_modules=reachable_modules,
             data_cleared=data_cleared,
@@ -244,6 +247,7 @@ class UnreachableCodeResult:
         modules: tuple[ModuleFinding, ...],
         symbols: tuple[SymbolFinding, ...],
         tests: tuple[TestFinding, ...] = (),
+        packages: tuple[str, ...] = (),
         data_cleared: int = 0,
         dev_cleared: int = 0,
     ) -> UnreachableCodeResult:
@@ -254,6 +258,7 @@ class UnreachableCodeResult:
         return cls(
             outcome=UnreachableCodeOutcome.FINDINGS,
             roots=roots,
+            packages=packages,
             shipped_modules=shipped_modules,
             reachable_modules=reachable_modules,
             modules=modules,

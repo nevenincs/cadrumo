@@ -1,7 +1,7 @@
 """The reachability gate that walks the real shipped tree.
 
 Reads the real ``pyproject.toml`` console scripts and parses every shipped
-module under ``src/cadrumo``, so this is ``integration``: it proves the
+tax module and its workspace consumers, so this is ``integration``: it proves the
 scanner against the live tree rather than a synthetic one. The
 classification and rendering checks live in ``test_unreachable_code``.
 """
@@ -27,7 +27,7 @@ def test_real_scan_over_the_tree_returns_a_typed_outcome_with_real_findings(
 ) -> None:
     """A real scan classifies to CLEAN or FINDINGS, never a crash, and names real paths.
 
-    No self-skip on a clean tree (forbidden by ``test_no_skip_xfail``): both
+    No self-skip on a clean tree (the project forbids skips as shortcuts): both
     branches are asserted inside one test, matching the vulture gate.
 
     The same scan also proves the reference walk read every file. If that ever
@@ -48,12 +48,12 @@ def test_real_scan_over_the_tree_returns_a_typed_outcome_with_real_findings(
 
     assert result.outcome in {UnreachableCodeOutcome.CLEAN, UnreachableCodeOutcome.FINDINGS}, result.reason
     assert result.headline()
-    assert "cadrumo.entrypoints.cli.bootstrap:main" in set(result.roots)
-    assert "cadrumo.entrypoints.tui.__main__ (python -m)" in set(result.roots)
+    assert "cadrumo_runtime.host.frontend.cli.bootstrap:main (workspace sibling)" in set(result.roots)
+    assert "cadrumo_runtime.host.bootstrap:main (workspace sibling)" in set(result.roots)
     assert 0 < result.reachable_modules <= result.shipped_modules
 
     reported_modules = {finding.module for finding in result.modules}
-    assert reported_modules.isdisjoint({"cadrumo", "cadrumo.entrypoints.cli.bootstrap"})
+    assert reported_modules.isdisjoint({"cadrumo", "cadrumo_runtime.host.frontend.cli.bootstrap"})
 
     if result.outcome is UnreachableCodeOutcome.FINDINGS:
         for module in result.modules:

@@ -31,12 +31,12 @@ from .....application.operations.observation import OperationObservationService
 from .....application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .....application.operations.owner import OperationExecutorContext
 from .....application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationSchemaBindingV1,
 )
+from .....application.operations.subject_reference import OperationSubjectReferenceV1
 from .....application.operations.supervisor import OperationSupervisor
 from .....application.operations.tests.authority_test_support import unread_authority_operation
 from .....application.operations.tests.financial_operand_models import FinancialOperandBaseline, FinancialOperandBatch
@@ -113,6 +113,7 @@ def _registry() -> OperationRegistry:
     definition = OperationDefinition(
         definition_id="test.typed.batch",
         request_type=_SafeRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=_SafeResult,
         executor_factory=OperationExecutorFactory(request_type=_SafeRequest, executor_type=_Executor, build=_Executor),
         phase_codes=("test.typed.batch",),
@@ -131,7 +132,6 @@ def _registry() -> OperationRegistry:
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
         transient_financial_operand=declaration,
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(

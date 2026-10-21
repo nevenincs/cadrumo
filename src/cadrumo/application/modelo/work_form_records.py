@@ -59,12 +59,12 @@ def _record_fields(
     layout: ExportLayoutDefinition,
     record: ExportRecordDefinition,
 ) -> tuple[tuple[ExportFieldDefinition, str | None], ...]:
-    bindings = {str(binding.id): binding for binding in snapshot.revision.bindings}
+    bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     row_casillas = row_binding_casilla_ids_by_field(snapshot.revision, layout)
     return tuple(
         (
             field,
-            None if target is None else str(target),
+            target,
         )
         for field in record.fields
         if field.kind in {CasillaFieldKind.BINDING, CasillaFieldKind.CASILLA, CasillaFieldKind.PROJECTION}
@@ -97,10 +97,10 @@ def _saved_casilla_rows(
 ) -> bool:
     known = False
     for (casilla, index), value in revision.row_casilla_values.items():
-        if str(casilla) not in casilla_targets:
+        if casilla not in casilla_targets:
             continue
         known = True
-        _put_row_value(by_row, index, str(casilla), value)
+        _put_row_value(by_row, index, casilla, value)
     return known
 
 
@@ -113,7 +113,7 @@ def _detail_binding_rows(
         return None
     return revision_detail_record_binding_inputs(
         revision=revision,
-        modelo=str(snapshot.modelo.id),
+        modelo=snapshot.modelo.id,
         binding_record=record.binding_record,
     )
 
@@ -181,7 +181,7 @@ def _needs_record_wide_fallback(
         and target is not None
         and target in targets
         and target not in row_field_targets
-        and not any(str(casilla) == target for casilla, _ in revision.row_casilla_values)
+        and not any(casilla == target for casilla, _ in revision.row_casilla_values)
     )
 
 
@@ -193,7 +193,7 @@ def _add_record_wide_casillas(
     text_casillas: frozenset[str],
     by_row: dict[int, dict[str, ModeloFormScalar]],
 ) -> None:
-    row_field_targets = {str(target) for target in record.row_field_casilla_ids.values()}
+    row_field_targets = set(record.row_field_casilla_ids.values())
     for field, target in fields:
         if target is None or not _needs_record_wide_fallback(revision, field, target, targets, row_field_targets):
             continue
@@ -255,7 +255,7 @@ def saved_form_records(
     if detail is not None and "detail_rows" in revision.model_fields_set:
         known = True
     text_casillas = text_family_casilla_ids(snapshot.revision.casillas)
-    casilla_data_types = {str(casilla.id): str(casilla.data_type) for casilla in snapshot.revision.casillas}
+    casilla_data_types = {casilla.id: str(casilla.data_type) for casilla in snapshot.revision.casillas}
     known = _saved_binding_rows(revision, detail, fields, targets, by_row, casilla_data_types) or known
     _add_record_wide_casillas(
         revision,

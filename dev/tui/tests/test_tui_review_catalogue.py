@@ -297,7 +297,7 @@ def test_an_unreadable_manifest_is_reported_rather_than_raised(tmp_path: Path) -
 
     assert view is not None
     assert view.manifest is None
-    assert view.manifest_error
+    assert view.manifest_error is not None and view.manifest_error
     assert len(view.frames) == 1
 
 

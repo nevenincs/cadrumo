@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#mcp-progressive-discovery'
 date: '2026-07-08'
-modified: '2026-10-03'
-body_hash: 'sha256:43049f3fa2f04ab0892fc3d86dfb9f0227e0062175ab0363cf5839b3ed3e3a7d'
+modified: '2026-10-12'
+body_hash: 'sha256:650246fd2b13ed12f792202e017e9fd08e85ae08972dce9ca5a6a5008bef91f4'
 related:
   - "[[2026-07-08-mcp-progressive-discovery-research]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
@@ -278,3 +278,7 @@ in-console help, documentation generation, and the harness router; toolset
 activation is the natural hook for itinerary-driven surfaces (a skill
 activating its own toolset); the A/B surface toggle gives the eval flywheel
 its first controlled experiment.
+
+## Amendment 2026-10-12: gates withdrawn by parity
+
+Accepted under `2026-10-11-mcp-parity-full-parity-adr` and the 2026-10-12 amendment of `2026-07-02-agent-harness-refoundation-adr`. The handoff deny, the CONFIRM elicitation gate and the call-time refusals tied to persona named in the Considerations and in P6 no longer exist: no frontend is refused what the CLI can do. Persona stays boot-frozen as a presentation choice and narrows what is advertised, never what is admitted. Gate invariance now applies to the checks that remain on every frontend: every discovery path still reaches the same shared admission and produces the same refusals. The live-write block is unchanged.

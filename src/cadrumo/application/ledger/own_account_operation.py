@@ -22,6 +22,8 @@ from uuid import UUID
 import pydantic
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import InternalInvariantError
@@ -44,8 +46,8 @@ from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .own_account_ports import OwnAccountRepositoryFactory, OwnAccountRepositoryProtocol
 from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
@@ -361,11 +363,11 @@ def build_ledger_own_account_definition(repository_factory: OwnAccountRepository
     return build_single_phase_definition(
         definition_id=LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID,
         request_type=LedgerOwnAccountRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerOwnAccountResult,
         executor_type=LedgerOwnAccountExecutor,
         build=lambda: LedgerOwnAccountExecutor(repository_factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

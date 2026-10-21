@@ -39,7 +39,7 @@ question about the axis rather than a settled refusal, and the earlier wording
 here read as the latter.
 
 See Also:
-    :class:`~domain.iva.classification.IvaTerritorialScope`
+    :class:`~domain.iva.schema.IvaTerritorialScope`
         The OTHER party fact — where the party is established. A value here
         never implies one there.
     :class:`~domain.iva.classification.PartyFact`

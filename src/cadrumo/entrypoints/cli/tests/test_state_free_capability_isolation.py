@@ -43,7 +43,7 @@ _PROBE = textwrap.dedent(
     paths = json.loads(sys.argv[1])
     prefixes = json.loads(sys.argv[2])
 
-    from cadrumo.entrypoints.cli.tests.cli_performance import _resolve_cli_path
+    from .cli_performance import _resolve_cli_path
 
     for path in paths:
         _resolve_cli_path(tuple(path))

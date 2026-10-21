@@ -28,6 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FORFAIT = "m303-modulos-iva-dificil-justificacion-forfait"
 _UMBRAL = "m303-bien-inversion-regularizacion-umbral-puntos"
+_CURRENT_ANNUAL_ORDEN = "boe-orden-hac-1425-2025-iva-authority"
 _EXPECTED = {_FORFAIT: Decimal("1"), _UMBRAL: Decimal("10")}
 
 
@@ -94,15 +95,25 @@ def test_the_threshold_row_never_closes() -> None:
 
 
 def test_the_deduction_row_closes_only_where_the_newest_annual_orden_stops_applying() -> None:
-    """Every edition but the newest inherits the open row; the newest closes it where its cited Orden stops."""
+    """Editions supported by the current Orden close the row at its stated end.
+
+    The early-2026 January/Q1 revision and the February-onward revision are
+    separate applicability projections of the same annual Orden. Both carry
+    its end date, while older Orden-backed editions retain the open row they
+    stated at the time.
+    """
     editions = sorted(_modelo().revisions.values(), key=lambda revision: (revision.valid_from, str(revision.id)))
     newest = editions[-1]
     ends = {str(revision.id): {row.valid_to for row in _parameter(revision, _FORFAIT).values} for revision in editions}
     sources = load_shared_catalogues(bundled_path("registry", "aeat")).sources
-    orden_ends = {sources[source_id].applies_to for source_id in _parameter(newest, _FORFAIT).source_refs}
+    newest_source_refs = set(_parameter(newest, _FORFAIT).source_refs)
+    current_orden_end = sources[_CURRENT_ANNUAL_ORDEN].applies_to
+    current_orden_revisions = {
+        str(revision.id) for revision in editions if _CURRENT_ANNUAL_ORDEN in _parameter(revision, _FORFAIT).source_refs
+    }
 
-    assert {
-        revision_id: end for revision_id, end in ends.items() if revision_id != str(newest.id) and end != {None}
-    } == {}
-    assert None not in orden_ends
-    assert ends[str(newest.id)] == orden_ends
+    assert _CURRENT_ANNUAL_ORDEN in newest_source_refs
+    assert current_orden_end == date(2026, 12, 31)
+    assert current_orden_revisions == {"2026-hasta-01-y-1t", "2026-y-siguientes"}
+    assert all(ends[revision_id] == {current_orden_end} for revision_id in current_orden_revisions)
+    assert all(ends[revision_id] == {None} for revision_id in ends.keys() - current_orden_revisions)

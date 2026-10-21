@@ -47,7 +47,6 @@ from cadrumo.application.auth.operator import inspect_operator_auth
 from cadrumo.application.auth.operator import test_operator_auth as probe_operator_auth
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.diagnostics_ports import DiagnosticSecureObjectNamespace, DiagnosticsPorts
-from cadrumo.application.ledger.actions_manual import create_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.application.modelo.tests.registry_revision import active_registry_revision_id
 from cadrumo.application.modelo.work_lifecycle import (
@@ -77,6 +76,7 @@ from ....adapters.persistence.profile.tests.operator_probe_fakes import fake_ope
 from ....adapters.persistence.profile.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -175,7 +175,7 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
         "iva.voluntary_sii_enrolled": "false",
         "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     }
-    if overrides:
+    if overrides is not None and overrides:
         profile_overrides.update(overrides)
 
     outcome = register_profile_with_credentials(

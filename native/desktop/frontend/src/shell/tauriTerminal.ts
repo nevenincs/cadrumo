@@ -5,8 +5,9 @@ import {
   type ShellToken,
   type TerminalWriteBody,
   type TerminalWriteHeaders,
+  type TerminalTarget,
 } from "../ipc/contract";
-import type { TerminalEvent, TerminalKind, TerminalSession } from "./host";
+import type { TerminalEvent, TerminalSession } from "./host";
 import type { HostCall } from "./hostCall";
 
 // One channel per session carries tagged frames in order: a tag byte, then
@@ -61,7 +62,7 @@ const pause = (ms: number) =>
 export async function openTauriTerminal(
   token: ShellToken,
   call: HostCall,
-  kind: TerminalKind,
+  kind: TerminalTarget,
   size: { cols: number; rows: number },
   listener: (event: TerminalEvent) => void,
 ): Promise<TerminalSession> {

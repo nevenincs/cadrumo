@@ -14,7 +14,6 @@ from ..adapters.inbound.justificante.parser import parse_justificante_bytes
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
 from ..adapters.outbound.aeat.sede.declarations_remote import extract_csv_from_url
-from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ..adapters.outbound.aeat.sede.filed_observation_persistence import FilingReconciliationAdapter
 from ..adapters.outbound.aeat.verify.contract import (
     VerifyBrowserSessionFactory,
@@ -33,6 +32,7 @@ from ..adapters.persistence.storage.secure_object_namespaces import LIVE_JUSTIFI
 from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..application.auth.operator_scope_ports import OperatorScopePorts
 from ..application.auth.session_types import AeatSession
+from ..application.live.expedientes_ports import ExpedientesDeclaration
 from ..application.live.filed_data_ports import FiledEffectGuard
 from ..application.live.filed_observation_ports import FiledObservationProtocol
 from ..application.live.justificante import (
@@ -120,7 +120,7 @@ class _LiveRead:
         self._operation = operation
         self._session: AeatSession | None = None
         self._settings: Settings | None = None
-        self._declarations: dict[str, Declaracion] = {}
+        self._declarations: dict[str, ExpedientesDeclaration] = {}
 
     async def declarations(
         self,

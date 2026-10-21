@@ -64,12 +64,13 @@ def _materialisable_members() -> tuple[StorageLocation, ...]:
     """Root-scoped members that name a settings field, in declaration order.
 
     Members with no field are fixed layout the bucket lifecycle provisions per
-    bucket, so the root tree is not where they appear.
+    bucket, so the root tree is not where they appear. Runtime-owned members are
+    created by the installed runtime, never by a client's materialisation.
     """
     return tuple(
         location
         for location in STORAGE_TAXONOMY.values()
-        if location.scope is StorageScope.ROOT and location.settings_field is not None
+        if location.scope is StorageScope.ROOT and location.settings_field is not None and not location.runtime_owned
     )
 
 

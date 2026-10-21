@@ -19,7 +19,7 @@ shape -- an early design routed decrypted bytes through a temp file for a
 subprocess to read by path, and it was rejected -- so an exemption for
 in-memory bytes cannot be read as reopening the temp-file question.
 
-These tests therefore guard in BOTH directions. A later agent must not
+These tests therefore guard in BOTH directions. A later automation must not
 reintroduce custody ceremony the operator ruled unnecessary, and must not read
 the exemption as permission to persist.
 """

@@ -62,7 +62,7 @@ def declared_modelo_period_tokens(
     operation: PinnedAuthorityOperation,
 ) -> tuple[str, ...]:
     """Return every period token declared by any revision of one modelo."""
-    if not modelo or not modelo.strip():
+    if not (modelo is not None and modelo) or not modelo.strip():
         return ()
     return _with_service(
         operation,

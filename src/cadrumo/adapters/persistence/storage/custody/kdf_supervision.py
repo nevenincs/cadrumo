@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import atexit
 import base64
+import contextvars
 import math
 import os
 import sys
 import threading
 import time
 from collections.abc import Callable, Generator, Mapping
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, Literal, cast
 from uuid import UUID
@@ -40,7 +42,7 @@ from ._kdf_records import (
 from ._kdf_refusals import resource_refusal as _resource_refusal
 from ._kdf_refusals import supervision_refusal as _supervision_refusal
 from ._kdf_worker_limits import PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES
-from ._kdf_worker_supervision import _SupervisedKdfWorker
+from ._kdf_worker_supervision import _SupervisedKdfWorker, kdf_worker_never_attested
 from ._profile_password_codec import encode_profile_password
 from ._recovery_secret_codec import encode_recovery_secret
 from .errors import (
@@ -65,11 +67,20 @@ PROFILE_CUSTODY_KDF_CALIBRATION_VERSION: Final = 1
 PROFILE_CUSTODY_KDF_SAMPLE_COUNT: Final = 5
 PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS: Final = 2.0
 PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS: Final = 15.0
+#: Wall-clock bound on one wrap or unwrap. Includes waiting for the installation's single
+#: KDF permit, launching and attesting a fresh child, then the derivation. The
+#: derivation's own cost is bounded by the child's operating-system CPU-time and
+#: memory ceilings; this bound only guarantees a stalled child is abandoned. The
+#: child starts the base interpreter without ``site`` and imports only its
+#: allow-listed leaves, so its start-up is a fraction of this even on a
+#: saturated host; a slow start is fixed there, never by widening this bound.
+PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS: Final = 15.0
 PROFILE_CUSTODY_KDF_TARGET_MIN_SECONDS: Final = 0.250
 PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS: Final = 0.500
 _MEBIBYTE: Final = 1024 * 1024
 _KDF_LEASE_FILENAME: Final = "profile-kdf.v1.lock"
 _KDF_THREAD_LEASE: Final = threading.BoundedSemaphore(value=1)
+_KDF_PREWARM: Final = contextvars.ContextVar["ProfileKdfPrewarm | None"]("cadrumo_profile_kdf_prewarm", default=None)
 
 
 @dataclass(frozen=True, slots=True)
@@ -337,7 +348,7 @@ def unlock_profile_custody(
     *,
     sentinel: ProfileCustodySentinelRecord,
     settings: Settings | None = None,
-    timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
 ) -> ProfileCustodyUnlock:
     """Return a DEK only after supervised unwrap and parent sentinel proof."""
     dek = unlock_profile_custody_password_material(
@@ -374,7 +385,7 @@ def unlock_profile_custody_password_material(
     associated_data: bytes,
     sentinel: ProfileCustodySentinelRecord,
     settings: Settings | None = None,
-    timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
 ) -> bytes:
     """Supervise one current-format wrapper unwrap and prove its immutable DEK.
 
@@ -389,7 +400,7 @@ def unlock_profile_custody_password_material(
     try:
         with (
             profile_kdf_lease(settings=settings, deadline=deadline),
-            _SupervisedKdfWorker(deadline=deadline, settings=settings) as worker,
+            _supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
         ):
             dek = worker.unwrap(
                 password=password_bytes,
@@ -397,8 +408,8 @@ def unlock_profile_custody_password_material(
                 wrapped_dek=wrapped_dek,
                 associated_data=associated_data,
             )
-    except TimeoutError:
-        raise _resource_refusal() from None
+    except TimeoutError as error:
+        raise _timeout_refusal(error) from None
     if dek is None:
         raise ProfileCustodyPasswordError("profile password did not authenticate the custody envelope")
     verify_profile_custody_sentinel(
@@ -417,7 +428,7 @@ def wrap_profile_custody_password_material(
     kdf: ProfileCustodyKdfParameters,
     associated_data: bytes,
     settings: Settings | None = None,
-    timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
 ) -> ProfileCustodyWrappedDek:
     """Build one wrapper only inside the existing supervised KDF boundary."""
     if timeout_seconds <= 0:
@@ -429,7 +440,7 @@ def wrap_profile_custody_password_material(
     try:
         with (
             profile_kdf_lease(settings=settings, deadline=deadline),
-            _SupervisedKdfWorker(deadline=deadline, settings=settings) as worker,
+            _supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
         ):
             wrapped_dek = worker.wrap(
                 secret=secret_bytes,
@@ -437,8 +448,8 @@ def wrap_profile_custody_password_material(
                 kdf=kdf,
                 associated_data=associated_data,
             )
-    except TimeoutError:
-        raise _resource_refusal() from None
+    except TimeoutError as error:
+        raise _timeout_refusal(error) from None
     if wrapped_dek is None:
         raise ProfileCustodyRecordError("supervised profile custody wrapper creation failed")
     return wrapped_dek
@@ -454,7 +465,7 @@ def unlock_profile_custody_recovery_material(
     associated_data: bytes,
     sentinel: ProfileCustodySentinelRecord,
     settings: Settings | None = None,
-    timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
 ) -> bytes:
     """Unlock the DEK using the recovery secret, inside the same supervised KDF boundary.
 
@@ -471,10 +482,7 @@ def unlock_profile_custody_recovery_material(
     try:
         with (
             profile_kdf_lease(settings=settings, deadline=deadline),
-            _SupervisedKdfWorker(
-                deadline=deadline,
-                settings=settings,
-            ) as worker,
+            _supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
         ):
             dek = worker.unwrap(
                 password=secret_bytes,
@@ -483,8 +491,8 @@ def unlock_profile_custody_recovery_material(
                 associated_data=associated_data,
                 recovery=True,
             )
-    except TimeoutError:
-        raise _resource_refusal() from None
+    except TimeoutError as error:
+        raise _timeout_refusal(error) from None
     if dek is None:
         raise ProfileCustodyRecoverySecretError("profile recovery secret did not authenticate the custody envelope")
     verify_profile_custody_sentinel(dek=dek, profile_id=profile_id, dek_epoch=dek_epoch, sentinel=sentinel)
@@ -498,7 +506,7 @@ def wrap_profile_custody_recovery_material(
     kdf: ProfileCustodyKdfParameters,
     associated_data: bytes,
     settings: Settings | None = None,
-    timeout_seconds: float = PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
 ) -> ProfileCustodyWrappedDek:
     """Wrap the DEK under the recovery secret, inside the same supervised KDF boundary.
 
@@ -516,17 +524,113 @@ def wrap_profile_custody_recovery_material(
     try:
         with (
             profile_kdf_lease(settings=settings, deadline=deadline),
-            _SupervisedKdfWorker(
-                deadline=deadline,
-                settings=settings,
-            ) as worker,
+            _supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
         ):
             wrapped = worker.wrap(secret=secret_bytes, dek=dek, kdf=kdf, associated_data=associated_data, recovery=True)
-    except TimeoutError:
-        raise _resource_refusal() from None
+    except TimeoutError as error:
+        raise _timeout_refusal(error) from None
     if wrapped is None:
         raise ProfileCustodyRecordError("supervised profile recovery wrapper creation failed")
     return wrapped
+
+
+class ProfileKdfPrewarm:
+    """Keep one attested, idle KDF child ready for its owner's next wrap or unwrap.
+
+    Every Argon2 operation still runs in its own freshly launched, contained
+    child that performs exactly one derivation and exits; no secret reaches a
+    child before its ready attestation is verified. This only moves that
+    launch and attestation, an interpreter start-up that costs far more than
+    the derivation itself, off the caller's critical path. A spare is used
+    only inside :meth:`bound`, so nothing outside the owner adopts it, and a
+    spare that died while idle is discarded for a fresh launch.
+    """
+
+    def __init__(self, *, settings: Settings | None = None) -> None:
+        """Bind the owner's settings now: a spare launches on another thread, outside its context."""
+        self._settings = settings or load_settings()
+        self._lock = threading.Lock()
+        self._spare: _SupervisedKdfWorker | None = None
+        self._launching = False
+        self._closed = False
+        atexit.register(self.close)
+
+    def refill(self) -> None:
+        """Start launching a spare unless one is ready, launching, or the owner closed."""
+        with self._lock:
+            if self._closed or self._spare is not None or self._launching:
+                return
+            self._launching = True
+        context = contextvars.copy_context()
+        threading.Thread(target=context.run, args=(self._launch,), name="profile-kdf-prewarm", daemon=True).start()
+
+    def _launch(self) -> None:
+        spare: _SupervisedKdfWorker | None = None
+        try:
+            spare = _SupervisedKdfWorker(
+                deadline=time.monotonic() + PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
+                settings=self._settings,
+            ).__enter__()
+        except (ProfileCustodyRefusedError, TimeoutError, OSError, ValueError):
+            # A failed spare already released itself and logged its lifecycle;
+            # the next operation launches its own child instead.
+            spare = None
+        finally:
+            with self._lock:
+                self._launching = False
+                if spare is not None and not self._closed and self._spare is None:
+                    self._spare, spare = spare, None
+            if spare is not None:
+                spare.__exit__(None, None, None)
+
+    def take(self, *, deadline: float) -> _SupervisedKdfWorker | None:
+        """Hand the ready spare to one operation, or ``None`` when a fresh launch is needed."""
+        with self._lock:
+            spare, self._spare = self._spare, None
+        if spare is None:
+            return None
+        if not spare.adopt(deadline=deadline):
+            spare.__exit__(None, None, None)
+            return None
+        return spare
+
+    @contextmanager
+    def bound(self) -> Generator[None]:
+        """Let supervised KDF work in this context use the spare, then prepare the next one."""
+        token = _KDF_PREWARM.set(self)
+        try:
+            yield
+        finally:
+            _KDF_PREWARM.reset(token)
+            self.refill()
+
+    def close(self) -> None:
+        """Stop launching spares and contain the idle one."""
+        with self._lock:
+            self._closed = True
+            spare, self._spare = self._spare, None
+        atexit.unregister(self.close)
+        if spare is not None:
+            spare.__exit__(None, None, None)
+
+
+@contextmanager
+def _supervised_kdf_worker(*, deadline: float, settings: Settings | None) -> Generator[_SupervisedKdfWorker]:
+    """Run one operation in the bound prewarmed child when one is ready, else in a fresh one."""
+    prewarm = _KDF_PREWARM.get()
+    spare = prewarm.take(deadline=deadline) if prewarm is not None else None
+    if spare is None:
+        with _SupervisedKdfWorker(deadline=deadline, settings=settings) as worker:
+            yield worker
+        return
+    with ExitStack() as owned:
+        owned.push(spare)
+        yield spare
+
+
+def _timeout_refusal(error: TimeoutError) -> ProfileCustodyRefusedError:
+    """Name a child that never attested as supervision; a late permit or derivation as the busy host's limit."""
+    return _supervision_refusal() if kdf_worker_never_attested(error) else _resource_refusal()
 
 
 def _measure_profile_kdf(
@@ -643,6 +747,7 @@ def _release_kdf_file_lease(descriptor: int) -> None:
 
 __all__ = [
     "PROFILE_CUSTODY_KDF_CALIBRATION_VERSION",
+    "PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS",
     "PROFILE_CUSTODY_KDF_SAMPLE_COUNT",
     "PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS",
     "PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS",
@@ -651,6 +756,7 @@ __all__ = [
     "ProfileCustodyKdfCalibration",
     "ProfileCustodyKdfResources",
     "ProfileCustodyUnlock",
+    "ProfileKdfPrewarm",
     "calibrate_profile_kdf",
     "fixed_profile_kdf_fallback",
     "profile_kdf_grid",

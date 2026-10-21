@@ -39,6 +39,8 @@ import time
 from collections.abc import Awaitable
 
 import pytest
+from playwright._impl._transport import PipeTransport
+from playwright.async_api import Playwright
 
 from .....core.pid_liveness import pid_is_alive
 
@@ -50,6 +52,23 @@ DEFAULT_PROCESS_EXIT_TIMEOUT_SECONDS = 10.0
 #: Poll interval. Short enough that a fast teardown is not charged the full
 #: interval, long enough not to spin the event loop against the OS.
 _POLL_INTERVAL_SECONDS = 0.1
+
+
+def playwright_driver_pid(playwright: Playwright) -> int:
+    """Return the OS pid of the driver subprocess a real Playwright runtime owns.
+
+    Playwright exposes no public handle on its driver process, and the product
+    never needs one: it releases the driver through ``Playwright.stop``. The
+    lifecycle tests do need it, to prove that release actually terminated the
+    process. The connection's transport is declared as the abstract
+    ``Transport``; only the local ``PipeTransport`` owns a subprocess, so a
+    runtime connected any other way fails here instead of yielding a pid the
+    tests could not have meant.
+    """
+    transport = playwright._impl_obj._connection._transport
+    if not isinstance(transport, PipeTransport):
+        pytest.fail(f"Playwright runtime is not driving a local subprocess: {type(transport).__name__}")
+    return transport._proc.pid
 
 
 async def wait_for_task_readiness[T](
@@ -112,4 +131,9 @@ async def wait_for_process_exit(
     pytest.fail(f"Playwright driver process {pid} remained alive after {after}")
 
 
-__all__ = ["DEFAULT_PROCESS_EXIT_TIMEOUT_SECONDS", "wait_for_process_exit", "wait_for_task_readiness"]
+__all__ = [
+    "DEFAULT_PROCESS_EXIT_TIMEOUT_SECONDS",
+    "playwright_driver_pid",
+    "wait_for_process_exit",
+    "wait_for_task_readiness",
+]

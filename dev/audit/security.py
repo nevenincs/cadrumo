@@ -38,7 +38,7 @@ import os
 import shutil
 import subprocess
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -46,14 +46,18 @@ from typing import Final, TypeIs
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, OK
-from dev.first_party_source import PRODUCT_PACKAGE
+from dev.first_party_source import SOURCE_PACKAGES
 from dev.packaging.command_execution import run_command
 
 _UTF_8: Final[str] = UTF_8
 _FINDING_CAP: Final[int] = 40
 _SEMGREP_SPEC: Final[str] = "semgrep==1.168.0"
-_SEMGREP_TIMEOUT_SECONDS: Final[float] = 600.0
-_PRODUCT_SOURCE_ROOT: Final[Path] = Path(PRODUCT_PACKAGE)
+# The scan over every src/ package took 970s on an otherwise idle Windows
+# workstation (3887 files, `--config auto`), so 600s made the recipe always
+# unavailable. A cut-off scan is reported unavailable, never clean.
+_SEMGREP_TIMEOUT_SECONDS: Final[float] = 1800.0
+#: Every package under ``src/``; ``.semgrepignore`` removes their test surface and bundled data.
+_SOURCE_ROOTS: Final[tuple[Path, ...]] = tuple(Path(package) for package in SOURCE_PACKAGES)
 
 #: `pyproject.toml` requires Python `>=3.13` with no upper bound, so semgrep's
 #: stock Python 3.6/3.7 forward-compatibility rules (flagging
@@ -205,15 +209,19 @@ class SecurityResult:
         return f"{len(self.findings)} finding(s) ({breakdown}) across {self.files_scanned} scanned file(s){error_note}"
 
 
-def semgrep_command(uvx: str, source_root: Path = _PRODUCT_SOURCE_ROOT) -> list[str]:
+def semgrep_command(uvx: str, source_roots: Sequence[Path] = _SOURCE_ROOTS) -> list[str]:
     r"""Build the one semgrep command line.
 
-    ``source_root`` is passed via :meth:`~pathlib.PurePath.as_posix` for the
+    Each of ``source_roots`` is passed via :meth:`~pathlib.PurePath.as_posix` for the
     same reason ``jscpd_command`` in ``duplication.py`` does: a Windows-native
     ``src\cadrumo`` risks matching nothing under semgrep's own path handling.
     """
     command = [
         uvx,
+        # Pin the scanner host independently of the application Python floor.
+        # uvx otherwise selected 3.15 before pywin32 had matching wheels.
+        "--python",
+        "3.13",
         "--from",
         _SEMGREP_SPEC,
         "semgrep",
@@ -224,7 +232,7 @@ def semgrep_command(uvx: str, source_root: Path = _PRODUCT_SOURCE_ROOT) -> list[
     ]
     for rule_id in _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS:
         command += ["--exclude-rule", rule_id]
-    command += ["--json", source_root.as_posix()]
+    command += ["--json", *(source_root.as_posix() for source_root in source_roots)]
     return command
 
 
@@ -278,11 +286,11 @@ def classify_semgrep_output(raw_stdout: str) -> SecurityResult:
 def run_security_scan(
     repo_root: Path,
     *,
-    source_root: Path = _PRODUCT_SOURCE_ROOT,
+    source_roots: Sequence[Path] = _SOURCE_ROOTS,
     timeout: float = _SEMGREP_TIMEOUT_SECONDS,
     which: Callable[[str], str | None] = shutil.which,
 ) -> SecurityResult:
-    """Run semgrep over ``source_root`` and classify the outcome.
+    """Run semgrep over ``source_roots`` and classify the outcome.
 
     This is the single entry point for every security consumer. ``uvx`` is
     resolved through ``which`` -- an injected seam matching
@@ -296,7 +304,7 @@ def run_security_scan(
 
     try:
         completed = run_command(
-            semgrep_command(uvx, source_root),
+            semgrep_command(uvx, source_roots),
             errors="replace",
             cwd=repo_root,
             timeout_seconds=timeout,
@@ -330,9 +338,27 @@ def _semgrep_environment() -> dict[str, str]:
         path = Path(environment[category]) / member
         path.parent.mkdir(parents=True, exist_ok=True)
         environment[variable] = str(path)
-    temporary = str(prepare_temporary_directory())
+    temporary = _semgrep_temporary_path(prepare_temporary_directory())
     environment.update({"TEMP": temporary, "TMP": temporary, "TMPDIR": temporary})
     return environment
+
+
+def _semgrep_temporary_path(path: Path) -> str:
+    """Keep the configured directory while avoiding OCaml's Windows socket path limit."""
+    if sys.platform != "win32":
+        return str(path)
+    import ctypes
+    from ctypes import wintypes
+
+    short_path = ctypes.WinDLL("kernel32", use_last_error=True).GetShortPathNameW
+    short_path.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+    short_path.restype = wintypes.DWORD
+    buffer = ctypes.create_unicode_buffer(32768)
+    length = short_path(str(path), buffer, len(buffer))
+    # Some volumes disable short names. Keep the actual directory in that case;
+    # a scanner unable to use it must still report unavailable, never clean.
+    shortened: object = buffer.value
+    return shortened if isinstance(shortened, str) and 0 < length < len(buffer) else str(path)
 
 
 def render_console_report(result: SecurityResult, *, full: bool = False, cap: int = _FINDING_CAP) -> str:

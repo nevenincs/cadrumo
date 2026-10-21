@@ -12,7 +12,7 @@ against itself, and the manifest tests check it against the same
 contract. Neither resolves the real Typer tree, so a whole family
 (``config google``, ``config check``, ``config reset``) or a sub-verb (every
 ``app live`` child but ``filed``) could be — and was — absent from the manifest
-while the CLI mounted it, handing an agent an authoritative-looking tool map with
+while the CLI mounted it, handing its reader an authoritative-looking tool map with
 holes.
 
 The gate forces every lazily-registered subtree to materialise, walks the two
@@ -36,6 +36,12 @@ from ....application.operator_surface.contract import get_operator_surface_contr
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PINNED_ROOTS: frozenset[str] = frozenset({"config", "app"})
+_PINNED_FAMILIES = {
+    "app": frozenset({"diagnostics", "ledger", "live", "modelo", "overview", "quickfile", "review"}),
+    "config": frozenset(
+        {"check", "collab", "google", "login", "logout", "profile", "provision", "repair", "reset", "storage"}
+    ),
+}
 
 
 def _is_command_group(command: click.Command) -> TypeGuard[click.Group]:
@@ -65,6 +71,18 @@ def _direct_children(command: click.Command) -> dict[str, click.Command]:
     return children
 
 
+def _envelope_free_families() -> frozenset[tuple[str, str]]:
+    """Name each ``(root, child)`` family whose every leaf declares no result schema."""
+    from ..command_specs import COMMAND_GRAPH
+
+    leaves: dict[tuple[str, str], list[bool]] = {}
+    for node in COMMAND_GRAPH.nodes():
+        if node.spec.kind != "leaf" or len(node.path) < 3:
+            continue
+        leaves.setdefault((node.path[1], node.path[2]), []).append(node.spec.result_schema.target is not None)
+    return frozenset(family for family, schemas in leaves.items() if not any(schemas))
+
+
 def _resolve_live_surface() -> dict[str, dict[str, frozenset[str]]]:
     """Resolve ``{root: {family-child: frozenset(sub-verb)}}`` from the live tree.
 
@@ -74,20 +92,24 @@ def _resolve_live_surface() -> dict[str, dict[str, frozenset[str]]]:
     the sub-verb set is the degenerate self-reference ``{child}`` — matching the
     contract's convention of summarising such a verb as ``commands=(child,)``.
     """
-    from ..main import app as live_app
+    from ..main import cli_app
+
+    live_app = cli_app()
 
     root = _typer_get_command(live_app)
     root.name = live_app.info.name or "cadrumo"
 
+    envelope_free = _envelope_free_families()
     surface: dict[str, dict[str, frozenset[str]]] = {}
     for root_name, root_cmd in _direct_children(cast(click.Command, root)).items():
         if root_name not in _PINNED_ROOTS:
             continue
         families: dict[str, frozenset[str]] = {}
         for child_name, child_cmd in _direct_children(root_cmd).items():
-            # The TUI leaf hands control to a separate interface process; it
-            # is not an operator-service family represented by this contract.
-            if root_name == "app" and child_name == "tui":
+            # A family none of whose leaves prints a result envelope hands its
+            # standard streams to another process (the terminal interface). It is not an operator-service family, and
+            # the manifest the contract feeds cannot list it.
+            if (root_name, child_name) in envelope_free:
                 continue
             sub_verbs = frozenset(_direct_children(child_cmd))
             families[child_name] = sub_verbs or frozenset({child_name})
@@ -107,7 +129,7 @@ def test_operator_surface_contract_covers_the_live_tree() -> None:
     """The contract declares exactly the mounted families.
 
     Symmetric difference after excluding the separate TUI launcher: a ``root -> child`` group/leaf mounted
-    by the CLI but absent from ``command_families`` (the agent's manifest would
+    by the CLI but absent from ``command_families`` (the manifest would
     omit it), or a contract family with no live mount (a dead manifest entry).
 
     The sub-verb half of this gate is gone because its subject is gone. A family
@@ -123,20 +145,16 @@ def test_operator_surface_contract_covers_the_live_tree() -> None:
     live = _resolve_live_surface()
     declared = _declared_families()
 
-    # Anti-vacuity floor. A symmetric-difference assertion over two empty maps
-    # passes while checking nothing, and the lazy-Typer tree is a documented
-    # false-green vector: an isinstance-gated or unmaterialised walk yields a
-    # single leaf (or none) and terminates silently. Pin the resolved surface
-    # against its known shape so a collapsed walk reds here rather than passing
-    # a mirror of two empty inventories. The floors sit comfortably below the
-    # live counts (2 roots, 19 operator-service families) yet far above the
-    # single-leaf blind-walk failure.
-    live_family_total = sum(len(families) for families in live.values())
+    # Pin actual family identities independently of the contract. The former
+    # floor of 19 rejected the complete current 17-family tree (134 sub-verbs).
+    # Named anchors still reject a collapsed lazy walk, including a nonempty
+    # tree that omits just one known family. Additional families remain subject
+    # to the exact live/declared comparison below.
     live_sub_verb_total = sum(len(sub) for families in live.values() for sub in families.values())
     assert set(live) == _PINNED_ROOTS, f"live surface did not resolve both pinned roots: {sorted(live)}"
-    assert live_family_total >= 19, (
-        f"live tree resolved only {live_family_total} families; the lazy walk likely collapsed"
-    )
+    for root, required in _PINNED_FAMILIES.items():
+        missing = required.difference(live[root])
+        assert not missing, f"live {root} tree omitted known families: {sorted(missing)}"
     assert live_sub_verb_total >= 120, (
         f"live tree resolved only {live_sub_verb_total} sub-verbs; the lazy walk likely collapsed"
     )

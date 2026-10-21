@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#desktop-capture-harness'
 date: '2026-07-21'
-modified: '2026-10-05'
-body_hash: 'sha256:22b61061b894e0c73a421bbcf553665603da07ea0c3ca06e18b1da32eada8fca'
+modified: '2026-10-12'
+body_hash: 'sha256:e05a8aae592ab0ce38a2b42a4ce815d6adaec1b890ffb9b1fc2aaafe9918b536'
 related:
   - '[[2026-07-21-desktop-capture-harness-reference]]'
   - '[[2026-07-19-post-release-distribution-adr]]'
@@ -20,7 +20,7 @@ The `claude-desktop-mcpb` and `claude-desktop-plugin` distribution rows are real
 ## Considerations
 
 - Claude Desktop on Windows is an MSIX / Store FullTrust Electron app (package family `Claude_pzs8sxrjxfjjc`, AppId `Claude`), empirically characterized on 2026-07-21: custom Electron flags reach the app only through Store activation (`IApplicationActivationManager::ActivateApplication`).
-- Store activation is DENIED (`E_ACCESSDENIED`) to an elevated Session-0 non-interactive caller; it succeeds from a non-elevated interactive session (historically verified via a scheduled-task bridge; that mechanism is withdrawn and must not be reused).
+- Store activation is DENIED (`E_ACCESSDENIED`) to an elevated Session-0 non-interactive caller; it succeeds from a non-elevated interactive session.
 - Electron single-instance forwarding: a launch while another Desktop instance runs forwards argv to the primary and exits, silently dropping `--remote-debugging-port`. The harness must own the PRIMARY instance.
 - Desktop session auth is the Electron safeStorage `oauth:tokenCacheV2` value in the profile's `config.json`, DPAPI-bound to the WINDOWS USER, not to the profile directory — so it is seedable into a fresh isolated profile by file copy for the same user, mirroring the `.credentials.json` seeding precedent.
 - Desktop pipes each MCP server's stderr to `logs/mcp-server-<name>.log` inside the active profile; the cadrumo server's log there carries the typed transport field and attested CLI identity (commit `60d7120e22`), giving a client-side proof of a REAL tool call stronger than model narration.
@@ -38,7 +38,7 @@ The `claude-desktop-mcpb` and `claude-desktop-plugin` distribution rows are real
 
 ## Constraints
 
-- The launch step must execute in an existing non-elevated interactive user session. Start testing manually from that session. An elevated Session-0 caller must report the unavailable execution context; it must not create or run a scheduled-task bridge or register an OS service. The operator withdrew the earlier scheduled-task exception on 2026-10-03.
+- The launch step must execute in an existing non-elevated interactive user session. Start testing manually from that session. An elevated Session-0 caller must report the unavailable execution context; it must not bridge into another session or register an OS service.
 - The harness requires exclusive ownership of Desktop for the run window: any running instance is closed GRACEFULLY first (WM_CLOSE via `taskkill` without `/F`; force only after a grace budget), and Desktop is left closed afterward.
 - One-time interactive operator login into the blessed source profile is the auth root; the harness only ever reads the curated seed set from it.
 - Whether `Claude.exe` honors `--user-data-dir` is not yet empirically confirmed (untestable without primary-instance ownership); the harness aborts BEFORE driving if the isolated profile gains no runtime state after launch, so nothing lands in the real profile, and the APPDATA-redirection fallback takes over.

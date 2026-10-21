@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import replace
 from datetime import UTC, date, datetime
@@ -13,6 +13,9 @@ import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
+)
+from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -69,8 +72,8 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.schema import InvoiceKind
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -97,9 +100,6 @@ from ...adapter_composition import (
     build_filing_action_ports,
     build_ledger_evidence_ports,
     build_verification_repository_bundle,
-)
-from .verification_repository_support import (
-    build_test_certificate_secret_backend_factory,
 )
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -198,7 +198,7 @@ def _ledger_ports(
     tx_repo: TransactionCatalogueRepository,
     event_repo: BucketEventHistoryRepository,
     invoice_repo: InvoiceCatalogueRepository | None = None,
-) -> Iterator[LedgerActionPorts]:
+) -> Generator[LedgerActionPorts]:
     """Yield canonical ledger ports while retaining isolated test stores."""
     with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -951,6 +951,7 @@ def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
         target=revision,
         work_unit=work_unit,
         transaction_repository=tx_repo,
+        operation=operation,
     )
 
     assert len(findings) == 1

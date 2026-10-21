@@ -81,7 +81,7 @@ class InvoiceCatalogueRepository:
             objects: Optional injected secure-object repository (testing seam).
         """
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
-        if bucket_id is not None and not self._bucket_id:
+        if bucket_id is not None and not (self._bucket_id is not None and self._bucket_id):
             raise InvoicePersistenceError(
                 translated_message="application.workflow.errors.no_active_profile_bucket",
             )

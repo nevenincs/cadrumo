@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -45,7 +45,7 @@ class _GuardProbe:
         self.maximum_depth = 0
 
     @asynccontextmanager
-    async def __call__(self) -> AsyncIterator[None]:
+    async def __call__(self) -> AsyncGenerator[None]:
         assert self.depth == 0, "local writes must use fresh sequential guard scopes"
         self.entries += 1
         entry = self.entries
@@ -89,7 +89,7 @@ class _SyntheticIvaRemoteStatePort:
         self.storage_span_exits = 0
 
     @contextmanager
-    def active_storage_span(self) -> Iterator[None]:
+    def active_storage_span(self) -> Generator[None]:
         self.storage_span_entries += 1
         self.trace.append("storage-enter")
         try:

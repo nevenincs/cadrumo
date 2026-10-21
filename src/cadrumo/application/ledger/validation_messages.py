@@ -19,7 +19,7 @@ def bounded_validation_messages(error: Exception, *, limit: int, fallback: str) 
         for item in error.errors(include_input=False, include_context=False, include_url=False)[:limit]:
             location = item.get("loc", ())
             field_path = ".".join(str(part) for part in location if part != "__root__")
-            message = str(item.get("msg", "")).removeprefix("Value error, ").strip()
+            message = item.get("msg", "").removeprefix("Value error, ").strip()
             detail = f"{field_path}: {message}" if field_path else message
             if detail:
                 messages.append(detail[:_MAX_MESSAGE_LENGTH])

@@ -6,6 +6,8 @@ import asyncio
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -27,10 +29,8 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .obligation_snapshot import WorkflowObligationSnapshot
 from .resume import (
@@ -76,7 +76,11 @@ def _validate_resume_receipt_identity(receipt: OperationTerminalReceipt, profile
 
 
 def _validate_resume_receipt_outcome(receipt: OperationTerminalReceipt, refusal_code: str | None) -> None:
-    condition = OperationTerminalCondition.REFUSED if refusal_code else OperationTerminalCondition.SUCCEEDED
+    condition = (
+        OperationTerminalCondition.REFUSED
+        if (refusal_code is not None and refusal_code)
+        else OperationTerminalCondition.SUCCEEDED
+    )
     if receipt.effect is not OperationEffect.NONE:
         raise ValueError("resume result differs from its terminal receipt")
     if receipt.condition is not condition:
@@ -251,11 +255,11 @@ def build_workflow_resume_definition(
     return build_single_phase_definition(
         definition_id=WORKFLOW_RESUME_OPERATION_DEFINITION_ID,
         request_type=WorkflowResumeRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=WorkflowResumeResult,
         executor_type=WorkflowResumeExecutor,
         build=lambda: WorkflowResumeExecutor(runs, calculations),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         refusal_detail_codes=frozenset({WORKFLOW_RESUME_REFUSAL_CODE, WORKFLOW_RESUME_AMBIGUITY_CODE}),
     )
 

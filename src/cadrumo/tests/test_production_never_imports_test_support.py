@@ -56,7 +56,11 @@ def _modules_importing_test_support() -> dict[str, int]:
         except (SyntaxError, UnicodeDecodeError):  # pragma: no cover - unparsable file is its own failure
             continue
         for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom) and node.module and _names_a_tests_package(node.module):
+            if (
+                isinstance(node, ast.ImportFrom)
+                and (node.module is not None and node.module)
+                and _names_a_tests_package(node.module)
+            ):
                 found.setdefault(repo_relative(path), node.lineno)
             elif isinstance(node, ast.Import):
                 for alias in node.names:

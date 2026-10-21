@@ -21,6 +21,7 @@ and only a confirmed code installs the wrapper.
 
 from __future__ import annotations
 
+import time
 import unicodedata
 from collections.abc import Callable
 from pathlib import Path
@@ -32,11 +33,10 @@ from textual.screen import Screen
 from textual.widget import Widget
 from textual.widgets import Button, Input, Static
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from ....adapters.persistence.storage.custody.recovery import PROFILE_CUSTODY_RECOVERY_FILENAME
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-
-from ....adapters.persistence.storage.custody.recovery import PROFILE_CUSTODY_RECOVERY_FILENAME
 from ....adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.authentication import ProfileAuthenticationRefusedError
@@ -62,7 +62,7 @@ _TYPED_INPUT = "screen-typed-operator-secret"
 def _storage_entries(storage_root: Path) -> tuple[Path, ...]:
     """Snapshot storage atomically enough for isolation teardown on Windows."""
     try:
-        return tuple(storage_root.iterdir())
+        return tuple(sorted(storage_root.rglob("*")))
     except FileNotFoundError:
         return ()
 
@@ -147,6 +147,7 @@ async def test_live_submission_refusals_stay_typed_secret_free_and_create_nothin
 ) -> None:
     """Every non-short invalid boundary traverses the real Textual screen."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        initial_entries = _storage_entries(storage_root)
         app = _screen()
         expected = assessment_refusal(assess_profile_password(candidate))
         assert expected is not None
@@ -173,7 +174,7 @@ async def test_live_submission_refusals_stay_typed_secret_free_and_create_nothin
             assert "Traceback" not in rendered_surface
             pilot.app.exit(None)
 
-        assert _storage_entries(storage_root) == ()
+        assert _storage_entries(storage_root) == initial_entries
 
 
 def _screen(**kwargs) -> RegistrationScreen:
@@ -267,6 +268,7 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
 @pytest.mark.asyncio
 async def test_mismatched_confirmation_refuses_and_creates_nothing(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        initial_entries = _storage_entries(storage_root)
         app = _screen()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(app, pilot, username="Mismatch", password=_TYPED_INPUT, confirm="something-else-entirely")
@@ -281,7 +283,7 @@ async def test_mismatched_confirmation_refuses_and_creates_nothing(tmp_path) -> 
             assert status.message, "the refusal must be shown in the pinned channel"
             pilot.app.exit(None)
 
-        assert _storage_entries(storage_root) == ()
+        assert _storage_entries(storage_root) == initial_entries
 
 
 @pytest.mark.asyncio
@@ -289,6 +291,7 @@ async def test_seven_scalar_failure_is_typed_without_internal_diagnostics(tmp_pa
     candidate = "a" * 7
     assert len(candidate) == 7
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        initial_entries = _storage_entries(storage_root)
         app = _screen()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(app, pilot, username="Short", password=candidate, confirm=candidate)
@@ -313,7 +316,7 @@ async def test_seven_scalar_failure_is_typed_without_internal_diagnostics(tmp_pa
             assert "Traceback" not in rendered
             pilot.app.exit(None)
 
-        assert _storage_entries(storage_root) == ()
+        assert _storage_entries(storage_root) == initial_entries
 
 
 @pytest.mark.asyncio
@@ -412,8 +415,11 @@ def _screen_with_recovery() -> RegistrationScreen:
 async def _create_and_reach_the_offer(app: RegistrationScreen, pilot, *, username: str) -> None:
     await _fill(app, pilot, username=username, password=_TYPED_INPUT, confirm=_TYPED_INPUT)
     await pilot.click("#btn-create")
+    await pilot.app.workers.wait_for_complete()
     assert await _wait_for_screen(pilot, RecoveryOfferScreen, composed="#btn-skip-recovery"), (
-        "creation must be followed by the recovery offer"
+        "creation must be followed by the recovery offer; "
+        f"screen={type(pilot.app.screen).__name__}, error={type(app.error).__name__}, "
+        f"created={app.outcome is not None}, status={app.query_one('#credential-status', PinnedStatusBar).message}"
     )
     assert app in pilot.app.screen_stack, "the screen must not leave while the offer is still open"
     assert pilot.app.return_value is None, "the host must not receive the profile while the offer is still open"
@@ -540,3 +546,25 @@ async def test_cancelling_on_the_code_screen_installs_nothing_and_still_leaves_w
         assert app.outcome.label == "Cancels Recovery"
         assert _recovery_envelopes(storage_root) == ()
         assert profile_recovery_status(profile_id=UUID(app.outcome.profile_id)).enrolled is False
+
+
+@pytest.mark.asyncio
+async def test_an_app_that_stops_while_the_code_is_shown_releases_the_enrolment_and_installs_nothing(
+    tmp_path,
+) -> None:
+    """The waiting enrolment ends with the application, though nothing polls it."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        app = _screen_with_recovery()
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await _create_and_reach_the_offer(app, pilot, username="Stops Mid Code")
+            await pilot.click("#btn-setup-recovery")
+            assert await _wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code")
+            await _displayed_recovery_code(pilot)
+            enrolling = [worker for worker in pilot.app.workers if worker.name == "profile-recovery-enrollment"]
+            assert enrolling, "the enrolment must be waiting on the code screen"
+            pilot.app.exit()
+        deadline = time.monotonic() + 10
+        while not all(worker.is_finished for worker in enrolling):
+            assert time.monotonic() < deadline, "the enrolment thread outlived the application"
+            time.sleep(0.05)
+        assert _recovery_envelopes(storage_root) == ()

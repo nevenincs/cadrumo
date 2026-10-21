@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -12,6 +12,9 @@ from typing import cast
 
 import pytest
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
@@ -19,9 +22,7 @@ from ....domain.buckets.event import BucketEvent
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...storage.sync_runs.records import SyncRunRecord
-from ...user_profile.access_contracts import AccessDenialCode
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ...user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ..errors import LiveApplicationError, LiveIvaSurfaceTimeoutError
 from ..filed_data_capture import (
     FiledCaptureAccumulator,
@@ -171,7 +172,7 @@ def test_single_capture_revocation_after_remote_fetch_discards_bytes(
             authority_operation: PinnedAuthorityOperation | None = None,
             effect_guard: FiledEffectGuard | None = None,
             on_session_write: SessionWriteReporter | None = None,
-        ) -> AsyncIterator[Register]:
+        ) -> AsyncGenerator[Register]:
             assert operation == "live-filed-read"
             assert effect_guard is DeniedGuard
             assert on_session_write is None
@@ -704,7 +705,7 @@ class _AccountingRegister:
         )
 
     @asynccontextmanager
-    async def open_register(self, **_kwargs: object) -> AsyncIterator[_AccountingRegister]:
+    async def open_register(self, **_kwargs: object) -> AsyncGenerator[_AccountingRegister]:
         """Supply one explicit synthetic acquisition session, without authentication or network."""
         self.opened += 1
         yield self

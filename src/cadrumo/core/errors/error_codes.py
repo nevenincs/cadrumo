@@ -43,7 +43,10 @@ if TYPE_CHECKING:
 # refusal names the missing flags inside its own message body
 # (`missing_flags`, also internal once interpolated) instead of leaking
 # a raw `('tax-id', 'activity')` tuple as a stray context line.
-_INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset({"prompt_key", "question_id", "flow_id", "missing", "missing_flags"})
+# Policy verdicts are projected through the typed action channel, not as object-valued context.
+_INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset(
+    {"prompt_key", "question_id", "flow_id", "missing", "missing_flags", "terminal_precondition_verdict"}
+)
 
 ERROR_CONTEXT_LABEL_KEYS: Final[tuple[str, ...]] = ("area", "entry_count", "reason")
 """Finite vocabulary translated for human-facing error context labels.
@@ -105,7 +108,7 @@ class ErrorCode(BaseModel):
     conflict; the identical restore could never have succeeded.
 
     "Retryable after the operator fixes something" is FALSE by this definition.
-    The agent cannot distinguish it from the transient case, and telling it to
+    The automation cannot distinguish it from the transient case, and telling it to
     retry is what produces the loop.
     """
     public_message_from_registry: bool = False
@@ -333,7 +336,7 @@ def scrub_error_context(context: Mapping[str, object] | None) -> dict[str, str] 
     entirely — they are implementation detail (e.g. widget prompt identifiers)
     and must not appear in operator-facing output.
     """
-    if not context:
+    if not (context is not None and context):
         return None
     from ..redaction.rules import is_sensitive_redaction_key, redact_for_log
 
@@ -375,6 +378,11 @@ def build_error_envelope(
     complete_error_envelope_model()
     code = get_registered_error_code(error)
     merged_context = _merge_error_context(error, context)
+    if code.category is ErrorCategory.INTERNAL:
+        diagnostic_context = _internal_root_cause_context(error)
+        if diagnostic_context:
+            merged_context = {**diagnostic_context, **(merged_context or {})}
+            trace_id = trace_id or diagnostic_context.get("trace_id")
     return ErrorEnvelope(
         code=code.code,
         category=code.category.value,
@@ -385,6 +393,21 @@ def build_error_envelope(
         context=scrub_error_context(merged_context),
         trace_id=trace_id,
     )
+
+
+def _internal_root_cause_context(error: BaseException) -> dict[str, str]:
+    """Name an internal failure's root cause, never its message, for the operator.
+
+    An internal failure's public message is deliberately generic, so without
+    this the operator learns nothing about where or why it happened. The
+    summary shares its correlation id with the boundary's log record.
+    """
+    try:
+        from .failure_report import root_cause_context
+
+        return root_cause_context(error)
+    except Exception:
+        return {}
 
 
 def render_error_text(
@@ -398,8 +421,11 @@ def render_error_text(
     message = resolve_error_message(error, code)
     first_line = f"{prefix} {message}"
     lines = [first_line]
-    scrubbed_context = scrub_error_context(_merge_error_context(error, context))
-    if scrubbed_context:
+    merged_context = _merge_error_context(error, context)
+    if code.category is ErrorCategory.INTERNAL:
+        merged_context = {**_internal_root_cause_context(error), **(merged_context or {})}
+    scrubbed_context = scrub_error_context(merged_context)
+    if scrubbed_context is not None and scrubbed_context:
         for key, value in scrubbed_context.items():
             lines.append(f"  {_text_context_label(key)}: {_text_context_value(key, value)}")
     return "\n".join(lines) + "\n"
@@ -567,7 +593,7 @@ def _merge_error_context(
         if key.startswith("_") or key in {"code", "context", "translated_message", "suggestion", "original_exception"}:
             continue
         merged[key] = value
-    if context:
+    if context is not None and context:
         merged.update(context)
     return merged or None
 
@@ -630,6 +656,17 @@ def _stringify_collection_context_value(value: object) -> str | None:
             f"{_stringify_context_value(key)}={_stringify_context_value(item)}" for key, item in mapping.items()
         )
     return None
+
+
+def _install_binder() -> None:
+    # Imported here, after every binding name exists: the hierarchy may be
+    # mid-import itself when it first reaches this module.
+    from .hierarchy import install_error_code_binder
+
+    install_error_code_binder(bind_error_code)
+
+
+_install_binder()
 
 
 __all__ = [

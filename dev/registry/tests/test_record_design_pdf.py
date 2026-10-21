@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from hashlib import file_digest
 from io import BytesIO
 from pathlib import Path
 
@@ -29,6 +30,18 @@ from ._record_design_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _source_record_design_pdf(source_id: str) -> Path:
+    """Read the exact declared design from its canonical source identity."""
+    _, catalogues = _committed_registry_tree()
+    source = catalogues.sources[source_id]
+    assert source.corpus_path is not None
+    path = bundled_path(source.corpus_path)
+    assert path.suffix == ".pdf"
+    with path.open("rb") as stream:
+        assert file_digest(stream, "sha256").hexdigest() == source.sha256
+    return path
 
 
 def test_modelo_840_record_design_pdf_reuses_record_design_sheet_model() -> None:
@@ -131,8 +144,7 @@ def test_generated_record_design_pdf_rejects_inverted_position_ranges(tmp_path: 
 
 def test_modelo_190_record_design_pdf_extracts_narrative_type_one_and_two_records() -> None:
     sheets = {
-        sheet.name: sheet
-        for sheet in _official_record_design_sheets(_record_design_pdf("modelo_190", "orden-hac-1431"))
+        sheet.name: sheet for sheet in _official_record_design_sheets(_source_record_design_pdf("aeat-dr-190-2025"))
     }
 
     declarante = sheets["Tipo 1 - Registro De Declarante"]
@@ -158,8 +170,7 @@ def test_modelo_190_record_design_pdf_extracts_narrative_type_one_and_two_record
 
 def test_modelo_193_record_design_pdf_preserves_split_field_titles_across_lines() -> None:
     sheets = {
-        sheet.name: sheet
-        for sheet in _official_record_design_sheets(_record_design_pdf("modelo_193", "orden-hac-1430"))
+        sheet.name: sheet for sheet in _official_record_design_sheets(_source_record_design_pdf("aeat-dr-193-2025"))
     }
     declarante = sheets["Tipo 1 - Registro De Declarante"]
 
@@ -171,7 +182,7 @@ def test_modelo_193_record_design_pdf_preserves_split_field_titles_across_lines(
 
 
 def test_modelo_347_record_design_pdf_keeps_distinct_type_two_layouts() -> None:
-    sheets = _official_record_design_sheets(_record_design_pdf("modelo_347", "orden-hac-1431"))
+    sheets = _official_record_design_sheets(_source_record_design_pdf("aeat-dr-347-2025"))
 
     assert [sheet.name for sheet in sheets] == [
         "Tipo 1 - Registro De Declarante",

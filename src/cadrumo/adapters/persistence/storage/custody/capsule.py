@@ -1135,45 +1135,55 @@ def load_committed_profile_password_material(
 ) -> ProfileCustodyPasswordMaterial:
     """Read normal-password authority without resolving the separate recovery path."""
     trace: list[ProfileCustodyPasswordReadOperation] = []
-    capsule_path = recognize_current_profile_capsule(profile_id, settings=settings, root=root, _trace=trace)
-    if capsule_path is None:
+    marker_path = profile_custody_path(profile_id, StorageCategory.PROFILE_CAPSULE_COMMIT, settings=settings, root=root)
+    capsule_path = marker_path.parent
+    if not _lexists(capsule_path, trace=trace):
         raise ProfileCustodyRecordError("profile capsule is not committed")
-    marker_path = capsule_path / PROFILE_CUSTODY_COMMIT_FILENAME
+    # Recognize and read under the same retained directory identity. A separate
+    # recognition pass reopened the ancestry and parsed the marker twice on
+    # every authorization check. Nothing is cached between checks.
     if os.name != "nt":
-        with _posix_directory_fd(capsule_path) as capsule_fd:
-            custody_fd = _posix_open_child_directory(capsule_fd, "custody")
-            data_fd = _posix_open_child_directory(capsule_fd, "data")
-            try:
-                commit = parse_profile_custody_commit(
-                    _read_regular_file_fd(
-                        capsule_fd,
-                        marker_path.name,
-                        display_path=marker_path,
-                        maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
-                        trace=trace,
-                    )
-                )
-                envelope = _read_password_envelope_fd(
-                    custody_fd,
-                    display_path=capsule_path / "custody" / PROFILE_CUSTODY_ENVELOPE_FILENAME,
-                    trace=trace,
-                )
-                sentinel = _read_sentinel_fd(
-                    data_fd,
-                    display_path=capsule_path / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME,
-                    trace=trace,
-                )
-            finally:
-                os.close(custody_fd)
-                os.close(data_fd)
-    else:
         with ExitStack() as anchors:
-            _anchor_directory(anchors, capsule_path)
-            _anchor_directory(anchors, capsule_path / "custody")
-            _anchor_directory(anchors, capsule_path / "data")
+            capsule_fd = anchors.enter_context(_posix_directory_fd(capsule_path))
+            if not _posix_child_exists(capsule_fd, marker_path.name, trace=trace, display_path=marker_path):
+                raise ProfileCustodyRecordError("profile capsule is not committed")
+            commit = parse_profile_custody_commit(
+                _read_regular_file_fd(
+                    capsule_fd,
+                    marker_path.name,
+                    display_path=marker_path,
+                    maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
+                    trace=trace,
+                )
+            )
+            if commit.profile_id != profile_id:
+                raise ProfileCustodyRecordError("profile capsule commit UUID does not match its directory")
+            custody_fd = _posix_open_child_directory(capsule_fd, "custody")
+            anchors.callback(os.close, custody_fd)
+            data_fd = _posix_open_child_directory(capsule_fd, "data")
+            anchors.callback(os.close, data_fd)
+            envelope = _read_password_envelope_fd(
+                custody_fd,
+                display_path=capsule_path / "custody" / PROFILE_CUSTODY_ENVELOPE_FILENAME,
+                trace=trace,
+            )
+            sentinel = _read_sentinel_fd(
+                data_fd,
+                display_path=capsule_path / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME,
+                trace=trace,
+            )
+    else:
+        with shared_directory_anchors(), ExitStack() as anchors:
+            _anchor_directory(anchors, capsule_path, final_access=0x80000000)
+            if not _lexists(marker_path, trace=trace):
+                raise ProfileCustodyRecordError("profile capsule is not committed")
             commit = parse_profile_custody_commit(
                 _read_regular_file(marker_path, maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES, trace=trace)
             )
+            if commit.profile_id != profile_id:
+                raise ProfileCustodyRecordError("profile capsule commit UUID does not match its directory")
+            _anchor_directory(anchors, capsule_path / "custody", final_access=0x80000000)
+            _anchor_directory(anchors, capsule_path / "data", final_access=0x80000000)
             envelope = _read_password_envelope(
                 capsule_path / "custody" / PROFILE_CUSTODY_ENVELOPE_FILENAME, trace=trace
             )

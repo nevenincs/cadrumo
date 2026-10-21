@@ -45,10 +45,10 @@ from cadrumo.core.confirmation_gate import ConfirmationBlockReason, FindingResol
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.invoices.enums import IvaRate, iva_rate_percentage, iva_rate_slots_on
 from cadrumo.domain.invoices.errors import InvoiceValidationError
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.errors import IvaRateNotFoundError
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
+from .....domain.iva.schema import InvoiceKind
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     InvoiceAuthorityFixture,

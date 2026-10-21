@@ -58,7 +58,6 @@ from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.iva.classification import InvoiceKind, TransactionKind
 from cadrumo.domain.iva.oss import OssIossRegime
 from cadrumo.domain.iva.schema import IvaRateKind
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
@@ -76,6 +75,8 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 )
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....domain.iva.classification import TransactionKind
+from ....domain.iva.schema import InvoiceKind
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

@@ -48,10 +48,7 @@ from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.capsule_restore import restore_profile_capsule_with_password
 from cadrumo.application.user_profile.custody_ports import unlock_profile_custody_password
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
-from cadrumo.application.user_profile.login_session import (
-    ProfileLoginThrottledError,
-    authenticate_profile_for_invocation,
-)
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.passphrase_rotation import (
     ProfilePassphraseReplacementProof,
     ProfilePassphraseRotationError,
@@ -69,6 +66,7 @@ from cadrumo.core.time.clock import frozen_clock
 from cadrumo.core.time.clock import now as _now
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginThrottledError
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -3,20 +3,23 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime, timedelta
 from typing import ClassVar
 
 import pytest
 from textual.binding import Binding
 from textual.pilot import Pilot
 from textual.screen import Screen
-from textual.widgets import Static
+from textual.widgets import DataTable, Static
 
-from ....application.overview.home import HomeProjectionV1, HomeSessionPosture
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
+from ....application.overview.home import HomeAccountSession, HomeProjectionV1, HomeSessionPosture
 from ....application.search.workbench import WorkbenchDestinationAdmissionState, WorkbenchSearchService
 from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
+from ....core.period import Period
 from ..account import (
     AccountDirectSessionActionV1,
     AccountFactoriesV1,
@@ -26,6 +29,8 @@ from ..account import (
 )
 from ..app import CadrumoTuiApp, RootPresentationV1
 from ..components.account_chrome import AccountActionV1, AccountChromeScreen
+from ..declarations.calendar import DeclarationsCalendarScreen
+from ..declarations.tests.calendar_fixtures import calendar_controller, calendar_projection
 from ..home import HomeScreen
 from ..navigation import (
     TUI_DESTINATION_CATALOGUE,
@@ -38,7 +43,6 @@ from ..navigation import (
     TuiScreenFactoryV1,
     build_destination_catalogue,
 )
-from ..runtime_access_management import RuntimeAccessManagementScreen
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -102,6 +106,37 @@ def _catalogue(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("period", ["AD-HOC", "EXT-1T", "EVENT-3", "1T"])
+async def test_mouse_click_home_filing_opens_matching_calendar_row(period: str) -> None:
+    home = build_home_projection_fixture(HomeFixtureScenario.READY)
+    address = {"modelo": "360", "filing_year": 2025, "period": Period.from_year_and_code(2025, period)}
+    home = home.model_copy(update={"agenda": (home.agenda[0].model_copy(update=address),)})
+    calendar = calendar_projection()
+    row = calendar.entries[0].model_copy(update={**address, "recovery_action": None})
+    calendar = calendar.model_copy(update={"entries": (*calendar.entries[1:], row)})
+
+    def factory(context: TuiScreenContextV1) -> Screen[None]:
+        return DeclarationsCalendarScreen(calendar_controller(calendar, context=context))
+
+    app = CadrumoTuiApp(
+        destination_catalogue=_catalogue([], destination="workbench.declarations", destination_factory=factory),
+        refresh_home=lambda: home,
+    )
+    async with app.run_test(size=(160, 50)) as pilot:
+        await _settle(app, pilot)
+        assert await pilot.click("#home-agenda", offset=(2, 0))
+        await pilot.pause()
+        assert isinstance(app.screen, DeclarationsCalendarScreen)
+        table = app.screen.query_one("#declarations-calendar-agenda", DataTable)
+        assert table.ordered_rows[table.cursor_row].key.value == f"360|2025|{period}"
+        await pilot.press("escape")
+        await _settle(app, pilot)
+        assert isinstance(app.screen, HomeScreen)
+        assert app.screen.highlighted_target is not None
+        assert app.screen.highlighted_target.identity == f"agenda:360:2025:{period}"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "destination_state",
     [WorkbenchDestinationAdmissionState.LOCKED, WorkbenchDestinationAdmissionState.STALE],
@@ -138,13 +173,16 @@ async def test_navigate_to_refuses_unavailable_destination_without_replacing_hom
 
 
 @pytest.mark.asyncio
-async def test_navigate_to_refuses_a_factory_invocation_failure_without_replacing_home() -> None:
+@pytest.mark.parametrize("failure_type", [TypeError, RuntimeError])
+async def test_navigate_to_refuses_a_factory_invocation_failure_without_leaving_home(
+    caplog: pytest.LogCaptureFixture, failure_type: type[Exception]
+) -> None:
     """A broken injected factory is contained at the root boundary, after real invocation."""
     seen: list[TuiScreenContextV1] = []
 
     def broken_factory(context: TuiScreenContextV1) -> Screen[None]:
         seen.append(context)
-        raise TypeError("factory implementation failure")
+        raise failure_type("factory implementation failure")
 
     target = TuiNavigationTargetV1(
         destination="workbench.ledger",
@@ -166,15 +204,28 @@ async def test_navigate_to_refuses_a_factory_invocation_failure_without_replacin
         assert home.id == "home-screen"
 
         app.navigate_to(target)
-        await pilot.pause()
+        await _settle(app, pilot)
 
         assert seen == [TuiScreenContextV1(destination="workbench.ledger", focus=target.focus)]
-        assert app.screen is home
+        if failure_type is TypeError:
+            assert app.screen is home
+        else:
+            # Other read failures refresh Home so it can detect an expired
+            # session; they must still never mount the failed destination.
+            assert isinstance(app.screen, HomeScreen)
         assert len(app.screen_stack) == 2
         assert app._active_target is None
         assert app.is_running
         assert str(app.query_one("#root-navigation-refusal", Static).render()) == tr("tui.root.navigation.unavailable")
         assert str(app.query_one("#root-account-refusal", Static).render()) == ""
+        record = next(record for record in caplog.records if record.getMessage() == "tui_destination_open_failed")
+        if failure_type is TypeError:
+            assert record.__dict__["error_type"] == "DestinationFactoryError"
+            assert "TypeError" in str(record.__dict__["root_cause"])
+        else:
+            assert record.__dict__["error_type"] == "RuntimeError"
+            assert str(record.__dict__["error_origin"]).endswith(":broken_factory")
+        assert record.exc_info is None
 
 
 @pytest.mark.asyncio
@@ -370,6 +421,8 @@ def _account_factories(
     factories = object.__new__(AccountFactoriesV1)
     object.__setattr__(factories, "subscribe_retirement", None)
     object.__setattr__(factories, "subscribe_notices", None)
+    object.__setattr__(factories, "subscribe_language", None)
+    object.__setattr__(factories, "refresh_language", None)
     object.__setattr__(factories, "profile", lambda context: MarkerScreen(context))
     object.__setattr__(
         factories, "change_user", lambda: change_user or _direct_session_action(AccountRecomposeReasonV1.CHANGE_USER)
@@ -383,6 +436,42 @@ def _account_factories(
     )
     object.__setattr__(factories, "onboarding_pending", onboarding_pending)
     return factories
+
+
+@pytest.mark.asyncio
+async def test_with_pushed_retirement_the_session_is_read_only_at_its_expiry() -> None:
+    """No interval polls the session; one timer wakes at each expiry it learns."""
+    reads: list[float] = []
+    loop = asyncio.get_running_loop()
+    first_expiry = datetime.now(UTC) + timedelta(seconds=0.6)
+
+    async def read() -> HomeAccountSession:
+        reads.append(loop.time())
+        if len(reads) == 1:
+            # Activity extended the session: the root must wake again at the new expiry.
+            return HomeAccountSession(
+                posture=HomeSessionPosture.ACTIVE,
+                profile_label="Current profile",
+                expires_at=first_expiry + timedelta(seconds=0.6),
+            )
+        return HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Current profile", expires_at=None)
+
+    factories = _account_factories()
+    object.__setattr__(factories, "subscribe_retirement", lambda _retired: lambda: None)
+    app = CadrumoTuiApp(account_factories=factories, read_account_session=read)
+    async with app.run_test() as pilot:
+        started = loop.time()
+        app._account_session = HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE, profile_label="Current profile", expires_at=first_expiry
+        )
+        app._arm_session_lapse()
+        await asyncio.sleep(0.3)
+        assert reads == []
+        while app.return_value is None and loop.time() - started < 10:
+            await pilot.pause(0.05)
+        assert app.return_value is not None and app.return_value.reason is AccountRecomposeReasonV1.EXPIRED
+        assert len(reads) == 2
+        assert reads[0] - started >= 0.5
 
 
 @pytest.mark.asyncio
@@ -483,7 +572,7 @@ async def test_sign_out_direct_action_recomposes_success_or_requires_fresh_admis
 
     async def complete() -> AccountRecomposeRequiredV1:
         if completion == "refusal":
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
         return AccountRecomposeRequiredV1(
             reason=(
                 AccountRecomposeReasonV1.SIGNED_OUT if completion == "success" else AccountRecomposeReasonV1.CHANGE_USER
@@ -505,7 +594,7 @@ async def test_sign_out_direct_action_recomposes_success_or_requires_fresh_admis
                 await pilot.pause(0.02)
         assert app.return_value == AccountRecomposeRequiredV1(
             reason=(
-                AccountRecomposeReasonV1.SIGNED_OUT if completion == "success" else AccountRecomposeReasonV1.EXPIRED
+                AccountRecomposeReasonV1.SIGNED_OUT if completion == "success" else AccountRecomposeReasonV1.UNAVAILABLE
             )
         )
         assert app._account_factories is None
@@ -611,13 +700,13 @@ async def test_failed_direct_action_exits_to_fresh_admission_and_hides_unavailab
     async with app.run_test() as pilot:
         await _settle(app, pilot)
         assert not app.account_action_available(AccountActionV1.PASSWORD)
-        assert not app.check_action("account", ("password",))
+        assert not bool(app.check_action("account", ("password",)))
         assert "account('password')" not in {active.binding.action for active in app.active_bindings.values()}
         app.run_account_action(AccountActionV1.CHANGE_USER)
         async with asyncio.timeout(5):
             while app.return_value is None:
                 await pilot.pause(0.02)
-        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
+        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.UNAVAILABLE)
 
 
 @pytest.mark.asyncio
@@ -652,18 +741,20 @@ async def test_cancelled_direct_action_retains_completion_until_runtime_effect_s
             release.set()
         await asyncio.wait_for(completed.wait(), 5)
         await pilot.pause()
-        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
+        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.UNAVAILABLE)
 
 
 @pytest.mark.asyncio
 async def test_access_dismissal_with_lost_admission_exits_before_old_root_can_return() -> None:
+    class LostAccessScreen(Screen[None]):
+        access_lost = True
+
     app = CadrumoTuiApp(
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         account_factories=_account_factories(access=Screen()),
     )
-    lost_screen = object.__new__(RuntimeAccessManagementScreen)
-    object.__setattr__(lost_screen, "_access_lost", True)
+    lost_screen = LostAccessScreen()
     async with app.run_test() as pilot:
         await _settle(app, pilot)
         assert app.account_action_available(AccountActionV1.ACCESS)
@@ -752,7 +843,9 @@ async def test_authoritative_child_return_rebuilds_the_injected_search_snapshot_
 
 
 @pytest.mark.asyncio
-async def test_failed_search_refresh_retains_last_good_and_sanitizes_refusal() -> None:
+async def test_failed_search_refresh_retains_last_good_and_sanitizes_refusal(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """A bad refreshed projection retains the last complete search generation."""
     contexts: list[TuiScreenContextV1] = []
     initial_search = WorkbenchSearchService(())
@@ -782,6 +875,11 @@ async def test_failed_search_refresh_retains_last_good_and_sanitizes_refusal() -
     assert app.workbench_search_service is initial_search
     assert "12345678Z" not in app.workbench_search_refusal_code
     assert "protected" not in app.workbench_search_refusal_code
+    record = next(record for record in caplog.records if record.getMessage() == "tui_search_refresh_failed")
+    assert record.__dict__["error_type"] == "RuntimeError"
+    assert str(record.__dict__["error_origin"]).endswith(":fail_refresh")
+    assert record.exc_info is None
+    assert "12345678Z" not in record.getMessage()
 
 
 @pytest.mark.asyncio

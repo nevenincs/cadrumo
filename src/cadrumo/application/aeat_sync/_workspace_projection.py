@@ -18,7 +18,7 @@ from ...core.identity.tax_id import same_tax_identifier
 from ...core.period import Period
 from ...domain.modelos.codes import ModeloCode
 from ..operations.models import OperationDefinitionId
-from ..operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from ..operations.registry import OperationPublicContractSetV1
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue
 from ..operator_actions.models import ActionReference
 from ..user_profile.censal_observation import CensalObservation
@@ -301,11 +301,11 @@ def _validate_operation_ids(
     key: str,
     contract_by_id: Mapping[OperationDefinitionId, Any],
 ) -> set[str]:
-    operation_id_values: set[str] = {str(item) for item in operation_ids}
+    operation_id_values: set[str] = set(operation_ids)
     _unique(operation_ids, "row operations")
     for operation_id in operation_ids:
         contract = contract_by_id.get(operation_id)
-        if contract is None or OperationFrontendProjection.TUI not in contract.permitted_frontends:
+        if contract is None:
             raise AeatSyncWorkspaceProjectionError("operation is not admitted by public contracts")
     if not set(operation_ids) <= _ALLOWED_OPERATIONS[key]:
         raise AeatSyncWorkspaceProjectionError("operation is not allowed for row area/state")
@@ -322,9 +322,9 @@ def _validate_action_operation_joins(
         joined = tuple(
             contract
             for contract in contracts.definitions
-            if contract.action_reference == action and str(contract.definition_id) in operation_id_values
+            if contract.action_reference == action and contract.definition_id in operation_id_values
         )
-        if not joined and str(action.action_id) in {
+        if not joined and action.action_id in {
             "operator.live.filed.pull",
             "operator.live.filed.pull_all",
             "operator.live.notifications.list",

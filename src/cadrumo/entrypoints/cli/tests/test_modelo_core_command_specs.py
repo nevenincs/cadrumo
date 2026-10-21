@@ -5,7 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from .._command_target import resolve_deferred_target
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
+
 from .._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -39,7 +40,7 @@ def test_modelo_core_value_and_schema_targets_are_public_and_resolvable() -> Non
 
 
 def test_modelo_core_handlers_have_no_attached_cli_authority() -> None:
-    module_path = Path(__file__).parents[1] / "_modelo.py"
+    module_path = Path(__file__).parents[1] / "modelo_commands.py"
     tree = ast.parse(module_path.read_text(encoding="utf-8"))
     expected = {"modelo_history", "work_amend", "work_compare_taxation", "work_history"}
     functions = {

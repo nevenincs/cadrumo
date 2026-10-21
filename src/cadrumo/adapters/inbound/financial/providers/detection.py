@@ -51,7 +51,7 @@ def _exact_layout_candidates(path: Path) -> tuple[FinancialProvider, ...]:
         with path.open("rb") as handle:
             head = handle.read(_SNIFF_BYTES)
     except OSError:
-        _logger.warning("detect_provider: cannot read file header for sniffing file=%s", path.name, exc_info=True)
+        _logger.warning("detect_provider: cannot read file header for sniffing")
         return (CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider(), PdfN26Provider())
     return _header_layout_candidates(head)
 

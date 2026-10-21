@@ -32,6 +32,7 @@ _logger = get_logger(__name__)
 
 __all__ = [
     "active_profile_output_language_from_storage",
+    "adopt_profile_output_language",
     "mirror_profile_output_language_hint",
     "refresh_active_profile_output_language",
     "register_language_resolver",
@@ -63,6 +64,19 @@ _SNAPSHOT = _ProfileLanguageSnapshot()
 def resolve_active_profile_output_language() -> str | None:
     """Return the snapshotted ``preferences.output_language`` fact; never reads storage."""
     return _SNAPSHOT.get()
+
+
+def adopt_profile_output_language(language: OutputLanguage | None) -> bool:
+    """Adopt a canonical preference obtained by the host's exact-profile read door.
+
+    This is a presentation snapshot, never persistence or session authority.
+    Hosts fence their asynchronous read to the still-current profile binding.
+    """
+    value = None if language is None else language.value
+    changed = _SNAPSHOT.get() != value
+    _SNAPSHOT.set(value)
+    clear_output_language_cache()
+    return changed
 
 
 def refresh_active_profile_output_language() -> str | None:

@@ -1,3 +1,4 @@
+import { openPanelTab } from "./support/panel";
 import { expect, test, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -48,7 +49,7 @@ async function openHost(page: Page) {
     localStorage.setItem(
       "cadrumo-shell-layout",
       JSON.stringify({
-        layout: { panelOpen: true, tab: "console" },
+        layout: { tab: "console", page: "docs", tuiShown: true },
         prefs: { appearance: "dark", terminals: "match" },
       }),
     );
@@ -61,10 +62,25 @@ async function openHost(page: Page) {
         unregisterCallback: () => {},
         async invoke(command: string, args: Record<string, unknown>) {
           switch (command) {
+            case "manager_status":
+              return { state: "ready", failure: null };
+            case "manager_subscribe":
+              (
+                args.updates as { onmessage: (signal: unknown) => void }
+              ).onmessage({
+                kind: "manager-state",
+                revision: 1,
+                status: { state: "ready", failure: null },
+              });
+              return ++id;
+            case "manager_unsubscribe":
+              return null;
             case "desktop_environment":
               return {
                 outputLanguage: "en",
+                logLevel: "INFO",
                 docs: {
+                  state: "bundled",
                   origin: "http://docs.cadrumo.test",
                   languages: [
                     {
@@ -109,7 +125,6 @@ async function openHost(page: Page) {
                 subscription: 1,
                 states: {
                   python: { kind: "missing", detail: "" },
-                  manager: { kind: "missing", detail: "" },
                 },
               };
             default:
@@ -126,9 +141,15 @@ async function openHost(page: Page) {
     }),
   );
   await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.locator('[data-terminal="tui"] .xterm')).toBeAttached();
+  await write(
+    page,
+    "tui",
+    sample + "\x1b]777;cadrumo;presentation;ready\x1b\\",
+  );
   await expect(page.locator('[data-terminal="tui"] .xterm')).toBeVisible();
+  await openPanelTab(page, "console");
   await expect(page.locator('[data-terminal="console"] .xterm')).toBeVisible();
-  await write(page, "tui", sample);
   await write(
     page,
     "console",

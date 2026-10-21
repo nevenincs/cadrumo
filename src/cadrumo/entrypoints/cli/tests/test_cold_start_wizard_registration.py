@@ -36,21 +36,41 @@ by the fingerprint assertion retained in the work-create guard below.
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 import sys
 import textwrap
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
 
-from ....core.config import Settings
-from ....core.storage_taxonomy import StorageCategory
-from ....core.storage_taxonomy_locations import storage_location
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
-from ....tests.inventory import REPO_ROOT
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
+from cadrumo.tests.installed_process_ports import InstalledProcessWorld
+from cadrumo.tests.inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _owned_cold_runtime(tmp_path: Path, *, installed_process_world: InstalledProcessWorld) -> Generator[None]:
+    """Serve the cold processes from their real runtime without importing their CLI."""
+    scripts = Path(sys.prefix) / ("Scripts" if sys.platform == "win32" else "bin")
+    executable = scripts / ("aeat.exe" if sys.platform == "win32" else "aeat")
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    environment = installed_process_world.environment(
+        storage_root=tmp_path, authority_root=bundled_authority_descriptor_path().parent
+    )
+    with installed_process_world.runtime(executable, environment, tmp_path.parent / "caller-owned-runtime.log"):
+        try:
+            yield
+        finally:
+            close_active_bucket_session()
+
 
 # The newest Modelo 100 edition the registry authors.
 _M100_REVIEWED_EDITION = newest_authored_edition("100")
@@ -85,7 +105,7 @@ def _workspace_secret_store_fingerprint() -> dict[str, tuple[int, int] | None]:
 
 
 def _run_cli_cold(
-    storage_root: Path, argv: list[str], *, authenticate: bool = False
+    storage_root: Path, argv: list[str], *, authenticate: bool = False, installed_process_world: InstalledProcessWorld
 ) -> subprocess.CompletedProcess[str]:
     """Invoke the ``cadrumo`` CLI in a fresh interpreter against ``storage_root``.
 
@@ -98,29 +118,21 @@ def _run_cli_cold(
     code = f"""
         import sys
 
-        sys.argv = ["cadrumo", *{argv!r}]
-        from cadrumo.entrypoints.cli.main import main
+        sys.argv = ["aeat", *{argv!r}]
+        from cadrumo_runtime.host.frontend.cli.bootstrap import main
 
         try:
             main()
         except SystemExit as exit_:
             raise SystemExit(exit_.code)
         """
-    setting_env = str.upper
-    base_settings = Settings.model_validate({})
-    env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
-    env.update(
-        {
-            setting_env("cadrumo_local_storage_root"): str(storage_root),
-            setting_env(
-                "cadrumo_secret_passphrase"
-            ): base_settings.cadrumo_dev_test_database_password.get_secret_value(),
-        },
+    env = installed_process_world.environment(
+        storage_root=storage_root, authority_root=bundled_authority_descriptor_path().parent
     )
     return subprocess.run(
         [sys.executable, "-c", textwrap.dedent(code)],
         input=(
-            json.dumps({"profile_passphrase": base_settings.cadrumo_dev_test_database_password.get_secret_value()})
+            json.dumps({"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()})
             if authenticate
             else None
         ),
@@ -136,18 +148,19 @@ def _register_profile_for_cold_run(storage_root: Path, label: str, **facts: str)
     """Register one profile in-process against ``storage_root``, and return its id."""
     from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
-    from ....core.config import load_settings, override_settings
-
     with override_settings(
         cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
         cadrumo_active_profile=None,
     ):
-        return register_cli_profile(label=label, facts=facts)
+        profile_id = register_cli_profile(label=label, facts=facts, log_in=False)
+        close_active_bucket_session()
+        return profile_id
 
 
-def test_cold_process_overview_status_without_profile_resolves_profile_keys(tmp_path: Path) -> None:
-    """A cold no-profile overview status renders a normal status report.
+def test_cold_process_overview_status_without_profile_resolves_profile_keys(
+    tmp_path: Path, *, installed_process_world: InstalledProcessWorld
+) -> None:
+    """A cold no-profile overview returns the translated profile-creation action.
 
     `overview status` builds the shared state projection even before a
     profile exists. In a fresh interpreter no prior test has imported the
@@ -155,21 +168,22 @@ def test_cold_process_overview_status_without_profile_resolves_profile_keys(tmp_
     demand before any profile-key read.
     """
 
-    result = _run_cli_cold(tmp_path, ["app", "overview", "status"])
+    result = _run_cli_cold(tmp_path, ["app", "overview", "status"], installed_process_world=installed_process_world)
+    output = result.stdout + result.stderr
 
     for leak in _REGISTRATION_LEAKS:
-        assert leak not in result.stdout, (
-            f"overview status surfaced an unregistered core slot: {leak!r}\n{result.stdout}"
-        )
-    assert "Internal." not in result.stdout
-    assert "Traceback" not in result.stdout
-    assert result.returncode == 0, (
-        f"overview status failed in a cold no-profile process: {result.stdout}\n{result.stderr}"
+        assert leak not in output, f"overview status surfaced an unregistered core slot: {leak!r}\n{output}"
+    assert "Internal." not in output
+    assert "Traceback" not in output
+    assert result.returncode == 2, (
+        f"overview status did not refuse a cold no-profile process: {result.stdout}\n{result.stderr}"
     )
-    assert "aeat config profile create" in result.stdout
+    assert "aeat config profile create" in " ".join(output.split()), output
 
 
-def test_cold_process_work_create_registers_wizard_catalogue(tmp_path: Path) -> None:
+def test_cold_process_work_create_registers_wizard_catalogue(
+    tmp_path: Path, *, installed_process_world: InstalledProcessWorld
+) -> None:
     """A cold ``app modelo work create`` registers the wizard catalogue itself.
 
     Profile creation runs in its own fresh process (writing the storage root);
@@ -210,6 +224,7 @@ def test_cold_process_work_create_registers_wizard_catalogue(tmp_path: Path) -> 
             "2024",
         ],
         authenticate=True,
+        installed_process_world=installed_process_world,
     )
 
     for leak in _REGISTRATION_LEAKS:
@@ -217,7 +232,9 @@ def test_cold_process_work_create_registers_wizard_catalogue(tmp_path: Path) -> 
     assert created.returncode == 0, f"work create failed in a cold process: {created.stdout}\n{created.stderr}"
 
 
-def test_cold_process_m100_work_create_keeps_intracom_type_import_boundary(tmp_path: Path) -> None:
+def test_cold_process_m100_work_create_keeps_intracom_type_import_boundary(
+    tmp_path: Path, *, installed_process_world: InstalledProcessWorld
+) -> None:
     """M100 work-create must not crash importing invoice intracom types.
 
     The work-create path imports the CLI composition root in a cold process and
@@ -263,6 +280,7 @@ def test_cold_process_m100_work_create_keeps_intracom_type_import_boundary(tmp_p
             "Ana",
         ],
         authenticate=True,
+        installed_process_world=installed_process_world,
     )
 
     assert "ImportError" not in created.stdout

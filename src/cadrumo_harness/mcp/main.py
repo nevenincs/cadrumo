@@ -7,30 +7,68 @@ import io
 import os
 import sys
 from importlib.metadata import version
+from pathlib import Path
 from typing import BinaryIO, TextIO, cast
 from uuid import UUID
 
 
 def main() -> None:
-    """Serve one explicitly bound profile and protected credential reference."""
+    """Serve the person's sign-in on the selected profile, or one profile's enrolled key."""
     os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
     if isinstance(sys.stderr, io.TextIOWrapper):
         # The generic form is for static analysis; TextIOWrapper is not subscriptable at runtime.
         cast("io.TextIOWrapper[BinaryIO]", sys.stderr).reconfigure(newline="\n")
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--profile-id", type=UUID, required=True)
-    parser.add_argument("--credential-reference", type=lambda value: UUID(value) if value else None)
+    parser.add_argument(
+        "--profile-id",
+        type=UUID,
+        help="the profile of the enrolled key; given alone, its sign-in is resumed only while it is selected",
+    )
+    parser.add_argument(
+        "--credential-reference",
+        type=lambda value: UUID(value) if value else None,
+        help="the protected reference of a key the person issued with config automation; requires --profile-id",
+    )
+    parser.add_argument("--surface", help="the named surface to serve; every tool and operation when omitted")
+    parser.add_argument(
+        "--materialise-workspace",
+        type=Path,
+        metavar="DIRECTORY",
+        help="write the operating rules and skills into DIRECTORY as a Claude Code workspace, then exit unserved",
+    )
     args = parser.parse_args()
+    if args.credential_reference is not None and args.profile_id is None:
+        parser.error("--credential-reference names the key of one profile; give that profile with --profile-id")
+    if args.materialise_workspace is not None:
+        if args.profile_id is not None or args.surface is not None:
+            parser.error("--materialise-workspace writes files and serves nothing; give it alone")
+        from ..workspace import materialise_workspace
+
+        # Only the person's own launch opts in to writing files; no tool call writes one.
+        manifest = materialise_workspace(args.materialise_workspace)
+        cast(TextIO, sys.stdout).write(manifest.model_dump_json() + "\n")
+        return
     required_version = os.environ.get("CADRUMO_MCP_REQUIRED_VERSION")
     if required_version is not None and version("cadrumo") != required_version:
         parser.error("installed Cadrumo cohort does not match the required version")
-    from cadrumo.core.logging import configure_logging
+    from .surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, mcp_surface
 
+    try:
+        surface = mcp_surface(DEFAULT_MCP_SURFACE if args.surface is None else args.surface)
+    except KeyError:
+        known = ", ".join(sorted(MCP_SURFACES))
+        parser.error(f"unknown surface {args.surface!r}; the surfaces this version serves are: {known}")
+    from cadrumo.core.logging import configure_logging, register_first_party_logger
+
+    register_first_party_logger("cadrumo_harness")
     configure_logging()
+    from cadrumo.core.diagnostic_log import diagnostic_process
+
     try:
         from .server import serve
 
-        serve(profile_id=args.profile_id, credential_reference=args.credential_reference)
+        with diagnostic_process("external_client"):
+            serve(profile_id=args.profile_id, credential_reference=args.credential_reference, surface=surface)
     except ModuleNotFoundError as error:
         if error.name != "mcp":
             raise

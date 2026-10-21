@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ....tests.cli_envelope import require_schema_envelope
-from .cli_runner import invoke_cached_cli
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 
 
 def list_ledger_rows_via_cli() -> list[dict[str, Any]]:

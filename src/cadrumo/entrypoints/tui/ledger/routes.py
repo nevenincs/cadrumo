@@ -13,6 +13,7 @@ from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceProjectionV1
 from ....application.operator_actions.models import ActionReference
 from ....core.i18n.render import tr
+from ..components.language import localized
 from ..destination_alias import closed_destination_ids
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .actividad_asset import ActivityAssetTuiActionsV1
@@ -23,6 +24,7 @@ from .evidence import LedgerEvidenceScreen
 from .import_flow import LedgerImportScreen
 from .models import (
     LEDGER_DESTINATION_BY_AREA,
+    LedgerClassificationPatchBuilderV1,
     LedgerClassificationSubmitterV1,
     LedgerDestinationIdV1,
     LedgerEvidenceDoorV1,
@@ -56,17 +58,23 @@ class LedgerUnavailableScreen(LedgerWorkspaceScreen):
     @override
     def compose(self) -> ComposeResult:
         """Render the explicit unavailability and no action affordance."""
-        yield Static(
-            tr("tui.ledger.unavailable.title"),
-            classes="cadrumo-banner",
+        yield localized(
+            Static(
+                tr("tui.ledger.unavailable.title"),
+                classes="cadrumo-banner",
+            ),
+            "tui.ledger.unavailable.title",
         )
         with ledger_workspace_page() as navigation:
             yield navigation
-            yield Static(
-                tr(self._route_refusal.reason_key),
-                id="ledger-refusal",
-                classes="ledger-refusal",
-                markup=False,
+            yield localized(
+                Static(
+                    tr(self._route_refusal.reason_key),
+                    id="ledger-refusal",
+                    classes="ledger-refusal",
+                    markup=False,
+                ),
+                self._route_refusal.reason_key,
             )
 
     def on_mount(self) -> None:
@@ -148,6 +156,7 @@ def ledger_screen_factory(
     review_action: ActionReference,
     classify_action: ActionReference | None = None,
     classification_submitter: LedgerClassificationSubmitterV1 | None = None,
+    classification_patch_builder: LedgerClassificationPatchBuilderV1 | None = None,
     import_door: LedgerImportDoorV1 | None = None,
     evidence_action: ActionReference | None = None,
     evidence_items: tuple[AttachmentReviewItem, ...] | None = None,
@@ -166,6 +175,7 @@ def ledger_screen_factory(
         review_action=review_action,
         classify_action=classify_action,
         classification_submitter=classification_submitter,
+        classification_patch_builder=classification_patch_builder,
         import_door=import_door,
         evidence_action=evidence_action,
         evidence_items=evidence_items,

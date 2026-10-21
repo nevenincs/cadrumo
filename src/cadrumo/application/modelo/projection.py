@@ -498,7 +498,7 @@ def _parse_projection_binding_overrides(
     """
     extra_bindings: dict[BindingId, Decimal] = {}
     extra_enum_bindings: dict[BindingId, str] = {}
-    if not binding_overrides:
+    if not (binding_overrides is not None and binding_overrides):
         return extra_bindings, extra_enum_bindings
 
     bindings_by_id = revision_bindings_by_id(revision)

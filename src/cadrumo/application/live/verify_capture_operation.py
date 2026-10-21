@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.bucket import BucketId
 from ...core.identity.tax_id import tax_id_identity_token
@@ -43,7 +45,6 @@ from ..operations.models import (
 from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .errors import LiveNifIvaCertificateRequiredError
 from .filed_history_operation import FiledHistoryBrowserResourcesFactory, FiledHistoryProviderPreflight
@@ -140,7 +141,7 @@ def _project_capture(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
     require_succeeded_terminal_receipt(
         receipt,
         definition_id=_definition_id(observation.surface),
-        subject_ref=profile_operation_subject(str(observation.bucket_id)),
+        subject_ref=profile_operation_subject(observation.bucket_id),
         effect=OperationEffect.UPDATED if report.newly_persisted else OperationEffect.NONE,
         message=_RECEIPT_CONTRADICTION,
     )

@@ -276,9 +276,9 @@ def _active_row_field_selector(
     bindings: Mapping[str, BindingDefinition],
     active_binding_ids: set[str],
 ) -> str | None:
-    if field.binding is None or str(field.binding) not in active_binding_ids:
+    if field.binding is None or field.binding not in active_binding_ids:
         return None
-    binding = bindings.get(str(field.binding))
+    binding = bindings.get(field.binding)
     if binding is None or binding_aggregation_op(binding) is not BindingAggregationOp.ROWS:
         return None
     selector = binding_row_set_selector(binding)
@@ -311,9 +311,9 @@ def _rendered_row_binding_casilla_ids(
     schema_provider: RegistrySchemaAccessor,
 ) -> set[CasillaId]:
     """Return row-field casillas whose active binding value reaches a rendered record."""
-    bindings = {str(binding.id): binding for binding in schema_provider.get_snapshot(draft.modelo).revision.bindings}
+    bindings = {binding.id: binding for binding in schema_provider.get_snapshot(draft.modelo).revision.bindings}
     active_binding_ids = {
-        str(value.binding_id) for value in draft.binding_values if value.value is not None and value.value != ""
+        value.binding_id for value in draft.binding_values if value.value is not None and value.value != ""
     }
     rendered: set[CasillaId] = set()
     for record in layout.records:
@@ -764,7 +764,9 @@ def assert_xml_declaration_aux_declared(layout: ExportLayoutDefinition, *, aux_v
     if layout.format is not ExportLayoutFormat.XML_DICTIONARY:
         return
     undeclared = [
-        name for name, value in (("aux_idioma", layout.aux_idioma), ("aux_version", aux_version)) if not value
+        name
+        for name, value in (("aux_idioma", layout.aux_idioma), ("aux_version", aux_version))
+        if not (value is not None and value)
     ]
     if not undeclared:
         return

@@ -7,10 +7,10 @@ This module turns modelo application/domain records such as
 :class:`~VerificationReport`, and
 :class:`~cadrumo.application.modelo.work_plazo.ModeloWorkDeadlinePosture` into CLI text lines
 and CommandSpec-declared JSON payload fragments. The payload side feeds
-:class:`~cadrumo.entrypoints.cli._modelo_payloads.WorkUnitPayload`,
-:class:`~cadrumo.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`,
-:class:`~cadrumo.entrypoints.cli._modelo_payloads.ModeloRecordPayload`,
-:class:`~cadrumo.entrypoints.cli._modelo_payloads.VerificationReportPayload`,
+:class:`~cadrumo.entrypoints.cli.modelo_results.WorkUnitPayload`,
+:class:`~cadrumo.entrypoints.cli.modelo_results.CalculationRevisionPayload`,
+:class:`~cadrumo.entrypoints.cli.modelo_results.ModeloRecordPayload`,
+:class:`~cadrumo.entrypoints.cli.modelo_results.VerificationReportPayload`,
 and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 :func:`~cadrumo.entrypoints.cli.common.emit_envelope`.
 """
@@ -38,8 +38,9 @@ from ...domain.modelos.verification_report import ModeloVerificationFinding, Ver
 from ...domain.modelos.work_unit import WorkUnit
 from ._action_rendering import resolved_precondition_action_json_cell
 from ._filing_chain_payloads import aeat_register_lines, aeat_register_payload
-from ._modelo_bindings_payloads import BindingEncodedOptionPayload
-from ._modelo_payloads import (
+from .common import resolve_cli_precondition_action
+from .modelo_bindings_results import BindingEncodedOptionPayload
+from .modelo_results import (
     ExternalEvidencePayload,
     FindingPayload,
     ModeloRecordPayload,
@@ -48,7 +49,6 @@ from ._modelo_payloads import (
     WorkDeadlinePosturePayload,
     WorkUnitPayload,
 )
-from .common import resolve_cli_precondition_action
 from .modelo_revision_rendering import calculation_revision_state_label
 
 if TYPE_CHECKING:
@@ -219,7 +219,9 @@ def source_diagnostic_notice(
     }
     optional: dict[str, str | None] = {
         "resolver_id": diagnostic.resolver_id,
-        "binding_source": diagnostic.binding_source.value if diagnostic.binding_source else None,
+        "binding_source": diagnostic.binding_source.value
+        if (diagnostic.binding_source is not None and diagnostic.binding_source)
+        else None,
         "binding_id": diagnostic.binding_id,
         "relation_id": diagnostic.relation_id,
         "casilla_id": diagnostic.casilla_id,
@@ -243,7 +245,7 @@ def source_diagnostic_notice(
 
     box = None if boxes is None or diagnostic.casilla_id is None else boxes.number(str(diagnostic.casilla_id))
     attention = note_attention(diagnostic.reason, box=box)
-    context.update({key: value for key, value in optional.items() if value})
+    context.update({key: value for key, value in optional.items() if (value is not None and value)})
     context.update({"level": attention.value, "detail": diagnostic.message, **({} if box is None else {"box": box})})
     return Notice(
         severity=NoticeSeverity.INFO if attention is ModeloFormAttention.INFO else NoticeSeverity.WARNING,
@@ -268,7 +270,7 @@ def source_diagnostic_notice_text(notice: Notice) -> str:
 
 def short_id(value: str | None) -> str | None:
     """Return the display suffix for a content-addressed id."""
-    return value[-12:] if value else None
+    return value[-12:] if (value is not None and value) else None
 
 
 def _short_id_text(value: str | None) -> str:
@@ -435,7 +437,7 @@ def _work_unit_deadline_output_from_posture(
     """Project deadline posture onto a payload and unassessed-preview notice.
 
     Returns the typed
-    :class:`~cadrumo.entrypoints.cli._modelo_payloads.WorkDeadlinePosturePayload`
+    :class:`~cadrumo.entrypoints.cli.modelo_results.WorkDeadlinePosturePayload`
     (structured result data: the voluntary-filing close date and overdue
     posture) and a warning-severity
     :class:`~cadrumo.core.json_contract.Notice` list. An overdue deadline raises
@@ -803,9 +805,9 @@ def verification_report_payload(
     Both ``aeat app modelo work verify`` and ``verification-report view/list``
     use this function so persisted :class:`~VerificationReport`
     rows expose identical factual
-    :class:`~cadrumo.entrypoints.cli._modelo_payloads.VerificationReportPayload`
+    :class:`~cadrumo.entrypoints.cli.modelo_results.VerificationReportPayload`
     fields, including nested
-    :class:`~cadrumo.entrypoints.cli._modelo_payloads.FindingPayload` legal and
+    :class:`~cadrumo.entrypoints.cli.modelo_results.FindingPayload` legal and
     source references.
     """
     findings: list[FindingPayload] = []

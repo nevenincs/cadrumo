@@ -80,7 +80,7 @@ class WorkbenchHelpContentMixin:
 
     def _help_title(self: ModeloWorkbenchScreen, entry: CasillaListEntry) -> str:
         field = entry.field
-        box = f"[{field.box}] " if field.box else ""
+        box = f"[{field.box}] " if (field.box is not None and field.box) else ""
         title = f"{box}{grid_cell_title(entry) or field.label.text}"
         if field.label.disclosure is not ModeloFormTextDisclosure.LOCALIZED:
             title = f"{title} ({tr(f'tui.modelo.workbench.disclosure.{field.label.disclosure.value}')})"
@@ -122,7 +122,7 @@ class WorkbenchHelpContentMixin:
         for binding in field.bindings:
             if binding.policy.family is source.family:
                 sentence = lookup_translation(binding.policy.origin_sentence_key, locale=self._language.value)
-                if sentence:
+                if sentence is not None and sentence:
                     said.add(sentence)
         return frozenset(said)
 

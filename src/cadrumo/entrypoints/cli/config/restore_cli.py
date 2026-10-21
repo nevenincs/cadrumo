@@ -18,8 +18,8 @@ filesystem, which is unambiguous, rather than by a flag the operator has to get
 right.
 
 A restore never installs recovery. The restored profile reports
-``recovery_enrolled`` as false on every restore so the operator knows to run
-``config profile recovery enable`` again if they want a second door.
+``recovery_enrolled`` as false on every restore so the operator knows to use
+the authentication command for recovery enrollment again if they want a second door.
 
 The verb is bootstrap-exempt. Gating it behind an active session would be a
 deadlock in the literal sense --- the profile the operator would log in to is
@@ -35,11 +35,12 @@ from typing import TYPE_CHECKING
 import typer
 from pydantic import SecretStr
 
+from cadrumo_client.commands.secure_input import MachineSecretPayload, MachineSecretSelection
+
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
-from .secure_input import MachineSecretPayload, MachineSecretSelection
 
 if TYPE_CHECKING:
     from ....application.user_profile.capsule_restore import ProfileCapsuleSource, ProfileRestoreOutcome
@@ -53,7 +54,7 @@ class RestorePassphraseSecrets(MachineSecretPayload):
 
 def _collect_passphrase(*, selection: MachineSecretSelection | None) -> str:
     """Resolve the profile passphrase from one explicit channel or a verified prompt."""
-    from .secure_input import prompt_secret_no_echo, read_machine_secret_payload
+    from cadrumo_client.commands.secure_input import prompt_secret_no_echo, read_machine_secret_payload
 
     if selection is not None:
         return read_machine_secret_payload(
@@ -66,21 +67,13 @@ def _collect_passphrase(*, selection: MachineSecretSelection | None) -> str:
 def _read_capsule_source(source: Path) -> ProfileCapsuleSource:
     """Read restorable capsule material from a directory or a sealed archive.
 
-    The one place the two source shapes diverge. Everything downstream sees a
-    :class:`ProfileCapsuleSource` and cannot tell which shape produced it,
-    which is what keeps the publication authority single.
-
-    Dispatch is on what the path IS, not on what the operator claims it is: an
-    operator recovering from a failure should not have to tell the tool which
-    kind of backup they are holding, and a flag they could set wrongly would
-    turn a recoverable mistake into a confusing refusal.
+    The application reader tells the two shapes apart by what the path is, so
+    everything downstream sees one :class:`ProfileCapsuleSource` and the
+    publication authority stays single.
     """
-    from ....application.user_profile.capsule_archive import read_profile_capsule_archive
-    from ....application.user_profile.capsule_restore import read_profile_capsule_source
+    from ....application.user_profile.capsule_archive import read_restorable_profile_capsule
 
-    if source.is_dir():
-        return read_profile_capsule_source(source)
-    return read_profile_capsule_archive(source)
+    return read_restorable_profile_capsule(source).source
 
 
 def _restore_lines(outcome: ProfileRestoreOutcome) -> tuple[str, ...]:
@@ -108,10 +101,11 @@ def profile_archive_import(
 ) -> None:
     """Republish a capsule directory as a usable profile."""
     _activate_subcommand_output_language(ctx, output_language)
+    from cadrumo_client.commands.payloads import ConfigProfileArchiveImportResult
+    from cadrumo_client.commands.secure_input import select_machine_secret_channel
+
     from ....application.user_profile.capsule_restore import restore_profile_capsule_with_password
     from ....domain.calculations.registry.authority import bundled_indexed_authority
-    from ..config_payloads import ConfigProfileArchiveImportResult
-    from .secure_input import select_machine_secret_channel
 
     # Refuse an ambiguous source before reading the capsule, prompting, proving
     # custody, opening a publication transaction, or mutating storage.

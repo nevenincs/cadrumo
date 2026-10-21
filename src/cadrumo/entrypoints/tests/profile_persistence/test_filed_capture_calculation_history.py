@@ -12,7 +12,6 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from cadrumo.adapters.inbound.justificante.parser import parse_justificante_bytes
-from cadrumo.adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from cadrumo.adapters.outbound.aeat.sede.filed_observation_persistence import (
     BucketEventRepositoryAdapter,
     CalculationObservationRepositoryAdapter,
@@ -116,6 +115,7 @@ from cadrumo.application.calculations.binding_prefill import (
 from cadrumo.application.calculations.m303_carry_ingress import M303CarryIngressError
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind
 from cadrumo.application.live.errors import LiveApplicationError, LiveApplicationInputError
+from cadrumo.application.live.expedientes_ports import ExpedientesDeclaration
 from cadrumo.application.live.filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from cadrumo.application.live.filed_observation_persistence import (
     FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
@@ -903,7 +903,7 @@ def test_iva_history_capture_orders_annual_0a_after_periodic_declarations() -> N
 
 
 def test_filed_history_keeps_non_iva_numeric_period_order_alongside_iva_rows() -> None:
-    def declaration_for(modelo: str, period: str, expediente_id: str) -> Declaracion:
+    def declaration_for(modelo: str, period: str, expediente_id: str) -> ExpedientesDeclaration:
         return _declaration(
             period=period,
             expediente_id=expediente_id,

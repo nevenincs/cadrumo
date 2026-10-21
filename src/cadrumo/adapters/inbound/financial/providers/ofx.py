@@ -323,11 +323,11 @@ class OfxProvider(FinancialProvider):
             _logger.warning(
                 "ofx_provider: parse error transaction=%d source=<input-ofx>",
                 source_row_index,
-                exc_info=True,
             )
+            reason = str(exc) if isinstance(exc, FinancialValidationError) else "invalid date or amount"
             raise InvalidFinancialSourceError(
-                f"OFX transaction {source_row_index} could not be parsed: {exc}",
-            ) from exc
+                f"OFX transaction {source_row_index} could not be parsed: {reason}",
+            ) from None
         return _ParsedOfxRow(
             transaction_id=transaction_id,
             counterparty=counterparty,

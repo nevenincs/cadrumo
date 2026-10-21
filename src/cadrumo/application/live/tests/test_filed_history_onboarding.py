@@ -254,7 +254,7 @@ def test_the_run_model_holds_one_advisory_per_unreached_reason_without_merging()
     carried = {
         notice.context["reason"]
         for notice in run.evidence_notices
-        if notice.context and notice.code == FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE
+        if (notice.context is not None and notice.context) and notice.code == FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE
     }
     assert carried == {reason.value for reason in reasons}
     # One advisory per reason: the model merged nothing on the way in.

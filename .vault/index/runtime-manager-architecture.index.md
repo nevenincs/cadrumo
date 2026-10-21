@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#runtime-manager-architecture'
 date: '2026-10-03'
-modified: '2026-10-08'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:f4b41745eca9247c1f4923c8f71e102e852f3b83ac3745df098e53acdbcb7542'
+body_hash: 'sha256:feec0230beb45a331688845d69c3018cf04fd85354d8b86af6fac9830171f70c'
 related:
   - '[[2026-10-03-runtime-manager-architecture-research]]'
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
@@ -18,6 +18,8 @@ related:
   - '[[2026-10-08-runtime-manager-architecture-darwin-socket-paths-research]]'
   - '[[2026-10-08-runtime-manager-architecture-linux-placement-adr]]'
   - '[[2026-10-08-runtime-manager-architecture-linux-placement-research]]'
+  - '[[2026-10-09-runtime-manager-architecture-windows-admission-recovery-audit]]'
+  - '[[2026-10-12-runtime-manager-architecture-caller-owned-root-adr]]'
 ---
 
 # `runtime-manager-architecture` feature index
@@ -31,10 +33,12 @@ Auto-generated index of all documents tagged with `#runtime-manager-architecture
 - `2026-10-04-runtime-manager-architecture-adr` - `runtime-manager-architecture` adr: `Per-user runtime manager` | (**status:** `accepted`)
 - `2026-10-04-runtime-manager-architecture-supervisor-contract-adr` - `runtime-manager-architecture` adr: `Runtime supervisor contract` | (**status:** `accepted`)
 - `2026-10-08-runtime-manager-architecture-linux-placement-adr` - `runtime-manager-architecture` adr: `Proposed Linux placement amendment preserving native session admission` | (**status:** `proposed`)
+- `2026-10-12-runtime-manager-architecture-caller-owned-root-adr` - `runtime-manager-architecture` adr: `caller-owned runtime for an explicitly configured storage root` | (**status:** `accepted`)
 
 ### audit
 
 - `2026-10-05-runtime-manager-architecture-audit` - `runtime-manager-architecture` audit: `Manager lane checkpoint review`
+- `2026-10-09-runtime-manager-architecture-windows-admission-recovery-audit` - `runtime-manager-architecture` audit: `Windows Session 0 and explicit manager recovery`
 
 ### exec
 

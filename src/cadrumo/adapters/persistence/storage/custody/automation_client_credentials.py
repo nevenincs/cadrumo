@@ -15,13 +15,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, SecretBytes
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from .....application.user_profile.access_contracts import ProfileAccessBinding
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-    NativeSecretBackend,
-)
+from .....application.user_profile.automation_custody_port import AutomationSecretStore, NativeSecretBackend
 from .....core.base64_codec import b64_decode_canonical
 from .....core.identity.digest import ContentDigest
 from .....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG

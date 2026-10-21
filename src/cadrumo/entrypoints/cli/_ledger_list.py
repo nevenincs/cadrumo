@@ -8,7 +8,7 @@ from ...application.ledger.id_resolution import compute_display_id_width
 from ...application.ledger.list_operation import LedgerListProjection as LedgerListSnapshot
 from ...application.ledger.transaction_projection import LedgerTransactionReviewProjection
 from ...core.i18n.render import tr
-from ._ledger_payloads import LedgerListRowPayload
+from .ledger_results import LedgerListRowPayload
 
 
 @dataclass(frozen=True)

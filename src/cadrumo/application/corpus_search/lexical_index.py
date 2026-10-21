@@ -99,7 +99,7 @@ def _chunks_for_source(json_path: Path) -> Iterator[CorpusChunk]:
             continue
         anchor = _clean_anchor(unit.get("anchor"))
         section = _clean_optional(unit.get("section")) or _clean_optional(unit.get("title"))
-        corpus_ref = corpus_ref_base + (f"#{anchor}" if anchor else "")
+        corpus_ref = corpus_ref_base + (f"#{anchor}" if (anchor is not None and anchor) else "")
         for chunk_ordinal, chunk_text in enumerate(_chunk_prose(text)):
             yield CorpusChunk(
                 chunk_id=f"{html_stem}:{unit_ordinal:03d}:{chunk_ordinal:02d}",
@@ -119,7 +119,7 @@ def _document_title(units: Iterable[object], *, fallback: str) -> str:
         if not isinstance(unit, dict):
             continue
         title = _clean_optional(STR_KEYED_MAPPING_ADAPTER.validate_python(unit).get("title"))
-        if title:
+        if title is not None and title:
             return title
     return fallback
 

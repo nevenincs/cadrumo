@@ -51,7 +51,7 @@ def test_every_dispatch_key_runs_the_detector_it_names(tmp_path: Path) -> None:
     _module(package, "solo.py", _SHARED)
 
     for name in sorted(_DETECTORS):
-        assert run(package, [name]) is not None
+        assert run((package,), [name]) is not None
 
     assert sorted(_DETECTORS) == [
         "call_fingerprint",
@@ -71,9 +71,9 @@ def test_two_modules_reaching_for_the_same_collaborators_are_reported(tmp_path: 
     _module(package, "left.py", _SHARED)
     _module(package, "right.py", _SHARED)
 
-    found = run(package, ["import_overlap"])
+    found = run((package,), ["import_overlap"])
 
-    assert [candidate.sites for candidate in found] == [("left.py", "right.py")]
+    assert [candidate.sites for candidate in found] == [("cadrumo/left.py", "cadrumo/right.py")]
     assert found[0].fingerprint == "jaccard=1.00"
 
 
@@ -88,7 +88,7 @@ def test_modules_sharing_no_collaborator_are_not_reported(tmp_path: Path) -> Non
     _module(package, "left.py", _SHARED)
     _module(package, "right.py", _DISJOINT)
 
-    assert run(package, ["import_overlap"]) == []
+    assert run((package,), ["import_overlap"]) == []
 
 
 def test_a_corpus_with_no_production_module_refuses_rather_than_reporting_clean(tmp_path: Path) -> None:
@@ -99,7 +99,7 @@ def test_a_corpus_with_no_production_module_refuses_rather_than_reporting_clean(
     indistinguishable from one that has stopped firing.
     """
     with pytest.raises(SystemExit, match=r"no production modules found under"):
-        run(tmp_path, list(_DETECTORS))
+        run((tmp_path,), list(_DETECTORS))
 
 
 def test_an_unparsable_module_refuses_rather_than_shortening_the_corpus(tmp_path: Path) -> None:
@@ -107,7 +107,7 @@ def test_an_unparsable_module_refuses_rather_than_shortening_the_corpus(tmp_path
     (tmp_path / "bad.py").write_text("def (:" + chr(10), encoding="utf-8")
 
     with pytest.raises(SystemExit, match=r"could not be parsed, so the duplication corpus"):
-        run(tmp_path, list(_DETECTORS))
+        run((tmp_path,), list(_DETECTORS))
 
 
 def test_an_unreadable_module_refuses_for_its_own_reason(tmp_path: Path) -> None:
@@ -123,4 +123,32 @@ def test_an_unreadable_module_refuses_for_its_own_reason(tmp_path: Path) -> None
     (tmp_path / "broken.py").mkdir()
 
     with pytest.raises(SystemExit, match=r"could not be read, so the duplication corpus"):
-        run(tmp_path, list(_DETECTORS))
+        run((tmp_path,), list(_DETECTORS))
+
+
+def test_a_concept_restated_in_another_package_collides_across_roots(tmp_path: Path) -> None:
+    """The roots form one corpus, so a copy living in a second package is still a pair.
+
+    Each site carries its package, so two packages' same-named modules stay distinct.
+    """
+    product = tmp_path / "src" / "cadrumo"
+    runtime = tmp_path / "src" / "cadrumo_runtime"
+    product.mkdir(parents=True)
+    runtime.mkdir()
+    _module(product, "guard.py", _SHARED)
+    _module(runtime, "guard.py", _SHARED)
+
+    found = run((product, runtime), ["import_overlap"])
+
+    assert [candidate.sites for candidate in found] == [("cadrumo/guard.py", "cadrumo_runtime/guard.py")]
+
+
+def test_a_root_with_no_production_module_refuses_beside_a_populated_one(tmp_path: Path) -> None:
+    """A lost package must not shrink the corpus while the others still load."""
+    product = tmp_path / "cadrumo"
+    product.mkdir()
+    _module(product, "solo.py", _SHARED)
+
+    assert run((product,), ["import_overlap"]) == []
+    with pytest.raises(SystemExit, match=r"no production modules found under .*cadrumo_harness"):
+        run((product, tmp_path / "cadrumo_harness"), ["import_overlap"])

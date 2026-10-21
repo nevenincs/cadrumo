@@ -19,9 +19,9 @@ from decimal import Decimal
 
 import pytest
 
+from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from .....application.modelo.reconciliation_records import (
     ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
 )

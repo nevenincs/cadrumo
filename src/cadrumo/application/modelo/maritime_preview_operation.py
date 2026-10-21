@@ -10,6 +10,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
@@ -34,14 +38,8 @@ from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .maritime_preview import ModeloMaritimeExemptionPreview
 
@@ -228,15 +226,15 @@ class ModeloMaritimePreviewExecutor:
 
 
 def build_modelo_maritime_preview_definition(factory: ModeloMaritimePreviewPortsFactory) -> OperationDefinition:
-    """Enroll the existing private CLI calculation without additional frontends."""
+    """Enroll the profile-bound maritime exemption calculation."""
     return build_single_phase_definition(
         definition_id=MODELO_MARITIME_PREVIEW_OPERATION_DEFINITION_ID,
         request_type=ModeloMaritimePreviewRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloMaritimePreviewProjection,
         executor_type=ModeloMaritimePreviewExecutor,
         build=lambda: ModeloMaritimePreviewExecutor(factory),
         capabilities=RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 

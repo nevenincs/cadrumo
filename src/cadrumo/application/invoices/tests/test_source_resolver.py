@@ -25,8 +25,7 @@ from ....domain.calculations.registry.tests.registry_tree import bundled_registr
 from ....domain.invoices.business_premises import BusinessPremisesLease
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
-from ....domain.iva.classification import InvoiceKind
-from ....domain.iva.schema import IvaCategory
+from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ....domain.modelos.row_models import Modelo349OperadorRow
 from ...aggregation.source_mesh import (
     CalculationSourceContext,

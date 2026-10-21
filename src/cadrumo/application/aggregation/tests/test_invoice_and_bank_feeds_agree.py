@@ -46,7 +46,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation,
 from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.invoices.models import Invoice
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -258,7 +258,7 @@ def test_both_feeds_declare_an_export_into_casilla_60(
         f"the two feeds disagree on casilla 60: invoice={invoice.get(_CASILLA_60)!r} bank={bank.get(_CASILLA_60)!r}"
     )
     assert bank.get(_CASILLA_60) == _BASE
-    assert not invoice.get(_CASILLA_59), "an export must not also land in the intra-community casilla"
+    assert not bool(invoice.get(_CASILLA_59)), "an export must not also land in the intra-community casilla"
 
 
 def test_the_two_feeds_classify_the_operation_identically() -> None:

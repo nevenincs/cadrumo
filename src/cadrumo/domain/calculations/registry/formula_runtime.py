@@ -546,7 +546,7 @@ def _merge_relation_values_into_bindings(
             raise RegistryValidationError(
                 f"binding {binding_id!r} has conflicting values on the binding and relation channels",
                 translated_message="errors.calc.binding_relation_channel_conflict",
-                context={"binding_id": str(binding_id)},
+                context={"binding_id": binding_id},
             )
         merged[binding_id] = value
     return merged
@@ -758,7 +758,7 @@ def _evaluate_formula_target(
                 # is declared dict[str, object] | None for the general error
                 # hierarchy, so re-stringify here rather than narrowing the
                 # shared base attribute for every CadrumoError subclass.
-                context={str(key): str(value) for key, value in (exc.context or {}).items()},
+                context={key: str(value) for key, value in (exc.context or {}).items()},
             ),
         )
         return
@@ -801,7 +801,7 @@ def _validate_formula_target_constraint(
                 "casilla_id": target,
                 "display_number": target_casilla_def.number,
                 "value": str(value),
-                "violation": str(violation),
+                "violation": violation,
                 "formula_id": formula.id,
                 "legal_refs": ",".join(target_casilla_def.constraints.legal_refs),
                 "source_refs": ",".join(target_casilla_def.constraints.source_refs),
@@ -1298,7 +1298,7 @@ def _evaluate_age_at_year_end(expression: FormulaExpression, ctx: EvalContext) -
     arg = expression.args[0]
     if arg.date_binding is None:
         raise RegistryValidationError("formula op 'age_at_year_end' requires args[0] to be a date_binding leaf")
-    binding_id = str(arg.date_binding)
+    binding_id = arg.date_binding
     if binding_id not in ctx.date_binding_values:
         raise RegistryValidationError(
             f"date_binding {binding_id!r} has no supplied value; required by age_at_year_end",
@@ -1358,7 +1358,7 @@ def _reject_date_binding_leaf(binding_id: BindingId) -> None:
         f"date_binding {binding_id!r} leaf must be consumed inside an "
         "'age_at_year_end' op, not used as a standalone Decimal leaf",
         translated_message="errors.calc.date_binding_used_as_decimal_leaf",
-        context={"binding_id": str(binding_id)},
+        context={"binding_id": binding_id},
     )
 
 

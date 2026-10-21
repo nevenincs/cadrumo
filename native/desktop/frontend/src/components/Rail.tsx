@@ -19,9 +19,14 @@ export type RailItem = {
   /** What the item has to say when it shows no count: a state, shown after
    * the label in the tooltip and in the accessible name. */
   hint?: string;
-  /** A hollow pin where a count would be: what the item counts is not
-   * known, or could not be read. Never drawn together with a count. */
-  pin?: "unknown" | "failed";
+  /** A pin where a count would be, never drawn together with one. Hollow:
+   * what the item counts is not known, or could not be read. Filled: the
+   * surface it opens has something still to do, or, pulsing, is busy
+   * with it. Its `hint` says which. */
+  pin?: "unknown" | "failed" | "attention" | "busy";
+  /** Why the item cannot be used now. It stays in place and says so,
+   * and a press does nothing. */
+  heldBy?: string;
   /** Starts a new cluster: a divider is drawn before this item. */
   divided?: boolean;
   onClick: () => void;
@@ -37,13 +42,16 @@ function RailButton({ item }: { item: RailItem }) {
         <IconButton
           label={item.label}
           shortcut={item.shortcut}
-          hint={item.badge ? item.badgeLabel : item.hint}
+          hint={item.heldBy ?? (item.badge ? item.badgeLabel : item.hint)}
           size="lg"
           side="right"
           aria-pressed={item.pressed}
+          aria-disabled={item.heldBy ? true : undefined}
           aria-expanded={item.expanded}
           aria-haspopup={item.expanded === undefined ? undefined : "dialog"}
-          onClick={item.onClick}
+          // A locale-independent handle for drivers outside the shell.
+          data-rail={item.id}
+          onClick={item.heldBy ? undefined : item.onClick}
           // The chosen item carries a bar on the rail's edge as well as its
           // surface, so the choice does not rest on a tint alone. A button
           // whose surface is open is marked the same way.
@@ -54,7 +62,7 @@ function RailButton({ item }: { item: RailItem }) {
             <Badge
               variant="count"
               aria-hidden="true"
-              className="absolute -top-0.5 -right-0.5 ring-2 ring-chrome"
+              className="absolute -top-0.5 -right-0.5"
             >
               {item.badge > BADGE_LIMIT ? `${BADGE_LIMIT}+` : item.badge}
             </Badge>
@@ -67,8 +75,14 @@ function RailButton({ item }: { item: RailItem }) {
               data-pin={item.pin}
               aria-hidden="true"
               className={cn(
-                "absolute top-0.5 right-0.5 size-2 rounded-full ring-1 ring-inset",
-                item.pin === "failed" ? "ring-destructive" : "ring-faint",
+                "absolute top-0.5 right-0.5 size-2 rounded-full",
+                item.pin === "attention" || item.pin === "busy"
+                  ? "bg-muted-foreground"
+                  : "ring-1 ring-inset",
+                item.pin === "busy" && "motion-safe:animate-pulse",
+                item.pin === "failed"
+                  ? "ring-destructive"
+                  : item.pin === "unknown" && "ring-faint",
               )}
             />
           ) : null}

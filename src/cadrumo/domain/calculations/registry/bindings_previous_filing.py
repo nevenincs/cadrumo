@@ -296,7 +296,7 @@ def previous_filing_observation_requirements(
     """
     accumulator = _PreviousFilingRequirementAccumulator()
     # Same closed vocabulary as
-    # :attr:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition.treatment`
+    # :attr:`~cadrumo.domain.calculations.registry.schema_revision_members.DependencyClassificationDefinition.treatment`
     # and :attr:`RegistryFoldRequirement.dependency_treatment`, which this
     # value ultimately feeds -- typed to match rather than widened to `str`.
     dependency_treatments_by_source = {
@@ -654,7 +654,7 @@ def _previous_filing_selector(binding: BindingDefinition) -> PreviousFilingProvi
     if missing:
         raise RegistryValidationError(
             f"binding {binding.id!r} carries a malformed previous-filing selector missing {missing}",
-            context={"binding_id": str(binding.id)},
+            context={"binding_id": binding.id},
         )
     return selector
 

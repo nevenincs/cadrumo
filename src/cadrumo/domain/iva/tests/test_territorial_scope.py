@@ -12,7 +12,8 @@ from datetime import date
 import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
-from ..classification import IvaTerritorialScope, resolve_iva_classification_catalogue
+from ..classification import resolve_iva_classification_catalogue
+from ..schema import IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -62,20 +62,25 @@ import re
 from collections.abc import Callable, Hashable, Mapping
 from functools import cache, lru_cache
 from types import MappingProxyType
-from typing import cast, overload
+from typing import TYPE_CHECKING, cast, overload
 from urllib.parse import urlparse
 
-from ..classification.policies import ClassificationPolicy as _ClassificationPolicy
-from ..classification.policies import RedactionRule as _RedactionRule
-from ..classification.policies import RedactionStrategy as _RedactionStrategy
-from ..classification.policies import SensitivityClass as _SensitivityClass
-from ..classification.policies import default_policy_for as _default_policy_for
 from ..hashing import sha256_hex as _sha256_hex
 from ..iban import IBAN_SHAPE_RE as _IBAN_SHAPE_RE
 from ..iban import iban_mod_97 as _iban_mod_97
 from ..iban import normalise_iban as _normalise_iban
 from ..type_guards import is_object_dict, is_object_list, is_object_tuple
 from .tax_identity_admission import tax_identity_admission
+
+if TYPE_CHECKING:
+    from ..classification.policies import ClassificationPolicy as _ClassificationPolicy
+    from ..classification.policies import RedactionRule as _RedactionRule
+    from ..classification.policies import SensitivityClass as _SensitivityClass
+
+# The classification policies are pydantic records. Every process imports this
+# module through its logging filters before it has parsed a command, so the
+# policy table and the rule registry built from it load on the first redaction
+# that consults them, not with the import.
 
 ALWAYS_REDACT_KEY_TERMS: frozenset[str] = frozenset(
     {
@@ -355,6 +360,19 @@ _CLI_PROFILE_ID_KEYS = frozenset(
     },
 )
 _CLI_PROFILE_REFERENCE_KEYS = frozenset({"active_profile"})
+_CLI_PUBLIC_CONTROL_UUID_KEYS = frozenset(
+    {
+        "request_id",
+        "grant_id",
+        "key_id",
+        "credential_reference",
+        "session_id",
+        "parent_session_id",
+        "target_session_id",
+        "session_ids",
+        "reactivated_grants",
+    },
+)
 _CLI_BUCKET_ID_KEYS = frozenset(
     {
         "active_bucket_id",
@@ -426,56 +444,62 @@ def _host_only(value: str) -> str:
     if value == aeat_authentication_url():
         return value
     parsed = urlparse(value)
-    if not parsed.hostname:
+    if not (parsed.hostname is not None and parsed.hostname):
         return "https://[redacted]"
     scheme = parsed.scheme or "https"
     return f"{scheme}://{parsed.hostname}"
 
 
-_DEFAULT_RULES: Mapping[str, _RedactionRule] = MappingProxyType(
-    {
-        "nif-hash": _RedactionRule(
-            name="nif-hash",
-            pattern=NIF_PATTERN,
-            strategy=_RedactionStrategy.SHA256_PREFIX,
-        ),
-        "nif-separated-hash": _RedactionRule(
-            name="nif-separated-hash",
-            pattern=_SEPARATED_NIF_PATTERN,
-            strategy=_RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
-        ),
-        "cif-hash": _RedactionRule(
-            name="cif-hash",
-            pattern=_CIF_PATTERN,
-            strategy=_RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
-        ),
-        "nif-iva-hash": _RedactionRule(
-            name="nif-iva-hash",
-            pattern=_NIF_IVA_PATTERN,
-            strategy=_RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA,
-        ),
-        "iban-hash": _RedactionRule(
-            name="iban-hash",
-            pattern=_IBAN_PATTERN,
-            strategy=_RedactionStrategy.SHA256_PREFIX_IF_IBAN,
-        ),
-        "url-host-only": _RedactionRule(
-            name="url-host-only",
-            pattern=_URL_PATTERN,
-            strategy=_RedactionStrategy.HOST_ONLY,
-        ),
-        "token-fingerprint": _RedactionRule(
-            name="token-fingerprint",
-            pattern=_BEARER_PATTERN,
-            strategy=_RedactionStrategy.FINGERPRINT,
-        ),
-        "bearer-token-fingerprint": _RedactionRule(
-            name="bearer-token-fingerprint",
-            pattern=_OPAQUE_BEARER_PATTERN,
-            strategy=_RedactionStrategy.FINGERPRINT,
-        ),
-    },
-)
+@cache
+def _default_rules() -> Mapping[str, _RedactionRule]:
+    """Return the frozen registry of named redaction rules."""
+    from ..classification.policies import RedactionRule as _RedactionRule
+    from ..classification.policies import RedactionStrategy as _RedactionStrategy
+
+    return MappingProxyType(
+        {
+            "nif-hash": _RedactionRule(
+                name="nif-hash",
+                pattern=NIF_PATTERN,
+                strategy=_RedactionStrategy.SHA256_PREFIX,
+            ),
+            "nif-separated-hash": _RedactionRule(
+                name="nif-separated-hash",
+                pattern=_SEPARATED_NIF_PATTERN,
+                strategy=_RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
+            ),
+            "cif-hash": _RedactionRule(
+                name="cif-hash",
+                pattern=_CIF_PATTERN,
+                strategy=_RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
+            ),
+            "nif-iva-hash": _RedactionRule(
+                name="nif-iva-hash",
+                pattern=_NIF_IVA_PATTERN,
+                strategy=_RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA,
+            ),
+            "iban-hash": _RedactionRule(
+                name="iban-hash",
+                pattern=_IBAN_PATTERN,
+                strategy=_RedactionStrategy.SHA256_PREFIX_IF_IBAN,
+            ),
+            "url-host-only": _RedactionRule(
+                name="url-host-only",
+                pattern=_URL_PATTERN,
+                strategy=_RedactionStrategy.HOST_ONLY,
+            ),
+            "token-fingerprint": _RedactionRule(
+                name="token-fingerprint",
+                pattern=_BEARER_PATTERN,
+                strategy=_RedactionStrategy.FINGERPRINT,
+            ),
+            "bearer-token-fingerprint": _RedactionRule(
+                name="bearer-token-fingerprint",
+                pattern=_OPAQUE_BEARER_PATTERN,
+                strategy=_RedactionStrategy.FINGERPRINT,
+            ),
+        },
+    )
 
 
 def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ...]:
@@ -514,14 +538,15 @@ def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ..
     """
     from ..errors.hierarchy import RedactionError
 
-    unresolvable = [name for name in policy.redaction_rules if name not in _DEFAULT_RULES]
+    rules = _default_rules()
+    unresolvable = [name for name in policy.redaction_rules if name not in rules]
     if unresolvable:
-        known = ", ".join(sorted(_DEFAULT_RULES))
+        known = ", ".join(sorted(rules))
         raise RedactionError(
             f"policy for {policy.sensitivity.value!r} names redaction rule(s) that do not exist: "
             f"{', '.join(repr(name) for name in unresolvable)}; declared rules are: {known}"
         )
-    return tuple(_DEFAULT_RULES[name] for name in policy.redaction_rules)
+    return tuple(rules[name] for name in policy.redaction_rules)
 
 
 @cache
@@ -543,7 +568,9 @@ def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionR
         table and the rule registry are both frozen mappings of frozen
         records, and every redacted string resolved this afresh.
     """
-    return default_rules_for(_default_policy_for(sensitivity))
+    from ..classification.policies import default_policy_for
+
+    return default_rules_for(default_policy_for(sensitivity))
 
 
 @cache
@@ -754,6 +781,8 @@ def _admits_spanish_identity(normalised: str, structurally_shaped: Callable[[obj
 
 
 def _apply_one(rule: _RedactionRule, value: str) -> str:
+    from ..classification.policies import RedactionStrategy as _RedactionStrategy
+
     pattern = _compiled_rule_pattern(rule.pattern)
     protected = _timestamp_spans(value)
     identity_protected = (*protected, *_uuid_spans(value))
@@ -1206,7 +1235,7 @@ def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission: Ha
     the lifetime of the process: a tax identifier that was redacted on the way
     out stays readable in memory until it is evicted. The bound is 16,384
     entries of at most :data:`_CLI_STRING_CACHE_MAX_LENGTH` characters each. A
-    one-shot CLI process exits moments later; the TUI and MCP hosts are
+    one-shot CLI process exits moments later; the TUI and external client hosts are
     long-lived and keep the entries for as long as they run.
 
     ``admission`` is part of the key only: an answer computed under one
@@ -1335,11 +1364,18 @@ def _redact_structured_for_cli_output(
 
 
 def _is_public_cli_reference(key: object | None, value: object) -> bool:
-    """Keep reviewed public source references intact in CLI payloads."""
+    """Keep reviewed source references and canonical control UUIDs intact in CLI payloads."""
     # The official locator is a reviewed bundled source path, and registry
     # source-reference ids are public authority keys. Their exceptions are
     # key-scoped so operator URLs and identity-like strings remain redacted.
-    return isinstance(value, str) and (key == "official_locator" or key in {"source_refs", "workbook_source"})
+    if not isinstance(value, str):
+        return False
+    if key == "official_locator" or key in {"source_refs", "workbook_source"}:
+        return True
+    # Control references let the operator carry out the next reviewed action.
+    # Their exact field names and canonical UUID shape keep unrelated identity
+    # values, invalid references, and free text in the normal redaction path.
+    return key in _CLI_PUBLIC_CONTROL_UUID_KEYS and _is_cli_profile_reference(value)
 
 
 def _unique_mapping_key(candidate: object, existing: Mapping[object, object]) -> object:
@@ -1379,7 +1415,9 @@ def redact_for_log(text: str) -> str:
     Returns:
         The redacted string.
     """
-    return redact(text, rules=default_rules_for_class(_SensitivityClass.AUDIT))
+    from ..classification.policies import SensitivityClass
+
+    return redact(text, rules=default_rules_for_class(SensitivityClass.AUDIT))
 
 
 def redact_validation_context(context: Mapping[str, object]) -> dict[str, object]:

@@ -12,6 +12,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.entrypoints.tests.modelo_operator_work_storage import (
+    SEEDED_AT,
+    AppliedEdit,
+    SeededOperatorWork,
+    seeded_operator_work,
+)
+
 from ...application.modelo.action_errors import ModeloEditRefusedError
 from ...application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -26,7 +33,6 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.operations import OperationEffect
 from ...domain.filing.schema import ModeloScalar
 from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
-from .modelo_operator_work_storage import SEEDED_AT, AppliedEdit, SeededOperatorWork, seeded_operator_work
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

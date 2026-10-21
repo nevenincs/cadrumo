@@ -342,7 +342,7 @@ def projection_for_taxpayer(
     elif as_of is not None:
         raise UserProfileValidationError("an as-of taxpayer projection requires the profile record or snapshot")
     else:
-        mapping = {str(key): str(value) for key, value in facts.items() if value is not None}
+        mapping = {key: str(value) for key, value in facts.items() if value is not None}
     return taxpayer_profile_from_mapping(
         mapping,
         tax_id_default=tax_id_default,

@@ -11,7 +11,7 @@ written down once instead of a hundred and eight times, so a payload cannot
 quietly disagree with the model it projects about whether empty is allowed.
 Where a real domain concept exists, its own alias is the better home and these
 should not be reached for -- an evidence reference is
-:obj:`EvidenceReference`, not a bounded string that happens to be non-empty.
+:obj:`cadrumo.domain.modelos.filing_text.EvidenceReference`, not a bounded string that happens to be non-empty.
 
 ``PositiveCount`` exists because pydantic's ``PositiveInt`` is not a drop-in
 substitute at these sites. It is ``Gt(0)`` where these are ``Ge(1)``; for an

@@ -15,7 +15,14 @@ def build_paths(build: Path) -> dict[str, Path]:
         if not isinstance(key, str) or not isinstance(relative, str):
             raise ValueError("CMake output names and directories must be strings")
         member = PurePosixPath(relative)
-        if not member.parts or member.is_absolute() or ".." in member.parts or ":" in relative or "\\" in relative:
+        if (
+            not member.parts
+            or member.is_absolute()
+            or ".." in member.parts
+            or "_deps" in {part.casefold() for part in member.parts}
+            or ":" in relative
+            or "\\" in relative
+        ):
             raise ValueError(f"Invalid CMake output directory: {relative}")
         target = build
         for part in member.parts:

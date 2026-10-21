@@ -112,7 +112,7 @@ def _local_declaration_row(
         )
     )
     return DeclarationListRow(
-        str(declaration.work_unit_id),
+        declaration.work_unit_id,
         str(declaration.modelo),
         declaration.period,
         state,

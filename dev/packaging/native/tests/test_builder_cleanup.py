@@ -1,4 +1,4 @@
-"""The managed builder cleans without Python and restores before individual targets run."""
+"""CMake uses an existing interpreter and never provisions a second environment."""
 
 from __future__ import annotations
 
@@ -28,10 +28,7 @@ def test_builder_cleanup_and_individual_rebuild(tmp_path: Path, external: bool) 
         (source / name).touch()
     script = source / "fake_uv.py"
     script.write_text(
-        "import os\nfrom pathlib import Path\n"
-        "root = Path(os.environ['UV_PROJECT_ENVIRONMENT'])\n"
-        "python = root / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')\n"
-        "python.parent.mkdir(parents=True, exist_ok=True)\npython.write_text('managed builder')\n",
+        f"import sys\nassert sys.argv[1:] == ['python', 'find', '--no-python-downloads']\nprint({sys.executable!r})\n",
         encoding="utf-8",
     )
     fake_uv = source / ("uv.cmd" if os.name == "nt" else "uv")
@@ -66,11 +63,11 @@ def test_builder_cleanup_and_individual_rebuild(tmp_path: Path, external: bool) 
     command("--build", str(build), "--target", "individual", "sibling_target")
     sibling_time = (build / "sibling").stat().st_mtime_ns
     output = command("--build", str(build), "--target", "clean-setup-native-builder")
-    assert not (build / "_deps/builder").exists()
-    if external:
-        assert "externally owned" in output
-        assert Path(sys.executable).exists()
+    assert not (build / "_deps").exists()
+    assert "externally owned" in output
+    assert Path(sys.executable).exists()
     command("--build", str(build), "--target", "individual", "sibling_target")
     assert (build / "sibling").stat().st_mtime_ns == sibling_time
-    if not external:
-        assert (build / "_deps/builder").exists()
+    assert not (build / "_deps").exists()
+    assert not (source / ".venv").exists()
+    assert not (source / "var").exists()

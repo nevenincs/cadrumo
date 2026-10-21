@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable, Iterator
+from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -50,7 +50,6 @@ from cadrumo.application.operations.persistence.journal import OperationPersiste
 from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
@@ -62,6 +61,8 @@ from cadrumo.core.operations import (
 )
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -133,7 +134,7 @@ class _SyntheticIvaRemoteStatePort:
         raise AssertionError("history capture must not request the wallet endpoint")
 
     @contextmanager
-    def active_storage_span(self) -> Iterator[None]:
+    def active_storage_span(self) -> Generator[None]:
         self.storage_span_entries += 1
         self.storage_span_depth += 1
         try:
@@ -182,7 +183,7 @@ class _SyntheticIvaRemoteStatePort:
         self._trace.append("capture")
 
         @asynccontextmanager
-        async def tracked_guard() -> AsyncIterator[None]:
+        async def tracked_guard() -> AsyncGenerator[None]:
             async with effect_guard():
                 self.guard_entries += 1
                 self.guard_depth += 1
@@ -250,7 +251,7 @@ class _ResourceScope:
         self.close_calls = 0
 
     @contextmanager
-    def activate(self) -> Iterator[None]:
+    def activate(self) -> Generator[None]:
         self.activation_entries += 1
         self.activation_depth += 1
         try:
@@ -269,8 +270,10 @@ async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -
     return await supervisor.settled(operation_id)
 
 
-def test_supervisor_admits_exact_mcp_profile_and_projects_guarded_iva_history_capture(tmp_path: Path) -> None:
-    """Record a synthetic IVA history capture under exact-profile MCP authority."""
+def test_supervisor_admits_exact_external_client_profile_and_projects_guarded_iva_history_capture(
+    tmp_path: Path,
+) -> None:
+    """Record a synthetic IVA history capture under exact-profile external client authority."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
         trace: list[str] = []
@@ -319,7 +322,7 @@ def test_supervisor_admits_exact_mcp_profile_and_projects_guarded_iva_history_ca
             profile_id=profile_id,
             destination_id=uuid4(),
             action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=registration.contract,
             published_authority=Availability.AVAILABLE,
         )
@@ -379,7 +382,6 @@ def test_supervisor_admits_exact_mcp_profile_and_projects_guarded_iva_history_ca
         terminal, projected = asyncio.run(run())
 
     assert definition.definition_id == "live.iva-wallet.history-capture"
-    assert OperationFrontendProjection.MCP in definition.permitted_frontends
     assert terminal.lifecycle is OperationLifecycle.TERMINAL
     assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
     assert terminal.effect is OperationEffect.UPDATED

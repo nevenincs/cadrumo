@@ -31,7 +31,7 @@ from ._review_thumbnails import render_thumbnail
 
 def _first(query: Mapping[str, list[str]], name: str) -> str | None:
     values = query.get(name)
-    return values[0] if values else None
+    return values[0] if (values is not None and values) else None
 
 
 _DIGEST_PATTERN: Final[str] = r"^[0-9a-f]{64}$"

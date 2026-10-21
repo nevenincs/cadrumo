@@ -7,47 +7,35 @@ and sent a text-only prompt: the model was asked to read an invoice it had never
 been shown, and answered confidently from nothing. No exception, no warning, a
 plausible fabricated figure.
 
-These tests hold that shut. Nothing here is mocked, stubbed, or patched: the
-refusal crosses the real :class:`LLMClient` and a real adapter, the text-only
-success crosses a real HTTP transport to a loopback endpoint, and the Anthropic
-payload is the payload the adapter actually builds.
+These tests hold that shut. The refusal crosses the real :class:`LLMClient`
+and the real agent adapter; only the agent service behind the model-run port
+is a recording stand-in, so what reached the lane is observed, not assumed.
 """
 
 from __future__ import annotations
 
 import asyncio
 import base64
-from collections.abc import Generator, Mapping
-from contextlib import contextmanager
-from http import HTTPStatus
+from collections.abc import Mapping
 from io import BytesIO
 from pathlib import Path
-from queue import Queue
-from typing import override
 
 import pytest
 from PIL import Image
-from pydantic import SecretStr, ValidationError
+from pydantic import ValidationError
 
-from .....core.config import override_settings
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
+
 from .....core.config_support import LLMProvider
 from .....core.image_media_type import ImageMediaType
+from .....core.model_catalogue import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from .....tests.loopback_llm import (
-    SilentLoopbackHandler,
-    openai_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
 from ..client import LLMClient
 from ..errors import LLMConfigError
 from ..models import LLMRequest, MultimodalImageInput
-from ..providers.anthropic import build_user_content
-from ..providers.base import ProviderRequest
-from ..providers.gemini import GeminiAdapter
+from ..providers.agent import AgentAdapter
 from ..providers.local import LocalAdapter
-from ..providers.openai import OpenAIAdapter
+from .model_run_support import IMAGE_LANE, TEXT_ONLY_LANE, serving_agent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -64,195 +52,106 @@ def _png_image() -> MultimodalImageInput:
     )
 
 
-def _settings(tmp_path: Path, *, openai_chat_url: str | None = None) -> EnvFileFreeSettings:
-    """Settings whose provider credentials exist but whose endpoints stay on this host."""
-    base = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model="gpt-oss",
+def _settings(tmp_path: Path) -> EnvFileFreeSettings:
+    """Settings whose LLM stores stay inside ``tmp_path``."""
+    return EnvFileFreeSettings(
+        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
-        cadrumo_llm_openai_api_key=SecretStr("sk-loopback-only"),
-        cadrumo_llm_gemini_api_key=SecretStr("gemini-loopback-only"),
     )
-    if openai_chat_url is None:
-        return base
-    return base.model_copy(update={"cadrumo_llm_openai_chat_completions_url": openai_chat_url})
 
 
 def _client(settings: EnvFileFreeSettings) -> LLMClient:
-    """Build a real client, letting it construct its own core-side stores.
-
-    The cache and usage recorder are deliberately NOT injected. Passing them
-    built exactly what ``LLMClient.__init__`` already defaults to, from the same
-    two settings fields, so the injection changed nothing about the test and
-    only added an import of the persistence-backed stores into this package.
-
-    That import was the sole reason the inference subpackage appeared to reach
-    persistence: the boundary contract walks import chains, and a test importing
-    the core-side cache puts one there whether or not anything persists. The
-    property the contract protects is real -- the encryption exemption rests on
-    this package persisting nothing -- so the honest fix is to stop importing
-    what the test never needed, not to carve the chain out.
-    """
+    """Build a real client, letting it construct its own core-side stores."""
     return LLMClient(settings=settings)
 
 
-@contextmanager
-def _serve_openai() -> Generator[tuple[str, Queue[dict[str, object]]]]:
-    """Run a loopback endpoint speaking the OpenAI Chat Completions shape."""
-    events: Queue[dict[str, object]] = Queue()
-
-    class _Endpoint(SilentLoopbackHandler):
-        @override
-        def do_POST(self) -> None:
-            events.put({"body": read_json_body(self)})
-            write_json_response(self, openai_chat_reply(" text-only completion "), status=HTTPStatus.OK)
-
-    with serving_loopback(_Endpoint, path="/v1/chat/completions") as endpoint:
-        yield endpoint, events
+def _vision_request() -> LLMRequest:
+    return LLMRequest(
+        prompt=_PROMPT,
+        provider_override=LLMProvider.AGENT,
+        model_role=ModelRole.VISION_TRANSCRIPTION,
+        images=(_png_image(),),
+    )
 
 
-class TestTextOnlyProviderRefusesImages:
+def _refusal_facts(error: LLMConfigError) -> Mapping[str, object]:
+    verdict = error.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "llm.agent.model_run_completed"
+    return verdict.evidence[0].values
+
+
+class TestALaneThatTakesNoImagesRefusesThem:
     """The safety-critical case: images must never be dropped in silence."""
 
-    def test_a_vision_request_at_a_text_only_provider_refuses(self, tmp_path: Path) -> None:
-        """Routing images at OpenAI raises, naming the provider and the images.
+    def test_images_for_a_lane_whose_catalog_takes_none_refuse_before_any_run(self, tmp_path: Path) -> None:
+        """The lane's catalog entry says it takes no images, so nothing is sent.
 
-        The refusal must be reachable WITHOUT a network call -- it fires before
-        dispatch, so no loopback endpoint is served here. If the guard were
-        absent the request would leave for api.openai.com carrying only the
-        prompt, which is precisely the silent discard being prevented.
+        The empty run list is the load-bearing assertion: the refusal has to fire
+        before dispatch, or the lane would be asked to read a page it never got.
         """
-        settings = _settings(tmp_path)
-        request = LLMRequest(
-            prompt=_PROMPT,
-            provider_override=LLMProvider.OPENAI,
-            images=(_png_image(),),
-        )
-        with pytest.raises(LLMConfigError) as caught:
-            asyncio.run(_client(settings).complete(request))
-        verdict = caught.value.terminal_precondition_verdict
-        assert verdict is not None
-        assert verdict.failed_condition_id == "llm.vision.input_supported"
-        assert verdict.evidence[0].values == {
-            "image_input_count": 1,
-            "provider": LLMProvider.OPENAI.value,
-            "vision_input_supported": False,
+        with serving_agent(lane=TEXT_ONLY_LANE) as service, pytest.raises(LLMConfigError) as caught:
+            asyncio.run(_client(_settings(tmp_path)).complete(_vision_request()))
+
+        assert _refusal_facts(caught.value) == {
+            "model_run_refusal": "input_not_supported",
+            "model_role": ModelRole.VISION_TRANSCRIPTION.value,
         }
+        assert service.runs == []
 
-    def test_the_refusal_also_covers_gemini(self, tmp_path: Path) -> None:
-        """The second text-only adapter is gated by the same one guard.
+    def test_the_agents_own_admission_refusal_reaches_the_consumer_as_the_same_code(self, tmp_path: Path) -> None:
+        """A lane whose catalog says nothing is asked; the agent decides at admission."""
+        with (
+            serving_agent(run_refusal=ModelRunRefusalCode.INPUT_NOT_SUPPORTED) as service,
+            pytest.raises(LLMConfigError) as caught,
+        ):
+            asyncio.run(_client(_settings(tmp_path)).complete(_vision_request()))
 
-        Named explicitly rather than left implied: the whole point of declaring
-        capability as class data enforced at one dispatch point is that a
-        second text-only adapter needs no code of its own to be safe.
-        """
-        settings = _settings(tmp_path)
-        request = LLMRequest(
-            prompt=_PROMPT,
-            provider_override=LLMProvider.GEMINI,
-            images=(_png_image(),),
-        )
-        with pytest.raises(LLMConfigError) as caught:
-            asyncio.run(_client(settings).complete(request))
-        verdict = caught.value.terminal_precondition_verdict
-        assert verdict is not None
-        assert verdict.failed_condition_id == "llm.vision.input_supported"
-        assert verdict.evidence[0].values == {
-            "image_input_count": 1,
-            "provider": LLMProvider.GEMINI.value,
-            "vision_input_supported": False,
-        }
+        assert _refusal_facts(caught.value)["model_run_refusal"] == "input_not_supported"
+        assert len(service.runs) == 1
 
-    def test_a_text_only_request_at_a_text_only_provider_still_succeeds(self, tmp_path: Path) -> None:
-        """The guard is scoped to image-bearing requests and regresses nothing.
-
-        A real HTTP round trip through the real OpenAI adapter to a loopback
-        endpoint, so this fails if the guard ever widened to refuse an ordinary
-        text completion.
-        """
-        with _serve_openai() as (endpoint, events):
-            settings = _settings(tmp_path, openai_chat_url=endpoint)
-            request = LLMRequest(prompt=_PROMPT, provider_override=LLMProvider.OPENAI)
-            with override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
-                response = asyncio.run(_client(settings).complete(request))
+    def test_a_text_only_request_at_a_text_only_lane_still_succeeds(self, tmp_path: Path) -> None:
+        """The guard is scoped to image-bearing requests and regresses nothing."""
+        request = LLMRequest(prompt=_PROMPT, provider_override=LLMProvider.AGENT, model_role=ModelRole.TEXT_EXTRACTION)
+        with serving_agent(lane=TEXT_ONLY_LANE, replies=("text-only completion",)) as service:
+            response = asyncio.run(_client(_settings(tmp_path)).complete(request))
 
         assert response.text == "text-only completion"
-        assert response.provider is LLMProvider.OPENAI
-        observed = events.get_nowait()
-        body = observed["body"]
-        assert isinstance(body, Mapping)
-        messages = body.get("messages")
-        assert isinstance(messages, list)
-        assert messages[-1] == {"role": "user", "content": _PROMPT}
+        assert response.provider is LLMProvider.AGENT
+        ((_, body),) = service.runs
+        assert body.prompt == _PROMPT
+        assert body.attachments == ()
 
 
 class TestDeclaredImageCapability:
     """Capability is data on the adapter class, not per-adapter memory."""
 
-    def test_only_the_adapters_that_forward_images_declare_support(self) -> None:
-        """The declaration matches which adapters actually read ``request.images``.
+    def test_both_adapters_forward_images(self) -> None:
+        """The local adapter sends images itself; the agent adapter hands them to the lane.
 
-        Anchored to the real classes rather than a hand-listed set of names, so
-        a new adapter defaults to text-only and a rename cannot make this pass
-        vacuously.
+        Whether a given lane accepts them is the catalog's answer, checked at the
+        client's dispatch point, so the agent adapter declares that it carries them.
         """
-        from ..providers.anthropic import AnthropicAdapter
-
-        assert AnthropicAdapter.supports_images is True
         assert LocalAdapter.supports_images is True
-        assert OpenAIAdapter.supports_images is False
-        assert GeminiAdapter.supports_images is False
+        assert AgentAdapter.supports_images is True
 
 
-class TestAnthropicMultimodalPayload:
-    """The Anthropic adapter builds a real Messages API content-block list."""
+class TestAgentMultimodalPayload:
+    """The agent adapter puts each image on the run as one attachment, in order."""
 
-    def test_images_precede_the_text_and_carry_the_declared_media_type(self) -> None:
-        """One base64 image block per input, then exactly one text block."""
+    def test_each_image_is_an_attachment_carrying_its_declared_media_type(self, tmp_path: Path) -> None:
         first = _png_image()
         second = MultimodalImageInput.from_base64(first.base64_data, ImageMediaType.JPEG)
-        request = ProviderRequest(
-            request_id="req",
-            model="claude-opus-5",
-            prompt=_PROMPT,
-            system=None,
-            max_tokens=64,
-            temperature=0.0,
-            timeout_s=3,
-            images=(first, second),
-        )
+        request = _vision_request().model_copy(update={"images": (first, second)})
+        with serving_agent(lane=IMAGE_LANE) as service:
+            asyncio.run(_client(_settings(tmp_path)).complete(request))
 
-        content = build_user_content(request)
-
-        assert isinstance(content, list)
-        assert [block["type"] for block in content] == ["image", "image", "text"]
-        assert content[0] == {
-            "type": "image",
-            "source": {"type": "base64", "media_type": "image/png", "data": first.base64_data},
-        }
-        # The SECOND block proves the media type is carried per image from the
-        # input that declared it, rather than assumed once for the whole request:
-        # same bytes, different declaration, different block.
-        assert content[1] == {
-            "type": "image",
-            "source": {"type": "base64", "media_type": "image/jpeg", "data": second.base64_data},
-        }
-        assert content[2] == {"type": "text", "text": _PROMPT}
-
-    def test_a_text_only_request_keeps_the_bare_string_content(self) -> None:
-        """The text path is byte-identical to what it was before images existed."""
-        request = ProviderRequest(
-            request_id="req",
-            model="claude-opus-5",
-            prompt=_PROMPT,
-            system=None,
-            max_tokens=64,
-            temperature=0.0,
-            timeout_s=3,
-        )
-        assert build_user_content(request) == _PROMPT
+        ((_, body),) = service.runs
+        assert [attachment.media_type for attachment in body.attachments] == ["image/png", "image/jpeg"]
+        assert [attachment.base64_data for attachment in body.attachments] == [first.base64_data] * 2
+        assert body.prompt == _PROMPT
 
 
 class TestMultimodalImageInputDeclaresItsMediaType:

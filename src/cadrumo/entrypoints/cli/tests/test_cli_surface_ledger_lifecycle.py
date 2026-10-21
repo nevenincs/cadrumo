@@ -11,17 +11,16 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER
+from ....domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from ....tests.cli_envelope import unwrap_cli_result as _json
-from ._cli_json_support import _json_object
-from ._cli_surface_support import (
+from ....tests.cli_json_support import require_json_object
+from .profile_world_fixtures import cli_surface_isolated_backend
+from .scenario_support import (
     _active_bucket_id,
     _invoke,
     create_cli_surface_profile,
 )
-from ._strict_cli_fixture_support import cli_surface_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -55,7 +54,7 @@ def _create_manual_ledger_row(description: str, *, amount: str = "25.00", key: s
         ],
     )
     assert result.exit_code == 0, result.output
-    return _json_object(_json(result))
+    return require_json_object(_json(result))
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,7 +113,7 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
     from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ....domain.invoices.enums import IvaRate, PaymentStatus
     from ....domain.invoices.models import Invoice, InvoiceLine
-    from ....domain.iva.classification import InvoiceKind
+    from ....domain.iva.schema import InvoiceKind
 
     purchase_line = InvoiceLine(
         description="Material oficina",
@@ -161,7 +160,7 @@ def _ledger_lifecycle_attach(*, purchase_invoice_evidence_id: str) -> dict[str, 
         ],
     )
     assert attached.exit_code == 0, attached.output
-    return _json_object(_json(attached))
+    return require_json_object(_json(attached))
 
 
 def _ledger_lifecycle_lifecycle_transition(verb: str, *, reason: str, key: str) -> dict[str, object]:
@@ -181,7 +180,7 @@ def _ledger_lifecycle_lifecycle_transition(verb: str, *, reason: str, key: str) 
         ],
     )
     assert result.exit_code == 0, result.output
-    return _json_object(_json(result))
+    return require_json_object(_json(result))
 
 
 def _ledger_lifecycle_remove() -> tuple[dict[str, object], int, dict[str, object]]:
@@ -196,7 +195,7 @@ def _ledger_lifecycle_remove() -> tuple[dict[str, object], int, dict[str, object
         ["--format", "json", "app", "ledger", "remove", str(remove_row["transaction_id"]), "--yes"],
     )
     assert confirmed.exit_code == 0, confirmed.output
-    return _json_object(_json(dry)), _exit_code(refused), _json_object(_json(confirmed))
+    return require_json_object(_json(dry)), _exit_code(refused), require_json_object(_json(confirmed))
 
 
 def _ledger_lifecycle_export(tmp_path: Path) -> tuple[dict[str, object], Path]:
@@ -217,7 +216,7 @@ def _ledger_lifecycle_export(tmp_path: Path) -> tuple[dict[str, object], Path]:
         ],
     )
     assert exported.exit_code == 0, exported.output
-    return _json_object(_json(exported)), export_path
+    return require_json_object(_json(exported)), export_path
 
 
 def _ledger_lifecycle_reset() -> tuple[dict[str, object], int, dict[str, object]]:
@@ -227,7 +226,7 @@ def _ledger_lifecycle_reset() -> tuple[dict[str, object], int, dict[str, object]
     refused = _invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup"])
     confirmed = _invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup", "--yes"])
     assert confirmed.exit_code == 0, confirmed.output
-    return _json_object(_json(dry)), _exit_code(refused), _json_object(_json(confirmed))
+    return require_json_object(_json(dry)), _exit_code(refused), require_json_object(_json(confirmed))
 
 
 def test_app_ledger_lifecycle_round_trip_exercises_mutating_surfaces(
@@ -235,12 +234,12 @@ def test_app_ledger_lifecycle_round_trip_exercises_mutating_surfaces(
 ) -> None:
     outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
 
-    transaction = _json_object(outcome.attached_payload["transaction"])
+    transaction = require_json_object(outcome.attached_payload["transaction"])
     assert transaction["purchase_invoice_evidence_id"] == outcome.purchase_invoice_evidence_id
     assert outcome.attached_payload["bucket_event_ids"]
 
-    archived_transaction = _json_object(outcome.archived_payload["transaction"])
-    stashed_transaction = _json_object(outcome.stashed_payload["transaction"])
+    archived_transaction = require_json_object(outcome.archived_payload["transaction"])
+    stashed_transaction = require_json_object(outcome.stashed_payload["transaction"])
     assert archived_transaction["lifecycle_state"] == "ARCHIVED"
     assert stashed_transaction["lifecycle_state"] == "STASHED"
 

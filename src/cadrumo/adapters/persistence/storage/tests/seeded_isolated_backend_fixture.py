@@ -83,7 +83,11 @@ def seeded_isolated_backend_fixture(
     @contextmanager
     def _open_world(root: Path) -> Generator[None]:
         dispose_engine()
-        overrides = override_settings(**settings_overrides) if settings_overrides else nullcontext()
+        overrides = (
+            override_settings(**settings_overrides)
+            if (settings_overrides is not None and settings_overrides)
+            else nullcontext()
+        )
         with (
             overrides,
             isolated_profile_storage_root(tmp_path=root),

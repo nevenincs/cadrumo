@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
 from ....application.operations.public_period import PublicPeriod
 from ....core.period import Period
-from ..errors import CliRefusedBoundaryError
 from ..modelo_spreadsheet_cli import filing_period_or_refusal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

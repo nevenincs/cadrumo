@@ -19,7 +19,8 @@ mod fixture {
         VersionProbe,
     };
     use serde_json::{Value, json};
-    use std::collections::HashMap;
+    use sha2::{Digest, Sha256};
+    use std::collections::{BTreeMap, HashMap};
     use std::env;
     use std::ffi::c_void;
     use std::fs::{self, File, OpenOptions};
@@ -82,6 +83,21 @@ mod fixture {
 
     fn exit(code: u32) -> ! {
         process::exit(i32::from_ne_bytes(code.to_ne_bytes()))
+    }
+
+    pub fn retry_probe() -> ! {
+        fs::write("retry-probe-pid", process::id().to_string()).expect("record metadata child");
+        let mode = fs::read_to_string("retry-probe-mode").expect("metadata fixture mode");
+        match mode.as_str() {
+            "capable" => exit(0),
+            "legacy" => exit(USAGE),
+            "failed" => exit(UNEXPECTED_FAILURE),
+            "timeout" => {
+                thread::sleep(LIFETIME);
+                exit(UNEXPECTED_FAILURE)
+            }
+            _ => exit(USAGE),
+        }
     }
 
     /// Take sole ownership of one standard handle, as the runtime moves its protocol streams.
@@ -152,8 +168,21 @@ mod fixture {
         let environment: Vec<String> = env::vars_os()
             .map(|(name, _)| name.to_string_lossy().into_owned())
             .collect();
+        let package_fixed: BTreeMap<String, String> =
+            cadrumo_manager::contract::LAUNCH_PACKAGE_FIXED
+                .iter()
+                .filter_map(|(name, _)| {
+                    env::var(name).ok().map(|value| {
+                        (
+                            (*name).to_owned(),
+                            format!("{:x}", Sha256::digest(value.as_bytes())),
+                        )
+                    })
+                })
+                .collect();
         let record = json!({"pid": process::id(), "arguments": raw, "environment": environment,
-            "pinned_root": env::var(cadrumo_manager::contract::ROOT_VARIABLE).ok()});
+            "pinned_root": env::var(cadrumo_manager::contract::ROOT_VARIABLE).ok(),
+            "package_fixed_sha256": package_fixed});
         for index in 0.. {
             let path = root.join(format!("fixture-launch-{index}"));
             match OpenOptions::new().write(true).create_new(true).open(&path) {
@@ -347,6 +376,9 @@ mod fixture {
         let hang_after = number("hang_after");
         let hard_hang = options.get("hang").is_some_and(|hang| hang == "hard");
         let busy = options.contains_key("busy");
+        let busy_after = number("busy_after");
+        let unknown_in_flight = options.contains_key("unknown_in_flight");
+        let first_reply_delay = number("first_reply_delay_ms");
         let tick_age = number("tick_age_ms").unwrap_or(3);
         publish_boot_record(&arguments.root, &boot, &options);
         ready(&mut announcer, &boot, &arguments.identity);
@@ -389,12 +421,25 @@ mod fixture {
             match command.get("type").and_then(Value::as_str) {
                 Some("ping") if !hung => {
                     let seq = command.get("seq").and_then(Value::as_u64).expect("seq");
+                    if answered == 0
+                        && let Some(delay) = first_reply_delay
+                    {
+                        thread::sleep(Duration::from_millis(delay));
+                    }
                     answered += 1;
+                    let in_flight = if unknown_in_flight {
+                        "null".to_owned()
+                    } else {
+                        let busy = busy || busy_after.is_some_and(|after| answered > after);
+                        u8::from(busy).to_string()
+                    };
                     announcer.line(&format!(
                         "{{\"type\":\"heartbeat\",\"seq\":{seq},\"tick_age_ms\":{tick_age},\
-                         \"frontends\":0,\"in_flight_operations\":{}}}",
-                        u8::from(busy)
+                         \"frontends\":0,\"in_flight_operations\":{in_flight}}}"
                     ));
+                    // Evidence for the case, written after the reply so it never delays one;
+                    // a failed write is never a reason to stop serving.
+                    let _ = fs::write(arguments.root.join("fixture-pings"), answered.to_string());
                 }
                 Some("ping") => {}
                 Some("stop") if hung && hard_hang => {}
@@ -490,6 +535,9 @@ mod fixture {
 #[cfg(windows)]
 fn main() {
     let raw: Vec<String> = std::env::args().skip(1).collect();
+    if raw.as_slice() == ["--supports-retry"] {
+        fixture::retry_probe();
+    }
     match raw.split_first() {
         Some((first, rest)) if first == "--harness" => fixture::harness(rest),
         _ => fixture::runtime(&raw),

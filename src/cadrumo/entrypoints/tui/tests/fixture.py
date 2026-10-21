@@ -44,7 +44,7 @@ def workspace() -> Path:
 
     Concurrent reviewers each need their own session journal AND their own
     storage root: one shared journal means every ``open`` clobbers someone
-    else's walk, and one shared root means two agents contend on the same
+    else's walk, and one shared root means two delegated clients contend on the same
     SQLite bucket and active-profile pointer. Set
     ``CADRUMO_TUI_WORKSPACE`` to a name per reviewer and neither can
     happen.

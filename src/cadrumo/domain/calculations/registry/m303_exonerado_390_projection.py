@@ -70,7 +70,7 @@ def _project_exonerado_field(
 ) -> M303Exonerado390FieldProjection:
     """Project one authored exonerado-390 reference through typed evidence."""
     if isinstance(ref, M303Exonerado390OperacionesTercerosProjectionRef):
-        value = "X" if evidence.operaciones_terceros_declarables else None
+        value = "X" if (evidence.operaciones_terceros_declarables is True) else None
     else:
         row = rows_by_slot.get(ref.slot)
         value = None if row is None else _project_activity_field(ref, row)

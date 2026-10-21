@@ -32,6 +32,7 @@ pub mod installation;
 pub mod package;
 pub mod process;
 pub mod python;
+pub mod role;
 pub mod runtime;
 pub mod value;
 

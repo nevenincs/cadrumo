@@ -26,7 +26,7 @@ from dev.product_environment import clean_product_env
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
-if not __package__:
+if not (__package__ is not None and __package__):
     __package__ = "dev.packaging"
 
 _INSTALLED_WHEEL_BINDING = importlib.import_module("dev.packaging.installed_wheel_binding")

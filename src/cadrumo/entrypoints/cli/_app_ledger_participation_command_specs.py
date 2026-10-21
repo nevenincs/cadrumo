@@ -1,12 +1,18 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ._app_ledger_command_spec_policies import (
     _POLICY_3,
 )
-from .command_shared_contracts import DeferredTarget, LazyBinding, ResultSchemaSpec, SchemaState, TranslationKey
-from .command_spec import CommandSpec, InvocationSpec
 
 LEDGER_PARTICIPATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -19,10 +25,10 @@ LEDGER_PARTICIPATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
         policy=_POLICY_3,
-        handler=LazyBinding.available(DeferredTarget("._participation_cli", "participation_rebuild", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".participation_commands", "participation_rebuild", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerParticipationRebuildResult", __package__),
+            target=DeferredTarget(".ledger_results", "LedgerParticipationRebuildResult", __package__),
             identity="ledger.participation.rebuild",
         ),
     ),

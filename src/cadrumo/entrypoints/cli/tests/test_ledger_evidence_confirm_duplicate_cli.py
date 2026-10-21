@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.json_contract import NoticeSeverity
-from .._ledger_evidence_cli import _evidence_confirm_notices, _evidence_confirm_payload
 from ..ledger_business_payloads import EvidenceConfirmResult
+from ..ledger_evidence_commands import _evidence_confirm_notices, _evidence_confirm_payload
 from .test_ledger_evidence_confirm_cli import _projection as _confirm_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

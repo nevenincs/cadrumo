@@ -12,11 +12,14 @@
 //!   ends, and the next claim takes it.
 //! - *Linux:* `{manager id}.session.{XDG_SESSION_ID}.lock` in the user's private
 //!   `XDG_RUNTIME_DIR`, locked with the kernel-released custody lock.
+//! - *macOS:* the canonical compact IPC name plus `.lock` in the retained Darwin
+//!   transport namespace. Session ownership and IPC share one acquired capability.
 
 use std::io;
 use std::time::Duration;
 
-/// A held per-session lock. Dropping it releases the lock.
+/// A held per-session lock. On macOS the IPC listener shares its capability;
+/// the lock releases only after the final session/listener owner drops it.
 ///
 /// On Windows the mutex belongs to the thread that claimed it, so the lock is held and
 /// released on that thread.
@@ -25,6 +28,15 @@ pub struct SessionLock {
     _mutex: super::windows::SessionMutex,
     #[cfg(target_os = "linux")]
     _lock: crate::custody::LocalLock,
+    #[cfg(target_os = "macos")]
+    claim: crate::macos::ipc::SessionClaim,
+}
+
+#[cfg(target_os = "macos")]
+impl SessionLock {
+    pub(crate) fn macos(&self) -> &crate::macos::ipc::SessionClaim {
+        &self.claim
+    }
 }
 
 const MAXIMUM_IDENTIFIER_BYTES: usize = 128;
@@ -63,7 +75,7 @@ pub fn session_lock_name(manager_id: &str, _user: &str, session: &str) -> io::Re
     Ok(format!("{}.session.{session}.lock", validated(manager_id)?))
 }
 
-/// Claim this session's lock for `manager_id`, polling until `patience` ends.
+/// Claim this session's lock for `manager_id`, waiting until `patience` ends.
 ///
 /// `Ok(None)` means another manager in this session holds it.
 pub fn claim_session(manager_id: &str, patience: Duration) -> io::Result<Option<SessionLock>> {
@@ -78,6 +90,31 @@ fn claim_platform(manager_id: &str, patience: Duration) -> io::Result<Option<Ses
     Ok(super::windows::claim(&name, &user, patience)?.map(|mutex| SessionLock { _mutex: mutex }))
 }
 
+/// A wait handle that ends when this session's holder of `manager_id`'s lock
+/// releases it or ends, so a waiting manager claims it again only then.
+#[cfg(windows)]
+pub struct SessionRelease(super::windows::ReleaseWatch);
+
+#[cfg(windows)]
+impl SessionRelease {
+    pub fn watch(manager_id: &str) -> io::Result<Self> {
+        let current = super::ManagerSession::current()?;
+        let user = super::windows::User::current()?;
+        let name = session_lock_name(manager_id, &user.sid, &current.session)?;
+        super::windows::watch_release(&name, &user).map(Self)
+    }
+
+    /// Wait on this beside the loop's other handles.
+    pub fn handle(&self) -> std::os::windows::io::BorrowedHandle<'_> {
+        self.0.handle()
+    }
+
+    /// Whether the lock was released since the last call; claim it after a true answer.
+    pub fn take(&self) -> bool {
+        self.0.take()
+    }
+}
+
 #[cfg(target_os = "linux")]
 fn claim_platform(manager_id: &str, patience: Duration) -> io::Result<Option<SessionLock>> {
     let current = super::ManagerSession::current()?;
@@ -85,7 +122,15 @@ fn claim_platform(manager_id: &str, patience: Duration) -> io::Result<Option<Ses
     Ok(super::linux::claim(&name, patience)?.map(|lock| SessionLock { _lock: lock }))
 }
 
-#[cfg(not(any(windows, target_os = "linux")))]
+#[cfg(target_os = "macos")]
+fn claim_platform(manager_id: &str, patience: Duration) -> io::Result<Option<SessionLock>> {
+    Ok(
+        crate::macos::ipc::SessionClaim::acquire(validated(manager_id)?, patience)?
+            .map(|claim| SessionLock { claim }),
+    )
+}
+
+#[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
 fn claim_platform(manager_id: &str, _patience: Duration) -> io::Result<Option<SessionLock>> {
     validated(manager_id)?;
     Err(io::ErrorKind::Unsupported.into())
@@ -168,6 +213,64 @@ mod tests {
         holder.join().expect("holder");
         let lock = claim_session(&manager, Duration::from_secs(2)).expect("claim");
         assert!(lock.is_some());
+    }
+
+    #[test]
+    fn a_waiting_claim_is_woken_when_the_holder_releases() {
+        let manager = manager_id("waiting");
+        let (held, holding) = mpsc::channel();
+        let holder_id = manager.clone();
+        let holder = std::thread::spawn(move || {
+            let lock = claim_session(&holder_id, Duration::ZERO)
+                .expect("claim")
+                .expect("free");
+            held.send(()).expect("report");
+            std::thread::sleep(Duration::from_millis(50));
+            drop(lock);
+        });
+        holding.recv().expect("held");
+        let lock = claim_session(&manager, Duration::from_secs(5))
+            .expect("claim")
+            .expect("released while waiting");
+        holder.join().expect("holder");
+        drop(lock);
+    }
+
+    #[test]
+    #[ignore = "manual native timing benchmark; shared-host wall time is not a gate"]
+    fn session_lock_handoff_benchmark() {
+        let mut delays = Vec::new();
+        for _ in 0..20 {
+            let manager = manager_id("timing");
+            let (held, holding) = mpsc::channel();
+            let (released, release_time) = mpsc::channel();
+            let holder_id = manager.clone();
+            let holder = std::thread::spawn(move || {
+                let lock = claim_session(&holder_id, Duration::ZERO)
+                    .expect("claim")
+                    .expect("free");
+                held.send(()).expect("report");
+                std::thread::sleep(Duration::from_millis(5));
+                let at = std::time::Instant::now();
+                drop(lock);
+                released.send(at).expect("release time");
+            });
+            holding.recv().expect("held");
+            let lock = claim_session(&manager, Duration::from_secs(5))
+                .expect("claim")
+                .expect("released");
+            let acquired = std::time::Instant::now();
+            delays.push(acquired.duration_since(release_time.recv().expect("release time")));
+            holder.join().expect("holder");
+            drop(lock);
+        }
+        delays.sort();
+        eprintln!(
+            "session_lock_handoff samples={} median_ms={:.3} max_ms={:.3}",
+            delays.len(),
+            (delays[9].as_secs_f64() + delays[10].as_secs_f64()) * 500.0,
+            delays[19].as_secs_f64() * 1000.0,
+        );
     }
 
     #[test]

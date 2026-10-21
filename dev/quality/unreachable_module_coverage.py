@@ -1,6 +1,8 @@
-"""Fail while any shipped module is not reachable from a product command.
+"""Fail while any shipped module is neither reachable from a product command nor used by ``dev/``.
 
-The unreachable-code audit owns discovery.  This gate deliberately has no
+The unreachable-code audit owns discovery, including the ``dev/`` clear: a
+module ``dev/`` tooling imports, and what it imports in turn, is in use, while
+a module only tests import is still reported.  This gate deliberately has no
 baseline, namespace exclusion, or intentional-disposition input: every live
 module finding is emitted, and only an empty finding set is green.
 """
@@ -22,13 +24,13 @@ _NOT_COMMAND_REACHED = frozenset(
 
 @dataclass(frozen=True, slots=True)
 class UnreachableModuleVerdict:
-    """The complete current set of modules no product command reaches."""
+    """The complete current set of modules no product command reaches and ``dev/`` does not use."""
 
     findings: tuple[ModuleFinding, ...]
 
     @property
     def is_clean(self) -> bool:
-        """Whether every shipped module is command-reachable."""
+        """Whether every shipped module is command-reachable or used by ``dev/``."""
         return not self.findings
 
     def report(self) -> str:

@@ -71,6 +71,7 @@ type _KdfStage = Literal[
     "cleanup",
 ]
 type _KdfCleanupStatus = Literal["completed", "unconfirmed", "failed"]
+type _CleanupPart = Literal["process", "pipes", "directory"]
 
 _PHASE_FIELDS: dict[_KdfStage, str] = {
     "start": "kdf_start_elapsed_ms",
@@ -81,6 +82,14 @@ _PHASE_FIELDS: dict[_KdfStage, str] = {
     "clean_exit": "kdf_clean_exit_elapsed_ms",
     "cleanup": "kdf_cleanup_elapsed_ms",
 }
+
+
+_NEVER_ATTESTED = "_kdf_worker_never_attested"
+
+
+def kdf_worker_never_attested(error: BaseException) -> bool:
+    """Whether ``error`` is a deadline that elapsed before the child attested, so no derivation began."""
+    return error.__dict__.get(_NEVER_ATTESTED) is True
 
 
 class _SupervisedKdfWorker:
@@ -95,18 +104,24 @@ class _SupervisedKdfWorker:
         self._job: _WindowsJob | None = None
         self._neutral_directory: tempfile.TemporaryDirectory[str] | None = None
         self._ready_payload: dict[str, object] | None = None
+        self._environment_keys: frozenset[str] | None = None
         self._expected_posix_file_descriptors: tuple[int, int] | None = None
         self._started_ns = 0
+        self._adopted_ns: int | None = None
         self._phase_elapsed_ms: dict[_KdfStage, float | None] = dict.fromkeys(_PHASE_FIELDS)
+        self._cleanup_elapsed_ms: dict[_CleanupPart, float | None] = dict.fromkeys(("process", "pipes", "directory"))
         self._failure_stage: _KdfStage | Literal["caller"] | None = None
         self._failure_type: str | None = None
         self._launch_attempted = False
         self._result_refused = False
         self._diagnostic_emitted = False
+        self._operation: KdfOperation | None = None
 
     def __enter__(self) -> _SupervisedKdfWorker:
         self._started_ns = time.monotonic_ns()
+        self._adopted_ns = None
         self._phase_elapsed_ms = dict.fromkeys(_PHASE_FIELDS)
+        self._cleanup_elapsed_ms = dict.fromkeys(("process", "pipes", "directory"))
         self._failure_stage = None
         self._failure_type = None
         self._launch_attempted = False
@@ -116,13 +131,34 @@ class _SupervisedKdfWorker:
             with self._phase("start"):
                 self._start()
             with self._phase("ready_wait"):
-                ready = self._read_response_frame()
+                try:
+                    ready = self._read_response_frame()
+                except TimeoutError as error:
+                    error.__dict__[_NEVER_ATTESTED] = True
+                    raise
             with self._phase("ready_attestation"):
                 self._verify_ready_attestation(ready)
             return self
         except BaseException as error:
             self._close_with_diagnostic(failed=True, primary_error=error)
             raise
+
+    def adopt(self, *, deadline: float) -> bool:
+        """Hand this attested, still idle child to one operation under that operation's deadline.
+
+        A child launched ahead of need has proved its limits but received no
+        request. It is handed over only while its process is still running
+        inside its containment; otherwise the caller discards it and launches
+        a fresh one.
+        """
+        process = self._process
+        if self._ready_payload is None or process is None or process.poll() is not None:
+            return False
+        if sys.platform == "win32" and (self._job is None or not self._job.contains(process)):
+            return False
+        self._deadline = deadline
+        self._adopted_ns = time.monotonic_ns()
+        return True
 
     def __exit__(self, exc_type: object, exc_value: object, _traceback: object) -> None:
         primary = exc_value if isinstance(exc_value, BaseException) else None
@@ -231,7 +267,19 @@ class _SupervisedKdfWorker:
                 elapsed_ms = max(0, time.monotonic_ns() - started) / 1_000_000
                 self._phase_elapsed_ms[stage] = (self._phase_elapsed_ms[stage] or 0.0) + elapsed_ms
 
+    @contextmanager
+    def _cleanup_span(self, part: _CleanupPart) -> Generator[None]:
+        """Attribute cleanup delay without changing failure precedence or ownership."""
+        started = time.monotonic_ns()
+        try:
+            yield
+        finally:
+            elapsed_ms = max(0, time.monotonic_ns() - started) / 1_000_000
+            self._cleanup_elapsed_ms[part] = (self._cleanup_elapsed_ms[part] or 0.0) + elapsed_ms
+
     def _exchange(self, payload: dict[str, object]) -> tuple[int, bytes]:
+        operation = payload.get("operation")
+        self._operation = operation if isinstance(operation, KdfOperation) else None
         with self._phase("request_write"):
             self._write_request(payload)
         with self._phase("result_wait"):
@@ -279,6 +327,11 @@ class _SupervisedKdfWorker:
         fields: dict[str, DiagnosticValue] = {
             name: self._phase_elapsed_ms[stage] for stage, name in _PHASE_FIELDS.items()
         }
+        fields.update(
+            kdf_cleanup_process_elapsed_ms=self._cleanup_elapsed_ms["process"],
+            kdf_cleanup_pipes_elapsed_ms=self._cleanup_elapsed_ms["pipes"],
+            kdf_cleanup_directory_elapsed_ms=self._cleanup_elapsed_ms["directory"],
+        )
         outcome = "completed"
         if self._failure_type is not None or cleanup_error is not None:
             outcome = "failed"
@@ -286,11 +339,30 @@ class _SupervisedKdfWorker:
             outcome = "unconfirmed"
         elif self._result_refused:
             outcome = "refused"
+        # A calibration probe exceeding its sample budget is an expected
+        # rejection of that grid point, not a failed password operation.
+        if (
+            self._operation is KdfOperation.CALIBRATE
+            and self._failure_stage == "result_wait"
+            and self._failure_type == "TimeoutError"
+            and cleanup_status == "completed"
+            and cleanup_error is None
+        ):
+            outcome = "sample_rejected"
+        finished_ns = time.monotonic_ns()
+        if self._adopted_ns is not None:
+            # A prestarted child may wait minutes for a password. Preserve that
+            # lifetime separately; it is not time spent handling the request.
+            fields["kdf_worker_age_seconds"] = max(0, finished_ns - self._started_ns) / 1_000_000_000
         fields.update(
+            kdf_operation=self._operation.value if self._operation is not None else None,
             stage=self._failure_stage,
             error_type=self._failure_type,
             outcome=outcome,
-            elapsed_seconds=max(0, time.monotonic_ns() - self._started_ns) / 1_000_000_000,
+            elapsed_seconds=max(
+                0, finished_ns - (self._adopted_ns if self._adopted_ns is not None else self._started_ns)
+            )
+            / 1_000_000_000,
             cleanup_status=cleanup_status,
             cleanup_incomplete=cleanup_status != "completed",
             cleanup_error_type=type(cleanup_error).__name__ if cleanup_error is not None else None,
@@ -300,7 +372,13 @@ class _SupervisedKdfWorker:
             logger,
             "kdf_worker_lifecycle",
             fields=fields,
-            level=logging.INFO if outcome == "completed" else logging.WARNING,
+            level=(
+                logging.DEBUG
+                if outcome in {"completed", "sample_rejected"}
+                else logging.WARNING
+                if outcome == "refused"
+                else logging.ERROR
+            ),
             primary_error=primary_error,
         )
 
@@ -321,7 +399,7 @@ class _SupervisedKdfWorker:
             )
             try:
                 self._launch_attempted = True
-                self._process, self._job = _launch_worker(
+                self._process, self._job, self._environment_keys = _launch_worker(
                     neutral_root=Path(self._neutral_directory.name),
                     request_read=request_read,
                     result_write=result_write,
@@ -373,6 +451,7 @@ class _SupervisedKdfWorker:
         _verify_ready_worker(
             payload,
             neutral_directory=self._neutral_directory,
+            environment_keys=self._environment_keys,
             expected_posix_file_descriptors=self._expected_posix_file_descriptors,
             process=process,
             job=self._job,
@@ -403,28 +482,32 @@ class _SupervisedKdfWorker:
         process = self._process
         job = self._job
         if process is not None:
-            if failed or process.poll() is None:
-                _terminate_process_tree(process, job)
-            elif job is not None:
-                job.close()
-            try:
-                process.wait(timeout=1.0)
-            except subprocess.TimeoutExpired:
-                _terminate_process_tree(process, job)
-            if process.returncode is None:
-                raise _supervision_refusal()
-            self._process = None
-            self._job = None
+            with self._cleanup_span("process"):
+                if failed or process.poll() is None:
+                    _terminate_process_tree(process, job)
+                elif job is not None:
+                    job.close()
+                try:
+                    process.wait(timeout=1.0)
+                except subprocess.TimeoutExpired:
+                    _terminate_process_tree(process, job)
+                if process.returncode is None:
+                    raise _supervision_refusal()
+                self._process = None
+                self._job = None
         # A Windows reader may hold the CRT descriptor lock while blocked in
         # os.read. Settle its writer before closing the parent pipe ends.
-        _close_fd(self._request_fd)
-        _close_fd(self._result_fd)
-        self._request_fd = None
-        self._result_fd = None
+        with self._cleanup_span("pipes"):
+            _close_fd(self._request_fd)
+            _close_fd(self._result_fd)
+            self._request_fd = None
+            self._result_fd = None
         if process is None and job is not None:
-            job.close()
-            self._job = None
-        self._cleanup_neutral_directory()
+            with self._cleanup_span("process"):
+                job.close()
+                self._job = None
+        with self._cleanup_span("directory"):
+            self._cleanup_neutral_directory()
 
     def _cleanup_neutral_directory(self) -> None:
         if self._neutral_directory is not None:

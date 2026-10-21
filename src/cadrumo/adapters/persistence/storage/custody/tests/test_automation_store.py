@@ -51,17 +51,8 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import get_a
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    ApiKeyRecord,
-    AuthorityState,
-    AutomationGrant,
-    ProfileAccessBinding,
-)
+from cadrumo.application.user_profile.access_contracts import ApiKeyRecord, AutomationGrant, ProfileAccessBinding
 from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
     AutomationCustodyPort,
     AutomationGrantMaterial,
     AutomationKeyVerifier,
@@ -76,6 +67,8 @@ from cadrumo.application.user_profile.login_session import authenticate_profile_
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 NOW = datetime(2026, 9, 26, tzinfo=UTC)

@@ -1,13 +1,19 @@
+import { openLogFilters, openPanelTab } from "../support/panel";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
+import { useDomTerminal } from "../support/terminal";
 
 // The development entry on the development server: the production shell on
 // the scenario host, with the documentation fixture on another origin. These
 // tests prove the scenarios present what they are named for. They are
 // presentation evidence only; no host, runtime or sign-in is behind them.
 
-const open = (target: Page, scenario: string, extra = "") =>
-  target.goto(`/scenarios.html?scenario=${scenario}&latency=0${extra}`);
+const open = async (target: Page, scenario: string, extra = "") => {
+  await target.goto(`/scenarios.html?scenario=${scenario}&latency=0${extra}`);
+  // Panel interaction tests open it explicitly after each fresh launch.
+  await target.keyboard.press("Control+Backquote");
+};
 
 const password = (target: Page) =>
   target.getByLabel(label("desktop.signin.password"), { exact: true });
@@ -28,20 +34,17 @@ const calls = (target: Page, call: string) => () =>
     call,
   );
 
-const openLogs = (target: Page) =>
-  target
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+const openLogs = (target: Page) => openPanelTab(target, "logs");
 
 test.beforeEach(async ({ page: target }) => {
+  await useDomTerminal(target);
   await target.addInitScript(() => {
     if (sessionStorage.getItem("layout-cleared")) return;
     localStorage.clear();
-    // Exercise the full panel layout as a returning user's saved choice.
+    // These terminal scenarios explicitly exercise the workspace arrangement.
     localStorage.setItem(
       "cadrumo-shell-layout",
-      JSON.stringify({ layout: { panelOpen: true } }),
+      JSON.stringify({ layout: { page: "docs", tuiShown: true } }),
     );
     sessionStorage.setItem("layout-cleared", "1");
   });
@@ -90,10 +93,10 @@ test("signed in: the TUI runs and the account can sign out", async ({
   );
   await expect(password(target)).toHaveCount(0);
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
     .click();
   await target
-    .getByRole("button", {
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
@@ -109,6 +112,98 @@ test("signed in: the TUI runs and the account can sign out", async ({
     .click();
   await expect(password(target)).toBeFocused();
 });
+
+// After signing out, signing in is offered by every element that offers it,
+// and none of them sends the person to the TUI: sign-in is Cadrumo's and the
+// runtime's, and the TUI cannot be operated by someone who is signed out.
+for (const way of ["menu", "pane", "palette"] as const)
+  test(`signing out, then signing in again from the ${way}: sign-in is offered everywhere and the TUI nowhere`, async ({
+    page: target,
+  }) => {
+    await open(target, "signed-in");
+    await expect(target.locator(".pane-tui .xterm-rows")).toContainText(
+      "Simulated TUI session",
+    );
+    const profileMenu = target.getByRole("button", {
+      name: label("desktop.titlebar.profile_menu"),
+    });
+    await profileMenu.click();
+    await target
+      .getByRole("menuitem", {
+        name: label("desktop.account.sign_out"),
+        exact: true,
+      })
+      .click();
+    await expect.poll(calls(target, "signOut")).toBe(1);
+
+    // The menu that signed out is still open, and offers sign-in.
+    const menu = target.locator(".account-menu");
+    const signIn = { name: label("desktop.signin.submit"), exact: true };
+    await expect(menu.getByRole("menuitem", signIn)).toBeVisible();
+    await expect(menu.getByRole("menuitem", { name: /TUI/ })).toHaveCount(0);
+    await expect(
+      menu.getByRole("menuitem", {
+        name: label("desktop.account.sign_out"),
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    if (way === "menu") {
+      await menu.getByRole("menuitem", signIn).click();
+    } else {
+      await target.keyboard.press("Escape");
+      await expect(menu).toHaveCount(0);
+    }
+
+    // Put aside or not, the dialog is there to be asked for, and the pane
+    // behind it offers the same.
+    const dialog = target.locator(".sign-in");
+    if (way !== "menu") {
+      await expect(dialog).toHaveCount(0);
+      const pane = target.locator(".pane-tui");
+      await expect(pane).toContainText(label("desktop.account.signed_out"));
+      await expect(pane.getByRole("button", signIn)).toBeVisible();
+      await expect(
+        pane.locator("[data-slot=empty]").getByRole("button", { name: /TUI/ }),
+      ).toHaveCount(0);
+      if (way === "pane") {
+        await pane.getByRole("button", signIn).click();
+      } else {
+        await target
+          .getByRole("button", { name: label("desktop.rail.search") })
+          .click();
+        await target
+          .locator(".palette")
+          .getByRole("combobox", { name: label("desktop.palette.label") })
+          .fill(label("desktop.signin.submit"));
+        await target.keyboard.press("Enter");
+      }
+    }
+
+    // The form is there, and no way to the TUI beside it.
+    await expect(dialog).toBeVisible();
+    await expect(password(target)).toBeFocused();
+    await expect(dialog.getByRole("button", { name: /TUI/ })).toHaveCount(0);
+    await expect(target.locator(".pane-tui .xterm")).toHaveCount(0);
+    await password(target).fill("anything");
+    await submit(target).click();
+    await expect.poll(calls(target, "signIn")).toBe(1);
+
+    // Signed in again: the TUI is back, and so is the way to sign out.
+    await expect(target.locator(".pane-tui .xterm-rows")).toContainText(
+      "Simulated TUI session",
+    );
+    await expect(dialog).toHaveCount(0);
+    await profileMenu.click();
+    await expect(
+      target.locator(".account-menu").getByRole("menuitem", {
+        name: label("desktop.account.sign_out"),
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      target.locator(".account-menu").getByRole("menuitem", signIn),
+    ).toHaveCount(0);
+  });
 
 test("wrong password: the refusal shows and nothing is retried", async ({
   page: target,
@@ -145,7 +240,7 @@ test("throttled: the wait is shown and submission is held", async ({
   await expect.poll(calls(target, "signIn")).toBe(1);
 });
 
-test("profile locked: the refusal shows and the TUI handover is offered", async ({
+test("profile locked: the refusal shows beside the form, which signs in as ever", async ({
   page: target,
 }) => {
   await open(target, "profile-locked");
@@ -153,15 +248,19 @@ test("profile locked: the refusal shows and the TUI handover is offered", async 
   await expect(dialog).toContainText(
     label("desktop.signin.refused.profile_locked"),
   );
-  await dialog
-    .getByRole("button", {
-      name: label("desktop.signin.open_tui"),
-      exact: true,
-    })
-    .click();
-  await expect(target.locator(".pane-tui .xterm-rows")).toContainText(
-    "Simulated TUI session",
+  await expect(password(target)).toBeVisible();
+  await expect(submit(target)).toBeEnabled();
+  await expect(dialog.getByRole("button", { name: /TUI/ })).toHaveCount(0);
+  await password(target).fill("anything");
+  await submit(target).click();
+  // This host refuses every try: the reason is said again and the form is
+  // still there for the next.
+  await expect.poll(calls(target, "signIn")).toBe(1);
+  await expect(dialog).toContainText(
+    label("desktop.signin.refused.profile_locked"),
   );
+  await expect(password(target)).toBeEnabled();
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(0);
 });
 
 test("runtime unavailable: said plainly, with submission disabled", async ({
@@ -189,7 +288,7 @@ test("loading: nothing is invented while the host has not answered", async ({
   await open(target, "loading");
   // The pane and its header say the same thing: the check is in flight.
   const pane = target.locator(".pane-tui");
-  await expect(pane.locator("[data-slot=empty]")).toHaveText(
+  await expect(pane.locator("[data-slot=account-loading]")).toHaveText(
     label("desktop.signin.checking"),
   );
   await expect(pane.locator(".pane-head")).toContainText(
@@ -218,8 +317,11 @@ test("error: refusals are shown, not swallowed", async ({ page: target }) => {
   await expect(target.locator(".pane-docs")).toContainText(
     label("desktop.host.failed"),
   );
-  // The failed status read is said in the sign-in dialog, with its code.
-  await expect(target.locator(".sign-in")).toContainText("timed_out");
+  // The failure stays visible without exposing the transport's code.
+  await expect(target.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.other"),
+  );
+  await expect(target.locator(".sign-in")).not.toContainText("timed_out");
   await target.keyboard.press("Escape");
   await expect(target.locator(".sign-in")).toHaveCount(0);
   await openLogs(target);
@@ -247,9 +349,11 @@ test("fixture records list every level, an unnamed source and a dropped count", 
 }) => {
   await open(target, "signed-in");
   await openLogs(target);
+  await openLogFilters(target);
   await target
     .getByLabel(label("desktop.logs.minimum_level"))
     .selectOption({ label: label("desktop.logs.level_all") });
+  await target.keyboard.press("Escape");
   for (const level of ["debug", "info", "warning", "error", "critical", "none"])
     await expect(
       target.locator(`.record.level-${level}`).first(),
@@ -266,19 +370,18 @@ test("sign-out refused: the sign-in stays and the failure shows", async ({
 }) => {
   await open(target, "sign-out-refused");
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
     .click();
   await target
-    .getByRole("button", {
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
     .click();
   await expect.poll(calls(target, "signOut")).toBe(1);
-  const account = target.getByRole("region", {
-    name: label("desktop.settings.session"),
-  });
-  await expect(account).toContainText("timed_out");
+  const account = target.locator(".account-menu");
+  await expect(account).toContainText(label("desktop.account.sign_out_failed"));
+  await expect(account).not.toContainText("timed_out");
   await expect(
     account.getByText(label("desktop.account.signed_in"), { exact: true }),
   ).toBeVisible();
@@ -313,8 +416,12 @@ test("the documentation fixture is another origin and answers the bridge", async
   const palette = target.getByRole("dialog", {
     name: label("desktop.palette.label"),
   });
-  await palette.getByRole("combobox").fill("sign-in");
-  const result = palette.getByRole("option", { name: /config sign-in-status/ });
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill("sign-in");
+  const result = palette
+    .getByRole("listbox")
+    .getByRole("option", { name: /config sign-in-status/ });
   await expect(result).toBeVisible();
   await result.click();
   await expect(palette).toBeHidden();
@@ -360,9 +467,14 @@ test("the palette's first section is the documentation's while a query searches 
   // The packaged acceptance run reads documentation results from the first
   // section; an action that matches the same query must never stand there.
   await open(target, "empty");
-  await target.keyboard.press("Control+KeyK");
+  await target
+    .getByRole("navigation", { name: label("desktop.rail.label") })
+    .getByRole("button", { name: label("desktop.rail.search"), exact: true })
+    .click();
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.rail.logs"));
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.rail.logs"));
   const sections = palette.locator(".palette-results > section");
   await expect(sections).toHaveCount(2);
   await expect(sections.first().getByRole("option")).toHaveCount(0);
@@ -435,15 +547,20 @@ test("the smallest window keeps the newest record in view", async ({
         )
         .map((control) => {
           const box = control.getBoundingClientRect();
-          return { left: box.left, right: box.right, width: box.width };
+          return {
+            left: box.left,
+            right: box.right,
+            width: box.width,
+            top: box.top,
+          };
         })
-        .sort((a, b) => a.left - b.left),
+        .sort((a, b) => a.top - b.top || a.left - b.left),
     );
   expect(controls.length).toBeGreaterThan(4);
   for (const [index, control] of controls.entries()) {
-    expect(control.width, `control ${index}`).toBeGreaterThan(40);
+    expect(control.width, `control ${index}`).toBeGreaterThanOrEqual(24);
     const next = controls[index + 1];
-    if (next)
+    if (next && Math.abs(next.top - control.top) < 4)
       expect(control.right, `control ${index}`).toBeLessThanOrEqual(
         next.left + 1,
       );
@@ -461,54 +578,19 @@ test("the smallest window keeps the newest record in view", async ({
   ).toBeLessThanOrEqual(1);
 });
 
-test("a bar that scrolls sideways shows that it goes on", async ({
+test("a short log toolbar exposes every icon without sideways scrolling", async ({
   page: target,
 }) => {
   await target.setViewportSize({ width: 520, height: 400 });
   await open(target, "signed-in");
   await openLogs(target);
-  const bar = target.locator(".logview > div").first();
-  const state = () =>
-    bar.evaluate((element) => {
-      const style = getComputedStyle(element);
-      return {
-        more: element.scrollWidth > element.clientWidth,
-        start: parseFloat(style.getPropertyValue("--scroll-cue-start")),
-        end: parseFloat(style.getPropertyValue("--scroll-cue-end")),
-      };
-    });
-  // At its start there is more to the right only, and only that edge fades.
-  expect(await state()).toMatchObject({ more: true, start: 0 });
-  expect((await state()).end).toBeGreaterThan(0);
-  // Part way along, both edges do.
-  await bar.evaluate((element) => {
-    element.scrollLeft = element.scrollWidth / 3;
-  });
-  await expect.poll(async () => (await state()).start).toBeGreaterThan(0);
-  expect((await state()).end).toBeGreaterThan(0);
-  // At its end, only the left.
-  await bar.evaluate((element) => {
-    element.scrollLeft = element.scrollWidth;
-  });
-  await expect.poll(async () => (await state()).end).toBe(0);
-  expect((await state()).start).toBeGreaterThan(0);
-  // A bar with nothing beyond it fades nowhere.
-  await target.setViewportSize({ width: 1440, height: 900 });
-  await expect
-    .poll(async () => {
-      const wide = await target
-        .locator(".logview > div")
-        .first()
-        .evaluate((element) => {
-          const style = getComputedStyle(element);
-          return (
-            parseFloat(style.getPropertyValue("--scroll-cue-start") || "0") +
-            parseFloat(style.getPropertyValue("--scroll-cue-end") || "0")
-          );
-        });
-      return wide;
-    })
-    .toBe(0);
+  const bar = target.locator(".log-toolbar");
+  expect(
+    await bar.evaluate((element) => element.scrollWidth <= element.clientWidth),
+  ).toBe(true);
+  for (const button of await bar.getByRole("button").all())
+    await expect(button).toBeInViewport({ ratio: 1 });
+  await expect(target.locator(".logview-list")).toBeVisible();
 });
 
 test("a reader who has left the end keeps their place while records arrive", async ({
@@ -603,12 +685,12 @@ const errorsHeld = (target: Page) => async () =>
   );
 
 // The log's Follow toggle and its list, with the pointer over the list.
-async function overLog(target: Page) {
+async function overLog(target: Page, drawnCount = 400) {
   const list = target.locator(".logview-list");
   const follow = target.getByRole("button", {
     name: label("desktop.logs.follow"),
   });
-  await expect(list.locator(".record")).toHaveCount(400);
+  await expect(list.locator(".record")).toHaveCount(drawnCount);
   await expect(follow).toHaveAttribute("aria-pressed", "true");
   const box = await list.boundingBox();
   if (!box) throw new Error("The log's list is not on screen.");
@@ -729,9 +811,11 @@ test("a filter that still shows the reader's record keeps their place", async ({
     .toBeGreaterThan(2000);
   const before = await logPlace(target);
   // Every level: more records than before, the reader's among them.
+  await openLogFilters(target);
   await target
     .getByLabel(label("desktop.logs.minimum_level"))
     .selectOption("0");
+  await target.keyboard.press("Escape");
   await expect(follow).toHaveAttribute("aria-pressed", "false");
   await expect.poll(async () => (await logPlace(target)).seq).toBe(before.seq);
   expect(
@@ -833,11 +917,22 @@ test("Page Up and Page Down move the record the keyboard is on", async ({
     );
   await list.locator(".record").last().focus();
   const newest = await focusedSeq();
+  const position = () =>
+    list.evaluate((element) => ({
+      offset:
+        element.querySelector<HTMLElement>(".record:focus")?.offsetTop ?? 0,
+      viewport: element.clientHeight,
+    }));
+  const before = await position();
   for (let press = 0; press < 3; press++) await target.keyboard.press("PageUp");
   // Moving up from the end leaves it.
   await expect(follow).toHaveAttribute("aria-pressed", "false");
   const up = await focusedSeq();
-  expect(up).toBeLessThan(newest - 20);
+  expect(up).toBeLessThan(newest);
+  // Paging covers the view even when diagnostic metadata makes rows taller.
+  expect(before.offset - (await position()).offset).toBeGreaterThan(
+    2 * before.viewport,
+  );
   await expect(list.locator(".record:focus")).toHaveAttribute(
     "aria-current",
     "true",
@@ -856,8 +951,12 @@ test("Page Up and Page Down move the record the keyboard is on", async ({
   const next = await focusedSeq();
   expect(next).toBeLessThan(up);
   expect(up - next).toBeLessThan(10);
+  const downFrom = await position();
   await target.keyboard.press("PageDown");
-  expect(await focusedSeq()).toBeGreaterThan(next + 3);
+  expect(await focusedSeq()).toBeGreaterThan(next);
+  expect((await position()).offset - downFrom.offset).toBeGreaterThan(
+    downFrom.viewport / 2,
+  );
   expect(await inView()).toBe(true);
 });
 
@@ -1249,11 +1348,13 @@ test("under a fast feed, every key from a record the log has passed takes the vi
 }) => {
   // A batch every thirty milliseconds: one can land between a key and the
   // scroll it causes, which is when the log used to carry on following.
+  // Thirty keys, each looked at, under a feed that keeps the page busy.
+  test.setTimeout(60_000);
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000&feed=30",
   );
   await openLogs(target);
-  const { list, follow } = await overLog(target);
+  const { list } = await overLog(target);
   const seq = await focusNewest(target);
   await expect
     .poll(async () =>
@@ -1269,15 +1370,17 @@ test("under a fast feed, every key from a record the log has passed takes the vi
       return {
         newest: row === element.querySelector(":scope > .record:last-of-type"),
         inView: rect.bottom > box.top && rect.top < box.bottom,
+        // Read in the same moment as the view, not after another batch.
+        following:
+          document
+            .querySelector("[data-follow]")
+            ?.getAttribute("aria-pressed") === "true",
       };
     });
     // On the newest record the log follows again, as it should.
     if (at.newest) break;
     expect(at.inView, `press ${press}`).toBe(true);
-    await expect(follow, `press ${press}`).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
+    expect(at.following, `press ${press}`).toBe(false);
   }
 });
 
@@ -1309,85 +1412,50 @@ test("Follow keeps the keyboard when the bar changes shape under it", async ({
   await target.keyboard.press("ControlOrMeta+k");
   await target
     .locator(".palette")
-    .getByRole("combobox")
+    .getByRole("combobox", { name: label("desktop.palette.label") })
     .fill(label("desktop.pane.maximize_panel"));
   await target.keyboard.press("Enter");
   await expect(target.locator(".palette")).toHaveCount(0);
   await expect(follow).toBeFocused();
 });
 
-test("Follow is reached by the keyboard where the eye finds it, in each shape of the bar", async ({
+test("log controls keep a consistent keyboard order as the toolbar wraps", async ({
   page: target,
 }) => {
-  const order = async () => {
-    const follow = target.getByRole("button", {
-      name: label("desktop.logs.follow"),
-    });
-    // One Follow is shown, however many places the bar keeps for it.
-    await expect(follow).toHaveCount(1);
-    return target.locator(".logview").evaluate((view, name) => {
-      const controls = [
-        ...view.querySelectorAll<HTMLElement>(
-          ":scope > div:first-child :is(input, select, button)",
-        ),
-      ].filter((control) => control.offsetParent !== null);
-      const at = controls.findIndex(
-        (control) => control.textContent?.trim() === name,
-      );
-      const lefts = controls.map((control) =>
-        Math.round(control.getBoundingClientRect().left),
-      );
-      const tops = controls.map((control) =>
-        Math.round(control.getBoundingClientRect().top),
-      );
-      return {
-        at,
-        count: controls.length,
-        // Among the controls of its own row, how many stand to its left.
-        before: controls.filter(
-          (_, index) =>
-            Math.abs((tops[index] ?? 0) - (tops[at] ?? 0)) < 8 &&
-            (lefts[index] ?? 0) < (lefts[at] ?? 0),
-        ).length,
-        rowmates: controls.filter(
-          (_, index) => Math.abs((tops[index] ?? 0) - (tops[at] ?? 0)) < 8,
-        ).length,
-      };
-    }, label("desktop.logs.follow"));
-  };
-  // A wide bar: one row, Follow last on it and last for the keyboard.
-  await target.setViewportSize({ width: 1600, height: 900 });
   await open(target, "signed-in");
   await openLogs(target);
-  await expect(target.locator(".logview-list .record").first()).toBeVisible();
-  let found = await order();
-  expect(found.at).toBe(found.count - 1);
-  expect(found.before).toBe(found.rowmates - 1);
-  // A narrow bar: two rows, Follow at the end of the first, after the level.
-  await target.setViewportSize({ width: 700, height: 900 });
-  found = await order();
-  expect(found.at).toBe(2);
-  expect(found.before).toBe(2);
-  expect(found.rowmates).toBe(3);
-  // A short panel: one row again, Follow first on it and first for the
-  // keyboard, and still on screen when the keyboard has gone to the far end
-  // of a bar that scrolls sideways.
-  await target.setViewportSize({ width: 700, height: 420 });
-  found = await order();
-  expect(found.at).toBe(0);
-  expect(found.before).toBe(0);
-  const follow = target.getByRole("button", {
-    name: label("desktop.logs.follow"),
-  });
-  await follow.focus();
-  for (let press = 1; press < found.count; press++)
-    await target.keyboard.press("Tab");
-  await expect(follow).toBeInViewport({ ratio: 1 });
+  for (const size of [
+    { width: 1600, height: 900 },
+    { width: 700, height: 900 },
+    { width: 700, height: 420 },
+  ]) {
+    await target.setViewportSize(size);
+    const controls = target.locator(".log-toolbar").getByRole("button");
+    expect(
+      await controls.evaluateAll((buttons) =>
+        buttons.map((button) => button.getAttribute("aria-label")),
+      ),
+    ).toEqual([
+      label("desktop.logs.filters"),
+      label("desktop.menu.select_all"),
+      label("desktop.menu.copy"),
+      label("desktop.logs.export"),
+      label("desktop.logs.reveal"),
+      label("desktop.logs.follow"),
+    ]);
+    await controls.first().focus();
+    for (let at = 1; at < (await controls.count()); at++) {
+      await target.keyboard.press("Tab");
+      await expect(controls.nth(at)).toBeFocused();
+      await expect(controls.nth(at)).toBeInViewport({ ratio: 1 });
+    }
+  }
 });
 
 test("maximizing the bottom panel over the pane that holds the keyboard takes it into the panel", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-in");
   await expect(target.locator(".docs-frame")).toBeVisible();
   for (const from of ["tui", "docs"] as const) {
@@ -1401,7 +1469,7 @@ test("maximizing the bottom panel over the pane that holds the keyboard takes it
     await target.keyboard.press("Control+Shift+KeyK");
     const palette = target.locator(".palette");
     await palette
-      .getByRole("combobox")
+      .getByRole("combobox", { name: label("desktop.palette.label") })
       .fill(label("desktop.pane.maximize_panel"));
     await target.keyboard.press("Enter");
     await expect(target.locator(".pane-tui")).toBeHidden();
@@ -1412,7 +1480,9 @@ test("maximizing the bottom panel over the pane that holds the keyboard takes it
     ).toBeFocused();
     // And back, for the next pane to start from.
     await target.keyboard.press("Control+Shift+KeyK");
-    await palette.getByRole("combobox").fill(label("desktop.pane.restore"));
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label("desktop.pane.restore"));
     await target.keyboard.press("Enter");
     await expect(target.locator(".pane-tui")).toBeVisible();
   }
@@ -1421,24 +1491,17 @@ test("maximizing the bottom panel over the pane that holds the keyboard takes it
 test("Space on a record with no detail does not scroll the log", async ({
   page: target,
 }) => {
-  await target.goto(
-    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000",
-  );
+  await target.setViewportSize({ width: 1440, height: 600 });
+  await open(target, "signed-in", "&bar=off");
   await openLogs(target);
-  const { list, follow } = await overLog(target);
+  const { list, follow } = await overLog(target, 14);
   await target.mouse.wheel(0, -1500);
   await expect(follow).toHaveAttribute("aria-pressed", "false");
-  // A record in view that has no detail to open.
-  const plain = await list.evaluate((element) => {
-    const box = element.getBoundingClientRect();
-    const row = [...element.querySelectorAll<HTMLElement>(".record")].find(
-      (candidate) =>
-        candidate.getBoundingClientRect().top >= box.top &&
-        !candidate.querySelector("[aria-expanded]"),
-    );
-    return Number(row?.dataset.seq);
-  });
-  await list.locator(`.record[data-seq="${plain}"]`).focus();
+  // The unnamed-source fixture has neither continuation text nor context.
+  // Generated measurement records all carry diagnostic metadata.
+  const plain = list.locator('.record[data-seq="8"]');
+  await expect(plain.locator("[aria-expanded]")).toHaveCount(0);
+  await plain.focus();
   const before = (await logPlace(target)).scrollTop;
   // The key is taken from the browser, whose own answer to it is to scroll.
   await target.evaluate(() => {
@@ -1463,6 +1526,7 @@ test("Space on a record with no detail does not scroll the log", async ({
 test("a pane's note that is cut for want of room still says all of itself", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   // A window at 200 percent, in the language with the longest words: the
   // note beside the TUI's title has room for a few letters.
   await target.setViewportSize({ width: 640, height: 450 });
@@ -1492,6 +1556,7 @@ test("a pane's note that is cut for want of room still says all of itself", asyn
 test("hiding the TUI from inside it leaves the keyboard in the window", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-in");
   await expect(target.locator(".docs-frame")).toBeVisible();
   await target.locator('[data-terminal="tui"] .xterm-screen').click();
@@ -1661,7 +1726,7 @@ const ACCOUNT_STATES: {
     dot: "unavailable",
     badge: "desktop.account.signed_out",
     offers: ["desktop.signin.submit"],
-    withholds: ["desktop.account.sign_out", "desktop.account.create_profile"],
+    withholds: ["desktop.account.sign_out"],
   },
   {
     scenario: "signed-in",
@@ -1669,40 +1734,35 @@ const ACCOUNT_STATES: {
     dot: "running",
     badge: "desktop.account.signed_in",
     offers: ["desktop.account.sign_out"],
-    withholds: ["desktop.signin.submit", "desktop.account.create_profile"],
+    withholds: ["desktop.signin.submit"],
   },
   {
+    // A host that cannot make a profile has nothing to offer with none, and
+    // does not send the person to the TUI to make one.
     scenario: "no-profile",
     saying: "desktop.account.no_profile",
     dot: "unavailable",
     badge: "desktop.account.signed_out",
-    offers: ["desktop.account.create_profile"],
+    offers: [],
     withholds: ["desktop.signin.submit", "desktop.account.sign_out"],
   },
   {
-    // A locked profile is not answered by a password: nothing offers one.
+    // A locked profile is signed in to like any other: the refusal says why
+    // the last try failed, and the way to try again stays beside it.
     scenario: "profile-locked",
     saying: "desktop.account.signed_out",
     dot: "unavailable",
     badge: "desktop.account.signed_out",
-    offers: ["desktop.signin.open_tui"],
-    withholds: [
-      "desktop.signin.submit",
-      "desktop.account.sign_out",
-      "desktop.account.create_profile",
-    ],
+    offers: ["desktop.signin.submit"],
+    withholds: ["desktop.account.sign_out"],
   },
   {
     scenario: "runtime-unavailable",
     saying: "desktop.account.services_down",
     dot: "unavailable",
     badge: "desktop.account.services_down",
-    offers: ["desktop.signin.open_tui"],
-    withholds: [
-      "desktop.signin.submit",
-      "desktop.account.sign_out",
-      "desktop.account.create_profile",
-    ],
+    offers: [],
+    withholds: ["desktop.signin.submit", "desktop.account.sign_out"],
   },
 ];
 
@@ -1742,6 +1802,12 @@ for (const state of ACCOUNT_STATES)
       await expect(
         pane.getByRole("button", { name: label(key), exact: true }),
       ).toHaveCount(0);
+    // Where the account withholds the TUI, nothing in the gate offers it as
+    // a way in.
+    if (state.saying)
+      await expect(
+        pane.locator("[data-slot=empty]").getByRole("button", { name: /TUI/ }),
+      ).toHaveCount(0);
 
     // The calendar page says the same, or shows the calendar.
     const calendarToggle = target
@@ -1765,6 +1831,10 @@ for (const state of ACCOUNT_STATES)
       await expect(
         calendarRegion.getByRole("button", { name: label(key), exact: true }),
       ).toHaveCount(0);
+    if (state.saying)
+      await expect(
+        calendarRegion.getByRole("button", { name: /TUI/ }),
+      ).toHaveCount(0);
     // Messages has a count only for a signed-in profile; otherwise it says
     // the same thing the panes say.
     const messages = target
@@ -1781,25 +1851,29 @@ for (const state of ACCOUNT_STATES)
     await calendarToggle.click();
     await expect(calendarRegion).toHaveCount(0);
 
-    // Settings: the session section says the same and offers the same.
+    // The header is the account surface; Settings has no account controls.
     await target
-      .getByRole("button", { name: label("desktop.rail.settings") })
+      .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
       .click();
-    const session = target.getByRole("region", {
-      name: label("desktop.settings.session"),
-    });
-    await expect(
-      session.getByText(label(state.badge), { exact: true }),
-    ).toBeVisible();
-    const settings = target.locator(".settings");
+    const accountMenu = target.locator(".account-menu");
+    await expect(accountMenu).toContainText(
+      label(
+        state.scenario === "no-profile"
+          ? "desktop.account.no_profile"
+          : state.badge,
+      ),
+    );
     for (const key of state.offers)
       await expect(
-        settings.getByRole("button", { name: label(key), exact: true }),
+        accountMenu.getByRole("menuitem", { name: label(key), exact: true }),
       ).toBeVisible();
     for (const key of state.withholds)
       await expect(
-        settings.getByRole("button", { name: label(key), exact: true }),
+        accountMenu.getByRole("menuitem", { name: label(key), exact: true }),
       ).toHaveCount(0);
+    await expect(
+      accountMenu.getByRole("menuitem", { name: /TUI/ }),
+    ).toHaveCount(0);
     await target.keyboard.press("Escape");
 
     // The palette lists the same actions, and no others of the account's.
@@ -1808,7 +1882,9 @@ for (const state of ACCOUNT_STATES)
       .click();
     const palette = target.locator(".palette");
     for (const key of [...state.offers, ...state.withholds]) {
-      await palette.getByRole("combobox").fill(label(key));
+      await palette
+        .getByRole("combobox", { name: label("desktop.palette.label") })
+        .fill(label(key));
       const row = palette
         .locator(".palette-title")
         .filter({ hasText: new RegExp(`^${label(key)}$`) });
@@ -1816,62 +1892,68 @@ for (const state of ACCOUNT_STATES)
     }
   });
 
-test("no-profile: the dialog offers the TUI's setup and no password field", async ({
+test("no-profile: the dialog says there is none, with no password field and no way to the TUI", async ({
   page: target,
 }) => {
   await open(target, "no-profile");
   const dialog = target.locator(".sign-in");
   await expect(dialog).toContainText(label("desktop.account.no_profile"));
   await expect(dialog).toContainText(label("desktop.account.no_profile_lead"));
+  await expect(dialog).not.toContainText(/TUI/);
   await expect(password(target)).toHaveCount(0);
-  const setUp = dialog.getByRole("button", {
-    name: label("desktop.account.create_profile"),
-    exact: true,
-  });
-  await expect(setUp).toBeFocused();
-  await setUp.click();
-  // The TUI takes over: its own flow creates or chooses the profile.
+  await expect(dialog.getByRole("button", { name: /TUI/ })).toHaveCount(0);
+  await target.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
-  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(0);
   await expect.poll(calls(target, "signIn")).toBe(0);
 });
 
 const tui = (target: Page) => target.locator('[data-terminal="tui"] textarea');
 
-// Wherever the TUI's own flow is chosen from, the keyboard follows it there.
-for (const from of ["pane", "settings", "palette"] as const)
-  test(`no-profile: setting up a profile from the ${from} puts the keyboard in the TUI`, async ({
-    page: target,
-  }) => {
-    await open(target, "no-profile");
-    await expect(target.locator(".sign-in")).toBeVisible();
-    await target.keyboard.press("Escape");
-    await expect(target.locator(".sign-in")).toHaveCount(0);
-    const setUp = {
-      name: label("desktop.account.create_profile"),
-      exact: true,
-    };
-    if (from === "pane") {
-      await target.locator(".pane-tui").getByRole("button", setUp).click();
-    } else if (from === "settings") {
-      await target
-        .getByRole("button", { name: label("desktop.rail.settings") })
-        .click();
-      await target.locator(".settings").getByRole("button", setUp).click();
-      await expect(target.locator(".settings")).toHaveCount(0);
-    } else {
-      await target
-        .getByRole("button", { name: label("desktop.rail.search") })
-        .click();
-      const palette = target.locator(".palette");
-      await palette.getByRole("combobox").fill(setUp.name);
-      await target.keyboard.press("Enter");
-      await expect(palette).toHaveCount(0);
-    }
-    await expect(tui(target)).toBeFocused();
-  });
+// With no profile, and a host that cannot make one, no element sends the
+// person to the TUI to set one up: the pane, the header and the palette say
+// there is none and offer nothing else.
+test("no-profile: the pane, the header and the palette do not offer to set a profile up in the TUI", async ({
+  page: target,
+}) => {
+  await open(target, "no-profile");
+  await expect(target.locator(".sign-in")).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+  const gate = target.locator(".pane-tui [data-slot=empty]");
+  await expect(gate).toContainText(label("desktop.account.no_profile"));
+  await expect(gate).toContainText(label("desktop.account.no_profile_lead"));
+  await expect(gate.getByRole("button")).toHaveCount(0);
+  await target
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+    .click();
+  const menu = target.locator(".account-menu");
+  await expect(menu).toContainText(label("desktop.account.no_profile"));
+  // Nothing to set up or sign in to; the About entry is not a profile action.
+  await expect(
+    menu.getByRole("menuitem").filter({
+      hasNotText: label("desktop.about.open"),
+    }),
+  ).toHaveCount(0);
+  await target.keyboard.press("Escape");
+  await target
+    .getByRole("button", { name: label("desktop.rail.search") })
+    .click();
+  const palette = target.locator(".palette");
+  for (const key of ["desktop.account.new_profile", "desktop.signin.submit"]) {
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label(key));
+    await expect(
+      palette
+        .locator(".palette-title")
+        .filter({ hasText: new RegExp(`^${label(key)}$`) }),
+    ).toHaveCount(0);
+  }
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(0);
+});
 
-test("profile-locked: the pane says why and offers only the TUI", async ({
+test("profile-locked: the pane says why and still offers sign-in, never the TUI", async ({
   page: target,
 }) => {
   await open(target, "profile-locked");
@@ -1879,7 +1961,7 @@ test("profile-locked: the pane says why and offers only the TUI", async ({
   await expect(dialog).toContainText(
     label("desktop.signin.refused.profile_locked"),
   );
-  await expect(password(target)).toHaveCount(0);
+  await expect(password(target)).toBeVisible();
   await target.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   const pane = target.locator(".pane-tui");
@@ -1887,12 +1969,15 @@ test("profile-locked: the pane says why and offers only the TUI", async ({
     label("desktop.signin.refused.profile_locked"),
   );
   const onward = pane.getByRole("button", {
-    name: label("desktop.signin.open_tui"),
+    name: label("desktop.signin.submit"),
     exact: true,
   });
   await expect(onward).toBeFocused();
+  await expect(
+    pane.locator("[data-slot=empty]").getByRole("button", { name: /TUI/ }),
+  ).toHaveCount(0);
   await onward.click();
-  await expect(tui(target)).toBeFocused();
+  await expect(password(target)).toBeFocused();
   await expect.poll(calls(target, "signIn")).toBe(0);
 });
 
@@ -1907,7 +1992,7 @@ test("runtime-unavailable: the dialog and settings say what the window says", as
   await expect(dialog).not.toContainText(label("desktop.signin.title"));
   await target.keyboard.press("Escape");
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   // With no runtime to ask, the profile is not known: it is not said to be
   // none, and no section stands empty for it.
@@ -1992,17 +2077,17 @@ test("one Escape closes the dialog from a button showing its tooltip", async ({
   await expect(target.locator(".sign-in")).toHaveCount(0);
 });
 
-test("sign-out-refused: the failure is said once, not again when settings reopens", async ({
+test("sign-out-refused: the failure is said once, not again when the account menu reopens", async ({
   page: target,
 }) => {
   await open(target, "sign-out-refused");
   const settingsButton = target.getByRole("button", {
-    name: label("desktop.rail.settings"),
+    name: label("desktop.titlebar.profile_menu"),
   });
   await settingsButton.click();
-  const settings = target.locator(".settings");
+  const settings = target.locator(".account-menu");
   await settings
-    .getByRole("button", {
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
@@ -2013,15 +2098,15 @@ test("sign-out-refused: the failure is said once, not again when settings reopen
   await settingsButton.click();
   await expect(settings).toBeVisible();
   await expect(settings.getByRole("alert")).toHaveCount(0);
-  // The same however settings is closed: by its own button this time.
+  // A click outside dismisses the menu and the failure it has shown.
   await settings
-    .getByRole("button", {
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
     .click();
   await expect(settings.getByRole("alert")).toBeVisible();
-  await settingsButton.click();
+  await target.mouse.click(8, 200);
   await expect(settings).toHaveCount(0);
   await settingsButton.click();
   await expect(settings).toBeVisible();
@@ -2035,10 +2120,10 @@ test("signing out leaves no running session showing in the TUI's header", async 
   const dot = target.locator(".pane-tui .pane-head [data-phase]");
   await expect(dot).toHaveAttribute("data-phase", "running");
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
     .click();
   await target
-    .getByRole("button", {
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
@@ -2049,7 +2134,7 @@ test("signing out leaves no running session showing in the TUI's header", async 
   );
 });
 
-test("the rail keeps its order: search, window toggles, shortcuts, panel toggles", async ({
+test("the rail keeps its order: search, window toggles, shortcuts, panel toggle", async ({
   page: target,
 }) => {
   await open(target, "signed-in");
@@ -2060,26 +2145,35 @@ test("the rail keeps its order: search, window toggles, shortcuts, panel toggles
     .evaluateAll((buttons) =>
       buttons.map((button) => button.getAttribute("aria-label") ?? ""),
     );
-  // The packaged run reaches search and docs home by these two positions.
+  // The packaged run reaches search by its position. The window's columns
+  // follow in the order they are laid out by default.
   expect(names.map((name) => name.split(",")[0])).toEqual(
     [
       "desktop.rail.search",
-      "desktop.rail.docs_home",
+      "desktop.rail.agent",
       "desktop.rail.tui",
+      "desktop.rail.docs",
+      "desktop.profile.title",
       "desktop.calendar.title",
       "desktop.rail.messages",
       "desktop.rail.aeat",
-      "desktop.rail.console",
-      "desktop.rail.python",
-      "desktop.rail.logs",
+      "desktop.panel.label",
     ].map((key) => label(key)),
   );
 });
 
-const calendarButton = (target: Page) =>
+const calendarButton = (target: Page, locale = "en") =>
   target
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.calendar.title") });
+    .getByRole("navigation", { name: label("desktop.rail.label", {}, locale) })
+    .getByRole("button", { name: label("desktop.calendar.title", {}, locale) });
+
+/** Navigating to another fixture restores the selected page. */
+const showCalendar = async (target: Page, locale = "en") => {
+  const toggle = calendarButton(target, locale);
+  if ((await toggle.getAttribute("aria-pressed")) !== "true")
+    await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+};
 
 /** How many times the shell has asked the host for the filing calendar. */
 const calendarReads = (target: Page) => () =>
@@ -2098,6 +2192,7 @@ const FIXTURE_DAY = new Date(2026, 9, 6, 12);
 test("the filing calendar is a page of the first pane, read when it is shown", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await target.clock.setFixedTime(FIXTURE_DAY);
   await open(target, "signed-in");
   const pane = target.locator(".pane-docs");
@@ -2320,6 +2415,21 @@ test("the calendar's months draw each filing window across the days it is open",
     await expect(window303.nth(index)).toHaveAttribute("aria-hidden", "true");
     await expect(window303.nth(index)).toHaveAttribute("tabindex", "-1");
   }
+  // It is named in full once in the month, where it is first drawn; the
+  // weeks it goes on across carry its Modelo alone.
+  await expect(window303.getByText("303", { exact: true })).toHaveCount(4);
+  await expect(window303.first().getByText("2026-3T")).toBeVisible();
+  for (const index of [1, 2, 3])
+    await expect(window303.nth(index).getByText("2026-3T")).toBeHidden();
+  // A window closes with a rounded pill end and has no border.
+  const measures = await window303.last().evaluate((bar) => ({
+    closing: getComputedStyle(bar).borderRightWidth,
+    radius: getComputedStyle(bar).borderTopRightRadius,
+    opening: getComputedStyle(bar).borderLeftWidth,
+  }));
+  expect(measures.closing).toBe("0px");
+  expect(measures.radius).not.toBe("0px");
+  expect(measures.opening).toBe("0px");
   // Pressed, a part that is only for the eye chooses the obligation and
   // leaves the keyboard on the part that is its stop, the view unmoved.
   await window303.nth(2).scrollIntoViewIfNeeded();
@@ -2404,12 +2514,7 @@ test("the months begin the week on the day the language does", async ({
     ["hu", new Date(2026, 9, 5)],
   ] as const) {
     await open(target, "signed-in", `&lang=${language}`);
-    await target
-      .getByRole("button", {
-        name: label("desktop.calendar.title", {}, language),
-        exact: true,
-      })
-      .click();
+    await showCalendar(target, language);
     const october = target.locator('.calendar-month[data-month="2026-10"]');
     // The first of its weekday letters, and the day under it in the first
     // whole week: a Sunday in English, a Monday in Spanish and Hungarian.
@@ -2524,7 +2629,7 @@ test("the calendar's mark stands where the past ends in each shape of range, and
   const today = new RegExp(`^${said.format(0, "day")} · `, "i");
   const shown = async (shape: string) => {
     await open(target, "signed-in", `&calendar=${shape}`);
-    await calendarButton(target).click();
+    await showCalendar(target);
     const page = target.getByRole("region", {
       name: label("desktop.calendar.title"),
     });
@@ -2717,7 +2822,7 @@ test("the calendar says what its marks are, and has a way back to where it stand
   // A calendar worked out for another day names the way back by that day.
   await target.clock.setFixedTime(new Date(2026, 9, 7, 9));
   await open(target, "signed-in");
-  await calendarButton(target).click();
+  await showCalendar(target);
   // The day alone is what is shown; read aloud it says where it goes.
   const toDay = page.getByRole("button", {
     name: label("desktop.calendar.to_day", {
@@ -2817,7 +2922,7 @@ test("a calendar read again after a sign-out opens on the current month, as the 
   await target.keyboard.press("ControlOrMeta+k");
   await target
     .locator(".palette")
-    .getByRole("combobox")
+    .getByRole("combobox", { name: label("desktop.palette.label") })
     .fill(label("desktop.account.sign_out"));
   await target.keyboard.press("Enter");
   await expect(page).toContainText(label("desktop.calendar.signed_out"));
@@ -2890,6 +2995,7 @@ test("the months come back to the month the reader left them on, in a pane and b
 test("the reader's month does not drift however often the months are laid out anew", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await target.setViewportSize({ width: 1600, height: 900 });
   await open(target, "signed-in");
   await calendarButton(target).click();
@@ -3269,7 +3375,7 @@ test("a month that makes the page scroll when drawn whole does not change the pa
   // A page with nothing to scroll keeps no room for a scrollbar: what it
   // says stays in the middle.
   await open(target, "empty");
-  await calendarButton(target).click();
+  await showCalendar(target);
   await expect(page).toContainText(label("desktop.calendar.empty"));
   expect(
     await page.evaluate(
@@ -3467,7 +3573,7 @@ test("a short page keeps only the calendar's controls in view, a tall one its wh
 });
 
 for (const scheme of ["light", "dark"] as const)
-  test(`a window's edge stands out from the card and from its own fill (${scheme})`, async ({
+  test(`calendar pills are opaque, borderless and have readable text (${scheme})`, async ({
     page: target,
   }) => {
     await target.addInitScript((appearance) => {
@@ -3534,20 +3640,21 @@ for (const scheme of ["light", "dark"] as const)
         const bar = element.querySelector(
           `.calendar-bar[data-state="${state}"]`,
         );
-        if (!bar) return { state, card: 0, fill: 0 };
+        if (!bar) throw new Error(`Missing calendar state: ${state}`);
         const style = getComputedStyle(bar);
-        const edge = over(rgba(style.borderTopColor), card);
+        const fill = rgba(style.backgroundColor);
         return {
           state,
-          card: ratio(edge, card),
-          fill: ratio(edge, over(rgba(style.backgroundColor), card)),
+          alpha: fill[3],
+          border: style.borderTopWidth,
+          contrast: ratio(rgba(style.color), over(fill, card)),
         };
       });
     });
-    // Three to one is the least a part of a control needs to be made out.
-    for (const { state, card, fill } of ratios) {
-      expect(card, `${state} against the card`).toBeGreaterThanOrEqual(3);
-      expect(fill, `${state} against its fill`).toBeGreaterThanOrEqual(3);
+    for (const { state, alpha, border, contrast } of ratios) {
+      expect(alpha, `${state} fill`).toBe(1);
+      expect(border, `${state} border`).toBe("0px");
+      expect(contrast, `${state} text`).toBeGreaterThanOrEqual(4.5);
     }
   });
 
@@ -3587,30 +3694,29 @@ test("with the system's colours forced, the calendar still shows its day, its st
   expect(await style(message, "background-color")).not.toBe(
     await style(filing, "background-color"),
   );
-  // What is late and what is not known are told by the edge, and by a
-  // mark where the window has room, with the hue gone.
+  // State icons remain visible when forced colours remove the hues.
   const late = page.locator('.calendar-bar[data-state="late"]').first();
   const unknown = page.locator('.calendar-bar[data-state="unknown"]').first();
   const due = page.locator('.calendar-bar[data-state="due"]').first();
-  expect(await style(late, "border-top-style")).toBe("dashed");
-  expect(await style(due, "border-top-style")).toBe("solid");
+  expect(await style(late, "border-top-width")).toBe("0px");
+  expect(await style(late, "background-color")).not.toBe(canvas);
+  expect(await style(due, "border-top-width")).toBe("0px");
   await expect(late.locator("[data-slot=icon]")).toBeVisible();
   await expect(due.locator("[data-slot=icon]")).toHaveCount(0);
-  // What is filed is the first a crowded week gives up: it is found with
-  // its month drawn whole, hollow where what is due is filled, and with a
-  // double edge here, where there is no fill to be hollow against.
+  // Filed windows are found by expanding the crowded month.
   await page
     .locator('.calendar-month[data-month="2027-01"] .calendar-whole')
     .click();
   const filed = page.locator('.calendar-bar[data-state="filed"]').first();
   await expect(filed.locator("[data-slot=icon]")).toBeVisible();
-  expect(await style(filed, "border-top-style")).toBe("double");
-  expect(await style(filed, "border-top-width")).toBe("3px");
+  expect(await style(filed, "border-top-width")).toBe("0px");
+  expect(await style(filed, "background-color")).not.toBe(canvas);
   // The unknown window of the fixture is one day wide and is found whole.
   await page
     .locator('.calendar-month[data-month="2027-02"] .calendar-whole')
     .click();
-  expect(await style(unknown, "border-top-style")).toBe("dotted");
+  expect(await style(unknown, "border-top-width")).toBe("0px");
+  await expect(unknown.locator("[data-slot=icon]")).toBeVisible();
   // What is chosen is outlined among the months, and in the list it alone
   // has an edge that is not the page's own colour.
   await late.click();
@@ -3873,6 +3979,7 @@ test("the calendar is not read again for being put away and brought back", async
 test("the documentation keeps its place under the calendar", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-in");
   const frame = target.frameLocator(".docs-frame");
   await frame.getByRole("link", { name: "Second page" }).click();
@@ -3929,11 +4036,11 @@ test("the calendar asks for a sign-in, then reads; a sign-out drops what was rea
   await expect.poll(calendarReads(target)).toBe(1);
   // Signed out again, nothing of the profile stays on screen.
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
     .click();
   await target
-    .locator(".settings")
-    .getByRole("button", {
+    .locator(".account-menu")
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
@@ -3950,7 +4057,10 @@ test("views-refused: a read that fails is said, never drawn as an empty calendar
   const page = target.getByRole("region", {
     name: label("desktop.calendar.title"),
   });
-  await expect(page.getByRole("alert")).toContainText("timed_out");
+  await expect(page.getByRole("alert")).toContainText(
+    label("desktop.calendar.failed"),
+  );
+  await expect(page.getByRole("alert")).not.toContainText("timed_out");
   await expect(page).not.toContainText(label("desktop.calendar.empty"));
   await expect.poll(calendarReads(target)).toBe(1);
   const again = page.getByRole("button", {
@@ -3970,7 +4080,10 @@ test("views-refused: a read that fails is said, never drawn as an empty calendar
   await again.focus();
   await target.keyboard.press("Enter");
   await expect.poll(calendarReads(target)).toBe(2);
-  await expect(page.getByRole("alert")).toContainText("timed_out");
+  await expect(page.getByRole("alert")).toContainText(
+    label("desktop.calendar.failed"),
+  );
+  await expect(page.getByRole("alert")).not.toContainText("timed_out");
   // The button that asked is the same one, and still holds the keyboard.
   await expect(again).toBeFocused();
   await expect(again).toHaveAttribute("data-kept", "");
@@ -4039,7 +4152,9 @@ test("signing out from the calendar leaves the keyboard on its page", async ({
     .focus();
   await target.keyboard.press("ControlOrMeta+k");
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.account.sign_out"));
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.account.sign_out"));
   await target.keyboard.press("Enter");
   await expect(page).toContainText(label("desktop.account.signed_out"));
   await expect(page.getByRole("listitem")).toHaveCount(0);
@@ -4057,7 +4172,9 @@ test("the calendar's own actions replace the documentation's while it is shown",
     .click();
   const palette = target.locator(".palette");
   for (const key of ["desktop.action.zoom_in", "desktop.action.docs_back"]) {
-    await palette.getByRole("combobox").fill(label(key));
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label(key));
     await expect(
       palette.locator(".palette-title").filter({ hasText: label(key) }),
     ).toHaveCount(0);
@@ -4071,7 +4188,9 @@ test("the calendar's own actions replace the documentation's while it is shown",
   await target
     .getByRole("button", { name: label("desktop.rail.search") })
     .click();
-  await palette.getByRole("combobox").fill(label("desktop.action.zoom_reset"));
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.action.zoom_reset"));
   await expect(
     palette
       .locator(".palette-title")
@@ -4103,7 +4222,9 @@ test("the calendar chosen while the TUI is maximized takes the keyboard", async 
   await target.locator('[data-terminal="tui"] .xterm-screen').click();
   await target.keyboard.press("ControlOrMeta+Shift+k");
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.calendar.title"));
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.calendar.title"));
   await target.keyboard.press("Enter");
   await expect(palette).toHaveCount(0);
   await expect(page).toBeVisible();
@@ -4113,7 +4234,11 @@ test("the calendar chosen while the TUI is maximized takes the keyboard", async 
 test("putting the calendar away from the rail leaves the keyboard on the rail", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-in");
+  await expect(
+    target.locator('[data-terminal="console"] textarea'),
+  ).toBeFocused();
   await calendarButton(target).focus();
   await target.keyboard.press("Enter");
   await expect(
@@ -4125,31 +4250,33 @@ test("putting the calendar away from the rail leaves the keyboard on the rail", 
   await expect(calendarButton(target)).toBeFocused();
 });
 
-test("profile-locked: the dialog and settings say it and offer the TUI", async ({
+test("profile-locked: the dialog and the account menu say it and still offer sign-in", async ({
   page: target,
 }) => {
   await open(target, "profile-locked");
   const dialog = target.locator(".sign-in");
-  // Not titled as a sign-in where there is nothing to sign in with.
+  // Titled as a sign-in: a locked profile is signed in to like any other.
   await expect(dialog.getByRole("heading")).toHaveText(
-    label("desktop.account.signed_out"),
+    label("desktop.signin.title"),
   );
   await target.keyboard.press("Escape");
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
     .click();
-  const settings = target.locator(".settings");
+  const settings = target.locator(".account-menu");
   await expect(settings).toContainText(
     label("desktop.signin.refused.profile_locked"),
   );
+  await expect(settings.getByRole("menuitem", { name: /TUI/ })).toHaveCount(0);
   await settings
-    .getByRole("button", {
-      name: label("desktop.signin.open_tui"),
+    .getByRole("menuitem", {
+      name: label("desktop.signin.submit"),
       exact: true,
     })
     .click();
   await expect(settings).toHaveCount(0);
-  await expect(tui(target)).toBeFocused();
+  await expect(password(target)).toBeFocused();
+  await expect.poll(calls(target, "signIn")).toBe(0);
 });
 
 test("a refusal does not take the keyboard back from where the person moved it", async ({
@@ -4190,7 +4317,9 @@ test("no-views: a host that offers no profile views shows no way into one", asyn
     .click();
   const palette = target.locator(".palette");
   for (const key of ["desktop.calendar.title", "desktop.rail.messages"]) {
-    await palette.getByRole("combobox").fill(label(key));
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label(key));
     await expect(
       palette.locator(".palette-title").filter({ hasText: label(key) }),
     ).toHaveCount(0);
@@ -4243,7 +4372,9 @@ test("the palette's messages action opens the TUI", async ({
     .getByRole("button", { name: label("desktop.rail.search") })
     .click();
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.rail.messages"));
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.rail.messages"));
   await target.keyboard.press("Enter");
   await expect(palette).toHaveCount(0);
   await expect(tui(target)).toBeFocused();
@@ -4270,11 +4401,11 @@ test("messages are read at sign-in and dropped at sign-out, never while signed o
     named("desktop.messages.unread", { count: 3 }),
   );
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
     .click();
   await target
-    .locator(".settings")
-    .getByRole("button", {
+    .locator(".account-menu")
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
@@ -4323,9 +4454,9 @@ for (const origin of [
   "pane",
   "calendar",
   "palette",
-  "settings",
+  "header",
 ] as const)
-  test(`the dialog's way to the TUI takes the keyboard there, opened from the ${origin}`, async ({
+  test(`the dialog opened from the ${origin} holds the keyboard in the password field and offers no way to the TUI`, async ({
     page: target,
   }) => {
     await open(target, "signed-out");
@@ -4346,28 +4477,29 @@ for (const origin of [
         .click();
     } else if (origin === "palette") {
       await target
-        .getByRole("button", { name: label("desktop.rail.settings") })
+        .getByRole("button", {
+          name: label("desktop.rail.settings"),
+          exact: true,
+        })
         .focus();
       await target.keyboard.press("ControlOrMeta+k");
       await target
         .locator(".palette")
-        .getByRole("combobox")
+        .getByRole("combobox", { name: label("desktop.palette.label") })
         .fill(label("desktop.signin.submit"));
       await target.keyboard.press("Enter");
-    } else if (origin === "settings") {
+    } else if (origin === "header") {
       await target
-        .getByRole("button", { name: label("desktop.rail.settings") })
+        .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
         .click();
-      await target.locator(".settings").getByRole("button", signIn).click();
+      await target
+        .locator(".account-menu")
+        .getByRole("menuitem", signIn)
+        .click();
     }
     await expect(password(target)).toBeFocused();
-    await dialog
-      .getByRole("button", {
-        name: label("desktop.signin.open_tui"),
-        exact: true,
-      })
-      .click();
-    await expect(tui(target)).toBeFocused();
+    await expect(dialog.getByRole("button", { name: /TUI/ })).toHaveCount(0);
+    await expect(target.locator(".pane-tui .xterm")).toHaveCount(0);
   });
 
 test("admitted after the dialog was put aside, the keyboard goes to the TUI", async ({
@@ -4383,7 +4515,18 @@ test("admitted after the dialog was put aside, the keyboard goes to the TUI", as
   await expect(tui(target)).toBeFocused();
 });
 
-test("tui-unavailable: a TUI that cannot start is not a way on", async ({
+// How many times the TUI was asked for: a gated window starts none.
+const tuiStarts = (target: Page) => () =>
+  target.evaluate(
+    () =>
+      (
+        window as unknown as { __scenarioHostCalls?: string[] }
+      ).__scenarioHostCalls?.filter((made) =>
+        made.startsWith("openTerminal tui"),
+      ).length ?? 0,
+  );
+
+test("tui-unavailable: signed out, sign-in is the only way on and no TUI is asked for", async ({
   page: target,
 }) => {
   // Records keep arriving, so the shell is drawn again and again while a
@@ -4391,59 +4534,37 @@ test("tui-unavailable: a TUI that cannot start is not a way on", async ({
   await open(target, "tui-unavailable", "&feed=200");
   const dialog = target.locator(".sign-in");
   await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: /TUI/ })).toHaveCount(0);
   await target.keyboard.press("Escape");
   await calendarButton(target).click();
   const page = target.getByRole("region", {
     name: label("desktop.calendar.title"),
   });
-  await page
-    .getByRole("button", {
-      name: label("desktop.signin.open_tui"),
-      exact: true,
-    })
-    .click();
-  // The person is told why, and is back where a sign-in is offered: not
-  // left "continuing" in a TUI that never started.
-  await expect(target.locator("[data-slot=toast]")).toContainText(
-    "spawn_failed",
-  );
-  // Back at the gate, the dialog is offered again, as when a TUI exits,
-  // and it holds the keyboard: nothing behind it has been given focus.
-  await expect(dialog).toBeVisible();
-  await expect(password(target)).toBeFocused();
-  await target.keyboard.type("x");
-  await expect(password(target)).toHaveValue("x");
-  await target.keyboard.press("Escape");
-  await expect(dialog).toHaveCount(0);
-  await expect(page).not.toContainText(label("desktop.account.in_tui"));
   await expect(page).toContainText(label("desktop.account.signed_out"));
+  await expect(page.getByRole("button", { name: /TUI/ })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", {
+      name: label("desktop.signin.submit"),
+      exact: true,
+    }),
+  ).toBeVisible();
   await expect(
     target.locator(".pane-tui").getByRole("button", {
       name: label("desktop.signin.submit"),
       exact: true,
     }),
   ).toBeVisible();
+  expect(await tuiStarts(target)()).toBe(0);
 });
 
-test("tui-unavailable: the dialog's own way to the TUI comes back to a dialog that holds the keyboard", async ({
+test("tui-unavailable: the dialog keeps the keyboard while the account is read again", async ({
   page: target,
 }) => {
   await open(target, "tui-unavailable");
-  const dialog = target.locator(".sign-in");
   await expect(password(target)).toBeFocused();
-  await dialog
-    .getByRole("button", {
-      name: label("desktop.signin.open_tui"),
-      exact: true,
-    })
-    .click();
-  await expect(target.locator("[data-slot=toast]")).toContainText(
-    "spawn_failed",
-  );
-  await expect(dialog).toBeVisible();
-  // Past the moment in which a focus wished for the TUI could be granted,
-  // with the shell drawn again inside it: each return to the window has
-  // the account read again, and each answer draws the shell.
+  // With the shell drawn again inside the moment in which a focus wished for
+  // the TUI could be granted: each return to the window has the account read
+  // again, and each answer draws the shell.
   const asked = calls(target, "signInStatus");
   const before = await asked();
   for (let draw = 0; draw < 4; draw++) {
@@ -4452,6 +4573,7 @@ test("tui-unavailable: the dialog's own way to the TUI comes back to a dialog th
   }
   expect(await asked()).toBeGreaterThan(before + 2);
   await expect(password(target)).toBeFocused();
+  expect(await tuiStarts(target)()).toBe(0);
 });
 
 test("signing in from the calendar keeps the keyboard in the calendar, with the TUI beside it", async ({
@@ -4528,6 +4650,7 @@ test("a view asked for as a sign-in is admitted gets the keyboard, not the TUI",
 test("with the TUI hidden, the sign-in dialog leaves the keyboard in the documentation", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   // The window was last used with the TUI hidden.
   await open(target, "signed-in");
   await target.locator('[data-terminal="tui"] .xterm-screen').click();
@@ -4548,22 +4671,39 @@ test("with the TUI hidden, the sign-in dialog leaves the keyboard in the documen
   await expect(target.locator(".docs-frame")).toBeFocused();
 });
 
-test("a calendar put away with no documentation behind it leaves the keyboard on the rail", async ({
-  page: target,
-}) => {
-  await open(target, "error");
-  await expect(target.locator(".sign-in")).toBeVisible();
-  await target.keyboard.press("Escape");
-  await expect(target.locator(".docs-frame")).toHaveCount(0);
-  await target.keyboard.press("ControlOrMeta+Shift+D");
-  await expect(
-    target.getByRole("region", { name: label("desktop.calendar.title") }),
-  ).toBeFocused();
-  await target.keyboard.press("ControlOrMeta+Shift+D");
-  await expect(target.locator(".calendar-page")).toHaveCount(0);
-  // The rail hands focus given to it on to its own tab stop.
-  await expect(target.locator(".rail :focus")).toHaveCount(1);
-});
+for (const [beside, layout] of [
+  [
+    "the rail",
+    { agentShown: false, docsShown: false, tuiShown: false, page: "docs" },
+  ],
+  [
+    "the TUI's way in",
+    { agentShown: false, docsShown: false, tuiShown: true, page: "docs" },
+  ],
+] as const)
+  test(`a calendar put away with no documentation behind it leaves the keyboard on ${beside}`, async ({
+    page: target,
+  }) => {
+    // The calendar's pane goes with it: the keyboard goes to the next column
+    // on screen with something to focus, else to the rail.
+    await seedLayout(target, { layout });
+    await open(target, "error");
+    await expect(target.locator(".sign-in")).toBeVisible();
+    await target.keyboard.press("Escape");
+    await expect(target.locator(".docs-frame")).toHaveCount(0);
+    await target.keyboard.press("ControlOrMeta+Shift+D");
+    await expect(
+      target.getByRole("region", { name: label("desktop.calendar.title") }),
+    ).toBeFocused();
+    await target.keyboard.press("ControlOrMeta+Shift+D");
+    await expect(target.locator(".calendar-page")).toHaveCount(0);
+    // The rail hands focus given to it on to its own tab stop.
+    await expect(
+      target.locator(
+        layout.tuiShown === false ? ".rail :focus" : ".pane-tui :focus",
+      ),
+    ).toHaveCount(1);
+  });
 
 test("a calendar shown again after a failed read says the new failure once", async ({
   page: target,
@@ -4599,39 +4739,28 @@ test("a calendar shown again after a failed read says the new failure once", asy
   ).toBe(1);
 });
 
-test("carrying on in the TUI, the calendar looks at the account again", async ({
+test("signed out, the calendar offers sign-in and does not read the account again or send the person to the TUI", async ({
   page: target,
 }) => {
   await open(target, "signed-out");
-  await target
-    .locator(".sign-in")
-    .getByRole("button", {
-      name: label("desktop.signin.open_tui"),
-      exact: true,
-    })
-    .click();
-  await expect(tui(target)).toBeFocused();
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
   const before = await calls(target, "signInStatus")();
   await calendarButton(target).click();
   const page = target.getByRole("region", {
     name: label("desktop.calendar.title"),
   });
-  // The window does not know how the TUI's sign-in went: it says so,
-  // looks once on opening, and offers to look again.
-  await expect(page).toContainText(label("desktop.account.in_tui"));
-  await expect.poll(calls(target, "signInStatus")).toBe(before + 1);
-  // Once: time enough for another passes, and there is none.
+  await expect(page).toContainText(label("desktop.account.signed_out"));
+  await expect(page.getByRole("button", { name: /TUI/ })).toHaveCount(0);
+  // The account is known to be signed out: opening the page does not ask
+  // again, and nothing of the profile is read.
   await target.waitForTimeout(600);
-  expect(await calls(target, "signInStatus")()).toBe(before + 1);
-  const again = page.getByRole("button", {
-    name: label("desktop.calendar.refresh"),
-  });
-  await again.click();
-  // The button that asked keeps the keyboard while the account is read.
-  await expect(again).toBeFocused();
-  await expect.poll(calls(target, "signInStatus")).toBe(before + 2);
-  await expect(again).not.toHaveAttribute("aria-busy");
+  expect(await calls(target, "signInStatus")()).toBe(before);
   expect(await calendarReads(target)()).toBe(0);
+  await page
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await expect(password(target)).toBeFocused();
 });
 
 test("signing out from a terminal leaves the keyboard on the way back in", async ({
@@ -4642,7 +4771,9 @@ test("signing out from a terminal leaves the keyboard on the way back in", async
   await expect(tui(target)).toBeFocused();
   await target.keyboard.press("ControlOrMeta+Shift+k");
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.account.sign_out"));
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.account.sign_out"));
   await target.keyboard.press("Enter");
   await expect(
     target.locator(".pane-tui").getByRole("button", {
@@ -4681,7 +4812,10 @@ test("what is not known of the messages is said, never shown as none unread", as
   );
   // The tooltip says what the name says.
   await messagesButton(target).hover();
-  await expect(target.getByRole("tooltip")).toContainText("timed_out");
+  await expect(target.getByRole("tooltip")).toContainText(
+    label("desktop.messages.failed"),
+  );
+  await expect(target.getByRole("tooltip")).not.toContainText("timed_out");
 });
 
 test("messages are read again when the window is returned to, at most once a minute", async ({
@@ -4710,7 +4844,9 @@ test("the palette opens the calendar, and choosing it again keeps it open", asyn
       .getByRole("button", { name: label("desktop.rail.search") })
       .click();
     const palette = target.locator(".palette");
-    await palette.getByRole("combobox").fill(label("desktop.calendar.title"));
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label("desktop.calendar.title"));
     await target.keyboard.press("Enter");
     await expect(palette).toHaveCount(0);
     await expect(page).toBeFocused();

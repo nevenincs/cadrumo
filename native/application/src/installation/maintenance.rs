@@ -144,6 +144,25 @@ pub struct NativeOwner {
     product_code: String,
     context: NativeContext,
     prefix: PathBuf,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    feature: Option<NativeFeature>,
+}
+
+/// Independent native ownership inside the single release MSI product.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NativeFeature {
+    Version,
+    Registration,
+}
+
+impl NativeFeature {
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::Version => "VersionFiles",
+            Self::Registration => "SharedRegistration",
+        }
+    }
 }
 
 impl NativeOwner {
@@ -156,6 +175,7 @@ impl NativeOwner {
             product_code: product_code.to_ascii_uppercase(),
             context,
             prefix,
+            feature: None,
         };
         owner.validate()?;
         Ok(owner)
@@ -168,6 +188,13 @@ impl NativeOwner {
     }
     pub fn prefix(&self) -> &Path {
         &self.prefix
+    }
+    pub fn with_feature(mut self, feature: NativeFeature) -> Self {
+        self.feature = Some(feature);
+        self
+    }
+    pub fn feature(&self) -> Option<NativeFeature> {
+        self.feature
     }
 
     fn validate(&self) -> Result<(), Error> {
@@ -227,6 +254,23 @@ pub enum RollbackPublication {
 }
 
 impl Preparation<'_> {
+    /// Authorize recovery of only this invocation's fresh, unanchored candidate.
+    /// Retain this reservation and the maintenance lease through native settlement.
+    pub fn fresh_rollback_owner(&self) -> Result<Option<NativeOwner>, Error> {
+        let _writer = lock(&self.store.root.join("transaction.lock"), false, false)?;
+        let state = self.store.read()?;
+        if state.versions.get(&self.release) != Some(&self.product)
+            || state.manager_anchor.as_deref() == Some(&self.release)
+            || state.desktop_anchor.as_deref() == Some(&self.release)
+            || self.product.phase != Phase::Pending
+        {
+            return Err(Error::Integrity(
+                "fresh rollback reservation changed".into(),
+            ));
+        }
+        Ok(self.previous.is_none().then(|| self.product.owner.clone()))
+    }
+
     pub fn rollback(
         self,
         contract: &DiscoveryContract,
@@ -492,6 +536,11 @@ impl Store {
         lock(&self.root.join("maintenance.lock"), false, true)
     }
 
+    /// Read-only verification must not create even a missing maintenance lock.
+    pub fn existing_exclusive_maintenance(&self) -> Result<Lease, Error> {
+        lock(&self.root.join("maintenance.lock"), false, false)
+    }
+
     fn read(&self) -> Result<State, Error> {
         let state: State = filesystem::json_file(&self.root.join("state.json"))?;
         if state.schema != 2
@@ -505,6 +554,11 @@ impl Store {
         let first_owner = state.versions.values().next().map(|product| &product.owner);
         if let Some(registration) = &state.registration {
             self.validate_owner(&registration.owner)?;
+            if registration.owner.feature == Some(NativeFeature::Version) {
+                return Err(Error::Integrity(
+                    "registration names the version feature".into(),
+                ));
+            }
             if first_owner.is_some_and(|owner| {
                 owner.context != registration.owner.context
                     || owner.prefix != registration.owner.prefix
@@ -521,6 +575,11 @@ impl Store {
         for (release, product) in &state.versions {
             version(release)?;
             self.validate_owner(&product.owner)?;
+            if product.owner.feature == Some(NativeFeature::Registration) {
+                return Err(Error::Integrity(
+                    "version names the registration feature".into(),
+                ));
+            }
             if first_owner.is_some_and(|owner| {
                 owner.context != product.owner.context || owner.prefix != product.owner.prefix
             }) {
@@ -603,6 +662,11 @@ impl Store {
             phase: Phase::Pending,
         };
         self.validate_owner(&requested.owner)?;
+        if requested.owner.feature == Some(NativeFeature::Registration) {
+            return Err(Error::Invalid(
+                "version requires its own native feature".into(),
+            ));
+        }
         let _writer = lock(&self.root.join("transaction.lock"), false, false)?;
         let mut state = self.read()?;
         if let Some(previous) = state.versions.get(release) {
@@ -681,13 +745,20 @@ impl Store {
         let _writer = lock(&self.root.join("transaction.lock"), false, false)?;
         let mut state = self.read()?;
         self.validate_owner(&registration_owner)?;
+        if registration_owner.feature == Some(NativeFeature::Version) {
+            return Err(Error::Invalid(
+                "registration requires its own native feature".into(),
+            ));
+        }
         let product = state
             .versions
             .get(release)
             .ok_or_else(|| Error::Invalid("unreserved release".into()))?;
         if product.owner.context != registration_owner.context
             || product.owner.prefix != registration_owner.prefix
-            || product.owner.product_code == registration_owner.product_code
+            || (product.owner.product_code == registration_owner.product_code
+                && (product.owner.feature != Some(NativeFeature::Version)
+                    || registration_owner.feature != Some(NativeFeature::Registration)))
         {
             return Err(Error::Integrity(
                 "registration owner differs from version ownership".into(),
@@ -957,4 +1028,80 @@ fn validate_product_code(code: &str) -> Result<(), Error> {
         return Err(Error::Invalid("invalid native product identity".into()));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fresh_rollback_authority_excludes_prior_reservations_and_changed_publication() {
+        let root = tempfile::tempdir().unwrap();
+        let store = Store::new(
+            root.path().join("publication"),
+            Identity {
+                application_id: "rollback-test".into(),
+                channel: "stable".into(),
+                platform: "windows-x64".into(),
+            },
+            4,
+        )
+        .unwrap();
+        store.initialize().unwrap();
+        let owner = NativeOwner::new(
+            "12345678-1234-1234-1234-123456789abc".into(),
+            NativeContext::Machine,
+            root.path().to_owned(),
+        )
+        .unwrap();
+        let digest = Sha256Digest::new("a".repeat(64)).unwrap();
+        let mut reservation = store
+            .prepare_transaction("1.0.0", owner.clone(), digest)
+            .unwrap();
+        assert_eq!(reservation.fresh_rollback_owner().unwrap(), Some(owner));
+        assert!(store.exclusive_maintenance().is_ok());
+        assert!(store.begin_removal("1.0.0").is_err());
+        for phase in [Phase::Pending, Phase::Ready] {
+            let mut prior = reservation.product.clone();
+            prior.phase = phase;
+            reservation.previous = Some(prior);
+            assert_eq!(reservation.fresh_rollback_owner().unwrap(), None);
+        }
+        reservation.previous = None;
+        let original = store.read().unwrap();
+        let copy = || State {
+            schema: original.schema,
+            identity: original.identity.clone(),
+            versions: original.versions.clone(),
+            manager_anchor: original.manager_anchor.clone(),
+            desktop_anchor: original.desktop_anchor.clone(),
+            registration: original.registration.clone(),
+        };
+        let mut changed = copy();
+        changed.versions.get_mut("1.0.0").unwrap().manifest_sha256 =
+            Sha256Digest::new("b".repeat(64)).unwrap();
+        store.write(&changed).unwrap();
+        assert!(reservation.fresh_rollback_owner().is_err());
+        let mut changed = copy();
+        changed.versions.get_mut("1.0.0").unwrap().owner = NativeOwner::new(
+            "12345678-1234-1234-1234-123456789abd".into(),
+            NativeContext::Machine,
+            root.path().to_owned(),
+        )
+        .unwrap();
+        store.write(&changed).unwrap();
+        assert!(reservation.fresh_rollback_owner().is_err());
+        for manager in [true, false] {
+            let mut anchored = copy();
+            if manager {
+                anchored.manager_anchor = Some("1.0.0".into());
+            } else {
+                anchored.desktop_anchor = Some("1.0.0".into());
+            }
+            store.write(&anchored).unwrap();
+            assert!(reservation.fresh_rollback_owner().is_err());
+        }
+        store.write(&original).unwrap();
+        assert!(reservation.fresh_rollback_owner().unwrap().is_some());
+    }
 }

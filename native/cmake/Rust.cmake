@@ -3,7 +3,9 @@
 function(cadrumo_cargo_command output)
   # Cargo combines this builder path with native separators for CARGO_TARGET_TMPDIR.
   cmake_path(NATIVE_PATH CADRUMO_PATH_CARGO NORMALIZE cargo_directory)
-  set(command ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}"
+  # A command that builds a component's own images passes --build-identity <component>; only
+  # that component's crate reads the identity, and an unchanged fingerprint changes no value.
+  set(command ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>"
     --env "RUSTC=${CADRUMO_RUST_ROOT}/bin/rustc${CMAKE_EXECUTABLE_SUFFIX}"
     --env "RUSTDOC=${CADRUMO_RUST_ROOT}/bin/rustdoc${CMAKE_EXECUTABLE_SUFFIX}"
     --env "CARGO_TARGET_DIR=${cargo_directory}")

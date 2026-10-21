@@ -21,6 +21,7 @@ from ....application.modelo.declarations_workspace_contracts import (
 )
 from ....application.overview.home import HomeAvailability
 from ....core.i18n.render import tr
+from ..components.language import localized
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..destination_alias import closed_destination_ids
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
@@ -49,14 +50,20 @@ class DeclarationsUnavailableScreen(DeclarationsWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.declarations.unavailable.title"), classes="cadrumo-banner", markup=False)
+        yield localized(
+            Static(tr("tui.declarations.unavailable.title"), classes="cadrumo-banner", markup=False),
+            "tui.declarations.unavailable.title",
+        )
         with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
             yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
-            yield Static(
-                tr("tui.declarations.refusal.source"),
-                id="declarations-refusal",
-                classes="declarations-refusal",
-                markup=False,
+            yield localized(
+                Static(
+                    tr("tui.declarations.refusal.source"),
+                    id="declarations-refusal",
+                    classes="declarations-refusal",
+                    markup=False,
+                ),
+                "tui.declarations.refusal.source",
             )
 
     def on_mount(self) -> None:

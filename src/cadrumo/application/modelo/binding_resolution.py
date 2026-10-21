@@ -284,7 +284,7 @@ def _reject_binding_channel_mismatch(
         raise ModeloError(
             translated_message="errors.error.error_modelos",
             context={
-                "misrouted_binding_ids": ", ".join(str(b) for b in misrouted_to_decimal),
+                "misrouted_binding_ids": ", ".join(misrouted_to_decimal),
                 "expected_input_channel": "enum",
                 "supplied_input_channel": "decimal",
             },
@@ -297,7 +297,7 @@ def _reject_binding_channel_mismatch(
         raise ModeloError(
             translated_message="errors.error.error_modelos",
             context={
-                "misrouted_binding_ids": ", ".join(str(b) for b in misrouted_to_enum),
+                "misrouted_binding_ids": ", ".join(misrouted_to_enum),
                 "expected_input_channel": "decimal",
                 "supplied_input_channel": "enum",
             },
@@ -331,7 +331,7 @@ def _reject_boolean_binding_channel_mismatch(
     raise ModeloError(
         translated_message="errors.error.error_modelos",
         context={
-            "misrouted_binding_ids": ", ".join(str(binding_id) for binding_id in misrouted),
+            "misrouted_binding_ids": ", ".join(misrouted),
             "expected_input_channel": "boolean",
             "supplied_input_channel": "decimal",
         },
@@ -396,7 +396,11 @@ def _lift_previous_filing_casilla_overrides_to_bindings(
     promoted: dict[BindingId, Decimal] = {}
     for casilla_id, value in casilla_inputs.items():
         casilla = revision_casillas_by_id.get(casilla_id)
-        if casilla is None or casilla.input_kind != InputKind.BOUND or not casilla.binding:
+        if (
+            casilla is None
+            or casilla.input_kind != InputKind.BOUND
+            or not (casilla.binding is not None and casilla.binding)
+        ):
             continue
         binding = bindings_by_id.get(casilla.binding)
         if binding is None or binding.source != _BindingSourceKind.PREVIOUS_FILING:

@@ -19,9 +19,9 @@ from ....application.operations.public_scalar import PublicDecimal
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....domain.invoices.enums import PaymentStatus
-from ....domain.iva.classification import InvoiceKind
-from .._ledger_evidence_cli import _evidence_confirm_payload, _require_exact_evidence_reference
+from ....domain.iva.schema import InvoiceKind
 from ..ledger_business_payloads import EvidenceConfirmResult
+from ..ledger_evidence_commands import _evidence_confirm_payload, _require_exact_evidence_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -21,6 +21,8 @@ from cadrumo.domain.calculations.registry.schema_references import RegistrySnaps
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from cadrumo.domain.modelos.work_unit import WorkUnitCatalogue
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ...calculations.observations_repository import CalculationObservationPorts
 from ...ledger.tests.unused_repository_ports import ProfileOnlyCatalogueRepository, UnusedBucketEventRepository
@@ -30,7 +32,6 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
 from ...operations.registry import OperationFrontendProjection
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..iva_wallet_correction_operation import (
     MODELO_IVA_WALLET_CORRECTION_OPERATION_DEFINITION_ID,

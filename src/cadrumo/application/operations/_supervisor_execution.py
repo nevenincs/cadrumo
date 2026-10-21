@@ -9,7 +9,10 @@ from typing import override
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.diagnostic_log import diagnostic_error_fields
 from ...core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.hashing import canonical_json_bytes, content_hash_hex, prefixed_digest
@@ -22,7 +25,6 @@ from ...core.operations import (
     OperationTerminalCondition,
 )
 from ...core.operator_progress import OperatorProgress, operator_progress_sink
-from ..user_profile.access_contracts import AccessAction
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from . import _supervisor_snapshot
 from . import supervisor_context as _supervisor_context
@@ -40,6 +42,7 @@ from .interactions import (
     OperationPendingInteraction,
     OperationRejectResponse,
 )
+from .model_runs import operation_model_run_port, run_with_model_runs
 from .models import (
     OperationId,
     OperationIdentity,
@@ -112,6 +115,12 @@ async def _stored_error_detail(
         return await operands.put(detail, written_at=written_at)
     except Exception:
         return None
+
+
+def _raising_frame(error: BaseException) -> str:
+    """Where ``error`` was raised, as the canonical diagnostic origin, and nothing it carries."""
+    origin = diagnostic_error_fields(error).get("error_origin")
+    return "-" if origin is None else str(origin)
 
 
 class SupervisorExecutionMixin(SupervisorHost):
@@ -191,7 +200,7 @@ class SupervisorExecutionMixin(SupervisorHost):
         executor_context = _supervisor_context.SupervisorExecutorContext(
             context=context,
             authority_operation=self._authority_operation,
-            operands=self._operands,
+            operands=self._operands_for(snapshot.identity.operation_id),
             ephemeral_secret=BoundEphemeralSecretAccess(
                 requirement=requirement,
                 broker=self._ephemeral_secrets,
@@ -217,7 +226,10 @@ class SupervisorExecutionMixin(SupervisorHost):
                     identity=running.identity,
                     request=request,
                     action=AccessAction.START,
-                    executor=lambda: executor.execute(request, executor_context),
+                    executor=lambda: run_with_model_runs(
+                        operation_model_run_port(self._execution_authority, running.identity),
+                        executor.execute(request, executor_context),
+                    ),
                 ),
             ),
             name=f"operation-settlement-{operation_id}",
@@ -383,17 +395,20 @@ class SupervisorExecutionMixin(SupervisorHost):
         registered = get_registered_error_code(error) if isinstance(error, CadrumoError) else None
         settled_at = self._clock()
         error_detail_ref = await _stored_error_detail(
-            self.registry, snapshot.identity.definition_id, self._operands, error, written_at=settled_at
+            self.registry,
+            snapshot.identity.definition_id,
+            self._operands_for(snapshot.identity.operation_id),
+            error,
+            written_at=settled_at,
         )
         if registered is not None and registered.category is ErrorCategory.REFUSED:
-            # Persistence keeps only the registry code; the local log keeps which check refused.
+            # Log only registered lifecycle facts; the exception may carry private operands.
             _log.warning(
-                "operation refused definition=%s operation=%s code=%s denial=%s",
+                "operation refused definition=%s operation=%s code=%s raising_frame=%s",
                 snapshot.identity.definition_id,
                 snapshot.identity.operation_id,
                 registered.code,
-                getattr(error, "reason", None),
-                exc_info=error,
+                _raising_frame(error),
             )
             receipt = OperationTerminalReceipt(
                 identity=snapshot.identity,
@@ -406,13 +421,14 @@ class SupervisorExecutionMixin(SupervisorHost):
             )
         else:
             diagnostic_ref = self._executor_failure_diagnostic_reference(snapshot, error)
-            # The frontend shows only this opaque reference; the local log pairs it with the cause.
+            # The opaque reference correlates with the encrypted error detail.
             _log.error(
-                "operation failed definition=%s operation=%s diagnostic_ref=%s",
+                "operation failed definition=%s operation=%s diagnostic_ref=%s exception_type=%s raising_frame=%s",
                 snapshot.identity.definition_id,
                 snapshot.identity.operation_id,
                 diagnostic_ref,
-                exc_info=error,
+                type(error).__name__,
+                _raising_frame(error),
             )
             receipt = OperationTerminalReceipt(
                 identity=snapshot.identity,
@@ -574,7 +590,7 @@ class SupervisorExecutionMixin(SupervisorHost):
                 receipt = await await_cancellation_complete(
                     _validated_refusal_receipt(
                         registry=self.registry,
-                        operands=self._operands,
+                        operands=self._operands_for(snapshot.identity.operation_id),
                         snapshot=snapshot,
                         evidence=result_ref,
                         settled_at=self._clock(),

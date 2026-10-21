@@ -11,7 +11,7 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 
 from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva.classification import InvoiceKind as CatalogueInvoiceKind
+from ....domain.iva.schema import InvoiceKind as CatalogueInvoiceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

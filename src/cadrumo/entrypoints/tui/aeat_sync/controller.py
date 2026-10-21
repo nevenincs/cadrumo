@@ -11,15 +11,16 @@ from ....application.aeat_sync.workspace import (
     AeatSyncWorkspaceZone,
     AeatSyncWorkspaceZoneStateV1,
 )
+from ....application.auth.sync_readiness import AuthSyncReadiness
 from ....application.operations.models import OperationDefinitionId
 from ....application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
 )
 from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue
 from ....application.operator_actions.models import ActionReference
 from ..navigation import TuiScreenContextV1
+from ..profile.aeat_auth_setup import AeatAuthSetupPort
 from .models import (
     AEAT_SYNC_DESTINATION_BY_ZONE,
     AeatSyncNotificationDocumentHandoffV1,
@@ -72,14 +73,12 @@ def _operation_contract_for(
     )
 
 
-def _contract_admits_tui_action(
+def _contract_joins_action(
     contract: OperationPublicDefinitionContractV1 | None,
     action: ActionReference,
 ) -> bool:
-    """Require the contract's exact action join and TUI frontend capability."""
-    if contract is None or contract.action_reference != action:
-        return False
-    return OperationFrontendProjection.TUI in contract.permitted_frontends
+    """Require the contract's exact action join."""
+    return contract is not None and contract.action_reference == action
 
 
 class AeatSyncWorkspaceController:
@@ -95,6 +94,7 @@ class AeatSyncWorkspaceController:
         notification_document_handoff: AeatSyncNotificationDocumentHandoffV1 | None = None,
         action_catalogue: ActionCatalogue = OPERATOR_ACTION_CATALOGUE,
         operation_contracts: OperationPublicContractSetV1 | None = None,
+        aeat_auth_setup: AeatAuthSetupPort | None = None,
     ) -> None:
         """Validate the outer context and retain only injected public facts."""
         if context.destination != "workbench.aeat_sync":
@@ -108,6 +108,8 @@ class AeatSyncWorkspaceController:
         self.notification_document_handoff = notification_document_handoff
         self.action_catalogue = action_catalogue
         self.operation_contracts = operation_contracts
+        self.aeat_auth_setup = aeat_auth_setup
+        self.auth_readiness: AuthSyncReadiness | None = None
         self._states = {state.zone: state for state in projection.zones}
 
     def state_for(self, zone: AeatSyncWorkspaceZone) -> AeatSyncWorkspaceZoneStateV1:
@@ -153,7 +155,7 @@ class AeatSyncWorkspaceController:
         action_id = str(action.action_id)
         if not _is_canonical_action_admission(self.action_catalogue, action_id):
             return None
-        if not _contract_admits_tui_action(contract, action):
+        if not _contract_joins_action(contract, action):
             return None
         return AeatSyncOperationRequestV1(action=action, operation=operation)
 

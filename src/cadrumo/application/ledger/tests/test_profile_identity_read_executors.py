@@ -10,12 +10,13 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ....core.operations import profile_operation_subject
 from ....core.period import Period
 from ...operations import profile_guard
 from ...operations.models import OperationRequest
 from ...operations.public_period import PublicPeriod
-from ...user_profile.access_contracts import AccessDenialCode
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import (
     check_operation as check,
@@ -87,6 +88,14 @@ def _read_cases() -> tuple[_ReadCase, ...]:
                 history.LedgerHistoryRequest(profile_id=_PROFILE_ID, transaction_prefix="a" * 12),
             ),
             lambda ports: history.LedgerHistoryExecutor(cast(Any, ports)),
+        ),
+        _ReadCase(
+            "history-typed",
+            _request(
+                history.LEDGER_HISTORY_TYPED_OPERATION_DEFINITION_ID,
+                history.LedgerHistoryRequest(profile_id=_PROFILE_ID, transaction_prefix="a" * 12),
+            ),
+            lambda ports: history.LedgerHistoryTypedExecutor(cast(Any, ports)),
         ),
         _ReadCase(
             "list",

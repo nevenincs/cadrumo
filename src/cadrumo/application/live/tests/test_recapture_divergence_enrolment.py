@@ -94,6 +94,6 @@ class TestTheAdvisoryReachesTheOperator:
         """
         from pathlib import Path
 
-        source_path = Path(__file__).resolve().parents[3] / "entrypoints" / "cli" / "_app_live.py"
+        source_path = Path(__file__).resolve().parents[3] / "entrypoints" / "cli" / "app_live_commands.py"
         source = source_path.read_text(encoding="utf-8")
         assert "notices.extend(run.recapture_notices)" in source

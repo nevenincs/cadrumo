@@ -199,7 +199,7 @@ def _digest(output: bytes | None) -> str:
 
 def _failure_class(stderr: bytes | None) -> str | None:
     """Classify a Python failure without retaining its potentially private text."""
-    if not stderr:
+    if not (stderr is not None and stderr):
         return None
     text = stderr.decode("utf-8", errors="replace")
     for name in (
@@ -221,7 +221,7 @@ def _failure_class(stderr: bytes | None) -> str | None:
 
 def _failure_identity(stderr: bytes | None) -> str | None:
     """Return one redacted terminal diagnostic line for runner triage only."""
-    if not stderr:
+    if not (stderr is not None and stderr):
         return None
     lines = [line.strip() for line in stderr.decode("utf-8", errors="replace").splitlines() if line.strip()]
     if not lines:

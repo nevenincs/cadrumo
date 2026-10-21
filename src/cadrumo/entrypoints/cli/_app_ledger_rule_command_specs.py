@@ -1,6 +1,18 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ._app_ledger_command_spec_policies import (
     _POLICY_3,
@@ -11,18 +23,6 @@ from ._app_ledger_rule_ratio_command_spec_support import (
     _LEDGER_RULE_RATIO_LEAF_INVOCATION,
     _RULE_ACTOR_OPTION,
 )
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-    ValueContract,
-)
-from .command_spec import CommandSpec
 
 LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -103,10 +103,10 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _RULE_ACTOR_OPTION,
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("._ledger_rules_cli", "rule_add", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_rules_commands", "rule_add", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_rule_payloads", "RuleAddResult", __package__),
+            target=DeferredTarget(".ledger_rule_results", "RuleAddResult", __package__),
             identity="ledger.rule.add",
         ),
     ),
@@ -154,10 +154,10 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _RULE_ACTOR_OPTION,
         ),
         policy=_POLICY_3,
-        handler=LazyBinding.available(DeferredTarget("._ledger_rules_cli", "rule_apply", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_rules_commands", "rule_apply", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_rule_payloads", "RuleApplyResult", __package__),
+            target=DeferredTarget(".ledger_rule_results", "RuleApplyResult", __package__),
             identity="ledger.rule.apply",
         ),
     ),
@@ -171,10 +171,10 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=_LEDGER_RULE_RATIO_LEAF_INVOCATION,
         parameters=(),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_rules_cli", "rule_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_rules_commands", "rule_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_rule_payloads", "RuleListResult", __package__),
+            target=DeferredTarget(".ledger_rule_results", "RuleListResult", __package__),
             identity="ledger.rule.list",
         ),
     ),

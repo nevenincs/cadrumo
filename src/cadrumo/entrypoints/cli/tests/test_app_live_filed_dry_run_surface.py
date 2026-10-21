@@ -15,8 +15,8 @@ from __future__ import annotations
 import pytest
 
 from ....application.live.remote_state_models import BulkFiledDataCaptureReport, FiledCapturePairOutcome
-from .._app_live_filed_payloads import FiledCaptureResult
 from .._app_live_rendering import _filed_capture_lines
+from ..app_live_filed_results import FiledCaptureResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

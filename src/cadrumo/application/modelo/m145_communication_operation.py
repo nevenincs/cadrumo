@@ -4,8 +4,8 @@ The canonical record service remains the sole owner of validation, rendering,
 state transitions, and history payloads. This module adds encrypted request and
 result custody, exact-profile admission, and a gate at the service's actual
 repository mutation calls. Exported bytes stay in the encrypted operation
-result until the local CLI reads them; only their receipt is written to bucket
-history.
+result until the submitting frontend reads them; only their receipt is written
+to bucket history.
 """
 
 from __future__ import annotations
@@ -13,6 +13,8 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from pydantic import BaseModel
+
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from ...core.operations import (
     OperationCancellation,
@@ -39,16 +41,16 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.execution_actor import OperationExecutionCallerReader
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
-from ..user_profile.access_contracts import AccessAction, Availability, DisclosureCategory
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ._ports import FicheroBoeRecordRenderer
 from .m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,
@@ -124,11 +126,13 @@ def _build_definition(
     request_type: type[M145CommunicationRequest],
     records_ports_factory: M145CommunicationRecordsPortsFactory,
     renderer_factory: Callable[[], FicheroBoeRecordRenderer],
+    execution_caller_reader: OperationExecutionCallerReader | None,
 ) -> OperationDefinition:
     mutating = operation_id != M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID
     return OperationDefinition(
         definition_id=operation_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=M145CommunicationExecutionResult,
         executor_factory=OperationExecutorFactory(
             request_type=request_type,
@@ -136,6 +140,7 @@ def _build_definition(
             build=lambda: M145CommunicationExecutor(
                 records_ports_factory=records_ports_factory,
                 renderer_factory=renderer_factory,
+                execution_caller_reader=execution_caller_reader,
             ),
         ),
         phase_codes=(operation_id,),
@@ -158,7 +163,6 @@ def _build_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=M145_COMMUNICATION_REFUSAL_CODES_BY_OPERATION[operation_id],
     )
 
@@ -167,8 +171,13 @@ def build_m145_communication_operation_definitions(
     *,
     records_ports_factory: M145CommunicationRecordsPortsFactory,
     renderer_factory: Callable[[], FicheroBoeRecordRenderer],
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> tuple[OperationDefinition, ...]:
-    """Build all five existing CLI identities over the canonical record service."""
+    """Build all five command identities over the canonical record service.
+
+    ``execution_caller_reader`` names the frontend that admitted an execution,
+    so an automation's draft is recorded under its session's label.
+    """
     return tuple(
         sorted(
             (
@@ -177,6 +186,7 @@ def build_m145_communication_operation_definitions(
                     request_type=request_type,
                     records_ports_factory=records_ports_factory,
                     renderer_factory=renderer_factory,
+                    execution_caller_reader=execution_caller_reader,
                 )
                 for operation_id, request_type in M145_COMMUNICATION_REQUEST_TYPES.items()
             ),

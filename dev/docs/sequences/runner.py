@@ -63,13 +63,13 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Literal, cast
+from typing import Literal, Unpack, cast
 from uuid import UUID
 
 import keyring
 import keyring.backends.null
 import keyring.core
-from click.testing import Result
+from click.testing import CliRunner, Result
 from pydantic import BaseModel, Field, JsonValue
 
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
@@ -91,7 +91,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
-from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
 from cadrumo.application.user_profile.custody_ports import create_profile_custody_registration_material
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
@@ -104,13 +103,17 @@ from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.command_schema import command_registration_for_node
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
+from cadrumo.entrypoints.cli.tests.cli_runner import semantic_cli_text
+from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
+from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
+from cadrumo_runtime.host.tests.frontend.cli.cli_runner import cadrumo_click_command
 from dev._paths import REPO_ROOT
 
 from .errors import SequenceExecutionError
 from .receipt_fixture import requires_persistent_sign_in, sequence_receipt_store
 from .runtime_fixture import SANDBOX_INSTANT, sequence_runtime
 from .schema import (
+    CommandProgram,
     FrameKind,
     Identifier,
     JsonPath,
@@ -753,9 +756,12 @@ def _isolated_external_tool_env(sandbox_root: Path) -> Generator[None]:
     empty_browsers = sandbox_root / "workdir" / ".playwright-browsers"
     empty_bin.mkdir(parents=True, exist_ok=True)
     empty_browsers.mkdir(parents=True, exist_ok=True)
+    # The product resolves its managed browser root from its own setting rather
+    # than Playwright's variable, so both are pinned to the same empty directory.
     pins = {
         "PATH": str(empty_bin),
         "PLAYWRIGHT_BROWSERS_PATH": str(empty_browsers),
+        "CADRUMO_PLAYWRIGHT_BROWSERS_DIR": str(empty_browsers),
     }
     previous = {key: os.environ.get(key) for key in pins}
     os.environ.update(pins)
@@ -1195,7 +1201,7 @@ def _next_process_session_view() -> Generator[None]:
         yield
 
 
-def _invoke_frame(args: tuple[str, ...]) -> Result:
+def _invoke_frame(args: tuple[str, ...], *, program: CommandProgram) -> Result:
     """Invoke the cached CLI, retrying only on the transient registry-write race.
 
     The race exists only during local development, where concurrent
@@ -1213,8 +1219,8 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     is_profile_delete = any(args[index : index + 3] == ("config", "profile", "delete") for index in range(len(args)))
     settings_context = override_settings(cadrumo_active_profile=None) if is_profile_delete else nullcontext()
     with settings_context, _next_process_session_view():
-        result = _invoke_authenticated_frame(args)
-    if os.environ.get("CI"):
+        result = _invoke_authenticated_frame(args, program=program)
+    if bool(os.environ.get("CI")):
         return result
     tries = 1
     while (
@@ -1224,13 +1230,27 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     ):
         time.sleep(2)
         dispose_engine()
-        result = _invoke_authenticated_frame(args)
+        result = _invoke_authenticated_frame(args, program=program)
         tries += 1
     return result
 
 
-def _invoke_authenticated_frame(args: tuple[str, ...]) -> Result:
+def invoke_cached_cli(args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:
+    """Invoke the runtime frontend against the sequence-owned native server."""
+    return CliRunner().invoke(cadrumo_click_command(), list(args), **kwargs)
+
+
+def _invoke_authenticated_frame(args: tuple[str, ...], *, program: CommandProgram) -> Result:
     """Supply a fresh bounded password proof without replacing authored channels."""
+    if program is CommandProgram.AUTHENTICATION:
+        from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
+        from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
+
+        graph = RUNTIME_COMMAND_GRAPH
+        invoke = invoke_runtime_cli
+    else:
+        graph = COMMAND_GRAPH
+        invoke = invoke_cached_cli
     explicit = {
         "--profile-secrets-stdin",
         "--profile-secrets-fd",
@@ -1240,16 +1260,23 @@ def _invoke_authenticated_frame(args: tuple[str, ...]) -> Result:
         "--secrets-fd",
     }
     if any(argument.split("=", 1)[0] in explicit for argument in args):
-        return invoke_cached_cli(list(args))
-    spec = COMMAND_GRAPH.resolve_invocation(args)
-    registration = None if spec is None else command_registration_for_node(COMMAND_GRAPH.node(spec.key))
+        return invoke(list(args))
+    spec = graph.resolve_invocation(args)
+    registration = None if spec is None else command_registration_for_node(graph.node(spec.key))
     if spec is not None and spec.key == "config_login":
         password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-        return invoke_cached_cli([*args, "--secrets-stdin"], input=json.dumps({"passphrase": password}))
-    if registration is None or registration.profile_authentication is not ProfileAuthenticationPosture.RESUME_FALLBACK:
-        return invoke_cached_cli(list(args))
+        return invoke([*args, "--secrets-stdin"], input=json.dumps({"passphrase": password}))
+    posture = (
+        spec.profile_authentication
+        if program is CommandProgram.AUTHENTICATION and spec is not None
+        else None
+        if registration is None
+        else registration.profile_authentication
+    )
+    if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK:
+        return invoke(list(args))
     password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-    return invoke_cached_cli(["--profile-secrets-stdin", *args], input=json.dumps({"profile_passphrase": password}))
+    return invoke(["--profile-secrets-stdin", *args], input=json.dumps({"profile_passphrase": password}))
 
 
 def _execute_frame(
@@ -1264,7 +1291,7 @@ def _execute_frame(
     _record_frame_progress(sequence, frame, frame_index=frame_index, argv=argv)
     observer = _FRAME_OBSERVER.get()
     with observer(frame_index) if observer is not None else nullcontext():
-        result = _invoke_frame(argv[1:])
+        result = _invoke_frame(argv[1:], program=frame.program)
     # The runner records the two streams separately: ``Result.output`` under
     # this Click version is the COMBINED capture, so read the split
     # ``stdout``/``stderr`` properties — a refusal's error document (which
@@ -1408,11 +1435,14 @@ def executed_sequence_sandbox(
             names.
     """
     _refuse_unexecutable(sequence)
-    with sequence_sandbox(
-        sequence_id=sequence.sequence_id,
-        sandbox_root=sandbox_root,
-        fixtures_root=fixtures_root,
-    ) as sandbox:
+    with (
+        _logs_retained_on_failure(sandbox_root, _retained_logs_root(), sequence.sequence_id),
+        sequence_sandbox(
+            sequence_id=sequence.sequence_id,
+            sandbox_root=sandbox_root,
+            fixtures_root=fixtures_root,
+        ) as sandbox,
+    ):
         captures: dict[str, CapturedScalar] = {}
         # @static frames are display-only: they never run, so they never enter
         # the transcript (and therefore never the golden).
@@ -1496,17 +1526,51 @@ def _execute_page_in_root(
     transcripts: list[SequenceTranscript] = []
     page_seeds: dict[str, _PageSeedState] = {}
     page_seed_signatures: dict[tuple[str, ...], tuple[str, _PageSeedState]] = {}
-    with sequence_sandbox(
-        sequence_id=label,
-        sandbox_root=sandbox_root,
-        fixtures_root=fixtures_root,
-        enrolled_sequence_ids=tuple(sequence.sequence_id for sequence in sequences if sequence.executed_frames),
-    ) as sandbox:
+    with (
+        _logs_retained_on_failure(sandbox_root, _retained_logs_root(), label),
+        sequence_sandbox(
+            sequence_id=label,
+            sandbox_root=sandbox_root,
+            fixtures_root=fixtures_root,
+            enrolled_sequence_ids=tuple(sequence.sequence_id for sequence in sequences if sequence.executed_frames),
+        ) as sandbox,
+    ):
         for sequence in sequences:
             transcript = _execute_page_sequence(sequence, label, sandbox, page_seeds, page_seed_signatures)
             if transcript is not None:
                 transcripts.append(transcript)
     return tuple(transcripts)
+
+
+def _retained_logs_root() -> Path:
+    """Return where a failed sandbox's logs are kept, read before the sandbox rebinds the log directory."""
+    configured = load_settings().cadrumo_log_dir
+    return (Path(configured) if configured is not None else Path(prepare_temporary_directory())) / "failed-sandboxes"
+
+
+@contextmanager
+def _logs_retained_on_failure(sandbox_root: Path, retained_root: Path, label: str) -> Generator[None]:
+    """Copy a failed sandbox's product logs out before its directory is removed.
+
+    Each sandbox binds the runtime's, the profile worker's and this process's
+    diagnostic log under its own storage root, which goes with the sandbox. A
+    worker that dies mid-sequence, or a runtime that fails its own teardown,
+    would otherwise leave no record anywhere. Every ``logs`` directory under
+    the sandbox root is kept, by its path relative to that root.
+    """
+    try:
+        yield
+    except BaseException as error:
+        destination = retained_root / f"{re.sub(r'[^A-Za-z0-9._-]+', '_', label)}-{os.getpid()}-{time.time_ns()}"
+        try:
+            for logs in sandbox_root.rglob("logs"):
+                if logs.is_dir():
+                    shutil.copytree(logs, destination / logs.relative_to(sandbox_root), dirs_exist_ok=True)
+        except OSError as copy_error:
+            error.add_note(f"sandbox logs could not be retained: {type(copy_error).__name__}")
+        else:
+            error.add_note(f"sandbox logs retained at {destination}")
+        raise
 
 
 def _execute_page_sequence(

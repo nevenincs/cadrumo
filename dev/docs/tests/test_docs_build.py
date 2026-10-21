@@ -90,10 +90,7 @@ def _producer_source_paths() -> dict[str, Path]:
     Built by applying the generator's OWN naming rule forward over its
     discovered inventory, so the mapping cannot drift from what it writes.
     """
-    manager = ApiStubManager(
-        src_cadrumo=REPO_ROOT / "src" / API_SOURCE_PACKAGE,
-        docs_api=_DOCS / "api",
-    )
+    manager = ApiStubManager.for_repository(REPO_ROOT, docs_api=_DOCS / "api")
     paths: dict[str, Path] = {}
     for dotted, is_package in manager.discover_modules():
         parts = dotted.split(".")
@@ -136,12 +133,23 @@ def test_changed_cli_source_plans_the_generated_command_reference() -> None:
     assert not plan.api_scaffold_required, "the CLI subtree is documented by the generator, not autodoc"
 
 
+def test_changed_client_owner_source_plans_its_api_stub() -> None:
+    """Changes in sibling first-party packages reach their generated target too."""
+    source = Path("src", "cadrumo_client", "transport", "frontend_client.py")
+    plan = planned_doc_targets(REPO_ROOT, [source])
+
+    assert plan.api_scaffold_required
+    assert not plan.cli_reference_required
+    assert _DOCS / "api" / stub_filename("cadrumo_client.transport.frontend_client") in plan.targets
+
+
 def test_changed_source_the_generator_excludes_plans_nothing() -> None:
     """Paths the stub generator refuses must not plan an API scaffold either."""
     excluded = [
         Path("src", API_SOURCE_PACKAGE, "core", "tests", "test_thing.py"),
         Path("src", API_SOURCE_PACKAGE, "core", "conftest.py"),
         Path("src", API_SOURCE_PACKAGE, "core", "_data", "table.py"),
+        Path("src", "cadrumo_client", "tests", "test_transport.py"),
     ]
     for rel_path in excluded:
         plan = planned_doc_targets(REPO_ROOT, [rel_path])
@@ -183,6 +191,15 @@ def test_docs_build_root_refinement_is_relative_and_pinned_before_isolation(
     assert resolved == storage_root / "compiled" / "docs"
     assert docs_build_root(_REPO_ROOT) == resolved
     assert docs_html_root(_REPO_ROOT) == resolved / "html"
+
+
+def test_docs_build_root_defaults_to_the_checkout_build_tree(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    repo_root = tmp_path / "checkout"
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", "")
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "separate-storage"))
+    monkeypatch.setenv("CADRUMO_DOCS_BUILD_ROOT", "")
+
+    assert docs_build_root(repo_root) == repo_root / "build" / "docs"
 
 
 def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None:
@@ -581,7 +598,9 @@ def test_a_changed_source_check_builds_the_stub_its_build_generates() -> None:
     output = _ANSI_ESCAPE.sub("", (result.stdout or "") + (result.stderr or ""))
     assert result.returncode == 0, output[-6000:]
     assert "No existing documentation targets remained" not in output, output[-3000:]
-    assert f"writing output... [100%] {stub}" in output, output[-3000:]
+    # Parallel HTML writers may omit per-page write progress; the read event
+    # proves Sphinx consumed the generated target before the successful build.
+    assert f"reading sources... [100%] {stub}" in output, output[-3000:]
     # The other generated stubs exist only after conf.py lists what to exclude,
     # so reading exactly one source proves they stayed out of the read set.
     assert _environment_update(output)[0] == 1, output[-3000:]
@@ -799,6 +818,7 @@ def _scope_config(scope: str, tmp_path: Path) -> dict[str, object]:
         "print('SCOPE_CONFIG=' + json.dumps({"
         "'user_scope': ns['_USER_SCOPE'],"
         "'has_autodoc': 'sphinx.ext.autodoc' in ns['extensions'],"
+        "'has_attribute_types': 'dev.docs.apidocs.attribute_types' in ns['extensions'],"
         "'has_viewcode': 'sphinx.ext.viewcode' in ns['extensions'],"
         "'has_typehints': 'sphinx_autodoc_typehints' in ns['extensions'],"
         "'has_myst': 'myst_parser' in ns['extensions'],"
@@ -839,6 +859,7 @@ def test_docs_scope_config_switches_autodoc_and_api_exclusion(tmp_path: Path) ->
     user = _scope_config("user", tmp_path)
     assert user["user_scope"] is True
     assert user["has_autodoc"] is False
+    assert user["has_attribute_types"] is False
     assert user["has_viewcode"] is False
     assert user["has_typehints"] is False
     assert user["excludes_api"] is True
@@ -848,6 +869,7 @@ def test_docs_scope_config_switches_autodoc_and_api_exclusion(tmp_path: Path) ->
     full = _scope_config("full", tmp_path)
     assert full["user_scope"] is False
     assert full["has_autodoc"] is True
+    assert full["has_attribute_types"] is True
     assert full["has_viewcode"] is True
     assert full["has_typehints"] is True
     assert full["excludes_api"] is False
@@ -994,11 +1016,8 @@ def test_the_live_preview_build_is_classified_as_a_whole_site_build(tmp_path: Pa
     assert read_set == {**_EVERY_SURFACE, "api": scope == "full"}, (argv, read_set)
 
 
-def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -> None:
-    """A real focused HTML build and shipped SVGs expose the canonical identity."""
-    from bs4 import BeautifulSoup
-    from defusedxml import ElementTree
-
+def _render_focused_index(tmp_path: Path, flavor: str) -> Path:
+    """Build only the index page of one documentation flavor and return its output root."""
     docs_source = tmp_path / "docs-source"
     shutil.copytree(_DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "api", "cli"))
     output = tmp_path / "html"
@@ -1015,6 +1034,7 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
         # their dedicated gates and are not part of this page's assertions.
         "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK": "1",
         "CADRUMO_DOCS_SKIP_CLI_TREE": "1",
+        "CADRUMO_DOCS_FLAVOR": flavor,
     }
     result = subprocess.run(
         [
@@ -1036,7 +1056,16 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+    return output
 
+
+def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -> None:
+    """A real focused HTML build and shipped SVGs expose the canonical identity."""
+    from bs4 import BeautifulSoup
+    from defusedxml import ElementTree
+    from PIL import Image
+
+    output = _render_focused_index(tmp_path, "web")
     rendered = BeautifulSoup((output / "index.html").read_text(encoding="utf-8"), "html.parser")
     assert rendered.title is not None
     assert rendered.title.get_text(strip=True) == "Cadrumo documentation - local Spanish tax preparation"
@@ -1061,6 +1090,47 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
     favicon = ElementTree.parse(_DOCS / "_static" / "cadrumo-favicon.svg").getroot()
     assert favicon is not None
     assert favicon.attrib["aria-label"] == "Cadrumo mark"
+
+    # Every icon the web head links is shipped at the size it declares.
+    icons = {
+        (link.get("href"), " ".join(link.get_attribute_list("rel")), link.get("sizes"))
+        for link in rendered.find_all("link", rel=["icon", "apple-touch-icon", "manifest"])
+    }
+    assert icons >= {
+        ("_static/cadrumo-favicon.ico", "icon", "32x32"),
+        ("_static/cadrumo-favicon.svg", "icon", None),
+        ("_static/cadrumo-icon-square-180.png", "apple-touch-icon", None),
+        ("_static/cadrumo.webmanifest", "manifest", None),
+    }
+    with Image.open(output / "_static" / "cadrumo-favicon.ico") as ico:
+        assert ico.format == "ICO"
+        assert ico.info["sizes"] == {(16, 16), (32, 32), (48, 48)}
+    with Image.open(output / "_static" / "cadrumo-icon-square-180.png") as touch:
+        assert touch.size == (180, 180)
+    manifest = json.loads((output / "_static" / "cadrumo.webmanifest").read_text(encoding="utf-8"))
+    for icon in manifest["icons"]:
+        with Image.open(output / "_static" / icon["src"]) as image:
+            assert f"{image.width}x{image.height}" == icon["sizes"]
+    og_image = rendered.find("meta", property="og:image")
+    assert og_image is not None
+    og_content = og_image.get("content")
+    assert isinstance(og_content, str), og_content
+    assert og_content.endswith("_static/cadrumo-icon-square-512.png")
+
+
+def test_desktop_flavor_links_only_icons_the_package_serves(tmp_path: Path) -> None:
+    """The packaged copy's head names no favicon or manifest file the documentation scheme refuses."""
+    from bs4 import BeautifulSoup
+
+    from dev.packaging.native.docs_stage import scan_page, served_media_types
+    from dev.packaging.native.layout import load_layout
+
+    output = _render_focused_index(tmp_path, "desktop")
+    page = (output / "index.html").read_text(encoding="utf-8")
+    rendered = BeautifulSoup(page, "html.parser")
+    icons = [link.get("href") for link in rendered.find_all("link", rel=["icon", "apple-touch-icon", "manifest"])]
+    assert icons == ["_static/cadrumo-favicon.svg"]
+    assert scan_page(page, served_media_types(load_layout()["user_docs"])).refused == []
 
 
 # ---------------------------------------------------------------------------

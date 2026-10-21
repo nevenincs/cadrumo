@@ -16,6 +16,7 @@ from textual.widgets import Button, Input, Select, Static
 from ....application.modelo.work_calculation_contracts import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
 from ....core.i18n.render import tr
 from ....core.time.utc import parse_iso_datetime
+from ..components.language import localized, refresh_localized_widgets
 from ..components.theme import tokenised
 
 _M303_EVIDENCE_CSS = tokenised("""
@@ -66,38 +67,62 @@ class OrdinaryM303FilingEvidenceScreen(ModalScreen[OrdinaryM303FilingEvidenceSub
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="m303-evidence-dialog"):
-            yield Static(tr("tui.modelo.m303_evidence.title"), id="m303-evidence-title", markup=False)
-            yield Static(
-                tr(
-                    "tui.modelo.m303_evidence.existing_attestation_hint"
-                    if self._asks_modelo_390
-                    else "tui.modelo.m303_evidence.no_modelo_390_question_hint"
-                ),
-                id="m303-evidence-hint",
-                markup=False,
+            yield localized(
+                Static(tr("tui.modelo.m303_evidence.title"), id="m303-evidence-title", markup=False),
+                "tui.modelo.m303_evidence.title",
             )
-            yield Static(
-                tr("tui.modelo.m303_evidence.joint_return_elected"), classes="m303-evidence-label", markup=False
+            yield localized(
+                Static(
+                    tr(
+                        "tui.modelo.m303_evidence.existing_attestation_hint"
+                        if self._asks_modelo_390
+                        else "tui.modelo.m303_evidence.no_modelo_390_question_hint"
+                    ),
+                    id="m303-evidence-hint",
+                    markup=False,
+                ),
+                "tui.modelo.m303_evidence.existing_attestation_hint"
+                if self._asks_modelo_390
+                else "tui.modelo.m303_evidence.no_modelo_390_question_hint",
+            )
+            yield localized(
+                Static(
+                    tr("tui.modelo.m303_evidence.joint_return_elected"), classes="m303-evidence-label", markup=False
+                ),
+                "tui.modelo.m303_evidence.joint_return_elected",
             )
             yield Select[str](_yes_no_options(), id="m303-evidence-joint-return-elected")
             if self._asks_modelo_390:
-                yield Static(
-                    tr("tui.modelo.m303_evidence.attestation_attachment_id"),
-                    classes="m303-evidence-label",
-                    markup=False,
+                yield localized(
+                    Static(
+                        tr("tui.modelo.m303_evidence.attestation_attachment_id"),
+                        classes="m303-evidence-label",
+                        markup=False,
+                    ),
+                    "tui.modelo.m303_evidence.attestation_attachment_id",
                 )
                 yield Input(id="m303-evidence-attachment-id")
-                yield Static(
-                    tr("tui.modelo.m303_evidence.attestation_sha256"), classes="m303-evidence-label", markup=False
+                yield localized(
+                    Static(
+                        tr("tui.modelo.m303_evidence.attestation_sha256"), classes="m303-evidence-label", markup=False
+                    ),
+                    "tui.modelo.m303_evidence.attestation_sha256",
                 )
                 yield Input(id="m303-evidence-sha256")
-                yield Static(tr("tui.modelo.m303_evidence.observed_at"), classes="m303-evidence-label", markup=False)
+                yield localized(
+                    Static(tr("tui.modelo.m303_evidence.observed_at"), classes="m303-evidence-label", markup=False),
+                    "tui.modelo.m303_evidence.observed_at",
+                )
                 yield Input(id="m303-evidence-observed-at")
             yield Static(id="m303-evidence-notice", markup=False)
             with Horizontal(id="m303-evidence-actions"):
-                yield Button(tr("tui.modelo.m303_evidence.cancel"), id="m303-evidence-cancel")
-                yield Button(
-                    tr("application.modelo.lifecycle.calculate"), id="m303-evidence-submit", classes="-primary"
+                yield localized(
+                    Button(tr("tui.modelo.m303_evidence.cancel"), id="m303-evidence-cancel"),
+                    "tui.modelo.m303_evidence.cancel",
+                )
+                yield localized(
+                    Button(tr("application.modelo.lifecycle.calculate"), id="m303-evidence-submit", classes="-primary"),
+                    "application.modelo.lifecycle.calculate",
                 )
 
     def on_mount(self) -> None:
@@ -166,6 +191,15 @@ class OrdinaryM303FilingEvidenceScreen(ModalScreen[OrdinaryM303FilingEvidenceSub
             existing_evidence=existing_evidence,
             observed_at=parsed_observed_at,
         )
+
+    async def refresh_language(self) -> None:
+        """Reword mounted controls while preserving inputs and pending operations."""
+        refresh_localized_widgets(self)
+        selected = self.query_one("#m303-evidence-joint-return-elected", Select)
+        value = selected.value
+        with self.prevent(Select.Changed):
+            selected.set_options(_yes_no_options())
+            selected.value = value
 
 
 def _yes_no_options() -> tuple[tuple[str, str], ...]:

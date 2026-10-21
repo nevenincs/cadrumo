@@ -96,3 +96,33 @@ class OperationErrorDetailPort(Protocol):
     async def settled_error_detail(self, projection: OperationPublicProjectionV1) -> OperationErrorDetailV1 | None:
         """Read a refused or failed operation's recorded detail, or ``None`` when it has none."""
         ...
+
+
+class OperationChangeWaiterPort(Protocol):
+    """Wakes an observer when its operation may have advanced; it carries no operation fact."""
+
+    @property
+    def armed(self) -> bool:
+        """Whether the cue is subscribed, so a wait can end on it."""
+        ...
+
+    def arm(self) -> None:
+        """Subscribe on first use, then forget earlier cues; call before the observation the next wait follows."""
+        ...
+
+    async def wait(self, timeout: float) -> None:
+        """Wait until a cue since the last arm, or until ``timeout`` seconds pass."""
+        ...
+
+    def close(self) -> None:
+        """Stop receiving cues."""
+        ...
+
+
+@runtime_checkable
+class OperationChangeSourcePort(Protocol):
+    """A controller whose runtime cues it when the operation advances, so nothing need re-read on a timer."""
+
+    def operation_changes(self) -> OperationChangeWaiterPort:
+        """A new waiter on this controller's connection."""
+        ...

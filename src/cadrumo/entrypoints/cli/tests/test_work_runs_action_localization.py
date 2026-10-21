@@ -200,7 +200,7 @@ def test_work_runs_localizes_only_human_text_and_keeps_one_structural_envelope()
         assert action_row["action"]["action"] == {
             "action_id": "operator.modelo.work.calculate",
             "target_command_key": "modelo.work.calculate",
-            "cli_path": ["app", "modelo", "work", "calculate"],
+            "cli_path": ["aeat", "app", "modelo", "work", "calculate"],
         }
         assert action_row["action"]["missing_argument_names"] == ["work_unit_id"]
         assert health_row["action"]["action"] is None

@@ -874,6 +874,10 @@ GOOGLE_OAUTH_TOKEN_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="{profile}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+    # A profile's Google sign-in stays in that profile's folder: never mirrored to a remote store.
+    remote_mirror_policy=StorageRemoteMirrorPolicy.LOCAL_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
 )
 GOOGLE_OAUTH_METADATA_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_oauth_metadata",
@@ -884,6 +888,10 @@ GOOGLE_OAUTH_METADATA_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="{profile}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+    # A profile's Google sign-in stays in that profile's folder: never mirrored to a remote store.
+    remote_mirror_policy=StorageRemoteMirrorPolicy.LOCAL_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
 )
 GOOGLE_DRIVE_CONFIG_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_drive_config",
@@ -894,6 +902,20 @@ GOOGLE_DRIVE_CONFIG_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="{profile}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+)
+EXTENSION_SETTINGS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="provider_settings",
+    namespace="cadrumo.provider_settings",
+    owner="cadrumo.adapters.persistence.storage.secure_object_namespaces",
+    sensitivity=SensitivityClass.SECRET,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{extension_record_key}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+    # Opaque extension secrets remain process-local and never mirror remotely.
+    remote_mirror_policy=StorageRemoteMirrorPolicy.LOCAL_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
 )
 LLM_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_cache",

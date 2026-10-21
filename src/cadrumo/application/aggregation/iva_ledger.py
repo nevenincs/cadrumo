@@ -88,7 +88,7 @@ from ...domain.calculations.registry.prorrata_vocabulary import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.iva.classification import InvoiceKind, territorial_scope_alias
+from ...domain.iva.classification import territorial_scope_alias
 from ...domain.iva.errors import ProrrataInputError
 from ...domain.iva.establishment import (
     StatedCountryCodeStatus,
@@ -104,6 +104,7 @@ from ...domain.iva.prorrata import (
 )
 from ...domain.iva.schema import (
     EUMemberState,
+    InvoiceKind,
     IvaCategory,
     IvaRateKind,
     spanish_eu_member_state,

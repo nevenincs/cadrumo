@@ -5,23 +5,34 @@
 #[cfg(all(feature = "fixture-test-mode", not(debug_assertions)))]
 compile_error!("release builds refuse the fixture test mode");
 
-#[cfg(any(windows, test))]
-pub mod admission;
 #[cfg(windows)]
+pub mod activation_probe;
+#[cfg(any(windows, test))]
 pub mod background;
+#[cfg(windows)]
+pub mod change_watch;
 pub mod contract;
 pub mod custody;
+#[cfg(windows)]
+pub mod desktop_host;
 pub mod diagnostics;
 pub mod identity;
 #[cfg(windows)]
 pub mod installation;
 pub mod installed;
+pub mod invocation;
 pub mod ipc;
+pub mod lifecycle;
 pub mod preferences;
+#[cfg(windows)]
+pub mod process_job;
+#[cfg(windows)]
+pub mod service_windows;
 pub mod session;
 pub mod startup;
 pub mod strings;
 pub mod supervision;
+pub mod wake;
 #[cfg(windows)]
 pub mod windows_lifecycle;
 #[cfg(windows)]
@@ -42,8 +53,7 @@ pub mod failed_versions;
 #[cfg(windows)]
 pub mod installation_watch;
 
-#[cfg(windows)]
-pub mod cutover_child;
+pub mod successor;
 
 #[cfg(windows)]
 pub mod cutover_coordinator;

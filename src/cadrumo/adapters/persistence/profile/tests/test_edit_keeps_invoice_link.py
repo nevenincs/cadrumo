@@ -13,8 +13,9 @@ from decimal import Decimal
 
 import pytest
 
-from .....application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
+from .....application.ledger.actions_manual import update_manual_transaction_fields
 from .....application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.errors import TransactionValidationError
 from .....domain.transactions.service import link_invoice

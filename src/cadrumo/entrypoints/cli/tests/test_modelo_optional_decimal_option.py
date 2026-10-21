@@ -19,8 +19,8 @@ from decimal import Decimal
 import pytest
 import typer
 
-from .._modelo_cli_support import optional_decimal_option
-from ._english_locale_fixture import english_locale_fixture
+from cadrumo.entrypoints.cli._modelo_cli_support import optional_decimal_option
+from cadrumo.tests.english_locale_fixture import english_locale_fixture
 
 __all__ = ["english_locale_fixture"]
 

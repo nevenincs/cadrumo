@@ -12,6 +12,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
@@ -22,12 +25,6 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..taxation_comparison import (
     TaxationComparisonError,
@@ -120,12 +117,13 @@ def _access_context(
     profile_id: UUID = _PROFILE,
     admitted=None,
     authority_operation: PinnedAuthorityOperation | None = _AUTHORITY,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=action,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
         admitted_request=admitted,
@@ -180,6 +178,21 @@ def test_registered_access_pins_one_profile_period_and_tax_value_result() -> Non
     assert permission.projection_id == registration.contract.result_schema.schema_id
     assert factory_calls == [str(_PROFILE)]
     assert reader.loads == 1
+
+
+def test_taxation_comparison_is_admitted_on_the_external_client_frontend_without_a_commit_door() -> None:
+    unit = _unit()
+    reader = _Reader(WorkUnitCatalogue(work_units={unit.work_unit_id: unit}))
+    _factory, _factory_calls, _definition, registration, registry = _registered(reader)
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(unit),
+        context=_access_context(registration, frontend=OperationFrontendProjection.EXTERNAL_CLIENT),
+    )
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
+    assert resolved.request.periods == frozenset({unit.period})
+    assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 @pytest.mark.parametrize("failure", ["missing", "foreign_bucket"])
@@ -462,13 +475,11 @@ def test_work_unit_comparison_refuses_unproven_manual_and_relation_inputs() -> N
 
 def test_projection_rejects_non_finite_amount_and_unmodeled_scope() -> None:
     with pytest.raises(ValidationError):
-        ModeloTaxationComparisonProjection(
-            **(
-                ModeloTaxationComparisonProjection.from_comparison(
-                    _comparison(), profile_id=_PROFILE, work_unit_id=_unit().work_unit_id
-                ).model_dump()
-                | {"delta_resultado": "NaN"}
-            )
+        ModeloTaxationComparisonProjection.model_validate(
+            ModeloTaxationComparisonProjection.from_comparison(
+                _comparison(), profile_id=_PROFILE, work_unit_id=_unit().work_unit_id
+            ).model_dump()
+            | {"delta_resultado": "NaN"}
         )
 
     unsupported = _comparison().model_copy(update={"modelo": "303"})

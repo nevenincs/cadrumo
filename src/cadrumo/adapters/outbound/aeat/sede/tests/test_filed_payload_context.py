@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+from ......application.live.expedientes_ports import ExpedientesDeclaration
 from ......core.period import Period
 from ......domain.calculations.registry.export_parse import parse_filed_payload
 from ......domain.calculations.registry.export_semantics import ExportDraftAttribute
@@ -13,7 +14,6 @@ from ......domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from ..declarations_observations import _verify_submitted_file_context
-from ..declarations_schema import Declaracion
 from ..errors import SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -53,7 +53,7 @@ def test_filed_parser_retains_wrong_identity_for_context_refusal(attribute: str,
         ),
     )
     parsed = parse_filed_payload(layout, body)
-    declaration = Declaracion(
+    declaration = ExpedientesDeclaration(
         modelo="303",
         ejercicio=2024,
         period=Period.from_year_and_code(2024, "1T"),

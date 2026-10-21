@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from dev._paths import REPO_ROOT
+from dev.first_party_source import HARNESS_PACKAGE, SOURCE_PACKAGES
 from dev.packaging.command_execution import run_command
 
 from ..dead_code import (
@@ -59,9 +60,8 @@ def _expected_vulture_path(path: Path) -> str:
 def test_real_scan_over_the_tree_returns_a_typed_outcome_with_real_findings() -> None:
     """A real vulture run classifies to CLEAN or FINDINGS, never a crash.
 
-    No self-skip on a clean tree (forbidden by ``test_no_skip_xfail`` for
-    tests outside the source tree, per the sibling ``test_duplication_scan``'s
-    own convention): both branches are asserted inside one test instead.
+    No self-skip on a clean tree (the project forbids skips as shortcuts,
+    per the sibling ``test_duplication_scan``): both branches are asserted inside one test instead.
     """
     result = run_dead_code_scan(_REPO_ROOT)
 
@@ -202,6 +202,10 @@ def test_product_exclusions_match_a_real_vulture_scan(tmp_path: Path) -> None:
         "src/cadrumo/domain/tests/helper.py",
         "src/cadrumo/domain/_data/content.py",
         "src/cadrumo/domain/conftest.py",
+        "src/cadrumo_harness/mcp/test_one.py",
+        "src/cadrumo_harness/mcp/tests/helper.py",
+        "src/cadrumo_harness/_data/content.py",
+        "src/cadrumo_harness/conftest.py",
         "native/desktop/src-tauri/src/python/cli.py",
         "dev/packaging/native/build.py",
         "build/runtime/copied.py",
@@ -224,6 +228,7 @@ def test_product_exclusions_match_a_real_vulture_scan(tmp_path: Path) -> None:
             "--config",
             str(tmp_path / "pyproject.toml"),
             str(tmp_path / "src/cadrumo"),
+            str(tmp_path / "src/cadrumo_harness"),
             str(whitelist),
         ],
         cwd=_REPO_ROOT,
@@ -244,6 +249,9 @@ def _populated_tree(root: Path) -> Path:
     for index in range(MINIMUM_OFFERED_MODULES):
         (package / f"module_{index:05d}.py").write_text("", encoding="utf-8")
     (package / "dead.py").write_text("import os\n", encoding="utf-8")
+    for source_package in SOURCE_PACKAGES:
+        (root / source_package).mkdir(parents=True, exist_ok=True)
+        (root / source_package / "__init__.py").write_text("", encoding="utf-8")
     whitelist = root / "dev" / "audit"
     whitelist.mkdir(parents=True)
     (whitelist / "vulture_whitelist.py").write_text("", encoding="utf-8")
@@ -251,6 +259,26 @@ def _populated_tree(root: Path) -> Path:
     # file is absent, and a manifest here would make ``uv run`` adopt this
     # directory as a project instead of the synced environment.
     return package
+
+
+def test_a_source_package_offering_nothing_refuses_before_launch(tmp_path: Path) -> None:
+    """A small package vanishing cannot hide under the aggregate floor.
+
+    The populated tree clears the floor on the tax application alone, so only
+    the per-package check can see the harness offer nothing. The real vulture
+    run first shows the tree is otherwise scannable.
+    """
+    _populated_tree(tmp_path)
+    assert run_dead_code_scan(tmp_path).outcome is DeadCodeOutcome.FINDINGS
+
+    (tmp_path / HARNESS_PACKAGE / "__init__.py").unlink()
+
+    result = run_dead_code_scan(tmp_path, timeout=0.0)
+
+    assert result.outcome is DeadCodeOutcome.ERROR
+    assert result.is_green is False
+    assert f"no module from {HARNESS_PACKAGE}" in result.reason
+    assert "timeout" not in result.reason
 
 
 def test_a_module_vulture_cannot_parse_makes_the_scan_unavailable(tmp_path: Path) -> None:

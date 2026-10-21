@@ -11,8 +11,8 @@ import pytest
 
 from .....application.modelo.action_errors import CalculationRevisionNotFoundError
 from .....application.modelo.reconciliation import prepare_parsed_justificante
+from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from .....application.modelo.reconciliation_records import (
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationRecord,
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,

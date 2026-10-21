@@ -8,6 +8,8 @@ from pydantic import (
     BaseModel,
 )
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
@@ -18,15 +20,14 @@ from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .classify_result_contracts import (
@@ -51,9 +52,15 @@ from .read_access import resolve_ledger_commit_access
 class LedgerOperatorIvaExecutor:
     """Delegate operator-selected IVA derivation to its existing guarded writer."""
 
-    def __init__(self, ports_factory: LedgerActionPortsFactory) -> None:
+    def __init__(
+        self,
+        ports_factory: LedgerActionPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Retain the canonical exact-profile service composition."""
         self._ports_factory = ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self, request: OperationRequest[LedgerOperatorIvaRequest], context: OperationExecutorContext
@@ -67,6 +74,7 @@ class LedgerOperatorIvaExecutor:
         ports = self._ports_factory(bucket_id=bucket_id, operation=context.authority_operation)
         require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=context.authority_operation)
         await context.events.phase(LEDGER_OPERATOR_IVA_DEFINITION_ID)
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor or bucket_id)
 
         async def refuse(error: Exception, transaction_id: str) -> OperationRefusalEvidence:
             result = LedgerOperatorIvaResult(
@@ -111,7 +119,7 @@ class LedgerOperatorIvaExecutor:
                             bucket_id=bucket_id,
                             transaction_id=transaction_id,
                             iva_category=category,
-                            actor=payload.actor or bucket_id,
+                            actor=actor,
                             source_command="aeat app ledger classify --iva-category --saturate",
                             ports=ports,
                             expected_current=baseline,
@@ -161,16 +169,20 @@ def resolve_ledger_operator_iva_access(
     return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
-def build_ledger_operator_iva_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_operator_iva_definition(
+    ports_factory: LedgerActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Register the existing derivation with immutable profile custody and COMMIT."""
     return build_single_phase_definition(
         definition_id=LEDGER_OPERATOR_IVA_DEFINITION_ID,
         request_type=LedgerOperatorIvaRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerOperatorIvaExecutionResult,
         executor_type=LedgerOperatorIvaExecutor,
-        build=lambda: LedgerOperatorIvaExecutor(ports_factory),
+        build=lambda: LedgerOperatorIvaExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=frozenset({LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE}),
     )
 

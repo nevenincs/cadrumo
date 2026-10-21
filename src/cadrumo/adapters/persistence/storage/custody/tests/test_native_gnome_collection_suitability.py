@@ -21,11 +21,8 @@ from pydantic import SecretBytes
 from cadrumo.adapters.persistence.storage.custody import linux_secret_bus as secret_bus
 from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    NativeSecretBackend,
-)
+from cadrumo.application.user_profile.automation_custody_port import NativeSecretBackend
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 pytestmark = [
     pytest.mark.integration,

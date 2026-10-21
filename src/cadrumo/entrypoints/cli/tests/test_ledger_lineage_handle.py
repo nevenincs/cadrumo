@@ -23,9 +23,9 @@ from click.testing import Result
 
 from ....domain.transactions.models import derive_transaction_id
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
-from ._ledger_corpus_support import load_active_catalogue
-from ._ledger_seeded_profile_fixture import _isolated_backend
-from .cli_runner import invoke_cached_cli
+from ...tests.ledger_corpus_support import load_active_catalogue
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
+from .profile_world_fixtures import recorded_fx_isolated_backend as _isolated_backend
 
 __all__ = ["_isolated_backend"]
 

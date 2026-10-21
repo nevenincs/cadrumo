@@ -16,8 +16,8 @@ from ....application.live.remote_state_models import (
     SourceFiledDataCaptureReport,
 )
 from ....core.period import Period
-from .._app_live_iva_wallet_payloads import IvaWalletCaptureHistoryResult
 from .._app_live_rendering import _filed_capture_lines, _source_filed_capture_lines
+from ..app_live_iva_wallet_results import IvaWalletCaptureHistoryResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

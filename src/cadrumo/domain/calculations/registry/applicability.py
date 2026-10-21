@@ -1237,7 +1237,7 @@ def resolve_applicability_rule_from_operation(
     """Resolve one modelo's applicability rule from a generation-pinned directory."""
     directory = operation.modelo_directory(modelo.value)
     for metadata in directory.revisions:
-        revision = operation.revision(modelo.value, str(metadata.id))
+        revision = operation.revision(modelo.value, metadata.id)
         if revision.applicability:
             return hydrate_applicability_rule(modelo, revision.applicability[0])
     raise RegistryValidationError(
@@ -1317,7 +1317,7 @@ def iter_modelo_applicability_rules(
     could read two modelos from two generations.
     """
     known_modelos = sorted(
-        {str(modelo) for modelo in MODELO_APPLICABILITY_RULES} | REGISTRY_RESOLVED_APPLICABILITY_MODELOS,
+        {modelo for modelo in MODELO_APPLICABILITY_RULES} | REGISTRY_RESOLVED_APPLICABILITY_MODELOS,
     )
     if operation is None:
         from .authority import bundled_indexed_authority

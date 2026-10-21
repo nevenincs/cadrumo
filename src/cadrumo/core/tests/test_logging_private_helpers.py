@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import cast
+from typing import cast, override
 
 import pytest
 
@@ -171,3 +171,25 @@ def test_secret_scrubbing_filter_masks_the_home_directory_in_a_record() -> None:
     assert "~" in message
     assert "index.json" in message
     assert "error_type=OSError" in message
+
+
+def test_secret_scrubbing_filter_accepts_a_record_logged_with_exc_info_false() -> None:
+    """``exc_info=False`` reaches the record as ``False``; it names no exception to format."""
+
+    records: list[logging.LogRecord] = []
+
+    class _Collect(logging.Handler):
+        @override
+        def emit(self, record: logging.LogRecord) -> None:
+            records.append(record)
+
+    handler = _Collect()
+    handler.addFilter(SecretScrubbingFilter())
+    logger = logging.Logger("cadrumo.test.exc_info_false")
+    logger.addHandler(handler)
+
+    logger.error("no exception attached", exc_info=False)
+
+    assert len(records) == 1
+    assert records[0].exc_info is False
+    assert records[0].exc_text is None

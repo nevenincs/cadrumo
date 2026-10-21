@@ -47,7 +47,7 @@ class ObservationPayload(OutputSchema):
     """One JSON-safe casilla observation with registry provenance.
 
     Mirrors :class:`CasillaObservation` after
-    :func:`~cadrumo.entrypoints.cli.runtime_modelo_calculation.calculation_snapshot_payload`
+    :func:`~cadrumo.entrypoints.cli.operation_modelo_calculation.calculation_snapshot_payload`
     converts Decimal values to strings. Formula observations carry
     :obj:`FormulaId`, operand lineage,
     :obj:`LegalRefId`, and

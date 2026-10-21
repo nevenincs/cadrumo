@@ -26,7 +26,8 @@
       "category": "REFUSED",
       "code": "REFUSED_CLI_BOUNDARY",
       "context": {
-        "reason": "credential_rejected"
+        "reason": "credential_rejected",
+        "sign_in_reason": "credential_rejected"
       },
       "message": "credential_rejected",
       "retryable": false,
@@ -97,6 +98,7 @@
     "notices": [],
     "result": {
       "already_logged_out": false,
+      "automation_access_remains": false,
       "automation_enabled": false,
       "automation_revoked": false,
       "human_receipt_revoked": true,
@@ -114,6 +116,7 @@
     "notices": [],
     "result": {
       "already_logged_out": false,
+      "automation_access_remains": null,
       "automation_enabled": null,
       "automation_revoked": false,
       "human_receipt_revoked": true,
@@ -150,6 +153,7 @@
     "notices": [],
     "result": {
       "already_logged_out": false,
+      "automation_access_remains": true,
       "automation_enabled": true,
       "automation_revoked": false,
       "human_receipt_revoked": true,

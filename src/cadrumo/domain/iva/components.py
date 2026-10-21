@@ -36,9 +36,9 @@ from ._component_row_projection import (
     category_projection_from_entries,
     project_component_catalogue,
 )
-from .classification import InvoiceKind
 from .errors import IvaValidationError
 from .schema import (
+    InvoiceKind,
     IvaCategory,
     IvaStrictFrozen,
     _RegistryLegalRef,  # pyright: ignore[reportPrivateUsage] -- intra-package reuse of this package's own constrained legal-ref alias

@@ -11,7 +11,7 @@ and to restore the canonical read it was projected from.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
@@ -21,6 +21,8 @@ from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
+
+from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...application.modelo.calculation_actions import (
@@ -81,7 +83,6 @@ from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ..adapter_composition import build_calculation_action_ports
 from ..operation_composition import build_production_operation_registry
-from .modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -114,7 +115,7 @@ class _Events:
 
 class _Cancellation:
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         yield
 
 

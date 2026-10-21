@@ -1,6 +1,18 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import (
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    ValueContract,
+)
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec
+from cadrumo_client.contracts.command_ports import (
     CommandNodeKind,
     CommandWriteRoute,
 )
@@ -15,18 +27,6 @@ from ._app_live_command_spec_support import (
     _REQUIRED_FILING_YEAR_OPTION,
     NO_RESULT_SCHEMA,
 )
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    ValueContract,
-)
-from .command_shared_contracts import translation_key as _key
-from .command_spec import CommandSpec, ExecutionPolicySpec
 
 LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -100,10 +100,12 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             handoff=False,
             live_write=False,
         ),
-        handler=LazyBinding.available(DeferredTarget("._app_live_borrador_cli", "borrador_100_import", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".app_live_borrador_commands", "borrador_100_import", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_borrador_payloads", "Borrador100ImportResult", __package__),
+            target=DeferredTarget(".app_live_borrador_results", "Borrador100ImportResult", __package__),
             identity="app.live.borrador.100.import",
         ),
     ),
@@ -131,10 +133,10 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_borrador_cli", "borrador_100_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_borrador_commands", "borrador_100_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_borrador_payloads", "Borrador100ListResult", __package__),
+            target=DeferredTarget(".app_live_borrador_results", "Borrador100ListResult", __package__),
             identity="app.live.borrador.100.list",
         ),
     ),
@@ -156,10 +158,10 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_borrador_cli", "borrador_100_show", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_borrador_commands", "borrador_100_show", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_borrador_payloads", "Borrador100ViewResult", __package__),
+            target=DeferredTarget(".app_live_borrador_results", "Borrador100ViewResult", __package__),
             identity="app.live.borrador.100.view",
         ),
     ),
@@ -173,10 +175,12 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=_LEAF_INVOCATION,
         parameters=(_REQUIRED_FILING_YEAR_OPTION,),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_borrador_cli", "borrador_100_latest", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".app_live_borrador_commands", "borrador_100_latest", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_borrador_payloads", "Borrador100LatestResult", __package__),
+            target=DeferredTarget(".app_live_borrador_results", "Borrador100LatestResult", __package__),
             identity="app.live.borrador.100.latest",
         ),
     ),

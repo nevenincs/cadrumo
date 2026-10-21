@@ -11,7 +11,7 @@ cross-bucket key reuse, zero-amount, boundary timestamps).
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -25,7 +25,6 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.actions_import import import_ledger_transactions
-from cadrumo.application.ledger.actions_manual import create_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -48,6 +47,7 @@ from ....adapters.persistence.profile.tests.ledger_action_persistence_support im
 from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
     repositories as _repositories,
 )
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 _DEFAULT_AMOUNT = Decimal("25.00")
@@ -73,7 +73,7 @@ def _ledger_ports(
     event_repository: BucketEventHistoryRepository,
     *,
     bucket_id: str = _BUCKET_ID,
-) -> Iterator[LedgerActionPorts]:
+) -> Generator[LedgerActionPorts]:
     """Yield canonical ledger action ports over the isolated repositories."""
     with ledger_ports_for_test(
         bucket_id=bucket_id,

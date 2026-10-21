@@ -62,7 +62,6 @@ from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInput
 from .....application.ledger.grounding_anchor import evaluate_anchor
 from .....application.ledger.invoice_draft_records import InvoiceDraft
 from .....core.config import override_settings
-from .....core.config_support import LLMProvider
 from .....core.field_grounding import FieldGroundingOutcome
 from .....core.field_origin import FieldOrigin
 from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
@@ -166,8 +165,7 @@ def _serve_authored_reply(reply: str) -> Generator[str]:
 
 def _complete_over_loopback(reply: str, tmp_path: Path) -> str:
     settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model="gpt-oss",
+        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
     )

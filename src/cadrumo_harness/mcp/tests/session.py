@@ -16,20 +16,33 @@ manager does NOT call it implicitly) over the same in-memory transport.
 exact contract on top of ``Client`` so every in-process MCP test in this
 project shares one canonical composition instead of five independent
 reimplementations.
+
+A client of the 2026-07-28 revision performs no handshake: every request
+carries its own protocol version, and ``server/discover`` replaces
+``initialize``. :func:`connected_handshake_free_client` connects such a client
+to the same real server over framed streams, the path the stdio entry point
+serves, so the tests that use it say what that client is served.
 """
 
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, Literal
 
+import anyio
 from mcp.client import Client
+from mcp.client._transport import TransportStreams
 from mcp.client.session import ClientSession, ElicitationFnT
 from mcp.server import Server
+from mcp.server.lowlevel import NotificationOptions
 from mcp.server.mcpserver import MCPServer
+from mcp.shared.memory import create_client_server_memory_streams
+from mcp.types import LATEST_PROTOCOL_VERSION
 
-__all__ = ["connected_server_and_client_session"]
+__all__ = ["connected_handshake_free_client", "connected_server_and_client_session"]
+
+_SERVER_EXIT_GRACE_SECONDS = 2.0
 
 
 @asynccontextmanager
@@ -57,3 +70,53 @@ async def connected_server_and_client_session(
         cache=None,
     ) as client:
         yield client.session
+
+
+@asynccontextmanager
+async def _served_over_streams(server: Server[Any]) -> AsyncGenerator[TransportStreams]:
+    """Run ``server`` over one framed stream pair, with the options the stdio entry point runs it with."""
+    async with create_client_server_memory_streams() as (client_streams, server_streams):
+        server_read, server_write = server_streams
+        finished = anyio.Event()
+
+        async def run() -> None:
+            try:
+                await server.run(
+                    server_read,
+                    server_write,
+                    server.create_initialization_options(NotificationOptions(), experimental_capabilities={}),
+                )
+            finally:
+                finished.set()
+
+        async with anyio.create_task_group() as serving:
+            serving.start_soon(run)
+            try:
+                yield client_streams
+            finally:
+                # End of input is how a stdio client leaves; the server then returns of its own accord.
+                await client_streams[1].aclose()
+                await server_write.aclose()
+                with anyio.move_on_after(_SERVER_EXIT_GRACE_SECONDS):
+                    await finished.wait()
+                serving.cancel_scope.cancel()
+
+
+@asynccontextmanager
+async def connected_handshake_free_client(
+    server: Server[Any], *, negotiation: Literal["discover", "pinned"] = "discover"
+) -> AsyncGenerator[Client]:
+    """Connect a client of the newest protocol revision to ``server``; it never sends ``initialize``.
+
+    With ``discover`` the client asks ``server/discover`` what the server
+    speaks and adopts the answer. With ``pinned`` it asks nothing first and
+    sends its requests at the newest revision outright. Either way the
+    server's first sight of the client is a request that carries its own
+    version, over the same framing a stdio connection has.
+    """
+    async with Client(
+        _served_over_streams(server),
+        mode="auto" if negotiation == "discover" else LATEST_PROTOCOL_VERSION,
+        cache=None,
+    ) as client:
+        yield client

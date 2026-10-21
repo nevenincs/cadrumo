@@ -59,7 +59,7 @@ from pydantic import BaseModel, Field
 
 from ...core.identity.tax_id import same_tax_identifier
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from .grounding_anchor import printed_excerpt_occurs_in_text
 from .party_attribution import party_addresses
 from .party_colocation import party_regions

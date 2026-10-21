@@ -2,7 +2,19 @@ from __future__ import annotations
 
 from typing import Final
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ...application.ledger.operator_input_contracts import NOTES_INPUT
 from ._app_ledger_command_spec_policies import (
@@ -18,18 +30,6 @@ from .app_ledger_invoice_common_command_parameters import (
     INVOICE_LIFECYCLE_METADATA_OPTIONS,
     OPTIONAL_IVA_CATEGORY_OPTION,
 )
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-    ValueContract,
-)
-from .command_spec import CommandSpec, InvocationSpec
 
 _REQUIRED_INVOICE_ID_ARGUMENT: Final[ArgumentSpec] = ArgumentSpec(
     name="invoice_id",
@@ -55,7 +55,7 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="kind",
                 declarations=("--kind",),
-                value=ValueContract(DeferredTarget("...domain.iva.classification", "InvoiceKind", __package__)),
+                value=ValueContract(DeferredTarget("...domain.iva.schema", "InvoiceKind", __package__)),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.invoice.kind_help"),
                 metavar=None,
@@ -70,10 +70,10 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_business_invoice_cli", "invoice_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_business_invoice_commands", "invoice_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_catalogue_invoice_payloads", "CatalogueInvoiceListResult", __package__),
+            target=DeferredTarget(".ledger_catalogue_invoice_results", "CatalogueInvoiceListResult", __package__),
             identity="ledger.invoice.list",
         ),
     ),
@@ -105,10 +105,12 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_9,
-        handler=LazyBinding.available(DeferredTarget("._ledger_business_invoice_cli", "invoice_remove", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".ledger_business_invoice_commands", "invoice_remove", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_catalogue_invoice_payloads", "CatalogueInvoiceRemovePayload", __package__),
+            target=DeferredTarget(".ledger_catalogue_invoice_results", "CatalogueInvoiceRemovePayload", __package__),
             identity="ledger.invoice.remove",
         ),
     ),
@@ -159,10 +161,12 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             *INVOICE_LIFECYCLE_METADATA_OPTIONS,
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("._ledger_business_invoice_cli", "invoice_update", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".ledger_business_invoice_commands", "invoice_update", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_catalogue_invoice_payloads", "CatalogueInvoiceUpdatePayload", __package__),
+            target=DeferredTarget(".ledger_catalogue_invoice_results", "CatalogueInvoiceUpdatePayload", __package__),
             identity="ledger.invoice.update",
         ),
     ),
@@ -176,10 +180,10 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(_REQUIRED_INVOICE_ID_ARGUMENT,),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_business_invoice_cli", "invoice_view", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_business_invoice_commands", "invoice_view", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_catalogue_invoice_payloads", "CatalogueInvoiceViewResult", __package__),
+            target=DeferredTarget(".ledger_catalogue_invoice_results", "CatalogueInvoiceViewResult", __package__),
             identity="ledger.invoice.view",
         ),
     ),
@@ -216,10 +220,12 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[1],
         ),
         policy=_POLICY_2,
-        handler=LazyBinding.available(DeferredTarget("._ledger_business_invoice_cli", "invoice_wizard", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".ledger_business_invoice_commands", "invoice_wizard", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_catalogue_invoice_payloads", "CatalogueInvoiceWizardResult", __package__),
+            target=DeferredTarget(".ledger_catalogue_invoice_results", "CatalogueInvoiceWizardResult", __package__),
             identity="ledger.invoice.wizard",
         ),
     ),

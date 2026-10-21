@@ -67,11 +67,9 @@ def assert_canonical_protected_resource(value: str, *, subject: str) -> str:
 class TuiAppearance(StrEnum):
     """Supported appearances for the full-screen terminal surfaces.
 
-    :class:`~core.config.Settings` exposes this closed set through
-    ``cadrumo_tui_appearance`` so the profile manager, the paged flow
-    frontend, and the read-only status page share one spelling for the
-    operator's light/dark preference. ``AUTO`` defers to the host terminal
-    rather than pinning an appearance.
+    The terminal theme resolver and the TUI test harness share this closed
+    set as one spelling for the light/dark preference. ``AUTO`` defers to the
+    host terminal rather than pinning an appearance.
     """
 
     AUTO = "auto"
@@ -105,10 +103,20 @@ class LLMProvider(StrEnum):
     this enum; it does not redeclare it.
     """
 
+    AGENT = "AGENT"
+    LOCAL = "LOCAL"
+
+
+class RetiredLLMProvider(StrEnum):
+    """Vendor identities that usage, cache and run records written before the agent path name.
+
+    Records keep the identity they were written with, so these stay readable.
+    No dispatch can select one: :class:`LLMProvider` has no such member.
+    """
+
     ANTHROPIC = "ANTHROPIC"
     OPENAI = "OPENAI"
     GEMINI = "GEMINI"
-    LOCAL = "LOCAL"
 
 
 class StorageRouteKind(StrEnum):
@@ -156,16 +164,6 @@ def default_sede_expedientes_path() -> str:
     return load_external_constants().aeat.sede_paths.expedientes_resumen
 
 
-def default_status_detail_url_template() -> str:
-    """Return the configured AEAT expediente status detail URL template."""
-    return load_external_constants().aeat.sede_paths.expediente_detail_template
-
-
-def default_status_notificaciones_path() -> str:
-    """Return the configured AEAT notifications status path."""
-    return load_external_constants().aeat.sede_paths.notificaciones
-
-
 def default_aeat_sede_origin() -> str:
     """Return the configured AEAT Sede origin."""
     return load_external_constants().aeat.domains.sede
@@ -211,6 +209,7 @@ __all__ = [
     "AEAT_CERTIFICATE_PROTECTED_URL",
     "JustificanteParserBackendSetting",
     "LLMProvider",
+    "RetiredLLMProvider",
     "StorageRouteClassification",
     "StorageRouteKind",
     "assert_canonical_protected_resource",
@@ -219,7 +218,5 @@ __all__ = [
     "default_aeat_sede_origin_with_slash",
     "default_clave_sede_access_url_template",
     "default_sede_expedientes_path",
-    "default_status_detail_url_template",
-    "default_status_notificaciones_path",
     "unwrap_optional_secret",
 ]

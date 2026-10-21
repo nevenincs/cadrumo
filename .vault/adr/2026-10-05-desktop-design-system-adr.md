@@ -3,15 +3,15 @@ tags:
   - '#adr'
   - '#desktop-design-system'
 date: '2026-10-05'
-modified: '2026-10-06'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc654c0302fe49fa5847361c4571d88eff9b80c84c96ee0029e683b9636adba8'
+body_hash: 'sha256:a5ada921a60de961b3cce973862923809fa5ebff372d6bbce3f57d31f0f71d2b'
 related:
   - "[[2026-10-05-desktop-design-system-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
   - "[[2026-10-04-application-sign-in-adr]]"
+  - '[[2026-10-15-language-sync-reference]]'
 ---
-
 # `desktop-design-system` adr: `Desktop shell design system and browser development loop` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -27,6 +27,10 @@ related:
 ## Rationale
 
 ## Consequences
+
+### Amendment 2026-10-09: account controls move to the application header
+
+Authorized by the operator's approval of the dev-display title bar and instruction to implement it and retire the duplicated Settings profile switcher. The Settings constraint above is replaced for account placement: Settings retains frontend preferences and no account section. The application header owns the one account dropdown, current profile and sign-in state, reusing the canonical account controller and credential dialog. The existing sign-in dialog keeps its labelled profile choice when credentials are needed; it is not a second Settings switcher. Account-related acceptance selectors move from Settings to the header/menu under this explicit authorization. All other stable hooks and design-system ownership constraints stand.
 
 ## Context
 
@@ -135,3 +139,23 @@ Authorized by the user on 2026-10-06, who asked for the side rail to read: searc
 The first rail group's order becomes search, docs home, TUI, then the shortcuts group, then console, Python and logs; settings stays alone in the last group. Search and docs home keep the first two positions, which are the only positions the packaged acceptance suite reaches by index (`native/desktop/tests/packaged/docs-ui.mjs:22`, `:102`), so no packaged assertion changes. The shortcuts group opens with one element that needs nothing from the host beyond `open_external`: the tax agency's electronic office, whose address is the product's own constant and is held to it by a test. Further shortcuts that need data or actions the host does not offer today (notifications, the profile's Drive folder, sync counts, the filing calendar) are not part of this amendment: each needs its own decision on how the shell may read profile data.
 
 The stable-hooks commitment is otherwise unchanged.
+
+### Amendment 2026-10-15: shared application language
+
+Accepted under the user's explicit request to implement language dropdowns in the left Settings popup and Cmd+K palette and synchronize changes across documentation, TUI, CLI and desktop. For language alone, this replaces the Settings constraint that the choice is window-local and never reaches a backend. The canonical persisted value remains the authenticated profile fact `preferences.output_language`; the desktop uses narrow verified read/write/observation commands and no second persisted preference. Signed-out choices remain transient. Explicit CLI invocation overrides remain local to that invocation.
+
+Settings and the palette reuse the existing select and styling. Supported language options do not depend on bundled documentation. Documentation uses the existing origin-checked bridge to request a change; host observations update the shared frontend controller and mounted TUI views while preserving staged work. All other settings, dependency, catalog and token ownership constraints remain unchanged. Evidence: `2026-10-15-language-sync-reference`.
+
+### Amendment 2026-10-09: one bottom-panel rail toggle
+
+Authorized by the user's sidebar simplification request. The 2026-10-06 rail-order amendment is refined: after the shortcuts group, one bottom-panel toggle replaces the Console, Python and Logs rail buttons. Search and documentation home retain their first two positions, Settings remains in the last group, and the panel retains its three tabs and action-registry shortcuts. The log error badge moves to the single toggle; the Messages notification badge stays unchanged. The original ruling started the panel collapsed on every launch. That clause is superseded by the desktop-shell 2026-10-21 amendment: the panel now restores its saved visibility, tab and size. This authorizes the corresponding browser presentation selectors and rail-count assertions to follow the new visible controls; packaged assertions that address Search and Docs home by position stay unchanged. Shared primitives, token ownership and native host boundaries remain binding.
+
+### Amendment 2026-10-18: component setup surfaces
+
+Accepted under the owner's advance authorization of 2026-10-18 recorded in `2026-10-18-dependency-provisioning-unified-setup-adr` (D10). The Settings constraint, which read "Settings retains frontend preferences and no account section" after the 2026-10-09 amendment, gains one backend-reaching section, Components, built from the existing primitives. The setup dialog, progress bars, first-run and blocked-feature prompts, and the Settings rail badge compose existing primitives. A progress primitive may be added from the official registry on the already-bundled `radix-ui`, with no new runtime dependency. The development scenario host gains synthetic setup scenarios for every state, failure category and phase, labelled as simulated like the others. Rail order, stable hooks and the single colour authority are unchanged.
+
+### Amendment 2026-10-21: saved views and single pane headings
+
+Authorized by the user's design-polish request to remove repeated page titles, keep the TUI out of the default view, persist page view choices, and remember the selected log-level mode. The shell layout store is the single presentation preference owner. It restores the selected page, pane visibility and maximization, panel visibility/tab/size, calendar face and profile section/filter/disclosure choices, alongside existing appearance, arrangement and zoom preferences. The selected minimum log level overrides the host default until reset; resetting filters restores the host default. Fresh layouts open Profile and the agent where supported with the TUI closed. Existing saved TUI visibility remains an explicit saved arrangement.
+
+This replaces the 2026-10-09 always-collapsed panel startup clause only; the single panel toggle, notifications and mounted-session retention still apply. The canonical pane header owns the visible page title and maximize control; page content supplies its own actions without repeating them. Profile navigation offers one section selector at each size. Search text, drafts, taxpayer values, log records, authentication and transient dialogs are not presentation settings and are not persisted here. Stored preferences are validated and tolerate unavailable storage. No runtime or host authority changes. Evidence: `native/desktop/frontend/src/shell/layout.ts`, `src/App.tsx`, `src/components/profile/UserProfilePage.tsx`, and `src/components/FilingCalendar.tsx`.

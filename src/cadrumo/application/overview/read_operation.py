@@ -6,6 +6,8 @@ from functools import partial
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import override_settings
 from ...core.operations import profile_operation_subject
@@ -18,8 +20,8 @@ from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .read_ports import OverviewReadPortsFactory
 from .read_request import (
@@ -84,11 +86,11 @@ def build_overview_read_definition(kind: _OverviewReadKind, factory: OverviewRea
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=_OverviewReadRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=_OverviewReadResult,
         executor_type=OverviewReadExecutor,
         build=lambda: OverviewReadExecutor(factory, definition_id),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

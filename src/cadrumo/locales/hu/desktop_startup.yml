@@ -1,0 +1,13 @@
+desktop:
+  startup:
+    starting: "A Cadrumo indítása…"
+    progress: "Indítási folyamat"
+    environment_step: "Alkalmazás előkészítése"
+    runtime_step: "Helyi szolgáltatás indítása"
+    workspace_step: "Munkaterület megnyitása"
+    environment: "Alkalmazásfájlok és beállítások előkészítése…"
+    runtime: "Helyi szolgáltatás indítása és ellenőrzése…"
+    workspace: "Munkaterület megnyitása…"
+    failed: "A Cadrumo nem indult el"
+    failure: "Indítási hiba ({code}). Zárd be ezt az ablakot, és próbáld újra. A részleteket az alkalmazás naplója tartalmazza."
+    interrupted: "Az indítási kapcsolat megszakadt. Zárd be ezt az ablakot, és próbáld újra."

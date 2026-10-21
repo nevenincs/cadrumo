@@ -1,11 +1,11 @@
 """Canonical roots the locale tooling reads, resolved from the repository checkout.
 
-The tooling lives outside the package it maintains, so neither root can be
-derived from this module's own parent. Both the catalogue YAML and the ``tr()``
-call sites the key scan walks stay under ``src/cadrumo``, and every consumer --
-the CLI and the tooling's own suites -- resolves them here rather than
-re-deriving a parent count locally. A wrong count does not raise: the scan
-returns an empty key set, which reads exactly like a clean tree.
+The tooling lives outside the packages it maintains, so neither root can be
+derived from this module's own parent. The catalogue YAML lives under
+``src/cadrumo``; production ``tr()`` call sites span the canonical product
+source roots. Every consumer -- the CLI and the tooling's own suites -- resolves
+them here rather than re-deriving a parent count locally. A wrong count does not
+raise: the scan returns an empty key set, which reads exactly like a clean tree.
 
 ``importlib.resources`` would reach the catalogues but not the source tree, so a
 single checkout-relative derivation covers both.
@@ -17,9 +17,12 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT
-from dev.first_party_source import HARNESS_PACKAGE, PRODUCT_PACKAGE
+from dev.first_party_source import HARNESS_PACKAGE, PRODUCT_SOURCE_ROOTS
 
-SRC_DIR: Final[Path] = REPO_ROOT / PRODUCT_PACKAGE
+PRODUCT_SOURCE_DIRS: Final[tuple[Path, ...]] = tuple(REPO_ROOT / root for root in PRODUCT_SOURCE_ROOTS)
+SRC_DIR: Final[Path] = PRODUCT_SOURCE_DIRS[0]
+CLIENT_SRC_DIR: Final[Path] = PRODUCT_SOURCE_DIRS[1]
+RUNTIME_SRC_DIR: Final[Path] = PRODUCT_SOURCE_DIRS[2]
 LOCALES_DIR: Final[Path] = SRC_DIR / "locales"
 
 #: Roots outside the package that legitimately reference catalogue keys.
@@ -36,13 +39,19 @@ LOCALES_DIR: Final[Path] = SRC_DIR / "locales"
 DOCS_SRC_DIR: Final[Path] = REPO_ROOT / "dev" / "docs"
 
 #: The MCP harness (``cadrumo-mcp``) is a separate distribution living beside
-#: ``src/cadrumo`` rather than inside it, but its operator-facing elicitation
+#: the product source roots, but its operator-facing elicitation
 #: prompts and refusal messages render through the same shared ``tr()``
 #: catalogue (only its model-facing tool names and descriptions stay
-#: deliberately unlocalized English). A scan that stopped at ``src/cadrumo``
+#: deliberately unlocalized English). A scan that stopped at the product roots
 #: would report every one of its catalogue keys as an extra key with no
 #: codebase site, for exactly the reason :data:`DOCS_SRC_DIR` exists.
 HARNESS_SRC_DIR: Final[Path] = REPO_ROOT / HARNESS_PACKAGE
+
+LOCALE_SOURCE_EXTRA_DIRS: Final[tuple[Path, ...]] = (
+    *PRODUCT_SOURCE_DIRS[1:],
+    DOCS_SRC_DIR,
+    HARNESS_SRC_DIR,
+)
 
 #: Verified staged catalogue awaiting installation by the casilla collapse.
 #: Its presence means an install was interrupted and must be resumed before any

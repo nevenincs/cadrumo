@@ -13,8 +13,8 @@ related:
 supersedes:
   - '2026-06-30-agent-harness-adr'
   - '2026-07-01-agent-harness-adr'
-modified: '2026-10-05'
-body_hash: 'sha256:a75d65e7f26ab5294eec0abc219a16bbea373ea9c967df42f20810c99e4ee8b8'
+modified: '2026-10-14'
+body_hash: 'sha256:de0de3739a1940022595554e2719905f6f92d0cf573b80249feae2cadd3cf339'
 ---
 # `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `accepted`)
 
@@ -70,7 +70,7 @@ harness targets the user's existing client rather than a bespoke runtime.
 
 - **Q1:** prove the rules and one golden workflow over the manifest-backed JSON
   CLI first, then use the same manifest as the MCP tool authority.
-- **Q2:** authored harness data lives at `src/cadrumo/_data/agent/`; MCP is a
+- **Q2:** authored harness data lives at `src/cadrumo_harness/_data/agent/`; MCP is a
   sibling entry point and packaging is governed by the current Cadrumo
   distribution decisions.
 - **Q3:** manifest mutability annotations drive client confirmation while the
@@ -93,8 +93,13 @@ harness targets the user's existing client rather than a bespoke runtime.
 - **D2:** live reads that write derived local state remain
   `LOCAL_STATE_MUTATING`; the unused `LIVE_READ` fork is retired after a
   zero-consumer check.
-- **D3:** the verifier owns export and the record marker so the preparer cannot
-  self-certify the irreversible handoff.
+- **D3:** an agent may export and record the filed marker exactly as the command line
+  can. Telling the person before the hand-off, and having an independent verifier check
+  the work first, is conduct the packaged agent text describes, not a product gate; the
+  same agent run a second time is not an independent verifier. (Amended 2026-10-12 under
+  `2026-10-11-mcp-parity-full-parity-adr`. On 2026-10-10 an agent performed either act
+  only after the person approved that exact act in Cadrumo; before that the verifier
+  owned both so the preparer could not self-certify the irreversible handoff.)
 - **D4:** rules separate behavioural invariants, manifest-derived orientation,
   and lifecycle ordering; a manifest-derived negative gate rejects internal
   package, private-module, and test names in operator rules.
@@ -109,7 +114,7 @@ harness targets the user's existing client rather than a bespoke runtime.
 
 ### R2 — Console tool architecture
 
-**Status: AMENDED by the proposed `2026-07-08-mcp-progressive-discovery-adr` (P1–P4).**
+**Status: AMENDED by the accepted `2026-07-08-mcp-progressive-discovery-adr` (P1–P4).**
 The 2026-07-08 review found R2's toolsets shipped as grouping metadata that never
 reaches the protocol — `tools/list` still returns the full flat verb surface, the
 exact posture R2 rejected. The amending ADR retires the flat listing as the
@@ -155,7 +160,7 @@ storage-root promises. The original ruling follows for the decision trail.
 
 *Materialise a workspace as the primary vehicle (status quo):* rejected as primary — it is a dead-end export no in-repo consumer reads, is Claude-shaped, and does not reach an arbitrary client through the protocol.
 
-**Chosen — one authored source, four channels, floor-first.** The universal floor is a `harness.load` tool returning the operator rules and active persona as text — the only channel guaranteed to reach a model on a minimal tools-only client. Layered on top: resource templates `cadrumo://skill|rule|persona/{name}` for enumerable pull; MCP prompts as slash-command guided workflows that embed the matching skill plus its grounding excerpt; and optional `.claude/skills` materialisation (repurposing the existing `aeat app agent` materialiser) as a Claude-native enhancement, never the baseline. A single authored source in `src/cadrumo/_data/agent/` feeds all four channels, matching the one-authored-source/generated-outputs discipline. Each channel above the floor degrades cleanly when its capability is absent.
+**Chosen — one authored source, four channels, floor-first.** The universal floor is a `harness.load` tool returning the operator rules and active persona as text — the only channel guaranteed to reach a model on a minimal tools-only client. Layered on top: resource templates `cadrumo://skill|rule|persona/{name}` for enumerable pull; MCP prompts as slash-command guided workflows that embed the matching skill plus its grounding excerpt; and optional `.claude/skills` materialisation (owned by the separate harness product, absent from `aeat`) as a Claude-native enhancement, never the baseline. A single authored source in `src/cadrumo_harness/_data/agent/` feeds all four channels, matching the one-authored-source/generated-outputs discipline. Each channel above the floor degrades cleanly when its capability is absent.
 
 ### R5 — Skill taxonomy and metadata
 
@@ -169,7 +174,7 @@ storage-root promises. The original ruling follows for the decision trail.
 
 *Leave the gates nominal (status quo):* rejected — the CONFIRM tier and the faithfulness check are computed but never wired into the serving path, so only the permanent live-write block is real.
 
-**Chosen — wire all three, floor-aware.** (i) The CONFIRM tier is enforced via MCP **elicitation** (`accept`/`decline`/`cancel`), degrading per a decided capability matrix: where elicitation is absent, the console falls back to `destructiveHint`-driven client confirmation and refuses handoff-tier verbs by default. (ii) The `faithfulness_check` is wired into the live serving path as an advisory notice on narration mismatch, escalating to a **hard block at the export / record-marker boundary**. (iii) Persona scope stays family-granular at serve, **but the console adds per-verb deny rules for the handoff boundary**, closing the proposed ADR's D3 caveat (family scope cannot separate preparer/verifier/reconciler) structurally rather than by prose. (iv) Never-live-submit stays enforced as "no such tool exists" — the strongest form. A hard spec constraint binds (i): **elicitation must never request sensitive information**, so evidence bytes stay on-host and are never elicited.
+**Chosen — wire all three, floor-aware.** (i) No product approval gate stands in front of any operation on MCP; every operation inside the bound profile is served there as on the command line, and authentication, session administration and acts outside the profile are not served (narrowed 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`). An elicitation answer or a client's confirmation hint is never treated as authority. (Amended 2026-10-12 under `2026-10-11-mcp-parity-full-parity-adr`. On 2026-10-10 reserved operations did not admit the MCP frontend until a runtime approval step existed; before that the CONFIRM tier was enforced via MCP elicitation, falling back to `destructiveHint`-driven client confirmation.) (ii) The `faithfulness_check` is an advisory notice on narration mismatch and a measure in R7's live harness. (Amended 2026-10-12; its escalation to a hard block at the export / record-marker boundary is withdrawn, because it would refuse on MCP what the command line does.) (iii) Persona scope narrows what is presented, never what is admitted. (Amended 2026-10-12; the per-verb deny rules the console was to add for the handoff boundary are withdrawn with D3's gate.) (iv) Never-live-submit stays enforced as "no such tool exists" — the strongest form. A hard spec constraint binds (i): **elicitation must never request sensitive information**, so evidence bytes stay on-host and are never elicited.
 
 ### R7 — Measurement and live verification
 
@@ -183,13 +188,13 @@ storage-root promises. The original ruling follows for the decision trail.
 
 **Status: AMENDED by the accepted `2026-07-03-claude-ecosystem-packaging-adr` (D3a).** The
 Claude plugin (marketplace-served, generated from the single authored harness source,
-launching `cadrumo-mcp` from the published `cadrumo[agent]` distribution via `uvx`) replaces the signed `.mcpb` as the
+launching `cadrumo-mcp` from the declared installed harness entrypoint) replaces the signed `.mcpb` as the
 consumer path; the `.mcpb` artifact is demoted to a secondary kept only if measurement
 shows classic-Desktop demand. R8's INTENT — one-click install for a non-technical
 taxpayer, the identical server reachable by any MCP client — carries over unchanged;
 only the vehicle is superseded. The original ruling follows for the decision trail.
 
-**Chosen — a signed `.mcpb` Desktop Extension as the consumer path, the same server for any MCP client.** The console ships as a signed Desktop Extension (a local server beside the encrypted store) so a non-technical taxpayer installs it with one click and no JSON editing; the identical server is reachable by any MCP client for power users. It rides the `cadrumo[agent]` extra. Transport is `stdio` now; HTTP is deferred and added only if a remote-client need materialises. No alternative was preferred: a developer-only manual-config path is strictly weaker for the target user, and an embedded runtime contradicts the "any client, one console" definition.
+**Chosen — a signed `.mcpb` Desktop Extension as the consumer path, the same server for any MCP client.** The console ships as a signed Desktop Extension (a local server beside the encrypted store) so a non-technical taxpayer installs it with one click and no JSON editing; the identical server is reachable by any MCP client for power users. It is packaged by the separate harness product. Transport is `stdio` now; HTTP is deferred and added only if a remote-client need materialises. No alternative was preferred: a developer-only manual-config path is strictly weaker for the target user, and an embedded runtime contradicts the "any client, one console" definition.
 
 ### R9 — Off-host consent posture
 
@@ -207,7 +212,7 @@ binding.
 
 **MCP client capability unevenness.** Client support is negotiated: `tools` near-universal, `prompts`/`resources` partial, `elicitation` newest and least universal. This is the floor/enhancement design rule that binds R2, R4, and R6 — every capability above tools must degrade cleanly. The current spec revision is `2025-11-25`.
 
-**The CLI two-root rule.** `aeat config` and `aeat app` are the only command roots; the console is a **sibling entry point** (`cadrumo-mcp`), never a third root. The `cadrumo[agent]` extra rides the acceptance of the product-packaging ADR, exactly as the accepted parent ADR already requires.
+**The CLI two-root rule.** `aeat config` and `aeat app` are the only command roots; the console is a **sibling entry point** (`cadrumo-mcp`), never a third root. Separate harness code and material are included by the actual distribution/package manifest; no tax CLI optional agent extra owns them.
 
 ## Implementation
 
@@ -215,11 +220,11 @@ A high-level layering; no code accompanies this ADR. Notably, **the CLI surface 
 
 - **Console server evolution.** Group the manifest-derived tools into domain toolsets; attach `readOnlyHint`/`destructiveHint` annotations to every tool; surface per-verb input schemas in place of the `{args: [string]}` bag; add the `search`+`execute` meta-tool fallback for the long tail.
 - **Grounding surface.** Build the on-host hybrid index from the bundled `.extracted` triples; expose the hybrid search tool over corpus, citations, manuals, and terminology; add `cadrumo://corpus/{ref}` resources resolving citations to verbatim text.
-- **Operating-layer channels.** Add the `harness.load` floor tool; the `cadrumo://skill|rule|persona/{name}` resource templates; the guided-workflow prompts embedding skill plus grounding; and the optional `.claude/skills` materialisation, all fed from the single `src/cadrumo/_data/agent/` source.
+- **Operating-layer channels.** Add the `harness.load` floor tool; the `cadrumo://skill|rule|persona/{name}` resource templates; the guided-workflow prompts embedding skill plus grounding; and the optional `.claude/skills` materialisation, all fed from the single `src/cadrumo_harness/_data/agent/` source.
 - **Skill metadata and situation skills.** Lift each skill's selection predicate into the structured `applies_when` frontmatter field; author the six WHEN-layer skills, `regularizar-atrasos` first over the already-built backlog/recargo surface.
 - **Gate wiring.** Wire the CONFIRM tier to elicitation with the degradation matrix; wire faithfulness into the serving path with the handoff hard block; add the per-verb handoff deny rules over the family-granular persona scope.
 - **Live eval.** Build the live subagent-persona harness (real server, real client session, trajectory capture, scoring on observed calls), the real-client handshake conformance floor, and the flywheel that promotes live failures to golden scenarios.
-- **Packaging.** Assemble and sign the `.mcpb` Desktop Extension behind the `cadrumo[agent]` extra, `stdio` transport.
+- **Packaging.** Assemble and sign the `.mcpb` Desktop Extension from the separately owned harness payload, `stdio` transport.
 
 ## Rationale
 
@@ -251,6 +256,18 @@ enter model context.
 
 Accepted under the operator's instruction to continue the presented mcp-purpose-authentication plan. 2026-09-26-mcp-purpose-authentication-adr replaces the CLI-subprocess-only parts of R1, Q1, the CLI-as-contract consideration and their dependent implementation prose. The application operation/action authorities supply typed contracts and policy; CLI JSON, TUI and MCP are projections over the shared local runtime.
 
-The agent still sees a confined deterministic tool universe, with no arbitrary code, SQL or shell capability. MCP may call the public application operation boundary without going through command functions or an aeat subprocess. Catalogue-derived discovery, operating-layer content, provenance, human approval where required and the applicable never-live-submit/data-disclosure rules survive.
+Through the MCP server the agent sees a confined deterministic tool universe: the server offers no arbitrary code, SQL or shell capability and performs no work by invoking the command line. What an assistant does with a terminal of its own is outside this record. MCP may call the public application operation boundary without going through command functions or an aeat subprocess. Catalogue-derived discovery, operating-layer content, provenance, human approval where the operation itself requires it on every frontend and the applicable never-live-submit/data-disclosure rules survive.
 
-Persona/tool filtering can narrow presentation but cannot grant authority. Runtime credential, profile, scope and disclosure checks remain mandatory on every path. Client confirmation hints and an LLM's claimed approval never replace application authorization. API-key enrollment and secret collection use trusted local CLI/TUI channels governed by 2026-09-26-mcp-purpose-authentication-profile-access-adr; this does not reopen unrelated skill taxonomy or distribution decisions.
+Persona/tool filtering can narrow presentation but cannot grant authority. Runtime credential, profile, scope and disclosure checks remain mandatory on every path. Client confirmation hints and an LLM's claimed approval never replace application authorization. API-key enrollment and secret collection are governed by 2026-09-26-mcp-purpose-authentication-profile-access-adr and use trusted local CLI, TUI and desktop channels only. No MCP tool call carries a secret or names one by reference, and the agent never authenticates. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`. Earlier that day, under `2026-10-11-mcp-parity-full-parity-adr`, an MCP tool call could carry a typed secret to the runtime's protected frame or name one by reference; before that, trusted local CLI/TUI channels only.) This does not reopen unrelated skill taxonomy or distribution decisions.
+
+## Amendment 2026-10-10: the hand-off belongs to the person
+
+Accepted under the acceptance of `2026-10-10-mcp-parity-admission-rulings-adr` and `2026-10-10-mcp-parity-parity-mechanism-adr`, on the operator's rulings of that day. D3 and R6(i) are reworded in place, each with a note of what it said before. The hand-off rule is kept in intent and applied to a single agent: export and the record marker are the person's to approve, in Cadrumo, each time, and the runtime enforces it. R6(iii)'s per-verb deny rules for the hand-off are met by keeping reserved operations off the MCP frontend until that approval step exists. The implementation line that wires the CONFIRM tier to elicitation is superseded with R6(i). R6(iv), the hard block at the hand-off and the invariant of zero submission attempts are unchanged. The first sentence of the second paragraph of the 2026-09-26 amendment is reworded: the confinement it states is a property of the MCP server, and the operator has ruled that an assistant may also hold Cadrumo's command line and Python as a door of its own.
+
+## Amendment 2026-10-12: parity of the three frontends
+
+Accepted under `2026-10-11-mcp-parity-full-parity-adr`, which supersedes `2026-10-10-mcp-parity-admission-rulings-adr` on the owner's ruling that MCP never refuses anything the command line can do. D3, R6(i), R6(ii), R6(iii) and the 2026-09-26 amendment's secret-collection sentence are reworded in place, each with a note of what it said before. The 2026-10-10 amendment above is history: the person's approval of export and the record marker, and keeping reserved operations off the MCP frontend until an approval step exists, no longer apply. What remains of the hand-off rule is the agent's conduct as the packaged rules, personas and skills describe it. R6(iv), never-live-submit, and R7's invariant of zero submission attempts are unchanged. (Amended later on 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`: as first written, this amendment also let an MCP tool call carry a typed secret or name one by reference, and served every operation on MCP. Parity now holds for operations inside the bound profile only. MCP carries no secret, and the agent never authenticates, administers sessions or acts outside its profile. The 2026-09-26 amendment's secret sentence and R6(i) are reworded again in place.)
+
+## Boundary amendment 2026-10-14
+
+Authorized by the user's explicit deletion/migration instruction. Authored rules, personas and skills are owned and packaged under `src/cadrumo_harness`; `cadrumo-mcp` is the separate entrypoint. Optional materialization belongs to the harness and is absent from `aeat`. Runtime exposes deterministic registered operations and imports/manages no harness. Floor/enhancement delivery, safety, licensing, parity and the July decision history remain binding within their existing scope. Former Q2/R4 source was `src/cadrumo/_data/agent/`, materialization used `aeat app agent`, and distribution referenced `cadrumo[agent]`; those are historical ownership facts, no longer current requirements.

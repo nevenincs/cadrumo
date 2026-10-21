@@ -8,11 +8,9 @@ from uuid import UUID
 
 from pydantic import SecretBytes
 
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
+from .....application.user_profile.automation_custody_port import AutomationSecretStore
 from .....core.base64_codec import b64_decode_canonical
 from .....core.hashing import canonical_json_bytes, sha256_hex
 from .automation_crypto import (

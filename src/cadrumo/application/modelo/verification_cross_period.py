@@ -241,11 +241,11 @@ def zero_value_previous_filing_binding_ids(target: CalculationRevision | None) -
     resolved: set[str] = set()
     for binding_id, raw_value in target.binding_overrides.items():
         try:
-            value = coerce_decimal_strict(raw_value if isinstance(raw_value, Decimal) else str(raw_value).strip())
+            value = coerce_decimal_strict(raw_value if isinstance(raw_value, Decimal) else raw_value.strip())
         except (ValueError, ArithmeticError):
             continue
         if value == 0:
-            resolved.add(str(binding_id))
+            resolved.add(binding_id)
     return frozenset(resolved)
 
 
@@ -386,7 +386,7 @@ def _cross_period_evidence_findings(
             severity=ModeloVerificationFindingSeverity.BLOCKING,
             message_locale_key="application.modelo.findings.cross_period_dependency_unclean",
             message_facts={
-                "source_modelo": str(requirement.source_modelo),
+                "source_modelo": requirement.source_modelo,
                 "source_filing_year": requirement.filing_year,
                 "source_period": requirement.period.registry_token,
                 "origin_code": requirement.origin.value,
@@ -431,7 +431,7 @@ def _cross_period_operator_declared_suppression_advisory_finding(
         severity=ModeloVerificationFindingSeverity.WARNING,
         message_locale_key="application.modelo.findings.cross_period_operator_declared_suppression",
         message_facts={
-            "source_modelo": str(requirement.source_modelo),
+            "source_modelo": requirement.source_modelo,
             "source_filing_year": requirement.filing_year,
             "source_period": requirement.period.registry_token,
             "origin_code": requirement.origin.value,
@@ -452,7 +452,7 @@ def _cross_period_first_year_fractional_suppression_advisory_finding(
         severity=ModeloVerificationFindingSeverity.WARNING,
         message_locale_key="application.modelo.findings.cross_period_first_year_fractional_suppression",
         message_facts={
-            "source_modelo": str(requirement.source_modelo),
+            "source_modelo": requirement.source_modelo,
             "source_filing_year": requirement.filing_year,
             "source_period": requirement.period.registry_token,
             "activity_start_date": _declared_activity_start(evidence),
@@ -471,11 +471,11 @@ def _cross_period_target_advisory_finding(
     """Disclose a dependency admitted on explicit no-carry evidence for the target."""
     requirement = evidence.requirement
     facts: dict[str, str | int] = {
-        "source_modelo": str(requirement.source_modelo),
+        "source_modelo": requirement.source_modelo,
         "source_filing_year": requirement.filing_year,
         "source_period": requirement.period.registry_token,
         "origin_ids": _join_cross_period_ids(requirement.origin_ids),
-        "target_modelo": str(verdict.target_modelo),
+        "target_modelo": verdict.target_modelo,
         "target_filing_year": verdict.target_filing_year,
         "target_period": verdict.target_period.registry_token,
     }
@@ -513,7 +513,7 @@ def _cross_period_missing_activity_start_finding(verdict: CrossPeriodCleanStateV
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         message_locale_key="application.modelo.findings.cross_period_activity_start_missing",
         message_facts={
-            "target_modelo": str(verdict.target_modelo),
+            "target_modelo": verdict.target_modelo,
             "target_filing_year": verdict.target_filing_year,
             "target_period": verdict.target_period.registry_token,
         },
@@ -526,7 +526,7 @@ def _cross_period_modelo_not_applicable_advisory_finding(
 ) -> ModeloVerificationFinding:
     """Summarise dependencies on modelos this taxpayer does not file."""
     suppressed = tuple(item for item in verdict.dependencies if item.modelo_not_applicable_advisory)
-    modelos = sorted({str(item.requirement.source_modelo) for item in suppressed})
+    modelos = sorted({item.requirement.source_modelo for item in suppressed})
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
@@ -556,7 +556,7 @@ def _cross_period_non_official_local_chain_advisory_finding(
         severity=ModeloVerificationFindingSeverity.WARNING,
         message_locale_key="application.modelo.findings.cross_period_non_official_local_chain.message",
         message_facts={
-            "source_modelo": str(requirement.source_modelo),
+            "source_modelo": requirement.source_modelo,
             "source_filing_year": requirement.filing_year,
             "source_period": requirement.period.registry_token,
             "origin_code": requirement.origin.value,
@@ -576,8 +576,8 @@ def _iva_wallet_decision_covers_cross_period_dependency(
         return False
     requirement = evidence.requirement
     if not (
-        str(verdict.target_modelo) == "303"
-        and str(requirement.source_modelo) == "303"
+        verdict.target_modelo == "303"
+        and requirement.source_modelo == "303"
         and set(requirement.origin_ids) & _IVA_WALLET_CROSS_PERIOD_ORIGIN_IDS
     ):
         return False
@@ -669,7 +669,7 @@ def require_cross_period_clean_state(
             evidence_id=f"{subject_leaf_key}.cross_period_dependency",
             evidence_values={
                 "work_unit_id": work_unit.work_unit_id,
-                "source_modelo": str(requirement.source_modelo),
+                "source_modelo": requirement.source_modelo,
                 "year": requirement.filing_year,
                 "period": requirement.period.registry_token,
                 "origin_code": requirement.origin.value,

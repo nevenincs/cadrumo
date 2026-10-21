@@ -27,8 +27,9 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from .....application.user_profile.access_contracts import ProfileAccessBinding
-from .....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..bucket.keystore_paths import keystore_sidecar_path

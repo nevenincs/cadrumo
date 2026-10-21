@@ -121,7 +121,7 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
     """
     for executable in ("soffice", "libreoffice"):
         found = shutil.which(executable)
-        if found:
+        if found is not None and found:
             return WorkbookRunnerAvailability(
                 status="available",
                 engine=_ENGINE_LIBREOFFICE,

@@ -9,6 +9,8 @@ from datetime import date
 from decimal import Decimal
 from typing import NamedTuple, overload
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.iva_deduction_fact import IvaDeductionFactKind
@@ -26,9 +28,9 @@ from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, is_classified
 from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.irpf_categories import require_ledger_irpf_category
 from ..prorrata_register.ports import ProrrataRegisterRepositoryFactory
 from ..prorrata_register.service import ProrrataRegisterService
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .ledger_add_contracts import LedgerAddRequest, LedgerAddSourceJurisdictionCode
 from .models import ManualLedgerTransactionCommand
@@ -60,8 +62,13 @@ class _ResolvedLedgerAddRegistryFacts(NamedTuple):
 def prepare_ledger_add_command(
     payload: LedgerAddRequest,
     operation: PinnedAuthorityOperation,
+    *,
+    actor: str,
 ) -> ManualLedgerTransactionCommand:
-    """Resolve ordered profile facts, then construct the canonical command."""
+    """Resolve ordered profile facts, then construct the canonical command.
+
+    ``actor`` is the label the executing operation settled for this entry.
+    """
     booked_date, value_date, amount = _resolve_ledger_add_dates(payload)
     category_id, business_pct = _resolve_ledger_add_business_share(
         payload,
@@ -84,7 +91,7 @@ def prepare_ledger_add_command(
         business_pct=business_pct,
         category_id=category_id,
         taxable_base=parse_ledger_add_decimal(payload.taxable_base, label="taxable-base"),
-        iva_rate=parse_ledger_add_decimal(payload.iva_rate, label="iva-rate"),
+        iva_rate=parse_ledger_add_decimal(payload.iva_rate, label="iva-rate", max_fraction_digits=None),
         iva_amount=parse_ledger_add_decimal(payload.iva_amount, label="iva-amount"),
         iva_category=registry_facts.iva_category,
         deduction_fact_kind=registry_facts.deduction_kind,
@@ -92,7 +99,7 @@ def prepare_ledger_add_command(
         counterparty_country=payload.counterparty_country,
         counterparty_identification_state=registry_facts.identification_state,
         recargo_amount=parse_ledger_add_decimal(payload.recargo_amount, label="recargo-amount"),
-        irpf_category=payload.irpf_category,
+        irpf_category=_resolve_ledger_add_irpf_category(payload, operation=operation),
         usage_ratio_id=payload.usage_ratio_id,
         prorrata_reference=payload.prorrata_reference,
         art_104_tres_exclusion=registry_facts.exclusion,
@@ -101,7 +108,7 @@ def prepare_ledger_add_command(
         purchase_invoice_evidence_id=payload.purchase_invoice_evidence_id,
         attachment_ids=payload.attachment_ids,
         notes=payload.notes,
-        actor=payload.actor or str(payload.profile_id) or "operator",
+        actor=actor,
         source_command="aeat app ledger add",
         idempotency_key=payload.idempotency_key,
         source_jurisdiction=source_jurisdiction,
@@ -141,7 +148,9 @@ def _resolve_ledger_add_business_share(
         if category_id is not None
         else None
     )
-    operator_share = parse_ledger_add_decimal(payload.business_pct, label="business-pct", signed=True)
+    operator_share = parse_ledger_add_decimal(
+        payload.business_pct, label="business-pct", signed=True, max_fraction_digits=None
+    )
     if operator_share is not None and not is_unit_proportion(operator_share):
         raise TransactionValidationError("business_pct must be within the inclusive 0..1 range")
     censo_ratio = (
@@ -203,6 +212,17 @@ def _resolve_ledger_add_flow(payload: LedgerAddRequest) -> tuple[BusinessClassif
     if not is_classified(classification) and classification is not BusinessClassification.NOT_YET_PROCESSED:
         raise TransactionValidationError("this classification is assigned by the ledger pipeline")
     return classification, direction
+
+
+def _resolve_ledger_add_irpf_category(
+    payload: LedgerAddRequest,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> str | None:
+    """Admit only a category the published taxonomy declares; blank text is absence."""
+    if payload.irpf_category is None or not payload.irpf_category.strip():
+        return None
+    return require_ledger_irpf_category(payload.irpf_category, authority=operation)
 
 
 def _resolve_ledger_add_registry_facts(
@@ -281,18 +301,27 @@ def resolve_ledger_add_prorrata_advisory_facts(
 
 
 @overload
-def parse_ledger_add_decimal(raw: str, *, label: str, signed: bool = True) -> Decimal: ...
+def parse_ledger_add_decimal(
+    raw: str, *, label: str, signed: bool = True, max_fraction_digits: int | None = 2
+) -> Decimal: ...
 
 
 @overload
-def parse_ledger_add_decimal(raw: None, *, label: str, signed: bool = True) -> None: ...
+def parse_ledger_add_decimal(
+    raw: None, *, label: str, signed: bool = True, max_fraction_digits: int | None = 2
+) -> None: ...
 
 
-def parse_ledger_add_decimal(raw: str | None, *, label: str, signed: bool = True) -> Decimal | None:
-    """Parse an optional canonical decimal and preserve its labeled refusal."""
+def parse_ledger_add_decimal(
+    raw: str | None, *, label: str, signed: bool = True, max_fraction_digits: int | None = 2
+) -> Decimal | None:
+    """Parse an optional canonical decimal and preserve its labeled refusal.
+
+    Euro amounts keep the cent cap; a share or a rate passes ``None`` to keep its own fraction digits.
+    """
     if raw is None:
         return None
-    parsed = try_parse_canonical_decimal(raw, signed=signed, max_fraction_digits=2)
+    parsed = try_parse_canonical_decimal(raw, signed=signed, max_fraction_digits=max_fraction_digits)
     if parsed is None:
         raise TransactionValidationError(f"{label} must use canonical decimal text")
     return parsed

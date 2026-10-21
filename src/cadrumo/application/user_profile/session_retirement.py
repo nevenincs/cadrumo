@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from uuid import UUID
 
-from .access_contracts import AccessDenialCode
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 
 class SessionRetirementKind(StrEnum):

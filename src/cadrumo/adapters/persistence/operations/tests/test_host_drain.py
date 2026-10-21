@@ -18,7 +18,7 @@ from cadrumo.application.operations.tests.authority_test_support import unread_a
 from cadrumo.core.operations import OperationLifecycle
 
 from .supervision_support import run_to_settlement
-from .test_supervisor import _NOW, IdleExecutor, _registry, _repositories, _request, _supervisor
+from .supervisor_test_support import _NOW, IdleExecutor, _registry, _repositories, _request, _supervisor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

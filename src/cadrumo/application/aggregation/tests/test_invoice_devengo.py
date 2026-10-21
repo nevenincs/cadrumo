@@ -25,7 +25,7 @@ from ....core.aggregation import InvoiceDevengoRank
 from ....core.period import Period
 from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ..invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
     invoice_devengo_in_period,

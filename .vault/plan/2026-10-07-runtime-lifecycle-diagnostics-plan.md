@@ -10,9 +10,9 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
-modified: '2026-10-08'
+modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:e107381841b5592a082798d469cf0dba403cc954c73e439002bcd2be9144e8e2'
+body_hash: 'sha256:dff5a7a0ff3025fb043a79f739cafbb47bea1927d690779e2ea6fd6a7add8f00'
 ---
 
 <!-- RETIRED: S08 -->
@@ -90,11 +90,11 @@ S17 follows measured optimized package inspection of 29,286 files: 86.9 seconds 
 
 S16 isolates startup dependencies under the accepted canonical defining-module and demand-loading rules. Root owns the architectural cut, integrated review and measurements. The Sol 6.1 authority worker owns canonical CLI provisioning and authority-location moves, demand-loaded component decoding and tax-identity dependencies, all affected consumers and owning tests. The Sol 6.1 package worker owns the annotation-only custody binding import and its tests, then coordinates guarded same-interpreter paired CLI measurements after other checks settle. Neither assignment changes authority checks, custody binding, schema validation, cryptographic policy or timeouts. Concurrent unrelated changes are preserved.
 
-The historical Session 1 task-based runs below are retained as evidence of earlier work only. Current local-runtime rules prohibit scheduled-task/service bridges, including tests and session recovery. Further interactive acceptance requires direct execution in the signed-in desktop session; this Session 0 tool host must report that limitation. No new bridge or login registration is authorized by this plan.
+Current local-runtime rules prohibit bridging into another session, including for tests and session recovery. Further interactive acceptance requires direct execution in the signed-in desktop session; this Session 0 tool host must report that limitation. No new bridge or login registration is authorized by this plan.
 
 The queue hardening initially tracked as S08 is consolidated into S06: the bounded event channel, loss counter, persisted diagnostic schema and shutdown drain form one buildable producer change. S08 is retired without execution rows.
 
-The user subsequently supplied this machine's signed-in Session 1 for acceptance, explicitly noting that the machine is not disposable. Root will run the existing interactive harness with a fresh explicit storage root, without changing existing profiles or login registration. A one-shot current-user interactive task can launch the harness from Session 0 and is removed after use. This is isolated application acceptance, not installed default-root manager or upgrade acceptance.
+The user subsequently supplied this machine's signed-in Session 1 for acceptance, explicitly noting that the machine is not disposable. Root will run the existing interactive harness with a fresh explicit storage root, without changing existing profiles or login registration. The operator runs the harness at their desktop. This is isolated application acceptance, not installed default-root manager or upgrade acceptance.
 
 For S06-S07 the operator handed remaining work to this session ("it is all yours!"). The previous implementation and manager startup are now committed and the shared index lock has cleared. Root retains architectural review and package validation; Sol 6.1 workers implement manager diagnostic production, desktop consumption, and isolated acceptance fixture ordering with disjoint write ownership. Generator changes belong to the diagnostic producer and are coordinated with the consumer. The existing distribution-owned versioned-install prerequisite remains unresolved; this work does not invent a registry or installer discovery contract. Root's tool host is Session 0; the operator-authorized Session 1 harness supplies isolated interactive acceptance on this same machine.
 

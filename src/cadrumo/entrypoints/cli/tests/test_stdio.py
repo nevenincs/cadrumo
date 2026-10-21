@@ -36,16 +36,14 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import override
 
 import pytest
 import typer
 import typer.core
 
 from cadrumo.tests.audited_process import run_audited_process
-
-from .._stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
-from .subprocess_cli import as_text_completed_process
+from cadrumo.tests.subprocess_cli import as_text_completed_process
+from cadrumo_client.commands.stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -226,53 +224,47 @@ def test_console_help_invocation_renders_plain_text_with_full_flag_names(tmp_pat
 # --- SecretScrubbingFilter propagation via stdio logger (contract) ----------------
 
 
-class _CapturingHandler(logging.Handler):
-    """Real handler that collects emitted records."""
-
-    def __init__(self) -> None:
-        super().__init__(level=logging.DEBUG)
-        self.records: list[logging.LogRecord] = []
-
-    @override
-    def emit(self, record: logging.LogRecord) -> None:
-        self.records.append(record)
-
-
 def test_stdio_logger_records_are_scrubbed_after_configure_logging() -> None:
     """Records emitted by the _stdio module logger must have NIF-shaped content
     scrubbed once configure_logging() has installed SecretScrubbingFilter on the
-    root logger.
+    receiving handler.
 
     The ``_stdio`` module deliberately uses stdlib ``logging.getLogger`` (not
     ``cadrumo.core.logging.get_logger``) because it runs before settings are loaded
     — see the constraint comment in ``_stdio.py`` at the ``_LOGGER`` definition.
-    Scrubbing still applies because the stdlib logger propagates to the root
-    logger, and ``configure_logging()`` installs ``SecretScrubbingFilter`` on
-    root.  This test verifies that propagation contract end-to-end.
+    Scrubbing applies at the configured root handlers: ancestor logger filters
+    are not run for propagated records. This test verifies the configured sink
+    contract end-to-end.
     """
-    from ....core.logging import configure_logging
+    from ....core.logging import SecretScrubbingFilter, configure_logging
 
     configure_logging()
-
     root_logger = logging.getLogger()
-    handler = _CapturingHandler()
-    root_logger.addHandler(handler)
+    handler = next(
+        handler
+        for handler in root_logger.handlers
+        if isinstance(handler, logging.StreamHandler)
+        and not isinstance(handler, logging.FileHandler)
+        and any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in handler.filters)
+    )
+    captured = io.StringIO()
+    previous_stream = handler.setStream(captured)
+    previous_handler_level = handler.level
     previous_level = root_logger.level
+    handler.setLevel(logging.DEBUG)
     root_logger.setLevel(logging.DEBUG)
     try:
         # Emit through the same logger the _stdio module uses.
-        stdio_logger = logging.getLogger("cadrumo.entrypoints.cli._stdio")
+        stdio_logger = logging.getLogger("cadrumo_client.commands.stdio")
         nif_canary = "12345678Z"
-        stdio_logger.debug("stream reconfigure skipped for nif=%s", nif_canary)
+        stdio_logger.warning("stream reconfigure skipped for nif=%s", nif_canary)
     finally:
-        root_logger.removeHandler(handler)
+        handler.setStream(previous_stream)
+        handler.setLevel(previous_handler_level)
         root_logger.setLevel(previous_level)
 
-    assert handler.records, "log record did not reach the root handler via propagation"
-    record = handler.records[-1]
-    # After SecretScrubbingFilter runs, the NIF literal must not survive in
-    # either the message or the args tuple.
-    formatted = record.getMessage()
+    formatted = captured.getvalue()
+    assert "stream reconfigure skipped for nif=" in formatted, "record did not reach the configured root sink"
     assert nif_canary not in formatted, (
         f"NIF {nif_canary!r} survived SecretScrubbingFilter in rendered message: {formatted!r}"
     )

@@ -27,12 +27,9 @@ from cadrumo.adapters.persistence.storage.custody.automation_secret_store import
 from cadrumo.adapters.persistence.storage.custody.linux_secret_service_store import (
     LinuxSecretServiceAutomationSecretStore,
 )
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    NativeSecretBackend,
-)
+from cadrumo.application.user_profile.automation_custody_port import NativeSecretBackend
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 pytestmark = [
     pytest.mark.unit,
@@ -546,7 +543,7 @@ def test_native_bus_constructor_preserves_primary_when_socket_close_fails(
     cleanup = OSError("synthetic consumed socket close failure")
     port = _ConsumedSocketClosePort(primary, cleanup)
     monkeypatch.setattr(
-        native,
+        secret_transport,
         "socket",
         SimpleNamespace(AF_UNIX=socket.AF_UNIX, SOCK_STREAM=socket.SOCK_STREAM, socket=lambda *_: port),
     )

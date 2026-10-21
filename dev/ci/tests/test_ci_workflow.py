@@ -252,14 +252,11 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
         members[0],
     ]
 
-    # The fixture members live outside the repository, and pytest builds its
-    # collection tree from the ancestors of the paths it is given. Without an
-    # explicit root it therefore walks up to the drive root and stats every
-    # entry on the way -- which aborts collection outright on a host whose
-    # profile directory holds an untraversable mount point (a cloud-sync
-    # placeholder, a disconnected network drive), before either member is read.
-    # Naming the root bounds that walk to the fixture directory.
-    invocation = [*command[:-1], "--rootdir", str(tmp_path)]
+    # The suite may place tmp_path inside its shared scratch base. Confine
+    # conftest discovery as well as collection to these two fixture members:
+    # ancestor discovery can otherwise stat unrelated KDF staging directories
+    # while another test removes them.
+    invocation = [*command[:-1], "--rootdir", str(tmp_path), "--confcutdir", str(tmp_path)]
 
     aggregate = run_command(
         [*invocation, str(populated_member), str(empty_member)],
@@ -690,8 +687,8 @@ def test_former_aeat_product_forms_are_rejected(surface: str, expected_family: s
 _RELEASE = _WORKFLOWS_DIR / "release.yml"
 
 _DISTRIBUTION_STAGING_STEPS = {
-    "Refuse a distribution over the index file cap": "var/release-dist",
-    "Select the sealed distribution bytes": "dist",
+    "Refuse a distribution over the index file cap": "build/release-dist",
+    "Select the sealed distribution bytes": "build/release-dist",
 }
 
 

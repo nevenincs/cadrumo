@@ -9,16 +9,17 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ...core.period import Period
-from ..user_profile.access_contracts import (
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    AccessDenialCode,
     Availability,
     DisclosureCategory,
     DisclosurePermission,
     OperationAccessPolicy,
     OperationAccessRequest,
 )
+
+from ...core.period import Period
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .access_port import OperationAccessResolver
 from .frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
@@ -157,15 +158,8 @@ def require_period_independent_replay_or_authority(
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 
-def require_declared_frontend_and_action(
-    context: OperationAccessContext,
-    *,
-    frontends: frozenset[OperationFrontendProjection],
-    actions: frozenset[AccessAction],
-) -> None:
-    """Refuse a frontend, then an action, that the operation does not declare for this request."""
-    if context.frontend not in frontends:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+def require_declared_action(context: OperationAccessContext, *, actions: frozenset[AccessAction]) -> None:
+    """Refuse an action that the operation does not declare for this request."""
     if context.action not in actions:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 

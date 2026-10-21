@@ -60,7 +60,11 @@ def _unresolvable_imports() -> list[str]:
             keep = len(package) - (node.level - 1)
             if keep < 0:
                 continue
-            target = _ROOT / "/".join(package[:keep]) / (node.module.replace(".", "/") if node.module else "")
+            target = (
+                _ROOT
+                / "/".join(package[:keep])
+                / (node.module.replace(".", "/") if (node.module is not None and node.module) else "")
+            )
             init = target / "__init__.py"
             if not init.exists() or init == path or target.with_suffix(".py").exists():
                 continue

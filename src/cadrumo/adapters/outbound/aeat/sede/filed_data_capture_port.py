@@ -10,10 +10,14 @@ from contextlib import asynccontextmanager, nullcontext
 from dataclasses import dataclass, field
 from typing import cast, override
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.contracts import RefusalError
+
 from .....application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .....application.auth.operator_scope_ports import OperatorScopePorts
 from .....application.auth.protocols import BrowserSessionFactoryPort
 from .....application.live.errors import LiveApplicationError
+from .....application.live.expedientes_ports import ExpedientesDeclaration
 from .....application.live.filed_data_ports import (
     DeferredFiledObservation,
     DeferredFiledObservations,
@@ -25,9 +29,7 @@ from .....application.live.filed_data_ports import (
 )
 from .....application.live.filed_observation_ports import FiledObservationProtocol
 from .....application.live.session import SessionWriteReporter, active_verified_session
-from .....application.runtime.contracts import RuntimeRefusalError
 from .....application.user_profile.access_errors import ProfileAccessRefusedError
-from .....application.user_profile.automation_custody_port import AutomationCustodyError
 from .....core.errors.hierarchy import AuthError
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -42,7 +44,6 @@ from .declarations_capture import (
     capture_previous_filing_observations,
     capture_relation_source_observations,
 )
-from .declarations_schema import Declaracion
 from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 
 _DEFAULT_FAILURE_KEY = "application.live.filed_observations.errors.registry_enrollment_failed"
@@ -63,7 +64,7 @@ async def _call_adapter[T](operation: str, callback: Callable[[], Awaitable[T]])
         return await callback()
     # An authentication failure is the operator's login, not this read; it keeps
     # its own registered code so the operator sees, for example, an approval timeout.
-    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError, AuthError):
+    except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError, AuthError):
         raise
     except LiveApplicationError:
         raise
@@ -141,7 +142,7 @@ class _DeferredSedeObservations:
 
 
 async def capture_deferred_sede_observation(
-    register: DeclaracionesRegisterSession, declaration: Declaracion
+    register: DeclaracionesRegisterSession, declaration: ExpedientesDeclaration
 ) -> DeferredFiledObservation:
     """Stage one remote declaration without invoking a local persistence callback."""
     staged: list[tuple[tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes]] = []
@@ -188,7 +189,7 @@ class _SedeFiledDataRegisterPort(FiledDataRegisterPort):
         artefact_sink: FiledArtefactSink | None = None,
     ) -> FiledObservationProtocol:
         """Capture one register row through the concrete Sede reader."""
-        if not isinstance(declaration, Declaracion):
+        if not isinstance(declaration, ExpedientesDeclaration):
             raise TypeError("filed register port returned a non-Sede declaration")
         concrete_sink = _concrete_artefact_sink(artefact_sink)
         return await _call_adapter(
@@ -201,7 +202,7 @@ class _SedeFiledDataRegisterPort(FiledDataRegisterPort):
         self, declaration: FiledRegisterDeclarationProtocol
     ) -> DeferredFiledObservation:
         """Return captured bytes for a later guarded local persistence section."""
-        if not isinstance(declaration, Declaracion):
+        if not isinstance(declaration, ExpedientesDeclaration):
             raise TypeError("filed register port returned a non-Sede declaration")
         return await _call_adapter(
             "filed_declaration_capture", lambda: capture_deferred_sede_observation(self._register, declaration)
@@ -270,7 +271,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
             LiveApplicationError,
             ProfileAccessRefusedError,
             AutomationCustodyError,
-            RuntimeRefusalError,
+            RefusalError,
             AuthError,
         ):
             raise
@@ -311,7 +312,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
             LiveApplicationError,
             ProfileAccessRefusedError,
             AutomationCustodyError,
-            RuntimeRefusalError,
+            RefusalError,
             AuthError,
         ):
             raise

@@ -27,7 +27,7 @@ from textual.widget import Widget
 
 from ....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
 from ..components.host import ScreenHostApp
-from ..modelo.workbench.installed import InstalledModeloWorkbench
+from ..modelo.workbench.factory import InstalledModeloWorkbench
 from ..modelo.workbench.screen import ModeloWorkbenchScreen
 from ..modelo.workbench.sources import WorkbenchSourcesScreen
 from .modelo_workbench_session import real_workbench
@@ -59,10 +59,8 @@ def workbench(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathF
 
 async def _open(pilot: Pilot[None], screen: ModeloWorkbenchScreen, keys: tuple[str, ...]) -> None:
     """Wait for the form to be read, then reach the surface the way the filer does."""
-    for _ in range(200):
-        await pilot.pause()
-        if screen.form is not None:
-            break
+    await pilot.app.workers.wait_for_complete()
+    await pilot.pause()
     assert screen.form is not None, "the workbench never finished reading its declaration"
     if keys:
         await pilot.press(*keys)

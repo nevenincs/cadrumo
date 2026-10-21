@@ -6,9 +6,9 @@ date: '2026-10-04'
 tier: L2
 related:
   - '[[2026-10-04-application-sign-in-adr]]'
-modified: '2026-10-05'
+modified: '2026-10-12'
 body_schema: body-v2
-body_hash: 'sha256:c99babadea2c1808ab561e5e9da48552aa133cac9a3126b041c52d4c4c6a7cb5'
+body_hash: 'sha256:3e9bd854ff64388cd1a552455232c1a66379bdb1799079c6256999342a5274ff'
 ---
 
 # `application-sign-in` plan
@@ -44,44 +44,44 @@ Runtime-owned shared sign-in: three-state lock observation, durable generation, 
 - [x] `P01.S03` - Bind the receipt to the originating login_id and sign-in generation under a new schema_version in session.v2.json, keeping the v2 keychain service and sending older schemas to the delete-only path; `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py, acceleration_receipt_crypto.py, the mint chain (entrypoints/runtime/profile_login.py, application/user_profile/login_session.py, login_session_port.py, adapters/persistence/storage/profile_login_session.py) with legacy in-process login no longer persisting receipts, owning tests`.
 - [x] `P01.S04` - Mint the receipt only after session publication, under the admission guard, stamped with the generation captured at publication and discarded if the session is no longer published; `src/cadrumo/entrypoints/runtime/session_owner.py, profile_login.py, worker_service.py, application/user_profile session_authority_admission.py and session_authority_contracts.py, application/runtime/profile_worker.py worker request, local_runtime/profile_worker_human_admission.py, the mint chain (login_session, port, adapter, acceleration_receipt, sign_in_generation require_current), owning tests`.
 - [x] `P01.S05` - Make receipt borrowing proof-only so clients read only the keychain proof and locator while the runtime verifies, unwraps and deletes; `src/cadrumo/adapters/local_runtime/frontend_client.py, acceleration_receipt.py, src/cadrumo/application/user_profile/login_session.py, owning tests`.
-- [ ] `P01.S06` - Advance the generation and delete the receipt on lock everywhere, positive OS lock and logout evidence, password rotation or reset, recovery and profile deletion, and sweep receipts whose bound login is positively gone; `src/cadrumo/application/user_profile/session_authority_lifecycle.py, automation_lifecycle_service.py, src/cadrumo/entrypoints/runtime/profile_host.py, profile_connections.py, owning tests`.
-- [ ] `P01.S07` - Add the runtime human_sign_out operation for human-kind sessions or a presented proof, retiring every human and attended session and reporting remaining automation; `src/cadrumo/application/runtime/ contracts and transport, src/cadrumo/entrypoints/runtime/, owning tests`.
-- [ ] `P01.S08` - Add the unauthenticated sign_in_status runtime request reporting present, absent or unknown with deadlines, creating no worker and never reading the keychain; `src/cadrumo/application/runtime/ contracts, src/cadrumo/adapters/local_runtime/server dispatch, src/cadrumo/entrypoints/runtime/, owning tests`.
-- [ ] `P01.S09` - Split typed refusals so THROTTLED carries remaining seconds and PROFILE_LOCKED, receipt reasons and generation changed reach clients, and add the throttle unreadable-state diagnostic while it keeps clearing; `src/cadrumo/entrypoints/runtime/profile_login.py, src/cadrumo/application/user_profile/access_contracts.py, src/cadrumo/adapters/persistence/storage/master_key/login_throttle.py, error catalogue, owning tests`.
+- [x] `P01.S06` - Advance the generation and delete the receipt on lock everywhere, positive OS lock and logout evidence, password rotation or reset, recovery and profile deletion, and sweep receipts whose bound login is positively gone; `src/cadrumo/application/user_profile/session_authority_lifecycle.py, automation_lifecycle_service.py, src/cadrumo/entrypoints/runtime/profile_host.py, profile_connections.py, owning tests`.
+- [x] `P01.S07` - Add the runtime human_sign_out operation for human-kind sessions or a presented proof, retiring every human and attended session and reporting remaining automation; `src/cadrumo/application/runtime/ contracts and transport, src/cadrumo/entrypoints/runtime/, owning tests`.
+- [x] `P01.S08` - Add the unauthenticated sign_in_status runtime request reporting present, absent or unknown with deadlines, creating no worker and never reading the keychain; `src/cadrumo/application/runtime/ contracts, src/cadrumo/adapters/local_runtime/server dispatch, src/cadrumo/entrypoints/runtime/, owning tests`.
+- [x] `P01.S09` - Split typed refusals so THROTTLED carries remaining seconds and PROFILE_LOCKED, receipt reasons and generation changed reach clients, and add the throttle unreadable-state diagnostic while it keeps clearing; `src/cadrumo/entrypoints/runtime/profile_login.py, src/cadrumo/application/user_profile/access_contracts.py, src/cadrumo/adapters/persistence/storage/master_key/login_throttle.py, error catalogue, owning tests`.
 
 ### Phase `P02` - Session events
 
 Pushed revocation events from a single reason-carrying retire point over a new event frame kind.
 
-- [ ] `P02.S10` - Carry a reason through the session retire point, including lazy retirements, so every retirement is observable once; `src/cadrumo/application/user_profile/session_authority_core.py, src/cadrumo/entrypoints/runtime/profile_connection_sessions.py, owning tests`.
-- [ ] `P02.S11` - Add the session event frame kind with client-side demultiplexing and a bounded non-blocking per-connection queue that emits after commit and closes the connection on overflow; `src/cadrumo/adapters/local_runtime/framing.py, server_connection_handling.py, runtime_client.py, frontend_client.py, owning tests`.
+- [x] `P02.S10` - Carry a reason through the session retire point, including lazy retirements, so every retirement is observable once; `src/cadrumo/application/user_profile/session_authority_core.py, src/cadrumo/entrypoints/runtime/profile_connection_sessions.py, owning tests`.
+- [x] `P02.S11` - Add the session event frame kind with client-side demultiplexing and a bounded non-blocking per-connection queue that emits after commit and closes the connection on overflow; `src/cadrumo/adapters/local_runtime/framing.py, server_connection_handling.py, runtime_client.py, frontend_client.py, owning tests`.
 
 ### Phase `P03` - Legacy retirement
 
 Only the runtime owner mints, extends or deletes a receipt.
 
-- [ ] `P03.S12` - Retire the registered in-process login and logout operations and the non-runtime CLI receipt extension, and add a gate test that no other code mutates receipts; `src/cadrumo/application/auth/operation_definitions.py, src/cadrumo/application/user_profile/operations.py, profile_operation_execution.py, session_admission.py, login_session.py, owning tests`.
+- [x] `P03.S12` - Retire the registered in-process login and logout operations and the non-runtime CLI receipt extension, and add a gate test that no other code mutates receipts; `src/cadrumo/application/auth/operation_definitions.py, src/cadrumo/application/user_profile/operations.py, profile_operation_execution.py, session_admission.py, login_session.py, owning tests`.
 
 ### Phase `P04` - CLI
 
 Interactive-only automatic resume, global sign-out and the status leaf.
 
-- [ ] `P04.S13` - Gate automatic receipt resume on an interactive terminal and make config login without a secret refuse with passphrase_channel_absent when non-interactive; `src/cadrumo/entrypoints/cli/runtime_profile_admission.py, src/cadrumo/entrypoints/cli/config/custody.py, secure_input.py, owning tests`.
-- [ ] `P04.S14` - Route config logout to the global human sign-out and add the config sign-in-status leaf with its result model, locale keys and regenerated CLI references; `src/cadrumo/entrypoints/cli/config/custody.py, config_payloads.py, command specs, src/cadrumo/locales/ via dev.locales, generated CLI reference, owning tests`.
+- [x] `P04.S13` - Gate automatic receipt resume on an interactive terminal and make config login without a secret refuse with passphrase_channel_absent when non-interactive; `src/cadrumo/entrypoints/cli/runtime_profile_admission.py, src/cadrumo/entrypoints/cli/config/custody.py, secure_input.py, owning tests`.
+- [x] `P04.S14` - Route config logout to the global human sign-out and add the config sign-in-status leaf with its result model, locale keys and regenerated CLI references; `src/cadrumo/entrypoints/cli/config/custody.py, config_payloads.py, command specs, src/cadrumo/locales/ via dev.locales, generated CLI reference, owning tests`.
 
 ### Phase `P05` - TUI
 
 Resume first, opt-in persistence, event-driven clearing and global sign-out.
 
-- [ ] `P05.S15` - Make the TUI resume a live sign-in first and offer a Stay signed in opt-in defaulting off on its password screen; `src/cadrumo/entrypoints/tui/secret/runtime_login_form.py, runtime_login_attempt.py, runtime_admission.py, locale keys, owning tests`.
-- [ ] `P05.S16` - Subscribe the TUI to session events to clear private views immediately, route sign-out to the global operation and keep Lock this window; `src/cadrumo/entrypoints/tui/app.py, runtime_account.py, app_navigation.py, runtime_session.py, owning tests`.
+- [x] `P05.S15` - Make the TUI resume a live sign-in first and offer a Stay signed in opt-in defaulting off on its password screen; `src/cadrumo/entrypoints/tui/secret/runtime_login_form.py, runtime_login_attempt.py, runtime_admission.py, locale keys, owning tests`.
+- [x] `P05.S16` - Subscribe the TUI to session events to clear private views immediately, route sign-out to the global operation and keep Lock this window; `src/cadrumo/entrypoints/tui/app.py, runtime_account.py, app_navigation.py, runtime_session.py, owning tests`.
 
 ### Phase `P06` - Acceptance and review
 
 Cross-surface acceptance and integrated review against the ADR.
 
 - [ ] `P06.S17` - Run the acceptance matrix for lock-down events against open TUI and CLI windows, sign-out racing resume, crash around mint, reboot, a Windows RDP or SSH second session, unknown lock state, upgrade with a live older receipt, keychain unavailability, throttling and non-interactive CLI; `runtime, CLI and TUI integration suites, disposable Windows host, feature audit`.
-- [ ] `P06.S18` - Review the integrated sign-in model against the accepted ADR and its amendments and record findings; `feature audit`.
+- [x] `P06.S18` - Review the integrated sign-in model against the accepted ADR and its amendments and record findings; `feature audit`.
 
 ## Parallelization
 

@@ -4,16 +4,17 @@
   Runs the packaged desktop end-to-end test from an interactive desktop session.
 
 .DESCRIPTION
-  Configures the standalone desktop build, generates the native contract, builds
-  the test host with the webview2-remote-debugging feature and runs the
-  desktop-packaged-test target against an assembled package with documentation.
-  Each run uses a fresh storage root. Results go to
+  Builds the test host with the webview2-remote-debugging feature in the
+  configured repository build, then runs the packaged end-to-end test that the
+  desktop-packaged-test target runs, against an assembled package with
+  documentation. Each run uses a fresh storage root. Results go to
   <BuildDirectory>\desktop\test-results\packaged\<timestamp>\. BuildDirectory
-  defaults to the binary directory of the Windows x64 configure preset in
-  native\desktop\CMakePresets.json, and the build is then configured through
-  that preset.
+  defaults to build\<preset>, the binary directory of the repository's Windows
+  x64 configure preset; the desktop has no build directory of its own, and this
+  script never configures one. Configure the repository build first.
 
-  Give either -PackageRoot, an assembled package that carries
+  The package defaults to the build's own stage\<Configuration>\app. Give
+  -PackageRoot, another assembled package that carries
   docs\user\manifest.json, or -Kit, a directory holding app\ (a package) and
   docs-staged\user\ (staged documentation). A kit is copied, never modified,
   into <BuildDirectory>\desktop\testing\packaged\package\ with the
@@ -36,7 +37,7 @@
 #>
 [CmdletBinding(DefaultParameterSetName = 'Package')]
 param(
-    [Parameter(ParameterSetName = 'Package', Mandatory = $true)][string]$PackageRoot,
+    [Parameter(ParameterSetName = 'Package')][string]$PackageRoot,
     [Parameter(ParameterSetName = 'Kit', Mandatory = $true)][string]$Kit,
     [string]$BuildDirectory,
     [ValidateSet('Release', 'Debug', 'RelWithDebInfo', 'MinSizeRel')][string]$Configuration = 'Release',
@@ -53,24 +54,23 @@ Set-StrictMode -Version 2.0
 $Repository = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..\..')).ProviderPath
 $Desktop = Join-Path $Repository 'native\desktop'
 
-# The standalone desktop project's presets own the default build directory:
-# the preset that configures the Windows x64 target names it.
-function Get-DesktopPreset([string]$Source) {
-    $presets = (Get-Content -LiteralPath (Join-Path $Source 'CMakePresets.json') -Raw | ConvertFrom-Json).configurePresets
-    $selected = @($presets | Where-Object { $_.cacheVariables.CADRUMO_TARGET -eq 'windows-x86-64' })
-    if ($selected.Count -ne 1) { throw 'The desktop presets do not name exactly one Windows x64 configure preset.' }
-    $binary = $selected[0].binaryDir.Replace('${sourceDir}', $Source).Replace('${presetName}', $selected[0].name)
-    return [pscustomobject]@{ Name = $selected[0].name; BinaryDirectory = [IO.Path]::GetFullPath($binary) }
+# The repository build is the desktop's only build: its binary directory is
+# build\<name> of the configure preset that targets Windows x64.
+function Get-HostBuildDirectory([string]$Repository) {
+    $presets = (Get-Content -LiteralPath (Join-Path $Repository 'CMakePresets.json') -Raw | ConvertFrom-Json).configurePresets
+    $selected = @($presets | Where-Object {
+        $_.PSObject.Properties['cacheVariables'] -and $_.cacheVariables.PSObject.Properties['CADRUMO_TARGET'] -and
+        $_.cacheVariables.CADRUMO_TARGET -eq 'windows-x86-64'
+    })
+    if ($selected.Count -ne 1) { throw 'The repository presets do not name exactly one Windows x64 configure preset.' }
+    return [IO.Path]::GetFullPath((Join-Path (Join-Path $Repository 'build') $selected[0].name))
 }
 
-$Preset = $null
-if (-not $BuildDirectory) {
-    $Preset = Get-DesktopPreset $Desktop
-    $BuildDirectory = $Preset.BinaryDirectory
-}
+if (-not $BuildDirectory) { $BuildDirectory = Get-HostBuildDirectory $Repository }
 $BuildDirectory = [IO.Path]::GetFullPath($BuildDirectory)
 if (-not $DevPython) { $DevPython = Join-Path $Repository '.venv\Scripts\python.exe' }
 if (-not (Test-Path -LiteralPath $DevPython)) { throw "Development interpreter not found: $DevPython (pass -DevPython)" }
+$DevPython = (Resolve-Path -LiteralPath $DevPython).ProviderPath
 
 $session = [Diagnostics.Process]::GetCurrentProcess().SessionId
 if ($session -eq 0 -and -not $PrepareOnly) {
@@ -89,6 +89,28 @@ function Invoke-Checked([string]$File, [string[]]$Arguments) {
     if ($LASTEXITCODE -ne 0) { throw "$File exited with $LASTEXITCODE" }
 }
 
+function Assert-UnlinkedBuildMember([string]$Path) {
+    $root = [IO.Path]::GetFullPath($BuildDirectory).TrimEnd([char[]]@('\','/'))
+    $candidate = [IO.Path]::GetFullPath($Path)
+    $prefix = $root + [IO.Path]::DirectorySeparatorChar
+    if (-not $candidate.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Output path is outside the selected build directory: $candidate"
+    }
+    $current = $root
+    $relative = $candidate.Substring($prefix.Length)
+    $separators = [char[]]@([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
+    foreach ($part in $relative.Split($separators)) {
+        if (-not $part) { continue }
+        $current = Join-Path $current $part
+        if (Test-Path -LiteralPath $current) {
+            $item = Get-Item -LiteralPath $current -Force
+            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+                throw "Output path contains a symlink or junction: $current"
+            }
+        }
+    }
+}
+
 # The package ------------------------------------------------------------------
 $source = $null
 if ($PSCmdlet.ParameterSetName -eq 'Kit') {
@@ -99,42 +121,17 @@ if ($PSCmdlet.ParameterSetName -eq 'Kit') {
         if (-not (Test-Path -LiteralPath $required)) { throw "Kit file missing: $required" }
     }
     $PackageRoot = Join-Path $BuildDirectory 'desktop\testing\packaged\package'
-    $marker = Join-Path $PackageRoot 'kit-source.json'
     $wanted = [ordered]@{
         kit                  = $Kit
         packageManifestSha256 = Get-Sha256 (Join-Path $kitApp 'data\package-manifest.json')
         docsManifestSha256   = Get-Sha256 (Join-Path $kitDocs 'manifest.json')
     }
-    $current = $null
-    if (Test-Path -LiteralPath $marker) { $current = Get-Content -LiteralPath $marker -Raw | ConvertFrom-Json }
-    $same = $current -and $current.kit -eq $wanted.kit -and
-        $current.packageManifestSha256 -eq $wanted.packageManifestSha256 -and
-        $current.docsManifestSha256 -eq $wanted.docsManifestSha256
-    if (-not $same) {
-        if (Test-Path -LiteralPath $PackageRoot) {
-            $resolved = (Resolve-Path -LiteralPath $PackageRoot).ProviderPath
-            $owned = $resolved.StartsWith((Join-Path $BuildDirectory 'desktop\testing\packaged\'), [StringComparison]::OrdinalIgnoreCase)
-            if (-not $owned -or -not (Test-Path -LiteralPath $marker)) {
-                throw "Refusing to replace ${resolved}: it is not a kit copy this script made."
-            }
-            Remove-Item -LiteralPath $resolved -Recurse -Force
-        }
-        Write-Host "Copying the kit package and staged documentation into $PackageRoot"
-        & robocopy.exe $kitApp $PackageRoot /E /MT:16 /NFL /NDL /NJH /NJS /NP /XF cadrumo.exe cadrumo-production.exe | Out-Null
-        if ($LASTEXITCODE -ge 8) { throw "robocopy of the package failed with $LASTEXITCODE" }
-        & robocopy.exe $kitDocs (Join-Path $PackageRoot 'docs\user') /E /MT:16 /NFL /NDL /NJH /NJS /NP | Out-Null
-        if ($LASTEXITCODE -ge 8) { throw "robocopy of the documentation failed with $LASTEXITCODE" }
-        $wanted | ConvertTo-Json | Set-Content -LiteralPath $marker -Encoding UTF8
-    }
     $source = "a copy of the smoke kit $Kit (not a package built from HEAD)"
 } else {
+    if (-not $PackageRoot) { $PackageRoot = Join-Path $BuildDirectory "stage\$Configuration\app" }
     $PackageRoot = (Resolve-Path -LiteralPath $PackageRoot).ProviderPath.TrimEnd('\')
     $source = "the assembled package $PackageRoot"
 }
-foreach ($required in @('python.exe', 'data\package-manifest.json', 'docs\user\manifest.json')) {
-    if (-not (Test-Path -LiteralPath (Join-Path $PackageRoot $required))) { throw "The package has no $required" }
-}
-
 Write-Host ''
 Write-Host 'CADRUMO packaged desktop test'
 Write-Host "  package: $source"
@@ -153,37 +150,98 @@ if (-not $PrepareOnly) {
 }
 
 # Build and run -------------------------------------------------------------------
-$configure = @('-S', $Desktop)
-if ($Preset) {
-    # The preset pins the generator and the binary directory.
-    $configure += @('--preset', $Preset.Name)
-} else {
-    if (-not (Test-Path -LiteralPath (Join-Path $BuildDirectory 'CMakeCache.txt')) -and (Get-Command ninja -ErrorAction SilentlyContinue)) {
-        $configure = @('-G', 'Ninja') + $configure
-    }
-    $configure += @('-B', $BuildDirectory, "-DCMAKE_BUILD_TYPE=$Configuration")
-}
-$configure += @("-DCADRUMO_DESKTOP_PACKAGE_ROOT=$PackageRoot", "-DCADRUMO_DEV_PYTHON=$DevPython")
-Invoke-Checked 'cmake' $configure
+# The configured repository build is admitted, with its physical preset
+# directory and output manifest, before the kit is copied anywhere inside it.
 Push-Location $Repository
-try { Invoke-Checked $DevPython @('-B', '-m', 'dev.packaging.native.generate', (Join-Path $BuildDirectory 'generated')) }
-finally { Pop-Location }
-if (-not (Test-Path -LiteralPath (Join-Path $Repository 'native\desktop\frontend\node_modules'))) {
-    Invoke-Checked 'cmake' @('--build', $BuildDirectory, '--config', $Configuration, '--target', 'desktop-frontend-install')
+try {
+    $admittedBuild = & $DevPython -B -c 'import sys; from dev.packaging.native.build_directory import require_enrolled_build; print(require_enrolled_build(sys.argv[1]))' $BuildDirectory
+    if ($LASTEXITCODE -ne 0 -or -not $admittedBuild) {
+        throw 'The selected directory is not a configured repository build preset.'
+    }
+} finally {
+    Pop-Location
+}
+$BuildDirectory = [IO.Path]::GetFullPath([string]$admittedBuild)
+
+if ($PSCmdlet.ParameterSetName -eq 'Kit') {
+    $marker = Join-Path $PackageRoot 'kit-source.json'
+    $kitDocsDestination = Join-Path $PackageRoot 'docs\user'
+    Assert-UnlinkedBuildMember $PackageRoot
+    Assert-UnlinkedBuildMember $kitDocsDestination
+    Assert-UnlinkedBuildMember $marker
+    $current = $null
+    if (Test-Path -LiteralPath $marker) { $current = Get-Content -LiteralPath $marker -Raw | ConvertFrom-Json }
+    $same = $current -and $current.kit -eq $wanted.kit -and
+        $current.packageManifestSha256 -eq $wanted.packageManifestSha256 -and
+        $current.docsManifestSha256 -eq $wanted.docsManifestSha256
+    if (-not $same) {
+        if (Test-Path -LiteralPath $PackageRoot) {
+            if (-not (Test-Path -LiteralPath $marker)) {
+                throw "Refusing to replace ${PackageRoot}: it is not a kit copy this script made."
+            }
+            Remove-Item -LiteralPath $PackageRoot -Recurse -Force
+        }
+        Write-Host "Copying the kit package and staged documentation into $PackageRoot"
+        & robocopy.exe $kitApp $PackageRoot /E /MT:16 /NFL /NDL /NJH /NJS /NP /XF cadrumo.exe cadrumo-production.exe | Out-Null
+        if ($LASTEXITCODE -ge 8) { throw "robocopy of the package failed with $LASTEXITCODE" }
+        Assert-UnlinkedBuildMember $kitDocsDestination
+        & robocopy.exe $kitDocs $kitDocsDestination /E /MT:16 /NFL /NDL /NJH /NJS /NP | Out-Null
+        if ($LASTEXITCODE -ge 8) { throw "robocopy of the documentation failed with $LASTEXITCODE" }
+        Assert-UnlinkedBuildMember $marker
+        $wanted | ConvertTo-Json | Set-Content -LiteralPath $marker -Encoding UTF8
+    }
+}
+foreach ($required in @('python.exe', 'data\package-manifest.json', 'docs\user\manifest.json')) {
+    if (-not (Test-Path -LiteralPath (Join-Path $PackageRoot $required))) { throw "The package has no $required" }
 }
 
 if ($RustBin) { $env:CADRUMO_DESKTOP_RUST_BIN = $RustBin }
+# desktop-packaged-host depends on the native contract and the frontend bundle of this build.
+Invoke-Checked 'cmake' @('--build', $BuildDirectory, '--config', $Configuration, '--target', 'desktop-packaged-host')
 if ($PrepareOnly) {
-    Invoke-Checked 'cmake' @('--build', $BuildDirectory, '--config', $Configuration, '--target', 'desktop-packaged-host')
     Write-Host "Prepared. Run again without -PrepareOnly from a desktop session; package $PackageRoot"
     exit 0
 }
 
+# The environment desktop-packaged-test gives the test, with this run's package:
+# the shared build's configured package root is not rewritten for one run.
+$paths = (Get-Content -LiteralPath (Join-Path $BuildDirectory 'build-paths.json') -Raw | ConvertFrom-Json).paths
+$temporary = Join-Path (Join-Path $BuildDirectory $paths.desktop_testing) 'temporary'
+Assert-UnlinkedBuildMember $temporary
+New-Item -ItemType Directory -Path $temporary -Force | Out-Null
+Push-Location $Repository
+try {
+    $rootVariable = & $DevPython -B -c 'from cadrumo.core.storage_environment import STORAGE_ROOT; print(STORAGE_ROOT.variable)'
+    if ($LASTEXITCODE -ne 0 -or -not $rootVariable) { throw 'Cannot resolve the canonical storage-root variable.' }
+} finally {
+    Pop-Location
+}
 $results = Join-Path $BuildDirectory ('desktop\test-results\packaged\' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
-$env:CADRUMO_PACKAGED_RESULTS = $results
-$env:CADRUMO_PACKAGED_ALLOW_BROWSER = if ($AllowBrowser) { '1' } else { '0' }
-& cmake --build $BuildDirectory --config $Configuration --target desktop-packaged-test
-$exitCode = $LASTEXITCODE
+$runEnvironment = [ordered]@{
+    CADRUMO_CMAKE_BINARY_DIR       = $BuildDirectory
+    TEMP                           = $temporary
+    TMP                            = $temporary
+    TMPDIR                         = $temporary
+    CADRUMO_BUILD_CONFIG           = $Configuration
+    CADRUMO_NATIVE_CONTRACT        = Join-Path (Join-Path $BuildDirectory $paths.generated) 'contract.json'
+    CADRUMO_DESKTOP_PACKAGE_ROOT   = $PackageRoot
+    CADRUMO_STORAGE_ROOT_VARIABLE  = $rootVariable.Trim()
+    CADRUMO_PACKAGED_RESULTS       = $results
+    CADRUMO_PACKAGED_ALLOW_BROWSER = $(if ($AllowBrowser) { '1' } else { '0' })
+}
+$saved = @{}
+foreach ($name in $runEnvironment.Keys) {
+    $saved[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
+    [Environment]::SetEnvironmentVariable($name, [string]$runEnvironment[$name], 'Process')
+}
+Push-Location $BuildDirectory
+try {
+    & node --test (Join-Path $Desktop 'tests\packaged.test.mjs')
+    $exitCode = $LASTEXITCODE
+} finally {
+    Pop-Location
+    foreach ($name in $saved.Keys) { [Environment]::SetEnvironmentVariable($name, $saved[$name], 'Process') }
+}
 
 Write-Host ''
 $summary = Join-Path $results 'summary.txt'

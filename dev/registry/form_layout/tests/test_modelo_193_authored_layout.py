@@ -32,7 +32,9 @@ def test_official_sections_preserve_both_repeating_record_owners(
     assert len(layout.placements) == field_count
     assert {p.casilla_id for p in layout.placements} == {c.id for c in revision.casillas}
     assert all(p.kind.value == "on_form" for p in layout.placements)
-    assert {str(p.casilla_id): p.box_number for p in layout.placements if p.box_number} == {
+    assert {
+        str(p.casilla_id): p.box_number for p in layout.placements if (p.box_number is not None and p.box_number)
+    } == {
         "decl.total-perceptores": "01",
         "decl.base-total": "02",
         "decl.retenciones-total": "03",

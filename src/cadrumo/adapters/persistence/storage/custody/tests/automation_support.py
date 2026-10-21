@@ -5,12 +5,8 @@ from dataclasses import dataclass
 
 from pydantic import SecretBytes
 
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-    NativeSecretBackend,
-)
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore, NativeSecretBackend
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 
 class MemoryNativePort:

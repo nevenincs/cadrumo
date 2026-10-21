@@ -9,6 +9,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -25,12 +29,10 @@ from ..operations.operation_definition import OperationDefinition, OperationExec
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
-from .access_contracts import AccessDenialCode, Availability
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .access_errors import ProfileAccessRefusedError
 from .censal_access import bind_whole_profile_censal_access
 from .censal_observation import CensalObservation
@@ -220,6 +222,7 @@ def build_censal_prepare_operation_definition(
     return OperationDefinition(
         definition_id=CENSAL_PREPARE_OPERATION_DEFINITION_ID,
         request_type=CensalPrepareOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=CensalPrepareOperationProjection,
         executor_factory=OperationExecutorFactory(
             request_type=CensalPrepareOperationRequest,
@@ -230,7 +233,6 @@ def build_censal_prepare_operation_definition(
         interaction_kinds=frozenset(),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

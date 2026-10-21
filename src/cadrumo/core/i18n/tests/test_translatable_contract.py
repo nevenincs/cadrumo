@@ -70,7 +70,7 @@ def _resolved_import_target(path: Path, node: ast.ImportFrom) -> str | None:
     if not parts:
         return node.module
     resolved = ".".join(parts)
-    return f"{resolved}.{node.module}" if node.module else resolved
+    return f"{resolved}.{node.module}" if (node.module is not None and node.module) else resolved
 
 
 def _is_i18n_tr_import(path: Path, node: ast.ImportFrom, alias: ast.alias) -> bool:

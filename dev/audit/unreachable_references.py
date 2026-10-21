@@ -6,6 +6,7 @@ import ast
 import json
 import re
 from collections.abc import Iterator
+from pathlib import Path
 from typing import cast
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
@@ -221,6 +222,13 @@ def _string_tokens(tree: ast.Module) -> set[str]:
     return tokens
 
 
+def _data_paths(spec: ShippedTreeSpec) -> Iterator[Path]:
+    """Every shipped payload file the data globs select under an audited package root."""
+    for root in spec.package_roots:
+        for glob in spec.data_globs:
+            yield from (path for path in root.glob(glob) if path.is_file())
+
+
 def _data_tokens(spec: ShippedTreeSpec) -> frozenset[str]:
     """Identifier tokens in the shipped non-Python payloads.
 
@@ -228,25 +236,21 @@ def _data_tokens(spec: ShippedTreeSpec) -> frozenset[str]:
     by name, so a member appearing there is reached by data even though no
     Python statement spells it.
     """
-    package_root = spec.src_root / spec.package
     tokens: set[str] = set()
     unread: list[str] = []
-    for glob in spec.data_globs:
-        for path in package_root.glob(glob):
-            if not path.is_file():
-                continue
-            try:
-                text = path.read_text(encoding=UTF_8)
-            except (OSError, UnicodeDecodeError) as error:
-                # A REFERENCE set: a token here is the evidence that a field or
-                # enum value is addressed by data rather than by a Python
-                # statement. Losing one makes a live member look dead, and dead
-                # members here are deletion candidates. The lenient decode was
-                # worse than the skip - a replaced byte can split a token so it
-                # never matches, with nothing said either way.
-                unread.append(f"{path}: {type(error).__name__}: {error}")
-                continue
-            tokens.update(_DATA_TOKEN.findall(text))
+    for path in _data_paths(spec):
+        try:
+            text = path.read_text(encoding=UTF_8)
+        except (OSError, UnicodeDecodeError) as error:
+            # A REFERENCE set: a token here is the evidence that a field or
+            # enum value is addressed by data rather than by a Python
+            # statement. Losing one makes a live member look dead, and dead
+            # members here are deletion candidates. The lenient decode was
+            # worse than the skip - a replaced byte can split a token so it
+            # never matches, with nothing said either way.
+            unread.append(f"{path}: {type(error).__name__}: {error}")
+            continue
+        tokens.update(_DATA_TOKEN.findall(text))
     if unread:
         raise OSError(format_unread_notice("unreachable-code data tokens", "coverage is unproven", unread).rstrip())
     return frozenset(tokens)
@@ -267,21 +271,17 @@ def _declared_data_values(spec: ShippedTreeSpec) -> frozenset[str]:
     Unparseable files make the scan unavailable: a partial read would
     reintroduce exactly the prose matching this exists to exclude.
     """
-    package_root = spec.src_root / spec.package
     values: set[str] = set()
     unread: list[str] = []
 
-    for glob in spec.data_globs:
-        for path in package_root.glob(glob):
-            if not path.is_file():
-                continue
-            try:
-                text = path.read_text(encoding=UTF_8)
-                parsed = parse_toml(text) if path.suffix == ".toml" else json.loads(text)
-            except (OSError, UnicodeDecodeError, TomlDecodeError, json.JSONDecodeError) as error:
-                unread.append(f"{path}: {type(error).__name__}: {error}")
-                continue
-            _collect_declared_strings(parsed, values)
+    for path in _data_paths(spec):
+        try:
+            text = path.read_text(encoding=UTF_8)
+            parsed = parse_toml(text) if path.suffix == ".toml" else json.loads(text)
+        except (OSError, UnicodeDecodeError, TomlDecodeError, json.JSONDecodeError) as error:
+            unread.append(f"{path}: {type(error).__name__}: {error}")
+            continue
+        _collect_declared_strings(parsed, values)
     if unread:
         raise OSError(
             format_unread_notice("unreachable-code declared data values", "coverage is unproven", unread).rstrip()

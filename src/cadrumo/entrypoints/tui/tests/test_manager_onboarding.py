@@ -10,7 +10,7 @@ fails here.
 from __future__ import annotations
 
 import pytest
-from textual.widgets import Button, Checkbox, DataTable, Input, OptionList, ProgressBar, Static
+from textual.widgets import Button, Checkbox, DataTable, Input, OptionList, Static
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
@@ -24,6 +24,7 @@ from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.values import ProfileSetupState
 from ..components.host import ScreenHostApp
+from ..components.status import ProgressLine
 from ..components.widgets import DisclosureGroup
 from ..profile.edit_screens import FieldEditScreen, field_help_text
 from ..profile.overview import ProfileManagerScreen
@@ -124,7 +125,7 @@ async def test_previous_keeps_saved_answers_and_incomplete_review_returns_to_req
             await pilot.press("escape")
             await pilot.pause()
             value = app._field_by_key[path].value
-            assert value
+            assert value is not None and value
             await pilot.click("#onboarding-previous")
             await pilot.pause()
             assert app._setup_stage is ProfileSetupStage.GET_DATA
@@ -190,7 +191,7 @@ async def test_an_unfinished_profile_opens_on_only_its_required_answers(tmp_path
                 assert not app.query_one(f"#fold-{key}", DisclosureGroup).collapsed
                 summary = str(app.query_one(f"#summary-{key}", Static).content)
                 assert summary and summary != f"profile.schema.section.{key}.summary"
-            bar = app.query_one("#onboarding-progress", ProgressBar)
+            bar = app.query_one("#onboarding-progress", ProgressLine)
             assert (bar.progress, bar.total) == (0, len(overview.missing_required) + 1)
             assert app.focused is app.query_one("#onboarding-continue", Button)
 
@@ -269,7 +270,7 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
             assert app._setup_stage is ProfileSetupStage.READY
             assert "✓" in str(app.query_one("#onboarding-checklist", Static).content)
             assert not _visible_rows(app), "the success stage must not mount unrelated profile tables"
-            bar = app.query_one("#onboarding-progress", ProgressBar)
+            bar = app.query_one("#onboarding-progress", ProgressLine)
             assert bar.progress == bar.total
             assert str(button.label) == tr("flows.manager.onboarding.to_workbench")
             pilot.app.exit(None)

@@ -48,7 +48,7 @@ class LedgerRuleRowProjection(BaseModel):
     def from_rule(cls, rule: LedgerClassificationRule) -> LedgerRuleRowProjection:
         """Copy every canonical persisted field without changing its meaning."""
         return cls(
-            rule_id=str(rule.rule_id),
+            rule_id=rule.rule_id,
             description_pattern=rule.description_pattern,
             classification=rule.classification,
             category_id=rule.category_id,
@@ -59,7 +59,11 @@ class LedgerRuleRowProjection(BaseModel):
 
 
 class LedgerRuleAddRequest(BaseModel):
-    """Private secure-reference input for ``ledger.rule.add``."""
+    """Private secure-reference input for ``ledger.rule.add``.
+
+    ``actor`` is recorded as sent for a person's session. An automation's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -100,7 +104,7 @@ def _validate_rule_add_success(projection: LedgerRuleAddProjection) -> None:
         projection.rule is None
         or projection.validation_code is not None
         or projection.validation_messages
-        or projection.category_example
+        or (projection.category_example is not None and projection.category_example)
     ):
         raise ValueError("added rule projection requires one rule and no refusal details")
 
@@ -133,7 +137,13 @@ class LedgerRuleListProjection(BaseModel):
 
 
 class LedgerRuleApplyRequest(BaseModel):
-    """Private exact-profile rule apply or non-mutating preview request."""
+    """Private exact-profile rule apply or non-mutating preview request.
+
+    ``reaffirm`` widens the run to rows already classified by hand, replacing
+    what they carry. ``actor`` is recorded as sent for a person's session. An
+    automation's session is recorded under its own session label, whatever the
+    request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 

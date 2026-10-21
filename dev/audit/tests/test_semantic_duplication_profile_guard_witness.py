@@ -65,13 +65,13 @@ def _guard_pair(package: Path, *, right_normalization: str = "str(bucket_id)") -
 def test_call_fingerprint_reports_renamed_profile_guard_copies(tmp_path: Path) -> None:
     package = _guard_pair(tmp_path / "cadrumo")
 
-    candidates = run(package, ["call_fingerprint"])
+    candidates = run((package,), ["call_fingerprint"])
 
     matches = [
         candidate
         for candidate in candidates
         if candidate.detector == "call_fingerprint"
-        and {site.split(":", 1)[0] for site in candidate.sites} == {"left.py", "right.py"}
+        and {site.split(":", 1)[0] for site in candidate.sites} == {"cadrumo/left.py", "cadrumo/right.py"}
     ]
     assert len(matches) == 1
     assert {site.rsplit(" ", 1)[-1] for site in matches[0].sites} == {"require_identity", "verify_identity"}
@@ -80,4 +80,4 @@ def test_call_fingerprint_reports_renamed_profile_guard_copies(tmp_path: Path) -
 def test_call_fingerprint_does_not_match_a_different_subject_normalizer(tmp_path: Path) -> None:
     package = _guard_pair(tmp_path / "cadrumo", right_normalization="canonical_profile_id(bucket_id)")
 
-    assert run(package, ["call_fingerprint"]) == []
+    assert run((package,), ["call_fingerprint"]) == []

@@ -16,12 +16,14 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.storage_environment import STORAGE_ROOT
 from dev._paths import REPO_ROOT
-from dev.cache_root import dev_cache_dir
 
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
 from .action_cache import action_lock, completed, current, fingerprint
+from .build_directory import require_enrolled_build
+from .build_log import BuildLog, display_path
 from .build_paths import build_paths
+from .docs_input_identity import shared_docs_inputs
 from .docs_stage import DocsPackagingError, declared_languages, language_roots, package_prefix
 from .identity import identity
 from .layout import distribution_target, load_layout
@@ -37,8 +39,7 @@ _RAISED = re.compile(r"^\s*((?:\w+\.)*\w*(?:Error|Exception): .+)$")
 #: sense read together.
 PACKAGE_INDEX_ENVIRONMENT: dict[str, str] = {"CADRUMO_DOCS_PAGEFIND_MODE": "full"}
 
-#: The development cache holding the one built site every build configuration
-#: of this checkout takes its documentation from.
+#: A reusable site owned by this binary directory's documentation work target.
 SHARED_SITE_CACHE = "user-docs"
 
 
@@ -54,7 +55,30 @@ def compile_environment(storage: Path) -> dict[str, str]:
     the workstation's own.
     """
     environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_DOCS_")}
-    environment.update({STORAGE_ROOT.variable: str(storage), "PYTHONIOENCODING": "utf-8"})
+    temporary = storage.parent / "temporary"
+    temporary.mkdir(parents=True, exist_ok=True)
+    environment.update(
+        {
+            STORAGE_ROOT.variable: str(storage),
+            "CADRUMO_LOG_DIR": str(storage / "logs"),
+            "CADRUMO_DEV_CACHE_ROOT": str(storage.parent / "cache"),
+            "CADRUMO_TEMP_DIR": str(temporary),
+            "TEMP": str(temporary),
+            "TMP": str(temporary),
+            "TMPDIR": str(temporary),
+            "PYTHONDONTWRITEBYTECODE": "1",
+            "PYTHONIOENCODING": "utf-8",
+        }
+    )
+    environment[STORAGE_ROOT.development_variable] = str(storage)
+    for name in (
+        "CADRUMO_REGISTRY_DISK_CACHE_DIR",
+        "CADRUMO_RECORD_DESIGN_CACHE_DIR",
+        "CADRUMO_CORPUS_TEXT_CACHE_DIR",
+        "CADRUMO_REGISTRY_VERDICT_CACHE_DIR",
+        "CADRUMO_RUNTIME_WHEEL_CACHE_DIR",
+    ):
+        environment[name] = str(storage.parent / "cache" / name.lower())
     return environment
 
 
@@ -82,6 +106,7 @@ def compile_command(html_root: Path, build_root: Path) -> list[str]:
         "--flavor",
         "desktop",
         "--strict",
+        "--no-check-sequences",
     ]
 
 
@@ -102,6 +127,10 @@ def require_host_product_metadata(expected_version: str) -> None:
         )
 
 
+def _log() -> BuildLog:
+    return BuildLog("user_docs_build")
+
+
 def build_roots(build: Path, inputs: Path, *, target: str | None = None, shared_cache: bool = True) -> None:
     """Build every declared root with the owning driver unless its enrolled inputs are unchanged."""
     layout = load_layout(target)
@@ -111,39 +140,39 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None, shared_
     with action_lock(build, "user-docs"):
         authority = selected_published_authority(REPO_ROOT)
         input_identity = fingerprint(inputs, authority)
-        shared_inputs = fingerprint(inputs, authority, outside=build)
+        shared_inputs = shared_docs_inputs(inputs, authority, source=REPO_ROOT, build=build)
 
         def validate_inputs() -> None:
             selected = selected_published_authority(REPO_ROOT)
             if (
                 selected != authority
                 or fingerprint(inputs, selected) != input_identity
-                or fingerprint(inputs, selected, outside=build) != shared_inputs
+                or shared_docs_inputs(inputs, selected, source=REPO_ROOT, build=build) != shared_inputs
             ):
                 raise DocsPackagingError("Documentation inputs changed during the build; retry from stable sources")
 
         validate_inputs()
         if current(build_root, input_identity):
             validate_inputs()
-            print("Reusing user documentation: inputs and output inventory unchanged", flush=True)
+            _log().status(f"up to date, reusing {display_path(build_root)}: inputs and output inventory unchanged")
             return
         (build_root / "ready").unlink(missing_ok=True)
         languages = declared_languages(layout)
 
         def produce(destination: Path) -> None:
             _compile_roots(destination, paths["user_docs_work"], languages)
-            _index_site(destination, languages)
+            _index_site(destination, languages, paths["user_docs_work"])
 
         built = take_shared_site(
             build_root,
-            dev_cache_dir(SHARED_SITE_CACHE),
+            paths["user_docs_work"] / SHARED_SITE_CACHE,
             shared_site_identity(shared_inputs, languages),
             produce,
             validate_inputs=validate_inputs,
             reuse_shared=shared_cache,
         )
         if not built:
-            print("Reusing the user documentation another build configuration built from the same inputs", flush=True)
+            _log().status("reusing the documentation work target's site from the same inputs")
         validate_inputs()
         completed(build_root, input_identity)
 
@@ -154,7 +183,8 @@ def shared_site_identity(inputs_outside_the_build: str, languages: tuple[str, ..
     The documentation reads the sources, the registry authority and the
     declared languages. It does not read the platform, the architecture or the
     directory a configuration builds in, so those are not part of what names
-    it: two configurations of one checkout with the same inputs get one site.
+    it: configurations of byte-identical checkouts with the same enrolled
+    relative input names and selected authority get one site.
     """
     return hashlib.sha256(f"{inputs_outside_the_build}\n{','.join(languages)}".encode()).hexdigest()
 
@@ -247,7 +277,7 @@ def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> 
     # resolves, which is where the compile writes them.
     html_root = roots[OutputLanguage.EN.value].parent
     log = work / "compile.log"
-    print(f"Compiling the user documentation in {', '.join(languages)} once; log: {log}", flush=True)
+    _log().status(f"compiling the user documentation in {', '.join(languages)} once; log: {display_path(log)}")
     result = run_command(
         compile_command(html_root, build_root),
         cwd=REPO_ROOT,
@@ -255,13 +285,13 @@ def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> 
         errors="replace",
     )
     log.write_text(result.stdout + result.stderr, encoding="utf-8")
-    print(f"Documentation compile: exit {result.returncode} in {result.duration_seconds:.0f} s", flush=True)
+    _log().verbose(f"documentation compile exited with status {result.returncode} in {result.duration_seconds:.0f} s")
     if result.returncode:
         lines = log.read_text(encoding="utf-8").splitlines()
-        print(f"\nThe one documentation compile failed (exit {result.returncode}); log: {log}", file=sys.stderr)
-        print("\n".join(lines[-25:]), file=sys.stderr)
+        _log().error(f"the documentation compile failed with exit status {result.returncode}; log: {display_path(log)}")
+        _log().notice("\n".join(lines[-25:]))
         causes = [match.group(1) for line in lines if (match := _RAISED.search(line))]
-        print(f"cause: {causes[-1] if causes else 'see the log above'}", file=sys.stderr, flush=True)
+        _log().error(f"cause: {causes[-1] if causes else 'see the log excerpt above'}")
         raise SystemExit(f"User documentation compile failed: exit {result.returncode}")
     absent = sorted(language for language, root in roots.items() if not root.is_dir())
     if absent:
@@ -271,7 +301,7 @@ def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> 
         )
 
 
-def _index_site(build_root: Path, languages: tuple[str, ...]) -> None:
+def _index_site(build_root: Path, languages: tuple[str, ...], work: Path) -> None:
     """Build the site's ONE search index over every built root.
 
     Runs after every root has built, because the index spans all of them: each
@@ -286,7 +316,9 @@ def _index_site(build_root: Path, languages: tuple[str, ...]) -> None:
     Args:
         build_root: The documentation build root holding the language roots.
         languages: The declared languages, the apex language among them.
+        work: The build-owned documentation scratch directory.
     """
+    os.environ.update(compile_environment(work / "index-storage"))
     from dev.docs.build import ensure_isolated_storage_root, resolve_record_injector
     from dev.docs.pagefind_index import IndexedRoot, build_shared_search_index
     from dev.docs.pagefind_inject import InjectionStats
@@ -308,27 +340,28 @@ def _index_site(build_root: Path, languages: tuple[str, ...]) -> None:
     # The projections import the application to read the registry authority and
     # the live command tree, exactly as a root build does, so they get the same
     # scratch product storage rather than the workstation's own state.
+    # Index generation imports application services, so it must select build
+    # storage even when the invoking shell pins the operator's profile root.
     ensure_isolated_storage_root()
     stats: list[InjectionStats] = []
-    print(f"Indexing the documentation site once over {', '.join(languages)}", flush=True)
+    _log().status(f"indexing the documentation site once over {', '.join(languages)}")
     outcome = build_shared_search_index(
         indexed,
         apex[0].html_root,
         inject=resolve_record_injector(REPO_ROOT, PACKAGE_INDEX_ENVIRONMENT, on_complete=stats.append),
     )
     written = stats[0].custom_records_written if stats else 0
-    print(
-        f"Search index compiled: {outcome.page_count} pages of {len(languages)} languages "
+    _log().status(
+        f"search index compiled: {outcome.page_count} pages of {len(languages)} languages "
         f"+ {written} shared term/casilla/legal/CLI records "
-        f"-> {outcome.html_root / outcome.output_subdir}",
-        flush=True,
+        f"-> {display_path(outcome.html_root / outcome.output_subdir)}"
     )
 
 
 def main() -> None:
     """Build the roots for the CMake documentation target."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--inputs", type=Path, required=True)
     parser.add_argument("--target")
     parser.add_argument("--no-shared-cache", action="store_true")

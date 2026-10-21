@@ -36,8 +36,8 @@ from ....application.live.remote_state_models import (
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.json_contract import Notice, NoticeSeverity, emit_json_success
 from ....core.period import Period
-from .._app_live import _filed_capture_notices, _filed_pull_all_notices, _filed_pull_all_result_and_lines
-from .._app_live_filed_payloads import FiledCaptureResult, FiledCaptureSourcesResult
+from ..app_live_commands import _filed_capture_notices, _filed_pull_all_notices, _filed_pull_all_result_and_lines
+from ..app_live_filed_results import FiledCaptureResult, FiledCaptureSourcesResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -107,7 +107,9 @@ def test_the_transport_forwards_every_unreached_reason_as_its_own_notice() -> No
     notices = _filed_pull_all_notices(_run(*(_unreached_notice(reason) for reason in reasons)))
 
     relayed = [notice for notice in notices if notice.code == FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE]
-    assert {notice.context["reason"] for notice in relayed if notice.context} == {reason.value for reason in reasons}
+    assert {notice.context["reason"] for notice in relayed if (notice.context is not None and notice.context)} == {
+        reason.value for reason in reasons
+    }
     # One per reason. A builder that merged two dead ends into a single
     # "evidence not enrolled" notice would rebuild the uniform silence one layer
     # up, while still emitting something and still looking like a relay.

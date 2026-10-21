@@ -15,7 +15,7 @@ unmodified; everything is restored on exit.
 from __future__ import annotations
 
 import sys
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from importlib.abc import MetaPathFinder
 from importlib.machinery import ModuleSpec
@@ -44,7 +44,7 @@ class _AbsentPackageFinder(MetaPathFinder):
 
 
 @contextmanager
-def optional_extra_absent(extra: OptionalExtra) -> Iterator[None]:
+def optional_extra_absent(extra: OptionalExtra) -> Generator[None]:
     """Make ``extra``'s package unimportable for the scope, as an install without the extra is.
 
     Args:

@@ -26,8 +26,8 @@ from cadrumo.adapters.persistence.storage.custody.automation_native_identity imp
 )
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 _REVIEW_DIGEST = "a" * 64
 

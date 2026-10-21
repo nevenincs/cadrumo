@@ -24,11 +24,12 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     changed,
 )
 from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
-from cadrumo.application.user_profile.access_contracts import AuthorityState
 from cadrumo.application.user_profile.automation_administration import enrollment_review_digest
 from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentProposal, EnrollmentStage
+from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 
 pytestmark = [
     pytest.mark.integration,
@@ -311,7 +312,7 @@ def test_simple_grant_change_requires_original_live_requester(
     assert subject.approve(request.request_id).stage is EnrollmentStage.COMPLETE
 
 
-def test_agent_claims_are_not_authority_and_inventory_requires_human(subject: AdministrationSubject) -> None:
+def test_client_claims_are_not_authority_and_inventory_requires_human(subject: AdministrationSubject) -> None:
     fields = subject.proposal.model_dump(mode="json")
     fields["client_id"] = str(uuid4())
     with pytest.raises(ValidationError):

@@ -455,7 +455,11 @@ def merge_order(full_copy: tuple[RowKey, ...], predecessor_order: tuple[RowKey, 
     positions: dict[tuple[str, str], deque[int]] = {}
     for index, row in enumerate(full_copy):
         positions.setdefault(_match_key(row), deque()).append(index)
-    order = [queue.popleft() for row in predecessor_order if (queue := positions.get(_match_key(row)))]
+    order = [
+        queue.popleft()
+        for row in predecessor_order
+        if ((queue := positions.get(_match_key(row))) is not None and queue)
+    ]
     placed = frozenset(order)
     order.extend(index for index in range(len(full_copy)) if index not in placed)
     return tuple(full_copy[index] for index in order)

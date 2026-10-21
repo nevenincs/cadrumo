@@ -24,7 +24,8 @@ value at the very end) falls back to text rendering — the format wish is
 itself part of the unparseable input.
 
 The text-mode domain-refusal companion lives in
-:mod:`cadrumo.entrypoints.cli.tests.test_runtime_ledger_prefix_refusals_native`.
+:mod:`cadrumo_runtime.host.tests.frontend.cli.
+test_runtime_ledger_prefix_refusals_native`.
 It enrolls and admits a real private profile before requesting the malformed
 ledger prefix, so its human-rendering assertions reach the registered boundary.
 The session-only fixture here cannot establish that runtime admission.
@@ -43,7 +44,6 @@ diagnostic-log location, not an injected value.
 from __future__ import annotations
 
 import os
-import subprocess
 import sys
 import textwrap
 from pathlib import Path
@@ -54,10 +54,12 @@ from ....core.errors.error_codes import ErrorEnvelope
 from ....core.json_contract import ENVELOPE_SCHEMA_VERSION
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
+from ....tests.audited_process import run_audited_process
 from ....tests.cli_envelope import require_error_document
 from ....tests.env_scope import isolated_aeat_env
-from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
-from .cli_runner import invoke_cached_cli
+from ....tests.subprocess_cli import as_text_completed_process
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
+from .profile_world_fixtures import active_profile_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["active_profile_isolated_backend"]
@@ -111,11 +113,19 @@ def _assert_shared_spine(document: dict[str, object]) -> dict[str, object]:
 
 
 def test_json_usage_error_emits_shared_spine_document() -> None:
-    """A parse-time bad value emits the error document, exit 2 preserved."""
-    result = invoke_cached_cli(["--format", "json", "app", "ledger", "view", "not-hex!"])
+    """A parse-time bad value emits the error document, exit 2 preserved.
+
+    The value is refused by Click while parsing, so no runtime or sign-in is
+    asked for. A malformed ledger handle is not this case: it is a domain
+    refusal reached only after the profile is admitted, and the native
+    companion module holds its envelope.
+    """
+    result = invoke_cached_cli(["--format", "json", "app", "ledger", "list", "--limit", "not-a-number"])
     assert result.exit_code == 2, result.output
     error = _assert_shared_spine(require_error_document(result.output))
     assert error["category"] == "REFUSED"
+    assert error["code"] == "REFUSED_CLI_BOUNDARY", result.output
+    assert "--limit" in str(error["message"]), result.output
     assert "Usage:" not in result.output
 
 
@@ -192,17 +202,22 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
     """An unexpected exception emits the INTERNAL document (exit 6), not a traceback.
 
     Runs a real subprocess over a minimal app mounted on the production
-    :class:`CadrumoTyperGroup` so the terminal funnel is observed exactly as
-    an operator would: stderr payload, no traceback, registered exit code.
+    :class:`cadrumo_client.commands.suggestions.CadrumoTyperGroup` so the
+    terminal funnel is observed exactly as an operator would: stderr payload,
+    no traceback, registered exit code.
     """
     script = tmp_path / "crash_probe.py"
     script.write_text(
         textwrap.dedent(
             """
             import typer
-            from cadrumo.entrypoints.cli.command_suggestions import CadrumoTyperGroup
+            from cadrumo_client.commands.suggestions import CadrumoTyperGroup
+            from cadrumo.entrypoints.cli._terminal_errors import run_standalone_with_error_contract
 
-            app = typer.Typer(cls=CadrumoTyperGroup)
+            class TaxCrashGroup(CadrumoTyperGroup):
+                standalone_error_runner = staticmethod(run_standalone_with_error_contract)
+
+            app = typer.Typer(cls=TaxCrashGroup)
 
 
             @app.callback()
@@ -220,53 +235,59 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
         ),
         encoding="utf-8",
     )
-    json_run = subprocess.run(
-        [sys.executable, str(script), "boom", "--json"],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        timeout=None,
-        check=False,
+    json_run = as_text_completed_process(
+        run_audited_process(
+            [sys.executable, str(script), "boom", "--json"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=None,
+            check=False,
+        )
     )
     assert json_run.returncode == 6, json_run.stderr
     assert "Traceback" not in json_run.stderr
     error = _assert_shared_spine(require_error_document(json_run.stderr))
     assert error["code"] == "INTERNAL_CLI_UNEXPECTED_BOUNDARY"
 
-    text_run = subprocess.run(
-        [sys.executable, str(script), "boom"],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        timeout=None,
-        check=False,
+    text_run = as_text_completed_process(
+        run_audited_process(
+            [sys.executable, str(script), "boom"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=None,
+            check=False,
+        )
     )
     assert text_run.returncode == 6, text_run.stderr
     assert "Traceback" not in text_run.stderr
     assert not text_run.stderr.lstrip().startswith("{")
 
-    # The traceback is suppressed on stderr but MUST survive in the diagnostic
-    # log, because the document above tells the operator to go read it. Without
-    # this half, the stderr assertions above could be satisfied by deleting the
-    # log call outright and the crash would become untriageable.
+    # The static crash diagnostic must survive in the configured log. Raw
+    # exception text and traceback can contain caller input and stay out of
+    # plaintext diagnostics, as at the ordinary command boundary.
     state_root = tmp_path / "state"
     # The runner pins explicit category paths, and the child inherits them; the
     # log location under test is the one derived from the root alone.
     with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(state_root)):
         child_environment = dict(os.environ)
-    logged_run = subprocess.run(
-        [sys.executable, str(script), "boom", "--json"],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        timeout=None,
-        check=False,
-        env=child_environment,
+    logged_run = as_text_completed_process(
+        run_audited_process(
+            [sys.executable, str(script), "boom", "--json"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=None,
+            check=False,
+            env=child_environment,
+        )
     )
     assert logged_run.returncode == 6, logged_run.stderr
     assert "Traceback" not in logged_run.stderr
     diagnostic_log = state_root / storage_location(StorageCategory.LOG_FILE).relative_path()
     assert diagnostic_log.is_file(), f"no diagnostic log under {state_root}"
     logged = diagnostic_log.read_text(encoding="utf-8", errors="replace")
-    assert "Traceback" in logged, "the crash traceback must reach the diagnostic log"
-    assert "synthetic crash for the terminal funnel" in logged
+    assert "cli terminal boundary: unexpected exception type=ValueError" in logged
+    assert "Traceback" not in logged
+    assert "synthetic crash for the terminal funnel" not in logged

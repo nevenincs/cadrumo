@@ -204,6 +204,9 @@ beneath it. It is therefore the anchor rather than a member.
 _PROFILE_CAPSULE_ENVELOPE_LABEL = "profile-capsule.password-envelope"
 
 
+CONNECTION_SOCKET_DIRECTORY_ENVIRONMENT_VARIABLE: Final = "CADRUMO_RUNTIME_SOCKET_DIR"
+
+
 class StorageCategory(StrEnum):
     """Every application-chosen on-disk location, identified by scope and name.
 
@@ -216,13 +219,12 @@ class StorageCategory(StrEnum):
     TOKENS = "tokens"
     CHROMIUM_DATA = "chromium-data"
     TEMPORARY_FILES = "temporary-files"
-    RUNTIME_SOCKETS = "runtime-sockets"
+    CONNECTION_SOCKETS = "runtime-sockets"
     PLAYWRIGHT_BROWSERS = "playwright-browsers"
     OLLAMA_MODELS = "ollama-models"
     OLLAMA_HOME = "ollama-home"
+    DEPENDENCY_RECEIPTS = "dependency-receipts"
     GNOME_EXTENSIONS = "gnome-extensions"
-    DESKTOP_WEBVIEW = "desktop-webview"
-    CONSOLE_WORKSPACE = "console-workspace"
     SECRETS = "secrets"
     BLOBS = "blobs"
     LIVE_STATE = "live-state"
@@ -282,17 +284,11 @@ class StorageCategory(StrEnum):
     LOCAL_READER_FITNESS_VERDICTS = "local-reader-fitness-verdicts"
 
     # ── Fixed layout: runtime-written records under ``.runtime/`` ───────────
-    # Distinct from ``RUNTIME_SOCKETS``: that directory holds POSIX endpoints;
+    # Distinct from ``CONNECTION_SOCKETS``: that directory holds POSIX endpoints;
     # these records sit beside the installation identity in ``.runtime/``.
-    RUNTIME_BOOT_RECORD = "runtime-boot-record"
     RUNTIME_COORDINATION = "runtime-coordination"
     RUNTIME_INSTALLATION_RECORD = "runtime-installation-record"
     RUNTIME_INSTALLATION_LOCK = "runtime-installation-lock"
-    MANAGER_START_CLAIM = "manager-start-claim"
-    MANAGER_QUIT_RECORD = "manager-quit-record"
-    MANAGER_FAILED_VERSIONS = "manager-failed-versions"
-    MANAGER_PREFERENCES = "manager-preferences"
-    MANAGER_LOG_FILE = "manager-log-file"
 
     # ── Fixed layout: per-bucket ────────────────────────────────────────────
     BUCKET_DATABASE = "bucket.db"
@@ -349,6 +345,18 @@ class StorageLocation(BaseModel):
     New directories use the root's private mode; existing modes remain unchanged.
     """
 
+    runtime_owned: bool = False
+    """Only the installed runtime creates this member; its clients never materialise it.
+
+    The connection namespace and the ``.runtime/`` coordination records belong
+    to the runtime that owns the storage root. A command-line, terminal or MCP
+    client only observes them, so a missing member reads as no runtime rather
+    than being created on the runtime's behalf.
+    """
+
+    environment_variable: str | None = None
+    """Explicit environment name when it remains stable across settings renames."""
+
     settings_field: str | None = None
     """Flat :class:`~core.config.Settings` attribute holding the resolved path.
 
@@ -370,7 +378,7 @@ class StorageLocation(BaseModel):
     """
 
     consumer_module: str | None = None
-    """Production module that consumes this location, relative to ``src/cadrumo``.
+    """Production consumer path, relative to ``src/cadrumo`` or package-qualified under ``src``.
 
     Names the module, and a structural gate verifies the claim: that module must
     contain a real reference to this member -- an attribute load of the bound

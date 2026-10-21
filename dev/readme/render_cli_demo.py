@@ -30,7 +30,7 @@ FICHERO_PATH = DEMO_ROOT / "m115.boe"
 DISPLAY_COMMAND = (
     "aeat app quickfile --modelo=115 --year=2025 --period=1T --casilla=04=0 --output=var/readme-demo/m115.boe"
 )
-_CLI_BOOTSTRAP = "from cadrumo.entrypoints.cli.bootstrap import main; main()"
+_CLI_BOOTSTRAP = "from cadrumo_runtime.host.frontend.cli.bootstrap import main; main()"
 _CLI_ARGUMENTS = (
     "app",
     "quickfile",

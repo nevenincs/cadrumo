@@ -13,6 +13,10 @@ from uuid import UUID
 
 from pydantic import AnyHttpUrl, BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -50,12 +54,10 @@ from ..operations.operation_definition import OperationDefinition, OperationExec
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
-from .access_contracts import AccessDenialCode, Availability
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .access_errors import ProfileAccessRefusedError
 from .capsule_record import ProfileRecordConflictError
 from .censal_access import bind_whole_profile_censal_access
@@ -204,7 +206,7 @@ def _load_exact_baseline(
 ) -> UserProfileRecord:
     """Load the full encrypted record and reject a stale or mis-scoped baseline."""
     profile_id = require_active_bucket_id()
-    if profile_id != str(baseline.profile_id):
+    if profile_id != baseline.profile_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     record = ProfileRecordRepository.for_current_session(
         profile_id,
@@ -325,7 +327,7 @@ class CensalPreviewOperationExecutor:
     ) -> str:
         """Acquire one observation and persist its bounded exact-profile preview."""
         baseline = request.payload.baseline
-        profile_id = str(baseline.profile_id)
+        profile_id = baseline.profile_id
         if request.definition_id != CENSAL_PREVIEW_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, UUID(profile_id))
@@ -404,7 +406,9 @@ def build_censal_preview_operation_definition(
 
     return OperationDefinition(
         definition_id=CENSAL_PREVIEW_OPERATION_DEFINITION_ID,
+        public_error_detail=True,
         request_type=CensalPreviewOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=CensalPreviewOperationResult,
         executor_factory=OperationExecutorFactory(
             request_type=CensalPreviewOperationRequest,
@@ -427,7 +431,6 @@ def build_censal_preview_operation_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -449,7 +452,7 @@ def _validated_censal_preview_request(
         payload, CensalPreviewOperationRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    profile_id = str(payload.baseline.profile_id)
+    profile_id = payload.baseline.profile_id
     if payload.baseline.profile_id != str(context.profile_id) or request.subject_ref != profile_operation_subject(
         profile_id
     ):

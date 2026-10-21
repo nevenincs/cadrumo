@@ -37,6 +37,7 @@ from dev.registry.compiler.corpus_annotation import (
 from dev.registry.compiler.corpus_source_location import PACKAGED_DATA_ROOT, CorpusPathEscapeError, locate_corpus_file
 
 from .legal_grounding import PROVISION_SUFFIXED_FILENAME
+from .source_evidence_fingerprint import is_source_evidence_path
 
 _NORMATIVES_TREE_PREFIX: Final = "corpus/normatives/"
 _SOURCE_FULL_CONSOLIDATED_SIZE_FLOOR: Final = 10000
@@ -60,6 +61,8 @@ def verify_source_file(root: Path, source: GeneratedArtifactSource) -> Path:
     Structured manual citations are validated by their legal-reference owner;
     their availability does not establish or invalidate an acquired PDF's identity.
     """
+    if not is_source_evidence_path(PurePosixPath(source.corpus_path)):
+        raise RegistryValidationError(f"source {source.id!r} declares Python control code as corpus evidence")
     try:
         present_path = locate_corpus_file(root, source.corpus_path)
     except CorpusPathEscapeError as exc:

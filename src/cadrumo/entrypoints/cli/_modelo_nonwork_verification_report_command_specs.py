@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ._modelo_nonwork_command_spec_policies import _MODEL_READ
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -14,7 +11,10 @@ from .command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from .command_spec import CommandSpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._modelo_nonwork_command_spec_policies import _MODEL_READ
 
 MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -39,10 +39,12 @@ MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_records_cli", "verification_report_list", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".modelo_records_commands", "verification_report_list", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "VerificationReportListResult", __package__),
+            DeferredTarget(".modelo_results", "VerificationReportListResult", __package__),
             identity="modelo.verification_report.list",
         ),
     ),
@@ -63,10 +65,12 @@ MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_records_cli", "verification_report_show", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".modelo_records_commands", "verification_report_show", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "VerificationReportShowResult", __package__),
+            DeferredTarget(".modelo_results", "VerificationReportShowResult", __package__),
             identity="modelo.verification_report.view",
         ),
     ),

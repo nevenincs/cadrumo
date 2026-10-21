@@ -322,14 +322,9 @@ html.cadrumo-broadcast-dismissed .announcement {
 }
 
 .cadrumo-header-mark {
-  border-radius: 7px;
   display: block;
   height: 1.5rem;
   width: 1.5rem;
-}
-
-body[data-theme="dark"] .cadrumo-header-mark {
-  box-shadow: 0 0 0 1px var(--color-background-border);
 }
 
 .cadrumo-header-wordmark {

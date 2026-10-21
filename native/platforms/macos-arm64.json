@@ -105,6 +105,14 @@
     "/usr/lib/libffi.dylib",
     "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
     "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
-    "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation"
+    "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+    "/System/Library/Frameworks/WebKit.framework/Versions/A/WebKit",
+    "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices",
+    "/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon",
+    "/System/Library/Frameworks/CoreVideo.framework/Versions/A/CoreVideo",
+    "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
+    "/System/Library/Frameworks/ColorSync.framework/Versions/A/ColorSync",
+    "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+    "/usr/lib/libobjc.A.dylib"
   ]
 }

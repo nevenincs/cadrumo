@@ -9,6 +9,8 @@ pub mod ownership;
 #[cfg(windows)]
 pub mod publication;
 #[cfg(windows)]
+pub mod registration;
+#[cfg(windows)]
 pub mod runner;
 #[cfg(windows)]
 pub mod windows;

@@ -20,7 +20,7 @@ See Also:
 from __future__ import annotations
 
 import zipfile
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
@@ -31,7 +31,7 @@ from pydantic import ValidationError
 
 from ....core.hashing import sha256_hex
 from ....domain.invoices.errors import InvoiceValidationError
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.raw_transaction import SourceFormat
 from ....tests.xls_fixtures import XlsFormula, xls_workbook_bytes
 from ..bulk_import import BulkInvoiceImportRow, import_invoices_from_rows, read_bulk_invoice_import_source
@@ -45,7 +45,7 @@ _CIF = "A58818501"
 
 
 @contextmanager
-def _in_memory_ports() -> Iterator[CatalogueCreationPorts]:
+def _in_memory_ports() -> Generator[CatalogueCreationPorts]:
     yield in_memory_catalogue_creation_ports()
 
 

@@ -37,10 +37,6 @@ from cadrumo.application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsWorkspaceZoneStateV1,
 )
-from cadrumo.application.modelo.reconciliation_records import (
-    ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
-)
 from cadrumo.application.modelo.work_form_models import ModeloFormResultDirection
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.overview.calendar_models import (
@@ -75,6 +71,8 @@ from cadrumo.domain.modelos.filing_record import (
 from cadrumo.domain.modelos.work_unit import WorkUnitState
 
 from ..core.models import STRICT_FROZEN_CONFIG
+from .modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
+from .modelo.reconciliation_records import ModeloReconciliationDiffKind
 from .operations.public_period import PublicPeriod
 from .user_profile.censal_observation import CensalObservation
 from .workbench_generation_modelo_contracts import (

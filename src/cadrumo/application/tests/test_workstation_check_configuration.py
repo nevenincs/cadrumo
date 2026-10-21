@@ -34,8 +34,7 @@ def _report(monkeypatch: pytest.MonkeyPatch, *, profile_values: dict[str, str]) 
     vision = DependencyStatus(service="local-reader:vision_transcription", available=True)
     google = DependencyStatus(service="extra:google", available=True)
     browser = DependencyStatus(service="extra:browser", available=True)
-    anthropic = DependencyStatus(service="extra:anthropic", available=True)
-    extras = (google, browser, anthropic)
+    extras = (google, browser)
 
     def dependencies() -> tuple[tuple[DependencyStatus, ...], DependencyStatus, tuple[DependencyStatus, ...]]:
         return (vision, *extras), vision, extras

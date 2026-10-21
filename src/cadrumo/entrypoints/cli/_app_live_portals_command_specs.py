@@ -1,15 +1,7 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ._app_live_command_spec_support import (
-    _LEAF_INVOCATION,
-    _METADATA_GROUP_INVOCATION,
-    _METADATA_POLICY,
-    NO_RESULT_SCHEMA,
-)
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -18,8 +10,16 @@ from .command_shared_contracts import (
     SchemaState,
     ValueContract,
 )
-from .command_shared_contracts import translation_key as _key
-from .command_spec import CommandSpec
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._app_live_command_spec_support import (
+    _LEAF_INVOCATION,
+    _METADATA_GROUP_INVOCATION,
+    _METADATA_POLICY,
+    NO_RESULT_SCHEMA,
+)
 
 LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -68,10 +68,10 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_METADATA_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_portals_cli", "portals_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_portals_commands", "portals_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_portals_payloads", "PortalsListResult", __package__),
+            target=DeferredTarget("...application.reference_catalogue_contracts", "PortalsListResult", __package__),
             identity="app.live.portals.list",
         ),
     ),
@@ -93,10 +93,10 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_METADATA_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_portals_cli", "portals_show", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_portals_commands", "portals_show", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_portals_payloads", "PortalsViewResult", __package__),
+            target=DeferredTarget("...application.reference_catalogue_contracts", "PortalsViewResult", __package__),
             identity="app.live.portals.view",
         ),
     ),

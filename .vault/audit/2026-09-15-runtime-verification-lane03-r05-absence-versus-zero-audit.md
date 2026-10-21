@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-verification'
 date: '2026-09-15'
-modified: '2026-09-15'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:3168a1412b338e1594d90afced80cb870c715ec6b9a742ae198eb848d7f3dc41'
+body_hash: 'sha256:84e05478d7ce1460fb02afdc3e46aa1b1b07722a892f584ed513a77932e9964b'
 related:
   - "[[2026-09-15-runtime-verification-lane03-r04-complete-baseline-values-audit]]"
 ---
@@ -216,7 +216,7 @@ sys.exit(exit_code)
 Exit code: 0. No stderr. Complete emitted output:
 
 ```text
-{"descriptor": "Y:\\code\\cadrumo-worktrees\\main\\src\\cadrumo\\_data\\registry\\authority\\authority.current.json", "descriptor_logical_generation": "2bdbfabc832b91e9ec77345b342abc08a7416e6e84f6ceb4aa85f79af8222c66", "logical_generation": "2bdbfabc832b91e9ec77345b342abc08a7416e6e84f6ceb4aa85f79af8222c66", "matches_r04_generation": true, "reader_incarnation": "58c8da4666e1e366b6c137865cbca1f7291879dd878a2c636fda27576859ed74", "stage": "operation-pin"}
+{"descriptor": "src/cadrumo/_data/registry/authority/authority.current.json", "descriptor_logical_generation": "2bdbfabc832b91e9ec77345b342abc08a7416e6e84f6ceb4aa85f79af8222c66", "logical_generation": "2bdbfabc832b91e9ec77345b342abc08a7416e6e84f6ceb4aa85f79af8222c66", "matches_r04_generation": true, "reader_incarnation": "58c8da4666e1e366b6c137865cbca1f7291879dd878a2c636fda27576859ed74", "stage": "operation-pin"}
 {"revision": "2013-y-siguientes", "stage": "selected-revision"}
 {"binding_to_source_casilla": {"modelo-720-prior-year-cuentas-valoracion-baseline": "cuentas.valoracion", "modelo-720-prior-year-inmuebles-valoracion-baseline": "inmuebles.valoracion", "modelo-720-prior-year-valores-valoracion-baseline": "valores.valoracion"}, "stage": "published-bindings"}
 {"kind": "mapping", "resolved": {}, "stage": "case-A-absent-filing"}

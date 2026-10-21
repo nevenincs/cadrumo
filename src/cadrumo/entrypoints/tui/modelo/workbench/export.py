@@ -37,6 +37,7 @@ from .....core.payment_election import PaymentElection
 from .....core.prior_domiciliation_election import PriorDomiciliationElection
 from .....core.refund_election import RefundElection
 from .....domain.transactions.own_accounts import OwnAccountRole
+from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
 from ...ledger.own_accounts import LedgerOwnAccountDoorV1
 from ...ledger.workspace_presentation import door_refusal_text
@@ -150,9 +151,17 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
     @override
     def compose(self) -> ComposeResult:
         with Container(id="export-backdrop"), VerticalScroll(id="export-panel"):
-            yield Static(tr("tui.modelo.workbench.export.title"), id="export-title", markup=False)
-            yield Input(placeholder=tr("application.modelo.lifecycle.export_destination_placeholder"), id="export-path")
-            yield Static(tr("tui.modelo.export.artefact.label"), markup=False)
+            yield localized(
+                Static(tr("tui.modelo.workbench.export.title"), id="export-title", markup=False),
+                "tui.modelo.workbench.export.title",
+            )
+            yield localized(
+                Input(placeholder=tr("application.modelo.lifecycle.export_destination_placeholder"), id="export-path"),
+                "application.modelo.lifecycle.export_destination_placeholder",
+            )
+            yield localized(
+                Static(tr("tui.modelo.export.artefact.label"), markup=False), "tui.modelo.export.artefact.label"
+            )
             yield Select[str](
                 tuple(
                     (tr(EXPORT_ARTEFACT_LOCALE_KEYS[artefact]), artefact.value) for artefact in self._offer.artefacts
@@ -168,8 +177,14 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
             yield Checkbox(tr("tui.modelo.export.replace_existing.label"), id="export-replace")
             yield Static("", id="export-notice", markup=False)
             with Horizontal(id="export-actions"):
-                yield Button(tr("tui.modelo.workbench.editor.cancel"), id="export-cancel")
-                yield Button(tr("application.modelo.lifecycle.export"), id="export-submit", variant="primary")
+                yield localized(
+                    Button(tr("tui.modelo.workbench.editor.cancel"), id="export-cancel"),
+                    "tui.modelo.workbench.editor.cancel",
+                )
+                yield localized(
+                    Button(tr("application.modelo.lifecycle.export"), id="export-submit", variant="primary"),
+                    "application.modelo.lifecycle.export",
+                )
 
     def _compose_elections(self) -> ComposeResult:
         for control_id, label_key, keys, default in (
@@ -192,7 +207,7 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
                 PriorDomiciliationElection.KEEP.value,
             ),
         ):
-            yield Static(tr(label_key), markup=False)
+            yield localized(Static(tr(label_key), markup=False), label_key)
             yield Select[str](
                 tuple((tr(key), member.value) for member, key in keys.items()),
                 value=default,
@@ -202,7 +217,10 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
 
     def _compose_accounts(self) -> ComposeResult:
         for role, control_id in _ACCOUNT_CONTROLS.items():
-            yield Static(tr(f"tui.modelo.export.account.{role.value}_label"), markup=False)
+            yield localized(
+                Static(tr(f"tui.modelo.export.account.{role.value}_label"), markup=False),
+                f"tui.modelo.export.account.{role.value}_label",
+            )
             yield Select[str](
                 ((tr("tui.modelo.export.account.designated"), DESIGNATED_ACCOUNT),),
                 value=DESIGNATED_ACCOUNT,
@@ -306,6 +324,10 @@ class WorkbenchExportScreen(ModalScreen[WorkbenchExportRequest | None]):
     def action_cancel(self) -> None:
         """Leave without exporting."""
         self.dismiss(None)
+
+    async def refresh_language(self) -> None:
+        """Reword the open dialog without changing its inputs or decision."""
+        refresh_localized_widgets(self)
 
 
 __all__ = [

@@ -265,12 +265,12 @@ def test_only_active_journal_bound_old_backup_is_excluded_from_cutover_census(
     shutil.copytree(export_root, backup)
     manifest.write_bytes(new_bytes)
     journal = GeneratedExportPublicationJournal(
-        schema_version=1,
+        schema_version=2,
         state="candidate_live",
         modelo="232",
         revision_id="2016-2017",
-        candidate_export=str(registry_root / f"{paths.staging_prefix}consumed"),
-        backup_export=str(backup),
+        candidate_export=f"{paths.staging_prefix}consumed",
+        backup_export=backup.name,
         candidate_manifest_sha256=bridge.candidate_manifest_sha256,
     )
     write_generated_export_publication_journal(paths.journal, journal)

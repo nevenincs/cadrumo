@@ -42,27 +42,31 @@ registry engine plus the real CLI envelope serializer produced.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from typing import Any
 
 import pytest
+from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts,
     seed_test_profile_record,
 )
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
+from cadrumo_runtime.host.tests.frontend.cli.cli_runner import (
+    bind_public_cli_runner,
+    invoke_cached_cli,
+)
+from cadrumo_runtime.host.tests.frontend.cli.runtime_profile_backend import runtime_cli_profile
 
 from .._models import UnderDeclarationScenario
 from .._runner import check_under_declaration_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = "0ac1e000-0000-4000-8000-0000000002bb"
 _FILING_YEAR = 2025
 _PERIOD = "0A"
 _REVISION = "2025-y-siguientes"
@@ -72,13 +76,15 @@ _EXPECTED_LEGAL_REFS = ("ley-27-2014:art-10", "ley-27-2014:art-30")
 
 
 @pytest.fixture
-def runtime_profile(tmp_path: Any) -> Iterator[TestRuntimeProfile]:
+def runtime_profile(tmp_path: Any, run_cadrumo_cli: Callable[..., Result]) -> Iterator[TestRuntimeProfile]:
     """Real-session backend (real KEK/DEK, real SQLite per active bucket)."""
-    with isolated_cli_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_PROFILE_ID,
-        label="Under-declaration golden-eval test profile",
-    ) as profile:
+    with (
+        bind_public_cli_runner(run_cadrumo_cli),
+        runtime_cli_profile(
+            tmp_path=tmp_path,
+            label="Under-declaration golden-eval test profile",
+        ) as profile,
+    ):
         yield profile
 
 
@@ -96,7 +102,7 @@ def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:
     """
     record = create_user_profile_record(
         context=profile_authority_contexts()[0],
-        profile_id=_PROFILE_ID,
+        profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.name", value="Under Declaration Operator"),
@@ -126,7 +132,7 @@ def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:
     )
 
 
-def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestRuntimeProfile) -> None:
+def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestRuntimeProfile) -> str:
     """Dispatch a REAL ``modelo.work.calculate`` for a positive-00500/zero-00501 draft.
 
     Casilla ``00500`` (RESULTADO DE LA CUENTA DE PÉRDIDAS Y GANANCIAS, after-tax)
@@ -186,14 +192,16 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
     assert values.get("DP200014:00552") in (None, "0.00", "0"), (
         f"precondition broken: base imponible DP200014:00552 must cascade to zero, got {values.get('DP200014:00552')!r}"
     )
+    revision_id = payload["calculation_revision_id"]
+    assert isinstance(revision_id, str) and revision_id
+    return revision_id
 
 
-def _dispatch_m200_verify() -> tuple[dict[str, Any], ...]:
+def _dispatch_m200_verify(revision_id: str) -> tuple[dict[str, Any], ...]:
     result = invoke_cached_cli(
         [
             "--format", "json",
-            "app", "modelo", "work", "verify",
-            "--modelo", "200", "--year", str(_FILING_YEAR), "--period", _PERIOD,
+            "app", "modelo", "work", "verify", revision_id,
         ],
     )  # fmt: skip
     document = parse_json_object(result.output)
@@ -224,8 +232,8 @@ def test_m200_positive_resultado_zero_base_verify_surfaces_advisory(
     silent zero-finding grant), at least one of them is ADVISORY-kind, and it
     cites the exact legal grounding the registry predicate declares.
     """
-    _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile)
-    findings = _dispatch_m200_verify()
+    revision_id = _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile)
+    findings = _dispatch_m200_verify(revision_id)
 
     scenario = UnderDeclarationScenario(
         name="m200-resultado-positivo-base-cero-advisory",
@@ -285,8 +293,8 @@ def test_runner_rejects_a_response_with_the_advisory_stripped(
     populated. Proves ``advisory_finding_present``/``legal_refs_grounded`` catch
     the absence of the SPECIFIC advisory, not just an empty findings list.
     """
-    _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile)
-    findings = _dispatch_m200_verify()
+    revision_id = _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile)
+    findings = _dispatch_m200_verify(revision_id)
     assert any(f["kind"] == "advisory" for f in findings), "precondition: a real advisory must have fired"
     stripped = tuple(f for f in findings if f["kind"] != "advisory")
 

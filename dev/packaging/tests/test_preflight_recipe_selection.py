@@ -115,7 +115,7 @@ _ANCHOR_CAMPAIGN_PASSES: Final = frozenset(
 _TEST_WORKER_WIDTHS: Final = (None, 8)
 
 #: The argv prefix the driver builds every pytest pass on.
-_INVOCATION_PREFIX: Final = (sys.executable, "-m", "pytest")
+_INVOCATION_PREFIX: Final = (sys.executable, "-B", "-m", "pytest")
 
 #: Scheduler argument that pins a run to the controller process.
 _NO_WORKERS: Final = "-n0"

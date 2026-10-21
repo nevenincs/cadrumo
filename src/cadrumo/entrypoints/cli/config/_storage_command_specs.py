@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ..command_parameter_contracts import ArgumentSpec, OptionSpec
-from ..command_shared_contracts import (
+from cadrumo_client.commands.execution_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE, PROFILE_READ, STATE_FREE
+from cadrumo_client.commands.language_options import OUTPUT_LANGUAGE_OPTION as _OUTPUT_LANGUAGE_OPTION
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterDefault,
@@ -14,23 +14,16 @@ from ..command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from ..command_spec import CommandSpec, InvocationSpec
-from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE, PROFILE_READ, STATE_FREE
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
-_OUTPUT_LANGUAGE_OPTION = OptionSpec(
-    name="output_language",
-    declarations=("--output-language", "--language"),
-    value=ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__)),
-    default=ParameterDefault.value(None),
-    help_key=TranslationKey("cli.config.auth.output_language_help"),
-)
 _AREA = ValueContract(DeferredTarget("....core.storage_taxonomy", "StorageArea", __package__))
 
 
 def _schema(name: str, identity: str) -> ResultSchemaSpec:
     return ResultSchemaSpec(
         SchemaState.TARGET,
-        target=DeferredTarget(".storage_payloads", name, __package__),
+        target=DeferredTarget("....application.storage_management.documents", name, __package__),
         identity=identity,
     )
 

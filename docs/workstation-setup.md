@@ -59,9 +59,6 @@ The core install is lean. Each optional extra adds one capability:
 
 - `google` - Google Drive and Sheets export.
 - `browser` - live AEAT reads through browser automation.
-- `anthropic` - the Anthropic API as a hosted provider for
-  `aeat app ledger evidence extract --off-host-provider`, which sends a document
-  off your machine only when you acknowledge it for that one read.
 - `ofx` - OFX and QFX bank-statement import.
 - `llm` - on-host document reading with a local model runtime.
 - `pdf` - writing the calculation-summary PDF. Reading and verifying a summary
@@ -101,17 +98,22 @@ Two extras need a further provisioning step after the install:
   and the first step that fails stops the run. Setup installs the runtime
   only when you pass `--confirm`.
 
-  To go step by step, run the commands one at a time.
-  `aeat config provision install` installs the runtime through `winget` on
-  Windows or Homebrew on macOS, and only with `--confirm`; it does nothing
-  when the runtime is already installed. On Linux, install Ollama with its
-  upstream installer, which needs root. `aeat config provision start` starts
-  an installed runtime that is not answering, and does nothing when it
-  already answers. `aeat config provision pull` downloads every reader role's
-  model, a few GB in total. Narrow it with `--role` to one of
-  `vision_transcription`, `text_extraction`, `column_role_mapping`, or
-  `supply_nature_proposal`. `aeat config provision verify` confirms each model
-  loads and answers.
+  To set up only the local AI, run `aeat config provision pull`. The local AI
+  is one component: the runtime and every reader role's model. The command
+  installs the runtime when it is missing, through `winget` on Windows or
+  Homebrew on macOS, starts it, and downloads the models that are not ready
+  yet, a few GB in total. `--model` names one catalogue model to use instead
+  of the ones Cadrumo chooses. On Linux, install Ollama with its upstream
+  installer, which needs root. `aeat config provision start` starts an
+  installed runtime that is not answering, and does nothing when it already
+  answers. `aeat config provision verify --item local_ai` confirms the runtime
+  answers and each model loads and answers.
+
+  The commands work with or without a signed-in profile and with or without a
+  running Cadrumo. The same work is also available as the registered operations
+  `local-reader.provision`, `local-reader.status` and `local-reader.report`, and
+  the browser build as `browser-runtime.provision`. The full-screen app lists
+  them under **Operations** and an agent runs them with `execute`.
 
 LLM classification runs only on this local reader; no cloud provider is
 involved. See
@@ -122,17 +124,18 @@ Run `aeat config check` again after each change to confirm the gap is closed.
 ## Connect an AI assistant
 
 Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an agent
-to registered operations through the local runtime and binds each connection
-to an explicit profile ID. Run `cadrumo-mcp --help` to confirm it is on your
-path. In a source checkout, check the installed entrypoint with:
+to registered operations through the local runtime, either under your own
+Cadrumo sign-in or under an enrolled key for one profile. Run
+`cadrumo-mcp --help` to confirm it is on your path. In a source checkout, check
+the installed entrypoint with:
 
 ```bash
 uv sync
 uv run --no-sync cadrumo-mcp --help
 ```
 
-[Connect an agent](how-to/connect-an-agent.md) shows profile-bound registration
-and the grant request flow.
+[Connect an agent](how-to/connect-an-agent.md) shows both ways to connect and
+the grant request flow.
 
 ## Next steps
 

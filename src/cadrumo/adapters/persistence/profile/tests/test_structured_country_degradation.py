@@ -96,13 +96,14 @@ from cadrumo.domain.calculations.registry.authority import (
 from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
-from cadrumo.domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
 from cadrumo.domain.iva.establishment import StatedCountryCodeStatus, record_country_code_status
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.iva.supply_nature import SupplyNature
 from cadrumo.tests.country_vocabulary_specimens import an_uncatalogued_alpha2, an_uncatalogued_alpha3
 
+from .....domain.iva.classification import CustomerTaxStatus
+from .....domain.iva.schema import InvoiceKind, IvaTerritorialScope
 from ._invoice_confirmation_test_support import InvoiceAuthorityFixture, invoice_draft_extraction_kwargs
 from .evidence_test_support import (
     BUCKET_ID as _BUCKET_ID,

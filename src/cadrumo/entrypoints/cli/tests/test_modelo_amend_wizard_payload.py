@@ -24,7 +24,7 @@ from ....domain.modelos.filing_record import (
     FilingOrigin,
     ModeloRecordStatus,
 )
-from .._modelo_amend_wizard_payloads import WorkAmendWizardResult
+from ..modelo_amend_wizard_results import WorkAmendWizardResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -50,14 +50,11 @@ _READER_PROCESSES = 4
 _READER_WINDOW_SECONDS = 3.0
 _WRITER_WINDOW_SECONDS = 4.0
 _MINIMUM_READS = 50
-"""Both sides run on a CLOCK, not a count, and the writer's window is the longer.
+"""Synchronize startup, then keep rewriting until all readers have finished.
 
-A counted loop does not race here: spawning four interpreters and importing the
-package costs about a second, by which time a parent doing a fixed number of
-rewrites has already finished, so every read lands on the final payload and the
-test proves nothing. Measured -- the counted version passed while observing a
-single payload in three consecutive runs. Overlapping windows are what make the
-reads actually straddle a rewrite.
+Each reader retains both a measured race window and a minimum sample count.
+Interpreter startup and scheduler contention cannot consume that sample budget.
+The writer stays active throughout, and observing both payloads remains mandatory.
 """
 
 _SHORT_DIGEST = "a" * 8
@@ -80,8 +77,11 @@ from dev.registry.compiler.identity import read_registry_identity_stamp
 
 root = Path(os.environ[{_CHILD_ROOT_ENV_VAR!r}])
 observed = []
+sys.stdout.write("ready\\n")
+sys.stdout.flush()
+assert sys.stdin.readline() == "start\\n"
 deadline = time.monotonic() + {_READER_WINDOW_SECONDS}
-while time.monotonic() < deadline:
+while time.monotonic() < deadline or len(observed) <= {_MINIMUM_READS}:
     seen = read_registry_identity_stamp(root)
     observed.append(None if seen is None else [seen.tree_digest, seen.entry_count])
     # A hair of breathing room. Without it four readers hold the file open
@@ -142,6 +142,7 @@ async def _run_reader_race(
             _READER_SOURCE,
             cwd=str(Path.cwd()),
             env=environment,
+            stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -149,16 +150,25 @@ async def _run_reader_race(
     ]
     payloads = (_SHORT_DIGEST, _LONG_DIGEST)
     step = 0
-    deadline = time.monotonic() + _WRITER_WINDOW_SECONDS
     try:
-        while time.monotonic() < deadline:
+        for reader in readers:
+            assert reader.stdout is not None
+            assert (await reader.stdout.readline()).rstrip(b"\r\n") == b"ready"
+        for reader in readers:
+            assert reader.stdin is not None
+            reader.stdin.write(b"start\n")
+            await reader.stdin.drain()
+            reader.stdin.close()
+        communications = [asyncio.create_task(reader.communicate()) for reader in readers]
+        deadline = time.monotonic() + _WRITER_WINDOW_SECONDS
+        while time.monotonic() < deadline or step <= _MINIMUM_READS or not all(task.done() for task in communications):
             _write_with_retry(location, _stamp_text(payloads[step % 2]))
             step += 1
             await asyncio.sleep(0)
 
         results: list[list[list[object] | None]] = []
-        for reader in readers:
-            stdout, stderr = await asyncio.wait_for(reader.communicate(), timeout=None)
+        for reader, communication in zip(readers, communications, strict=True):
+            stdout, stderr = await communication
             assert reader.returncode == 0, f"a reading child failed: {stderr.decode('utf-8', errors='replace')}"
             results.append(json.loads(stdout.decode("utf-8", errors="replace")))
         return step, results

@@ -1,20 +1,20 @@
 //! Completed native registration removal, distinct from update/rollback gaps.
+use crate::change_watch::{CURRENT_USER, ChangeWatch, LOCAL_MACHINE};
 use cadrumo_application::installation::{
     DiscoveryContract, Selection,
     maintenance::{Identity, NativeOwner, NativeRegistration, RegistrationPhase, Store},
 };
-use std::{
-    io,
-    path::PathBuf,
-    time::{Duration, Instant},
-};
+use std::{io, path::PathBuf};
 
 pub struct InstallationWatch {
     entrypoint: PathBuf,
     application_id: String,
     owner: Option<NativeOwner>,
     store: Option<Store>,
-    next: Instant,
+    /// The publication store, the entry point's directory and both
+    /// registration keys: everything a removal changes.
+    changes: ChangeWatch,
+    observed: bool,
 }
 impl InstallationWatch {
     pub fn new(selected: &Selection) -> io::Result<Self> {
@@ -25,14 +25,17 @@ impl InstallationWatch {
             .entrypoint
             .parent()
             .ok_or_else(|| io::Error::from(io::ErrorKind::InvalidData))?;
-        let store = contract
+        let store_root = contract
             .layout
             .installation
             .publication
             .as_ref()
-            .map(|path| {
+            .map(|path| path.under(prefix));
+        let store = store_root
+            .clone()
+            .map(|root| {
                 Store::new(
-                    path.under(prefix),
+                    root,
                     Identity {
                         application_id: contract.installation_identity.application_id.clone(),
                         channel: contract.installation_identity.channel,
@@ -43,20 +46,23 @@ impl InstallationWatch {
             })
             .transpose()
             .map_err(io::Error::other)?;
+        let mut changes = ChangeWatch::default();
+        if let Some(root) = store_root {
+            changes.directory(root, false);
+            changes.directory(prefix.to_path_buf(), false);
+            let application_id = &contract.installation_identity.application_id;
+            for root in [CURRENT_USER, LOCAL_MACHINE] {
+                changes.registry_key(root, "Software", application_id)?;
+            }
+        }
         Ok(Self {
             entrypoint: selected.entrypoint.clone(),
             application_id: contract.installation_identity.application_id,
             owner: selected.registration.clone(),
             store,
-            next: Instant::now(),
+            changes,
+            observed: false,
         })
-    }
-    pub fn removed(&mut self) -> bool {
-        if Instant::now() < self.next {
-            return false;
-        }
-        self.next = Instant::now() + Duration::from_secs(2);
-        self.observe().unwrap_or(false)
     }
     fn observe(&mut self) -> io::Result<bool> {
         let Some(store) = &self.store else {
@@ -88,6 +94,23 @@ impl InstallationWatch {
         ))
     }
 }
+impl crate::lifecycle::RemovalObservation for InstallationWatch {
+    fn removed(&mut self) -> bool {
+        // Observed once, then again only when something a removal changes did change.
+        if !self.changes.take() && self.observed {
+            return false;
+        }
+        self.observed = true;
+        self.observe().unwrap_or(false)
+    }
+    fn readiness<'a>(&'a self, into: &mut crate::wake::windows::Readiness<'a>) {
+        if !self.observed {
+            into.now();
+        }
+        self.changes.readiness(into);
+    }
+}
+
 fn completed(
     expected: &mut Option<NativeOwner>,
     observed: Option<&NativeRegistration>,

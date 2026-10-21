@@ -1,17 +1,32 @@
 cmake_minimum_required(VERSION 4.4)
+list(APPEND CMAKE_MESSAGE_CONTEXT cadrumo distribution)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR "Use an out-of-source distribution build directory")
 endif()
 include(../Identity.cmake)
+include(../ToolchainFloor.cmake)
 file(READ "${CADRUMO_SOURCE_ROOT}/native/toolchain.json" toolchain)
-string(JSON required_cmake GET "${toolchain}" cmake)
-if(NOT CMAKE_VERSION VERSION_EQUAL required_cmake)
-  message(FATAL_ERROR "CMake ${required_cmake} is required")
+string(JSON cmake_floor GET "${toolchain}" cmake)
+cadrumo_floor_violation(cmake_violation "CMake" "${CMAKE_VERSION}" "${cmake_floor}")
+if(cmake_violation)
+  message(FATAL_ERROR "${cmake_violation}")
 endif()
 project(CADRUMO VERSION "${CADRUMO_ID_VERSION}"
   DESCRIPTION "${CADRUMO_ID_DESCRIPTION}" HOMEPAGE_URL "${CADRUMO_ID_HOMEPAGE}"
   SPDX_LICENSE "${CADRUMO_ID_LICENSE}" LANGUAGES NONE)
 set(CADRUMO_PAYLOAD "" CACHE PATH "Assembled native payload containing data/package-manifest.json")
+set(CADRUMO_PAYLOAD_BUILD "" CACHE PATH "Enrolled source build owning desktop bootstrap output; empty for standalone payloads")
+if(NOT CADRUMO_PAYLOAD_BUILD AND CADRUMO_PAYLOAD)
+  get_filename_component(payload_build_candidate "${CADRUMO_PAYLOAD}/../../.." ABSOLUTE)
+  get_filename_component(payload_build_parent "${payload_build_candidate}" DIRECTORY)
+  file(RELATIVE_PATH payload_build_relative "${payload_build_candidate}" "${CADRUMO_PAYLOAD}")
+  if(payload_build_parent STREQUAL "${CADRUMO_SOURCE_ROOT}/build"
+      AND payload_build_relative MATCHES "^stage/[^/]+/app$")
+    # Direct distribution presets can consume the canonical source build too.
+    # The command's existing --build admission verifies actual preset enrollment.
+    set(CADRUMO_PAYLOAD_BUILD "${payload_build_candidate}")
+  endif()
+endif()
 set(CADRUMO_DESKTOP_EXECUTABLE "" CACHE STRING "Payload-relative real desktop executable; empty for runtime-only packages")
 if(NOT IS_DIRECTORY "${CADRUMO_PAYLOAD}")
   message(FATAL_ERROR "Set CADRUMO_PAYLOAD to an assembled native payload")
@@ -19,23 +34,65 @@ endif()
 if(CADRUMO_DESKTOP_EXECUTABLE)
   set(desktop_args --desktop "${CADRUMO_DESKTOP_EXECUTABLE}")
 endif()
+cadrumo_build_fact("Payload" "${CADRUMO_PAYLOAD}")
+if(CADRUMO_DESKTOP_EXECUTABLE)
+  cadrumo_build_fact("Desktop executable" "${CADRUMO_DESKTOP_EXECUTABLE}")
+else()
+  cadrumo_build_fact("Desktop executable" "none (runtime-only package)")
+endif()
+if(CADRUMO_TARGET STREQUAL "windows-x86-64")
+  file(READ "${CADRUMO_PAYLOAD}/data/package-manifest.json" payload_manifest)
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CADRUMO_PAYLOAD}/data/package-manifest.json")
+  string(JSON payload_image_count LENGTH "${payload_manifest}" layout application_images)
+  set(installed_manager FALSE)
+  if(payload_image_count GREATER 0)
+    math(EXPR last_payload_image "${payload_image_count} - 1")
+    foreach(index RANGE 0 ${last_payload_image})
+      string(JSON payload_image_target GET "${payload_manifest}" layout application_images ${index} target)
+      if(payload_image_target STREQUAL "rust_manager")
+        set(installed_manager TRUE)
+      endif()
+    endforeach()
+  endif()
+endif()
 set(installation_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.installation)
 include(../CachedCommand.cmake)
 set(installation_inputs "${CADRUMO_PAYLOAD}" "${CADRUMO_PATH_GENERATED}/identity.json"
   "${CMAKE_BINARY_DIR}/build-paths.json" "${CADRUMO_SOURCE_ROOT}/LICENSE" "${CADRUMO_SOURCE_ROOT}/NOTICE"
-  "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-favicon.svg")
-foreach(helper installation installation_filesystem distribution_prepare build_paths hashing layout package_inventory docs_stage macos_launchagent)
+  "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-icon.svg")
+foreach(helper installation installation_plan installation_currency installation_filesystem installation_reuse distribution_prepare build_paths hashing layout package_inventory docs_stage macos_launchagent linux_desktop_runtime)
   list(APPEND installation_inputs "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/${helper}.py")
 endforeach()
+if(CADRUMO_TARGET MATCHES "^linux-")
+  execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
+    "from dev._paths import REPO_ROOT; from dev.packaging.native.linux_desktop_runtime import DEPENDENCY_INPUTS; print(';'.join((REPO_ROOT / name).as_posix() for name in DEPENDENCY_INPUTS))"
+    WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}"
+    OUTPUT_VARIABLE linux_desktop_dependency_inputs OUTPUT_STRIP_TRAILING_WHITESPACE
+    COMMAND_ERROR_IS_FATAL ANY)
+  list(APPEND installation_inputs ${linux_desktop_dependency_inputs})
+endif()
+# MSI authoring and maintenance own other members of installation/metadata.
+# Inventory only the files this producer writes; later MSI output must not make
+# the unchanged installation tree stale and trigger another complete copy.
+set(installation_outputs "${CADRUMO_PATH_INSTALLATION_STAGE}"
+  "${CADRUMO_PATH_INSTALLATION_METADATA}/installation.json")
+if(CADRUMO_TARGET STREQUAL "windows-x86-64" AND CADRUMO_DESKTOP_EXECUTABLE AND NOT installed_manager)
+  list(APPEND installation_outputs "${CADRUMO_PATH_INSTALLATION_METADATA}/Desktop.wxs"
+    "${CADRUMO_PATH_INSTALLATION_METADATA}/DesktopPatch.xml")
+endif()
 cadrumo_cached_command(installation_command installation_prepare INPUTS ${installation_inputs}
+  OUTPUTS ${installation_outputs})
+cadrumo_build_step(step_comment installation_prepare GROUP installation
+  SUMMARY "stage the payload as an installation tree with its metadata"
   OUTPUTS "${CADRUMO_PATH_INSTALLATION_STAGE}" "${CADRUMO_PATH_INSTALLATION_METADATA}")
 add_custom_target(installation_prepare ALL
   COMMAND ${installation_command} "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.distribution_prepare
     --payload "${CADRUMO_PAYLOAD}" --identity "${CADRUMO_PATH_GENERATED}/identity.json"
     --build "${CMAKE_BINARY_DIR}" ${desktop_args}
-  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" VERBATIM)
 add_dependencies(installation_prepare setup-native-builder)
-cadrumo_register_clean(TARGET installation_prepare PATHS "${CADRUMO_PATH_INSTALLATION_WORK}")
+cadrumo_register_clean(TARGET installation_prepare PATHS "${CADRUMO_PATH_INSTALLATION_WORK}"
+  "${CMAKE_BINARY_DIR}/.installation-staging.lock")
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Explicit development installation prefix" FORCE)
 endif()
@@ -45,10 +102,12 @@ install(DIRECTORY "${CADRUMO_PATH_INSTALLATION_STAGE}/" DESTINATION . USE_SOURCE
 set(CADRUMO_UNINSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "Exact prefix previously installed with cmake --install")
 set(CADRUMO_UNINSTALL_RECEIPT "${CADRUMO_PATH_INSTALLATION_METADATA}/installation.json"
   CACHE FILEPATH "Receipt identifying the installed prefix; older receipts are retained in installation/receipts")
+cadrumo_build_step(step_comment uninstall GROUP installation
+  SUMMARY "remove the prefix a cmake --install recorded in its receipt")
 add_custom_target(uninstall
   COMMAND ${installation_helper} uninstall --prefix "${CADRUMO_UNINSTALL_PREFIX}"
     --receipt "${CADRUMO_UNINSTALL_RECEIPT}"
-  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" VERBATIM)
 
 set(CPACK_PACKAGE_NAME "${CADRUMO_ID_NAME}")
 set(CPACK_PACKAGE_VENDOR "${CADRUMO_ID_PUBLISHER}")
@@ -76,20 +135,7 @@ if(CADRUMO_TARGET STREQUAL "windows-x86-64")
   set(CPACK_WIX_PROGRAM_MENU_FOLDER "${CADRUMO_ID_NAME}")
   set(CPACK_WIX_PROPERTY_ARPURLINFOABOUT "${CADRUMO_ID_HOMEPAGE}")
   set(CPACK_WIX_PROPERTY_ARPHELPLINK "${CADRUMO_ID_HOMEPAGE}/issues")
-  file(READ "${CADRUMO_PAYLOAD}/data/package-manifest.json" payload_manifest)
-  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CADRUMO_PAYLOAD}/data/package-manifest.json")
-  string(JSON payload_image_count LENGTH "${payload_manifest}" layout application_images)
-  set(installed_manager FALSE)
-  if(payload_image_count GREATER 0)
-    math(EXPR last_payload_image "${payload_image_count} - 1")
-    foreach(index RANGE 0 ${last_payload_image})
-      string(JSON payload_image_target GET "${payload_manifest}" layout application_images ${index} target)
-      if(payload_image_target STREQUAL "rust_manager")
-        set(installed_manager TRUE)
-      endif()
-    endforeach()
-  endif()
-  if(CADRUMO_DESKTOP_EXECUTABLE OR installed_manager)
+  if(CADRUMO_DESKTOP_EXECUTABLE AND NOT installed_manager)
     set(CPACK_WIX_EXTRA_SOURCES "${CADRUMO_PATH_INSTALLATION_METADATA}/Desktop.wxs")
     set(CPACK_WIX_PATCH_FILE "${CADRUMO_PATH_INSTALLATION_METADATA}/DesktopPatch.xml")
   endif()
@@ -128,6 +174,17 @@ elseif(CADRUMO_TARGET MATCHES "^linux-")
   set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
   set(CPACK_RPM_PACKAGE_LICENSE "${CADRUMO_ID_LICENSE}")
   set(CPACK_RPM_PACKAGE_REQUIRES "glibc >= ${glibc_floor}")
+  execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.linux_desktop_runtime
+    --payload "${CADRUMO_PAYLOAD}" --output "${CADRUMO_PATH_GENERATED}/LinuxDesktopRuntime.cmake"
+    WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMAND_ERROR_IS_FATAL ANY)
+  include("${CADRUMO_PATH_GENERATED}/LinuxDesktopRuntime.cmake")
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/linux_desktop_runtime.py"
+    ${linux_desktop_dependency_inputs})
+  if(CADRUMO_LINUX_DEB_DESKTOP_DEPENDS)
+    string(APPEND CPACK_DEBIAN_PACKAGE_DEPENDS ", ${CADRUMO_LINUX_DEB_DESKTOP_DEPENDS}")
+    string(APPEND CPACK_RPM_PACKAGE_REQUIRES ", ${CADRUMO_LINUX_RPM_DESKTOP_DEPENDS}")
+  endif()
   set(CPACK_RPM_PACKAGE_AUTOREQPROV ON)
   set(CPACK_RPM_PACKAGE_RELOCATABLE OFF)
   # Assembly owns every payload byte, ELF edit and Python bootstrap. Distro
@@ -149,6 +206,8 @@ elseif(CADRUMO_TARGET STREQUAL "macos-arm64")
   set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK OFF)
 endif()
 set(distribution_archive "${CADRUMO_PATH_PACKAGES}/${CPACK_PACKAGE_FILE_NAME}.zip")
+cadrumo_build_fact("Package formats" ${CPACK_GENERATOR} ZIP)
+cadrumo_build_fact("Packages" "${CADRUMO_PATH_PACKAGES}")
 include(CPack)
 function(cadrumo_distribution_package target generator)
   set(msi_guard)
@@ -157,11 +216,14 @@ function(cadrumo_distribution_package target generator)
       "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.windows_msi
       reject-combined --build "${CMAKE_BINARY_DIR}")
   endif()
+  cadrumo_build_step(step_comment ${target} GROUP package
+    SUMMARY "package the installation tree with the CPack ${generator} generator"
+    OUTPUTS "${CADRUMO_PATH_PACKAGES}")
   add_custom_target(${target}
     ${msi_guard}
     COMMAND "${CMAKE_CPACK_COMMAND}" --config "${CMAKE_BINARY_DIR}/CPackConfig.cmake"
       -C "$<CONFIG>" -G "${generator}"
-    DEPENDS installation_prepare USES_TERMINAL VERBATIM)
+    DEPENDS installation_prepare COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
 endfunction()
 if(CADRUMO_TARGET STREQUAL "windows-x86-64")
   set(CADRUMO_MSI_ADAPTER "" CACHE FILEPATH "Installer-only DLL built by the native rust_installer target")
@@ -179,50 +241,112 @@ if(CADRUMO_TARGET STREQUAL "windows-x86-64")
     endif()
     list(APPEND msi_adapter_arguments --runner "${CADRUMO_MSI_RUNNER}")
   endif()
+  cadrumo_build_step(step_comment msi-author GROUP package
+    SUMMARY "author the WiX sources for the MSI" OUTPUTS "${CADRUMO_PATH_INSTALLATION_METADATA}/wix")
   add_custom_target(msi-author
     COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.windows_msi author
       --build "${CMAKE_BINARY_DIR}" --identity "${CADRUMO_PATH_GENERATED}/identity.json" ${desktop_args} ${msi_adapter_arguments}
     DEPENDS installation_prepare
-    WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
+    WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" VERBATIM)
   cadrumo_register_clean(TARGET msi-author PATHS "${CADRUMO_PATH_INSTALLATION_METADATA}/wix")
   if(installed_manager)
     find_program(CADRUMO_WIX_EXECUTABLE NAMES wix DOC "WiX 5+ compiler for scoped MSI products")
     set(msi_build_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.windows_msi_build)
     set(msi_build_arguments --build "${CMAKE_BINARY_DIR}"
       --identity "${CADRUMO_PATH_GENERATED}/identity.json" ${desktop_args} ${msi_adapter_arguments})
+    cadrumo_build_step(step_comment msi GROUP package
+      SUMMARY "build the scoped MSI with WiX" OUTPUTS "${CADRUMO_PATH_PACKAGES}/msi")
+    set(msi_inputs "${CADRUMO_PATH_INSTALLATION_STAGE}"
+      "${CADRUMO_PATH_INSTALLATION_METADATA}/installation.json"
+      "${CADRUMO_PATH_GENERATED}/identity.json")
+    if(EXISTS "${CADRUMO_WIX_EXECUTABLE}")
+      list(APPEND msi_inputs "${CADRUMO_WIX_EXECUTABLE}")
+      # Global dotnet tool shims can keep identical bytes across a WiX update.
+      # A reconfigured tool version is a compiler input in its own right.
+      set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CADRUMO_WIX_EXECUTABLE}")
+      execute_process(COMMAND "${CADRUMO_WIX_EXECUTABLE}" --version
+        OUTPUT_VARIABLE msi_compiler_version OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET RESULT_VARIABLE msi_compiler_status)
+      set(msi_compiler_identity "${CMAKE_BINARY_DIR}/generated/msi-compiler.txt")
+      file(GENERATE OUTPUT "${msi_compiler_identity}"
+        CONTENT "${CADRUMO_WIX_EXECUTABLE}\n${msi_compiler_status}\n${msi_compiler_version}\n")
+      list(APPEND msi_inputs "${msi_compiler_identity}")
+    endif()
+    foreach(helper windows_msi windows_msi_build windows_msi_database windows_msi_identity windows_msi_single windows_msi_paths
+        installation installation_filesystem identity layout package_inventory build_paths hashing)
+      list(APPEND msi_inputs "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/${helper}.py")
+    endforeach()
+    foreach(artifact CADRUMO_MSI_ADAPTER CADRUMO_MSI_RUNNER)
+      if(${artifact})
+        list(APPEND msi_inputs "${${artifact}}")
+      endif()
+    endforeach()
+    cadrumo_cached_command(msi_command msi INPUTS ${msi_inputs}
+      OUTPUTS "${CADRUMO_PATH_PACKAGES}/msi")
     add_custom_target(msi
-      COMMAND ${msi_build_helper} build ${msi_build_arguments} --wix "${CADRUMO_WIX_EXECUTABLE}"
-      DEPENDS msi-author WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
+      COMMAND ${msi_command} ${msi_build_helper} build ${msi_build_arguments} --wix "${CADRUMO_WIX_EXECUTABLE}"
+      DEPENDS installation_prepare WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}"
+      COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+    cadrumo_build_step(step_comment msi-verify GROUP verification SUMMARY "verify the built MSI")
     add_custom_target(msi-verify
       COMMAND ${msi_build_helper} verify ${msi_build_arguments}
-      DEPENDS msi WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
-    add_custom_target(native-package DEPENDS msi-verify)
+      DEPENDS msi WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+    if(CADRUMO_DESKTOP_EXECUTABLE AND CADRUMO_MSI_RUNNER)
+      string(JSON bootstrap_directory GET "${payload_manifest}" layout installation bootstrap directory)
+      get_filename_component(payload_parent "${CADRUMO_PAYLOAD}" DIRECTORY)
+      # installation_prepare and msi admit the full payload and staged inventory
+      # before this action. Bind delivery to their receipts and actual artifacts,
+      # rather than repeating authoring and payload verification on every build.
+      set(msi_kit_inputs ${msi_inputs})
+      list(REMOVE_ITEM msi_kit_inputs "${CADRUMO_PATH_INSTALLATION_STAGE}")
+      list(APPEND msi_kit_inputs "${CADRUMO_PATH_INSTALLATION_METADATA}/wix/authoring.json"
+        "${CADRUMO_PATH_PACKAGES}/msi/compiled.json" "${CADRUMO_PATH_PACKAGES}/msi/application.msi"
+        "${CADRUMO_PAYLOAD}/data/package-manifest.json")
+      set(msi_kit_command)
+      if(CADRUMO_PAYLOAD_BUILD)
+        cadrumo_cached_command(msi_kit_command msi-bootstrap-kit BUILD "${CADRUMO_PAYLOAD_BUILD}"
+          INPUTS ${msi_kit_inputs} OUTPUTS "${payload_parent}/${bootstrap_directory}")
+      endif()
+      cadrumo_build_step(step_comment msi-bootstrap-kit GROUP package
+        SUMMARY "assemble the desktop bootstrap kit around the verified MSI")
+      add_custom_target(msi-bootstrap-kit
+        COMMAND ${msi_kit_command} ${msi_build_helper} kit ${msi_build_arguments} --payload "${CADRUMO_PAYLOAD}"
+        DEPENDS msi WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+      cadrumo_build_step(step_comment native-package GROUP package
+        SUMMARY "the native Windows package: verified MSI and desktop bootstrap kit")
+      add_custom_target(native-package DEPENDS msi-bootstrap-kit COMMENT "${step_comment}")
+    else()
+      cadrumo_build_step(step_comment native-package GROUP package SUMMARY "the verified native MSI")
+      add_custom_target(native-package DEPENDS msi-verify COMMENT "${step_comment}")
+    endif()
     set(CADRUMO_MSI_SCOPE "" CACHE STRING "Explicit maintenance scope: user or machine")
     set_property(CACHE CADRUMO_MSI_SCOPE PROPERTY STRINGS user machine)
     set(CADRUMO_MSI_PREFIX "" CACHE PATH "Explicit native MSI installation prefix")
+    cadrumo_build_step(step_comment install-msi GROUP installation
+      SUMMARY "install the verified MSI into CADRUMO_MSI_SCOPE and CADRUMO_MSI_PREFIX")
     add_custom_target(install-msi
       COMMAND ${msi_build_helper} install ${msi_build_arguments}
         --scope "${CADRUMO_MSI_SCOPE}" --prefix "${CADRUMO_MSI_PREFIX}"
-      DEPENDS msi-verify WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
+      DEPENDS msi-verify WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
     set(CADRUMO_MSI_REMOVE_VERSION "" CACHE STRING "Exact unanchored installed release to remove")
+    cadrumo_build_step(step_comment remove-msi-version GROUP installation
+      SUMMARY "remove the installed release CADRUMO_MSI_REMOVE_VERSION")
     add_custom_target(remove-msi-version
       COMMAND ${msi_build_helper} remove-version ${msi_build_arguments}
         --scope "${CADRUMO_MSI_SCOPE}" --prefix "${CADRUMO_MSI_PREFIX}"
         --version "${CADRUMO_MSI_REMOVE_VERSION}"
-      DEPENDS msi-verify WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
+      DEPENDS msi-verify WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+    cadrumo_build_step(step_comment unregister-msi GROUP installation
+      SUMMARY "unregister the installed MSI product")
     add_custom_target(unregister-msi
       COMMAND ${msi_build_helper} unregister ${msi_build_arguments}
         --scope "${CADRUMO_MSI_SCOPE}" --prefix "${CADRUMO_MSI_PREFIX}"
-      DEPENDS msi-verify WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
-    # Readiness is an independent refusal, so missing compilers do not hide the
-    # lifecycle blockers. It never installs products or changes login registration.
-    add_custom_target(check-msi-installation
-      COMMAND ${msi_build_helper} check-installation ${msi_build_arguments}
-      WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
-    cadrumo_register_clean(TARGET msi PATHS "${CADRUMO_PATH_PACKAGES}/msi")
+      DEPENDS msi-verify WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+    cadrumo_register_clean(TARGET msi PATHS "${CADRUMO_PATH_PACKAGES}/msi" "${CMAKE_BINARY_DIR}/.msi-products.lock")
   else()
     cadrumo_distribution_package(msi WIX)
-    add_custom_target(native-package DEPENDS msi)
+    cadrumo_build_step(step_comment native-package GROUP package SUMMARY "the native MSI")
+    add_custom_target(native-package DEPENDS msi COMMENT "${step_comment}")
   endif()
 elseif(CADRUMO_TARGET MATCHES "^linux-")
   cadrumo_distribution_package(deb DEB)
@@ -239,32 +363,41 @@ elseif(CADRUMO_TARGET MATCHES "^linux-")
       else()
         set(linux_inspector "${CADRUMO_RPM_EXECUTABLE}")
       endif()
+      cadrumo_build_step(step_comment ${format}-verify GROUP verification
+        SUMMARY "inspect the built ${format} package with its native tool")
       add_custom_target(${format}-verify
         COMMAND ${linux_package_helper} inspect ${linux_package_arguments} --format "${format}"
           --artifact "${CADRUMO_PATH_PACKAGES}/${linux_package_basename}.${format}" --tool "${linux_inspector}"
-        DEPENDS ${format} WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
+        DEPENDS ${format} WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
     endforeach()
+    cadrumo_build_step(step_comment check-linux-installation GROUP installation
+      SUMMARY "check the installed Linux packages on this host")
     add_custom_target(check-linux-installation
       COMMAND ${linux_package_helper} check-installation ${linux_package_arguments}
-      WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
-    add_custom_target(native-package DEPENDS deb-verify rpm-verify)
+      WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" VERBATIM)
+    cadrumo_build_step(step_comment native-package GROUP package SUMMARY "the inspected DEB and RPM packages")
+    add_custom_target(native-package DEPENDS deb-verify rpm-verify COMMENT "${step_comment}")
   else()
-    add_custom_target(native-package DEPENDS deb rpm)
+    cadrumo_build_step(step_comment native-package GROUP package SUMMARY "the DEB and RPM packages")
+    add_custom_target(native-package DEPENDS deb rpm COMMENT "${step_comment}")
   endif()
 elseif(CADRUMO_TARGET STREQUAL "macos-arm64")
   cadrumo_distribution_package(dmg DragNDrop)
-  add_custom_target(native-package DEPENDS dmg)
+  cadrumo_build_step(step_comment native-package GROUP package SUMMARY "the DMG disk image")
+  add_custom_target(native-package DEPENDS dmg COMMENT "${step_comment}")
 endif()
 # The generated `package` target builds ALL first; `zip` selects the portable
 # install-based archive independently of host installer tool availability.
 cadrumo_cached_command(distribution_zip_command zip
-  INPUTS "${CADRUMO_PATH_INSTALLATION_STAGE}" "${CADRUMO_PATH_INSTALLATION_METADATA}"
+  INPUTS ${installation_outputs}
     "${CMAKE_BINARY_DIR}/CPackConfig.cmake" "${CMAKE_BINARY_DIR}/cmake_install.cmake"
     "${CMAKE_BINARY_DIR}/VerifyInstall.cmake" "${CMAKE_CPACK_COMMAND}"
   OUTPUTS "${distribution_archive}")
+cadrumo_build_step(step_comment zip GROUP package
+  SUMMARY "package the installation tree as a portable ZIP" OUTPUTS "${distribution_archive}")
 add_custom_target(zip COMMAND ${distribution_zip_command} "${CMAKE_CPACK_COMMAND}"
   --config "${CMAKE_BINARY_DIR}/CPackConfig.cmake" -C "$<CONFIG>" -G ZIP
-  DEPENDS installation_prepare USES_TERMINAL VERBATIM)
+  DEPENDS installation_prepare COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
 add_custom_target(clean-package
   COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cleanup "${CMAKE_BINARY_DIR}" packages
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)

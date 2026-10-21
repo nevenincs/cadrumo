@@ -19,7 +19,9 @@ pins the distinction so a later sweep does not "fix" them:
   once the rate is pinned does row one mean super-reducido, row two reducido and row
   three general, so only then may the registry project a rate-specific carrier.
 - Box [18] is the recargo de equivalencia cuota, whose paired `Tipo % [17]` is a free
-  field in 2022, an enumeration of three tiers in 2023 and the early 2024 design, an
+  wire field in 2022, while LIVA art. 161.3 fixes the super-reduced population's
+  recargo. That population remains ledger-bound. The field is an enumeration of
+  three tiers in 2023 and the early 2024 design, an
   open note in the late 2024 design and a single constant in 2025. The registry
   follows each design rather than one shape.
 
@@ -101,7 +103,9 @@ def _design_row(revision_id: str, box: str) -> str:
 
 def _derived_state(revision: ModeloRevision, box: str) -> tuple[str, str | None]:
     row = next(row for row in revision.casillas if str(row.id) == box)
-    return str(row.input_kind), str(row.formula or row.binding) if (row.formula or row.binding) else None
+    return str(row.input_kind), str(row.formula or row.binding) if (
+        (row.formula is not None and row.formula) or (row.binding is not None and row.binding)
+    ) else None
 
 
 @pytest.mark.parametrize("box", sorted(_DERIVED_BOXES))
@@ -142,15 +146,15 @@ def test_the_rate_row_cuotas_are_derived_only_where_the_design_pins_their_rate()
             )
 
 
-def test_box_18_follows_its_own_designs_rate_constraint_rather_than_one_shape() -> None:
-    """The other kept divergence, stated as the designs state it."""
+def test_box_18_follows_design_constraints_and_the_2022_statutory_population() -> None:
+    """Free wire syntax does not erase the population defined by LIVA art. 161.3."""
     observed = {revision_id: _derived_state(_revision(revision_id), "18")[0] for revision_id in _REVISIONS}
     enumerated = {
         revision_id for revision_id in _REVISIONS if '"00000", "00050", "00062"' in _design_row(revision_id, "17")
     }
     assert enumerated, "no design enumerates the recargo tiers; the premise of this test is gone"
     for revision_id in _REVISIONS:
-        expected = "bound" if revision_id in enumerated else "manual"
+        expected = "bound" if revision_id == "2022" or revision_id in enumerated else "manual"
         assert observed[revision_id] == expected, (
             f"{revision_id}: [18] is {observed[revision_id]} while its design "
             f"{'enumerates' if revision_id in enumerated else 'does not enumerate'} the tiers"

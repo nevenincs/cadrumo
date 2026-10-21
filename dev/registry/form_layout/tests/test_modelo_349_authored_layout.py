@@ -17,7 +17,9 @@ def test_only_summary_boxes_have_official_numbers() -> None:
     (layout,) = revision.form_layouts
     assert form_layout_failures(revision) == ()
     assert layout.seed_source == "authored" and layout.review.state == "generated"
-    assert {p.casilla_id: str(p.box_number) for p in layout.placements if p.box_number} == {
+    assert {
+        p.casilla_id: str(p.box_number) for p in layout.placements if (p.box_number is not None and p.box_number)
+    } == {
         "decl.numero-operadores": "01",
         "decl.importe-operaciones": "02",
         "decl.numero-rectificaciones": "03",

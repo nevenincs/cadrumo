@@ -6,6 +6,7 @@ from collections.abc import Mapping, Sequence
 
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 
+from . import edition_delta_errors as _edition_delta_errors
 from . import edition_delta_fields as _edition_delta_fields
 from . import edition_delta_lineage_attestation as _edition_delta_lineage_attestation
 from . import edition_delta_source as _edition_delta_source
@@ -68,6 +69,34 @@ def storage_rows(source: _edition_delta_source._EditionSource) -> Mapping[str, _
             stored = _edition_delta_source._as_row(row)
             rows[_edition_delta_source._row_id(stored)] = stored
     return rows
+
+
+def manifest_operations(manifest: Mapping[str, object], name: str) -> tuple[_edition_delta_source._Row, ...]:
+    """Return one manifest operation array as ordinary row mappings."""
+    raw = manifest.get(name, ())
+    if not isinstance(raw, list | tuple):
+        return ()
+    return tuple({str(key): value for key, value in item.items()} for item in raw if isinstance(item, Mapping))
+
+
+def operations_with_replacements(
+    manifest: Mapping[str, object],
+    name: str,
+    replacements: Sequence[_edition_delta_source._Row],
+) -> tuple[_edition_delta_source._Row, ...]:
+    """Apply replacement operations by their exact predecessor selector."""
+    operations = list(manifest_operations(manifest, name))
+    for replacement in replacements:
+        selector = replacement.get("selector")
+        if not isinstance(selector, Mapping):
+            continue
+        matching = [index for index, operation in enumerate(operations) if operation.get("selector") == selector]
+        if len(matching) != 1:
+            raise _edition_delta_errors.MigrationRefusedError(
+                f"expected one {name} operation for selector {selector!r}, found {len(matching)}"
+            )
+        operations[matching[0]] = dict(replacement)
+    return tuple(operations)
 
 
 def reconcile_source_removals(

@@ -65,7 +65,7 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 
 from .supervision_support import run_to_settlement
-from .test_supervisor import (
+from .supervisor_test_support import (
     _SENSITIVE_EXCEPTION_DETAIL,
     SupervisorRequest,
     SupervisorResult,

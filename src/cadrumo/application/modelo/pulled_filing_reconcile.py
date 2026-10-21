@@ -101,7 +101,7 @@ def _pulled_filed_values(
         return None
     require_observation_envelope_coordinates_current(stored, operation=operation)
     coordinate = stored.registry_snapshot_ref
-    if (str(coordinate.modelo), coordinate.modelo_year, coordinate.period, coordinate.revision_id) != (
+    if (coordinate.modelo, coordinate.modelo_year, coordinate.period, coordinate.revision_id) != (
         str(work_unit.modelo),
         work_unit.filing_year,
         work_unit.period.registry_token,
@@ -161,7 +161,7 @@ def pulled_filing_divergence_findings(
         within tolerance.
     """
     filed_values = _pulled_filed_values(work_unit=work_unit, repository=observation_repository, operation=operation)
-    if not filed_values:
+    if not (filed_values is not None and filed_values):
         return []
 
     snapshot = _law_resolved_snapshot(work_unit, operation=operation)

@@ -208,7 +208,7 @@ def materialize_modelo_193_disclosure_phases(
         capital = observation.modelo_193_capital
         if capital is None:
             continue
-        recognized_on = date.fromisoformat(str(observation.accrued_on))
+        recognized_on = date.fromisoformat(observation.accrued_on)
         if recognized_on.year not in pending_disclosure_years:
             raise Modelo193PhaseMaterializationError("unsupported_accrual_year")
         allocation_key = _active_allocation_key(observation, capital)

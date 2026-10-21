@@ -44,15 +44,15 @@ from cadrumo.domain.filing.schema import (
 )
 from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.entrypoints.cli.common import resolve_notice_action
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
+from cadrumo.tests.cli_fixture_ports import CliInvocation
 
 from ..perf_measurement import CPU_CONTENTION_MARGIN
 
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
-    pytest.mark.usefixtures("overview_cli_backend"),
+    pytest.mark.usefixtures("overview_cli_backend", "cli_runtime_lifetime"),
 ]
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
@@ -90,13 +90,13 @@ _RETIRED_DEADLINES_VERBS = (
 )
 
 
-def test_overview_verb_help_renders() -> None:
+def test_overview_verb_help_renders(invoke_cli: CliInvocation) -> None:
     """Every `aeat app overview <verb> --help` renders cleanly; each
     verb is mounted and its help-text translation key resolves to a
     non-empty default."""
     violations: list[str] = []
     for verb in _OVERVIEW_VERBS:
-        result = invoke_cached_cli(["app", "overview", verb, "--help"])
+        result = invoke_cli(["app", "overview", verb, "--help"])
         if result.exit_code != 0:
             violations.append(f"{verb}: exit {result.exit_code}: {result.output!r}")
             continue
@@ -106,16 +106,16 @@ def test_overview_verb_help_renders() -> None:
     assert not violations, "\n".join(violations)
 
 
-def test_overview_status_returns_envelope_on_empty_bucket() -> None:
+def test_overview_status_returns_envelope_on_empty_bucket(invoke_cli: CliInvocation) -> None:
     """`aeat app overview status` against an isolated profile with no
     work units emits a typed envelope (no exception, no missing-data
     error). The verb is read-only and works without a populated bucket."""
 
-    result = invoke_cached_cli(["app", "overview", "status"])
+    result = invoke_cli(["app", "overview", "status"])
     assert result.exit_code == 0, result.output
 
 
-def test_overview_status_actions_match_fresh_resolution_in_one_bounded_invocation() -> None:
+def test_overview_status_actions_match_fresh_resolution_in_one_bounded_invocation(invoke_cli: CliInvocation) -> None:
     """One real overview invocation shares its inventory without changing actions.
 
     A sibling test separately proves the one-inventory-per-root lifecycle. This test uses
@@ -126,13 +126,13 @@ def test_overview_status_actions_match_fresh_resolution_in_one_bounded_invocatio
     """
     baseline_cpu_started = time.process_time()
     baseline_wall_started = time.perf_counter()
-    baseline = invoke_cached_cli(["--format", "json", "app", "overview", "status"])
+    baseline = invoke_cli(["--format", "json", "app", "overview", "status"])
     baseline_cpu_seconds = time.process_time() - baseline_cpu_started
     baseline_wall_seconds = time.perf_counter() - baseline_wall_started
 
     candidate_cpu_started = time.process_time()
     candidate_wall_started = time.perf_counter()
-    overview = invoke_cached_cli(["--format", "json", "app", "overview", "status"])
+    overview = invoke_cli(["--format", "json", "app", "overview", "status"])
     candidate_cpu_seconds = time.process_time() - candidate_cpu_started
     candidate_wall_seconds = time.perf_counter() - candidate_wall_started
 
@@ -179,6 +179,7 @@ def test_overview_status_actions_match_fresh_resolution_in_one_bounded_invocatio
 @pytest.mark.usefixtures("governed_fact_scope")
 def test_overview_status_period_filter_matches_typed_draft_period(
     operation: PinnedAuthorityOperation,
+    invoke_cli: CliInvocation,
 ) -> None:
     q1_draft = build_registry_filing_draft(
         modelo="130",
@@ -200,7 +201,7 @@ def test_overview_status_period_filter_matches_typed_draft_period(
     repository.save(q1_draft)
     repository.save(q2_draft)
 
-    result = invoke_cached_cli(["app", "overview", "status", "--period", "1T", "--year", "2026"])
+    result = invoke_cli(["app", "overview", "status", "--period", "1T", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
     assert q1_draft.draft_id in result.output
@@ -210,6 +211,7 @@ def test_overview_status_period_filter_matches_typed_draft_period(
 @pytest.mark.usefixtures("governed_fact_scope")
 def test_overview_status_period_filter_accepts_instalment_period(
     operation: PinnedAuthorityOperation,
+    invoke_cli: CliInvocation,
 ) -> None:
     p1_draft = _minimal_stored_draft(
         modelo="202",
@@ -229,7 +231,7 @@ def test_overview_status_period_filter_accepts_instalment_period(
     repository.save(p1_draft)
     repository.save(q1_draft)
 
-    result = invoke_cached_cli(["app", "overview", "status", "--period", "1P", "--year", "2026"])
+    result = invoke_cli(["app", "overview", "status", "--period", "1P", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
     assert "2026 1P" in result.output
@@ -240,6 +242,7 @@ def test_overview_status_period_filter_accepts_instalment_period(
 @pytest.mark.usefixtures("governed_fact_scope")
 def test_overview_status_period_display_matches_typed_period_in_text_and_json(
     operation: PinnedAuthorityOperation,
+    invoke_cli: CliInvocation,
 ) -> None:
     """The real overview CLI renders one canonical typed-period display in both formats."""
 
@@ -253,8 +256,8 @@ def test_overview_status_period_display_matches_typed_period_in_text_and_json(
     )
     ModeloDraftRepository().save(draft)
 
-    text_result = invoke_cached_cli(["app", "overview", "status", "--period", "1T", "--year", "2026"])
-    json_result = invoke_cached_cli(
+    text_result = invoke_cli(["app", "overview", "status", "--period", "1T", "--year", "2026"])
+    json_result = invoke_cli(
         ["--format", "json", "app", "overview", "status", "--period", "1T", "--year", "2026"],
     )
 
@@ -271,14 +274,14 @@ def test_overview_status_period_display_matches_typed_period_in_text_and_json(
 # ---------------------------------------------------------------------------
 
 
-def test_retired_deadlines_noun_group_is_unknown() -> None:
+def test_retired_deadlines_noun_group_is_unknown(invoke_cli: CliInvocation) -> None:
     """Reaching for `cadrumo deadlines ...` (or `aeat app deadlines ...`)
     must surface Click's "No such command" refusal. The verb tree
     retired the standalone deadlines noun-group; its surfaces live
     under `aeat app overview` (calendar, agenda, backlog)."""
     violations: list[str] = []
     for retired_verb in _RETIRED_DEADLINES_VERBS:
-        result = invoke_cached_cli(retired_verb)
+        result = invoke_cli(retired_verb)
         if result.exit_code == 0:
             violations.append(f"{retired_verb!r}: unexpectedly exited 0: {result.output!r}")
             continue

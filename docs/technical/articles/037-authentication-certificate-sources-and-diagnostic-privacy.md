@@ -21,7 +21,7 @@ Apoderado configuration is local and per profile. The two-page flow collects a r
 
 The named certificate-source registry supports register/re-point, list, select and remove, with local health checks for every registered certificate. Selecting a named certificate routes credentials through the witnessed active-profile state; each named passphrase comes only from the profile-scoped secret backend and never falls back to the global unnamed password. The local probe reports missing/unreadable/expired/expiring certificate states without contacting AEAT. Registry transformations (`src/cadrumo/application/auth/certificate_sources.py`) Source health and secret resolution (`src/cadrumo/application/auth/certificate_source_operations.py`) Witnessed credential route (`src/cadrumo/application/auth/credentials.py`)
 
-The source mutations update workflow state together with typed bucket events under active-profile, recovery and mutation guards. Selecting a source is separate from selecting the certificate auth provider; removing the active source clears that selection and prevents a same-path legacy unnamed credential from remaining effective. Auth-read requests are also credential-free and closed: a provider selector is accepted only for status/test, a diagnostic ID only for a detail view, and the response schema must match the requested kind. Event-backed registry mutation (`src/cadrumo/application/auth/certificate_source_operations.py`) Active selection and removal (`src/cadrumo/application/auth/certificate_sources.py`) Closed auth-read requests/results (`src/cadrumo/application/auth/auth_read_contracts.py`)
+The source mutations update workflow state together with typed bucket events under active-profile, recovery and mutation guards. Selecting a source is separate from selecting the certificate auth provider; removing the active source clears that selection and prevents a same-path legacy unnamed credential from remaining effective. Auth-read requests are also credential-free and closed: a provider selector is accepted only for status/test, a diagnostic ID only for a detail view, and the response schema must match the requested kind. Event-backed registry mutation (`src/cadrumo/application/auth/certificate_source_operations.py`) Active selection and removal (`src/cadrumo/application/auth/certificate_sources.py`) Closed auth-read requests/results (`src/cadrumo/application/auth/auth_read_command_ports.py`)
 
 Certificate passphrase updates use a durable secret-free intent, a backend request witness for matching retries, a completion witness, and a final event that clears the intent. The passphrase itself is supplied through a short-lived ephemeral secret, is wrapped in SecretStr for the backend, and is absent from workflow state and result payloads. Set/remove operations are exact-profile, human-authorized, and protected by the auth mutation span; the backend is an application port whose encryption details are outside this chunk. Secret mutation boundary (`src/cadrumo/application/auth/certificate_secret_operation.py`) Intent, retry and completion lifecycle (`src/cadrumo/application/auth/certificate_source_operations.py`) Durable mutation state (`src/cadrumo/application/auth/models.py`)
 
@@ -31,7 +31,7 @@ Auth diagnostics may contain raw HTML, screenshots, route facts and identity hin
 
 Malformed encrypted payloads are rejected with typed validation errors rather than partially displayed, and old optional payload fields remain readable when valid. A detail view without a phone-state observation carries a structured operator-decision verdict; the report operation updates the existing encrypted record instead of writing a separate plaintext report. Payload decoding and UTC checks (`src/cadrumo/application/auth/diagnostics.py`) Report update preparation (`src/cadrumo/application/auth/diagnostics.py`) Report receipt validation (`src/cadrumo/application/auth/diagnostic_report_operation.py`)
 
-The registered phone-state report operation requires the exact profile and a human-access policy, prepares the encrypted payload update before entering the irreversible save, and emits a typed not-found refusal when the diagnostic does not exist. Read requests similarly return only closed projection models, with detail fields and operator findings explicitly typed. Report executor and guarded persistence (`src/cadrumo/application/auth/diagnostic_report_operation.py`) Report access policy (`src/cadrumo/application/auth/diagnostic_report_operation.py`) Read projection contracts (`src/cadrumo/application/auth/auth_read_contracts.py`)
+The registered phone-state report operation requires the exact profile and a human-access policy, prepares the encrypted payload update before entering the irreversible save, and emits a typed not-found refusal when the diagnostic does not exist. Read requests similarly return only closed projection models, with detail fields and operator findings explicitly typed. Report executor and guarded persistence (`src/cadrumo/application/auth/diagnostic_report_operation.py`) Report access policy (`src/cadrumo/application/auth/diagnostic_report_operation.py`) Read projection contracts (`src/cadrumo/application/auth/auth_read_command_ports.py`)
 
 The modules show strong exact-profile routing, typed receipts, secret redaction and explicit live-operation limits. Storage encryption, filesystem permissions and backend concurrency are adapter responsibilities and were not tested. The lock race above is the primary confirmed local defect; no other issue is inferred from a missing implementation detail. No tests are in the assigned set. The external authority/catalogue material is not independently verified.
 
@@ -41,18 +41,18 @@ The modules show strong exact-profile routing, typed receipts, secret redaction 
 - auth/_mutation.py (56 lines) (`src/cadrumo/application/auth/_mutation.py`)
 - auth/acquisition_lock.py (480 lines) (`src/cadrumo/application/auth/acquisition_lock.py`)
 - auth/actions.py (50 lines) (`src/cadrumo/application/auth/actions.py`)
-- auth/apoderado_contracts.py (257 lines) (`src/cadrumo/application/auth/apoderado_contracts.py`)
+- auth/apoderado_command_ports.py (257 lines) (`src/cadrumo/application/auth/apoderado_command_ports.py`)
 - auth/apoderado_execution.py (301 lines) (`src/cadrumo/application/auth/apoderado_execution.py`)
 - auth/apoderado_flow.py (238 lines) (`src/cadrumo/application/auth/apoderado_flow.py`)
 - auth/apoderado_operation.py (265 lines) (`src/cadrumo/application/auth/apoderado_operation.py`)
 - auth/apoderado_repository.py (45 lines) (`src/cadrumo/application/auth/apoderado_repository.py`)
 - auth/apoderado_service.py (278 lines) (`src/cadrumo/application/auth/apoderado_service.py`)
 - auth/apoderado_text.py (24 lines) (`src/cadrumo/application/auth/apoderado_text.py`)
-- auth/auth_read_contracts.py (207 lines) (`src/cadrumo/application/auth/auth_read_contracts.py`)
+- auth/auth_read_command_ports.py (207 lines) (`src/cadrumo/application/auth/auth_read_command_ports.py`)
 - auth/catalogue.py (122 lines) (`src/cadrumo/application/auth/catalogue.py`)
 - auth/certificate_secret_backend.py (67 lines) (`src/cadrumo/application/auth/certificate_secret_backend.py`)
 - auth/certificate_secret_operation.py (335 lines) (`src/cadrumo/application/auth/certificate_secret_operation.py`)
-- auth/certificate_source_contracts.py (161 lines) (`src/cadrumo/application/auth/certificate_source_contracts.py`)
+- auth/certificate_source_command_ports.py (161 lines) (`src/cadrumo/application/auth/certificate_source_command_ports.py`)
 - auth/certificate_source_execution.py (206 lines) (`src/cadrumo/application/auth/certificate_source_execution.py`)
 - auth/certificate_source_operation.py (448 lines) (`src/cadrumo/application/auth/certificate_source_operation.py`)
 - auth/certificate_source_operations.py (795 lines) (`src/cadrumo/application/auth/certificate_source_operations.py`)

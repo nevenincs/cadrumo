@@ -12,14 +12,14 @@ BASES = ("https://cadrumo.neve.md/docs", "https://neve.md/cadrumo/docs")
 def probe(url: str, *, redirect_release: str | None = None) -> tuple[dict[str, str], bytes]:
     """Read a successful HTTPS response with a consistent monitoring identity."""
     parsed = urlsplit(url)
-    if parsed.scheme != "https" or not parsed.hostname:
+    if parsed.scheme != "https" or not (parsed.hostname is not None and parsed.hostname):
         raise ValueError("Health checks require HTTPS")
     connection = HTTPSConnection(parsed.hostname, timeout=20)
     try:
         connection.request("GET", parsed.path, headers={"User-Agent": "cadrumo-docs-health"})
         response = connection.getresponse()
         body = response.read()
-        if response.status == 302 and redirect_release:
+        if response.status == 302 and (redirect_release is not None and redirect_release):
             target = response.getheader("location", "")
             expected = f"https://cadrumo-docs-search.neve.md/releases/{redirect_release}/"
             if not target.startswith(expected):
@@ -68,7 +68,7 @@ def _check_mount_path(base: str, path: str) -> str:
     """Check mount path and return the release it answered from."""
     headers, _ = probe(base + path)
     release = headers.get("x-cadrumo-docs-release")
-    if not release:
+    if not (release is not None and release):
         raise ValueError(f"Missing release identity: {base}{path}")
     if headers.get("x-cadrumo-docs-delivery") != "static":
         raise ValueError(f"Documentation is not on native static delivery: {base}{path}")

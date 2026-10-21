@@ -13,9 +13,9 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.identity.documents import IdentityError
-from ...iva.classification import InvoiceKind, TransactionKind
+from ...iva.classification import TransactionKind
 from ...iva.oss import OssIossRegime
-from ...iva.schema import IvaRateKind
+from ...iva.schema import InvoiceKind, IvaRateKind
 from ..enums import (
     IvaRate,
     PaymentStatus,

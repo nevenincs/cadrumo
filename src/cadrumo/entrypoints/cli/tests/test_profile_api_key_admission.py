@@ -2,31 +2,28 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import cast
 from uuid import uuid4
 
 import pytest
 import typer
+from click.testing import Result
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
-
-from .. import _profile_authentication_gate as gate
-from .. import _profile_session_gate as session_gate
-from .. import runtime_profile_admission
-from .._profile_authentication_contract import (
+from cadrumo.entrypoints.cli import _profile_authentication_gate as gate
+from cadrumo.entrypoints.cli import _profile_session_gate as session_gate
+from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.profile_authentication import (
     ProfileAuthenticationMethod,
-    ProfileAuthenticationSecrets,
     ProfileSecretSourceOptions,
-    profile_authentication_posture,
 )
-from ..command_specs import COMMAND_GRAPH
-from ..config.secure_input import ProfileSecretChannel, ProfileSecretSelection
-from ..errors import CliRefusedBoundaryError
-from .cli_runner import invoke_cached_cli
+from cadrumo_client.commands.secure_input import ProfileSecretChannel, ProfileSecretSelection
+from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
+
+from ..profile_authentication_policy import profile_authentication_posture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -65,8 +62,10 @@ def _context(source: ProfileSecretSourceOptions) -> typer.Context:
         ("config", "profile", "archive", "export", "--output", "ignored.bundle"),
     ),
 )
-def test_api_method_without_protected_root_channel_refuses_before_admission(command: tuple[str, ...]) -> None:
-    result = invoke_cached_cli(("--profile-auth-method", "api-key", *command))
+def test_api_method_without_protected_root_channel_refuses_before_admission(
+    command: tuple[str, ...], run_cadrumo_cli: Callable[..., Result]
+) -> None:
+    result = run_cadrumo_cli(("--profile-auth-method", "api-key", *command))
     assert result.exit_code == 2
     assert "profile_secrets_api_key_requires_channel" not in result.output
 
@@ -106,15 +105,15 @@ def test_runtime_leaf_receives_explicit_api_method_before_local_session(
     monkeypatch.setattr(session_gate, "normalize_ambient_profile", lambda _ctx: None)
     monkeypatch.setattr("cadrumo.core.bucket_pointer.resolve_active_bucket_id", lambda: str(uuid4()))
     monkeypatch.setattr(gate, "_diagnose_unregistered_profile", lambda **_kwargs: False)
-    monkeypatch.setattr(
-        runtime_profile_admission,
-        "activate_runtime_profile",
-        lambda _ctx, **kwargs: events.append((kwargs["root_selection"], kwargs["method"])),
-    )
     source = ProfileSecretSourceOptions(stdin=True, method=ProfileAuthenticationMethod.API_KEY)
     # A grant change requires a stored reference for its independent fresh
     # reconciliation, so the raw-key route remains available to other leaves.
-    raw_key_leaves = gate._RUNTIME_PROFILE_KEYS - {"config_profile_automation_change"}
+    raw_key_leaves = {
+        node.spec.key
+        for node in COMMAND_GRAPH.nodes()
+        if profile_authentication_posture(node) is ProfileAuthenticationPosture.RESUME_FALLBACK
+        and node.spec.key in gate._PROFILE_CONNECTION_KEYS
+    } - {"config_profile_automation_change"}
     # Two leaves gate their own dispatch before the secret source is read: a
     # discard demands its audited confirmation, and a censo import reaches the
     # runtime only when it applies rather than previews. Supplying both is how
@@ -125,81 +124,14 @@ def test_runtime_leaf_receives_explicit_api_method_before_local_session(
         spec = COMMAND_GRAPH.node(key).spec
         assert profile_authentication_posture(COMMAND_GRAPH.node(key)) is ProfileAuthenticationPosture.RESUME_FALLBACK
         gate.preflight_parsed_leaf(
-            _context(source), graph=COMMAND_GRAPH, spec=spec, arguments=cast(Mapping[str, object], confirmations)
+            _context(source),
+            graph=COMMAND_GRAPH,
+            spec=spec,
+            arguments=cast(Mapping[str, object], confirmations),
+            load_connection_activator=lambda: (
+                lambda ctx, **kwargs: events.append((kwargs["root_selection"], kwargs["method"]))
+            ),
         )
     assert events == [(ProfileSecretSelection(ProfileSecretChannel.STDIN), ProfileAuthenticationMethod.API_KEY)] * len(
         raw_key_leaves
     )
-
-
-class _LoginWitness:
-    def __init__(self) -> None:
-        self.calls: list[str] = []
-        self.secret: bytearray | None = None
-
-    def resume_receipt(self) -> None:
-        self.calls.append("receipt")
-        raise AssertionError("API authentication must not attempt a human receipt")
-
-    def login_password(self, _secret: bytearray) -> None:
-        self.calls.append("password")
-        raise AssertionError("API authentication must not attempt password login")
-
-    def login_api_key(self, secret: bytearray) -> None:
-        self.calls.append("api_key")
-        self.secret = secret
-        assert bytes(secret) == b"synthetic-api-key"
-
-
-def test_api_login_consumes_once_and_wipes_the_mutable_secret(monkeypatch: pytest.MonkeyPatch) -> None:
-    witness = _LoginWitness()
-    monkeypatch.setattr(
-        runtime_profile_admission,
-        "read_profile_secret_payload",
-        lambda _model, *, selection: ProfileAuthenticationSecrets.model_validate({"api_key": "synthetic-api-key"}),
-    )
-    runtime_profile_admission._authenticate(
-        _context(ProfileSecretSourceOptions(method=ProfileAuthenticationMethod.API_KEY)),
-        cast(RuntimeFrontendClient, witness),
-        root_selection=ProfileSecretSelection(ProfileSecretChannel.STDIN),
-        profile_label=None,
-        method=ProfileAuthenticationMethod.API_KEY,
-    )
-    assert witness.calls == ["api_key"]
-    assert witness.secret == bytearray(len(b"synthetic-api-key"))
-
-
-@pytest.mark.parametrize(
-    ("method", "field"),
-    (
-        (ProfileAuthenticationMethod.PASSWORD, "api_key"),
-        (ProfileAuthenticationMethod.API_KEY, "profile_passphrase"),
-    ),
-)
-def test_selected_method_refuses_the_other_valid_payload(
-    monkeypatch: pytest.MonkeyPatch,
-    method: ProfileAuthenticationMethod,
-    field: str,
-) -> None:
-    witness = _LoginWitness()
-    monkeypatch.setattr(
-        runtime_profile_admission,
-        "read_profile_secret_payload",
-        lambda _model, *, selection: ProfileAuthenticationSecrets.model_validate({field: "synthetic-secret"}),
-    )
-    with pytest.raises(CliRefusedBoundaryError) as refused:
-        if method is ProfileAuthenticationMethod.API_KEY:
-            runtime_profile_admission._authenticate(
-                _context(ProfileSecretSourceOptions(method=method)),
-                cast(RuntimeFrontendClient, witness),
-                root_selection=ProfileSecretSelection(ProfileSecretChannel.STDIN),
-                profile_label=None,
-                method=method,
-            )
-        else:
-            runtime_profile_admission._password(
-                cast(RuntimeFrontendClient, witness), selection=ProfileSecretSelection(ProfileSecretChannel.STDIN)
-            )
-    assert refused.value.translated_message is not None
-    assert refused.value.translated_message.endswith("profile_secrets_method_mismatch")
-    assert witness.calls == []

@@ -10,6 +10,8 @@ from typing import Never
 
 import pytest
 
+from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
+
 from ....application.modelo.action_errors import WorkUnitMutationRefusedError
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.declaration_summary import DeclarationSummaryState
@@ -27,7 +29,6 @@ from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.filing_record import ModeloRecordCatalogue
 from ....domain.modelos.work_unit import WorkUnitCatalogue, WorkUnitState
 from ....entrypoints.adapter_composition import build_work_lifecycle_ports
-from ..modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _FIRST = Period.from_year_and_code(2026, "1T")
@@ -153,7 +154,7 @@ def test_two_real_rows_survive_one_stale_coordinate_without_its_amount_or_histor
     assert healthy.summary is None or healthy.summary.state is not DeclarationSummaryState.UNREADABLE
     assert bad.settled_result is None
     assert bad.summary is not None and bad.summary.state is DeclarationSummaryState.UNREADABLE
-    assert bad.summary.result is None and bad.summary.technical_reason
+    assert bad.summary.result is None and (bad.summary.technical_reason is not None and bad.summary.technical_reason)
     assert "technical_reason" not in bad.summary.model_dump()
     assert read_periods == [Period.from_year_and_code(2026, "1T")]
     assert all(row.work_unit_id == healthy.work_unit_id for row in projection.calculation_revisions)

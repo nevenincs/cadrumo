@@ -42,10 +42,10 @@ from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
 from ..calculations.registry.schema_base import DateAxis
 from ..identifiers import canonical_decimal_string
-from ..iva.classification import InvoiceKind, TransactionKind, resolve_transaction_kind_catalogue
+from ..iva.classification import TransactionKind, resolve_transaction_kind_catalogue
 from ..iva.errors import IvaRateNotFoundError, IvaValidationError
 from ..iva.oss import OssIossRegime, resolve_oss_ioss_regime_catalogue
-from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind, spanish_eu_member_state
+from ..iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, spanish_eu_member_state
 from ..transactions.raw_transaction import RawProvenance, SourceFormat
 from . import normalization as _normalization
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
@@ -909,11 +909,16 @@ class Invoice(BaseModel):
         _normalization.raise_first_invoice_violation(
             (
                 (
-                    (self.invoice_class == rectificativa, not self.series) == (True, True),
+                    (self.invoice_class == rectificativa, not (self.series is not None and self.series))
+                    == (True, True),
                     "a factura rectificativa must be issued in a specific series (RD 1619/2012 art. 6.1.a.2.º)",
                 ),
                 (
-                    (self.invoice_class == rectificativa, not self.rectifies_invoice_number) == (True, True),
+                    (
+                        self.invoice_class == rectificativa,
+                        not (self.rectifies_invoice_number is not None and self.rectifies_invoice_number),
+                    )
+                    == (True, True),
                     "a factura rectificativa must name the invoice it rectifies (LIVA art. 89)",
                 ),
                 (

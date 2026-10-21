@@ -11,10 +11,10 @@ Two narrow boundary exceptions wrap unexpected failures so they reach
 
 - :exc:`CliValidationBoundaryError` wraps a leaked
   :exc:`~pydantic.ValidationError`.
-- :exc:`CliUnexpectedBoundaryError` wraps any
+- :exc:`~cadrumo_client.commands.errors.CliUnexpectedBoundaryError` wraps any
   other non-control-flow exception.
 
-A third type, :exc:`CliRefusedBoundaryError`, is
+A third type, :exc:`~cadrumo_client.commands.errors.CliRefusedBoundaryError`, is
 reserved for refusals emitted in JSON mode whose payload is intentionally
 stderr-only.
 
@@ -44,9 +44,12 @@ import click
 import typer
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.commands import errors as _client_commands_errors
+from cadrumo_client.commands.errors import CliUnexpectedBoundaryError as _CliUnexpectedBoundaryError
+
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.operator_actions.models import PreconditionVerdict
-from ...application.operator_output.runtime_remedies import runtime_unavailable_remedy
+from ...application.operator_output.connection_remedies import connection_unavailable_remedy
 from ...core.click_context import argv_requests_json, json_output_requested
 from ...core.config_state_root import FormerProductStateError
 from ...core.errors.error_codes import (
@@ -55,7 +58,7 @@ from ...core.errors.error_codes import (
     render_error_json,
     render_error_text,
 )
-from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError, RecordedRegisteredError
+from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
 from ...core.errors.record_fault import internal_record_fault_context
 from ...core.json_contract import Notice, ResolvedPreconditionAction
 from ...core.redaction.rules import redact_for_cli_output
@@ -114,7 +117,7 @@ class CliValidationBoundaryError(CadrumoError):
     document is such a field: the operator's arguments are all correct and
     re-reading them discovers nothing. Splitting the two channels keeps the
     sentence readable and makes the failure diagnosable, which is the same split
-    :exc:`CliOutboundPayloadBoundaryError` and
+    :exc:`~cadrumo_client.commands.errors.CliOutboundPayloadBoundaryError` and
     :exc:`CliStoredDataValidationBoundaryError` already use.
 
     The context names the failing record, the field path and the rule broken,
@@ -140,50 +143,6 @@ class CliValidationBoundaryError(CadrumoError):
             context=internal_record_fault_context(error, record=record),
         )
         self.original_exception: ValidationError = error
-
-
-class CliUnexpectedBoundaryError(CadrumoError):
-    """Raised when a CLI callback leaks an unexpected exception.
-
-    Used for any exception that is not :class:`CadrumoError`,
-    :exc:`~pydantic.ValidationError`, or Typer/Click control flow. The
-    original exception is preserved on
-    :attr:`CliUnexpectedBoundaryError.original_exception`.
-
-    Attributes:
-        original_exception: The underlying exception raised by the
-            callback.
-    """
-
-    def __init__(self, error: Exception) -> None:
-        """Wrap ``error`` in the structured CLI boundary contract.
-
-        Args:
-            error: The unexpected exception raised inside the Typer
-                callback.
-        """
-        # An unexpected exception is a code or environment fault, not a storage
-        # repair instruction. The error envelope records an explicit
-        # no-recovery outcome at emission time.
-        # Name the fault without its message: messages can quote URLs or identifiers,
-        # while the exception type and the raising product frame cannot.
-        super().__init__(
-            translated_message="errors.internal.internal_cli_unexpected_boundary",
-            context={"exception_type": type(error).__name__, "raised_at": _raising_product_frame(error)},
-        )
-        self.original_exception: Exception = error
-
-
-def _raising_product_frame(error: BaseException) -> str:
-    """Return ``module:function:line`` of the innermost Cadrumo frame that raised ``error``."""
-    located = "unknown"
-    trace = error.__traceback__
-    while trace is not None:
-        module = trace.tb_frame.f_globals.get("__name__", "")
-        if isinstance(module, str) and module.startswith("cadrumo."):
-            located = f"{module}:{trace.tb_frame.f_code.co_name}:{trace.tb_lineno}"
-        trace = trace.tb_next
-    return located
 
 
 class CliStoredDataValidationBoundaryError(CadrumoError):
@@ -214,51 +173,6 @@ class CliStoredDataValidationBoundaryError(CadrumoError):
         """
         super().__init__(
             translated_message="errors.storage.stored_data_validation_boundary",
-        )
-        self.original_exception: ValidationError = error
-
-
-class CliOutboundPayloadBoundaryError(CadrumoError):
-    """Raised when the application builds an outbound payload that fails validation.
-
-    The third member of this family, and the one neither sibling covered.
-    :exc:`CliValidationBoundaryError` is scoped to input-time failures -- the
-    operator passed an invalid argument or body -- and
-    :exc:`CliStoredDataValidationBoundaryError` to drift on a record that was
-    valid when written. This case is neither: the operator's input was fine and
-    nothing was loaded, but a record the application ITSELF constructed on the
-    way out violated its own contract. That is a program defect, so it is
-    INTERNAL rather than REFUSED.
-
-    Classifying it as either sibling misdirects the operator. The observed case
-    was a Modelo 100 reconcile diverging on several casillas: the per-diff
-    grounding overflowed a bucket-event payload field, and the operator was told
-    "the command input failed validation, check the command's arguments" about
-    arguments that were entirely correct, on the modelo most likely to trigger
-    it.
-
-    Attributes:
-        original_exception: The underlying :exc:`~pydantic.ValidationError`
-            raised while constructing the outbound record.
-    """
-
-    def __init__(self, error: ValidationError, *, record: type[BaseModel] | None = None) -> None:
-        """Wrap ``error`` in the outbound-payload boundary contract.
-
-        Args:
-            error: The pydantic validation error raised while constructing a
-                payload the application emits or persists.
-            record: The model being validated, when the raising site knows it.
-                Supplying it is what lets the fault name its field path: a
-                :exc:`~pydantic.ValidationError` carries only the model's name,
-                so without the class every path component is redacted rather
-                than guessed at. Optional because several raise sites guard a
-                block in which more than one model is validated and genuinely
-                cannot say which one failed.
-        """
-        super().__init__(
-            translated_message="errors.internal.cli_outbound_payload_boundary",
-            context=internal_record_fault_context(error, record=record),
         )
         self.original_exception: ValidationError = error
 
@@ -298,61 +212,6 @@ class CliCommandGroupUnavailableError(CadrumoError):
         self.module = module
 
 
-class CliRefusedBoundaryError(CadrumoError):
-    """Raised when JSON-mode CLI must refuse a request with stderr-only output.
-
-    Refusals are emitted as plain stderr text even in JSON mode because
-    the structured payload contract intentionally does not expose them
-    on stdout.
-    """
-
-
-class CliRecordedOperationError(CliRefusedBoundaryError, RecordedRegisteredError):
-    """Preserve a supervised operation's declared code at the shared CLI boundary.
-
-    When the operation recorded its public error detail, the registered
-    code, its catalogue message, its scrubbed context and its typed
-    precondition verdict all arrive here, so the envelope says what the
-    in-process command would have said. The verdict is held privately, as
-    every registered error holds it, and never enters the envelope context.
-    """
-
-    def __init__(
-        self,
-        registered_code: str,
-        *,
-        context: Mapping[str, object] | None = None,
-        translated_message: str | None = None,
-        precondition_verdict: PreconditionVerdict | None = None,
-    ) -> None:
-        """Bind the recorded code, its presentation facts and its optional verdict."""
-        super().__init__(registered_code, context=context, translated_message=translated_message)
-        self._terminal_precondition_verdict = precondition_verdict
-
-    @property
-    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
-        """Return the typed verdict the stopped operation recorded, if any."""
-        return self._terminal_precondition_verdict
-
-
-class CliOperationStillRunningError(CadrumoError):
-    """Raised when a submitted operation has not settled within the command's wait.
-
-    The operation keeps running in the profile worker, so its effect is
-    unknown rather than refused: the command must not report a possibly
-    committed write as a refusal, and must not suggest repeating it. The
-    context names the operation and, where the command knows one, the read
-    that shows its outcome later.
-    """
-
-    def __init__(self, *, operation_id: str, effect: str, check_command: str | None = None) -> None:
-        """Name the unsettled operation, its last observed effect and how to check it."""
-        context: dict[str, object] = {"operation_id": operation_id, "effect": effect}
-        if check_command is not None:
-            context["check_command"] = check_command
-        super().__init__(translated_message="errors.locked.locked_cli_operation_still_running", context=context)
-
-
 def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     """Wrap ``callback`` so :class:`CadrumoError` emits the structured stderr form.
 
@@ -370,7 +229,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     - :exc:`~pydantic.ValidationError` is wrapped in
       :exc:`CliValidationBoundaryError`.
     - Any other non-control-flow exception is wrapped in
-      :exc:`CliUnexpectedBoundaryError`.
+      :exc:`~cadrumo_client.commands.errors.CliUnexpectedBoundaryError`.
 
     Typer/Click control-flow exceptions (e.g. :exc:`~click.exceptions.Exit`,
     :exc:`~click.Abort`, :exc:`~typer.Exit`) propagate untouched so the
@@ -549,7 +408,7 @@ def _resolve_active_profile_label() -> str | None:
 
         return active_profile_label()
     except Exception:  # identity resolution must never break error emit
-        _log.debug("cli error boundary: active-profile label resolution failed", exc_info=True)
+        _log.debug("cli error boundary: active-profile label resolution failed")
         return None
 
 
@@ -578,7 +437,7 @@ def _resolve_sandbox_notice() -> Notice | None:
 
         return sandbox_notice_for_active_bucket()
     except Exception:  # the sandbox indicator must never break error emit
-        _log.debug("cli error boundary: sandbox notice resolution failed", exc_info=True)
+        _log.debug("cli error boundary: sandbox notice resolution failed")
         return None
 
 
@@ -642,8 +501,9 @@ def render_error_payload(
     line without reconstructing a command or recovery sentence.
     """
     notice = sandbox_notice_for_error(error)
+    from cadrumo_client.commands.profile_authentication_notice import drain_profile_authentication_notices
+
     from ..payer_fact_migration_notices import drain_payer_fact_migration_notices
-    from ._profile_authentication_notice import drain_profile_authentication_notices
     from .common import resolve_notice_actions
 
     authentication_notices = resolve_notice_actions(
@@ -652,9 +512,9 @@ def render_error_payload(
     reason = getattr(error, "reason", None)
     if reason is None and isinstance(error, CadrumoError):
         reason = (error.context or {}).get("reason")
-    if reason is None and isinstance(error, CliRefusedBoundaryError) and error.args:
+    if reason is None and isinstance(error, _client_commands_errors.CliRefusedBoundaryError) and error.args:
         reason = error.args[0]
-    remedy = runtime_unavailable_remedy(reason if isinstance(reason, str) else None)
+    remedy = connection_unavailable_remedy(reason if isinstance(reason, str) else None)
     remedy_context = {"remedy": remedy} if remedy is not None else None
     if as_json:
         return render_error_json(
@@ -740,7 +600,7 @@ def _boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | 
 
     if isinstance(error, CliValidationBoundaryError):
         condition = CliExceptionPrecondition.VALIDATION_BOUNDARY
-    elif isinstance(error, CliUnexpectedBoundaryError):
+    elif isinstance(error, _CliUnexpectedBoundaryError):
         condition = CliExceptionPrecondition.UNEXPECTED_BOUNDARY
     elif isinstance(error, CliStoredDataValidationBoundaryError):
         condition = CliExceptionPrecondition.STORED_DATA_VALID
@@ -750,7 +610,7 @@ def _boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | 
         condition = CliExceptionPrecondition.CONFIG_BOUNDARY
     elif isinstance(error, NonTtyRefusedError):
         condition = CliExceptionPrecondition.STDIN_INTERACTIVE
-    elif isinstance(error, CliRefusedBoundaryError):
+    elif isinstance(error, _client_commands_errors.CliRefusedBoundaryError):
         condition = CliExceptionPrecondition.REFUSAL_RETRIED
     else:
         return None
@@ -792,6 +652,7 @@ def emit_error_and_exit(error: CadrumoError) -> Never:
         if projection.requested_leaf is not None:
             command = projection.requested_leaf.subject_leaf_key
 
+    _client_commands_errors.log_cli_boundary_failure("cli_command", error)
     code = get_registered_error_code(error)
     payload = render_error_payload(
         error,
@@ -992,7 +853,7 @@ def _project_former_product_state(error: Exception, callback: Callable[..., obje
     from .common import attach_cli_policy_verdict
 
     return attach_cli_policy_verdict(
-        CliRefusedBoundaryError(str(error)),
+        _client_commands_errors.CliRefusedBoundaryError(str(error)),
         verdict=former_product_state_verdict(FormerProductDetectionScope.STARTUP),
     )
 
@@ -1009,12 +870,6 @@ def _project_cadrumo_error(error: CadrumoError, callback: Callable[..., object])
         verdict = _active_profile_pointer_error_verdict(error)
         if verdict is not None:
             return attach_cli_policy_verdict(error, verdict=verdict)
-    from ...domain.calculations.registry.errors import RegistryError
-
-    if isinstance(error, RegistryError) and error.registry_failure is not None:
-        from ...application.calculations.registry_preconditions import calculation_registry_failure_verdict
-
-        return attach_cli_policy_verdict(error, verdict=calculation_registry_failure_verdict(error.registry_failure))
     storage_verdict = _storage_session_failure_verdict(error)
     if storage_verdict is not None:
         return attach_cli_policy_verdict(error, verdict=storage_verdict)
@@ -1102,19 +957,25 @@ def _storage_session_failure_verdict(error: CadrumoError) -> PreconditionVerdict
 
 
 def _project_validation_error(error: ValidationError, callback: Callable[..., object]) -> CadrumoError:
-    """Log the pydantic detail, then wrap the input-time validation failure.
+    """Log only validation structure, then wrap the input-time failure.
 
     The wrapped :class:`CliValidationBoundaryError` keeps the refusal SENTENCE
     free of the per-field error list, which is too noisy to read as prose, while
     carrying the failing record, field path and broken rule on the envelope's
-    ``context``. The log line stays: it holds the raw ``errors()`` payload,
-    including the input values the envelope deliberately withholds, which is
-    what an engineer triaging a failing surface or fixture needs.
+    ``context``. Pydantic messages, context and inputs can contain taxpayer
+    values, so the diagnostic record contains only error kinds and path shape.
     """
+    error_structure = [
+        {
+            "type": item["type"],
+            "loc": tuple(part if isinstance(part, int) else "<field>" for part in item["loc"]),
+        }
+        for item in error.errors(include_input=False, include_context=False, include_url=False)
+    ]
     _log.error(
         "command_error_boundary: pydantic ValidationError in %s: %s",
-        getattr(callback, "__name__", repr(callback)),
-        error.errors(),
+        getattr(callback, "__name__", type(callback).__name__),
+        error_structure,
     )
     boundary = CliValidationBoundaryError(error)
     from ...application.cli_exception_preconditions import nested_terminal_precondition_verdict
@@ -1154,17 +1015,13 @@ def _project_unexpected(error: Exception, callback: Callable[..., object]) -> Ca
     wrapped = _unwrap_cadrumo_error(error)
     if wrapped is not None:
         return _project_cadrumo_error(wrapped, callback)
-    # DEBUG, not ERROR: the stderr handler is level-gated while the file handler
-    # stays at DEBUG, so this keeps the traceback in the diagnostic log the
-    # operator's envelope points them at, and off the console. Printing it
-    # ahead of the translated envelope leaked absolute source paths and made a
-    # handled refusal read as a crash the CLI had failed to catch.
+    # Exception messages and traceback locals may contain private input.
     _log.debug(
-        "command_error_boundary: unexpected exception in %s",
-        getattr(callback, "__name__", repr(callback)),
-        exc_info=True,
+        "command_error_boundary: unexpected exception in %s type=%s",
+        getattr(callback, "__name__", type(callback).__name__),
+        type(error).__name__,
     )
-    return CliUnexpectedBoundaryError(error)
+    return _CliUnexpectedBoundaryError(error)
 
 
 def _project_boundary_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
@@ -1189,15 +1046,11 @@ def project_cli_boundary_error(error: Exception, callback: Callable[..., object]
         if projected is not None:
             return projected
     wrapped = _unwrap_cadrumo_error(error)
-    return _project_cadrumo_error(wrapped, callback) if wrapped is not None else CliUnexpectedBoundaryError(error)
+    return _project_cadrumo_error(wrapped, callback) if wrapped is not None else _CliUnexpectedBoundaryError(error)
 
 
 __all__ = [
     "CliCommandGroupUnavailableError",
-    "CliOperationStillRunningError",
-    "CliOutboundPayloadBoundaryError",
-    "CliRecordedOperationError",
-    "CliRefusedBoundaryError",
     "CliStoredDataValidationBoundaryError",
     "CliValidationBoundaryError",
     "boundary_no_recovery_verdict",

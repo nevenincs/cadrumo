@@ -35,11 +35,11 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.iva.classification import CustomerTaxStatus, IvaTerritorialScope
 from cadrumo.domain.iva.schema import IvaRateKind
 
 from ....core.classifier_input_source import ClassifierInputSource
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.classification import CustomerTaxStatus
+from ....domain.iva.schema import InvoiceKind, IvaTerritorialScope
 from ....domain.iva.supply_nature import SupplyNature
 from ..classification_assembly import (
     DeclaredFact,

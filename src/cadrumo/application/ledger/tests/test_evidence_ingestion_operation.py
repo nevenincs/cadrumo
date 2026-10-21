@@ -11,25 +11,20 @@ from uuid import uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ...modelo.tests.m036_operation_support import PROFILE_ID as POLICY_PROFILE_ID
 from ...modelo.tests.m036_operation_support import policy_decision
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.operation_definition import OperationDefinition
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
-    Availability,
-    DisclosureCategory,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..batch_ingest import (
     BatchItemResult,
@@ -84,7 +79,6 @@ def test_the_real_public_contract_compiles(subject: Subject) -> None:
     assert tuple(row.definition_id for row in definitions) == ("ledger.evidence.batch",)
     for definition in definitions:
         assert registry.lookup_public_registration(definition.definition_id).contract.result_schema is not None
-        assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
         assert OperationEffect.UNKNOWN in definition.capabilities.permitted_effects
         assert definition.capabilities.request_storage.value == "secure_reference"
 
@@ -205,7 +199,7 @@ def test_changed_planned_source_refuses_before_any_custody_write(subject: Subjec
     assert not subject.store.blobs and not subject.evidence.rows
 
 
-def test_complete_batch_tracks_draft_then_replay_manifest_even_when_row_is_no_op(
+def test_complete_batch_tracks_draft_then_replays_the_stored_reading_without_writing(
     subject: Subject, tmp_path: Path
 ) -> None:
     path = tmp_path / "invoice.pdf"
@@ -224,7 +218,7 @@ def test_complete_batch_tracks_draft_then_replay_manifest_even_when_row_is_no_op
     second = subject.operands.values[1]
     assert isinstance(second, LedgerEvidenceBatchExecutionResult)
     assert second.projection.run.items[0].status == "no_op"
-    assert second.projection.effect is OperationEffect.UPDATED and second.projection.write_count == 1
+    assert second.projection.effect is OperationEffect.NONE and second.projection.write_count == 0
     assert len(subject.shared_events.load().events) == 1
 
 
@@ -260,7 +254,7 @@ def test_foreign_profile_refuses_before_composition(subject: Subject, tmp_path: 
     assert subject.before_read is unused and not subject.operands.values
 
 
-def test_exact_human_all_period_dual_disclosure_policy(subject: Subject, tmp_path: Path) -> None:
+def test_exact_all_period_dual_disclosure_policy_on_every_frontend(subject: Subject, tmp_path: Path) -> None:
     definitions = build_ledger_evidence_ingestion_definitions(subject.compose)
     registrations = build_ledger_evidence_ingestion_registrations(definitions)
     registry = OperationRegistry(definitions=definitions, public_registrations=registrations)
@@ -286,37 +280,42 @@ def test_exact_human_all_period_dual_disclosure_policy(subject: Subject, tmp_pat
         authority_operation=subject.operation,
     )
     resolved = resolve_operation_access(registry=registry, request=request, context=context)
-    assert resolved.policy.requires_human and resolved.policy.requires_all_periods
+    assert resolved.policy.requires_all_periods and not resolved.policy.requires_human
     assert {row.category for row in resolved.policy.disclosures} == {
         DisclosureCategory.PROFILE_VALUES,
         DisclosureCategory.TAX_VALUES,
     }
-    assert isinstance(
-        policy_decision(resolved, registry, disclosures=resolved.policy.disclosures, human=True), AccessAllowed
-    )
-    assert isinstance(policy_decision(resolved, registry, disclosures=resolved.policy.disclosures), AccessDenied)
-    assert isinstance(
-        policy_decision(resolved, registry, disclosures=resolved.policy.disclosures, human=True, all_periods=False),
-        AccessDenied,
-    )
-    for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES):
+    # A session under the person's sign-in and one under an enrolled key are answered alike.
+    for human in (True, False):
+        assert isinstance(
+            policy_decision(resolved, registry, disclosures=resolved.policy.disclosures, human=human), AccessAllowed
+        )
         assert isinstance(
             policy_decision(
-                resolved,
-                registry,
-                human=True,
-                disclosures=frozenset(row for row in resolved.policy.disclosures if row.category is not category),
+                resolved, registry, disclosures=resolved.policy.disclosures, human=human, all_periods=False
             ),
             AccessDenied,
         )
+        for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES):
+            assert isinstance(
+                policy_decision(
+                    resolved,
+                    registry,
+                    human=human,
+                    disclosures=frozenset(row for row in resolved.policy.disclosures if row.category is not category),
+                ),
+                AccessDenied,
+            )
     observed = resolve_operation_access(
         registry=registry, request=request, context=replace(context, action=AccessAction.OBSERVE)
     )
     assert {row.category for row in observed.policy.disclosures} == {DisclosureCategory.OPERATION_METADATA}
-    with pytest.raises(ProfileAccessRefusedError):
-        resolve_operation_access(
-            registry=registry, request=request, context=replace(context, frontend=OperationFrontendProjection.MCP)
+    for frontend in OperationFrontendProjection:
+        elsewhere = resolve_operation_access(
+            registry=registry, request=request, context=replace(context, frontend=frontend)
         )
+        assert elsewhere.request.frontend is frontend
+        assert elsewhere.policy == resolved.policy
 
 
 def test_projection_rejects_terminal_effect_that_hides_real_writes(subject: Subject, tmp_path: Path) -> None:

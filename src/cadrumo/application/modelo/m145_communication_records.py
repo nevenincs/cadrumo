@@ -381,10 +381,10 @@ def derive_m145_communication_record_id(
     field_values: Mapping[str, str],
 ) -> M145CommunicationRecordId:
     """Return the content-addressed id for a Modelo 145 communication record."""
-    canonical_values = dict(sorted((str(key), str(value)) for key, value in field_values.items()))
+    canonical_values = dict(sorted(field_values.items()))
     return content_hash_hex(
         {
-            "bucket_id": str(bucket_id).strip(),
+            "bucket_id": bucket_id.strip(),
             "modelo": Modelo("145").value,
             "communication_year": communication_year,
             "period_token": _period_value(period_token),
@@ -585,8 +585,8 @@ def _issue(
         casilla_id=casilla.id if casilla is not None else casilla_id,
         data_type=casilla.data_type if casilla is not None else None,
         message=message,
-        legal_refs=tuple(str(ref) for ref in (casilla.legal_refs if casilla is not None else legal_refs)),
-        source_refs=tuple(str(ref) for ref in (casilla.source_refs if casilla is not None else source_refs)),
+        legal_refs=tuple(casilla.legal_refs if casilla is not None else legal_refs),
+        source_refs=tuple(casilla.source_refs if casilla is not None else source_refs),
     )
 
 
@@ -707,8 +707,8 @@ def validate_m145_communication_record(
         operation=operation,
     )
     revision = snapshot.revision
-    revision_legal_refs = tuple(sorted(str(ref) for ref in revision.legal_refs))
-    revision_source_refs = tuple(sorted(str(ref) for ref in revision.source_refs))
+    revision_legal_refs = tuple(sorted(revision.legal_refs))
+    revision_source_refs = tuple(sorted(revision.source_refs))
     casillas = casillas_by_id(revision)
     issues = _m145_authority_issues(record, revision, revision_legal_refs, revision_source_refs)
     issues.extend(_m145_unknown_casilla_issues(record, revision, revision_legal_refs, revision_source_refs))
@@ -1004,8 +1004,8 @@ def export_m145_communication_record(
         byte_length=len(payload),
         payload_sha256=sha256_hex(payload),
         payload=payload,
-        legal_refs=tuple(sorted(str(ref) for ref in layout.legal_refs)),
-        source_refs=tuple(sorted(str(ref) for ref in layout.source_refs)),
+        legal_refs=tuple(sorted(layout.legal_refs)),
+        source_refs=tuple(sorted(layout.source_refs)),
     )
     _emit_m145_communication_event(
         record,
@@ -1214,8 +1214,8 @@ def create_m145_communication_record(
         period_token=command.period_token,
         revision_id=snapshot.revision.id,
         field_values=field_values,
-        legal_refs=tuple(sorted(str(ref) for ref in snapshot.revision.legal_refs)),
-        source_refs=tuple(sorted(str(ref) for ref in snapshot.revision.source_refs)),
+        legal_refs=tuple(sorted(snapshot.revision.legal_refs)),
+        source_refs=tuple(sorted(snapshot.revision.source_refs)),
         created_at=now(),
         note=command.note,
     )

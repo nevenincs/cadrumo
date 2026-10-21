@@ -489,8 +489,8 @@ def _modelo_180_type2_row_value(
     """
     detail = row.property_detail
     values: dict[str, Decimal | str | int | bool | None] = {
-        "perceptor_nif": str(row.perceptor_nif),
-        "representative_nif": None if detail.representative_nif is None else str(detail.representative_nif),
+        "perceptor_nif": row.perceptor_nif,
+        "representative_nif": None if detail.representative_nif is None else detail.representative_nif,
         "perceptor_name": row.perceptor_name,
         "recipient_province_code": detail.recipient_province_code,
         "modality": detail.modality,

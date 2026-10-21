@@ -10,6 +10,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
@@ -28,11 +31,10 @@ from ..operations.operation_definition import OperationDefinition, OperationExec
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from .access_contracts import AccessDenialCode, Availability
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .access_errors import ProfileAccessRefusedError
 from .censal_access import bind_whole_profile_censal_access
 from .cotejo_apply import apply_cotejo
@@ -156,7 +158,7 @@ class CensalFileImportOperationResult(BaseModel):
         return self
 
 
-def _apply_censal_file_facts(
+def apply_censal_file_facts(
     *,
     profile_id: str,
     facts: tuple[CensalFileImportFact, ...],
@@ -207,7 +209,7 @@ class CensalFileImportOperationExecutor:
             async with context.cancellation.irreversible_section():
                 await context.events.effect(OperationEffect.UNKNOWN)
                 result = await asyncio.to_thread(
-                    _apply_censal_file_facts,
+                    apply_censal_file_facts,
                     profile_id=profile_id,
                     facts=payload.facts,
                     profile_decode_context=profile_decode_context,
@@ -248,6 +250,7 @@ def build_censal_file_import_operation_definition() -> OperationDefinition:
     return OperationDefinition(
         definition_id=CENSAL_FILE_IMPORT_OPERATION_DEFINITION_ID,
         request_type=CensalFileImportOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=CensalFileImportOperationResult,
         executor_factory=OperationExecutorFactory(
             request_type=CensalFileImportOperationRequest,
@@ -258,7 +261,6 @@ def build_censal_file_import_operation_definition() -> OperationDefinition:
         interaction_kinds=frozenset(),
         capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 
@@ -280,6 +282,7 @@ __all__ = [
     "CensalFileImportOperationRequest",
     "CensalFileImportOperationResult",
     "CensalFileImportProvenance",
+    "apply_censal_file_facts",
     "build_censal_file_import_operation_definition",
     "build_censal_file_import_operation_registration",
     "resolve_censal_file_import_operation_access",

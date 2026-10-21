@@ -38,12 +38,14 @@ from .....application.user_profile.censal_operation import (
 )
 from .....application.user_profile.censo_sync import CENSO_SOURCE_TAG
 from .....core.config import Settings
-from ...main import app as _live_app
+from ...main import cli_app
 from ...tests.cli_runner import invoke_cached_cli
-from .. import _censo_transport
-from .._censo_payloads import CensoFactPayload, CensoPullDivergencePayload, CensoPullResult
+from .. import censo_commands
 from .._censo_review_cli import confirm_censal_review
-from ..runtime_censal_contracts import CensalRuntimeReviewResult
+from ..censo_results import CensoFactPayload, CensoPullDivergencePayload, CensoPullResult
+from ..operation_censal_contracts import CensalReviewResult
+
+_live_app = cli_app()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -215,7 +217,7 @@ def test_a_clear_and_a_value_conflict_raise_separate_notices() -> None:
     cleared = CensoPullDivergencePayload(path="contact.postcode", profile_value=None, aeat_value="28001")
     contested = CensoPullDivergencePayload(path="identity.tax_id", profile_value="00000000T", aeat_value="99999999R")
 
-    both = _censo_transport._pull_notices(applied=False, adopted=(), divergences=(cleared, contested))
+    both = censo_commands._pull_notices(applied=False, adopted=(), divergences=(cleared, contested))
     codes = {notice.code for notice in both}
     assert "config.profile.censo.pull.cleared" in codes
     assert "config.profile.censo.pull.divergences" in codes
@@ -232,7 +234,7 @@ def test_a_clear_and_a_value_conflict_raise_separate_notices() -> None:
     }
 
     # And a run with only one kind raises only that one.
-    only_cleared = {n.code for n in _censo_transport._pull_notices(applied=False, adopted=(), divergences=(cleared,))}
+    only_cleared = {n.code for n in censo_commands._pull_notices(applied=False, adopted=(), divergences=(cleared,))}
     assert "config.profile.censo.pull.divergences" not in only_cleared
 
 
@@ -260,13 +262,13 @@ def test_a_divergence_whose_values_are_masked_says_so() -> None:
     masked = CensoPullDivergencePayload(path="identity.tax_id", profile_value=tax_id, aeat_value="99999999R")
     plain = CensoPullDivergencePayload(path="contact.postcode", profile_value=postcode, aeat_value="08001")
 
-    assert _censo_transport._values_are_withheld(masked)
-    assert not _censo_transport._values_are_withheld(plain)
+    assert censo_commands._values_are_withheld(masked)
+    assert not censo_commands._values_are_withheld(plain)
 
-    codes = {n.code for n in _censo_transport._pull_notices(applied=False, adopted=(), divergences=(masked,))}
+    codes = {n.code for n in censo_commands._pull_notices(applied=False, adopted=(), divergences=(masked,))}
     assert "config.profile.censo.pull.values_withheld" in codes
     # A readable disagreement must not claim its values were withheld.
-    plain_codes = {n.code for n in _censo_transport._pull_notices(applied=False, adopted=(), divergences=(plain,))}
+    plain_codes = {n.code for n in censo_commands._pull_notices(applied=False, adopted=(), divergences=(plain,))}
     assert "config.profile.censo.pull.values_withheld" not in plain_codes
 
 
@@ -288,7 +290,7 @@ def test_every_notice_reaches_the_plain_text_output() -> None:
         profile_value="CALLE MAYOR 1",
         aeat_value="CALLE REAL 2",
     )
-    notices = _censo_transport._pull_notices(applied=False, adopted=(), divergences=(cleared, contested))
+    notices = censo_commands._pull_notices(applied=False, adopted=(), divergences=(cleared, contested))
     assert {n.code for n in notices} == {
         "config.profile.censo.pull.divergences",
         "config.profile.censo.pull.cleared",
@@ -378,7 +380,7 @@ def test_pull_refuses_before_the_read_when_no_profile_is_active() -> None:
 
 def test_live_pull_contains_no_censal_write_authority() -> None:
     """The preview frontend cannot redeclare or invoke a censal write path."""
-    source = inspect.getsource(_censo_transport.censo_pull)
+    source = inspect.getsource(censo_commands.censo_pull)
     assert "apply_censal_read" not in source
     assert "apply_cotejo" not in source
     assert "apply_fact_changes(" not in source
@@ -386,9 +388,9 @@ def test_live_pull_contains_no_censal_write_authority() -> None:
 
 def test_apply_routes_through_the_canonical_reviewed_operation() -> None:
     """The CLI apply branch prepares and reviews through its bound runtime."""
-    source = inspect.getsource(_censo_transport.censo_pull)
+    source = inspect.getsource(censo_commands.censo_pull)
     assert "prepare_censal_review(ctx)" in source
-    assert "review_censal_with_runtime(" in source
+    assert "review_censal_operation(" in source
     assert "bound_profile_client(ctx)" in source
     assert "confirm_censal_review" in source
     assert "apply_cotejo" not in source
@@ -424,8 +426,8 @@ def test_reviewed_apply_outcomes_render_the_registered_projection() -> None:
         ),
     )
 
-    adopted, unchanged, divergences, source_url = _censo_transport._reviewed_pull_outcomes(
-        reviewed=CensalRuntimeReviewResult(projection=projection, applied=True),
+    adopted, unchanged, divergences, source_url = censo_commands._reviewed_pull_outcomes(
+        reviewed=CensalReviewResult(projection=projection, applied=True),
         effective={
             "contact.postcode": EffectiveValue(value=" 28013 "),
             "contact.fiscal_address_cadastral_reference": EffectiveValue(value=None),
@@ -474,6 +476,6 @@ def test_the_module_docstring_does_not_declare_the_pull_retired() -> None:
     retired. An operator who meets that word here concludes the surface
     in front of them does not exist, and stops looking for it.
     """
-    source = Path(inspect.getfile(_censo_transport)).read_text(encoding="utf-8")
+    source = Path(inspect.getfile(censo_commands)).read_text(encoding="utf-8")
     docstring = ast.get_docstring(ast.parse(source)) or ""
     assert "retired" not in docstring.lower()

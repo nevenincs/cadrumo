@@ -15,15 +15,16 @@ const docsStatic = fileURLToPath(
   new URL("../../../docs/_static", import.meta.url),
 );
 
-// The shell's two generated inputs, by the names the shell imports them
+// The shell's generated inputs, by the names the shell imports them
 // under. They are outputs of the build directory in use, so one build's are
 // never another's and nothing generated is written into the source tree.
 const GENERATED_INPUTS: Record<string, string> = {
   "virtual:desktop-strings": "chrome-strings.json",
   "virtual:desktop-palette.css": "palette.css",
+  "virtual:desktop-provider-icons": "provider-icons.json",
 };
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const identity = readIdentity();
   const generated = buildPath("desktop_frontend_generated");
   const ports = server();
@@ -41,12 +42,15 @@ export default defineConfig(({ mode }) => {
   // development server's unminified modules are not what ships; it is never
   // the product and nothing packages it.
   const scenarios = mode === "scenarios";
-  // The product has one entry. The development entry beside it is never an
+  // The product has a workspace and a lightweight loading entry. The development entry beside it is never an
   // input of the product build, and the boundary plugin refuses its modules
   // by any route.
   const input: Record<string, string> = scenarios
     ? { scenarios: resolve(root, "scenarios.html") }
-    : { index: resolve(root, "index.html") };
+    : {
+        index: resolve(root, "index.html"),
+        startup: resolve(root, "startup.html"),
+      };
   return {
     base: "./",
     cacheDir: buildPath("desktop_cache"),
@@ -76,6 +80,20 @@ export default defineConfig(({ mode }) => {
     },
     resolve: { alias: { "@": source } },
     plugins: [
+      {
+        name: "desktop-server-ports",
+        configResolved(config) {
+          if (
+            config.server.port !== ports.devPort ||
+            config.preview.port !== ports.previewPort ||
+            config.server.strictPort !== true ||
+            config.preview.strictPort !== true
+          )
+            throw new Error(
+              "Desktop server ports are fixed by just dev; port overrides and fallback are not supported.",
+            );
+        },
+      },
       react(),
       tailwindcss(),
       docsFixture(),
@@ -89,7 +107,7 @@ export default defineConfig(({ mode }) => {
           const file = resolve(generated, name);
           if (!existsSync(file))
             this.error(
-              `${name} has not been generated in ${generated}. Run "npm run bootstrap".`,
+              `${name} has not been generated in ${generated}. Build the desktop-frontend-generated target, or run just dev.`,
             );
           // The file itself: it is then watched and transformed as any
           // stylesheet or JSON module is.
@@ -106,11 +124,12 @@ export default defineConfig(({ mode }) => {
         },
         load(id) {
           if (id !== "\0desktop-content") return;
-          this.emitFile({
-            type: "asset",
-            fileName: "identity.json",
-            source: JSON.stringify(identity),
-          });
+          if (command === "build")
+            this.emitFile({
+              type: "asset",
+              fileName: "identity.json",
+              source: JSON.stringify(identity),
+            });
           return `export const identity = ${JSON.stringify(identity)};`;
         },
       },

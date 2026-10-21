@@ -42,7 +42,6 @@ from .action_ports import LedgerActionPorts
 from .actions_common import (
     blockers_by_source_transaction_id,
     normalise_timestamp,
-    raise_finalized_modelo_blocked,
     replace_transaction,
     require_transaction,
     resolve_bucket_event_repository,
@@ -60,6 +59,7 @@ from .actions_manual import (
 from .actions_manual import (
     update_manual_transaction_fields,
 )
+from .classify_patch import build_bulk_row_classification_patch
 from .id_resolution import resolve_transaction_id
 from .models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
@@ -123,7 +123,7 @@ def _normalise_bulk_classify_row(
             malformed_cells.append("<extra>")
             continue
         if value is not None and not isinstance(value, str):
-            malformed_cells.append(str(key))
+            malformed_cells.append(key)
             continue
         normalised_row[key] = (value.strip() or None) if value is not None else None
     return transaction_id, normalised_row, malformed_cells
@@ -249,9 +249,6 @@ def _apply_one_bulk_classify_row(
     folds the outcome into the accumulated counters, events, and catalogue.
     """
     idx, row, provided_patch_columns = parsed_row
-    patch_values: dict[str, object] = {"business_classification": row.classification}
-    patch_values.update({column: getattr(row, column) for column in provided_patch_columns})
-    patch = ManualLedgerTransactionPatch.model_validate(patch_values)
     try:
         resolved_transaction_id = resolve_transaction_id(row.transaction_id, working.transactions.keys())
         current = require_transaction(working, resolved_transaction_id)
@@ -263,14 +260,11 @@ def _apply_one_bulk_classify_row(
                     "lifecycle_state": current.lifecycle_state.value,
                 },
             )
+        patch = build_bulk_row_classification_patch(
+            row, provided_patch_columns, current=current, operation=ports.operation
+        )
         source_ids = transaction_modelo_source_ids(current)
         blockers = tuple(b for txid in source_ids for b in blockers_by_txid.get(txid, ()))
-        if blockers:
-            raise_finalized_modelo_blocked(
-                operation="ledger transaction update",
-                transaction_ids=source_ids,
-                blockers=blockers,
-            )
         command = _command_from_patch(
             bucket_id=bucket_id,
             current=current,
@@ -284,6 +278,9 @@ def _apply_one_bulk_classify_row(
             previous_transaction_id=resolved_transaction_id,
             now=now,
             ports=ports,
+            # Every row of the table states a classification, changed or not.
+            decides_classification=True,
+            finalized_blockers=blockers,
         )
         if prepared is None:
             # field-for-field identical â€” classification already applied.

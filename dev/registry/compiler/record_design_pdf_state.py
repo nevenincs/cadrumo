@@ -1068,7 +1068,11 @@ def _recover_inline_constants(sheets: tuple[RecordDesignSheet, ...]) -> tuple[Re
     for sheet in sheets:
         fields: list[RecordDesignField] = []
         for design_field in sheet.fields:
-            match = None if design_field.content else _INLINE_CONSTANT_RE.search(design_field.description or "")
+            match = (
+                None
+                if (design_field.content is not None and design_field.content)
+                else _INLINE_CONSTANT_RE.search(design_field.description or "")
+            )
             if match is None:
                 fields.append(design_field)
                 continue

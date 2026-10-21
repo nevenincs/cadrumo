@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import base64
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -22,11 +22,8 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import p
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
-    Availability,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
@@ -36,16 +33,16 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionState,
 )
 from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
     AdministrationFacts,
-    EnrollmentKind,
-    EnrollmentProposal,
     EnrollmentRecord,
     EnrollmentRequester,
     ProtectedEnrollmentRecipient,
 )
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 
 NOW = datetime(2026, 9, 26, tzinfo=UTC)
 PROFILE_INPUT = "synthetic-enrollment-password"
@@ -81,7 +78,7 @@ class DeliveryFaults:
 
 
 class TestAdministrationOwner:
-    """Test-owned provenance; agent proposal fields cannot modify these observations."""
+    """Test-owned provenance; automation proposal fields cannot modify these observations."""
 
     __test__ = False
 
@@ -104,7 +101,7 @@ class TestAdministrationOwner:
         return self.delivery
 
     @contextmanager
-    def administration_guard(self) -> Iterator[None]:
+    def administration_guard(self) -> Generator[None]:
         with self.guard:
             yield
 
@@ -134,7 +131,7 @@ def administration_subject(
     os_owner_id: str = "synthetic-owner",
     installation_id: UUID | None = None,
     profile_label: str = "Enrollment tests",
-) -> Iterator[AdministrationSubject]:
+) -> Generator[AdministrationSubject]:
     """Use a real encrypted profile; only native store and OS/transport observations are doubled."""
     create, decode = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path):

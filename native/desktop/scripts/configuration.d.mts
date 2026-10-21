@@ -8,6 +8,8 @@ export function server(): {
   host: string;
   devPort: number;
   previewPort: number;
+  docsPort: number;
+  cataloguePort: number;
 };
 export function profile(configuration?: string): {
   directory: string;

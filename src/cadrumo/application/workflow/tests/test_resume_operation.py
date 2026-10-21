@@ -9,6 +9,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
+
 from ....core.modelo import Modelo
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
@@ -19,7 +22,6 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.public_period import PublicPeriod
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessRequest
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..abort import WorkflowAbortReason
 from ..obligation_snapshot import WorkflowObligationSnapshot
@@ -79,12 +81,13 @@ def _context(
     profile_id: UUID = _PROFILE,
     action: AccessAction = AccessAction.SUBMIT,
     admitted: OperationAccessRequest | None = None,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=action,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
         admitted_request=admitted,
@@ -184,6 +187,23 @@ def test_exact_expected_period_is_finite_without_claiming_a_natural_target() -> 
     assert unconstrained.scope_period() is None
     broad = resolve_operation_access(registry=registry, request=_request(unconstrained), context=_context(registration))
     assert broad.policy.requires_all_periods
+
+
+def test_resume_context_is_admitted_on_the_external_client_frontend_without_a_commit_door() -> None:
+    registry, registration = _registration()
+    visible = _request(
+        WorkflowResumeRequest(profile_id=_PROFILE, modelo="303", period=PublicPeriod.from_period(_PERIOD))
+    )
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=visible,
+        context=_context(registration, frontend=OperationFrontendProjection.EXTERNAL_CLIENT),
+    )
+
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
+    assert resolved.request.periods == frozenset({_PERIOD})
+    assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 def test_exact_address_uses_independent_all_period_scope_and_visible_target_is_finite() -> None:

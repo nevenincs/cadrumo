@@ -7,10 +7,11 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo_client.contracts.google_auth import GoogleAuthPreconditionCondition, GoogleAuthSignInRequiredError
+
 from .....application.export.managed_artifact_ports import ArtifactCreationReceipt, ManagedArtifactKind
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...google.artifact_receipt_store import GoogleArtifactReceiptStore
-from ...google.errors import GoogleAuthPreconditionCondition, GoogleAuthSignInRequiredError
 from ...google.tests.installation_client_support import SYNTHETIC_CLIENT_ID
 from ...google.tests.token_endpoint_server import (
     ENDED_GRANT_RESPONSE,

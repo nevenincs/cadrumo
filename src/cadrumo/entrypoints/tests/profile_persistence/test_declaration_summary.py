@@ -8,6 +8,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
+
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.declaration_summary import DeclarationSummaryState, declaration_summary
 from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
@@ -27,7 +29,6 @@ from ....domain.modelos.verification_report import (
     derive_verification_report_id,
 )
 from ....domain.modelos.work_unit import WorkUnitState
-from ..modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -178,7 +179,7 @@ def test_a_registry_refusal_is_confined_to_its_row_and_keeps_technical_details_p
     )
 
     assert bad.state is DeclarationSummaryState.UNREADABLE
-    assert bad.result is None and bad.technical_reason
+    assert bad.result is None and (bad.technical_reason is not None and bad.technical_reason)
     assert "technical_reason" not in bad.model_dump()
     assert good.state is DeclarationSummaryState.CALCULATED and good.result is not None
 

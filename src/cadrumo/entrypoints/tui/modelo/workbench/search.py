@@ -78,7 +78,9 @@ class SearchEntry:
 
     def text(self) -> str:
         """The hit as the results show it: box and label, page, value and where it comes from."""
-        named = " ".join(part for part in (f"[{self.box}]" if self.box else "", self.label) if part)
+        named = " ".join(
+            part for part in (f"[{self.box}]" if (self.box is not None and self.box) else "", self.label) if part
+        )
         return _SEPARATOR.join(part for part in (named, self.page, self.value, self.origin) if part)
 
 

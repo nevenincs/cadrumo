@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:e74116ac161afb2b0d505fdc3bffe01e5762e79bb6928f031245104c752c27d5'
+body_hash: 'sha256:07461a8d49b384a004066c70962213505e62a18a9975491115f06e6d6c004270'
 related:
   - "[[2026-09-30-modelo-editor-workbench-reference]]"
 ---
@@ -16,7 +16,7 @@ What does a non-developer's journey to file a modelo look like today, and what s
 
 ## Findings
 
-Investigator: lens E. Date of measurement: 2026-09-30. Repository: `Y:\code\cadrumo-worktrees\tui`
+Investigator: lens E. Date of measurement: 2026-09-30. Repository: `<repo-root>`
 (branch `feature/tui`, working tree carries another contributor's uncommitted edits to
 `src/cadrumo/application/modelo/work_review.py` and its test; nothing in the repo was modified by
 this investigation).
@@ -29,7 +29,7 @@ Evidence roots used below:
   `modelo-303-first-quarter`, `modelo-390-annual-2025`) in a hermetic temp sandbox, composes the
   installed workbench exactly as `aeat app tui` does, and walks Declarations -> row -> workspace page
   with the pilot. Language is forced per run with `override_settings(cadrumo_output_language=...)`.
-- `REVIEW` = `Y:\code\cadrumo-worktrees\tui\.tmp-tui-visual-inventory\runs\current\text\` (the shared
+- `REVIEW` = `.tmp-tui-visual-inventory/runs/current/text/` (the shared
   visual review run generated 2026-09-29T22:21Z; read only, not regenerated).
 - Measurement scripts and outputs: `agent-e\measure_help.py` -> `help_measure.json`,
   `agent-e\allhelp.py` -> `allhelp.txt`, `measure2.py`, `cites.py`, `laws.py`, `sections.py`,

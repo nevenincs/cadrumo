@@ -10,6 +10,14 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+)
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
@@ -17,7 +25,7 @@ from ...core.identity.hex_ids import WorkUnitId
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
+from ...domain.modelos.work_unit import WorkUnit
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
@@ -26,22 +34,16 @@ from ..operations.access_resolution import (
     require_single_period_admission,
 )
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest, OperationTerminalReceipt, require_terminal_receipt_match
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-)
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
 from .external_import_actions import (
@@ -63,6 +65,7 @@ from .filing_record_import_contracts import (
 from .filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 from .local_observation_spreadsheet import parse_casilla_lexical_spreadsheet
 from .work_addressing import ModeloWorkRegistryYearMismatchError, law_selected_revision_for_work_target
+from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -105,14 +108,17 @@ def _selected_work_unit(ports: CalculationActionPorts, payload: ModeloFilingReco
     repository = ports.work_unit_repository
     if repository.bucket_id != profile_id or ports.work_lifecycle_ports.work_unit_repository.bucket_id != profile_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    work_unit = repository.load().get(payload.work_unit_id)
+    work_units = repository.load()
+    work_unit = work_units.get(payload.work_unit_id)
     if work_unit is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     if work_unit.bucket_id != profile_id or work_unit.work_unit_id != payload.work_unit_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    if work_unit.state is WorkUnitState.DESCARTADO:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    return work_unit
+    # A discarded unit is the caller's own record, so its declared lifecycle
+    # verdict says why the import stops; an access denial would misstate it.
+    return require_active_work_unit(
+        work_units, work_unit_id=payload.work_unit_id, repository_bucket_id=profile_id, use=ActiveWorkUnitUse.IMPORT
+    )
 
 
 def _declared_tax_id(ports: CalculationActionPorts, *, profile_id: str) -> str:
@@ -173,9 +179,15 @@ def _record_projection(
 class ModeloFilingRecordImportExecutor:
     """Run the existing external-import writer inside exact-profile custody."""
 
-    def __init__(self, ports_factory: CalculationActionPortsFactory) -> None:
-        """Retain the composition-supplied per-profile application capabilities."""
+    def __init__(
+        self,
+        ports_factory: CalculationActionPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
+        """Retain the per-profile application capabilities and the session host's caller reader."""
         self._ports_factory = ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -190,6 +202,7 @@ class ModeloFilingRecordImportExecutor:
         require_operation_profile(request, context, payload.profile_id)
 
         await context.events.phase(_PHASES[0])
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
 
         source_file_lexicals = None
         if payload.source_path is not None:
@@ -237,7 +250,7 @@ class ModeloFilingRecordImportExecutor:
                 evidence_kind=payload.evidence_kind,
                 evidence_reference_id=payload.evidence_reference_id,
                 declared_kind=payload.declared_kind,
-                actor=payload.actor,
+                actor=actor,
                 expected_tax_id=expected_tax_id,
                 work_unit_repository=ports.work_unit_repository,
                 calculation_repository=ports.calculation_repository,
@@ -278,22 +291,28 @@ class ModeloFilingRecordImportExecutor:
 
 def build_modelo_filing_record_import_definition(
     ports_factory: CalculationActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Declare an interrupt-on-restart import with confidential request custody."""
     return OperationDefinition(
         definition_id=MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID,
         request_type=ModeloFilingRecordImportRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloFilingRecordImportOperationReport,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloFilingRecordImportRequest,
             executor_type=ModeloFilingRecordImportExecutor,
-            build=lambda: ModeloFilingRecordImportExecutor(ports_factory),
+            build=lambda: ModeloFilingRecordImportExecutor(
+                ports_factory, execution_caller_reader=execution_caller_reader
+            ),
         ),
         phase_codes=_PHASES,
         interaction_kinds=frozenset(),
         capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        # A refusal's registered message, context and verdict reach every frontend.
+        public_error_detail=True,
     )
 
 

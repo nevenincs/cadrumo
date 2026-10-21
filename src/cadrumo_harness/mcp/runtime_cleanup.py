@@ -6,15 +6,15 @@ import asyncio
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
+from cadrumo_client.transport.transport_cleanup import TransportResource
 
 
 @dataclass(frozen=True, slots=True)
 class RuntimeClientCleanup:
     """Retain a blocking connection owner until close succeeds or is retried."""
 
-    client: RuntimeFrontendClient
+    client: TransportResource
     on_closed: Callable[[], None] | None = None
 
     async def close(self) -> None:

@@ -1,15 +1,75 @@
 import { readFileSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { buildPath } from "./build-paths.mjs";
+import { developmentServer } from "./development-server.mjs";
 
 export function identity() {
   const value = JSON.parse(
     readFileSync(resolve(buildPath("generated"), "identity.json"), "utf8"),
   );
-  for (const key of ["name", "application_id", "version"])
+  for (const key of [
+    "name",
+    "application_id",
+    "version",
+    "manager_id",
+    "manager_name",
+  ])
     if (typeof value[key] !== "string" || !value[key].trim())
       throw new Error(`Generated identity is missing ${key}`);
   return value;
+}
+
+// The desktop component's build identity, resolved by the identity step of each desktop
+// target (component-identity/<Config>/desktop.json). Only the desktop crate reads it, through its own
+// CADRUMO_DESKTOP_BUILD_* variables; CADRUMO_IMAGE_COMPONENT tells the manager and installer
+// crates it links that they are libraries here and read no identity of their own. The Tauri
+// version carries the id as semantic-version build metadata, so an unchanged desktop changes
+// nothing Cargo or Vite sees.
+export function componentIdentity(
+  component,
+  configuration = process.env.CADRUMO_BUILD_CONFIG,
+) {
+  if (!configuration)
+    throw new Error(
+      "Select the CMake configuration whose build identity to read through CADRUMO_BUILD_CONFIG",
+    );
+  const value = JSON.parse(
+    readFileSync(
+      resolve(
+        buildPath("generated"),
+        "component-identity",
+        configuration,
+        `${component}.json`,
+      ),
+      "utf8",
+    ),
+  );
+  if (
+    value.component !== component ||
+    typeof value.build_id !== "string" ||
+    !/^[0-9]{10,}$/.test(value.build_id) ||
+    !Number.isInteger(value.build_sequence) ||
+    value.build_sequence < 1 ||
+    value.build_sequence > 65535 ||
+    typeof value.build_date !== "string"
+  )
+    throw new Error(
+      `Generated ${component} build identity is invalid; build a desktop target, which resolves it first`,
+    );
+  return value;
+}
+
+export function buildStamp(debug, product = identity()) {
+  const desktop = componentIdentity("desktop");
+  return {
+    displayVersion: `${product.version}+${desktop.build_id}${debug ? ".debug" : ""}`,
+    environment: {
+      CADRUMO_IMAGE_COMPONENT: "desktop",
+      CADRUMO_DESKTOP_BUILD_ID: desktop.build_id,
+      CADRUMO_DESKTOP_BUILD_SEQUENCE: String(desktop.build_sequence),
+      CADRUMO_DESKTOP_BUILD_DATE: desktop.build_date,
+    },
+  };
 }
 
 export function server() {
@@ -21,9 +81,14 @@ export function server() {
   );
   if (typeof value.host !== "string" || !value.host.trim())
     throw new Error("Missing frontend bind address");
-  for (const key of ["devPort", "previewPort"])
+  const fixed = developmentServer();
+  for (const key of ["devPort", "previewPort", "docsPort", "cataloguePort"])
     if (!Number.isInteger(value[key]) || value[key] < 1 || value[key] > 65535)
       throw new Error(`Invalid frontend ${key}`);
+    else if (value[key] !== fixed[key])
+      throw new Error(
+        `Stale frontend ${key}; run just dev to regenerate the fixed server configuration`,
+      );
   return value;
 }
 

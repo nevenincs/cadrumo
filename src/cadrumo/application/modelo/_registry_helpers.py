@@ -222,7 +222,7 @@ def reject_incomplete_amendment_casillas(
                 "modelo": str(modelo),
                 "filing_year": str(filing_year),
                 "period": period.registry_token,
-                "missing_casilla_ids": ", ".join(str(casilla_id) for casilla_id in missing),
+                "missing_casilla_ids": ", ".join(missing),
             },
         )
 

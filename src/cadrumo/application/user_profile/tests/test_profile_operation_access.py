@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import tempfile
+from dataclasses import replace
 from pathlib import Path
 from uuid import UUID
 
@@ -12,18 +13,12 @@ from pydantic import BaseModel
 from cadrumo.application.operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
     OperationAccessContext,
+    ResolvedOperationAccess,
     resolve_operation_access,
 )
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    OperationAccessRequest,
-)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
 from cadrumo.application.user_profile.operations import (
@@ -38,15 +33,28 @@ from cadrumo.application.user_profile.profile_operation_access import (
 from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
+    PROFILE_PATCH_OPERATION_DEFINITION_ID,
     ProfileBundleExportOperationRequest,
     ProfileFieldMutationOperationRequest,
+    ProfilePatchOperationRequest,
+    ProfilePatchValue,
 )
 from cadrumo.application.user_profile.view_operation import (
     PROFILE_VIEW_OPERATION_DEFINITION_ID,
     ProfileViewOperationRequest,
     ProfileViewPageKind,
 )
+from cadrumo.application.wizard.catalogue import build_setup_flow
+from cadrumo.core.capabilities import ServiceCapability
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    OperationAccessRequest,
+)
 
 from .foreign_operation_payload import ForeignProfilePayload
 
@@ -66,6 +74,7 @@ _ALL_ACTIONS = (
     AccessAction.RESULT,
 )
 _ROUTES = ("view", "field_mutation", "bundle_export")
+_COMMITTING_ROUTES = frozenset({"field_mutation", "bundle_export"})
 _RESOLVERS = {
     "view": resolve_profile_view_access,
     "field_mutation": resolve_profile_mutation_access,
@@ -119,7 +128,7 @@ def _context(
 
 @pytest.mark.parametrize("action", _ALL_ACTIONS)
 @pytest.mark.parametrize("route", _ROUTES)
-def test_registered_profile_route_binds_committing_period_independent_profile_access(
+def test_registered_profile_route_binds_period_independent_access_and_commits_only_to_change_or_export(
     route: str, action: AccessAction
 ) -> None:
     registry = _registry()
@@ -132,7 +141,8 @@ def test_registered_profile_route_binds_committing_period_independent_profile_ac
     assert resolved.request.action is action
     assert resolved.request.period_independent and resolved.request.periods == frozenset()
     policy = resolved.policy
-    assert policy.actions == frozenset(_ALL_ACTIONS)
+    assert (AccessAction.COMMIT in policy.actions) is (route in _COMMITTING_ROUTES)
+    assert policy.actions | {AccessAction.COMMIT} == frozenset(_ALL_ACTIONS)
     assert policy.periods == frozenset() and policy.allow_period_independent
     assert not policy.requires_all_periods and not policy.requires_human
     assert policy.provider is Availability.NOT_REQUIRED and policy.backend is Availability.AVAILABLE
@@ -308,3 +318,133 @@ def test_profile_mismatch_precedes_a_mismatched_replay(route: str) -> None:
             _replay(registry, request, AccessAction.RESULT, foreign_admission),
         )
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+_CAPABILITY_PATHS = tuple(capability.schema_path for capability in ServiceCapability)
+_FIELD_PATHS = (
+    *_CAPABILITY_PATHS,
+    # The fact writer trims the path, so a padded one stores the same capability.
+    f"  {ServiceCapability.CLOUD_EVIDENCE_UPLOAD.schema_path}	",
+    "preferences.output_language",
+    "identity.notes",
+)
+_FRONTENDS = tuple(OperationFrontendProjection)
+
+
+def _field_mutation(path: str, value: str) -> OperationRequest[BaseModel]:
+    return OperationRequest(
+        definition_id=PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
+        subject_ref=f"profile:{_PROFILE}",
+        payload=ProfileFieldMutationOperationRequest(
+            profile_id=_PROFILE,
+            expected_revision=1,
+            expected_content_digest="0" * 64,
+            path=path,
+            value=value,
+        ),
+    )
+
+
+def _resolve_on(
+    frontend: OperationFrontendProjection, request: OperationRequest[BaseModel], action: AccessAction
+) -> ResolvedOperationAccess:
+    registry = _registry()
+    context = replace(_context(registry, request, action), frontend=frontend)
+    return resolve_operation_access(registry=registry, request=request, context=context)
+
+
+def test_the_field_cases_name_every_service_capability() -> None:
+    assert _CAPABILITY_PATHS
+    assert set(_CAPABILITY_PATHS) < set(_FIELD_PATHS)
+
+
+@pytest.mark.parametrize("value", ["true", "false", ""])
+@pytest.mark.parametrize("action", _ALL_ACTIONS)
+@pytest.mark.parametrize("path", _FIELD_PATHS)
+def test_every_frontend_resolves_the_same_access_for_a_field_change(
+    path: str, action: AccessAction, value: str
+) -> None:
+    request = _field_mutation(path, value)
+
+    resolved = {frontend: _resolve_on(frontend, request, action) for frontend in _FRONTENDS}
+
+    assert set(resolved) == set(OperationFrontendProjection)
+    for frontend, access in resolved.items():
+        assert access.request.frontend is frontend
+        assert access.request.action is action
+        assert access.policy == resolved[OperationFrontendProjection.CLI].policy
+        assert AccessAction.COMMIT in access.policy.actions
+
+
+_KNOWN_CAPABILITY_QUESTIONS = ("llm-vision", "google-export")
+"""The capability questions the setup catalogue asks today, named here independently of it."""
+_OTHER_QUESTION = "notes"
+
+
+def _patch(*answers: tuple[str, str], colegio_concertado: bool | None = None) -> OperationRequest[BaseModel]:
+    return OperationRequest(
+        definition_id=PROFILE_PATCH_OPERATION_DEFINITION_ID,
+        subject_ref=f"profile:{_PROFILE}",
+        payload=ProfilePatchOperationRequest(
+            profile_id=_PROFILE,
+            expected_revision=1,
+            expected_content_digest="0" * 64,
+            values=tuple(ProfilePatchValue(question_id=question_id, value=value) for question_id, value in answers),
+            colegio_concertado=colegio_concertado,
+        ),
+    )
+
+
+def _resolve_patch(
+    frontend: OperationFrontendProjection,
+    request: OperationRequest[BaseModel],
+    action: AccessAction,
+    operation: PinnedAuthorityOperation | None,
+) -> ResolvedOperationAccess:
+    """Ask the registered resolver as the host does, with or without its pinned authority."""
+    registry = _registry()
+    context = replace(_context(registry, request, action), frontend=frontend, authority_operation=operation)
+    return resolve_operation_access(registry=registry, request=request, context=context)
+
+
+def test_the_setup_catalogue_asks_the_known_capability_questions(operation: PinnedAuthorityOperation) -> None:
+    questions = {
+        question.id: question.profile_key
+        for section in build_setup_flow(operation).sections
+        for question in section.questions
+    }
+
+    assert {questions[question_id] for question_id in _KNOWN_CAPABILITY_QUESTIONS} <= {
+        item.schema_path for item in ServiceCapability
+    }
+    assert questions[_OTHER_QUESTION] == "identity.notes"
+
+
+_PATCHES = (
+    *(((question_id, value),) for question_id in _KNOWN_CAPABILITY_QUESTIONS for value in ("true", "false", "")),
+    ((_OTHER_QUESTION, "synthetic note"), (_KNOWN_CAPABILITY_QUESTIONS[0], "false")),
+    ((_OTHER_QUESTION, "synthetic note"),),
+    (),
+)
+
+
+@pytest.mark.parametrize("with_authority", [True, False])
+@pytest.mark.parametrize("action", _ALL_ACTIONS)
+@pytest.mark.parametrize("answers", _PATCHES)
+def test_every_frontend_resolves_the_same_access_for_a_patch(
+    answers: tuple[tuple[str, str], ...],
+    action: AccessAction,
+    with_authority: bool,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    request = _patch(*answers, colegio_concertado=None if answers else False)
+    authority = operation if with_authority else None
+
+    resolved = {frontend: _resolve_patch(frontend, request, action, authority) for frontend in _FRONTENDS}
+
+    assert set(resolved) == set(OperationFrontendProjection)
+    for frontend, access in resolved.items():
+        assert access.request.frontend is frontend
+        assert access.request.action is action
+        assert access.policy == resolved[OperationFrontendProjection.CLI].policy
+        assert AccessAction.COMMIT in access.policy.actions

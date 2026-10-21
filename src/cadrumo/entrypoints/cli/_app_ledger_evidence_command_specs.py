@@ -1,6 +1,18 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ...application.ledger.operator_input_contracts import (
     INVOICE_CLASS_INPUT,
@@ -26,18 +38,6 @@ from ._app_ledger_command_spec_support import (
     _required_text_argument,
     _required_text_option,
 )
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-    ValueContract,
-)
-from .command_spec import CommandSpec, InvocationSpec
 
 LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -76,7 +76,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_cli", "evidence_add", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_commands", "evidence_add", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "EvidenceAddResult", __package__),
@@ -93,7 +93,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_cli", "attachment_queue", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_commands", "attachment_queue", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "AttachmentReviewQueueResult", __package__),
@@ -110,7 +110,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(_required_text_argument("attachment_id", "cli.app.ledger.evidence.attachment_id_help"),),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_cli", "attachment_view", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_commands", "attachment_view", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "AttachmentReviewViewResult", __package__),
@@ -161,10 +161,10 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_2,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_batch_cli", "evidence_batch", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_batch_commands", "evidence_batch", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_evidence_batch_payloads", "EvidenceBatchResult", __package__),
+            target=DeferredTarget(".ledger_evidence_batch_results", "EvidenceBatchResult", __package__),
             identity="ledger.evidence.batch",
         ),
     ),
@@ -267,7 +267,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _repeatable_text_option("resolve", ("--resolve",), "cli.app.ledger.evidence.confirm_resolve_help"),
         ),
         policy=_POLICY_2,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_cli", "evidence_confirm", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_commands", "evidence_confirm", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "EvidenceConfirmResult", __package__),
@@ -325,7 +325,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_2,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_cli", "evidence_extract", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_commands", "evidence_extract", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("...application.ledger.invoice_draft_payloads", "EvidenceExtractResult", __package__),
@@ -342,7 +342,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_cli", "evidence_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_commands", "evidence_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "EvidenceListResult", __package__),
@@ -362,7 +362,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _boolean_flag_option("yes", ("--yes",), "cli.app.ledger.evidence.yes_help"),
         ),
         policy=_POLICY_9,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_cli", "evidence_remove", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_commands", "evidence_remove", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "EvidenceRemoveResult", __package__),
@@ -476,7 +476,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option_from_application_contract(NOTES_INPUT, None),
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_cli", "evidence_update", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_commands", "evidence_update", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "EvidenceUpdateResult", __package__),
@@ -493,7 +493,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(_required_text_argument("evidence_id", "cli.app.ledger.evidence.evidence_id_help"),),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_cli", "evidence_view", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_commands", "evidence_view", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "EvidenceViewResult", __package__),

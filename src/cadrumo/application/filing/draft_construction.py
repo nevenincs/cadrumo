@@ -738,7 +738,7 @@ def binding_provenance(
         raise _ModeloBuilderError(
             translated_message="application.filing.build_draft.errors.binding_provenance_missing",
             context={
-                "binding_id": str(binding.id),
+                "binding_id": binding.id,
                 "source": source.value,
                 "legal_ref_count": len(legal_refs),
                 "source_ref_count": len(source_refs),

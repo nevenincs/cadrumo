@@ -15,6 +15,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
@@ -25,14 +28,6 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.public_period import PublicPeriod
 from ...operations.public_scalar import PublicDecimal
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
-    Availability,
-    DisclosureCategory,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import borrador_100 as service_module
 from .. import borrador_100_contracts as contracts
@@ -307,7 +302,7 @@ async def test_import_settles_actual_writer_failure_without_claiming_rollback(
 
 
 @pytest.mark.parametrize("missing", [DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES, None])
-def test_agent_query_requires_both_exact_destination_disclosures(
+def test_external_client_query_requires_both_exact_destination_disclosures(
     authority_operation: PinnedAuthorityOperation,
     missing: DisclosureCategory | None,
 ) -> None:
@@ -322,7 +317,7 @@ def test_agent_query_requires_both_exact_destination_disclosures(
             profile_id=PROFILE_ID,
             destination_id=uuid4(),
             action=AccessAction.RESULT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=registry.lookup_public_contract(request.definition_id),
             published_authority=Availability.AVAILABLE,
             authority_operation=authority_operation,
@@ -369,8 +364,10 @@ def test_query_consent_never_authorizes_full_read_or_import(
             human=True,
         )
         assert isinstance(denied, AccessDenied) and denied.code is AccessDenialCode.OPERATION_DENIED
-        with pytest.raises(ProfileAccessRefusedError):
-            module.resolve_borrador_100_access(public, replace(context, frontend=OperationFrontendProjection.MCP))
+        for frontend in OperationFrontendProjection:
+            on_frontend = module.resolve_borrador_100_access(public, replace(context, frontend=frontend))
+            assert on_frontend.policy == resolved.policy, (request.definition_id, frontend)
+            assert on_frontend.request == resolved.request.model_copy(update={"frontend": frontend})
 
 
 def test_projector_rejects_cross_purpose_receipt(subject: Subject) -> None:

@@ -64,6 +64,7 @@ from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
 from ....core.tabular import NormalizedTable
+from .consent import EvidenceConsentToken
 from .errors import LLMConfigError, LLMValidationError
 from .models import LLMRequest
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
@@ -274,7 +275,9 @@ def _role_catalogue_lines() -> tuple[str, ...]:
     lines: list[str] = []
     for role in permitted_column_roles():
         description = descriptions.get(role.value)
-        lines.append(f"- {role.value}: {description}" if description else f"- {role.value}")
+        lines.append(
+            f"- {role.value}: {description}" if (description is not None and description) else f"- {role.value}"
+        )
     return tuple(lines)
 
 
@@ -503,31 +506,25 @@ class SemanticColumnRoleMapper:
     which engine answers -- an on-host runtime or a gated hosted one -- is
     configuration rather than a fact this class holds.
 
-    **The model comes from the role, never from the general default.** Left to
-    itself the client would answer a mapping call on
-    ``cadrumo_llm_model`` -- a frontier hosted model -- for a task that is
-    selecting among a handful of short strings. So the model is resolved
+    **The model comes from the role, never from a general default.** A mapping
+    call selects among a handful of short strings. So the model is resolved
     through :func:`~application.provisioning.select_model_for_role` against
     :attr:`~core.model_catalogue.ModelRole.COLUMN_ROLE_MAPPING`, which names the WEAKEST catalogued
     candidate clearing the capability, licence and headroom bars on this
     machine. Re-pointing that role in the catalogue re-points this lane with no
     edit here.
 
-    A role-resolved model is an on-host runtime id, so it is paired with the
-    LOCAL provider: the pairing is the point, and sending an Ollama id to a
-    hosted API would fail at the transport. A caller that pins ``model``
-    explicitly owns that pairing and gets no provider override; a caller that
-    pins ``provider`` gets exactly what it asked for. That is the seam the
-    measurement lane runs its gated cloud engine through, and it is the only
-    way off-host.
+    A role-resolved or pinned model is an on-host runtime id, so it runs on the
+    LOCAL provider. The only way off-host is naming AGENT, which asks the agent
+    service to pick the lane and model for the role. That read always rides
+    behind the evidence consent gate, so it needs a consent token.
 
     Args:
         model: Optional runtime id, honoured over the role resolution. Passed
             to selection as the operator override, so a licence-barred or
             uncatalogued choice is still honoured -- and still advised on.
-        provider: Optional provider override. ``None`` pairs a role-resolved
-            model with LOCAL, and leaves an explicitly pinned ``model`` on
-            whichever provider is configured.
+        provider: The transport. ``None`` means LOCAL; AGENT takes no model.
+        consent_token: The per-invocation off-host consent an AGENT read needs.
         client: Injected client (dependency injection for callers holding one);
             default-constructed against the resolved settings otherwise.
         settings: Injected settings; defaults to ``load_settings()``.
@@ -540,6 +537,7 @@ class SemanticColumnRoleMapper:
         provider: LLMProvider | None = None,
         client: LLMClient | None = None,
         settings: Settings | None = None,
+        consent_token: EvidenceConsentToken | None = None,
     ) -> None:
         """Build the mapper against a model and settings."""
         # Ahead of every other statement, so the refusal is what an operator
@@ -550,14 +548,13 @@ class SemanticColumnRoleMapper:
         # mapping call and refuses with the install hint.
         require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
-        self._model = model if model is not None else self._role_model(resolved_settings)
-        self._provider = provider if provider is not None else (None if model is not None else LLMProvider.LOCAL)
-        # The transport the stamp names, resolved separately from the one the
-        # request carries. `self._provider` stays None when the caller deferred
-        # to configuration, because passing None to the request means "let the
-        # client resolve it" -- but a stamp cannot defer, and one that omits the
-        # transport is a stamp a consent withdrawal cannot classify.
-        self._stamp_provider = self._provider or LLMProvider(resolved_settings.cadrumo_llm_provider)
+        self._provider = provider if provider is not None else LLMProvider.LOCAL
+        self._model: str | None = (
+            (model if model is not None else self._role_model(resolved_settings))
+            if self._provider is LLMProvider.LOCAL
+            else None
+        )
+        self._consent_token = consent_token
         if client is None:
             # The provider transports load only when a mapping is actually requested.
             from .client import LLMClient
@@ -605,9 +602,9 @@ class SemanticColumnRoleMapper:
         a transport.
         """
         return build_provenance_stamp(
-            provider=self._stamp_provider,
+            provider=self._provider,
             reader="column-role-map",
-            model=self._model,
+            model=self._model or "configured",
         )
 
     def map(self, headers: Sequence[str]) -> ColumnRoleProposal:
@@ -633,16 +630,12 @@ class SemanticColumnRoleMapper:
         Temperature is pinned to zero because role assignment has one right
         answer per column.
 
-        **The evidence marker is stated, and it is stated False.** What crosses
+        **The evidence marker is stated, and it is stated True.** What crosses
         this seam is the file's schema -- the header labels a bank or a billing
-        tool printed to name its own columns -- and never a cell value: the
-        prompt compiler accepts headers and nothing else, and the instruction it
-        writes forbids the model to reproduce data. That is a judgement about
-        the content, so it is written here rather than inherited from the
-        model's default, where it would be indistinguishable from a builder that
-        forgot. Marking it would put a schema-shaped request behind a
-        taxpayer-evidence consent token and close the gated hosted lane the
-        tabular measurement runs through.
+        tool printed to name its own columns -- and never a cell value. Those
+        labels still come from a taxpayer's own file, so an off-host mapping
+        rides behind the same per-invocation consent as every other read of a
+        taxpayer's document, and an on-host mapping is unaffected.
         """
         return LLMRequest(
             prompt=build_column_role_mapping_prompt(headers),
@@ -650,7 +643,10 @@ class SemanticColumnRoleMapper:
             temperature=_MAPPING_TEMPERATURE,
             provider_override=self._provider,
             model_override=self._model,
-            evidence_derived=False,
+            evidence_derived=True,
+            consent_token=self._consent_token,
+            model_role=ModelRole.COLUMN_ROLE_MAPPING,
+            expects_json=True,
         )
 
 

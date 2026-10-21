@@ -8,7 +8,7 @@ historical editions no filer can select and are not part of this population.
 
 For each one the form must build without a layout refusal, from the generated
 layout rather than the inspection-only fallback, and account for every casilla
-of the revision exactly once: shown on a page, kept as a working figure, or
+of the revision, with repetitions limited to declared aliases: shown on a page, kept as a working figure, or
 declared unplaced with its reason. No field is ever labelled with its own
 identifier: a box the form gives no name says so in words.
 """
@@ -124,10 +124,19 @@ def test_every_reachable_revision_builds_its_form_and_accounts_for_every_casilla
             failures.append(f"{modelo}/{revision_id}: no usable layout ({form.inspection_reason})")
             continue
         shown = Counter(_shown_casillas(form))
-        repeated = sorted(casilla for casilla, count in shown.items() if count > 1)
-        if repeated or set(shown) != declared:
+        layout = operation.form_layout(modelo, revision_id)
+        assert layout is not None
+        expected = Counter({casilla: 1 for casilla in declared})
+        for placement in layout.placements:
+            expected[str(placement.casilla_id)] += len(placement.aliases)
+        differing = {
+            casilla: (shown[casilla], expected[casilla])
+            for casilla in shown.keys() | expected.keys()
+            if not 1 <= shown[casilla] <= expected[casilla]
+        }
+        if differing:
             failures.append(
-                f"{modelo}/{revision_id}: repeated {repeated[:5]}, missing {sorted(declared - set(shown))[:5]}, "
+                f"{modelo}/{revision_id}: actual/maximum counts {differing}, missing {sorted(declared - set(shown))[:5]}, "
                 f"invented {sorted(set(shown) - declared)[:5]}"
             )
     assert not failures, "\n".join(failures)
@@ -159,7 +168,6 @@ def test_no_field_of_any_reachable_revision_is_labelled_with_its_identifier(
 ) -> None:
     """A value the form gives no name reads as unnamed, in words, and keeps its identifier in its address."""
     labelled_by_id: list[str] = []
-    unnamed = Counter[str]()
     for (modelo, revision_id), (year, code) in sorted(_reachable_contexts(operation).items()):
         form, _declared = _form(operation, modelo, year, code)
         for field in (*form.fields(), *form.working_figures, *(item.field for item in form.unplaced)):
@@ -167,11 +175,11 @@ def test_no_field_of_any_reachable_revision_is_labelled_with_its_identifier(
             if field.label.text == identifier or field.label.disclosure is ModeloFormTextDisclosure.TECHNICAL:
                 labelled_by_id.append(f"{modelo}/{revision_id}: {identifier}")
             if field.label.disclosure is ModeloFormTextDisclosure.UNNAMED:
-                unnamed[modelo] += 1
                 assert field.label.text == "Casilla sin nombre", identifier
 
     assert not labelled_by_id, "\n".join(labelled_by_id[:20])
-    assert unnamed["369"], "unproven envelope inputs must still disclose the missing name"
+    # The synthetic unproven binding in test_work_form_binding_labels exercises
+    # UNNAMED even when every currently published manual input has a label.
 
 
 def test_modelo_390s_named_first_page_inputs_keep_their_identifier_and_their_kind(

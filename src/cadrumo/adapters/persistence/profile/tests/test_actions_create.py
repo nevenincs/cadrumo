@@ -17,7 +17,6 @@ from cadrumo.adapters.persistence.storage.errors import StorageValidationError
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.ledger.actions_manual import create_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.currency.service import CurrencyNormalizationService
@@ -26,6 +25,7 @@ from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.transactions.raw_transaction import SourceFormat
 from cadrumo.tests.ecb_stub import ecb_csv_fetch
 
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_create_support import (
     PROVENANCE_RAW_FIELD_EXPECTATIONS,
     TAXABLE_IVA_EXPECTATIONS,

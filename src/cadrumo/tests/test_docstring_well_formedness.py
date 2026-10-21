@@ -186,7 +186,7 @@ def _documented_nodes(tree: ast.AST) -> Iterable[tuple[ast.AST, str]]:
         if not isinstance(node, ast.Module | ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
             continue
         doc = ast.get_docstring(node)
-        if doc:
+        if doc is not None and doc:
             yield node, doc
 
 

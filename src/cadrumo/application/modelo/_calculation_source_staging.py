@@ -291,8 +291,8 @@ def _iva_wallet_staging_defaults(
     return {
         binding_id: Decimal("0.00")
         for binding_id in iva_wallet_owned_binding_ids_for_revision(
-            modelo_id=str(registry_snapshot.modelo.id),
-            revision_id=str(revision.id),
+            modelo_id=registry_snapshot.modelo.id,
+            revision_id=revision.id,
         )
         if binding_id not in effective_binding_values
     }

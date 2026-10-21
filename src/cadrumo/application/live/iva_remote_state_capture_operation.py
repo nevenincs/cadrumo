@@ -8,6 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.operations import OperationEffect
@@ -18,13 +20,13 @@ from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .errors import LiveIvaAcquisitionFailureMode
 from .filed_history_operation import (
     FiledHistoryBrowserResourcesFactory,
     FiledHistoryCompositionFactory,
     FiledHistoryProviderPreflight,
+    require_capture_output_root,
 )
 from .iva_remote_state import capture_iva_remote_state
 from .live_operation_execution import (
@@ -193,6 +195,7 @@ class IvaRemoteStateCaptureExecutor:
         require_exact_profile_worker(
             payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
         )
+        require_capture_output_root(payload.output_root)
         period = Period.from_year_and_code(payload.target_year, payload.target_period)
         composition, resources, session_receipt = await prepare_provider_capture(
             context,
@@ -224,7 +227,7 @@ class IvaRemoteStateCaptureExecutor:
             or report.year_to != payload.year_to
             or report.target_year != payload.target_year
             or report.target_period != period
-            or not report.acquisition_manifest_id
+            or not (report.acquisition_manifest_id is not None and report.acquisition_manifest_id)
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         return await publish_live_capture_report(

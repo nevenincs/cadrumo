@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, NonNegativeInt, StringConstraints, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.identity.bucket import BucketId
@@ -22,7 +24,6 @@ from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .expedientes import ExpedientesService, PersistedExpedientesSnapshot
 from .expedientes_ports import ExpedientesPortsFactory
@@ -180,7 +181,7 @@ def _summary(snapshot: PersistedExpedientesSnapshot) -> ExpedientesSnapshotSumma
 
 
 def _require_bucket(snapshot: PersistedExpedientesSnapshot, bucket_id: str) -> None:
-    if str(snapshot.bucket_id) != bucket_id:
+    if snapshot.bucket_id != bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
@@ -337,7 +338,7 @@ def _project_list(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
     require_live_read_receipt(
         receipt,
         definition_id=EXPEDIENTES_LIST_DEFINITION_ID,
-        bucket_id=str(report.bucket_id),
+        bucket_id=report.bucket_id,
         message=_RECEIPT_CONTRADICTION,
     )
     return ExpedientesListPublicResultV1(bucket_id=report.bucket_id, count=len(report.rows), rows=report.rows)
@@ -351,7 +352,7 @@ def _project_show(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
     require_live_read_receipt(
         receipt,
         definition_id=EXPEDIENTES_SHOW_DEFINITION_ID,
-        bucket_id=str(snapshot.bucket_id),
+        bucket_id=snapshot.bucket_id,
         message=_RECEIPT_CONTRADICTION,
     )
     return ExpedientesShowPublicResultV1(
@@ -363,7 +364,7 @@ def _project_show(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
         declarations=tuple(
             ExpedienteDeclarationPublicV1(
                 modelo=row.modelo,
-                ejercicio=int(row.ejercicio),
+                ejercicio=row.ejercicio,
                 period=row.period.registry_token,
                 expediente_id=row.expediente_id,
                 estado=row.estado,
@@ -390,7 +391,7 @@ def _project_latest(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     require_live_read_receipt(
         receipt,
         definition_id=EXPEDIENTES_LATEST_DEFINITION_ID,
-        bucket_id=str(report.bucket_id),
+        bucket_id=report.bucket_id,
         message=_RECEIPT_CONTRADICTION,
     )
     snapshot = report.snapshot

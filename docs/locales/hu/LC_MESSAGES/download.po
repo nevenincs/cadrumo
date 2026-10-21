@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 21:54+0200\n"
+"POT-Creation-Date: 2026-10-12 00:32+0200\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -124,8 +124,8 @@ msgstr ""
 "agent.md) oldalon."
 
 #: ../../download.md:45
-msgid "Two ways to work"
-msgstr "Kétféle munkavégzés"
+msgid "Ways to work"
+msgstr "Munkavégzési módok"
 
 #: ../../download.md:47
 msgid "`aeat` runs as ordinary commands that print their results:"
@@ -148,10 +148,29 @@ msgstr ""
 "pont ugyanazokat a helyi nyilvántartásokat használja."
 
 #: ../../download.md:62
+msgid ""
+"An AI assistant connected through MCP is a third way to work. The command"
+" line, the full-screen app and an assistant can each do the same work "
+"against the same local records. In the full-screen app, **Operations** "
+"lists every one of them, **Installation** covers storage, repair, the "
+"reset and the profiles on this computer without a sign-in, and "
+"**Reference** shows the modelo catalogue, casillas, formulas, categories,"
+" portals and sign-in methods."
+msgstr ""
+"Az MCP-n keresztül csatlakoztatott MI-asszisztens a harmadik munkavégzési"
+" mód. A parancssor, a teljes képernyős alkalmazás és az asszisztens "
+"ugyanazt a munkát végezheti el ugyanazokon a helyi nyilvántartásokon. A "
+"teljes képernyős alkalmazásban a **Műveletek** felsorol minden műveletet,"
+" a **Telepítés** bejelentkezés nélkül lefedi a tárolást, a javítást, az "
+"alaphelyzetbe állítást és a számítógépen lévő profilokat, a **Kézikönyv**"
+" pedig a nyomtatványkatalógust, a rovatokat, a képleteket, a "
+"kategóriákat, a portálokat és a bejelentkezési módokat mutatja."
+
+#: ../../download.md:69
 msgid "Install channels"
 msgstr "Telepítési csatornák"
 
-#: ../../download.md:64
+#: ../../download.md:71
 msgid ""
 "PyPI is the primary channel. Homebrew and Scoop packages, for users "
 "without a Python toolchain, are not published yet. Each release is "
@@ -162,93 +181,93 @@ msgstr ""
 "közzétéve. Minden kiadást telepítési teszten viszünk át minden általa "
 "megjelölt platformon, mielőtt közzétesszük."
 
-#: ../../download.md:75
+#: ../../download.md:82
 msgid "Platform"
 msgstr "Platform"
 
-#: ../../download.md:76
+#: ../../download.md:83
 msgid "Channel"
 msgstr "Csatorna"
 
-#: ../../download.md:77
+#: ../../download.md:84
 msgid "Where it comes from"
 msgstr "Honnan származik"
 
-#: ../../download.md:78
+#: ../../download.md:85
 msgid "Any platform with Python 3.13+"
 msgstr "Bármely platform Python 3.13+ verzióval"
 
-#: ../../download.md:79
+#: ../../download.md:86
 msgid "Python package"
 msgstr "Python-csomag"
 
-#: ../../download.md:80
+#: ../../download.md:87
 msgid "PyPI listing"
 msgstr "PyPI-adatlap"
 
-#: ../../download.md:81
+#: ../../download.md:88
 msgid "macOS (Apple silicon), Linux (x86-64 and arm64)"
 msgstr "macOS (Apple silicon), Linux (x86-64 és arm64)"
 
-#: ../../download.md:82
+#: ../../download.md:89
 msgid "Homebrew formula"
 msgstr "Homebrew-formula"
 
-#: ../../download.md:83
+#: ../../download.md:90
 msgid "Homebrew tap"
 msgstr "Homebrew-tároló"
 
-#: ../../download.md:84
+#: ../../download.md:91
 msgid "Windows (x86-64)"
 msgstr "Windows (x86-64) rendszer"
 
-#: ../../download.md:85
+#: ../../download.md:92
 msgid "Scoop package"
 msgstr "Scoop csomag"
 
-#: ../../download.md:86
+#: ../../download.md:93
 msgid "Scoop bucket"
 msgstr "Scoop-tároló"
 
-#: ../../download.md:89
+#: ../../download.md:96
 msgid "Per-channel install paths:"
 msgstr "Telepítési utak csatornánként:"
 
-#: ../../download.md:91
+#: ../../download.md:98
 msgid "**Python package**: Any platform with Python 3.13+"
 msgstr "**Python-csomag**: Bármely platform Python 3.13+ verzióval"
 
-#: ../../download.md:99
+#: ../../download.md:106
 msgid "**Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)"
 msgstr "**Homebrew-formula**: macOS (Apple silicon), Linux (x86-64 és arm64)"
 
-#: ../../download.md:106
+#: ../../download.md:113
 msgid "**Scoop package**: Windows (x86-64)"
 msgstr "**Scoop csomag**: Windows (x86-64)"
 
-#: ../../download.md:116
+#: ../../download.md:123
 msgid "Each release's notes in [Updates](updates.md) name what changed."
 msgstr ""
 "Az egyes kiadások [Frissítések](updates.md) alatt található jegyzetei "
 "megnevezik a változásokat."
 
-#: ../../download.md:118
+#: ../../download.md:125
 msgid "After you install"
 msgstr "A telepítés után"
 
-#: ../../download.md:124
+#: ../../download.md:131
 msgid "Quickstart"
 msgstr "Gyorsindító"
 
-#: ../../download.md:129
+#: ../../download.md:136
 msgid "Take the shortest path from an empty profile to an exported modelo file."
 msgstr "Tedd meg a legrövidebb utat az üres profiltól az exportált modelofájlig."
 
-#: ../../download.md:132
+#: ../../download.md:139
 msgid "Connect an agent (MCP)"
 msgstr "Ügynök csatlakoztatása (MCP)"
 
-#: ../../download.md:137
+#: ../../download.md:144
 msgid ""
 "Let an AI assistant such as Claude drive Cadrumo with you, on your "
 "machine."

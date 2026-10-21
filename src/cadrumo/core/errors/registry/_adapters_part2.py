@@ -238,7 +238,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthError",
+        "cadrumo_client.contracts.google_auth.GoogleAuthError",
         ErrorCode(
             code="AUTH_GOOGLE",
             category=ErrorCategory.AUTH,
@@ -248,7 +248,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthValidationError",
+        "cadrumo_client.contracts.google_auth.GoogleAuthValidationError",
         ErrorCode(
             code="REFUSED_GOOGLE_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -258,7 +258,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthClientMetadataUnavailableError",
+        "cadrumo_client.contracts.google_auth.GoogleAuthClientMetadataUnavailableError",
         ErrorCode(
             code="REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE",
             category=ErrorCategory.REFUSED,
@@ -268,7 +268,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthClientRevokedError",
+        "cadrumo_client.contracts.google_auth.GoogleAuthClientRevokedError",
         ErrorCode(
             code="AUTH_GOOGLE_CLIENT_REVOKED",
             category=ErrorCategory.AUTH,
@@ -278,7 +278,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthSignInRequiredError",
+        "cadrumo_client.contracts.google_auth.GoogleAuthSignInRequiredError",
         ErrorCode(
             code="REFUSED_GOOGLE_SIGN_IN_REQUIRED",
             category=ErrorCategory.REFUSED,
@@ -288,7 +288,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthScopeInsufficientError",
+        "cadrumo_client.contracts.google_auth.GoogleAuthScopeInsufficientError",
         ErrorCode(
             code="AUTH_GOOGLE_SCOPE_INSUFFICIENT",
             category=ErrorCategory.AUTH,
@@ -298,7 +298,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthNetworkError",
+        "cadrumo_client.contracts.google_auth.GoogleAuthNetworkError",
         ErrorCode(
             code="FAIL_GOOGLE_NETWORK",
             category=ErrorCategory.FAIL,
@@ -308,7 +308,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthLoopbackBindError",
+        "cadrumo_client.contracts.google_auth.GoogleAuthLoopbackBindError",
         ErrorCode(
             code="FAIL_GOOGLE_LOOPBACK_BIND",
             category=ErrorCategory.FAIL,
@@ -318,7 +318,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthBrowserOpenError",
+        "cadrumo_client.contracts.google_auth.GoogleAuthBrowserOpenError",
         ErrorCode(
             code="FAIL_GOOGLE_BROWSER_OPEN",
             category=ErrorCategory.FAIL,
@@ -328,7 +328,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthNonInteractiveError",
+        "cadrumo_client.contracts.google_auth.GoogleAuthNonInteractiveError",
         ErrorCode(
             code="REFUSED_GOOGLE_NON_INTERACTIVE",
             category=ErrorCategory.REFUSED,
@@ -338,7 +338,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthKeychainLockedError",
+        "cadrumo_client.contracts.google_auth.GoogleAuthKeychainLockedError",
         ErrorCode(
             code="LOCKED_GOOGLE_KEYCHAIN",
             category=ErrorCategory.LOCKED,
@@ -348,7 +348,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthProfileUnboundError",
+        "cadrumo_client.contracts.google_auth.GoogleAuthProfileUnboundError",
         ErrorCode(
             code="REFUSED_GOOGLE_PROFILE_UNBOUND",
             category=ErrorCategory.REFUSED,

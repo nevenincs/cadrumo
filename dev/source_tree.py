@@ -251,6 +251,26 @@ def normalised_contents(root: Path, files: Sequence[str]) -> Iterator[tuple[str,
         yield relative, normalised_content(root, relative, attributes=rules)
 
 
+def line_ending_policies(root: Path, files: Sequence[str]) -> dict[str, str]:
+    """Name the line-ending treatment the repository's rules give each of ``files``, reading the rules once.
+
+    Two files with the same raw bytes and the same treatment have the same
+    normalised content, so a treatment and a raw digest together name it.
+    """
+    rules = _attribute_rules(root, files)
+    return {relative: ":".join(_line_ending_policy(relative, rules)) for relative in files}
+
+
+def normalise_with(policy: str, raw: bytes) -> bytes:
+    """Apply one treatment :func:`line_ending_policies` named to ``raw`` bytes."""
+    states: dict[str, _TextState] = {"text": "text", "binary": "binary", "auto": "auto"}
+    endings: dict[str, _LineEnding] = {"lf": "lf", "crlf": "crlf"}
+    text, _, eol = policy.partition(":")
+    if text not in states or eol not in endings:
+        raise ValueError(f"Unknown line-ending treatment {policy!r}")
+    return _normalise(raw, text=states[text], eol=endings[eol])
+
+
 def content_digest(root: Path, files: Sequence[str]) -> str:
     """Name the content of ``files`` with a sha256 that is the same on every platform.
 

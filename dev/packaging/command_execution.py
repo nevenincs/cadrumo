@@ -13,16 +13,15 @@ import shutil
 import subprocess
 import sys
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import Any, Literal, Protocol, cast, runtime_checkable
 
-from dev._paths import UTF_8
+from cadrumo.core.external_constants import UTF_8_ENCODING
 
-_UTF_8 = UTF_8
 # How long a killed command's pipes may take to close. A tree kill closes them
 # at once; the bound only matters when a descendant escaped the kill.
 _POST_KILL_DRAIN_SECONDS = 10.0
@@ -85,6 +84,8 @@ def run_command(
     errors: Literal["strict", "replace"] = "strict",
     input_text: str | None = None,
     inherited_descriptors: Sequence[int] = (),
+    inherit_output: bool = False,
+    on_spawn: Callable[[int], None] | None = None,
 ) -> CommandResult:
     """Run one command and retain its actual output, timestamps, and exit status.
 
@@ -93,12 +94,23 @@ def run_command(
     the child what it was given, and the token differs by platform, so it reads
     the descriptor numbers - or, on Windows, ``msvcrt.get_osfhandle`` of the
     same descriptors - for itself.
+
+    ``inherit_output`` gives the child this process's standard output and
+    error instead of capturing them, so a long build step reports progress as
+    it happens. The result then carries empty ``stdout`` and ``stderr``.
+
+    ``on_spawn`` observes the PID returned by this invocation's process creation;
+    a failing observer terminates the owned process instead of leaving it running.
     """
     if isinstance(argv, str):
         raise ValueError("command argv must be a sequence of arguments, not one string")
     command = tuple(argv)
     if not command or any(not argument for argument in command):
         raise ValueError("command argv must contain only non-empty arguments")
+    if inherit_output:
+        # The child writes to the same streams; keep this process's lines before its own.
+        sys.stdout.flush()
+        sys.stderr.flush()
     started_at = datetime.now(UTC)
     started = time.monotonic()
     try:
@@ -111,6 +123,8 @@ def run_command(
                 errors=errors,
                 input_text=input_text,
                 inherited_descriptors=inherited_descriptors,
+                inherit_output=inherit_output,
+                on_spawn=on_spawn,
             ),
         )
     finally:
@@ -128,6 +142,26 @@ def run_command(
     )
 
 
+@runtime_checkable
+class _Descriptor(Protocol):
+    def fileno(self) -> int: ...
+
+
+def _descriptor(stream: object, original: object, name: str) -> int:
+    """Return a standard stream's descriptor, refusing a process that has no such stream.
+
+    A stream replaced by one without a descriptor (an in-memory capture) hands the child the
+    process's original stream instead, as a POSIX child inherits descriptor 1 or 2 regardless.
+    """
+    for candidate in (stream, original):
+        if isinstance(candidate, _Descriptor):
+            try:
+                return candidate.fileno()
+            except (OSError, ValueError):
+                continue
+    raise RuntimeError(f"this process has no {name} for a child to inherit")
+
+
 async def _run_process(
     command: tuple[str, ...],
     *,
@@ -137,24 +171,48 @@ async def _run_process(
     errors: Literal["strict", "replace"],
     input_text: str | None,
     inherited_descriptors: Sequence[int],
+    inherit_output: bool = False,
+    on_spawn: Callable[[int], None] | None = None,
 ) -> tuple[int, str, str]:
     """Execute one explicit argv with bounded capture and optional input."""
+    windows = sys.platform == "win32"
+    # A console child never opens a window of its own on the person's screen.
+    # Without a console it inherits no standard streams implicitly, so the
+    # ones it shares are handed to it by descriptor.
+    stdout: int | None = asyncio.subprocess.PIPE
+    stderr: int | None = asyncio.subprocess.PIPE
+    if inherit_output:
+        if windows:
+            stdout = _descriptor(sys.stdout, sys.__stdout__, "stdout")
+            stderr = _descriptor(sys.stderr, sys.__stderr__, "stderr")
+        else:
+            stdout, stderr = None, None
     process = await asyncio.create_subprocess_exec(
         *command,
         cwd=str(cwd),
         env=dict(environment) if environment is not None else None,
         stdin=asyncio.subprocess.PIPE if input_text is not None else None,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
+        stdout=stdout,
+        stderr=stderr,
+        creationflags=subprocess.CREATE_NO_WINDOW if windows else 0,
         **cast(Any, _inheritance_options(inherited_descriptors)),
     )
-    encoded_input = None if input_text is None else input_text.encode(_UTF_8)
+    encoded_input = None if input_text is None else input_text.encode(UTF_8_ENCODING)
+    communication = asyncio.create_task(process.communicate(encoded_input))
     try:
-        stdout_bytes, stderr_bytes = await asyncio.wait_for(process.communicate(encoded_input), timeout_seconds)
+        if on_spawn is not None:
+            try:
+                on_spawn(process.pid)
+            except BaseException:
+                await _terminate_tree(process)
+                communication.cancel()
+                await asyncio.gather(communication, return_exceptions=True)
+                raise
+        stdout_bytes, stderr_bytes = await asyncio.wait_for(asyncio.shield(communication), timeout_seconds)
     except TimeoutError as exc:
         await _terminate_tree(process)
         try:
-            stdout_bytes, stderr_bytes = await asyncio.wait_for(process.communicate(), _POST_KILL_DRAIN_SECONDS)
+            stdout_bytes, stderr_bytes = await asyncio.wait_for(communication, _POST_KILL_DRAIN_SECONDS)
         except TimeoutError:
             # A descendant the kill could not reach still holds the captured
             # pipes; the timeout is reported without the output it withholds.
@@ -162,6 +220,10 @@ async def _run_process(
         if timeout_seconds is None:
             raise RuntimeError("process timed out without a configured timeout") from exc
         raise subprocess.TimeoutExpired(command, timeout_seconds, output=stdout_bytes, stderr=stderr_bytes) from exc
+    finally:
+        if not communication.done():
+            communication.cancel()
+        await asyncio.gather(communication, return_exceptions=True)
     returncode = process.returncode
     if returncode is None:
         raise RuntimeError("process completed without a return code")
@@ -222,9 +284,11 @@ def _kill_posix_descendants(pid: int) -> None:
             descendant.kill()
 
 
-def _decode_output(payload: bytes, *, errors: Literal["strict", "replace"]) -> str:
-    """Match ``subprocess.run(text=True)`` universal-newline decoding."""
-    return payload.decode(_UTF_8, errors=errors).replace("\r\n", "\n").replace("\r", "\n")
+def _decode_output(payload: bytes | None, *, errors: Literal["strict", "replace"]) -> str:
+    """Match ``subprocess.run(text=True)`` universal-newline decoding; inherited streams are empty."""
+    if payload is None:
+        return ""
+    return payload.decode(UTF_8_ENCODING, errors=errors).replace("\r\n", "\n").replace("\r", "\n")
 
 
 __all__ = ["CommandResult", "run_command"]

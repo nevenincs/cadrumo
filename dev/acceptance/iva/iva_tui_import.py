@@ -100,9 +100,7 @@ async def _classify_transaction(
     row_key = next((candidate for candidate in table.rows if str(candidate.value) == transaction_id), None)
     if row_key is None:
         raise InstalledTuiChildError("installed Ledger Entries lost an imported transaction before classification")
-    table.focus()
-    table.move_cursor(row=table.get_row_index(row_key))
-    await pilot.press("enter")
+    await select_public_data_table_row(pilot=pilot, table_selector="#ledger-entries", row_key=transaction_id)
     await pilot.pause()
     await select_public_data_table_row(
         pilot=pilot,

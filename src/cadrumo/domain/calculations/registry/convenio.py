@@ -357,7 +357,7 @@ def _convenio_document_id(operation: PinnedAuthorityOperation, resolved: Resolve
     if not resolved.legal_refs:
         raise RegistryValidationError(f"convenio override fact {resolved.fact_id!r} lacks legal provenance")
     try:
-        document_id = operation.legal_reference(str(resolved.legal_refs[0])).document_id
+        document_id = operation.legal_reference(resolved.legal_refs[0]).document_id
     except KeyError as exc:
         raise RegistryValidationError(
             f"convenio override fact {resolved.fact_id!r} names unknown legal reference {resolved.legal_refs[0]!r}",

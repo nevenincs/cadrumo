@@ -93,7 +93,7 @@
           "code": "REFUSED_LEDGER_EVIDENCE_NOT_FOUND",
           "context": {
             "effect": "none",
-            "operation_id": "32a71325252e7465596f1b7a2dc622dd551a52f7bff6adbd8e6806946baed6b4",
+            "operation_id": "d6883aee034d865617c0ac496c3dca06b77aa107ef851f10d344985ed4fe505c",
             "refusal_code": "REFUSED_LEDGER_EVIDENCE_NOT_FOUND",
             "terminal_condition": "refused"
           },

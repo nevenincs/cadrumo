@@ -637,6 +637,20 @@ modelo:
         modelo-322-papel-actividades:
           field:
             title: Activitats
+        modelo-322-printed-disclosure-arithmetic-2008-2022:
+          field:
+            title: 'Model 322: totals que imprimeix el formulari, exercicis 2008 a
+              2022'
+        modelo-322-printed-disclosure-arithmetic-2023:
+          field:
+            title: 'Model 322: totals que imprimeix el formulari, exercici 2023'
+        modelo-322-printed-disclosure-arithmetic-2024-2025:
+          field:
+            title: 'Model 322: totals que imprimeix el formulari, exercicis 2024 i
+              2025'
+        modelo-322-printed-disclosure-arithmetic-2026-y-siguientes:
+          field:
+            title: 'Model 322: totals que imprimeix el formulari, des de 2026'
       field:
         official_name: Modelo 322. Impost sobre el Valor Afegit. Grup d'entitats.
           Model individual. Autoliquidació mensual.

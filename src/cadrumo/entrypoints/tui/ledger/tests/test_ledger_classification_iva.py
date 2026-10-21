@@ -11,7 +11,7 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Static
 
 from .....application.ledger import models as ledger_models
-from .....application.ledger.models import ManualLedgerTransactionResult
+from .....application.ledger.models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.iva_deduction_fact import IvaDeductionFactKind
@@ -100,6 +100,7 @@ async def test_iva_and_allocation_fields_reach_the_shared_submitter_as_typed_val
     assert screen.flow_state is LedgerFlowState.SUCCEEDED
     assert len(door.calls) == 1
     patch = door.calls[0].patch
+    assert isinstance(patch, ManualLedgerTransactionPatch)
     assert patch.model_fields_set == {
         "business_classification",
         "taxable_base",
@@ -123,6 +124,24 @@ async def test_iva_and_allocation_fields_reach_the_shared_submitter_as_typed_val
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("rate", ["0.052", "0.075", "0.014", "0.005", "0.0175"])
+async def test_a_share_and_a_rate_keep_the_fraction_digits_they_have(rate: str) -> None:
+    door = _ClassificationDoor()
+    screen = LedgerClassificationScreen(_action_controller(door))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 60)) as pilot:
+        await pilot.pause()
+        _set_input(screen, "iva_rate", rate)
+        _set_input(screen, "business_pct", "0.333")
+        await _choose_and_confirm(pilot, screen, row=2)  # MIXED
+
+    assert screen.flow_state is LedgerFlowState.SUCCEEDED
+    patch = door.calls[0].patch
+    assert patch.iva_rate == Decimal(rate)
+    assert patch.business_pct == Decimal("0.333")
+
+
+@pytest.mark.asyncio
 async def test_blank_iva_and_prorrata_inputs_remain_unset() -> None:
     door = _ClassificationDoor()
     screen = LedgerClassificationScreen(_action_controller(door))
@@ -133,6 +152,7 @@ async def test_blank_iva_and_prorrata_inputs_remain_unset() -> None:
 
     assert screen.flow_state is LedgerFlowState.SUCCEEDED
     patch = door.calls[0].patch
+    assert isinstance(patch, ManualLedgerTransactionPatch)
     assert patch.model_fields_set == {"business_classification"}
     assert patch.taxable_base is None
     assert patch.iva_rate is None
@@ -155,6 +175,8 @@ async def test_blank_iva_and_prorrata_inputs_remain_unset() -> None:
         ("taxable_base", "1_000", 0, "taxable_base must be a decimal"),
         ("iva_amount", "+5", 0, "iva_amount must be a decimal"),
         ("iva_amount", "1.234", 0, "iva_amount must be a decimal"),
+        # Money stays at euro cents, which a three-digit fraction with no thousands reading shows.
+        ("taxable_base", "0.123", 0, "taxable_base must be a decimal"),
         ("business_pct", "NaN", 2, "business_pct must be a decimal"),
     ),
 )

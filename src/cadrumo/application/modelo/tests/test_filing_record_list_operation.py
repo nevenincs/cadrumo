@@ -11,6 +11,14 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    OperationAccessRequest,
+)
+
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -30,13 +38,6 @@ from ....domain.modelos.work_unit import derive_work_unit_id
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    OperationAccessRequest,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..filing_record_list_contracts import (
     ModeloFilingRecordListEntryProjection,
@@ -167,12 +168,13 @@ def _access_context(
     action: AccessAction = AccessAction.SUBMIT,
     profile_id: UUID = _PROFILE,
     admitted: OperationAccessRequest | None = None,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=action,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
         authority_operation=operation,
@@ -238,6 +240,22 @@ def test_access_is_exact_profile_and_requires_whole_profile_consent() -> None:
             context=_access_context(registration, operation=operation, profile_id=_OTHER_PROFILE),
         )
     assert foreign.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def test_filing_record_list_is_admitted_on_the_external_client_frontend_without_a_commit_door() -> None:
+    _factory, _definition, registration, registry = _setup(_bundle(_record()))
+    operation = cast(PinnedAuthorityOperation, object())
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(),
+        context=_access_context(
+            registration, operation=operation, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
+        ),
+    )
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
+    assert resolved.request.profile_id == _PROFILE
+    assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 def test_capture_filters_exact_profile_and_does_not_truncate(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -4,10 +4,14 @@ import {
   calendarMonths,
   crowded,
   drawnWeeks,
-  entrySpan,
   LANES_SHOWN,
   weekStartOf,
 } from "../src/shell/calendarGrid";
+import {
+  compareCalendarEntries,
+  entrySpan,
+  STATE_ORDER,
+} from "../src/shell/calendarEntries";
 import type { CalendarEntry } from "../src/shell/views";
 
 // The calendar's pure rules, checked at their boundaries. No page is opened.
@@ -80,6 +84,33 @@ const obligation = (
 });
 
 const OCTOBER = { from_date: "2026-10-01", to_date: "2026-10-31" };
+
+test("calendar faces share urgency ordering with deterministic date and identity ties", () => {
+  const entries = [
+    { ...obligation("303", null, "2026-10-20"), user_state: "filed" as const },
+    {
+      ...obligation("130", null, "2026-10-19"),
+      user_state: "unknown" as const,
+    },
+    obligation("349", null, "2026-10-20"),
+    obligation("303", null, "2026-10-20"),
+    obligation("130", null, "2026-10-19"),
+    { ...obligation("303", null, "2026-10-30"), user_state: "late" as const },
+  ];
+  expect(STATE_ORDER).toEqual(["late", "due", "unknown", "filed"]);
+  expect(
+    entries
+      .sort(compareCalendarEntries)
+      .map((entry) => `${entry.user_state}:${entry.modelo}`),
+  ).toEqual([
+    "late:303",
+    "due:130",
+    "due:303",
+    "due:349",
+    "unknown:130",
+    "filed:303",
+  ]);
+});
 
 test("a month is weeks from the locale's first day, blank outside the month", () => {
   // 1 October 2026 is a Thursday.

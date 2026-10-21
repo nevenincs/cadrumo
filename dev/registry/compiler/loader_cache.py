@@ -514,7 +514,7 @@ def registry_disk_cache_dir() -> Path:
        other development caches.
     """
     override = os.environ.get(REGISTRY_DISK_CACHE_DIR_ENV)
-    if override and override.strip():
+    if (override is not None and override) and override.strip():
         return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
     return dev_cache_dir("registry-disk-cache")
 

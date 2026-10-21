@@ -8,6 +8,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..adapters.persistence.storage.attachment import AttachmentStore
 from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
@@ -16,7 +18,6 @@ from ..adapters.persistence.storage.sql.secure_objects import SecureObjectReposi
 from ..application.modelo.action_errors import ModeloProfileReadinessError
 from ..application.modelo.profile_readiness_gate import load_modelo_work_profile
 from ..application.modelo.quickfile_operation_ports import QuickfileOperationPorts
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.wizard.status import taxpayer_profile_from_record
 from ..core.bucket_pointer import require_active_bucket_id

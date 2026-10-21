@@ -30,7 +30,7 @@ from ..installed_wheel_binding import (
     installed_python_for_cli,
     sealed_wheel_payload_sha256,
 )
-from ..release_cohort_support import _real_product_wheel, _uv_executable, client_venv_template
+from ..release_cohort_support import _real_companion_wheels, _real_product_wheel, _uv_executable, client_venv_template
 
 # Serial and integration for the same reason as the sibling evidence suite:
 # these cases install the real product wheel into a real environment, which is
@@ -54,7 +54,15 @@ def _install_product_wheel(root: Path) -> Path:
     interpreter = venv_bin_dir(venv) / ("python.exe" if os.name == "nt" else "python")
     for argv in (
         [uv, "venv", "--python", sys.executable, str(venv)],
-        [uv, "pip", "install", "--python", str(interpreter), str(_real_product_wheel())],
+        [
+            uv,
+            "pip",
+            "install",
+            "--python",
+            str(interpreter),
+            str(_real_product_wheel()),
+            *(str(wheel) for wheel in _real_companion_wheels()),
+        ],
     ):
         completed = run_command(
             argv,

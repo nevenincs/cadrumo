@@ -368,7 +368,7 @@ def _add_annual_orden_legal_reference(
         published_at=source.published_at,
         effective_from=effective_from,
         effective_to=effective_to,
-        review_status=RevisionReviewStatus.AGENT_REVIEWED,
+        review_status=RevisionReviewStatus.AUTOMATION_REVIEWED,
         reviewed_at=source.retrieved_at,
         reviewed_by=f"compiler:{EXTRACTOR_VERSION}",
         required_text=required_text,

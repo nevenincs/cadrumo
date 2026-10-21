@@ -7,7 +7,6 @@ import pytest
 from cadrumo.application.operations.access_resolution import OperationAccessContext
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessAction, Availability, OperationAccessRequest
 from cadrumo.application.user_profile.censal_operation import CensalProfileBaseline
 from cadrumo.application.user_profile.censal_preview_operation import (
     CENSAL_PREVIEW_OPERATION_DEFINITION_ID,
@@ -16,6 +15,7 @@ from cadrumo.application.user_profile.censal_preview_operation import (
 )
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

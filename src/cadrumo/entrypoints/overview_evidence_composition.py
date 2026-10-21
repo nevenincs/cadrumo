@@ -394,7 +394,7 @@ def _stored_filed_artefact_matching_observation_csv(
     expected_tax_id: str | None,
 ) -> str | None:
     storage_ref = artefact.storage_ref
-    if not storage_ref:
+    if not (storage_ref is not None and storage_ref):
         return None
     try:
         body = store.load_artefact(storage_ref)

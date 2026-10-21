@@ -201,6 +201,13 @@ class AccountChromeScreen(TypedAppAccess, Screen[None]):
                 bar.refresh_copy()
         self._describe_own_appearance_key()
 
+    async def refresh_language(self) -> None:
+        """Refresh mounted presentation in place; subclasses preserve their edit state."""
+        from .language import refresh_localized_widgets
+
+        refresh_localized_widgets(self)
+        self._describe_own_appearance_key()
+
     def _describe_own_appearance_key(self) -> None:
         """Make this screen's own appearance key agree with the root's.
 
@@ -213,7 +220,7 @@ class AccountChromeScreen(TypedAppAccess, Screen[None]):
         ``ProfileManagerScreen._offer_language_in_footer`` gives.
         """
         bindings = self._bindings.key_to_bindings.get(_APPEARANCE_KEY)
-        if not bindings:
+        if not (bindings is not None and bindings):
             return
         if isinstance(self.app, TuiAccountHostV1):
             self._bindings.key_to_bindings = {

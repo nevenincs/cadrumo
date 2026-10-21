@@ -27,13 +27,15 @@ class PluginTestCohort:
     manuals_sdist: Path
     official_wheel: Path
     official_sdist: Path
+    normatives_wheel: Path
+    normatives_sdist: Path
     sha256: dict[str, str]
     command_spec_attestation: dict[str, object] | None = None
 
     @property
-    def product_wheels(self) -> tuple[Path, Path, Path]:
+    def product_wheels(self) -> tuple[Path, Path, Path, Path]:
         """Return the synthetic installable product wheels in stable order."""
-        return self.root_wheel, self.manuals_wheel, self.official_wheel
+        return self.root_wheel, self.manuals_wheel, self.official_wheel, self.normatives_wheel
 
 
 def make_test_plugin_cohort(
@@ -51,6 +53,8 @@ def make_test_plugin_cohort(
         "cadrumo-data-manuals-sdist": directory / f"cadrumo_data_manuals-{version}.tar.gz",
         "cadrumo-data-official": directory / f"cadrumo_data_official-{version}-py3-none-any.whl",
         "cadrumo-data-official-sdist": directory / f"cadrumo_data_official-{version}.tar.gz",
+        "cadrumo-data-normatives": directory / f"cadrumo_data_normatives-{version}-py3-none-any.whl",
+        "cadrumo-data-normatives-sdist": directory / f"cadrumo_data_normatives-{version}.tar.gz",
     }
     for name, path in artifacts.items():
         path.write_bytes(f"sealed-test-wheel:{name}\n".encode())
@@ -127,5 +131,7 @@ def make_test_plugin_cohort(
         manuals_sdist=artifacts["cadrumo-data-manuals-sdist"],
         official_wheel=artifacts["cadrumo-data-official"],
         official_sdist=artifacts["cadrumo-data-official-sdist"],
+        normatives_wheel=artifacts["cadrumo-data-normatives"],
+        normatives_sdist=artifacts["cadrumo-data-normatives-sdist"],
         sha256=sha256,
     )

@@ -8,10 +8,11 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ...application.user_profile.access_contracts import AccessDenialCode
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..modelo_maritime_operation_composition import build_modelo_maritime_preview_ports

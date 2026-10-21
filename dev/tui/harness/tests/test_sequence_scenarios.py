@@ -13,8 +13,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
-from cadrumo.entrypoints.tui.modelo.workbench.bulk_confirm import BulkConfirmScreen
 from cadrumo.entrypoints.tui.modelo.workbench.issues import WorkbenchIssuesScreen
 from cadrumo.entrypoints.tui.modelo.workbench.review import EditReviewScreen
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
@@ -50,6 +48,7 @@ _BROWSING_PAGES = ("workbench", NEXT_PAGE, "sources", "legend", "search", "not-e
 _FIRST_QUARTER_PAGES = (*_BROWSING_PAGES, ISSUES_PAGE)
 _INSTALMENT_PAGES = (*_BROWSING_PAGES, REVIEW_PAGE, RECALCULATE_PAGE, ISSUES_PAGE)
 _EVERY_PAGE = (*_BROWSING_PAGES, EDITOR_PAGE, BULK_CONFIRM_PAGE, REVIEW_PAGE, RECALCULATE_PAGE, ISSUES_PAGE)
+_ANNUAL_RETURN_PAGES = (*_BROWSING_PAGES, REVIEW_PAGE, ISSUES_PAGE)
 
 
 def _qualname(screen: object) -> str:
@@ -92,7 +91,7 @@ def test_a_scenario_offers_only_the_pages_its_declaration_can_reach() -> None:
     assert ISSUES_PAGE not in scenario_pages(_UNVERIFIED)
     assert REVIEW_PAGE in scenario_pages(_UNVERIFIED)
     assert EDITOR_PAGE not in scenario_pages(_NOTHING_ASSUMED)
-    assert scenario_pages(_ANNUAL_RETURN) == (DECLARATIONS_PAGE, *_EVERY_PAGE)
+    assert scenario_pages(_ANNUAL_RETURN) == (DECLARATIONS_PAGE, *_ANNUAL_RETURN_PAGES)
     assert REVIEW_PAGE in scenario_pages(_NOTHING_ASSUMED)
 
 
@@ -169,20 +168,24 @@ def _surface_text(frame_text: str) -> str:
 
 @pytest.mark.integration
 @pytest.mark.hex_core
-def test_every_walk_lands_on_its_screen_and_none_changes_the_declaration(tmp_path: Path) -> None:
+def test_every_walk_refuses_unavailable_pages_without_changing_the_declaration(tmp_path: Path) -> None:
     """Every capture shares one sandbox, so a walk that saved anything would show on the workbench read after it.
 
-    At 120x40 the box panel docks in the workbench, so its pages paint the
-    workbench; a walk that opened no panel is refused, which ``refusals`` checks.
+    This sequence now records its operator inputs and has no editable assumed
+    value. Deliberately claiming the old pages must produce exact refusals;
+    pressing recalculation there would mutate the shared declaration.
     """
     shots = [
         Shot(page, 120, 40, "dark", tmp_path / f"{index}-{page}.svg")
         for index, page in enumerate((*_EVERY_PAGE, "workbench"))
     ]
 
-    _, frames, refusals = capture_scenario(_ANNUAL_RETURN, shots)
+    claimed = SequenceScenario(
+        _ANNUAL_RETURN.sequence_id, _ANNUAL_RETURN.modelo, "claimed to offer every editing page", assumes=True
+    )
+    _, frames, refusals = capture_scenario(claimed, shots)
 
-    assert not refusals
+    assert [refusal.shot.page for refusal in refusals] == [EDITOR_PAGE, BULK_CONFIRM_PAGE, RECALCULATE_PAGE], refusals
 
     painted = {frame.shot.page: frame.screen for frame in frames}
     assert painted == {
@@ -192,10 +195,7 @@ def test_every_walk_lands_on_its_screen_and_none_changes_the_declaration(tmp_pat
         "legend": _qualname(ModeloWorkbenchScreen),
         "search": _qualname(ModeloWorkbenchScreen),
         "not-editable": _qualname(ModeloWorkbenchScreen),
-        EDITOR_PAGE: _qualname(ModeloWorkbenchScreen),
-        BULK_CONFIRM_PAGE: _qualname(BulkConfirmScreen),
         REVIEW_PAGE: _qualname(EditReviewScreen),
-        RECALCULATE_PAGE: _qualname(ConfirmScreen),
         ISSUES_PAGE: _qualname(WorkbenchIssuesScreen),
     }
     assert _surface_text(frames[0].frame_text) == _surface_text(frames[-1].frame_text)
@@ -225,10 +225,10 @@ def test_a_page_the_declaration_does_not_offer_is_refused_alone(tmp_path: Path) 
 @pytest.mark.parametrize(
     ("scenario", "reason"),
     [
-        (_ANNUAL_RETURN, "can be confirmed from a list"),
+        (_ANNUAL_RETURN, "not confirm"),
         (_INSTALMENT, "not confirm"),
     ],
-    ids=["value-a-list-confirms", "next-step-is-not-confirm"],
+    ids=["completed-return-is-not-confirm", "next-step-is-not-confirm"],
 )
 def test_f8_is_never_pressed_where_it_would_do_anything_but_open_a_panel(
     scenario: SequenceScenario, reason: str, tmp_path: Path
@@ -245,7 +245,7 @@ def test_f8_is_never_pressed_where_it_would_do_anything_but_open_a_panel(
     _, frames, refusals = capture_scenario(claimed, shots)
 
     assert [refused.shot.page for refused in refusals] == [F8_CONFIRM_PAGE]
-    assert reason in refusals[0].detail
+    assert reason in refusals[0].detail, refusals
     assert _surface_text(frames[0].frame_text) == _surface_text(frames[-1].frame_text)
 
 

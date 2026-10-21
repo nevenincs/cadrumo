@@ -23,8 +23,7 @@ from ...domain.invoices.business_premises import (
 from ...domain.invoices.enums import IvaRate
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import InvoiceLine
-from ...domain.iva.classification import InvoiceKind
-from ...domain.iva.schema import IvaRateKind
+from ...domain.iva.schema import InvoiceKind, IvaRateKind
 from ..operations.models import OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.public_scalar import PublicDecimal
 from .catalogue_read_projection import CatalogueInvoiceSnapshot
@@ -285,7 +284,7 @@ def _require_created_invoice_result(result: InvoiceAddResult) -> None:
     if (
         result.invoice is None
         or result.invoice.bucket_id is None
-        or str(result.invoice.bucket_id) != str(result.profile_id)
+        or result.invoice.bucket_id != str(result.profile_id)
         or len(result.bucket_event_ids) != 1
         or result.invoice_id is not None
         or result.validation_code is not None

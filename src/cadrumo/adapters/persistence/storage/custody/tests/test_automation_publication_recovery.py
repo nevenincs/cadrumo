@@ -15,12 +15,8 @@ from pydantic import SecretBytes
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import api_key_verifier, generate_api_key
 from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.zeroise import zeroise
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationGrantMaterial,
-    AutomationKeyVerifier,
-)
+from cadrumo.application.user_profile.automation_custody_port import AutomationGrantMaterial, AutomationKeyVerifier
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 from .automation_support import MemoryNativePort
 from .test_automation_store import NOW, Subject, changed

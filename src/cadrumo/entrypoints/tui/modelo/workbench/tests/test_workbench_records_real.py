@@ -33,13 +33,13 @@ from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ......domain.deadlines.models import IVARegime, TaxpayerProfile
 from ......domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from ......tests.env_scope import ready_clave_settings
-from .....tests.modelo_349_invoice_facts import (
+from ......domain.invoices.tests.modelo_349_invoice_facts import (
     M349_EXPECTED_IMPORTE,
     M349_EXPECTED_OPERADORES,
     M349_INVOICES,
     intra_community_invoice,
 )
+from ......tests.env_scope import ready_clave_settings
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from .....tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -50,8 +50,8 @@ from ....components.theme import install_cadrumo_themes
 from ....tests.modelo_workbench_session import application_workbench
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry
+from ..factory import InstalledModeloWorkbench
 from ..grid import CasillaListRecords
-from ..installed import InstalledModeloWorkbench
 from ..issue_projection import issue_lines
 from ..issues import WorkbenchIssuesScreen
 from ..page_items import page_of, workbench_pages

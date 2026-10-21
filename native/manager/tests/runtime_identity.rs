@@ -95,7 +95,7 @@ fn start_packaged_runtime(
         startup::{self, Start},
         supervision::{
             adoption::{InstalledVersion, InstalledVersions},
-            launch::{LaunchTarget, runtime_image},
+            launch::LaunchTarget,
             stop::PlatformStopSignal,
             supervisor::{
                 Collaborators, Event, Outcome, Request, SessionActivity, SupervisorConfig,
@@ -124,7 +124,7 @@ fn start_packaged_runtime(
         }
     }
     let target =
-        LaunchTarget::fixture(runtime_image(package), root.to_owned(), identity, version).unwrap();
+        LaunchTarget::packaged_fixture(package, root.to_owned(), identity, version).unwrap();
     let mut ownership = Ownership::new(
         root.to_owned(),
         ManagerSession::current().unwrap(),

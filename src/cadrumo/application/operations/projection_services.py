@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from secrets import compare_digest
 from typing import Protocol, Self, cast, runtime_checkable
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -121,6 +122,7 @@ from .frontend_requests import (
     OperationResultProjectionRefusalCode,
     OperationResultProjectionRefusalV1,
     OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
     OperationResultProjectionVersionHeader,
     OperationReviewProjectionRefusalV1,
     OperationReviewProjectionRequestV1,
@@ -147,6 +149,7 @@ from .persistence.journal import (
     OperationSecureReferenceStore,
 )
 from .registry import (
+    OperationFrontendProjection,
     OperationRegistry,
 )
 from .secret_submission import zeroize_secret_buffer
@@ -485,16 +488,33 @@ class OperationResultProjectionService:
     reader: OperationObservationReader
     registry: OperationRegistry
     operands: OperationSecureReferenceStore
+    _snapshot: list[
+        tuple[tuple[OperationId, UUID, OperationFrontendProjection, str, type[BaseModel], ContentDigest], BaseModel]
+    ] = field(default_factory=list, init=False, repr=False, compare=False)
+
+    def forget_snapshot(self, operation_id: OperationId | None = None) -> None:
+        """Release the single pending delivery snapshot, without retaining private history."""
+        retained = next(iter(self._snapshot), None)
+        if operation_id is None or (retained is not None and retained[0][0] == operation_id):
+            self._snapshot.clear()
 
     async def resolve[ResultProjectionT: BaseModel](
         self,
         request: OperationResultProjectionVersionHeader | OperationResultProjectionRequestV1,
         projection_type: type[ResultProjectionT],
+        *,
+        snapshot_scope: tuple[UUID, OperationFrontendProjection] | None = None,
+        continue_snapshot: bool = False,
     ) -> OperationResultProjectionResultV1[ResultProjectionT]:
         """Resolve the exact registered public result projection or a refusal.
 
         ``projection_type`` names the model the caller expects. A request whose
         registered schema binds a different model refuses.
+
+        Only a runtime holding its output guard supplies ``snapshot_scope``.
+        Page zero resolves afresh; continuations can reuse one validated public
+        model after all terminal and contract checks. Delivery, loss of the
+        profile's last session, or shutdown forgets the pending snapshot.
         """
         request_or_refusal = _result_request_or_refusal(request)
         if isinstance(request_or_refusal, OperationResultProjectionRefusalV1):
@@ -520,13 +540,37 @@ class OperationResultProjectionService:
         digest_or_refusal = _result_digest_or_refusal(context_or_refusal)
         if isinstance(digest_or_refusal, OperationResultProjectionRefusalV1):
             return digest_or_refusal
-        return await _resolve_result_projection(
+        key = (
+            (
+                request_or_refusal.operation_id,
+                *snapshot_scope,
+                request_or_refusal.model_dump_json(),
+                projection_type,
+                digest_or_refusal,
+            )
+            if snapshot_scope is not None
+            else None
+        )
+        # Every continuation has already rechecked the terminal snapshot,
+        # current registry contract, schema and operand digest above. The host
+        # separately retains the exact session's disclosure guard on every page.
+        retained = next(iter(self._snapshot), None)
+        if key is not None and continue_snapshot and retained is not None and retained[0] == key:
+            # CAST-RATIONALE-PAGED-RESULT: the exact requested model class is
+            # part of the key; only validated success envelopes are retained.
+            return cast("OperationResultProjectionResultV1[ResultProjectionT]", retained[1])
+        if key is not None:
+            self._snapshot.clear()
+        result = await _resolve_result_projection(
             self.registry,
             self.operands,
             registration_or_refusal,
             digest_or_refusal,
             projection_type,
         )
+        if key is not None and isinstance(result, OperationResultProjectionSuccessV1):
+            self._snapshot[:] = [(key, result)]
+        return result
 
 
 @dataclass(frozen=True, slots=True)

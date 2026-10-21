@@ -45,9 +45,9 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from cadrumo.application.ledger.preconditions import LedgerPreconditionCondition
 from cadrumo.core.config import Settings
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
+from .....domain.iva.schema import InvoiceKind
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     InvoiceAuthorityFixture,

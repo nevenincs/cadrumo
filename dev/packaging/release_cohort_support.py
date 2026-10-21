@@ -55,6 +55,7 @@ from .cohort_manifest import (
     load_release_cohort,
     write_manifest,
 )
+from .lane_verification_core import build_companion_wheels
 
 DEFAULT_COHORT_VERSION = "0.2.1"
 DEFAULT_COHORT_SOURCE_DIGEST = "c" * 64
@@ -105,8 +106,14 @@ def _real_product_wheel() -> Path:
 
 
 @functools.lru_cache(maxsize=1)
+def _real_companion_wheels() -> tuple[Path, Path, Path]:
+    """Build the mandatory data companions beside the genuine core wheel."""
+    return build_companion_wheels(_real_product_wheel().parent, _uv_executable(), build_root=REPO_ROOT)
+
+
+@functools.lru_cache(maxsize=1)
 def client_venv_template() -> Path:
-    """Install the real product wheel into a minimal venv, once per process.
+    """Install the real four-wheel product into a minimal venv, once per process.
 
     The launcher-facing tests need the genuine installer-generated ``aeat`` and
     ``cadrumo-mcp`` console scripts, the interpreter that owns them, and an
@@ -132,7 +139,15 @@ def client_venv_template() -> Path:
     interpreter = venv_bin_dir(template) / ("python.exe" if os.name == "nt" else "python")
     for argv in (
         [uv, "venv", "--python", sys.executable, str(template)],
-        [uv, "pip", "install", "--python", str(interpreter), str(_real_product_wheel())],
+        [
+            uv,
+            "pip",
+            "install",
+            "--python",
+            str(interpreter),
+            str(_real_product_wheel()),
+            *(str(wheel) for wheel in _real_companion_wheels()),
+        ],
     ):
         completed = run_command(
             argv,

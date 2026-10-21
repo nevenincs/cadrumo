@@ -13,15 +13,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from textual.app import App
-
+from .quiet_app import QuietApp
 from .theme import BASE_CSS, install_cadrumo_themes, tokenised
 
 if TYPE_CHECKING:
     from textual.screen import Screen
 
 
-class ScreenHostApp[ResultT](App[ResultT | None]):
+class ScreenHostApp[ResultT](QuietApp[ResultT | None]):
     """Run exactly one screen as its own process."""
 
     CSS = tokenised(BASE_CSS)

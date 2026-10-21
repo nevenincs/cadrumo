@@ -1,17 +1,20 @@
-//! The Logs view: Python records and manager diagnostics tailed from their
-//! logs and rotations, merged with desktop-host events in paced batches.
+//! The Logs view: Python records and manager diagnostics from the current
+//! desktop launch, merged with desktop-host events in paced batches.
 //!
-//! Records are read, never written: nothing here creates, truncates, rotates
-//! or deletes a log file, and nothing is persisted. Terminal bytes and
-//! captured child output never become records.
+//! The feed never changes source files. Explicit exports write a new file in
+//! Downloads. Terminal bytes and captured child output never become records.
 //!
 //! One poller thread owns the tail and does every file and directory read,
-//! and only while a subscription exists. The commands and the page-load hook
-//! take a lock that is never held across file I/O or a delivery.
+//! and only while a subscription exists. It polls when a file in a log
+//! directory changes, a host event is recorded or a subscription changes,
+//! and at the deadlines its own pending work sets; otherwise it sleeps. The
+//! commands and the page-load hook take a lock that is never held across
+//! file I/O or a delivery.
 mod format;
 mod host;
 mod manager;
 mod record;
+mod severity;
 mod tail;
 #[cfg(test)]
 mod tests;
@@ -22,6 +25,8 @@ use cadrumo_application::{
     diagnostics::Diagnostics,
     error::application::{ApplicationError, ErrorCode, Operation, Result},
 };
+use cadrumo_platform::file_changes::{FileChanges, Waker};
+pub use format::Level;
 use record::{Aggregate, LogBatch, LogSourceState, LogSourceStates, Prepared, Sink, SourceKind};
 use serde::Serialize;
 use std::{
@@ -32,10 +37,6 @@ use std::{
 use tauri::{
     Manager, Runtime, State, Webview, ipc::Channel, plugin::TauriPlugin, webview::PageLoadEvent,
 };
-
-/// How often the files and the diagnostics events are polled while a
-/// subscription exists.
-const TICK: Duration = Duration::from_millis(100);
 
 struct Inner {
     aggregate: Aggregate,
@@ -67,15 +68,22 @@ pub struct LogHub {
     file: PathBuf,
     manager_file: PathBuf,
     refusal: Option<ApplicationError>,
+    diagnostics: Arc<Diagnostics>,
+    /// Ends the poller's wait for a change.
+    waker: Waker,
 }
 
 /// The poller's side: the tail and the host events, read on its own thread.
 pub struct Poller {
+    /// Fixed for the launch, including when the page reloads or the reader rests.
+    since_ms: Option<u64>,
     shared: Arc<Shared>,
     tail: tail::Tail,
     manager_tail: tail::Tail,
     host: host::HostEvents,
     diagnostics: Arc<Diagnostics>,
+    /// The log files' directories.
+    changes: FileChanges,
 }
 
 impl LogHub {
@@ -96,13 +104,9 @@ impl LogHub {
         let shared = Arc::new(Shared {
             inner: Mutex::new(Inner {
                 aggregate: Aggregate::new(LogSourceStates {
+                    host: host::source(&diagnostics),
                     python: state,
-                    manager: LogSourceState {
-                        kind: SourceKind::Missing,
-                        detail: manager_log_file.display().to_string(),
-                        failure: None,
-                        rejected: 0,
-                    },
+                    manager: None,
                 }),
                 polled: false,
                 resting: true,
@@ -110,18 +114,31 @@ impl LogHub {
             }),
             wake: Condvar::new(),
         });
+        let changes = FileChanges::new(
+            [&log_file, &manager_log_file]
+                .into_iter()
+                .filter_map(|file| file.parent().map(PathBuf::from))
+                .collect(),
+        );
+        let waker = changes.waker();
+        let recorded = waker.clone();
+        diagnostics.on_recorded(Arc::new(move || recorded.wake()));
         let hub = Self {
             shared: shared.clone(),
             file: log_file,
             manager_file: manager_log_file,
             refusal: tail.refusal(),
+            diagnostics: diagnostics.clone(),
+            waker,
         };
         let poller = Poller {
+            since_ms: Some(diagnostics.started_ms()),
             shared,
             tail,
             manager_tail,
             host: host::HostEvents::default(),
             diagnostics,
+            changes,
         };
         (hub, poller)
     }
@@ -134,12 +151,14 @@ impl LogHub {
             let mut inner = self.shared.lock();
             let subscription = inner.aggregate.subscribe(sink);
             self.shared.wake.notify_all();
+            self.waker.wake();
             (
                 subscription,
                 inner.polled.then(|| inner.aggregate.states.clone()),
             )
         };
         let states = polled.unwrap_or_else(|| LogSourceStates {
+            host: host::source(&self.diagnostics),
             python: match &self.refusal {
                 Some(refusal) => LogSourceState {
                     kind: SourceKind::Unreadable,
@@ -149,7 +168,7 @@ impl LogHub {
                 },
                 None => tail::probe(&self.file),
             },
-            manager: tail::probe(&self.manager_file),
+            manager: standalone(tail::probe(&self.manager_file)),
         });
         Subscribed {
             subscription,
@@ -159,6 +178,8 @@ impl LogHub {
 
     fn unsubscribe(&self, subscription: u64) -> Result<()> {
         if self.shared.lock().aggregate.unsubscribe(subscription) {
+            // The last one going lets the poller rest without waiting for a change.
+            self.waker.wake();
             Ok(())
         } else {
             Err(ApplicationError::new(
@@ -170,6 +191,7 @@ impl LogHub {
 
     fn clear_subscriptions(&self) {
         self.shared.lock().aggregate.clear_subscriptions();
+        self.waker.wake();
     }
 }
 
@@ -177,16 +199,22 @@ impl Drop for LogHub {
     fn drop(&mut self) {
         self.shared.lock().closed = true;
         self.shared.wake.notify_all();
+        self.waker.wake();
     }
 }
 
 impl Poller {
-    /// Polls while a subscription exists and waits without polling while none
+    /// Polls while a subscription exists, each time something may have changed
+    /// or a pending deadline passes, and waits without polling while none
     /// does, until the hub is dropped.
     pub fn run(mut self) {
         while self.ready() {
-            self.tick(Instant::now());
-            std::thread::sleep(TICK);
+            // Batches are paced from when they go, not from when the poll
+            // began: reading a large backlog can outlast the pacing interval,
+            // and a change that wakes the next poll at once must not send a
+            // second batch right behind the first.
+            let due = self.poll(Instant::now(), Instant::now);
+            self.changes.wait(due);
         }
     }
 
@@ -220,15 +248,24 @@ impl Poller {
         }
     }
 
-    /// Reads new records without the lock, then numbers them and picks the
-    /// due batches under it, then sends the batches without it.
-    pub fn tick(&mut self, now: Instant) {
+    /// One poll in which every step happens at `now`.
+    #[cfg(test)]
+    pub fn tick(&mut self, now: Instant) -> Option<Duration> {
+        self.poll(now, || now)
+    }
+
+    /// Reads new records at `now` without the lock, then numbers them and
+    /// picks the due batches under it at the instant `sending` reports, then
+    /// sends the batches without it. Returns how long until a poll is due
+    /// with no change at all: a record settling, a batch held by the pacing
+    /// interval, or a tail's retry.
+    fn poll(&mut self, now: Instant, sending: impl Fn() -> Instant) -> Option<Duration> {
         let shared = self.shared.clone();
         {
             let mut inner = shared.lock();
             if inner.aggregate.idle() {
                 self.rest(&mut inner);
-                return;
+                return None;
             }
             inner.resting = false;
         }
@@ -239,23 +276,59 @@ impl Poller {
             .map(Prepared::new)
             .collect();
         let (entries, python) = self.tail.poll(now);
-        prepared.extend(entries.into_iter().map(Prepared::new));
+        prepared.extend(
+            entries
+                .into_iter()
+                .filter(|entry| {
+                    self.since_ms
+                        .is_none_or(|since| entry.timestamp_ms.is_some_and(|time| time >= since))
+                })
+                .map(Prepared::new),
+        );
         let (entries, manager) = self.manager_tail.poll(now);
-        prepared.extend(entries.into_iter().map(Prepared::new));
-        let deliveries = {
+        prepared.extend(
+            entries
+                .into_iter()
+                .filter(|entry| {
+                    self.since_ms
+                        .is_none_or(|since| entry.timestamp_ms.is_some_and(|time| time >= since))
+                })
+                .map(Prepared::new),
+        );
+        // Every deadline below counts from the same instant.
+        let sent = sending();
+        let (deliveries, held) = {
             let mut inner = shared.lock();
             for record in prepared {
                 inner.aggregate.push(record);
             }
-            inner.aggregate.states = LogSourceStates { python, manager };
+            inner.aggregate.lost(std::mem::take(&mut self.host.dropped));
+            inner.aggregate.states = LogSourceStates {
+                python,
+                manager: standalone(manager),
+                host: host::source(&self.diagnostics),
+            };
             inner.polled = true;
-            inner.aggregate.deliver(now)
+            let deliveries = inner.aggregate.deliver(sent);
+            (deliveries, inner.aggregate.due(sent))
         };
         let refused = record::send(deliveries);
         if !refused.is_empty() {
             shared.lock().aggregate.end(&refused);
         }
+        [held, self.tail.due(sent), self.manager_tail.due(sent)]
+            .into_iter()
+            .flatten()
+            .min()
     }
+}
+
+/// Only a standalone manager process writes the manager log. A desktop that
+/// hosts the supervisor passes it its own diagnostics, so those records are
+/// host events and no manager file exists: the file's absence is not a
+/// missing source. A file that exists but cannot be read still is reported.
+fn standalone(state: LogSourceState) -> Option<LogSourceState> {
+    (state.kind != SourceKind::Missing).then_some(state)
 }
 
 #[derive(Serialize)]
@@ -297,6 +370,94 @@ async fn logs_unsubscribe(hub: State<'_, Arc<LogHub>>, subscription: u64) -> Res
     hub.unsubscribe(subscription)
 }
 
+/// Exports an explicit log selection to a new file; never overwrites an export.
+#[tauri::command]
+async fn logs_export<R: Runtime>(app: tauri::AppHandle<R>, text: String) -> Result<String> {
+    admit_text(&text)?;
+    let directory = app.path().download_dir().map_err(|e| {
+        ApplicationError::new(ErrorCode::WriteFailed, Operation::Logging).caused_by(e)
+    })?;
+    tauri::async_runtime::spawn_blocking(move || export(&directory, &text))
+        .await
+        .map_err(|e| ApplicationError::new(ErrorCode::Panic, Operation::Logging).caused_by(e))?
+}
+
+fn admit_text(text: &str) -> Result<()> {
+    if text.is_empty() || text.len() > 1024 * 1024 * 1024 {
+        return Err(ApplicationError::new(
+            ErrorCode::InvalidArguments,
+            Operation::Logging,
+        ));
+    }
+    Ok(())
+}
+
+/// The host chooses the location; webview callers cannot supply a path.
+#[tauri::command]
+async fn logs_reveal(hub: State<'_, Arc<LogHub>>) -> Result<()> {
+    let file = hub.file.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let directory = file
+            .parent()
+            .filter(|parent| parent.is_dir())
+            .ok_or_else(|| ApplicationError::new(ErrorCode::ReadFailed, Operation::Logging))?;
+        opener::open(directory).map_err(|e| {
+            ApplicationError::new(ErrorCode::SpawnFailed, Operation::Logging).caused_by(e)
+        })
+    })
+    .await
+    .map_err(|e| ApplicationError::new(ErrorCode::Panic, Operation::Logging).caused_by(e))?
+}
+
+/// Log selections can exceed the ordinary shell clipboard's one MiB limit.
+#[tauri::command]
+async fn logs_copy<R: Runtime>(app: tauri::AppHandle<R>, text: String) -> Result<()> {
+    admit_text(&text)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        app.try_state::<tauri_plugin_clipboard_manager::Clipboard<R>>()
+            .ok_or_else(|| {
+                ApplicationError::new(ErrorCode::DesktopUnavailable, Operation::Logging)
+            })?
+            .write_text(text)
+            .map_err(|e| {
+                ApplicationError::new(ErrorCode::WriteFailed, Operation::Logging).caused_by(e)
+            })
+    })
+    .await
+    .map_err(|e| ApplicationError::new(ErrorCode::Panic, Operation::Logging).caused_by(e))?
+}
+
+fn export(directory: &std::path::Path, text: &str) -> Result<String> {
+    use std::io::Write;
+    admit_text(text)?;
+    let stamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let path = directory.join(format!(
+        "cadrumo-session-{}-{stamp}.log",
+        std::process::id()
+    ));
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&path)
+        .map_err(|e| {
+            ApplicationError::new(ErrorCode::WriteFailed, Operation::Logging).caused_by(e)
+        })?;
+    if let Err(error) = file
+        .write_all(text.as_bytes())
+        .and_then(|()| file.sync_all())
+    {
+        drop(file);
+        let _ = std::fs::remove_file(&path);
+        return Err(
+            ApplicationError::new(ErrorCode::WriteFailed, Operation::Logging).caused_by(error),
+        );
+    }
+    Ok(path.display().to_string())
+}
+
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let (hub, poller) = LogHub::new(
         launch.log_file.clone(),
@@ -325,5 +486,11 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
 }
 
 pub fn commands<R: Runtime>() -> Commands<R> {
-    crate::app::commands![logs_subscribe, logs_unsubscribe]
+    crate::app::commands![
+        logs_subscribe,
+        logs_unsubscribe,
+        logs_export,
+        logs_copy,
+        logs_reveal
+    ]
 }

@@ -70,7 +70,7 @@ sequence scenario borrows that state from the documentation: it names a
 (profile, ledger, evidence, create, calculate, verify, file), runs it once in
 the documentation engine's hermetic sandbox, and checks the result against
 that golden. The installed workbench is then composed over the sandbox the
-way `aeat app tui` composes it, and each capture walks the operator's path on
+way `cadrumo-runtime tui` composes it, and each capture walks the operator's path on
 a freshly built app: Declarations, the declaration's row, which opens its
 workbench, then the keys that reach each further page (`s` for the sources
 view).

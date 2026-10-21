@@ -2,11 +2,11 @@
 
 The registry is the authority for the exact casilla set, numbering, legal
 grounding, and formulas of the revision that applies to a given
-`(year, period)`. Read it with
-`aeat app modelo casillas 111 --year <YEAR> --period <PERIOD>` and treat
-that output as canonical; this page is orientation only, so you know what you
-are looking at. Never report a casilla value from this page — report the value
-the CLI computes, with its `legal_refs`/`source_refs`.
+`(year, period)`. Read it with the `authority` tool (`query` `casillas`, with
+`modelo` 111, `filing_year` and `period` (`1T`-`4T` or `01`-`12`)), or `aeat app modelo casillas 111
+--year <YEAR> --period <PERIOD>`, and treat that output as canonical; this page
+is orientation only, so you know what you are looking at. Never report a casilla value from this
+page — report the value Cadrumo computes, with its `legal_refs`/`source_refs`.
 
 ## The nine three-casilla blocks
 
@@ -38,7 +38,7 @@ retenciones/ingresos a cuenta withheld on them.
   contraprestaciones with ingresos a cuenta. Manual input.
 - **Total liquidación (28-30)** — casilla 28 sums every block's retención/
   ingreso-a-cuenta casilla (03, 06, 09, 12, 15, 18, 21, 24, 27); casilla 29 is
-  the operator-supplied correction from prior same-year autoliquidaciones;
+  the taxpayer-supplied correction from prior same-year autoliquidaciones;
   casilla 30 is 28 minus 29, the amount to pay.
 
 ## How to read it safely
@@ -48,12 +48,12 @@ retenciones/ingresos a cuenta withheld on them.
   genuinely had no such payment in the period; if in doubt, ask rather than
   trusting a computed-looking zero.
 - Casilla 28 (computed) and casilla 30 (computed) come only from
-  `aeat app modelo work calculate`. Reach them through the calculation, never
+  the `modelo.work.calculate` operation (`aeat app modelo work calculate`). Reach them through the calculation, never
   by re-deriving the arithmetic.
 - A nonzero perceptor count with a zero base or zero retención sum on the same
   ledger-derived block is the under-declaration shape to question before any
-  export (see `cadrumo-operator-grounding` and `cadrumo-operator-safety-handoff`).
-- Casilla 29's prior-autoliquidación correction is operator-supplied, not
+  export; the grounding, honest-declaration and safety rules govern.
+- Casilla 29's prior-autoliquidación correction is taxpayer-supplied, not
   cross-period carried; do not assume it defaults to zero without asking
   whether an amendment applies.
 - Modelo 190 folds this modelo's annual totals across all filed quarters/

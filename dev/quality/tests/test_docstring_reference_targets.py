@@ -22,9 +22,9 @@ from ..docstring_reference_targets import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _package(tmp_path: Path, **modules: str) -> Path:
+def _package(tmp_path: Path, name: str = "cadrumo", /, **modules: str) -> Path:
     """Write a miniature package and return the directory to scan."""
-    root = tmp_path / "cadrumo"
+    root = tmp_path / name
     root.mkdir()
     for name, source in modules.items():
         (root / f"{name}.py").write_text(source, encoding="utf-8")
@@ -42,7 +42,7 @@ def test_a_reference_to_a_symbol_nothing_defines_is_reported(tmp_path: Path) -> 
         tmp_path,
         live='"""Points at :func:`resolve_read_id`, which nothing defines."""\n',
     )
-    targets = [item.target for item in dangling_references(root)]
+    targets = [item.target for item in dangling_references((root,))]
     assert targets == ["resolve_read_id"]
 
 
@@ -51,14 +51,14 @@ def test_the_gate_refuses_a_dangling_target_and_accepts_a_resolved_one(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     root = _package(tmp_path, live='"""Points at :func:`missing`."""\n')
-    assert main([], root=root) == 1
+    assert main([], roots=(root,)) == 1
     assert "dangling target=missing" in capsys.readouterr().out
 
     (root / "live.py").write_text(
         '"""Points at :func:`present`."""\n\n\ndef present() -> None:\n    pass\n',
         encoding="utf-8",
     )
-    assert main([], root=root) == 0
+    assert main([], roots=(root,)) == 0
     assert "summary dangling=0 modules=0" in capsys.readouterr().out
 
 
@@ -82,7 +82,7 @@ def test_a_file_the_walk_listed_but_cannot_read_refuses(tmp_path: Path) -> None:
     (root / "unreadable.py").mkdir()
 
     with pytest.raises(DocstringReferenceScanError, match="could not read"):
-        dangling_references(root)
+        dangling_references((root,))
 
 
 def test_an_unparseable_or_undecodable_file_is_still_skipped(tmp_path: Path) -> None:
@@ -100,7 +100,7 @@ def test_an_unparseable_or_undecodable_file_is_still_skipped(tmp_path: Path) -> 
     )
     (root / "undecodable.py").write_bytes(bytes([0xFF, 0xFE, 0x00, 0x41]))
 
-    targets = [item.target for item in dangling_references(root)]
+    targets = [item.target for item in dangling_references((root,))]
 
     assert targets == ["resolve_read_id"]
 
@@ -112,7 +112,7 @@ def test_a_reference_to_a_symbol_the_tree_defines_is_not_reported(tmp_path: Path
         home='"""Home of the resolver."""\n\n\ndef resolve_id() -> None:\n    """Resolve."""\n',
         user='"""Uses :func:`resolve_id` from its neighbour."""\n',
     )
-    assert dangling_references(root) == ()
+    assert dangling_references((root,)) == ()
 
 
 def test_a_third_party_name_the_tree_imports_is_not_reported(tmp_path: Path) -> None:
@@ -122,7 +122,7 @@ def test_a_third_party_name_the_tree_imports_is_not_reported(tmp_path: Path) -> 
         models='"""Models."""\n\nfrom pydantic import BaseModel\n',
         prose='"""Describes a :class:`BaseModel` subclass."""\n',
     )
-    assert dangling_references(root) == ()
+    assert dangling_references((root,)) == ()
 
 
 def test_a_relative_module_role_resolves_to_its_last_segment(tmp_path: Path) -> None:
@@ -132,7 +132,7 @@ def test_a_relative_module_role_resolves_to_its_last_segment(tmp_path: Path) -> 
         _ledger='"""A sibling."""\n',
         caller='"""Delegates to :mod:`_ledger`."""\n',
     )
-    assert dangling_references(root) == ()
+    assert dangling_references((root,)) == ()
 
 
 def test_every_role_that_names_code_is_collected(tmp_path: Path) -> None:
@@ -165,7 +165,7 @@ def test_a_subscripted_generic_resolves_through_its_base_and_arguments(tmp_path:
         types="class Envelope:\n    pass\n\n\nclass BlobManifest:\n    pass\n",
         prose='"""Returns an :class:`Envelope[BlobManifest]` for the caller."""\n',
     )
-    assert dangling_references(root) == ()
+    assert dangling_references((root,)) == ()
 
 
 def test_a_subscript_reports_only_the_half_that_is_missing(tmp_path: Path) -> None:
@@ -175,7 +175,7 @@ def test_a_subscript_reports_only_the_half_that_is_missing(tmp_path: Path) -> No
         types="class Envelope:\n    pass\n",
         prose='"""Returns an :class:`Envelope[GhostPayload]`."""\n',
     )
-    assert [item.target for item in dangling_references(root)] == ["GhostPayload"]
+    assert [item.target for item in dangling_references((root,))] == ["GhostPayload"]
 
 
 def test_a_package_the_tree_imports_from_is_known(tmp_path: Path) -> None:
@@ -189,13 +189,13 @@ def test_a_package_the_tree_imports_from_is_known(tmp_path: Path) -> None:
         tmp_path,
         user='"""Uses :mod:`cryptography`."""\n\nfrom cryptography.hazmat.primitives import hashes\n',
     )
-    assert dangling_references(root) == ()
+    assert dangling_references((root,)) == ()
 
 
 def test_a_package_the_tree_never_imports_is_still_reported(tmp_path: Path) -> None:
     """Widening to import sources must not blind the screen to real misses."""
     root = _package(tmp_path, user='"""Uses :mod:`nowhere_at_all`."""\n')
-    assert [item.target for item in dangling_references(root)] == ["nowhere_at_all"]
+    assert [item.target for item in dangling_references((root,))] == ["nowhere_at_all"]
 
 
 def test_a_symbol_only_a_sibling_tree_defines_does_not_resolve(
@@ -220,7 +220,7 @@ def test_a_symbol_only_a_sibling_tree_defines_does_not_resolve(
     monkeypatch.setattr(docstring_reference_targets, "_SIBLING_TREES", (sibling,))
     root = _package(tmp_path, live='"""Points at :func:`dev_only_helper`."""\n')
 
-    assert [item.target for item in dangling_references(root)] == ["dev_only_helper"]
+    assert [item.target for item in dangling_references((root,))] == ["dev_only_helper"]
 
 
 def test_the_screen_holds_the_sibling_symbols_it_refuses_to_use(
@@ -248,7 +248,7 @@ def test_the_screen_holds_the_sibling_symbols_it_refuses_to_use(
 
     assert "dev_only_helper" in sibling_defined, "the fixture does not exercise the discard"
     assert "dev.harness" in sibling_modules, "module names arrive dotted; the leaf is derived later"
-    assert [item.target for item in dangling_references(root)] == ["dev_only_helper"]
+    assert [item.target for item in dangling_references((root,))] == ["dev_only_helper"]
 
 
 def test_a_module_name_a_sibling_tree_defines_still_resolves(
@@ -266,4 +266,39 @@ def test_a_module_name_a_sibling_tree_defines_still_resolves(
     monkeypatch.setattr(docstring_reference_targets, "_SIBLING_TREES", (sibling,))
     root = _package(tmp_path, live='"""Its counterpart is :mod:`harness`."""\n')
 
-    assert dangling_references(root) == ()
+    assert dangling_references((root,)) == ()
+
+
+def test_a_reference_into_a_sibling_source_package_resolves(tmp_path: Path) -> None:
+    """A runtime docstring naming the client contract it implements is citing something real."""
+    client = _package(tmp_path, "cadrumo_client", contracts='"""Contracts."""\n\n\nclass SessionLease:\n    pass\n')
+    runtime = _package(
+        tmp_path, "cadrumo_runtime", host='"""Issues a :class:`cadrumo_client.contracts.SessionLease`."""\n'
+    )
+
+    assert dangling_references((client, runtime)) == ()
+
+
+def test_a_reference_into_a_sibling_source_package_that_names_nothing_is_reported(tmp_path: Path) -> None:
+    """Rooting only ``cadrumo.`` let every other first-party package's dotted path pass as third-party."""
+    client = _package(tmp_path, "cadrumo_client", contracts='"""Contracts."""\n')
+    runtime = _package(
+        tmp_path, "cadrumo_runtime", host='"""Issues a :class:`cadrumo_client.contracts.GhostLease`."""\n'
+    )
+
+    assert [(item.module, item.target) for item in dangling_references((client, runtime))] == [
+        ("cadrumo_runtime/host.py", "cadrumo_client.contracts.GhostLease"),
+    ]
+
+
+def test_an_unscanned_package_s_dotted_path_stays_third_party(tmp_path: Path) -> None:
+    """Only scanned packages are first-party; another dotted path is not this screen's claim."""
+    runtime = _package(tmp_path, "cadrumo_runtime", host='"""Uses :class:`elsewhere.contracts.GhostLease`."""\n')
+
+    assert dangling_references((runtime,)) == ()
+
+
+def test_an_absent_source_root_refuses(tmp_path: Path) -> None:
+    root = _package(tmp_path, live='"""Live module."""\n')
+    with pytest.raises(DocstringReferenceScanError, match="source root is unavailable"):
+        dangling_references((root, tmp_path / "missing"))

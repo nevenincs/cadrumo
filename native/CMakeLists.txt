@@ -19,6 +19,8 @@ set(sdk_inputs ${shared_inputs} ${contract_inputs} ${provision_helper_inputs}
   "${PROJECT_SOURCE_DIR}/dev/packaging/runtime_wheelhouse_contract.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/command_execution.py")
 set(provision_inputs ${shared_inputs}
+  "${CADRUMO_PATH_AGENT}/agent-dependencies.txt" "${CADRUMO_PATH_AGENT}/agent-dependencies.json"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/provision.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_toolchain.py"
@@ -43,34 +45,43 @@ cmake_path(GET bridge_library STEM bridge_name)
 set(CADRUMO_PACKAGE_EXECUTABLE "${production_executable}" PARENT_SCOPE)
 string(JSON package_manifest GET "${package_layout}" files package_manifest)
 set(CADRUMO_PACKAGE_MANIFEST "${package_manifest}" PARENT_SCOPE)
+cadrumo_build_step(step_comment python_sdk GROUP dependencies
+  SUMMARY "provision the pinned CPython SDK for ${CADRUMO_TARGET}" OUTPUTS "${CADRUMO_PATH_PYTHON_SDK}")
 add_custom_target(python_sdk
   COMMAND ${CADRUMO_HELPER} sdk --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-sdk.txt"
   DEPENDS ${sdk_inputs} "${PROJECT_BINARY_DIR}/inputs-sdk.txt"
   BYPRODUCTS "${CADRUMO_PATH_PYTHON_SDK}/ready" ${sdk_link_outputs}
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
+cadrumo_build_step(step_comment python_dependencies GROUP dependencies
+  SUMMARY "install the hash-pinned runtime wheels" OUTPUTS "${CADRUMO_PATH_RUNTIME}")
 add_custom_target(python_dependencies
   COMMAND ${CADRUMO_HELPER} provision --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-provision.txt"
   DEPENDS ${provision_inputs} "${PROJECT_BINARY_DIR}/inputs-provision.txt"
   BYPRODUCTS "${CADRUMO_PATH_RUNTIME}/ready"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
-add_dependencies(python_dependencies python_sdk)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
+add_dependencies(python_dependencies python_sdk agent_project)
+cadrumo_build_step(step_comment native_build_tools GROUP dependencies
+  SUMMARY "install the pinned build-only tools" OUTPUTS "${CADRUMO_PATH_TOOLS}")
 add_custom_target(native_build_tools
   COMMAND ${CADRUMO_HELPER} tools --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-tools.txt"
   DEPENDS ${tool_inputs} "${PROJECT_BINARY_DIR}/inputs-tools.txt"
   BYPRODUCTS "${CADRUMO_PATH_TOOLS}/ready"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET python_sdk PATHS "${CADRUMO_PATH_PYTHON_SDK}")
   cadrumo_register_clean(TARGET python_dependencies PATHS "${CADRUMO_PATH_RUNTIME}")
   cadrumo_register_clean(TARGET native_build_tools PATHS "${CADRUMO_PATH_TOOLS}")
 endif()
+include("${PROJECT_SOURCE_DIR}/native/cmake/Agent.cmake")
 set(native_helper_inputs "${native_helper_inputs}" PARENT_SCOPE)
 set(contract_inputs "${contract_inputs}" PARENT_SCOPE)
 set(CADRUMO_HELPER "${CADRUMO_HELPER}" PARENT_SCOPE)
 set(CADRUMO_BUILD_HELPER "${CADRUMO_BUILD_HELPER}" PARENT_SCOPE)
+set(CADRUMO_BUILD_IDENTITY_DIR "${CADRUMO_BUILD_IDENTITY_DIR}" PARENT_SCOPE)
 include("${PROJECT_SOURCE_DIR}/native/cmake/Rust.cmake")
 set(metadata_inputs ${contract_inputs}
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/metadata.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_stamp.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/identity.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/stable_output.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/${CADRUMO_BACKEND}.py"
@@ -78,6 +89,7 @@ set(metadata_inputs ${contract_inputs}
   "${PROJECT_SOURCE_DIR}/src/cadrumo/core/toml.py"
   "${PROJECT_SOURCE_DIR}/pyproject.toml" "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version")
 include("${PROJECT_SOURCE_DIR}/native/cmake/platforms/${CMAKE_SYSTEM_NAME}.cmake")
+include("${PROJECT_SOURCE_DIR}/native/cmake/PythonDistribution.cmake")
 if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET rust_platform_static PATHS "${platform_static}")
   if(WIN32)
@@ -94,6 +106,24 @@ include("${PROJECT_SOURCE_DIR}/native/cmake/LaunchGuard.cmake")
 # Defines rust_manager and CADRUMO_MANAGER_EXECUTABLE in this directory scope for Packaging.cmake.
 include("${PROJECT_SOURCE_DIR}/native/cmake/Manager.cmake")
 include("${PROJECT_SOURCE_DIR}/native/cmake/Installer.cmake")
+# Every Cargo command receives this target and environment; each component fingerprint hashes it
+# as the effective Rust build settings (dev/packaging/native/build_fingerprint.py).
+set(rust_environment "{}")
+string(JSON rust_environment SET "${rust_environment}" target "\"${CADRUMO_PIN_rust_target}\"")
+string(JSON rust_environment SET "${rust_environment}" environment "{}")
+foreach(name IN LISTS CADRUMO_RUST_ENVIRONMENT_NAMES)
+  set(value "${CADRUMO_RUST_ENV_${name}}")
+  string(REPLACE "\\" "\\\\" value "${value}")
+  string(REPLACE "\"" "\\\"" value "${value}")
+  string(JSON rust_environment SET "${rust_environment}" environment "${name}" "\"${value}\"")
+endforeach()
+file(CONFIGURE OUTPUT "${CONTRACT_DIR}/rust-environment.json" CONTENT "@rust_environment@\n" @ONLY)
+if(BUILD_TESTING)
+  # Every file the last build compiled into a component must be among its declared inputs.
+  add_test(NAME native.identity-coverage
+    COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.build_fingerprint --build "${PROJECT_BINARY_DIR}")
+  set_tests_properties(native.identity-coverage PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+endif()
 set(CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE "${CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE}" PARENT_SCOPE)
 set(CADRUMO_ENTRYPOINTS "${CADRUMO_ENTRYPOINTS}" PARENT_SCOPE)
 set(CADRUMO_ENTRYPOINT_TARGETS "${CADRUMO_ENTRYPOINT_TARGETS}" PARENT_SCOPE)

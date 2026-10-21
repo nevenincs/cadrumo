@@ -119,7 +119,7 @@ def _canonicalize_and_pad(
 def _canonicalize_values(values: Mapping[str, object]) -> dict[str, str]:
     """Stringify profile facts and normalize the IVA selector token."""
     canonical: dict[str, str] = {key: _stringify(raw) for key, raw in values.items()}
-    if canonical.get("iva.regime"):
+    if bool(canonical.get("iva.regime")):
         canonical["iva.regime"] = canonical["iva.regime"].strip().upper().replace("-", "_")
     return canonical
 
@@ -731,7 +731,7 @@ def _parse_date(raw: str | None) -> date | None:
 
 
 def _parse_decimal(raw: str | None) -> Decimal | None:
-    if not raw:
+    if not (raw is not None and raw):
         return None
     try:
         return Decimal(raw.strip())
@@ -740,7 +740,7 @@ def _parse_decimal(raw: str | None) -> Decimal | None:
 
 
 def _parse_optional_int(raw: str | None) -> int | None:
-    if not raw:
+    if not (raw is not None and raw):
         return None
     try:
         return int(raw.strip())

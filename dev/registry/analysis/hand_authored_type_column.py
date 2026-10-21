@@ -369,7 +369,11 @@ def main() -> int:
         if item.alignment is not Alignment.ALIGNED:
             print(f"UNCHECKED {item.subject} {item.layout_file} {item.record_id} {item.alignment.value}")
     for item in contradictions:
-        state = f"blocked ({item.blocked_reason})" if item.blocked_reason else "contradiction"
+        state = (
+            f"blocked ({item.blocked_reason})"
+            if (item.blocked_reason is not None and item.blocked_reason)
+            else "contradiction"
+        )
         print(f"{state} {item.subject} {item.layout_file} {item.field_id} {item.sheet} @{item.offset}+{item.length}")
     return 0
 

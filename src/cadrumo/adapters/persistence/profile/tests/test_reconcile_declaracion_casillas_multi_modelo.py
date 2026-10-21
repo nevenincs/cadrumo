@@ -41,11 +41,6 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
-from cadrumo.application.modelo.reconciliation_records import (
-    ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
-    ModeloReconciliationVerdict,
-)
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
@@ -63,6 +58,8 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
+from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
+from .....application.modelo.reconciliation_records import ModeloReconciliationDiffKind, ModeloReconciliationVerdict
 from .reconciliation_persist_support import reconcile_parsed_declaracion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

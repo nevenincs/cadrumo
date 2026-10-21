@@ -682,7 +682,6 @@ def test_runtime_default_surfaces_isolate_active_profile_writes(tmp_path: Path) 
 
 
 def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:
-    profile = "operator-google"
     google_a = _google_records(_BUCKET_A_ID)
     google_b = _google_records(_BUCKET_B_ID)
     cache = LLMCache(root_dir=tmp_path / "llm-cache")
@@ -692,9 +691,9 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
     artefact_b, body_b = _sede_artefact(_BUCKET_B_ID)
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
-        google_session_records.save_token(profile, google_a[0])
-        google_session_records.save_metadata(profile, google_a[1])
-        google_session_records.save_drive_config(profile, google_a[2])
+        google_session_records.save_token(_BUCKET_A_ID, google_a[0])
+        google_session_records.save_metadata(_BUCKET_A_ID, google_a[1])
+        google_session_records.save_drive_config(_BUCKET_A_ID, google_a[2])
         cache.write(request, _llm_response(_BUCKET_A_ID))
         usage.record(_usage_record(_BUCKET_A_ID))
         InventoryLedgerRepository().save(
@@ -706,15 +705,15 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         )
 
     with _active_runtime(tmp_path, _BUCKET_B_ID):
-        assert google_session_store.load_token(profile) is None
-        assert cache.read(request, LLMProvider.OPENAI, "gpt-test") is None
+        assert google_session_store.load_token(_BUCKET_B_ID) is None
+        assert cache.read(request, LLMProvider.AGENT, "gpt-test") is None
         assert usage.load_records() == ()
         assert InventoryLedgerRepository().load().ledgers == ()
         with pytest.raises(ExpedienteNotFoundError):
             FiledDeclaracionObservationStore(tmp_path / "sede-cache").load_artefact(stored_a.storage_ref or "")
-        google_session_records.save_token(profile, google_b[0])
-        google_session_records.save_metadata(profile, google_b[1])
-        google_session_records.save_drive_config(profile, google_b[2])
+        google_session_records.save_token(_BUCKET_B_ID, google_b[0])
+        google_session_records.save_metadata(_BUCKET_B_ID, google_b[1])
+        google_session_records.save_drive_config(_BUCKET_B_ID, google_b[2])
         cache.write(request, _llm_response(_BUCKET_B_ID))
         usage.record(_usage_record(_BUCKET_B_ID))
         InventoryLedgerRepository().save(
@@ -726,15 +725,15 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         )
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
-        cached = cache.read(request, LLMProvider.OPENAI, "gpt-test")
+        cached = cache.read(request, LLMProvider.AGENT, "gpt-test")
         usage_records = usage.load_records()
         inventory = InventoryLedgerRepository().load().ledgers
         loaded_body = FiledDeclaracionObservationStore(tmp_path / "sede-cache").load_artefact(
             stored_a.storage_ref or "",
         )
-        assert google_session_store.load_token(profile) == google_a[0]
-        assert google_session_store.load_metadata(profile) == google_a[1]
-        assert google_session_store.load_drive_config(profile) == google_a[2]
+        assert google_session_store.load_token(_BUCKET_A_ID) == google_a[0]
+        assert google_session_store.load_metadata(_BUCKET_A_ID) == google_a[1]
+        assert google_session_store.load_drive_config(_BUCKET_A_ID) == google_a[2]
 
     assert cached is not None
     assert cached.text == f"runtime attached response {_BUCKET_A_ID}"

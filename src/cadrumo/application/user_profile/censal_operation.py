@@ -12,6 +12,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
+
 from ...core.async_cleanup import AsyncCloseable
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -59,21 +67,14 @@ from ..operations.operation_definition import OperationDefinition, OperationExec
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ..operations.persistence.journal import serialize_operation_operand
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ..operator_actions.models import ActionReference
-from .access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from .access_errors import ProfileAccessRefusedError
 from .capsule_record import ProfileRecordConflictError
 from .censal_observation import CensalObservation
@@ -371,7 +372,7 @@ def _validated_censal_operation_access_request(
     if request.definition_id != CENSAL_OPERATION_DEFINITION_ID or not isinstance(payload, CensalOperationRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     baseline = payload.baseline
-    if request.subject_ref != str(baseline.profile_id) or context.profile_id != UUID(str(baseline.profile_id)):
+    if request.subject_ref != baseline.profile_id or context.profile_id != UUID(baseline.profile_id):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return payload
 
@@ -437,7 +438,7 @@ def _load_exact_baseline(
 ) -> UserProfileRecord:
     profile_id = require_active_bucket_id()
     baseline = request.payload.baseline
-    if request.subject_ref != str(baseline.profile_id) or profile_id != str(baseline.profile_id):
+    if request.subject_ref != baseline.profile_id or profile_id != baseline.profile_id:
         raise ProfileRecordConflictError("censal operation baseline does not identify the active profile")
     record = ProfileRecordRepository.for_current_session(
         profile_id,
@@ -497,7 +498,7 @@ class CensalOperationExecutor:
             request,
             profile_decode_context=context.authority_operation.profile_decode_context(),
         )
-        self._provider_preflight(UUID(str(request.payload.baseline.profile_id)), context.authority_operation)
+        self._provider_preflight(UUID(request.payload.baseline.profile_id), context.authority_operation)
         if await _acknowledge_if_cancelled(context):
             return None
         await context.events.phase(CENSAL_PHASE_CLAVE_DEVICE_WAIT)
@@ -690,7 +691,7 @@ def _require_current_operand_baseline(
         profile_decode_context=profile_decode_context,
     ).load(profile_id)
     if (
-        profile_id != str(baseline.profile_id)
+        profile_id != baseline.profile_id
         or record.profile_id != baseline.profile_id
         or record.record_revision != baseline.record_revision
         or record.content_digest != baseline.content_digest
@@ -742,7 +743,9 @@ def build_censal_operation_definition(
 
     return OperationDefinition(
         definition_id=CENSAL_OPERATION_DEFINITION_ID,
+        public_error_detail=True,
         request_type=CensalOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field("baseline", "profile_id"),
         result_type=CensalOperationResult,
         executor_factory=OperationExecutorFactory(
             request_type=CensalOperationRequest,
@@ -766,7 +769,6 @@ def build_censal_operation_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

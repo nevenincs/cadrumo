@@ -830,7 +830,7 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
     # rows exist.
     row_owned: frozenset[CasillaId] = (
         frozenset[CasillaId]()
-        if str(modelo.id) == Modelo("349").value
+        if modelo.id == Modelo("349").value
         else frozenset(row_field_template_records_by_casilla(revision))
     )
     casillas = tuple(

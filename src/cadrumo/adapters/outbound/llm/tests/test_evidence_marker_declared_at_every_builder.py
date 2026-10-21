@@ -43,15 +43,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _REQUEST_MODEL = "LLMRequest"
 _MARKER = "evidence_derived"
 
-_BUILDERS_DECLARING_NO_EVIDENCE = {
-    "adapters/outbound/llm/column_role_mapping.py": (
-        "Column-role mapping transmits the header row -- the file's schema labels -- and never a "
-        "cell value: the prompt builder accepts headers and nothing else, and the instruction it "
-        "compiles forbids the model to reproduce data. Marking this request evidence-derived would "
-        "put a schema-shaped request behind a taxpayer-evidence consent token and close the gated "
-        "hosted lane the tabular measurement runs through."
-    ),
-}
+_BUILDERS_DECLARING_NO_EVIDENCE: dict[str, str] = {}
+"""Every production builder marks its request as evidence-derived; none is enrolled as declaring otherwise."""
 
 
 def _request_construction_sites() -> list[tuple[str, int, ast.Call]]:
@@ -141,24 +134,23 @@ def test_the_requests_declaring_no_evidence_are_exactly_the_enrolled_ones() -> N
 
 
 def test_the_column_role_prompt_has_no_channel_for_a_cell_value() -> None:
-    """The structural fact the enrolment above rests on.
+    """The mapper sends a file's header labels and never a cell value.
 
-    The mapper is enrolled because it sends schema labels rather than taxpayer
-    content, and what makes that a property rather than call-site discipline at
-    the prompt layer is that the compiler accepts headers and nothing else. A
-    second parameter carrying rows would make the enrolment false, so it reds
-    here.
+    Its requests still ride behind the evidence consent gate off-host, because
+    the labels come from a taxpayer's own file. What keeps a cell value out of
+    the prompt at all is that the compiler accepts headers and nothing else; a
+    second parameter carrying rows would change what the mapper can disclose,
+    so it reds here.
     """
     parameters = list(inspect.signature(build_column_role_mapping_prompt).parameters)
 
     assert parameters == ["headers"], (
-        f"the column-role prompt builder now accepts {parameters}; it is enrolled as sending no "
-        "taxpayer content on the ground that headers are the only thing it can carry, so a new "
-        "input channel requires that enrolment to be re-decided rather than inherited"
+        f"the column-role prompt builder now accepts {parameters}; headers are the only thing it may "
+        "carry, so a new input channel must be decided rather than inherited"
     )
 
     prompt = build_column_role_mapping_prompt(("Fecha", "Importe"))
     assert "Do not read, copy or produce any data value." in prompt, (
-        "the compiled instruction no longer forbids the model to reproduce data; the enrolment "
-        "above claims this lane carries schema labels only"
+        "the compiled instruction no longer forbids the model to reproduce data, though this lane "
+        "carries schema labels only"
     )

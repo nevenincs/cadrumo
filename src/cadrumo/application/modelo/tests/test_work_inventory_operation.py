@@ -11,6 +11,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
+
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
@@ -19,12 +22,6 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    Availability,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ...user_profile.operation_access_policy import operation_scope_refusal
 from ..metadata_projection import ModeloWorkMetadataSnapshot
@@ -101,12 +98,17 @@ def _request(
     )
 
 
-def _context(registration, *, action: AccessAction = AccessAction.SUBMIT) -> OperationAccessContext:
+def _context(
+    registration,
+    *,
+    action: AccessAction = AccessAction.SUBMIT,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
+) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=_PROFILE,
         destination_id=uuid4(),
         action=action,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
     )
@@ -147,6 +149,20 @@ def test_profile_wide_access_requires_unrestricted_period_ceiling() -> None:
         )
         denied = operation_scope_refusal(request=resolved.request, policy=resolved.policy, scope=scope)
         assert denied is not None and denied.code is AccessDenialCode.PERIOD_DENIED
+
+
+def test_work_list_is_admitted_on_the_external_client_frontend_without_a_commit_door() -> None:
+    registry, registration = _registration()
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=cast(OperationRequest[BaseModel], cast(object, _request())),
+        context=_context(registration, frontend=OperationFrontendProjection.EXTERNAL_CLIENT),
+    )
+
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
+    assert resolved.request.profile_id == _PROFILE
+    assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 @pytest.mark.parametrize("include_discarded", [False, True])

@@ -11,7 +11,6 @@ from typing import Annotated, Protocol
 
 from pydantic import BaseModel, Field, SecretBytes
 
-from ...core.errors.hierarchy import CadrumoError
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import UtcInstant
@@ -72,27 +71,6 @@ class AutomationCustodyPort(Protocol):
     def unlocked(self, *, credential: SecretBytes, now: UtcInstant) -> AbstractContextManager[bytearray]:
         """Lend verified material to a trusted owner and wipe it on every exit."""
         ...
-
-
-class AutomationCustodyCode(StrEnum):
-    """Credential-free automation custody failures."""
-
-    UNAVAILABLE = "unavailable"
-    NEEDS_USER = "needs_user"
-    UNSUPPORTED = "unsupported"
-    MISSING = "missing"
-    INVALID = "invalid"
-    CONFLICT = "conflict"
-    CREDENTIAL_REJECTED = "credential_rejected"
-
-
-class AutomationCustodyError(CadrumoError):
-    """Safe failure code with no native error or secret-bearing input."""
-
-    def __init__(self, code: AutomationCustodyCode) -> None:
-        """Retain only a safe code."""
-        self.reason = code
-        super().__init__(code.value)
 
 
 class NativeSecretBackend(StrEnum):

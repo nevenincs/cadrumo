@@ -6,9 +6,9 @@ date: '2026-10-04'
 tier: L1
 related:
   - '[[2026-10-04-canonical-environment-adr]]'
-modified: '2026-10-05'
+modified: '2026-10-14'
 body_schema: body-v2
-body_hash: 'sha256:6a813eab38a8b691fa6336b63b2c52ecc6d38f365410d8bc7259c33c52b5bad0'
+body_hash: 'sha256:d56e7bf570cd1194db90c7d8fc67a5fe4d567dee8a4ad26385fd58bc1d14c6ae'
 ---
 
 # `canonical-environment` plan
@@ -86,7 +86,7 @@ After S01, two assignments run at once:
 
 S04 waits for S02 (the contract the desktop reads) and closes when desktop-shell S04, S07 and S11 have landed. S06 waits for S01 and closes on the manager workstream's report. Both are tracking Steps with no write scope in this plan.
 
-Write ownership is disjoint per row: S01 owns the listed `src/cadrumo` files; S02 owns `dev/packaging/native/generate.py`, its test module and the `native_contract` OUTPUT list in `native/CMakeLists.txt`; S03 owns `native/platform/src/lib.rs`, `native/platform/tests/` and the `Cargo.toml` dependency list; S05 owns `dev/ci/tests/test_canonical_location_literal_gate.py` and its fixtures; S04 and S06 own nothing here. The worktree `Y:\code\cadrumo-worktrees\tui` is shared with the runtime, packaging and designer sessions and the Preflight auto-commit: re-read before patching, never stash, reset, clean or overwrite. Vault, ledger and commit mutations are serialized by the orchestrator. Rust builds from parallel executors use distinct `CADRUMO_CMAKE_BINARY_DIR` values.
+Write ownership is disjoint per row: S01 owns the listed `src/cadrumo` files; S02 owns `dev/packaging/native/generate.py`, its test module and the `native_contract` OUTPUT list in `native/CMakeLists.txt`; S03 owns `native/platform/src/lib.rs`, `native/platform/tests/` and the `Cargo.toml` dependency list; S05 owns `dev/ci/tests/test_canonical_location_literal_gate.py` and its fixtures; S04 and S06 own nothing here. The worktree `<repo-root>` is shared with the runtime, packaging and designer sessions and the Preflight auto-commit: re-read before patching, never stash, reset, clean or overwrite. Vault, ledger and commit mutations are serialized by the orchestrator. Rust builds from parallel executors use distinct `CADRUMO_CMAKE_BINARY_DIR` values.
 
 ## Verification
 

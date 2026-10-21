@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from cadrumo_client.commands.graph import CommandSpecFamily, CommandSpecGraph
+from cadrumo_client.commands.shared_contracts import DeferredTarget
+
 from ._root_command_specs import ROOT_COMMAND_SPECS
-from .command_graph import CommandSpecFamily, CommandSpecGraph
-from .command_shared_contracts import DeferredTarget
+from .command_targets import resolve_deferred_target
 
 
 def _family(mount_key: str, module: str, qualname: str) -> CommandSpecFamily:
@@ -30,6 +32,7 @@ COMMAND_GRAPH = CommandSpecGraph(
         _family("app", "._app_quickfile_command_specs", "QUICKFILE_COMMAND_SPECS"),
         _family("app", "._review_command_specs", "REVIEW_COMMAND_SPECS"),
     ),
+    resolver=resolve_deferred_target,
 )
 
 __all__ = ["COMMAND_GRAPH"]

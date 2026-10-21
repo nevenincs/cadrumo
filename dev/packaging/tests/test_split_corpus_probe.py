@@ -30,9 +30,12 @@ def test_split_pip_proofs_require_successful_install_and_dependency_check(
     """Keep command failure refusal and transaction proof recording coupled."""
     commands: list[tuple[str, ...]] = []
 
-    def execute(argv: Sequence[str], *, cwd: Path, environment: Mapping[str, str] | None = None) -> CommandResult:
+    def execute(
+        argv: Sequence[str], *, cwd: Path, environment: Mapping[str, str] | None = None, input_text: str | None = None
+    ) -> CommandResult:
         assert cwd == tmp_path
         assert environment is None
+        assert input_text is None
         assert recorded_proofs() == ()
         commands.append(tuple(argv))
         now = datetime.now(UTC)

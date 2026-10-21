@@ -42,19 +42,26 @@ from ..operations.models import OperationIdentity, OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.passphrase_rotation import (
     ProfilePassphraseRotationError,
     ProfilePassphraseRotationOutcome,
     rotate_profile_passphrase,
 )
 from .certificate_secret_backend import CertificateSecretBackendFactory
+from .credential_operations import (
+    AUTH_CREDENTIAL_INPUT_KIND,
+    AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
+    AuthCredentialSaveExecutor,
+    AuthCredentialSaveRequest,
+    AuthCredentialSaveResult,
+    resolve_auth_credential_access,
+)
 from .operator import configure_operator_auth, login_operator_auth, logout_operator_auth, reset_operator_auth
 from .operator_probe_ports import OperatorProbePorts
 from .operator_results import AuthConfigureResult, AuthLoginResult, AuthLogoutResult, AuthResetResult
@@ -453,12 +460,12 @@ def _definition(
     phases: tuple[str, ...],
     secret_kind: str | None = None,
     request_storage: OperationRequestStoragePolicy = OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-    permitted_frontends: frozenset[OperationFrontendProjection] = ALL_OPERATION_FRONTENDS,
     public_error_detail: bool = False,
 ) -> OperationDefinition:
     return OperationDefinition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_factory=OperationExecutorFactory(
             request_type=request_type,
@@ -481,7 +488,6 @@ def _definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=permitted_frontends,
         ephemeral_secret=(
             None
             if secret_kind is None
@@ -507,6 +513,16 @@ def build_auth_operation_definitions(
     """Build the owner registrations over the composed outer authority ports."""
     return (
         _definition(
+            definition_id=AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
+            request_type=AuthCredentialSaveRequest,
+            result_type=AuthCredentialSaveResult,
+            executor_type=AuthCredentialSaveExecutor,
+            build=lambda: AuthCredentialSaveExecutor(ports=ports),
+            phases=("auth.credential.secret-consume", "auth.credential.execute", "auth.credential.settlement"),
+            secret_kind=AUTH_CREDENTIAL_INPUT_KIND,
+            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+        ),
+        _definition(
             definition_id=AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
             request_type=AuthConfigureOperationRequest,
             result_type=AuthConfigureResult,
@@ -514,7 +530,6 @@ def build_auth_operation_definitions(
             build=lambda: AuthConfigureOperationExecutor(ports=ports, configure=configure),
             phases=("auth.configure.preflight", "auth.configure.execute", "auth.configure.settlement"),
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         ),
         _definition(
             definition_id=AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
@@ -524,7 +539,6 @@ def build_auth_operation_definitions(
             build=lambda: AuthSessionAcquireOperationExecutor(ports=ports, acquire=acquire),
             phases=("auth.acquire.preflight", "auth.acquire.execute", "auth.acquire.settlement"),
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
             public_error_detail=True,
         ),
         _definition(
@@ -557,7 +571,6 @@ def build_auth_operation_definitions(
             phases=("auth.passphrase.secret-consume", "auth.passphrase.execute", "auth.passphrase.settlement"),
             secret_kind=_PROFILE_ROTATION_KIND,
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         ),
     )
 
@@ -645,6 +658,12 @@ def build_auth_operation_registrations(
                     access_resolver=resolve_auth_teardown_access,
                 )
                 if definition.definition_id in {AUTH_LOGOUT_OPERATION_DEFINITION_ID, AUTH_RESET_OPERATION_DEFINITION_ID}
+                else OperationPublicDefinitionRegistrationV1.compose_request_result(
+                    definition=definition,
+                    public_result_type=AuthCredentialSaveResult,
+                    access_resolver=resolve_auth_credential_access,
+                )
+                if definition.definition_id == AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID
                 else OperationPublicDefinitionRegistrationV1.compose_request_only(
                     definition=definition, request_schema_id=f"{definition.definition_id}.request"
                 )

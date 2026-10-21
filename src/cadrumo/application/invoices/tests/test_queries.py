@@ -15,7 +15,7 @@ from ....core.invoice_link import LinkInconsistencyDirection
 from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.invoices.service import verify_link_consistency
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import (
     LedgerDatePartition,

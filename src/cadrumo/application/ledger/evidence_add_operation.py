@@ -13,6 +13,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
@@ -25,6 +27,7 @@ from ...core.operations import (
 from ...core.time.clock import now
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
@@ -32,10 +35,8 @@ from ..operations.models import (
 )
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import display_decimal
 from .evidence import (
@@ -54,6 +55,8 @@ LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID = "ledger.evidence.add"
 LEDGER_EVIDENCE_ADD_PHASE = LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID
 
 _MAX_RESULT_BYTES = 60 * 1024
+_PERSON_FRONTEND_ACTOR = "cli"
+"""The audit label of evidence a person's frontend adds; an automation's is derived from its session."""
 _EvidenceText = Annotated[str, Field(max_length=16_384)]
 _EvidencePath = Annotated[str, Field(min_length=1, max_length=4_096)]
 _EvidenceLabel = Annotated[str, Field(max_length=1_024)]
@@ -148,9 +151,15 @@ class _PreparedAdd:
 class LedgerEvidenceAddExecutor:
     """Commit one evidence add through the canonical service in exact-profile custody."""
 
-    def __init__(self, ports_factory: LedgerEvidencePortsFactory) -> None:
-        """Bind the exact-profile evidence capability factory."""
+    def __init__(
+        self,
+        ports_factory: LedgerEvidencePortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
+        """Bind the exact-profile evidence capability factory and the session host's caller reader."""
         self._ports_factory = ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -167,6 +176,7 @@ class LedgerEvidenceAddExecutor:
             bucket_id=bucket_id,
         )
         await context.events.phase(LEDGER_EVIDENCE_ADD_PHASE)
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=_PERSON_FRONTEND_ACTOR)
 
         def preflight() -> _PreparedAdd:
             ports = self._ports_factory(bucket_id=bucket_id)
@@ -207,7 +217,7 @@ class LedgerEvidenceAddExecutor:
                     iva_rate=prepared.candidate.iva_rate,
                     iva_amount=prepared.candidate.iva_amount,
                     notes=prepared.candidate.notes,
-                    actor="cli",
+                    actor=actor,
                     idempotency_key=payload.idempotency_key,
                 )
                 await context.events.effect(OperationEffect.UPDATED)
@@ -376,23 +386,30 @@ def _require_add_success_receipt(receipt: OperationTerminalReceipt, *, profile_i
     )
 
 
-def _build_definition(ports_factory: LedgerEvidencePortsFactory) -> OperationDefinition:
+def _build_definition(
+    ports_factory: LedgerEvidencePortsFactory,
+    execution_caller_reader: OperationExecutionCallerReader | None,
+) -> OperationDefinition:
     request_type = LedgerEvidenceAddRequest
     result_type = LedgerEvidenceAddExecutionResult
     return build_single_phase_definition(
         definition_id=LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_type=LedgerEvidenceAddExecutor,
-        build=lambda: LedgerEvidenceAddExecutor(ports_factory),
+        build=lambda: LedgerEvidenceAddExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 
-def build_ledger_evidence_add_definition(ports_factory: LedgerEvidencePortsFactory) -> OperationDefinition:
+def build_ledger_evidence_add_definition(
+    ports_factory: LedgerEvidencePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Declare one bounded exact-profile purchase-evidence add operation."""
-    return _build_definition(ports_factory)
+    return _build_definition(ports_factory, execution_caller_reader)
 
 
 def resolve_ledger_evidence_add_access(

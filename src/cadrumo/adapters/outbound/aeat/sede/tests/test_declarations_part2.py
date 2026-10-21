@@ -13,6 +13,7 @@ from pydantic import AnyHttpUrl
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
+from ......application.live.expedientes_ports import ExpedientesDeclaration
 from ......core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ......core.casilla_value_kind import CasillaValueKind
 from ......core.period import Period
@@ -33,7 +34,6 @@ from ..declarations_observations import (
     observed_header_facts_from_submitted_file,
     registry_observation_from_filed_declaration,
 )
-from ..declarations_schema import Declaracion
 from ..errors import SedeParseError
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
@@ -100,7 +100,7 @@ class TestSubmittedFileObservation:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
             body = _submitted_file_payload()
-            declaration = Declaracion(
+            declaration = ExpedientesDeclaration(
                 modelo="130",
                 ejercicio=2026,
                 period=Period.from_year_and_code(2026, "1T"),
@@ -212,7 +212,7 @@ class TestSubmittedFileObservation:
                 return "".join(buffer)
 
             body = (_record(500, declarante_fields) + _record(500, perceptor_fields)).encode("latin-1")
-            declaration = Declaracion(
+            declaration = ExpedientesDeclaration(
                 modelo="180",
                 ejercicio=2026,
                 period=Period.from_year_and_code(2026, "0A"),
@@ -266,7 +266,7 @@ class TestSubmittedFileObservation:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
             body = _submitted_file_payload()
-            declaration = Declaracion(
+            declaration = ExpedientesDeclaration(
                 modelo="130",
                 ejercicio=2026,
                 period=Period.from_year_and_code(2026, "1T"),
@@ -360,7 +360,7 @@ class TestSubmittedFileObservation:
             # submitted file yields every expected result casilla, so coverage is 1.0.
             snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
             body = _submitted_file_payload()
-            declaration = Declaracion(
+            declaration = ExpedientesDeclaration(
                 modelo="130",
                 ejercicio=2026,
                 period=Period.from_year_and_code(2026, "1T"),
@@ -407,7 +407,7 @@ class TestSubmittedFileObservation:
             snapshot = _modelo_snapshot("111", filing_year=2025, period="1T", operation=_authority_operation_for_test)
             resolved = resolve_export_layout(snapshot)
             body = _submitted_file_payload(_SUBMITTED_FILE_111_2025_1T)
-            declaration = Declaracion(
+            declaration = ExpedientesDeclaration(
                 modelo="111",
                 ejercicio=2025,
                 period=Period.from_year_and_code(2025, "1T"),
@@ -461,7 +461,7 @@ class TestSubmittedFileObservation:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_snapshot("100", filing_year=2023, period="0A", operation=_authority_operation_for_test)
             body = _value_valid_m100_submitted_payload()
-            declaration = Declaracion(
+            declaration = ExpedientesDeclaration(
                 modelo="100",
                 ejercicio=2023,
                 period=Period.from_year_and_code(2023, "0A"),
@@ -518,7 +518,7 @@ class TestSubmittedFileObservation:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_snapshot("100", filing_year=2023, period="0A", operation=_authority_operation_for_test)
             body = _value_valid_m100_submitted_payload()
-            declaration = Declaracion(
+            declaration = ExpedientesDeclaration(
                 modelo="100",
                 ejercicio=2023,
                 period=Period.from_year_and_code(2023, "0A"),
@@ -589,7 +589,7 @@ class TestDeclaracionPdfObservation:
                 target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
                 for index, target in enumerate(profile.target_casillas, start=1)
             }
-            declaration = Declaracion(
+            declaration = ExpedientesDeclaration(
                 modelo="130",
                 ejercicio=2026,
                 period=Period.from_year_and_code(2026, "1T"),
@@ -611,7 +611,7 @@ class TestDeclaracionPdfObservation:
     def test_declaration_pdf_parse_failure_redacts_identifier_and_chained_error(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
-            declaration = Declaracion(
+            declaration = ExpedientesDeclaration(
                 modelo="130",
                 ejercicio=2026,
                 period=Period.from_year_and_code(2026, "1T"),
@@ -643,7 +643,7 @@ class TestDeclaracionPdfObservation:
                 target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
                 for index, target in enumerate(profile.target_casillas, start=1)
             }
-            declaration = Declaracion(
+            declaration = ExpedientesDeclaration(
                 modelo="111",
                 ejercicio=2025,
                 period=Period.from_year_and_code(2025, "1T"),

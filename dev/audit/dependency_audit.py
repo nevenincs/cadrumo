@@ -331,7 +331,7 @@ def _open(url: str, body: bytes | None) -> dict[str, Any]:
     different rule sets.
     """
     parts = urlsplit(url)
-    if parts.scheme != "https" or not parts.hostname:
+    if parts.scheme != "https" or not (parts.hostname is not None and parts.hostname):
         raise AuditError(f"refusing to fetch a non-HTTPS URL: {url}")
     headers = {"Accept": "application/json"}
     if body is not None:

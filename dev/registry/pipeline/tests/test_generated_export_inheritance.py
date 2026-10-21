@@ -579,7 +579,7 @@ def test_extra_revision_and_same_size_old_field_mutation_refuse(tmp_path: Path) 
     _full_witness(prepared, mutated)
     record = mutated / "0001-record-modelo-189-declarante.toml"
     original = record.read_bytes()
-    changed = original.replace(b"literal = '1'", b"literal = '2'", 1)
+    changed = original.replace(b'literal = "1"', b'literal = "2"', 1)
     assert len(changed) == len(original) and changed != original
     record.write_bytes(changed)
     state = GeneratedExportTreeTargetStateReceipt.observe(mutated)
@@ -940,12 +940,12 @@ def test_retained_compact_recovery_checks_source_before_and_after_real_journal_r
         expected_manifest=candidate_manifest,
     )
     journal = GeneratedExportPublicationJournal(
-        schema_version=1,
+        schema_version=2,
         state="intent",
         modelo="303",
         revision_id="2026-hasta-01-y-1t",
-        candidate_export=str(staged),
-        backup_export=str(paths.new_backup_sibling()),
+        candidate_export=staged.name,
+        backup_export=paths.new_backup_sibling().name,
         candidate_manifest_sha256=manifest_sha,
     )
     write_generated_export_publication_journal(paths.journal, journal)
@@ -1078,12 +1078,12 @@ def test_retained_compact_refuses_incompatible_modes_before_transaction_changes(
     candidate_sha = bootstrap_layout_supersession_fingerprint(bundle)
     manifest_sha = export_provenance_file_sha256(bundle / "export/_generation.provenance.json")
     supersession_journal = GeneratedExportPublicationJournal(
-        schema_version=1,
+        schema_version=2,
         state="intent",
         modelo="303",
         revision_id="2026-hasta-01-y-1t",
-        candidate_export=str(bundle),
-        backup_export=str(paths.new_bundle_backup_sibling()),
+        candidate_export=bundle.name,
+        backup_export=paths.new_bundle_backup_sibling().name,
         candidate_manifest_sha256=manifest_sha,
         candidate_revision_sha256=candidate_sha,
         superseded_layout_id="injected-manual-layout",
@@ -1092,12 +1092,12 @@ def test_retained_compact_refuses_incompatible_modes_before_transaction_changes(
         supersession_source_sha256=source_sha,
     )
     clearance_journal = GeneratedExportPublicationJournal(
-        schema_version=1,
+        schema_version=2,
         state="intent",
         modelo="303",
         revision_id="2026-hasta-01-y-1t",
-        candidate_export=str(bundle),
-        backup_export=str(paths.new_bundle_backup_sibling()),
+        candidate_export=bundle.name,
+        backup_export=paths.new_bundle_backup_sibling().name,
         candidate_manifest_sha256=manifest_sha,
         candidate_revision_sha256=candidate_sha,
         supersession_source_sha256=source_sha,
@@ -1113,7 +1113,7 @@ def test_retained_compact_refuses_incompatible_modes_before_transaction_changes(
             path.relative_to(bundle): path.read_bytes() for path in bundle.rglob("*") if path.is_file()
         } == bundle_before
         assert metadata.read_bytes() == before and not prepared.target_export_root.exists()
-        assert not Path(journal.backup_export).exists()
+        assert not (paths.transaction_root / journal.backup_export).exists()
         paths.journal.unlink()
     assert (
         generated_export_source_chain_fingerprint(registry_root, modelo="303", revision="2026-hasta-01-y-1t")

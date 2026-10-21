@@ -13,23 +13,24 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import StrEnum, auto
 from functools import partial
-from typing import TYPE_CHECKING, ClassVar, override
+from typing import TYPE_CHECKING, ClassVar, Protocol, override, runtime_checkable
 
 from textual.command import DiscoveryHit, Hit, Hits, Provider
 from textual.message import Message
 
-from ...application.runtime.session_events import RuntimeLifecycleNotice
+from cadrumo_client.contracts.session_events import LifecycleNotice
+
 from ...core.errors.hierarchy import CadrumoError
 from .components.account_chrome import AccountActionV1, TuiAccountHostV1, account_action_help, account_action_label
 from .navigation import TuiScreenContextV1
-from .profile.overview import ProfileManagerScreen
-from .secret.passphrase import PassphraseScreen
 
 if TYPE_CHECKING:
     from textual.app import App
     from textual.screen import Screen
 
     from ...application.overview.home import HomeAccountSession
+    from .profile.overview import ProfileManagerScreen
+    from .secret.passphrase import PassphraseScreen
 
 
 type AccountProfileFactoryV1 = Callable[[TuiScreenContextV1], ProfileManagerScreen]
@@ -46,8 +47,25 @@ class AccountSessionExpiredError(CadrumoError):
     """Signal that the current non-secret account session must be recomposed."""
 
 
+class AccountSessionUnavailableError(AccountSessionExpiredError):
+    """Authority could not be observed; this does not establish expiry."""
+
+
 class AccountSessionRetired(Message):
     """Ask the owning UI thread to clear private views after a runtime event."""
+
+
+class ProfileLanguageInvalidated(Message):
+    """Ask the UI owner to refresh its canonical presentation preference."""
+
+
+@runtime_checkable
+class LanguageRefreshable(Protocol):
+    """A mounted presentation owner that can relabel itself without replacing state."""
+
+    async def refresh_language(self) -> None:
+        """Refresh authored wording while retaining inputs and operation identity."""
+        ...
 
 
 class AccountRecomposeReasonV1(StrEnum):
@@ -57,6 +75,7 @@ class AccountRecomposeReasonV1(StrEnum):
     PASSWORD_CHANGED = auto()
     SIGNED_OUT = "signed_out"
     EXPIRED = "expired"
+    UNAVAILABLE = "unavailable"
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,7 +92,10 @@ class AccountRecomposeRequiredV1:
         if self.reason is AccountRecomposeReasonV1.CHANGE_USER:
             if (self.profile_id is None) != (self.profile_label is None):
                 raise ValueError("change-user recomposition requires both profile identity fields or neither")
-            if has_profile and (not self.profile_id or not self.profile_label):
+            if has_profile and (
+                not (self.profile_id is not None and self.profile_id)
+                or not (self.profile_label is not None and self.profile_label)
+            ):
                 raise ValueError("change-user profile identity fields must not be empty")
             return
         if has_profile:
@@ -101,7 +123,19 @@ class AccountFactoriesV1:
     onboarding_pending: bool = False
     """Whether the profile still needs setup, so the session opens on the setup walk."""
     subscribe_retirement: Callable[[Callable[[], None]], Callable[[], None]] | None = None
-    subscribe_notices: Callable[[Callable[[RuntimeLifecycleNotice], None]], Callable[[], None]] | None = None
+    subscribe_notices: Callable[[Callable[[LifecycleNotice], None]], Callable[[], None]] | None = None
+    subscribe_language: Callable[[Callable[[], None]], Callable[[], None]] | None = None
+    refresh_language: Callable[[], Awaitable[bool]] | None = None
+
+
+@runtime_checkable
+class AccountAccessState(Protocol):
+    """Presentation fact an injected account screen may report when it closes."""
+
+    @property
+    def access_lost(self) -> bool:
+        """Whether the host reported that this screen's access ended."""
+        ...
 
 
 class RuntimeUpgradePending(Message):

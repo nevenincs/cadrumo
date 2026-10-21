@@ -172,7 +172,9 @@ def _calculate_200(
         iva_history_repository=IvaCompensationHistoryRepository(),
     ).binding_values
     carry_defaults = {
-        c.binding: Decimal("0") for c in snapshot.revision.casillas if c.input_kind.value == "bound" and c.binding
+        c.binding: Decimal("0")
+        for c in snapshot.revision.casillas
+        if c.input_kind.value == "bound" and (c.binding is not None and c.binding)
     }
     binding_values = {**carry_defaults, **prefilled, **relation_binding_values, **_PROFILE_DECIMAL_BINDINGS}
     inputs = {

@@ -14,6 +14,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
@@ -27,10 +29,11 @@ from ..operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
     bind_operation_access_profile,
-    require_declared_frontend_and_action,
+    require_declared_action,
     require_period_independent_replay_or_authority,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -39,10 +42,10 @@ from ..operations.profile_guard import (
     require_access_request_profile_payload,
     require_operation_profile,
 )
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
+from ..operations.registry import (
+    OperationPublicDefinitionRegistrationV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .recipient_encryption import RecipientEncryptedPackage
 from .review_package import ReviewPackageActor
@@ -87,7 +90,6 @@ MODELO_REVIEW_PACKAGE_ENCRYPT_FOR_RECIPIENT_OPERATION_DEFINITION_ID = "modelo.re
 MODELO_REVIEW_PACKAGE_DECRYPT_OPERATION_DEFINITION_ID = "modelo.review_package.decrypt"
 MODELO_REVIEW_PACKAGE_ENCRYPT_FEEDBACK_OPERATION_DEFINITION_ID = "modelo.review_package.encrypt_feedback"
 MODELO_REVIEW_PACKAGE_IMPORT_FEEDBACK_OPERATION_DEFINITION_ID = "modelo.review_package.import_feedback"
-_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
 
 
 class _Request(BaseModel):
@@ -129,7 +131,12 @@ class ModeloReviewPackageDecryptRequest(_Request):
 
 
 class ModeloReviewPackageEncryptFeedbackRequest(_Request):
-    """Canonical feedback fields, protected as one human request."""
+    """Canonical feedback fields, protected as one human request.
+
+    ``submitted_by`` is recorded in the feedback as sent for a person's session.
+    An automation's session is recorded under its own session label, whatever the
+    request carries.
+    """
 
     originator_id: Annotated[str, Field(min_length=1, max_length=200)]
     work_unit_id: WorkUnitId
@@ -292,8 +299,14 @@ def _envelope(path: Path, ports: ReviewPackageExchangeOperationPorts) -> Recipie
         raise RecipientEncryptionError(str(exc)) from exc
 
 
-def _exchange(payload: _Request, ports: ReviewPackageExchangeOperationPorts) -> ReviewPackageExchangeProjection:
-    """Compose existing routines in their established order; do not duplicate crypto."""
+def _exchange(
+    payload: _Request, ports: ReviewPackageExchangeOperationPorts, *, feedback_submitted_by: str | None
+) -> ReviewPackageExchangeProjection:
+    """Compose existing routines in their established order; do not duplicate crypto.
+
+    ``feedback_submitted_by`` is the label the feedback route records as its
+    submitter, and ``None`` for every other route.
+    """
     profile = str(payload.profile_id)
     if isinstance(payload, ModeloReviewPackageSignRequest):
         keypair = ensure_review_package_signing_keypair(bucket_id=profile, signing_keypair=ports.signing)
@@ -369,6 +382,8 @@ def _exchange(payload: _Request, ports: ReviewPackageExchangeOperationPorts) -> 
             review_only=decrypted.review_only,
         )
     if isinstance(payload, ModeloReviewPackageEncryptFeedbackRequest):
+        if feedback_submitted_by is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         originator = get_recipient_fingerprint(payload.originator_id, ports=ports.recipients)
         receipt = _receipt(payload.receipt, ports) if payload.receipt is not None else None
         feedback = build_feedback_package(
@@ -377,7 +392,7 @@ def _exchange(payload: _Request, ports: ReviewPackageExchangeOperationPorts) -> 
             calculation_revision_id=payload.calculation_revision_id,
             note=payload.note,
             counter_signed_receipt=receipt,
-            submitted_by=payload.submitted_by,
+            submitted_by=feedback_submitted_by,
         )
         envelope = encrypt_feedback_package_for_originator(
             feedback, originator_public_key_hex=originator.public_key_hex, recipient_encryption=ports.encryption
@@ -440,9 +455,15 @@ def _failed_exchange_writer_effect(tracker: LedgerCommitAttemptTracker) -> Opera
 class ReviewPackageExchangeExecutor:
     """Settle each concrete key/artifact/audit/replay writer before result release."""
 
-    def __init__(self, factory: ReviewPackageExchangeOperationPortsFactory) -> None:
+    def __init__(
+        self,
+        factory: ReviewPackageExchangeOperationPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Bind exact worker composition without retaining secrets or a registry pin."""
         self._factory = factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(self, request: OperationRequest[BaseModel], context: OperationExecutorContext) -> str:
         """Execute the request-bound canonical human exchange and honest write effects."""
@@ -452,6 +473,11 @@ class ReviewPackageExchangeExecutor:
         payload = require_access_request_payload(request, definition_id=request.definition_id, payload_type=models[0])
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(request.definition_id)
+        feedback_submitted_by = (
+            execution_actor_label(self._execution_caller_reader, context, supplied=payload.submitted_by)
+            if isinstance(payload, ModeloReviewPackageEncryptFeedbackRequest)
+            else None
+        )
 
         async def settle() -> str:
             tracker = LedgerCommitAttemptTracker()
@@ -462,7 +488,7 @@ class ReviewPackageExchangeExecutor:
                 ports = self._factory(profile_id=payload.profile_id, operation=operation, write=tracker.call_writer)
                 if ports.profile_id != payload.profile_id or ports.operation is not operation:
                     raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-                return _exchange(payload, ports)
+                return _exchange(payload, ports, feedback_submitted_by=feedback_submitted_by)
 
             try:
                 projection = await run_with_ledger_commit_fence(
@@ -501,7 +527,7 @@ def resolve_review_package_exchange_operation_access(
         access_profile_id=context.profile_id,
     )
     access_profile = HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
-    require_declared_frontend_and_action(context, frontends=_FRONTENDS, actions=access_profile.actions)
+    require_declared_action(context, actions=access_profile.actions)
     require_period_independent_replay_or_authority(
         context, profile_id=payload.profile_id, definition_id=request.definition_id
     )
@@ -563,6 +589,8 @@ def project_review_package_exchange_operation_result(
 
 def build_review_package_exchange_operation_definitions(
     factory: ReviewPackageExchangeOperationPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> tuple[OperationDefinition, ...]:
     """Enroll the complete six-route family, retaining explicit human authority."""
     capabilities = RECORDED_IDEMPOTENT_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES
@@ -570,11 +598,11 @@ def build_review_package_exchange_operation_definitions(
         build_single_phase_definition(
             definition_id=identifier,
             request_type=models[0],
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=ReviewPackageExchangeExecutionResult,
             executor_type=ReviewPackageExchangeExecutor,
-            build=lambda: ReviewPackageExchangeExecutor(factory),
+            build=lambda: ReviewPackageExchangeExecutor(factory, execution_caller_reader=execution_caller_reader),
             capabilities=capabilities,
-            permitted_frontends=_FRONTENDS,
         )
         for identifier, models in sorted(_MODELS.items())
     )

@@ -9,7 +9,7 @@ settle anything other than the canonical onboarding run.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import cast
@@ -123,7 +123,7 @@ async def _invoke(
     markers: tuple[object, ...],
 ) -> FiledHistoryOnboardingRun:
     @asynccontextmanager
-    async def effect_guard() -> AsyncIterator[None]:
+    async def effect_guard() -> AsyncGenerator[None]:
         yield
 
     async def on_session_write(_effect: OperationEffect) -> None:

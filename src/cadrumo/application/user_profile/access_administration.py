@@ -14,13 +14,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.session_policy import evaluate_session_authority
+
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import UtcInstant
 from .access_contracts import (
     ACCESS_LEASE_MAXIMUM,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
     AccessSession,
     ApiKeyRecord,
@@ -29,7 +30,6 @@ from .access_contracts import (
     ProfileAccessState,
     SessionKind,
 )
-from .session_authority_policy import evaluate_session_authority
 
 
 class AccessAdministrationAction(StrEnum):
@@ -52,7 +52,7 @@ class AccessAdministrationAction(StrEnum):
 
 
 class AdministrationRequirement(StrEnum):
-    """Capability floor, independent of CLI, TUI or MCP presentation."""
+    """Capability floor, independent of CLI, TUI or external client presentation."""
 
     OWN_SESSION = "own_session"
     HUMAN_PROFILE = "human_profile"

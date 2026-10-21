@@ -9,6 +9,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.digest import ContentDigest
@@ -27,11 +30,10 @@ from ..operations.operation_definition import OperationDefinition, OperationExec
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_payload
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
 from .projection import (
@@ -177,11 +179,11 @@ class ModeloProjectOperationProjection(BaseModel):
             ),
             casilla_observations=tuple(
                 ProjectCasillaObservationProjection(
-                    casilla_id=str(row.casilla_id),
+                    casilla_id=row.casilla_id,
                     value=_decimal(row.value),
-                    formula_id=str(row.formula_id) if row.formula_id is not None else None,
-                    legal_refs=tuple(str(ref) for ref in row.legal_refs),
-                    source_refs=tuple(str(ref) for ref in row.source_refs),
+                    formula_id=row.formula_id,
+                    legal_refs=tuple(row.legal_refs),
+                    source_refs=tuple(row.source_refs),
                 )
                 for row in result.casilla_observations
             ),
@@ -267,8 +269,8 @@ class ModeloCompareOperationProjection(BaseModel):
             modelo=result.modelo,
             year_a=result.year_a,
             year_b=result.year_b,
-            year_a_revision_id=str(result.year_a_revision_id),
-            year_b_revision_id=str(result.year_b_revision_id),
+            year_a_revision_id=result.year_a_revision_id,
+            year_b_revision_id=result.year_b_revision_id,
             year_a_is_draft=result.year_a_is_draft,
             year_b_is_draft=result.year_b_is_draft,
             sections=tuple(
@@ -293,16 +295,16 @@ def _compare_row(row: object) -> CompareDeltaRowProjection:
     if not isinstance(row, ModeloCompareDeltaRow):
         raise TypeError("canonical comparison row has changed type")
     return CompareDeltaRowProjection(
-        casilla_id=str(row.casilla_id),
+        casilla_id=row.casilla_id,
         label=row.label,
         section=row.section,
         year_a_value=_decimal(row.year_a_value),
         year_b_value=_decimal(row.year_b_value),
         delta=_decimal(row.delta),
         pct_change=_decimal(row.pct_change) if row.pct_change is not None else None,
-        formula_id=str(row.formula_id) if row.formula_id is not None else None,
-        legal_refs=tuple(str(ref) for ref in row.legal_refs),
-        source_refs=tuple(str(ref) for ref in row.source_refs),
+        formula_id=row.formula_id,
+        legal_refs=tuple(row.legal_refs),
+        source_refs=tuple(row.source_refs),
     )
 
 
@@ -489,6 +491,7 @@ def _definition(
     return OperationDefinition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_factory=OperationExecutorFactory(
             request_type=request_type,
@@ -499,7 +502,6 @@ def _definition(
         interaction_kinds=frozenset(),
         capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

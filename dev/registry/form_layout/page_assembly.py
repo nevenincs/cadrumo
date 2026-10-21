@@ -49,7 +49,13 @@ class _PageBuildState:
 def _page_condition(records: Iterable[ExportRecordDefinition]) -> tuple[FormPageCondition, str | None]:
     """Return the page condition the page's export records structurally declare."""
     listed = list(records)
-    gated = sorted({record.requires_positive_casilla_id for record in listed if record.requires_positive_casilla_id})
+    gated = sorted(
+        {
+            record.requires_positive_casilla_id
+            for record in listed
+            if (record.requires_positive_casilla_id is not None and record.requires_positive_casilla_id)
+        }
+    )
     if len(gated) == 1 and all(record.requires_positive_casilla_id for record in listed):
         return FormPageCondition.REQUIRES_POSITIVE_CASILLA, gated[0]
     if listed and all(not record.required for record in listed):
@@ -89,7 +95,10 @@ def _section_for_page(
     signatures: Counter[tuple[str, ...]],
     used_sections: set[str],
 ) -> FormSectionDefinition | None:
-    section_id = _unique(node_slug(draft.heading) if draft.heading else _section_slug(draft.key), used_sections)
+    section_id = _unique(
+        node_slug(draft.heading) if (draft.heading is not None and draft.heading) else _section_slug(draft.key),
+        used_sections,
+    )
     blocks = _section_blocks(
         state.build,
         draft,
@@ -104,7 +113,7 @@ def _section_for_page(
         state.section_of[index] = (page_id, section_id)
     state.shown.update(_block_casillas(blocks))
     state.placed_bindings.update(_block_bindings(blocks))
-    heading = node_slug(draft.heading) if draft.heading else section_id
+    heading = node_slug(draft.heading) if (draft.heading is not None and draft.heading) else section_id
     return FormSectionDefinition(
         id=section_id,
         heading_key=_heading_key(state.build.modelo_id, "section", heading),

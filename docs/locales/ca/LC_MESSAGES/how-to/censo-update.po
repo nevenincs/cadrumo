@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-10-12 00:32+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -358,12 +358,20 @@ msgstr ""
 #: ../../how-to/censo-update.md:152
 msgid ""
 "The command previews the census facts the certificate carries without "
-"writing anything. Add `--apply` to record them onto the active profile."
+"writing anything. Add `--apply` to record them onto the active profile. "
+"The same preview and record is the registered operation `user-profile"
+".censo-certificate-import`, which the full-screen app lists under "
+"**Operations** and an agent runs with `execute`; give it the "
+"certificate's absolute path."
 msgstr ""
-"L'ordre mostra les dades censals del certificat sense escriure res. "
-"Afegeix `--apply` per registrar-les al perfil actiu."
+"L'ordre mostra una vista prèvia de les dades censals que conté el "
+"certificat sense escriure res. Afegeix `--apply` per registrar-les al "
+"perfil actiu. La mateixa vista prèvia i el mateix registre són l'operació"
+" registrada `user-profile.censo-certificate-import`, que l'aplicació a "
+"pantalla completa enumera a **Operacions** i que un agent executa amb "
+"`execute`; indica-li el camí absolut del certificat."
 
-#: ../../how-to/censo-update.md:155
+#: ../../how-to/censo-update.md:159
 msgid ""
 "Facts recorded this way carry a marker saying they are not official AEAT "
 "data: they came from a document you supplied, not from an AEAT-confirmed "
@@ -382,7 +390,7 @@ msgstr ""
 "la configuració, el perfil conserva un registre de la divergència i `aeat"
 " config profile view` t'avisa fins que la resolguis."
 
-#: ../../how-to/censo-update.md:163
+#: ../../how-to/censo-update.md:167
 msgid ""
 "Reading the certificate's contents is not yet active: the command "
 "currently refuses every document while layout coverage for AEAT-issued "
@@ -399,11 +407,11 @@ msgstr ""
 "l'ordre és estable i aquesta pàgina s'aplicarà sense canvis quan s'activi"
 " la lectura."
 
-#: ../../how-to/censo-update.md:170
+#: ../../how-to/censo-update.md:174
 msgid "Record a Modelo 036 filing done outside Cadrumo"
 msgstr "Registra una presentació del Modelo 036 feta fora de Cadrumo"
 
-#: ../../how-to/censo-update.md:172
+#: ../../how-to/censo-update.md:176
 msgid ""
 "If you file a Modelo 036 alta, modificacion, or baja in AEAT's sede, "
 "record that fact locally so later filings can rely on it. [Record a "
@@ -420,27 +428,27 @@ msgstr ""
 "presentació, actualitza els camps del perfil que la presentació hagi "
 "canviat."
 
-#: ../../how-to/censo-update.md:178
+#: ../../how-to/censo-update.md:182
 msgid "Check the profile afterwards"
 msgstr "Comprova el perfil després"
 
-#: ../../how-to/censo-update.md:180
+#: ../../how-to/censo-update.md:184
 msgid "Check the active profile after editing census facts:"
 msgstr "Comprova el perfil actiu després d'editar les dades censals:"
 
-#: ../../how-to/censo-update.md:186
+#: ../../how-to/censo-update.md:190
 msgid "If the profile still reports missing facts, edit those fields directly:"
 msgstr ""
 "Si el perfil encara informa de dades que falten, edita aquests camps "
 "directament:"
 
-#: ../../how-to/censo-update.md:191
+#: ../../how-to/censo-update.md:195
 msgid "For modelo-specific readiness, use modelo readiness:"
 msgstr ""
 "Per a la preparació específica d'un model, usa la comprovació de "
 "preparació del model:"
 
-#: ../../how-to/censo-update.md:197
+#: ../../how-to/censo-update.md:201
 msgid ""
 "The command exits with status 2 while the modelo is not ready. "
 "`profile_ready` covers profile facts only, so read `missing_bindings` for"
@@ -450,17 +458,17 @@ msgstr ""
 "`profile_ready` només cobreix les dades del perfil; per això, consulta "
 "`missing_bindings` per veure les entrades d'origen que encara falten."
 
-#: ../../how-to/censo-update.md:201
+#: ../../how-to/censo-update.md:205
 msgid "Keep the facts current"
 msgstr "Mantén les dades actualitzades"
 
-#: ../../how-to/censo-update.md:203
+#: ../../how-to/censo-update.md:207
 msgid "Your AEAT census can change: a new activity, a regime change, a baja."
 msgstr ""
 "El teu censo de l'AEAT pot canviar: una activitat nova, un canvi de règim"
 " o una baja."
 
-#: ../../how-to/censo-update.md:205
+#: ../../how-to/censo-update.md:209
 msgid ""
 "Pull again to catch changes in your address. The pull reports anything "
 "AEAT now holds that your profile does not."
@@ -469,7 +477,7 @@ msgstr ""
 "L'obtenció informa de qualsevol dada que ara tingui l'AEAT i que no "
 "tingui el teu perfil."
 
-#: ../../how-to/censo-update.md:208
+#: ../../how-to/censo-update.md:212
 msgid ""
 "The pull cannot see a regime change, so re-check those fields against "
 "your latest Modelo 036 copy whenever you file a censo change, and before "
@@ -480,23 +488,22 @@ msgstr ""
 "que presentes un canvi al censo, i abans de planificar un nou any de "
 "presentació."
 
-#: ../../how-to/censo-update.md:212
+#: ../../how-to/censo-update.md:216
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/censo-update.md:214
+#: ../../how-to/censo-update.md:218
 msgid "[Set up your taxpayer profile](profile-setup.md)"
 msgstr "[Configura el teu perfil de contribuent](profile-setup.md)"
 
-#: ../../how-to/censo-update.md:215
+#: ../../how-to/censo-update.md:219
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica el teu calendari de presentacions](filing-calendar.md)"
 
-#: ../../how-to/censo-update.md:216
+#: ../../how-to/censo-update.md:220
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importa i gestiona els moviments](import-bank-statements.md)"
 
-#: ../../how-to/censo-update.md:217
+#: ../../how-to/censo-update.md:221
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
-

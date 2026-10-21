@@ -363,7 +363,7 @@ async def test_navigation_during_a_landing_row_write_does_not_claim_a_rollback()
 async def test_delayed_profile_a_result_cannot_replace_the_visible_profile_b() -> None:
     """An old completion is discarded after the visible profile has switched.
 
-    ``_apply_overview`` is the narrow test seam standing in for the outer
+    ``apply_overview`` is the narrow test seam standing in for the outer
     root's profile recomposition.  The important race is the same: A's worker
     started under A's baseline, B became visible, and A's result arrived late.
     """
@@ -403,7 +403,7 @@ async def test_delayed_profile_a_result_cannot_replace_the_visible_profile_b() -
             await pilot.pause()
             assert screen._pending_write is not None
 
-            await screen._apply_overview(visible_b)
+            await screen.apply_overview(visible_b)
             assert screen.overview == visible_b
             assert _rendered_value(screen, _EDITED_PATH) == "B current"
 
@@ -489,7 +489,7 @@ async def test_late_older_result_for_the_same_profile_is_discarded_with_an_hones
             await pilot.pause()
             assert screen._pending_write is not None
 
-            await screen._apply_overview(visible_newer)
+            await screen.apply_overview(visible_newer)
             assert screen.overview == visible_newer
             assert _rendered_value(screen, _EDITED_PATH) == "Changed elsewhere"
 

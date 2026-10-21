@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-operation-observation'
 date: '2026-08-24'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:9a5193777c98554a9cd1b5c296466bdc0a4b6fc3f19f753a10b60b9dc935c19f'
+body_hash: 'sha256:8fb481ea908597ab02697b925cc240fec715a703975b02ddf5b01cdc30bfe44e'
 related:
   - '[[2026-08-24-tui-operation-observation-research]]'
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -723,3 +723,7 @@ the decisive ownership, consistency, security, and honesty criteria identified b
 - Public-contract changes and durable journal changes can proceed independently,
   but each retains its own strict current-version cutover and conformance burden;
   while `PRE_RELEASE`, no private-schema migration path survives either cutover.
+
+### Amendment 2026-10-14: runtime-host operation projection
+
+The operation observer and controller projection now reside under `src/cadrumo_runtime/host/frontend/tui/operations/` (`cadrumo_runtime.host.frontend.tui.operations`) and are launched through `cadrumo-runtime tui`. The former `cadrumo.entrypoints.tui.operations` locator records the prior placement and is superseded for current physical ownership and launch. Backend operation semantics and application supervision remain unchanged; `cadrumo` tax modules do not import `cadrumo_runtime`.

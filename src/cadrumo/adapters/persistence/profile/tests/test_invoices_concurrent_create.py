@@ -33,7 +33,7 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 
 from .....domain.invoices.enums import PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from .....domain.iva.classification import InvoiceKind
+from .....domain.iva.schema import InvoiceKind
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..invoices import InvoiceCatalogueRepository
 

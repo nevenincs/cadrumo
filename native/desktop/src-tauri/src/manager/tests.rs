@@ -1,6 +1,158 @@
 use super::*;
 
-fn fixture(target: Result<Option<PathBuf>>) -> Arc<ManagerStart> {
+#[cfg(windows)]
+#[tokio::test(start_paused = true)]
+async fn readiness_preserves_public_observation_after_former_startup_boundary() {
+    let started = tokio::time::Instant::now();
+    let observed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let progress = observed.clone();
+    let ready = wait_for_readiness(async move {
+        tokio::time::sleep(Duration::from_millis(89_800)).await;
+        progress.store(1, Ordering::Release);
+        tokio::time::sleep(Duration::from_secs(5)).await;
+        progress.store(2, Ordering::Release);
+        Ok(())
+    });
+    tokio::pin!(ready);
+    tokio::select! {
+        result = &mut ready => panic!("admission finished before public observation: {result:?}"),
+        _ = tokio::time::sleep(Duration::from_secs(90)) => {}
+    }
+    assert_eq!(observed.load(Ordering::Acquire), 1);
+    ready.await.unwrap();
+    assert_eq!(observed.load(Ordering::Acquire), 2);
+    assert_eq!(started.elapsed(), Duration::from_millis(94_800));
+}
+
+#[cfg(windows)]
+#[tokio::test(start_paused = true)]
+async fn readiness_expiry_and_public_refusal_remain_failures() {
+    let started = tokio::time::Instant::now();
+    let error = wait_for_readiness(std::future::pending())
+        .await
+        .unwrap_err();
+    assert_eq!(error.code, ErrorCode::TimedOut);
+    assert_eq!(error.operation, Operation::Manager);
+    assert_eq!(
+        started.elapsed(),
+        cadrumo_manager::supervision::supervisor::SupervisorConfig::default().readiness_ceiling
+    );
+    let error = wait_for_readiness(async {
+        tokio::time::sleep(Duration::from_secs(95)).await;
+        Err(failure(ErrorCode::ReadFailed))
+    })
+    .await
+    .unwrap_err();
+    assert_eq!(error.code, ErrorCode::ReadFailed);
+    assert_eq!(error.operation, Operation::Manager);
+}
+
+#[tokio::test]
+async fn failed_start_is_a_typed_public_status_and_close_still_settles() {
+    let manager = fixture(Ok(Err("image_not_installed")));
+    manager
+        .start_with(false, |_| async {
+            Err(failure(ErrorCode::PackageUnavailable))
+        })
+        .await
+        .unwrap_err();
+    let status = manager.read_status().unwrap();
+    assert_eq!(status.state, ManagerState::Failed);
+    assert_eq!(status.failure.unwrap().code, ErrorCode::PackageUnavailable);
+    manager.close_checked().await.unwrap();
+    assert_eq!(manager.read_status().unwrap().state, ManagerState::Stopped);
+}
+
+#[tokio::test]
+async fn isolated_root_activation_never_inspects_or_dispatches_the_installed_manager() {
+    let manager = fixture(Err(failure(ErrorCode::ManagerUnavailable)));
+    let package = PathBuf::from("unusable package");
+    for retry in [false, true] {
+        assert_eq!(
+            manager
+                .activate_installed(false, package.clone(), retry)
+                .await
+                .unwrap(),
+            None
+        );
+    }
+    let snapshot = manager.diagnostics.snapshot(0);
+    assert!(snapshot.processes.is_empty());
+    assert!(snapshot.events.is_empty());
+    assert!(manager.attempt.lock().await.is_none());
+}
+
+#[test]
+fn dispatch_command_preserves_only_explicit_recovery_intent() {
+    use std::ffi::OsString;
+
+    let manager = fixture(Ok(Err("image_not_installed")));
+    let target = Selection {
+        entrypoint: PathBuf::from("installed prefix/manager.exe"),
+        package: PathBuf::from("installed prefix/versions/0.6.0"),
+        manager: PathBuf::from("installed prefix/versions/0.6.0/manager.exe"),
+        version: [0, 6, 0],
+        lease: None,
+        registration: None,
+    };
+    for retry in [false, true] {
+        let command = manager.dispatch_command(&target, retry);
+        let mut expected: Vec<OsString> = ["-I", "-c", DISPATCH]
+            .into_iter()
+            .map(OsString::from)
+            .collect();
+        if retry {
+            expected.push("installed prefix/versions/0.6.0/manager.exe".into());
+            expected.push("--retry".into());
+        } else {
+            expected.push("installed prefix/manager.exe".into());
+        }
+        assert_eq!(command.as_std().get_args().collect::<Vec<_>>(), expected);
+    }
+}
+
+#[tokio::test]
+async fn overlapping_explicit_retry_does_not_share_an_ordinary_attempt() {
+    use std::{future::Future, task::Poll};
+
+    let manager = fixture(Ok(Err("image_not_installed")));
+    let (entered, ready) = tokio::sync::oneshot::channel();
+    let (release, waiting) = tokio::sync::oneshot::channel();
+    let initial_owner = manager.clone();
+    let initial = tokio::spawn(async move {
+        initial_owner
+            .start_with(false, |_| async move {
+                entered.send(()).unwrap();
+                waiting.await.unwrap();
+                Ok(StartOutcome::Dispatched)
+            })
+            .await
+    });
+    ready.await.unwrap();
+
+    let ran = Arc::new(AtomicBool::new(false));
+    let recovery_ran = ran.clone();
+    let mut recovery = Box::pin(manager.start_with(true, |_| async move {
+        recovery_ran.store(true, Ordering::Release);
+        Ok(StartOutcome::Dispatched)
+    }));
+    std::future::poll_fn(|context| {
+        assert!(recovery.as_mut().poll(context).is_pending());
+        Poll::Ready(())
+    })
+    .await;
+    release.send(()).unwrap();
+    assert_eq!(initial.await.unwrap().unwrap(), StartOutcome::Dispatched);
+    assert_eq!(recovery.await.unwrap(), StartOutcome::Dispatched);
+    assert!(
+        ran.load(Ordering::Acquire),
+        "explicit recovery must execute"
+    );
+    assert_eq!(manager.generation.load(Ordering::Acquire), 2);
+    assert!(manager.attempt.lock().await.as_ref().unwrap().retry);
+}
+
+fn fixture(target: Result<std::result::Result<PathBuf, &'static str>>) -> Arc<ManagerStart> {
     Arc::new(ManagerStart {
         package_root: target,
         child: ChildConfiguration::new(
@@ -9,14 +161,36 @@ fn fixture(target: Result<Option<PathBuf>>) -> Arc<ManagerStart> {
             Default::default(),
         )
         .unwrap(),
+        storage_root: std::env::temp_dir(),
         diagnostics: Arc::new(Diagnostics::default()),
         attempt: Arc::new(tokio::sync::Mutex::new(None)),
         generation: AtomicU64::new(0),
-        closed: AtomicBool::new(false),
+        closed: Arc::new(AtomicBool::new(false)),
         cancellation: Arc::new(Cancellation::default()),
-        spawn_fence: Mutex::new(()),
+        spawn_fence: Arc::new(Mutex::new(())),
         closing: tokio::sync::Notify::new(),
+        supervision: Arc::new(tokio::sync::watch::Sender::new(0)),
+        observation: observation::Observer::new(cfg!(windows)),
+        #[cfg(windows)]
+        host: Mutex::new(None),
     })
+}
+
+#[tokio::test]
+async fn explicit_install_refuses_unmanaged_hosts_and_closed_requests() {
+    for scope in [InstallScope::User, InstallScope::Machine] {
+        let manager = fixture(Ok(Err("image_not_installed")));
+        let error = manager.install(scope).await.unwrap_err();
+        assert_eq!(error.code, ErrorCode::InstallationRefused);
+        assert_eq!(error.operation, Operation::Installation);
+        assert!(!manager.attempt.lock().await.as_ref().unwrap().retry);
+        assert!(manager.diagnostics.snapshot(0).processes.is_empty());
+        manager.close().await;
+        assert_eq!(
+            manager.install(scope).await.unwrap_err().code,
+            ErrorCode::SessionUnavailable
+        );
+    }
 }
 
 #[cfg(windows)]
@@ -25,7 +199,7 @@ async fn close_cancels_then_joins_the_actual_verifier_and_refuses_late_retries()
     use cadrumo_application::{error::Error, package::PackageManifest, value::RelativePath};
     use std::{sync::mpsc, time::Instant};
     for abandon_caller in [false, true] {
-        let manager = fixture(Ok(None));
+        let manager = fixture(Ok(Err("image_not_installed")));
         let settled = Arc::new(AtomicBool::new(false));
         let cancellation_observed = Arc::new(AtomicBool::new(false));
         let worker_settled = settled.clone();
@@ -119,6 +293,7 @@ async fn close_cancels_then_joins_the_actual_verifier_and_refuses_late_retries()
                 .await
                 .as_ref()
                 .unwrap()
+                .outcome
                 .as_ref()
                 .unwrap_err()
                 .code,
@@ -144,7 +319,7 @@ async fn close_cancels_then_joins_the_actual_verifier_and_refuses_late_retries()
 #[cfg(windows)]
 #[tokio::test]
 async fn close_waits_for_the_private_helper_and_fences_later_launches() {
-    let manager = fixture(Ok(None));
+    let manager = fixture(Ok(Err("image_not_installed")));
     let held = manager.attempt.lock().await;
     let running = async {
         let result = manager
@@ -172,7 +347,7 @@ async fn close_waits_for_the_private_helper_and_fences_later_launches() {
 #[cfg(windows)]
 #[tokio::test]
 async fn cancelled_ipc_caller_does_not_abandon_the_owned_helper() {
-    let manager = fixture(Ok(None));
+    let manager = fixture(Ok(Err("image_not_installed")));
     let caller_owner = manager.clone();
     let caller = tokio::spawn(async move {
         caller_owner.start_with(true, |owner| async move {
@@ -194,7 +369,7 @@ async fn cancelled_ipc_caller_does_not_abandon_the_owned_helper() {
         .await
         .unwrap();
     assert_eq!(
-        settled.as_ref().unwrap().as_ref().unwrap(),
+        settled.as_ref().unwrap().outcome.as_ref().unwrap(),
         &StartOutcome::Dispatched
     );
     drop(settled);
@@ -210,6 +385,7 @@ async fn cancelled_ipc_caller_does_not_abandon_the_owned_helper() {
             .await
             .as_ref()
             .unwrap()
+            .outcome
             .as_ref()
             .unwrap(),
         &StartOutcome::Dispatched
@@ -220,7 +396,7 @@ async fn cancelled_ipc_caller_does_not_abandon_the_owned_helper() {
 #[tokio::test]
 async fn overlapping_retries_share_one_attempt_instead_of_forming_a_launch_queue() {
     use std::{future::Future, task::Poll};
-    let manager = fixture(Ok(None));
+    let manager = fixture(Ok(Err("image_not_installed")));
     let held = manager.attempt.lock().await;
     let mut requests: Vec<_> = (0..64).map(|_| Box::pin(manager.start(true))).collect();
     std::future::poll_fn(|context| {
@@ -232,7 +408,10 @@ async fn overlapping_retries_share_one_attempt_instead_of_forming_a_launch_queue
     .await;
     drop(held);
     for request in requests {
-        assert_eq!(request.await.unwrap(), StartOutcome::Unmanaged);
+        assert_eq!(
+            request.await.unwrap_err().code,
+            ErrorCode::ManagerUnavailable
+        );
     }
     let starts = manager
         .diagnostics
@@ -266,11 +445,10 @@ async fn initial_calls_share_the_failure_but_explicit_retry_records_a_new_attemp
         ErrorCode::ManagerUnavailable
     );
     assert_eq!(starts(), 2);
-    let unmanaged = fixture(Ok(None));
-    assert_eq!(
-        unmanaged.start(false).await.unwrap(),
-        StartOutcome::Unmanaged
-    );
+    let unmanaged = fixture(Ok(Err("image_not_installed")));
+    let refused = unmanaged.start(false).await.unwrap_err();
+    assert_eq!(refused.code, ErrorCode::ManagerUnavailable);
+    assert_eq!(refused.reason.as_deref(), Some("image_not_installed"));
     assert!(unmanaged.diagnostics.snapshot(0).processes.is_empty());
 }
 
@@ -300,7 +478,7 @@ fn helper(script: &str) -> tokio::process::Command {
 #[tokio::test]
 async fn missing_executable_or_working_directory_reports_safe_spawn_failure() {
     for missing_image in [false, true] {
-        let manager = fixture(Ok(None));
+        let manager = fixture(Ok(Err("image_not_installed")));
         let private_path =
             std::env::temp_dir().join(format!("cadrumo-missing-private-{}", std::process::id()));
         assert!(!private_path.exists());
@@ -331,7 +509,7 @@ async fn missing_executable_or_working_directory_reports_safe_spawn_failure() {
 #[cfg(windows)]
 #[tokio::test]
 async fn repeated_helpers_remain_settled_and_report_measured_latency() {
-    let manager = fixture(Ok(None));
+    let manager = fixture(Ok(Err("image_not_installed")));
     let mut samples = Vec::new();
     for _ in 0..24 {
         let start = std::time::Instant::now();
@@ -386,7 +564,7 @@ async fn helper_success_and_failure_keep_exit_attribution_without_capturing_outp
             Some(ErrorCode::ManagerDispatchFailed),
         ),
     ] {
-        let manager = fixture(Ok(None));
+        let manager = fixture(Ok(Err("image_not_installed")));
         let result = manager
             .run_dispatch(helper(script), Duration::from_secs(15))
             .await;
@@ -419,7 +597,7 @@ async fn helper_timeout_and_output_limit_reap_and_attribute_the_child() {
             ErrorCode::OutputLimit,
         ),
     ] {
-        let manager = fixture(Ok(None));
+        let manager = fixture(Ok(Err("image_not_installed")));
         assert_eq!(
             manager
                 .run_dispatch(helper(script), deadline)
@@ -473,7 +651,7 @@ fn manager_path_is_taken_from_the_package_projection_and_is_unambiguous() {
     }];
     assert_eq!(
         contract.manager_member().unwrap().as_str(),
-        "fixture-manager.exe"
+        format!("fixture-manager{}", contract.layout.entrypoint_suffix)
     );
     contract.layout.application_images[0].name = "../foreign".into();
     assert!(contract.manager_member().is_err());
@@ -486,4 +664,23 @@ fn manager_path_is_taken_from_the_package_projection_and_is_unambiguous() {
     assert!(contract.manager_member().is_err());
     contract.layout.application_images.clear();
     assert!(contract.manager_member().is_err());
+}
+
+#[test]
+fn asynchronous_service_failure_is_logged_once_per_transition() {
+    let manager = fixture(Ok(Err("image_not_installed")));
+    manager.report_failure(failure(ErrorCode::ManagerUnavailable));
+    manager.report_failure(failure(ErrorCode::ManagerUnavailable));
+    let snapshot = manager.diagnostics.snapshot(u64::MAX);
+    let failures: Vec<_> = snapshot
+        .events
+        .iter()
+        .filter(|event| event.failure.is_some())
+        .collect();
+    assert_eq!(failures.len(), 1);
+    assert_eq!(failures[0].stage, Some(HostStage::Manager));
+    assert_eq!(
+        failures[0].failure.as_ref().unwrap().code,
+        ErrorCode::ManagerUnavailable
+    );
 }

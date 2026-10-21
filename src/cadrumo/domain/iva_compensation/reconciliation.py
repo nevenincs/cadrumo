@@ -214,10 +214,9 @@ def _require_registry_authority_source_coordinates(source: IvaCompensationAuthor
     if source.source_modelo is None:
         raise ValueError("registry-derived authority sources require source_modelo")
     expected_coordinates = {
-        (str(source.source_modelo), source.source_filing_year, period.registry_token)
-        for period in source.source_periods
+        (source.source_modelo, source.source_filing_year, period.registry_token) for period in source.source_periods
     }
-    actual_coordinates = {(str(ref.modelo), ref.modelo_year, str(ref.period)) for ref in source.registry_snapshot_refs}
+    actual_coordinates = {(ref.modelo, ref.modelo_year, ref.period) for ref in source.registry_snapshot_refs}
     if actual_coordinates != expected_coordinates:
         raise ValueError("registry-derived authority source coordinates must exactly match its source periods")
 
@@ -843,7 +842,7 @@ def local_recurrence_authority_source(
     amount = Decimal(recurrence.amount)
     binding_id = str(recurrence.binding_id)
     source_modelo = str(recurrence.source_modelo)
-    source_filing_year = int(recurrence.source_filing_year)
+    source_filing_year = recurrence.source_filing_year
     source_periods = tuple(recurrence.source_periods)
     resolved_at = recurrence.resolved_at
     source_locator = str(

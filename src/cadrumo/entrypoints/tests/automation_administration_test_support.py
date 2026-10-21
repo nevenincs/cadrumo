@@ -12,14 +12,12 @@ from uuid import UUID
 
 from pydantic import SecretBytes
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentProposal
+
 from ...application.user_profile.automation_administration_service import AutomationAdministrationService
 from ...application.user_profile.automation_approval_session import ApprovalSession
-from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from ...application.user_profile.automation_enrollment import (
-    AutomationInventory,
-    EnrollmentProposal,
-    EnrollmentTransition,
-)
+from ...application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
 from ...application.user_profile.automation_execution import AutomationApprovalExecution
 from ...core.identity.digest import ContentDigest
 

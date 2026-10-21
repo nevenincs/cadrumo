@@ -2,13 +2,8 @@
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import (
-    CommandNodeKind,
-    CommandWriteRoute,
-)
-
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     DeferredTarget,
@@ -19,7 +14,11 @@ from .command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import (
+    CommandNodeKind,
+    CommandWriteRoute,
+)
 
 _CALCULATION_READ = ExecutionPolicySpec(
     capabilities=frozenset({"calculation", "encrypted-facts"}),
@@ -75,10 +74,10 @@ MODELO_READINESS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_CALCULATION_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_readiness_cli", "modelo_readiness", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_readiness_commands", "modelo_readiness", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._modelo_payloads", "ModeloReadinessResult", __package__),
+            target=DeferredTarget(".modelo_results", "ModeloReadinessResult", __package__),
             identity="modelo.readiness",
         ),
     ),

@@ -35,6 +35,8 @@ pub enum StartKind {
     SignIn,
     /// The user started it by hand.
     Manual,
+    /// Automatic manager recovery preserves an explicit Quit marker.
+    Recovery,
 }
 
 /// A runtime in another session, watched through a process handle and never signalled.
@@ -183,6 +185,7 @@ impl Ownership {
     /// cannot be read stays. A manual start clears any marker.
     pub fn begin(&mut self, start: StartKind) -> io::Result<Role> {
         match start {
+            StartKind::Recovery => Ok(self.reassess()),
             StartKind::Manual => self.start_manually(),
             StartKind::SignIn => {
                 if let QuitState::Present(marker) = read_quit_marker(&self.storage_root)

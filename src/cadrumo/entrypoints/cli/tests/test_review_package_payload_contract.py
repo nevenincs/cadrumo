@@ -16,7 +16,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
-from .._modelo_review_package_payloads import (
+from ..modelo_review_package_results import (
     ModeloReviewPackageBuildResult,
     ModeloReviewPackageCounterSignResult,
     ModeloReviewPackageEncryptForRecipientResult,

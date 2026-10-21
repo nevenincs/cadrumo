@@ -6,8 +6,9 @@ import base64
 from pathlib import Path
 from uuid import UUID
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from .....application.user_profile.access_contracts import ProfileAccessBinding
-from .....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from .capsule import load_committed_profile_password_material
 from .errors import ProfileCustodyRecordError
 from .sentinel_contract import verify_profile_custody_sentinel

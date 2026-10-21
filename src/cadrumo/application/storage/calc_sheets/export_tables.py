@@ -42,9 +42,9 @@ _EVIDENCE_HEADERS: tuple[str, ...] = (
 
 def evidence_table(plan: AnySheetExportPlan) -> tuple[str, tuple[str, ...], tuple[tuple[str, ...], ...]]:
     """Return the value table written to the Evidencia sheet of every transport."""
-    body = tuple(
-        tuple(str(value) for value in _contributor_values(row)) for row in plan.evidence.contributor_rows
-    ) + tuple(tuple(str(value) for value in _manual_values(row)) for row in plan.evidence.manual_entries)
+    body = tuple(_contributor_values(row) for row in plan.evidence.contributor_rows) + tuple(
+        _manual_values(row) for row in plan.evidence.manual_entries
+    )
     return (plan.evidence.snapshot_fingerprint or "", _EVIDENCE_HEADERS, body)
 
 

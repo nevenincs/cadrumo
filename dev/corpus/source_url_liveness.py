@@ -151,6 +151,10 @@ def probe_source_urls(
 
 
 WITHDRAWN_SOURCE_URLS: Final[Mapping[str, str]] = {
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/"
+    "presentacion-declaraciones-ayuda-tecnica/modelo-131/presentacion-utilizando-datos-anteriores.html": (
+        "AEAT returned HTTP 404 for the captured modelo 131 prior-data presentation guide on 2026-10-15"
+    ),
     "https://sede.agenciatributaria.gob.es/Sede/en_gb/todas-gestiones/impuestos-tasas/"
     "declaraciones-informativas/modelo-289-decla_informativa-anual-cuentas-financieras_/"
     "gestiones/servicio-web-presentacion-modelo-289.html": (

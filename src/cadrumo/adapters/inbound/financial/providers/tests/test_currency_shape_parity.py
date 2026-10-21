@@ -178,14 +178,15 @@ def test_every_currency_surface_is_wired_to_the_one_shared_normaliser() -> None:
 
 
 def test_refused_currency_keeps_boundary_specific_diagnostics() -> None:
-    """Shared shape policy must not flatten the per-boundary error context.
+    """CSV refusal keeps a safe field reference without the source cell.
 
-    SUPPORTING. The retired inline check built the same message, so this
-    passes on both sides; it guards against a future consolidation that
-    replaces the CSV wording with the bare core message.
+    The original header and invalid token are source data and must stay out
+    of exception messages that may reach diagnostics.
     """
     with pytest.raises(FinancialValidationError) as csv_exc:
         _csv_currency("U$D")
     message = str(csv_exc.value)
-    assert "test layout row 1" in message, "CSV refusal must name the row context"
-    assert "'Divisa'" in message, "CSV refusal must name the offending column"
+    assert "currency field" in message
+    assert "test layout row 1" not in message
+    assert "Divisa" not in message
+    assert "U$D" not in message

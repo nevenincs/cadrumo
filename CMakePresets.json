@@ -8,7 +8,7 @@
   "configurePresets": [
     {
       "name": "windows-x64",
-      "displayName": "Windows x64 pinned MSVC",
+      "displayName": "Windows x64 MSVC",
       "generator": "Visual Studio 17 2022",
       "toolchainFile": "${sourceDir}/native/cmake/WindowsToolchain.cmake",
       "binaryDir": "$env{CADRUMO_BUILD_DIR}",
@@ -19,9 +19,9 @@
       },
       "environment": {
         "CADRUMO_BUILD_DIR": "${sourceDir}/build/windows-x64",
-        "TEMP": "$env{CADRUMO_BUILD_DIR}/tmp",
-        "TMP": "$env{CADRUMO_BUILD_DIR}/tmp",
-        "TMPDIR": "$env{CADRUMO_BUILD_DIR}/tmp"
+        "TEMP": "$env{CADRUMO_BUILD_DIR}/temporary",
+        "TMP": "$env{CADRUMO_BUILD_DIR}/temporary",
+        "TMPDIR": "$env{CADRUMO_BUILD_DIR}/temporary"
       },
       "cacheVariables": {
         "CADRUMO_TARGET": "windows-x86-64"

@@ -52,12 +52,12 @@ from cadrumo.application.operations.operation_definition import OperationDefinit
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.events import OperationLogRecord, OperationPhaseEvent
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationSchemaBindingV1,
 )
+from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.config import Settings
@@ -167,6 +167,7 @@ def _supervisor(
     definition = OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=ResourceRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ResourceResult,
         executor_factory=OperationExecutorFactory(
             request_type=ResourceRequest,
@@ -177,7 +178,6 @@ def _supervisor(
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,

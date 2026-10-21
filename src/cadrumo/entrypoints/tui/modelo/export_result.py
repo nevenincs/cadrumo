@@ -32,6 +32,7 @@ from ....core.i18n.render import tr
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.presentation import NoticePresentation
 from ....domain.filing.software_identity import AeatSoftwareIdentityGrade
+from ..components.language import localized, refresh_localized_widgets, repaint_tables
 from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable, NoticeBand
 
@@ -191,14 +192,23 @@ class ModeloExportResultScreen(ModalScreen[None]):
     def compose(self) -> ComposeResult:
         with Vertical(id="modelo-export-result-dialog"):
             with VerticalScroll(id="modelo-export-result-content"):
-                yield Static(tr("tui.modelo.export.result.title"), id="modelo-export-result-title", markup=False)
+                yield localized(
+                    Static(tr("tui.modelo.export.result.title"), id="modelo-export-result-title", markup=False),
+                    "tui.modelo.export.result.title",
+                )
                 yield NoticeBand(export_result_warnings(self._result), id="modelo-export-result-warnings")
                 if self._result is not None:
                     yield ContentDataTable[str](id="modelo-export-result-table", cursor_type="row", zebra_stripes=True)
             with Horizontal(id="modelo-export-result-actions"):
                 if self._result is not None:
-                    yield Button(tr("tui.modelo.workbench.issues.technical"), id="modelo-export-result-technical")
-                yield Button(tr("tui.modelo.export.result.close"), id="modelo-export-result-close")
+                    yield localized(
+                        Button(tr("tui.modelo.workbench.issues.technical"), id="modelo-export-result-technical"),
+                        "tui.modelo.workbench.issues.technical",
+                    )
+                yield localized(
+                    Button(tr("tui.modelo.export.result.close"), id="modelo-export-result-close"),
+                    "tui.modelo.export.result.close",
+                )
 
     def on_mount(self) -> None:
         """Fill the ordinary facts and make closing the primary keyboard action."""
@@ -247,6 +257,20 @@ class ModeloExportResultScreen(ModalScreen[None]):
     def action_close(self) -> None:
         """Close the statement from the keyboard."""
         self.dismiss(None)
+
+    async def refresh_language(self) -> None:
+        """Reword mounted controls while preserving inputs and pending operations."""
+        refresh_localized_widgets(self)
+        self.query_one("#modelo-export-result-warnings", NoticeBand).reword(export_result_warnings(self._result))
+        if self._result is not None:
+
+            def paint() -> None:
+                table = self.query_one("#modelo-export-result-table", ContentDataTable)
+                table.add_column(tr("flows.modelo_workspace_overview.column.field"), key="field")
+                table.add_column(tr("flows.modelo_workspace_overview.column.value"), key="value")
+                self._render_rows()
+
+            repaint_tables(self, paint)
 
 
 __all__ = [

@@ -37,7 +37,9 @@ restored it.
 from __future__ import annotations
 
 from base64 import b64decode, b64encode
+from dataclasses import dataclass
 from datetime import UTC, datetime
+from hashlib import sha256
 from typing import TYPE_CHECKING, Final
 from uuid import UUID
 
@@ -47,6 +49,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import bounded_canonical_json_bytes, sha256_hex
 from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.product_identity import PRODUCT_IDENTITY
 from ...core.time.clock import now as _now
@@ -91,9 +94,54 @@ _SLOT_LENGTH_PREFIX_BYTES: Final[int] = 4
 #: needs a public name to compare against.
 PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES: Final[int] = 512 * 1024 * 1024
 
+#: The file-name suffix every sealed archive carries.
+#:
+#: The sealed-archive writer in the storage adapter enforces the same suffix
+#: from its own constant, for the reason given above for the payload bound: an
+#: adapter does not import the application layer. A test holds the two equal.
+PROFILE_CAPSULE_ARCHIVE_SUFFIX: Final[str] = f".{PRODUCT_IDENTITY.python_package}-bucket.tar.gz"
+
+_DIGEST_MEMBER_LENGTH_BYTES: Final[int] = 8
+
 
 class ProfileCapsuleArchiveError(CadrumoError):
     """Raised when an archive cannot be written or cannot be read back."""
+
+
+@dataclass(frozen=True, slots=True)
+class RestorableProfileCapsule:
+    """Capsule material read once, with the digest of exactly the members that were read.
+
+    A restore publishes ``source`` itself and never reads the path again, so
+    the digest names the bytes that will be published and not whatever the
+    path holds later.
+    """
+
+    source: ProfileCapsuleSource
+    digest: ContentDigest
+
+
+def refuse_unwritable_profile_capsule_archive_target(target: Path) -> None:
+    """Refuse an export destination before any capsule is read or sealed.
+
+    The sealed-archive writer refuses the same two destinations, but only
+    after the capsule has been read, and as a storage failure that names an
+    internal write. An operator learns here which suffix the path needs, and
+    that an existing backup is theirs to move and is never replaced.
+
+    Raises:
+        ProfileCapsuleArchiveError: ``target`` lacks the archive suffix, or a
+            file already exists there.
+    """
+    if not target.name.endswith(PROFILE_CAPSULE_ARCHIVE_SUFFIX):
+        raise ProfileCapsuleArchiveError(
+            translated_message="cli.config.profile.archive.refusal.export_suffix",
+            context={"suffix": PROFILE_CAPSULE_ARCHIVE_SUFFIX},
+        )
+    if target.exists():
+        raise ProfileCapsuleArchiveError(
+            translated_message="cli.config.profile.archive.refusal.export_target_exists",
+        )
 
 
 class ProfileCapsuleArchiveReceipt(BaseModel):
@@ -225,6 +273,36 @@ def read_profile_capsule_archive(source: Path) -> ProfileCapsuleSource:
     return _decode_payload(payload, expected_bucket_id=contents.header.bucket_id)
 
 
+def read_restorable_profile_capsule(source: Path) -> RestorableProfileCapsule:
+    """Read restorable capsule material from a capsule directory or a sealed archive.
+
+    The two shapes differ only in how their material is read, and they are
+    told apart by what the path is, never by a claim about it: someone
+    recovering from a failure should not have to say which kind of backup they
+    hold. Everything after this sees one :class:`ProfileCapsuleSource`.
+
+    Raises:
+        ProfileCapsuleSourceError: The directory is not a readable capsule.
+        ProfileCapsuleArchiveError: The archive's digest does not match its
+            payload, or a member is missing or will not parse.
+    """
+    material = read_profile_capsule_source(source) if source.is_dir() else read_profile_capsule_archive(source)
+    return RestorableProfileCapsule(source=material, digest=_capsule_source_digest(material))
+
+
+def _capsule_source_digest(source: ProfileCapsuleSource) -> ContentDigest:
+    """Digest the three members a restore publishes, each framed by its length."""
+    digest = sha256()
+    for member in (
+        source.password_envelope.canonical_json_bytes(),
+        source.sentinel.canonical_json_bytes(),
+        source.database_bytes,
+    ):
+        digest.update(len(member).to_bytes(_DIGEST_MEMBER_LENGTH_BYTES, "big"))
+        digest.update(member)
+    return digest.hexdigest()
+
+
 def _encode_payload(source: ProfileCapsuleSource) -> bytes:
     """Serialise one capsule source into the archive's invariant layout."""
     return bounded_canonical_json_bytes(
@@ -311,11 +389,15 @@ def _member(decoded: dict[str, object], key: str) -> bytes:
 
 
 __all__ = [
+    "PROFILE_CAPSULE_ARCHIVE_SUFFIX",
     "RECOVERY_SLOT_BYTES",
     "ProfileCapsuleArchiveError",
     "ProfileCapsuleArchiveInspection",
     "ProfileCapsuleArchiveReceipt",
+    "RestorableProfileCapsule",
     "export_profile_capsule_archive",
     "inspect_profile_capsule_archive",
     "read_profile_capsule_archive",
+    "read_restorable_profile_capsule",
+    "refuse_unwritable_profile_capsule_archive_target",
 ]

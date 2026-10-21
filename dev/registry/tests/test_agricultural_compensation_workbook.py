@@ -15,7 +15,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 def test_compiled_compensation_example_has_live_rows_and_refund_mirror(year: int) -> None:
     source, plan = build_agricultural_compensation_plan(year=year)
     inputs = {
-        cell.casilla_id: cell for cell in plan.value_cells if cell.address.tab is TabName.ENTRADAS and cell.casilla_id
+        cell.casilla_id: cell
+        for cell in plan.value_cells
+        if cell.address.tab is TabName.ENTRADAS and (cell.casilla_id is not None and cell.casilla_id)
     }
     calculations = {cell.casilla_id: cell for cell in plan.formula_cells if cell.address.tab is TabName.CALCULOS}
     assert {"07", "08", "09", "10"} <= calculations.keys()

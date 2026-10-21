@@ -31,7 +31,9 @@ def test_group_example_keeps_member_values_and_settlement_formula_sources(period
     assert values[layout.binding_cells[prefix + "entidades-dependientes-numero-de-justifi"]] == "0000000000003"
     assert values[layout.entradas_cells["01"]] == Decimal("2100")
     inputs = {
-        cell.casilla_id: cell for cell in plan.value_cells if cell.address.tab is TabName.ENTRADAS and cell.casilla_id
+        cell.casilla_id: cell
+        for cell in plan.value_cells
+        if cell.address.tab is TabName.ENTRADAS and (cell.casilla_id is not None and cell.casilla_id)
     }
     for identifier in ("06", "07", "papel.importe-ingreso"):
         assert inputs[identifier].value is None

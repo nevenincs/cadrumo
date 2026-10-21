@@ -19,7 +19,7 @@ survives its own operation would pass a weaker test and fail in production.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -49,7 +49,7 @@ _CREDENTIAL = "registration-admits-the-profile-it-creates"
 
 
 @contextmanager
-def _this_process_owns_no_session() -> Iterator[None]:
+def _this_process_owns_no_session() -> Generator[None]:
     """Hide a session an earlier test left bound, and close the one registration binds.
 
     These claims are about the session registration itself leaves live, so a

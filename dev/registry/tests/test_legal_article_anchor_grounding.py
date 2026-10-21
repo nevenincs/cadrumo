@@ -152,7 +152,7 @@ _MINIMUM_ARTICLE_CITATIONS: Final = 550
 
 def _article_key(number: str, qualifier: str | None) -> str:
     folded = number.casefold()
-    return _ORDINALS.get(folded, folded) + (f" {qualifier.casefold()}" if qualifier else "")
+    return _ORDINALS.get(folded, folded) + (f" {qualifier.casefold()}" if (qualifier is not None and qualifier) else "")
 
 
 def _requested_article(anchor: str, declared_article: str | None) -> str | None:

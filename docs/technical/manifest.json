@@ -48,7 +48,7 @@
     {
       "source": "map/stage-2/STAGE-2-007.md",
       "source_sha256": "1dee3501a22cf65c7f7f9782ecffa2cea2806f99e1f2e9c83126193c09ecf8e7",
-      "page": "articles/007-windows-login-task-control-and-worker-authority.md",
+      "page": "articles/007-windows-login-process-containment-and-worker-authority.md",
       "section": "article",
       "body_sha256": "9f161705479d72177149fe7ca9f9d9abf4aa1d523636b432ebe8fc0f21557470"
     },

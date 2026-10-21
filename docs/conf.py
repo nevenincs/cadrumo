@@ -5,7 +5,9 @@ from __future__ import annotations
 import ast
 import os
 import warnings
+from functools import cache
 from importlib import import_module
+from importlib.util import resolve_name
 
 from cadrumo.core.toml import load_toml
 
@@ -31,6 +33,9 @@ sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 scan_directory = import_module("cadrumo.core.directory_scan").scan_directory
 OutputLanguage = import_module("cadrumo.core.external_constants").OutputLanguage
 PRODUCT_IDENTITY = import_module("cadrumo.core.product_identity").PRODUCT_IDENTITY
+API_SOURCE_ROOTS = import_module("dev.docs.apidocs.manager").API_SOURCE_ROOTS
+typehints_formatter = import_module("dev.docs.apidocs.rendering").TypeHintsFormatter()
+external_type_url = import_module("dev.docs.apidocs.rendering").external_type_url
 
 # Site chrome (header, broadcast strip, footer, accessible names, and the
 # strings the interaction layer writes into the DOM) is not page content, so
@@ -141,6 +146,7 @@ def _skip_generated_output_for_i18n(generator: str) -> bool:
 # ── Extensions ──────────────────────────────────────────────────────────────
 extensions = [
     "sphinx.ext.autodoc",
+    "dev.docs.apidocs.attribute_types",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
@@ -159,7 +165,12 @@ if _USER_SCOPE:
     # notfound, intersphinx, napoleon) stays so the user surface renders
     # identically. napoleon is left loaded but inert (its docstring transform
     # never fires without autodoc).
-    _AUTODOC_ONLY_EXTENSIONS = {"sphinx.ext.autodoc", "sphinx.ext.viewcode", "sphinx_autodoc_typehints"}
+    _AUTODOC_ONLY_EXTENSIONS = {
+        "dev.docs.apidocs.attribute_types",
+        "sphinx.ext.autodoc",
+        "sphinx.ext.viewcode",
+        "sphinx_autodoc_typehints",
+    }
     extensions = [name for name in extensions if name not in _AUTODOC_ONLY_EXTENSIONS]
 if _DESKTOP_FLAVOR:
     # The tooltips load from ``/_/api/v3/embed/``, an endpoint only Read the
@@ -272,12 +283,12 @@ if _ONLY_SOURCES:
         # The API stubs are written at builder-inited, after this list is taken,
         # so the ones the build will generate are named by the generator rather
         # than found on disk; otherwise every stub would join the read set.
-        from dev.docs.apidocs.manager import API_SOURCE_PACKAGE, ApiStubManager, stub_filename
+        from dev.docs.apidocs.manager import ApiStubManager, stub_filename
 
         _discovered_sources |= {
             f"api/{stub_filename(_name)}"
-            for _name, _ in ApiStubManager(
-                src_cadrumo=_PROJECT_ROOT / "src" / API_SOURCE_PACKAGE,
+            for _name, _ in ApiStubManager.for_repository(
+                _PROJECT_ROOT,
                 docs_api=_DOCS_ROOT / "api",
             ).discover_modules()
         }
@@ -299,7 +310,7 @@ suppress_warnings = [
     "sphinx_autodoc_typehints.forward_reference",
     "sphinx_autodoc_typehints.guarded_import",
 ]
-if os.environ.get("CADRUMO_DOCS_SINGLE_PAGE"):
+if bool(os.environ.get("CADRUMO_DOCS_SINGLE_PAGE")):
     suppress_warnings.append("toc.excluded")
     suppress_warnings.append("toc.not_included")
 if _USER_SCOPE:
@@ -366,12 +377,6 @@ autoclass_content = "class"
 autodoc_typehints = "description"
 autodoc_typehints_format = "short"
 
-_PUBLIC_TYPE_ALIAS_TARGETS = {
-    "CasillaId": "cadrumo.core.CasillaId",
-    "SubjectTaxId": "cadrumo.domain.calculations.registry.tax_id_format.SubjectTaxId",
-    "TaxIdIdentityToken": "cadrumo.core.identity.tax_id.TaxIdIdentityToken",
-}
-
 # Be tolerant of the wider AEAT dep tree at autodoc-import time. These are
 # either heavy native deps that pull a lot of platform-specific shared
 # libraries, or optional vault tooling that isn't installed in every env.
@@ -423,7 +428,7 @@ intersphinx_mapping = {
     "typer": ("https://typer.tiangolo.com/", None),
 }
 _SELF_INVENTORY = _DOCS_HTML_ROOT / "objects.inv"
-if os.environ.get("CADRUMO_DOCS_SELF_INVENTORY") and _SELF_INVENTORY.is_file():
+if bool(os.environ.get("CADRUMO_DOCS_SELF_INVENTORY")) and _SELF_INVENTORY.is_file():
     intersphinx_mapping["cadrumo-local"] = ((_SELF_INVENTORY.parent).as_uri() + "/", str(_SELF_INVENTORY))
 intersphinx_disabled_reftypes = ["std:doc"]
 
@@ -432,9 +437,11 @@ intersphinx_disabled_reftypes = ["std:doc"]
 # mappings, so the build resolves stdlib/SQLAlchemy targets deterministically
 # without any network access. The dropped third-party namespaces are covered by
 # nitpick_ignore_regex below.
-if os.environ.get("CADRUMO_DOCS_OFFLINE"):
+if bool(os.environ.get("CADRUMO_DOCS_OFFLINE")):
     intersphinx_mapping = {
-        name: (uri, inv) for name, (uri, inv) in intersphinx_mapping.items() if inv and Path(inv).is_file()
+        name: (uri, inv)
+        for name, (uri, inv) in intersphinx_mapping.items()
+        if (inv is not None and inv) and Path(inv).is_file()
     }
 
 # ── HTML theme ──────────────────────────────────────────────────────────────
@@ -678,6 +685,9 @@ html_context = {
         },
     ],
     "cadrumo_footer_note": _SITE_LABELS["footer_note"],
+    # The packaged copy serves neither .ico nor .webmanifest, and a desktop
+    # frame shows no tab or home-screen icon, so only the web site links them.
+    "cadrumo_web_icons": not _DESKTOP_FLAVOR,
 }
 if _USER_SCOPE:
     # The header nav carries an "API" entry pointing at the excluded api/index
@@ -772,7 +782,7 @@ ogp_site_name = _SITE_LABELS["meta_short_title"]
 ogp_site_url = html_baseurl
 ogp_description_length = _DESCRIPTION_LENGTH
 ogp_type = "website"
-ogp_image = "_static/cadrumo-mark-light.svg"
+ogp_image = "_static/cadrumo-icon-square-512.png"
 
 # ── Syntax highlighting ─────────────────────────────────────────────────────
 # Bare code fences are overwhelmingly operator command transcripts; lexing them
@@ -1291,7 +1301,7 @@ def _build_reads(relative_target: str) -> bool:
 
 def _should_generate_cli_reference() -> bool:
     """Return whether this Sphinx invocation needs generated ``docs/cli`` pages."""
-    if os.environ.get("CADRUMO_DOCS_SKIP_CLI_REFERENCE"):
+    if bool(os.environ.get("CADRUMO_DOCS_SKIP_CLI_REFERENCE")):
         return False
     return _build_reads("cli")
 
@@ -1314,7 +1324,7 @@ def _should_resolve_deferred_models() -> bool:
         # diagnostics report models; user scope loads no autodoc, so importing
         # the application here would defeat the whole point of the scope.
         return False
-    if os.environ.get("CADRUMO_DOCS_SKIP_DEFERRED_MODELS"):
+    if bool(os.environ.get("CADRUMO_DOCS_SKIP_DEFERRED_MODELS")):
         return False
     specific_sources = _specific_build_sources()
     if specific_sources is None:
@@ -1330,84 +1340,25 @@ def _should_resolve_deferred_models() -> bool:
 
 _PY_SUFFIX_INDEX: dict[str, list[str]] = {}
 
-_TYPING_ALIAS_FACTORIES = frozenset(
-    {
-        "Annotated",
-        "AsyncIterator",
-        "Awaitable",
-        "Callable",
-        "Collection",
-        "Iterable",
-        "Iterator",
-        "Literal",
-        "Mapping",
-        "MutableMapping",
-        "Protocol",
-        "Sequence",
-    }
-)
-_ALIAS_NAME_SUFFIXES = (
-    "Builder",
-    "Collector",
-    "Cursor",
-    "Facts",
-    "Fetcher",
-    "Guard",
-    "Kind",
-    "Policy",
-    "Port",
-    "Predicate",
-    "Projection",
-    "Reference",
-    "Resolver",
-    "Scalar",
-    "Store",
-    "Token",
-    "Type",
-    "Value",
-)
-
-
-def _subscript_root_name(node: ast.expr) -> str | None:
-    """Return the root identifier of a subscription expression."""
-    value = node.value if isinstance(node, ast.Subscript) else None
-    while isinstance(value, ast.Attribute):
-        value = value.value
-    return value.id if isinstance(value, ast.Name) else None
-
 
 def _declared_type_hint_names() -> frozenset[str]:
-    """Return source-declared aliases and TypeVars that are not API objects."""
+    """Return PEP 695 and typing.TypeVar parameters rendered inline by typehints."""
     names: set[str] = set()
-    source_root = _PROJECT_ROOT / "src" / "cadrumo"
-    for path in scan_directory(source_root, pattern="*.py", recursive=True):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.TypeAlias):
-                names.add(node.name.id)
-            elif isinstance(node, ast.TypeVar):
-                names.add(node.name)
-            elif (
-                isinstance(node, ast.Assign)
-                and isinstance(node.value, ast.Call)
-                and isinstance(node.value.func, ast.Name)
-                and node.value.func.id == "TypeVar"
-            ):
-                names.update(target.id for target in node.targets if isinstance(target, ast.Name))
-            elif isinstance(node, ast.Assign):
-                target_names = tuple(target.id for target in node.targets if isinstance(target, ast.Name))
-                alias_like = (
-                    _subscript_root_name(node.value) in _TYPING_ALIAS_FACTORIES
-                    or (isinstance(node.value, ast.BinOp) and isinstance(node.value.op, ast.BitOr))
-                    or (
-                        isinstance(node.value, ast.Name)
-                        and node.value.id[:1].isupper()
-                        and any(name.endswith(_ALIAS_NAME_SUFFIXES) for name in target_names)
-                    )
-                )
-                if alias_like:
-                    names.update(target_names)
-    return frozenset(names - _PUBLIC_TYPE_ALIAS_TARGETS.keys())
+    for source_root_name in API_SOURCE_ROOTS:
+        source_root = _PROJECT_ROOT.joinpath(*Path(source_root_name).parts)
+        for path in scan_directory(source_root, pattern="*.py", recursive=True):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.TypeVar):
+                    names.add(node.name)
+                elif (
+                    isinstance(node, ast.Assign)
+                    and isinstance(node.value, ast.Call)
+                    and isinstance(node.value.func, ast.Name)
+                    and node.value.func.id == "TypeVar"
+                ):
+                    names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+    return frozenset(names)
 
 
 _LITERAL_TYPE_HINT_NAMES = _declared_type_hint_names()
@@ -1448,6 +1399,120 @@ def _build_py_suffix_index(env):
     return index
 
 
+def _api_source_path(module_name: str) -> Path | None:
+    """Resolve a documented first-party module to its source file."""
+    for source_root_name in API_SOURCE_ROOTS:
+        source_root = _PROJECT_ROOT / source_root_name
+        package_name = source_root.name
+        if module_name != package_name and not module_name.startswith(package_name + "."):
+            continue
+        module_path = source_root.joinpath(*module_name.split(".")[1:])
+        if module_path.is_dir():
+            return module_path / "__init__.py"
+        return module_path.with_suffix(".py")
+    return None
+
+
+@cache
+def _source_bindings(module_name: str) -> dict[str, str]:
+    """Parse one module's final source bindings once per documentation build."""
+    source_path = _api_source_path(module_name)
+    if source_path is None or not source_path.is_file():
+        return {}
+    try:
+        tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return {}
+
+    package = module_name if source_path.name == "__init__.py" else module_name.rpartition(".")[0]
+    bindings: dict[str, str] = {}
+    for statement in tree.body:
+        if isinstance(statement, ast.ImportFrom):
+            for imported in statement.names:
+                if imported.name == "*":
+                    continue
+                if statement.module is None:
+                    try:
+                        imported_module = resolve_name("." * statement.level, package)
+                    except (ImportError, ValueError):
+                        continue
+                elif statement.level:
+                    try:
+                        imported_module = resolve_name("." * statement.level + statement.module, package)
+                    except (ImportError, ValueError):
+                        continue
+                else:
+                    imported_module = statement.module
+                bindings[imported.asname or imported.name] = f"{imported_module}.{imported.name}"
+            continue
+
+        bound_names: set[str] = set()
+        if isinstance(statement, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            bound_names.add(statement.name)
+        elif isinstance(statement, ast.TypeAlias):
+            bound_names.add(statement.name.id)
+        elif isinstance(statement, (ast.Assign, ast.AnnAssign)):
+            targets = statement.targets if isinstance(statement, ast.Assign) else (statement.target,)
+            for target in targets:
+                bound_names.update(node.id for node in ast.walk(target) if isinstance(node, ast.Name))
+        for symbol in bound_names:
+            bindings[symbol] = f"{module_name}.{symbol}"
+    return bindings
+
+
+def _source_binding_target(module_name: str, symbol: str) -> str | None:
+    """Return the source-level owner bound to *symbol* in one API module."""
+    return _source_bindings(module_name).get(symbol)
+
+
+def _clear_source_binding_cache(app, env, docnames) -> None:
+    """Discard prior-build bindings before Sphinx reads the next source set."""
+    _source_bindings.cache_clear()
+
+
+def _contextual_api_target(env, node, symbol: str, candidates: list[str]) -> str | None:
+    """Resolve an ambiguous short API name through its current source import."""
+    module_name = node.get("py:module")
+    if not isinstance(module_name, str):
+        docname = node.get("refdoc") or env.docname
+        module_name = docname.removeprefix("api/") if isinstance(docname, str) else ""
+    if not isinstance(module_name, str) or _api_source_path(module_name) is None:
+        return None
+    target = _source_binding_target(module_name, symbol)
+    return target if target in candidates else None
+
+
+def _contextual_external_reference(app, env, node, contnode):
+    """Resolve source-imported short names against the loaded inventories."""
+    from sphinx.ext.intersphinx import InventoryAdapter, missing_reference
+
+    target = node.get("reftarget", "")
+    module_name = node.get("py:module")
+    if not isinstance(module_name, str):
+        docname = node.get("refdoc") or env.docname
+        module_name = docname.removeprefix("api/") if isinstance(docname, str) else ""
+    root, _, nested = target.partition(".")
+    imported = _source_binding_target(module_name, root)
+    if imported is None or _api_source_path(imported) is not None:
+        return None
+    qualified = f"{imported}.{nested}" if nested else imported
+    parts = qualified.split(".")
+    # Textual exposes widgets through a lazy public module; its inventory uses
+    # the defining private module for nested events. Match the imported path
+    # in order, and refuse ambiguous inventory owners.
+    candidates = {
+        name
+        for objects in InventoryAdapter(env).main_inventory.values()
+        for name in objects
+        if name.rsplit(".", 1)[-1] == parts[-1] and _is_ordered_subsequence(parts, name.split("."))
+    }
+    if len(candidates) != 1:
+        return None
+    qualified_node = node.copy()
+    qualified_node["reftarget"] = candidates.pop()
+    return missing_reference(app, env, qualified_node, contnode)
+
+
 def _resolve_short_reference(app, env, node, contnode):
     """Bridge a short cross-reference to its single canonical defining-module target.
 
@@ -1475,10 +1540,16 @@ def _resolve_short_reference(app, env, node, contnode):
     if node.get("refdomain") not in ("py", ""):
         return None
     target = node.get("reftarget", "")
+    external_url = external_type_url(target)
+    if external_url is not None:
+        return nodes.reference("", "", contnode, refuri=external_url)
     parts = target.split(".") if target else []
     short = parts[-1] if parts else ""
     if not short or not short.isidentifier():
         return None
+    contextual_external = _contextual_external_reference(app, env, node, contnode)
+    if contextual_external is not None:
+        return contextual_external
     # ``country`` is an upstream locale-library annotation, not the unrelated
     # in-tree callable that happens to share its final component.
     if target == "country":
@@ -1487,12 +1558,11 @@ def _resolve_short_reference(app, env, node, contnode):
     if not _PY_SUFFIX_INDEX:
         _PY_SUFFIX_INDEX.update(_build_py_suffix_index(env))
     candidates = _PY_SUFFIX_INDEX.get(short)
-    if not candidates:
+    if not (candidates is not None and candidates):
         # Postponed annotations reach the extension as unresolved strings, so
-        # ``typehints_formatter`` cannot inspect their runtime TypeAliasType or
-        # TypeVar identity.  A source-declared alias with no documented object
-        # is implementation vocabulary, not a missing public class.  Preserve
-        # it as inline code; a real documented candidate always takes priority.
+        # ``typehints_formatter`` cannot inspect their runtime TypeVar identity.
+        # Public source aliases have generated ``py:type`` targets; these
+        # remaining declared names are generic parameters, which stay inline.
         if short in _LITERAL_TYPE_HINT_NAMES:
             return contnode
         if target.startswith(("bs4.", "textual.")) or target in {
@@ -1516,6 +1586,10 @@ def _resolve_short_reference(app, env, node, contnode):
     # keeping the candidates whose dotted components contain the reference's
     # components as an ordered subsequence. This separates same-named symbols
     # that live under different public packages (``iva`` vs ``normatives``).
+    if len(candidates) > 1:
+        contextual = _contextual_api_target(env, node, short, candidates)
+        if contextual is not None:
+            candidates = [contextual]
     if len(candidates) > 1 and len(parts) > 1:
         subseq = [name for name in candidates if _is_ordered_subsequence(parts, name.split("."))]
         if len(subseq) == 1:
@@ -1767,10 +1841,10 @@ def setup(app):
         generate_cli_reference(Path(__file__).resolve().parent)
 
     def _generate_api_stubs(app):
-        """Write the ``api/*.rst`` automodule stubs fresh from the module tree.
+        """Write the ``api/*.rst`` automodule stubs from every canonical source root.
 
-        The stubs are a pure function of the ``src/cadrumo`` module tree, so they
-        are build output: written into the source tree this build reads
+        The stubs are a pure function of the canonical ``src/`` package roots,
+        so they are build output: written into the source tree this build reads
         (``app.srcdir``, which is a private copy when the build isolates its
         source), gitignored, and never committed. Unchanged stubs keep their
         bytes and mtime, so an incremental build re-reads only the pages whose
@@ -1782,12 +1856,9 @@ def setup(app):
         """
         if _skip_generated_output_for_i18n("api_stubs") or not _should_generate_api_stubs():
             return
-        from dev.docs.apidocs.manager import API_SOURCE_PACKAGE, ApiStubManager
+        from dev.docs.apidocs.manager import ApiStubManager
 
-        ApiStubManager(
-            src_cadrumo=_PROJECT_ROOT / "src" / API_SOURCE_PACKAGE,
-            docs_api=Path(app.srcdir) / "api",
-        ).scaffold()
+        ApiStubManager.for_repository(_PROJECT_ROOT, docs_api=Path(app.srcdir) / "api").scaffold()
 
     def _generate_glossary_reference(app):
         """Render the glossary fresh from the approved Handbook concepts.
@@ -2113,6 +2184,7 @@ def setup(app):
     # source, once for every screen that inherits Textual's ``compose``.
     app.connect("autodoc-process-docstring", _convert_markdown_fences_in_inherited_docstrings, priority=400)
     app.connect("autodoc-skip-member", _skip_non_owner_autodoc_member, priority=100)
+    app.connect("env-before-read-docs", _clear_source_binding_cache)
     app.connect("builder-inited", _resolve_deferred_models)
     app.connect("builder-inited", _generate_cli_reference)
     app.connect("builder-inited", _generate_api_stubs)

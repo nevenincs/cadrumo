@@ -71,7 +71,7 @@ def _printed(design: str) -> dict[str, tuple[frozenset[int], frozenset[tuple[int
 
 
 def _record(casilla: CasillaDefinition) -> str | None:
-    if casilla.segmento:
+    if casilla.segmento is not None and casilla.segmento:
         return str(casilla.segmento)
     match = _SPAN.match(str(casilla.number))
     return str(match.group(1)).upper() if match else None
@@ -86,7 +86,7 @@ def _unprinted(revision: ModeloRevision, casillas: tuple[CasillaDefinition, ...]
         if record is None:
             continue
         boxes, spans = printed.get(record, (frozenset(), frozenset()))
-        if _BOXED.match(number) and casilla.segmento:
+        if _BOXED.match(number) and (casilla.segmento is not None and casilla.segmento):
             if int(number) not in boxes:
                 missing.append(str(casilla.id))
             continue
@@ -151,7 +151,9 @@ def test_every_declared_box_is_printed_on_its_record_by_the_editions_own_design(
 
 def test_a_box_its_design_does_not_print_on_the_record_is_reported() -> None:
     revision = _editions()[0]
-    template = next(c for c in revision.casillas if c.segmento and _BOXED.match(str(c.number)))
+    template = next(
+        c for c in revision.casillas if (c.segmento is not None and c.segmento) and _BOXED.match(str(c.number))
+    )
     boxes, _ = _printed(_design_of(revision))[str(template.segmento)]
     unprinted = next(str(n).zfill(5) for n in range(1, 100000) if n not in boxes)
     planted = template.model_copy(update={"id": f"{template.segmento}:{unprinted}", "number": unprinted})
@@ -159,7 +161,7 @@ def test_a_box_its_design_does_not_print_on_the_record_is_reported() -> None:
 
 
 def _shared_chains(earlier: ModeloRevision, later: ModeloRevision) -> list[tuple[CasillaDefinition, CasillaDefinition]]:
-    by_chain = {c.continuidad_id: c for c in earlier.casillas if c.continuidad_id}
+    by_chain = {c.continuidad_id: c for c in earlier.casillas if (c.continuidad_id is not None and c.continuidad_id)}
     return [(by_chain[c.continuidad_id], c) for c in later.casillas if c.continuidad_id in by_chain]
 
 
@@ -174,7 +176,7 @@ def _chains_off_their_record(
     for left, right in _shared_chains(earlier, later) if pairs is None else pairs:
         for casilla, printed in ((left, first), (right, second)):
             number = str(casilla.number)
-            if casilla.segmento and _BOXED.match(number):
+            if (casilla.segmento is not None and casilla.segmento) and _BOXED.match(number):
                 boxes, _ = printed.get(str(casilla.segmento), (frozenset(), frozenset()))
                 if int(number) not in boxes:
                     off.append(f"{casilla.continuidad_id}@{casilla.id}")
@@ -190,7 +192,11 @@ def test_a_chain_two_consecutive_editions_share_is_printed_on_its_record_by_both
 
 def test_a_chain_claimed_on_a_box_the_earlier_design_does_not_print_is_reported() -> None:
     earlier, later = _editions()[0], _editions()[1]
-    left, right = next((a, b) for a, b in _shared_chains(earlier, later) if a.segmento and _BOXED.match(str(a.number)))
+    left, right = next(
+        (a, b)
+        for a, b in _shared_chains(earlier, later)
+        if (a.segmento is not None and a.segmento) and _BOXED.match(str(a.number))
+    )
     boxes, _ = _printed(_design_of(earlier))[str(left.segmento)]
     unprinted = next(str(n).zfill(5) for n in range(1, 100000) if n not in boxes)
     planted = left.model_copy(update={"number": unprinted})

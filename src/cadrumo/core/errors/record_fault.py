@@ -174,7 +174,7 @@ def _violation_rule(item: Mapping[str, object]) -> str:
     typed_context = cast(Mapping[str, object], context) if isinstance(context, Mapping) else None
     raised = typed_context.get("error") if typed_context is not None else None
     named = type(raised).__name__ if raised is not None else None
-    return f"{kind} ({named})" if named else kind
+    return f"{kind} ({named})" if (named is not None and named) else kind
 
 
 def internal_record_fault_context(
@@ -229,7 +229,7 @@ def internal_record_fault_context(
     reported = violations[:_INTERNAL_FAULT_VIOLATION_LIMIT]
     declared = _declared_field_names(record)
     named = tuple(f"{_violation_location(item, declared)}: {_violation_rule(item)}" for item in reported)
-    withheld = sum(1 for item in reported if str(item.get("type", "")) in _VALIDATOR_AUTHORED_MESSAGE_TYPES)
+    withheld = sum(1 for item in reported if item.get("type", "") in _VALIDATOR_AUTHORED_MESSAGE_TYPES)
     context: dict[str, object] = {
         "failing_record": error.title,
         "violation_count": len(violations),

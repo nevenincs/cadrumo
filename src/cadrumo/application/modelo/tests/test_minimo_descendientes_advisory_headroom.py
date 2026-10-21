@@ -195,7 +195,7 @@ class TestEveryRemedyIsCarriedApartFromTheProblem:
         """
         advisory = build()
 
-        assert advisory.remedy, f"{name} carries no remedy"
+        assert advisory.remedy is not None and advisory.remedy, f"{name} carries no remedy"
 
     @pytest.mark.parametrize(("name", "build"), _CASES, ids=_IDS)
     def test_the_message_does_not_restate_the_remedy(

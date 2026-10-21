@@ -27,19 +27,10 @@ from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATI
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
@@ -53,6 +44,15 @@ from cadrumo.application.user_profile.operation_access_policy import evaluate_op
 from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from cadrumo.core.config import Settings
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 
 from ._operator_probe_fakes import fake_operator_probe_ports
 from ._operator_scope_fakes import build_inward_operator_scope_ports
@@ -92,7 +92,6 @@ def _request(profile_id: UUID) -> OperationRequest[BaseModel]:
 def test_rotation_registration_exposes_one_typed_human_result_with_no_secret_schema() -> None:
     registry = _registry()
     contract = registry.lookup_public_contract(PROFILE_ROTATION_OPERATION_DEFINITION_ID)
-    assert contract.permitted_frontends == frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
     assert contract.result_schema is not None
     assert contract.result_schema.schema_id == PROFILE_ROTATION_RESULT_SCHEMA_ID
     assert registry.lookup_public_registration(PROFILE_ROTATION_OPERATION_DEFINITION_ID).result_projector is not None
@@ -167,12 +166,18 @@ def test_rotation_resolver_enforces_exact_subject_frontend_actions_and_destinati
     )
     for changed_context, expected in (
         (replace(base, profile_id=uuid4()), AccessDenialCode.PROFILE_MISMATCH),
-        (replace(base, frontend=OperationFrontendProjection.MCP), AccessDenialCode.FRONTEND_DENIED),
         (replace(base, action=AccessAction.DETACH), AccessDenialCode.OPERATION_DENIED),
     ):
         with pytest.raises(ProfileAccessRefusedError) as refused:
             resolve_operation_access(registry=registry, request=request, context=changed_context)
         assert refused.value.reason is expected
+    on_the_command_line = resolve_operation_access(registry=registry, request=request, context=base)
+    for frontend in OperationFrontendProjection:
+        elsewhere = resolve_operation_access(
+            registry=registry, request=request, context=replace(base, frontend=frontend)
+        )
+        assert elsewhere.request.frontend is frontend
+        assert elsewhere.policy == on_the_command_line.policy
     with pytest.raises(ProfileAccessRefusedError) as wrong_subject:
         resolve_operation_access(
             registry=registry,

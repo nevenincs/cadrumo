@@ -86,8 +86,7 @@ def _serve(*, rate_limited: bool) -> Generator[tuple[str, list[float]]]:
 
 def _client(tmp_path: Path, *, attempts: int = 1) -> LLMClient:
     settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model="gpt-oss",
+        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -126,23 +125,31 @@ def test_a_rate_limit_on_one_item_paces_the_next_item(tmp_path: Path) -> None:
     )
 
 
-def test_without_a_rate_limit_the_second_item_is_not_delayed(tmp_path: Path) -> None:
+def test_without_a_rate_limit_the_second_item_is_not_delayed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """The positive control, and the proof that the window OPENS rather than merely closing.
 
     Same two dispatches, same server, same client -- only the 429 differs. It
-    establishes both halves at once: that a paced item genuinely would have
-    dispatched immediately without the injection, and that the measured gap
-    above is the pacing rather than the fixture's own overhead.
+    establishes that a paced item genuinely would have dispatched immediately
+    without the injection. The window each dispatch's pacing gate saw is
+    recorded at the gate itself rather than inferred from arrival gaps, which
+    under load measure the host, not the pacing.
     """
+    observed_windows: list[float] = []
+    gate = LLMClient._await_shared_pacing
+
+    async def recording_gate(provider: LLMProvider, policy: LLMRetryPolicy) -> None:
+        observed_windows.append(client_module._PROVIDER_PACING.remaining_s(provider))
+        await gate(provider, policy)
+
+    monkeypatch.setattr(LLMClient, "_await_shared_pacing", staticmethod(recording_gate))
     with _serve(rate_limited=False) as (endpoint, arrivals), override_settings(cadrumo_llm_ollama_chat_url=endpoint):
         client = _client(tmp_path)
         asyncio.run(client.complete(LLMRequest(prompt="first item")))
         asyncio.run(client.complete(LLMRequest(prompt="second item")))
 
-    assert client_module._PROVIDER_PACING.remaining_s(LLMProvider.LOCAL) == 0
     assert len(arrivals) == 2
-    gap = arrivals[1] - arrivals[0]
-    assert gap < _RETRY_AFTER_S * 0.5, f"an unpaced second dispatch took {gap:.2f}s; the fixture is measuring overhead"
+    assert observed_windows == [0.0, 0.0], f"an unlimited run still asked its dispatches to wait: {observed_windows}"
+    assert client_module._PROVIDER_PACING.remaining_s(LLMProvider.LOCAL) == 0
 
 
 def test_the_window_is_shared_across_clients(tmp_path: Path) -> None:
@@ -184,8 +191,7 @@ def test_the_shared_wait_is_bounded_by_the_retry_budget(tmp_path: Path) -> None:
     single dispatch blocks longer than the budget it was given.
     """
     settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model="gpt-oss",
+        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",

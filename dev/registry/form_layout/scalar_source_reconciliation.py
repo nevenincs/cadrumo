@@ -140,7 +140,7 @@ def _is_rate_box_source(
     return bool(
         isinstance(old_provider, LedgerIvaProvider)
         and isinstance(new_provider, LedgerIvaProvider)
-        and not old_provider.applied_rates
+        and not (old_provider.applied_rates is not None and old_provider.applied_rates)
         and bool(new_provider.applied_rates)
         and old_binding.aggregation == new_binding.aggregation
         and old_binding.value == new_binding.value

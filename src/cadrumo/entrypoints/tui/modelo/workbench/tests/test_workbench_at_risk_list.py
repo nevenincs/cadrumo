@@ -21,7 +21,11 @@ from textual.widgets import Static
 from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_models import ModeloWorkForm
 from ......application.modelo.work_form_service import modelo_form_snapshot
-from ......application.modelo.work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
+from ......application.modelo.work_review import (
+    ModeloWorkProgress,
+    ModeloWorkReview,
+    build_modelo_work_review_casillas,
+)
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
@@ -118,7 +122,7 @@ async def test_a_modelo_100_whose_values_nobody_typed_names_sections_with_counts
     operation: PinnedAuthorityOperation,
 ) -> None:
     built = _modelo_100(operation)
-    boxes = {field.box for field in built.fields() if field.box}
+    boxes = {field.box for field in built.fields() if (field.box is not None and field.box)}
     form = replace_fields(built, {box: {"unattributed": True} for box in boxes}).model_copy(
         update={"calculation_revision_id": "b" * 64, "operator_entries_known": False}
     )

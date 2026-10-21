@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#evidence-revision-identity'
 date: '2026-07-26'
-modified: '2026-10-03'
-body_hash: 'sha256:494d3fbfa7b092169e8a4e3df63fd937ea5a689dc99090f4a8f3b78ec6cbfae0'
+modified: '2026-10-12'
+body_hash: 'sha256:9bf5566b4143d47b5b3c316ea7bba645795ae6ee217f451c34efb15b13e3924b'
 related:
   - "[[2026-07-24-evidence-revision-identity-adr]]"
   - "[[2026-07-25-evidence-revision-identity-supersede-implementation-findings-audit]]"
@@ -129,8 +129,15 @@ asked to compensate for a severity assignment that is wrong at its source.
   never form; that trade is accepted, not overlooked.
 - The finding class beyond deductible IVA was not exhaustively enumerated. What
   would reopen the identity question is a gap class NOT detectable at verify from
-  the live ledger. This one is detectable — verify already computes the exact
-  predicate.
+  the live ledger. This one is detectable: verify and the export and
+  local-filing gates evaluate it through one shared predicate, and an absent
+  cuota counts as a gap only on a revision that claims IVA, one whose registry
+  revision declares `ledger_iva_aggregation` bindings. (Amended 2026-10-12 on
+  the owner's ruling, "B, obvioulsy, irpf has no iva claim (what sort of
+  question is this anyway?). reconcile"; before that this line said "verify
+  already computes the exact predicate", which was not true: verify fired only
+  on a positive cuota while export and local filing also refused an absent one,
+  on every modelo.)
 
 ## Implementation
 

@@ -8,13 +8,14 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
+
 from ....core.operations import profile_operation_subject
 from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationRequest
 from ...operations.public_period import PublicPeriod
 from ...operations.registry import OperationFrontendProjection
-from ...user_profile.access_contracts import AccessAction, Availability, OperationAccessRequest
 from ..m303_attestation_operation import (
     MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID,
     ModeloWorkM303AttestationPublicResultV2,

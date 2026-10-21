@@ -75,6 +75,34 @@ def test_empty_catalogue_is_constructible_and_iterates_to_nothing() -> None:
     assert catalogue.for_object(object_type=BucketEventObjectType.WORK_UNIT, object_id="anything") == ()
 
 
+@pytest.mark.parametrize("length", (64, 128))
+def test_actor_labels_round_trip_without_truncation_at_the_supported_bounds(length: int) -> None:
+    actor = "a" * length
+    event = _build_event(
+        bucket_id=_BUCKET_A,
+        event_type=BucketEventType.MODELO_CALCULATION_CREATED,
+        occurred_at=_T0,
+        object_type=BucketEventObjectType.CALCULATION_REVISION,
+        object_id="rev-1",
+        actor=actor,
+    )
+    restored = BucketEvent.model_validate_json(event.model_dump_json())
+    assert restored.actor == actor
+    assert restored.event_id == event.event_id
+
+
+def test_an_actor_label_beyond_128_characters_is_still_refused() -> None:
+    with pytest.raises(ValidationError, match="at most 128 characters"):
+        _build_event(
+            bucket_id=_BUCKET_A,
+            event_type=BucketEventType.MODELO_CALCULATION_CREATED,
+            occurred_at=_T0,
+            object_type=BucketEventObjectType.CALCULATION_REVISION,
+            object_id="rev-1",
+            actor="a" * 129,
+        )
+
+
 def test_catalogue_rejects_key_that_does_not_match_event_id() -> None:
     event = _build_event(
         bucket_id=_BUCKET_A,

@@ -9,6 +9,8 @@ from datetime import timedelta
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.operations import OperationEffect, OperationInteractionKind
@@ -20,7 +22,6 @@ from ..operations.persistence.journal import serialize_operation_operand
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationExecutorResult
 from ..operations.registry import operation_public_schema_reference
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .google_operation import GoogleSheetsExportCapabilityDisabledError
 from .google_review_operation_contracts import (

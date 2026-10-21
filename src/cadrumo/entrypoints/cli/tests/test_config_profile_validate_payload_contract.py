@@ -14,9 +14,10 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from cadrumo_client.commands.custody_payloads import ConfigLoginResult
+from cadrumo_client.commands.payloads import ConfigProfileValidateResult
+
 from ....domain.user_profile.values import ProfileSetupState
-from ..config.custody_payloads import ConfigLoginResult
-from ..config_payloads import ConfigProfileValidateResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

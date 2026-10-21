@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.domain.calculations.registry.tests.authored_editions import revision_before_first_declaring
+from cadrumo.entrypoints.cli.tests.modelo_empty_profile_fixture import _isolated_backend
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 
-from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ._modelo_empty_profile_fixture import _isolated_backend
-from ._profile_cli_support import seed_profile
-from .cli_runner import invoke_cached_cli
+from .cli_fixture_worlds import invoke_joined_cli
 
 __all__ = ["_isolated_backend"]
 
@@ -48,34 +48,37 @@ _LEGAL_ENTITY_FACTS = {
 
 
 def _create_laura_taller_sol_profile() -> None:
-    seed_profile(
-        "laura-taller-sol",
-        **_LEGAL_ENTITY_FACTS,
-        **{
-            "identity.legal_name": "Taller Sol SL",
-            "activities.description": "taller mecanico",
+    register_cli_profile(
+        label="laura-taller-sol",
+        facts={
+            **_LEGAL_ENTITY_FACTS,
+            **{"identity.legal_name": "Taller Sol SL", "activities.description": "taller mecanico"},
         },
+        log_in=False,
     )
 
 
 def _create_lorentz_irene_profile() -> None:
-    seed_profile(
-        "lorentz-irene",
-        **_LEGAL_ENTITY_FACTS,
-        **{
-            "identity.legal_name": "Lorentz Irene SL",
-            "activities.description": "IVA corporate run",
-            "taxpayer_type.incn_prior_12_months": "500000",
-            "censo.activity_start_date": "2024-01-15",
-            "tax_residence.ccaa": "madrid",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+    register_cli_profile(
+        label="lorentz-irene",
+        facts={
+            **_LEGAL_ENTITY_FACTS,
+            **{
+                "identity.legal_name": "Lorentz Irene SL",
+                "activities.description": "IVA corporate run",
+                "taxpayer_type.incn_prior_12_months": "500000",
+                "censo.activity_start_date": "2024-01-15",
+                "tax_residence.ccaa": "madrid",
+                "iva.regime": "GENERAL",
+                "tax_residence.jurisdiction_scope": "common_regime",
+                "iva.m303_regime_composition": "general",
+                "iva.redeme_enrolled": "false",
+                "iva.cash_accounting_regime_enrolled": "false",
+                "iva.voluntary_sii_enrolled": "false",
+                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+            },
         },
+        log_in=False,
     )
 
 
@@ -83,7 +86,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
     """Laura/Taller Sol cannot turn a not-ready M202 state into a zero draft/export/file."""
     _create_laura_taller_sol_profile()
 
-    readiness = invoke_cached_cli(
+    readiness = invoke_joined_cli(
         [
             "--format",
             "json",
@@ -106,7 +109,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
     assert readiness_payload["binding_ready"] is False
     assert {row["binding_id"] for row in readiness_payload["missing_bindings"]} == _MISSING_M202_BINDINGS
 
-    created = invoke_cached_cli(
+    created = invoke_joined_cli(
         [
             "--format",
             "json",
@@ -125,7 +128,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
 
-    calculated = invoke_cached_cli(
+    calculated = invoke_joined_cli(
         [
             "--format",
             "json",
@@ -153,13 +156,13 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
     } == _MISSING_M202_BINDINGS
     assert "Traceback" not in calculated.output
 
-    status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+    status = invoke_joined_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
     status_payload = _payload(status.output)
     assert status_payload["current_calculation_revision_id"] is None
     assert status_payload["filed_calculation_revision_id"] is None
 
-    verify = invoke_cached_cli(
+    verify = invoke_joined_cli(
         [
             "--format",
             "json",
@@ -178,7 +181,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
     assert verify.exit_code != 0, verify.output
     assert "granted_verificado_completo" not in verify.output
 
-    filed = invoke_cached_cli(
+    filed = invoke_joined_cli(
         [
             "--format",
             "json",
@@ -197,10 +200,13 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
     assert filed.exit_code != 0, filed.output
     filed_error = json.loads(filed.output)["error"]
     # Calculate never created a revision, so file refuses at revision selection.
-    assert filed_error["code"] == "REFUSED_CLI_BOUNDARY"
+    assert filed_error["code"] == "ERROR_MODELO_CALCULATION_REVISION_SELECTOR_NOT_FOUND", filed.output
+    assert filed_error["context"]["work_unit_id"] == work_unit_id
+    assert filed_error["context"]["pointer_name"] == "current_calculation_revision_id"
+    assert filed_error["context"]["effect"] == "none"
 
     export_path = tmp_path / "modelo-202-2025-1P.txt"
-    exported = invoke_cached_cli(
+    exported = invoke_joined_cli(
         [
             "--format",
             "json",
@@ -224,7 +230,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
 def test_lorentz_m202_first_period_calculates_with_prior_payments_zero() -> None:
     _create_lorentz_irene_profile()
 
-    created = invoke_cached_cli(
+    created = invoke_joined_cli(
         [
             "--format",
             "json",
@@ -244,7 +250,7 @@ def test_lorentz_m202_first_period_calculates_with_prior_payments_zero() -> None
     )
     assert created.exit_code == 0, created.output
 
-    calculated = invoke_cached_cli(
+    calculated = invoke_joined_cli(
         [
             "--format",
             "json",

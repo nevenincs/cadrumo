@@ -5,6 +5,10 @@ provided by a caller. The installed product does not infer checkout-only test
 fixtures from package paths; registry validation may still receive an explicit
 specimen root in authoring and test contexts.
 
+Python control code and package initializers do not contribute evidence bytes.
+Source enrollment rejects a declaration targeting those controls rather than
+admitting a document outside the evidence receipt.
+
 Collecting the fingerprint means stat-ing every file under the evidence roots,
 and the authority collects it on every load, so it is bounded exactly as the
 registry tree fingerprint is: an evidence root that lies inside the read-only
@@ -20,7 +24,7 @@ from __future__ import annotations
 
 import time
 from functools import lru_cache
-from pathlib import Path
+from pathlib import Path, PurePath
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from dev.registry.compiler.corpus_source_location import PACKAGED_DATA_ROOT
@@ -32,9 +36,19 @@ SourceEvidenceFingerprint = tuple[tuple[str, int, int], ...]
 __all__ = (
     "SourceEvidenceFingerprint",
     "collect_source_evidence_fingerprints",
+    "is_source_evidence_path",
 )
 
 _evidence_fingerprint_cache: dict[tuple[Path, ...], tuple[float, SourceEvidenceFingerprint]] = {}
+
+
+def is_source_evidence_path(path: PurePath) -> bool:
+    """Distinguish evidence files from Python control code and interpreter artifacts.
+
+    Source enrollment rejects these controls rather than admitting evidence
+    whose changes a publication receipt would ignore.
+    """
+    return path.suffix.casefold() not in {".py", ".pyi", ".pyc"}
 
 
 def collect_source_evidence_fingerprints(
@@ -88,7 +102,7 @@ def _walk_source_evidence(roots: tuple[Path, ...]) -> SourceEvidenceFingerprint:
             select=DirectoryEntryKind.FILES,
             prune_directories=("__pycache__", ".pytest_cache"),
         ):
-            if path.suffix.casefold() == ".pyc":
+            if not is_source_evidence_path(path):
                 continue
             stat = path.stat()
             fingerprints.append((str(path), stat.st_size, stat.st_mtime_ns))

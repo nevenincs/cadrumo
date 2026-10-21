@@ -18,7 +18,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.ledger.models import LedgerReviewRow
-from .._ledger_payloads import LedgerReviewResult, LedgerReviewRowPayload
+from ..ledger_results import LedgerReviewResult, LedgerReviewRowPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

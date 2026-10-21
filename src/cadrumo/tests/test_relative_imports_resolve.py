@@ -41,7 +41,7 @@ def _resolved_target(module_path: Path, node: ast.ImportFrom) -> tuple[str, Path
     if keep < 0:
         return ("<above the package root>", _ROOT)
     dotted = ".".join(package[:keep])
-    if node.module:
+    if node.module is not None and node.module:
         dotted = f"{dotted}.{node.module}" if dotted else node.module
     return dotted, _ROOT / dotted.replace(".", "/")
 

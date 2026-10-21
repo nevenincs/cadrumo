@@ -7,19 +7,19 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationResultProjector,
 )
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .ports import InventoryServicePortsFactory
 
@@ -94,6 +94,7 @@ def _definition(
     definition_id: str,
     request_type: type[BaseModel],
     ports_factory: InventoryServicePortsFactory,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     shape = INVENTORY_OPERATION_SHAPES[definition_id]
     if shape.request_type is not request_type:
@@ -101,11 +102,13 @@ def _definition(
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=InventoryOperationExecutionResult,
         executor_type=InventoryOperationExecutor,
-        build=lambda: InventoryOperationExecutor(ports_factory, definition_id=definition_id),
+        build=lambda: InventoryOperationExecutor(
+            ports_factory, definition_id=definition_id, execution_caller_reader=execution_caller_reader
+        ),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=shape.refusal_codes,
     )
 
@@ -133,33 +136,59 @@ def build_inventory_list_definition(ports_factory: InventoryServicePortsFactory)
     return _definition(INVENTORY_LIST_OPERATION_DEFINITION_ID, InventoryListRequest, ports_factory)
 
 
-def build_inventory_create_definition(ports_factory: InventoryServicePortsFactory) -> OperationDefinition:
+def build_inventory_create_definition(
+    ports_factory: InventoryServicePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Build the guarded exact-profile ledger-creation definition."""
-    return _definition(INVENTORY_CREATE_OPERATION_DEFINITION_ID, InventoryCreateRequest, ports_factory)
+    return _definition(
+        INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+        InventoryCreateRequest,
+        ports_factory,
+        execution_caller_reader,
+    )
 
 
-def build_inventory_movement_add_definition(ports_factory: InventoryServicePortsFactory) -> OperationDefinition:
+def build_inventory_movement_add_definition(
+    ports_factory: InventoryServicePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Build the guarded exact-profile movement append definition."""
-    return _definition(INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID, InventoryMovementAddRequest, ports_factory)
+    return _definition(
+        INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
+        InventoryMovementAddRequest,
+        ports_factory,
+        execution_caller_reader,
+    )
 
 
-def build_inventory_valuation_preview_definition(ports_factory: InventoryServicePortsFactory) -> OperationDefinition:
+def build_inventory_valuation_preview_definition(
+    ports_factory: InventoryServicePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Build the audited exact-profile valuation preview definition."""
     return _definition(
         INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
         InventoryValuationPreviewRequest,
         ports_factory,
+        execution_caller_reader,
     )
 
 
 def build_inventory_closing_authority_record_definition(
     ports_factory: InventoryServicePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Build the guarded exact-profile closing-authority write definition."""
     return _definition(
         INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
         InventoryClosingAuthorityRecordRequest,
         ports_factory,
+        execution_caller_reader,
     )
 
 

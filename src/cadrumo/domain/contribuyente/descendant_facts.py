@@ -438,7 +438,7 @@ def descendant_list_from_facts(
     return tuple(
         _descendant_from_stored_row(idx, row, authority=authority)
         for idx, row in sorted(rows.items())
-        if row.get("birth_date")
+        if bool(row.get("birth_date"))
     )
 
 
@@ -486,9 +486,15 @@ def _stored_civil_fields(
     if disc_val is not None and disc_val not in _accepted_disability_grades(authority=authority):
         raise ProfileAnswerTypeError(f"DISCAPACIDAD carries an unsupported governed grade: {disc_val!r}")
     return {
-        "inscripcion_registro_civil_date": parse_iso8601_date(inscripcion_raw) if inscripcion_raw else None,
-        "acogimiento_resolucion_date": parse_iso8601_date(acogimiento_raw) if acogimiento_raw else None,
-        "death_date": parse_iso8601_date(fallecimiento_raw) if fallecimiento_raw else None,
+        "inscripcion_registro_civil_date": parse_iso8601_date(inscripcion_raw)
+        if (inscripcion_raw is not None and inscripcion_raw)
+        else None,
+        "acogimiento_resolucion_date": parse_iso8601_date(acogimiento_raw)
+        if (acogimiento_raw is not None and acogimiento_raw)
+        else None,
+        "death_date": parse_iso8601_date(fallecimiento_raw)
+        if (fallecimiento_raw is not None and fallecimiento_raw)
+        else None,
         "discapacidad_grado": _discapacidad_grade(disc_val, authority=authority),
     }
 
@@ -760,7 +766,7 @@ def _flag_integer(value: str, *, key: str) -> int:
 def _flag_birth_date(parts: dict[str, str], *, raw: str) -> date:
     """Read the required birth date from parsed descendant flag parts."""
     nacimiento_raw = parts.get("NACIMIENTO")
-    if not nacimiento_raw:
+    if not (nacimiento_raw is not None and nacimiento_raw):
         raise ProfileAnswerTypeError(
             f"--descendiente flag requires NACIMIENTO=YYYY-MM-DD; got: {raw!r}",
             context={"key": "NACIMIENTO"},
@@ -850,7 +856,7 @@ def parse_descendiente_flag(
     # value identically rather than each inventing a tolerance.
     relacion_raw = parts.get("RELACION")
     relacion = _stored_relacion(
-        relacion_raw.strip() or None if relacion_raw else None,
+        relacion_raw.strip() or None if (relacion_raw is not None and relacion_raw) else None,
         index=0,
         key="RELACION",
         authority=authority,
@@ -877,7 +883,7 @@ def _flag_nif(raw: str | None, *, authority: GovernedFactSource | None) -> str |
     checksum is enforced, exactly as the wizard's descendant page enforces it.
     The refusal names the key and never echoes the identifier.
     """
-    if not raw:
+    if not (raw is not None and raw):
         return None
     try:
         return validate_spanish_tax_id(raw, runtime_tax_id_format(authority=authority))
@@ -905,10 +911,16 @@ def _flag_civil_fields(
         )
     return {
         "inscripcion_registro_civil_date": (
-            _flag_date(inscripcion_raw, key="INSCRIPCION") if inscripcion_raw else None
+            _flag_date(inscripcion_raw, key="INSCRIPCION")
+            if (inscripcion_raw is not None and inscripcion_raw)
+            else None
         ),
-        "acogimiento_resolucion_date": _flag_date(acogimiento_raw, key="ACOGIMIENTO") if acogimiento_raw else None,
-        "death_date": _flag_date(fallecimiento_raw, key="FALLECIMIENTO") if fallecimiento_raw else None,
+        "acogimiento_resolucion_date": _flag_date(acogimiento_raw, key="ACOGIMIENTO")
+        if (acogimiento_raw is not None and acogimiento_raw)
+        else None,
+        "death_date": _flag_date(fallecimiento_raw, key="FALLECIMIENTO")
+        if (fallecimiento_raw is not None and fallecimiento_raw)
+        else None,
         "discapacidad_grado": _discapacidad_grade(discapacidad_grado, authority=authority),
     }
 

@@ -36,36 +36,38 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.m130_source_support import (
+    seed_m130_expense_transaction,
+    seed_m130_income_transaction,
+)
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-
-from ....adapters.persistence.storage.tests.secure_sql import (
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
-from ....application.flows import line_frontend as _line_frontend
-from ....application.flows.copy import assemble_page_copy
-from ....application.flows.definition import FlowDefinition, FlowPage
-from ....application.flows.errors import FlowCopyResolutionError
-from ....application.flows.scripted import run_scripted_flow
-from ....application.modelo.action_errors import modelo_work_wizard_retry_exhausted_precondition
-from ....application.modelo.work_wizard import (
+from cadrumo.application.flows import line_frontend as _line_frontend
+from cadrumo.application.flows.copy import assemble_page_copy
+from cadrumo.application.flows.definition import FlowDefinition, FlowPage
+from cadrumo.application.flows.errors import FlowCopyResolutionError
+from cadrumo.application.flows.scripted import run_scripted_flow
+from cadrumo.application.modelo.action_errors import modelo_work_wizard_retry_exhausted_precondition
+from cadrumo.application.modelo.work_wizard import (
     ModeloWorkWizardStep,
     discover_modelo_work_wizard_steps,
     open_modelo_work_wizard_from_steps,
 )
-from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
-from ....core.flows import FlowMode
-from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from .. import _modelo_work_wizard_cli
-from .._modelo_work_wizard_payloads import WizardPromptedCasillaPayload
-from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
-from ._modelo_work_ux_support import _create_m130_work_unit, load_work_unit_by_id
-from .cli_runner import invoke_cached_cli
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
+from cadrumo.core.flows import FlowMode
+from cadrumo.core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.entrypoints.cli import _modelo_work_wizard_cli
+from cadrumo.entrypoints.cli._modelo_work_wizard_payloads import WizardPromptedCasillaPayload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+
+from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke_joined_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
-from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from .modelo_work_scenarios import load_work_unit_by_id
 
 __all__ = ["_isolated_cli_backend"]
 
@@ -106,12 +108,12 @@ def test_wizard_retry_exhaustion_has_a_declared_no_recovery_outcome() -> None:
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
 
-def _invoke(fixture: NativeCliProfileFixture, args: Sequence[str]) -> Result:
+def _invoke(fixture: RegisteredCliProfile, args: Sequence[str]) -> Result:
     """Run one protected command through the fixture's installed profile worker."""
     if fixture.label is None:
         raise AssertionError("the native profile fixture has not registered a subject")
     close_active_bucket_session()
-    result = invoke_cached_cli(
+    result = invoke_joined_cli(
         (
             "--format",
             "json",
@@ -128,7 +130,7 @@ def _invoke(fixture: NativeCliProfileFixture, args: Sequence[str]) -> Result:
 
 
 def _scripted_manual_answers(
-    work_unit_id: str, *, fixture: NativeCliProfileFixture, operation: PinnedAuthorityOperation
+    work_unit_id: str, *, fixture: RegisteredCliProfile, operation: PinnedAuthorityOperation
 ) -> list[tuple[ModeloWorkWizardStep, str]]:
     """Walk the wizard's outstanding manual pages through the scripted substrate.
 
@@ -164,7 +166,7 @@ def _calculate_flags(overrides: list[str]) -> list[str]:
     return flags
 
 
-def _create_profile(fixture: NativeCliProfileFixture) -> None:
+def _create_profile(fixture: RegisteredCliProfile) -> None:
     """Register a profile served by the test-owned native worker."""
     fixture.register(
         label="operator",
@@ -187,7 +189,7 @@ def _create_profile(fixture: NativeCliProfileFixture) -> None:
     )
 
 
-def _login_for_oracle(fixture: NativeCliProfileFixture, *, operation: PinnedAuthorityOperation) -> str:
+def _login_for_oracle(fixture: RegisteredCliProfile, *, operation: PinnedAuthorityOperation) -> str:
     """Open the real password-registered profile before encrypted local assertions."""
     if fixture.label is None:
         raise AssertionError("the native profile fixture has not registered a subject")
@@ -202,22 +204,30 @@ def _login_for_oracle(fixture: NativeCliProfileFixture, *, operation: PinnedAuth
 
 
 @pytest.fixture
-def wizard_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
+def wizard_profile(tmp_path: Path) -> Iterator[RegisteredCliProfile]:
     """Provide one password-registered profile served by its real worker."""
-    with native_cli_profile_scope(tmp_path) as fixture:
+    with cli_world_provider().native_profile(tmp_path) as fixture:
         _create_profile(fixture)
         yield fixture
 
 
-def _seed_m130_ledger(
-    source_key: str, *, fixture: NativeCliProfileFixture, operation: PinnedAuthorityOperation
-) -> None:
+def _seed_m130_ledger(source_key: str, *, fixture: RegisteredCliProfile, operation: PinnedAuthorityOperation) -> None:
     _login_for_oracle(fixture, operation=operation)
     seed_m130_income_transaction(amount=_INGRESOS, filing_year=2025, source_key=source_key)
     seed_m130_expense_transaction(amount=_GASTOS, filing_year=2025, source_key=source_key)
 
 
-def _create_m123_work_unit(*, operation: PinnedAuthorityOperation) -> str:
+def _create_m130_work_unit(fixture: RegisteredCliProfile) -> str:
+    return create_modelo_work_unit_via_cli(
+        modelo="130",
+        filing_year=2025,
+        period="1T",
+        revision="2019-y-siguientes",
+        native_profile=fixture,
+    )
+
+
+def _create_m123_work_unit(fixture: RegisteredCliProfile, *, operation: PinnedAuthorityOperation) -> str:
     """Create the real 2025 2T work unit used by the no-prompt wizard path."""
     revision = operation.snapshot("123", filing_year=2025, period="2T").revision
     return create_modelo_work_unit_via_cli(
@@ -225,11 +235,12 @@ def _create_m123_work_unit(*, operation: PinnedAuthorityOperation) -> str:
         filing_year=2025,
         period="2T",
         revision=revision.id,
+        native_profile=fixture,
     )
 
 
 def _assert_encrypted_calculation_matches_cli(
-    fixture: NativeCliProfileFixture,
+    fixture: RegisteredCliProfile,
     *,
     operation: PinnedAuthorityOperation,
     work_unit_id: str,
@@ -262,7 +273,7 @@ def _assert_encrypted_calculation_matches_cli(
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_wizard_scripted_path_walks_the_manual_sequence_and_lands_the_m130_draft(
-    wizard_profile: NativeCliProfileFixture, *, operation: PinnedAuthorityOperation
+    wizard_profile: RegisteredCliProfile, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The wizard's discovered steps, driven scripted, produce the oracle M130 draft.
 
@@ -273,7 +284,7 @@ def test_wizard_scripted_path_walks_the_manual_sequence_and_lands_the_m130_draft
     ledger-bound 01/02, computed rendimiento neto 03 and pago fraccionado 04/19.
     """
     _seed_m130_ledger("wizard-scripted-sequence", fixture=wizard_profile, operation=operation)
-    work_unit_id = _create_m130_work_unit()
+    work_unit_id = _create_m130_work_unit(wizard_profile)
 
     answers = _scripted_manual_answers(work_unit_id, fixture=wizard_profile, operation=operation)
 
@@ -306,7 +317,7 @@ def test_wizard_scripted_path_walks_the_manual_sequence_and_lands_the_m130_draft
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_wizard_scripted_inputs_compose_the_same_calculate_as_work_calculate(
-    wizard_profile: NativeCliProfileFixture, *, operation: PinnedAuthorityOperation
+    wizard_profile: RegisteredCliProfile, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The scripted-wizard inputs assemble the same overrides and draft as ``work calculate``.
 
@@ -316,7 +327,7 @@ def test_wizard_scripted_inputs_compose_the_same_calculate_as_work_calculate(
     hand-typed ``work calculate`` receives, and both compose the identical draft.
     """
     _seed_m130_ledger("wizard-scripted-parity", fixture=wizard_profile, operation=operation)
-    work_unit_id = _create_m130_work_unit()
+    work_unit_id = _create_m130_work_unit(wizard_profile)
 
     answers = _scripted_manual_answers(work_unit_id, fixture=wizard_profile, operation=operation)
     scripted_overrides = sorted(f"{step.key}={value}" for step, value in answers)
@@ -357,7 +368,7 @@ def test_wizard_scripted_inputs_compose_the_same_calculate_as_work_calculate(
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_wizard_non_interactive_host_with_steps_refuses_with_the_typed_console_error(
-    wizard_profile: NativeCliProfileFixture, *, operation: PinnedAuthorityOperation
+    wizard_profile: RegisteredCliProfile, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A non-TTY caller with outstanding steps gets the substrate's typed refusal.
 
@@ -367,7 +378,7 @@ def test_wizard_non_interactive_host_with_steps_refuses_with_the_typed_console_e
     envelope error code, never on localized prose.
     """
     _seed_m130_ledger("wizard-non-interactive", fixture=wizard_profile, operation=operation)
-    work_unit_id = _create_m130_work_unit()
+    work_unit_id = _create_m130_work_unit(wizard_profile)
 
     result = _invoke(wizard_profile, ["app", "modelo", "work", "wizard", work_unit_id])
 
@@ -380,7 +391,7 @@ def test_wizard_non_interactive_host_with_steps_refuses_with_the_typed_console_e
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
-    wizard_profile: NativeCliProfileFixture,
+    wizard_profile: RegisteredCliProfile,
     monkeypatch: pytest.MonkeyPatch,
     *,
     operation: PinnedAuthorityOperation,
@@ -394,7 +405,7 @@ def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
     above retains the production refusal for ordinary piped callers.
     """
     _seed_m130_ledger("wizard-cli-source-provenance", fixture=wizard_profile, operation=operation)
-    work_unit_id = _create_m130_work_unit()
+    work_unit_id = _create_m130_work_unit(wizard_profile)
 
     # Five registry-discovered manual casillas, then submit from review.
     keystrokes = "0\r" * len(_MANUAL_CASILLAS) + "\r"
@@ -449,13 +460,13 @@ def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_registered_m123_wizard_prompts_registry_pages_and_publishes(
-    wizard_profile: NativeCliProfileFixture,
+    wizard_profile: RegisteredCliProfile,
     monkeypatch: pytest.MonkeyPatch,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """The registered M123 2T wizard asks its nine pinned pages, then publishes."""
-    work_unit_id = _create_m123_work_unit(operation=operation)
+    work_unit_id = _create_m123_work_unit(wizard_profile, operation=operation)
     page_ids = {"10", "11", "13", "01", "02", "04", "05", "07", "08"}
     keystrokes = "0\r" * len(page_ids) + "\r"
     with create_pipe_input() as pipe:
@@ -531,11 +542,11 @@ def test_wizard_prompted_casilla_payload_refuses_malformed_field(field: str, bad
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_canonical_wizard_factory_carries_real_registry_grounding(
-    wizard_profile: NativeCliProfileFixture, *, operation: PinnedAuthorityOperation
+    wizard_profile: RegisteredCliProfile, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The public wizard factory discovers the registry's grounded question set."""
     _seed_m130_ledger("wizard-binding-grounding-lookup", fixture=wizard_profile, operation=operation)
-    work_unit_id = _create_m130_work_unit()
+    work_unit_id = _create_m130_work_unit(wizard_profile)
     bucket_id = _login_for_oracle(wizard_profile, operation=operation)
 
     with open_test_profile_session(bucket_id):

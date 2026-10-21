@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TypedDict
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
@@ -28,6 +28,7 @@ from .filed_history_operation import (
     FiledHistoryBrowserResourcesFactory,
     FiledHistoryCompositionFactory,
     FiledHistoryProviderPreflight,
+    require_capture_output_root,
 )
 from .live_operation_execution import (
     own_provider_browser,
@@ -101,6 +102,9 @@ class FiledSingleCapturePublicResultV1(BaseModel):
     captured_count: NonNegativeInt
     reached_count: NonNegativeInt
     observation_paths: tuple[str, ...]
+    #: The identifier of each stored observation, in the order of ``observation_paths``.
+    #: A later request names an observation by this identifier, never by a path.
+    observation_ids: tuple[str, ...]
     artefact_refs: tuple[str, ...]
     justificante_metadata_count: NonNegativeInt
     justificante_csvs: tuple[str, ...]
@@ -113,6 +117,12 @@ class FiledSingleCapturePublicResultV1(BaseModel):
     calculation_observation_keys: tuple[str, ...]
     evidence_notices: tuple[FiledCaptureNoticeV1, ...]
     reconciliations: tuple[FiledReconciliationV1, ...]
+
+    @model_validator(mode="after")
+    def _identifier_for_every_path(self) -> FiledSingleCapturePublicResultV1:
+        if len(self.observation_ids) != len(self.observation_paths):
+            raise ValueError("a filed capture result names each stored observation by path and by identifier")
+        return self
 
 
 def public_filed_capture_notice(notice: Notice) -> FiledCaptureNoticeV1:
@@ -198,7 +208,11 @@ def _project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> Bas
     del receipt
     report = FiledDataCaptureReport.model_validate(result, strict=True)
     return FiledSingleCapturePublicResultV1(
-        output_root=report.output_root, modelo=report.modelo, year=report.year, **public_filed_capture_tally(report)
+        output_root=report.output_root,
+        modelo=report.modelo,
+        year=report.year,
+        observation_ids=report.observation_ids,
+        **public_filed_capture_tally(report),
     )
 
 
@@ -224,6 +238,7 @@ class FiledSingleCaptureExecutor:
         require_exact_profile_worker(
             payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
         )
+        require_capture_output_root(payload.output_root)
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
         period = Period.from_year_and_code(payload.year, payload.period) if payload.period is not None else None

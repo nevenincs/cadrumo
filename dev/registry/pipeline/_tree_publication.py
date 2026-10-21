@@ -262,8 +262,8 @@ def _publish_ordinary_candidate(
         state="intent",
         modelo=str(context.validation.target.modelo),
         revision_id=str(context.validation.target.revision_id),
-        candidate_export=str(staged_candidate_export_root),
-        backup_export=str(backup_export_root),
+        candidate_export=staged_candidate_export_root.name,
+        backup_export=backup_export_root.name,
         candidate_manifest_sha256=candidate_manifest_sha256,
     )
     write_generated_export_publication_journal(journal_path, journal)

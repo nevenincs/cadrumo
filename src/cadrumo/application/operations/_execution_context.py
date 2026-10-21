@@ -8,13 +8,14 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import AsyncExitStack, asynccontextmanager
 from datetime import datetime
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
 from ...core.async_cleanup import AsyncCloseable
 from ...core.diagnostic_log import diagnostic_timing_event
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.logging import get_logger
 from ...core.operations import OperationEffect, OperationLifecycle
 from ...core.operator_progress import OperatorDisplayCode
-from ..user_profile.access_contracts import AccessAction
 from .authorization import OperationExecutionAuthority
 from .capabilities import OperationOwnedResource
 from .errors import OperationDeclarationError
@@ -199,7 +200,14 @@ class _DefinitionBoundEvents:
         )
         await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,))
 
-    async def progress(self, *, completed: int, total: int, unit_code: OperationEventCode | None = None) -> None:
+    async def progress(
+        self,
+        *,
+        completed: int,
+        total: int,
+        unit_code: OperationEventCode | None = None,
+        subject_code: OperationEventCode | None = None,
+    ) -> None:
         event = OperationProgressEvent(
             identity=self._context.identity,
             revision=0,
@@ -209,6 +217,7 @@ class _DefinitionBoundEvents:
             completed=completed,
             total=total,
             unit_code=unit_code,
+            subject_code=subject_code,
         )
         await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,))
 

@@ -18,7 +18,7 @@ from datetime import date
 import pytest
 
 from ....deadlines.models import IrpfEstimationRegime, IVARegime
-from ....iva.classification import InvoiceKind
+from ....iva.schema import InvoiceKind
 from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..errors import RegistryValidationError
 from ..facts.payloads import MappingFactEntry, MappingFactPayload

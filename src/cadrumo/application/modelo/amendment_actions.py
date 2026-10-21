@@ -195,7 +195,7 @@ def _load_amendment_baseline[CasillaKey](
         )
 
     export_identity = resolve_export_identity(
-        bucket_id=str(work_unit.bucket_id),
+        bucket_id=work_unit.bucket_id,
         operation=operation,
     )
     taxpayer_tax_id = export_identity[0].tax_id if export_identity is not None else None

@@ -13,7 +13,7 @@ import pytest
 from .....application.ledger.invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
 from .....core.config import override_settings
 from .....core.i18n.render import lookup_translation
-from .....domain.iva.classification import InvoiceKind
+from .....domain.iva.schema import InvoiceKind
 from ..evidence_draft import draft_lines
 from ..models import LedgerEvidenceDraftV1
 

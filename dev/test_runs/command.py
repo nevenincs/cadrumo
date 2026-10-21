@@ -13,7 +13,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Final
 
-from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS, tool_storage_environment
 from dev._paths import REPO_ROOT, UTF_8
 
 from .dead_weight_signal import _AUDIT_DEAD_WEIGHT_SIGNAL, _DeadWeightSignalProcessor
@@ -260,12 +259,6 @@ def _run_in_scratch(
     environment["CADRUMO_DEV_ARTIFACTS_DIR"] = str(artifacts)
     environment["CADRUMO_DEV_CACHE_DIR"] = str(cache)
     environment["CADRUMO_DEV_SCRATCH_DIR"] = str(scratch)
-    # Reassert the Cadrumo-controlled shared caches for children, even if a
-    # caller changed a native tool variable such as XDG_CACHE_HOME in-process.
-    tool_environment = tool_storage_environment()
-    for native_variable, (refinement_variable, _default_location) in TOOL_STORAGE_LOCATIONS.items():
-        environment[refinement_variable] = tool_environment[native_variable]
-    environment.update(tool_environment)
     environment.update(scratch_environment(scratch))
     with log_path.open("x", encoding=UTF_8, newline="\n") as transcript:
         transcript.write(f"START {started.isoformat()} pid={os.getpid()}\n")

@@ -1,6 +1,18 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    ValueContract,
+)
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ._app_live_command_spec_support import (
     _LEAF_INVOCATION,
@@ -18,18 +30,6 @@ from ._app_live_command_spec_support import (
     _REQUIRED_YEAR_OPTION,
     NO_RESULT_SCHEMA,
 )
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    ValueContract,
-)
-from .command_shared_contracts import translation_key as _key
-from .command_spec import CommandSpec
 
 LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -82,10 +82,10 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _OPTIONAL_YEAR_TO_OPTION,
         ),
         policy=_NETWORK_READ_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live", "filed_list_cmd", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_commands", "filed_list_cmd", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_filed_payloads", "FiledListResult", __package__),
+            target=DeferredTarget(".app_live_filed_results", "FiledListResult", __package__),
             identity="app.live.filed.list",
         ),
     ),
@@ -99,10 +99,10 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=_LEAF_INVOCATION,
         parameters=(),
         policy=_NETWORK_READ_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live", "filed_discover_cmd", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_commands", "filed_discover_cmd", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_filed_payloads", "FiledDiscoverResult", __package__),
+            target=DeferredTarget(".app_live_filed_results", "FiledDiscoverResult", __package__),
             identity="app.live.filed.discover",
         ),
     ),
@@ -129,10 +129,10 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live", "filed_pull_all_cmd", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_commands", "filed_pull_all_cmd", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_filed_payloads", "FiledHistoryOnboardingResult", __package__),
+            target=DeferredTarget(".app_live_filed_results", "FiledHistoryOnboardingResult", __package__),
             identity="app.live.filed.pull_all",
         ),
     ),
@@ -196,10 +196,10 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live", "filed_pull_cmd", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_commands", "filed_pull_cmd", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_filed_payloads", "FiledCaptureResult", __package__),
+            target=DeferredTarget(".app_live_filed_results", "FiledCaptureResult", __package__),
             identity="app.live.filed.pull",
         ),
     ),
@@ -218,10 +218,10 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _OUTPUT_ROOT_OPTION,
         ),
         policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live", "filed_pull_sources_cmd", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_commands", "filed_pull_sources_cmd", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_filed_payloads", "FiledCaptureSourcesResult", __package__),
+            target=DeferredTarget(".app_live_filed_results", "FiledCaptureSourcesResult", __package__),
             identity="app.live.filed.pull_sources",
         ),
     ),

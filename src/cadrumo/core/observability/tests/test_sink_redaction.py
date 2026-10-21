@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from ....tests.aeat_literal_fixtures import REDACTION_PATH_CANARY, aeat_url
+from ...redaction.tax_identity_admission import bind_tax_identity_admission
 from ..models import ErrorPayload, FormFillPayload, NavigationPayload, RunEvent, RunEventKind, RunEventPayload
 from .sink import JsonlRunSink
 
@@ -123,6 +124,19 @@ def test_redacted_jsonl_remains_parseable(tmp_path: Path) -> None:
     assert decoded["kind"] == RunEventKind.FORM_FILL.value
     # The non-sensitive value passes through unchanged.
     assert decoded["payload"]["form_fill"]["value"] == "not sensitive"
+
+
+@pytest.mark.parametrize("account", ("DE89 3704 0044 0532 0130 00", "GB29 NWBK 6016 1331 9268 19"))
+def test_sink_hashes_the_whole_account_without_identity_admission(tmp_path: Path, account: str) -> None:
+    """The sink must hash the full account even before the host binds authority."""
+    import hashlib
+
+    target = tmp_path / "events.jsonl"
+    with bind_tax_identity_admission(None):
+        _emit(JsonlRunSink(target, run_id=_RUN_ID), _build_form_fill_event(value=account))
+    document = json.loads(target.read_text(encoding="utf-8"))
+    expected = "sha256:" + hashlib.sha256(account.encode("utf-8")).hexdigest()[:8]
+    assert document["payload"]["form_fill"]["value"] == expected
 
 
 def test_timestamp_not_redacted_away(tmp_path: Path) -> None:

@@ -198,7 +198,7 @@ def _record_path(key: str) -> Path:
 
 def reused_verdict(key: str) -> str | None:
     """Return a description of the recorded clean verdict for ``key``, or ``None`` to run the gate."""
-    if os.environ.get(FORCE_ENV):
+    if bool(os.environ.get(FORCE_ENV)):
         return None
     record = _record_path(key)
     try:
@@ -272,7 +272,7 @@ def _resolved_import_module(node: ast.ImportFrom, package: str) -> str:
     if node.level:
         parts = package.split(".")
         base = ".".join(parts[: len(parts) - node.level + 1])
-        module = f"{base}.{node.module}" if node.module else base
+        module = f"{base}.{node.module}" if (node.module is not None and node.module) else base
     else:
         module = node.module or ""
     return module

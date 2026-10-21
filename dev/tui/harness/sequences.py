@@ -39,8 +39,6 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input
 from textual.worker import WorkerCancelled
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, ModeloWorkForm, confirmable
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import load_settings
@@ -49,6 +47,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tui.app import RootBindingV1
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
@@ -66,8 +65,10 @@ from cadrumo.entrypoints.tui.modelo.workbench.search import WorkbenchSearchPanel
 from cadrumo.entrypoints.tui.modelo.workbench.sources import WorkbenchSourcesScreen
 from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import TYPED_EDITABILITIES
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
-from cadrumo.entrypoints.tui.runtime_workbench import RuntimeWorkbenchRoot
 from cadrumo.entrypoints.tui.tests.frame import capture
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.installed_client import open_installed_client
+from cadrumo_runtime.host.frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
 from dev.docs.sequences.checks import discover_sequences
 from dev.docs.sequences.compare import check_transcript
 from dev.docs.sequences.golden_store import golden_path, read_golden
@@ -148,9 +149,11 @@ class SequenceScenario:
     filed: bool = False
     """Whether the sequence records the declaration as filed, so its workbench accepts no change."""
     assumes: bool = False
-    """Whether the calculation leaves assumed values for the filer to confirm."""
+    """Whether the declaration offers an editable assumed value or a confirmation list."""
     assumed_unconfirmable: bool = False
     """Whether every assumed value is one a list cannot confirm, so F8 opens the first one's panel instead."""
+    recalculation_question: bool = True
+    """Whether recalculation must first ask which unrecorded values the filer typed."""
 
 
 SEQUENCE_SCENARIOS: Final[dict[str, SequenceScenario]] = {
@@ -163,7 +166,12 @@ SEQUENCE_SCENARIOS: Final[dict[str, SequenceScenario]] = {
             "verification-reports-incomplete", "303", "Modelo 303 calculated but not complete", verified=False
         ),
         SequenceScenario("modelo-130-first-quarter", "130", "Modelo 130, first quarter, verified"),
-        SequenceScenario("modelo-100-renta-2025", "100", "Modelo 100, renta 2025, verified", assumes=True),
+        SequenceScenario(
+            "modelo-100-renta-2025",
+            "100",
+            "Modelo 100, renta 2025, verified with recorded operator inputs",
+            recalculation_question=False,
+        ),
         SequenceScenario("modelo-349-first-quarter", "349", "Modelo 349, first quarter, verified"),
         SequenceScenario("modelo-390-annual-2025", "390", "Modelo 390, annual summary 2025, verified"),
         SequenceScenario(
@@ -300,7 +308,11 @@ async def _search_a_box(scenario: SequenceScenario, pilot: Pilot[object]) -> Non
     """Press ``/`` and type the number of the declaration's first numbered box, as a filer looks one up."""
     workbench = _workbench(scenario, pilot.app)
     form = workbench.form
-    box = None if form is None else next((field.box for field in form.fields() if field.box), None)
+    box = (
+        None
+        if form is None
+        else next((field.box for field in form.fields() if (field.box is not None and field.box)), None)
+    )
     if box is None:
         raise PageUnavailableError(f"{scenario.sequence_id}: the declaration has no numbered box to search for")
     await pilot.press("slash")
@@ -453,6 +465,8 @@ def scenario_pages(scenario: SequenceScenario) -> tuple[str, ...]:
             return scenario.verified
         if page == F8_CONFIRM_PAGE:
             return scenario.assumed_unconfirmable and not scenario.filed
+        if page == RECALCULATE_PAGE and not scenario.recalculation_question:
+            return False
         if scenario.filed and page in _CHANGING_PAGES:
             return False
         return scenario.assumes or page not in _ASSUMED_PAGES
@@ -582,9 +596,7 @@ async def _capture_all(
     # The sandbox already runs the profile worker for its storage root; the
     # frames are taken through the same authenticated runtime root the
     # installed TUI composes, never through an in-process service graph.
-    client = await open_installed_runtime_client(
-        profile_id=UUID(sandbox.profile_id), frontend=OperationFrontendProjection.TUI
-    )
+    client = await open_installed_client(profile_id=UUID(sandbox.profile_id), frontend=OperationFrontendProjection.TUI)
     try:
         secret = bytearray(load_settings().cadrumo_dev_test_database_password.get_secret_value().encode())
         await asyncio.to_thread(client.login_password, secret)
@@ -593,6 +605,7 @@ async def _capture_all(
             profile_label=SANDBOX_PROFILE_LABEL,
             output_language=OutputLanguage(output_language()),
             open_recovery_client=_no_recovery,
+            operation_registry=build_production_operation_registry,
         )
         root = await asyncio.to_thread(workbench.load)
         frames: list[ScenarioFrame] = []
@@ -611,7 +624,7 @@ async def _capture_all(
         await asyncio.to_thread(client.close)
 
 
-async def _no_recovery() -> RuntimeFrontendClient:
+async def _no_recovery() -> FrontendClient:
     """A review capture never opens profile recovery."""
     raise ScenarioError("a scenario capture must not open profile recovery")
 

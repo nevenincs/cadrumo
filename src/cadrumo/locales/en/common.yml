@@ -292,6 +292,24 @@ auth:
       Permanente identity provider. Headless-automatable for AEAT read paths; requires
       DNI/NIE and password.
     clave_permanente_label: Cl@ve Permanente
+  sync:
+    requirement:
+      auth_method_required: Choose an authentication method.
+      certificate_file_required: Select an existing PKCS#12 certificate file.
+      certificate_passphrase_required: Save the certificate passphrase.
+      clave_identity_required: Enter a valid Cl@ve DNI/NIE.
+      clave_password_required: Save the Cl@ve Permanente password.
+      corrupt: The certificate cannot be opened. Check the file and passphrase.
+      dni_validity_required: Enter the DNI validity date for the app request route.
+      expired: The certificate has expired.
+      expiring: The certificate expires soon.
+      file_missing: The certificate file does not exist.
+      nie_support_required: Enter the NIE support number for the app request route.
+      ok: The local check passed.
+      profile_identity_must_match: The Cl@ve DNI/NIE must match the taxpayer NIF/NIE.
+      profile_tax_id_required: Enter the taxpayer NIF/NIE.
+      unavailable: The required local check could not be completed.
+      unreadable: The certificate file cannot be read.
 categories:
   registry:
     amortizacion_vivienda_afecto:
@@ -508,6 +526,38 @@ core:
       output_language_type: The profile output language must be a supported language
         code in text form.
 desktop:
+  about:
+    agent: Agent
+    agent_version: Agent version
+    application: Application
+    build_date: Build date
+    build_id: Build
+    build_type: Build type
+    build_type_debug: Debug
+    build_type_release: Release
+    channel: Channel
+    close: Close
+    copy: Copy
+    debug_badge: Debug
+    dependencies: Dependencies ({count})
+    description: Version and build details of this installation.
+    desktop_host: Desktop
+    interpreter: Interpreter
+    load_failed: The version details could not be read ({code}).
+    loading: Reading version details…
+    manager: Manager
+    managers: Managers
+    open: About Cadrumo
+    packages: Bundled packages ({count})
+    python: Python
+    runtime: Runtime
+    settings_hint: Version and build details
+    target: Platform
+    title: About Cadrumo
+    tools: Tools
+    unavailable: Unavailable
+    version: Version
+    version_row: Cadrumo {version}
   account:
     create:
       back: Back to sign in
@@ -527,24 +577,21 @@ desktop:
       password_long: Use a shorter password.
       password_short: Use at least {min} characters.
       policy: At least {min} characters.
-      refused: The profile was not created ({code}).
+      refused: The profile could not be created. Review its details and try again.
       submit: Create profile
       submitting: Creating…
       title: Create a profile
-      unknown: It is not known whether the profile was created ({code}). Look for
-        it among the profiles before trying again.
-      wait: 'This takes about half a minute: the profile''s key is being made from
-        its password.'
-    create_profile: Set up a profile
+      unknown: The profile may have been created. Check the profile list before trying
+        again.
     first_run_lead: Create a profile to start.
-    in_tui: Continuing in the TUI
     new_profile: New profile
     no_profile: No active profile
-    no_profile_lead: Create a profile, or choose one, in the TUI.
-    remaining_access: Agent access you enabled stays on.
+    no_profile_lead: There's no profile on this computer yet.
+    remaining_access: After you sign out, at least one key you issued for an external
+      application can still grant access to this profile.
     services_down: Background services aren't running
     sign_out: Sign out
-    sign_out_failed: Signing out didn't work ({code}).
+    sign_out_failed: Signing out didn't work. Try again.
     sign_out_hint: Signs you out of every Cadrumo window.
     signed_in: Signed in
     signed_out: Not signed in
@@ -561,6 +608,60 @@ desktop:
     zoom_in: Zoom docs in
     zoom_out: Zoom docs out
     zoom_reset: Reset docs zoom
+  automation_access:
+    cancel: Cancel
+    cleanup_pending: Removed. Cadrumo is still deleting the stored key from this computer.
+    copied: Copied
+    copy: Copy code
+    copy_failed: Couldn't copy. Select the code and copy it yourself.
+    done: Done
+    empty: No access keys yet.
+    expired_on: Expired {date}
+    expires_on: Expires {date}
+    issue: Create an access key
+    issue_lead: The app can read your profile details, see the actions it runs, and
+      use every Cadrumo action available to connected apps.
+    issue_submit: Create access key
+    issued_lead: Paste this connection code into the other app when you set it up.
+      The key itself stays safely on this computer.
+    issued_once: Shown only once. After you close this, you can't see it again.
+    issued_title: Access key created
+    issuing: Creating…
+    key_title: Access key created {date}
+    key_title_undated: Access key
+    last_used: Last used {date}
+    lead: Access keys let other AI apps on this computer work with this profile. Only
+      you can create or remove them.
+    never_used: Not used yet
+    reference_label: Connection code
+    refresh: Refresh
+    refused_failed: Couldn't complete this. Try again.
+    refused_not_found: That key isn't in the list any more.
+    refused_not_signed_in: Sign in to change these settings.
+    refused_outcome_unknown: Cadrumo couldn't confirm whether the key was created.
+      Refresh to check.
+    refused_person_act_required: Only you can change these settings, from this window.
+    refused_profile_locked: Unlock your profile to change these settings.
+    revoke: Remove
+    revoke_confirm: Remove this key? Apps using it lose access right away. This can't
+      be undone.
+    revoke_confirm_action: Remove key
+    revoking: Removing…
+    scope_all_operations: Can use every Cadrumo action available to connected apps
+    scope_no_tax_values: Doesn't read tax amounts
+    scope_operations_seen: Sees the actions it runs
+    scope_profile_values: Reads profile details
+    scope_some_operations: Can use only some actions
+    scope_tax_values: Reads tax amounts
+    standing_active: Active
+    standing_expired: Expired
+    standing_pending: Waiting for approval
+    standing_revoked: Removed
+    standing_suspended: Paused
+    tax_values: Also let it read tax amounts
+    tax_values_note: Includes calculated taxes and return details. Leave this off
+      to keep them from the app.
+    title: Access keys for other AI apps
   calendar:
     aeat:
       accepted: Accepted
@@ -573,7 +674,7 @@ desktop:
     event:
       filing: Filing
       message: Message
-    failed: The calendar couldn't be read ({code}).
+    failed: The calendar couldn't be loaded. Try refreshing it.
     loading: Loading the calendar…
     local:
       external_baseline_imported: Imported from an earlier filing
@@ -584,7 +685,7 @@ desktop:
     more: '{count} more'
     moved: Moved from {date}
     observed: Filing history and messages
-    open_tui: Open in the TUI
+    open_tui: Open in workspace
     payment_cutoff: Direct debit until {date}
     refresh: Refresh
     show_all: Show all
@@ -604,36 +705,74 @@ desktop:
     view_months: Calendar
     warnings: Some profile details are missing, so these dates use defaults.
     window_unknown: Opening date not reported
+  canvas:
+    lead: Choose a work area below, or open one from the sidebar. You can open the
+      documentation from either place.
+    title: Nothing open
   docs:
     frame_title: Cadrumo documentation
+    hide: Hide the docs
     loading: Loading the documentation…
+    not_bundled: Documentation is not available in this installation.
+    show: Show the docs
+    unavailable: The documentation couldn't be opened. Try again later.
+  google:
+    checking: Checking the Google sign-in…
+    not_in_this_build: Google sign-in isn't available right now.
+    open_drive: Open profile folder in Google Drive
+    palette_sign_in: Authenticate with Google
+    sign_in: Sign in
+    sign_in_label: Sign in to Google
+    sign_out: Sign out
+    sign_out_label: Sign out of Google
+    signed_in: Signed in as {email}.
+    signed_in_plain: Signed in.
+    signed_out: Not signed in.
+    signing_out: Signing out of Google…
+    title: Google account
+    unknown: The Google sign-in couldn't be read right now.
+    waiting: Finish signing in to Google in your browser.
   host:
     failed: This part couldn't load.
     unavailable: This part needs the desktop application.
   logs:
+    all_loggers: All loggers
+    all_origins: All origins
     clear_logger: Clear logger filter
+    copy_all: Copy all
     details: Details
     dropped: 'Older records dropped from this view: {count}'
     empty: The log is empty.
     errors: 'Errors: {count}'
+    export: Export logs
+    export_all: Export all
+    export_failed: The logs could not be exported.
+    export_visible: Export visible
+    exported: Exported to {path}
     filter: Filter
+    filters: Log filters
     follow: Follow
     follow_hint: Keep the newest record in view
     level_all: All levels
+    level_critical: Critical only
     level_error: Errors only
     level_info: Info and worse
     level_warning: Warnings and worse
     loading: Loading the log…
+    logger: Logger
     minimum_level: Minimum level
     no_match: No records match these filters.
+    origin: Origin
     rejected: '{count} records omitted because their diagnostic format was invalid.'
+    reveal: Reveal log location
+    selected: '{count} entries selected'
     source_host: Desktop
     source_python: Python
-    sources: Sources
     state_available: cadrumo.log
     state_missing_detail: No log file yet. Records appear once a Cadrumo process writes
       one.
     state_unreadable: Can't read the log
+    visible_count: '{visible} of {total} entries'
     warnings: 'Warnings: {count}'
   menu:
     clear: Clear
@@ -646,7 +785,7 @@ desktop:
     paste: Paste
     select_all: Select all
   messages:
-    failed: Couldn't be read ({code})
+    failed: Notifications couldn't be loaded. Try again later.
     never: Not synced with AEAT yet
     none_unread: None unread at the last sync
     unread: '{count} unread'
@@ -668,17 +807,97 @@ desktop:
     maximize_docs: Maximize the docs
     maximize_focused: Maximize the focused area
     maximize_panel: Maximize the bottom panel
-    maximize_tui: Maximize the TUI
+    maximize_tui: Maximize workspace
     restore: Restore the layout
-    tui: TUI
+    tui: Workspace
   panel:
     hide: Hide the bottom panel
     label: Bottom panel
     resize: Resize the bottom panel
     show: Show the bottom panel
+  profile:
+    add: Add entry
+    all_fields: All details
+    all_sections: All sections
+    auth: Set up AEAT access
+    cancel: Cancel
+    censo:
+      absent: AEAT did not supply this value. No change.
+      adopt: Use the AEAT value when you save.
+      apply: Save reviewed changes
+      cancel: Stop synchronization
+      close: Close
+      current: Saved
+      device: Approve the sign-in request in your Cl@ve app.
+      done: Synchronization complete. Review any remaining gaps in your profile.
+      field: Profile detail
+      identity: Add tax ID
+      incoming: AEAT
+      preserve: Keep your saved answer.
+      pull: Retrieve Censo data
+      reading: Retrieving Censo data…
+      ready: AEAT sign-in is set up. You can review the retrieved information before
+        saving.
+      reject: Discard changes
+      return: Back to profile
+      review: Review the information from AEAT.
+      scope: Import your fiscal address, postcode and cadastral reference from Censo.
+        Other profile details still need your answers.
+      setup: Set up AEAT sign-in
+      stopped: Synchronization stopped. No profile changes were saved.
+      title: Sync from AEAT
+      unavailable: Could not check synchronization. Try refreshing.
+      unknown: The result is not confirmed. Refresh before starting another synchronization.
+      unsupported: This sign-in needs an interaction available in the terminal. Cancel
+        this attempt and use Censo sync in the terminal.
+    close: Close profile
+    collapse_all: Collapse all
+    complete: Finish profile setup
+    conflict: Your profile changed elsewhere. Close this editor, review the updated
+      details, and open the field again. Your draft has not been saved.
+    description: Review your saved details and fill in what is missing. Changes are
+      saved to this profile.
+    edit: Edit
+    edit_field: Edit {field}
+    edit_help: Only the details you change will be saved. Leave unchanged details
+      as they are.
+    empty: No details match these filters. Try another search or section.
+    expand_all: Expand all
+    field_help: About this field
+    filled: Required details filled in
+    filter: Show fields
+    loading: Loading your profile…
+    maximize: Full screen
+    missing: '{count} required details to complete'
+    missing_count: '{count} missing'
+    missing_filter: Missing details
+    not_set: Not filled in
+    refresh: Refresh
+    refused: These changes could not be saved. Check the field guidance and refresh
+      your profile before trying again.
+    remove: Remove entry
+    remove_help: Remove this entry from your profile? This includes all its fields.
+    required: Required
+    required_filter: Required and missing
+    restore: Split view
+    results: '{count} fields shown'
+    save: Save changes
+    saved_filter: Saved details
+    saved_notice: Saved
+    saved_unread: Your changes were saved, but the updated profile could not be loaded.
+      Refresh to check them.
+    saving: Saving…
+    search: Search profile details
+    sections: Profile section
+    signed_out: Sign in to view and edit your profile.
+    title: Your profile
+    unavailable: Your profile could not be loaded. Refresh to try again.
+    unknown: We could not confirm whether the changes were saved. Refresh and check
+      the saved values before trying again.
   rail:
     aeat: AEAT website
     console: Console
+    docs: Docs
     docs_home: Docs home
     label: Workspace
     logs: Logs
@@ -686,17 +905,17 @@ desktop:
     python: Python shell
     search: Search
     settings: Settings
-    tui: TUI
+    tui: Workspace
   session:
     enter_restarts: Enter restarts
     exit_line: '[Process exited with code {code}. Press Enter to start again.]'
     exited: exited {code}
-    failed: 'The session couldn''t start: {reason}'
+    failed: The session couldn't start.
   settings:
     always_dark: Always dark
     appearance: Appearance
     dark: Dark
-    docs_and_tui: Docs and TUI
+    docs_and_tui: Documentation and workspace
     first_pane: First pane
     follow_cadrumo: Same as Cadrumo
     follow_docs: Follow docs
@@ -705,54 +924,161 @@ desktop:
     light: Light
     match_appearance: Match appearance
     reset_layout: Reset layout
-    session: Sign-in
     side_by_side: Side by side
     stacked: Stacked
     terminal_text: Terminal text
     terminals: Terminals
     title: Settings
     window: Window
+  setup:
+    advisory_incomplete: Cadrumo setup is not complete. Click here to complete it.
+    advisory_running: Cadrumo setup is running. Click here to see how it's going.
+    approve: Download and set up
+    approve_at_least: Download at least {size} and set up
+    approve_size: Download {size} and set up
+    cancel: Cancel setup
+    cancelling: Stopping after the current step…
+    checking: Checking components…
+    close: Close
+    copy_details: Copy details
+    details: Details
+    hide: Hide
+    lead: Cadrumo needs these components to work.
+    lead_review: Check what will be downloaded and where it goes, then approve it.
+    lead_running: You can close this; setup keeps going and Settings shows how it's
+      doing.
+    not_now: Not now
+    open: Open setup
+    outcome_cancelled: Setup was cancelled. What was already downloaded is kept.
+    outcome_completed: Everything is set up.
+    outcome_failed: Setup didn't finish.
+    outcome_interrupted: Setup stopped before it finished. Resume to continue where
+      it left off.
+    outcome_not_enough_space: There wasn't enough free space, so nothing was downloaded.
+    outcome_nothing_to_do: Everything was already set up.
+    outcome_plan_changed: What's needed changed before setup started. Check the new
+      plan and approve it.
+    outcome_rejected: Nothing was downloaded.
+    overall_progress: Setup progress
+    palette_browser: Set up the browser
+    palette_cancel: Cancel setup
+    palette_check: Check components
+    palette_local_ai: Set up the local AI
+    palette_open: Set up components
+    palette_retry: Retry setup
+    plan_destination: 'Saved in: {folder}'
+    plan_from: 'From: {hosts}'
+    plan_nothing: Nothing to download.
+    plan_outside_program: This installs a separate program on this computer, which
+      may ask for your permission.
+    plan_shared: Downloaded together with {name}.
+    plan_size: '{size} to download.'
+    plan_size_at_least: At least {size} to download.
+    planning: Working out what to download…
+    progress_bytes: '{done} of {total}'
+    progress_item: '{index} of {count}: {name} — {step}'
+    progress_label: Progress of {name}
+    rail_busy: Setting up components
+    rail_incomplete: Setup isn't finished
+    refused_busy: Setup is already running elsewhere. Wait for it to finish.
+    refused_not_cancellable: Setup can't be stopped right now. It will finish shortly.
+    refused_not_pending: That plan is no longer waiting for an answer.
+    refused_not_signed_in: Sign in to your profile first.
+    refused_other: Setup couldn't be reached. Try again in a moment.
+    refused_plan_changed: What's needed changed. Check the new plan, then approve
+      it.
+    refused_unavailable: Cadrumo's services aren't answering. Try again in a moment.
+    reject: Don't download
+    result_already: Already set up
+    result_done: Set up
+    result_not_finished: Didn't finish
+    resume: Resume
+    show_new_plan: Show the new plan
+    size_unknown: Size known once it starts
+    space: Needs {required} of free space; {free} is free.
+    space_short: There isn't enough free space. Free some up, then try again.
+    space_unread: Needs {required} of free space; the free space couldn't be read.
+    start: Set up
+    step_checking: Checking
+    step_connecting: Connecting
+    step_downloading: Downloading
+    step_installing: Installing
+    step_tidying: Tidying up
+    step_waiting: Waiting to start
+    summary_complete: Everything Cadrumo needs is set up.
+    summary_hardware: This computer can't run everything Cadrumo needs; the rest is
+      set up.
+    summary_incomplete: Some of what Cadrumo needs isn't set up yet.
+    summary_running: Setup is running.
+    title: Set up Cadrumo
+    toast_cancelled: Setup cancelled
+    toast_done: Components are set up
+    toast_not_finished: Setup didn't finish
+    try_again: Try again
+    unavailable: Components can't be checked right now. Try again in a moment.
   signin:
     checking: Checking your sign-in…
     choose_profile: Choose a profile
     dismiss: Not now
     hide_password: Hide password
+    install_machine_permission: Installing for all users requires administrator permission.
+    install_machine_services: Install for all users
+    install_user_services: Install for this user
     lead: Enter your profile password to open your workspace.
-    open_tui: Open the TUI
-    open_tui_hint: First-time setup, another profile or recovery? Use the TUI.
     password: Password
     profile: Profile
     profiles_unread: The profiles on this computer could not be read.
-    recovery_hint: Lost the password, or the profile is locked? Use the TUI.
+    recovering_services: Recovering background services…
     refused:
+      busy: Signing in took too long because the computer is busy. Try again in a
+        moment.
       custody_changed: This profile's password or recovery settings changed. Sign
         in again.
       generation_changed: You were signed out elsewhere. Sign in again.
+      installation_cancelled: Installation was cancelled.
+      installation_failed: Background services could not be installed.
+      installation_refused: The installation kit could not be verified. Use a complete
+        matching distribution.
+      installation_unavailable: The installation kit is missing. Use the complete
+        Cadrumo distribution.
+      installation_unsettled: Installation could not be confirmed. Check the logs
+        before retrying.
       invalid: That password didn't work. Try again.
-      keyring_unavailable: Cadrumo can't keep you signed in on this device, so the
-        TUI will ask for your password.
+      keyring_unavailable: Cadrumo can't keep you signed in on this device. The system
+        keychain isn't available.
       login_mismatch: Your sign-in is from an earlier session on this computer. Sign
         in again.
-      other: Signing in didn't work ({code}).
-      profile_locked: This profile is locked. Continue in the TUI to unlock it.
+      manager: Cadrumo couldn't start. Open Logs for details.
+      other: Signing in didn't work. Try again.
+      profile_locked: This profile is locked. Sign in with its password to unlock
+        it.
       receipt_absent: You're not signed in.
       receipt_expired: Your sign-in expired. Sign in again.
       runtime_unavailable: Cadrumo's background services aren't running.
       throttled: Too many attempts. You can try again in {seconds} s.
+    services_recovered: Background services are ready. Checking sign-in…
     show_password: Show password
-    signed_out_lead: Sign in to open your workspace in the TUI.
+    signed_out_lead: Sign in to open your workspace.
     start_services: Start background services
     starting_services: Starting background services…
     submit: Sign in
     submitting: Signing in…
     title: Sign in to Cadrumo
-    unnameable: A profile whose name holds * ? [ % or $ is opened in the TUI.
-    unsupported: Sign in from the TUI on this system.
+    unnameable: Open the workspace to sign in to this profile.
+    unsupported: Sign in from the workspace on this system.
   split:
-    resize: Resize docs and TUI
-    side_by_side: Put docs and TUI side by side
-    stack: Stack docs and TUI
-    swap: Swap docs and TUI
+    resize: Resize documentation and workspace
+    side_by_side: Put documentation and workspace side by side
+    stack: Stack documentation and workspace
+    swap: Swap documentation and workspace
+  titlebar:
+    close: Close window
+    failed: The window action could not be completed.
+    label: Application title bar
+    maximize: Maximize window
+    minimize: Minimize window
+    profile_menu: Profile menu
+    restore: Restore window
   toast:
     copied: Copied
     copy_failed: Couldn't copy that.
@@ -760,9 +1086,9 @@ desktop:
     paste_failed: Could not paste that.
     paste_too_large: That is too much text to paste at once.
   tui:
-    hide: Hide the TUI
-    label: Cadrumo TUI
-    show: Show the TUI
+    hide: Hide workspace
+    label: Cadrumo workspace
+    show: Show workspace
 entries:
   portal_calendario_contribuyente:
     label: Taxpayer Calendar
@@ -1128,20 +1454,16 @@ overview:
     The automated retrieval sweep cannot fetch Impuesto sobre Sociedades filing history
     (modelo 200/202); check it directly at the AEAT sede.
 provisioning:
-  condition:
-    role_model_fit_for_role: '%{model} answered the test document, but its answer
-      could not be used to read an invoice. Choose a different text model.'
-    role_model_fitness_verified: 'No fitness check is recorded for the current weights
-      of %{model}. This does not mean the model is unfit: run `aeat config provision
-      verify` to check it.'
-    role_model_fitness_within_timeout: '%{model} did not finish its test answer before
-      the time limit ran out. It may be too slow for this machine; choose a smaller
-      model or raise the LLM timeout, then run `aeat config provision verify` again.'
   model:
     licence:
       non_commercial_advisory: Model %{model} is covered by the %{licence}, which
         does not permit commercial use. You named it explicitly, so Cadrumo will use
         it, but a commercial filing practice needs a separate licence from the publisher.
+  role:
+    column_role_mapping: for table columns
+    supply_nature_proposal: for the kind of sale or purchase
+    text_extraction: for document text
+    vision_transcription: for scanned pages
 review:
   adapters:
     errors:
@@ -1384,8 +1706,9 @@ sheets:
 topic:
   authentication:
     body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
-      certificate (FNMT / equivalent). Configure a provider with 'aeat config auth
-      configure --provider certificate' and verify with 'aeat config auth test'.
+      certificate (FNMT / equivalent). Configure a provider with 'cadrumo-runtime
+      config auth configure --provider certificate' and verify with 'cadrumo-runtime
+      config auth test'.
     title: Authentication with AEAT
   calendar:
     body: The calendar shows filing obligations (modelos and periods) within a range.
@@ -1426,7 +1749,7 @@ topic:
       Edit it with 'aeat config profile edit NAME'.
     title: Taxpayer profile
   providers:
-    body: Supported authentication providers; each has distinct prerequisites. 'aeat
+    body: Supported authentication providers; each has distinct prerequisites. 'cadrumo-runtime
       config auth providers' lists them with requirements.
     title: Authentication providers
   recargo-extemporaneo:
@@ -1460,6 +1783,26 @@ transactions:
     unreadable: Unreadable file or unsupported format
     verified: Import verified successfully
 tui:
+  aeat_auth:
+    blocked: 'Complete these requirements before synchronizing:'
+    certificate_path: Certificate file path (leave blank to keep saved value)
+    certificate_secret: Certificate passphrase (leave blank to keep saved value)
+    close: Back
+    document_hint: For an app request, enter the DNI validity date or the NIE support
+      number, according to your identity document.
+    edit: Set up / edit AEAT authentication
+    failed: Authentication settings could not be saved. Check the required fields
+      and try again.
+    field_failed: Could not save {field}. Check its format and try again.
+    method: Authentication method
+    password: Cl@ve Permanente password (leave blank to keep saved value)
+    ready: Ready to synchronize
+    route: Cl@ve Móvil route
+    save: Save authentication
+    saved: Saved. Readiness reflects the stored profile.
+    title: AEAT authentication
+    unknown: Authentication readiness could not be read. Reopen authentication settings
+      to retry.
   aeat_sync:
     action:
       pull_filed: Pull filed declarations
@@ -1652,6 +1995,7 @@ tui:
     delegation: Delegation
     destination: Destination
     details: Details
+    disclosure_categories: Whole categories
     disclosures: Disclosures
     empty: No items
     expires: Expires
@@ -2002,8 +2346,12 @@ tui:
     aeat_sync: AEAT Sync
     declarations: Declarations
     home: Home
+    installation: Installation
     ledger: Records
+    operations: Operations
     profile: Profile
+    reference: Reference
+    setup: Components
     withholding: Withholding
   home:
     account_fallback: Account
@@ -2089,7 +2437,167 @@ tui:
       locked: Profile locked
       no_profile: No profile selected
     title: Home
+  installation:
+    act:
+      archive_import:
+        label: Restore a profile from a backup
+        summary: Restores a profile from a backup file or folder once you prove its
+          password.
+      archive_import_prepare:
+        label: Read a backup before restoring it
+        summary: Reads a backup file or folder and returns the digest of what was
+          read. It restores nothing.
+      archive_inspect:
+        label: Inspect a profile backup
+        summary: Shows what a backup file says about itself, without decrypting it.
+      profile_list:
+        label: List the profiles
+        summary: Lists the profiles on this computer without unlocking any of them.
+      recovery_enroll:
+        label: Set up a recovery code
+        summary: Creates a recovery code for a profile once you prove its password.
+          The code is shown once.
+      repair_logs:
+        label: Recent log lines
+        summary: Shows where the log file is and its most recent lines.
+      repair_profile:
+        label: Repair the active profile
+        summary: Checks whether one profile's record can be read, or clears an active-profile
+          setting that points at nothing usable.
+      repair_report:
+        label: Diagnose the installation
+        summary: Checks the local configuration, the active profile, sign-in and the
+          log.
+      report_verify_document:
+        label: Verify a calculation summary
+        summary: Checks a calculation summary file by its own contents, without tracing
+          it to any profile.
+      reset_resume:
+        label: Resume a reset
+        summary: Carries an unfinished reset through to its end.
+      reset_start:
+        label: Reset all profiles
+        summary: Starts the irreversible removal of every profile stored on this computer.
+      reset_status:
+        label: Reset status
+        summary: Shows how far a reset has got, without continuing it.
+      review_package_verify:
+        label: Verify a review package
+        summary: Checks every file in a review package against its checksum list.
+      review_package_verify_receipt:
+        label: Verify a countersigned receipt
+        summary: Checks both signatures on a countersigned receipt for a review package.
+      review_package_verify_signature:
+        label: Verify a package signature
+        summary: Checks a review package's signature against a public key you trust.
+      storage_check:
+        label: Check the storage
+        summary: Compares the storage folders on disk with what they should be, without
+          repairing anything.
+      storage_init:
+        label: Create the storage folders
+        summary: Creates every folder that is missing and keeps everything that is
+          already there.
+      storage_inventory:
+        label: Storage inventory
+        summary: Shows where each storage area is and what it holds.
+      storage_reclaim:
+        label: Free up a storage area
+        summary: Deletes the contents of one area that can be created again.
+    action:
+      close: Back
+      read_outcome: 'See how it ended: {act}'
+      run: Run
+    column:
+      act: Task
+      effect: Effect
+      family: Area
+    confirm:
+      accept: Run it
+      cancel: Do not run
+      question: Run it now? This changes records on this computer.
+      title: 'Confirm: {act}'
+    effect:
+      changes: Changes records
+      reads: Reads only
+    family:
+      other: Other
+      profiles: Profiles
+      repair: Repair
+      reset: Reset
+      storage: Storage
+      verification: Verification
+    field:
+      acknowledge_retention_override: Remove profiles even if their legal retention
+        period has not ended
+      area: Storage area
+      clear_active: Clear the active-profile setting
+      counter_signer_public_key: The countersigner's public key
+      label: Profile name
+      lines: Number of lines
+      operation_id: Reset identifier
+      operator_public_key: Your public key
+      package: Review package file
+      path: File or folder
+      profile: Profile name or identifier
+      profile_id: Profile identifier
+      public_key: Public key
+      receipt: Receipt file
+      retention_override_reason: Reason for removing them early
+      signature: Signature file
+      source_digest: Digest of the backup
+      trusted_key: Key you trust
+    hint:
+      json: A JSON value.
+      optional: Optional.
+      path: A path on this computer.
+      supplied: Leave it empty and it is read from the backup first.
+    intro: Work on this installation that needs no signed-in profile. The local service
+      carries out each one.
+    inventory_unavailable: The profiles on this computer could not be listed ({reason}).
+      You can still inspect and repair the installation here.
+    list_hint: Press Enter on a row to open it.
+    passphrase:
+      label: Profile password
+      required: Enter the profile password.
+    profiles:
+      column:
+        active: Active
+        id: Identifier
+        label: Name
+    result:
+      remedy: 'Suggested next step: {action}'
+    status:
+      completed: Done.
+      effect_unknown: The connection ended before an answer arrived ({code}). It may
+        still have run; check before you run it again.
+      failed: The local service stopped on a fault ({act}). Its log has the detail.
+      failed_unknown: The local service stopped on a fault ({act}). Some records may
+        already have changed; check before you run it again.
+      invalid_fields: 'Check: {fields}.'
+      preview: Nothing has changed yet. This is what would happen.
+      progress: Asking the local service…
+      recovery_declined: You did not confirm the recovery code, so none was set up.
+      refused: Refused ({code}).
+      unreachable: The local service did not accept the request ({code}).
+    title: Installation and repair
+    verdict:
+      invalid: Not valid.
+      outcome: 'Verification result: {outcome}'
+      valid: Valid.
   ledger:
+    activity_asset:
+      asset_id: Asset identifier
+      claim: Record depreciation
+      correct: Correct
+      create: Create
+      filing: Prepare tax form transfer
+      forecast: Calculate forecast
+      free_amount: Optional accelerated depreciation amount
+      inspect: Inspect
+      revision: Asset revision (JSON)
+      supersedes: Recorded depreciation to replace (optional)
+      title: Depreciable assets
     area:
       classification: Classification
       entries: Entries
@@ -2311,6 +2819,9 @@ tui:
         xlsx: Excel workbook
       provider_label: Statement format
       refusal:
+        empty_directory: the folder holds no statement file that can be imported
+        file_limit: the import names more files than one import takes, so none was
+          read; import fewer at a time
         own_account_mismatch: the statement names a different account than the one
           you chose
         result_limit: the import reached its row limit before this file
@@ -3299,6 +3810,152 @@ tui:
       value:
         not_applicable: n/a
       was: was {value}
+  operations:
+    action:
+      close: Close
+      edit_fields: Edit as fields
+      edit_json: Edit as JSON
+      next_page: Next page
+      previous_page: Previous page
+      run: Run
+    form:
+      choose: Choose
+      error:
+        choice: Choose one of the offered values.
+        integer: Enter a whole number.
+        json: This is not valid JSON.
+        json_object: The request must be one valid JSON object. Nothing was sent.
+        json_unknown_fields: The JSON names fields this request does not have. Remove
+          them, or keep editing as JSON.
+        number: Enter a number.
+      fixed: set by this session
+      hint:
+        date: Date as YYYY-MM-DD
+        datetime: Date and time as YYYY-MM-DDTHH:MM:SSZ
+        decimal: Exact amount, for example 1234.56
+        integer: Whole number
+        number: Number
+        path: File or folder path
+        text: Text
+        uuid: Identifier
+      invalid: The request is not valid yet. Nothing was sent.
+      profile: Profile
+      replay_key: Replay key (optional)
+      replay_key_hint: Send the same key again with the same request to get the first
+        operation back instead of starting a new one.
+      required: required
+      secret: Secret (hidden as you type, sent apart from the request)
+      secret_required: This operation needs its secret. Enter it and run again. Nothing
+        was sent.
+      session: Session
+      subject: Subject
+      subject_entry: Work unit this request acts on
+      subject_missing: The request does not say yet what it acts on. Fill in the field
+        that names it. Nothing was sent.
+      subject_pending: the request does not say yet
+    interaction:
+      expires: Expires
+      kind:
+        choice: The operation is waiting for a choice.
+        input: The operation is waiting for an input.
+      no_answer: 'This kind of request cannot be answered yet, here or from the command
+        line: only a review can be applied or rejected. You can cancel the operation
+        or leave it waiting.'
+      presentation: Asks for
+    palette:
+      help: Open this operation's request form
+    receipt:
+      effect: Effect
+      operation: Operation
+      outcome: Outcome
+    result:
+      page: Result, page {page} of {pages}
+    run:
+      busy_holder: 'Operation holding it: {operation_id}'
+      contract_changed: The runtime now serves a different contract for this operation.
+        Reopen Operations and try again. Nothing was sent.
+      detached: You left the operation while it was still running. Its outcome is
+        not known here.
+      start_unconfirmed: The request was recorded, but its start was not confirmed.
+        Nothing was retried.
+      unknown: The reply was lost, so it is not known whether the request was recorded.
+        Nothing was retried.
+      unobserved: The operation could not be observed, so its state is not known here.
+    search:
+      placeholder: Search by identifier or description
+    status:
+      count: '{shown} of {total} operations'
+      loading: Reading the registered operations.
+      unavailable: The registered operations could not be read.
+    stopped:
+      code: Code
+      remedy: What would let it proceed
+      remedy_command: 'Remedy command: {command}'
+    title: Operations
+  reference:
+    action:
+      close: Back
+      show: Show
+    column:
+      read: Reference
+    filter:
+      any: Any
+      as_of: As of date (YYYY-MM-DD)
+      casilla: Casilla
+      casilla_number: Casilla number or identifier
+      category: Category
+      domain: Tax family
+      form_number: Official box number
+      input_kind: How the value is supplied
+      modelo: Modelo
+      period: Period (0A, 1T to 4T, 01 to 12)
+      portal: Portal identifier
+      required: Required only
+      year: Filing year
+    filters: What to show
+    intro: Public reference data that comes with Cadrumo. Reading it needs no profile
+      and contacts nobody.
+    list_hint: Press Enter on a row to open it.
+    read:
+      apoderado_scopes: Representative scopes
+      auth_providers: Sign-in methods for AEAT
+      bindings: Box sources of a modelo
+      casilla: One casilla
+      casillas: Casillas of a modelo
+      categories: Record categories
+      describe: Modelo description
+      formulas: Formulas of a modelo
+      modelos: Modelo catalogue
+      portal: One AEAT portal
+      portals: AEAT portals
+      support_matrix: Capability matrix
+    section:
+      irpf_categories: IRPF categories
+      spending_categories: Spending categories
+    status:
+      failed: The reference could not be read. The log has the detail.
+      invalid: 'Check: {fields}.'
+      loading: Reading…
+      rows: 'Rows: {count}'
+    summary:
+      apoderado_scopes: What a representative can be authorised to do on someone's
+        behalf.
+      auth_providers: The ways Cadrumo can identify you to AEAT.
+      bindings: Where the values of one version of a modelo come from.
+      casilla: 'One casilla: its official label, legal basis and, if it is calculated,
+        its formula.'
+      casillas: The casillas of one version of a modelo, with filters.
+      categories: The spending and IRPF categories a record can carry.
+      describe: One modelo's versions, periods and counts.
+      formulas: The formulas of one version of a modelo, with what each one reads.
+      modelos: Every modelo Cadrumo knows, for one filing year or tax family if you
+        choose.
+      portal: 'One AEAT web page: its address, purpose and sign-in methods.'
+      portals: The AEAT web pages Cadrumo knows, by category or modelo. Listing them
+        opens none.
+      support_matrix: 'What Cadrumo can do with each modelo: calculate, export, read
+        filed copies.'
+    title: Reference
   restricted:
     actions: 'Allowed actions: {values}'
     all_periods: All periods
@@ -3306,6 +3963,11 @@ tui:
       {provider}'
     change_user: Change user
     close: Close
+    disclosure_page: Disclosures {first} to {last} of {total}
+    disclosure_page_empty: This session may disclose nothing.
+    disclosure_page_stale: The disclosures changed since they were counted. Wait for
+      the status to refresh, then read them again.
+    disclosures_next: Disclosures, next page
     grant: 'Grant valid: {valid}; expires: {expires_at}'
     lock: Lock this session
     'no': 'No'
@@ -3352,6 +4014,8 @@ tui:
     opening: Opening Cadrumo…
     palette:
       placeholder: Search for areas, records and actions…
+    read_unavailable: This view could not be loaded. Try again.
+    retry: Retry
     system:
       quit: Quit
       quit_help: Leave Cadrumo; the profile's session stays as it is
@@ -3427,16 +4091,24 @@ tui:
       aeat_sync: Open AEAT Sync
       declarations: Open Declarations
       home: Open Home
+      installation: Open Installation
       ledger: Open Records
+      operations: Open Operations
       profile: Open Profile
+      reference: Open Reference
+      setup: Open Components
       unknown: Open area
       withholding: Open Withholding
     destination_help:
       aeat_sync: What has been read from the AEAT and what can be read next
       declarations: Declarations, earlier calculations, filing history and calendar
       home: Next actions, declarations and deadlines at a glance
+      installation: Storage, repair, reset and the profiles on this computer
       ledger: Entries, review, classification and supporting documents
+      operations: Every operation Cadrumo can run, to search, fill in and run
       profile: This profile's details and the sources that fill them in
+      reference: Modelos, casillas, categories, portals and sign-in methods
+      setup: The browser and the local AI
       withholding: Capture and inspect invoice withholding for a selected filing year
     refusal:
       not_composed: Not every area could be read yet.
@@ -3490,3 +4162,46 @@ tui:
         reconciliation_resolved: Resolved
         revision_current: Current
         revision_superseded: Replaced
+  setup:
+    check_again: Check again
+    checking: Checking…
+    column:
+      action: Action
+      item: Component
+      state: State
+    complete: Cadrumo is set up.
+    hardware_limited: This computer does not have enough memory for the local AI.
+    hint: Enter runs the action of the selected row. Setting up shows the plan and
+      asks before anything is downloaded.
+    incomplete: Some components are not ready yet.
+    intro: 'What Cadrumo needs on this computer: the browser for the tax agency website
+      and the local AI. Choose a row to run its action.'
+    outcome:
+      cancelled: You cancelled the setup.
+      completed: Setup finished.
+      interrupted: Setup was interrupted before it finished. Choose Resume to continue.
+      not_enough_space: There is not enough free disk space, so nothing was downloaded.
+      nothing_to_do: Everything is already set up.
+      plan_changed: The plan changed after you approved it, so nothing was downloaded.
+        Start again to see the new plan.
+      rejected: Nothing was downloaded.
+    plan:
+      destination: '  Stored in %{path}'
+      entry: '%{name}: %{size} from %{hosts}'
+      heading: 'Cadrumo will set up:'
+      installs_program: '  This installs a program on this computer. Its installer
+        may ask for your permission.'
+      part: '    %{name}: %{size}'
+      shared: '  Uses the same download as %{name}.'
+      size_unknown: size not known yet
+      total: 'Total download: %{size}.'
+      total_unknown: 'Total download: at least %{size}. Some sizes are only known
+        once the download starts.'
+    set_up_all: Set up everything
+    size:
+      gigabytes: '%{value} GB'
+      megabytes: '%{value} MB'
+    title: Components
+    unavailable: Cadrumo's background service could not be reached, so components
+      cannot be checked or set up right now.
+    working: Preparing the plan…

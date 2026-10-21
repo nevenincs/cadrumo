@@ -48,7 +48,7 @@ def _calculate(
     """Calculate one edition with an empty ledger and the promotor's autoconsumo as stated."""
     modelo, catalogues = load_modelo_303()
     assert revision.period_selector is not None
-    period = revision.period_selector.periods[0]
+    period = revision.period_selector.periods_for_year(revision.valid_from.year)[0]
     snapshot = build_snapshot(
         modelo,
         catalogues,

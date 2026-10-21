@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 
 from dev._paths import REPO_ROOT
+from dev.source_tree import normalised_content
 
 from ...command_execution import run_command
 from .. import cmake_build, product, provision
@@ -62,7 +63,9 @@ def test_configured_actions_use_selected_uv_despite_path_reordering(
     with pytest.raises(ObservedUvError):
         if action == "provision":
             monkeypatch.setattr(provision, "run_command", observe)
-            monkeypatch.setattr(provision, "plan_target_wheels", lambda *args: ())
+            # One pinned wheel, so provisioning has something to install with the selected uv.
+            wheel = SimpleNamespace(distribution="demo", url="https://example.invalid/demo.whl", sha256="0" * 64)
+            monkeypatch.setattr(provision, "plan_target_wheels", lambda *args, **kwargs: (wheel,))
             monkeypatch.setattr(
                 provision,
                 "backend",
@@ -70,17 +73,35 @@ def test_configured_actions_use_selected_uv_despite_path_reordering(
                     provision_sdk=lambda destination, *args: destination / layout["sdk"]["root"]
                 ),
             )
-            provision.provision(tmp_path / "runtime", "windows-x86-64", build_toolchain=configured)
+            agent = tmp_path / "agent"
+            agent.mkdir()
+            (agent / "agent-dependencies.txt").write_bytes(b"")
+            pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
+            (agent / "agent-dependencies.json").write_text(
+                json.dumps(
+                    {
+                        "target": "windows-x86-64",
+                        "python": pin,
+                        "requirements_sha256": hashlib.sha256(b"").hexdigest(),
+                        "versions": {},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            provision.provision(
+                tmp_path / "runtime", "windows-x86-64", build_toolchain=configured, agent_dependencies=agent
+            )
         elif action == "product":
 
             def snapshot(root: Path, files: object, destination: Path) -> None:
                 destination.mkdir(parents=True)
-                shutil.copyfile(root / "pyproject.toml", destination / "pyproject.toml")
+                (destination / "pyproject.toml").write_bytes(normalised_content(root, "pyproject.toml"))
 
             monkeypatch.setattr(product, "run_command", observe)
-            monkeypatch.setattr(product, "repository_files", lambda root: ())
+            monkeypatch.setattr(product, "repository_files", lambda root, *, under=(): ())
             monkeypatch.setattr(product, "snapshot", snapshot)
-            monkeypatch.setattr(product, "stage_published_authority", lambda *args: None)
+            monkeypatch.setattr(product, "selected_published_authority", lambda *args: ())
+            monkeypatch.setattr(product, "_wheel_input_digest", lambda *args, **kwargs: "selected-inputs")
             dependencies = tmp_path / "dependencies"
             dependencies.mkdir()
             product.build_product(

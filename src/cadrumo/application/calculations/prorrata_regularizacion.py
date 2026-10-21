@@ -399,7 +399,7 @@ def _modelo_303_regularizacion_target(revision: ModeloRevision) -> CasillaId | N
 def _regularizacion_target_label(revision: ModeloRevision, casilla_id: CasillaId | None) -> str:
     """Name the registry-declared target casilla by its printed number for operator messages."""
     number = next((casilla.number for casilla in revision.casillas if casilla.id == casilla_id), None)
-    if number:
+    if number is not None and number:
         return tr("application.calculations.prorrata_regularizacion.target_casilla", number=number)
     return tr("application.calculations.prorrata_regularizacion.target_declared")
 
@@ -861,7 +861,7 @@ def _missing_current_year_resolution(
         return None
     message = (
         f"prorrata_regularizacion binding requires current-year registry casillas "
-        f"{tuple(str(casilla_id) for casilla_id in missing_current)} before it can resolve"
+        f"{missing_current} before it can resolve"
     )
     return CalculationSourceResolution(
         resolver_id=resolver_id,

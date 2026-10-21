@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 21:54+0200\n"
+"POT-Creation-Date: 2026-10-12 00:32+0200\n"
 "PO-Revision-Date: 2026-07-19 09:00+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
@@ -124,8 +124,8 @@ msgstr ""
 " con [Conectar un agente (MCP)](how-to/connect-an-agent.md)."
 
 #: ../../download.md:45
-msgid "Two ways to work"
-msgstr "Dos formas de trabajar"
+msgid "Ways to work"
+msgstr "Formas de trabajar"
 
 #: ../../download.md:47
 msgid "`aeat` runs as ordinary commands that print their results:"
@@ -148,10 +148,30 @@ msgstr ""
 "usan los mismos registros locales."
 
 #: ../../download.md:62
+msgid ""
+"An AI assistant connected through MCP is a third way to work. The command"
+" line, the full-screen app and an assistant can each do the same work "
+"against the same local records. In the full-screen app, **Operations** "
+"lists every one of them, **Installation** covers storage, repair, the "
+"reset and the profiles on this computer without a sign-in, and "
+"**Reference** shows the modelo catalogue, casillas, formulas, categories,"
+" portals and sign-in methods."
+msgstr ""
+"Un asistente de IA conectado mediante MCP es una tercera forma de "
+"trabajar. La línea de comandos, la aplicación a pantalla completa y un "
+"asistente pueden hacer el mismo trabajo sobre los mismos registros "
+"locales. En la aplicación a pantalla completa, **Operaciones** enumera "
+"todas las operaciones, **Instalación** abarca el almacenamiento, la "
+"reparación, el reinicio y los perfiles de este ordenador sin iniciar "
+"sesión, y **Referencia** muestra el catálogo de modelos, las casillas, "
+"las fórmulas, las categorías, los portales y los métodos de inicio de "
+"sesión."
+
+#: ../../download.md:69
 msgid "Install channels"
 msgstr "Canales de instalación"
 
-#: ../../download.md:64
+#: ../../download.md:71
 msgid ""
 "PyPI is the primary channel. Homebrew and Scoop packages, for users "
 "without a Python toolchain, are not published yet. Each release is "
@@ -162,187 +182,98 @@ msgstr ""
 " Antes de publicar cada versión, se prueba su instalación en todas las "
 "plataformas que dice admitir."
 
-#: ../../download.md:75
+#: ../../download.md:82
 msgid "Platform"
 msgstr "Plataforma"
 
-#: ../../download.md:76
+#: ../../download.md:83
 msgid "Channel"
 msgstr "Canal"
 
-#: ../../download.md:77
+#: ../../download.md:84
 msgid "Where it comes from"
 msgstr "De dónde procede"
 
-#: ../../download.md:78
+#: ../../download.md:85
 msgid "Any platform with Python 3.13+"
 msgstr "Cualquier plataforma con Python 3.13+"
 
-#: ../../download.md:79
+#: ../../download.md:86
 msgid "Python package"
 msgstr "Paquete de Python"
 
-#: ../../download.md:80
+#: ../../download.md:87
 msgid "PyPI listing"
 msgstr "Ficha de PyPI"
 
-#: ../../download.md:81
+#: ../../download.md:88
 msgid "macOS (Apple silicon), Linux (x86-64 and arm64)"
 msgstr "macOS (Apple silicon), Linux (x86-64 y arm64)"
 
-#: ../../download.md:82
+#: ../../download.md:89
 msgid "Homebrew formula"
 msgstr "Fórmula de Homebrew"
 
-#: ../../download.md:83
+#: ../../download.md:90
 msgid "Homebrew tap"
 msgstr "Repositorio de Homebrew"
 
-#: ../../download.md:84
+#: ../../download.md:91
 msgid "Windows (x86-64)"
 msgstr "Windows (x86-64)"
 
-#: ../../download.md:85
+#: ../../download.md:92
 msgid "Scoop package"
 msgstr "Paquete de Scoop"
 
-#: ../../download.md:86
+#: ../../download.md:93
 msgid "Scoop bucket"
 msgstr "Bucket de Scoop"
 
-#: ../../download.md:89
+#: ../../download.md:96
 msgid "Per-channel install paths:"
 msgstr "Vías de instalación por canal:"
 
-#: ../../download.md:91
+#: ../../download.md:98
 msgid "**Python package**: Any platform with Python 3.13+"
 msgstr "**Paquete de Python**: Cualquier plataforma con Python 3.13+"
 
-#: ../../download.md:99
+#: ../../download.md:106
 msgid "**Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)"
 msgstr "**Fórmula de Homebrew**: macOS (Apple silicon), Linux (x86-64 y arm64)"
 
-#: ../../download.md:106
+#: ../../download.md:113
 msgid "**Scoop package**: Windows (x86-64)"
 msgstr "**Paquete de Scoop**: Windows (x86-64)"
 
-#: ../../download.md:116
+#: ../../download.md:123
 msgid "Each release's notes in [Updates](updates.md) name what changed."
 msgstr ""
 "Las notas de cada versión en [Actualizaciones](updates.md) indican qué ha"
 " cambiado."
 
-#: ../../download.md:118
+#: ../../download.md:125
 msgid "After you install"
 msgstr "Después de instalar"
 
-#: ../../download.md:124
+#: ../../download.md:131
 msgid "Quickstart"
 msgstr "Guía rápida"
 
-#: ../../download.md:129
+#: ../../download.md:136
 msgid "Take the shortest path from an empty profile to an exported modelo file."
 msgstr ""
 "Toma el camino más corto desde un perfil vacío hasta un fichero de modelo"
 " exportado."
 
-#: ../../download.md:132
+#: ../../download.md:139
 msgid "Connect an agent (MCP)"
 msgstr "Conectar un agente (MCP)"
 
-#: ../../download.md:137
+#: ../../download.md:144
 msgid ""
 "Let an AI assistant such as Claude drive Cadrumo with you, on your "
 "machine."
 msgstr ""
 "Permite que un asistente de IA como Claude maneje Cadrumo contigo en tu "
 "propia máquina."
-
-#~ msgid "Around 200 MB of free disk space."
-#~ msgstr "Alrededor de 200 MB de espacio libre en disco."
-
-#~ msgid ""
-#~ "No taxpayer data, AEAT credentials, or"
-#~ " online account is involved in the"
-#~ " install. Cadrumo stores everything locally"
-#~ " and encrypted; nothing about your "
-#~ "taxes leaves your machine."
-#~ msgstr ""
-#~ "En la instalación no interviene ningún"
-#~ " dato del contribuyente, credenciales de"
-#~ " la AEAT ni cuenta en línea. "
-#~ "Cadrumo lo guarda todo de forma "
-#~ "local y cifrada; nada sobre tus "
-#~ "impuestos sale de tu máquina."
-
-#~ msgid ""
-#~ "Pick the channel for your platform "
-#~ "from [Install channels](#install-channels) "
-#~ "below and run the command it "
-#~ "lists. PyPI is the primary channel "
-#~ "and installs the `aeat` command with "
-#~ "its bundled legal corpus into an "
-#~ "isolated environment; Homebrew and Scoop "
-#~ "install the same package for platforms"
-#~ " where a Python toolchain cannot be"
-#~ " assumed."
-#~ msgstr ""
-#~ "Elige abajo el canal de tu "
-#~ "plataforma en [Canales de instalación"
-#~ "](#install-channels) y ejecuta el comando"
-#~ " que indica. PyPI es el canal "
-#~ "principal e instala el comando `aeat`"
-#~ " con su corpus jurídico incluido en"
-#~ " un entorno aislado; Homebrew y Scoop"
-#~ " instalan el mismo paquete en "
-#~ "plataformas en las que no se puede"
-#~ " dar por supuesto un conjunto de "
-#~ "herramientas de Python."
-
-#~ msgid ""
-#~ "PyPI is the primary channel; Homebrew"
-#~ " and Scoop install the same package"
-#~ " for users without a Python "
-#~ "toolchain. Each release is install-"
-#~ "tested on every platform it claims "
-#~ "before it is published."
-#~ msgstr ""
-#~ "PyPI es el canal principal; Homebrew "
-#~ "y Scoop instalan el mismo paquete "
-#~ "para quienes no disponen de un "
-#~ "conjunto de herramientas de Python. Cada"
-#~ " versión se prueba durante la "
-#~ "instalación en todas las plataformas que"
-#~ " declara antes de publicarla."
-
-#~ msgid "Start the full-screen workbench separately when that suits the task:"
-#~ msgstr ""
-#~ "Inicia por separado el entorno de "
-#~ "trabajo a pantalla completa cuando la"
-#~ " tarea lo requiera:"
-
-#~ msgid ""
-#~ "The channel table is generated from "
-#~ "the shipped channel inventory, so the"
-#~ " commands there are the ones this "
-#~ "release actually publishes."
-#~ msgstr ""
-#~ "La tabla de canales se genera a"
-#~ " partir del inventario de canales "
-#~ "distribuido, por lo que los comandos "
-#~ "que aparecen en ella son los que"
-#~ " esta versión publica realmente."
-
-#~ msgid ""
-#~ "The command starts the independent "
-#~ "workbench; its navigation and availability "
-#~ "are owned inside that interface. Both"
-#~ " entrypoints use the same local "
-#~ "records."
-#~ msgstr ""
-#~ "El comando inicia el entorno de "
-#~ "trabajo independiente; esa interfaz es "
-#~ "la que gestiona su navegación y "
-#~ "disponibilidad. Ambos puntos de entrada "
-#~ "utilizan los mismos registros locales."
-

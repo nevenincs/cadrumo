@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#broad-test-failure-repair'
 date: '2026-10-07'
-modified: '2026-10-07'
+modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:36857ab836272e4d59ffd8edff4afa47daa5298906c1ce72e70228c94a197fbe'
+body_hash: 'sha256:7d8ecb123604949446924c43b30af814553f5b5febbad604eabffd4ab873f827'
 related:
   - "[[2026-06-28-product-packaging-adr]]"
   - "[[2026-07-02-arch-remediation-data-budget-adr]]"
@@ -50,3 +50,7 @@ Release tooling gains one mandatory wheel and sdist. Existing installations upgr
 ## Approval (2026-10-07)
 
 The user explicitly approved the third mandatory companion while preserving all files, paths, exact-version pins and existing caps. This accepts the concrete proposal and its scoped amendments to the prior accepted decisions.
+
+## Scoped amendment (2026-10-11): Windows physical locators
+
+The operator's explicit authorization to fix complete application packaging and failure-producing real installation acceptance authorizes the bounded corpus basename repair recorded in `2026-06-28-product-packaging-adr` under its 2026-10-11 amendment. That amendment is a sole scoped exception to this record's preservation of physical paths: new versioned cohorts may shorten affected corpus basenames and update all declared and derived locators coherently, preserving every source byte/hash, official URL, title, stable source identifier, resource namespace, directory partition and existing budget. The 2026-10-07 approval and original cohort remain history; no failed immutable cohort is overwritten or retrospectively accepted. Actual installed proof and actual-prefix pre-mutation validation remain required under `2026-10-07-application-distribution-windows-versioned-msi-adr` and `2026-07-15-distribution-installation-readiness-adr`.

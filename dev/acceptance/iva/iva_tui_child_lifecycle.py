@@ -37,7 +37,7 @@ from .iva_tui_scenario import _synthetic_rows, _write_synthetic_statement
 def _child_authority() -> AuthorityIdentity:
     """Read the isolated authority root installed by the shared child runner."""
     raw = os.environ.get("CADRUMO_AUTHORITY_ROOT")
-    if not raw:
+    if not (raw is not None and raw):
         raise InstalledTuiChildError("installed TUI child has no isolated authority root")
     try:
         return _authority_identity(Path(raw))
@@ -70,7 +70,7 @@ def _capture_child(
 
     from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
     from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
-    from cadrumo.entrypoints.tui.launcher import main
+    from cadrumo_runtime.host.frontend.tui.launcher import main
 
     with live_exchange_rate_composition(), profile_adapter_composition():
         asyncio.run(register_profile_through_installed_tui(profile_label=profile_label, passphrase=passphrase))
@@ -135,7 +135,7 @@ def _reopen_child(
 
     from textual.widgets import DataTable
 
-    from cadrumo.entrypoints.tui.launcher import main
+    from cadrumo_runtime.host.frontend.tui.launcher import main
 
     async def drive(pilot: Any) -> None:
         nonlocal observed, reopen_error, reopen_stage

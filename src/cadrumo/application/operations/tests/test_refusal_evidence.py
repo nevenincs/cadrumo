@@ -43,13 +43,13 @@ from ..persistence.events import OperationPhaseEvent
 from ..persistence.journal import OperationPersistedSnapshot
 from ..refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
 from ..registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationResultProjector,
     OperationSchemaBindingV1,
 )
+from ..subject_reference import OperationSubjectReferenceV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -130,6 +130,7 @@ def _definition(
     return OperationDefinition(
         definition_id="test.refusal.evidence",
         request_type=_RequestPayload,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=_PrivateRefusalDetail,
         executor_factory=OperationExecutorFactory(
             request_type=_RequestPayload,
@@ -140,7 +141,6 @@ def _definition(
         interaction_kinds=frozenset({OperationInteractionKind.INPUT}),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=refusal_detail_codes,
     )
 

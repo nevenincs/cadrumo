@@ -134,6 +134,9 @@
       "{}",
       "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\",\"pid\":4242}",
       "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":2,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1.0,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1e0,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":true,\"version\":\"0.5.1\"}",
       "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":0,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}",
       "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4294967296,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}",
       "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":0,\"schema_version\":1,\"version\":\"0.5.1\"}",
@@ -157,7 +160,6 @@
     ],
     "refused_by_manager_only": [
       "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"version\":\"0.5.1\"}",
-      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":true,\"version\":\"0.5.1\"}",
       "{\"admission\":\"native\",\"boot_id\":\"0F8FAD5B-D9CB-469F-A165-70867728950E\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}"
     ]
   }

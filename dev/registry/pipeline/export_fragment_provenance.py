@@ -199,7 +199,7 @@ class ExportFieldVerdict(_StrictModel):
     def _ruling_matches_outcome(self) -> ExportFieldVerdict:
         if self.outcome == "agrees" and self.ruling is not None:
             raise ValueError("an agreeing verdict carries no ruling")
-        if self.outcome == "adjudicated" and not self.ruling:
+        if self.outcome == "adjudicated" and not (self.ruling is not None and self.ruling):
             raise ValueError("an adjudicated verdict must name the ruling that explains it")
         return self
 
@@ -621,6 +621,8 @@ def export_fragment_provenance_manifest_json_bytes(manifest: ExportFragmentProve
             del derivation["semantic_entry"]["part"]
         if derivation["semantic_entry"]["required_with"] is None:
             del derivation["semantic_entry"]["required_with"]
+        if derivation["semantic_entry"]["requirement"] is None:
+            del derivation["semantic_entry"]["requirement"]
         if derivation["verdict"] is None:
             del derivation["verdict"]
     return canonical_json_bytes(payload)

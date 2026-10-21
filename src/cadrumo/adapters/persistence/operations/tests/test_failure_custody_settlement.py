@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import traceback
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -45,12 +44,12 @@ from cadrumo.application.operations.operation_definition import OperationDefinit
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationSchemaBindingV1,
 )
+from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.application.operations.tests.financial_operand_models import (
@@ -160,6 +159,7 @@ def _supervisor(
     definition = OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=_Request,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=None,
         executor_factory=OperationExecutorFactory(
             request_type=_Request,
@@ -170,7 +170,6 @@ def _supervisor(
         interaction_kinds=frozenset({OperationInteractionKind.INPUT}),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
         transient_financial_operand=_DECLARATION,
         public_error_detail=False,
     )
@@ -238,13 +237,17 @@ def test_executor_failure_receipt_waits_for_financial_operand_release(tmp_path: 
             )
             executor.requirement = (await supervisor.inspect(operation_id)).financial_requirement
             await supervisor.start(operation_id)
-            await asyncio.wait_for(custody.release_persisted.wait(), timeout=5)
+            # Whichever comes first decides: the custody release, or a settlement that skipped it.
+            released = asyncio.ensure_future(custody.release_persisted.wait())
+            settled = asyncio.ensure_future(supervisor.settled(operation_id))
+            await asyncio.wait({released, settled}, return_when=asyncio.FIRST_COMPLETED)
+            assert released.done() and not settled.done(), "the operation settled before its custody release"
             before_cleanup_returns = await supervisor.inspect(operation_id)
             requirement = executor.requirement
             assert requirement is not None
             checkpoint_during_cleanup = await custody.read(requirement.handoff_id)
             custody.allow_buffer_release.set()
-            terminal = await supervisor.settled(operation_id)
+            terminal = await settled
             return before_cleanup_returns, terminal, checkpoint_during_cleanup
 
         before_cleanup_returns, terminal, checkpoint_during_cleanup = asyncio.run(run())
@@ -356,7 +359,8 @@ def test_executor_failure_log_record_carries_the_raising_frame(
         and correlation in record.getMessage()
     ]
     assert len(records) == 1
-    exc_info = records[0].exc_info
-    assert exc_info is not None
-    frames = [(frame.f_code.co_filename, frame.f_code.co_name) for frame, _ in traceback.walk_tb(exc_info[2])]
-    assert (__file__, "execute") == frames[-1]
+    # The exception itself may carry private operands, so the record holds no traceback or message of it,
+    # only where it was raised: this module's executor.
+    assert records[0].exc_info is None
+    message = records[0].getMessage()
+    assert f"raising_frame={__file__}:" in message and message.endswith(":execute")

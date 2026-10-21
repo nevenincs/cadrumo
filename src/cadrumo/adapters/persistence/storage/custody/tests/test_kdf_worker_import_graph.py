@@ -20,11 +20,14 @@ would fail for reasons that have nothing to do with the import graph.
 from __future__ import annotations
 
 import importlib
+import json
 import sys
 from importlib.util import resolve_name
+from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody._kdf_process import worker_environment, worker_interpreter
 from cadrumo.tests.audited_process import run_audited_process
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -58,6 +61,108 @@ _FORBIDDEN_IN_CHILD: tuple[str, ...] = (
 )
 
 
+_ALLOWED_FIRST_PARTY_IN_CHILD: tuple[str, ...] = (
+    # Inert package initialisers on the ``-m`` path.
+    "cadrumo",
+    "cadrumo.adapters",
+    "cadrumo.adapters.persistence",
+    "cadrumo.adapters.persistence.storage",
+    "cadrumo.adapters.persistence.storage.crypto",
+    "cadrumo.adapters.persistence.storage.custody",
+    "cadrumo.core",
+    # The child itself and its stdlib-only custody leaves.
+    "cadrumo.adapters.persistence.storage.custody._kdf_worker",
+    "cadrumo.adapters.persistence.storage.custody._kdf_attestation",
+    "cadrumo.adapters.persistence.storage.custody._kdf_codec",
+    "cadrumo.adapters.persistence.storage.custody._kdf_operations",
+    "cadrumo.adapters.persistence.storage.custody._kdf_records",
+    "cadrumo.adapters.persistence.storage.custody._kdf_worker_limits",
+    "cadrumo.adapters.persistence.storage.custody._profile_password_codec",
+    "cadrumo.adapters.persistence.storage.custody._recovery_secret_codec",
+    "cadrumo.adapters.persistence.storage._kdf_salt",
+    "cadrumo.adapters.persistence.storage.crypto.aes_gcm",
+    "cadrumo.core.base64_codec",
+    "cadrumo.core.credentials",
+    "cadrumo.core.descriptor_write",
+    "cadrumo.core.hashing",
+)
+"""Every first-party module the supervised child may import, and no other.
+
+An allow-list rather than a deny-list: the deny-list above names subsystems
+that once leaked in, and cannot see the next one. Any new first-party edge
+into the child must be added here deliberately, where the review sees it.
+"""
+
+_FORBIDDEN_CLOSURES_IN_CHILD: tuple[str, ...] = ("argon2", "argparse", "ctypes", "pathlib")
+"""Closures the child once paid on every launch without using.
+
+``argon2`` is the high-level package: the child calls its C binding,
+``_argon2_cffi_bindings``, directly.
+"""
+
+
+def _launched_child_modules(neutral_root: Path, prelude: str = "") -> frozenset[str]:
+    """Import the worker with the interpreter, flags and environment the supervisor launches it with."""
+    neutral_root.mkdir(parents=True, exist_ok=True)
+    source = f"{prelude}\nimport {_WORKER_MODULE}\nimport json, sys\nprint(json.dumps(sorted(sys.modules)))"
+    environment = worker_environment(neutral_root=neutral_root)
+    if sys.platform != "win32":
+        # The POSIX supervisor runs this environment's own interpreter, which
+        # resolves its import roots itself; the probe needs them explicitly.
+        environment["PYTHONPATH"] = ":".join(entry for entry in sys.path if entry)
+    completed = run_audited_process(
+        [*worker_interpreter(), "-c", source],
+        cwd=neutral_root,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    names = json.loads(completed.stdout)
+    assert isinstance(names, list), "the worker child must print a JSON list of module names"
+    assert all(isinstance(name, str) for name in names), "module names must be strings"
+    return frozenset(str(name) for name in names)
+
+
+def _first_party(modules: frozenset[str]) -> frozenset[str]:
+    return frozenset(name for name in modules if name == "cadrumo" or name.startswith("cadrumo."))
+
+
+def test_kdf_worker_child_imports_only_its_allowlisted_first_party_modules(tmp_path: Path) -> None:
+    """The launched child's first-party module table is exactly the allow-list."""
+    modules = _launched_child_modules(tmp_path / "neutral")
+
+    assert _WORKER_MODULE in modules, f"the child did not import {_WORKER_MODULE}; the probe observed nothing"
+    unexpected = sorted(_first_party(modules).difference(_ALLOWED_FIRST_PARTY_IN_CHILD))
+    assert unexpected == [], (
+        f"the supervised key-derivation child imported {unexpected}, outside its allow-list. Every "
+        "wrap and unwrap launches this interpreter, so each new edge is paid on the sign-in path."
+    )
+    unused = sorted(name for name in _FORBIDDEN_CLOSURES_IN_CHILD if name in modules)
+    assert unused == [], f"the supervised key-derivation child imported {unused}, which it does not use"
+    assert "_argon2_cffi_bindings" in modules, "the child must derive through the Argon2 C binding"
+    if sys.platform == "win32":
+        assert "site" not in modules, "the Windows child must start without site processing"
+
+
+def test_the_allowlist_probe_bites_on_a_new_first_party_edge(tmp_path: Path) -> None:
+    """A first-party module imported ahead of the worker is reported as outside the allow-list."""
+    modules = _launched_child_modules(tmp_path / "neutral", prelude="import cadrumo.core.time.utc")
+
+    assert "cadrumo.core.time.utc" in _first_party(modules).difference(_ALLOWED_FIRST_PARTY_IN_CHILD)
+
+
+def test_every_allowlisted_module_still_resolves() -> None:
+    """A renamed leaf must not leave a stale allow-list entry that silently admits a successor name."""
+    unresolvable = []
+    for name in _ALLOWED_FIRST_PARTY_IN_CHILD:
+        try:
+            importlib.import_module(name)
+        except ImportError:
+            unresolvable.append(name)
+    assert sorted(unresolvable) == []
+
+
 def _resolved_target(target: str) -> str:
     return resolve_name(target, __package__) if target.startswith(".") else target
 
@@ -76,8 +181,6 @@ def _child_modules(prelude: str = "") -> frozenset[str]:
         text=True,
         check=True,
     )
-    import json
-
     # Validated rather than cast: the child prints its own module table, so a
     # child that failed differently could print anything, and a bare cast would
     # let that reach the set comparison as a silently empty or wrong graph.

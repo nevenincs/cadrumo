@@ -60,7 +60,7 @@ from ...domain.filing.schema import (
 from ...domain.identifiers import ModeloIdentifier
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.justificante.schema import Justificante
@@ -573,7 +573,7 @@ def _llm_request() -> LLMRequest:
 def _llm_response(label: str) -> LLMResponse:
     return LLMResponse(
         text=f"runtime attached response {label}",
-        provider=LLMProvider.OPENAI,
+        provider=LLMProvider.AGENT,
         model="gpt-test",
         input_tokens=10,
         output_tokens=5,

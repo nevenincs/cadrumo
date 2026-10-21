@@ -322,7 +322,7 @@ fn assert_no_pty_bytes(diagnostics: &Diagnostics) {
                 && !chunk.bytes.windows(4).any(|w| w == b"L000")),
         "PTY bytes reached the diagnostics capture"
     );
-    assert!(snapshot.processes.iter().all(|p| p.terminal_bytes == 0));
+    assert!(snapshot.processes.iter().any(|p| p.terminal_bytes > 0));
 }
 
 #[tokio::test]
@@ -382,9 +382,10 @@ async fn python_kind_is_a_repl_in_workspace_with_the_pinned_storage_root() {
 }
 
 #[tokio::test]
-async fn tui_kind_draws_the_alternate_screen_from_the_storage_root() {
+async fn tui_kind_draws_the_alternate_screen_from_the_workspace_with_pinned_storage() {
     let launch = launch().await;
     let storage = launch.working_directory.clone();
+    let workspace = launch.console_workspace.clone();
     let state = TerminalState::new(launch);
     let (sink, frames) = collector();
     let id = state
@@ -419,7 +420,7 @@ async fn tui_kind_draws_the_alternate_screen_from_the_storage_root() {
     let probe = Session::start(program, 1000, 40, sink, state.launch.diagnostics.clone()).unwrap();
     let mut screen = Screen::new(frames, &probe);
     assert_eq!(screen.exit(WAIT), Some(0));
-    assert!(same_path(Path::new(&screen.value("CWD=")), &storage));
+    assert!(same_path(Path::new(&screen.value("CWD=")), &workspace));
     assert!(same_path(Path::new(&screen.value("ROOT=")), &storage));
 }
 
@@ -970,7 +971,7 @@ mod relocated {
     use std::collections::BTreeMap;
 
     // Reports the storage root this process resolves through both owners.
-    const PROBE: &str = "import json, os, sys; from cadrumo.core.config import load_settings; from cadrumo.core.storage_environment import configured_storage_root; open(sys.argv[1], 'w', encoding='utf-8').write(json.dumps([str(configured_storage_root()), str(load_settings().cadrumo_local_storage_root), os.getcwd()]))";
+    const PROBE: &str = "import json, os, sys; from cadrumo.core.config import load_settings; from cadrumo.core.storage_environment import StorageMode, configured_storage_root, storage_mode; assert storage_mode().mode is StorageMode.INSTALLED; open(sys.argv[1], 'w', encoding='utf-8').write(json.dumps([str(configured_storage_root()), str(load_settings().cadrumo_local_storage_root), os.getcwd()]))";
 
     struct Scratch(PathBuf);
     impl Drop for Scratch {
@@ -985,9 +986,9 @@ mod relocated {
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap()
     }
 
-    /// A fresh directory outside any project, so the package resolves in
-    /// installed mode.
-    fn outside_project(label: &str) -> Scratch {
+    /// A fresh directory under the runner's configured temporary root.
+    /// The probe verifies installed mode from the imported package itself.
+    fn relocation_scratch(label: &str) -> Scratch {
         let base = std::env::temp_dir().join(format!(
             "cadrumo-{label}-{}-{}",
             std::process::id(),
@@ -996,15 +997,12 @@ mod relocated {
                 .unwrap()
                 .as_nanos()
         ));
-        assert!(
-            !inside_project(&base),
-            "the temporary directory must lie outside any project for an installed-mode layout"
-        );
         Scratch(base)
     }
 
     fn settings_storage_names() -> Vec<String> {
-        serde_json::from_value(contract()["storage_environment_allowlist"].clone()).unwrap()
+        serde_json::from_value(contract()["application_environment"]["location_names"].clone())
+            .unwrap()
     }
 
     /// The canonical root override, which wins in every mode.
@@ -1014,11 +1012,6 @@ mod relocated {
 
     fn storage_name(key: &OsString, names: &[String]) -> bool {
         names.contains(&key.to_string_lossy().to_ascii_uppercase())
-    }
-
-    fn inside_project(path: &Path) -> bool {
-        path.ancestors()
-            .any(|ancestor| ancestor.join("pyproject.toml").is_file())
     }
 
     // Hard links keep relocation cheap on one volume; copies cover the rest.
@@ -1092,7 +1085,7 @@ mod relocated {
 
     #[tokio::test]
     async fn every_child_kind_resolves_the_explicit_storage_root_from_any_directory() {
-        let scratch = outside_project("relocated");
+        let scratch = relocation_scratch("relocated");
         let package_root = scratch.0.join("package");
         relocate(&package(), &package_root);
         let explicit = scratch.0.join("storage");
@@ -1200,16 +1193,13 @@ mod relocated {
         }
     }
 
-    /// The storage member the generated contract declares for the webview
-    /// profile.
-    fn webview_member() -> serde_json::Value {
-        contract()["locations"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .find(|location| location["category"] == "desktop-webview")
-            .cloned()
-            .expect("the contract declares the desktop webview member")
+    /// The webview profile's place beneath the storage root, as the package
+    /// declares it for the desktop.
+    fn webview_location() -> String {
+        contract()["desktop_defaults"]["webview"]
+            .as_str()
+            .expect("the contract declares the desktop webview location")
+            .to_owned()
     }
 
     /// Resolves a launch with the parent's storage variables replaced by `pins`.
@@ -1246,25 +1236,21 @@ mod relocated {
     /// member beneath the explicit root, not under the development tool cache,
     /// and an absolute override of that member is honoured.
     #[tokio::test]
-    async fn the_webview_profile_and_window_state_live_in_the_declared_member() {
+    async fn the_webview_profile_and_window_state_live_at_the_declared_location() {
         use crate::shell::window_state::{self, Placement};
 
-        let scratch = outside_project("webview");
+        let scratch = relocation_scratch("webview");
         let package_root = scratch.0.join("package");
         relocate(&package(), &package_root);
         let explicit = scratch.0.join("storage");
         let launch_directory = scratch.0.join("launch");
         fs::create_dir_all(&launch_directory).unwrap();
-        let member = webview_member();
+        let location = webview_location();
         let root = root_variable();
 
         let launch = resolve_pinned(&package_root, &launch_directory, &[(&root, &explicit)]).await;
         assert_eq!(launch.working_directory, explicit, "projected storage root");
-        assert_eq!(
-            launch.webview,
-            explicit.join(member["subpath"].as_str().unwrap()),
-            "webview profile"
-        );
+        assert_eq!(launch.webview, explicit.join(&location), "webview profile");
 
         // The window state round-trips through the record the shell opens there.
         let record = launch.webview.join(window_state::FILE);
@@ -1288,21 +1274,19 @@ mod relocated {
             [window_state::FILE]
         );
 
-        // The member is declared operator-overridable, so its absolute
-        // override moves the profile while the storage root stays put.
-        assert_eq!(member["override_policy"], "operator_overridable");
-        let variable = member["variable"].as_str().unwrap();
-        let elsewhere = scratch.0.join("elsewhere").join("profile");
-        let overridden = resolve_pinned(
-            &package_root,
-            &launch_directory,
-            &[(&root, &explicit), (variable, &elsewhere)],
-        )
-        .await;
+        // The webview is the package's own component: it follows the pinned
+        // storage root and no operator override relocates it on its own.
+        let elsewhere = scratch.0.join("elsewhere");
+        let relocated =
+            resolve_pinned(&package_root, &launch_directory, &[(&root, &elsewhere)]).await;
         assert_eq!(
-            overridden.working_directory, explicit,
+            relocated.working_directory, elsewhere,
             "projected storage root"
         );
-        assert_eq!(overridden.webview, elsewhere, "overridden webview profile");
+        assert_eq!(
+            relocated.webview,
+            elsewhere.join(&location),
+            "relocated webview profile"
+        );
     }
 }

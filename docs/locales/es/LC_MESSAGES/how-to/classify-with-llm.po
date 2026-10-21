@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-10-19 12:17+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -638,49 +638,49 @@ msgstr ""
 #: ../../how-to/classify-with-llm.md:256
 msgid ""
 "One command can send a document off your machine: `aeat app ledger "
-"evidence extract --off-host-provider <provider>`. It reads invoice "
-"fields, not classifications, and it is off by default. It runs only when "
-"the deployment permits off-host reads, the profile's "
-"`cloud_evidence_upload` capability is on, and you pass `--acknowledge-"
-"off-host` for that one read. Gestor deployments never allow it. Reading "
-"with the Anthropic API also needs the `anthropic` extra. Treat the "
-"document as taxpayer data before you use it. The settings that govern it "
-"are in the [environment overrides reference](../reference/environment-"
-"overrides.md)."
+"evidence extract --off-host-provider AGENT`. It reads invoice fields, not"
+" classifications, and it is off by default. The agent service reads the "
+"document with a provider you set up for the signed-in profile, and `aeat`"
+" holds no model key for it. It runs only when the deployment permits off-"
+"host reads, the profile's `cloud_evidence_upload` capability is on, and "
+"you pass `--acknowledge-off-host` for that one read. Gestor deployments "
+"never allow it. Treat the document as taxpayer data before you use it. "
+"The settings that govern it are in the [environment overrides "
+"reference](../reference/environment-overrides.md)."
 msgstr ""
 "Un comando puede enviar un documento fuera de tu equipo: `aeat app ledger"
-" evidence extract --off-host-provider <provider>`. Lee campos de la "
-"factura, no clasificaciones, y está desactivado de forma predeterminada. "
-"Solo se ejecuta cuando el despliegue permite lecturas fuera del equipo, "
-"la capacidad `cloud_evidence_upload` del perfil está activada y pasas "
-"`--acknowledge-off-host` para esa lectura concreta. Los despliegues de "
-"gestor nunca lo permiten. Leer con la API de Anthropic necesita además el"
-" extra `anthropic`. Trata el documento como datos del contribuyente antes"
-" de usarlo. Los ajustes que lo regulan están en la [referencia de "
-"anulaciones por variables de entorno](../reference/environment-"
-"overrides.md)."
+" evidence extract --off-host-provider AGENT`. Lee campos de la factura, "
+"no clasificaciones, y está desactivado de forma predeterminada. El "
+"servicio del agente lee el documento con un proveedor que hayas "
+"configurado para el perfil con sesión iniciada, y `aeat` no guarda "
+"ninguna clave de modelo para ello. Solo se ejecuta cuando el despliegue "
+"permite lecturas fuera del equipo, la capacidad `cloud_evidence_upload` "
+"del perfil está activada y pasas `--acknowledge-off-host` para esa "
+"lectura concreta. Los despliegues de gestor nunca lo permiten. Trata el "
+"documento como datos del contribuyente antes de usarlo. Los ajustes que "
+"lo regulan están en la [referencia de anulaciones por variables de "
+"entorno](../reference/environment-overrides.md)."
 
-#: ../../how-to/classify-with-llm.md:266
+#: ../../how-to/classify-with-llm.md:267
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/classify-with-llm.md:268
+#: ../../how-to/classify-with-llm.md:269
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Clasificar movimientos](classify-transactions.md)"
 
-#: ../../how-to/classify-with-llm.md:269
+#: ../../how-to/classify-with-llm.md:270
 msgid "[Attach invoices and receipts to transactions](ledger-evidence.md)"
 msgstr "[Adjuntar facturas y recibos a los movimientos](ledger-evidence.md)"
 
-#: ../../how-to/classify-with-llm.md:270
+#: ../../how-to/classify-with-llm.md:271
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importar y gestionar movimientos](import-bank-statements.md)"
 
-#: ../../how-to/classify-with-llm.md:271
+#: ../../how-to/classify-with-llm.md:272
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisar y aportar las entradas de cálculo](review-calculation-values.md)"
 
-#: ../../how-to/classify-with-llm.md:272
+#: ../../how-to/classify-with-llm.md:273
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"
-

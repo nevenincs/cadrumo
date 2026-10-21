@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from types import SimpleNamespace
 from typing import cast
@@ -33,7 +33,7 @@ class _Recorder:
         self.result: object | None = None
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         assert not self.active
         self.active = True
         self.timeline.append(("enter", asyncio.current_task()))
@@ -85,7 +85,7 @@ def _factory(
         hooks.append((before_consent_save, after_consent_save))
 
         def mint(provider: LLMProvider, acknowledged: bool, surface: str, content_sha256: str) -> EvidenceConsentProof:
-            assert provider is LLMProvider.ANTHROPIC
+            assert provider is LLMProvider.AGENT
             assert acknowledged and surface == "runtime:ledger.evidence.extract"
             assert content_sha256 == _SOURCE
             recorder.timeline.append(("mint", content_sha256))
@@ -110,7 +110,7 @@ def _request(*, off_host: bool) -> OperationRequest[extract_operation.LedgerEvid
         profile_id=_PROFILE,
         evidence_id="e" * 16 if off_host else None,
         attachment_id=None if off_host else _SOURCE,
-        off_host_provider=LLMProvider.ANTHROPIC if off_host else None,
+        off_host_provider=LLMProvider.AGENT if off_host else None,
         acknowledge_off_host=off_host,
     )
     return OperationRequest[extract_operation.LedgerEvidenceExtractRequest](
@@ -171,7 +171,7 @@ async def test_off_host_executor_reports_the_actual_append_effect(
     )
 
     def read(**kwargs: object) -> InvoiceDraft:
-        assert kwargs["off_host_provider"] is LLMProvider.ANTHROPIC
+        assert kwargs["off_host_provider"] is LLMProvider.AGENT
         assert cast(EvidenceConsentProof, kwargs["consent_token"]).evidence_content_address == _SOURCE
         before, after = hooks[0]
         assert before is not None and after is not None

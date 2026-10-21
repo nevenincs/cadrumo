@@ -77,7 +77,7 @@ def _parse_extracted_declaracion_values(
         )
     except DeclaracionParseError as exc:
         detail = exc.translated_message or str(exc) or type(exc).__name__
-        context = f" (context={exc.context})" if exc.context else ""
+        context = f" (context={exc.context})" if (exc.context is not None and exc.context) else ""
         pytest.fail(f"PARSER-GAP [{label}]: parse_declaracion raised.\n  error: {detail}{context}")
 
     return {value.casilla_id: value.printed_value for value in filing.values}

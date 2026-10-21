@@ -398,7 +398,7 @@ def _project_declarations(declarations: tuple[HomeDeclarationResume, ...]) -> tu
         sorted(
             declarations,
             key=lambda unit: (
-                str(unit.modelo),
+                unit.modelo,
                 unit.filing_year,
                 unit.period.registry_token,
                 unit.work_unit_id,

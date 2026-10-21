@@ -1,21 +1,23 @@
 //! What the manager launches and how: the packaged single-process runtime host.
 //!
-//! The target is `P/bin/cadrumo-runtime` of a versioned package root `P`, whose interpreter
-//! stays `P/python`. A development launcher that relaunches itself would leave the stop
-//! signal with the wrong process, so the manager never launches one. The fixture test mode
-//! may name a fixture image instead; release builds refuse that mode.
+//! The target is the Cadrumo binary `P/cadrumo` of a versioned package root `P` in its runtime
+//! role, so the runtime is the same image as the window and Windows groups them as one
+//! application; its interpreter stays `P/python`. A development launcher that relaunches
+//! itself would leave the stop signal with the wrong process, so the manager never launches
+//! one. The fixture test mode may name a fixture image instead; release builds refuse that
+//! mode.
 
 use super::environment::{ManagedLocations, runtime_environment};
 use super::json::is_hex64;
-use crate::contract::NATIVE;
+use cadrumo_application::role::Role;
 use std::env;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::OnceLock;
 
-/// File stem of the packaged runtime host among the declared console entrypoints.
-pub const RUNTIME_IMAGE_STEM: &str = "cadrumo-runtime";
+/// File stem of the Cadrumo binary at the package root, which runs the runtime role.
+pub const RUNTIME_IMAGE_STEM: &str = "cadrumo";
 
 /// `CREATE_NO_WINDOW`: the runtime gets a console of its own, hidden, which the stop signal
 /// targets. `CREATE_NEW_PROCESS_GROUP` is never used; it would ignore Ctrl+C.
@@ -40,6 +42,8 @@ pub struct LaunchTarget {
     storage_identity: String,
     expected_version: String,
     package_root: Option<PathBuf>,
+    /// The role the image runs as; a fixture image has none.
+    role: Option<Role>,
     environment: OnceLock<Vec<(std::ffi::OsString, std::ffi::OsString)>>,
 }
 
@@ -53,6 +57,7 @@ impl std::fmt::Debug for LaunchTarget {
             .field("storage_identity", &self.storage_identity)
             .field("expected_version", &self.expected_version)
             .field("package_root", &self.package_root)
+            .field("role", &self.role)
             .finish_non_exhaustive()
     }
 }
@@ -71,6 +76,26 @@ impl LaunchTarget {
             expected_version,
         )?;
         target.package_root = Some(locations.package_root().to_path_buf());
+        target.role = Some(Role::Runtime);
+        Ok(target)
+    }
+
+    /// The runtime role of a real package for the fixture test mode, which keeps the
+    /// isolated root and admission of a fixture.
+    #[cfg(any(test, feature = "fixture-test-mode"))]
+    pub fn packaged_fixture(
+        package_root: &Path,
+        storage_root: PathBuf,
+        storage_identity: String,
+        expected_version: String,
+    ) -> Result<Self, LaunchRefusal> {
+        let mut target = Self::new(
+            runtime_image(package_root),
+            storage_root,
+            storage_identity,
+            expected_version,
+        )?;
+        target.role = Some(Role::Runtime);
         Ok(target)
     }
 
@@ -103,6 +128,7 @@ impl LaunchTarget {
             storage_identity,
             expected_version: String::new(),
             package_root: None,
+            role: None,
             environment: OnceLock::new(),
         };
         target.set_expected_version(expected_version)?;
@@ -135,6 +161,14 @@ impl LaunchTarget {
         &self.expected_version
     }
 
+    /// The arguments before the runtime's own: the role the image runs as.
+    pub fn role_arguments(&self) -> &'static [&'static str] {
+        match self.role {
+            Some(role) => role.arguments(),
+            None => &[],
+        }
+    }
+
     /// The runtime's arguments, in order.
     pub fn arguments(&self) -> [&std::ffi::OsStr; 7] {
         [
@@ -152,6 +186,7 @@ impl LaunchTarget {
     pub(crate) fn spawn(&self) -> io::Result<Child> {
         let mut command = Command::new(&self.image);
         command
+            .args(self.role_arguments())
             .args(self.arguments())
             .env_clear()
             .envs(
@@ -173,7 +208,7 @@ impl LaunchTarget {
             command.creation_flags(CREATE_NO_WINDOW);
             // No process may start while this process is attached to a runtime console.
             let _quiescent = super::windows::console_quiescent();
-            command.spawn()
+            cadrumo_application::process::creation::run(|| command.spawn())
         }
         #[cfg(unix)]
         {
@@ -203,10 +238,9 @@ impl LaunchTarget {
     }
 }
 
-/// The packaged runtime host below a versioned package root.
+/// The Cadrumo binary at a versioned package root, which runs the runtime role.
 pub fn runtime_image(package_root: &Path) -> PathBuf {
     package_root
-        .join(NATIVE)
         .join(RUNTIME_IMAGE_STEM)
         .with_extension(env::consts::EXE_EXTENSION)
 }
@@ -214,7 +248,7 @@ pub fn runtime_image(package_root: &Path) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::contract::ENTRYPOINT_FILES;
+    use crate::contract::INSTALLATION_CONTRACT;
 
     fn absolute(path: &str) -> PathBuf {
         if cfg!(windows) {
@@ -225,19 +259,39 @@ mod tests {
     }
 
     #[test]
-    fn the_runtime_image_is_a_declared_entrypoint_in_the_native_directory() {
+    fn the_runtime_image_is_the_desktop_application_image_at_the_package_root() {
         let image = runtime_image(&absolute("cadrumo"));
-        assert_eq!(
-            image.parent(),
-            Some(absolute("cadrumo").join(NATIVE).as_path())
-        );
-        if cfg!(windows) {
-            let name = image.file_name().and_then(|name| name.to_str());
-            assert!(
-                ENTRYPOINT_FILES.iter().any(|file| Some(*file) == name),
-                "{image:?}"
-            );
-        }
+        assert_eq!(image.parent(), Some(absolute("cadrumo").as_path()));
+        let contract: serde_json::Value = serde_json::from_str(INSTALLATION_CONTRACT).unwrap();
+        let desktop = contract["layout"]["application_images"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|image| image["desktop"] == true)
+            .expect("the layout declares the desktop image");
+        assert_eq!(desktop["name"], RUNTIME_IMAGE_STEM);
+        assert_eq!(desktop["placement"], ".");
+    }
+
+    #[test]
+    fn only_a_packaged_runtime_runs_as_the_runtime_role() {
+        let packaged = LaunchTarget::packaged_fixture(
+            &absolute("cadrumo"),
+            absolute("data"),
+            "a".repeat(64),
+            "1.2.3".into(),
+        )
+        .unwrap();
+        assert_eq!(packaged.image(), runtime_image(&absolute("cadrumo")));
+        assert_eq!(packaged.role_arguments(), ["--role", "runtime"]);
+        let fixture = LaunchTarget::fixture(
+            absolute("fixture"),
+            absolute("data"),
+            "a".repeat(64),
+            "1.2.3".into(),
+        )
+        .unwrap();
+        assert!(fixture.role_arguments().is_empty());
     }
 
     #[test]
@@ -347,6 +401,7 @@ mod tests {
                 (ROOT_VARIABLE.into(), "discard-this-root".into()),
                 ("PYTHONPATH".into(), "discard-this-secret".into()),
                 ("PATH".into(), "initial-os-path".into()),
+                ("SYSTEMROOT".into(), r"C:\Windows".into()),
             ])
             .unwrap()
             .clone();
@@ -357,7 +412,12 @@ mod tests {
                 .any(|(_, value)| value == "discard-this-root" || value == "discard-this-secret")
         );
         for name in HOST_INHERITED_ENV {
-            assert!(first.contains(&(name.into(), package.join(AUTHORITY).into_os_string())));
+            assert!(first.iter().any(|(key, value)| {
+                key == name
+                    && Path::new(value)
+                        .components()
+                        .eq(package.join(AUTHORITY).components())
+            }));
         }
         let second = target
             .prepare_environment([("PATH".into(), "later-os-path".into())])

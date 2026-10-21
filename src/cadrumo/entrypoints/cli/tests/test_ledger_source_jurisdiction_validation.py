@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from ._ledger_validation_fixtures import _open_bucket_session, bucket
-from ._ledger_validation_support import _invoke, _set_profile_axis
+from .scenario_support import _invoke, _set_profile_axis
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

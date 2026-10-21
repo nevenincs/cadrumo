@@ -33,7 +33,7 @@ def test_llm_request_round_trip() -> None:
         temperature=0.0,
         language="es",
         cache_key="translation_v1",
-        provider_override=LLMProvider.ANTHROPIC,
+        provider_override=LLMProvider.AGENT,
         model_override="claude-sonnet-4-6",
     )
     assert LLMRequest.model_validate_json(request.model_dump_json()) == request
@@ -83,7 +83,7 @@ def test_llm_response_round_trip() -> None:
 
     response = LLMResponse(
         text="Resumen",
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         model="claude-sonnet-4-6",
         input_tokens=10,
         output_tokens=4,

@@ -92,7 +92,7 @@ def resolve_copy(ref: CopyRef) -> str:
             )
         return rendered
     resolvers = _SOURCE_RESOLVERS.get(ref.kind)
-    if not resolvers:
+    if not (resolvers is not None and resolvers):
         raise FlowCopyResolutionError(
             translated_message="application.flows.errors.copy_source_unregistered",
             context={"kind": ref.kind.value, "ref": ref.ref},

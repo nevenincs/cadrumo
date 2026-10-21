@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-10-12 00:32+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -366,12 +366,20 @@ msgstr ""
 #: ../../how-to/censo-update.md:152
 msgid ""
 "The command previews the census facts the certificate carries without "
-"writing anything. Add `--apply` to record them onto the active profile."
+"writing anything. Add `--apply` to record them onto the active profile. "
+"The same preview and record is the registered operation `user-profile"
+".censo-certificate-import`, which the full-screen app lists under "
+"**Operations** and an agent runs with `execute`; give it the "
+"certificate's absolute path."
 msgstr ""
-"El comando muestra los datos censales del certificado sin escribir nada. "
-"Añade `--apply` para registrarlos en el perfil activo."
+"El comando muestra una vista previa de los datos censales que contiene el"
+" certificado sin escribir nada. Añade `--apply` para registrarlos en el "
+"perfil activo. La misma vista previa y el mismo registro son la operación"
+" registrada `user-profile.censo-certificate-import`, que la aplicación a "
+"pantalla completa enumera en **Operaciones** y que un agente ejecuta con "
+"`execute`; indícale la ruta absoluta del certificado."
 
-#: ../../how-to/censo-update.md:155
+#: ../../how-to/censo-update.md:159
 msgid ""
 "Facts recorded this way carry a marker saying they are not official AEAT "
 "data: they came from a document you supplied, not from an AEAT-confirmed "
@@ -390,7 +398,7 @@ msgstr ""
 "configuración, el perfil conserva un registro de la divergencia y `aeat "
 "config profile view` te avisa hasta que la resuelvas."
 
-#: ../../how-to/censo-update.md:163
+#: ../../how-to/censo-update.md:167
 msgid ""
 "Reading the certificate's contents is not yet active: the command "
 "currently refuses every document while layout coverage for AEAT-issued "
@@ -407,11 +415,11 @@ msgstr ""
 "La interfaz del comando es estable y esta página se aplicará sin cambios "
 "cuando se active la lectura."
 
-#: ../../how-to/censo-update.md:170
+#: ../../how-to/censo-update.md:174
 msgid "Record a Modelo 036 filing done outside Cadrumo"
 msgstr "Registrar una presentación del Modelo 036 hecha fuera de Cadrumo"
 
-#: ../../how-to/censo-update.md:172
+#: ../../how-to/censo-update.md:176
 msgid ""
 "If you file a Modelo 036 alta, modificacion, or baja in AEAT's sede, "
 "record that fact locally so later filings can rely on it. [Record a "
@@ -428,27 +436,27 @@ msgstr ""
 "cambia y no cambia. Después de registrar una presentación, actualiza los "
 "campos del perfil que la presentación haya cambiado."
 
-#: ../../how-to/censo-update.md:178
+#: ../../how-to/censo-update.md:182
 msgid "Check the profile afterwards"
 msgstr "Comprobar el perfil después"
 
-#: ../../how-to/censo-update.md:180
+#: ../../how-to/censo-update.md:184
 msgid "Check the active profile after editing census facts:"
 msgstr "Comprueba el perfil activo tras editar los datos censales:"
 
-#: ../../how-to/censo-update.md:186
+#: ../../how-to/censo-update.md:190
 msgid "If the profile still reports missing facts, edit those fields directly:"
 msgstr ""
 "Si el perfil sigue informando de datos que faltan, edita esos campos "
 "directamente:"
 
-#: ../../how-to/censo-update.md:191
+#: ../../how-to/censo-update.md:195
 msgid "For modelo-specific readiness, use modelo readiness:"
 msgstr ""
 "Para comprobar la preparación de un modelo concreto, usa la comprobación "
 "de preparación del modelo:"
 
-#: ../../how-to/censo-update.md:197
+#: ../../how-to/censo-update.md:201
 msgid ""
 "The command exits with status 2 while the modelo is not ready. "
 "`profile_ready` covers profile facts only, so read `missing_bindings` for"
@@ -458,17 +466,17 @@ msgstr ""
 "`profile_ready` solo abarca los datos del perfil, así que consulta "
 "`missing_bindings` para ver las entradas de origen que aún faltan."
 
-#: ../../how-to/censo-update.md:201
+#: ../../how-to/censo-update.md:205
 msgid "Keep the facts current"
 msgstr "Mantén los datos al día"
 
-#: ../../how-to/censo-update.md:203
+#: ../../how-to/censo-update.md:207
 msgid "Your AEAT census can change: a new activity, a regime change, a baja."
 msgstr ""
 "Tu censo en la AEAT puede cambiar: una nueva actividad, un cambio de "
 "régimen o una baja."
 
-#: ../../how-to/censo-update.md:205
+#: ../../how-to/censo-update.md:209
 msgid ""
 "Pull again to catch changes in your address. The pull reports anything "
 "AEAT now holds that your profile does not."
@@ -477,7 +485,7 @@ msgstr ""
 "obtención informa de cualquier dato que la AEAT conserve ahora y que no "
 "esté en tu perfil."
 
-#: ../../how-to/censo-update.md:208
+#: ../../how-to/censo-update.md:212
 msgid ""
 "The pull cannot see a regime change, so re-check those fields against "
 "your latest Modelo 036 copy whenever you file a censo change, and before "
@@ -488,23 +496,22 @@ msgstr ""
 "presentes un cambio en el censo y antes de planificar un nuevo año de "
 "presentaciones."
 
-#: ../../how-to/censo-update.md:212
+#: ../../how-to/censo-update.md:216
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/censo-update.md:214
+#: ../../how-to/censo-update.md:218
 msgid "[Set up your taxpayer profile](profile-setup.md)"
 msgstr "[Configurar tu perfil de contribuyente](profile-setup.md)"
 
-#: ../../how-to/censo-update.md:215
+#: ../../how-to/censo-update.md:219
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planificar tu calendario de presentaciones](filing-calendar.md)"
 
-#: ../../how-to/censo-update.md:216
+#: ../../how-to/censo-update.md:220
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importar y gestionar movimientos](import-bank-statements.md)"
 
-#: ../../how-to/censo-update.md:217
+#: ../../how-to/censo-update.md:221
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisar y aportar las entradas de cálculo](review-calculation-values.md)"
-

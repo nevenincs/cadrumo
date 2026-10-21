@@ -17,7 +17,21 @@ import { dirname, isAbsolute, relative, resolve } from "node:path";
 // and no copy lands beside the directory the build declares.
 const HOST_CRATE = "desktop/src-tauri";
 const HOST_CRATE_ENTRIES = ["Cargo.toml", "Cargo.lock", "build.rs", "src"];
-const PATH_CRATES = ["application", "platform"];
+const PATH_CRATES = [
+  "application",
+  "platform",
+  "installer",
+  "manager",
+  "launch_guard",
+  "interpreter_host",
+];
+// The interpreter host crate compiles these C host sources into the Cadrumo binary.
+const INTERPRETER_SOURCES = [
+  "interpreter/windows/host.manifest",
+  "interpreter/windows/host.c",
+  "interpreter/launch_guard.h",
+  "interpreter/launch_profile.h",
+];
 
 export function hostSnapshot(root) {
   return {
@@ -111,6 +125,7 @@ export function snapshotHostSources(
   mkdirSync(layout.crate, { recursive: true });
   for (const member of [
     ...PATH_CRATES,
+    ...INTERPRETER_SOURCES,
     ...HOST_CRATE_ENTRIES.map((entry) => `${HOST_CRATE}/${entry}`),
   ]) {
     const source = resolve(native, member);

@@ -13,6 +13,7 @@ never reclassifies lifecycle truth beyond what
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from contextlib import suppress
 from datetime import timedelta
 from typing import ClassVar, Literal, override
@@ -25,7 +26,9 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 from textual.worker import Worker, WorkerCancelled, WorkerFailed
 
-from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.frontend_requests import (
     OperationCancellationRefusalCode,
@@ -43,24 +46,55 @@ from ....application.operations.interactions import (
     OperationResponseIntentValue,
 )
 from ....application.operations.models import OperationId, OperationRevision
-from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.i18n.render import tr
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationLifecycle
+from ....core.operator_notice_messages import operation_notice_message
 from ....core.time.clock import now
-from ...operation_notice_messages import operation_notice_message
+from ..components.language import localized, refresh_localized_widgets
 from ..components.theme import tokenised
-from .controller_port import OperationControllerPort, OperationErrorDetailPort
+from .controller_port import (
+    OperationChangeSourcePort,
+    OperationChangeWaiterPort,
+    OperationControllerPort,
+    OperationErrorDetailPort,
+)
 from .interactions import (
     OperationModalInteractionStateV1,
     OperationModalReviewInteractionV1,
+    OperationModalUnsupportedInteractionV1,
     resolve_modal_interaction_state,
+    unanswerable_interaction_text,
 )
 from .logs import OperationModalLogRowV1, OperationModalLogViewV1, build_initial_log_view, fold_event_page
 from .projection import OperationModalViewModelV1, build_operation_modal_view_model
 from .refusal_explanation import operation_error_explanation, public_refusal_explanation
 
-_POLL_INTERVAL = timedelta(milliseconds=200)
+# A refused observation is not watched, so no cue follows it: retry with backoff.
+_REFUSED_RETRY_FIRST = timedelta(milliseconds=200)
+_REFUSED_RETRY_MAX = timedelta(seconds=5)
+
+
+class _NoOperationCues:
+    """The waiter for a controller whose runtime sends no operation cue.
+
+    It never wakes, so the modal holds what it last observed until the person
+    acts or closes it. Nothing re-reads on a timer: the runtime's cue is the
+    only signal that an operation advanced.
+    """
+
+    armed = True
+
+    def arm(self) -> None:
+        """Nothing to subscribe to."""
+
+    async def wait(self, timeout: float) -> None:
+        """Wait until the observer is cancelled; no cue will ever arrive."""
+        del timeout
+        await asyncio.Event().wait()
+
+    def close(self) -> None:
+        """Nothing to release."""
 
 
 class OperationModalSettledOutcomeV1(BaseModel):
@@ -126,10 +160,18 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
     """)
     BINDINGS: ClassVar = [Binding("escape", "request_close", "", show=False)]
 
-    def __init__(self, controller: OperationControllerPort) -> None:
-        """Bind the modal to exactly one already-submitted operation."""
+    def __init__(
+        self, controller: OperationControllerPort, *, review_text: Callable[[BaseModel], str] | None = None
+    ) -> None:
+        """Bind the modal to exactly one already-submitted operation.
+
+        ``review_text`` words a REVIEW projection for a person, for a caller
+        that knows its operation's projection type; without it the modal shows
+        the projection's own document.
+        """
         super().__init__()
         self._controller = controller
+        self._review_text = review_text
         self._view_model: OperationModalViewModelV1 | None = None
         # The last operator action this modal refused, held on the screen rather
         # than written straight to the widget because the poll worker re-renders
@@ -164,35 +206,70 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 yield Static("", id="operation-modal-review")
                 yield Static("", id="operation-modal-log")
             with ItemGrid(id="operation-modal-actions", min_column_width=_ACTION_MIN_COLUMN_WIDTH):
-                yield Button(tr("operation.modal.action.reject"), id="btn-operation-reject", disabled=True)
-                yield Button(
-                    tr("operation.modal.action.apply"), id="btn-operation-apply", classes="-primary", disabled=True
+                yield localized(
+                    Button(tr("operation.modal.action.reject"), id="btn-operation-reject", disabled=True),
+                    "operation.modal.action.reject",
                 )
-                yield Button(tr("operation.modal.action.cancel"), id="btn-operation-cancel")
-                yield Button(tr("operation.modal.action.detach"), id="btn-operation-detach")
-                yield Button(tr("operation.modal.action.close"), id="btn-operation-close")
+                yield localized(
+                    Button(
+                        tr("operation.modal.action.apply"), id="btn-operation-apply", classes="-primary", disabled=True
+                    ),
+                    "operation.modal.action.apply",
+                )
+                yield localized(
+                    Button(tr("operation.modal.action.cancel"), id="btn-operation-cancel"),
+                    "operation.modal.action.cancel",
+                )
+                yield localized(
+                    Button(tr("operation.modal.action.detach"), id="btn-operation-detach"),
+                    "operation.modal.action.detach",
+                )
+                yield localized(
+                    Button(tr("operation.modal.action.close"), id="btn-operation-close"), "operation.modal.action.close"
+                )
 
     def on_mount(self) -> None:
-        """Start the bounded observation poll loop as an exclusive worker."""
+        """Start observing, on each runtime cue, as an exclusive worker."""
         self._poll_worker = self.run_worker(self._poll_loop(), name="operation-modal-poll", exclusive=True)
+
+    async def refresh_language(self) -> None:
+        """Reword the held observation without restarting or answering the operation."""
+        refresh_localized_widgets(self)
+        self._refresh_view_state()
+        self._render_action_refusal()
 
     async def _poll_loop(self) -> None:
         try:
             await self._observe_until_stopped()
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+        except (FrontendRefusedError, RefusalError) as error:
             self._runtime_access_lost(error)
 
     async def _observe_until_stopped(self) -> None:
+        controller = self._controller
+        changes: OperationChangeWaiterPort = (
+            controller.operation_changes() if isinstance(controller, OperationChangeSourcePort) else _NoOperationCues()
+        )
+        try:
+            await self._observe_with(changes)
+        finally:
+            changes.close()
+
+    async def _observe_with(self, changes: OperationChangeWaiterPort) -> None:
         cursor = self._log_view.next_cursor
+        refused_retry = _REFUSED_RETRY_FIRST
         while self._observing():
+            if changes.armed:
+                changes.arm()
             observed = await self._controller.observe(cursor)
             if not self._observing():
                 return
             if not isinstance(observed, OperationObservationSuccessV1):
                 self._clear_private_view(observed.code.value)
                 cursor = 0
-                await asyncio.sleep(_POLL_INTERVAL.total_seconds())
+                await asyncio.sleep(refused_retry.total_seconds())
+                refused_retry = min(refused_retry * 2, _REFUSED_RETRY_MAX)
                 continue
+            refused_retry = _REFUSED_RETRY_FIRST
             self._log_view = fold_event_page(self._log_view, observed.event_page)
             restart_cursor = self._log_view.restart_cursor
             if self._log_view.resynchronized and restart_cursor is not None:
@@ -213,7 +290,11 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 explanation = await self._settled_error_explanation(observed.projection)
                 self.dismiss(OperationModalSettledOutcomeV1(view_model=self._view_model, error_explanation=explanation))
                 return
-            await asyncio.sleep(_POLL_INTERVAL.total_seconds())
+            if not changes.armed:
+                # Subscribed only now; observe once more so nothing between the two reads is missed.
+                changes.arm()
+            else:
+                await changes.wait(float("inf"))
 
     def _observing(self) -> bool:
         """Read the current state, which another action may change across an await."""
@@ -226,9 +307,9 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             return None
         return operation_error_explanation(await controller.settled_error_detail(projection))
 
-    def _runtime_access_lost(self, error: RuntimeFrontendRefusedError | RuntimeRefusalError) -> None:
+    def _runtime_access_lost(self, error: FrontendRefusedError | RefusalError) -> None:
         self._observation_stopped = True
-        code = error.reason if isinstance(error, RuntimeFrontendRefusedError) else error.reason.value
+        code = error.reason if isinstance(error, FrontendRefusedError) else error.reason.value
         self._clear_private_view(code)
 
     def _clear_private_view(self, code: str) -> None:
@@ -271,7 +352,10 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         review = self.query_one("#operation-modal-review", Static)
         interaction = self._interaction
         if isinstance(interaction, OperationModalReviewInteractionV1):
-            review.update(interaction.projection.model_dump_json())
+            projection = interaction.projection
+            review.update(projection.model_dump_json() if self._review_text is None else self._review_text(projection))
+        elif isinstance(interaction, OperationModalUnsupportedInteractionV1):
+            review.update(unanswerable_interaction_text(interaction.interaction))
         else:
             review.update("")
         log_widget = self.query_one("#operation-modal-log", Static)
@@ -370,7 +454,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             return
         try:
             result = await self._controller.cancel(expected_revision=view_model.projection.revision)
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+        except (FrontendRefusedError, RefusalError) as error:
             self._runtime_access_lost(error)
             return
         if isinstance(result, OperationCancellationSuccessV1):
@@ -389,7 +473,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             return
         try:
             result = await self._controller.detach(expected_revision=view_model.projection.revision)
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+        except (FrontendRefusedError, RefusalError) as error:
             self._runtime_access_lost(error)
             return
         if isinstance(result, OperationDetachSuccessV1):
@@ -406,7 +490,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
     async def _respond(self, *, intent: OperationResponseIntentValue) -> None:
         try:
             await self._send_response(intent=intent)
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+        except (FrontendRefusedError, RefusalError) as error:
             self._runtime_access_lost(error)
 
     async def _send_response(self, *, intent: OperationResponseIntentValue) -> None:

@@ -25,9 +25,8 @@ from .....core.aggregation import IntracomOperationType
 from .....core.config import Settings
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.invoices.enums import InvoiceClass
-from .....domain.iva.classification import InvoiceKind
 from .....domain.iva.regime_legend import RegimeLegend
-from .....domain.iva.schema import IvaCategory
+from .....domain.iva.schema import InvoiceKind, IvaCategory
 from .....domain.iva.supply_nature import SupplyNature
 
 

@@ -1,8 +1,9 @@
 """Windows Job Object boundary for the supervised profile KDF worker.
 
-The Job Object structures below are laid out with :mod:`ctypes.wintypes`, which
-raises on import on every platform that is not Windows -- its ``VARIANT_BOOL``
-names a ``_type_`` the other platforms do not support. Importing this module
+The Job Object layout from :mod:`cadrumo.core.windows_job_object` is built
+with :mod:`ctypes.wintypes`, which raises on import on every platform that is
+not Windows -- its ``VARIANT_BOOL`` names a ``_type_`` the other platforms do
+not support. Importing this module
 therefore has to stay safe everywhere, because the KDF process boundary that
 consumes :class:`_WindowsJob` is imported on every platform.
 
@@ -27,52 +28,20 @@ from ._kdf_worker_limits import (
     PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES,
 )
 
-_WIN32_JOB_OBJECT_EXTENDED_LIMIT_INFORMATION: Final = 9
 _WIN32_JOB_OBJECT_BASIC_PROCESS_ID_LIST: Final = 3
 _WIN32_JOB_OBJECT_LIMIT_PROCESS_TIME: Final = 0x00000002
 _WIN32_JOB_OBJECT_LIMIT_ACTIVE_PROCESS: Final = 0x00000008
 _WIN32_JOB_OBJECT_LIMIT_PROCESS_MEMORY: Final = 0x00000100
-_WIN32_JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE: Final = 0x00002000
 
 
 if sys.platform == "win32":
     from ctypes import wintypes
 
-    class _BasicLimitInformation(ctypes.Structure):
-        _fields_ = [
-            ("PerProcessUserTimeLimit", ctypes.c_int64),
-            ("PerJobUserTimeLimit", ctypes.c_int64),
-            ("LimitFlags", wintypes.DWORD),
-            ("MinimumWorkingSetSize", ctypes.c_size_t),
-            ("MaximumWorkingSetSize", ctypes.c_size_t),
-            ("ActiveProcessLimit", wintypes.DWORD),
-            ("Affinity", ctypes.c_size_t),
-            ("PriorityClass", wintypes.DWORD),
-            ("SchedulingClass", wintypes.DWORD),
-        ]
-
-    class _IoCounters(ctypes.Structure):
-        _fields_ = [
-            (name, ctypes.c_uint64)
-            for name in (
-                "ReadOperationCount",
-                "WriteOperationCount",
-                "OtherOperationCount",
-                "ReadTransferCount",
-                "WriteTransferCount",
-                "OtherTransferCount",
-            )
-        ]
-
-    class _ExtendedLimitInformation(ctypes.Structure):
-        _fields_ = [
-            ("BasicLimitInformation", _BasicLimitInformation),
-            ("IoInfo", _IoCounters),
-            ("ProcessMemoryLimit", ctypes.c_size_t),
-            ("JobMemoryLimit", ctypes.c_size_t),
-            ("PeakProcessMemoryUsed", ctypes.c_size_t),
-            ("PeakJobMemoryUsed", ctypes.c_size_t),
-        ]
+    from .....core.windows_job_object import (
+        JOB_OBJECT_EXTENDED_LIMIT_INFORMATION_CLASS,
+        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+        JobObjectExtendedLimitInformation,
+    )
 
     class _WindowsJob:
         """A required kill-on-close Windows process-tree and resource boundary."""
@@ -88,7 +57,7 @@ if sys.platform == "win32":
             handle = kernel32.CreateJobObjectW(None, None)
             if not handle:
                 raise _supervision_refusal()
-            information = _ExtendedLimitInformation()
+            information = JobObjectExtendedLimitInformation()
             information.BasicLimitInformation.PerProcessUserTimeLimit = (
                 PROFILE_CUSTODY_KDF_WORKER_CPU_SECONDS * 10_000_000
             )
@@ -97,12 +66,12 @@ if sys.platform == "win32":
                 _WIN32_JOB_OBJECT_LIMIT_PROCESS_TIME
                 | _WIN32_JOB_OBJECT_LIMIT_ACTIVE_PROCESS
                 | _WIN32_JOB_OBJECT_LIMIT_PROCESS_MEMORY
-                | _WIN32_JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+                | JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
             )
             information.ProcessMemoryLimit = PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES
             if not kernel32.SetInformationJobObject(
                 wintypes.HANDLE(handle),
-                _WIN32_JOB_OBJECT_EXTENDED_LIMIT_INFORMATION,
+                JOB_OBJECT_EXTENDED_LIMIT_INFORMATION_CLASS,
                 ctypes.byref(information),
                 ctypes.sizeof(information),
             ):
@@ -146,10 +115,10 @@ if sys.platform == "win32":
             """Read back the required Job Object limits before releasing a secret."""
             if not self._handle:
                 raise _supervision_refusal()
-            information = _ExtendedLimitInformation()
+            information = JobObjectExtendedLimitInformation()
             if not self._kernel32.QueryInformationJobObject(
                 wintypes.HANDLE(self._handle),
-                _WIN32_JOB_OBJECT_EXTENDED_LIMIT_INFORMATION,
+                JOB_OBJECT_EXTENDED_LIMIT_INFORMATION_CLASS,
                 ctypes.byref(information),
                 ctypes.sizeof(information),
                 None,
@@ -159,7 +128,7 @@ if sys.platform == "win32":
                 _WIN32_JOB_OBJECT_LIMIT_PROCESS_TIME
                 | _WIN32_JOB_OBJECT_LIMIT_ACTIVE_PROCESS
                 | _WIN32_JOB_OBJECT_LIMIT_PROCESS_MEMORY
-                | _WIN32_JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+                | JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
             )
             if information.BasicLimitInformation.LimitFlags & expected_flags != expected_flags:
                 raise _supervision_refusal()

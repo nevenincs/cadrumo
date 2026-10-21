@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, NonNegativeInt, PositiveInt, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -15,15 +17,15 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.errors import FilterParseError
 from ..review.filter import LedgerReviewFilterSpec
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .action_ports import LedgerActionPortsFactory
 from .actions_manual import ledger_transaction_payload
 from .list_query import LedgerTransactionListQuery, query_ledger_transaction_list
 from .read_access import resolve_ledger_read_access
+from .read_ports import LedgerReadPortsFactory
 from .review_projection import ledger_transaction_review_status
 from .transaction_projection import LedgerTransactionProjection, LedgerTransactionReviewProjection
 
@@ -90,7 +92,7 @@ class LedgerListProjection(BaseModel):
 class LedgerListExecutor:
     """Host the canonical list query without frontend persistence access."""
 
-    def __init__(self, ports: LedgerActionPortsFactory) -> None:
+    def __init__(self, ports: LedgerReadPortsFactory) -> None:
         """Retain the exact-profile port factory."""
         self._ports = ports
 
@@ -146,16 +148,16 @@ class LedgerListExecutor:
         return await capture_read_result(context, read, task_name="ledger-list")
 
 
-def build_ledger_list_definition(ports: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_list_definition(ports: LedgerReadPortsFactory) -> OperationDefinition:
     """Register a private-query read without commit or provider authority."""
     return build_single_phase_definition(
         definition_id=LEDGER_LIST_OPERATION_DEFINITION_ID,
         request_type=LedgerListRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerListProjection,
         executor_type=LedgerListExecutor,
         build=lambda: LedgerListExecutor(ports),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

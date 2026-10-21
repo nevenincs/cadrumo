@@ -12,6 +12,7 @@ from ....application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....domain.invoices.models import Invoice
+from ..components.language import localized
 from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
@@ -77,7 +78,9 @@ class LedgerInvoiceCatalogueScreen(LedgerWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.ledger.records.invoices"), classes="cadrumo-banner")
+        yield localized(
+            Static(tr("tui.ledger.records.invoices"), classes="cadrumo-banner"), "tui.ledger.records.invoices"
+        )
         with ledger_workspace_page() as navigation:
             yield navigation
             yield ContentDataTable[str](id="ledger-invoice-catalogue", cursor_type="row", zebra_stripes=True)
@@ -142,14 +145,25 @@ class LedgerInvoiceDetailScreen(LedgerWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.ledger.records.invoice_detail"), classes="cadrumo-banner")
+        yield localized(
+            Static(tr("tui.ledger.records.invoice_detail"), classes="cadrumo-banner"),
+            "tui.ledger.records.invoice_detail",
+        )
         with ledger_workspace_page() as navigation:
             yield navigation
             yield Static("", id="ledger-record-detail", markup=False)
-            yield Static(tr("tui.ledger.invoice.field.notes"), markup=False)
+            yield localized(
+                Static(tr("tui.ledger.invoice.field.notes"), markup=False), "tui.ledger.invoice.field.notes"
+            )
             yield Input(id="ledger-invoice-notes")
-            yield Button(tr("tui.ledger.invoice.review"), id="ledger-invoice-edit-review", disabled=True)
-            yield Button(tr("tui.ledger.records.save"), id="ledger-invoice-edit-save", disabled=True)
+            yield localized(
+                Button(tr("tui.ledger.invoice.review"), id="ledger-invoice-edit-review", disabled=True),
+                "tui.ledger.invoice.review",
+            )
+            yield localized(
+                Button(tr("tui.ledger.records.save"), id="ledger-invoice-edit-save", disabled=True),
+                "tui.ledger.records.save",
+            )
             yield Static("", id="ledger-flow-status", markup=False)
             yield Static("", id="ledger-refusal", classes="ledger-refusal", markup=False)
 

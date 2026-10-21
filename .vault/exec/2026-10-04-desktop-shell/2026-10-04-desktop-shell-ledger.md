@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-05'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:44334764c657a83fdf0482dc0d59cf29702ff914e4eb6c14765ccb50b64b672a'
+body_hash: 'sha256:cf86d64029790966aed68f068ab4bac37f4ba2d2e27ddcb384304d074500560b'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---

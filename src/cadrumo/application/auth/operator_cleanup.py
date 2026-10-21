@@ -16,6 +16,7 @@ from .acquisition_lock import (
 )
 from .catalogue import get_auth_provider
 from .certificate_secret_backend import CertificateSecretBackendFactory
+from .credentials import CLAVE_PERMANENTE_PASSWORD_SECRET_NAME, UNNAMED_CERTIFICATE_PASSWORD_SECRET_NAME
 from .models import (
     AuthCleanupCertificateSource,
     AuthCleanupIntent,
@@ -234,18 +235,22 @@ def _secret_scoped_source_names(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     certificate_targeted: bool,
+    permanente_targeted: bool,
 ) -> tuple[str, ...]:
-    """Return the witnessed certificate sources whose secret exists (targeted only)."""
-    if not certificate_targeted:
-        return ()
+    """Return existing provider passwords selected by a destructive reset."""
+    candidates = [source.name for source in certificate_sources] if certificate_targeted else []
+    if certificate_targeted:
+        candidates.append(UNNAMED_CERTIFICATE_PASSWORD_SECRET_NAME)
+    if permanente_targeted:
+        candidates.append(CLAVE_PERMANENTE_PASSWORD_SECRET_NAME)
     return tuple(
-        source.name
-        for source in certificate_sources
+        name
+        for name in candidates
         if _certificate_source_secret_exists(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             settings=settings,
             bucket_id=bucket_id,
-            name=source.name,
+            name=name,
         )
     )
 
@@ -362,6 +367,7 @@ def build_auth_cleanup_intent(
             certificate_sources,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             certificate_targeted=certificate_targeted,
+            permanente_targeted=destructive_reset and AuthProviderKind.CLAVE_PERMANENTE.value in provider_ids,
         ),
     )
 

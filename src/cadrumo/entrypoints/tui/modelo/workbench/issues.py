@@ -20,6 +20,7 @@ from .....application.modelo.work_form_models import (
     ModeloWorkForm,
 )
 from .....core.i18n.render import tr
+from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
 from .casilla_list_models import AddressKey
 from .dialog_width import fit_dialog_height, fit_dialog_width
@@ -190,7 +191,10 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             )
             yield _IssueList(*self._options(), id="issues-list")
             with Horizontal(id="issues-actions"):
-                yield Button(tr("tui.modelo.workbench.result_diff.close"), id="issues-close", variant="primary")
+                yield localized(
+                    Button(tr("tui.modelo.workbench.result_diff.close"), id="issues-close", variant="primary"),
+                    "tui.modelo.workbench.result_diff.close",
+                )
         yield Footer(compact=True)
 
     def _options(self) -> list[Option]:
@@ -278,7 +282,7 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         table = self._bindings.key_to_bindings
         for key in ("escape", "a", "b", "t"):
             entries = table.get(key)
-            if entries:
+            if entries is not None and entries:
                 table[key] = [replace(binding, show=key in shown) for binding in entries]
         self.refresh_bindings()
 
@@ -286,7 +290,7 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         """Name the area ``a`` opens for the finding under the cursor, and show the key only when there is one."""
         table = self._bindings.key_to_bindings
         entries = table.get("a")
-        if entries:
+        if entries is not None and entries:
             label = "" if area is None else tr(_OPEN_AREA_LOCALE_KEY, area=area_words(area))
             table["a"] = [replace(binding, description=label, show=area is not None) for binding in entries]
         self.refresh_bindings()
@@ -390,6 +394,10 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
     def action_close(self) -> None:
         """Return to the workbench."""
         self.dismiss(None)
+
+    async def refresh_language(self) -> None:
+        """Reword the open dialog without changing its inputs or decision."""
+        refresh_localized_widgets(self)
 
 
 __all__ = ("WorkbenchIssuesScreen",)

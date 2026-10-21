@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#google-app-identity'
 date: '2026-10-04'
-modified: '2026-10-05'
+modified: '2026-10-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:c1cce77f1e31f7552ff520968462826a37ad75370299fd075d2275f8ac3c1d83'
+body_hash: 'sha256:7cae6ba76b5275fdfd7cbdb04deaf122506fffc9711b3c7abc1bb1cbbca74ead'
 related:
   - '[[2026-10-04-google-app-identity-adr]]'
   - '[[2026-10-04-google-app-identity-client-registration-adr]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-10-04-google-app-identity-reference]]'
   - '[[2026-10-04-google-app-identity-research]]'
   - '[[2026-10-05-google-app-identity-audit]]'
+  - '[[2026-10-19-google-app-identity-profile-folder-scope-adr]]'
 ---
 
 # `google-app-identity` feature index
@@ -27,6 +28,7 @@ Auto-generated index of all documents tagged with `#google-app-identity`.
 
 - `2026-10-04-google-app-identity-adr` - `google-app-identity` adr: `Publisher-owned Google client limited to application-created files` | (**status:** `accepted`)
 - `2026-10-04-google-app-identity-client-registration-adr` - `google-app-identity` adr: `Single client resolution path without operator registration` | (**status:** `deprecated`)
+- `2026-10-19-google-app-identity-profile-folder-scope-adr` - `google-app-identity` adr: `A profile's Google sign-in and its environment stay inside that profile's folder` | (**status:** `accepted`)
 
 ### audit
 

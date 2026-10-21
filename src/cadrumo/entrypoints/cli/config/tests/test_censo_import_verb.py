@@ -107,9 +107,9 @@ def test_apply_routes_through_the_registered_file_import_operation() -> None:
     """
     import inspect
 
-    from .. import _censo_transport
+    from .. import censo_commands
 
-    tree = ast.parse(inspect.getsource(_censo_transport.censo_import))
+    tree = ast.parse(inspect.getsource(censo_commands.censo_import))
     bridge_calls = [
         node
         for node in ast.walk(tree)

@@ -310,7 +310,7 @@ def project_profile_bundle_export_result(result: BaseModel, receipt: OperationTe
     """Release the canonical export receipt only for its settled profile subject."""
     if not isinstance(result, ProfileBundleExportResult):
         raise TypeError("unexpected profile bundle export result")
-    if receipt.identity.subject_ref != _profile_subject(str(result.profile_id)):
+    if receipt.identity.subject_ref != _profile_subject(result.profile_id):
         raise ValueError("profile bundle export result does not match its settled subject")
     return ProfileBundleExportOperationProjection.model_validate(result.model_dump(mode="python"))
 

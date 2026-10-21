@@ -5,24 +5,29 @@ from __future__ import annotations
 import asyncio
 from dataclasses import replace
 from datetime import UTC, datetime
+from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, ValidationError
+
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification
+from ....domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ....domain.transactions.models import Transaction
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...operations.execution_actor import OperationExecutionCaller
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...operations.registry_schema_validation import strict_model_json_schema
-from ...user_profile.access_contracts import AccessAction, Availability
+from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import bulk_classify_operation as operation
 from ..action_ports import LedgerActionPorts
@@ -92,7 +97,7 @@ def test_request_is_strict_hides_csv_and_round_trips_through_public_schema() -> 
         operation.LedgerBulkClassifyRequest.model_validate({**request.model_dump(), "file": "private.csv"})
 
 
-def test_registration_requires_all_periods_commit_and_refuses_mcp() -> None:
+def test_registration_requires_all_periods_commit_on_every_frontend() -> None:
     def unused(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerActionPorts:
         raise AssertionError("access resolution must not compose profile storage")
 
@@ -111,16 +116,13 @@ def test_registration_requires_all_periods_commit_and_refuses_mcp() -> None:
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
     )
-    access = resolve_operation_access(registry=registry, request=public_request, context=context)
-    assert AccessAction.COMMIT in access.policy.actions
-    assert access.policy.requires_all_periods and access.request.period_independent
-    assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
-    with pytest.raises(ProfileAccessRefusedError):
-        resolve_operation_access(
-            registry=registry,
-            request=public_request,
-            context=replace(context, frontend=OperationFrontendProjection.MCP),
+    for frontend in OperationFrontendProjection:
+        access = resolve_operation_access(
+            registry=registry, request=public_request, context=replace(context, frontend=frontend)
         )
+        assert AccessAction.COMMIT in access.policy.actions
+        assert access.policy.requires_all_periods and access.request.period_independent
+        assert access.request.frontend is frontend
     with pytest.raises(ProfileAccessRefusedError):
         resolve_operation_access(
             registry=registry, request=public_request, context=replace(context, profile_id=uuid4())
@@ -265,3 +267,185 @@ def test_nonrevision_catalogue_port_refuses_before_mutation(subject: BulkClassif
     with pytest.raises(InternalInvariantError, match="revision-guarded"):
         asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(""), subject.context))
     assert subject.repository.loads == 0 and subject.repository.write_attempts == 0
+
+
+def test_bulk_notes_record_reasons_and_blank_cells_preserve_them(
+    subject: BulkClassifySubject,
+    transactions: tuple[Transaction, Transaction],
+) -> None:
+    first, second = transactions
+    source = (
+        "transaction_id,classification,notes\n"
+        f'{first.transaction_id},BUSINESS,"Paper and ink, consulting only"\n'
+        f"{second.transaction_id},PERSONAL,Family gift\n"
+    )
+    executor = operation.LedgerBulkClassifyExecutor(subject.compose)
+    asyncio.run(executor.execute(_request(source), subject.context))
+    result = cast(operation.LedgerBulkClassifyExecutionResult, subject.operands.values[-1]).projection.result
+    assert result is not None and result.applied == 2 and not result.failures
+    stored = subject.repository.current.transactions
+    assert stored[first.transaction_id].notes == "Paper and ink, consulting only"
+    assert stored[second.transaction_id].notes == "Family gift"
+    source = f"transaction_id,classification,notes\n{first.transaction_id},BUSINESS,\n"
+    asyncio.run(executor.execute(_request(source), subject.context))
+    assert subject.repository.current.transactions[first.transaction_id].notes == "Paper and ink, consulting only"
+
+
+def _declared_irpf_category(authority: PinnedAuthorityOperation) -> str:
+    return ledger_irpf_category_catalogue(authority=authority)[0].id
+
+
+@pytest.mark.parametrize(
+    ("cells", "rule"),
+    [
+        ("BUSINESS,not-in-the-taxonomy,,", "an irpf_category the published taxonomy does not declare"),
+        ("BUSINESS,,100.123456,", "an amount with six decimals"),
+        ("BUSINESS,,,0.5", "a share on a classification that is not mixed"),
+        ("MIXED,,,", "a mixed classification without its share"),
+        ("MIXED,,,1.5", "a share outside zero to one"),
+    ],
+)
+def test_a_row_that_breaks_a_rule_of_single_classification_fails_alone_and_applies_nothing(
+    subject: BulkClassifySubject,
+    transactions: tuple[Transaction, Transaction],
+    cells: str,
+    rule: str,
+) -> None:
+    first, second = transactions
+    source = (
+        "transaction_id,classification,irpf_category,taxable_base,business_pct\n"
+        f"{first.transaction_id},{cells}\n"
+        f"{second.transaction_id},PERSONAL,,,\n"
+    )
+    asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(source), subject.context))
+
+    execution = cast(operation.LedgerBulkClassifyExecutionResult, subject.operands.values[-1])
+    result = execution.projection.result
+    assert result is not None, rule
+    assert (result.total, result.applied, result.skipped) == (2, 1, 0), rule
+    assert [failure.transaction_id for failure in result.failures] == [first.transaction_id], rule
+    stored = subject.repository.current.transactions
+    assert stored[first.transaction_id] == first, rule
+    assert stored[second.transaction_id].business_classification is BusinessClassification.PERSONAL
+
+
+def test_a_row_within_the_rules_of_single_classification_still_applies(
+    subject: BulkClassifySubject,
+    transactions: tuple[Transaction, Transaction],
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    category = _declared_irpf_category(authority_operation)
+    first, second = transactions
+    source = (
+        "transaction_id,classification,irpf_category,taxable_base,business_pct\n"
+        f"{first.transaction_id},BUSINESS,{category},100.50,\n"
+        f"{second.transaction_id},MIXED,,,0.25\n"
+    )
+    asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(source), subject.context))
+
+    execution = cast(operation.LedgerBulkClassifyExecutionResult, subject.operands.values[-1])
+    result = execution.projection.result
+    assert result is not None and not result.failures, result
+    assert result.applied == 2
+    stored = subject.repository.current.transactions
+    assert stored[first.transaction_id].irpf_category == category
+    assert stored[first.transaction_id].taxable_base == Decimal("100.5")
+    assert stored[second.transaction_id].business_classification is BusinessClassification.MIXED
+    assert stored[second.transaction_id].business_pct == Decimal("0.25")
+
+
+@pytest.mark.parametrize("rate", ["0.052", "0.075", "0.014", "0.005", "0.0175"])
+def test_a_share_and_a_rate_keep_the_fraction_digits_they_have(
+    subject: BulkClassifySubject,
+    transactions: tuple[Transaction, Transaction],
+    rate: str,
+) -> None:
+    first, second = transactions
+    source = (
+        "transaction_id,classification,iva_rate,business_pct\n"
+        f"{first.transaction_id},BUSINESS,{rate},\n"
+        f"{second.transaction_id},MIXED,,0.333\n"
+    )
+    asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(source), subject.context))
+
+    execution = cast(operation.LedgerBulkClassifyExecutionResult, subject.operands.values[-1])
+    result = execution.projection.result
+    assert result is not None and not result.failures, result
+    assert result.applied == 2
+    stored = subject.repository.current.transactions
+    assert stored[first.transaction_id].iva_rate == Decimal(rate)
+    assert stored[second.transaction_id].business_pct == Decimal("0.333")
+
+
+@pytest.mark.parametrize(
+    ("cells", "rule"),
+    [
+        ("BUSINESS,0.123,,", "a taxable base with three fraction digits"),
+        ("BUSINESS,,1.01,", "an IVA rate above one"),
+        ("BUSINESS,,21,", "an IVA rate written as a percentage"),
+        ("MIXED,,,1.001", "a share above one"),
+    ],
+)
+def test_money_keeps_its_cent_limit_and_a_share_or_rate_its_range_in_a_bulk_row(
+    subject: BulkClassifySubject,
+    transactions: tuple[Transaction, Transaction],
+    cells: str,
+    rule: str,
+) -> None:
+    first, second = transactions
+    source = (
+        "transaction_id,classification,taxable_base,iva_rate,business_pct\n"
+        f"{first.transaction_id},{cells}\n"
+        f"{second.transaction_id},PERSONAL,,,\n"
+    )
+    asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(source), subject.context))
+
+    execution = cast(operation.LedgerBulkClassifyExecutionResult, subject.operands.values[-1])
+    result = execution.projection.result
+    assert result is not None, rule
+    assert (result.total, result.applied) == (2, 1), rule
+    assert [failure.transaction_id for failure in result.failures] == [first.transaction_id], rule
+    assert subject.repository.current.transactions[first.transaction_id] == first, rule
+
+
+_SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
+
+
+@pytest.mark.parametrize(
+    ("frontend", "recorded"),
+    [
+        (OperationFrontendProjection.EXTERNAL_CLIENT, f"automation:external-client.attended.{_SESSION_CLIENT}"),
+        (OperationFrontendProjection.CLI, "typed by the caller"),
+    ],
+    ids=["external_client", "cli"],
+)
+def test_the_recorded_actor_is_the_session_label_for_automation_and_the_typed_one_otherwise(
+    subject: BulkClassifySubject,
+    transactions: tuple[Transaction, Transaction],
+    frontend: OperationFrontendProjection,
+    recorded: str,
+) -> None:
+    def session_host(identity: OperationIdentity) -> OperationExecutionCaller:
+        assert identity.definition_id == operation.LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID
+        return OperationExecutionCaller(frontend=frontend, session_kind=SessionKind.ATTENDED, client_id=_SESSION_CLIENT)
+
+    first = transactions[0]
+    request = OperationRequest[operation.LedgerBulkClassifyRequest](
+        definition_id=operation.LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(PROFILE_ID)),
+        payload=operation.LedgerBulkClassifyRequest(
+            profile_id=PROFILE_ID,
+            csv_text="transaction_id,classification\n" + first.transaction_id + ",BUSINESS\n",
+            actor="typed by the caller",
+        ),
+    )
+
+    asyncio.run(
+        operation.LedgerBulkClassifyExecutor(subject.compose, execution_caller_reader=session_host).execute(
+            request, subject.context
+        )
+    )
+
+    stored = subject.repository.current.transactions[first.transaction_id]
+    assert stored.business_classification is BusinessClassification.BUSINESS
+    assert {entry.actor for entry in stored.edit_lineage} == {recorded}

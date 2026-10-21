@@ -18,23 +18,17 @@ from .unreachable_policy import _EXIT_ERROR, _EXIT_FINDINGS
 from .unreachable_receiver_types import receiver_types
 from .unreachable_references import _data_tokens, _declared_data_values
 from .unreachable_reporting import filter_by_confidence, render_console_report, result_as_json
-from .unreachable_tree import EntryPoint, ShippedTreeSpec, shipped_modules
+from .unreachable_tree import ShippedTreeSpec, shipped_modules
 
 
 def _resolve_scan_roots(
-    spec: ShippedTreeSpec, modules: dict[str, ShippedModule], companion_entries: tuple[EntryPoint, ...]
+    spec: ShippedTreeSpec, modules: dict[str, ShippedModule]
 ) -> tuple[tuple[str, ...], list[str]] | UnreachableCodeResult:
     """Resolve scan roots."""
-    roots = (
-        tuple(entry.spec for entry in spec.entry_points)
-        + tuple(f"{module} (python -m)" for module in spec.module_roots)
-        + tuple(f"{entry.spec} (workspace sibling)" for entry in companion_entries)
+    roots = tuple(entry.spec for entry in spec.entry_points) + tuple(
+        f"{module} (python -m)" for module in spec.module_roots
     )
-    root_modules = (
-        [entry.module for entry in spec.entry_points]
-        + list(spec.module_roots)
-        + [entry.module for entry in companion_entries]
-    )
+    root_modules = [entry.module for entry in spec.entry_points] + list(spec.module_roots)
     missing = [module for module in root_modules if module not in modules]
     if missing:
         return UnreachableCodeResult.error(f"root module(s) absent from the shipped tree: {', '.join(missing)}")
@@ -44,7 +38,6 @@ def _resolve_scan_roots(
 def _resolve_scan_graph(
     spec: ShippedTreeSpec,
     modules: dict[str, ShippedModule],
-    companion_entries: tuple[EntryPoint, ...],
     root_modules: list[str],
 ) -> tuple[frozenset[str], frozenset[str], frozenset[str], frozenset[str], dict[str, frozenset[str]]]:
     """Resolve scan graph."""
@@ -53,11 +46,7 @@ def _resolve_scan_graph(
     spawned = {name: _spawn_edges(module, known) for name, module in modules.items()}
     runtime_edges = {name: runtime | spawned[name] for name, (runtime, _) in edges.items()}
     full_edges = {name: runtime | type_only | spawned[name] for name, (runtime, type_only) in edges.items()}
-    script_reach = reachable_closure(
-        [entry.module for entry in spec.entry_points] + [entry.module for entry in companion_entries],
-        modules,
-        runtime_edges,
-    )
+    script_reach = reachable_closure([entry.module for entry in spec.entry_points], modules, runtime_edges)
     runtime_reach = reachable_closure(root_modules, modules, runtime_edges)
     full_reach = reachable_closure(root_modules, modules, full_edges)
     return known, script_reach, runtime_reach, full_reach, full_edges
@@ -80,17 +69,15 @@ def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
     except OSError as exc:
         return UnreachableCodeResult.error(f"shipped tree could not be read ({exc})")
     if not modules:
-        return UnreachableCodeResult.error(f"no shipped modules found under {spec.src_root / spec.package}")
+        roots = ", ".join(root.as_posix() for root in spec.package_roots)
+        return UnreachableCodeResult.error(f"no shipped modules found under {roots}")
 
-    companion_entries = tuple(entry for companion in spec.companions for entry in companion.entry_points)
-    root_result = _resolve_scan_roots(spec, modules, companion_entries)
+    root_result = _resolve_scan_roots(spec, modules)
     if isinstance(root_result, UnreachableCodeResult):
         return root_result
     roots, root_modules = root_result
 
-    known, script_reach, runtime_reach, full_reach, full_edges = _resolve_scan_graph(
-        spec, modules, companion_entries, root_modules
-    )
+    known, script_reach, runtime_reach, full_reach, full_edges = _resolve_scan_graph(spec, modules, root_modules)
 
     audited_names = _audited_module_names(spec, modules)
     audited_total = len(audited_names)
@@ -99,7 +86,7 @@ def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
     declared_values = _declared_data_values(spec)
     shipped_importers = _shipped_importers(full_edges)
     module_findings = _module_findings(
-        spec, modules, script_reach, runtime_reach, full_reach, outside, shipped_importers
+        spec, modules, script_reach, runtime_reach, full_reach, outside, shipped_importers, full_edges
     )
     symbol_findings, data_cleared, dev_cleared = _symbol_findings(
         spec, modules, runtime_reach, full_reach, outside, data_tokens, declared_values
@@ -108,6 +95,7 @@ def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
     if not module_findings and not symbol_findings:
         return UnreachableCodeResult.clean(
             roots=roots,
+            packages=spec.packages,
             shipped_modules=audited_total,
             reachable_modules=len(runtime_reach & audited_names),
             data_cleared=data_cleared,
@@ -115,6 +103,7 @@ def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
         )
     return UnreachableCodeResult.from_findings(
         roots=roots,
+        packages=spec.packages,
         shipped_modules=audited_total,
         reachable_modules=len(runtime_reach & audited_names),
         modules=module_findings,
@@ -171,8 +160,8 @@ def main() -> int:
 
 
 def _audited_module_names(spec: ShippedTreeSpec, modules: dict[str, ShippedModule]) -> frozenset[str]:
-    """Keep the audited package denominator separate from workspace consumers."""
-    return frozenset(name for name in modules if name == spec.package or name.startswith(spec.package + "."))
+    """The audited packages' modules, the coverage denominator."""
+    return frozenset(name for name in modules if spec.audits(name))
 
 
 if __name__ == "__main__":

@@ -403,7 +403,11 @@ def _projection_yes_declaration(profile: TaxpayerProfile, fact: PayerFactProject
         raise RegistryValidationError(
             f"payer applicability period set {fact.period_companion.profile_key!r} must resolve to a token set",
         )
-    return PayerFactDeclaration.DECLARED_YES if periods else PayerFactDeclaration.PERIODS_UNDECLARED
+    return (
+        PayerFactDeclaration.DECLARED_YES
+        if (periods is not None and periods)
+        else PayerFactDeclaration.PERIODS_UNDECLARED
+    )
 
 
 def _projection_declaration(profile: TaxpayerProfile, fact: PayerFactProjection) -> PayerFactDeclaration:

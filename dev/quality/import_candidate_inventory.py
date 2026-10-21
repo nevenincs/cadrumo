@@ -129,7 +129,7 @@ def occurrence_inventory(
 def write_candidate_artifact(repository: Path, candidate: CandidateInventory) -> Path | None:
     """Write the candidate evidence to the explicitly configured artifact directory."""
     raw_artifacts = os.environ.get("CADRUMO_DEV_ARTIFACTS_DIR")
-    if not raw_artifacts:
+    if not (raw_artifacts is not None and raw_artifacts):
         return None
     artifacts = resolve_storage_path(raw_artifacts)
     path = artifacts / "import-boundary-candidate.json"

@@ -10,14 +10,12 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.iva.classification import (
     CustomerTaxStatus,
-    InvoiceKind,
-    IvaTerritorialScope,
     PartyFact,
     TransactionKind,
     domestic_rate_tier_is_required,
     resolve_transaction_kind_catalogue,
 )
-from ...domain.iva.schema import EUMemberState, IvaCategory
+from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaTerritorialScope
 from ...domain.iva.supply_nature import SupplyNature
 
 __all__ = [

@@ -6,16 +6,19 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from .._command_target import resolve_deferred_target
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
+from cadrumo_client.commands.graph import CommandSpecGraph
+
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_graph import CommandSpecGraph
-from ..main import app
+from ..main import cli_app
+
+app = cli_app()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_root_specs_own_the_executable_namespace_and_parameter_contracts() -> None:
-    graph = CommandSpecGraph(ROOT_COMMAND_SPECS)
+    graph = CommandSpecGraph(ROOT_COMMAND_SPECS, resolver=resolve_deferred_target)
 
     assert tuple(node.path for node in graph.nodes()) == (
         ("aeat",),
@@ -64,7 +67,7 @@ def test_root_executable_targets_are_public_behavior_only_functions() -> None:
         assert spec.handler.target is not None
         assert callable(resolve_deferred_target(spec.handler.target))
 
-    module_path = Path(__file__).parents[1] / "_root_cli.py"
+    module_path = Path(__file__).parents[1] / "root_commands.py"
     tree = ast.parse(module_path.read_text(encoding="utf-8"))
     functions = {
         node.name: node

@@ -395,21 +395,3 @@ fn wait_reason(reason: WaitReason) -> fact::WaitReason {
         WaitReason::ClaimUnavailable(_) => fact::WaitReason::ClaimUnavailable,
     }
 }
-
-#[cfg(any(windows, test))]
-pub fn admission_refused(diagnostics: &Diagnostics, reason: crate::admission::Refusal) {
-    use crate::admission::Refusal;
-    let reason = match reason {
-        Refusal::SessionUnavailable => fact::AdmissionRefusal::SessionUnavailable,
-        Refusal::SessionZero => fact::AdmissionRefusal::SessionZero,
-        Refusal::ElevationUnavailable => fact::AdmissionRefusal::ElevationUnavailable,
-        Refusal::FullyElevated => fact::AdmissionRefusal::FullyElevated,
-        Refusal::DesktopUnavailable => fact::AdmissionRefusal::DesktopUnavailable,
-    };
-    diagnostics.lifecycle(
-        EventKind::Failure,
-        HostStage::Admission,
-        fact::LifecycleFact::AdmissionRefused { reason },
-        None,
-    );
-}

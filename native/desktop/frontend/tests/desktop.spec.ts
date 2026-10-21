@@ -1,8 +1,11 @@
+import { seedLayout } from "./support/layout";
+import { openLogFilters, openPanelTab, panelToggle } from "./support/panel";
 import { expect, test, type Frame, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { identity } from "../../scripts/configuration.mjs";
 import { label } from "./support/strings";
+import { ABOUT_FIXTURE } from "../src/dev/fixtures/about";
 
 const local = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
@@ -13,9 +16,11 @@ async function signInHost(
   supported = true,
   deferInitial = false,
   deferInitialList = false,
+  bundled = true,
+  logLevel = "INFO",
 ) {
   await target.addInitScript(
-    ({ supported, docs, deferInitial, deferInitialList }) => {
+    ({ supported, docs, deferInitial, deferInitialList, logLevel, about }) => {
       const state = {
         presence: "absent",
         supported,
@@ -32,9 +37,18 @@ async function signInHost(
         activeStatusReads: 0,
         activeListReads: 0,
         signOuts: 0,
+        // What the product reports a sign-out leaves standing: the saved
+        // setting is on, and whether an issued key can still admit is a
+        // separate answer.
+        automationAccessRemains: false as boolean | null,
         tuiStarts: 0,
         tuiCloses: 0,
         terminalStarts: [] as string[],
+        terminalWrites: [] as string[],
+        deferTui: false,
+        deferReady: false,
+        tuiOutput: null as ((text: string) => void) | null,
+        releaseTui: null as (() => void) | null,
         terminalCloses: 0,
         rawPassword: false,
         tokenHeader: false,
@@ -52,6 +66,7 @@ async function signInHost(
         deferList: deferInitialList,
         releaseList: null as (() => void) | null,
         exitTui: null as (() => void) | null,
+        signInUpdate: null as ((signal: unknown) => void) | null,
       };
       let id = 0;
       Object.assign(window, {
@@ -67,13 +82,45 @@ async function signInHost(
             options?: { headers?: Record<string, string> },
           ) {
             switch (command) {
+              case "about_info":
+                return about;
+              case "manager_status":
+                return { state: "ready", failure: null };
+              case "manager_subscribe":
+                if (!(args instanceof Uint8Array))
+                  (
+                    args.updates as { onmessage: (signal: unknown) => void }
+                  ).onmessage({
+                    kind: "manager-state",
+                    revision: 1,
+                    status: { state: "ready", failure: null },
+                  });
+                return ++id;
+              case "manager_unsubscribe":
+                return null;
+              case "sign_in_subscribe":
+                if (!(args instanceof Uint8Array))
+                  state.signInUpdate = (signal) =>
+                    (
+                      args.updates as { onmessage: (signal: unknown) => void }
+                    ).onmessage(signal);
+                return ++id;
+              case "sign_in_unsubscribe":
+                state.signInUpdate = null;
+                return null;
               case "desktop_environment":
                 return {
                   outputLanguage: "en",
-                  docs: {
-                    origin: docs,
-                    languages: [{ code: "en", entry: `${docs}/index.html` }],
-                  },
+                  logLevel,
+                  docs: docs
+                    ? {
+                        state: "bundled",
+                        origin: docs,
+                        languages: [
+                          { code: "en", entry: `${docs}/index.html` },
+                        ],
+                      }
+                    : { state: "notBundled" },
                 };
               case "sign_in_status": {
                 ++state.statusReads;
@@ -185,6 +232,7 @@ async function signInHost(
                 return {
                   remainingAccess: {
                     automationEnabled: true,
+                    automationAccessRemains: state.automationAccessRemains,
                     automationRevoked: false,
                   },
                 };
@@ -193,6 +241,27 @@ async function signInHost(
                   state.terminalStarts.push(String(args.kind));
                 if (!(args instanceof Uint8Array) && args.kind === "tui") {
                   ++state.tuiStarts;
+                  const frames = args.frames as {
+                    onmessage: (data: ArrayBuffer) => void;
+                  };
+                  state.tuiOutput = (text) =>
+                    frames.onmessage(
+                      Uint8Array.from([0, ...new TextEncoder().encode(text)])
+                        .buffer,
+                    );
+                  frames.onmessage(Uint8Array.from([1]).buffer);
+                  if (!state.deferReady)
+                    state.tuiOutput(
+                      "\x1b]777;cadrumo;presentation;ready\x1b\\",
+                    );
+                  if (state.deferTui) {
+                    (
+                      args.frames as { onmessage: (data: ArrayBuffer) => void }
+                    ).onmessage(Uint8Array.from([0, 27, 91, 54, 110]).buffer);
+                    await new Promise<void>((resolve) => {
+                      state.releaseTui = resolve;
+                    });
+                  }
                   state.exitTui = () =>
                     (
                       args.frames as { onmessage: (data: ArrayBuffer) => void }
@@ -214,6 +283,10 @@ async function signInHost(
                 if (!(args instanceof Uint8Array) && args.session === 99)
                   ++state.tuiCloses;
                 return {};
+              case "terminal_write":
+                if (args instanceof Uint8Array)
+                  state.terminalWrites.push(new TextDecoder().decode(args));
+                return null;
               case "logs_subscribe":
                 return {
                   subscription: 1,
@@ -226,8 +299,22 @@ async function signInHost(
         },
       });
     },
-    { supported, docs: DOCS, deferInitial, deferInitialList },
+    {
+      supported,
+      docs: bundled ? DOCS : null,
+      deferInitial,
+      deferInitialList,
+      logLevel,
+      about: ABOUT_FIXTURE,
+    },
   );
+  await target.addInitScript(() => {
+    if (localStorage.getItem("cadrumo-shell-layout")) return;
+    localStorage.setItem(
+      "cadrumo-shell-layout",
+      JSON.stringify({ layout: { page: "docs", tuiShown: true } }),
+    );
+  });
   await serveDocs(target);
   await target.goto("/");
 }
@@ -239,6 +326,220 @@ const signInState = (target: Page) =>
         .__signInTest,
   );
 
+test("TUI startup stays covered through sign-in and loading until a screen is rendered", async ({
+  page,
+}) => {
+  await signInHost(page);
+  await page.evaluate(() => {
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { submitCode: "", deferReady: true },
+    );
+  });
+  await page
+    .getByLabel(label("desktop.signin.password"), { exact: true })
+    .fill("fixture");
+  await page
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  const terminal = page.locator('[data-terminal="tui"]');
+  const content = terminal.locator(".terminal-host");
+  await expect(terminal).toHaveAttribute("aria-busy", "true");
+  await expect(content).toBeHidden();
+  await expect(terminal.getByRole("status")).toBeVisible();
+  const workspace = page
+    .getByRole("navigation", { name: label("desktop.rail.label") })
+    .getByRole("button", { name: label("desktop.rail.tui"), exact: true });
+  await workspace.click();
+  await workspace.click();
+  const output = (text: string) =>
+    page.evaluate((text) => {
+      (
+        window as unknown as {
+          __signInTest: { tuiOutput: (text: string) => void };
+        }
+      ).__signInTest.tuiOutput(text);
+    }, text);
+  await output(
+    "\x1b[?1049hSign-in form\x1b[?1049l\x1b[?1049hLoading workbench\x1b[6n",
+  );
+  // Hidden output is still parsed, including the cursor reply ConPTY needs.
+  await expect
+    .poll(async () => (await signInState(page)).terminalWrites)
+    .not.toEqual([]);
+  await expect(content).toBeHidden();
+  // Split the readiness sequence across frames, as a real PTY may do.
+  await output("\x1b[2J\x1b[HReady workspace\x1b]777;cadrumo;presentation;");
+  await expect(content).toBeHidden();
+  await output("ready\x1b\\");
+  await expect(terminal).toHaveAttribute("aria-busy", "false");
+  await expect(content).toBeVisible();
+  await expect(terminal.locator("textarea")).toBeFocused();
+  expect((await signInState(page)).tuiStarts).toBe(1);
+  expect((await signInState(page)).tuiCloses).toBe(0);
+  await output("\x1b]777;cadrumo;presentation;loading\x1b\\\x1b[2J");
+  await expect(content).toBeHidden();
+  // ConPTY can forward OSC first and buffer the following screen repaint.
+  await output("\x1b]777;cadrumo;presentation;ready\x1b\\");
+  await page.waitForTimeout(50);
+  await expect(content).toBeHidden();
+  await output("Next screen");
+  await page.waitForTimeout(50);
+  await expect(content).toBeHidden();
+  await expect(content).toBeVisible();
+  expect((await signInState(page)).tuiStarts).toBe(1);
+  // A process that exits before readiness must not strand a loading cover.
+  await output("\x1b]777;cadrumo;presentation;loading\x1b\\");
+  await expect(content).toBeHidden();
+  await page.evaluate(() => {
+    (
+      window as unknown as { __signInTest: { exitTui: () => void } }
+    ).__signInTest.exitTui();
+  });
+  await expect(content).toBeVisible();
+  await expect(terminal).toHaveAttribute("aria-busy", "false");
+});
+
+test("terminal cursor replies survive output arriving before session opening completes", async ({
+  page,
+}) => {
+  await signInHost(page);
+  await page.evaluate(() => {
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      {
+        submitCode: "",
+        deferTui: true,
+      },
+    );
+  });
+  await page
+    .getByLabel(label("desktop.signin.password"), { exact: true })
+    .fill("secret á漢");
+  await page
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await expect.poll(async () => (await signInState(page)).tuiStarts).toBe(1);
+  // Let xterm consume the cursor query while the host still holds the open reply.
+  await page.evaluate(async () => {
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+    (
+      window as unknown as { __signInTest: { releaseTui: () => void } }
+    ).__signInTest.releaseTui();
+  });
+  await expect
+    .poll(async () => (await signInState(page)).terminalWrites)
+    .toEqual(["\u001b[1;1R"]);
+});
+
+for (const [severity, value] of [
+  ["DEBUG", "0"],
+  ["INFO", "1"],
+  ["ERROR", "3"],
+] as const) {
+  test(`the log view starts and resets at the host's ${severity} level`, async ({
+    page,
+  }) => {
+    await signInHost(page, false, false, false, true, severity);
+    await page.keyboard.press("Control+Shift+KeyL");
+    await openLogFilters(page);
+    const selector = page.getByLabel(label("desktop.logs.minimum_level"));
+    await expect(selector).toHaveValue(value);
+    await selector.selectOption("2");
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Control+Shift+KeyK");
+    await page.locator("[cmdk-input]").fill(label("desktop.action.logs_reset"));
+    await page
+      .locator("[cmdk-item]")
+      .filter({ hasText: label("desktop.action.logs_reset") })
+      .click();
+    await openLogFilters(page);
+    await expect(selector).toHaveValue(value);
+  });
+}
+
+test("public sign-in signals update the gate without focus or another status read", async ({
+  page,
+}) => {
+  await signInHost(page);
+  await expect(page.locator(".sign-in")).toBeVisible();
+  const before = (await signInState(page)).statusReads;
+  let revision = 0;
+  const emit = async (
+    state: string,
+    runtimeAvailable: boolean,
+    active_profile: string,
+  ) => {
+    await page.evaluate(
+      ({ state, runtimeAvailable, active_profile, revision }) => {
+        const host = (
+          window as unknown as {
+            __signInTest: {
+              signInUpdate: (signal: unknown) => void;
+            };
+          }
+        ).__signInTest;
+        host.signInUpdate({
+          kind: "sign-in-state",
+          revision,
+          status: {
+            supported: true,
+            state,
+            runtimeAvailable,
+            active_profile,
+            refusal: null,
+          },
+        });
+      },
+      { state, runtimeAvailable, active_profile, revision: ++revision },
+    );
+  };
+  await emit("present", true, "Other profile");
+  await expect(page.locator(".sign-in")).toHaveCount(0);
+  await emit("absent", true, "Test profile");
+  await expect(
+    page.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toBeVisible();
+  await emit("unknown", false, "Test profile");
+  await expect(
+    page.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toHaveCount(0);
+  expect((await signInState(page)).statusReads).toBe(before);
+});
+
+test("a package without documentation says so and keeps every terminal working", async ({
+  page: target,
+}) => {
+  await signInHost(target, true, false, false, false);
+  await expect(target.locator(".pane-docs")).toContainText(
+    label("desktop.docs.not_bundled"),
+  );
+  await expect(target.locator(".pane-docs")).not.toContainText(
+    /built|compiled|Everything else works/,
+  );
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".pane-tui")).toContainText(
+    "Sign in to open your workspace.",
+  );
+  await expect(target.locator(".pane-tui")).not.toContainText(
+    /\blocked\b|\bTUI\b/,
+  );
+  await expect(target.locator(".docs-frame")).toHaveCount(0);
+  await target.keyboard.press("Escape");
+  for (const kind of ["console", "python"] as const) {
+    await openPanelTab(target, kind);
+    await expect(
+      target.locator(`[data-terminal="${kind}"]`).locator("textarea"),
+    ).toBeFocused();
+  }
+  expect((await signInState(target)).terminalStarts).toEqual([
+    "console",
+    "python",
+  ]);
+});
+
 test("optional terminals start on first opening and survive hiding and switching", async ({
   page: target,
 }) => {
@@ -248,29 +549,20 @@ test("optional terminals start on first opening and survive hiding and switching
   await expect(target.locator("section.panel")).toBeHidden();
   await expect(target.locator(".xterm")).toHaveCount(0);
   await target.keyboard.press("Escape");
-  const rail = target.getByRole("navigation", {
-    name: label("desktop.rail.label"),
-  });
   for (const kind of ["console", "python"] as const) {
-    await rail
-      .getByRole("button", { name: label(`desktop.rail.${kind}`) })
-      .click();
+    await openPanelTab(target, kind);
     const pane = target.locator(`[data-terminal="${kind}"]`);
     await expect(pane.locator("textarea")).toBeFocused();
     await expect(pane.locator(".xterm")).toHaveCount(1);
     await pane.locator(".xterm").evaluate((element) => {
       element.setAttribute("data-session-marker", "retained");
     });
-    await rail
-      .getByRole("button", { name: label(`desktop.rail.${kind}`) })
-      .click();
+    await panelToggle(target).click();
     await expect(pane).toBeHidden();
     await expect(pane.locator("textarea")).not.toBeFocused();
   }
   for (const kind of ["console", "python"] as const) {
-    await rail
-      .getByRole("button", { name: label(`desktop.rail.${kind}`) })
-      .click();
+    await openPanelTab(target, kind);
     const pane = target.locator(`[data-terminal="${kind}"]`);
     await expect(pane.locator("textarea")).toBeFocused();
     await expect(pane.locator(".xterm")).toHaveAttribute(
@@ -285,7 +577,7 @@ test("optional terminals start on first opening and survive hiding and switching
   expect((await signInState(target)).terminalCloses).toBe(0);
 });
 
-test("a remembered open terminal starts without opening the other tab", async ({
+test("a previously open panel restores its visibility and chosen tab", async ({
   page: target,
 }) => {
   await target.addInitScript(() => {
@@ -296,6 +588,8 @@ test("a remembered open terminal starts without opening the other tab", async ({
   });
   await signInHost(target);
   await expect(target.locator(".sign-in")).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(target.locator("section.panel")).toBeVisible();
   await expect
     .poll(async () => (await signInState(target)).terminalStarts)
     .toEqual(["python"]);
@@ -303,8 +597,8 @@ test("a remembered open terminal starts without opening the other tab", async ({
     0,
   );
   await expect(
-    target.getByLabel(label("desktop.signin.password"), { exact: true }),
-  ).toBeFocused();
+    target.getByRole("tab", { name: label("desktop.rail.python") }),
+  ).toHaveAttribute("aria-selected", "true");
 });
 
 test("startup focus events share one pending sign-in status read", async ({
@@ -348,7 +642,10 @@ test("a failed status read releases its slot for the next focus refresh", async 
     );
     window.dispatchEvent(new Event("focus"));
   });
-  await expect(target.locator(".sign-in")).toContainText("queue_full");
+  await expect(target.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.other"),
+  );
+  await expect(target.locator(".sign-in")).not.toContainText("queue_full");
   await target.evaluate(() => {
     Object.assign(
       (window as unknown as { __signInTest: object }).__signInTest,
@@ -357,6 +654,9 @@ test("a failed status read releases its slot for the next focus refresh", async 
     window.dispatchEvent(new Event("focus"));
   });
   await expect(target.locator(".sign-in")).not.toContainText("queue_full");
+  await expect(target.locator(".sign-in")).not.toContainText(
+    label("desktop.signin.refused.other"),
+  );
   expect((await signInState(target)).statusReads).toBe(3);
   expect((await signInState(target)).submissions).toBe(0);
 });
@@ -395,6 +695,9 @@ test("explicit sign-in dispatches beside a pending status read and submits once"
     target.getByText(label("desktop.signin.refused.invalid")),
   ).toBeVisible();
   expect((await signInState(target)).submissions).toBe(1);
+  await expect(target.locator(".sign-in")).not.toContainText(
+    label("desktop.signin.refused.other"),
+  );
   expect((await signInState(target)).statusReads).toBe(3);
 });
 
@@ -432,6 +735,86 @@ test("sign-in gates TUI, sends a raw secret once, clears it and refreshes refusa
     await target.evaluate(() => JSON.stringify(localStorage)),
   ).not.toContain("secret á漢");
 });
+
+const markSignedIn = (target: Page, extra: object = {}) =>
+  target.evaluate((fields) => {
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { presence: "present", ...fields },
+    );
+    window.dispatchEvent(new Event("focus"));
+  }, extra);
+
+test("the agent is there only while a profile is signed in", async ({
+  page: target,
+}) => {
+  await signInHost(target);
+  const rail = target.getByRole("navigation", {
+    name: label("desktop.rail.label"),
+  });
+  const held = rail.getByRole("button", {
+    name: `${label("desktop.rail.agent")}, ${label("desktop.agent.sign_in_first")}`,
+    exact: true,
+  });
+  // Signed out, there is no agent: its column is not shown, and its button
+  // stays in the rail, held, saying why. Pressing it does nothing. The
+  // sign-in dialog is dismissed to reach the rail behind it.
+  await expect(target.locator(".pane-agent")).toBeHidden();
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+  await expect(held).toHaveAttribute("aria-disabled", "true");
+  await held.click({ force: true });
+  await expect(target.locator(".pane-agent")).toBeHidden();
+  await markSignedIn(target);
+  await expect(target.locator(".pane-agent")).toBeVisible();
+  const available = rail.getByRole("button", {
+    name: label("desktop.rail.agent"),
+    exact: true,
+  });
+  await expect(available).not.toHaveAttribute("aria-disabled", "true");
+  await target
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+    .click();
+  await target
+    .getByRole("menuitem", {
+      name: label("desktop.account.sign_out"),
+      exact: true,
+    })
+    .click();
+  await expect.poll(async () => (await signInState(target)).signOuts).toBe(1);
+  await expect(target.locator(".pane-agent")).toBeHidden();
+  await expect(held).toHaveAttribute("aria-disabled", "true");
+});
+
+// What a sign-out leaves standing is what the product reports of it. The
+// saved setting is on in every case; only an issued key that can still admit
+// is said, and what the product does not answer is not said.
+for (const remains of [false, null, true] as const)
+  test(`signing out with agent access remaining ${String(remains)} ${remains ? "says" : "says nothing of"} issued keys`, async ({
+    page: target,
+  }) => {
+    await signInHost(target);
+    await markSignedIn(target, { automationAccessRemains: remains });
+    await expect(target.locator(".pane-agent")).toBeVisible();
+    await target
+      .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+      .click();
+    await target
+      .getByRole("menuitem", {
+        name: label("desktop.account.sign_out"),
+        exact: true,
+      })
+      .click();
+    await expect.poll(async () => (await signInState(target)).signOuts).toBe(1);
+    // The menu stays open on the sign-out and offers sign-in.
+    const menu = target.locator(".account-menu");
+    await expect(
+      menu.getByRole("menuitem", { name: label("desktop.signin.submit") }),
+    ).toBeVisible();
+    await expect(
+      menu.getByText(label("desktop.account.remaining_access")),
+    ).toHaveCount(remains ? 1 : 0);
+  });
 
 for (const pending of ["status", "list"] as const)
   test(`persisted sign-in displays immediately beside a held ${pending} read without another status call`, async ({
@@ -512,10 +895,15 @@ for (const pending of ["status", "list"] as const)
   });
 
 for (const pending of ["status", "list"] as const)
-  test(`profile creation dispatches before a held ${pending} read and refreshes the selected new profile coherently`, async ({
+  test(`profile creation authenticates before a held ${pending} read settles`, async ({
     page: target,
   }) => {
     await signInHost(target, true, false, pending === "list");
+    await target.evaluate(() => {
+      (
+        window as unknown as { __signInTest: { submitCode: string } }
+      ).__signInTest.submitCode = "";
+    });
     const dialog = target.locator(".sign-in");
     await expect(dialog).toBeVisible();
     if (pending === "status")
@@ -571,14 +959,15 @@ for (const pending of ["status", "list"] as const)
       if (pending === "status") state.releaseStatus();
       else state.releaseList();
     }, pending);
-    await expect(dialog.locator("#profile-password")).toBeFocused();
-    await expect(dialog.locator("#profile-choice option:checked")).toHaveText(
-      "Marta Ruiz á漢",
-    );
+    await expect(dialog).toHaveCount(0);
+    await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
     const state = await signInState(target);
     expect(state.creations).toBe(1);
-    expect(state.statusReads).toBe(Number(reads) + 1);
-    expect(state.submissions).toBe(0);
+    expect(state.statusReads).toBe(reads);
+    expect(state.submissions).toBe(1);
+    expect(state.profileHeader).toBe(state.createdHeader);
+    expect(state.rawPassword).toBe(true);
+    expect(state.secretCleared).toBe(true);
     expect(state.createdHeader).toBe("Marta%20Ruiz%20%C3%A1%E6%BC%A2");
     expect(state.createdRawPassword).toBe(true);
     expect(state.createdTokenHeader).toBe(true);
@@ -629,7 +1018,7 @@ test("a chosen profile is named to the host by its label, percent-encoded in a h
   expect(state.tokenHeader).toBe(true);
 });
 
-test("a profile is created through the host with one raw password body, its label in a header", async ({
+test("a created profile remains available when automatic sign-in is refused", async ({
   page: target,
 }) => {
   await signInHost(target);
@@ -650,7 +1039,7 @@ test("a profile is created through the host with one raw password body, its labe
   await form
     .getByRole("button", { name: label("desktop.account.create.submit") })
     .click();
-  // Created and selected, and not signed in: its password is asked for.
+  // Creation succeeded, but the runtime refused the subsequent sign-in.
   await expect(dialog.locator("#profile-password")).toBeFocused();
   await expect(dialog.locator("#profile-choice option:checked")).toHaveText(
     "Marta Ruiz á漢",
@@ -661,11 +1050,14 @@ test("a profile is created through the host with one raw password body, its labe
   expect(state.createdRawPassword).toBe(true);
   expect(state.createdTokenHeader).toBe(true);
   expect(state.createdSecretCleared).toBe(true);
-  expect(state.submissions).toBe(0);
+  expect(state.submissions).toBe(1);
+  expect(state.profileHeader).toBe(state.createdHeader);
+  expect(state.rawPassword).toBe(true);
+  expect(state.secretCleared).toBe(true);
   expect(state.tuiStarts).toBe(0);
 });
 
-test("throttling counts down without retry and a successful sign-in hands over to TUI", async ({
+test("throttling counts down without retry and a successful sign-in starts the TUI", async ({
   page: target,
 }) => {
   await signInHost(target);
@@ -699,7 +1091,9 @@ test("throttling counts down without retry and a successful sign-in hands over t
   await submit.click();
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   expect((await signInState(target)).tuiStarts).toBe(1);
-  await target.getByRole("button", { name: /Settings/ }).click();
+  await target
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+    .click();
   await target.evaluate(() => {
     Object.assign(
       (window as unknown as { __signInTest: object }).__signInTest,
@@ -708,7 +1102,7 @@ test("throttling counts down without retry and a successful sign-in hands over t
     window.dispatchEvent(new Event("focus"));
   });
   await target
-    .getByRole("button", {
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
@@ -719,14 +1113,22 @@ test("throttling counts down without retry and a successful sign-in hands over t
       window as unknown as { __signInTest: { releaseStatus: () => void } }
     ).__signInTest.releaseStatus(),
   );
-  await expect(
-    target.getByText(label("desktop.account.remaining_access")),
-  ).toBeVisible();
   // Signing out here leaves the signed-out pane; the dialog is not thrown
   // back at the person who has just chosen to sign out.
   await expect(
     target.getByText(label("desktop.signin.signed_out_lead")),
   ).toBeVisible();
+  // The product kept the saved automation setting and reports that no issued
+  // key can admit: the menu, still open on the sign-out, says nothing of
+  // access that is not there.
+  await expect(
+    target
+      .locator(".account-menu")
+      .getByRole("menuitem", { name: label("desktop.signin.submit") }),
+  ).toBeVisible();
+  await expect(
+    target.getByText(label("desktop.account.remaining_access")),
+  ).toHaveCount(0);
   await expect(
     target.getByLabel(label("desktop.signin.password"), { exact: true }),
   ).toHaveCount(0);
@@ -750,44 +1152,166 @@ test("throttling counts down without retry and a successful sign-in hands over t
   expect((await signInState(target)).tuiStarts).toBe(1);
 });
 
-test("TUI handover remains available for locked profiles and refreshes on focus", async ({
+test("a locked profile is said beside the sign-in form, which stays available and never leads to the TUI", async ({
   page: target,
 }) => {
   await signInHost(target);
   await target.evaluate(() => {
     Object.assign(
       (window as unknown as { __signInTest: object }).__signInTest,
-      { refusal: { code: "PROFILE_LOCKED", retryAfterSeconds: null } },
+      {
+        refusal: { code: "PROFILE_LOCKED", retryAfterSeconds: null },
+        submitCode: "PROFILE_LOCKED",
+      },
     );
     window.dispatchEvent(new Event("focus"));
   });
-  // Said in the dialog, and in the pane behind it.
-  await expect(target.locator(".sign-in")).toContainText(
+  const dialog = target.locator(".sign-in");
+  const gate = target.locator(".pane-tui [data-slot=empty]");
+  const password = dialog.getByLabel(label("desktop.signin.password"), {
+    exact: true,
+  });
+  const submit = dialog.getByRole("button", {
+    name: label("desktop.signin.submit"),
+    exact: true,
+  });
+  // Said in the dialog, with the form beside it and no way to the TUI.
+  await expect(dialog).toContainText(
     label("desktop.signin.refused.profile_locked"),
   );
-  await expect(target.locator(".pane-tui")).toContainText(
+  await expect(password).toBeVisible();
+  await expect(dialog.getByRole("button", { name: /TUI/ })).toHaveCount(0);
+  // Put aside, the pane behind it says the same, with the way to try again.
+  await target.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(gate).toContainText(
     label("desktop.signin.refused.profile_locked"),
+  );
+  const again = gate.getByRole("button", {
+    name: label("desktop.signin.submit"),
+    exact: true,
+  });
+  await expect(again).toBeVisible();
+  await expect(gate.getByRole("button", { name: /TUI/ })).toHaveCount(0);
+  await again.click();
+  await expect(password).toBeFocused();
+  // A try is refused again, said again, and the form is still there.
+  await password.fill("secret á漢");
+  await submit.click();
+  await expect
+    .poll(async () => (await signInState(target)).submissions)
+    .toBe(1);
+  await expect(dialog).toContainText(
+    label("desktop.signin.refused.profile_locked"),
+  );
+  await expect(password).toBeEnabled();
+  expect((await signInState(target)).tuiStarts).toBe(0);
+  // The profile is unlocked in the host: the next try signs in.
+  const reads = (await signInState(target)).statusReads as number;
+  await target.evaluate(() => {
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { refusal: null, submitCode: "" },
+    );
+    window.dispatchEvent(new Event("focus"));
+  });
+  await expect
+    .poll(async () => (await signInState(target)).statusReads)
+    .toBeGreaterThan(reads);
+  await password.fill("secret á漢");
+  await submit.click();
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  expect((await signInState(target)).submissions).toBe(2);
+});
+
+// A refusal is the reason the last try failed. Whatever its code, the dialog
+// and the account menu still offer sign-in afterwards, and neither sends the
+// person to the TUI to unlock, recover or sign in.
+const REFUSALS = {
+  PROFILE_LOCKED: label("desktop.signin.refused.profile_locked"),
+  KEYRING_UNAVAILABLE: label("desktop.signin.refused.keyring_unavailable"),
+  CREDENTIAL_REJECTED: label("desktop.signin.refused.invalid"),
+  // The wait runs down, so only the words before it are fixed.
+  THROTTLED:
+    label("desktop.signin.refused.throttled").split("{seconds}")[0]?.trim() ??
+    "",
+} as const;
+
+for (const [code, said] of Object.entries(REFUSALS))
+  test(`${code}: said as the reason of the last try, with sign-in still offered and no way to the TUI`, async ({
+    page: target,
+  }) => {
+    await signInHost(target);
+    await target.evaluate((code) => {
+      Object.assign(
+        (window as unknown as { __signInTest: object }).__signInTest,
+        {
+          submitCode: code,
+          retryAfterSeconds: code === "THROTTLED" ? 30 : null,
+        },
+      );
+    }, code);
+    const dialog = target.locator(".sign-in");
+    const password = dialog.getByLabel(label("desktop.signin.password"), {
+      exact: true,
+    });
+    const signIn = { name: label("desktop.signin.submit"), exact: true };
+    await password.fill("secret á漢");
+    await dialog.getByRole("button", signIn).click();
+    await expect
+      .poll(async () => (await signInState(target)).submissions)
+      .toBe(1);
+    // The reason is said, the form is still there, and the TUI is not offered.
+    await expect(dialog).toContainText(said);
+    await expect(password).toBeVisible();
+    await expect(dialog.getByRole("button", signIn)).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /TUI/ })).toHaveCount(0);
+
+    // Put aside, the account menu still offers sign-in, and not the TUI.
+    await target.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await target
+      .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+      .click();
+    const menu = target.locator(".account-menu");
+    await expect(menu.getByRole("menuitem", signIn)).toBeVisible();
+    await expect(menu.getByRole("menuitem", { name: /TUI/ })).toHaveCount(0);
+    // What outlasts the attempt is still said there.
+    if (code !== "CREDENTIAL_REJECTED") await expect(menu).toContainText(said);
+
+    // And it opens the form again.
+    await menu.getByRole("menuitem", signIn).click();
+    await expect(dialog).toBeVisible();
+    await expect(password).toBeVisible();
+    expect((await signInState(target)).tuiStarts).toBe(0);
+  });
+
+test("the end of the TUI's session reads the account again", async ({
+  page: target,
+}) => {
+  await signInHost(target);
+  await target.evaluate(() =>
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { submitCode: "" },
+    ),
   );
   await target
-    .locator(".sign-in")
-    .getByRole("button", {
-      name: label("desktop.signin.open_tui"),
-      exact: true,
-    })
+    .getByLabel(label("desktop.signin.password"), { exact: true })
+    .fill("secret á漢");
+  await target
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
     .click();
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
-  expect((await signInState(target)).submissions).toBe(0);
   const reads = (await signInState(target)).statusReads as number;
   await target.evaluate(() =>
     (
       window as unknown as { __signInTest: { exitTui: () => void } }
     ).__signInTest.exitTui(),
   );
-  // Back at the gate, with the status read again: still locked, still said.
-  await expect(target.locator(".sign-in")).toContainText(
-    label("desktop.signin.refused.profile_locked"),
-  );
-  expect((await signInState(target)).statusReads).toBeGreaterThan(reads);
+  await expect
+    .poll(async () => (await signInState(target)).statusReads)
+    .toBeGreaterThan(reads);
 });
 
 test("runtime-unavailable remains distinct from unknown presence", async ({
@@ -829,9 +1353,14 @@ test("unsupported platforms hide desktop sign-in and Account", async ({
   await expect(
     target.getByLabel(label("desktop.signin.password"), { exact: true }),
   ).toHaveCount(0);
-  await target.getByRole("button", { name: /Settings/ }).click();
+  await target
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+    .click();
   await expect(
-    target.getByRole("region", { name: label("desktop.settings.session") }),
+    target.locator(".account-menu").getByRole("menuitem", {
+      name: label("desktop.signin.submit"),
+      exact: true,
+    }),
   ).toHaveCount(0);
 });
 
@@ -849,7 +1378,9 @@ test("the desktop host offers no profile views, so nothing leads to one", async 
     .click();
   const palette = target.locator(".palette");
   for (const key of ["desktop.calendar.title", "desktop.rail.messages"]) {
-    await palette.getByRole("combobox").fill(label(key));
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label(key));
     await expect(
       palette.locator(".palette-title").filter({ hasText: label(key) }),
     ).toHaveCount(0);
@@ -888,6 +1419,7 @@ async function serveDocs(target: Page) {
 }
 
 async function openWithDocs(target: Page) {
+  await seedLayout(target);
   await serveDocs(target);
   await target.goto(`/?docs=${encodeURIComponent(`${DOCS}/index.html`)}`);
   await expect(target.frameLocator(".docs-frame").locator("h1")).toHaveText(
@@ -920,7 +1452,19 @@ test("without a host the shell lays out every area and invents nothing", async (
   const rail = target.getByRole("navigation", {
     name: label("desktop.rail.label"),
   });
-  await expect(rail.getByRole("button")).toHaveCount(8);
+  await expect(rail.getByRole("button")).toHaveCount(7);
+  // The TUI is shown; the documentation waits to be asked for. The agent
+  // works only for a signed-in profile, and with no host nobody is: its
+  // column is not shown, and its button stays in the rail, held, saying why.
+  await expect(target.locator(".pane-agent")).toBeHidden();
+  const agent = rail.getByRole("button", {
+    name: `${label("desktop.rail.agent")}, ${label("desktop.agent.sign_in_first")}`,
+    exact: true,
+  });
+  await expect(agent).toHaveAttribute("aria-disabled", "true");
+  await agent.click({ force: true });
+  await expect(target.locator(".pane-agent")).toBeHidden();
+  await expect(target.locator(".pane-docs")).toBeHidden();
   await expect(target.locator(".pane-docs")).toContainText(
     label("desktop.host.unavailable"),
   );
@@ -932,7 +1476,7 @@ test("without a host the shell lays out every area and invents nothing", async (
     label("desktop.host.unavailable"),
   );
   await expect(target.locator(".pane-tui .terminal-host")).toBeHidden();
-  await rail.getByRole("button", { name: label("desktop.rail.logs") }).click();
+  await openPanelTab(target, "logs");
   await expect(
     target.getByRole("tab", { name: label("desktop.rail.logs") }),
   ).toHaveAttribute("aria-selected", "true");
@@ -942,7 +1486,7 @@ test("without a host the shell lays out every area and invents nothing", async (
   await expect(target.locator(".record")).toHaveCount(0);
 });
 
-test("the rail opens and closes the panel tabs and the TUI pane", async ({
+test("the single rail toggle opens and closes the panel and preserves its tab", async ({
   page: target,
 }) => {
   await target.goto("/");
@@ -950,23 +1494,20 @@ test("the rail opens and closes the panel tabs and the TUI pane", async ({
     name: label("desktop.rail.label"),
   });
   const panel = target.locator("section.panel");
-  await rail
-    .getByRole("button", { name: label("desktop.rail.python") })
-    .click();
+  await expect(panel).toBeHidden();
+  await openPanelTab(target, "python");
   await expect(panel).toBeVisible();
   await expect(
     target.getByRole("tab", { name: label("desktop.rail.python") }),
   ).toHaveAttribute("aria-selected", "true");
-  await rail
-    .getByRole("button", { name: label("desktop.rail.python") })
-    .click();
+  await panelToggle(target).click();
   await expect(panel).toBeHidden();
   await target.keyboard.press("Control+Backquote");
   await expect(panel).toBeVisible();
   await rail.getByRole("button", { name: label("desktop.rail.tui") }).click();
-  await expect(target.locator(".pane-tui")).toBeHidden();
-  await rail.getByRole("button", { name: label("desktop.rail.tui") }).click();
   await expect(target.locator(".pane-tui")).toBeVisible();
+  await rail.getByRole("button", { name: label("desktop.rail.tui") }).click();
+  await expect(target.locator(".pane-tui")).toBeHidden();
 });
 
 test("maximize, swap, orientation and hide never reload the documentation", async ({
@@ -1007,6 +1548,7 @@ test("maximize, swap, orientation and hide never reload the documentation", asyn
 test("a window too narrow for side by side stacks without changing the choice", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await target.goto("/");
   const docsHead = target.locator(".pane-docs .pane-head");
   const stack = docsHead.getByRole("button", {
@@ -1081,7 +1623,7 @@ test("bridge messages from any window but the documentation frame are ignored", 
 test("the remembered layout survives a reload", async ({ page: target }) => {
   await target.goto("/");
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   const settings = target.getByRole("dialog", {
     name: label("desktop.settings.title"),
@@ -1092,12 +1634,19 @@ test("the remembered layout survives a reload", async ({ page: target }) => {
     .click();
   await expect(target.locator(".split")).toHaveClass(/split-column/);
   await target.keyboard.press("Escape");
-  await target
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.python") })
-    .click();
+  await openPanelTab(target, "python");
+  await expect
+    .poll(() =>
+      target.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("cadrumo-shell-layout") ?? "null")
+            ?.layout?.tab,
+      ),
+    )
+    .toBe("python");
   await target.reload();
   await expect(target.locator(".split")).toHaveClass(/split-column/);
+  await expect(target.locator("section.panel")).toBeVisible();
   await expect(
     target.getByRole("tab", { name: label("desktop.rail.python") }),
   ).toHaveAttribute("aria-selected", "true");
@@ -1170,8 +1719,12 @@ test("the palette lists actions and runs the chosen one", async ({
   const palette = target.getByRole("dialog", {
     name: label("desktop.palette.label"),
   });
-  await expect(palette.getByRole("option").first()).toBeVisible();
-  await palette.getByRole("combobox").fill(label("desktop.pane.maximize_tui"));
+  await expect(
+    palette.getByRole("listbox").getByRole("option").first(),
+  ).toBeVisible();
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.pane.maximize_tui"));
   await target.keyboard.press("Enter");
   await expect(palette).toBeHidden();
   await expect(target.locator(".pane-docs")).toBeHidden();
@@ -1183,7 +1736,7 @@ test("a forced appearance reaches the documentation through the bridge", async (
 }) => {
   await openWithDocs(target);
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   await target
     .getByRole("radiogroup", { name: label("desktop.settings.appearance") })
@@ -1204,6 +1757,8 @@ test("a forced appearance reaches the documentation through the bridge", async (
 test("the shell runs under the window's content security policy without a violation", async ({
   page: target,
 }) => {
+  const pageErrors: string[] = [];
+  target.on("pageerror", (error) => pageErrors.push(error.message));
   const template = JSON.parse(
     readFileSync(local("../../src-tauri/tauri.conf.json.in"), "utf8"),
   ) as { app: { security: { csp: string } } };
@@ -1259,21 +1814,22 @@ test("the shell runs under the window's content security policy without a violat
   ).toBeVisible();
   await target.keyboard.press("Escape");
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   await expect(target.locator(".settings")).toBeVisible();
+  await expect(target.locator(".settings [data-about-open]")).toContainText(
+    ABOUT_FIXTURE.display_version!,
+  );
   await target.keyboard.press("Escape");
   await expect(target.frameLocator(".docs-frame").locator("h1")).toHaveText(
     "Stand-in documentation",
   );
-  await target
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.console") })
-    .click();
+  await openPanelTab(target, "console");
   await expect(target.locator(".xterm").first()).toBeVisible();
   expect(
     await target.evaluate(
       () => (window as unknown as { __violations: string[] }).__violations,
     ),
   ).toEqual([]);
+  expect(pageErrors).toEqual([]);
 });

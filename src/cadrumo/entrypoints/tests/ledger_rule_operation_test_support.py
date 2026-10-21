@@ -17,11 +17,7 @@ from ...application.ledger.actions_classification import (
     add_classification_rule,
     plan_classification_rules,
 )
-from ...application.ledger.actions_manual import (
-    command_from_patch,
-    create_manual_transaction,
-    prepare_manual_transaction_update,
-)
+from ...application.ledger.actions_manual import command_from_patch, prepare_manual_transaction_update
 from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from ...application.ledger.rule_contracts import (
     LedgerRuleAddProjection,
@@ -39,6 +35,7 @@ from ...application.ledger.rule_operation import (
     LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
     LEDGER_RULE_LIST_OPERATION_DEFINITION_ID,
 )
+from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ...core.decimal.formatting import format_decimal
 from ...core.operations import OperationEffect
 from ...domain.buckets.event import (

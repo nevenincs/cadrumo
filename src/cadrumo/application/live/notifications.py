@@ -241,7 +241,7 @@ class NotificationsService(
             snapshot_id=snapshot_id,
             bucket_id=bucket_id,
             captured_at=snapshot.captured_at,
-            source_url=str(snapshot.source_url),
+            source_url=snapshot.source_url,
             authenticated_identity=_normalise_authenticated_identity(capture.authenticated_identity),
             rows=snapshot.rows,
             persisted_at=now(),
@@ -327,7 +327,7 @@ def resolve_notification_row(
     )
     for snapshot in snapshots:
         for row in snapshot.rows:
-            if str(row.certificado_id) == wanted:
+            if row.certificado_id == wanted:
                 return row
     raise LiveApplicationInputError(
         translated_message="application.live.notifications.errors.certificado_not_in_any_snapshot",

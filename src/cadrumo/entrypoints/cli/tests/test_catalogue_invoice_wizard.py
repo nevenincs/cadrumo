@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....entrypoints.cli._ledger_catalogue_invoice_payloads import CatalogueInvoiceWizardResult
+from ..ledger_catalogue_invoice_results import CatalogueInvoiceWizardResult
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

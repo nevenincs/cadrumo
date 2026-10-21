@@ -126,15 +126,15 @@ def iter_worksheet_rows(
             )
         except (ValueError, FinancialValidationError) as exc:
             _logger.warning(
-                "%s: parse error row=%d file=%s",
+                "%s: parse error row=%d reason=%s",
                 provider.name,
                 source_row_index,
-                path.name,
-                exc_info=True,
+                "financial_validation" if isinstance(exc, FinancialValidationError) else "invalid_value",
             )
             raise InvalidFinancialSourceError(
-                f"worksheet row {source_row_index} could not be parsed: {exc}",
-            ) from exc
+                f"worksheet row {source_row_index} could not be parsed: "
+                f"{str(exc) if isinstance(exc, FinancialValidationError) else 'invalid field value'}",
+            ) from None
         yield build_provider_row(
             provider=provider,
             path=path,

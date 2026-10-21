@@ -279,7 +279,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             storage_state_path = self._storage_state_path()
             if not session_store.exists(storage_state_path):
                 raise AeatLoginAssertionError(
-                    "no persisted Cl@ve Móvil session; run `aeat config auth status` first",
+                    "no persisted Cl@ve Móvil session; run `cadrumo-runtime config auth status` first",
                     translated_message="adapters.auth.clave_movil.errors.no_persisted_session",
                 )
 
@@ -445,7 +445,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         resolved_target_url = target_url or session_landing_url
         target_path = (
             self._target_path_from_url(resolved_target_url)
-            if resolved_target_url
+            if (resolved_target_url is not None and resolved_target_url)
             else self._settings.aeat_sede_expedientes_path
         )
         probe_url = self._probe_url_for_verification(
@@ -562,7 +562,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         if not raw:
             raise ClaveMovilConfigurationError(
                 f"{_CLAVE_MOVIL_DNI_NIE_ENV} is not set; set it to your DNI or NIE "
-                "before running `aeat config auth configure --provider clave_movil`.",
+                "before running `cadrumo-runtime config auth configure --provider clave_movil`.",
                 translated_message="adapters.auth.clave_movil.errors.dni_nie_not_set",
             )
         _classify_identity(raw)
@@ -659,7 +659,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         from ....persistence.storage.master_key.active_session import active_bucket_session_serves
 
         bucket_id = resolve_active_bucket_id()
-        pointer = read_profile_bucket_by_id(bucket_id) if bucket_id else None
+        pointer = read_profile_bucket_by_id(bucket_id) if (bucket_id is not None and bucket_id) else None
         context = _active_profile_context_defaults(
             bucket_id,
             profile_label_present=bool(pointer is not None and pointer.label),
@@ -775,7 +775,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         persisted = session_store.load(storage_state_path)
         if persisted is None:
             raise AeatLoginAssertionError(
-                "no persisted Cl@ve Móvil session; run `aeat config auth status` first",
+                "no persisted Cl@ve Móvil session; run `cadrumo-runtime config auth status` first",
                 translated_message="adapters.auth.clave_movil.errors.no_persisted_session",
             )
         return persisted

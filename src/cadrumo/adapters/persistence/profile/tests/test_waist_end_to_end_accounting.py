@@ -57,7 +57,7 @@ from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.service import AttachmentFileContent, AttachmentIngestionRequest, add_attachment
 from .....domain.calculations.registry.schema import ModeloRevision
 from .....domain.invoices.models import Invoice
-from .....domain.iva.classification import InvoiceKind
+from .....domain.iva.schema import InvoiceKind
 from ....inbound.einvoice.shape import probe_document_shape
 from ...storage.attachment import AttachmentStore
 from ...storage.tests.secure_sql import TestRuntimeProfile

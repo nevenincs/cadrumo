@@ -2,7 +2,7 @@
 
 ``aeat app ledger invoice wizard`` is the fallback entry point for
 when automated extraction (``ledger evidence extract`` / vision OCR) is
-unavailable or insufficient: the operator (an autonomous LLM agent that cannot
+unavailable or insufficient: the operator (an delegated operator that cannot
 answer an interactive prompt) supplies every invoice field as CLI options in
 one call. This module validates each field independently -- reusing the same
 authority-backed
@@ -60,14 +60,10 @@ from ...domain.invoices.enums import InvoiceClass, resolve_iva_rate_slot
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice
 from ...domain.invoices.validators import validate_country_code, validate_iva_number
-from ...domain.iva.classification import (
-    InvoiceKind,
-    domestic_categories_by_rate_kind,
-    resolve_iva_classification_inputs,
-)
+from ...domain.iva.classification import domestic_categories_by_rate_kind, resolve_iva_classification_inputs
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.lookup import unique_rate_kind_for_declared_rate
-from ...domain.iva.schema import IvaCategory, spanish_eu_member_state
+from ...domain.iva.schema import InvoiceKind, IvaCategory, spanish_eu_member_state
 from .catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from .catalogue_creation_ports import CatalogueCreationPorts
 
@@ -595,7 +591,7 @@ def _build_wizard_invoice(
             operation=operation,
         )
     except (InvoiceValidationError, ValidationError, CoreValidationError) as exc:
-        reason = str(exc.errors()[0].get("msg", str(exc))) if isinstance(exc, ValidationError) else str(exc)
+        reason = exc.errors()[0].get("msg", str(exc)) if isinstance(exc, ValidationError) else str(exc)
         raise InvoiceValidationError(
             f"invoice wizard refused: {reason}",
             translated_message="application.invoices.wizard.errors.build_failed",
@@ -607,6 +603,7 @@ def _persist_or_resolve_wizard_invoice(
     candidate: Invoice,
     *,
     ports: CatalogueCreationPorts,
+    actor: str,
 ) -> InvoiceWizardResult:
     catalogue = ports.invoice_repository.load()
     existing = catalogue.get(candidate.invoice_id)
@@ -620,6 +617,7 @@ def _persist_or_resolve_wizard_invoice(
     result = create_catalogue_invoice(
         invoice=candidate,
         ports=ports,
+        actor=actor,
     )
     return InvoiceWizardResult(invoice=result.invoice, already_existed=False)
 
@@ -655,6 +653,7 @@ def create_invoice_via_wizard(
     rectifies_invoice_number: str | None = None,
     recargo_amount: str | None = None,
     operation: PinnedAuthorityOperation | None = None,
+    actor: str = "cli",
 ) -> InvoiceWizardResult:
     """Validate every field, then create (or resolve) one catalogue invoice.
 
@@ -696,6 +695,8 @@ def create_invoice_via_wizard(
         recargo_amount: Optional canonical euro amount added to grand total.
         operation: Exact retained authority pin, or the ordinary bundled default.
         ports: Required catalogue-creation capabilities for the active bucket.
+        actor: Identifier stamped on the creation audit event. It is what tells
+            an invoice an automation entered from one the person entered.
 
     Returns:
         :class:`InvoiceWizardResult` naming the resolved invoice and whether
@@ -737,4 +738,4 @@ def create_invoice_via_wizard(
         ports=ports,
         operation=operation,
     )
-    return _persist_or_resolve_wizard_invoice(candidate, ports=ports)
+    return _persist_or_resolve_wizard_invoice(candidate, ports=ports, actor=actor)

@@ -108,9 +108,9 @@ def section_title(section: ModeloFormSection, *, page_number: int, part_number: 
     if readable_text(section.heading) is not None:
         return section.heading
     official = section.official_heading
-    if official and not looks_like_identifier(official):
+    if (official is not None and official) and not looks_like_identifier(official):
         return ModeloFormText(text=official, disclosure=ModeloFormTextDisclosure.OFFICIAL_SPANISH)
-    boxes = list(dict.fromkeys(field.box for field in section_fields(section) if field.box))
+    boxes = list(dict.fromkeys(field.box for field in section_fields(section) if (field.box is not None and field.box)))
     return _section_location_title(boxes, page_number=page_number, part_number=part_number)
 
 

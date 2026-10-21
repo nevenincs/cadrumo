@@ -21,12 +21,13 @@ from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.llm import LLMSplitChild, LLMSplitResponse, prompt_spec_with_saturation_fields
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
+from .....domain.iva.schema import InvoiceKind
 
 _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 _BUCKET = "c8bef9e4-b162-4bea-b33d-332c607f0ed1"  # was 'bucket-split'

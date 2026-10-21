@@ -8,6 +8,7 @@ import pytest
 from textual.widgets import Button, DataTable, Static
 
 from .....application.modelo.declaration_summary import DeclarationSummary, DeclarationSummaryState
+from .....application.modelo.declarations_list import declaration_list_rows
 from .....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from .....application.modelo.work_form_models import ModeloFormResult, ModeloFormResultDirection
 from .....application.operator_actions.catalogue import lookup_action
@@ -109,3 +110,32 @@ async def test_external_details_never_borrows_the_local_amount_and_returns_to_th
             assert app.screen is screen and app.focused is table
             assert table.ordered_rows[table.cursor_row].key.value == external.key
             assert calls == []
+
+
+@pytest.mark.asyncio
+async def test_mounted_external_details_reword_preserves_row_disclosure_and_focus() -> None:
+    workspace, calendar = portfolio_projection()
+    row = next(item for item in declaration_list_rows(workspace, calendar) if item.state == "aeat_unlinked")
+    with override_settings(cadrumo_output_language="en"):
+        modal = ExternalFilingDetailsScreen(row)
+        async with ScreenHostApp(modal).run_test(size=(120, 40)) as pilot:
+            await pilot.pause()
+            modal.action_technical()
+            detail = modal.query_one("#external-filing-technical", Static)
+            summary = modal.query_one("#external-filing-summary", Static)
+            assert row.calendar is not None
+            reference = row.calendar.aeat_reference_id
+            assert reference is not None and detail.content == reference
+            focused = modal.focused
+            with override_settings(cadrumo_output_language="es"):
+                await modal.refresh_language()
+                await pilot.pause()
+                assert modal.row is row
+                assert modal.query_one("#external-filing-summary", Static) is summary
+                assert modal.query_one("#external-filing-technical", Static) is detail
+                assert detail.display and detail.content == reference
+                assert modal.focused is focused
+                assert str(modal.query_one("#external-filing-close", Button).label) == tr(
+                    "tui.modelo.workbench.key.close", locale="es"
+                )
+                assert modal.is_mounted

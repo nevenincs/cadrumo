@@ -130,7 +130,7 @@ def profile_resolvable_binding_ids(
             exc,
         )
         return frozenset[str]()
-    return frozenset(str(binding_id) for binding_id in profile_resolved_binding_ids(result))
+    return frozenset(profile_resolved_binding_ids(result))
 
 
 def annual_period_for_year(

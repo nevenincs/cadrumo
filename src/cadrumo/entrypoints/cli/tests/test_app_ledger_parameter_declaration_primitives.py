@@ -20,6 +20,15 @@ from typing import Final
 
 import pytest
 
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    ParameterConstraint,
+    ParameterDefault,
+    TranslationKey,
+    ValueContract,
+)
+
 from .._app_ledger_command_spec_support import (
     _blank_default_text_option,
     _boolean_flag_option,
@@ -27,14 +36,6 @@ from .._app_ledger_command_spec_support import (
     _repeatable_text_option,
     _required_text_argument,
     _required_text_option,
-)
-from ..command_parameter_contracts import ArgumentSpec, OptionSpec
-from ..command_shared_contracts import (
-    DeferredTarget,
-    ParameterConstraint,
-    ParameterDefault,
-    TranslationKey,
-    ValueContract,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

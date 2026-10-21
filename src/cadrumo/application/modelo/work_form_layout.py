@@ -74,9 +74,9 @@ class LayoutWalker:
         self.layout = layout
         self.context = context
         self.producer_snapshot = producer_snapshot
-        self.placements: dict[str, FormPlacementDefinition] = {str(item.casilla_id): item for item in layout.placements}
+        self.placements: dict[str, FormPlacementDefinition] = {item.casilla_id: item for item in layout.placements}
         self.aliases: dict[str, tuple[str, ...]] = {
-            str(item.casilla_id): tuple(alias.official_ref or alias.page_id for alias in item.aliases)
+            item.casilla_id: tuple(alias.official_ref or alias.page_id for alias in item.aliases)
             for item in layout.placements
         }
         self.seen: set[str] = set()
@@ -165,7 +165,7 @@ class LayoutWalker:
             if block.box_number is not None:
                 label = label.model_copy(update={"text": f"[{block.box_number}] {label.text}"})
             value = (
-                project_binding_field(str(owner.binding), self.context).value
+                project_binding_field(owner.binding, self.context).value
                 if owner.binding is not None
                 else form_context_value(
                     self.context.snapshot,
@@ -179,11 +179,11 @@ class LayoutWalker:
                 value = localized_heading(choice.heading_key, choice.official_heading, "Opción", language).text
             return ModeloFormContextFieldBlock(id=block.id, label=label, value=value)
         if isinstance(block, FormFieldBlock):
-            if block.casilla_id is not None and str(block.casilla_id) in self.seen:
+            if block.casilla_id is not None and block.casilla_id in self.seen:
                 return self.alias(block)
             field = (
                 self.casilla(
-                    str(block.casilla_id),
+                    block.casilla_id,
                     design_constant=block.design_constant,
                     literal_decimals=block.literal_decimals,
                 )
@@ -218,7 +218,7 @@ class LayoutWalker:
             return self.repeating(block)
         return ModeloFormBindingInputsBlock(
             id=block.id,
-            fields=tuple(project_binding_field(str(binding_id), self.context) for binding_id in block.binding_ids),
+            fields=tuple(project_binding_field(binding_id, self.context) for binding_id in block.binding_ids),
         )
 
     def alias(self, block: FormFieldBlock) -> ModeloFormContextFieldBlock:
@@ -243,13 +243,13 @@ class LayoutWalker:
     ) -> ModeloFormGridCell:
         """Project one grid cell from its declared casilla, binding, or design literal."""
         if kind is FormCellKind.CASILLA and casilla_id is not None:
-            return ModeloFormGridCell(kind=kind, field=self.casilla(str(casilla_id)))
+            return ModeloFormGridCell(kind=kind, field=self.casilla(casilla_id))
         if kind is FormCellKind.BINDING_INPUT and binding_id is not None:
-            return ModeloFormGridCell(kind=kind, field=project_binding_field(str(binding_id), self.context))
+            return ModeloFormGridCell(kind=kind, field=project_binding_field(binding_id, self.context))
         if kind is FormCellKind.DESIGN_CONSTANT and casilla_id is not None:
             return ModeloFormGridCell(
                 kind=kind,
-                field=self.casilla(str(casilla_id), design_constant=literal, literal_decimals=literal_decimals),
+                field=self.casilla(casilla_id, design_constant=literal, literal_decimals=literal_decimals),
                 literal=literal,
             )
         return ModeloFormGridCell(kind=kind, literal=literal)
@@ -259,9 +259,7 @@ class LayoutWalker:
         columns = tuple(
             ModeloFormGridColumn(key=column.key, heading=self.repeating_heading(column)) for column in block.columns
         )
-        column_casillas = tuple(
-            None if column.casilla_id is None else str(column.casilla_id) for column in block.columns
-        )
+        column_casillas = tuple(column.casilla_id for column in block.columns)
         self._remember_placed_columns(column_casillas)
         data_types = self._column_data_types(column_casillas)
         if any(column.export_field_id is not None for column in block.columns):
@@ -296,7 +294,7 @@ class LayoutWalker:
         return tuple(
             "text"
             if casilla_id is None or casilla_id not in self.context.rows
-            else str(self.context.rows[casilla_id].data_type)
+            else self.context.rows[casilla_id].data_type
             for casilla_id in column_casillas
         )
 
@@ -306,6 +304,6 @@ class LayoutWalker:
         heading = localized_heading(column.heading_key, column.official_heading, column.key, language)
         if heading.disclosure is not ModeloFormTextDisclosure.TECHNICAL or column.casilla_id is None:
             return heading
-        casilla = self.context.casillas.get(str(column.casilla_id))
+        casilla = self.context.casillas.get(column.casilla_id)
         label = None if casilla is None else localized_text(casilla.localization_keys, language)
         return heading if label is None else label

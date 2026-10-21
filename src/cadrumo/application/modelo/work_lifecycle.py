@@ -499,7 +499,9 @@ def create_work_unit(
         filing_year=filing_year,
         period=period,
         revision_id=revision_id,
-        name=name.strip() if name else _default_name(modelo=modelo, filing_year=filing_year, period=period),
+        name=name.strip()
+        if (name is not None and name)
+        else _default_name(modelo=modelo, filing_year=filing_year, period=period),
         created_at=now,
         updated_at=now,
         causante_ccaa=causante_ccaa,
@@ -832,7 +834,7 @@ def discard_work_unit(
             "state": WorkUnitState.DESCARTADO,
             "discarded_at": now,
             "discarded_by": actor.strip(),
-            "discard_reason": reason.strip() if reason else None,
+            "discard_reason": reason.strip() if (reason is not None and reason) else None,
             "updated_at": now,
         },
     )

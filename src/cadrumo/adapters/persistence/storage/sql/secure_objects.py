@@ -314,7 +314,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         )
 
     @override
-    def _check_session_freshness(self, namespace: str | None = None) -> None:
+    def _check_session_freshness(self, namespace: str | None = None, *, touch: bool = True) -> None:
         """Refuse the operation when the active profile session is no longer valid.
 
         Polls :func:`evaluate_idle` against the live
@@ -358,7 +358,24 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             session, self._active_session_bucket_id
         ):
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.SESSION_CHANGED)
-        session.touch(now)
+        if touch:
+            session.touch(now)
+
+    def observe_revision_ids(self, namespace: str) -> tuple[str | None, ...]:
+        """Return every row revision in ``namespace``, sorted, without extending the session.
+
+        The same freshness and bucket checks as every other read apply, so a
+        sealed, expired or replaced session still refuses. What differs is that
+        a fresh session's idle deadline is left where it was: a background
+        observer polling for change must never keep a sign-in alive. Nothing is
+        decrypted.
+        """
+        self._check_session_freshness(namespace, touch=False)
+        with session_scope(self._engine) as session:
+            rows = session.execute(
+                select(SecureObjectRow.revision_id).where(SecureObjectRow.namespace == namespace),
+            ).all()
+        return tuple(sorted((row[0] for row in rows), key=lambda revision: revision or ""))
 
     def exists(self, namespace: str, object_key: str) -> bool:
         """Return whether ``namespace`` / ``object_key`` is present."""

@@ -7,11 +7,11 @@ from collections.abc import Callable
 from dataclasses import replace
 from datetime import date
 from pathlib import Path
-from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.modelo.registry_discovery import registry_support_matrix
+from cadrumo.application import reference_catalogue
+from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry import authority as authority_module
 from cadrumo.domain.calculations.registry.authority import (
@@ -33,10 +33,12 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_revision,
     synthetic_legal_identity,
 )
-from cadrumo_harness.mcp import authority_query as mcp_authority
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_client.contracts.contracts import RefusalCode
+
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..server import build_server
+from .admitted_lease import admitted_adapter
+from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -52,6 +54,11 @@ async def _assert_all_advertised_authority_queries_refuse(adapter: RuntimeMcpAda
         "casillas": {"modelo": "100", "filing_year": 2024, "period": "0A"},
         "casilla": {"modelo": "100", "filing_year": 2024, "period": "0A", "casilla": "0505"},
         "formulas": {"modelo": "100", "filing_year": 2024, "period": "0A"},
+        "categories": {},
+        "portals": {},
+        "portal": {"portal": "portal_sede_root"},
+        "auth_providers": {},
+        "apoderado_scopes": {},
     }
     async with connected_server_and_client_session(build_server(adapter)) as client:
         tools = (await client.list_tools()).tools
@@ -62,12 +69,11 @@ async def _assert_all_advertised_authority_queries_refuse(adapter: RuntimeMcpAda
             refused = await client.call_tool("authority", {"query": query, **requests[query]})
             assert refused.is_error is True
             assert refused.structured_content == {"outcome": "refused", "code": code}
-    assert adapter.client is None
 
 
 @pytest.mark.anyio
 async def test_public_authority_queries_preserve_coordinates_and_support_projection() -> None:
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    adapter = admitted_adapter()
     try:
         described = await adapter.call(
             "authority",
@@ -80,8 +86,7 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
             },
         )
 
-        assert described["outcome"] == "published"
-        assert adapter.client is None
+        assert described["outcome"] == "published", described
         assert described["report"]["code"] == "100"
         assert described["report"]["filing_year"] == 2024
         assert described["report"]["period"] == "0A"
@@ -90,33 +95,50 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
 
         low_grade = await adapter.call(
             "authority",
-            {
-                "query": "describe",
-                "modelo": "036",
-                "filing_year": 2024,
-                "period": "alta",
-                "as_of": "2024-12-31",
-            },
+            {"query": "describe", "modelo": "036", "period": "alta"},
         )
         assert low_grade["outcome"] == "published"
         assert low_grade["report"]["authority_grade"] == "applicability"
 
         with bundled_indexed_authority().operation() as operation:
-            canonical_support = registry_support_matrix(operation=operation).model_dump(mode="json")
+            canonical_support = reference_catalogue.read_support_matrix(operation=operation).model_dump(mode="json")
         support = await adapter.call("authority", {"query": "support"})
 
         assert support["outcome"] == "published"
         assert support["report"] == canonical_support
-        assert adapter.client is None
     finally:
         await adapter.close()
+
+
+@pytest.mark.anyio
+async def test_authority_is_refused_to_a_connection_with_no_key_and_no_runtime(tmp_path: Path) -> None:
+    """Reference data is read inside the person's profile like everything else; with no runtime nothing answers.
+
+    The runtime names the selected profile, so with none running the refusal
+    is the runtime's typed unavailability, never a request to sign in.
+    """
+    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+        adapter = RuntimeMcpAdapter(profile_id=None, client=None, requests_attendance=True)
+        try:
+            async with connected_server_and_client_session(build_server(adapter)) as client:
+                names = {tool.name for tool in (await client.list_tools()).tools}
+                support = await client.call_tool("authority", {"query": "support"})
+        finally:
+            await adapter.close()
+
+    assert {"status", "authority", "corpus_search", "search", "execute"} <= names
+    assert support.is_error is True
+    assert isinstance(support.structured_content, dict)
+    assert support.structured_content["code"] == RefusalCode.UNAVAILABLE.value
+    assert support.structured_content["remedy"] == connection_unavailable_remedy(RefusalCode.UNAVAILABLE.value)
+    assert adapter.client is None and adapter.profile_id is None
 
 
 @pytest.mark.anyio
 async def test_authority_response_provenance_matches_the_pin_passed_to_the_real_query(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    canonical_query = mcp_authority.registry_describe_modelo_for_registry_scope
+    canonical_query = reference_catalogue.registry_describe_modelo_for_registry_scope
     observed_pins: list[AuthorityGenerationPin] = []
 
     def record_pin_and_run_query(
@@ -136,8 +158,8 @@ async def test_authority_response_provenance_matches_the_pin_passed_to_the_real_
             operation=operation,
         )
 
-    monkeypatch.setattr(mcp_authority, "registry_describe_modelo_for_registry_scope", record_pin_and_run_query)
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    monkeypatch.setattr(reference_catalogue, "registry_describe_modelo_for_registry_scope", record_pin_and_run_query)
+    adapter = admitted_adapter()
     try:
         result = await adapter.call(
             "authority",
@@ -158,7 +180,7 @@ async def test_missing_configured_authority_refuses_without_packaged_fallback(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    adapter = admitted_adapter()
     try:
         with override_settings(cadrumo_authority_root=tmp_path):
             await _assert_all_advertised_authority_queries_refuse(adapter, "published_authority_unavailable")
@@ -192,7 +214,7 @@ async def test_corrupt_configured_database_refuses_without_packaged_fallback(
     _copy_and_corrupt_published_database(source_descriptor, tmp_path)
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
 
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    adapter = admitted_adapter()
     try:
         with override_settings(cadrumo_authority_root=tmp_path):
             await _assert_all_advertised_authority_queries_refuse(adapter, "published_authority_invalid")
@@ -224,10 +246,10 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
     second_artifact = replace(first_artifact, identity_digest=synthetic_legal_identity("mcp-second-publication"))
     first = publish_authority_artifact(first_artifact)
     authority = IndexedRegistryAuthority(tmp_path / _DESCRIPTOR_NAME)
-    canonical_query = mcp_authority.registry_support_matrix
+    canonical_query = reference_catalogue.registry_support_matrix
     with authority.operation() as initial:
         first_pin = initial.pin()
-        expected = canonical_query(operation=initial).model_dump(mode="json")
+        expected = reference_catalogue.read_support_matrix(operation=initial).model_dump(mode="json")
 
     def cut_over_and_query(*, operation: PinnedAuthorityOperation) -> object:
         assert operation.pin() == first_pin
@@ -237,8 +259,8 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
         return canonical_query(operation=operation)
 
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", authority)
-    monkeypatch.setattr(mcp_authority, "registry_support_matrix", cut_over_and_query)
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    monkeypatch.setattr(reference_catalogue, "registry_support_matrix", cut_over_and_query)
+    adapter = admitted_adapter()
     try:
         async with connected_server_and_client_session(build_server(adapter)) as client:
             result = await client.call_tool("authority", {"query": "support"})
@@ -249,7 +271,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
                 "reader_incarnation": first_pin.reader_incarnation,
                 "report": expected,
             }
-            monkeypatch.setattr(mcp_authority, "registry_support_matrix", canonical_query)
+            monkeypatch.setattr(reference_catalogue, "registry_support_matrix", canonical_query)
             current = await client.call_tool("authority", {"query": "support"})
             assert current.is_error is False
             assert isinstance(current.structured_content, dict)

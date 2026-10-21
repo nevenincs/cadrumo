@@ -52,11 +52,12 @@ from vulture.config import InputError, make_config
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, OK
-from dev.first_party_source import DEVELOPMENT_TOOLING, HARNESS_PACKAGE, PACKAGING_HOOKS, PRODUCT_PACKAGE
+from dev.first_party_source import DEVELOPMENT_TOOLING, PACKAGING_HOOKS, SOURCE_PACKAGES
 from dev.packaging.command_execution import CommandResult, run_command
 
 _UTF_8: Final[str] = UTF_8
-_TARGETS: Final[tuple[str, ...]] = (PRODUCT_PACKAGE, "dev/audit/vulture_whitelist.py")
+_WHITELIST: Final[str] = "dev/audit/vulture_whitelist.py"
+_TARGETS: Final[tuple[str, ...]] = (*SOURCE_PACKAGES, _WHITELIST)
 _FINDING_CAP: Final[int] = 40
 _VULTURE_TIMEOUT_SECONDS: Final[float] = 180.0
 
@@ -84,13 +85,17 @@ _EXIT_FINDINGS: Final = 3
 
 # The floor counts what vulture is meant to analyse: production modules as
 # ``dev.first_party_source`` classifies them, not the test modules vulture's
-# config excludes. src/cadrumo held 2810 such modules, plus the whitelist file,
-# when this floor was set. A bare ``> 0`` check would be satisfied by that
-# single whitelist file alone, so it could not see src/cadrumo disappear --
-# which is the degradation that makes a clean scan vacuous. The floor sits
-# near half the live population, matching the sibling stub-population floor,
-# so ordinary churn cannot trip it and a wholesale loss cannot hide.
-MINIMUM_OFFERED_MODULES: Final = 1400
+# config excludes. The packages under src/ held 3544 such modules (3111 of them
+# in src/cadrumo), plus the whitelist file, when this floor was set. A bare
+# ``> 0`` check would be satisfied by that single whitelist file alone, so it
+# could not see the product disappear -- which is the degradation that makes a
+# clean scan vacuous. The floor sits near half the live population, matching
+# the sibling stub-population floor, so ordinary churn cannot trip it and a
+# wholesale loss cannot hide. A small package vanishing would not move a
+# population this size, and vulture reads an emptied or wholly excluded
+# package as a clean one, so each source package must also offer a module of
+# its own.
+MINIMUM_OFFERED_MODULES: Final = 1750
 
 
 class DeadCodeOutcome(StrEnum):
@@ -209,9 +214,9 @@ def dead_code_scope() -> dict[str, object]:
     """Declare the Python audit's subject and the surfaces it cannot measure."""
     return {
         "language": "python",
-        "source_root": PRODUCT_PACKAGE,
-        "support_files": list(_TARGETS[1:]),
-        "excluded_roots": [HARNESS_PACKAGE, DEVELOPMENT_TOOLING, PACKAGING_HOOKS, "native"],
+        "source_roots": list(SOURCE_PACKAGES),
+        "support_files": [_WHITELIST],
+        "excluded_roots": [DEVELOPMENT_TOOLING, PACKAGING_HOOKS, "native"],
         "excluded_surfaces": [
             "tests and bundled data",
             "CMake configuration and build tools",
@@ -236,15 +241,20 @@ def offered_module_population(repo_root: Path) -> int:
     modules the scanner never reads. Skipped unreadable or unparseable
     modules are caught separately from stderr.
     """
+    return sum(_offered_modules_by_target(repo_root).values())
+
+
+def _offered_modules_by_target(repo_root: Path) -> dict[str, int]:
+    """Count the modules each of :data:`_TARGETS` offers vulture after its exclusions."""
     config = make_config(["--config", str(repo_root / "pyproject.toml"), *_TARGETS])
     patterns = tuple(
         (pattern if any(char in pattern for char in "*?[") else f"*{pattern}*").lower() for pattern in config["exclude"]
     )
-    offered = 0
+    offered: dict[str, int] = {}
     for target in _TARGETS:
         candidate = (repo_root / target).resolve()
         modules = (candidate,) if candidate.is_file() else candidate.rglob("*.py") if candidate.is_dir() else ()
-        offered += sum(
+        offered[target] = sum(
             1 for module in modules if not any(fnmatchcase(str(module).lower(), pattern) for pattern in patterns)
         )
     return offered
@@ -318,14 +328,21 @@ def run_dead_code_scan(repo_root: Path, *, timeout: float = _VULTURE_TIMEOUT_SEC
     deliberately no second vulture invocation anywhere in the tree.
     """
     try:
-        offered = offered_module_population(repo_root)
+        by_target = _offered_modules_by_target(repo_root)
     except (InputError, OSError, TypeError, ValueError, SystemExit) as exc:
         return DeadCodeResult.error(f"vulture configuration could not be read ({exc})")
+    offered = sum(by_target.values())
     if offered < MINIMUM_OFFERED_MODULES:
         return DeadCodeResult.error(
             f"vulture was offered {offered} Python module(s), under the "
             f"{MINIMUM_OFFERED_MODULES} the production tree must hold, so exit 0 "
             "would prove nothing about dead code",
+        )
+    empty = [package for package in SOURCE_PACKAGES if not by_target[package]]
+    if empty:
+        return DeadCodeResult.error(
+            f"vulture was offered no module from {', '.join(empty)}, so its verdict "
+            "would say nothing about that package",
         )
 
     try:
@@ -363,8 +380,8 @@ def render_console_report(result: DeadCodeResult, *, full: bool = False, cap: in
     """Render the operator-facing console report for ``python -m dev.audit.dead_code``."""
     out = [
         f"dead code: {result.headline()}",
-        f"  scope: {PRODUCT_PACKAGE} Python source and the reviewed whitelist",
-        "  excluded: harness, dev/packaging tools, native Rust/C/desktop, CMake, build outputs and binaries; "
+        f"  scope: {', '.join(SOURCE_PACKAGES)} Python source and the reviewed whitelist",
+        "  excluded: dev/packaging tools, native Rust/C/desktop, CMake, build outputs and binaries; "
         "tests and bundled data",
     ]
     if result.outcome is not DeadCodeOutcome.FINDINGS:

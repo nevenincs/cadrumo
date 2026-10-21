@@ -63,12 +63,12 @@ def test_llm_cache_row_carries_registry_declared_metadata(
         max_tokens=512,
         temperature=0.2,
         language="en",
-        provider_override=LLMProvider.ANTHROPIC,
+        provider_override=LLMProvider.AGENT,
         model_override="claude-opus-4-7",
     )
     response = LLMResponse(
         text="Casilla 03 records cumulative net revenue for the period.",
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         model="claude-opus-4-7",
         input_tokens=137,
         output_tokens=64,
@@ -96,7 +96,7 @@ def test_llm_usage_row_carries_registry_declared_metadata(
             prompt_id="casilla_extract_v1",
             caller="aeat.cli.modelo.calc",
             text="Casilla 03 records cumulative net revenue for the period.",
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
             model="claude-opus-4-7",
             input_tokens=137,
             output_tokens=64,

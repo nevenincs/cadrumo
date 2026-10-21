@@ -1,0 +1,281 @@
+"""The environment the service composes for its gateway: system values and launch slots.
+
+The agent's credentials travel only on its standard-input frame. Its environment
+is built from an allow-list rather than by clearing names from the service's
+own, because a cleared list cannot know every provider's variable: an inherited
+a provider key or ``AWS_SECRET_ACCESS_KEY`` would otherwise reach the
+agent and every process it starts.
+
+The service fills the gateway's launch slots: the hosted root, the two ports
+and the admitted runtime's storage root, which the agent forwards to the programs it
+starts so that they serve the runtime's root and never resolve a default of
+their own. It also tells the agent, in plain variables, what Cadrumo supplies:
+the programs the agent may run, the tool server it may mount with its
+arguments, and the names it forwards. Skills and rules ship with the agent
+image; the service does not override their locations. The agent reads the
+supplied variables; Cadrumo keeps no list of the agent's providers or lanes,
+and the agent reads each tool's trust from the tool server's own declarations.
+In a package the agent image's host defines the rest of the gateway's
+environment, its search path included, from the image's launch profile.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from collections.abc import Mapping
+from pathlib import Path
+from typing import TYPE_CHECKING, Final
+
+from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE
+from cadrumo.core.storage_environment import (
+    STORAGE_ROOT,
+    ChildEnvironmentProfile,
+    child_environment,
+    normalize_storage_path,
+)
+from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE
+
+if TYPE_CHECKING:
+    from uuid import UUID
+
+HOSTED_ROOT_VARIABLE: Final = "CADRUMO_AGENT_HOSTED_ROOT"
+GATEWAY_PORT_VARIABLE: Final = "CADRUMO_AGENT_PORT"
+WORKER_PORT_VARIABLE: Final = "CADRUMO_AGENT_WORKER_PORT"
+AGENT_LOG_LEVEL_VARIABLE: Final = "CADRUMO_AGENT_LOG_LEVEL"
+EXTERNAL_BIN_DIRECTORIES_VARIABLE: Final = "CADRUMO_EXTERNAL_BIN_DIRS"
+"""The native package's admitted directories for external provider executables."""
+
+AUTH_BROWSER_EXECUTABLE_VARIABLE: Final = "CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE"
+"""The packaged browser handoff executable, supplied only to the login helper."""
+
+AGENT_SLOTS: Final = frozenset({HOSTED_ROOT_VARIABLE, GATEWAY_PORT_VARIABLE, WORKER_PORT_VARIABLE})
+"""The agent's own launch parameters the service fills."""
+GATEWAY_SLOTS: Final = AGENT_SLOTS | {STORAGE_ROOT.variable, PROFILE_ROOT_VARIABLE}
+"""Every launch slot the service fills for the gateway."""
+
+PROGRAM_AEAT_VARIABLE: Final = "CADRUMO_AGENT_PROGRAM_AEAT"
+"""The absolute path of the ``aeat`` command line the agent may run."""
+PROGRAM_PYTHON_VARIABLE: Final = "CADRUMO_AGENT_PROGRAM_PYTHON"
+"""The absolute path of the package's Python interpreter the agent may run."""
+TOOL_SERVER_VARIABLE: Final = "CADRUMO_AGENT_TOOL_SERVER_CADRUMO"
+"""The absolute path of the ``cadrumo-mcp`` tool server the agent may mount."""
+TOOL_SERVER_ARGUMENTS_VARIABLE: Final = "CADRUMO_AGENT_TOOL_SERVER_ARGS_CADRUMO"
+"""The JSON array of arguments the agent gives that tool server."""
+FORWARD_VARIABLE: Final = "CADRUMO_AGENT_FORWARD"
+"""The comma-separated names the agent forwards to the tool servers and programs it starts."""
+ADVERTISED_VARIABLES: Final = frozenset(
+    {
+        PROGRAM_AEAT_VARIABLE,
+        PROGRAM_PYTHON_VARIABLE,
+        TOOL_SERVER_VARIABLE,
+        TOOL_SERVER_ARGUMENTS_VARIABLE,
+        FORWARD_VARIABLE,
+    }
+)
+"""What the service advertises to the gateway under the agent's prefix."""
+
+
+# Values the operating system and the interpreter need to run at all. None of
+# them can carry a credential.
+_WINDOWS_NAMES: Final = frozenset(
+    {
+        "SYSTEMROOT",
+        "SYSTEMDRIVE",
+        "WINDIR",
+        "PATHEXT",
+        "NUMBER_OF_PROCESSORS",
+        "PROCESSOR_ARCHITECTURE",
+        "OS",
+        "USERPROFILE",
+        "HOMEDRIVE",
+        "HOMEPATH",
+        "LOCALAPPDATA",
+        "APPDATA",
+        "PROGRAMDATA",
+        "PROGRAMFILES",
+        "PROGRAMFILES(X86)",
+        "COMMONPROGRAMFILES",
+        "USERNAME",
+        "USERDOMAIN",
+        "PATH",
+    }
+)
+_POSIX_NAMES: Final = frozenset({"HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "LC_CTYPE", "TZ", "PATH"})
+
+
+def system_environment(received: Mapping[str, str], *, sys_platform: str | None = None) -> dict[str, str]:
+    """Return only the allow-listed operating-system values of ``received``; none can carry a credential."""
+    platform = sys.platform if sys_platform is None else sys_platform
+    names = _WINDOWS_NAMES if platform == "win32" else _POSIX_NAMES
+    if platform == "win32":
+        folded = {name.upper(): value for name, value in received.items()}
+        return {name: folded[name] for name in names if name in folded}
+    return {name: received[name] for name in names if name in received}
+
+
+def _packaged_node_bin_directory(python: Path | None, *, platform: str) -> Path | None:
+    """Return the packaged Node bin beside the manifest-declared packages, if present."""
+    if python is None or not python.is_absolute() or not python.is_file():
+        return None
+    try:
+        package_root = python.parent.resolve(strict=True)
+        resolved_python = python.resolve(strict=True)
+        if not resolved_python.is_relative_to(package_root):
+            return None
+
+        manifest_path = (package_root / "data" / "package-manifest.json").resolve(strict=True)
+        if not manifest_path.is_relative_to(package_root) or not manifest_path.is_file():
+            return None
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        layout = manifest.get("layout") if isinstance(manifest, dict) else None
+        paths = layout.get("paths") if isinstance(layout, dict) else None
+        if not isinstance(paths, dict):
+            return None
+
+        executable_parts = _package_relative_parts(paths.get("executable"))
+        package_parts = _package_relative_parts(paths.get("packages"))
+        if executable_parts is None or len(executable_parts) != 1 or package_parts is None:
+            return None
+        executable = package_root.joinpath(*executable_parts).resolve(strict=True)
+        if executable != resolved_python or not executable.is_file():
+            return None
+        packages = _resolve_package_path(package_root, package_parts)
+        if packages is None or not packages.is_dir():
+            return None
+
+        node_root = packages.parent / "node"
+        node_executable = node_root / "node.exe" if platform == "win32" else node_root / "bin" / "node"
+        node_executable = node_executable.resolve(strict=True)
+        if not node_executable.is_relative_to(package_root) or not node_executable.is_file():
+            return None
+        return node_executable.parent
+    except (OSError, RuntimeError, TypeError, ValueError, RecursionError):
+        return None
+
+
+def _package_relative_parts(value: object) -> tuple[str, ...] | None:
+    """Accept canonical slash-separated package paths without platform escapes."""
+    if not isinstance(value, str) or not value or "\\" in value or ":" in value:
+        return None
+    parts = tuple(value.split("/"))
+    return None if any(part in {"", ".", ".."} for part in parts) else parts
+
+
+def _resolve_package_path(package_root: Path, parts: tuple[str, ...]) -> Path | None:
+    try:
+        resolved = package_root.joinpath(*parts).resolve(strict=True)
+    except (OSError, RuntimeError):
+        return None
+    return resolved if resolved.is_relative_to(package_root) else None
+
+
+def agent_binary_directories(
+    *, python: Path | None, received: Mapping[str, str], sys_platform: str | None = None
+) -> str | None:
+    """Return public provider directories with the packaged Node directory prepended when present."""
+    platform = sys.platform if sys_platform is None else sys_platform
+    external = next(
+        (
+            value
+            for name, value in received.items()
+            if (name.upper() if platform == "win32" else name) == EXTERNAL_BIN_DIRECTORIES_VARIABLE
+        ),
+        None,
+    )
+    node_bin = _packaged_node_bin_directory(python, platform=platform)
+    if node_bin is not None:
+        path_separator = ";" if platform == "win32" else ":"
+        external = (
+            str(node_bin) if external is None or external == "" else path_separator.join((str(node_bin), external))
+        )
+    return external if external is not None and external != "" else None
+
+
+def auth_browser_executable(python: Path | None) -> Path | None:
+    """Locate the declared desktop image that relays a provider's browser hook."""
+    if python is None or not python.is_absolute() or not python.is_file():
+        return None
+    try:
+        root = python.parent.resolve(strict=True)
+        manifest = _resolve_package_path(root, ("data", "package-manifest.json"))
+        if manifest is None:
+            return None
+        layout = json.loads(manifest.read_text(encoding="utf-8"))["layout"]
+        executable_parts = _package_relative_parts(layout["paths"]["executable"])
+        if executable_parts is None or _resolve_package_path(root, executable_parts) != python.resolve(strict=True):
+            return None
+        images = [image for image in layout["application_images"] if image.get("desktop") is True]
+        if len(images) != 1:
+            return None
+        image = images[0]
+        parts = _package_relative_parts(image["name"] + layout["entrypoint_suffix"])
+        placement = () if image["placement"] == "." else _package_relative_parts(image["placement"])
+        if parts is None or placement is None:
+            return None
+        candidate = _resolve_package_path(root, (*placement, *parts))
+        return candidate if candidate is not None and candidate.is_file() else None
+    except (OSError, RuntimeError, KeyError, TypeError, ValueError, RecursionError):
+        return None
+
+
+def agent_launch_environment(
+    *,
+    storage_root: Path,
+    agent_root: Path,
+    relay: Path,
+    aeat: Path | None,
+    python: Path | None,
+    received: Mapping[str, str],
+    sys_platform: str | None = None,
+    profile_id: UUID | None = None,
+) -> dict[str, str]:
+    """Return the gateway's whole environment: allow-listed system values, the pinned root and the gateway slots.
+
+    ``agent_root`` is the profile's opaque agent directory that Cadrumo derived;
+    the agent holds no session, password or settings of the profile. ``relay`` is the
+    ``cadrumo-mcp`` tool server a hosted run mounts, ``aeat`` the command line and
+    ``python`` the interpreter the agent may run. Either is ``None`` when only a
+    virtual environment holds it, because the agent refuses to run a program there. The pinned storage root reaches
+    the gateway, and the agent forwards it to the programs and tool servers it starts.
+    ``profile_id`` is the profile the agent is started inside; the gateway and the
+    tools it starts are told that profile's folder, derived here and forwarded
+    with the root, and never a folder of another profile.
+    """
+    platform = sys.platform if sys_platform is None else sys_platform
+    base = system_environment(received, sys_platform=platform)
+    environment = child_environment(
+        ChildEnvironmentProfile.STRICT,
+        storage_root,
+        received=received,
+        base=base,
+        sys_platform=platform,
+        profile_id=profile_id,
+    )
+    environment[STORAGE_ROOT.variable] = str(normalize_storage_path(storage_root))
+    external = agent_binary_directories(python=python, received=received, sys_platform=platform)
+    if external is not None:
+        environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] = external
+    environment[HOSTED_ROOT_VARIABLE] = str(agent_root)
+    # The agent binds ephemeral ports and reports the real one on its ready line.
+    environment[GATEWAY_PORT_VARIABLE] = "0"
+    environment[WORKER_PORT_VARIABLE] = "0"
+    # Keep DEBUG available in the application viewer. An explicit agent override
+    # can reduce producer output without changing the app's INFO default view.
+    level = next(
+        (value for name, value in received.items() if name.upper() == AGENT_LOG_LEVEL_VARIABLE), "debug"
+    ).lower()
+    environment[AGENT_LOG_LEVEL_VARIABLE] = (
+        level if level in {"debug", "info", "warning", "error", "critical"} else "debug"
+    )
+    if aeat is not None:
+        environment[PROGRAM_AEAT_VARIABLE] = str(aeat)
+    if python is not None:
+        environment[PROGRAM_PYTHON_VARIABLE] = str(python)
+    environment[TOOL_SERVER_VARIABLE] = str(relay)
+    environment[TOOL_SERVER_ARGUMENTS_VARIABLE] = json.dumps(["--surface", DEFAULT_MCP_SURFACE.value])
+    forwarded = [STORAGE_ROOT.variable]
+    if PROFILE_ROOT_VARIABLE in environment:
+        forwarded.append(PROFILE_ROOT_VARIABLE)
+    environment[FORWARD_VARIABLE] = ",".join(forwarded)
+    return environment

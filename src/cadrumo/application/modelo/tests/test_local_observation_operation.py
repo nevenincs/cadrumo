@@ -10,6 +10,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.operations import OperationEffect, profile_operation_subject
 from ...calculations.observations_repository import ObservationSourceKind
 from ...operations.access_resolution import OperationAccessContext
@@ -17,7 +20,6 @@ from ...operations.capabilities import OperationRequestStoragePolicy, OperationS
 from ...operations.models import OperationRequest
 from ...operations.public_period import PublicPeriod
 from ...operations.registry import OperationFrontendProjection
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..calculation_action_ports import CalculationActionPortsFactory
 from ..filing_record_view_operation import (
@@ -193,3 +195,43 @@ def test_projection_keeps_the_canonical_record_and_its_persisted_layer_aligned()
     assert wire["official_evidence"] is False
     assert wire["filing_record_created"] is False
     assert wire["aeat_accepted"] is False
+
+
+def _record_request() -> OperationRequest[BaseModel]:
+    payload = ModeloLocalObservationMutationRequest(
+        profile_id=_PROFILE,
+        action="record",
+        modelo="130",
+        period=_PERIOD,
+        casilla_values=(ModeloLocalObservationCasillaValue(casilla_id="base_imponible", value="125.00"),),
+        reason="operator estimate",
+    )
+    return OperationRequest[BaseModel](
+        definition_id=MODELO_LOCAL_OBSERVATION_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=payload,
+    )
+
+
+@pytest.mark.parametrize("mutation", ["record", "clear"])
+@pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, AccessAction.RESULT])
+def test_every_frontend_resolves_recording_and_clearing_to_the_same_access(mutation: str, action: AccessAction) -> None:
+    _definition, registration = _definition_and_registration()
+    request = _record_request() if mutation == "record" else cast(OperationRequest[BaseModel], cast(object, _request()))
+    context = OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=uuid4(),
+        action=action,
+        frontend=OperationFrontendProjection.CLI,
+        contract=registration.contract,
+        published_authority=Availability.AVAILABLE,
+    )
+    on_cli = resolve_modelo_local_observation_access(request, context)
+
+    assert on_cli.request.periods == frozenset({_PERIOD.to_period()})
+    assert AccessAction.COMMIT in on_cli.policy.actions
+    assert not on_cli.policy.requires_human
+    for frontend in OperationFrontendProjection:
+        on_frontend = resolve_modelo_local_observation_access(request, replace(context, frontend=frontend))
+        assert on_frontend.policy == on_cli.policy, frontend
+        assert on_frontend.request == on_cli.request.model_copy(update={"frontend": frontend}), frontend

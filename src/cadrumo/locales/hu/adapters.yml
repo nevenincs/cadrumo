@@ -41,7 +41,7 @@ adapters:
         metadata_invalid: A Cl@ve Móvil munkamenet-metaadatai érvénytelenek vagy nem
           elemezhetők.
         no_persisted_session: Nem található Cl@ve Móvil munkamenet; futtasd először
-          a `aeat config auth status` parancsot.
+          a `cadrumo-runtime config auth status` parancsot.
         session_expired: A Cl@ve Móvil munkamenet túllépte a tétlenségi határidőt.
         storage_state_hash_mismatch: A Cl@ve Móvil tárolási állapot hash nem egyezik;
           a munkamenet adatai sérülhetnek.
@@ -69,8 +69,8 @@ adapters:
           az OAuth-hozzájárulási URL megnyitását.
         client_config_refused: A Google OAuth ügyfélkonfigurációját elutasították.
         consent_declined: 'A Google hozzájárulási kérését elutasították, ezért nem
-          történt bejelentkezés, és semmi sem lett elmentve. Futtasd újra: `aeat config
-          google login`, és hagyd jóvá a kérést.'
+          történt bejelentkezés, és semmi sem lett elmentve. Futtasd újra: `cadrumo-runtime
+          config google login`, és hagyd jóvá a kérést.'
         endpoint_unreachable: A Google OAuth-végpont nem érhető el.
         id_token_missing: A Google nem adott vissza id_token-t; az OAuth-hozzájárulás
           nem tartalmazta az openid+email hatókört.
@@ -86,7 +86,7 @@ adapters:
           AEAT-profil állapotát.
         refresh_token_missing: 'A Google úgy fejezte be a bejelentkezést, hogy nem
           adott ki tartós hitelesítő adatot, ezért semmi sem lett elmentve. Futtasd
-          újra: `aeat config google login`.'
+          újra: `cadrumo-runtime config google login`.'
         scope_missing: A Google hozzájárulási képernyő visszatért anélkül, hogy minden
           szükséges hatókört megadott volna.
     profile_binding:
@@ -141,11 +141,11 @@ adapters:
       _factory:
         errors:
           drive_root_missing: 'Az aktív profilhoz még nem jött létre Google Drive-mappa.
-            Futtasd először: `aeat config google login`.'
+            Futtasd először: `cadrumo-runtime config google login`.'
           google_auth_import_failed: 'A google-auth függőség nem importálható; futtasd:
             `uv sync`, majd próbáld újra.'
           google_token_missing: 'Nincs Google OAuth-token mentve az aktív profilhoz.
-            Futtasd először: `aeat config google login`.'
+            Futtasd először: `cadrumo-runtime config google login`.'
           kind_empty: Az CADRUMO_STORAGE_PROVIDER_KIND üres.
           kind_unhandled: A(z) {kind} tárhelyszolgáltató-típust a factory nem kezeli.
           kind_unknown: 'A(z) {value} tárhelyszolgáltató-típus nem ismert; várt értékek:
@@ -279,13 +279,13 @@ adapters:
         a hálózati kapcsolatot, és próbáld újra.
       modelo_unavailable: Az AEAT bevallásnyilvántartója nem kínálja a kért nyomtatványt.
       no_auth_session: Az AEAT hitelesítési munkamenet hiányzik vagy nincs perzisztálva;
-        futtasd először a `aeat config auth status` parancsot.
+        futtasd először a `cadrumo-runtime config auth status` parancsot.
       notification_content_requires_operator: 'Nem nyitható meg olvasatlan értesítés
         tartalma: ez a lépés maga a kézbesítés (comparecencia), amely jogilag kézbesíti
         az értesítést és elindítja a határidőket; ehhez az aláírásodra van szükség.
         Nyisd meg személyesen a Sede felületén.'
       notifications_bad_landing: Az AEAT értesítési oldala nem töltődött be megfelelően;
-        a munkamenet lejárhatott, vagy az AEAT karbantartás alatt áll. Futtasd a 'aeat
+        a munkamenet lejárhatott, vagy az AEAT karbantartás alatt áll. Futtasd a 'cadrumo-runtime
         config auth status' parancsot, és próbáld újra. Ne tekintsd ezt üres postafióknak.
       parse_failed: Nem sikerült elemezni az AEAT nyilatkozatválaszt; az oldal struktúrája
         megváltozhatott.
@@ -295,8 +295,8 @@ adapters:
       playwright_combobox_open_failed: Hiba a Sede legördülő lista megnyitásakor.
       playwright_combobox_select_failed: Hiba a Sede legördülő lista opciójának kiválasztásakor.
       session_expired_nav_failed: Az AEAT nyilatkozatnyilvántartó nem töltött be;
-        a munkamenet valószínűleg lejárt. Futtasd a 'aeat config auth test' parancsot
-        és próbáld újra.
+        a munkamenet valószínűleg lejárt. Futtasd a 'cadrumo-runtime config auth test'
+        parancsot és próbáld újra.
       submitted_file_layout_parse_failed: A benyújtott fájlt nem sikerült beolvasni
         a nyomtatvány hivatalos rekordszerkezete szerint, így egyetlen rovatérték
         sem került ki belőle. A szerkezet és a benyújtott fájl nem ért egyet abban,

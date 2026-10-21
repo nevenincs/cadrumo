@@ -6,10 +6,11 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.models import OperationTerminalReceipt
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_manual import ledger_transaction_result_payload
 from .classify_requests import (
@@ -72,7 +73,9 @@ def classification_result_from_action(
         profile_id=profile_id,
         transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
         deduction_fact_kind=(
-            result.transaction.deduction_fact_kind.value if result.transaction.deduction_fact_kind else None
+            result.transaction.deduction_fact_kind.value
+            if (result.transaction.deduction_fact_kind is not None and result.transaction.deduction_fact_kind)
+            else None
         ),
         investment_asset_id=result.transaction.investment_asset_id,
         review_status=canonical.review_status,

@@ -7,6 +7,7 @@
         "label": "main",
         "url": "index.html",
         "create": false,
+        "decorations": false,
         "width": 1440,
         "height": 1050,
         "minWidth": 520,

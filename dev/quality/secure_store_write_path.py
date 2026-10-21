@@ -45,6 +45,18 @@ directions, for the reason every baseline in this tree is:
 Only the second direction keeps the file honest. Without it the declaration
 accumulates, and a later reader cannot tell an accepted exception from a line
 nobody removed.
+
+The scan reads every package under ``src/`` (``SOURCE_PACKAGES``), because a
+store's readers and writers need not share its package: the runtime composes
+the tax application's profile persistence, and a store only the runtime fills
+would read as unwritten from inside ``cadrumo`` alone. Two store families are
+recognised. A profile secure-object store subclasses ``SecureBoundRepository``.
+A service store keeps its records in the runtime's opaque custody and reaches
+them only through the descriptor record verbs of
+``cadrumo_client.transport.service_client.InstalledServiceClient``; the agent
+service's provider settings are one. Both answer the same question -- is what
+production reads ever filled -- so both are measured. Stores are named by class,
+and a class name two packages both define is refused rather than merged.
 """
 
 from __future__ import annotations
@@ -56,13 +68,18 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.toml import parse_toml
-from dev.first_party_source import PRODUCT_PACKAGE, is_production_source
+from dev.first_party_source import SOURCE_PACKAGES, is_production_source
 
 from .unread_inputs import report_unread
 
 _REPO_BASE: Final = "SecureBoundRepository"
-_SOURCE_ROOT: Final = Path(__file__).resolve().parents[2] / PRODUCT_PACKAGE
+_SOURCE_ROOTS: Final = tuple(Path(__file__).resolve().parents[2] / package for package in SOURCE_PACKAGES)
 _DECLARATION: Final = Path(__file__).resolve().parent / "secure_store_write_path.toml"
+
+#: The runtime's opaque-custody record verbs, as ``InstalledServiceClient``
+#: defines them. A class that calls one of them on a receiver keeps its records
+#: in runtime custody, which makes it a service store.
+OPAQUE_RECORD_VERBS: Final = ("record_read", "record_write", "record_delete")
 
 #: A method mutates the store when any snake_case token of its name is one of
 #: these verbs. ``save``, ``save_period``, ``save_observation`` and
@@ -130,25 +147,31 @@ def _is_mutator(method: str) -> bool:
     return bool(set(method.split("_")) & set(_MUTATOR_VERBS))
 
 
-def _production_modules(root: Path) -> dict[Path, ast.Module]:
-    """Parse every shipped module, skipping tests and caches.
+def _production_modules(roots: tuple[Path, ...]) -> dict[str, ast.Module]:
+    """Parse every shipped module under ``roots``, keyed by its ``src``-relative path.
 
     A module that will not parse is skipped, because a walk over a tree a
     sibling process is editing must survive a half-written file. It is not
     skipped silently: this scan decides where a secure store is written,
     and a module left out contributes neither its reads nor its writes, so
     a store written only from the unread module reads as written nowhere.
+    An absent root is refused for the same reason: its stores, readers and
+    writers would vanish together and the verdict would still read clean.
     """
-    trees: dict[Path, ast.Module] = {}
+    trees: dict[str, ast.Module] = {}
     unread: list[str] = []
-    for path in sorted(root.rglob("*.py")):
-        if not is_production_source(path, root=root):
-            continue
-        try:
-            trees[path] = ast.parse(path.read_text(encoding="utf-8"))
-        except (OSError, SyntaxError, UnicodeDecodeError):
-            unread.append(path.relative_to(root).as_posix())
-            continue
+    for root in roots:
+        if not root.is_dir():
+            raise SecureStoreWritePathError(f"secure-store write-path source root is unavailable: {root}")
+        for path in sorted(root.rglob("*.py")):
+            if not is_production_source(path, root=root):
+                continue
+            module = path.relative_to(root.parent).as_posix()
+            try:
+                trees[module] = ast.parse(path.read_text(encoding="utf-8"))
+            except (OSError, SyntaxError, UnicodeDecodeError):
+                unread.append(module)
+                continue
     report_unread(
         "secure-store write-path scan",
         "their secure-store reads and writes are both absent from the analysis",
@@ -157,17 +180,33 @@ def _production_modules(root: Path) -> dict[Path, ast.Module]:
     return trees
 
 
-def _repository_classes(trees: dict[Path, ast.Module], root: Path) -> dict[str, str]:
-    """Return each secure repository class mapped to its defining module path."""
+def _is_store_class(node: ast.ClassDef) -> bool:
+    """Return whether a class is a profile secure-object store or a service store."""
+    if any(_REPO_BASE in ast.unparse(base) for base in node.bases):
+        return True
+    return any(
+        isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute) and call.func.attr in OPAQUE_RECORD_VERBS
+        for call in ast.walk(node)
+    )
+
+
+def _repository_classes(trees: dict[str, ast.Module]) -> dict[str, str]:
+    """Return each secure store class mapped to its defining module path."""
     owners: dict[str, str] = {}
-    for path, tree in trees.items():
+    for module, tree in trees.items():
         for node in ast.walk(tree):
-            if isinstance(node, ast.ClassDef) and any(_REPO_BASE in ast.unparse(base) for base in node.bases):
-                owners[node.name] = path.relative_to(root).as_posix()
+            if not isinstance(node, ast.ClassDef) or not _is_store_class(node):
+                continue
+            previous = owners.setdefault(node.name, module)
+            if previous != module:
+                raise SecureStoreWritePathError(
+                    f"secure store {node.name} is defined in both {previous} and {module}; "
+                    "the declaration names stores by class, so the two cannot be told apart",
+                )
     return owners
 
 
-def _protocol_aliases(trees: dict[Path, ast.Module], repositories: frozenset[str]) -> dict[str, str]:
+def _protocol_aliases(trees: dict[str, ast.Module], repositories: frozenset[str]) -> dict[str, str]:
     """Return each port protocol mapped to the one secure repository it stands for.
 
     Application services hold a repository through its protocol, so a write
@@ -176,10 +215,49 @@ def _protocol_aliases(trees: dict[Path, ast.Module], repositories: frozenset[str
     unresolved rather than credited to one of them.
     """
     implementers: dict[str, set[str]] = {}
-    for tree in trees.values():
-        for node in ast.walk(tree):
-            _collect_protocol_implementer(node, repositories, implementers)
+    classes = [node for tree in trees.values() for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
+    stores = {node.name: _method_names(node) for node in classes if node.name in repositories}
+    for node in classes:
+        _collect_protocol_implementer(node, repositories, implementers)
+        _collect_structural_implementer(node, stores, implementers)
     return {protocol: next(iter(names)) for protocol, names in implementers.items() if len(names) == 1}
+
+
+def _method_names(node: ast.ClassDef) -> frozenset[str]:
+    """Return the methods a class body defines."""
+    return frozenset(
+        statement.name for statement in node.body if isinstance(statement, ast.FunctionDef | ast.AsyncFunctionDef)
+    )
+
+
+def _is_protocol_class(node: ast.ClassDef) -> bool:
+    """Return whether a class declares ``typing.Protocol`` (bare or subscripted) as a base."""
+    for base in node.bases:
+        target = base.value if isinstance(base, ast.Subscript) else base
+        if isinstance(target, ast.Name | ast.Attribute) and _called_name(target) == "Protocol":
+            return True
+    return False
+
+
+def _collect_structural_implementer(
+    node: ast.ClassDef, stores: dict[str, frozenset[str]], implementers: dict[str, set[str]]
+) -> None:
+    """Credit a structural port to the store that both carries its name and satisfies it.
+
+    A service store implements its port structurally and names itself by
+    qualifying the port's name -- ``SecureProviderSettingsStore`` for the
+    ``ProviderSettingsStore`` protocol -- without listing it as a base. Both
+    conditions are required: a name suffix alone would credit an unrelated
+    protocol, and a method subset alone would credit every small one.
+    """
+    if not _is_protocol_class(node):
+        return
+    required = _method_names(node)
+    if not required:
+        return
+    for store, methods in stores.items():
+        if store != node.name and store.endswith(node.name) and required <= methods:
+            implementers.setdefault(node.name, set()).add(store)
 
 
 def _annotated_repositories(annotation: ast.expr | None, repositories: frozenset[str]) -> set[str]:
@@ -259,17 +337,16 @@ def _receiver_repository(
     return None
 
 
-def collect_store_usage(root: Path = _SOURCE_ROOT) -> tuple[StoreUsage, ...]:
-    """Return read and write sites for every secure repository in the tree."""
-    trees = _production_modules(root)
-    owners = _repository_classes(trees, root)
+def collect_store_usage(roots: tuple[Path, ...] = _SOURCE_ROOTS) -> tuple[StoreUsage, ...]:
+    """Return read and write sites for every secure store under ``roots``."""
+    trees = _production_modules(roots)
+    owners = _repository_classes(trees)
     aliases = _protocol_aliases(trees, frozenset(owners))
     repositories = frozenset(owners) | frozenset(aliases)
     reads: dict[str, set[str]] = {name: set() for name in owners}
     writes: dict[str, set[str]] = {name: set() for name in owners}
-    for path, tree in trees.items():
+    for module, tree in trees.items():
         module_names, module_attributes, module_accessors = _bindings(tree, repositories)
-        module = path.relative_to(root).as_posix()
         # Each top-level class or function binds its own names over the
         # module's, so two adapters in one module that both hold a
         # ``_repository`` resolve to their own stores rather than the last one.
@@ -311,9 +388,9 @@ def _declared_read_only(declaration: Path = _DECLARATION) -> dict[str, str]:
     return declared
 
 
-def evaluate(root: Path = _SOURCE_ROOT, declaration: Path = _DECLARATION) -> tuple[str, ...]:
+def evaluate(roots: tuple[Path, ...] = _SOURCE_ROOTS, declaration: Path = _DECLARATION) -> tuple[str, ...]:
     """Return the verdict lines; an empty tuple is a pass."""
-    usage = collect_store_usage(root)
+    usage = collect_store_usage(roots)
     observed = {store.name for store in usage if store.is_read_only}
     declared = _declared_read_only(declaration)
     problems: list[str] = []
@@ -336,7 +413,12 @@ def main() -> int:
     usage = collect_store_usage()
     problems = evaluate()
     declared = _declared_read_only()
+    packages: dict[str, int] = {}
+    for store in usage:
+        package = store.owner.split("/", 1)[0]
+        packages[package] = packages.get(package, 0) + 1
     print(f"{len(usage)} secure store(s); {len(declared)} declared read-only.")
+    print(f"  scanned {', '.join(SOURCE_PACKAGES)}; stores by package: {packages}")
     for name, rationale in sorted(declared.items()):
         print(f"  = {name}: {rationale}")
     for problem in problems:

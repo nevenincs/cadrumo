@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.period import Period
@@ -14,9 +16,6 @@ from ...domain.modelos.verification_report import (
 )
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .verification_report_public_facts import ModeloVerificationReportProjection
@@ -71,9 +70,9 @@ def verification_calculation_revision_period(
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     snapshot = revision.registry_snapshot_ref
     if (
-        str(snapshot.modelo) != str(unit.modelo)
+        snapshot.modelo != str(unit.modelo)
         or snapshot.modelo_year != unit.filing_year
-        or str(snapshot.period) != unit.period.registry_token
+        or snapshot.period != unit.period.registry_token
         or snapshot.revision_id != unit.revision_id
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)

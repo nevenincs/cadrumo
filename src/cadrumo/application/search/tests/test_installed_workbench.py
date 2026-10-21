@@ -308,7 +308,7 @@ def test_snapshot_rejects_a_destination_admission_from_another_area() -> None:
 def test_distinct_reconciliation_evidence_at_one_period_has_unique_search_identities() -> None:
     from ...aeat_sync.tests.reconciliation_fixtures import reconciliation_projection as _projection
     from ...aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
-    from ...modelo.reconciliation_records import ModeloReconciliationEvidenceKind
+    from ...modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 
     receipt = _record()
     declaration = receipt.model_copy(

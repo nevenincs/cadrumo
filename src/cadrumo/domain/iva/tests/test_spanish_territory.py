@@ -30,8 +30,8 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
-from ..classification import IvaTerritorialScope
 from ..establishment import territorial_scope_for_country, territorial_scope_for_spanish_postal_code
+from ..schema import IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -12,6 +12,8 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.contribuyente.inventory.records import (
@@ -28,7 +30,6 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_scalar import PublicDecimal
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...user_profile.access_contracts import AccessDenialCode
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..errors import InventoryServiceInputError
 from ..ports import InventoryServicePorts

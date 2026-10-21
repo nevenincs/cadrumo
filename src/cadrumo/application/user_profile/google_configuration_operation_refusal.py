@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
+
 from ...core.errors.error_codes import get_registered_error_code_by_code
 from ...core.errors.hierarchy import CadrumoError
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -174,7 +176,13 @@ class GoogleConfigurationPresentationFacts(BaseModel):
 
 
 class GoogleConfigurationRefusalProjection(BaseModel):
-    """Original declared human failure and lossless canonical action evidence."""
+    """Original declared human failure and lossless canonical action evidence.
+
+    ``failure_category`` is the one closed setup failure the refusal falls
+    into, so a surface that words setup can say why a sign-in did not finish
+    without reading provider codes. A refusal recorded before it existed
+    names none.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -182,6 +190,7 @@ class GoogleConfigurationRefusalProjection(BaseModel):
     message_key: GoogleConfigurationMessageKey
     facts: GoogleConfigurationPresentationFacts
     verdict: PreconditionVerdictSnapshot | None = None
+    failure_category: DependencyFailureCategory | None = None
 
     @model_validator(mode="after")
     def _same_profile(self) -> Self:

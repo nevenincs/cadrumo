@@ -42,10 +42,9 @@ from ....domain.calculations.registry.governed_fact_scope import governed_facts_
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
-from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
-from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from ....domain.iva.schema import InvoiceKind, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from .._modelo_bindings_invoice_iva import (
     _invoice_line_iva_observation,
     _reverse_charge_cuota_not_derivable,

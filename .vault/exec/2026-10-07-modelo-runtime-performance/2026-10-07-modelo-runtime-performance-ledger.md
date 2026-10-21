@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#modelo-runtime-performance'
 date: '2026-10-07'
-modified: '2026-10-08'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:da3b3d8100ff0864391a2821b27459595fa0ac96bd8624d7847518ff2a9204dc'
+body_hash: 'sha256:d654d39d52d6b5243cbdb92255e6c2fa6ecd5a468526de62d2323b924de007e0'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
 ---
@@ -98,7 +98,7 @@ related:
 - `S04` `verify:` `uv run --no-sync ruff format --check src/cadrumo/entrypoints/tui/tests/test_installed_session.py` -> `pass`
 - `S04` `verify:` `just check-import-boundaries` -> `pass`
 - `S04` `verify:` `mcp__vaultspec_core__check feature=modelo-runtime-performance fix=false` -> `pass`
-- `S04` `verify:` `vaultspec-core --target Y:/code/cadrumo-worktrees/tui vault plan check modelo-runtime-performance --json` -> `pass`
+- `S04` `verify:` `vaultspec-core --target <repo-root> vault plan check modelo-runtime-performance --json` -> `pass`
 - `S11` `M` `src/cadrumo/entrypoints/runtime/operation_authority.py`
 - `S11` `A` `src/cadrumo/entrypoints/runtime/tests/test_operation_scope_resolution.py`
 - `S11` `verify:` `uv run --no-sync pytest -n 0 -m unit src/cadrumo/entrypoints/runtime/tests/test_operation_scope_resolution.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py src/cadrumo/application/operations/tests/test_access_resolution.py --basetemp=.tmp/s11-scope-read-final -q` -> `pass`

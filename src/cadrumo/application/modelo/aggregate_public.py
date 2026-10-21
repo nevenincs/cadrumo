@@ -64,7 +64,7 @@ class PublicCounterpartObservation(BaseModel):
         return cls.model_validate(
             {
                 **public_model_mapping(value),
-                "accrued_on": date.fromisoformat(str(value.accrued_on)),
+                "accrued_on": date.fromisoformat(value.accrued_on),
             },
             strict=True,
         )
@@ -107,7 +107,7 @@ class PublicForeignAssetObservation(BaseModel):
         return cls.model_validate(
             {
                 **public_model_mapping(value),
-                "acquisition_date": date.fromisoformat(str(value.acquisition_date)),
+                "acquisition_date": date.fromisoformat(value.acquisition_date),
                 "valuation_event_date": (
                     date.fromisoformat(value.valuation_event_date) if value.valuation_event_date is not None else None
                 ),

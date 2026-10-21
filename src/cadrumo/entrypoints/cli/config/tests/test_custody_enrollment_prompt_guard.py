@@ -69,7 +69,7 @@ verdict = {}
 try:
     from cadrumo.core import config as config_module
     from cadrumo.core.config import Settings
-    from cadrumo.entrypoints.cli.config.secure_input import _stdin_is_a_real_console
+    from cadrumo_client.commands.secure_input import _stdin_is_a_real_console
 
     settings = Settings(
         _env_file=None,

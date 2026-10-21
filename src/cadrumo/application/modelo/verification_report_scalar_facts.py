@@ -7,11 +7,10 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.identifier_grammar import FIELD_KEY_PATTERN
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 
 _FindingFactKey = Annotated[str, StringConstraints(min_length=1, max_length=128, pattern=FIELD_KEY_PATTERN)]

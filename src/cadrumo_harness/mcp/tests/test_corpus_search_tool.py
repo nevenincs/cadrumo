@@ -6,7 +6,6 @@ import json
 import shutil
 from collections.abc import Iterator
 from pathlib import Path
-from uuid import uuid4
 
 import pytest
 
@@ -19,10 +18,11 @@ from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry import authority as authority_module
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin
-from cadrumo_harness.mcp import corpus_query as mcp_corpus
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+
+from .. import corpus_query as mcp_corpus
+from ..server import build_server
+from .admitted_lease import admitted_adapter
+from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -48,7 +48,7 @@ def sample_corpus(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[P
 @pytest.mark.anyio
 @pytest.mark.usefixtures("sample_corpus")
 async def test_unauthenticated_connection_grounds_a_query_in_corpus_and_terminology() -> None:
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    adapter = admitted_adapter()
     try:
         async with connected_server_and_client_session(build_server(adapter)) as client:
             tools = {tool.name: tool for tool in (await client.list_tools()).tools}
@@ -78,7 +78,6 @@ async def test_unauthenticated_connection_grounds_a_query_in_corpus_and_terminol
         assert terminology
         assert "iva-recargo-equivalencia" in {hit["concept_id"] for hit in terminology}
         assert found["terminology"] == terminology
-        assert adapter.client is None
     finally:
         await adapter.close()
 
@@ -86,7 +85,7 @@ async def test_unauthenticated_connection_grounds_a_query_in_corpus_and_terminol
 @pytest.mark.anyio
 @pytest.mark.usefixtures("sample_corpus")
 async def test_exact_citation_returns_published_verbatim_evidence() -> None:
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    adapter = admitted_adapter()
     try:
         result = await adapter.call("corpus_search", {"query": _CITATION_ID})
     finally:
@@ -114,7 +113,7 @@ async def test_reported_generation_is_the_pin_the_citation_lookup_used(monkeypat
         return canonical(query, operation=operation, limit=limit)
 
     monkeypatch.setattr(mcp_corpus, "search_corpus", record_pin)
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    adapter = admitted_adapter()
     try:
         result = await adapter.call("corpus_search", {"query": _CITATION_ID})
     finally:
@@ -140,7 +139,7 @@ async def test_reported_generation_is_the_pin_the_citation_lookup_used(monkeypat
 )
 @pytest.mark.usefixtures("sample_corpus")
 async def test_invalid_corpus_queries_refuse_with_typed_codes(args: dict[str, object], code: str) -> None:
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    adapter = admitted_adapter()
     try:
         async with connected_server_and_client_session(build_server(adapter)) as client:
             refused = await client.call_tool("corpus_search", args)
@@ -157,7 +156,7 @@ async def test_missing_published_authority_refuses_before_any_corpus_index_is_bu
     unpublished = tmp_path / "unpublished"
     unpublished.mkdir()
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
-    adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
+    adapter = admitted_adapter()
     try:
         with override_settings(cadrumo_authority_root=unpublished):
             async with connected_server_and_client_session(build_server(adapter)) as client:

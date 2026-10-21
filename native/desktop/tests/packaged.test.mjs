@@ -4,7 +4,7 @@
 // and writes one PASS, FAIL, SKIP or INFO line per check to a results
 // directory. It needs an interactive desktop session; see run-packaged.ps1.
 import assert from "node:assert/strict";
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import {
   copyFileSync,
@@ -14,9 +14,11 @@ import {
   readFileSync,
   readdirSync,
   statSync,
+  statfsSync,
 } from "node:fs";
-import { dirname, isAbsolute, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { buildPath } from "../scripts/build-paths.mjs";
 import { docsOrigin as docsOriginOf } from "../scripts/configuration.mjs";
@@ -32,6 +34,24 @@ import {
   survivors,
 } from "./packaged/os.mjs";
 import { Results } from "./packaged/results.mjs";
+import {
+  CountingProxy,
+  SCRATCH_BUDGET_BYTES,
+  SETUP_VARIABLE,
+  SetupDriver,
+  TRACKED_PROCESSES,
+  fingerprint,
+  fingerprintChanges,
+  freeSpaceVerdict,
+  isolatedEnvironment,
+  probe,
+  realStorageVerdict,
+  removeScratch,
+  runSetupAcceptance,
+  scratchLayout,
+  setupHostVerdict,
+  treeBytes,
+} from "./packaged/setup.mjs";
 import {
   connect,
   devtoolsEndpoint,
@@ -73,29 +93,52 @@ function settings() {
     "Set CADRUMO_DESKTOP_PACKAGE_ROOT to an assembled package that carries docs/user/manifest.json.",
   );
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const run = resolve(buildPath("desktop_testing"), "packaged", "runs", stamp);
+  // The setup run's whole footprint is one throwaway root in the build's
+  // testing directory, removed when the run ends.
+  const setup = process.env[SETUP_VARIABLE] === "1";
+  const setupParent = setup
+    ? resolve(buildPath("testing"), "packaged-setup")
+    : null;
+  const run = setup
+    ? resolve(setupParent, `run-${stamp}`)
+    : resolve(buildPath("desktop_testing"), "packaged", "runs", stamp);
+  const layout = setup ? scratchLayout(run) : null;
   return {
     stamp,
     packageRoot,
     storageVariable:
       process.env.CADRUMO_STORAGE_ROOT_VARIABLE || "CADRUMO_LOCAL_STORAGE_ROOT",
     run,
-    storage: resolve(run, "storage"),
+    storage: layout ? layout.storage : resolve(run, "storage"),
+    setupParent,
+    layout,
     results:
       process.env.CADRUMO_PACKAGED_RESULTS ||
-      resolve(buildPath("desktop_results"), "packaged", stamp),
+      resolve(
+        buildPath("desktop_results"),
+        setup ? "packaged-setup" : "packaged",
+        stamp,
+      ),
     allowBrowser: process.env.CADRUMO_PACKAGED_ALLOW_BROWSER === "1",
   };
 }
 
-/** The host's environment: the caller's, without CADRUMO_ or WEBVIEW2_ variables. */
+/**
+ * The host's environment: the caller's, without CADRUMO_ or WEBVIEW2_
+ * variables. The setup run also moves application data and temporary files
+ * into its throwaway root and drops Playwright, Ollama and proxy settings.
+ */
 function hostEnvironment(config, extra = {}) {
-  const removed = [];
-  const env = {};
-  for (const [key, value] of Object.entries(process.env)) {
-    if (/^(CADRUMO_|WEBVIEW2_)/i.test(key)) removed.push(key);
-    else env[key] = value;
-  }
+  const removed = Object.keys(process.env).filter((key) =>
+    /^(CADRUMO_|WEBVIEW2_)/i.test(key),
+  );
+  const env = config.layout
+    ? isolatedEnvironment(process.env, config.layout, config.storageVariable)
+    : Object.fromEntries(
+        Object.entries(process.env).filter(
+          ([key]) => !/^(CADRUMO_|WEBVIEW2_)/i.test(key),
+        ),
+      );
   env[config.storageVariable] = config.storage;
   env.CADRUMO_DESKTOP_PACKAGE_ROOT = config.packageRoot;
   return { env: { ...env, ...extra }, removed };
@@ -155,38 +198,31 @@ function htmlTitle(html) {
     .trim();
 }
 
-/** Runs the host's own projection query and keeps only the paths it declares. */
-function projection(config, packageRoot, env) {
+/**
+ * The locations the host projects, from the package contract's declared
+ * components under the pinned storage root; the environment carries no
+ * relocated member here.
+ */
+function projection(config, env) {
   const contract = JSON.parse(
     readFileSync(process.env.CADRUMO_NATIVE_CONTRACT, "utf8"),
   );
-  const query = readFileSync(
-    new URL("../src-tauri/src/python/environment.py", import.meta.url),
-    "utf8",
+  const defaults = contract.desktop_defaults;
+  const storage = env[config.storageVariable];
+  assert(isAbsolute(storage), "the host environment pins the storage root");
+  assert(
+    !(defaults.log_variable in env),
+    "the packaged run relocates no log directory",
   );
-  const result = spawnSync(
-    resolve(packageRoot, contract.layout.paths.executable),
-    ["-I", "-c", query],
-    {
-      cwd: config.run,
-      env,
-      encoding: "utf8",
-      timeout: 60000,
-      windowsHide: true,
-    },
-  );
-  if (result.status !== 0)
-    throw new Error(
-      `projection query exited ${result.status}: ${result.stderr.slice(0, 300)}`,
-    );
-  const value = JSON.parse(result.stdout);
+  const logs = resolve(storage, defaults.logs);
   return {
-    storage: value.storage,
-    webview: value.webview,
-    logs: value.logs,
-    logFile: value.log_file,
-    outputLanguage: value.output_language,
-    consoleWorkspace: value.console_workspace,
+    storage,
+    webview: resolve(storage, defaults.webview),
+    logs,
+    logFile: resolve(logs, defaults.log_file.split("/").pop()),
+    outputLanguage:
+      env[defaults.output_language_variable] || defaults.output_language,
+    consoleWorkspace: resolve(storage, defaults.console_workspace),
   };
 }
 
@@ -211,21 +247,9 @@ async function exited(exit, ms) {
   return Promise.race([exit, sleep(ms).then(() => null)]);
 }
 
-test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
-  const config = settings();
-  mkdirSync(config.storage, { recursive: true });
-  const results = new Results(config.results);
-  const startedAt = new Date().toISOString();
-  const summary = {};
-  const input = new DesktopInput();
-  let session = null;
-  let host = null;
-  let hostPid = null;
-  let projected = null;
-  let webviewPids = [];
-  let signIn = null;
-
-  const record = async (kind, id, title, run) => {
+/** Records one check or experiment as a result line and as a subtest. */
+function recorder(t, results) {
+  return async (kind, id, title, run) => {
     const checkStartedAt = new Date().toISOString();
     const checkStarted = performance.now();
     let outcome;
@@ -251,6 +275,30 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
     );
     return entry;
   };
+}
+
+const SETUP_RUN = process.env[SETUP_VARIABLE] === "1";
+
+const WINDOW_RUN = {
+  timeout: 45 * 60 * 1000,
+  skip: SETUP_RUN && `${SETUP_VARIABLE}=1 runs the setup acceptance instead`,
+};
+
+test("packaged desktop window", WINDOW_RUN, async (t) => {
+  const config = settings();
+  mkdirSync(config.storage, { recursive: true });
+  const results = new Results(config.results);
+  const startedAt = new Date().toISOString();
+  const summary = {};
+  const input = new DesktopInput();
+  let session = null;
+  let host = null;
+  let hostPid = null;
+  let projected = null;
+  let webviewPids = [];
+  let signIn = null;
+
+  const record = recorder(t, results);
   const check = (id, title, run) => record("check", id, title, run);
   const experiment = (id, title, run) => record("experiment", id, title, run);
   const evidence = (name, value) => results.evidence(name, value);
@@ -299,11 +347,7 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
         "utf8",
       ),
     );
-    projected = projection(
-      config,
-      config.packageRoot,
-      hostEnvironment(config).env,
-    );
+    projected = projection(config, hostEnvironment(config).env);
     summary.webview = projected.webview;
     evidence("projection.json", projected);
 
@@ -669,6 +713,9 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
     );
 
     // Documentation: CSP, search and a localized root ---------------------------
+    // The documentation is put away by default: it is shown before it is read.
+    if (!(await page.locator(".pane-docs").isVisible()))
+      await page.locator('.rail [data-rail="docs"]').click();
     const shown = session.docsFrame()?.url();
     const shownEntry = entries.find((language) => language.entry === shown);
     const localized = entries.find(
@@ -1762,6 +1809,444 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
         evidence("final-log-capture.json", captures);
       } catch {
         // Keep cleanup and the original failing check authoritative.
+      }
+    }
+    input.close();
+    const counts = results.finish({
+      startedAt,
+      endedAt: new Date().toISOString(),
+      summary,
+    });
+    console.log(`Results: ${config.results}\n${JSON.stringify(counts)}`);
+  }
+});
+
+// The packaged setup acceptance ---------------------------------------------
+//
+// Run on the development host with CADRUMO_PACKAGED_SETUP=1. The window, its
+// runtime and every process they start see one throwaway root under the
+// build's testing directory as their storage, application data and
+// temporary directory. The run refuses a volume with under 30 GiB free, stops
+// itself when the root outgrows its budget, removes the root and any
+// keychain entry it created when it ends, and lists real storage before and
+// after. It needs an interactive desktop and no other Cadrumo window: one
+// window runs per user.
+
+const REPOSITORY = fileURLToPath(new URL("../../../", import.meta.url));
+
+/** Where a setup or a profile would write on this computer, outside any run. */
+function realStorageRoots() {
+  const local = process.env.LOCALAPPDATA;
+  const roaming = process.env.APPDATA;
+  return [
+    resolve(REPOSITORY, "var", "storage"),
+    ...(local
+      ? [resolve(local, "cadrumo"), resolve(local, "ms-playwright")]
+      : []),
+    ...(roaming ? [resolve(roaming, "cadrumo")] : []),
+  ];
+}
+
+const GUARDED_MEMBERS = new Set([
+  "components",
+  "models",
+  "buckets",
+  "active-profile",
+  "keystore",
+  "secrets",
+  "tokens",
+]);
+
+/** A change a setup or a profile of this run could have made, not another program's. */
+function guardedChange(change, roots, marks) {
+  const path = change.slice(change.indexOf(" ") + 1).replace(/\|absent$/, "");
+  if (
+    marks.some(
+      (mark) => mark && path.toLowerCase().includes(mark.toLowerCase()),
+    )
+  )
+    return true;
+  const root = roots.find(
+    (candidate) => path === candidate || path.startsWith(candidate + sep),
+  );
+  if (!root) return true;
+  if (root.toLowerCase().endsWith(`${sep}ms-playwright`)) return true;
+  const parts = relative(root, path).split(sep).filter(Boolean);
+  const member = parts[0] === "development" ? parts[1] : parts[0];
+  return (
+    member !== undefined &&
+    (GUARDED_MEMBERS.has(member) || member.startsWith("profile-custody"))
+  );
+}
+
+const SETUP_ACCEPTANCE = {
+  timeout: 90 * 60 * 1000,
+  skip: !SETUP_RUN && `set ${SETUP_VARIABLE}=1 to run the setup acceptance`,
+};
+
+test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
+  const config = settings();
+  const { layout } = config;
+  const results = new Results(config.results);
+  const startedAt = new Date().toISOString();
+  const summary = { root: layout.root };
+  const record = recorder(t, results);
+  const check = (id, title, run) => record("check", id, title, run);
+  const evidence = (name, value) => results.evidence(name, value);
+  const input = new DesktopInput();
+  const contract = JSON.parse(
+    readFileSync(process.env.CADRUMO_NATIVE_CONTRACT, "utf8"),
+  );
+  const python = resolve(config.packageRoot, contract.layout.paths.executable);
+  let session = null;
+  let host = null;
+  let hostPid = null;
+  let signIn = null;
+  let proxy = null;
+  let driver = null;
+  let watchdog = null;
+  let before = null;
+  let credentialsBefore = null;
+  let started = false;
+  const seen = new Map();
+
+  /** Every process of this run: the host's and the runtime's trees, and anything naming the root. */
+  const runProcesses = async () => {
+    const all = await input.processes(TRACKED_PROCESSES);
+    const roots = [
+      hostPid,
+      signIn?.child?.pid,
+      signIn?.messages.find((message) => message.kind === "ready")?.pid,
+    ].filter(Boolean);
+    const root = layout.root.toLowerCase();
+    for (const process of all)
+      if (
+        roots.includes(process.pid) ||
+        process.commandLine?.toLowerCase().includes(root)
+      )
+        seen.set(process.pid, process);
+    for (const pid of roots)
+      for (const process of descendants(all, pid))
+        seen.set(process.pid, process);
+    for (const process of driver?.cutTree ?? []) seen.set(process.pid, process);
+    return [...seen.values()];
+  };
+  /** Ends the run at once: the window, the runtime fixture and so the runtime's job. */
+  const stopEverything = () => {
+    for (const child of [host?.child, signIn?.child])
+      try {
+        child?.kill();
+      } catch {
+        // Already gone.
+      }
+  };
+
+  try {
+    const testHost = packagedHost();
+    const desktop = await input.session();
+    summary.host = testHost.executable;
+    summary.package = config.packageRoot;
+    const preflight = await check(
+      "preflight",
+      "interactive desktop, test host, and no other Cadrumo window",
+      async () => {
+        const problems = [];
+        if (!desktop.inputDesktop || desktop.sessionId === 0)
+          problems.push(
+            `session ${desktop.sessionId} has no interactive input desktop`,
+          );
+        const windows = (await input.processes(["cadrumo.exe"])).filter(
+          (process) => !/\s--role\s/.test(process.commandLine ?? ""),
+        );
+        if (windows.length)
+          problems.push(
+            `another Cadrumo window runs (pid ${windows.map((process) => process.pid).join(", ")}); one window runs per user, so the test window would only activate it`,
+          );
+        return problems.length
+          ? { verdict: FAIL, detail: problems.join("; ") }
+          : {
+              verdict: PASS,
+              detail: `session ${desktop.sessionId}, host ${testHost.sha256.slice(0, 12)}`,
+            };
+      },
+    );
+    if (preflight.verdict !== PASS) return;
+
+    mkdirSync(config.setupParent, { recursive: true });
+    const volume = statfsSync(config.setupParent);
+    summary.freeBytesBefore = Number(volume.bavail) * Number(volume.bsize);
+    const space = await check(
+      "setup-free-space",
+      "the volume has at least 30 GiB free",
+      async () => freeSpaceVerdict({ freeBytes: summary.freeBytesBefore }),
+    );
+    if (space.verdict !== PASS) return;
+    for (const directory of [
+      layout.storage,
+      layout.local,
+      layout.roaming,
+      layout.temporary,
+    ])
+      mkdirSync(directory, { recursive: true });
+    started = true;
+    const gate = await check(
+      "setup-host",
+      "a clean storage root inside a throwaway root under the build's testing directory",
+      async () =>
+        setupHostVerdict({
+          env: process.env,
+          storageRoot: layout.storage,
+          storageEntries: readdirSync(layout.storage),
+          runDirectory: layout.root,
+          testingRoot: buildPath("testing"),
+        }),
+    );
+    if (gate.verdict !== PASS) return;
+
+    before = fingerprint(realStorageRoots());
+    summary.realStorageEntriesBefore = before.size;
+    proxy = await new CountingProxy().start();
+    const env = hostEnvironment(config).env;
+    const runtimeEnv = { ...env, CADRUMO_PROXY_URL: proxy.url };
+    credentialsBefore = probe(python, env, ["credentials"]);
+    summary.peakScratchBytes = 0;
+    watchdog = setInterval(() => {
+      const bytes = treeBytes(layout.root);
+      summary.peakScratchBytes = Math.max(summary.peakScratchBytes, bytes);
+      if (bytes > SCRATCH_BUDGET_BYTES && !summary.budgetExceeded) {
+        summary.budgetExceeded = bytes;
+        driver?.abort(`the throwaway root reached ${bytes} bytes`);
+        stopEverything();
+      }
+    }, 1000);
+
+    const isolation = await check(
+      "setup-isolation",
+      "every Cadrumo location, the application data and temporary files resolve inside the root",
+      async () => {
+        const answer = probe(python, runtimeEnv, ["locations", layout.root]);
+        evidence("setup-locations.json", answer);
+        return answer.outside.length
+          ? {
+              verdict: FAIL,
+              detail: `outside the root: ${answer.outside.join(", ")}`,
+              data: answer,
+            }
+          : {
+              verdict: PASS,
+              detail: `${Object.keys(answer.resolved).length} locations inside ${layout.root}`,
+            };
+      },
+    );
+    if (isolation.verdict !== PASS) return;
+
+    signIn = new SignInFixture({
+      config,
+      env: runtimeEnv,
+      contract,
+      results,
+    });
+    const fixture = await check(
+      "sign-in-fixture",
+      "canonical profile creation and explicitly owned packaged runtime",
+      () => signIn.start(),
+    );
+    if (fixture.verdict !== PASS) return;
+
+    const port = await freePort();
+    const { env: hostEnv } = hostEnvironment(config, {
+      [REMOTE]: `--remote-debugging-port=${port}`,
+    });
+    host = launch(testHost.executable, ["--gui"], {
+      env: hostEnv,
+      cwd: layout.root,
+      out: resolve(config.results, "host-stdout.txt"),
+      err: resolve(config.results, "host-stderr.txt"),
+    });
+    hostPid = host.child.pid;
+    const tauri = JSON.parse(
+      readFileSync(packagedHostPaths().configuration, "utf8"),
+    );
+    const window = tauri.app.windows[0];
+    const scheme = window.useHttpsScheme ? "https" : "http";
+    const launched = await check(
+      "launch",
+      "the window opens with the DevTools endpoint",
+      async () => {
+        const early = host.exit.then((done) => {
+          throw new Error(`the host exited with ${done.code}`);
+        });
+        early.catch(() => undefined);
+        const endpoint = await Promise.race([
+          devtoolsEndpoint(port, 90000),
+          early,
+        ]);
+        session = await connect({
+          endpoint,
+          shellOrigins: [`${scheme}://tauri.localhost`],
+          docsOrigin: docsOriginOf(window),
+          ipcPrefix: `${scheme}://ipc.localhost/`,
+          blockExternal: !config.allowBrowser,
+        });
+        return { verdict: PASS, detail: endpoint };
+      },
+    );
+    if (launched.verdict !== PASS) return;
+    const authenticated = await check(
+      "canonical-sign-in",
+      "real password form signs in to the throwaway profile",
+      () => signIn.signIn(session, input, hostPid),
+    );
+    if (authenticated.verdict !== PASS) return;
+    await results.screenshot(session.page, "setup-01-signed-in");
+
+    driver = new SetupDriver({ session, input, signIn, layout, proxy });
+    if (summary.budgetExceeded)
+      driver.abort(
+        `the throwaway root reached ${summary.budgetExceeded} bytes`,
+      );
+    await runSetupAcceptance({ driver, check, results });
+    await results.screenshot(session.page, "setup-02-finished");
+  } finally {
+    clearInterval(watchdog);
+    if (session) {
+      try {
+        evidence("playwright-console.json", session.console);
+        evidence(
+          "ipc-trace.json",
+          await session.shell(() =>
+            window.__s10.ipc.filter((entry) =>
+              entry.cmd.startsWith("desktop_setup_"),
+            ),
+          ),
+        );
+      } catch {
+        // A closed window keeps the Node-side evidence already written.
+      }
+    }
+    if (proxy) {
+      summary.wireDownstreamBytes = proxy.downstream;
+      summary.wireUpstreamBytes = proxy.upstream;
+      summary.tunnels = proxy.tunnels;
+      summary.hosts = [...proxy.hosts].sort().join(", ");
+    }
+    if (started) {
+      const tracked = await runProcesses().catch(() => []);
+      if (host) {
+        const done = await exited(host.exit, 1000);
+        if (!done && hostPid) {
+          await input.post(hostPid, "close").catch(() => undefined);
+          if (!(await exited(host.exit, 15000))) host.child.kill();
+        }
+      }
+      if (signIn)
+        await check(
+          "sign-in-fixture-cleanup",
+          "test-owned runtime and exact-profile keychain entry are settled",
+          () => signIn.stop(),
+        );
+      await proxy?.stop();
+      await sleep(3000);
+      await check(
+        "setup-children-closed",
+        "the window and every process it or its runtime started have ended",
+        async () => {
+          const left = survivors(
+            [...tracked, ...(await runProcesses().catch(() => []))],
+            await input.processes(TRACKED_PROCESSES),
+          );
+          const unique = [...new Map(left.map((p) => [p.pid, p])).values()];
+          for (const process of unique)
+            try {
+              globalThis.process.kill(process.pid);
+            } catch {
+              // It ended between the listing and the kill.
+            }
+          return unique.length
+            ? {
+                verdict: FAIL,
+                detail: `${unique.length} process(es) still ran and were ended: ${unique.map((p) => `${p.name} ${p.pid}`).join(", ")}`,
+              }
+            : {
+                verdict: PASS,
+                detail: `${new Set(tracked.map((p) => p.pid)).size} tracked processes, none left`,
+              };
+        },
+      );
+      const profileId = signIn?.messages.find(
+        (message) => message.kind === "profile-ready",
+      )?.profileId;
+      await check(
+        "setup-keychain-clean",
+        "no keychain entry of this run remains",
+        async () => {
+          const key = ({ target, type, user }) => `${type}|${target}|${user}`;
+          const known = new Set((credentialsBefore ?? []).map(key));
+          const now = probe(python, hostEnvironment(config).env, [
+            "credentials",
+          ]);
+          const created = now.filter((entry) => !known.has(key(entry)));
+          const mine = created.filter(
+            (entry) =>
+              profileId &&
+              `${entry.target} ${entry.user}`.toLowerCase().includes(profileId),
+          );
+          const remaining = mine.length
+            ? probe(python, hostEnvironment(config).env, ["delete"], mine)
+            : [];
+          const others = created.filter((entry) => !mine.includes(entry));
+          const data = {
+            before: credentialsBefore?.length ?? null,
+            after: now.length,
+            deleted: mine.length - remaining.length,
+            othersCreated: others.map(({ target, type }) => ({
+              target,
+              type,
+            })),
+          };
+          if (remaining.length)
+            return {
+              verdict: FAIL,
+              detail: `${remaining.length} entry(ies) of this profile could not be deleted`,
+              data,
+            };
+          return {
+            verdict: PASS,
+            detail: `${now.length - created.length + others.length} Cadrumo entries before and after${mine.length ? `; deleted ${mine.length} of this profile` : ""}${others.length ? `; ${others.length} new entry(ies) name no profile of this run and were left` : ""}`,
+            data,
+          };
+        },
+      );
+      await check(
+        "setup-scratch-removed",
+        "the throwaway root is removed",
+        async () =>
+          (await removeScratch(layout.root, config.setupParent))
+            ? { verdict: PASS, detail: `${layout.root} is gone` }
+            : { verdict: FAIL, detail: `${layout.root} still exists` },
+      );
+      const volume = statfsSync(config.setupParent);
+      summary.freeBytesAfter = Number(volume.bavail) * Number(volume.bsize);
+      if (before) {
+        const after = fingerprint(realStorageRoots());
+        summary.realStorageEntriesAfter = after.size;
+        const changes = fingerprintChanges(before, after);
+        const roots = realStorageRoots();
+        const marks = [layout.root, profileId];
+        evidence("setup-real-storage-changes.json", changes);
+        await check(
+          "setup-real-storage-unchanged",
+          "real storage, var/storage and the per-user browser and Cadrumo folders are unchanged",
+          async () =>
+            realStorageVerdict({
+              guarded: changes.filter((change) =>
+                guardedChange(change, roots, marks),
+              ),
+              observed: changes.filter(
+                (change) => !guardedChange(change, roots, marks),
+              ),
+            }),
+        );
       }
     }
     input.close();

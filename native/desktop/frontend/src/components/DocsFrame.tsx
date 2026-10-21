@@ -4,6 +4,7 @@ import {
   useEffect,
   useImperativeHandle,
   useRef,
+  useState,
 } from "react";
 import type {
   BridgeChord,
@@ -58,6 +59,9 @@ export type DocsFrameApi = {
 type Props = {
   origin: string;
   entry: string;
+  language?: string;
+  languages?: readonly string[];
+  onLanguage?: (language: string) => void;
   title: string;
   chords: BridgeChord[];
   zoom: number;
@@ -127,6 +131,7 @@ function readResults(
 export const DocsFrame = forwardRef<DocsFrameApi, Props>(
   function DocsFrame(props, ref) {
     const { origin, entry, title, chords, zoom, appearance } = props;
+    const [source, setSource] = useState(entry);
     const frame = useRef<HTMLIFrameElement>(null);
     const features = useRef<BridgeFeature[]>([]);
     const pending = useRef(
@@ -183,12 +188,25 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
             post("zoom", { factor: p.zoom });
             if (p.appearance && features.current.includes("appearance"))
               post("appearance", { theme: p.appearance });
+            if (
+              p.language &&
+              data.lang !== p.language &&
+              features.current.includes("language")
+            )
+              post("language", { language: p.language, entry: p.entry });
             p.onReady({
               theme: readTheme(data.theme),
               features: [...features.current],
             });
             break;
           }
+          case "language-change":
+            if (
+              typeof data.language === "string" &&
+              p.languages?.includes(data.language)
+            )
+              p.onLanguage?.(data.language);
+            break;
           case "theme":
             p.onTheme(readTheme(data.theme));
             break;
@@ -268,6 +286,16 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
     }, [origin, post]);
 
     useEffect(() => {
+      if (
+        props.language &&
+        ready.current &&
+        features.current.includes("language")
+      )
+        post("language", { language: props.language, entry });
+      else setSource(entry);
+    }, [entry, props.language, post]);
+
+    useEffect(() => {
       post("keymap", { chords });
     }, [chords, post]);
 
@@ -341,7 +369,7 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
         ref={frame}
         className="docs-frame w-full flex-1 border-0 bg-background"
         title={title}
-        src={entry}
+        src={source}
       />
     );
   },

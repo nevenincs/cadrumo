@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.invoices.service import LinkInconsistency
@@ -19,8 +21,8 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
 from .check_query import LedgerCheckV1, read_ledger_check
@@ -157,11 +159,11 @@ def build_ledger_check_definition(ports: LedgerActionPortsFactory) -> OperationD
     return build_single_phase_definition(
         definition_id=LEDGER_CHECK_OPERATION_DEFINITION_ID,
         request_type=LedgerCheckRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerCheckProjection,
         executor_type=LedgerCheckExecutor,
         build=lambda: LedgerCheckExecutor(ports),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

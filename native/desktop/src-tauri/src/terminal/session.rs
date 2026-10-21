@@ -14,7 +14,7 @@ use super::{
 use cadrumo_application::{
     diagnostics::Diagnostics,
     error::application::{ApplicationError, ErrorCode, Operation, Result},
-    process::status::{ProcessPhase, ProcessRole},
+    process::status::{ProcessPhase, ProcessRole, Stream},
 };
 use portable_pty::{ChildKiller, CommandBuilder, MasterPty, PtySize, native_pty_system};
 use std::{
@@ -25,7 +25,7 @@ use std::{
     sync::{
         Arc, Mutex, MutexGuard,
         atomic::{AtomicBool, Ordering},
-        mpsc::{self, RecvTimeoutError, SyncSender, TrySendError},
+        mpsc::{self, Receiver, SyncSender, TrySendError},
     },
     thread::{self, JoinHandle},
     time::{Duration, Instant},
@@ -42,6 +42,20 @@ pub const SETTLE_TIMEOUT: Duration = Duration::from_secs(3);
 
 /// Receives encoded frames in send order.
 pub type Sink = Arc<dyn Fn(Vec<u8>) -> Result<()> + Send + Sync>;
+
+/// Colour switches the desktop terminal decides for its children. It is a colour
+/// terminal whose palette it owns, so a switch inherited from whatever shell started
+/// the desktop would only strip that palette: Textual reads a mere presence of
+/// `NO_COLOR` as monochrome, even `NO_COLOR=false`.
+const TERMINAL_OWNED: [&str; 2] = ["NO_COLOR", "CADRUMO_FORCE_COLOR"];
+
+fn terminal_owned(key: &OsString) -> bool {
+    key.to_str().is_some_and(|key| {
+        TERMINAL_OWNED
+            .iter()
+            .any(|owned| key.eq_ignore_ascii_case(owned))
+    })
+}
 
 pub fn failure(code: ErrorCode) -> ApplicationError {
     ApplicationError::new(code, Operation::Terminal)
@@ -73,29 +87,56 @@ type Master = Arc<Mutex<Option<Box<dyn MasterPty + Send>>>>;
 
 type Killer = Box<dyn ChildKiller + Send + Sync>;
 
+/// Terminates the child. portable-pty 0.9.0's Windows killer inverts
+/// `TerminateProcess`: it answers a successful termination with the thread's
+/// previous, unrelated error and a refused one with `Ok`. Read it the right
+/// way round, so only a refused termination is reported, with its own code.
+fn terminate(killer: &mut Killer) -> std::io::Result<()> {
+    let outcome = killer.kill();
+    if !cfg!(windows) {
+        return outcome;
+    }
+    match outcome {
+        // The refusal's code is still the thread's last error.
+        Ok(()) => Err(std::io::Error::last_os_error()),
+        Err(_) => Ok(()),
+    }
+}
+
 /// State shared between the session handle and its workers.
 struct Shared {
     process: u64,
     credit: Credit,
     input_stopped: AtomicBool,
+    /// Wakes the input writer when input stops; it blocks without a timeout.
+    input_wake: SyncSender<Input>,
     stop_requested: AtomicBool,
     exited: AtomicBool,
+    cleanup_stage: Mutex<&'static str>,
     write_error: Mutex<Option<ApplicationError>>,
     /// Terminates the child when a worker abandons the session.
     killer: Mutex<Killer>,
 }
 
 impl Shared {
-    fn new(killer: Killer, process: u64) -> Self {
+    fn new(killer: Killer, process: u64, input_wake: SyncSender<Input>) -> Self {
         Self {
             process,
             credit: Credit::default(),
             input_stopped: AtomicBool::new(false),
+            input_wake,
             stop_requested: AtomicBool::new(false),
             exited: AtomicBool::new(false),
+            cleanup_stage: Mutex::new("terminal_child_exit_timeout"),
             write_error: Mutex::new(None),
             killer: Mutex::new(killer),
         }
+    }
+
+    /// A full queue needs no marker: the writer checks the stop after each write.
+    fn stop_input(&self) {
+        self.input_stopped.store(true, Ordering::Release);
+        let _ = self.input_wake.try_send(Input::Stop);
     }
 
     fn write_error(&self) -> MutexGuard<'_, Option<ApplicationError>> {
@@ -110,10 +151,11 @@ impl Shared {
         if self.stop_requested.swap(true, Ordering::AcqRel) {
             return;
         }
-        self.input_stopped.store(true, Ordering::Release);
+        self.stop_input();
         self.credit.stop();
         if !self.exited.load(Ordering::Acquire)
-            && let Err(error) = self.killer.lock().unwrap_or_else(|e| e.into_inner()).kill()
+            && let Err(error) =
+                terminate(&mut self.killer.lock().unwrap_or_else(|e| e.into_inner()))
         {
             diagnostics.failure_for(
                 self.process,
@@ -129,13 +171,20 @@ struct Workers {
     writer: Option<JoinHandle<()>>,
 }
 
+enum Input {
+    Bytes(Vec<u8>),
+    Stop,
+}
+
 pub struct Session {
     shared: Arc<Shared>,
-    input: SyncSender<Vec<u8>>,
+    input: SyncSender<Input>,
     master: Master,
-    killer: Box<dyn ChildKiller + Send + Sync>,
+    killer: Killer,
     kill_error: Option<ApplicationError>,
     finisher: Option<JoinHandle<Result<()>>>,
+    /// Closed when the finisher returns, so settlement is awaited as an event.
+    finished: Receiver<()>,
     settled: bool,
     diagnostics: Arc<Diagnostics>,
 }
@@ -166,17 +215,21 @@ impl Session {
         sink: Sink,
         diagnostics: Arc<Diagnostics>,
     ) -> Result<Self> {
-        let pair = native_pty_system()
-            .openpty(size(cols, rows)?)
-            .map_err(|cause| {
-                let error = failure(ErrorCode::SpawnFailed).caused_by(std::io::Error::other(cause));
-                diagnostics.spawn_failure(program.role, error.clone());
-                error
-            })?;
+        let size = size(cols, rows)?;
+        let pair =
+            cadrumo_application::process::creation::run(|| native_pty_system().openpty(size))
+                .map_err(|cause| {
+                    let error =
+                        failure(ErrorCode::SpawnFailed).caused_by(std::io::Error::other(cause));
+                    diagnostics.spawn_failure(program.role, error.clone());
+                    error
+                })?;
         let mut command = CommandBuilder::new(&program.executable);
         command.env_clear();
         for (key, value) in &program.environment {
-            command.env(key, value);
+            if !terminal_owned(key) {
+                command.env(key, value);
+            }
         }
         command.env("TERM", "xterm-256color");
         command.env("COLORTERM", "truecolor");
@@ -210,8 +263,10 @@ impl Session {
         let process = diagnostics.start(pid, program.role);
         let mut killer = child.clone_killer();
         let master: Master = Arc::new(Mutex::new(Some(pair.master)));
-        let shared = Arc::new(Shared::new(child.clone_killer(), process));
+        let (input, queued) = mpsc::sync_channel::<Input>(INPUT_QUEUE);
+        let shared = Arc::new(Shared::new(child.clone_killer(), process, input.clone()));
         let (deliver_workers, workers) = mpsc::sync_channel::<Workers>(1);
+        let (finishing, finished) = mpsc::sync_channel::<()>(0);
         let finisher = {
             let shared = shared.clone();
             let master = master.clone();
@@ -220,20 +275,36 @@ impl Session {
             thread::Builder::new()
                 .name("terminal-exit".into())
                 .spawn(move || {
+                    let _finishing = finishing;
                     let status = child.wait();
                     let stopped = shared.stop_requested.load(Ordering::Acquire);
                     shared.exited.store(true, Ordering::Release);
-                    shared.input_stopped.store(true, Ordering::Release);
+                    shared.stop_input();
                     // ConPTY reports end of output only once the pseudoconsole
                     // closes; the reader keeps draining meanwhile.
+                    *shared
+                        .cleanup_stage
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner()) = "terminal_console_close_timeout";
                     drop(take_master(&master));
                     let mut outcome = Ok(());
                     let Workers { reader, writer } = workers.recv().unwrap_or_default();
-                    for worker in [reader, writer].into_iter().flatten() {
-                        if worker.join().is_err() {
+                    for (worker, stage) in [
+                        (reader, "terminal_output_join_timeout"),
+                        (writer, "terminal_input_join_timeout"),
+                    ] {
+                        *shared
+                            .cleanup_stage
+                            .lock()
+                            .unwrap_or_else(|e| e.into_inner()) = stage;
+                        if worker.is_some_and(|worker| worker.join().is_err()) {
                             outcome = Err(failure(ErrorCode::Panic));
                         }
                     }
+                    *shared
+                        .cleanup_stage
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner()) = "terminal_exit_delivery_timeout";
                     let code = status.as_ref().ok().map(|status| status.exit_code());
                     let wait_error = status
                         .err()
@@ -261,7 +332,7 @@ impl Session {
             Ok(finisher) => finisher,
             Err(error) => {
                 // Nothing can wait for this child; terminate it and close the PTY.
-                if let Err(kill) = killer.kill() {
+                if let Err(kill) = terminate(&mut killer) {
                     diagnostics
                         .failure_for(process, failure(ErrorCode::CleanupFailed).caused_by(kill));
                 }
@@ -272,7 +343,6 @@ impl Session {
                 return Err(error);
             }
         };
-        let (input, queued) = mpsc::sync_channel::<Vec<u8>>(INPUT_QUEUE);
         // From here the session owns cleanup: dropping it on any error settles the child.
         let session = Self {
             shared: shared.clone(),
@@ -281,6 +351,7 @@ impl Session {
             killer,
             kill_error: None,
             finisher: Some(finisher),
+            finished,
             settled: false,
             diagnostics: diagnostics.clone(),
         };
@@ -293,8 +364,8 @@ impl Session {
                     .name("terminal-input".into())
                     .spawn(move || {
                         while !input_shared.input_stopped.load(Ordering::Acquire) {
-                            match queued.recv_timeout(Duration::from_millis(50)) {
-                                Ok(bytes) => {
+                            match queued.recv() {
+                                Ok(Input::Bytes(bytes)) => {
                                     if let Err(error) =
                                         writer.write_all(&bytes).and_then(|()| writer.flush())
                                     {
@@ -303,8 +374,7 @@ impl Session {
                                         break;
                                     }
                                 }
-                                Err(RecvTimeoutError::Timeout) => continue,
-                                Err(RecvTimeoutError::Disconnected) => break,
+                                Ok(Input::Stop) | Err(_) => break,
                             }
                         }
                     })
@@ -323,6 +393,7 @@ impl Session {
                             match reader.read(&mut buffer) {
                                 Ok(0) => break,
                                 Ok(count) => {
+                                    output_diagnostics.count(process, Stream::Terminal, count);
                                     if credit.admit(count) == Admission::Deliver {
                                         deliver(
                                             &sink,
@@ -407,7 +478,7 @@ impl Session {
             return Ok(());
         }
         self.input
-            .try_send(bytes.to_vec())
+            .try_send(Input::Bytes(bytes.to_vec()))
             .map_err(|error| match error {
                 TrySendError::Full(_) => failure(ErrorCode::QueueFull),
                 TrySendError::Disconnected(_) => failure(ErrorCode::SessionUnavailable),
@@ -436,15 +507,13 @@ impl Session {
             return;
         }
         self.shared.stop_requested.store(true, Ordering::Release);
-        self.shared.input_stopped.store(true, Ordering::Release);
+        self.shared.stop_input();
         // A paused reader resumes and discards, so the PTY drains while it closes.
         self.shared.credit.stop();
         if !self.shared.exited.load(Ordering::Acquire) {
             // A child that exits concurrently can refuse termination; only a
             // missed settlement deadline makes this error the reported cause.
-            self.kill_error = self
-                .killer
-                .kill()
+            self.kill_error = terminate(&mut self.killer)
                 .err()
                 .map(|e| failure(ErrorCode::CleanupFailed).caused_by(e));
         }
@@ -472,17 +541,35 @@ impl Session {
                 }
                 return Ok(());
             }
-            if Instant::now() >= deadline {
+            let remaining = deadline.saturating_duration_since(Instant::now());
+            if remaining.is_zero() {
                 let error = self
                     .kill_error
                     .clone()
-                    .unwrap_or_else(|| failure(ErrorCode::CleanupFailed));
+                    .unwrap_or_else(|| failure(ErrorCode::CleanupFailed))
+                    .with_reason(
+                        *self
+                            .shared
+                            .cleanup_stage
+                            .lock()
+                            .unwrap_or_else(|e| e.into_inner()),
+                    );
                 self.diagnostics
                     .failure_for(self.shared.process, error.clone());
                 return Err(error);
             }
-            thread::sleep(Duration::from_millis(5));
+            // The finisher's end closes this channel; nothing is ever sent.
+            let _ = self.finished.recv_timeout(remaining);
         }
+    }
+
+    /// Settles without waiting once every worker has ended; a session whose
+    /// workers still run stays unsettled and reports nothing.
+    pub fn settle_ended(&mut self) -> bool {
+        if !self.settled && self.finisher.as_ref().is_none_or(JoinHandle::is_finished) {
+            let _ = self.await_stop(Instant::now());
+        }
+        self.settled
     }
 
     pub fn stop(&mut self) -> Result<()> {

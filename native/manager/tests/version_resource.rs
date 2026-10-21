@@ -40,14 +40,16 @@ fn strings_name_the_manager_product_and_version() {
         .expect("the manager image has a file name");
     assert_eq!(text(&info, "FileDescription"), identity::MANAGER_NAME);
     assert_eq!(text(&info, "ProductName"), identity::NAME);
-    assert_eq!(text(&info, "FileVersion"), identity::VERSION);
+    assert_eq!(text(&info, "FileVersion"), env!("CADRUMO_DISPLAY_VERSION"));
     assert_eq!(text(&info, "ProductVersion"), identity::VERSION);
+    assert_eq!(text(&info, "BuildId"), env!("CADRUMO_MANAGER_BUILD_ID"));
+    assert_eq!(text(&info, "BuildType"), env!("CADRUMO_BUILD_TYPE"));
     assert_eq!(text(&info, "OriginalFilename"), file_name);
     assert_eq!(file_name, "cadrumo-manager.exe");
 }
 
 #[test]
-fn fixed_version_matches_the_projected_release_version() {
+fn fixed_version_is_the_release_version_and_the_build_sequence() {
     let info = version_api::VersionInfo::read(Path::new(MANAGER));
     let fixed = info.query("\\", 1).expect("the fixed file information");
     assert_eq!(fixed.len(), 52);
@@ -56,7 +58,10 @@ fn fixed_version_matches_the_projected_release_version() {
         .split('.')
         .map(|part| part.parse().expect("numeric version part"))
         .collect();
-    let expected = ((parts[0] << 16) | parts[1], parts[2] << 16);
+    let sequence: u32 = env!("CADRUMO_MANAGER_BUILD_SEQUENCE")
+        .parse()
+        .expect("numeric build sequence");
+    let expected = ((parts[0] << 16) | parts[1], (parts[2] << 16) | sequence);
     assert_eq!((dword(fixed, 2), dword(fixed, 3)), expected, "file version");
     assert_eq!(
         (dword(fixed, 4), dword(fixed, 5)),

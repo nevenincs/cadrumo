@@ -19,7 +19,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 @pytest.mark.parametrize("year", (2022, 2023, 2024, 2025))
 def test_full_deduction_total_and_regime_result_keep_all_printed_inputs_live(year: int) -> None:
     snapshot = demonstration_snapshot(DemoCase("390", str(year), None, None, filing_year=year, period="0A"))
-    owners = {p.box_number: p.casilla_id for p in snapshot.revision.form_layouts[0].placements if p.box_number}
+    owners = {
+        p.box_number: p.casilla_id
+        for p in snapshot.revision.form_layouts[0].placements
+        if (p.box_number is not None and p.box_number)
+    }
     components = ("49", "513", "51", "521", "53", "55", "57", "59", "598", "61", "661", "62", "652", "63", "522")
     casillas = {c.id: c for c in snapshot.revision.casillas}
     formulas = {f.id: f for f in snapshot.revision.formulas}
@@ -38,7 +42,7 @@ def test_full_deduction_total_and_regime_result_keep_all_printed_inputs_live(yea
         expressions = [formulas[formula_id].expression]
         while expressions:
             expression = expressions.pop()
-            if expression.casilla_id:
+            if expression.casilla_id is not None and expression.casilla_id:
                 pending.append(expression.casilla_id)
             expressions.extend(expression.args)
     inputs = OperatorInputs(

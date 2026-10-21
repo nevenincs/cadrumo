@@ -553,7 +553,7 @@ def _minimo_descendientes_parameter(
     does not carry the table, or a CCAA with no published divergent figure
     for this tranche).
     """
-    infix = f"{ccaa_infix}-" if ccaa_infix else ""
+    infix = f"{ccaa_infix}-" if (ccaa_infix is not None and ccaa_infix) else ""
     parameter_id = f"renta-minimo-descendientes-{infix}{suffix}"
     for parameter in snapshot.revision.parameters:
         if parameter.id == parameter_id:
@@ -611,7 +611,9 @@ def _resolved_minimo_descendientes_tranches(
 
     def _resolve_tranche(suffix: str) -> Decimal | None:
         specific = (
-            _minimo_descendientes_parameter(snapshot, suffix=suffix, ccaa_infix=ccaa_infix) if ccaa_infix else None
+            _minimo_descendientes_parameter(snapshot, suffix=suffix, ccaa_infix=ccaa_infix)
+            if (ccaa_infix is not None and ccaa_infix)
+            else None
         )
         general = _minimo_descendientes_parameter(snapshot, suffix=suffix)
         chosen = specific if specific is not None else general

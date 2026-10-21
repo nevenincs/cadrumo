@@ -9,24 +9,27 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessDenialCode,
-    AccessScope,
-    AuthorityState,
-    Availability,
-    ProfileAccessStatus,
-)
+from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
 from cadrumo.core.time.clock import now
-from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
-from cadrumo_harness.mcp import runtime_admission as mcp_admission
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
+from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_harness.mcp.access_scope import surface_scope
+from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
+
+from .. import runtime_adapter as mcp_runtime
+from .. import runtime_admission as mcp_admission
+from ..operation_discovery import operation_summary
+from ..runtime_adapter import RuntimeMcpAdapter
+from .admitted_lease import public_descriptions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _AT = datetime(2026, 10, 3, 12, tzinfo=UTC)
+_READ = "auth.local-read"
+_FOUND = {"outcome": "found", "operations": [operation_summary(public_descriptions()[_READ])]}
 _STATUS_REFUSALS = (
     ("denial", "grant_expired"),
     ("profile", "profile_mismatch"),
@@ -56,7 +59,7 @@ class _Client:
         self, profile_id: UUID, *, fail_status: bool = False, status_flaw: str | None = None, at: datetime | None = None
     ) -> None:
         self.profile_id = profile_id
-        self.frontend = OperationFrontendProjection.MCP
+        self.frontend = OperationFrontendProjection.EXTERNAL_CLIENT
         self.session_id = uuid4()
         self.at = now() if at is None else at
         self.session_expires_at = self.at + timedelta(minutes=5)
@@ -74,7 +77,7 @@ class _Client:
         assert not self.closed
         self.status_calls += 1
         if self.fail_status:
-            raise RuntimeFrontendRefusedError("session_expired")
+            raise FrontendRefusedError("session_expired")
         status = ProfileAccessStatus(
             connected=True,
             credential_authenticated=True,
@@ -89,13 +92,15 @@ class _Client:
             automation_custody=Availability.AVAILABLE,
             published_authority=Availability.AVAILABLE,
             provider=Availability.NOT_REQUIRED,
-            effective_scope=AccessScope(
-                operations=frozenset({"auth.local-read"}),
-                actions=frozenset(),
-                disclosures=frozenset(),
-                periods=None,
-                allow_period_independent=True,
-                allow_delegation=False,
+            effective_scope=EffectiveScopeSummary.summarize(
+                AccessScope(
+                    operations=frozenset({"auth.local-read"}),
+                    actions=frozenset(),
+                    disclosures=frozenset(),
+                    periods=None,
+                    allow_period_independent=True,
+                    allow_delegation=False,
+                )
             ),
             denial=None,
         )
@@ -132,11 +137,17 @@ class _Client:
             self.frontend = OperationFrontendProjection.TUI
         return SimpleNamespace(status=status)
 
-    def describe(self, definition_id: str, *, deadline: float) -> SimpleNamespace:
+    def describe(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionDescriptionV1:
         assert not self.closed
         assert deadline > 0
         self.describe_calls.append(definition_id)
-        return SimpleNamespace(contract={"definition_id": definition_id})
+        return public_descriptions()[definition_id]
+
+    def subscribe_session_retirement(self, receive: object) -> None:
+        """The runtime retires no lease of this double."""
+
+    def subscribe_lifecycle_notices(self, receive: object) -> None:
+        """The runtime sends this double no lifecycle notice."""
 
     def close(self) -> None:
         self.close_count += 1
@@ -162,39 +173,41 @@ async def test_reauthentication_retires_existing_session_only_after_candidate_st
     )
 
     async def admit(
-        *, profile_id: UUID, credential_reference: UUID, frontend: OperationFrontendProjection
-    ) -> RuntimeFrontendClient:
+        *,
+        profile_id: UUID,
+        credential_reference: UUID,
+        frontend: OperationFrontendProjection,
+        timeout: float,
+        scope: AccessScope,
+    ) -> FrontendClient:
+        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         assert profile_id == original.profile_id
         assert credential_reference == reference
-        assert frontend is OperationFrontendProjection.MCP
+        assert frontend is OperationFrontendProjection.EXTERNAL_CLIENT
         assert not original.closed
         if failure == "admission":
-            raise RuntimeFrontendRefusedError("credential_rejected")
-        return cast(RuntimeFrontendClient, candidate)
+            raise FrontendRefusedError("credential_rejected")
+        return cast(FrontendClient, candidate)
 
     monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", admit)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, original))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, original))
     try:
-        result = await adapter.call("authenticate", {"credential_reference": str(reference)})
+        await adapter.bootstrap_reference(reference)
         if failure is None:
-            assert result == {"outcome": "authenticated", "status": candidate.status().status.model_dump(mode="json")}
             assert adapter.client is candidate
+            assert (await adapter.call("status", {}))["session"] == "key"
             assert original.close_count == 1
             assert candidate.close_count == 0
         else:
-            assert result == {
-                "outcome": "refused",
-                "code": expected_code,
-            }
+            denial = adapter._admission_denial
+            assert denial is not None and denial.code == expected_code
             assert adapter.client is original
             assert original.close_count == 0
             assert original.session_id == original_session
             assert candidate.close_count == (0 if failure == "admission" else 1)
             assert (await adapter.call("status", {}))["outcome"] == "status"
-            assert await adapter.call("search", {}) == {
-                "outcome": "found",
-                "operations": [{"definition_id": "auth.local-read"}],
-            }
+            assert await adapter.call("search", {}) == _FOUND
             assert original.describe_calls == ["auth.local-read"]
             assert candidate.describe_calls == []
     finally:
@@ -213,22 +226,27 @@ async def test_search_requires_exact_live_admission_before_listing_private_opera
     samples: list[datetime] = []
 
     def sample_after_status() -> datetime:
-        assert client.status_calls == 1
+        # Each check of the lease reads its status first and the clock after it.
+        assert client.status_calls == len(samples) + 1
         samples.append(_AT)
         return _AT
 
     monkeypatch.setattr(mcp_admission, "now", sample_after_status)
-    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", {})
         if expected_code is None:
-            assert result == {"outcome": "found", "operations": [{"definition_id": "auth.local-read"}]}
+            assert result == _FOUND
             assert client.describe_calls == ["auth.local-read"]
+            assert samples == [_AT]
         else:
-            assert result == {"outcome": "refused", "code": expected_code}
+            # A lease that is not a live admission is no session: nothing is read under it, and the
+            # search is refused with the runtime's code, as every call but status is with no session.
+            assert (result["outcome"], result["code"]) == ("refused", expected_code)
             assert client.describe_calls == []
-        assert samples == [_AT]
-        assert client.close_count == 0
+            assert samples == [_AT] or not samples
+        # A lease the runtime says has ended is let go at once; any other refusal leaves it to the next call.
+        assert client.close_count == (1 if expected_code == "session_expired" else 0)
     finally:
         await adapter.close()
     assert client.close_count == 1

@@ -4,16 +4,17 @@ from __future__ import annotations
 
 from typing import Final
 
-from ...application.ledger.operator_input_contracts import INVOICE_CLASS_INPUT
-from ._app_ledger_command_spec_support import _option_from_application_contract
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     ParameterConstraint,
     ParameterDefault,
     TranslationKey,
     ValueContract,
 )
+
+from ...application.ledger.operator_input_contracts import INVOICE_CLASS_INPUT
+from ._app_ledger_command_spec_support import _option_from_application_contract
 
 OPTIONAL_IVA_CATEGORY_OPTION: Final[OptionSpec] = OptionSpec(
     name="iva_category",
@@ -188,7 +189,7 @@ INVOICE_INTAKE_WIZARD_CORE_OPTIONS: Final[tuple[OptionSpec, ...]] = (
     OptionSpec(
         name="kind",
         declarations=("--kind",),
-        value=ValueContract(DeferredTarget("...domain.iva.classification", "InvoiceKind", __package__)),
+        value=ValueContract(DeferredTarget("...domain.iva.schema", "InvoiceKind", __package__)),
         default=ParameterDefault.required(),
         help_key=TranslationKey("cli.app.ledger.invoice.kind_help"),
     ),

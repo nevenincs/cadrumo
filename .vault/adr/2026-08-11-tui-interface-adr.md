@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-interface'
 date: '2026-08-11'
-modified: '2026-10-05'
+modified: '2026-10-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:05fcdd5f2d00355dfd73277921e7549c35bb2aa15b1efee743cfe901a3fcf165'
+body_hash: 'sha256:7ad16a5e47f73caffbd3848fb319d4faa20efc4ded7e59fa032499118a4acb7e'
 related:
   - "[[2026-08-11-tui-interface-research]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -641,3 +641,7 @@ not CLI-to-TUI routing.
 Every earlier clause requiring root-owned frontend selection, `aeat --tui [COMMAND_PATH]`,
 per-command available/not-implemented posture, or `TUI_NOT_IMPLEMENTED` is superseded. The
 independent full-screen package and its inbound-only dependency boundary remain unchanged.
+
+### Amendment 2026-10-14: runtime-host TUI ownership
+
+The installed Textual presentation tree now lives at `src/cadrumo_runtime/host/frontend/tui/` (`cadrumo_runtime.host.frontend.tui`), with the canonical operator launch `cadrumo-runtime tui`. It belongs to the runtime host; the `cadrumo` tax application never imports `cadrumo_runtime`. Earlier references in this record to `cadrumo.entrypoints.tui`, its tests and launcher, and the CLI `aeat app tui` bridge are preserved as decision history and are superseded for current source ownership, dependency direction, and launch. The frontend component and feature contracts otherwise remain in force.

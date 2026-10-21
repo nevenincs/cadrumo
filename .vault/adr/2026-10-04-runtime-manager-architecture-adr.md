@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-08'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:608f8ef971be16efe40401e5437effa0643349baa29681a5527e33b279796f35'
+body_hash: 'sha256:4d51519550d3935c5ae273e54cf9c9be5a6be8a679d35a99ffa3bb30e498f7a9'
 related:
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
   - "[[2026-10-03-runtime-manager-architecture-research]]"
@@ -28,7 +28,7 @@ related:
 
 ## Problem Statement
 
-The CLI, the TUI and the MCP servers do nothing without a running runtime, and nothing in the product starts one, so an MCP host has nothing to connect to. `2026-10-03-runtime-without-service-manager-adr` removed an unprincipled scheduled-task launcher and deferred launch and management policy to application provisioning.
+The CLI, the TUI and the MCP servers do nothing without a running runtime, and nothing in the product starts one, so an MCP host has nothing to connect to. `2026-10-03-runtime-without-service-manager-adr` removed an unprincipled ad hoc launcher and deferred launch and management policy to application provisioning.
 
 On 2026-10-04 the operator ruled:
 - Runtime management is a definite target.
@@ -72,7 +72,7 @@ This record decides the installed topology. The runtime-side contract is `2026-1
 - **Clients spawn the runtime on demand:** rejected. The runtime would join the client's job and die with it.
 - **The runtime starts at sign-in with no manager:** rejected. Nothing would recover crashes, hangs or version changes.
 - **Upgrade by stopping and replacing in place:** rejected by the operator.
-- **SCM service, SYSTEM broker or scheduled task:** rejected on the 10-03 evidence and by the operator.
+- **SCM service or SYSTEM broker:** rejected on the 10-03 evidence and by the operator.
 
 ## Constraints
 
@@ -123,7 +123,7 @@ This record decides the installed topology. The runtime-side contract is `2026-1
 - A machine has at most one scope registered for a given account:
   - the installer refuses a second scope where the other is present
   - if both are nevertheless found, the this-user installation takes precedence: the all-users manager checks for it before taking the session lock and stands down for that account
-- Excluded: scheduled tasks, SCM services, system daemons, units that need an enable step the product cannot perform, and pre-login execution.
+- Excluded: SCM services, system daemons, units that need an enable step the product cannot perform, and pre-login execution.
 
 **Versions.**
 - The product never removes or replaces files of a version that a process is using. Removal by an external package manager is detected and handled as a crash followed by cutover.
@@ -158,6 +158,14 @@ This record decides the installed topology. The runtime-side contract is `2026-1
 - The supervision core is verified against fixture runtimes in isolated synthetic roots, through a test mode that release builds refuse.
 - Registration, tray, session end, job escape, cutover and uninstall are verified only in package acceptance on disposable hosts.
 - Development and CI machines never receive login registration.
+
+### 2026-10-09 authorized admission amendment
+
+The user explicitly removed desktop/logon launch-context admission. Earlier requirements to reject Session 0, missing desktop witnesses, or elevated launch contexts are superseded within Windows manager/runtime operation. A verified same-account native process and its actual token logon may authenticate without a desktop. Desktop lock observation remains applicable when a desktop is positively bound; a native non-desktop logon has no screen-lock surface. Passwords, receipts and approved exact-profile MCP grants remain required. Native peer identity, executable verification, storage ownership, credential revocation and process ownership are unchanged. Runtime recovery follows the owning manager lifetime until explicit stop or session-end, rather than requiring an active WTS desktop. Evidence and implementation: `2026-10-09-runtime-process-lifecycle-plan`.
+
+### 2026-10-10 authorized startup ownership and optional-installation amendment
+
+Accepted under the user's explicit instruction that installation is optional, admin installation supplies a machine-start platform manager, user installation supplies login startup, and every running Cadrumo GUI must establish runtime supervision. This supersedes the earlier exclusions of desktop-owned supervision and Windows SCM hosting for this scope. A boot-time Windows service is a lifecycle broker only: it launches and watches per-user managers using genuine user logon tokens; it never owns profile credentials or runs a taxpayer runtime as SYSTEM. User-only installation retains unprivileged login startup. Cadrumo embeds the existing manager supervision core as a fallback when no installed session manager owns supervision, with the same native ownership lock, runtime start claim, process identity verification, heartbeat/recovery and authenticated client readiness. Existing installed managers retain ownership; a running GUI watches their liveness and takes over after ownership is released. Installation registration, dispatch acknowledgement, a PID or a supervisor ready line alone never establishes application readiness. CLI, TUI and MCP remain connect-only. Build and command acceptance exercise the shipped Cadrumo startup path and fail when supervision or real native IPC readiness fails. No development-host boot/login registration is required to test GUI fallback. Real installed boot/login acceptance remains separately reported until exercised on a disposable host. Detailed prior evidence: 2026-10-09-runtime-process-lifecycle-audit.
 
 ## Implementation
 
@@ -254,7 +262,7 @@ An adopted runtime has no heartbeat, so it cuts over only at the user's Restart 
 
 The user-facing name, and whether it is localized, is a *hypothesis* for the operator to confirm. Tray strings come from the locale catalogues.
 
-**Naming hygiene for the plan.** A routine plan step renames `src/cadrumo/adapters/local_runtime/manager_commands.py`, which only issues worker-containment commands, to `containment_commands.py`. The same step renames `NativeManagerCommand`, `ManagerCommandResult` and `run_manager_command_sync`, and updates `linux_worker_process.py`, `macos_worker_process.py` and their tests atomically. This keeps "manager" unambiguous.
+**Naming hygiene for the plan.** A routine plan step renames `src/cadrumo_client/transport/manager_commands.py`, which only issues worker-containment commands, to `containment_commands.py`. The same step renames `NativeManagerCommand`, `ManagerCommandResult` and `run_manager_command_sync`, and updates `linux_worker_process.py`, `macos_worker_process.py` and their tests atomically. This keeps "manager" unambiguous.
 
 **Acceptance obligations for the plan:**
 - fixture supervision: crash, hang, outside stop, witness loss, foreign, stale and forged boot records
@@ -299,16 +307,16 @@ Letting the old manager orchestrate the cutover keeps the only supervisor channe
 
   The first two are replaced by: "Management controls on the runtime transport stay excluded. The runtime hosts only the private supervisor contract in `2026-10-04-runtime-manager-architecture-supervisor-contract-adr`. Product lifecycle management, including login registration, belongs to the per-user manager in `2026-10-04-runtime-manager-architecture-adr`."
 
-  The third is replaced by: "Missing desktop access is reported, never bridged through scheduled tasks or services. An unavailable runtime is the per-user manager's to recover."
+  The third is replaced by: "Missing desktop access is reported, never bridged through services. An unavailable runtime is the per-user manager's to recover."
 - `2026-10-04-application-distribution-adr`. Two sentences are replaced:
   - "Use per-machine native package ownership for MSI/DEB/RPM, Applications-folder bundle installation on macOS, and explicit prefix installation for development/archives." becomes "Offer all-users and this-user installation scopes for MSI/DEB/RPM, Applications-folder bundle installation on macOS, and explicit prefix installation for development/archives. Install versions side by side under a version-independent entry point per `2026-10-04-runtime-manager-architecture-adr`."
-  - "No service, scheduled task, runtime autostart or storage migration is introduced" becomes "No service, scheduled task or storage migration is introduced. Login start for the runtime manager is registered in the installation scope." Its acceptance evidence includes the manager on disposable hosts.
+  - "No service, runtime autostart or storage migration is introduced" becomes "No service or storage migration is introduced. Login start for the runtime manager is registered in the installation scope." Its acceptance evidence includes the manager on disposable hosts.
 - `2026-10-03-application-packaging-adr` (proposed). Provisioning step 5 is answered: a dual-scope, versioned install with a per-session supervisor process, and runtime ownership independent of any window. The on-demand-supervisor hypothesis is retired, and the runtime-control UI moves to the manager.
 - `2026-10-03-application-packaging-interpreter-foundation-adr`: an extension note authorizing the manager on the platform crate.
 - `2026-10-04-desktop-shell-adr` (proposed), S12: the desktop may start a missing manager by shell dispatch and request `reveal`, and never starts the runtime. Approval prompts belong to the TUI. The desktop shell also owns the cross-version GUI single instance defined under Versions. A newer desktop version launched while an older one is open hands its activation to the open window; the user finishes the switch by closing the old window.
 - `2026-10-03-application-core-packaging-plan`: its autostart and supervision exclusion is reconciled through the plan verbs.
 - Storage taxonomy: register the opt-out, a `LOG_FILE`-style member for `cadrumo-manager.log`, and the `.runtime/` records `boot.json` and `manager-*` together. The existing `runtime` socket member stays distinct.
-- Rule 04 "Runtime lifecycle policy" (owned by the operator). Proposed text: "Scheduled tasks, SCM services and system daemons remain prohibited. The installed per-user runtime manager is the sole product supervisor. The desktop may start it by shell dispatch. Other clients never start, stop or supervise the runtime. Development and CI never register login start, and package acceptance runs on disposable hosts."
+- Rule 04 "Runtime lifecycle policy" (owned by the operator). Proposed text: "SCM services and system daemons remain prohibited. The installed per-user runtime manager is the sole product supervisor. The desktop may start it by shell dispatch. Other clients never start, stop or supervise the runtime. Development and CI never register login start, and package acceptance runs on disposable hosts."
 
 **Follow-on decisions** (named, not made):
 - Restore per-session peer admission, or state in `2026-09-26-mcp-purpose-authentication-profile-access-adr` that attended-session lifetime follows the runtime's desktop when one user has several sessions.
@@ -325,6 +333,10 @@ Letting the old manager orchestrate the cutover keeps the only supervisor channe
 
 Acceptance would establish decision authority only. None of this is implemented.
 
+### 2026-10-09 authorized desktop provisioning exception
+
+Under the operator's explicit request, the desktop may ensure the manager's scoped native installation before shell dispatch through the shared installer bootstrap and verified companion kit of 2026-10-09-desktop-service-installation-adr. Missing-installation recovery defaults to user scope; machine scope uses native installer elevation. This refines desktop dispatch and login registration: the desktop may provision the manager while the separate interactive manager remains the sole runtime supervisor. Overrides, opt-out, session admission and the prohibition of SCM services/tasks remain unchanged.
+
 ## 2026-10-08 accepted Darwin transport location and naming exception
 
 2026-10-08-canonical-environment-darwin-transport-adr refines Canonical locations and the POSIX Manager IPC naming row. For default socket endpoints in installed Darwin mode, the runtime, worker and manager use the canonical owner's public per-user cache anchor and identity-projected product-family directory. The manager filename is `manager-` plus unpadded base64url of the first 16 SHA-256 digest bytes plus `.sock`. The canonical declaration defines the compact JSON domain/version, channel-qualified manager identifier, decimal UID and native-session input grammar and shared vectors. The name remains independent of image, version and install scope; full kernel peer owner/session/image admission remains mandatory.
@@ -332,3 +344,7 @@ Acceptance would establish decision authority only. None of this is implemented.
 Stable and preview share only the transient family directory, with distinct endpoint identities. Each process resolves the native transport base once through the canonical owner and retains validated namespace identity; the inherited storage-root pin and strict child environment are unchanged, and no new environment pin is added. Persistent `.runtime/` start claims, Quit/failed-version markers, boot/installation records, logs and preferences stay at their declared locations. Development roots remain root-relative and explicit synthetic/operator socket namespaces retain isolation. Custom installed data roots keep root-derived endpoint identities. Ordinary reclaim/uninstall never removes the shared directory or namespace-lock inodes, and socket cleanup remains incarnation-checked. Per-session ownership must coordinate with the IPC namespace lock; this amendment does not claim that separate integration complete.
 
 Accepted 2026-10-08 under the user's advance authorization to fix defects and code/build all installer/manager work except signing. Identity, supervision, signing, login registration and disposable-host lifecycle acceptance gates are unchanged. This decision establishes the transport remedy, not a completed macOS manager port.
+
+## 2026-10-17 amendment: the manager is a role of the one Cadrumo binary
+
+Accepted 2026-10-17 under `2026-10-17-single-binary-process-tree-adr`, which the operator approved. The manager is no longer a separate `cadrumo-manager` image: it runs as the `cadrumo` binary in its manager role, and the runtime it supervises runs as the same binary in its runtime role. Wherever this record identifies the manager or runtime by image (startup items, quiescence, termination targeting, adoption and diagnostics), identification is by the digest-verified image plus the role argument and exact invocation. Supervision, the session lock, IPC endpoints, login startup, logs and the cutover protocol are unchanged. The machine lifecycle broker service is the same binary in its broker role, so an installed runtime runs in a Cadrumo tree of broker, manager and runtime. The runtime host is only ever started by a manager role or by the supervision core embedded in a running desktop; it never runs outside a Cadrumo tree.

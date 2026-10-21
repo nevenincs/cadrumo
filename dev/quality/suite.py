@@ -56,6 +56,12 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
             "--known-first-party",
             "cadrumo_harness",
             "--known-first-party",
+            "cadrumo_agent_service",
+            "--known-first-party",
+            "cadrumo_client",
+            "--known-first-party",
+            "cadrumo_runtime",
+            "--known-first-party",
             "dev",
             "--non-dev-dependency-groups",
             "registry",
@@ -92,6 +98,10 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
         (sys.executable, "-m", "dev.quality.write_path_coverage"),
     ),
     ("check-docstring-references", (sys.executable, "-m", "dev.quality.docstring_reference_targets")),
+    (
+        "check-operation-contract-manifest",
+        (sys.executable, "-m", "dev.operation_contract_manifest.generate", "--check"),
+    ),
 )
 
 

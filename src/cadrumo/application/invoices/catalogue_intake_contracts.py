@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.aggregation import IntracomOperationType
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from .catalogue_intake_refusal import (
     InvoiceWizardValidationRefusalProjection,
 )
@@ -23,13 +23,18 @@ type _Text = Annotated[str, Field(max_length=16384)]
 
 
 class InvoiceImportRequest(BaseModel):
-    """Secure reference to the original file, checked before parsing or mapping."""
+    """Secure reference to the original file, checked before parsing or mapping.
+
+    ``source_sha256`` is the digest a caller expects the file to have. When it
+    is given, a file whose bytes differ is refused. When it is absent, the
+    operation computes the digest of the bytes it parses and returns it.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
     kind: InvoiceKind
     source_path: Annotated[str, Field(min_length=1, max_length=4096)]
-    source_sha256: Hex64Str
+    source_sha256: Hex64Str | None = None
     country: _Text | None = None
 
     @model_validator(mode="after")
@@ -75,10 +80,15 @@ class InvoiceImportRowFailure(BaseModel):
 
 
 class InvoiceImportProjection(BaseModel):
-    """The whole current import outcome and human mapping disclosures."""
+    """The whole current import outcome and human mapping disclosures.
+
+    ``source_sha256`` is the digest of the bytes the rows were parsed from,
+    which is also what each created invoice records as its source.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
+    source_sha256: Hex64Str
     rows: Annotated[int, Field(ge=0)]
     created: Annotated[int, Field(ge=0)]
     skipped_duplicate: Annotated[int, Field(ge=0)]

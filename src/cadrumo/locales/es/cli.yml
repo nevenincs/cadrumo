@@ -1402,7 +1402,7 @@ cli:
             desde el almacén local de observaciones antes de exportar (resúmenes anuales,
             arrastre de trimestres anteriores, etc.)
           root_folder_required: No se ha creado ninguna carpeta de Drive para este
-            perfil; ejecuta `aeat config google login` primero
+            perfil; ejecuta `cadrumo-runtime config google login` primero
           snapshot_failure: No se puede construir la instantánea de las definiciones
             de los modelos para el modelo {modelo} ({period} {year}).
         push_help: Exporta el cálculo de un modelo y periodo, tal como lo fijan las
@@ -1426,8 +1426,7 @@ cli:
         actor_help: Actor responsable de la acción (etiqueta libre de hasta 64 caracteres)
         actor_too_long: La etiqueta --by debe tener como máximo {limit} caracteres;
           se recibieron {length}. Identifica al actor del evento de auditoría que
-          registra este comando, así que indica un nombre corto para ti o para el
-          agente.
+          registra este comando, así que indica un nombre corto para ti.
         allow_not_applicable_help: Crear la declaración aunque el modelo no aplique
           al tipo de contribuyente del perfil activo.
         amend_help: Construir una corrección de una declaración presentada fuera de
@@ -1499,6 +1498,9 @@ cli:
           valores introducidos antes en la interfaz de pantalla completa (aeat app
           tui) no se conservan salvo que se vuelvan a indicar aquí; la interfaz de
           pantalla completa sí los conserva.
+        calculate_reused_sealed: 'Estos datos coinciden con el cálculo %{revision_id}
+          (estado: %{state}). No se ha creado un borrador nuevo. Selecciona este cálculo
+          guardado por su identificador de revisión o cambia los datos.'
         calculate_saved: 'Guardado como revisión de cálculo en borrador %{revision_id}
           (estado: %{state}). Está persistido y puede retomarse más tarde.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
@@ -1924,6 +1926,23 @@ cli:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> comprobar -> exportar. Solo construye
         y exporta; nunca presenta ante la AEAT'
+  censo_auth:
+    certificate: Ruta del certificado (en blanco conserva el valor guardado)
+    configure_help: Configura o edita la autenticación AEAT guardada antes de consultar
+      el censo (terminal interactivo).
+    console_required: 'Para editar la autenticación necesitas un terminal interactivo:
+      {command}. Requisitos: {requirements}.'
+    field: '{field} (en blanco conserva el valor guardado)'
+    field_failed: No se pudo guardar {field}. Revisa su formato y reintenta; los campos
+      guardados antes se conservan.
+    method: Método de autenticación
+    offer: ¿Configurar la autenticación AEAT antes de sincronizar?
+    password: Contraseña (en blanco conserva el valor guardado)
+    required: 'La sincronización AEAT requiere: {requirements}. Configura o edita
+      la autenticación aquí: {command}.'
+    route: Vía de Cl@ve Móvil
+    saved: Autenticación guardada.
+    still_missing: Sigue faltando {field}.
   common:
     errors:
       invalid_iso_date: 'Formato de fecha inválido para %{label}: %{raw}. Se requiere
@@ -1939,6 +1958,8 @@ cli:
         (trimestres), 0A (anual), 01-12 (meses), e indica el año con --year (p. ej.
         --period 1T --year 2024).'
   config:
+    activity:
+      help: Registrar actividad del perfil conectado sin solicitar una contraseña.
     app_help: Configurar y reparar el perfil local, las credenciales, el almacenamiento
       y el enlace con Google.
     auth:
@@ -1948,8 +1969,8 @@ cli:
         clear_help: Retirar la configuración de apoderado
         configure:
           no_console_hint: 'La configuración interactiva del apoderamiento requiere
-            una consola. Configúralo de forma no interactiva con: aeat config auth
-            apoderado configure --represented-nif NIF --scope SCOPE.'
+            una consola. Configúralo de forma no interactiva con: cadrumo-runtime
+            config auth apoderado configure --represented-nif NIF --scope SCOPE.'
           represented_nif_help: NIF de la parte representada
           scope_help: Tokens de ámbito (se pueden repetir)
           scope_required: 'No se ha indicado ningún ámbito. Añade --scope con uno
@@ -2044,7 +2065,7 @@ cli:
       status_summary_unconfigured: La autenticación aún no está configurada.
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
-        ''aeat config auth --help'' para ver los identificadores válidos.'
+        ''cadrumo-runtime config auth --help'' para ver los identificadores válidos.'
     check:
       available: disponible
       capability_label: Capacidad
@@ -2055,6 +2076,8 @@ cli:
       missing: ausente
       preflight_label: Comprobación previa
       profile_label: perfil
+      setup_unavailable: No se ha podido comprobar la preparación porque el servicio
+        en segundo plano de Cadrumo no ha respondido.
     collab:
       help: Gestiona los destinatarios de confianza para la colaboración con paquetes
         de revisión.
@@ -2175,8 +2198,23 @@ cli:
         login NAME' para activar un perfil registrado.
       profile_session_absent: No has iniciado sesión. Ejecuta `aeat config login`
         para desbloquear tu perfil.
+      profile_session_custody_changed: La contraseña o la configuración de recuperación
+        de este perfil cambiaron. Ejecuta `aeat config login` para volver a iniciar
+        sesión.
       profile_session_expired: Tu sesión de perfil ha caducado. Ejecuta `aeat config
         login` para volver a iniciar sesión.
+      profile_session_login_mismatch: Tu sesión guardada pertenece a otra sesión de
+        este equipo. Ejecuta `aeat config login` para iniciar sesión aquí.
+      profile_session_logout_unproven: Cadrumo no puede comprobar este cierre de sesión
+        sin un inicio de sesión guardado que sirva. Ejecuta `aeat config login` y
+        vuelve a cerrar sesión.
+      profile_session_outdated: Tu inicio de sesión guardado lo creó otra versión
+        de Cadrumo y no se puede usar. Ejecuta `aeat config login` para volver a iniciar
+        sesión.
+      profile_session_signed_out: Se cerró tu sesión en este perfil desde otro lugar.
+        Ejecuta `aeat config login` para volver a iniciar sesión.
+      profile_session_unreadable: No se pudo verificar tu inicio de sesión guardado,
+        así que no se usó. Ejecuta `aeat config login` para volver a iniciar sesión.
     google:
       detail:
         sync_push_limit_requires_dry_run: La sincronización push de Google no puede
@@ -2199,7 +2237,7 @@ cli:
         profile_unbound: No hay ningún perfil activo. Ejecuta aeat config login NAME
           o indica --profile.
         scope_insufficient: El acceso concedido a Google no incluye los permisos necesarios.
-          Ejecuta `aeat config google login` y acepta todos los permisos.
+          Ejecuta `cadrumo-runtime config google login` y acepta todos los permisos.
         storage: 'No se pudo acceder al almacenamiento de Google Drive: {detail}'
         unsecured_mode: El acceso a Google está bloqueado mientras el almacén de secretos
           funciona en modo no seguro para un perfil con un NIF real.
@@ -2218,6 +2256,8 @@ cli:
       probe_read_only_help: Comprueba Google Drive en modo solo lectura
       status_help: Mostrar el estado actual de la sesión OAuth de Google para el perfil
         activo
+    help: Gestiona el inicio de sesión, el acceso al perfil y la configuración de
+      autenticación local.
     list:
       help: Listar todos los perfiles registrados y marcar el activo
     login:
@@ -2234,12 +2274,30 @@ cli:
         session_not_persisted: No hay un almacén de claves del sistema utilizable,
           así que este comando solo autenticó su propio proceso; vuelve a proporcionar
           la autenticación del perfil al proceso siguiente.
+        session_not_persisted_logon: 'Sesión iniciada solo para este comando: el Administrador
+          de credenciales de Windows rechazó esta sesión de Windows (error 1312) porque
+          no contiene credenciales de Windows, así que ningún proceso de esa sesión
+          puede conservar ni seguir un inicio de sesión, y los comandos siguientes
+          no pueden usarlo. Ejecuta Cadrumo desde tu sesión de escritorio de Windows
+          o pasa la contraseña del perfil a cada comando con --profile-secrets-stdin.'
+        session_not_persisted_no_backend: 'Sesión iniciada solo para este comando:
+          este proceso no tiene ningún almacén de claves del sistema disponible, así
+          que el inicio de sesión no se puede conservar para los comandos siguientes.
+          Activa el almacén de claves del sistema para esta cuenta o pasa la contraseña
+          del perfil a cada comando con --profile-secrets-stdin.'
+        session_not_persisted_unconfirmed: 'Sesión iniciada solo para este comando:
+          el runtime no conservó este inicio de sesión, aunque este proceso puede
+          usar el almacén de claves del sistema. O bien el inicio de sesión cambió
+          mientras terminaba este acceso, o bien el runtime se ejecuta en un inicio
+          de sesión que no puede usar el almacén de claves. Vuelve a iniciar sesión;
+          si se repite, inicia el runtime desde el mismo inicio de sesión que este
+          comando.'
       passphrase_channel_absent: No hay ningún canal de contraseña disponible. Ejecuta
         este verbo en un terminal o usa --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contraseña del perfil: '
     logout:
       help: Cierra la sesión de este perfil en todas las sesiones de usuario de este
-        dispositivo. El acceso de los agentes y las sesiones de la AEAT siguen activos.
+        dispositivo. Las sesiones de la AEAT siguen activas.
       notices:
         already_logged_out: No hay ningún perfil seleccionado; no hay ninguna sesión
           que cerrar.
@@ -2326,8 +2384,9 @@ cli:
             API existente.
           kind_help: 'Cambio de autorización: rotate, renew o change_scope.'
         create:
-          help: Solicita una autorización API y recibe su credencial en almacenamiento
-            protegido tras la aprobación humana por separado.
+          help: Emite una clave API a partir de una propuesta completa proporcionada
+            mediante --secrets-stdin o --secrets-fd. La clave llega al almacenamiento
+            protegido tras tu aprobación por separado.
         decline:
           digest_help: Huella exacta de revisión mostrada por inspect.
           help: Rechazar la solicitud exacta revisada.
@@ -2338,6 +2397,17 @@ cli:
           target_help: UUID de la clave o concesión que se va a revocar.
           target_mismatch: La revocación de una clave o concesión requiere su UUID;
             all no admite destino.
+        disclosures:
+          expected_digest_help: El resumen criptográfico que mostró una página anterior;
+            la lectura se rechaza si la lista ha cambiado desde entonces.
+          help: Cuenta por categoría los datos divulgados de una concesión o solicitud
+            pendiente y muestra una página de la lista completa.
+          invalid_page: Indica --offset como un número entero igual o mayor que cero
+            y --expected-digest como un resumen que haya mostrado una página anterior.
+          offset_help: La entrada en la que empieza la página; pasa el next_offset
+            de la página anterior.
+          target_help: El ID de la concesión o de la solicitud pendiente cuyos datos
+            divulgados quieres leer.
         help: Gestiona el acceso automatizado de este perfil.
         inspect:
           help: Mostrar la solicitud exacta de automatización revisada.
@@ -2417,7 +2487,7 @@ cli:
         profile status' para ver qué falta.
       create_help: Crea un perfil protegido por una contraseña. En un terminal ofrece
         después un código de recuperación opcional; puedes omitirlo o añadirlo más
-        tarde con 'aeat config profile recovery enable'.
+        tarde con 'cadrumo-runtime config profile recovery enable'.
       create_login_required: El perfil '{profile}' se ha creado, pero todavía no tienes
         una sesión abierta en él. Inicia sesión con el comando 'config login {profile}'
         para desbloquear sus datos antes de continuar.
@@ -2475,6 +2545,12 @@ cli:
         list_help: Listar los descendientes declarados en el perfil activo.
         remove_help: Eliminar un descendiente por índice (base 0) del perfil activo.
         remove_index_help: Índice (base 0) del descendiente a eliminar.
+      disclosures:
+        help: Cuenta por categoría los datos que esta sesión puede revelar e imprime
+          una página de la lista completa.
+        offset_help: La entrada en la que empieza la página; pasa el next_offset de
+          la página anterior. Cada ejecución del comando es una sesión propia, así
+          que sus entradas nombran esa sesión como destino.
       edit_help: Vuelve a ejecutar el asistente sobre un perfil existente
       edit_row:
         clear_help: Campo declarado que se vacía de forma explícita; repítalo si es
@@ -2611,67 +2687,95 @@ cli:
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
     provision:
+      approval_needed: Esto necesita tu aprobación. Vuelve a ejecutar la orden con
+        --yes para aprobar el plan anterior.
+      approve_prompt: ¿Descargar y preparar esto ahora?
       browser:
-        help: Descarga la versión del navegador que abre la automatización de la AEAT.
-          No hace nada si ya está instalada.
-      help: 'Gestiona lo que se ejecuta en este equipo: el navegador de la automatización
-        de la AEAT y el lector local de documentos (estado del runtime, instalación,
-        arranque, descarga, carga, verificación y eliminación de modelos, o prepáralo
-        todo de una vez).'
-      install:
-        confirm_help: Acepta descargar y ejecutar la instalación del gestor de paquetes.
-          Sin esta opción no se instala nada.
-        help: Instala el runtime local con el gestor de paquetes de la plataforma
-          (winget en Windows, Homebrew en macOS). No hace nada si ya está instalado;
-          en Linux la instalación queda a tu cargo.
+        help: Prepara el navegador que Cadrumo usa para la web de la Agencia Tributaria.
+          Muestra el plan y te pregunta antes.
+      complete: Cadrumo está preparado.
+      fix: 'Para solucionarlo, ejecuta: %{command}'
+      hardware_limited: Este ordenador no tiene memoria suficiente para la IA local.
+      help: 'Prepara y comprueba lo que Cadrumo necesita en este ordenador: el navegador
+        para la web de la Agencia Tributaria y la IA local, con su programa y sus
+        modelos. Cada orden se ejecuta en tu perfil con la sesión iniciada.'
+      incomplete: Algunos componentes aún no están listos.
       load:
-        help: Carga modelos en la memoria del runtime local para que la primera lectura
-          no espere a un arranque en frío; el de cada función del lector salvo que
-          --role o --model lo acoten. Se niega antes de cargar si falta memoria; un
-          modelo ya cargado se deja como está.
-        model_help: Identificador en el runtime del modelo que se cargará. Debe estar
-          ya descargado. Por defecto, el modelo seleccionado para la función.
+        help: Carga los modelos en memoria para que la primera lectura no espere,
+          el de cada rol salvo que --role o --model lo limiten. Se niega antes de
+          cargar si falta memoria.
+        model_help: Nombre del modelo que cargar. Debe estar ya descargado. Por defecto,
+          el modelo elegido para el rol.
+      outcome:
+        cancelled: Has cancelado la preparación.
+        completed: La preparación ha terminado.
+        interrupted: La preparación se interrumpió antes de terminar. Vuelve a ejecutar
+          la orden para continuar.
+        not_enough_space: No hay espacio libre suficiente en el disco, así que no
+          se ha descargado nada.
+        nothing_to_do: Todo está ya preparado.
+        plan_changed: El plan cambió después de que lo aprobaras, así que no se ha
+          descargado nada. Vuelve a ejecutar la orden para ver el plan nuevo.
+        rejected: No se ha descargado nada.
+      plan:
+        destination: '  Se guarda en %{path}'
+        entry: '%{name}: %{size} desde %{hosts}'
+        heading: 'Cadrumo va a preparar:'
+        installs_program: '  Esto instala un programa en este ordenador. Su instalador
+          puede pedirte permiso.'
+        part: '    %{name}: %{size}'
+        shared: '  Usa la misma descarga que %{name}.'
+        size_unknown: tamaño aún desconocido
+        total: 'Descarga total: %{size}.'
+        total_unknown: 'Descarga total: al menos %{size}. Algunos tamaños solo se
+          conocen al empezar la descarga.'
       probe:
-        help: Comprueba ahora la aptitud del modelo de texto en lugar de leer el veredicto
-          registrado por `aeat config provision verify` e informa del lector local
-          con ese resultado. Carga el modelo; no registra nada.
+        help: 'Comprueba a fondo cada componente: contacta con los servidores de descarga,
+          abre el navegador y prueba cada modelo. No descarga nada.'
+      progress: '%{name}: %{step}'
+      progress_bytes: '%{name}: descargando %{done} de %{total} (%{percent}%)'
       pull:
-        help: Descarga modelos al runtime local, el de cada función del lector salvo
-          que --role o --model lo acoten. Rechaza antes de descargar si un modelo
-          no podría cargarse.
-        model_help: Identificador del modelo que se descargará. Por defecto, el modelo
-          seleccionado para la función.
+        help: 'Prepara la IA local: instala su programa si falta y luego descarga
+          el modelo de cada rol. Muestra el plan y te pregunta antes; el instalador
+          del programa también puede pedirte permiso.'
+        model_help: Nombre de un modelo del catálogo que usar en lugar del que elige
+          Cadrumo.
       remove:
-        help: Elimina del almacén del runtime local un modelo seleccionado por Cadrumo
-          e informa del espacio recuperado.
-        model_help: Identificador del modelo que se eliminará. Solo pueden eliminarse
-          modelos seleccionados por Cadrumo.
+        help: Borra de este ordenador un modelo que eligió Cadrumo e indica el espacio
+          liberado.
+        model_help: Nombre del modelo que borrar. Solo se pueden borrar modelos que
+          eligió Cadrumo.
       report:
-        help: Informa del hardware medido, el modelo seleccionado por función y si
-          puede cargarse ahora.
-      role_help: Función del modelo sobre la que actuar (transcripción de imágenes,
-        extracción de texto, mapeo tabular, propuesta de naturaleza del suministro).
-        Por defecto, todas.
+        help: Indica la memoria de este ordenador, el modelo elegido para cada rol
+          y si se puede cargar ahora.
+      role_help: Rol del modelo sobre el que actuar (transcripción de imágenes, extracción
+        de texto, mapeo de tablas, propuesta de naturaleza de la operación). Por defecto,
+        todos los roles.
       setup:
-        confirm_help: Acepta descargar y ejecutar la instalación con el gestor de
-          paquetes si falta el runtime. Sin esta opción, la preparación se detiene
-          en el paso de instalación en lugar de instalar.
-        help: 'Prepara el lector local de una vez: instala el runtime (solo con --confirm),
-          lo arranca, descarga el modelo de cada función, los carga y los verifica.
-          Los pasos ya hechos se indican sin cambios; el primer paso que falla detiene
-          la ejecución.'
+        help: Prepara todos los componentes que aún no están listos. Muestra qué se
+          va a descargar, cuánto ocupa y dónde se guarda, y te pregunta antes de descargar
+          nada.
+      size:
+        gigabytes: '%{value} GB'
+        megabytes: '%{value} MB'
       start:
-        help: Arranca el runtime local instalado cuando el endpoint local configurado
-          no responde. No hace nada si ya responde.
+        help: Inicia el programa de IA local instalado cuando no responde. No hace
+          nada si ya responde.
       status:
-        help: Informa de si el runtime local está instalado y responde, y de si el
-          modelo de cada función del lector está instalado. Solo lee.
+        help: Muestra si cada componente está listo, a partir de lo que este ordenador
+          ya tiene. Es rápido y no descarga nada.
+      step:
+        cleanup: ordenando
+        download: descargando
+        install: instalando
+        plan: planificando
+        preflight: comprobando la conexión
+        verify: comprobando que funciona
       verify:
-        help: Verifica que los modelos cargan y responden a una consulta trivial dentro
-          de un límite de tiempo, el de cada función del lector salvo que --role o
-          --model lo acoten.
-        model_help: Identificador del modelo que se verificará. Por defecto, el modelo
-          seleccionado para la función.
+        help: Comprueba a fondo un componente, o todos si no indicas ninguno. No descarga
+          nada.
+        item_help: 'Componente que comprobar: browser o local_ai. Por defecto, todos.'
+      yes_help: Aprueba el plan que muestra la orden, sin preguntar.
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       help: Diagnosticar y reparar configuración local, definiciones de los modelos,
@@ -2706,6 +2810,8 @@ cli:
         con --yes para confirmar o pasa --dry-run para ver qué se borraría.
       reset_progress_yes_help: Confirmar el borrado del progreso guardado de un comando
         interrumpido
+      setup_status_hint: La preparación se muestra con la orden de estado de abajo
+        una vez que hayas iniciado sesión.
       yes_help: Confirmar la reparación.
     reset:
       help: Inicia, consulta o reanuda el reinicio irreversible de todos los perfiles
@@ -2980,7 +3086,7 @@ cli:
         invalid_date: '{option} necesita una fecha con formato AAAA-MM-DD.'
         nothing_to_update: 'Nada que cambiar en {account}: indica un dato o envía
           campos de la cuenta por el canal secreto.'
-      none: 'Aún no hay cuentas propias. Añade una con: aeat app ledger account add'
+      none: Aún no hay cuentas propias.
       prompts:
         bank_address: 'Dirección del banco: '
         bank_city: 'Ciudad del banco: '
@@ -3329,6 +3435,8 @@ cli:
         en este periodo AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (meses). Requiere
         --year.'
       provider_help: Proveedor del formato del extracto.
+      statement_refused: 'Extracto rechazado: {file} tiene un movimiento que no es
+        una transacción válida, así que no se ha importado nada.'
       verbose_help: Mostrar información detallada durante la importación
       verify_help: Comprobar los apuntes después de la importación
       verify_source_help: Fichero original usado para comprobar las filas importadas.
@@ -3893,9 +4001,28 @@ cli:
       applicability_evidence_disagreement: Tu respuesta en el perfil y tus facturas
         registradas no coinciden sobre si estas obligaciones aplican; las filas siguen
         visibles hasta que corrijas una de las dos.
+      art109_activity_income_withholding_ge_70pct_unset: En tu perfil aún no consta
+        si al menos el 70% de los ingresos de tu actividad empresarial o profesional
+        están sujetos a retención.
+      estimacion_objetiva_unset: En tu perfil aún no consta qué régimen de estimación
+        del IRPF se aplica a tu actividad.
+      has_employees_unset: En tu perfil aún no consta si tienes empleados.
+      intracomunitario_unset: En tu perfil aún no consta si compras o vendes bienes
+        o servicios entre países de la UE.
+      iva_regime_unset: En tu perfil aún no consta qué régimen de IVA se aplica a
+        tu actividad.
       m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero el motor de
         cálculo forfait del régimen simplificado aún no está disponible; revisa las
         casillas del régimen simplificado antes de presentar.
+      retencion_arrendamientos_unset: En tu perfil aún no consta si pagas alquileres
+        y practicas retenciones sobre ellos.
+      retencion_capital_unset: En tu perfil aún no consta si pagas rendimientos del
+        capital sujetos a retención.
+      retencion_profesionales_unset: En tu perfil aún no consta si pagas honorarios
+        a profesionales y practicas retenciones.
+      terceros_threshold_unset: En tu perfil aún no consta si las operaciones con
+        algún cliente o proveedor superan el umbral anual de declaración del Modelo
+        347.
     year_help: Año de declaración para --period (p. ej. 2024).
   review:
     app_help: 'Tu cola de revisión: clasifica movimientos de tus registros, justificantes

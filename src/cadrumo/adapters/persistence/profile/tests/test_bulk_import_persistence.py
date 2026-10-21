@@ -10,7 +10,8 @@ from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalo
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.invoices.bulk_import import import_invoices_from_rows, read_bulk_invoice_import_source
-from cadrumo.domain.iva.classification import InvoiceKind
+
+from .....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

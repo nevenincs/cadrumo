@@ -38,10 +38,9 @@ from decimal import Decimal
 import pytest
 
 from ....invoices.enums import IvaRate
-from ....iva.classification import InvoiceKind
 from ....iva.errors import IvaRateNotFoundError
 from ....iva.invoice_classification import invoice_line_to_iva_observation
-from ....iva.schema import IvaCategory, IvaRateKind
+from ....iva.schema import InvoiceKind, IvaCategory, IvaRateKind
 from ..ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,

@@ -107,7 +107,10 @@ def _build_search_site(out: Path) -> Path:
         # The shipped templates read this root's chrome strings by name and
         # serialise them for the controller, so the context the production
         # conf.py resolves is supplied here too rather than stubbed.
-        f"html_context = {{'cadrumo_chrome': {_ENGLISH_CHROME!r}}}\n",
+        f"html_context = {{'cadrumo_chrome': {_ENGLISH_CHROME!r}}}\n"
+        "from dev.docs.translations_js import register\n"
+        "def setup(app):\n"
+        "    register(app)\n",
         encoding="utf-8",
     )
     (src / "index.rst").write_text(

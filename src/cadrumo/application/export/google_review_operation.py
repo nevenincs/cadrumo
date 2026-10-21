@@ -6,6 +6,9 @@ from dataclasses import replace
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, OperationAccessPolicy
+
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -29,19 +32,13 @@ from ..operations.capabilities import (
 from ..operations.interactions import OperationInteractionRequest
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.projection_disclosure import profile_and_tax_value_projection_disclosures
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-)
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .google_review_operation_contracts import (
     GOOGLE_REVIEW_OPERATION_DEFINITION_ID,
@@ -67,21 +64,7 @@ def resolve_google_review_access(
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    disclosures = resolved.policy.disclosures
-    if context.action in {AccessAction.RESULT, AccessAction.REVIEW, AccessAction.RESPOND}:
-        schema = (
-            context.contract.result_schema
-            if context.action is AccessAction.RESULT
-            else context.contract.review_projection_schema
-        )
-        if schema is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosures = frozenset(
-            DisclosurePermission(
-                destination_id=context.destination_id, projection_id=schema.schema_id, category=category
-            )
-            for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
-        )
+    disclosures = profile_and_tax_value_projection_disclosures(context, resolved.policy.disclosures)
     return replace(
         resolved,
         policy=OperationAccessPolicy.model_validate(
@@ -147,6 +130,7 @@ def build_google_review_operation_definition(factory: GoogleReviewOperationPorts
     return OperationDefinition(
         definition_id=GOOGLE_REVIEW_OPERATION_DEFINITION_ID,
         request_type=GoogleReviewRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=GoogleReviewExecutionResult,
         executor_factory=OperationExecutorFactory(
             request_type=GoogleReviewRequest,
@@ -172,7 +156,6 @@ def build_google_review_operation_definition(factory: GoogleReviewOperationPorts
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

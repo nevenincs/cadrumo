@@ -1,0 +1,64 @@
+"""A busy subject's refusal names the unsettled operation that holds it, in text and in JSON."""
+
+from __future__ import annotations
+
+import json
+from uuid import uuid4
+
+import pytest
+from pydantic import ValidationError
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.profile_access import AccessRefusal, Reply
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.frontend_operation_client import OperationFrontend
+
+from ....application.user_profile.access_errors import ProfileAccessRefusedError
+from ..errors import render_error_payload
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_HOLDER = "ab" * 32
+
+
+def _received(code: AccessDenialCode, holder: str | None) -> FrontendRefusedError:
+    """Decode a runtime refusal from its wire bytes, as a client receives it."""
+    reply = AccessRefusal(
+        request_id=uuid4(), runtime_boot_id=uuid4(), connection_id=uuid4(), code=code, holder_operation_id=holder
+    )
+    decoded = Reply.model_validate_json(reply.model_dump_json()).root
+    assert isinstance(decoded, AccessRefusal)
+    with pytest.raises(FrontendRefusedError) as raised:
+        OperationFrontend._raise_wire_refusal(decoded)
+    return raised.value
+
+
+def test_the_operation_holding_a_busy_subject_is_named_in_text_and_json() -> None:
+    refused = _received(AccessDenialCode.SUBJECT_BUSY, _HOLDER)
+
+    assert refused.holder_operation_id == _HOLDER
+    assert _HOLDER in render_error_payload(refused, as_json=False)
+    context = json.loads(render_error_payload(refused, as_json=True))["error"]["context"]
+    assert context["reason"] == AccessDenialCode.SUBJECT_BUSY.value
+    assert context["holder_operation_id"] == _HOLDER
+
+
+def test_a_refusal_that_names_no_holder_renders_no_holder_line() -> None:
+    refused = _received(AccessDenialCode.SUBJECT_BUSY, None)
+
+    assert refused.holder_operation_id is None
+    assert "holder_operation_id" not in json.loads(render_error_payload(refused, as_json=True))["error"]["context"]
+    assert "Holder operation id" not in render_error_payload(refused, as_json=False)
+
+
+def test_no_other_refusal_can_name_a_holder() -> None:
+    with pytest.raises(ValidationError, match="only a busy subject"):
+        AccessRefusal(
+            request_id=uuid4(),
+            runtime_boot_id=uuid4(),
+            connection_id=uuid4(),
+            code=AccessDenialCode.OPERATION_UNAVAILABLE,
+            holder_operation_id=_HOLDER,
+        )
+    with pytest.raises(ValueError, match="only a busy subject"):
+        ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE, holder_operation_id=_HOLDER)

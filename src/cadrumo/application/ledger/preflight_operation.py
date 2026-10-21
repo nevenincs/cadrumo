@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, NonNegativeInt, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
@@ -15,8 +17,8 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
 from .check_operation import LedgerCheckIssueProjection
@@ -60,7 +62,7 @@ class LedgerPreflightProjection(BaseModel):
         return cls(
             profile_id=profile_id,
             period=PublicPeriod.from_period(report.period),
-            bucket_id=str(report.bucket_id),
+            bucket_id=report.bucket_id,
             checked_transaction_count=report.checked_transaction_count,
             issues=tuple(LedgerCheckIssueProjection.from_issue(issue) for issue in report.issues),
             ready=report.ready,
@@ -121,11 +123,11 @@ def build_ledger_preflight_definition(ports: LedgerActionPortsFactory) -> Operat
     return build_single_phase_definition(
         definition_id=LEDGER_PREFLIGHT_OPERATION_DEFINITION_ID,
         request_type=LedgerPreflightRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerPreflightProjection,
         executor_type=LedgerPreflightExecutor,
         build=lambda: LedgerPreflightExecutor(ports),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

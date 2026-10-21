@@ -314,6 +314,27 @@ auth:
       del proveedor de identidad Cl@ve Permanente. Automatizable sin intervención
       para los flujos de lectura de la AEAT; requiere DNI/NIE y contraseña.
     clave_permanente_label: Cl@ve Permanente
+  sync:
+    requirement:
+      auth_method_required: Elige un método de autenticación.
+      certificate_file_required: Selecciona un archivo de certificado PKCS#12 existente.
+      certificate_passphrase_required: Guarda la contraseña del certificado.
+      clave_identity_required: Introduce un DNI/NIE válido para Cl@ve.
+      clave_password_required: Guarda la contraseña de Cl@ve Permanente.
+      corrupt: No se puede abrir el certificado. Revisa el archivo y la contraseña.
+      dni_validity_required: Introduce la fecha de validez del DNI para la solicitud
+        en la app.
+      expired: El certificado ha caducado.
+      expiring: El certificado caduca pronto.
+      file_missing: El archivo del certificado no existe.
+      nie_support_required: Introduce el número de soporte del NIE para la solicitud
+        en la app.
+      ok: La comprobación local es correcta.
+      profile_identity_must_match: El DNI/NIE de Cl@ve debe coincidir con el NIF/NIE
+        del contribuyente.
+      profile_tax_id_required: Introduce el NIF/NIE del contribuyente.
+      unavailable: No se ha podido completar la comprobación local requerida.
+      unreadable: No se puede leer el archivo del certificado.
 categories:
   registry:
     amortizacion_vivienda_afecto:
@@ -534,6 +555,38 @@ core:
       output_language_type: El idioma de salida del perfil debe ser un código de idioma
         admitido en formato texto.
 desktop:
+  about:
+    agent: Agente
+    agent_version: Versión del agente
+    application: Aplicación
+    build_date: Fecha de compilación
+    build_id: Compilación
+    build_type: Tipo de compilación
+    build_type_debug: Depuración
+    build_type_release: Publicación
+    channel: Canal
+    close: Cerrar
+    copy: Copiar
+    debug_badge: Depuración
+    dependencies: Dependencias ({count})
+    description: Versión y detalles de compilación de esta instalación.
+    desktop_host: Escritorio
+    interpreter: Intérprete
+    load_failed: No se pudieron leer los detalles de la versión ({code}).
+    loading: Leyendo los detalles de la versión…
+    manager: Gestor
+    managers: Gestores
+    open: Acerca de Cadrumo
+    packages: Paquetes incluidos ({count})
+    python: Python
+    runtime: Entorno de ejecución
+    settings_hint: Versión y detalles de compilación
+    target: Plataforma
+    title: Acerca de Cadrumo
+    tools: Herramientas
+    unavailable: No disponible
+    version: Versión
+    version_row: Cadrumo {version}
   account:
     create:
       back: Volver a iniciar sesión
@@ -553,24 +606,21 @@ desktop:
       password_long: Usa una contraseña más corta.
       password_short: Usa al menos {min} caracteres.
       policy: Al menos {min} caracteres.
-      refused: No se ha creado el perfil ({code}).
+      refused: No se ha podido crear el perfil. Revisa sus datos e inténtalo de nuevo.
       submit: Crear perfil
       submitting: Creando…
       title: Crear un perfil
-      unknown: No se sabe si el perfil se ha creado ({code}). Búscalo entre los perfiles
-        antes de volver a intentarlo.
-      wait: 'Tarda alrededor de medio minuto: se está generando la clave del perfil
-        a partir de su contraseña.'
-    create_profile: Configurar un perfil
+      unknown: Puede que el perfil se haya creado. Revisa la lista de perfiles antes
+        de volver a intentarlo.
     first_run_lead: Crea un perfil para empezar.
-    in_tui: Sigues en la TUI
     new_profile: Nuevo perfil
     no_profile: Ningún perfil activo
-    no_profile_lead: Crea un perfil o elige uno en la TUI.
-    remaining_access: El acceso de agentes que activaste sigue activo.
+    no_profile_lead: Todavía no hay ningún perfil en este equipo.
+    remaining_access: Después de cerrar la sesión, al menos una clave que emitiste
+      para una aplicación externa todavía puede dar acceso a este perfil.
     services_down: Los servicios en segundo plano no están en marcha
     sign_out: Cerrar sesión
-    sign_out_failed: No se ha podido cerrar la sesión ({code}).
+    sign_out_failed: No se ha podido cerrar la sesión. Inténtalo de nuevo.
     sign_out_hint: Cierra tu sesión en todas las ventanas de Cadrumo.
     signed_in: Sesión iniciada
     signed_out: Sin sesión iniciada
@@ -587,6 +637,65 @@ desktop:
     zoom_in: Ampliar la documentación
     zoom_out: Reducir la documentación
     zoom_reset: Restablecer el zoom de la documentación
+  automation_access:
+    cancel: Cancelar
+    cleanup_pending: Eliminada. Cadrumo aún está borrando la clave guardada de este
+      equipo.
+    copied: Copiado
+    copy: Copiar código
+    copy_failed: No se ha podido copiar. Selecciona el código y cópialo tú.
+    done: Hecho
+    empty: Todavía no hay claves de acceso.
+    expired_on: Caducó el {date}
+    expires_on: Caduca el {date}
+    issue: Crear una clave de acceso
+    issue_lead: La aplicación puede leer los datos de tu perfil, ver las acciones
+      que realiza y usar todas las acciones de Cadrumo disponibles para aplicaciones
+      conectadas.
+    issue_submit: Crear clave de acceso
+    issued_lead: Pega este código de conexión en la otra aplicación al configurarla.
+      La clave queda guardada de forma segura en este equipo.
+    issued_once: Solo se muestra una vez. Cuando cierres esto, no podrás volver a
+      verlo.
+    issued_title: Clave de acceso creada
+    issuing: Creando…
+    key_title: Clave de acceso creada el {date}
+    key_title_undated: Clave de acceso
+    last_used: 'Último uso: {date}'
+    lead: Las claves de acceso permiten que otras aplicaciones de IA de este equipo
+      trabajen con este perfil. Solo tú puedes crearlas o eliminarlas.
+    never_used: Aún sin usar
+    reference_label: Código de conexión
+    refresh: Actualizar
+    refused_failed: No se ha podido completar. Inténtalo de nuevo.
+    refused_not_found: Esa clave ya no está en la lista.
+    refused_not_signed_in: Inicia sesión para cambiar esta configuración.
+    refused_outcome_unknown: Cadrumo no ha podido confirmar si se ha creado la clave.
+      Actualiza para comprobarlo.
+    refused_person_act_required: Solo tú puedes cambiar esta configuración, desde
+      esta ventana.
+    refused_profile_locked: Desbloquea tu perfil para cambiar esta configuración.
+    revoke: Eliminar
+    revoke_confirm: ¿Eliminas esta clave? Las aplicaciones que la usen perderán el
+      acceso de inmediato. No se puede deshacer.
+    revoke_confirm_action: Eliminar clave
+    revoking: Eliminando…
+    scope_all_operations: Puede usar todas las acciones de Cadrumo disponibles para
+      aplicaciones conectadas
+    scope_no_tax_values: No lee importes fiscales
+    scope_operations_seen: Ve las acciones que realiza
+    scope_profile_values: Lee los datos del perfil
+    scope_some_operations: Solo puede usar algunas acciones
+    scope_tax_values: Lee importes fiscales
+    standing_active: Activa
+    standing_expired: Caducada
+    standing_pending: Pendiente de aprobación
+    standing_revoked: Eliminada
+    standing_suspended: En pausa
+    tax_values: Permitirle también leer importes fiscales
+    tax_values_note: Incluye los impuestos calculados y los datos de las declaraciones.
+      Déjalo desactivado para que la aplicación no los vea.
+    title: Claves de acceso para otras aplicaciones de IA
   calendar:
     aeat:
       accepted: Aceptada
@@ -600,7 +709,7 @@ desktop:
     event:
       filing: Presentación
       message: Mensaje
-    failed: No se ha podido leer el calendario ({code}).
+    failed: No se ha podido cargar el calendario. Prueba a actualizarlo.
     loading: Cargando el calendario…
     local:
       external_baseline_imported: Importado de una presentación anterior
@@ -611,7 +720,7 @@ desktop:
     more: '{count} más'
     moved: Trasladado desde el {date}
     observed: Historial de presentaciones y mensajes
-    open_tui: Abrir en la TUI
+    open_tui: Abrir en el espacio de trabajo
     payment_cutoff: Domiciliación hasta el {date}
     refresh: Actualizar
     show_all: Mostrar todo
@@ -631,36 +740,74 @@ desktop:
     view_months: Calendario
     warnings: Faltan datos del perfil; estas fechas usan valores por defecto.
     window_unknown: Fecha de apertura no indicada
+  canvas:
+    lead: Elige un área de trabajo a continuación o ábrela desde la barra lateral.
+      También puedes abrir la documentación desde cualquiera de esos lugares.
+    title: No hay nada abierto
   docs:
     frame_title: Documentación de Cadrumo
+    hide: Ocultar la documentación
     loading: Cargando la documentación…
+    not_bundled: La documentación no está disponible en esta instalación.
+    show: Mostrar la documentación
+    unavailable: No se ha podido abrir la documentación. Inténtalo más tarde.
+  google:
+    checking: Comprobando el acceso a Google…
+    not_in_this_build: El inicio de sesión con Google no está disponible ahora.
+    open_drive: Abrir la carpeta del perfil en Google Drive
+    palette_sign_in: Autenticarse con Google
+    sign_in: Iniciar sesión
+    sign_in_label: Iniciar sesión en Google
+    sign_out: Cerrar sesión
+    sign_out_label: Cerrar sesión de Google
+    signed_in: Sesión iniciada como {email}.
+    signed_in_plain: Sesión iniciada.
+    signed_out: No has iniciado sesión.
+    signing_out: Cerrando la sesión de Google…
+    title: Cuenta de Google
+    unknown: Ahora no se ha podido leer el acceso a Google.
+    waiting: Termina de iniciar sesión en Google en tu navegador.
   host:
     failed: Esta parte no se ha podido cargar.
     unavailable: Esta parte necesita la aplicación de escritorio.
   logs:
+    all_loggers: Todos los registradores
+    all_origins: Todos los orígenes
     clear_logger: Quitar el filtro de logger
+    copy_all: Copiar todo
     details: Detalles
     dropped: 'Registros antiguos descartados de esta vista: {count}'
     empty: El registro está vacío.
     errors: 'Errores: {count}'
+    export: Exportar registros
+    export_all: Exportar todo
+    export_failed: No se pudieron exportar los registros.
+    export_visible: Exportar visibles
+    exported: Exportado a {path}
     filter: Filtrar
+    filters: Filtros de registros
     follow: Seguir
     follow_hint: Mantener visible el registro más reciente
     level_all: Todos los niveles
+    level_critical: Solo críticos
     level_error: Solo errores
     level_info: Info y más graves
     level_warning: Avisos y más graves
     loading: Cargando el registro…
+    logger: Registrador
     minimum_level: Nivel mínimo
     no_match: Ningún registro coincide con estos filtros.
+    origin: Origen
     rejected: Se han omitido {count} registros con un formato de diagnóstico no válido.
+    reveal: Mostrar la ubicación de los registros
+    selected: '{count} entradas seleccionadas'
     source_host: Escritorio
     source_python: Python
-    sources: Orígenes
     state_available: cadrumo.log
     state_missing_detail: Aún no hay archivo de registro. Los registros aparecerán
       cuando un proceso de Cadrumo escriba uno.
     state_unreadable: No se puede leer el registro
+    visible_count: '{visible} de {total} entradas'
     warnings: 'Avisos: {count}'
   menu:
     clear: Limpiar
@@ -673,7 +820,7 @@ desktop:
     paste: Pegar
     select_all: Seleccionar todo
   messages:
-    failed: No se han podido leer ({code})
+    failed: No se han podido cargar las notificaciones. Inténtalo más tarde.
     never: Aún sin sincronizar con la AEAT
     none_unread: Ninguno sin leer en la última sincronización
     unread: '{count} sin leer'
@@ -695,17 +842,97 @@ desktop:
     maximize_docs: Maximizar la documentación
     maximize_focused: Maximizar el área activa
     maximize_panel: Maximizar el panel inferior
-    maximize_tui: Maximizar la TUI
+    maximize_tui: Maximizar el espacio de trabajo
     restore: Restaurar la disposición
-    tui: TUI
+    tui: Espacio de trabajo
   panel:
     hide: Ocultar el panel inferior
     label: Panel inferior
     resize: Cambiar el tamaño del panel inferior
     show: Mostrar el panel inferior
+  profile:
+    add: Añadir registro
+    all_fields: Todos los datos
+    all_sections: Todas las secciones
+    auth: Configurar acceso a la AEAT
+    cancel: Cancelar
+    censo:
+      absent: La AEAT no ha proporcionado este dato. Sin cambios.
+      adopt: Usar el dato de la AEAT al guardar.
+      apply: Guardar cambios revisados
+      cancel: Detener sincronización
+      close: Cerrar
+      current: Guardado
+      device: Aprueba la solicitud de acceso en tu aplicación Cl@ve.
+      done: Sincronización completada. Revisa los datos que aún faltan en tu perfil.
+      field: Dato del perfil
+      identity: Añadir NIF o NIE
+      incoming: AEAT
+      preserve: Conservar tu respuesta guardada.
+      pull: Consultar datos censales
+      reading: Consultando datos censales…
+      ready: El acceso a la AEAT está configurado. Podrás revisar los datos obtenidos
+        antes de guardarlos.
+      reject: Descartar cambios
+      return: Volver al perfil
+      review: Revisa los datos de la AEAT.
+      scope: Importa tu domicilio fiscal, código postal y referencia catastral del
+        Censo. Los demás datos del perfil requieren tus respuestas.
+      setup: Configurar acceso a la AEAT
+      stopped: Sincronización detenida. No se han guardado cambios en el perfil.
+      title: Sincronizar con la AEAT
+      unavailable: No se ha podido comprobar la sincronización. Prueba a actualizar.
+      unknown: El resultado no está confirmado. Actualiza antes de iniciar otra sincronización.
+      unsupported: Este acceso requiere una interacción disponible en el terminal.
+        Cancela este intento y sincroniza el Censo desde el terminal.
+    close: Cerrar perfil
+    collapse_all: Contraer todo
+    complete: Finalizar la configuración del perfil
+    conflict: Tu perfil ha cambiado en otra pantalla. Cierra este editor, revisa los
+      datos actualizados y vuelve a abrir el campo. Tu borrador no se ha guardado.
+    description: Revisa tus datos guardados y completa lo que falta. Los cambios se
+      guardan en este perfil.
+    edit: Editar
+    edit_field: Editar {field}
+    edit_help: Solo se guardarán los datos que cambies. Deja los demás como están.
+    empty: Ningún dato coincide con estos filtros. Prueba otra búsqueda o sección.
+    expand_all: Expandir todo
+    field_help: Sobre este campo
+    filled: Datos obligatorios completos
+    filter: Mostrar campos
+    loading: Cargando tu perfil…
+    maximize: Pantalla completa
+    missing: Faltan {count} datos obligatorios
+    missing_count: Faltan {count}
+    missing_filter: Datos sin completar
+    not_set: Sin completar
+    refresh: Actualizar
+    refused: No se han podido guardar estos cambios. Revisa las indicaciones de los
+      campos y actualiza el perfil antes de volver a intentarlo.
+    remove: Eliminar registro
+    remove_help: ¿Quieres eliminar este registro de tu perfil? Se eliminarán todos
+      sus campos.
+    required: Obligatorio
+    required_filter: Obligatorios pendientes
+    restore: Vista dividida
+    results: Se muestran {count} campos
+    save: Guardar cambios
+    saved_filter: Datos guardados
+    saved_notice: Guardado
+    saved_unread: Tus cambios se han guardado, pero no se ha podido cargar el perfil
+      actualizado. Actualiza para comprobarlos.
+    saving: Guardando…
+    search: Buscar datos del perfil
+    sections: Sección del perfil
+    signed_out: Inicia sesión para ver y editar tu perfil.
+    title: Tu perfil
+    unavailable: No se ha podido cargar tu perfil. Actualiza para volver a intentarlo.
+    unknown: No hemos podido confirmar si se guardaron los cambios. Actualiza y comprueba
+      los valores guardados antes de volver a intentarlo.
   rail:
     aeat: Sede de la AEAT
     console: Consola
+    docs: Documentación
     docs_home: Inicio de la documentación
     label: Espacio de trabajo
     logs: Registros
@@ -713,18 +940,18 @@ desktop:
     python: Shell de Python
     search: Buscar
     settings: Ajustes
-    tui: TUI
+    tui: Espacio de trabajo
   session:
     enter_restarts: Intro lo reinicia
     exit_line: '[El proceso terminó con el código {code}. Pulsa Intro para volver
       a empezar.]'
     exited: terminó ({code})
-    failed: 'La sesión no ha podido iniciarse: {reason}'
+    failed: No se ha podido iniciar la sesión.
   settings:
     always_dark: Siempre oscuro
     appearance: Apariencia
     dark: Oscuro
-    docs_and_tui: Documentación y TUI
+    docs_and_tui: Documentación y espacio de trabajo
     first_pane: Primer panel
     follow_cadrumo: Igual que Cadrumo
     follow_docs: Como la documentación
@@ -733,55 +960,172 @@ desktop:
     light: Claro
     match_appearance: Según la apariencia
     reset_layout: Restablecer la disposición
-    session: Inicio de sesión
     side_by_side: Lado a lado
     stacked: Apiladas
     terminal_text: Texto del terminal
     terminals: Terminales
     title: Ajustes
     window: Ventana
+  setup:
+    advisory_incomplete: La configuración de Cadrumo no está completa. Haz clic aquí
+      para completarla.
+    advisory_running: La configuración de Cadrumo está en curso. Haz clic aquí para
+      ver cómo va.
+    approve: Descargar y configurar
+    approve_at_least: Descargar al menos {size} y configurar
+    approve_size: Descargar {size} y configurar
+    cancel: Cancelar la configuración
+    cancelling: Se detendrá tras el paso actual…
+    checking: Comprobando los componentes…
+    close: Cerrar
+    copy_details: Copiar detalles
+    details: Detalles
+    hide: Ocultar
+    lead: Cadrumo necesita estos componentes para funcionar.
+    lead_review: Revisa qué se va a descargar y dónde se guarda, y después apruébalo.
+    lead_running: Puedes cerrar esto; la configuración sigue y Ajustes muestra cómo
+      va.
+    not_now: Ahora no
+    open: Abrir la configuración
+    outcome_cancelled: Se ha cancelado la configuración. Lo ya descargado se conserva.
+    outcome_completed: Todo está configurado.
+    outcome_failed: La configuración no ha terminado.
+    outcome_interrupted: La configuración se detuvo antes de terminar. Reanúdala para
+      seguir donde se quedó.
+    outcome_not_enough_space: No había suficiente espacio libre, así que no se ha
+      descargado nada.
+    outcome_nothing_to_do: Todo estaba ya configurado.
+    outcome_plan_changed: Lo necesario cambió antes de empezar. Revisa el nuevo plan
+      y apruébalo.
+    outcome_rejected: No se ha descargado nada.
+    overall_progress: Progreso de la configuración
+    palette_browser: Configurar el navegador
+    palette_cancel: Cancelar la configuración
+    palette_check: Comprobar los componentes
+    palette_local_ai: Configurar la IA local
+    palette_open: Configurar los componentes
+    palette_retry: Reintentar la configuración
+    plan_destination: 'Se guarda en: {folder}'
+    plan_from: 'Desde: {hosts}'
+    plan_nothing: No hay nada que descargar.
+    plan_outside_program: Esto instala un programa aparte en este ordenador, que puede
+      pedirte permiso.
+    plan_shared: Se descarga junto con {name}.
+    plan_size: Se descargarán {size}.
+    plan_size_at_least: Se descargarán al menos {size}.
+    planning: Calculando qué hay que descargar…
+    progress_bytes: '{done} de {total}'
+    progress_item: '{index} de {count}: {name} — {step}'
+    progress_label: Progreso de {name}
+    rail_busy: Configurando los componentes
+    rail_incomplete: La configuración no ha terminado
+    refused_busy: Ya hay una configuración en curso en otro sitio. Espera a que termine.
+    refused_not_cancellable: Ahora no se puede detener la configuración. Terminará
+      en breve.
+    refused_not_pending: Ese plan ya no espera respuesta.
+    refused_not_signed_in: Primero inicia sesión en tu perfil.
+    refused_other: No se ha podido contactar con la configuración. Inténtalo de nuevo
+      en un momento.
+    refused_plan_changed: Lo necesario ha cambiado. Revisa el nuevo plan y después
+      apruébalo.
+    refused_unavailable: Los servicios de Cadrumo no responden. Inténtalo de nuevo
+      en un momento.
+    reject: No descargar
+    result_already: Ya estaba configurado
+    result_done: Configurado
+    result_not_finished: No ha terminado
+    resume: Reanudar
+    show_new_plan: Ver el nuevo plan
+    size_unknown: Tamaño conocido al empezar
+    space: Necesita {required} de espacio libre; hay {free} libres.
+    space_short: No hay suficiente espacio libre. Libera algo y vuelve a intentarlo.
+    space_unread: Necesita {required} de espacio libre; no se ha podido leer el espacio
+      libre.
+    start: Configurar
+    step_checking: Comprobando
+    step_connecting: Conectando
+    step_downloading: Descargando
+    step_installing: Instalando
+    step_tidying: Ordenando
+    step_waiting: Esperando para empezar
+    summary_complete: Todo lo que Cadrumo necesita está configurado.
+    summary_hardware: Este ordenador no puede ejecutar todo lo que Cadrumo necesita;
+      el resto está configurado.
+    summary_incomplete: Parte de lo que Cadrumo necesita aún no está configurado.
+    summary_running: La configuración está en curso.
+    title: Configurar Cadrumo
+    toast_cancelled: Configuración cancelada
+    toast_done: Los componentes están configurados
+    toast_not_finished: La configuración no ha terminado
+    try_again: Reintentar
+    unavailable: Ahora no se pueden comprobar los componentes. Inténtalo de nuevo
+      en un momento.
   signin:
     checking: Comprobando tu sesión…
     choose_profile: Elige un perfil
     dismiss: Ahora no
     hide_password: Ocultar la contraseña
+    install_machine_permission: La instalación para todos los usuarios requiere permisos
+      de administrador.
+    install_machine_services: Instalar para todos los usuarios
+    install_user_services: Instalar para este usuario
     lead: Escribe la contraseña de tu perfil para abrir tu espacio de trabajo.
-    open_tui: Abrir la TUI
-    open_tui_hint: ¿Configuración inicial, otro perfil o recuperación? Usa la TUI.
     password: Contraseña
     profile: Perfil
     profiles_unread: No se han podido leer los perfiles de este equipo.
-    recovery_hint: ¿Has perdido la contraseña o el perfil está bloqueado? Usa la TUI.
+    recovering_services: Recuperando los servicios en segundo plano…
     refused:
+      busy: Iniciar sesión ha tardado demasiado porque el ordenador está ocupado.
+        Vuelve a intentarlo en un momento.
       custody_changed: La contraseña o la configuración de recuperación de este perfil
         ha cambiado. Vuelve a iniciar sesión.
       generation_changed: Se ha cerrado tu sesión en otro lugar. Vuelve a iniciar
         sesión.
+      installation_cancelled: Se ha cancelado la instalación.
+      installation_failed: No se pudieron instalar los servicios en segundo plano.
+      installation_refused: No se pudo verificar el paquete de instalación. Usa una
+        distribución completa de la misma versión.
+      installation_unavailable: Falta el paquete de instalación. Usa la distribución
+        completa de Cadrumo.
+      installation_unsettled: No se pudo confirmar la instalación. Consulta los registros
+        antes de reintentarlo.
       invalid: Esa contraseña no ha funcionado. Vuelve a intentarlo.
-      keyring_unavailable: Cadrumo no puede mantener tu sesión en este dispositivo,
-        así que la TUI te pedirá la contraseña.
+      keyring_unavailable: Cadrumo no puede mantener tu sesión en este dispositivo.
+        El llavero del sistema no está disponible.
       login_mismatch: Tu inicio de sesión es de una sesión anterior en este ordenador.
         Vuelve a iniciar sesión.
-      other: No se ha podido iniciar sesión ({code}).
-      profile_locked: Este perfil está bloqueado. Continúa en la TUI para desbloquearlo.
+      manager: Cadrumo no ha podido iniciarse. Abre los registros para ver los detalles.
+      other: No se ha podido iniciar sesión. Inténtalo de nuevo.
+      profile_locked: Este perfil está bloqueado. Inicia sesión con su contraseña
+        para desbloquearlo.
       receipt_absent: No has iniciado sesión.
       receipt_expired: Tu sesión ha caducado. Vuelve a iniciar sesión.
       runtime_unavailable: Los servicios en segundo plano de Cadrumo no están en marcha.
       throttled: Demasiados intentos. Podrás volver a intentarlo en {seconds} s.
+    services_recovered: Los servicios en segundo plano están listos. Comprobando el
+      inicio de sesión…
     show_password: Mostrar la contraseña
-    signed_out_lead: Inicia sesión para abrir tu espacio de trabajo en la TUI.
+    signed_out_lead: Inicia sesión para abrir tu espacio de trabajo.
     start_services: Iniciar servicios en segundo plano
     starting_services: Iniciando servicios en segundo plano…
     submit: Iniciar sesión
     submitting: Iniciando sesión…
     title: Inicia sesión en Cadrumo
-    unnameable: Un perfil cuyo nombre contiene * ? [ % o $ se abre en la TUI.
-    unsupported: En este sistema, inicia sesión desde la TUI.
+    unnameable: Abre el espacio de trabajo para iniciar sesión en este perfil.
+    unsupported: En este sistema, inicia sesión desde el espacio de trabajo.
   split:
-    resize: Cambiar el tamaño de documentación y TUI
-    side_by_side: Poner documentación y TUI lado a lado
-    stack: Apilar documentación y TUI
-    swap: Intercambiar documentación y TUI
+    resize: Cambiar el tamaño de documentación y espacio de trabajo
+    side_by_side: Poner documentación y espacio de trabajo lado a lado
+    stack: Apilar documentación y espacio de trabajo
+    swap: Intercambiar documentación y espacio de trabajo
+  titlebar:
+    close: Cerrar ventana
+    failed: No se ha podido completar la acción de la ventana.
+    label: Barra de título de la aplicación
+    maximize: Maximizar ventana
+    minimize: Minimizar ventana
+    profile_menu: Menú de perfil
+    restore: Restaurar ventana
   toast:
     copied: Copiado
     copy_failed: No se ha podido copiar.
@@ -789,9 +1133,9 @@ desktop:
     paste_failed: No se ha podido pegar.
     paste_too_large: Es demasiado texto para pegar de una vez.
   tui:
-    hide: Ocultar la TUI
-    label: TUI de Cadrumo
-    show: Mostrar la TUI
+    hide: Ocultar el espacio de trabajo
+    label: Espacio de trabajo de Cadrumo
+    show: Mostrar el espacio de trabajo
 entries:
   portal_calendario_contribuyente:
     label: Calendario del contribuyente
@@ -1167,22 +1511,17 @@ overview:
     del Impuesto sobre Sociedades (modelo 200/202); consúltelo directamente en la
     sede electrónica de la AEAT.
 provisioning:
-  condition:
-    role_model_fit_for_role: '%{model} respondió al documento de prueba, pero su respuesta
-      no sirve para leer una factura. Elige otro modelo de texto.'
-    role_model_fitness_verified: 'No hay ninguna comprobación de aptitud registrada
-      para los pesos actuales de %{model}. Esto no significa que el modelo no sea
-      apto: ejecuta `aeat config provision verify` para comprobarlo.'
-    role_model_fitness_within_timeout: '%{model} no terminó su respuesta de prueba
-      antes de agotarse el tiempo límite. Puede ser demasiado lento para este equipo;
-      elige un modelo más pequeño o aumenta el tiempo de espera del LLM y vuelve a
-      ejecutar `aeat config provision verify`.'
   model:
     licence:
       non_commercial_advisory: El modelo %{model} está sujeto a la %{licence}, que
         no permite el uso comercial. Lo has indicado tú de forma explícita, así que
         Cadrumo lo utilizará, pero una gestoría comercial necesita una licencia aparte
         del editor.
+  role:
+    column_role_mapping: para columnas de tablas
+    supply_nature_proposal: para el tipo de venta o compra
+    text_extraction: para el texto de documentos
+    vision_transcription: para páginas escaneadas
 review:
   adapters:
     errors:
@@ -1432,8 +1771,9 @@ sheets:
 topic:
   authentication:
     body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado
-      digital (FNMT / equivalente). Configura un proveedor con 'aeat config auth configure
-      --provider certificate' y verifica con 'aeat config auth test'.
+      digital (FNMT / equivalente). Configura un proveedor con 'cadrumo-runtime config
+      auth configure --provider certificate' y verifica con 'cadrumo-runtime config
+      auth test'.
     title: Autenticación con la AEAT
   calendar:
     body: El calendario muestra las obligaciones de presentación (modelos y periodos)
@@ -1476,7 +1816,7 @@ topic:
     title: Perfil del contribuyente
   providers:
     body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos.
-      'aeat config auth --help' lista los proveedores con sus prerrequisitos.
+      'cadrumo-runtime config auth --help' lista los proveedores con sus prerrequisitos.
     title: Proveedores de autenticación
   recargo-extemporaneo:
     body: La presentación fuera de plazo sin requerimiento previo de la AEAT acumula
@@ -1509,6 +1849,25 @@ transactions:
     unreadable: Archivo ilegible o formato no soportado
     verified: Importación verificada con éxito
 tui:
+  aeat_auth:
+    blocked: 'Completa estos requisitos antes de sincronizar:'
+    certificate_path: Ruta del certificado (en blanco conserva la guardada)
+    certificate_secret: Contraseña del certificado (en blanco conserva la guardada)
+    close: Volver
+    document_hint: Para solicitar el acceso en la app, introduce la fecha de validez
+      del DNI o el número de soporte del NIE, según tu documento.
+    edit: Configurar / editar autenticación AEAT
+    failed: No se pudo guardar la autenticación. Revisa los campos requeridos y reintenta.
+    field_failed: No se pudo guardar {field}. Revisa su formato y reintenta.
+    method: Método de autenticación
+    password: Contraseña de Cl@ve Permanente (en blanco conserva la guardada)
+    ready: Listo para sincronizar
+    route: Vía de Cl@ve Móvil
+    save: Guardar autenticación
+    saved: Guardado. Los requisitos reflejan el perfil almacenado.
+    title: Autenticación AEAT
+    unknown: No se pudo comprobar la autenticación. Vuelve a abrir los ajustes para
+      reintentar.
   aeat_sync:
     action:
       pull_filed: Obtener declaraciones presentadas
@@ -1705,6 +2064,7 @@ tui:
     delegation: Delegación
     destination: Destino
     details: Detalles
+    disclosure_categories: Categorías completas
     disclosures: Datos que se pueden revelar
     empty: No hay elementos
     expires: Caduca
@@ -2060,8 +2420,12 @@ tui:
     aeat_sync: Sincronización AEAT
     declarations: Declaraciones
     home: Inicio
+    installation: Instalación
     ledger: Registros
+    operations: Operaciones
     profile: Perfil
+    reference: Referencia
+    setup: Componentes
     withholding: Retenciones
   home:
     account_fallback: Cuenta
@@ -2148,7 +2512,173 @@ tui:
       locked: Perfil bloqueado
       no_profile: Ningún perfil seleccionado
     title: Inicio
+  installation:
+    act:
+      archive_import:
+        label: Restaurar un perfil desde una copia de seguridad
+        summary: Restaura un perfil desde un archivo o una carpeta de copia de seguridad
+          cuando demuestras su contraseña.
+      archive_import_prepare:
+        label: Leer una copia de seguridad antes de restaurarla
+        summary: Lee un archivo o una carpeta de copia de seguridad y devuelve la
+          huella de lo leído. No restaura nada.
+      archive_inspect:
+        label: Inspeccionar una copia de seguridad de perfil
+        summary: Muestra lo que un archivo de copia de seguridad dice de sí mismo,
+          sin descifrarlo.
+      profile_list:
+        label: Listar los perfiles
+        summary: Lista los perfiles de este equipo sin desbloquear ninguno.
+      recovery_enroll:
+        label: Configurar un código de recuperación
+        summary: Crea un código de recuperación para un perfil cuando demuestras su
+          contraseña. El código se muestra una sola vez.
+      repair_logs:
+        label: Últimas líneas del registro
+        summary: Muestra dónde está el archivo de registro y sus líneas más recientes.
+      repair_profile:
+        label: Reparar el perfil activo
+        summary: Comprueba si se puede leer el registro de un perfil, o borra un ajuste
+          de perfil activo que no apunta a nada utilizable.
+      repair_report:
+        label: Diagnosticar la instalación
+        summary: Comprueba la configuración local, el perfil activo, el inicio de
+          sesión y el registro de actividad.
+      report_verify_document:
+        label: Verificar un resumen de cálculo
+        summary: Comprueba un archivo de resumen de cálculo por su propio contenido,
+          sin vincularlo a ningún perfil.
+      reset_resume:
+        label: Reanudar un reinicio
+        summary: Lleva hasta el final un reinicio que quedó a medias.
+      reset_start:
+        label: Reiniciar todos los perfiles
+        summary: Inicia la eliminación irreversible de todos los perfiles guardados
+          en este equipo.
+      reset_status:
+        label: Estado del reinicio
+        summary: Muestra hasta dónde ha llegado un reinicio, sin continuarlo.
+      review_package_verify:
+        label: Verificar un paquete de revisión
+        summary: Comprueba cada archivo de un paquete de revisión contra su lista
+          de sumas de comprobación.
+      review_package_verify_receipt:
+        label: Verificar un recibo contrafirmado
+        summary: Comprueba las dos firmas de un recibo contrafirmado de un paquete
+          de revisión.
+      review_package_verify_signature:
+        label: Verificar la firma de un paquete
+        summary: Comprueba la firma de un paquete de revisión con una clave pública
+          en la que confías.
+      storage_check:
+        label: Comprobar el almacenamiento
+        summary: Compara las carpetas de almacenamiento del disco con lo que deberían
+          ser, sin reparar nada.
+      storage_init:
+        label: Crear las carpetas de almacenamiento
+        summary: Crea todas las carpetas que falten y conserva todo lo que ya existe.
+      storage_inventory:
+        label: Inventario del almacenamiento
+        summary: Muestra dónde está cada área de almacenamiento y qué contiene.
+      storage_reclaim:
+        label: Liberar un área de almacenamiento
+        summary: Elimina el contenido de un área que se puede volver a generar.
+    action:
+      close: Volver
+      read_outcome: 'Ver cómo terminó: {act}'
+      run: Ejecutar
+    column:
+      act: Tarea
+      effect: Efecto
+      family: Área
+    confirm:
+      accept: Ejecutar
+      cancel: No ejecutar
+      question: ¿Ejecutarlo ahora? Esto modifica datos de este equipo.
+      title: 'Confirmar: {act}'
+    effect:
+      changes: Modifica datos
+      reads: Solo lectura
+    family:
+      other: Otras
+      profiles: Perfiles
+      repair: Reparación
+      reset: Reinicio
+      storage: Almacenamiento
+      verification: Verificación
+    field:
+      acknowledge_retention_override: Eliminar los perfiles aunque no haya terminado
+        su plazo legal de conservación
+      area: Área de almacenamiento
+      clear_active: Borrar el ajuste de perfil activo
+      counter_signer_public_key: Clave pública de quien contrafirma
+      label: Nombre del perfil
+      lines: Número de líneas
+      operation_id: Identificador del reinicio
+      operator_public_key: Tu clave pública
+      package: Archivo del paquete de revisión
+      path: Archivo o carpeta
+      profile: Nombre o identificador del perfil
+      profile_id: Identificador del perfil
+      public_key: Clave pública
+      receipt: Archivo del recibo
+      retention_override_reason: Motivo para eliminarlos antes de tiempo
+      signature: Archivo de firma
+      source_digest: Huella de la copia de seguridad
+      trusted_key: Clave en la que confías
+    hint:
+      json: Un valor JSON.
+      optional: Opcional.
+      path: Una ruta de este equipo.
+      supplied: Déjalo vacío y se leerá antes de la copia de seguridad.
+    intro: Tareas sobre esta instalación que no necesitan ningún perfil con sesión
+      iniciada. El servicio local realiza cada una.
+    inventory_unavailable: No se han podido listar los perfiles de este equipo ({reason}).
+      Aun así puedes revisar y reparar la instalación desde aquí.
+    list_hint: Pulsa Intro en una fila para abrirla.
+    passphrase:
+      label: Contraseña del perfil
+      required: Introduce la contraseña del perfil.
+    profiles:
+      column:
+        active: Activo
+        id: Identificador
+        label: Nombre
+    result:
+      remedy: 'Siguiente paso sugerido: {action}'
+    status:
+      completed: Hecho.
+      effect_unknown: La conexión terminó antes de que llegara una respuesta ({code}).
+        Puede que se haya ejecutado; compruébalo antes de volver a ejecutarlo.
+      failed: El servicio local se ha detenido por un fallo ({act}). El detalle está
+        en su registro.
+      failed_unknown: El servicio local se ha detenido por un fallo ({act}). Puede
+        que algunos datos ya hayan cambiado; compruébalo antes de volver a ejecutarlo.
+      invalid_fields: 'Revisa: {fields}.'
+      preview: Todavía no ha cambiado nada. Esto es lo que ocurriría.
+      progress: Consultando al servicio local…
+      recovery_declined: No has confirmado el código de recuperación, así que no se
+        ha configurado ninguno.
+      refused: Rechazado ({code}).
+      unreachable: El servicio local no ha aceptado la solicitud ({code}).
+    title: Instalación y reparación
+    verdict:
+      invalid: No válido.
+      outcome: 'Resultado de la verificación: {outcome}'
+      valid: Válido.
   ledger:
+    activity_asset:
+      asset_id: Identificador del activo
+      claim: Registrar amortización
+      correct: Corregir
+      create: Crear
+      filing: Preparar traslado a modelos
+      forecast: Calcular previsión
+      free_amount: Importe de libertad de amortización (opcional)
+      inspect: Inspeccionar
+      revision: Revisión del activo (JSON)
+      supersedes: Amortización registrada que se sustituye (opcional)
+      title: Activos amortizables
     area:
       classification: Clasificación
       entries: Apuntes
@@ -2372,6 +2902,9 @@ tui:
         xlsx: Libro de Excel
       provider_label: Formato del extracto
       refusal:
+        empty_directory: la carpeta no contiene ningún extracto que se pueda importar
+        file_limit: la importación incluye más ficheros de los que admite una sola
+          importación, así que no se leyó ninguno; importa menos a la vez
         own_account_mismatch: el extracto indica otra cuenta distinta de la que elegiste
         result_limit: la importación alcanzó su límite de filas antes de este fichero
         source_changed: el fichero cambió después de la previsualización y no se importó
@@ -3374,6 +3907,156 @@ tui:
       value:
         not_applicable: no aplica
       was: 'antes: {value}'
+  operations:
+    action:
+      close: Cerrar
+      edit_fields: Editar por campos
+      edit_json: Editar como JSON
+      next_page: Página siguiente
+      previous_page: Página anterior
+      run: Ejecutar
+    form:
+      choose: Elige
+      error:
+        choice: Elige uno de los valores ofrecidos.
+        integer: Introduce un número entero.
+        json: Esto no es JSON válido.
+        json_object: La solicitud debe ser un único objeto JSON válido. No se ha enviado
+          nada.
+        json_unknown_fields: El JSON nombra campos que esta solicitud no tiene. Quítalos
+          o sigue editando como JSON.
+        number: Introduce un número.
+      fixed: lo fija esta sesión
+      hint:
+        date: Fecha con el formato AAAA-MM-DD
+        datetime: Fecha y hora con el formato AAAA-MM-DDTHH:MM:SSZ
+        decimal: Importe exacto, por ejemplo 1234.56
+        integer: Número entero
+        number: Número
+        path: Ruta de archivo o carpeta
+        text: Texto
+        uuid: Identificador
+      invalid: La solicitud aún no es válida. No se ha enviado nada.
+      profile: Perfil
+      replay_key: Clave de repetición (opcional)
+      replay_key_hint: Envía la misma clave otra vez con la misma solicitud para recuperar
+        la primera operación en lugar de iniciar una nueva.
+      required: obligatorio
+      secret: Secreto (oculto al escribir, se envía aparte de la solicitud)
+      secret_required: Esta operación necesita su secreto. Introdúcelo y vuelve a
+        ejecutar. No se ha enviado nada.
+      session: Sesión
+      subject: Sujeto
+      subject_entry: Unidad de trabajo sobre la que actúa esta solicitud
+      subject_missing: La solicitud aún no indica sobre qué actúa. Rellena el campo
+        que lo nombra. No se ha enviado nada.
+      subject_pending: la solicitud aún no lo indica
+    interaction:
+      expires: Caduca
+      kind:
+        choice: La operación espera una elección.
+        input: La operación espera un dato.
+      no_answer: 'Este tipo de petición aún no se puede responder, ni aquí ni desde
+        la línea de comandos: solo se puede aplicar o rechazar una revisión. Puedes
+        cancelar la operación o dejarla en espera.'
+      presentation: Pide
+    palette:
+      help: Abre el formulario de solicitud de esta operación
+    receipt:
+      effect: Efecto
+      operation: Operación
+      outcome: Resultado
+    result:
+      page: Resultado, página {page} de {pages}
+    run:
+      busy_holder: 'Operación que lo retiene: {operation_id}'
+      contract_changed: El servicio ofrece ahora otro contrato para esta operación.
+        Vuelve a abrir Operaciones e inténtalo de nuevo. No se ha enviado nada.
+      detached: Has dejado la operación mientras seguía en curso. Aquí no se conoce
+        su resultado.
+      start_unconfirmed: La solicitud quedó registrada, pero no se ha confirmado su
+        inicio. No se ha reintentado nada.
+      unknown: La respuesta se ha perdido, así que no se sabe si la solicitud quedó
+        registrada. No se ha reintentado nada.
+      unobserved: No se ha podido observar la operación, así que aquí no se conoce
+        su estado.
+    search:
+      placeholder: Busca por identificador o descripción
+    status:
+      count: '{shown} de {total} operaciones'
+      loading: Leyendo las operaciones registradas.
+      unavailable: No se han podido leer las operaciones registradas.
+    stopped:
+      code: Código
+      remedy: Qué permitiría continuar
+      remedy_command: 'Comando que lo resuelve: {command}'
+    title: Operaciones
+  reference:
+    action:
+      close: Volver
+      show: Mostrar
+    column:
+      read: Referencia
+    filter:
+      any: Cualquiera
+      as_of: A fecha de (AAAA-MM-DD)
+      casilla: Casilla
+      casilla_number: Número o identificador de casilla
+      category: Categoría
+      domain: Ámbito fiscal
+      form_number: Número oficial de casilla
+      input_kind: Cómo se aporta el valor
+      modelo: Modelo
+      period: Período (0A, 1T a 4T, 01 a 12)
+      portal: Identificador del portal
+      required: Solo obligatorias
+      year: Ejercicio
+    filters: Qué mostrar
+    intro: Datos públicos de referencia incluidos en Cadrumo. Consultarlos no necesita
+      ningún perfil ni contacta con nadie.
+    list_hint: Pulsa Intro en una fila para abrirla.
+    read:
+      apoderado_scopes: Ámbitos de apoderamiento
+      auth_providers: Métodos de identificación ante la AEAT
+      bindings: Orígenes de las casillas de un modelo
+      casilla: Una casilla
+      casillas: Casillas de un modelo
+      categories: Categorías de los registros
+      describe: Descripción de un modelo
+      formulas: Fórmulas de un modelo
+      modelos: Catálogo de modelos
+      portal: Un portal de la AEAT
+      portals: Portales de la AEAT
+      support_matrix: Matriz de capacidades
+    section:
+      irpf_categories: Categorías de IRPF
+      spending_categories: Categorías de gasto
+    status:
+      failed: No se ha podido leer la referencia. El detalle está en el registro de
+        actividad.
+      invalid: 'Revisa: {fields}.'
+      loading: Leyendo…
+      rows: 'Filas: {count}'
+    summary:
+      apoderado_scopes: Lo que se puede autorizar a hacer a un apoderado en nombre
+        de otra persona.
+      auth_providers: Las formas en que Cadrumo puede identificarte ante la AEAT.
+      bindings: De dónde salen los valores de una versión de un modelo.
+      casilla: 'Una casilla: su etiqueta oficial, su base legal y, si se calcula,
+        su fórmula.'
+      casillas: Las casillas de una versión de un modelo, con filtros.
+      categories: Las categorías de gasto y de IRPF que puede llevar un registro.
+      describe: Las versiones, los períodos y los recuentos de un modelo.
+      formulas: Las fórmulas de una versión de un modelo, con lo que lee cada una.
+      modelos: Todos los modelos que conoce Cadrumo, de un ejercicio o un ámbito fiscal
+        si lo eliges.
+      portal: 'Una página web de la AEAT: su dirección, su finalidad y sus métodos
+        de identificación.'
+      portals: Las páginas web de la AEAT que conoce Cadrumo, por categoría o modelo.
+        Listarlas no abre ninguna.
+      support_matrix: 'Lo que Cadrumo puede hacer con cada modelo: calcular, exportar,
+        leer copias presentadas.'
+    title: Referencia
   restricted:
     actions: 'Acciones permitidas: {values}'
     all_periods: Todos los períodos
@@ -3381,6 +4064,11 @@ tui:
       proveedor: {provider}'
     change_user: Cambiar de usuario
     close: Cerrar
+    disclosure_page: Datos revelables {first} a {last} de {total}
+    disclosure_page_empty: Esta sesión no puede revelar nada.
+    disclosure_page_stale: Los datos revelables cambiaron desde que se contaron. Espera
+      a que se actualice el estado y vuelve a leerlos.
+    disclosures_next: Datos revelables, página siguiente
     grant: 'Concesión válida: {valid}; vence: {expires_at}'
     lock: Bloquear esta sesión
     'no': 'No'
@@ -3427,6 +4115,8 @@ tui:
     opening: Abriendo Cadrumo…
     palette:
       placeholder: Busca áreas, registros y acciones…
+    read_unavailable: No se ha podido cargar esta vista. Inténtalo de nuevo.
+    retry: Reintentar
     system:
       quit: Salir
       quit_help: Sale de Cadrumo; la sesión del perfil queda como está
@@ -3502,8 +4192,12 @@ tui:
       aeat_sync: Abrir Sincronización AEAT
       declarations: Abrir Declaraciones
       home: Abrir Inicio
+      installation: Abrir Instalación
       ledger: Abrir Registros
+      operations: Abrir Operaciones
       profile: Abrir Perfil
+      reference: Abrir Referencia
+      setup: Abrir Componentes
       unknown: Abrir área
       withholding: Abrir Retenciones
     destination_help:
@@ -3511,8 +4205,14 @@ tui:
       declarations: Declaraciones, cálculos anteriores, historial de presentaciones
         y calendario
       home: Próximas acciones, declaraciones y plazos de un vistazo
+      installation: Almacenamiento, reparación, restablecimiento y los perfiles de
+        este equipo
       ledger: Apuntes, revisión, clasificación y justificantes
+      operations: Todas las operaciones que Cadrumo puede ejecutar, para buscarlas,
+        rellenarlas y ejecutarlas
       profile: Los datos de este perfil y los orígenes que los completan
+      reference: Modelos, casillas, categorías, portales y métodos de acceso
+      setup: El navegador y la IA local
       withholding: Registrar y consultar retenciones de facturas del ejercicio seleccionado
     refusal:
       not_composed: Todavía no se han podido leer todas las áreas.
@@ -3566,3 +4266,48 @@ tui:
         reconciliation_resolved: Resuelta
         revision_current: Vigente
         revision_superseded: Sustituida
+  setup:
+    check_again: Comprobar de nuevo
+    checking: Comprobando…
+    column:
+      action: Acción
+      item: Componente
+      state: Estado
+    complete: Cadrumo está preparado.
+    hardware_limited: Este ordenador no tiene memoria suficiente para la IA local.
+    hint: Intro ejecuta la acción de la fila elegida. Al preparar, se muestra el plan
+      y se te pregunta antes de descargar nada.
+    incomplete: Algunos componentes aún no están listos.
+    intro: 'Lo que Cadrumo necesita en este ordenador: el navegador para la web de
+      la Agencia Tributaria y la IA local. Elige una fila para ejecutar su acción.'
+    outcome:
+      cancelled: Has cancelado la preparación.
+      completed: La preparación ha terminado.
+      interrupted: La preparación se interrumpió antes de terminar. Elige Reanudar
+        para continuar.
+      not_enough_space: No hay espacio libre suficiente en el disco, así que no se
+        ha descargado nada.
+      nothing_to_do: Todo está ya preparado.
+      plan_changed: El plan cambió después de que lo aprobaras, así que no se ha descargado
+        nada. Empieza de nuevo para ver el plan nuevo.
+      rejected: No se ha descargado nada.
+    plan:
+      destination: '  Se guarda en %{path}'
+      entry: '%{name}: %{size} desde %{hosts}'
+      heading: 'Cadrumo va a preparar:'
+      installs_program: '  Esto instala un programa en este ordenador. Su instalador
+        puede pedirte permiso.'
+      part: '    %{name}: %{size}'
+      shared: '  Usa la misma descarga que %{name}.'
+      size_unknown: tamaño aún desconocido
+      total: 'Descarga total: %{size}.'
+      total_unknown: 'Descarga total: al menos %{size}. Algunos tamaños solo se conocen
+        al empezar la descarga.'
+    set_up_all: Preparar todo
+    size:
+      gigabytes: '%{value} GB'
+      megabytes: '%{value} MB'
+    title: Componentes
+    unavailable: No se ha podido contactar con el servicio en segundo plano de Cadrumo,
+      así que ahora no se pueden comprobar ni preparar los componentes.
+    working: Preparando el plan…

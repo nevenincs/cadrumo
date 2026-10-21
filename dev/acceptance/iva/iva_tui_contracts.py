@@ -16,10 +16,19 @@ _N26_HEADER: Final = "Date,Payee,Payment reference,Amount (EUR),Currency,Transac
 
 _SOURCE_MODULES: Final[tuple[tuple[str, str], ...]] = (
     ("cadrumo.application.ledger.actions_manual", "src/cadrumo/application/ledger/actions_manual.py"),
-    ("cadrumo.entrypoints.tui.launcher", "src/cadrumo/entrypoints/tui/launcher.py"),
-    ("cadrumo.entrypoints.tui.ledger.classification", "src/cadrumo/entrypoints/tui/ledger/classification.py"),
-    ("cadrumo.entrypoints.tui.ledger.entries", "src/cadrumo/entrypoints/tui/ledger/entries.py"),
-    ("cadrumo.entrypoints.tui.ledger.import_flow", "src/cadrumo/entrypoints/tui/ledger/import_flow.py"),
+    ("cadrumo_runtime.host.frontend.tui.launcher", "src/cadrumo_runtime/host/frontend/tui/launcher.py"),
+    (
+        "cadrumo.entrypoints.tui.ledger.classification",
+        "src/cadrumo/entrypoints/tui/ledger/classification.py",
+    ),
+    (
+        "cadrumo.entrypoints.tui.ledger.entries",
+        "src/cadrumo/entrypoints/tui/ledger/entries.py",
+    ),
+    (
+        "cadrumo.entrypoints.tui.ledger.import_flow",
+        "src/cadrumo/entrypoints/tui/ledger/import_flow.py",
+    ),
 )
 
 

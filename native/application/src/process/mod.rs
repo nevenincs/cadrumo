@@ -1,4 +1,5 @@
 //! CLI stream relay. Standard output remains a byte-for-byte operator result channel.
+pub mod creation;
 pub mod status;
 
 use crate::{
@@ -63,18 +64,20 @@ pub fn passthrough(
     diagnostics: Arc<Diagnostics>,
     cancelled: Arc<AtomicBool>,
 ) -> Result<i32> {
-    let child = configuration
-        .command()
-        .args(arguments)
-        .stdin(Stdio::inherit())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .map_err(|cause| {
-            let error = fail(ErrorCode::SpawnFailed).caused_by(cause);
-            diagnostics.spawn_failure(ProcessRole::Cli, error.clone());
-            error
-        })?;
+    let child = crate::process::creation::run(|| {
+        configuration
+            .command()
+            .args(arguments)
+            .stdin(Stdio::inherit())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+    })
+    .map_err(|cause| {
+        let error = fail(ErrorCode::SpawnFailed).caused_by(cause);
+        diagnostics.spawn_failure(ProcessRole::Cli, error.clone());
+        error
+    })?;
     let id = diagnostics.start(child.id(), ProcessRole::Cli);
     let mut owned = OwnedChild {
         child,

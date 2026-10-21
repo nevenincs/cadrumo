@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
@@ -125,7 +125,7 @@ def calculation_ports_for_test(
     invoice_repository: InvoiceCatalogueRepository | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
-) -> Iterator[CalculationActionPorts]:
+) -> Generator[CalculationActionPorts]:
     """Yield calculation ports for one bucket while retaining test repositories.
 
     The authority operation owns every capability in the yielded bundle.  The

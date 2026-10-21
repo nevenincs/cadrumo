@@ -28,12 +28,12 @@ from ..operations.capabilities import (
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .bundle_export_contracts import (
     ProfileBundleExportResult,
 )
@@ -120,10 +120,12 @@ def _definition(
     phase_codes: tuple[str, ...],
     ephemeral_secret: OperationEphemeralSecretDeclaration | None = None,
     permitted_effects: frozenset[OperationEffect] = EFFECTS_WITHOUT_PARTIAL_COMMIT,
+    capabilities: OperationCapabilities | None = None,
 ) -> OperationDefinition:
     return OperationDefinition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_factory=OperationExecutorFactory(
             request_type=request_type,
@@ -132,7 +134,8 @@ def _definition(
         ),
         phase_codes=phase_codes,
         interaction_kinds=frozenset[OperationInteractionKind](),
-        capabilities=OperationCapabilities(
+        capabilities=capabilities
+        or OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
             deadline=OperationDeadline.ABSENT,
@@ -146,10 +149,25 @@ def _definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         ephemeral_secret=ephemeral_secret,
     )
 
+
+_PROFILE_VIEW_CAPABILITIES = OperationCapabilities(
+    # A page read has no effect that lost observation could conceal, so it lives
+    # only as long as the worker that reads it and is never journaled to disk.
+    durability=OperationDurability.EPHEMERAL,
+    cancellation=OperationCancellation.UNSUPPORTED,
+    deadline=OperationDeadline.ABSENT,
+    replay=OperationReplayPolicy.NONE,
+    baseline=OperationBaselinePolicy.NONE,
+    request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+    sensitive_input=OperationSensitiveInputPolicy.NONE,
+    conflict_scope=OperationConflictScope.NONE,
+    owned_resources=frozenset(),
+    permitted_effects=frozenset({OperationEffect.NONE}),
+    close_policy=OperationClosePolicy.DETACH_ALLOWED,
+)
 
 USER_PROFILE_OPERATION_DEFINITIONS = (
     _definition(
@@ -158,7 +176,7 @@ USER_PROFILE_OPERATION_DEFINITIONS = (
         result_type=ProfileViewOperationResult,
         executor_type=ProfileViewOperationExecutor,
         phase_codes=PROFILE_VIEW_PHASES,
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
+        capabilities=_PROFILE_VIEW_CAPABILITIES,
     ),
     _definition(
         definition_id=PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,

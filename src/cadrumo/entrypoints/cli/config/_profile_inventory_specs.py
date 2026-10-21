@@ -2,30 +2,17 @@
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ..command_parameter_contracts import OptionSpec
-from ..command_shared_contracts import (
+from cadrumo_client.commands.execution_policies import CALCULATION_READ, PROFILE_READ
+from cadrumo_client.commands.language_options import OUTPUT_LANGUAGE_OPTION as _OUTPUT_LANGUAGE_OPTION
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
-    ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
-    ValueContract,
 )
-from ..command_spec import CommandSpec, InvocationSpec
-from ._spec_policies import CALCULATION_READ, PROFILE_READ
-
-_OUTPUT_LANGUAGE = ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__))
-_OUTPUT_LANGUAGE_OPTION = OptionSpec(
-    name="output_language",
-    declarations=("--output-language", "--language"),
-    value=_OUTPUT_LANGUAGE,
-    default=ParameterDefault.value(None),
-    help_key=TranslationKey("cli.config.auth.output_language_help"),
-)
-
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 PROFILE_INVENTORY_COMMAND_SPECS = (
     CommandSpec(
@@ -58,7 +45,7 @@ PROFILE_INVENTORY_COMMAND_SPECS = (
         handler=LazyBinding.available(DeferredTarget(".profile_status_cli", "config_status", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("..config_payloads", "ConfigStatusResult", __package__),
+            target=DeferredTarget("cadrumo_client.commands.payloads", "ConfigStatusResult"),
             identity="config.profile.status",
         ),
         allow_unregistered_profile_diagnostic=True,

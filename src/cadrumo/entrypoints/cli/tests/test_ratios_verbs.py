@@ -7,11 +7,10 @@ from collections.abc import Sequence
 import pytest
 from click.testing import Result
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
-
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from ....core.i18n.render import tr
-from ._strict_cli_fixture_support import inventory_isolated_backend
-from .cli_runner import invoke_cached_cli
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
+from .profile_world_fixtures import inventory_isolated_backend
 
 __all__ = ["inventory_isolated_backend"]
 
@@ -40,7 +39,8 @@ def test_ratios_set_persists_and_list_reflects() -> None:
 
 
 def test_ratios_unset_clears() -> None:
-    _invoke_ratios(["set", "vehiculo_combustible", "0.5"])
+    set_result = _invoke_ratios(["set", "vehiculo_combustible", "0.5"])
+    assert set_result.exit_code == 0, set_result.output
     result = _invoke_ratios(["unset", "vehiculo_combustible"])
     assert result.exit_code == 0, result.output
     assert "vehiculo_combustible\t<unset>" in result.output

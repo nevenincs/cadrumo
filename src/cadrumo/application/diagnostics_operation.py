@@ -7,6 +7,9 @@ from typing import TypedDict
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ..core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .diagnostics_operation_ports import DiagnosticsReadPortsFactory
 from .diagnostics_read_contracts import (
@@ -34,7 +37,7 @@ from .operations.access_resolution import (
     ResolvedOperationAccess,
     bind_operation_access,
     operation_disclosures,
-    require_declared_frontend_and_action,
+    require_declared_action,
     require_period_independent_replay_or_authority,
 )
 from .operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES, OperationCapabilities
@@ -48,16 +51,10 @@ from .operations.owner import OperationExecutorContext
 from .operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from .operations.read_capture import capture_read_result
 from .operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from .user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-)
+from .operations.subject_reference import OperationSubjectReferenceV1
 from .user_profile.access_errors import ProfileAccessRefusedError
 
 DIAGNOSTICS_READ_OPERATION_DEFINITION_ID = "diagnostics.read"
@@ -130,7 +127,7 @@ def _resolve_access(request: OperationRequest[BaseModel], context: OperationAcce
         access_profile_id=context.profile_id,
     )
     actions = RESUMABLE_READ_ACTIONS
-    require_declared_frontend_and_action(context, frontends=ALL_OPERATION_FRONTENDS, actions=actions)
+    require_declared_action(context, actions=actions)
     require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
     disclosures = operation_disclosures(
         context,
@@ -186,6 +183,7 @@ def build_diagnostics_read_definition(factory: DiagnosticsReadPortsFactory) -> O
     return OperationDefinition(
         definition_id=DIAGNOSTICS_READ_OPERATION_DEFINITION_ID,
         request_type=DiagnosticsReadRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=DiagnosticsReadExecutionResult,
         executor_factory=OperationExecutorFactory(
             request_type=DiagnosticsReadRequest,
@@ -196,7 +194,6 @@ def build_diagnostics_read_definition(factory: DiagnosticsReadPortsFactory) -> O
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

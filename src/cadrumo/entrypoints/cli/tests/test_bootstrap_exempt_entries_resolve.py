@@ -45,7 +45,9 @@ from click import Context as ClickContext
 from typer.main import get_command
 
 from .._bootstrap_exempt import BOOTSTRAP_EXEMPTIONS, BootstrapExemption, is_bootstrap_exempt
-from ..main import app
+from ..main import cli_app
+
+app = cli_app()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

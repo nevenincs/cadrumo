@@ -6,7 +6,8 @@ from typing import Any
 
 import pytest
 
-from ......application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from ..automation_secret_target import AUTOMATION_NAMESPACE_PREFIX, require_automation_secret_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

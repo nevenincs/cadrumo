@@ -18,6 +18,7 @@ from pydantic import ValidationError
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.logging import get_logger
 from ...core.time.clock import now as _utc_now
+from .classification_origin import ClassificationOrigin, with_classification_origin
 from .enums import BusinessClassification
 from .errors import TransactionCatalogueError, TransactionNotFoundError
 from .lineage_models import ClassificationHistoryEntry
@@ -61,6 +62,7 @@ def set_classification(
     category_id: str | None = None,
     notes: str | None = None,
     classified_by: str,
+    origin: ClassificationOrigin,
     reason: str = "",
     confidence: Decimal | None = None,
 ) -> TransactionCatalogue:
@@ -82,6 +84,11 @@ def set_classification(
         notes: Optional notes or reasoning for the classification.
         classified_by: Classifier source string: ``auto``, ``manual``, or
             ``rule:<rule-id>``.
+        origin: Whose decision this classification is. It is recorded when the
+            write changes the classification, its share or the category. A
+            person who restates what the row carries has accepted it and
+            becomes its origin; any other restatement leaves the origin on
+            the row standing.
         reason: Free-text override justification; embedded in the
             history entry, not on the top-level transaction.
         confidence: Caller-supplied decision confidence in the inclusive
@@ -154,9 +161,14 @@ def set_classification(
     if notes is not None:
         payload["notes"] = notes
 
-    updated_transaction = _validate_transaction_update(
-        payload,
-        context=f"invalid classification update for transaction: {transaction_id}",
+    updated_transaction = with_classification_origin(
+        _validate_transaction_update(
+            payload,
+            context=f"invalid classification update for transaction: {transaction_id}",
+        ),
+        replaces=transaction,
+        written=origin,
+        decided=True,
     )
     return _replace_transaction(catalogue, updated_transaction)
 

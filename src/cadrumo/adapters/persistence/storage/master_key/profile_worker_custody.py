@@ -5,14 +5,18 @@ from __future__ import annotations
 import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
+from datetime import timedelta
 from pathlib import Path
 from threading import RLock
 from uuid import UUID
 
-from .....application.runtime.profile_worker import ProfileWorkerIdentity
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
+
 from .....application.user_profile.access_contracts import AccessSession, SessionKind, SessionState
+from .....application.user_profile.access_errors import ProfileAccessRefusedError
 from .....application.user_profile.access_policy import intersect_scopes
-from .....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from .....application.user_profile.profile_record_repository import close_active_profile_record_session
 from .....core.time.clock import now
 from .....core.time.utc import UtcInstant
@@ -20,6 +24,9 @@ from ..custody.automation_profile import validate_automation_profile_binding
 from .active_session import bind_active_bucket_session, close_active_bucket_session, current_active_bucket_session
 from .bucket_session import BucketSession
 from .profile_worker_binding import profile_worker_binding
+
+_ENDED_MEMORY = 256
+"""How many ended lease ids custody remembers, so a late request hears how its session ended."""
 
 
 class ProfileWorkerCustody:
@@ -44,6 +51,7 @@ class ProfileWorkerCustody:
         profile_worker_binding.bind(identity, storage_root=storage_root)
         self.identity, self.root, self.clock, self.monotonic = identity, storage_root, clock, monotonic
         self._leases: dict[UUID, AccessSession] = {}
+        self._ended: dict[UUID, AccessDenialCode] = {}
         self._lock = RLock()
         self._closed = False
         self._sections = 0
@@ -57,7 +65,7 @@ class ProfileWorkerCustody:
             and 0 <= elapsed < (lease.expires_at - lease.issued_at).total_seconds()
         )
 
-    def _validate(self, lease: AccessSession) -> None:
+    def _validate_lease(self, lease: AccessSession) -> None:
         if (
             self._closed
             or lease.binding != self.identity.binding
@@ -65,6 +73,9 @@ class ProfileWorkerCustody:
             or not self._live(lease)
         ):
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+
+    def _validate(self, lease: AccessSession) -> None:
+        self._validate_lease(lease)
         validate_automation_profile_binding(self.identity.binding, root=self.root)
 
     def install(self, lease: AccessSession, dek: bytearray) -> None:
@@ -95,11 +106,11 @@ class ProfileWorkerCustody:
             self._leases[lease.session_id] = lease
 
     def refresh(self, lease: AccessSession) -> None:
-        """Replace only a live root API deadline after runtime reauthorization."""
+        """Replace only a live root human or API deadline after runtime reauthorization."""
         with self._lock:
             previous = self.require(lease.session_id)
             self._validate(lease)
-            if lease.kind is not SessionKind.API_KEY or lease.parent_session_id is not None:
+            if lease.kind not in {SessionKind.HUMAN, SessionKind.API_KEY} or lease.parent_session_id is not None:
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
             mutable = {"issued_at", "issued_monotonic", "expires_at"}
             if any(
@@ -117,11 +128,18 @@ class ProfileWorkerCustody:
     def require(self, session_id: UUID) -> AccessSession:
         """Revalidate exact custody and local lease lifetime before worker access."""
         with self._lock:
-            self.expire()
+            binding_validated = self._expire_locked()
             lease = self._leases.get(session_id)
             if lease is None:
+                ended = self._ended.get(session_id)
+                if ended is not None:
+                    # The session ended, by its lifetime or by a retirement such as a sign-out:
+                    # nothing presented was wrong, and only a lapse is reported as expiry.
+                    raise ProfileAccessRefusedError(ended)
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-            self._validate(lease)
+            self._validate_lease(lease)
+            if not binding_validated:
+                validate_automation_profile_binding(self.identity.binding, root=self.root)
             return lease
 
     @contextmanager
@@ -157,28 +175,45 @@ class ProfileWorkerCustody:
     def expire(self) -> None:
         """Release expired custody during idle polling as well as before requests."""
         with self._lock:
-            # A publication may replace its own envelope inside a held native
-            # fence. Revalidate at the last section exit; each new require still
-            # validates independently, so this cannot admit successor work.
-            if self._leases and not self._sections:
-                try:
-                    validate_automation_profile_binding(self.identity.binding, root=self.root)
-                except BaseException:
-                    self.close()
-                    raise
-            for identity in tuple(self._leases):
-                if identity in self._leases and not self._live(self._leases[identity]):
-                    self.retire(identity)
+            self._expire_locked()
 
-    def retire(self, session_id: UUID) -> None:
-        """Drop one lineage; the process remains pinned after its last lease ends."""
+    def _expire_locked(self) -> bool:
+        """Expire under the custody lock, reporting this call's binding proof.
+
+        require() consumes the proof only inside the same critical section.
+        Every later request, idle poll and final section exit revalidates afresh.
+        """
+        # A publication may replace its own envelope inside a held native
+        # fence. Revalidate at the last section exit; each new require still
+        # validates independently, so this cannot admit successor work.
+        binding_validated = bool(self._leases) and not self._sections
+        if binding_validated:
+            try:
+                validate_automation_profile_binding(self.identity.binding, root=self.root)
+            except BaseException:
+                self.close()
+                raise
+        for identity in tuple(self._leases):
+            if identity in self._leases and not self._live(self._leases[identity]):
+                for lapsed in self.retire(identity):
+                    self._ended[lapsed] = AccessDenialCode.SESSION_EXPIRED
+        return binding_validated
+
+    def retire(self, session_id: UUID) -> frozenset[UUID]:
+        """Drop one lineage and name the leases it held; the process remains pinned after its last lease ends."""
         with self._lock:
+            dropped: set[UUID] = set()
             pending = {session_id}
             while pending:
                 retired = pending
                 pending = {lease.session_id for lease in self._leases.values() if lease.parent_session_id in retired}
                 for identity in retired:
-                    self._leases.pop(identity, None)
+                    if self._leases.pop(identity, None) is not None:
+                        dropped.add(identity)
+                        # As the runtime's authority answers for a session it no longer holds.
+                        self._ended[identity] = AccessDenialCode.AUTHENTICATION_REQUIRED
+            while len(self._ended) > _ENDED_MEMORY:
+                del self._ended[next(iter(self._ended))]
             if not self._leases:
                 self._release_material()
             else:
@@ -187,6 +222,7 @@ class ProfileWorkerCustody:
                     self.close()
                     raise AutomationCustodyError(AutomationCustodyCode.MISSING)
                 self._replace_key_session(self._leases.copy(), session.dek)
+            return frozenset(dropped)
 
     def _replace_key_session(self, leases: dict[UUID, AccessSession], dek: bytes) -> None:
         if not leases:
@@ -197,10 +233,15 @@ class ProfileWorkerCustody:
             return
         opened = min(lease.issued_at for lease in leases.values())
         deadline = max(lease.expires_at for lease in leases.values())
+        # Each request is admitted against its own lease, so a key session that
+        # went idle sooner would refuse work a live lease still admits. A window
+        # no shorter than the whole lease span clamps every storage access to
+        # the latest lease expiry, which stays the only bound on this session.
+        whole_minutes, remainder = divmod(deadline - opened, timedelta(minutes=1))
         successor = BucketSession.open_resumed(
             bucket_id=str(self.identity.binding.profile_id),
             dek=dek,
-            idle_minutes=5,
+            idle_minutes=max(1, whole_minutes + (1 if remainder else 0)),
             opened_at=opened,
             idle_deadline=deadline,
             absolute_deadline=deadline,
@@ -222,6 +263,19 @@ class ProfileWorkerCustody:
         with self._lock:
             self.expire()
             return tuple(sorted(self._leases))
+
+    def seconds_until_expiry(self) -> float | None:
+        """Seconds until the earliest held lease lapses on either clock, or ``None`` while none is held."""
+        with self._lock:
+            instant, elapsed = self.clock(), self.monotonic()
+            remaining = [
+                min(
+                    (lease.expires_at - instant).total_seconds(),
+                    lease.issued_monotonic + (lease.expires_at - lease.issued_at).total_seconds() - elapsed,
+                )
+                for lease in self._leases.values()
+            ]
+        return max(0.0, min(remaining)) if remaining else None
 
     def retire_password_successor(self, *, password_generation: int) -> None:
         """Retire old leases after verifying one committed, same-key successor.

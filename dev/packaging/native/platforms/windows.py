@@ -9,8 +9,10 @@ import os
 import shutil
 import sys
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
+from xml.sax.saxutils import quoteattr
 
 import httpx
 from PIL import Image
@@ -20,18 +22,34 @@ from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
 from dev._paths import REPO_ROOT
 
+from ..build_stamp import BuildStamp, display_version
 from ..hashing import digest
+from ..identity import DistributionIdentity
 from ..stable_output import write_bytes, write_text
 from .pe import imports as pe_imports
 from .windows_verify import verify as windows_verify
 
+APPLICATION_MANIFESTS = {
+    "process": REPO_ROOT / "native/interpreter/windows/host.manifest",
+    "desktop": REPO_ROOT / "native/desktop/src-tauri/windows/desktop.manifest",
+}
+"""Authored manifests of the application images; each embeds its manifest with the package identity added."""
 
-def assemble_native(python: Path, packages: Path, native: Path, root: Path, contract: dict[str, Any]) -> dict[str, Any]:
+
+def assemble_native(
+    python: Path,
+    packages: Path,
+    native: Path,
+    root: Path,
+    contract: dict[str, Any],
+    *,
+    copy_function: Callable[[Path, Path], object] = shutil.copy2,
+) -> dict[str, Any]:
     """Relocate PE modules and apply the reviewed Windows wheel loader patches."""
     modules: dict[str, str] = {}
     for source in [*python.glob("*.dll"), *(python / "DLLs").glob("*.dll"), *(python / "DLLs").glob("*.pyd")]:
         target = native / source.name
-        shutil.copy2(source, target)
+        copy_function(source, target)
         if source.suffix.lower() == ".pyd":
             modules[source.stem] = target.relative_to(root).as_posix()
     relocation = {}
@@ -88,6 +106,26 @@ def assemble_native(python: Path, packages: Path, native: Path, root: Path, cont
                 "before": before,
                 "after": digest(bindings),
                 "reason": "Relocated explicit pdfium DLL path",
+            }
+        )
+    # Playwright starts its Node driver from beside the package; point that default at
+    # the relocated executable while keeping its own PLAYWRIGHT_NODEJS_PATH override.
+    driver = packages / "playwright/_impl/_driver.py"
+    if driver.is_file():
+        before = digest(driver)
+        source = driver.read_text(encoding="utf-8")
+        old = 'str(driver_path / "node.exe")'
+        relative_node = (native / "packages/playwright/driver/node.exe").relative_to(root).as_posix()
+        if source.count(old) != 1 or not (root / relative_node).is_file():
+            raise ValueError("Unrecognized Playwright driver loader")
+        new = f"str(Path(sys.executable).parent / {relative_node!r})"
+        driver.write_text(source.replace(old, new), encoding="utf-8")
+        patches.append(
+            {
+                "file": driver.relative_to(root).as_posix(),
+                "before": before,
+                "after": digest(driver),
+                "reason": "Relocated Playwright Node driver path",
             }
         )
     com_init = packages / "win32com/__init__.py"
@@ -163,39 +201,101 @@ def provision_sdk(destination: Path, pin: str, tools: dict[str, Any], contract: 
     if digest(archive) != tools["cpython_sha256"]:
         raise ValueError("CPython SDK SHA256 mismatch")
     sdk = destination / Path(contract["sdk"]["root"]).parts[0]
-    if not sdk.exists():
-        with zipfile.ZipFile(archive) as package:
-            for member in package.namelist():
-                if not (sdk / member).resolve().is_relative_to(sdk):
-                    raise ValueError("SDK archive contains an escaping path")
-            package.extractall(sdk)
+    # Reprovisioning rewrites only files whose bytes differ, so the headers and libraries the
+    # native images compile against keep their timestamps and nothing recompiles needlessly.
+    expected: set[Path] = set()
+    with zipfile.ZipFile(archive) as package:
+        for member in package.infolist():
+            target = (sdk / member.filename).resolve()
+            if not target.is_relative_to(sdk.resolve()):
+                raise ValueError("SDK archive contains an escaping path")
+            if member.is_dir():
+                target.mkdir(parents=True, exist_ok=True)
+                continue
+            expected.add(target)
+            content = package.read(member)
+            if not target.is_file() or target.read_bytes() != content:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(content)
+    for path in sorted(sdk.rglob("*"), reverse=True):
+        if path.is_file() and path.resolve() not in expected:
+            path.unlink()
     return destination / str(contract["sdk"]["root"])
 
 
 def resources(
-    destination: Path, version: str, number: int, date: str, tools: Path, entrypoints: dict[str, str]
+    destination: Path,
+    version: str,
+    stamp: BuildStamp,
+    tools: Path,
+    entrypoints: dict[str, str],
+    product: DistributionIdentity,
+    *,
+    shared: Path | None = None,
 ) -> None:
-    """Render the canonical icon and one PE version resource per native executable."""
-    if not 0 <= number <= 65535:
-        raise ValueError("Windows resource build number must be between 0 and 65535")
+    """Render the icon, one PE version resource per native executable and the process manifests.
+
+    The version resources carry the build identity and go to ``destination``; the icon and
+    manifests carry none and go to ``shared`` (``destination`` when omitted).
+    """
+    shared = destination if shared is None else shared
+    if not 0 <= stamp.build_sequence <= 65535:
+        raise ValueError("Windows resource build sequence must be between 0 and 65535")
+    for image, source in APPLICATION_MANIFESTS.items():
+        authored = source.read_bytes()
+        for build_kind, publisher in (
+            ("release", product.windows_package_publisher),
+            ("development", product.windows_package_development_publisher),
+        ):
+            write_bytes(
+                shared / application_manifest_name(image, build_kind),
+                identity_manifest(
+                    authored,
+                    package_name=product.windows_package_name,
+                    publisher=publisher,
+                    application=product.windows_package_application,
+                ),
+            )
     metadata = json.loads((destination / "build.json").read_text(encoding="utf-8"))
     publisher = _rc_string(metadata["publisher"])
     sys.path.insert(0, str(tools))
     renderer = importlib.import_module("resvg_py")
     png = renderer.svg_to_bytes(
-        svg_path=str(REPO_ROOT / "docs/_static/cadrumo-favicon.svg"), width=256, height=256, skip_system_fonts=True
+        svg_path=str(REPO_ROOT / "docs/_static/cadrumo-icon.svg"), width=256, height=256, skip_system_fonts=True
     )
     with Image.open(io.BytesIO(png)) as icon:
         output = io.BytesIO()
         icon.save(output, format="ICO", sizes=[(s, s) for s in (16, 24, 32, 48, 64, 128, 256)])
-        write_bytes(destination / "cadrumo.ico", output.getvalue())
-    numeric = ",".join([*version.split(".")[:3], str(number)])
-    descriptions = {"interpreter": "CADRUMO controlled Python interpreter"} | {
+        write_bytes(shared / "cadrumo.ico", output.getvalue())
+    numeric = ",".join([*version.split(".")[:3], str(stamp.build_sequence)])
+    descriptions = {"interpreter": "Cadrumo controlled Python interpreter"} | {
         f"entrypoint-{name}": description for name, description in entrypoints.items()
     }
     for stem, description in descriptions.items():
-        resource = _version_resource(destination, numeric, version, number, date, publisher, _rc_string(description))
+        resource = _version_resource(shared, numeric, version, stamp, publisher, _rc_string(description))
         write_text(destination / f"{stem}.rc", resource)
+
+
+def application_manifest_name(image: str, build_kind: str) -> str:
+    """Name the identity-bearing manifest an application image of this build kind embeds."""
+    if image not in APPLICATION_MANIFESTS or build_kind not in {"release", "development"}:
+        raise ValueError(f"Unknown Windows application manifest: {image} {build_kind}")
+    return f"{image}-{build_kind}.manifest"
+
+
+def identity_manifest(authored: bytes, *, package_name: str, publisher: str, application: str) -> bytes:
+    """Add the package identity claim to an authored manifest, keeping every other byte."""
+    closing = b"</assembly>"
+    body = authored.rstrip()
+    if not body.endswith(closing) or authored.count(closing) != 1 or b"urn:schemas-microsoft-com:msix.v1" in authored:
+        raise ValueError("An authored application manifest must end with one </assembly> and claim no identity")
+    newline = b"\r\n" if b"\r\n" in authored else b"\n"
+    claim = (
+        f'  <msix xmlns="urn:schemas-microsoft-com:msix.v1" publisher={quoteattr(publisher)}'
+        f" packageName={quoteattr(package_name)} applicationId={quoteattr(application)} />"
+    ).encode()
+    position = len(body) - len(closing)
+    return authored[:position] + claim + newline + authored[position:]
 
 
 def _rc_string(value: str) -> str:
@@ -203,8 +303,11 @@ def _rc_string(value: str) -> str:
 
 
 def _version_resource(
-    destination: Path, numeric: str, version: str, number: int, date: str, publisher: str, description: str
+    destination: Path, numeric: str, version: str, stamp: BuildStamp, publisher: str, description: str
 ) -> str:
+    """Render one VERSIONINFO; the compiler's ``CADRUMO_BUILD_DEBUG`` selects the build type strings."""
+    release = _rc_string(display_version(version, stamp.build_id, "release"))
+    debug = _rc_string(display_version(version, stamp.build_id, "debug"))
     return f'''#include <winver.h>
 1 ICON "{(destination / "cadrumo.ico").as_posix()}"
 1 VERSIONINFO
@@ -226,9 +329,16 @@ BEGIN
    VALUE "CompanyName", {publisher}
    VALUE "ProductName", "CADRUMO\\0"
    VALUE "FileDescription", {description}
-   VALUE "FileVersion", "{version}.{number}\\0"
+#if CADRUMO_BUILD_DEBUG
+   VALUE "FileVersion", {debug}
+   VALUE "BuildType", "debug\\0"
+#else
+   VALUE "FileVersion", {release}
+   VALUE "BuildType", "release\\0"
+#endif
    VALUE "ProductVersion", "{version}\\0"
-   VALUE "BuildDate", "{date}\\0"
+   VALUE "BuildId", "{stamp.build_id}\\0"
+   VALUE "BuildDate", "{stamp.build_date}\\0"
   END
  END
  BLOCK "VarFileInfo"
@@ -248,8 +358,8 @@ def verify(
     )
 
 
-def analyze_trace(directory: Path) -> None:
+def analyze_trace(directory: Path, build_root: Path) -> None:
     """Check lossless Windows kernel-file events for the scoped process tree."""
     from .windows_trace_analysis import analyze
 
-    analyze(directory)
+    analyze(directory, build_root)

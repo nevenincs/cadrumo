@@ -11,7 +11,7 @@ from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import canonical_json_bytes
-from cadrumo.entrypoints.cli.runtime_modelo_calculation import calculation_snapshot_payload
+from cadrumo.entrypoints.cli.operation_modelo_calculation import calculation_snapshot_payload
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,

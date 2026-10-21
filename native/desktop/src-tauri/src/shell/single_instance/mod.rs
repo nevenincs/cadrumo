@@ -166,7 +166,7 @@ pub fn admit(mode: &Mode) -> Result<Admission> {
 }
 
 fn admit_with(mode: &Mode, family: impl FnOnce() -> Result<String>) -> Result<Admission> {
-    if let Mode::Cli(_) = mode {
+    if matches!(mode, Mode::Cli(_) | Mode::Health { .. }) {
         return Ok(Admission::Headless);
     }
     let admission = claim(&family()?)?;
@@ -264,7 +264,7 @@ pub fn attach<R: Runtime>(window: &Window<R>, diagnostics: Arc<Diagnostics>) {
         .windows
         .first()
         .is_some_and(|config| config.label == window.label());
-    if !main {
+    if !main && window.label() != "startup" {
         return;
     }
     let window = window.clone();
@@ -445,6 +445,7 @@ if (-not $created) { throw "the name already existed" }
 [void][Console]::In.ReadLine()
 $held.Dispose()
 "#;
+        use std::os::windows::process::CommandExt;
         let root = std::env::var_os("SystemRoot").expect("SystemRoot");
         let powershell =
             PathBuf::from(root).join(r"System32\WindowsPowerShell\v1.0\powershell.exe");
@@ -456,6 +457,8 @@ $held.Dispose()
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .stderr(Stdio::inherit())
+                // The squatter never opens a console on the person's screen.
+                .creation_flags(0x0800_0000)
                 .spawn()
                 .unwrap(),
         );
@@ -505,11 +508,16 @@ $held.Dispose()
         });
         let activations = holding.recv().unwrap();
         // The passthrough never resolves the key, so it cannot reach the lock.
-        let headless = admit_with(&Mode::Cli(vec!["--version".into()]), || {
-            panic!("the headless passthrough resolved the lock key")
-        })
-        .unwrap();
-        assert!(matches!(headless, Admission::Headless));
+        for mode in [
+            Mode::Cli(vec!["--version".into()]),
+            Mode::Health { hold_seconds: 0 },
+        ] {
+            let headless = admit_with(&mode, || {
+                panic!("a headless invocation resolved the lock key")
+            })
+            .unwrap();
+            assert!(matches!(headless, Admission::Headless));
+        }
         assert_eq!(activations.load(Ordering::SeqCst), 0);
         // Control: a GUI launch with the same key does contend.
         let gui = admit_with(&Mode::Gui, || Ok(family.clone())).unwrap();
@@ -560,7 +568,8 @@ $held.Dispose()
     }
 
     fn launch(executable: &PathBuf, family: &str, stdin: Stdio) -> std::process::Child {
-        Command::new(executable)
+        let mut command = Command::new(executable);
+        command
             .args([
                 "--exact",
                 "shell::single_instance::tests::helper",
@@ -570,9 +579,11 @@ $held.Dispose()
             .env(FAMILY_VARIABLE, family)
             .stdin(stdin)
             .stdout(Stdio::piped())
-            .stderr(Stdio::inherit())
-            .spawn()
-            .unwrap()
+            .stderr(Stdio::inherit());
+        // The helper instance never opens a console on the person's screen.
+        #[cfg(windows)]
+        std::os::windows::process::CommandExt::creation_flags(&mut command, 0x0800_0000);
+        command.spawn().unwrap()
     }
 
     /// The helper's report on `line`. The test harness may print its own

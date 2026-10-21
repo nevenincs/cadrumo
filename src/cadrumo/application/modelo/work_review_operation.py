@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ..operations.access_resolution import (
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
@@ -21,10 +23,8 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_work_unit_payload, require_operation_profile
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .history_operation import bind_profile_history_ports, read_profile_work_unit
 from .history_ports import ModeloHistoryPortsFactory
@@ -97,11 +97,11 @@ def build_modelo_work_review_definition(factory: ModeloHistoryPortsFactory) -> O
     return build_single_phase_definition(
         definition_id=MODELO_WORK_REVIEW_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkReviewRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field("work_unit_id"),
         result_type=ModeloWorkReviewResult,
         executor_type=ModeloWorkReviewExecutor,
         build=lambda: ModeloWorkReviewExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

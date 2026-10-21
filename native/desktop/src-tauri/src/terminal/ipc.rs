@@ -7,7 +7,7 @@ use cadrumo_application::{
     diagnostics::{Diagnostics, Snapshot},
     error::application::{ErrorCode, Result},
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tauri::{
     Manager, Runtime, State, Webview,
@@ -89,6 +89,25 @@ pub fn frame_sink<R: Runtime>(webview: Webview<R>, frames: Channel) -> Sink {
 
 const OPEN: &str = "terminal_open";
 
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum Target {
+    Terminal(Kind),
+    Setup(SetupTarget),
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SetupTarget {
+    aeat_setup: SetupProfile,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SetupProfile {
+    profile_id: String,
+}
+
 /// `terminal_open{kind, cols, rows, frames}`. Written against the invoke
 /// itself rather than as a command function, because the requesting document
 /// must be read when the request arrives: a command function's body, and
@@ -111,7 +130,7 @@ fn terminal_open<R: Runtime>(invoke: Invoke<R>) -> bool {
         let state: State<'_, Arc<TerminalState>> = CommandArg::from_command(argument("state"))?;
         let state = state.inner().clone();
         let document = state.document();
-        let kind: Kind = CommandArg::from_command(argument("kind"))?;
+        let kind: Target = CommandArg::from_command(argument("kind"))?;
         let cols: u16 = CommandArg::from_command(argument("cols"))?;
         let rows: u16 = CommandArg::from_command(argument("rows"))?;
         let frames: Channel = CommandArg::from_command(argument("frames"))?;
@@ -124,7 +143,16 @@ fn terminal_open<R: Runtime>(invoke: Invoke<R>) -> bool {
                 tauri::async_runtime::spawn_blocking(move || {
                     record(
                         &state.launch.diagnostics,
-                        state.open(kind, cols, rows, sink, document),
+                        match kind {
+                            Target::Terminal(kind) => state.open(kind, cols, rows, sink, document),
+                            Target::Setup(target) => state.open_aeat_setup(
+                                &target.aeat_setup.profile_id,
+                                cols,
+                                rows,
+                                sink,
+                                document,
+                            ),
+                        },
                     )
                 })
                 .await

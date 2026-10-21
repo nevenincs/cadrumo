@@ -108,7 +108,7 @@ def build_m145_communication_service_contract(
         period=requested_token,
     )
     declared_tokens = tuple(
-        str(period).lower() for period in revision.period_selector.periods_for_year(selected_filing_year)
+        period.lower() for period in revision.period_selector.periods_for_year(selected_filing_year)
     )
     if requested_token not in declared_tokens:
         raise ValueError(
@@ -130,13 +130,11 @@ def build_m145_communication_service_contract(
         export_layout_ids=tuple(
             sorted(
                 layout.id
-                for layout in operation.revision_with_export_layouts(
-                    Modelo("145").value, str(revision.id)
-                ).export_layouts
+                for layout in operation.revision_with_export_layouts(Modelo("145").value, revision.id).export_layouts
             )
         ),
-        legal_refs=tuple(sorted(str(ref) for ref in revision.legal_refs)),
-        source_refs=tuple(sorted(str(ref) for ref in revision.source_refs)),
+        legal_refs=tuple(sorted(revision.legal_refs)),
+        source_refs=tuple(sorted(revision.source_refs)),
     )
 
 

@@ -37,10 +37,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 def _definition(policy: StorageRemoteMirrorPolicy) -> SecureObjectNamespaceDefinition:
     """Build a namespace definition carrying ``policy``.
 
-    Built rather than borrowed from the shipped registry on purpose. No
-    namespace ships as ``LOCAL_ONLY``, so reaching that branch by re-labelling
-    a real one would pin the proof to a production declaration somebody may
-    legitimately change. The ciphertext policy additionally requires the two
+    Built rather than borrowed from the shipped registry on purpose. Reaching
+    a branch through a real namespace's declared policy would pin the proof
+    to a production declaration somebody may legitimately change. The ciphertext policy additionally requires the two
     metadata flags, which the definition's own coherence validator enforces.
     """
     requires_metadata = policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA

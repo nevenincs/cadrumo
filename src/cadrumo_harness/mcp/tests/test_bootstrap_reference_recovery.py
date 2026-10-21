@@ -1,4 +1,4 @@
-"""A failed configured reference leaves public MCP open for explicit recovery."""
+"""A key the person configured at launch is the only key the server uses, and a refusal of it is asked again."""
 
 from __future__ import annotations
 
@@ -9,20 +9,20 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessScope,
-    AuthorityState,
-    Availability,
-    ProfileAccessStatus,
-)
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.time.clock import now
-from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_harness.mcp.access_scope import surface_scope
+from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
+
+from .. import runtime_adapter as mcp_runtime
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..server import build_server
+from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -32,7 +32,7 @@ class _AdmittedClient:
 
     def __init__(self, profile_id: UUID) -> None:
         self.profile_id = profile_id
-        self.frontend = OperationFrontendProjection.MCP
+        self.frontend = OperationFrontendProjection.EXTERNAL_CLIENT
         self.session_id = uuid4()
         self.closed = False
         self._status = ProfileAccessStatus(
@@ -49,13 +49,15 @@ class _AdmittedClient:
             automation_custody=Availability.AVAILABLE,
             published_authority=Availability.AVAILABLE,
             provider=Availability.NOT_REQUIRED,
-            effective_scope=AccessScope(
-                operations=frozenset(),
-                actions=frozenset(),
-                disclosures=frozenset(),
-                periods=None,
-                allow_period_independent=True,
-                allow_delegation=False,
+            effective_scope=EffectiveScopeSummary.summarize(
+                AccessScope(
+                    operations=frozenset(),
+                    actions=frozenset(),
+                    disclosures=frozenset(),
+                    periods=None,
+                    allow_period_independent=True,
+                    allow_delegation=False,
+                )
             ),
             denial=None,
         )
@@ -64,51 +66,59 @@ class _AdmittedClient:
         assert not self.closed
         return SimpleNamespace(status=self._status)
 
+    def subscribe_session_retirement(self, receive: object) -> None:
+        """The runtime retires no lease of this double."""
+
+    def subscribe_lifecycle_notices(self, receive: object) -> None:
+        """The runtime sends this double no lifecycle notice."""
+
     def close(self) -> None:
         self.closed = True
 
 
+_REMOVED_TOOLS = frozenset(
+    {"authorization_prepare", "authorization_request", "authorization_poll", "authenticate", "session", "installation"}
+)
+
+
 @pytest.mark.anyio
 @pytest.mark.parametrize("failure", [AutomationCustodyCode.MISSING, AutomationCustodyCode.UNAVAILABLE])
-async def test_failed_configured_reference_preserves_public_tools_and_fences_every_private_route(
+async def test_a_refused_configured_key_fences_every_private_route_and_offers_no_way_to_name_another(
     monkeypatch: pytest.MonkeyPatch, failure: AutomationCustodyCode
 ) -> None:
     profile_id, reference = uuid4(), uuid4()
     calls: list[tuple[UUID, UUID, OperationFrontendProjection]] = []
 
     async def missing(
-        *, profile_id: UUID, credential_reference: UUID, frontend: OperationFrontendProjection
-    ) -> RuntimeFrontendClient:
+        *,
+        profile_id: UUID,
+        credential_reference: UUID,
+        frontend: OperationFrontendProjection,
+        timeout: float,
+        scope: AccessScope,
+    ) -> FrontendClient:
+        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         calls.append((profile_id, credential_reference, frontend))
         raise AutomationCustodyError(failure)
 
     monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", missing)
-    monkeypatch.setattr(mcp_runtime, "authority_query", lambda _args: {"outcome": "published", "report": {}})
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
     try:
         await adapter.bootstrap_reference(reference)
-        assert calls == [(profile_id, reference, OperationFrontendProjection.MCP)]
+        assert calls == [(profile_id, reference, OperationFrontendProjection.EXTERNAL_CLIENT)]
         assert adapter.client is None
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
             names = {tool.name for tool in (await sdk.list_tools()).tools}
-            assert {"status", "authority", "authorization_prepare", "authenticate"} <= names
+            # No tool names, requests or presents a credential: the key comes from the launch configuration.
+            assert "status" in names
+            assert not names & _REMOVED_TOOLS
             status = await sdk.call_tool("status", {})
             assert status.is_error is False
-            assert status.structured_content == {
-                "outcome": "status",
-                "profile_id": str(profile_id),
-                "authenticated": False,
-                "denial": failure.value,
-            }
-            published = await sdk.call_tool("authority", {"query": "modelos"})
-            assert published.is_error is False
-            assert published.structured_content == {"outcome": "published", "report": {}}
-            recovery = await sdk.call_tool("authorization_prepare", {"credential_reference": str(reference)})
-            assert recovery.is_error is True
-            assert recovery.structured_content == {"outcome": "refused", "code": failure.value}
+            assert status.structured_content is not None
+            assert status.structured_content["authenticated"] is False
+            assert status.structured_content["denial"] == failure.value
             for name, args in (
-                ("search", {"query": "auth.local-read"}),
-                ("describe", {"definition_id": "auth.local-read"}),
                 (
                     "execute",
                     {"definition_id": "auth.local-read", "subject_ref": f"profile:{profile_id}", "payload": {}},
@@ -122,62 +132,62 @@ async def test_failed_configured_reference_preserves_public_tools_and_fences_eve
             ):
                 denied = await sdk.call_tool(name, args)
                 assert denied.is_error is True, name
-                assert denied.structured_content == {"outcome": "refused", "code": failure.value}, name
-        assert calls == [
-            (profile_id, reference, OperationFrontendProjection.MCP),
-            (profile_id, reference, OperationFrontendProjection.MCP),
-        ]
+                assert denied.structured_content is not None
+                assert denied.structured_content["code"] == failure.value, name
+            for name in sorted(_REMOVED_TOOLS):
+                absent = await sdk.call_tool(name, {"credential_reference": str(reference)})
+                assert absent.is_error is True, name
+                assert absent.structured_content == {"outcome": "refused", "code": "unknown_tool"}, name
+        # Every call asked the runtime again with the configured key, and with no other.
+        assert len(calls) > 1
+        assert {call[1] for call in calls} == {reference}
     finally:
         await adapter.close()
 
 
 @pytest.mark.anyio
-async def test_explicit_successful_authentication_clears_failed_bootstrap_status_only_after_exact_admission(
+async def test_a_configured_key_the_runtime_refused_admits_the_server_once_the_runtime_admits_it(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    profile_id, configured_reference, replacement_reference = uuid4(), uuid4(), uuid4()
+    profile_id, reference = uuid4(), uuid4()
     candidate = _AdmittedClient(profile_id)
     opened: list[UUID] = []
 
     async def open_candidate(
-        *, profile_id: UUID, credential_reference: UUID, frontend: OperationFrontendProjection
-    ) -> RuntimeFrontendClient:
+        *,
+        profile_id: UUID,
+        credential_reference: UUID,
+        frontend: OperationFrontendProjection,
+        timeout: float,
+        scope: AccessScope,
+    ) -> FrontendClient:
+        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         assert profile_id == candidate.profile_id
-        assert frontend is OperationFrontendProjection.MCP
+        assert frontend is OperationFrontendProjection.EXTERNAL_CLIENT
+        assert credential_reference == reference
         opened.append(credential_reference)
-        if credential_reference == configured_reference:
-            raise AutomationCustodyError(AutomationCustodyCode.MISSING)
-        assert credential_reference == replacement_reference
-        return cast(RuntimeFrontendClient, candidate)
+        if len(opened) == 1:
+            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+        return cast(FrontendClient, candidate)
 
     monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", open_candidate)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
     try:
-        await adapter.bootstrap_reference(configured_reference)
+        await adapter.bootstrap_reference(reference)
+        assert adapter.client is None
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
-            failed_again = await sdk.call_tool("authenticate", {"credential_reference": str(configured_reference)})
-            assert failed_again.is_error is True
-            assert failed_again.structured_content == {"outcome": "refused", "code": "missing"}
-            stale = await sdk.call_tool("status", {})
-            assert stale.structured_content == {
-                "outcome": "status",
-                "profile_id": str(profile_id),
-                "authenticated": False,
-                "denial": "missing",
-            }
-            recovered = await sdk.call_tool("authenticate", {"credential_reference": str(replacement_reference)})
-            assert recovered.is_error is False
-            assert recovered.structured_content == {
-                "outcome": "authenticated",
-                "status": candidate.status().status.model_dump(mode="json"),
-            }
             current = await sdk.call_tool("status", {})
             assert current.is_error is False
             assert current.structured_content == {
                 "outcome": "status",
+                "authenticated": True,
+                "grant_required": True,
+                "session": "key",
+                "surface": "full",
                 "status": candidate.status().status.model_dump(mode="json"),
             }
-        assert opened == [configured_reference, configured_reference, replacement_reference]
+        assert opened == [reference, reference]
+        assert adapter.client is candidate
     finally:
         await adapter.close()
-    assert candidate.closed

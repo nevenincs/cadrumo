@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#gate-integrity-adjudication'
 date: '2026-09-03'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:b4bff0e304d1c7ed98164bb21a47299f0cc17005e6dc6e28645f3b2c6536da17'
+body_hash: 'sha256:7928dfc3e85f5e3a12e1a3da87d1295e5544eeabc191620eb69d34a8d4cd8122'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
@@ -166,3 +166,7 @@ gain and a risk: a broad or careless frozen prefix now defers more than its own 
 The two teeth bound it -- no importers at all, or any importer outside the deferred set,
 keeps a module red -- and both are exercised against a planted tree in the same suite as
 the positive path.
+
+### Amendment 2026-10-14: runtime-host source ownership
+
+The TUI cluster referenced above has since moved to `src/cadrumo_runtime/host/frontend/tui/` (`cadrumo_runtime.host.frontend.tui`), and its canonical launch is `cadrumo-runtime tui`. The earlier references to `cadrumo.entrypoints.tui` and its navigation module remain historical context for the gate decision and are superseded for current physical ownership, dependency direction, and launch. `cadrumo` tax modules do not import `cadrumo_runtime`.

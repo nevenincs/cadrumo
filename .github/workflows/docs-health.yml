@@ -26,14 +26,6 @@ jobs:
         uses: taiki-e/install-action@6012bba2f8e3e666a2b212f8823c06831704ce92 # just
         with:
           tool: just@1.38.0
-      - name: Bind monitoring tool storage
-        shell: bash
-        run: |
-          set -euo pipefail
-          for name in UV_CACHE_DIR UV_PYTHON_INSTALL_DIR UV_TOOL_DIR UV_TOOL_BIN_DIR PYTHONPYCACHEPREFIX XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME; do
-            value="$(just --evaluate "$name")"
-            printf '%s=%s\n' "$name" "$value" >> "$GITHUB_ENV"
-          done
       - name: Provision the monitoring runtime
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:

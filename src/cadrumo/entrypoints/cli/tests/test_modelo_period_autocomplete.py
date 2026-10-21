@@ -97,8 +97,9 @@ class TestDeclaredPeriodTokensAutocomplete:
             if record.levelno == logging.DEBUG and "_declared_period_tokens" in record.message
         ]
         assert len(debug_records) == 1, [record.message for record in caplog.records]
-        assert debug_records[0].exc_info is not None
-        assert debug_records[0].exc_info[0] is RuntimeError
+        exc_info = debug_records[0].exc_info
+        assert isinstance(exc_info, tuple), exc_info
+        assert exc_info[0] is RuntimeError
 
     def test_cadrumo_error_subtype_is_swallowed_not_propagated(self) -> None:
         """Any CadrumoError subclass raised by the authority is caught and swallowed.

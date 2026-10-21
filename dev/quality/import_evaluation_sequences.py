@@ -49,7 +49,7 @@ def sequence_name_nodes(
     if key in resolving:
         return None
     assignments = self.latest_values(node.id, lineno, scope)
-    if not assignments:
+    if not (assignments is not None and assignments):
         return None
     resolving.add(key)
     sequences: list[ast.AST] = []

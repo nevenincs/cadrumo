@@ -5,6 +5,8 @@ from __future__ import annotations
 from decimal import Decimal
 from functools import partial
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import override_settings
 from ...core.operations import profile_operation_subject
@@ -12,7 +14,6 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.read_capture import capture_read_result
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .operator import project_review_item, project_review_queue
 from .read_contracts import (

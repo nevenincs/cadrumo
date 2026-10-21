@@ -7,8 +7,8 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-research]]"
 supersedes:
   - '2026-07-12-cadrumo-product-rename-adr'
-modified: '2026-10-03'
-body_hash: 'sha256:076f651f9641a6b288ae31ebd737abe03e58abc554ea3cc2a211dd45c49e59de'
+modified: '2026-10-17'
+body_hash: 'sha256:bbff499ab74611522143668c2de809db31d29379bf6e054f7709845497ef4169'
 ---
 # `cadrumo-cli-executable` adr: `CADRUMO product identity with aeat CLI executable` | (**status:** `accepted`)
 
@@ -34,8 +34,9 @@ contracts.
 An executable name and a Python import root are independent interfaces. The
 approved executable is exactly `aeat`; the approved Python root is exactly
 `cadrumo`. The command must invoke the CADRUMO implementation directly. No
-second executable name, import fallback, wrapper package, or compatibility
-claim is permitted.
+second human tax CLI alias, import fallback, wrapper package, or compatibility
+claim is permitted. The separate agent service and MCP entrypoints are distinct
+products, not alternative human tax CLI names.
 
 The parent rename research remains applicable to the package move, generated
 artifacts, release naming, state boundary, and authority-owned terminology. This
@@ -61,7 +62,7 @@ is exactly `CADRUMO`, and the sole human CLI executable is exactly `aeat`.
 The complete canonical identity matrix is:
 
 - product display name: `CADRUMO`;
-- Python package and root distribution: `cadrumo`;
+- tax Python package and root distribution: `cadrumo`;
 - owner-qualified repository slug: `nevenincs/cadrumo`;
 - sole human command-line executable: `aeat`;
 - MCP server identifier, tool prefix, and resource URI scheme: `cadrumo`;
@@ -101,8 +102,9 @@ supersedes the prior rename ADR as its active source of naming authority.
 Keep exactly one human CLI console-script declaration named `aeat`, pointed
 directly at the CADRUMO CLI entry callable, and retain the distinct MCP
 console-script declaration named `cadrumo-mcp`, pointed at the CADRUMO MCP
-entry callable. Keep all CADRUMO application code and Python imports under the
-`cadrumo` root; remove or correct stale checks that demand an `aeat` import
+entry callable in `cadrumo_harness`. Keep deterministic tax/profile application code and imports under the
+`cadrumo` root; agent-service implementation belongs to the sibling
+`cadrumo_agent_service`, and MCP implementation to `cadrumo_harness`; remove or correct stale checks that demand an `aeat` import
 package instead of adding a shim.
 
 Project the same distinction into command help, user documentation, packaging
@@ -168,3 +170,11 @@ script `cadrumo-mcp`; Python import root `cadrumo`; PyPI distributions
 `nevenincs/cadrumo`; product env-var prefix `CADRUMO_*`; authority-owned
 vocabulary (`AEAT_CERTIFICATE_*`, `AEAT_BROWSER_*`, modelo/casilla domain
 terms) stays `AEAT`/Spanish per the Spanish-stem rule.
+
+## Boundary amendment 2026-10-14
+
+Authorized by the user's explicit deletion/migration instruction. `aeat` remains the sole human tax/profile CLI, directly bound to `cadrumo`; it has no agent/provider/attendance verbs. Agent management belongs to `cadrumo_agent_service`; generic runtime/login/custody/session authority belongs to `cadrumo_runtime`, shared client contracts to `cadrumo_client`; MCP belongs to `cadrumo_harness` and retains `cadrumo-mcp`. Former Implementation wording put all application Python under `cadrumo`; that ownership premise is replaced without relaxing naming or no-shim constraints. Original dates, acceptance and reconfirmation above remain history.
+
+## Application identity amendment 2026-10-16
+
+Authorized by the user's explicit ruling that the application is named `Cadrumo`, capital C followed by lowercase. Every name the operating system shows for the native application uses `Cadrumo`: the distribution identity name projected into the build (window title, Tauri product name, installer and Start menu names, manager name such as `Cadrumo Background Services`), and the Windows version-resource descriptions of the packaged executables and the controlled interpreter (`dev/packaging/native/identity.py`, `native/package-layout.json`, `dev/packaging/native/platforms/windows.py`). `PRODUCT_IDENTITY.display_name` stays `CADRUMO` for the CLI, documentation site and locale identity tokens until a separate ruling extends this amendment. The other tuple elements are unchanged.

@@ -120,7 +120,7 @@ def append_required_casilla_findings(
                 "modelo": str(work_unit.modelo),
                 "year": work_unit.filing_year,
                 "period": work_unit.period.registry_token,
-                "casilla_id": str(casilla.id),
+                "casilla_id": casilla.id,
             },
             provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
         )
@@ -147,7 +147,7 @@ def detail_row_template_casilla_is_satisfied(
     """
     if not casilla.section:
         return False
-    section = str(casilla.section[0])
+    section = casilla.section[0]
     if str(work_unit.modelo) != Modelo("349").value:
         return casilla.id in row_field_template_records_by_casilla(revision)
     if section == "operador":
@@ -173,8 +173,8 @@ def missing_required_casilla_finding(
         raise ModeloValidationError(
             f"missing-required finding for casilla {casilla_id!r} requires registry casilla definition provenance",
         )
-    legal_refs: tuple[str, ...] = tuple(str(r) for r in casilla_def.legal_refs)
-    source_refs: tuple[str, ...] = tuple(str(r) for r in casilla_def.source_refs)
+    legal_refs: tuple[str, ...] = tuple(casilla_def.legal_refs)
+    source_refs: tuple[str, ...] = tuple(casilla_def.source_refs)
     if not legal_refs or not source_refs:
         raise ModeloValidationError(
             f"missing-required finding for casilla {casilla_id!r} requires legal_refs/source_refs provenance",
@@ -184,7 +184,7 @@ def missing_required_casilla_finding(
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         casilla_id=casilla_id,
         message_locale_key="application.modelo.findings.missing_required_casilla",
-        message_facts={"casilla_id": str(casilla_id)},
+        message_facts={"casilla_id": casilla_id},
         legal_refs=legal_refs,
         source_refs=source_refs,
     )

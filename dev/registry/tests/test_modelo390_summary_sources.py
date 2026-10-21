@@ -36,14 +36,15 @@ def test_printed_summary_and_filing_ignore_obsolete_manual_amounts(year, amount)
     fields = tuple(f for f in record.fields if f.offset in offsets)
     assert len(fields) == 10
     assert all(f.kind is CasillaFieldKind.CASILLA and f.casilla_id is not None for f in fields)
+    historical = demonstration_snapshot(DemoCase("390", "2022", None, None, filing_year=2022, period="0A"))
     old_bindings = tuple(
         b
-        for b in revision.bindings
+        for b in historical.revision.bindings
         if isinstance(b.provider, ManualInputProvider)
         and b.provider.record == "page_5"
         and b.provider.offset in offsets
     )
-    assert len(old_bindings) == 9
+    assert len(old_bindings) == 9, [(binding.id, binding.provider) for binding in old_bindings]
     values = {f.casilla_id: amount for f in fields if f.casilla_id is not None}
     layout = plan_layout(revision)
     assert not {b.id for b in old_bindings}.intersection(layout.binding_cells)

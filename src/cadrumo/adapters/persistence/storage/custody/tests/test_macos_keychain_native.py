@@ -31,11 +31,8 @@ from cadrumo.adapters.persistence.storage.custody.automation_native_identity imp
     WRAP_NAMESPACE,
 )
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    NativeSecretBackend,
-)
+from cadrumo.application.user_profile.automation_custody_port import NativeSecretBackend
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 from .. import macos_keychain_contracts, macos_keychain_policy, macos_login_keychain
 
@@ -52,7 +49,8 @@ import json
 import secrets
 import sys
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError, NativeSecretBackend
+from cadrumo.application.user_profile.automation_custody_port import NativeSecretBackend
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 
 expected = bytearray(sys.stdin.buffer.read(2561))
 result = {"result": "refused"}

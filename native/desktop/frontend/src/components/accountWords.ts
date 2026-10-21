@@ -6,7 +6,7 @@ import type { AccountPhase } from "../shell/signIn";
 // hot update and not a reload.
 
 /** How each phase that withholds the TUI is said: in the TUI pane, in its
- * header, in the calendar, in the dialog and in settings. */
+ * header, in the calendar, in the dialog and in the account menu. */
 export const GATES: Partial<
   Record<AccountPhase, { icon: IconName; title: string; lead: string | null }>
 > = {
@@ -34,6 +34,5 @@ export function accountLabel(phase: AccountPhase): string | null {
   if (phase === "checking") return "desktop.signin.checking";
   if (phase === "starting") return "desktop.signin.starting_services";
   if (phase === "signed-in") return "desktop.account.signed_in";
-  if (phase === "in-tui") return "desktop.account.in_tui";
   return GATES[phase]?.title ?? null;
 }

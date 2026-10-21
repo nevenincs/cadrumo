@@ -30,7 +30,7 @@ from dev._paths import REPO_ROOT
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _CONTROLLER: Final[Path] = REPO_ROOT / "src/cadrumo/entrypoints/tui/ledger/controller.py"
-_LAUNCHER: Final[Path] = REPO_ROOT / "src/cadrumo/entrypoints/tui/runtime_workbench.py"
+_LAUNCHER: Final[Path] = REPO_ROOT / "src/cadrumo_runtime/host/frontend/tui/runtime_workbench.py"
 _FACTORY: Final = "ledger_screen_factory"
 
 
@@ -70,7 +70,7 @@ def supplied_fields(source: str, factory: str = _FACTORY) -> frozenset[str]:
     supplied: set[str] = set()
     for node in ast.walk(ast.parse(source)):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == factory:
-            supplied.update(kw.arg for kw in node.keywords if kw.arg)
+            supplied.update(kw.arg for kw in node.keywords if (kw.arg is not None and kw.arg))
     return frozenset(supplied)
 
 

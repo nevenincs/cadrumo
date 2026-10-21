@@ -55,7 +55,7 @@ ACQUISITION_ORIGINS = frozenset({FieldOrigin.TEXT_LAYER, FieldOrigin.VISION})
 """The origins stage S1 can actually produce.
 
 Derived from the closed core taxonomy rather than restated as strings, so a new
-:class:`~cadrumo.core.FieldOrigin` member cannot silently become an acquisition
+:class:`~cadrumo.core.field_origin.FieldOrigin` member cannot silently become an acquisition
 origin. ``EXACT_STRUCTURED`` values come from a machine-readable record that
 needs no transcription at all, ``TABULAR_MAPPED`` from a column-role mapping,
 and ``OPERATOR`` from a human at the confirm boundary -- none of the three

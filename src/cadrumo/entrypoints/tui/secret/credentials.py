@@ -24,7 +24,7 @@ inject rather than import.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import replace
 from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast
@@ -113,10 +113,15 @@ class CredentialScreen[OutcomeT](TypedAppAccess, Screen[OutcomeT | None]):
         super().__init__()
         self.outcome: OutcomeT | None = None
         self.error: BaseException | None = None
+        self._last_strength_assessment: ProfilePasswordAssessment | None = None
         self._attempt: Worker[CredentialAttempt[OutcomeT]] | None = None
 
     @on(events.Mount)
     def _describe_appearance_on_mount(self) -> None:
+        self.describe_appearance_key()
+
+    async def refresh_language(self) -> None:
+        """Reword labels only; never copy or repopulate credential inputs."""
         self.describe_appearance_key()
 
     def describe_appearance_key(self) -> None:
@@ -128,7 +133,7 @@ class CredentialScreen[OutcomeT](TypedAppAccess, Screen[OutcomeT | None]):
         by a screen that changes its own language.
         """
         bindings = self._bindings.key_to_bindings.get("f3")
-        if not bindings:
+        if not (bindings is not None and bindings):
             return
         label = tr("tui.root.account.appearance", locale=self.output_locale())
         self._bindings.key_to_bindings["f3"] = [replace(binding, description=label, show=True) for binding in bindings]
@@ -145,14 +150,16 @@ class CredentialScreen[OutcomeT](TypedAppAccess, Screen[OutcomeT | None]):
         line = self.query_one("#strength-line", Static)
         line.remove_class("strength-refused", "strength-weak", "strength-fair", "strength-strong")
         if not candidate:
+            self._last_strength_assessment = None
             line.update("")
             return
         assessment = assess(candidate)
+        self._last_strength_assessment = assessment
         line.add_class(assessment_css_class(assessment))
         line.update(assessment_copy(assessment, locale=locale))
 
     @contextmanager
-    def credential_panel(self, *, panel_id: str) -> Iterator[None]:
+    def credential_panel(self, *, panel_id: str) -> Generator[None]:
         """Compose the shared scrollable column that contains one credential form.
 
         The caller owns its banner, status bar, fields, actions, and footer.

@@ -87,11 +87,8 @@ from ...core.type_guards import is_object_mapping
 from ..calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 from ..calculations.registry.nif_iva_catalogue import resolve_nif_iva_catalogue
 from . import country_vocabulary as _country_vocabulary
-from .classification import (
-    IvaTerritorialScope,
-    require_iva_territorial_scope,
-    territorial_scope_alias,
-)
+from .classification import require_iva_territorial_scope, territorial_scope_alias
+from .schema import IvaTerritorialScope
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation

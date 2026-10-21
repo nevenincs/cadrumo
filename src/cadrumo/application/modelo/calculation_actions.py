@@ -690,7 +690,7 @@ def _capture_calculation_rendering(
     snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOperation
 ) -> CalculationRenderingSnapshot:
     """Join the separately published form under the actual calculation's leased pin."""
-    layout = operation.form_layout(str(snapshot.modelo.id), str(snapshot.revision.id))
+    layout = operation.form_layout(snapshot.modelo.id, snapshot.revision.id)
     if layout is not None:
         snapshot = snapshot.model_copy(
             update={"revision": snapshot.revision.model_copy(update={"form_layouts": (layout,)})}
@@ -1000,8 +1000,8 @@ def resolve_bucket_source_mesh(
                     iva_history_repository=ports.iva_compensation_history_repository,
                     profile_read_ports=profile_read_ports,
                     excluded_binding_ids=iva_wallet_owned_binding_ids_for_revision(
-                        modelo_id=str(snapshot.modelo.id),
-                        revision_id=str(snapshot.revision.id),
+                        modelo_id=snapshot.modelo.id,
+                        revision_id=snapshot.revision.id,
                     ),
                     operation=ports.operation,
                 )
@@ -1687,7 +1687,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         + profile_text_diagnostics
     )
     # Held for the editor form until the next calculation of this declaration; only the blocking ones persist.
-    CALCULATION_NOTES.record(str(revision.work_unit_id), str(revision.calculation_revision_id), source_diagnostics)
+    CALCULATION_NOTES.record(revision.work_unit_id, revision.calculation_revision_id, source_diagnostics)
     return BucketAggregationCalculationResult(
         revision=revision,
         profile=preparation.profile,
@@ -1793,7 +1793,7 @@ def _unrouted_source_issues(
         binding_source = durable_binding_source(diagnostic)
         if reason in _BINDING_SOURCE_KEYED_REASONS and binding_source is None:
             continue
-        casilla_id = None if diagnostic.casilla_id is None else str(diagnostic.casilla_id)
+        casilla_id = None if diagnostic.casilla_id is None else diagnostic.casilla_id
         if reason in PRINTED_BOX_REASONS and not boxes.prints(casilla_id):
             continue
         issues.append(
@@ -1943,8 +1943,8 @@ def _iva_wallet_source_ids(snapshot: RegistrySnapshot) -> frozenset[BindingId]:
     identity rather than a binding id paired with a separate relation id.
     """
     return iva_wallet_owned_binding_ids_for_revision(
-        modelo_id=str(snapshot.modelo.id),
-        revision_id=str(snapshot.revision.id),
+        modelo_id=snapshot.modelo.id,
+        revision_id=snapshot.revision.id,
     )
 
 

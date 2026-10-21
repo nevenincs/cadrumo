@@ -48,7 +48,7 @@ def _bulk_classification_output(
     result: BulkClassifyResult,
 ) -> tuple[OutputSchema, list[str], list[Notice]]:
     """Build the canonical bulk payload, text lines, and all-failed warning."""
-    from ._ledger_payloads import LedgerClassifyBulkResult
+    from .ledger_results import LedgerClassifyBulkResult
 
     lines = [
         tr(
@@ -98,7 +98,7 @@ def ledger_classify_bulk_csv(
     actor: str | None,
 ) -> None:
     _validate_bulk_classification_route(transaction_id, classification)
-    from .runtime_ledger_bulk_classify import run_ledger_bulk_classify
+    from .operation_ledger_bulk_classify import run_ledger_bulk_classify
 
     projection = run_ledger_bulk_classify(
         ctx,
@@ -115,9 +115,9 @@ def ledger_classify_bulk_csv(
         )
     result = projection.result
     if result is None:
-        from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+        from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise RefusalError(RefusalCode.INVALID_FRAME)
     classify_result, lines, notices = _bulk_classification_output(result)
     emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
     if notices:

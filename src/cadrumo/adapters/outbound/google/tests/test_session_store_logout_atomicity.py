@@ -37,7 +37,7 @@ from . import session_records as google_session_records
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _BUCKET_ID = "80cc197a-74fe-4984-93cd-471aa29411ef"  # was 'google-logout-atomicity'
-_PROFILE = "operator-google"
+_PROFILE = _BUCKET_ID
 _ISSUED_AT = datetime(2026, 5, 26, 9, 0, 0, tzinfo=UTC)
 #: A namespace no registry declares. Every write and deletion path validates
 #: its namespace against the registry, so this is the one rejection reachable
@@ -98,7 +98,7 @@ def test_a_rejected_batch_removes_neither_row(tmp_path: Path) -> None:
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _seed()
-        repository = session_store._repository()
+        repository = session_store._repository(_PROFILE)
         digest = secure_object_key_digest(_PROFILE)
 
         with pytest.raises(StorageValidationError):
@@ -125,7 +125,7 @@ def test_the_sequential_deletes_it_replaced_would_have_removed_the_first(tmp_pat
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _seed()
-        repository = session_store._repository()
+        repository = session_store._repository(_PROFILE)
 
         removed_first = repository.delete(session_store._NAMESPACE_TOKEN, _PROFILE)
         with pytest.raises(StorageValidationError):

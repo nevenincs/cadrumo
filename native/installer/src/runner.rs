@@ -6,7 +6,7 @@ use crate::{
 use cadrumo_application::{
     error::Error,
     installation::{
-        DiscoveryContract,
+        CandidateRejection, DiscoveryContract,
         maintenance::{Identity, NativeOwner, NativeProductInventory, RegistrationPhase, Store},
         version,
     },
@@ -22,11 +22,15 @@ use std::{
 const PLAN_LIMIT: u64 = 64 * 1024;
 const ARTIFACT_LIMIT: u64 = 16 * 1024 * 1024 * 1024;
 
+mod already_installed;
+pub mod bootstrap;
+mod phase;
 mod recovery;
 mod removal;
+mod rollback_candidate;
 pub use removal::{remove_version, unregister};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 struct Artifact {
     path: PathBuf,
@@ -34,7 +38,7 @@ struct Artifact {
     product_code: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 struct Plan {
     schema: u32,
@@ -52,6 +56,7 @@ struct Plan {
 #[serde(rename_all = "snake_case")]
 pub enum Outcome {
     Published,
+    AlreadyPublishedVerified,
     Removed,
     Unregistered,
     Refused,
@@ -66,13 +71,32 @@ pub struct MaintenanceResult {
     schema: u32,
     outcome: Outcome,
     code: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    cause: Option<&'static str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    candidate_rejection: Option<CandidateRejection>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    service_restore: Option<&'static str>,
 }
 impl MaintenanceResult {
+    fn restore_services(mut self, held: &mut [crate::registration::service::RestartGuard]) -> Self {
+        for guard in held {
+            if guard.restore().is_err() {
+                self.service_restore = Some("native_service_restart_failed");
+            }
+        }
+        self
+    }
+
     pub fn succeeded(&self) -> bool {
-        matches!(
-            self.outcome,
-            Outcome::Published | Outcome::Removed | Outcome::Unregistered
-        )
+        self.service_restore.is_none()
+            && matches!(
+                self.outcome,
+                Outcome::Published
+                    | Outcome::AlreadyPublishedVerified
+                    | Outcome::Removed
+                    | Outcome::Unregistered
+            )
     }
 }
 
@@ -81,6 +105,9 @@ fn report(outcome: Outcome, code: &'static str) -> MaintenanceResult {
         schema: 1,
         outcome,
         code,
+        cause: None,
+        candidate_rejection: None,
+        service_restore: None,
     }
 }
 
@@ -93,7 +120,11 @@ fn read_plan(path: &Path) -> Result<Plan, Error> {
     }
     let plan: Plan = serde_json::from_slice(&bytes)?;
     version(&plan.version)?;
-    if plan.schema != 1
+    if !matches!(plan.schema, 1 | 2)
+        || (plan.schema == 2
+            && (plan.version_product.path != plan.registration_product.path
+                || plan.version_product.sha256 != plan.registration_product.sha256
+                || plan.version_product.product_code != plan.registration_product.product_code))
         || plan.contract.layout.platform != "windows-x64"
         || plan.contract.layout.installation.publication.is_none()
         || !plan.prefix.is_absolute()
@@ -163,7 +194,18 @@ fn existing_native_registration(
                 "native family belongs to another prefix or context".into(),
             ));
         }
-        if family == admission.permitted_families[1] && registration.replace(owner).is_some() {
+        let owner = if plan.schema == 2 {
+            let owner = owner.with_feature(
+                cadrumo_application::installation::maintenance::NativeFeature::Registration,
+            );
+            if MsiInventory.locate(&owner)?.is_none() {
+                continue;
+            }
+            owner
+        } else {
+            owner
+        };
+        if family == admission.family(1) && registration.replace(owner).is_some() {
             return Err(Error::Integrity(
                 "multiple native registration owners".into(),
             ));
@@ -205,22 +247,30 @@ fn previous_registration(
     let anchor = snapshot
         .manager_anchor()
         .ok_or_else(|| Error::Integrity("registration has no manager anchor".into()))?;
+    if plan.schema == 2 && version(&plan.version)? < version(anchor)? {
+        return Err(Error::Incompatible(
+            "shared registration cannot be downgraded".into(),
+        ));
+    }
     let product = snapshot
         .versions()
         .find(|(release, _)| *release == anchor)
         .map(|(_, product)| product)
         .ok_or_else(|| Error::Integrity("registration anchor has no product".into()))?;
-    if definition.family != admission.permitted_families[1]
+    if definition.family != admission.family(1)
         || definition.version != anchor
         || definition.ownership.version != anchor
-        || definition.ownership.role != "registration"
-        || metadata.role != crate::owner::Role::Registration
+        || definition.ownership.role
+            != if plan.schema == 2 {
+                "application"
+            } else {
+                "registration"
+            }
         || definition.ownership.manifest_sha256 != product.manifest_sha256
         || definition.ownership.application_id != plan.contract.installation_identity.application_id
         || definition.ownership.channel != plan.contract.installation_identity.channel
         || definition.ownership.platform != plan.contract.layout.platform
-        || metadata.schema != 2
-        || metadata.scope != plan.scope
+        || !metadata.admits_role(plan.scope, crate::owner::Role::Registration)
         || metadata.product_code != definition.code
         || metadata.identity.application_id != definition.ownership.application_id
         || metadata.identity.channel != definition.ownership.channel
@@ -318,7 +368,8 @@ fn artifact(
     if Sha256Digest::new(format!("{:x}", digest.finalize()))? != artifact.sha256 {
         return Err(Error::Integrity("native MSI artifact hash changed".into()));
     }
-    let definition = windows::product_definition(&artifact.path).map_err(native_error)?;
+    let definition =
+        windows::product_definition_for_scope(&artifact.path, plan.scope).map_err(native_error)?;
     let family_index = match role {
         "version" => 0,
         "registration" => 1,
@@ -328,10 +379,16 @@ fn artifact(
         .owner
         .as_ref()
         .ok_or_else(|| Error::Integrity("MSI has no authenticated native owner".into()))?;
-    if owner.schema != 2
-        || owner.scope != plan.scope
+    let native_role = if role == "version" {
+        crate::owner::Role::Version
+    } else {
+        crate::owner::Role::Registration
+    };
+    if !owner.admits_role(plan.scope, native_role)
+        || (plan.schema == 2
+            && (!owner.admits_role(plan.scope, crate::owner::Role::Version)
+                || !owner.admits_role(plan.scope, crate::owner::Role::Registration)))
         || owner.product_code != definition.code
-        || owner.role.as_str() != role
         || &owner.runner_sha256 != runner
         || Some(&owner.publication) != plan.contract.layout.installation.publication.as_ref()
         || owner.identity.application_id != plan.contract.installation_identity.application_id
@@ -348,15 +405,20 @@ fn artifact(
         || definition.admission.scope != plan.scope
         || definition.ownership
             != (windows::PackageOwnership {
-                schema: 1,
+                schema: if plan.schema == 2 { 2 } else { 1 },
                 application_id: plan.contract.installation_identity.application_id.clone(),
                 channel: plan.contract.installation_identity.channel.clone(),
                 platform: plan.contract.layout.platform.clone(),
                 version: plan.version.clone(),
-                role: role.into(),
+                role: if plan.schema == 2 {
+                    "application"
+                } else {
+                    role
+                }
+                .into(),
                 manifest_sha256: plan.manifest_sha256.clone(),
             })
-        || definition.family != definition.admission.permitted_families[family_index]
+        || definition.family != definition.admission.family(family_index)
     {
         return Err(Error::Integrity(
             "native MSI identity differs from maintenance plan".into(),
@@ -368,6 +430,7 @@ fn artifact(
 /// A successful native commit is irreversible; any later publication failure is
 /// reported as committed-but-pending and never represented as a native rollback.
 pub fn install(path: &Path) -> MaintenanceResult {
+    let phase_started = std::time::Instant::now();
     let plan = match read_plan(path) {
         Ok(plan) => plan,
         Err(_) => return report(Outcome::Refused, "invalid_plan"),
@@ -379,26 +442,40 @@ pub fn install(path: &Path) -> MaintenanceResult {
     let prepared = (|| -> Result<_, Error> {
         let runner = runner_digest()?;
         let (admission, version_file) = artifact(&plan.version_product, &plan, "version", &runner)?;
-        let (registration, registration_file) =
-            artifact(&plan.registration_product, &plan, "registration", &runner)?;
+        let (registration, registration_file) = if plan.schema == 2 {
+            (admission.clone(), None)
+        } else {
+            let (registration, custody) =
+                artifact(&plan.registration_product, &plan, "registration", &runner)?;
+            (registration, Some(custody))
+        };
         if admission.permitted_families != registration.permitted_families
             || admission.conflicting_families != registration.conflicting_families
-            || plan.version_product.product_code == plan.registration_product.product_code
+            || ((plan.version_product.product_code == plan.registration_product.product_code)
+                != (plan.schema == 2))
         {
             return Err(Error::Integrity(
                 "MSI roles have inconsistent ownership".into(),
             ));
         }
-        let owner = NativeOwner::new(
+        let mut owner = NativeOwner::new(
             plan.version_product.product_code.clone(),
             context.clone(),
             plan.prefix.clone(),
         )?;
-        let registration_owner = NativeOwner::new(
+        let mut registration_owner = NativeOwner::new(
             plan.registration_product.product_code.clone(),
             context,
             plan.prefix.clone(),
         )?;
+        if plan.schema == 2 {
+            owner = owner.with_feature(
+                cadrumo_application::installation::maintenance::NativeFeature::Version,
+            );
+            registration_owner = registration_owner.with_feature(
+                cadrumo_application::installation::maintenance::NativeFeature::Registration,
+            );
+        }
         let publication = plan
             .contract
             .layout
@@ -429,13 +506,45 @@ pub fn install(path: &Path) -> MaintenanceResult {
             Ok(value) => value,
             Err(_) => return report(Outcome::Refused, "artifact_or_owner_refused"),
         };
-    // Native lifecycle protections must pass disposable-host acceptance before
-    // the unconditional MSI Launch gate can open. Refuse before creating state
-    // or starting a native transaction; implemented source is not that evidence.
+    let mut admitted_artifacts = vec![(&plan.version_product, &_version_file)];
+    if let Some(custody) = &_registration_file {
+        admitted_artifacts.push((&plan.registration_product, custody));
+    }
+    for (artifact, custody) in admitted_artifacts {
+        if let Err(refusal) = windows::verify_installation_destinations_for_scope(
+            &artifact.path,
+            &plan.prefix,
+            custody,
+            plan.scope,
+        ) {
+            return report(
+                Outcome::Refused,
+                match refusal {
+                    windows::DestinationRefusal::Inventory => {
+                        "installation_destination_inventory_refused"
+                    }
+                    windows::DestinationRefusal::TooLong => "installation_destination_too_long",
+                },
+            );
+        }
+    }
+    // Legacy/unowned products remain unconditionally blocked. New owned products
+    // require native scope and owner authentication before any file changes.
+    // This does not establish signing or disposable-host release acceptance.
     if windows::standalone_gate_present(&plan.version_product.path).unwrap_or(true)
         || windows::standalone_gate_present(&plan.registration_product.path).unwrap_or(true)
     {
         return report(Outcome::Refused, "native_owner_protocol_not_admitted");
+    }
+    match already_installed::verify(&plan, &admission, &owner, &registration_owner, &store) {
+        Ok(Some(_verified)) => {
+            return report(
+                Outcome::AlreadyPublishedVerified,
+                "already_published_verified",
+            );
+        }
+        Ok(None) => {}
+        Err(_) => return report(Outcome::Refused, "existing_registration_not_verified"),
     }
     let transaction = match Transaction::begin(&plan.contract.installation_identity.application_id)
     {
@@ -518,6 +627,7 @@ pub fn install(path: &Path) -> MaintenanceResult {
         Ok(guards) => guards,
         Err(_) => return rollback(transaction, "native_preparation_refused"),
     };
+    let mut service_restart = Vec::new();
     let broker = match crate::owner::Broker::bind(
         owner.context().clone(),
         transaction.ownership(),
@@ -540,6 +650,7 @@ pub fn install(path: &Path) -> MaintenanceResult {
                 transaction,
                 reservation,
                 &plan.contract,
+                &mut service_restart,
                 "native_owner_unavailable",
             );
         }
@@ -558,6 +669,22 @@ pub fn install(path: &Path) -> MaintenanceResult {
             claims.push(claim.clone());
         }
         let _active = broker.activate_claims(claims)?;
+        if plan.schema == 2
+            && role == crate::owner::Role::Registration
+            && let Some((claim, _custody)) = &previous
+            && claim.product_code != artifact.product_code.to_ascii_uppercase()
+        {
+            let previous_owner = NativeOwner::new(
+                claim.product_code.clone(),
+                owner.context().clone(),
+                plan.prefix.clone(),
+            )
+            .map_err(|_| crate::admission::Refusal::InvalidRequest)?
+            .with_feature(
+                cadrumo_application::installation::maintenance::NativeFeature::Registration,
+            );
+            transaction.remove(&previous_owner, broker.endpoint())?;
+        }
         let product_owner = if role == crate::owner::Role::Version {
             &owner
         } else {
@@ -585,29 +712,38 @@ pub fn install(path: &Path) -> MaintenanceResult {
             transaction,
             reservation,
             &plan.contract,
+            &mut service_restart,
             "version_in_use_or_unknown",
         );
     }
-    if install(&plan.version_product, crate::owner::Role::Version).is_err() {
-        return rollback_prepared(
-            transaction,
-            reservation,
-            &plan.contract,
-            "version_installation_failed",
-        );
-    }
-    // Verify while Pending. Publication is deliberately deferred until commit.
-    if plan
-        .contract
-        .verify_candidate(&package, &plan.version)
-        .is_err()
+    if phase::run(phase::Phase::VersionInstall, phase_started, || {
+        install(&plan.version_product, crate::owner::Role::Version)
+    })
+    .is_err()
     {
         return rollback_prepared(
             transaction,
             reservation,
             &plan.contract,
-            "version_inventory_failed",
+            &mut service_restart,
+            "version_installation_failed",
         );
+    }
+    // Verify while Pending. Publication is deliberately deferred until commit.
+    if let Err(rejection) = phase::run(phase::Phase::CandidateVerification, phase_started, || {
+        plan.contract
+            .verify_candidate_diagnostic(&package, &plan.version)
+    }) {
+        let mut result = rollback_candidate::rollback(
+            transaction,
+            broker,
+            reservation,
+            &plan,
+            &admission,
+            &mut service_restart,
+        );
+        result.candidate_rejection = Some(rejection);
+        return result;
     }
     let stable_manager = match plan.contract.manager_member() {
         Ok(member) => member.under(&plan.prefix),
@@ -616,6 +752,7 @@ pub fn install(path: &Path) -> MaintenanceResult {
                 transaction,
                 reservation,
                 &plan.contract,
+                &mut service_restart,
                 "registration_entrypoint_invalid",
             );
         }
@@ -623,6 +760,16 @@ pub fn install(path: &Path) -> MaintenanceResult {
     let stable_available = (|| -> Result<bool, Error> {
         if !stable_manager.try_exists()? {
             return Ok(true);
+        }
+        if let Some(registration) = store.snapshot()?.registration() {
+            let (definition, _custody) = windows::cached_product(&registration.owner)?;
+            let description = definition
+                .registration
+                .as_ref()
+                .ok_or_else(|| Error::Integrity("cached service inventory is missing".into()))?;
+            description
+                .stop_service(&registration.owner, &mut service_restart)
+                .map_err(native_error)?;
         }
         Ok(windows::file_users(std::slice::from_ref(&stable_manager))
             .map_err(native_error)?
@@ -633,19 +780,26 @@ pub fn install(path: &Path) -> MaintenanceResult {
             transaction,
             reservation,
             &plan.contract,
+            &mut service_restart,
             "shared_registration_in_use_or_unknown",
         );
     }
-    if install(&plan.registration_product, crate::owner::Role::Registration).is_err() {
+    if phase::run(phase::Phase::RegistrationInstall, phase_started, || {
+        install(&plan.registration_product, crate::owner::Role::Registration)
+    })
+    .is_err()
+    {
         return rollback_prepared(
             transaction,
             reservation,
             &plan.contract,
+            &mut service_restart,
             "registration_installation_failed",
         );
     }
-    if transaction.commit().is_err() {
-        return report(Outcome::NativeUnsettled, "native_commit_failed");
+    if phase::run(phase::Phase::Commit, phase_started, || transaction.commit()).is_err() {
+        return report(Outcome::NativeUnsettled, "native_commit_failed")
+            .restore_services(&mut service_restart);
     }
     let published = (|| -> Result<(), Error> {
         // Native file creation must preserve the admitted inherited ACLs. A
@@ -659,24 +813,54 @@ pub fn install(path: &Path) -> MaintenanceResult {
             .expect("validated publication")
             .under(&plan.prefix);
         let _postinstall_namespace =
-            crate::publication::prepare(&plan.prefix, &publication, owner.context())
-                .map_err(native_error)?;
-        if MsiInventory.locate(&owner)?.as_ref() != Some(&owner)
-            || MsiInventory.locate(&registration_owner)?.as_ref() != Some(&registration_owner)
-        {
-            return Err(Error::Integrity(
-                "committed native ownership differs".into(),
-            ));
-        }
-        store.publish_registered(
-            &plan.version,
-            &package,
-            &plan.contract,
-            plan.desktop_present,
-            registration_owner,
-        )
+            phase::run(phase::Phase::PublicationAdmission, phase_started, || {
+                crate::publication::prepare(&plan.prefix, &publication, owner.context())
+                    .map_err(native_error)
+            })?;
+        phase::run(phase::Phase::ProductVerification, phase_started, || {
+            if MsiInventory.locate(&owner)?.as_ref() != Some(&owner)
+                || MsiInventory.locate(&registration_owner)?.as_ref() != Some(&registration_owner)
+            {
+                return Err(Error::Integrity(
+                    "committed native ownership differs".into(),
+                ));
+            }
+            Ok(())
+        })?;
+        let _registration = phase::run(
+            phase::Phase::RegistrationVerification,
+            phase_started,
+            || {
+                let (definition, cached) = windows::cached_product(&registration_owner)?;
+                let description = definition.registration.as_ref().ok_or_else(|| {
+                    Error::Integrity("committed registration inventory is missing".into())
+                })?;
+                if description.schema != 2 {
+                    return Err(Error::Integrity(
+                        "new registration lacks service ownership evidence".into(),
+                    ));
+                }
+                let resources = description
+                    .verify(&registration_owner)
+                    .map_err(native_error)?;
+                description
+                    .verify_service_running(&registration_owner)
+                    .map_err(native_error)?;
+                // Retain cached metadata and resource custody through publication.
+                Ok::<_, Error>((definition, cached, resources))
+            },
+        )?;
+        phase::run(phase::Phase::PublicationHash, phase_started, || {
+            store.publish_registered(
+                &plan.version,
+                &package,
+                &plan.contract,
+                plan.desktop_present,
+                registration_owner,
+            )
+        })
     })();
-    if published.is_err() {
+    let result = if published.is_err() {
         report(
             Outcome::CommittedPublicationPending,
             "native_publication_incomplete",
@@ -690,7 +874,8 @@ pub fn install(path: &Path) -> MaintenanceResult {
                 "installation_published"
             },
         )
-    }
+    };
+    result.restore_services(&mut service_restart)
 }
 
 fn rollback(transaction: Transaction, code: &'static str) -> MaintenanceResult {
@@ -705,19 +890,52 @@ fn rollback_prepared(
     transaction: Transaction,
     reservation: cadrumo_application::installation::maintenance::Preparation<'_>,
     contract: &DiscoveryContract,
+    held: &mut [crate::registration::service::RestartGuard],
     code: &'static str,
 ) -> MaintenanceResult {
     if transaction.rollback().is_err() {
-        return report(Outcome::NativeUnsettled, "native_rollback_unsettled");
+        let mut result = report(Outcome::NativeUnsettled, "native_rollback_unsettled");
+        result.cause = Some(code);
+        return result.restore_services(held);
     }
+    rollback_publication(reservation, contract, held, code)
+}
+
+fn rollback_publication(
+    reservation: cadrumo_application::installation::maintenance::Preparation<'_>,
+    contract: &DiscoveryContract,
+    held: &mut [crate::registration::service::RestartGuard],
+    code: &'static str,
+) -> MaintenanceResult {
     if matches!(
         reservation.rollback(contract, &MsiInventory),
         Err(_) | Ok(cadrumo_application::installation::maintenance::RollbackPublication::PendingRetained)
     ) {
-        return report(
-            Outcome::RolledBackPublicationPending,
-            "rollback_publication_fenced",
-        );
+        let mut result = report(Outcome::RolledBackPublicationPending, "rollback_publication_fenced");
+        result.cause = Some(code);
+        return result.restore_services(held);
     }
-    report(Outcome::NativeRolledBack, code)
+    report(Outcome::NativeRolledBack, code).restore_services(held)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn service_restoration_failure_preserves_the_transaction_failure_and_rejects_success() {
+        let mut result = report(
+            Outcome::NativeRolledBack,
+            "registration_installation_failed",
+        );
+        result.service_restore = Some("native_service_restart_failed");
+        let receipt = serde_json::to_value(&result).unwrap();
+        assert_eq!(receipt["code"], "registration_installation_failed");
+        assert_eq!(receipt["service_restore"], "native_service_restart_failed");
+        assert!(!result.succeeded());
+        result.outcome = Outcome::Published;
+        assert!(!result.succeeded());
+        result.service_restore = None;
+        assert!(result.succeeded());
+    }
 }

@@ -59,7 +59,7 @@ from urllib.parse import urlsplit
 _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
 if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
     sys.path.insert(0, str(_ROOT_FOR_DIRECT_INVOCATION))
-if not __package__:
+if not (__package__ is not None and __package__):
     __package__ = "dev.docs"
 
 
@@ -1116,6 +1116,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--strict", action="store_true", help="Refuse a warning in the compile (Sphinx -n -W).")
     parser.add_argument(
+        "--check-sequences",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Execute the live documentation checks; disable when a separate verification target owns them.",
+    )
+    parser.add_argument(
         "--stored",
         type=Path,
         default=None,
@@ -1165,10 +1171,13 @@ def main(argv: list[str] | None = None) -> int:
             flavor=arguments.flavor,
             jobs=arguments.jobs,
             strict=arguments.strict,
-            # The gate the environment already decides about: a caller that
-            # cannot run the live CLI sequences says so there, and this mode
-            # does not overrule it.
-            check_sequences=os.environ.get(SEQUENCE_CHECK_SKIP_ENV) != "1",
+            # Explicit build-stage selection wins; otherwise retain the
+            # existing environment-controlled gate behavior.
+            check_sequences=(
+                arguments.check_sequences
+                if arguments.check_sequences is not None
+                else os.environ.get(SEQUENCE_CHECK_SKIP_ENV) != "1"
+            ),
             base_url=arguments.base_url,
             stored=arguments.stored,
             languages=arguments.languages,

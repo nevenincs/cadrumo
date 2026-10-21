@@ -23,6 +23,7 @@ from ..campaign import (
     _run_step,
     _test_worker_count,
     campaign_pytest_argv,
+    preflight_basetemp_root,
     preflight_pass_failures,
     pytest_pass_argv,
     resolve_form,
@@ -113,6 +114,15 @@ def test_only_the_developer_lane_skips_the_shared_cohort() -> None:
             assert takes_cohort is expected, f"{lane.name}/{form.name} cohort wiring is wrong"
 
 
+def test_campaign_python_children_suppress_checkout_bytecode() -> None:
+    """The controlled interpreter entrypoints must not create checkout pycache."""
+    for lane in _LANES.values():
+        for form in lane.forms:
+            assert form.command()[:3] == [sys.executable, "-B", "-m"]
+    for pytest_pass in _PREFLIGHT_PASSES:
+        assert pytest_pass_argv(pytest_pass, REPO_ROOT, None)[:4] == [sys.executable, "-B", "-m", "pytest"]
+
+
 def test_portable_profile_matches_the_host_portable_aggregate() -> None:
     """The portable profile carries the host-portable forms, no host-specific ones."""
     assert set(PROFILES["portable"]) == {
@@ -196,6 +206,7 @@ def test_a_caller_can_still_request_a_pytest_timeout(timeout_seconds: int) -> No
 
     assert pytest_pass_argv(requested, REPO_ROOT, None) == [
         sys.executable,
+        "-B",
         "-m",
         "pytest",
         "-q",
@@ -407,6 +418,11 @@ def test_a_missing_prebuilt_cohort_is_refused_before_any_step(tmp_path: Path) ->
     with pytest.raises(FileNotFoundError):
         _adopt_cohort(tmp_path / "absent", tmp_path)
     assert not (tmp_path / COHORT_DIR).exists()
+
+
+def test_campaign_preflight_basetemp_is_under_build(tmp_path: Path) -> None:
+    """The campaign's pytest scratch belongs to the canonical build root."""
+    assert preflight_basetemp_root(tmp_path) == tmp_path / "build" / "packaging-smoke" / "pytest-basetemp"
 
 
 def test_an_unverifiable_prebuilt_cohort_is_refused_and_never_placed(tmp_path: Path) -> None:

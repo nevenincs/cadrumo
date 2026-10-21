@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import (
-    CommandNodeKind,
-    CommandWriteRoute,
-)
-
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.execution_policies import CALCULATION_READ, ENCRYPTED_READ, STATE_FREE
+from cadrumo_client.commands.language_options import OUTPUT_LANGUAGE_VALUE
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
@@ -19,23 +16,19 @@ from .command_shared_contracts import (
     SchemaState,
     ValueContract,
 )
-from .command_shared_contracts import translation_key as _key
-from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import (
+    CommandNodeKind,
+    CommandWriteRoute,
+)
 
-_METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
-_CALCULATION_READ = ExecutionPolicySpec(
-    frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE
-)
-_MODEL_READ = ExecutionPolicySpec(
-    frozenset({"encrypted-facts"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE
-)
 _CALCULATION_WRITE = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts"}),
     frozenset({"local-state"}),
     "compute",
     CommandWriteRoute.PROFILE_BOUND,
 )
-_LANGUAGE = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
     click_type=DeferredTarget(".common", "MODELO_CODE_CHOICE", __package__),
@@ -88,7 +81,7 @@ def _leaf(
         InvocationSpec(context_parameter="ctx"),
         parameters,
         policy,
-        LazyBinding.available(DeferredTarget("._modelo", handler, __package__)),
+        LazyBinding.available(DeferredTarget(".modelo_commands", handler, __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
             DeferredTarget(schema_module, schema_name, __package__),
@@ -115,7 +108,7 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         None,
         InvocationSpec(no_args_is_help=True),
         (),
-        _METADATA,
+        STATE_FREE,
         None,
         ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
@@ -133,12 +126,12 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "output_language",
                 ("--output-language",),
-                _LANGUAGE,
+                OUTPUT_LANGUAGE_VALUE,
                 "cli.app.modelo.work.output_language_help",
             ),
         ),
-        _CALCULATION_READ,
-        "._payloads_modelo_reconcile",
+        CALCULATION_READ,
+        ".modelo_reconcile_results",
         "WorkCompareTaxationResult",
         "modelo.work.compare_taxation",
     ),
@@ -159,11 +152,11 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "output_language",
                 ("--output-language", "--language"),
-                _LANGUAGE,
+                OUTPUT_LANGUAGE_VALUE,
                 "cli.config.auth.output_language_help",
             ),
         ),
-        _MODEL_READ,
+        ENCRYPTED_READ,
         ".modelo_aux_payloads",
         "WorkHistoryResult",
         "modelo.work.history",
@@ -212,7 +205,7 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         _CALCULATION_WRITE,
-        "._modelo_payloads",
+        ".modelo_results",
         "WorkAmendResult",
         "modelo.work.amend",
     ),
@@ -233,8 +226,8 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.app.modelo.history.year_help"),
             _option("period", ("--period",), TEXT_VALUE, "cli.app.modelo.history.period_help"),
         ),
-        _MODEL_READ,
-        "._modelo_payloads",
+        ENCRYPTED_READ,
+        ".modelo_results",
         "ModeloHistoryResult",
         "modelo.history",
     ),
