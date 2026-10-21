@@ -62,6 +62,7 @@ from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
 from ...core.errors.record_fault import internal_record_fault_context
 from ...core.json_contract import Notice, ResolvedPreconditionAction
 from ...core.redaction.rules import redact_for_cli_output
+from ...core.terminal_encoding import encode_terminal_field, encode_terminal_text
 from ...domain.user_profile.errors import StoredProfileDriftError
 
 _log = logging.getLogger(__name__)
@@ -313,28 +314,52 @@ def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
     failure it falls back to the underlying byte buffer with
     ``errors="replace"``, and finally to an ASCII-safe replacement string.
 
+    The text is redacted and then terminal-encoded, so a refusal quoting an
+    imported value cannot carry live control sequences; newline and tab survive
+    as deliberate separators, and JSON documents remain valid.
+
     Args:
         text: Text payload to emit.
         stream: Optional target stream to write to instead of
             :data:`~sys.stderr`. Primarily useful in tests.
     """
+    _write_stderr_encoded(encode_terminal_text(redact_for_cli_output(text)), stream=stream)
+
+
+def redraw_stderr_line(text: str, *, stream: io.TextIOBase | None = None) -> None:
+    """Redraw the current stderr line in place with ``text``, redacted and terminal-encoded.
+
+    The carriage return and erase-line sequence that perform the redraw are
+    the only terminal controls emitted, and they come from here rather than
+    from the caller's text, which is encoded like any other stderr output.
+    """
+    _write_stderr_encoded(
+        _REDRAW_LINE_PREFIX + encode_terminal_field(redact_for_cli_output(text)),
+        stream=stream,
+    )
+
+
+#: Return to column zero, then erase the whole line.
+_REDRAW_LINE_PREFIX = "\r\x1b[2K"
+
+
+def _write_stderr_encoded(safe_text: str, *, stream: io.TextIOBase | None) -> None:
     target = sys.stderr if stream is None else stream
-    redacted_text = redact_for_cli_output(text)
     if _supports_reconfigure(target):
         with contextlib.suppress(Exception):
             target.reconfigure(encoding="utf-8", errors="replace")
     try:
-        target.write(redacted_text)
+        target.write(safe_text)
         target.flush()
         return
     except UnicodeEncodeError:
         buffer = getattr(target, "buffer", None)
         if buffer is not None:
-            buffer.write(redacted_text.encode("utf-8", errors="replace"))
+            buffer.write(safe_text.encode("utf-8", errors="replace"))
             with contextlib.suppress(Exception):
                 buffer.flush()
             return
-        target.write(redacted_text.encode("ascii", errors="replace").decode("ascii"))
+        target.write(safe_text.encode("ascii", errors="replace").decode("ascii"))
         target.flush()
 
 

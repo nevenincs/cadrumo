@@ -132,7 +132,12 @@ from ..filing.draft_construction import build_draft
 from ..filing.draft_review import approve_draft
 from ..filing.draft_review_ports import DraftReviewPorts
 from ..filing.export import export_draft, export_layout_renderability_reason
-from ..filing.export_verification import DeclaracionExportResult, assert_export_artifact_matches_receipt
+from ..filing.export_verification import (
+    DeclaracionExportResult,
+    FilingExportConsumedResult,
+    FilingExportPayloadConsumer,
+    assert_export_artifact_matches_receipt,
+)
 from ..filing.producer_snapshot import (
     AmendmentEvidence,
     FilingElectionFacts,
@@ -1449,6 +1454,7 @@ def _persist_exported_draft(
     schema_provider: RegistrySchemaAccessor,
     operation: PinnedAuthorityOperation,
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    payload_consumer: FilingExportPayloadConsumer | None = None,
 ) -> ModeloExportResult:
     m360_solicitud = _require_m360_solicitud_for_export(command, work_unit=work_unit, export_ports=export_ports)
     accounts = _resolve_export_accounts(
@@ -1505,18 +1511,12 @@ def _persist_exported_draft(
         if export_layout is not None and export_layout.format is ExportLayoutFormat.XML_DICTIONARY
         else None
     )
-    # The fichero-BOE bytes are staged, the MODELO_EXPORTED event is committed,
-    # and only then does the artefact become operator-visible: a crash between
-    # the write and the event leaves a staged file carrying no provenance
-    # rather than a filing artefact no event accounts for. The staging file is
-    # an unguessable sibling reserved by the shared deferred-publish tier,
-    # which discards it on EVERY exit that does not publish -- including an
-    # operator interrupt -- so cleartext financial data cannot outlive a failed
-    # export next to the destination the operator chose.
-    sink = _export_sink(command)
-    with sink.staged() as staged:
-        receipt = _write_export_staging(
-            staged=staged,
+    receipt: DeclaracionExportResult | FilingExportConsumedResult
+    if payload_consumer is not None:
+        # In-memory delivery: the caller publishes the bytes inside its own
+        # artefact, so the cleartext fichero never exists as a file of its own.
+        receipt = _consume_export_payload(
+            payload_consumer=payload_consumer,
             command=command,
             approved=approved,
             producer_snapshot=producer_snapshot,
@@ -1524,7 +1524,6 @@ def _persist_exported_draft(
             prior_domiciliation_election=prior_domiciliation_election.election,
             product_software_identity=software_identity if _envelope_requires_product_identity(export_layout) else None,
             schema_provider=schema_provider,
-            mutation_writer=mutation_writer,
         )
         event = _emit_export_event(
             command=command,
@@ -1537,21 +1536,56 @@ def _persist_exported_draft(
             exported_at=exported_at,
             bucket_event_repository=export_ports.bucket_event,
         )
-        # Defence in depth: the sink re-checks the path before staging and
-        # translates a destination that changed underneath it (a TOCTOU race,
-        # a file that appeared after the check) into the same typed refusal.
-        if mutation_writer is None:
-            sink.publish(staged)
-        else:
-            mutation_writer(lambda: sink.publish(staged))
+    else:
+        # The fichero-BOE bytes are staged, the MODELO_EXPORTED event is committed,
+        # and only then does the artefact become operator-visible: a crash between
+        # the write and the event leaves a staged file carrying no provenance
+        # rather than a filing artefact no event accounts for. The staging file is
+        # an unguessable sibling reserved by the shared deferred-publish tier,
+        # which discards it on EVERY exit that does not publish -- including an
+        # operator interrupt -- so cleartext financial data cannot outlive a failed
+        # export next to the destination the operator chose.
+        sink = _export_sink(command)
+        with sink.staged() as staged:
+            receipt = _write_export_staging(
+                staged=staged,
+                command=command,
+                approved=approved,
+                producer_snapshot=producer_snapshot,
+                dictionary_values=dictionary_values,
+                prior_domiciliation_election=prior_domiciliation_election.election,
+                product_software_identity=software_identity
+                if _envelope_requires_product_identity(export_layout)
+                else None,
+                schema_provider=schema_provider,
+                mutation_writer=mutation_writer,
+            )
+            event = _emit_export_event(
+                command=command,
+                work_unit=work_unit,
+                receipt=receipt,
+                iva_wallet_provenance=iva_wallet_provenance,
+                resolved_result_disposition=resolved_result_disposition,
+                prior_domiciliation_election=prior_domiciliation_election,
+                selected_account=selected_account,
+                exported_at=exported_at,
+                bucket_event_repository=export_ports.bucket_event,
+            )
+            # Defence in depth: the sink re-checks the path before staging and
+            # translates a destination that changed underneath it (a TOCTOU race,
+            # a file that appeared after the check) into the same typed refusal.
+            if mutation_writer is None:
+                sink.publish(staged)
+            else:
+                mutation_writer(lambda: sink.publish(staged))
 
-    # The receipt below was measured against the staging file, and the result and
-    # the durable MODELO_EXPORTED event both publish those numbers against
-    # ``command.output_path`` instead. Re-bind them to the artefact that
-    # actually landed, through the same check the draft writer used, so the
-    # published size and digest are proven of the operator-visible file rather
-    # than transplanted from the staging path the rename has just consumed.
-    assert_export_artifact_matches_receipt(receipt, artifact_path=command.output_path)
+        # The receipt below was measured against the staging file, and the result and
+        # the durable MODELO_EXPORTED event both publish those numbers against
+        # ``command.output_path`` instead. Re-bind them to the artefact that
+        # actually landed, through the same check the draft writer used, so the
+        # published size and digest are proven of the operator-visible file rather
+        # than transplanted from the staging path the rename has just consumed.
+        assert_export_artifact_matches_receipt(receipt, artifact_path=command.output_path)
 
     # Coverage honesty: a fixed-width fichero-BOE whose revision declares no
     # completeness manifest cannot be structural-parity-verified (the pre-write
@@ -1642,6 +1676,34 @@ def _write_export_staging(
         ) from exc
 
 
+def _consume_export_payload(
+    *,
+    payload_consumer: FilingExportPayloadConsumer,
+    command: ModeloExportCommand,
+    approved: ModeloDraft,
+    producer_snapshot: FilingProducerSnapshot,
+    dictionary_values: Mapping[str, object] | None,
+    prior_domiciliation_election: PriorDomiciliationElection,
+    product_software_identity: AeatProductSoftwareIdentity | None,
+    schema_provider: RegistrySchemaAccessor,
+) -> FilingExportConsumedResult:
+    try:
+        return export_draft(
+            approved,
+            payload_consumer=payload_consumer,
+            producer_snapshot=producer_snapshot,
+            dictionary_values=dictionary_values,
+            prior_domiciliation_election=prior_domiciliation_election,
+            product_software_identity=product_software_identity,
+            schema_provider=schema_provider,
+        )
+    except FilingExportError as exc:
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_draft_write_failed",
+            context=_export_write_failure_context(command, exc),
+        ) from exc
+
+
 def _export_write_failure_context(command: ModeloExportCommand, exc: FilingExportError) -> dict[str, object]:
     """Name what the operator must supply when the refusal is a missing identity fact.
 
@@ -1667,7 +1729,7 @@ def _emit_export_event(
     *,
     command: ModeloExportCommand,
     work_unit: WorkUnit,
-    receipt: DeclaracionExportResult,
+    receipt: DeclaracionExportResult | FilingExportConsumedResult,
     iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None,
     resolved_result_disposition: ResultDisposition | None,
     prior_domiciliation_election: PriorDomiciliationElectionProjection,
@@ -2048,6 +2110,7 @@ def export_modelo_revision(
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     clock: datetime | None = None,
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    payload_consumer: FilingExportPayloadConsumer | None = None,
 ) -> ModeloExportResult:
     """Export a verified-complete or filed calculation revision to disk.
 
@@ -2071,6 +2134,11 @@ def export_modelo_revision(
     the bucket-event-history catalogue, and finally publishes the staged
     artefact onto the operator's path. Any write, event, or publication failure
     discards the staged cleartext artefact before raising.
+
+    When ``payload_consumer`` is supplied the validated fichero bytes are handed
+    to it in memory instead and no file is written: ``command.output_path``
+    then names the artefact the caller publishes those bytes inside, and the
+    ``MODELO_EXPORTED`` event records it with the digest of the fichero bytes.
 
     Returns:
         :class:`~cadrumo.application.modelo.export.ModeloExportResult`: The export
@@ -2098,7 +2166,8 @@ def export_modelo_revision(
     # bytes: an unusable --output (empty, existing directory, missing parent)
     # is a clean typed refusal here, never a raw OSError traceback at the
     # late publication — and never after cleartext financial bytes exist.
-    _export_sink(command).require_writable()
+    if payload_consumer is None:
+        _export_sink(command).require_writable()
 
     now = clock or _utc_now()
     prepared = _prepare_modelo_export(
@@ -2144,6 +2213,7 @@ def export_modelo_revision(
         schema_provider=schema_provider,
         operation=operation,
         mutation_writer=mutation_writer,
+        payload_consumer=payload_consumer,
     )
 
 

@@ -83,7 +83,10 @@ def probe_text_extraction_fitness(model: str, settings: Settings) -> RoleFitness
         started = time.monotonic()
         try:
             completion = asyncio.run(
-                LocalAdapter(timeout_s=settings.cadrumo_llm_default_timeout_s).complete(request),
+                LocalAdapter(
+                    timeout_s=settings.cadrumo_llm_default_timeout_s,
+                    chat_url=settings.cadrumo_llm_ollama_chat_url,
+                ).complete(request),
             )
         except (LLMError, httpx.HTTPError) as exc:
             if _timed_out(exc):

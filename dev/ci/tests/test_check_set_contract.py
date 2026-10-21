@@ -161,6 +161,14 @@ _RECIPE_SIGNATURE: Final = re.compile(r"^(?P<name>[a-z][\w-]*)(?P<parameters>[^:
 #: arguments, so they are left to it.
 _JUST_CALL_WITH_ARGUMENTS: Final = re.compile(r"\bjust\s+(?P<recipe>_?[a-z][\w-]*)(?P<arguments>[^|;&\n]*)")
 
+# An intrinsic branch/exit does not launch a command. Keep the predicate inert:
+# commands inside a predicate or body must remain visible to duplicate detection.
+_POWERSHELL_EXIT_GUARD: Final = re.compile(
+    r"if\s*\(\s*\$[A-Za-z_][\w:]*\s+-(?:eq|ne|lt|le|gt|ge)\s+[+-]?\d+\s*\)"
+    r"\s*\{\s*exit(?:\s+(?:\$[A-Za-z_][\w:]*|[+-]?\d+))?\s*;?\s*\}",
+    re.IGNORECASE,
+)
+
 
 def _recipe_parameters(text: str) -> dict[str, tuple[tuple[str, str | None], ...]]:
     """Return each recipe's declared parameters, with defaults where given."""
@@ -237,7 +245,11 @@ def _commands(
             return
         for line in text.splitlines():
             normalized = re.sub(r"\s+", " ", line.strip().lstrip("@"))
-            if normalized and not normalized.startswith(("#", "$", "echo ", "Write-", "else", "fi", "}", ")", "-")):
+            if (
+                normalized
+                and not normalized.startswith(("#", "$", "echo ", "Write-", "else", "fi", "}", ")", "-"))
+                and _POWERSHELL_EXIT_GUARD.fullmatch(normalized) is None
+            ):
                 commands.append(normalized)
 
     for step in job.get("steps") or []:
@@ -330,6 +342,35 @@ def test_one_parameterised_recipe_with_the_same_argument_twice_is_a_duplicate() 
     counts = Counter(_commands(job, bodies, parameters))
 
     assert counts["uv run matrix --phase smoke"] == 2
+
+
+@pytest.mark.parametrize(
+    "guard", ("if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }", "if ($buildStatus -gt 0) { exit 1; }")
+)
+def test_intrinsic_exit_guards_are_not_repeated_commands(guard: str) -> None:
+    """Repeated status checks preserve a single build and real duplicate detection."""
+    justfile = f"gate:\n    cmake --preset selected\n    {guard}\n    uv run check\n    {guard}\n    uv run check\n"
+    bodies = _platform_recipe_bodies(justfile, "windows")
+
+    assert Counter(_commands({"steps": [{"run": "just gate"}]}, bodies)) == Counter(
+        {"cmake --preset selected": 1, "uv run check": 2}
+    )
+
+
+@pytest.mark.parametrize(
+    "command",
+    (
+        "if ($ready) { uv run check }",
+        "if (uv run check) { exit 1 }",
+        "if ($status -ne 0) { exit $status; uv run check }",
+    ),
+)
+def test_exit_guard_recognition_keeps_commands_inside_conditionals(command: str) -> None:
+    """A conditional's real command must never disappear behind guard recognition."""
+    justfile = f"gate:\n    {command}\n    {command}\n"
+    bodies = _platform_recipe_bodies(justfile, "windows")
+
+    assert Counter(_commands({"steps": [{"run": "just gate"}]}, bodies))[command] == 2
 
 
 def test_a_declared_default_is_substituted_when_no_argument_is_given() -> None:

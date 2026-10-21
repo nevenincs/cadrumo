@@ -7,6 +7,7 @@ import typer
 from ...application.auth.operator import build_live_auth_preflight_report
 from ...application.auth.operator_results import LiveAuthPreflightReport
 from ...core.redaction.rules import redact_for_cli_output
+from ...core.terminal_encoding import encode_terminal_text
 
 
 def metric_line(key: str, value: object) -> str:
@@ -35,7 +36,7 @@ def emit_live_auth_preflight(
         operation=authority_operation(ctx),
     )
     for line in _live_auth_preflight_lines(report):
-        typer.echo(redact_for_cli_output(line), err=True)
+        typer.echo(encode_terminal_text(redact_for_cli_output(line)), err=True)
 
 
 def _live_auth_preflight_lines(report: LiveAuthPreflightReport) -> tuple[str, ...]:

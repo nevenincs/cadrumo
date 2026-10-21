@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from ...directory_scan import scan_directory
-from ..errors import CorpusBundleError, CorpusManifestTamperError
+from ..errors import CorpusBundleError, CorpusManifestError, CorpusManifestTamperError
 from ..manifest import build_corpus_bundle, verify_corpus_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -30,35 +30,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _GENERATED_AT = datetime(2026, 6, 1, 9, 0, 0, tzinfo=UTC)
 
 
-def _seed_corpus(corpus_root: Path) -> dict[str, bytes]:
-    corpus_root.mkdir(parents=True, exist_ok=True)
-    files = {
-        "legal/ley-1.html": b"<html>Articulo primero.</html>",
-        "manuals/renta/2024/manual.txt": b"Manual practico Renta 2024 excerpt.",
-        "manuals/renta/2024/sub/rules.txt": b"Rule text nested one level deeper.",
-    }
-    for relative, content in files.items():
-        path = corpus_root / relative
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(content)
-    return files
+_MEMBERS = {
+    "legal/ley-1.html": b"<html>Articulo primero.</html>",
+    "manuals/renta/2024/manual.txt": b"Manual practico Renta 2024 excerpt.",
+    "manuals/renta/2024/sub/rules.txt": b"Rule text nested one level deeper.",
+}
 
 
-def _build_bundle(tmp_path: Path, *, name: str = "test-corpus") -> tuple[Path, Path]:
-    corpus_root = tmp_path / "corpus"
-    _seed_corpus(corpus_root)
+def _build_bundle(tmp_path: Path, *, name: str = "test-corpus") -> Path:
     bundle_path = tmp_path / "bundle.zip"
     build_corpus_bundle(
-        corpus_root,
+        _MEMBERS,
         corpus_root_name=name,
         output_path=bundle_path,
         generated_at=_GENERATED_AT,
     )
-    return corpus_root, bundle_path
+    return bundle_path
 
 
 def test_build_corpus_bundle_writes_every_file_plus_embedded_manifest(tmp_path: Path) -> None:
-    _corpus_root, bundle_path = _build_bundle(tmp_path)
+    bundle_path = _build_bundle(tmp_path)
 
     assert bundle_path.exists()
     with zipfile.ZipFile(bundle_path, "r") as archive:
@@ -72,7 +63,7 @@ def test_build_corpus_bundle_writes_every_file_plus_embedded_manifest(tmp_path: 
 
 
 def test_verify_corpus_bundle_reports_clean_for_untouched_bundle(tmp_path: Path) -> None:
-    _corpus_root, bundle_path = _build_bundle(tmp_path)
+    bundle_path = _build_bundle(tmp_path)
 
     result = verify_corpus_bundle(bundle_path)
 
@@ -118,7 +109,7 @@ def _rewrite_bundle(
 
 
 def test_verify_corpus_bundle_flags_mismatched_file_by_name(tmp_path: Path) -> None:
-    _corpus_root, bundle_path = _build_bundle(tmp_path)
+    bundle_path = _build_bundle(tmp_path)
 
     _rewrite_bundle(bundle_path, mutate={"legal/ley-1.html": b"tampered content, wrong hash now"})
 
@@ -131,7 +122,7 @@ def test_verify_corpus_bundle_flags_mismatched_file_by_name(tmp_path: Path) -> N
 
 
 def test_verify_corpus_bundle_flags_missing_file_by_name(tmp_path: Path) -> None:
-    _corpus_root, bundle_path = _build_bundle(tmp_path)
+    bundle_path = _build_bundle(tmp_path)
 
     _rewrite_bundle(bundle_path, mutate={}, drop={"manuals/renta/2024/sub/rules.txt"})
 
@@ -144,7 +135,7 @@ def test_verify_corpus_bundle_flags_missing_file_by_name(tmp_path: Path) -> None
 
 
 def test_verify_corpus_bundle_flags_unexpected_extra_file(tmp_path: Path) -> None:
-    _corpus_root, bundle_path = _build_bundle(tmp_path)
+    bundle_path = _build_bundle(tmp_path)
 
     rewritten = bundle_path.with_name(bundle_path.name + ".rewritten")
     with zipfile.ZipFile(bundle_path, "r") as src, zipfile.ZipFile(rewritten, "w") as dst:
@@ -165,7 +156,7 @@ def test_verify_corpus_bundle_raises_tamper_error_when_manifest_digest_mismatche
     """Mutating the embedded manifest's recorded ``manifest_sha256`` (without
     recomputing it) must trip the self-attesting digest check, exactly as
     ``load_corpus_manifest`` does for the on-disk sidecar form."""
-    _corpus_root, bundle_path = _build_bundle(tmp_path)
+    bundle_path = _build_bundle(tmp_path)
 
     with zipfile.ZipFile(bundle_path, "r") as archive:
         manifest_bytes = archive.read("corpus.manifest.json")
@@ -184,7 +175,7 @@ def test_verify_corpus_bundle_raises_tamper_error_when_manifest_digest_mismatche
 
 
 def test_verify_corpus_bundle_raises_on_missing_manifest_member(tmp_path: Path) -> None:
-    _corpus_root, bundle_path = _build_bundle(tmp_path)
+    bundle_path = _build_bundle(tmp_path)
 
     _rewrite_bundle(bundle_path, mutate={}, drop={"corpus.manifest.json"})
 
@@ -210,13 +201,11 @@ def test_build_corpus_bundle_overwrites_existing_output_atomically(tmp_path: Pat
     successful build, never partially overwritten -- proving the
     temp-file-then-rename write is exercised for the bundle path too,
     matching :func:`build_corpus_manifest`'s atomicity guarantee."""
-    corpus_root = tmp_path / "corpus"
-    _seed_corpus(corpus_root)
     output_path = tmp_path / "bundle.zip"
     output_path.write_bytes(b"stale placeholder bytes from a previous run")
 
     build_corpus_bundle(
-        corpus_root,
+        _MEMBERS,
         corpus_root_name="test-corpus",
         output_path=output_path,
         generated_at=_GENERATED_AT,
@@ -226,3 +215,26 @@ def test_build_corpus_bundle_overwrites_existing_output_atomically(tmp_path: Pat
     assert result.is_clean is True
     # The rename leaves no stray temp file behind.
     assert scan_directory(output_path.parent, pattern="*.tmp") == ()
+
+
+def test_build_corpus_bundle_archives_members_byte_for_byte_without_staging_files(tmp_path: Path) -> None:
+    bundle_path = _build_bundle(tmp_path)
+
+    with zipfile.ZipFile(bundle_path, "r") as archive:
+        archived = {name: archive.read(name) for name in archive.namelist() if name != "corpus.manifest.json"}
+    assert archived == _MEMBERS
+    assert {path.name for path in tmp_path.iterdir()} == {"bundle.zip"}
+
+
+@pytest.mark.parametrize("relative_path", ["corpus.manifest.json", "../escape.txt", "/absolute.txt"])
+def test_build_corpus_bundle_refuses_unsafe_or_reserved_member_paths(tmp_path: Path, relative_path: str) -> None:
+    output_path = tmp_path / "bundle.zip"
+
+    with pytest.raises(CorpusManifestError):
+        build_corpus_bundle(
+            {relative_path: b"x"},
+            corpus_root_name="test-corpus",
+            output_path=output_path,
+            generated_at=_GENERATED_AT,
+        )
+    assert not output_path.exists()

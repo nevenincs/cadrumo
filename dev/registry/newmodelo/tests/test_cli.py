@@ -29,7 +29,7 @@ def test_default_manager_targets_the_live_cadrumo_registry_tree() -> None:
 
 
 #: Escape sequences Rich writes around the refusal it renders.
-_ANSI: Final = re.compile(r"\[[0-9;]*m")
+_ANSI: Final = re.compile(r"\x1b\[[0-9;]*m")
 
 
 def _scaffold_args(tmp_path: Path, *extra: str) -> list[str]:

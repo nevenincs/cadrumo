@@ -67,6 +67,10 @@ def _capture_child(
     statement = _write_synthetic_statement(scratch, synthetic_rows)
     transaction_ids: tuple[str, str] | None = None
     classifications = 0
+    capture_error: InstalledTuiChildError | None = None
+    capture_stage = "launcher_not_entered"
+
+    from textual.css.query import NoMatches
 
     from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
     from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
@@ -76,18 +80,34 @@ def _capture_child(
         asyncio.run(register_profile_through_installed_tui(profile_label=profile_label, passphrase=passphrase))
 
     async def drive(pilot: Any) -> None:
-        nonlocal classifications, transaction_ids
-        await _import_statement(pilot, statement=statement)
-        transaction_ids = await _resolve_imported_transaction_ids(pilot, synthetic_rows)
-        for transaction_id, scenario_row in zip(transaction_ids, synthetic_rows, strict=True):
-            await _classify_transaction(pilot, transaction_id=transaction_id, scenario_row=scenario_row)
-            classifications += 1
-        pilot.app.exit()
+        nonlocal classifications, transaction_ids, capture_error, capture_stage
+        try:
+            capture_stage = "importing_statement"
+            await _import_statement(pilot, statement=statement)
+            capture_stage = "resolving_imported_entries"
+            transaction_ids = await _resolve_imported_transaction_ids(pilot, synthetic_rows)
+            for index, (transaction_id, scenario_row) in enumerate(zip(transaction_ids, synthetic_rows, strict=True)):
+                capture_stage = f"classifying_entry_{index + 1}"
+                await _classify_transaction(pilot, transaction_id=transaction_id, scenario_row=scenario_row)
+                classifications += 1
+            capture_stage = "entries_classified"
+        except NoMatches as error:
+            capture_error = InstalledTuiChildError(
+                f"installed IVA TUI public control was absent (stage={capture_stage})",
+                diagnostic=public_surface_diagnostic(pilot),
+            )
+            capture_error.__cause__ = error
+        except InstalledTuiChildError as error:
+            capture_error = error
+        finally:
+            pilot.app.exit()
 
     exit_code = main(
         headless=True,
         auto_pilot=admitted_session_autopilot(passphrase=passphrase, drive_after_home=drive),
     )
+    if capture_error is not None:
+        raise capture_error
     if exit_code != 0 or transaction_ids is None or classifications != 2:
         raise InstalledTuiChildError("installed IVA TUI capture did not complete both public classifications")
     return _CaptureChildReceipt(

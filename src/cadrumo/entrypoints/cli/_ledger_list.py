@@ -8,6 +8,7 @@ from ...application.ledger.id_resolution import compute_display_id_width
 from ...application.ledger.list_operation import LedgerListProjection as LedgerListSnapshot
 from ...application.ledger.transaction_projection import LedgerTransactionReviewProjection
 from ...core.i18n.render import tr
+from ...core.terminal_encoding import encode_terminal_field
 from .ledger_results import LedgerListRowPayload
 
 
@@ -99,9 +100,12 @@ def _ledger_list_rows_and_lines(
             ),
         )
         iva_category = review_payload.iva_category or ""
+        # The narrative is imported text: escape its newlines and tabs so it
+        # cannot forge rows or shift the tab-separated columns.
         lines.append(
             f"{display_id}\t{transaction.transaction_id}\t{review_payload.date}\t"
-            f"{review_payload.amount}\t{review_payload.description}\t{iva_category}\t{review_status}",
+            f"{review_payload.amount}\t{encode_terminal_field(review_payload.description)}\t"
+            f"{iva_category}\t{review_status}",
         )
     return rows, lines
 

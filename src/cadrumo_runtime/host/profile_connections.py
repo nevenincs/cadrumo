@@ -8,7 +8,7 @@ from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from threading import BoundedSemaphore, Event, RLock
+from threading import BoundedSemaphore, Condition, Event, RLock
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -151,6 +151,8 @@ class RuntimeProfileConnections(
         self._services: dict[UUID, ServiceConnection] = {}
         # Worker model runs waiting for the service that was told about them, by run id.
         self._model_runs: dict[UUID, PendingModelRun] = {}
+        # Signalled as each model-run disclosure ends, for a lease withdrawal waiting on it.
+        self._disclosures = Condition(self._guard)
         self._notice_connections: dict[UUID, tuple[ConnectionContext, LoginEvidence]] = {}
         self._notice_observation: NoticeObservation | None = None
         self._logins: dict[str, LoginEvidence] = {}
@@ -184,14 +186,14 @@ class RuntimeProfileConnections(
         withdrawn: list[ServiceLeaseChanged] = []
         with self._guard:
             self._language_observations.pop(event.connection_id, None)
-            for connection_id, service in self._services.items():
+            for connection_id, service in tuple(self._services.items()):
                 if service.lease is not None and service.lease.parent_session_id == event.session_id:
                     withdrawn.append(
                         ServiceLeaseChanged(
                             runtime_boot_id=self.boot, connection_id=connection_id, profile_id=service.lease.profile_id
                         )
                     )
-                    service.lease = None
+                    self._withdraw_lease(service)
         self._events.publish(event)
         for cue in withdrawn:
             self._events.publish_cue(cue)

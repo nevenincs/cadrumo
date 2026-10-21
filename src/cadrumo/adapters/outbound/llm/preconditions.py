@@ -29,6 +29,7 @@ class LLMPreconditionCondition(StrEnum):
     COLUMN_MAPPING_RESPONSE_PARSEABLE = "llm.column_mapping.response_parseable"
     COLUMN_MAPPING_RESPONSE_SCHEMA_VALID = "llm.column_mapping.response_schema_valid"
     EVIDENCE_IMAGES_PRESENT = "llm.evidence.images_present"
+    EVIDENCE_LOCAL_READER_LOOPBACK = "llm.evidence.local_reader_loopback"
     EVIDENCE_OFF_HOST_DISPATCH_PERMITTED = "llm.evidence.off_host_dispatch_permitted"
     EVIDENCE_RESPONSE_JSON_OBJECT = "llm.evidence.response_json_object"
     EVIDENCE_RESPONSE_SCHEMA_VALID = "llm.evidence.response_schema_valid"

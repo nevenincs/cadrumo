@@ -66,6 +66,8 @@ class ServiceConnection:
     peer: VerifiedServicePeer
     channel: ByteChannel
     lease: ServiceLease | None = None
+    # Model-run disclosures being written under the lease; withdrawing it waits for them.
+    disclosing: int = 0
 
 
 class ProfileConnectionServicesMixin:
@@ -124,12 +126,14 @@ class ProfileConnectionServicesMixin:
                                 scope=existing.descriptor.operation_scope,
                             )
                         except Exception:
-                            if existing.lease is approved:
-                                existing.lease = None
+                            with self._guard:
+                                if existing.lease is approved:
+                                    self._withdraw_lease(existing)
                         else:
                             if isinstance(child, AccessDenied):
-                                if existing.lease is approved:
-                                    existing.lease = None
+                                with self._guard:
+                                    if existing.lease is approved:
+                                        self._withdraw_lease(existing)
                             elif existing.lease is approved:
                                 connection.session_id = child.session_id
                                 existing.lease = approved.model_copy(update={"session_id": child.session_id})

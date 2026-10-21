@@ -18,6 +18,7 @@ from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_re
 from cadrumo.core.click_context import json_output_requested
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.terminal_encoding import encode_terminal_text
 from cadrumo.core.tty import stderr_is_tty, stdin_is_tty
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -128,7 +129,7 @@ def subscribe_profile_notices(ctx: typer.Context, client: FrontendClient) -> Non
 
         def notice(_event: object) -> None:
             with suppress(OSError):
-                typer.echo(message, err=True)
+                typer.echo(encode_terminal_text(message), err=True)
 
         ctx.call_on_close(client.subscribe_lifecycle_notices(notice))
         subscriptions.clients.add(client)

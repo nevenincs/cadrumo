@@ -172,6 +172,7 @@ def _fully_populated_record(
         registry_snapshot_ref=_registry_snapshot_ref_for_work_unit(work_unit_id),
         source_kind=ModeloReconciliationEvidenceKind.DECLARATION,
         source_ref="/operator/evidence/modelo-100-2024-declaracion.pdf",
+        source_pdf_sha256="d" * 64,
         verdict=ModeloReconciliationVerdict.MISMATCHES,
         diffs=(
             ModeloReconciliationDiff(
@@ -231,6 +232,7 @@ def test_record_roundtrips_with_every_defaultable_field_populated_non_default() 
     assert len(loaded.advisories) == 1
     assert loaded.advisories[0].context == {"reason": "no_persisted_revision", "modelo": "100"}
     assert loaded.source_ref.endswith("modelo-100-2024-declaracion.pdf")
+    assert loaded.source_pdf_sha256 == "d" * 64
 
 
 def test_record_requires_the_canonical_registry_snapshot_reference() -> None:
@@ -280,6 +282,37 @@ def test_anti_tautology_stored_payload_with_a_deleted_field_refuses_on_load() ->
 
     with pytest.raises(ValidationError):
         repository.load(key)
+
+
+def test_a_record_stored_before_its_source_digest_was_carried_still_loads() -> None:
+    """A stored payload without ``source_pdf_sha256`` reads back with the digest absent.
+
+    Records persisted before the digest was carried hold no such key; they stay
+    readable under the same schema version instead of refusing, and report no
+    digest rather than inventing one.
+    """
+    work_unit_id = _seed_work_unit()
+    record = _fully_populated_record(work_unit_id=work_unit_id, bucket_event_id="c" * 64)
+    repository = ModeloReconciliationRecordRepository()
+    objects = repository.secure_object_repository
+    prepared = repository.to_secure_object_write(record)
+    envelope = json.loads(prepared.payload.decode("utf-8"))
+    assert envelope["payload"]["source_pdf_sha256"] == "d" * 64
+    del envelope["payload"]["source_pdf_sha256"]
+
+    objects.save(
+        namespace=MODELO_RECONCILIATION_RECORDS_NAMESPACE.namespace,
+        object_key=prepared.object_key,
+        classification=MODELO_RECONCILIATION_RECORDS_NAMESPACE.sensitivity,
+        schema_version=MODELO_RECONCILIATION_RECORDS_NAMESPACE.schema_version,
+        written_at=prepared.written_at,
+        payload=json.dumps(envelope).encode("utf-8"),
+    )
+    loaded = repository.load(prepared.object_key)
+
+    assert loaded is not None
+    assert loaded.source_pdf_sha256 is None
+    assert loaded == record.model_copy(update={"source_pdf_sha256": None})
 
 
 def test_n_records_for_one_work_unit_persist_distinctly_and_all_read_back() -> None:

@@ -168,6 +168,7 @@ def test_public_projection_preserves_stored_differences_and_advisories() -> None
         "event_id",
         "bucket_id",
         "work_unit_id",
+        "source_pdf_sha256",
         "calculation_revision_id",
         "registry_snapshot_ref",
         "source_kind",

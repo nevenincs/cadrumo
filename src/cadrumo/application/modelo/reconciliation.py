@@ -61,6 +61,7 @@ from ...core.casilla_value_kind import CasillaValueKind
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.identity.tax_id import same_tax_identifier, tax_id_identity_token
 from ...core.modelo import Modelo
@@ -260,6 +261,7 @@ class ModeloReconciliationReport(BaseModel):
     bucket_id: BucketId
     source_kind: ModeloReconciliationEvidenceKind
     source_path: str
+    source_pdf_sha256: ContentDigest | None = None
     verdict: ModeloReconciliationVerdict
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
     advisories: tuple[ModeloReconciliationAdvisory, ...] = ()
@@ -518,6 +520,7 @@ def prepare_parsed_justificante(
         advisories=advisories,
         calculation_revision_id=filed_revision.calculation_revision_id if filed_revision else None,
         narrative_subject=f"modelo {justificante.modelo} for ejercicio {justificante.ejercicio or '?'}",
+        source_pdf_sha256=justificante.source_pdf_sha256,
     )
 
 
@@ -584,6 +587,7 @@ def prepare_parsed_declaracion(
         advisories=advisories,
         calculation_revision_id=filed_revision.calculation_revision_id if filed_revision else None,
         narrative_subject=f"modelo {declaracion.modelo} for ejercicio {declaracion.ejercicio}",
+        source_pdf_sha256=declaracion.source_pdf_sha256,
     )
 
 
@@ -651,6 +655,7 @@ def prepare_filed_observation_reconciliation(
         advisories=advisories,
         calculation_revision_id=filed_revision.calculation_revision_id if filed_revision else None,
         narrative_subject=f"captured modelo {observation.modelo} for ejercicio {observation.ejercicio}",
+        source_pdf_sha256=None,
     )
 
 
@@ -732,6 +737,7 @@ def _prepare_reconciliation(
     advisories: list[ModeloReconciliationAdvisory],
     narrative_subject: str,
     calculation_revision_id: CalculationRevisionId | None,
+    source_pdf_sha256: str | None,
 ) -> PreparedModeloReconciliation:
     """Build the report, record and event for one later atomic write.
 
@@ -771,6 +777,7 @@ def _prepare_reconciliation(
         bucket_id=work_unit.bucket_id,
         source_kind=source_kind,
         source_path=source_ref,
+        source_pdf_sha256=source_pdf_sha256,
         verdict=verdict,
         diffs=tuple(diffs),
         advisories=tuple(advisories),
@@ -826,6 +833,7 @@ def _prepare_reconciliation(
         ),
         source_kind=source_kind,
         source_ref=source_ref,
+        source_pdf_sha256=source_pdf_sha256,
         verdict=verdict,
         diffs=tuple(diffs),
         advisories=tuple(advisories),

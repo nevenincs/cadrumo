@@ -14,6 +14,7 @@ from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BY
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
@@ -87,6 +88,7 @@ class ModeloReconciliationListEntryProjection(BaseModel):
     source_kind: ModeloReconciliationEvidenceKind
     registry_snapshot_ref: ModeloVerificationRegistrySnapshotProjection | None = None
     source_path: _BoundedSourcePath
+    source_pdf_sha256: ContentDigest | None = None
     verdict: ModeloReconciliationVerdict
     diff_count: NonNegativeInt
     advisory_count: NonNegativeInt = 0
@@ -116,6 +118,7 @@ class ModeloReconciliationListEntryProjection(BaseModel):
             ),
             source_kind=entry.source_kind,
             source_path=entry.source_path,
+            source_pdf_sha256=entry.source_pdf_sha256,
             verdict=entry.verdict,
             diff_count=entry.diff_count,
             advisory_count=entry.advisory_count,

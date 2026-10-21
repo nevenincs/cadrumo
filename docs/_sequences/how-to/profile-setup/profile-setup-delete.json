@@ -6,89 +6,38 @@
         "--format",
         "json",
         "config",
-        "login",
+        "profile",
+        "delete",
         "docs-sequence-sandbox"
       ],
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "config.login",
-        "notices": [],
+        "command": "config.profile.delete",
+        "notices": [
+          {
+            "action": null,
+            "code": "config.profile.delete.preflight",
+            "context": {
+              "profile_id": "<profile-id>"
+            },
+            "message": "Preflight only: nothing was deleted. Re-run with --yes to delete.",
+            "severity": "info"
+          }
+        ],
         "result": {
-          "absolute_deadline": "2026-04-01T13:00:00+00:00",
-          "active_profile": "docs-sequence-sandbox",
-          "already_authenticated": false,
-          "authenticated_at": "2026-04-01T09:00:00+00:00",
-          "closed_previous_profile": null,
-          "idle_deadline": "2026-04-01T09:15:00+00:00",
+          "completed_at": null,
+          "deleted": false,
+          "display_name": "docs-sequence-sandbox",
+          "earliest_safe_erase_date": null,
+          "fingerprint": {
+            "digest": "a2ee9745eda8ed1fa11bc9743c6b0b1cf8c65cd0818f1b05897f6342d49f2f0a",
+            "file_count": 4,
+            "schema_version": 1,
+            "total_bytes": 1850
+          },
           "profile_id": "<profile-id>",
-          "session_persisted": true
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
-      "exit_code": 0,
-      "kind": "command",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "config",
-        "logout"
-      ],
-      "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.logout",
-        "notices": [],
-        "result": {
-          "already_logged_out": false,
-          "automation_access_remains": null,
-          "automation_enabled": null,
-          "automation_revoked": false,
-          "human_receipt_revoked": true,
-          "keychain_removed": true,
-          "logged_out_profile": "docs-sequence-sandbox",
-          "receipt_removed": true,
-          "scope": "profile_human_access"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
-      "exit_code": 0,
-      "kind": "command",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "config",
-        "login",
-        "docs-sequence-replacement"
-      ],
-      "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.login",
-        "notices": [],
-        "result": {
-          "absolute_deadline": "2026-04-01T13:00:00+00:00",
-          "active_profile": "docs-sequence-replacement",
-          "already_authenticated": false,
-          "authenticated_at": "2026-04-01T09:00:00+00:00",
-          "closed_previous_profile": null,
-          "idle_deadline": "2026-04-01T09:15:00+00:00",
-          "profile_id": "<profile-id>",
-          "session_persisted": true
+          "retained_record_count": 0
         },
         "schema_version": "2",
         "status": "success"
@@ -112,7 +61,7 @@
       ],
       "captures": [],
       "envelope": {
-        "active_profile": "docs-sequence-replacement",
+        "active_profile": null,
         "command": "config.profile.delete",
         "notices": [
           {
@@ -131,7 +80,7 @@
           "display_name": "docs-sequence-sandbox",
           "earliest_safe_erase_date": null,
           "fingerprint": {
-            "digest": "62e1c6e7f88797f6810d7d4706edaf0fecf55cc5011986574ff56850224ecdac",
+            "digest": "a2ee9745eda8ed1fa11bc9743c6b0b1cf8c65cd0818f1b05897f6342d49f2f0a",
             "file_count": 4,
             "schema_version": 1,
             "total_bytes": 1850

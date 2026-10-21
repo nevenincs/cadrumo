@@ -1427,6 +1427,10 @@ llm:
       dispatch_refused: 'Elutasítva: ez a kérés az adózó egyik dokumentumát olvassa,
         és a gépen kívüli %{provider} szolgáltatóhoz küldené az adott híváshoz tartozó
         kifejezett hozzájárulás nélkül.'
+      local_reader_not_loopback: 'Elutasítva: ez a kérés az adózó egyik dokumentumát
+        olvassa, de a helyi olvasó végpontja nem ennek a gépnek a loopback címe. Ha
+        ott olvasnád, a dokumentum elhagyná ezt a gépet, ezért az adózói bizonylatok
+        olvasásához állítsd a helyi olvasót loopback címre.'
       mint_refused: 'Elutasítva: az adózó bizonylatainak gépen kívüli olvasása ehhez
         a híváshoz nem engedélyezett.'
 operation:

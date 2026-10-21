@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:c65bad72c88a3ab6545dd592974cf1bf611f7006ae5653368d591ef146453bda'
+body_hash: 'sha256:f94c8d876bd6ed7fce95e5ef97c0ff22bbdddd99e682938f66c0785bad44edeb'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
@@ -1501,6 +1501,10 @@ related:
 - `S04` `verify:` `browser-focused-repairs` -> `pass`
 - `S04` `verify:` `complete-current-browser` -> `pass`
 - `S04` `verify:` `current-mcp-language` -> `pass`
+- `S04` `verify:` `ci-owner` -> `pass`
+- `S04` `verify:` `full-serial` -> `fail`
+- `S04` `verify:` `historical-baseline` -> `pass`
+- `S04` `verify:` `iva-failure-controls` -> `pass`
 
 ## Notes
 
@@ -1562,3 +1566,5 @@ related:
 - `S04` 5063618728 preserves controlled first draft by observing input after React; activity3PASS and broader focused18PASS1laterAEATFAIL retained. a600d32fef focuses AEAT terminal after ready; unchanged2PASS1FAIL reproduced, final whole3PASS9.5s. Complete frontend check passes; full browser rerun active/no verdict. Current restored env-loader18PASS0.38s after17574b95ce. Root review passes, S03/S04 remain open.
 - `S04` Canonical product+scenario browser793 cases exits0:784PASS9SKIP0FAIL14.7min; prior interruptedattempt retained. 50b6d7e3f0 sharedcheckbox/profilelayout12PASS, b3c58d805a explicitloglevels/preferences10PASS incl3new. Startup11/AEAT3/activity3PASS; rootreview/fullfrontendstaticPASS. Nine skipped realdesktopagent cases queued afternative, no executioncredit. MCP/docs/static/native/capabilities remain; S03/S04 open.
 - `S04` Current45module246definition MCPcohort388expanded plus ambientlanguage LASTsameprocess=389PASS0FAIL0SKIP244.01s run20261021T175128.332521Z-pytest-73108-30eb1c73. Stablefingerprints; all61movedhistoricalerrors mapactualpassingIDs,48retiredremainnoPASScredit. Originalbroadreceipt retained. LayoutCI/docs/serial nowrunning, finalstatic/native/capabilities/populationreconciliationpending; S03/S04 open.
+- `S04` CI reader preserves real command detection; scoped static/review PASS, owner15PASS and whole canonical CI1153PASS220.85s. Two canonical docs golden refreshes exit0, review PASS, strict full docs pending. Serial58 exits1:48PASS2FAIL7ERROR1foreign-hostSKIP6803.78s; IVA selector, installed baseline deadline and lifetime diagnostics remain open. Historical diagnostic restores original4wheels/all82dependencyversions. Current Scoop imports coherent but unexecuted. User confirms concurrent security editors; preserve their edits and defer final current broad/docs/static/native/capability verification until source settles. S03/S04 remain open.
+- `S04` Original4wheels/all82versions healthy baseline PASS unchanged; original timeout and controller lifetime cause unresolved, no product patch. IVA diagnostic two controls PASS0.77s; static/root review PASS. Historical IVA preflight refuses five CRLF/LF byte differences, normalized text identical; no guard change or current product credit. Narrow commit failed on existing unowned index.lock18:30:56UTC, preserved during concurrent security editing. Tracked repairs/audit remain uncommitted. No active owned heavy run; final current gates await stable source; S03/S04 open.

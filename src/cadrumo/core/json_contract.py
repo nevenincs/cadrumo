@@ -60,6 +60,7 @@ from .precondition_action_invariants import (
     PreconditionOutcomeInvariant,
 )
 from .redaction.rules import redact_structured_for_cli_output
+from .terminal_encoding import encode_terminal_text
 
 _log = get_logger(__name__)
 
@@ -493,7 +494,7 @@ def _write_json_document(
         sort_keys=sort_keys,
         default=str,
     )
-    target.write(f"{document}\n")
+    target.write(f"{encode_terminal_text(document)}\n")
     target.flush()
 
 

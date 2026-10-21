@@ -14,6 +14,7 @@ from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocati
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.json_contract import strict_round_trip as _strict_round_trip
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
+from ...core.terminal_encoding import encode_terminal_text
 from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 from .common import (
     active_profile_label,
@@ -55,7 +56,7 @@ def emit_version_report_and_exit(*, detail: bool) -> None:
         from ...application.diagnostics import build_cli_version_report, render_cli_version_text
 
         report = build_cli_version_report()
-        typer.echo(render_cli_version_text(report))
+        typer.echo(encode_terminal_text(render_cli_version_text(report)))
     else:
         from ...core.package_version import PACKAGE_VERSION
 
@@ -63,7 +64,7 @@ def emit_version_report_and_exit(*, detail: bool) -> None:
         # (e.g. "Cadrumo 1.2.3") consumed by CI tooling and package
         # managers. Cadrumo policy treats semver output as machine-format,
         # not operator text, so tr() wrapping is intentionally omitted.
-        typer.echo(f"{_PRODUCT_IDENTITY.display_name} {PACKAGE_VERSION}")
+        typer.echo(encode_terminal_text(f"{_PRODUCT_IDENTITY.display_name} {PACKAGE_VERSION}"))
     raise typer.Exit()
 
 

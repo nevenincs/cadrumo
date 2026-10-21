@@ -64,6 +64,11 @@ def provider_reads_off_host(provider: LLMProvider) -> bool:
     off-host by construction: a new member is a new vendor until someone
     deliberately makes it local, and the failure of a hand-kept cloud list is
     that the newest transport is the one missing from it.
+
+    ``False`` for :attr:`~core.config_support.LLMProvider.LOCAL` is a claim
+    about the transport, not its endpoint: the dispatch gate in
+    :class:`~llm.LLMClient` additionally refuses evidence at a local endpoint
+    that is not loopback.
     """
     return provider is not LLMProvider.LOCAL
 

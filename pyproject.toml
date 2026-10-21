@@ -693,6 +693,8 @@ select = [
   "SIM",  # flake8-simplify
   "TID251",  # flake8-tidy-imports banned-api; enforces the table below
   "RUF",  # ruff-specific rules
+  "PLE2502",  # bidirectional-unicode: Trojan Source reordering controls in source
+  "PLE251",  # invalid-character-*: literal BS, SUB, ESC, NUL and zero-width space in source
   "D",  # pydocstyle (Google-style docstring conventions)
 ]
 ignore = [

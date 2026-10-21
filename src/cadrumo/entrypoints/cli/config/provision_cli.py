@@ -109,6 +109,7 @@ from ....core.operations import OperationTerminalCondition
 from ....core.output_rendering import OutputFormat
 from ....core.tty import stderr_is_tty, stdin_is_tty
 from ..common import emit_envelope, format_of, resolve_cli_precondition_action
+from ..errors import redraw_stderr_line
 from ..errors import write_stderr as draw_stderr
 from .provision_payloads import (
     ProvisionBrowserResult,
@@ -587,8 +588,7 @@ class SetupProgressLine:
         if not self.interactive:
             write_stderr(text)
             return
-        # The stderr funnel redacts and adds no line ending, so the line is redrawn in place.
-        draw_stderr("\r\x1b[2K" + text)
+        redraw_stderr_line(text)
         self._drawn = True
         if settled:
             self.finish()

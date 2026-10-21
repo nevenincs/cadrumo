@@ -20,7 +20,6 @@ from typing import ClassVar, override
 import pytest
 from PIL import Image
 
-from .....core.config import override_settings
 from .....core.image_media_type import ImageMediaType
 from .....tests.loopback_llm import (
     SilentLoopbackHandler,
@@ -86,11 +85,8 @@ def test_local_adapter_forwards_rasterised_images_to_loopback() -> None:
         timeout_s=3,
         images=images,
     )
-    with (
-        serving_loopback(_ObservedOllamaRequest, path="/api/chat") as endpoint,
-        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-    ):
-        completion = asyncio.run(LocalAdapter(timeout_s=3).complete(request))
+    with serving_loopback(_ObservedOllamaRequest, path="/api/chat") as endpoint:
+        completion = asyncio.run(LocalAdapter(timeout_s=3, chat_url=endpoint).complete(request))
 
     observed = events.get_nowait()
     body = observed["body"]
@@ -125,11 +121,8 @@ def test_local_adapter_switches_thinking_off_and_reserves_room_for_it() -> None:
         temperature=0.0,
         timeout_s=3,
     )
-    with (
-        serving_loopback(_ObservedOllamaRequest, path="/api/chat") as endpoint,
-        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-    ):
-        asyncio.run(LocalAdapter(timeout_s=3).complete(request))
+    with serving_loopback(_ObservedOllamaRequest, path="/api/chat") as endpoint:
+        asyncio.run(LocalAdapter(timeout_s=3, chat_url=endpoint).complete(request))
 
     body = events.get_nowait()["body"]
     assert isinstance(body, Mapping)

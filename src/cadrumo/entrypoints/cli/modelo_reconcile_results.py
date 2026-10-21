@@ -22,6 +22,7 @@ from ...application.modelo.reconciliation_records import ModeloReconciliationDif
 from ...application.modelo.taxation_comparison import TaxationRecommendation
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
 from ...core.modelo import Modelo
@@ -73,7 +74,8 @@ class ModeloReconcileResult(OutputSchema):
     :class:`ModeloReconciliationReport` from
     :func:`prepare_modelo_reconcile` or :func:`prepare_modelo_reconcile_bytes`: a work-unit-level
     :obj:`WorkUnitId`, :obj:`BucketId` scope, :class:`ModeloReconciliationVerdict`,
-    :class:`ModeloReconciliationEvidenceKind`, evidence path/reference,
+    :class:`ModeloReconciliationEvidenceKind`, evidence path/reference, the
+    digest of the PDF bytes that were compared when the evidence is a PDF,
     :class:`ModeloReconciliationDiffPayload` list, an aware ``reconciled_at``
     timestamp, and optional narrative. Non-blocking reconciliation advisories
     ride the shared envelope ``notices`` channel exclusively
@@ -87,6 +89,7 @@ class ModeloReconcileResult(OutputSchema):
     bucket_id: BucketId
     source_kind: ModeloReconciliationEvidenceKind
     source_path: str
+    source_pdf_sha256: ContentDigest | None = None
     verdict: ModeloReconciliationVerdict
     diffs: tuple[ModeloReconciliationDiffPayload, ...] = ()
     reconciled_at: datetime

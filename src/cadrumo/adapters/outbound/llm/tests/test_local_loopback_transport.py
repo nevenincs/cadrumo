@@ -16,7 +16,6 @@ from typing import ClassVar, override
 
 import pytest
 
-from .....core.config import override_settings
 from .....tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -96,8 +95,8 @@ def _request() -> ProviderRequest:
     )
 
 
-def _complete() -> ProviderCompletion:
-    return asyncio.run(LocalAdapter(timeout_s=3).complete(_request()))
+def _complete(chat_url: str) -> ProviderCompletion:
+    return asyncio.run(LocalAdapter(timeout_s=3, chat_url=chat_url).complete(_request()))
 
 
 def _route_through_proxy(monkeypatch: pytest.MonkeyPatch, proxy_url: str) -> None:
@@ -131,8 +130,7 @@ def test_loopback_request_ignores_proxy_environment(monkeypatch: pytest.MonkeyPa
     ):
         _route_through_proxy(monkeypatch, proxy_url)
         endpoint = reader_url.replace("127.0.0.1", host)
-        with override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-            completion = _complete()
+        completion = _complete(endpoint)
 
     assert completion.text == "from the reader"
     assert reader_arrivals.get_nowait() == "/api/chat"
@@ -145,8 +143,7 @@ def test_remote_request_keeps_environment_proxy(monkeypatch: pytest.MonkeyPatch)
     _Proxy.arrivals = proxy_arrivals
     with serving_loopback(_Proxy, path="/api/chat") as proxy_url:
         _route_through_proxy(monkeypatch, proxy_url)
-        with override_settings(cadrumo_llm_ollama_chat_url="http://reader.example.test:11434/api/chat"):
-            completion = _complete()
+        completion = _complete("http://reader.example.test:11434/api/chat")
 
     assert completion.text == "from the proxy"
     assert proxy_arrivals.get_nowait() == "http://reader.example.test:11434/api/chat"
@@ -161,11 +158,8 @@ def test_loopback_request_does_not_follow_a_redirect_to_another_host() -> None:
         serving_loopback(_Redirecting, path="/api/chat") as redirecting_url,
     ):
         _Redirecting.location = bystander_url
-        with (
-            override_settings(cadrumo_llm_ollama_chat_url=redirecting_url),
-            pytest.raises(LLMProviderError),
-        ):
-            _complete()
+        with pytest.raises(LLMProviderError):
+            _complete(redirecting_url)
 
     assert redirect_arrivals.get_nowait() == "/api/chat"
     assert _nothing_arrived(bystander_arrivals)

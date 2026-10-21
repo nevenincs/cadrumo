@@ -20,6 +20,7 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_process, diagnostic_scope
 from cadrumo.core.logging import configure_logging, get_logger, register_first_party_logger
 from cadrumo.core.startup_phase_log import startup_phase
+from cadrumo.core.terminal_encoding import encode_terminal_text
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 from cadrumo_client.contracts.contracts import (
     ExitReason,
@@ -322,7 +323,7 @@ def _run_runtime(
         )
         if sys.platform == "win32" and has_async_cleanup_failure(error):
             raise
-        sys.stderr.write(error.reason.value + "\n")
+        sys.stderr.write(encode_terminal_text(error.reason.value) + "\n")
         return int(refusal_exit_reason(error.reason))
     except KeyboardInterrupt as error:
         if sys.platform == "win32" and has_async_cleanup_failure(error):

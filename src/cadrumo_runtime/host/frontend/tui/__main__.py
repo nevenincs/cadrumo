@@ -19,6 +19,7 @@ if __name__ == "__main__":
     os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
 
     from cadrumo.core.async_cleanup import AsyncResourceCleanupError
+    from cadrumo.core.terminal_encoding import encode_terminal_text
     from cadrumo.entrypoints.tui.module_arguments import TUI_MODULE_ARGUMENT_ERROR_EXIT_CODE, TuiModuleArgumentError
     from cadrumo_client.contracts.contracts import RefusalError
     from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -28,7 +29,7 @@ if __name__ == "__main__":
     try:
         raise SystemExit(run_module(sys.argv[1:]))
     except TuiModuleArgumentError as exc:
-        sys.stderr.write(f"error: {exc}\n")
+        sys.stderr.write(f"error: {encode_terminal_text(str(exc))}\n")
         raise SystemExit(TUI_MODULE_ARGUMENT_ERROR_EXIT_CODE) from None
     except (FrontendRefusedError, RefusalError, AsyncResourceCleanupError) as exc:
         if not isinstance(exc, AsyncResourceCleanupError) and not any(

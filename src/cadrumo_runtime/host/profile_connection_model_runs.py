@@ -50,6 +50,7 @@ class PendingModelRun:
 
     profile_id: UUID
     connection_id: UUID
+    lease_id: UUID
     command: WorkerModelRun
     body: bytearray = field(repr=False)
     answered: Event = field(default_factory=Event)
@@ -85,7 +86,11 @@ class ProfileConnectionModelRunsMixin:
                 body[:] = bytes(len(body))
                 return ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE), bytearray()
             pending = PendingModelRun(
-                profile_id=profile_id, connection_id=service.lease.connection_id, command=command, body=body
+                profile_id=profile_id,
+                connection_id=service.lease.connection_id,
+                lease_id=service.lease.lease_id,
+                command=command,
+                body=body,
             )
             self._model_runs[run_id] = pending
         self._events.publish(
@@ -114,38 +119,80 @@ class ProfileConnectionModelRunsMixin:
         for run in waiting:
             run.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE))
 
+    def _withdraw_lease(self: RuntimeProfileConnections, service: ServiceConnection) -> None:
+        """Withdraw the service's lease once no disclosure admitted under it is still being written.
+
+        Called under ``self._guard``. Once the lease is cleared no fetch can claim
+        it; a fetch already writing finishes its bounded output first. Every run
+        bound to the withdrawn lease is then failed, so no retirement is published
+        while a disclosure under that lease is in flight, and none follows it.
+        """
+        lease = service.lease
+        service.lease = None
+        while service.disclosing:
+            self._disclosures.wait()
+        if lease is None:
+            return
+        for run in self._model_runs.values():
+            if run.lease_id == lease.lease_id:
+                run.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE))
+
     def model_run_fetch(
         self: RuntimeProfileConnections,
         context: ConnectionContext,
         channel: ByteChannel,
         request: ModelRunFetchRequest,
     ) -> None:
-        """Hand the waiting request to the service it was announced to, once."""
+        """Hand the waiting request to the service it was announced to, once.
+
+        The lease the run was announced under fences the disclosure: it must still
+        be the service's exact lease after the profile and peer are rechecked, and
+        its withdrawal waits until the bounded header and body writes end.
+        """
         deadline = time.monotonic() + 10
         with self._guard:
             pending = self._model_runs.get(request.run_id)
-            admitted = _admitted_lease(self, context, request)
-            if pending is None or not admitted or pending.connection_id != context.connection_id or pending.fetched:
+            service = self._services.get(context.connection_id)
+            lease = None if service is None else service.lease
+            if (
+                pending is None
+                or service is None
+                or lease is None
+                or not _admitted_lease(self, context, request)
+                or pending.connection_id != context.connection_id
+                or pending.lease_id != lease.lease_id
+                or pending.fetched
+            ):
                 return _refuse(self, context, channel, request.request_id)
             pending.fetched = True
         if not _service_still_admitted(self, context, channel, request):
             pending.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE))
             return _refuse(self, context, channel, request.request_id)
-        command = pending.command
-        write_document(
-            channel,
-            ModelRunFetched(
-                request_id=request.request_id,
-                runtime_boot_id=self.boot,
-                connection_id=context.connection_id,
-                run_id=request.run_id,
-                role=command.role,
-                header=command.header,
-                body_byte_count=len(pending.body),
-            ),
-            deadline=deadline,
-        )
-        write_secret_chunks(channel, pending.body, deadline=deadline)
+        with self._guard:
+            if service.lease is not lease:
+                pending.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE))
+                return _refuse(self, context, channel, request.request_id)
+            service.disclosing += 1
+        try:
+            command = pending.command
+            write_document(
+                channel,
+                ModelRunFetched(
+                    request_id=request.request_id,
+                    runtime_boot_id=self.boot,
+                    connection_id=context.connection_id,
+                    run_id=request.run_id,
+                    role=command.role,
+                    header=command.header,
+                    body_byte_count=len(pending.body),
+                ),
+                deadline=deadline,
+            )
+            write_secret_chunks(channel, pending.body, deadline=deadline)
+        finally:
+            with self._guard:
+                service.disclosing -= 1
+                self._disclosures.notify_all()
 
     def model_run_complete(
         self: RuntimeProfileConnections,
@@ -153,10 +200,18 @@ class ProfileConnectionModelRunsMixin:
         channel: ByteChannel,
         request: ModelRunCompleteRequest,
     ) -> None:
-        """Take the service's answer to a request it fetched and wake the worker that waits for it."""
+        """Take the service's answer to a request it fetched and wake the worker that waits for it.
+
+        The service controls how long the answer's text takes to arrive, so the
+        admission seen before it is read grants nothing afterwards: the profile,
+        the peer and the exact lease are checked again once it is in, and the
+        answer is recorded under the guard that a lease withdrawal holds.
+        """
         deadline = time.monotonic() + 10
         with self._guard:
             pending = self._model_runs.get(request.run_id)
+            service = self._services.get(context.connection_id)
+            lease = None if service is None else service.lease
             admitted = _admitted_lease(self, context, request)
         outcome = request.outcome
         if not admitted or not _service_still_admitted(self, context, channel, request):
@@ -175,12 +230,24 @@ class ProfileConnectionModelRunsMixin:
         if (
             pending is not None
             and pending.connection_id == context.connection_id
+            and pending.lease_id == request.lease_id
             and pending.fetched
             and _answers_its_phase(pending.command, outcome)
+            and _service_still_admitted(self, context, channel, request)
         ):
-            pending.answer(outcome, text)
-            accepted = True
-        else:
+            with self._guard:
+                if (
+                    service is not None
+                    and lease is not None
+                    and service.lease is lease
+                    and self._services.get(context.connection_id) is service
+                    and self._model_runs.get(request.run_id) is pending
+                    and _admitted_lease(self, context, request)
+                    and not pending.answered.is_set()
+                ):
+                    pending.answer(outcome, text)
+                    accepted = True
+        if not accepted:
             text[:] = bytes(len(text))
         write_document(
             channel,

@@ -50,6 +50,7 @@ if TYPE_CHECKING:
 
 from ...core.click_context import argv_requests_json, context_chain_requests_json
 from ...core.errors.error_codes import get_error_exit_code, get_registered_error_code, render_error_json
+from ...core.terminal_encoding import encode_terminal_text
 from ...core.type_guards import is_object_tuple, is_str_keyed_dict
 
 _ABORTED_EXIT_CODE = 1
@@ -339,7 +340,7 @@ def _render_click_exception_text(exc: BaseException) -> None:
     if callable(show):
         show()
     else:
-        sys.stderr.write(str(exc) + "\n")
+        sys.stderr.write(encode_terminal_text(str(exc)) + "\n")
 
 
 def _resolved_command_identifier(exc: BaseException) -> str | None:

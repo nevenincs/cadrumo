@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import io
 import zipfile
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from datetime import datetime
 from pathlib import Path, PurePosixPath
 
@@ -303,9 +303,19 @@ def build_corpus_manifest(
                 content_length=length,
             ),
         )
+    _logger.debug("build_corpus_manifest: hashed %d files under %s", len(raw_entries), corpus_root)
+    return _self_signed_manifest(raw_entries, corpus_root_name=corpus_root_name, generated_at=generated_at)
+
+
+def _self_signed_manifest(
+    raw_entries: list[CorpusEntry],
+    *,
+    corpus_root_name: str,
+    generated_at: datetime,
+) -> CorpusManifest:
+    """Sort ``raw_entries`` and sign them into a self-attesting manifest."""
     raw_entries.sort(key=lambda entry: entry.relative_path)
     entries = tuple(raw_entries)
-    _logger.debug("build_corpus_manifest: hashed %d files under %s", len(entries), corpus_root)
     body = _canonical_manifest_body(
         manifest_version=_MANIFEST_VERSION,
         corpus_root_name=corpus_root_name,
@@ -353,27 +363,28 @@ class CorpusBundleVerification(BaseModel):
 
 
 def build_corpus_bundle(
-    corpus_root: Path,
+    members: Mapping[str, bytes],
     *,
     corpus_root_name: str,
     output_path: Path,
     generated_at: datetime | None = None,
 ) -> CorpusManifest:
-    """Pack ``corpus_root`` into a checksummed zip bundle at ``output_path``.
+    """Pack in-memory ``members`` into a checksummed zip bundle at ``output_path``.
 
-    Walks ``corpus_root`` with the same file-selection rules as
-    :func:`build_corpus_manifest` (hidden files and the manifest
-    sidecar itself are excluded), builds the manifest, then writes a
-    new zip archive containing the manifest under
-    :data:`_BUNDLE_MANIFEST_MEMBER` plus every corpus file under its
-    POSIX-relative path. The archive is assembled fully in memory, then
-    persisted through :func:`~cadrumo.core.atomic_write.atomic_write_bytes`
-    (standard tier: tempfile sibling, fsync, :func:`os.replace`,
-    best-effort parent-directory fsync), so a failure mid-write never
-    leaves a partial bundle at ``output_path``.
+    Builds the manifest over ``members`` (keyed by POSIX-relative archive
+    path, validated like every :class:`CorpusEntry`), then writes a new zip
+    archive containing the manifest under :data:`_BUNDLE_MANIFEST_MEMBER`
+    plus every member. Members are taken as bytes rather than read from a
+    staging directory so a bundle of sensitive members never materialises
+    them as files a hard process stop could strand. The archive is assembled
+    fully in memory, then persisted through
+    :func:`~cadrumo.core.atomic_write.atomic_write_bytes` (standard tier:
+    tempfile sibling, fsync, :func:`os.replace`, best-effort
+    parent-directory fsync), so a failure mid-write never leaves a partial
+    bundle at ``output_path``.
 
     Args:
-        corpus_root: The corpus directory to bundle.
+        members: Archive path to member bytes.
         corpus_root_name: Stable identifier recorded in the manifest
             (mirrors :func:`build_corpus_manifest`).
         output_path: Destination ``.zip`` path. Parent directories are
@@ -386,20 +397,35 @@ def build_corpus_bundle(
         The :class:`CorpusManifest` embedded in the written bundle.
 
     Raises:
-        FileNotFoundError: If ``corpus_root`` does not exist.
-        NotADirectoryError: If ``corpus_root`` is not a directory.
+        CorpusManifestError: If a member path is unsafe or collides with
+            the embedded manifest member.
     """
-    manifest = build_corpus_manifest(
-        corpus_root,
+    if _BUNDLE_MANIFEST_MEMBER in members:
+        raise CorpusManifestError(
+            translated_message="errors.integrity.integrity_storage_corpus_manifest",
+            context={"relative_path": _BUNDLE_MANIFEST_MEMBER, "reserved_member": True},
+        )
+    raw_entries: list[CorpusEntry] = []
+    for relative_path, content in members.items():
+        try:
+            entry = CorpusEntry(relative_path=relative_path, sha256=_sha256_hex(content), content_length=len(content))
+        except ValidationError as exc:
+            raise CorpusManifestError(
+                translated_message="errors.integrity.integrity_storage_corpus_manifest",
+                context={"relative_path": relative_path, "member_path_valid": False},
+            ) from exc
+        raw_entries.append(entry)
+    manifest = _self_signed_manifest(
+        raw_entries,
         corpus_root_name=corpus_root_name,
-        generated_at=generated_at,
+        generated_at=_clock_now() if generated_at is None else generated_at,
     )
     resolved_output = output_path.resolve()
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr(_BUNDLE_MANIFEST_MEMBER, manifest.model_dump_json())
         for entry in manifest.entries:
-            archive.write(corpus_root / entry.relative_path, arcname=entry.relative_path)
+            archive.writestr(entry.relative_path, members[entry.relative_path])
     # Deferred import: core.atomic_write imports core.logging, whose runtime
     # configuration depends on settings. Keep it local to avoid widening this
     # module's eager import surface during settings bootstrap.

@@ -7,12 +7,13 @@ import io
 import sys
 
 from cadrumo.core.redaction.rules import redact_for_cli_output
+from cadrumo.core.terminal_encoding import encode_terminal_text
 
 
 def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
-    """Write a redacted line with a UTF-8 fallback when the stream supports it."""
+    """Write a redacted, terminal-encoded line with a UTF-8 fallback when the stream supports it."""
     target = sys.stderr if stream is None else stream
-    safe = redact_for_cli_output(text)
+    safe = encode_terminal_text(redact_for_cli_output(text))
     reconfigure = getattr(target, "reconfigure", None)
     if callable(reconfigure):
         with contextlib.suppress(Exception):

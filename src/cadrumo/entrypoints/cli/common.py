@@ -39,6 +39,7 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.output_rendering import OutputFormat, render_command_output
+from ...core.terminal_encoding import encode_terminal_text
 from ...core.text_bounds import NonEmptyStr
 from .operator_surface_reconciliation import operator_surface_target_reconciliation
 
@@ -555,7 +556,7 @@ format_of = _format_of
 
 def emit_help_text(ctx: typer.Context) -> None:
     """Emit Click/Typer help text through the shared CLI output boundary."""
-    typer.echo(ctx.get_help())
+    typer.echo(encode_terminal_text(ctx.get_help()))
 
 
 def _render_and_echo(*, format_name: str, payload: object, lines: tuple[str, ...]) -> None:

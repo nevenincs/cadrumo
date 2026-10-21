@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
 from ...core.storage_environment import STORAGE_ROOT, storage_directory
+from ...core.terminal_encoding import encode_terminal_text
 from ...core.type_guards import is_object_collection, is_object_dict
 from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 
@@ -270,7 +271,7 @@ async def _emit_operator_progress(progress: object) -> None:
 
     if not isinstance(progress, OperatorProgress):
         raise TypeError(f"progress must be OperatorProgress, got {type(progress).__name__}")
-    typer.echo(progress.render(), err=True)
+    typer.echo(encode_terminal_text(progress.render()), err=True)
 
 
 def _jsonable_command_surface_value(value: object) -> object:
@@ -355,7 +356,7 @@ def _emit_command_surface_manifest() -> None:
         "search_terms": search_terms,
         "registration_projection": _jsonable_command_surface_value(command_registration_projection()),
     }
-    typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
+    typer.echo(encode_terminal_text(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))))
 
 
 __all__ = [

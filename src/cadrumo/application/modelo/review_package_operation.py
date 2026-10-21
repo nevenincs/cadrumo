@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import tempfile
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
@@ -17,6 +16,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
+from ...core.hashing import sha256_hex
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -37,6 +37,7 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.transactions.own_accounts import OwnAccountId
+from ..filing.export_verification import FilingExportValidatedPayload
 from ..operations.access_port import OperationAccessResolver
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -223,8 +224,30 @@ def _require_review_package_export_identity(
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
+class _DraftPayloadCollector:
+    """Hold the validated fichero bytes in memory for the package being built."""
+
+    def __init__(self) -> None:
+        self._payload: bytes | None = None
+
+    def consume_validated_payload(self, payload: FilingExportValidatedPayload) -> None:
+        self._payload = payload.payload
+
+    def collected(self, exported: ModeloExportResult) -> bytes:
+        """Return the bytes the export receipt describes, refusing any other."""
+        if self._payload is None or sha256_hex(self._payload) != exported.file_sha256:
+            raise ReviewPackageError(
+                translated_message="application.modelo.errors.review_package_generic",
+                context={
+                    "calculation_revision_id": exported.calculation_revision_id,
+                    "detail": "exported draft bytes do not match the export receipt",
+                },
+            )
+        return self._payload
+
+
 class ModeloReviewPackageBuildExecutor:
-    """Keep export, revision capture, staging, and package write in one worker."""
+    """Keep export, revision capture, in-memory draft, and package write in one worker."""
 
     def __init__(
         self,
@@ -271,54 +294,56 @@ class ModeloReviewPackageBuildExecutor:
             with validating_governed_facts(context.authority_operation):
                 workflow_profile = self._profile_resolver(context.authority_operation)
                 output.parent.mkdir(parents=True, exist_ok=True)
-                with tempfile.TemporaryDirectory(prefix="cadrumo-review-package-draft-", dir=output.parent) as name:
-                    draft_path = Path(name) / "draft.fichero-boe"
-                    exported = export_modelo_revision(
-                        ModeloExportCommand(
-                            calculation_revision_id=payload.calculation_revision_id,
-                            output_path=draft_path,
-                            actor=actor,
-                            refund_election=payload.refund_election,
-                            payment_election=payload.payment_election,
-                            prior_domiciliation_election=payload.prior_domiciliation_election,
-                            charge_account_id=payload.charge_account_id,
-                            refund_account_id=payload.refund_account_id,
-                        ),
-                        workflow_profile=workflow_profile,
-                        operation=context.authority_operation,
-                        export_ports=self._export_ports_factory(
-                            bucket_id=profile_id,
-                            m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
-                            operation=context.authority_operation,
-                        ),
-                    )
-                    _require_review_package_export_identity(
-                        exported,
-                        profile_id=profile_id,
-                        work_unit_id=unit.work_unit_id,
-                        calculation_revision_id=revision.calculation_revision_id,
-                    )
-                    _fresh_revisions, fresh_revision_token = bundle.calculation.load_revisioned(
-                        operation=context.authority_operation
-                    )
-                    _fresh_units, fresh_unit_token = bundle.work_unit.load_revisioned()
-                    if fresh_revision_token != revision_token or fresh_unit_token != unit_token:
-                        raise ReviewPackageError(
-                            translated_message="application.modelo.errors.review_package_generic",
-                            context={
-                                "calculation_revision_id": payload.calculation_revision_id,
-                                "detail": "calculation or work unit changed during export",
-                            },
-                        )
-                    built = build_review_package(
-                        revision=revision,
-                        work_unit=unit,
-                        draft_bytes=draft_path.read_bytes(),
+                # The fichero bytes stay in memory until they are archived: the
+                # package at ``output`` is the only artefact that carries them.
+                draft = _DraftPayloadCollector()
+                exported = export_modelo_revision(
+                    ModeloExportCommand(
+                        calculation_revision_id=payload.calculation_revision_id,
                         output_path=output,
-                        built_by=actor,
+                        actor=actor,
+                        refund_election=payload.refund_election,
+                        payment_election=payload.payment_election,
+                        prior_domiciliation_election=payload.prior_domiciliation_election,
+                        charge_account_id=payload.charge_account_id,
+                        refund_account_id=payload.refund_account_id,
+                    ),
+                    workflow_profile=workflow_profile,
+                    operation=context.authority_operation,
+                    export_ports=self._export_ports_factory(
+                        bucket_id=profile_id,
+                        m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
                         operation=context.authority_operation,
-                        notes=payload.notes,
+                    ),
+                    payload_consumer=draft,
+                )
+                _require_review_package_export_identity(
+                    exported,
+                    profile_id=profile_id,
+                    work_unit_id=unit.work_unit_id,
+                    calculation_revision_id=revision.calculation_revision_id,
+                )
+                _fresh_revisions, fresh_revision_token = bundle.calculation.load_revisioned(
+                    operation=context.authority_operation
+                )
+                _fresh_units, fresh_unit_token = bundle.work_unit.load_revisioned()
+                if fresh_revision_token != revision_token or fresh_unit_token != unit_token:
+                    raise ReviewPackageError(
+                        translated_message="application.modelo.errors.review_package_generic",
+                        context={
+                            "calculation_revision_id": payload.calculation_revision_id,
+                            "detail": "calculation or work unit changed during export",
+                        },
                     )
+                built = build_review_package(
+                    revision=revision,
+                    work_unit=unit,
+                    draft_bytes=draft.collected(exported),
+                    output_path=output,
+                    built_by=actor,
+                    operation=context.authority_operation,
+                    notes=payload.notes,
+                )
             return ModeloReviewPackageBuildPublicResultV1.from_results(
                 built, export_bucket_event_id=exported.bucket_event_id
             )

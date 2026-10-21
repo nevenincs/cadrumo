@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import UtcInstant
@@ -176,6 +177,11 @@ class ModeloReconciliationRecord(BaseModel):
     ``source_ref`` is the evidence reference as supplied: an operator filesystem
     path, or the secure-storage handle on the bytes path. It is stored here at
     full length; only the bucket-event copy is shortened to fit the payload cap.
+    ``source_pdf_sha256`` is the digest of the exact PDF bytes that were parsed
+    and compared, so a path that later names other bytes cannot be mistaken
+    for this evidence. It is absent on records written before it was carried
+    and on comparisons against a captured register observation, which have no
+    source PDF.
     """
 
     model_config = _STRICT_FROZEN
@@ -187,6 +193,7 @@ class ModeloReconciliationRecord(BaseModel):
     registry_snapshot_ref: RegistrySnapshotRef
     source_kind: ModeloReconciliationEvidenceKind
     source_ref: str = ""
+    source_pdf_sha256: ContentDigest | None = None
     verdict: ModeloReconciliationVerdict
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
     advisories: tuple[ModeloReconciliationAdvisory, ...] = ()
@@ -227,6 +234,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
     calculation_revision_id: CalculationRevisionId | None = None
     source_kind: ModeloReconciliationEvidenceKind
     source_path: str
+    source_pdf_sha256: ContentDigest | None = None
     registry_snapshot_ref: RegistrySnapshotRef | None = None
     verdict: ModeloReconciliationVerdict
     diff_count: NonNegativeInt
@@ -327,6 +335,7 @@ def list_modelo_reconciliations(
             work_unit_id=record.work_unit_id,
             source_kind=record.source_kind,
             source_path=record.source_ref,
+            source_pdf_sha256=record.source_pdf_sha256,
             verdict=record.verdict,
             diff_count=len(record.diffs),
             advisory_count=len(record.advisories),

@@ -40,6 +40,7 @@ from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_even
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language, profile_output_language_precedence, tr
 from cadrumo.core.logging import get_logger
+from cadrumo.core.terminal_encoding import encode_terminal_text
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.tui.account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
@@ -282,7 +283,7 @@ def _unavailable_inventory(inventory: ProfileLoginInventoryV1) -> int | None:
         fields={"outcome": "refused", "reason_code": inventory.reason_code},
         level=ERROR,
     )
-    sys.stderr.write(f"{inventory.reason_code}\n")
+    sys.stderr.write(encode_terminal_text(f"{inventory.reason_code}") + "\n")
     return SESSION_INVENTORY_UNAVAILABLE
 
 
@@ -305,9 +306,9 @@ def _runtime_session_refusal(error: FrontendRefusedError | RefusalError) -> int:
         level=ERROR,
         primary_error=error,
     )
-    sys.stderr.write(f"{reason}\n")
+    sys.stderr.write(f"{encode_terminal_text(reason)}\n")
     if (remedy := connection_unavailable_remedy(reason)) is not None and remedy:
-        sys.stderr.write(f"{remedy}\n")
+        sys.stderr.write(f"{encode_terminal_text(remedy)}\n")
     return SESSION_INVENTORY_UNAVAILABLE
 
 

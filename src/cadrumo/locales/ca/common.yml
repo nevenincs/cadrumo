@@ -1441,6 +1441,11 @@ llm:
       dispatch_refused: 'Rebutjat: aquesta sol·licitud llegeix un document del contribuent
         i l''enviaria al proveïdor extern %{provider} sense una autorització de consentiment
         per a aquesta invocació.'
+      local_reader_not_loopback: 'Rebutjat: aquesta sol·licitud llegeix un document
+        del contribuent i el punt de connexió del lector local no és l''adreça de
+        loopback d''aquest equip. Llegir-lo allà enviaria el document fora d''aquest
+        equip; configura el lector local amb una adreça de loopback per llegir documents
+        del contribuent.'
       mint_refused: 'Rebutjat: la lectura externa de documents del contribuent no
         està permesa per a aquesta invocació.'
 operation:

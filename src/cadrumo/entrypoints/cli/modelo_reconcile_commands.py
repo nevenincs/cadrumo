@@ -49,6 +49,7 @@ def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliati
         bucket_id=report.bucket_id,
         source_kind=report.source_kind,
         source_path=report.source_path,
+        source_pdf_sha256=report.source_pdf_sha256,
         verdict=report.verdict,
         diffs=tuple(
             ModeloReconciliationDiffPayload(

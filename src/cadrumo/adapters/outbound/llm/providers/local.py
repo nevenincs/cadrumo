@@ -1,8 +1,9 @@
 """Local provider adapter for Ollama-compatible runtimes.
 
-Speaks the Ollama ``/api/chat`` endpoint (resolved per call from
-``Settings.cadrumo_llm_ollama_chat_url``) and adapts its response into the
-:class:`~llm.providers.base.ProviderCompletion` shape.
+Speaks the Ollama ``/api/chat`` endpoint it is constructed with and adapts its
+response into the :class:`~llm.providers.base.ProviderCompletion` shape. The
+endpoint is resolved by the caller, so the client's dispatch gate classifies
+the same URL this adapter posts to.
 A request to a loopback endpoint never goes through a proxy and never follows a
 redirect; a request to any other endpoint keeps the HTTP client's ordinary
 environment-proxy behaviour.
@@ -166,13 +167,18 @@ class LocalAdapter(ProviderAdapter):
     provider = LLMProvider.LOCAL
     supports_images = True
 
-    def __init__(self, timeout_s: int) -> None:
+    def __init__(self, timeout_s: int, *, chat_url: str) -> None:
         """Initialize the adapter.
 
         Args:
             timeout_s: Per-request HTTP timeout in seconds.
+            chat_url: The ``/api/chat`` endpoint every request is posted to.
+                Taken at construction rather than read from settings per call,
+                so a gate that judged this URL cannot be bypassed by a setting
+                that changed between the judgement and the post.
         """
         self._timeout_s = timeout_s
+        self._chat_url = chat_url
 
     def _http_client(self, chat_url: str) -> httpx.AsyncClient:
         """Return the HTTP client for ``chat_url``.
@@ -213,7 +219,7 @@ class LocalAdapter(ProviderAdapter):
             user_message["images"] = [image.base64_data for image in request.images]
         messages.append(user_message)
         settings = load_settings()
-        chat_url = settings.cadrumo_llm_ollama_chat_url
+        chat_url = self._chat_url
         async with self._http_client(chat_url) as client:
             response = await post_provider_request(
                 client,

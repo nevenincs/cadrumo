@@ -22,9 +22,10 @@ as a strict ``bytes`` / pydantic inequality.
 from __future__ import annotations
 
 import hashlib
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import pytest
 from sqlalchemy import select
@@ -34,6 +35,13 @@ from .....core.errors.error_codes import build_error_envelope, resolve_error_mes
 from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentPersistenceError, AttachmentValidationError
 from .....domain.attachments.models import Attachment
+from .....domain.attachments.service import (
+    AttachmentBytesContent,
+    AttachmentIngestionRequest,
+    add_attachment,
+    link_attachment_invoice,
+    link_attachment_transaction,
+)
 from ..attachment import AttachmentStore
 from ..crypto.encrypted_columns import (
     decrypt_secure_object_payload,
@@ -359,3 +367,64 @@ def test_malformed_attachment_manifest_payload_is_localized_for_all_read_paths(
                     "surface": "attachment_store",
                     "violation": "manifest_payload",
                 }, f"{case_label}:{read_path}"
+
+
+class _RecordCollector(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__(level=logging.DEBUG)
+        self.records: list[logging.LogRecord] = []
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+def test_attachment_ingest_and_link_logs_omit_digests_and_relations(tmp_path: Path) -> None:
+    """Plaintext diagnostics must not carry content digests or protected record relations."""
+
+    invoice_id = "inv-log-canary-7f3a"
+    transaction_id = "tx-log-canary-91c2"
+    payload = b"%PDF-1.4\n%attachment-log-redaction-canary\n" + b"\x00" * 32
+    digest = hashlib.sha256(payload).hexdigest()
+    collector = _RecordCollector()
+    loggers = [
+        logging.getLogger("cadrumo.adapters.persistence.storage.attachment"),
+        logging.getLogger("cadrumo.domain.attachments.service"),
+    ]
+    previous_levels = [logger.level for logger in loggers]
+    for logger in loggers:
+        logger.addHandler(collector)
+        logger.setLevel(logging.DEBUG)
+    try:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+            store = AttachmentStore()
+            request = AttachmentIngestionRequest(
+                kind=AttachmentKind.INVOICE_PDF,
+                source=AttachmentSource.LOCAL_FILE,
+                source_reference="invoice.pdf",
+                mime_type="application/pdf",
+                captured_at=_CAPTURED_AT,
+                bucket_id=_BUCKET_ID,
+            )
+            attachment = add_attachment(store, content=AttachmentBytesContent(data=payload), request=request)
+            add_attachment(store, content=AttachmentBytesContent(data=payload), request=request)
+            link_attachment_invoice(store, attachment_id=attachment.attachment_id, invoice_id=invoice_id)
+            linked = link_attachment_transaction(
+                store, attachment_id=attachment.attachment_id, transaction_id=transaction_id
+            )
+    finally:
+        for logger, level in zip(loggers, previous_levels, strict=True):
+            logger.removeHandler(collector)
+            logger.setLevel(level)
+
+    assert attachment.attachment_id == digest
+    assert linked.linked_invoice_ids == (invoice_id,)
+    assert linked.linked_transaction_ids == (transaction_id,)
+    messages = [record.getMessage() for record in collector.records]
+    assert f"stored attachment object bytes={len(payload)}" in messages
+    assert "reusing existing attachment object" in messages
+    assert "linked attachment to invoice" in messages
+    assert "linked attachment to transaction" in messages
+    for message in messages:
+        for protected in (digest, digest[:12], invoice_id, transaction_id):
+            assert protected not in message, message

@@ -33,6 +33,7 @@ from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegis
 from cadrumo.adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
+from cadrumo.application.filing.export_verification import FilingExportValidatedPayload
 from cadrumo.application.modelo.action_errors import (
     ModeloChargeAccountMissingError,
     ModeloPaymentElectionCapabilityRefusedError,
@@ -190,6 +191,62 @@ def test_export_modelo_303_matched_wallet_revision_writes_fichero_with_redacted_
         assert "1200" not in event_json
         assert "synthetic-modelo-303-export" not in result_json
         assert "synthetic-modelo-303-export" not in event_json
+
+
+class _CollectingPayloadConsumer:
+    def __init__(self) -> None:
+        self.payloads: list[FilingExportValidatedPayload] = []
+
+    def consume_validated_payload(self, payload: FilingExportValidatedPayload) -> None:
+        self.payloads.append(payload)
+
+
+def test_export_modelo_303_to_a_payload_consumer_writes_no_file_and_records_the_event(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
+            operation=_authority_operation_for_test,
+        )
+        package_path = tmp_path / "review-package.zip"
+        consumer = _CollectingPayloadConsumer()
+        files_before = sorted(path for path in tmp_path.rglob("*") if path.is_file())
+
+        result = export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=verified.calculation_revision_id,
+                output_path=package_path,
+                actor="operator",
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+            ),
+            workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
+            export_ports=modelo_export_ports_for_test(
+                product_software_identity=_product_software_identity(),
+                bucket_id=bucket_id,
+                taxpayer_tax_id=taxpayer_nif,
+                work_unit=work_repo,
+                calculation=calc_repo,
+                bucket_event=event_repo,
+            ),
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+            operation=_authority_operation_for_test,
+            payload_consumer=consumer,
+        )
+
+        assert not package_path.exists()
+        new_files = sorted(path for path in tmp_path.rglob("*") if path.is_file() and path not in files_before)
+        delivered_digest = hashlib.sha256(consumer.payloads[0].payload).hexdigest()
+        assert not [path for path in new_files if hashlib.sha256(path.read_bytes()).hexdigest() == delivered_digest]
+        (delivered,) = consumer.payloads
+        assert taxpayer_nif in delivered.payload.decode("utf-8")
+        assert result.output_path == package_path
+        assert result.byte_size == len(delivered.payload)
+        assert result.file_sha256 == hashlib.sha256(delivered.payload).hexdigest()
+        event = event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))[-1]
+        assert event.event_id == result.bucket_event_id
+        assert event.payload["output_path"] == str(package_path)
+        assert event.payload["file_sha256"] == result.file_sha256
 
 
 def test_export_modelo_303_stamps_the_development_identity_into_the_developer_header_fields(

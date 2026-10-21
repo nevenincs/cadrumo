@@ -32,11 +32,12 @@ from cadrumo_client.contracts.model_runs import (
 )
 
 from ....application.operations.model_runs import ModelRunPort, current_model_run_port
-from ....core.config import Settings
+from ....core.config import Settings, load_settings
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.hashing import content_hash_hex
 from ....core.logging import get_logger
+from ....core.loopback_endpoint import endpoint_host_is_loopback
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.time.clock import now
@@ -79,6 +80,7 @@ from .providers.local import LocalAdapter
 _LOGGER = get_logger(__name__)
 
 _EVIDENCE_CONSENT_DISPATCH_REFUSAL_LOCALE_KEY = "llm.evidence.consent.dispatch_refused"
+_EVIDENCE_LOCAL_READER_REFUSAL_LOCALE_KEY = "llm.evidence.consent.local_reader_not_loopback"
 
 
 def _elapsed_ms(monotonic_start: float) -> int:
@@ -459,7 +461,11 @@ class LLMClient:
             if agent is not None
             else request.model_override or self._default_model(provider)
         )
-        self._require_evidence_consent(provider, model, request)
+        # Resolved once, here, and handed to both the gate and the adapter: the
+        # URL the gate judges on-host is then the only URL the request can be
+        # posted to.
+        local_chat_url = load_settings().cadrumo_llm_ollama_chat_url if provider is LLMProvider.LOCAL else None
+        self._require_evidence_consent(provider, model, request, local_chat_url=local_chat_url)
         request_id = self._request_id(request)
         cached = self.cache.read(request, provider, model)
         if cached is not None:
@@ -467,7 +473,7 @@ class LLMClient:
             self.usage_recorder.record(self.usage_recorder.build_record(response, self.prompt_id, self.caller))
             return response
 
-        adapter = self._build_adapter(provider, agent=agent, request=request)
+        adapter = self._build_adapter(provider, agent=agent, request=request, local_chat_url=local_chat_url)
         provider_request = ProviderRequest(
             request_id=request_id,
             model=model,
@@ -753,7 +759,14 @@ class LLMClient:
         finally:
             arena.release()
 
-    def _require_evidence_consent(self, provider: LLMProvider, model: str, request: LLMRequest) -> None:
+    def _require_evidence_consent(
+        self,
+        provider: LLMProvider,
+        model: str,
+        request: LLMRequest,
+        *,
+        local_chat_url: str | None,
+    ) -> None:
         """Refuse an off-host dispatch of taxpayer evidence without consent.
 
         Per-invocation consent is required; permitted dispatches are recorded.
@@ -796,19 +809,34 @@ class LLMClient:
         err on: the response is still cloud-derived, so a withdrawal must list
         it as a re-derivation candidate.
 
+        **The local provider is on-host only at a loopback endpoint.** The
+        provider enum says which transport runs, not where its endpoint is, and
+        the Ollama endpoint may be configured to another machine. An
+        evidence-derived request at a non-loopback local endpoint is refused
+        outright rather than routed through the token: the consent surfaces
+        refuse to name the local provider for an off-host read, and a ledger
+        entry recording ``local`` would not say where the document went.
+
         Args:
             provider: The resolved provider this request would dispatch at.
             model: The resolved model this request would dispatch at, recorded
                 in the ledger entry.
             request: The request, carrying its evidence marker and any token.
+            local_chat_url: The endpoint a local dispatch will be posted to,
+                the same value handed to the adapter; ``None`` for any other
+                provider.
 
         Raises:
             LLMConsentError: When an evidence-derived request would be
                 dispatched off-host without a valid per-invocation consent
-                token, in a gestor deployment at all, or when the consent
-                ledger cannot record the permitted dispatch.
+                token, in a gestor deployment at all, at a local endpoint that
+                is not loopback, or when the consent ledger cannot record the
+                permitted dispatch.
         """
-        if not request.evidence_derived or not provider_reads_off_host(provider):
+        if not request.evidence_derived:
+            return
+        if not provider_reads_off_host(provider):
+            self._require_loopback_local_reader(provider, local_chat_url)
             return
         token = request.consent_token
         if self.settings.cadrumo_evidence_gestor_mode or token is None:
@@ -834,6 +862,30 @@ class LLMClient:
             provider=provider.value,
             model=model,
             surface=token.surface,
+        )
+
+    @staticmethod
+    def _require_loopback_local_reader(provider: LLMProvider, chat_url: str | None) -> None:
+        """Refuse an evidence read at a local endpoint that is not this machine's loopback.
+
+        A missing endpoint is refused too: an on-host claim nobody can check is
+        not one this gate accepts. The URL itself stays out of the refusal,
+        because a configured endpoint may carry credentials in its user part.
+
+        Raises:
+            LLMConsentError: When ``chat_url`` is absent or not loopback.
+        """
+        if chat_url is not None and endpoint_host_is_loopback(chat_url):
+            return
+        facts = {"provider": provider.value, "local_reader_loopback": False}
+        raise LLMConsentError(
+            translated_message=_EVIDENCE_LOCAL_READER_REFUSAL_LOCALE_KEY,
+            context=facts,
+            precondition_verdict=llm_no_recovery_verdict(
+                LLMPreconditionCondition.EVIDENCE_LOCAL_READER_LOOPBACK,
+                facts=facts,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            ),
         )
 
     @staticmethod
@@ -987,11 +1039,19 @@ class LLMClient:
         return _AgentDispatch(port=port, role=role, lane=lane)
 
     def _build_adapter(
-        self, provider: LLMProvider, *, agent: _AgentDispatch | None = None, request: LLMRequest | None = None
+        self,
+        provider: LLMProvider,
+        *,
+        agent: _AgentDispatch | None = None,
+        request: LLMRequest | None = None,
+        local_chat_url: str | None = None,
     ) -> ProviderAdapter:
         timeout_s = self.settings.cadrumo_llm_default_timeout_s
         if provider is LLMProvider.LOCAL:
-            return LocalAdapter(timeout_s=timeout_s)
+            if local_chat_url is None:
+                msg = "a local adapter is built only from the endpoint the dispatch gate judged"
+                raise InternalInvariantError(msg)
+            return LocalAdapter(timeout_s=timeout_s, chat_url=local_chat_url)
         if agent is None or request is None:
             msg = "an agent adapter is built only from a resolved lane"
             raise InternalInvariantError(msg)

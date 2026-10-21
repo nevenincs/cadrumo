@@ -73,9 +73,10 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "text crosses into stdout. It replaced two entries that each owned a "
         "private copy of the same three lines."
     ),
-    ("entrypoints/cli/errors.py", "write_stderr", "write"): (
-        "IS the stderr funnel: every write in this function emits redacted_text, "
-        "already through the error-path redaction boundary."
+    ("entrypoints/cli/errors.py", "_write_stderr_encoded", "write"): (
+        "IS the stderr funnel's writer: its only callers, write_stderr and "
+        "redraw_stderr_line, hand it text already through the error-path "
+        "redaction boundary and terminal encoding, so every write emits safe_text."
     ),
     ("entrypoints/cli/common.py", "emit_help_text", "typer.echo"): (
         "Click-generated help text (ctx.get_help()), composed by click from "
@@ -92,7 +93,7 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "renderer context exists, and carries no operator data to redact."
     ),
     ("entrypoints/cli/_app_live_auth_preflight.py", "emit_live_auth_preflight", "typer.echo"): (
-        "Already redacted: emits redact_for_cli_output(line) to stderr. Honours "
+        "Already redacted: emits encode_terminal_text(redact_for_cli_output(line)) to stderr. Honours "
         "the redaction boundary, though it hand-calls the policy rather than "
         "going through the renderer, so it does not consult the "
         "reveal-identifiers opt-in the way the funnel does."

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:263b54b999175cf93a3798a4394fcbdf8ceea314df6d191cd806c290d906c6bd'
+body_hash: 'sha256:bf05851b48f46667e779b28899df85fdf6e9078196e3100ea3ca0df8c4ef2f2e'
 related:
   - '[[2026-10-15-full-suite-repair-plan]]'
 ---
@@ -42,6 +42,26 @@ Two old generated release staging directories were moved, after absolute-path an
 ### fixture-authority | low | Backlog corruption must be encrypted under the registered profile's real key
 
 The native backlog test's synthetic resumed session wrote a row invisible to the password-authenticated worker. The repaired fixture authenticates the actual registered profile before saving the deliberately invalid catalogue, then closes local custody before invoking the real CLI worker. Both the local degradation contract and end-to-end warning projection passed in `resume-overview-corruption-authenticated.log`. No product degradation behavior or encryption contract was weakened.
+
+### ci-goldens-and-serial-followup-2026-10-21 | medium | Preserve failed serial evidence while concurrent security work continues
+
+The CI recipe reader now recognizes only inert PowerShell comparison-and-exit guards as intrinsic control flow. Real commands in predicates or bodies remain visible to duplicate detection. Root review and scoped lint, formatting and type checks pass; the complete owner passes 15 cases and the canonical CI suite passes 1,153 cases in 220.85 seconds (run 20261021T180630.730812Z-pytest-35368-f5d862cd). The earlier 1,147-pass/one-failure receipt remains retained. This repairs the test reader without relaxing command duplication checks.
+
+Canonical targeted refreshes of the profile-delete and IRPF agenda documentation sequences exit successfully. The delete fixture matches the documented two-command preflight/delete workflow, with the active profile cleared only after deletion. The agenda diff changes eight warning messages and eight matching notices to reviewed profile wording, preserving arguments, exits, envelopes and counts. Root review passes; strict full documentation verification remains pending.
+
+The serial run 20261021T181208.973621Z-pytest-35704-f95568bb exits 1 with 48 passes, two failures, seven errors and one genuine foreign-host skip across 58 selected cases in 6,803.78 seconds. It remains a failed receipt. The IVA installed-TUI failure is a missing public selector; bounded callback diagnostics preserve existing deadlines and success assertions, with functional proof pending. The installed-oracle missing-authority case fails during healthy baseline result collection, before authority mutation. No lock cycle or production cause is established. Historical product wheels and all 82 installed dependency versions have been restored for diagnosis. Seven Scoop errors share a copied snapshot with an absent imported symbol; current imports are coherent, which earns no execution credit. Fresh complete-owner verification remains pending.
+
+Serial cleanup also reports a shared registry authority held by an operation and a ContextVar token from a different context; both remain under investigation. Earlier exact dead-owner ACL residue was reclaimed after bounded handle, identity and ACL checks. Partial restoration and final receipts retain the qualification that reference-directory contents were not independently inspected before canonical removal.
+
+The user confirms many concurrent security editors in this worktree. Their changes are preserved. Final broad, documentation, static, native and capability checks await settled source; passing subsets do not establish a current complete result. The affected-owner inventory includes runtime dependencies of the earlier 389-pass MCP result. Final native verification will use one documentation-enabled Debug artifact through all consumers before restoring the original documentation-disabled cache. Disk measurements are read-only; no shared build output was deleted. S03/S04 remain open; overall review is PENDING.
+
+### bounded-diagnostics-and-shared-index-2026-10-21 | low | Keep historical diagnosis separate from current verification
+
+The installed-oracle healthy baseline passes unchanged against the original four product wheels and all 82 recorded dependency versions. Observations complete in 90.249 seconds, with 51.094 seconds between durable success and CLI completion. Host CPU samples range from 42.5 to 100 percent, so this is not an idle-machine claim. Stack capture did not expose the result-collection hot path. The original timeout and the separate controller authority-lifetime warning remain unresolved; no runtime, deadline or assertion patch is justified by this evidence. See build/verification/installed-oracle-diagnostic-20261021/baseline-20261021T201753Z/diagnostic-decision.json.
+
+The IVA child diagnostic preserves failure across callback exit and writes a value-free typed receipt for missing controls. Both new unit controls pass in 0.77 seconds (run 20261021T202313.411964Z-pytest-11876-3b5b250b); scoped Ruff, formatting, ty and root review pass. The historical installed journey refuses before launch because all five raw source hashes differ between CRLF checkout files and LF wheel members. Read-only normalized comparisons show identical text, but byte guards remain unchanged and the refusal earns no product execution credit. The original missing control remains unresolved; see build/verification/portable-remaining-execution-20261021.json and iva-historical-source-comparison-20261021.json.
+
+The narrow commit of the reviewed CI repair, documentation fixtures and audit/ledger failed because the worktree index.lock already exists. It is a zero-byte file last written at 18:30:56 UTC, unowned by this session's agents. The lock is preserved while concurrent security editors are active. All owned changes remain available in the worktree; no new commit is claimed. Read-only measurements of three canonical Release roots total 4.749 GiB logical and remain insufficient for the packaged setup prerequisite; nothing was deleted. No owned heavy diagnostic remains active. Final current checks and S03/S04 remain pending.
 
 ## Recommendations
 

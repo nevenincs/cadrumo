@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import atomic_write
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -476,3 +477,38 @@ def _drop_member(package_path: Path, member: str) -> None:
 
 
 __all__: list[str] = []
+
+
+def test_build_review_package_never_stages_members_as_plaintext_files(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """At publication -- the last moment a hard stop could strand anything -- no member exists as a file."""
+    work_unit = _work_unit()
+    revision = _revision(work_unit)
+    output_path = tmp_path / "review-package.zip"
+    publish = atomic_write.atomic_write_bytes
+    seen_at_publication: list[tuple[str, ...]] = []
+
+    def observe_then_publish(path: Path, payload: bytes) -> None:
+        seen_at_publication.append(
+            tuple(sorted(entry.relative_to(tmp_path).as_posix() for entry in tmp_path.rglob("*"))),
+        )
+        publish(path, payload)
+
+    monkeypatch.setattr(atomic_write, "atomic_write_bytes", observe_then_publish)
+
+    build_review_package(
+        revision=revision,
+        work_unit=work_unit,
+        draft_bytes=_DRAFT_BYTES,
+        output_path=output_path,
+        built_by="operator",
+        operation=authority_operation,
+    )
+
+    assert seen_at_publication == [()]
+    assert sorted(entry.name for entry in tmp_path.iterdir()) == ["review-package.zip"]
+    with zipfile.ZipFile(output_path, "r") as archive:
+        assert archive.read("draft.fichero-boe") == _DRAFT_BYTES

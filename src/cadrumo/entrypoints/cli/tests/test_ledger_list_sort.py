@@ -32,6 +32,7 @@ from ....application.ledger.transaction_projection import (
 )
 from ....application.review.filter import LedgerReviewFilterSpec
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
+from ....core.output_rendering import render_command_output
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
@@ -265,3 +266,72 @@ def test_project_ledger_list_renders_canonical_sort_from_real_encrypted_reposito
     # so the assertion checks the ascending ORDER of the rendered amounts.
     amounts = [row.amount for row in projection.rows]
     assert amounts == ["100", "200", "300"]
+
+
+def test_project_ledger_list_renders_imported_terminal_controls_inert(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """An imported narrative carrying terminal controls reaches text output inert.
+
+    The description is persisted through the real encrypted repository, read
+    back through the canonical list query and rendered through the central
+    text renderer. The embedded newline and tab must not forge a row or a
+    column, and no ESC, CR, C1 or bidi character may survive.
+    """
+    hostile = "Cafe\x1b[2J\x1b]52;c;cHduZWQ=\x07\rfake\nforged\trow\u202egnp.exe\x9b31m"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="65853d4f-9e30-443f-9f91-b048ef4d292e") as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        repo.save(
+            TransactionCatalogue.from_transactions(
+                [
+                    _transaction(
+                        provider_id="hostile",
+                        amount=Decimal("10.00"),
+                        description=hostile,
+                        created_at=datetime(2024, 1, 1, tzinfo=UTC),
+                    ),
+                ],
+            ),
+        )
+        ports = compose_ledger_action_ports(bucket_id=profile.bucket_id, operation=authority_operation)
+        canonical_page = query_ledger_transaction_list(
+            LedgerTransactionListQuery(
+                spec=LedgerReviewFilterSpec.from_strings([]),
+                sort_by=LedgerSortField.AMOUNT,
+                sort_order=LedgerSortOrder.ASC,
+            ),
+            bucket_id=profile.bucket_id,
+            ports=ports,
+        )
+        projection = project_ledger_list(
+            LedgerListSnapshot(
+                profile_id=UUID(profile.bucket_id),
+                rows=tuple(
+                    LedgerTransactionReviewProjection(
+                        transaction=LedgerTransactionProjection.from_payload(
+                            ledger_transaction_payload(item.transaction),
+                        ),
+                        review_status=ledger_transaction_review_status(item.transaction),
+                        group_label=item.transaction.group_label,
+                    )
+                    for item in canonical_page.results
+                ),
+                total=canonical_page.total,
+                truncated=canonical_page.truncated,
+                offset=0,
+                limit=None,
+                by_group=False,
+            ),
+        )
+
+    rendered = render_command_output(format_name="text", payload=None, lines=projection.lines)
+    rendered_lines = rendered.text.split("\n")
+    assert len(rendered_lines) == len(projection.lines) == 3
+    data_columns = rendered_lines[-1].split("\t")
+    assert len(data_columns) == len(rendered_lines[1].split("\t"))
+    for control in ("\x1b", "\x07", "\r", "\u202e", "\x9b"):
+        assert control not in rendered.text
+    assert "Cafe\\u001b[2J" in data_columns[4]
+    assert "\\nforged\\trow\\u202egnp.exe" in data_columns[4]
+    assert projection.rows[0].description == hostile

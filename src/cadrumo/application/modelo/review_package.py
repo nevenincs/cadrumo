@@ -41,7 +41,6 @@ See Also:
 
 from __future__ import annotations
 
-import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
@@ -241,16 +240,11 @@ def build_review_package(
       ledger evidence (a non-ledger modelo, or a manual-only filing).
     * ``package-info.json`` — the :class:`ReviewPackageManifest` descriptor.
 
-    Members are written to a temporary staging directory then packed with
-    :func:`~core.corpus_manifest.manifest.build_corpus_bundle`, which itself
-    writes atomically (temp-file-then-rename) so a build failure never
-    leaves a partial package at ``output_path``. The staging directory is a
-    sibling of ``output_path`` (``dir=output_path.parent``), never the
-    OS-shared temp directory: it holds the rendered fichero-BOE draft plus
-    the revision's typed observations and bundled ledger evidence in
-    plaintext for the few milliseconds the archive build takes, and a
-    world-shared temp location is not an acceptable home for that
-    (``sensitive-financial-data-secure-storage-only``).
+    Members are packed from memory by
+    :func:`~core.corpus_manifest.manifest.build_corpus_bundle`, which writes
+    atomically (temp-file-then-rename) so a build failure never leaves a
+    partial package at ``output_path``. No member is ever written as a
+    plaintext file of its own: only the finished archive reaches disk.
 
     Raises:
         ReviewPackageRevisionStateError: If ``revision.state`` is not in
@@ -317,37 +311,22 @@ def build_review_package(
         else '{"present": false}'
     )
 
-    # Pin staging beside the operator-chosen destination rather than the
-    # OS-shared temp directory: the members below are plaintext filing
-    # evidence, and the default ``tempfile`` location is not a sanctioned
-    # home for that (``sensitive-financial-data-secure-storage-only``).
-    # ``mkdir`` runs before the ``TemporaryDirectory`` call because the
-    # latter requires ``dir`` to already exist; a destination whose parent
-    # cannot be created (permission denied, a path component is a file, disk
-    # full) refuses loudly here rather than silently falling back to
-    # ``tempfile.gettempdir()``.
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="cadrumo-review-package-", dir=output_path.parent) as staging_name:
-        staging_root = Path(staging_name)
-        (staging_root / _DRAFT_MEMBER).write_bytes(draft_bytes)
-        (staging_root / _REVISION_MEMBER).write_text(
-            revision.model_dump_json(indent=2),
-            encoding=UTF_8_ENCODING,
-            newline="\n",
-        )
-        (staging_root / _EVIDENCE_MEMBER).write_text(evidence_payload, encoding=UTF_8_ENCODING, newline="\n")
-        (staging_root / _PACKAGE_INFO_MEMBER).write_text(
-            manifest.model_dump_json(indent=2),
-            encoding=UTF_8_ENCODING,
-            newline="\n",
-        )
-        corpus_root_name = f"review-package:{revision.calculation_revision_id[:16]}"
-        corpus_manifest = build_corpus_bundle(
-            staging_root,
-            corpus_root_name=corpus_root_name,
-            output_path=output_path,
-            generated_at=built_at,
-        )
+    # The members are plaintext filing evidence, so they are handed to the
+    # bundle builder as bytes: none of them exists as a file of its own that a
+    # hard process stop could strand beside the destination.
+    members = {
+        _DRAFT_MEMBER: draft_bytes,
+        _REVISION_MEMBER: revision.model_dump_json(indent=2).encode(UTF_8_ENCODING),
+        _EVIDENCE_MEMBER: evidence_payload.encode(UTF_8_ENCODING),
+        _PACKAGE_INFO_MEMBER: manifest.model_dump_json(indent=2).encode(UTF_8_ENCODING),
+    }
+    corpus_root_name = f"review-package:{revision.calculation_revision_id[:16]}"
+    corpus_manifest = build_corpus_bundle(
+        members,
+        corpus_root_name=corpus_root_name,
+        output_path=output_path,
+        generated_at=built_at,
+    )
 
     return ReviewPackageBuildResult(
         output_path=output_path,
