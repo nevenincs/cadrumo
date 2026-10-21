@@ -78,6 +78,7 @@ from cadrumo_client.transport.credentials import open_installed_credential_clien
 from cadrumo_client.transport.enrollment_client import NativeEnrollmentClient
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
+from cadrumo_mcp.mcp.protocol_contract import SIGN_IN_REMEDY
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 from cadrumo_runtime.host.frontend.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
 from cadrumo_runtime.host.frontend.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
@@ -743,15 +744,18 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                     progress("rotated_sdk_read_exit")
                     delete_profile_session(storage_root=tmp_path / "cadrumo-storage", profile_id=profile.profile_id)
                     progress("cli_deny_enter")
-                    denied = await asyncio.to_thread(
-                        profile.invoke_password,
-                        "config",
-                        "profile",
-                        "automation",
-                        "deny",
-                        "grant",
-                        str(initial.grant_id),
-                    )
+                    # Correlate this synthetic grant through the CLI's explicit
+                    # identifier-disclosure option; ordinary output masks the UUID.
+                    with override_settings(cadrumo_cli_reveal_identifiers=True):
+                        denied = await asyncio.to_thread(
+                            profile.invoke_password,
+                            "config",
+                            "profile",
+                            "automation",
+                            "deny",
+                            "grant",
+                            str(initial.grant_id),
+                        )
                     progress("cli_deny_exit")
                     assert denied.exit_code == 0, denied.output
                     document = _record(json.loads(denied.stdout))
@@ -759,14 +763,15 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                     denial = _record(document["result"])
                     assert denial["kind"] == "grant" and denial["target_id"] == str(initial.grant_id)
                     assert _record(denial["receipt"])["access_denied"] is True
-                    # Which operations exist is public and still answered, under no session.
-                    public = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
-                    assert not public.is_error and _record(public.structured_content)["session"] == "none"
+                    search = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+                    assert search.is_error
+                    search_refusal = _record(search.structured_content)
+                    assert search_refusal["outcome"] == "refused" and search_refusal["code"] in _FENCED
                     refused = await sdk.call_tool("result", {"result": result_request.model_dump(mode="json")})
                     assert refused.is_error
                     refusal = _record(refused.structured_content)
                     assert refusal["outcome"] == "refused" and refusal["code"] in _FENCED
-                    for answer in (refusal, _record(public.structured_content)):
+                    for answer in (refusal, search_refusal):
                         assert str(reference) not in repr(answer)
                         assert str(rotated.credential_reference) not in repr(answer)
 
@@ -783,13 +788,18 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                     revoked = _record(status.structured_content)
                     assert revoked["outcome"] == "status" and revoked["profile_id"] == str(profile.profile_id)
                     assert revoked["authenticated"] is False and revoked["denial"] in _REVOKED
-                    public = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
-                    assert not public.is_error and _record(public.structured_content)["session"] == "none"
+                    search = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+                    assert search.is_error and _record(search.structured_content) == {
+                        "outcome": "refused",
+                        "code": revoked["denial"],
+                        "remedy": SIGN_IN_REMEDY,
+                    }, search.structured_content
                     refused = await sdk.call_tool("observe", {"observation": {}})
                     assert refused.is_error and _record(refused.structured_content) == {
                         "outcome": "refused",
                         "code": revoked["denial"],
-                    }
+                        "remedy": SIGN_IN_REMEDY,
+                    }, refused.structured_content
         except BaseException as error:
             primary = error
             error.add_note(safe_trace())
