@@ -515,9 +515,9 @@ msgstr ""
 "Aquesta via no actualitza de manera massiva imports de pagament, "
 "descripcions, adjunts, tipus de deducció ni l'estat de divisió/fusió; fes"
 " servir el flux de moviments per a aquestes edicions a escala de fila. "
-"Comprova els recomptes d'aplicades i ometudes i cada fila fallida. Un lot"
-" pot reeixir només en part; corregeix únicament les files fallides en "
-"lloc de repetir el fitxer sencer."
+"Comprova els recomptes d'aplicades i omeses i cada fila fallida. Un lot "
+"pot reeixir només en part; corregeix únicament les files fallides en lloc"
+" de repetir el fitxer sencer."
 
 #: ../../how-to/classify-transactions.md:212
 msgid "Apply stored rules automatically"
