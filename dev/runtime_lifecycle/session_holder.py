@@ -27,7 +27,12 @@ from .caller_owned_root import AcceptanceError, require
 _PASSWORD_FRAME_LIMIT = 4096
 _COMMAND_FRAME_LIMIT = 16_384
 _STARTUP_SECONDS = 30.0
+# Grace for stdin to settle and the child to exit on its own after EOF; also bounds thread joins.
 _CLOSE_SECONDS = 10.0
+# Bound for the OS to report that an ended child has exited and closed its stderr, after
+# close lets it exit or terminates or kills it. It is separate from the exit grace because a
+# short or refused grace must not shorten reaping.
+_REAP_SECONDS = 10.0
 _WRITE_SECONDS = 30.0
 _STDERR_CHUNK_BYTES = 4096
 # The leading arguments that start the runtime console script as a role of the desktop image.
@@ -257,7 +262,7 @@ class _AsyncPipeOwner:
             except BaseException as error:
                 failures.append(error)
             try:
-                settled = await self._wait(_CLOSE_SECONDS)
+                settled = await self._wait(_REAP_SECONDS)
             except BaseException as error:
                 failures.append(error)
         if not settled:
@@ -268,7 +273,7 @@ class _AsyncPipeOwner:
             except BaseException as error:
                 failures.append(error)
             try:
-                settled = await self._wait(_CLOSE_SECONDS)
+                settled = await self._wait(_REAP_SECONDS)
             except BaseException as error:
                 failures.append(error)
         if not settled:
@@ -286,7 +291,7 @@ class _AsyncPipeOwner:
                     failures.append(stderr_error)
         else:
             try:
-                await asyncio.wait_for(asyncio.shield(self._stderr_task), timeout=_CLOSE_SECONDS)
+                await asyncio.wait_for(asyncio.shield(self._stderr_task), timeout=_REAP_SECONDS)
             except TimeoutError as error:
                 failure = AcceptanceError("runtime holder stderr drainer did not stop")
                 failure.__cause__ = error
@@ -594,7 +599,7 @@ class WindowsRuntimeSessionHolder:
         if scope is None:
             return
         self._scope_termination_attempted = True
-        scope.terminate(timeout=_CLOSE_SECONDS)
+        scope.terminate(timeout=_REAP_SECONDS)
         self._scope = None
 
     def close(self) -> None:

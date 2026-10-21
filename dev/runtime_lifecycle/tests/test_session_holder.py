@@ -165,10 +165,15 @@ async def test_async_close_terminates_a_child_that_ignores_stdin_eof(
         ("-u", "-c", "import time; time.sleep(30)"),
         os.environ,
     )
+    stream = owner.process.stdin
+    assert stream is not None
+    # Deliver EOF before close so only the exit grace, not stdin settlement, meets the short bound.
+    stream.close()
+    await stream.wait_closed()
 
     await owner.close()
 
-    assert owner.process.returncode is not None
+    assert owner.process.returncode not in {None, 0}
     assert owner._stderr_task.done()
 
 
@@ -213,7 +218,7 @@ async def test_async_close_retries_stdin_wait_while_stream_is_already_closing(
 async def test_async_close_retains_owner_until_stderr_drainer_finishes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(session_holder, "_CLOSE_SECONDS", 0.05)
+    monkeypatch.setattr(session_holder, "_REAP_SECONDS", 0.05)
     owner = await _AsyncPipeOwner.launch(
         Path(sys.executable).resolve(strict=True),
         ("-u", "-c", "pass"),
