@@ -206,11 +206,31 @@ def test_ledger_notices_do_not_redeclare_actions_or_english_fallbacks() -> None:
     assert failures == []
 
 
-#: Floors for the two pattern-matched corpora below. Live: seven payload
-#: modules and twenty-six ledger modules, against 221 .py files in the same
-#: directory. Floors, not pinned counts.
+#: Floors for the two filename-selected corpora below. Public result modules
+#: and private payload modules belong to the same wire surface.
 _MINIMUM_PAYLOAD_MODULES = 3
 _MINIMUM_LEDGER_MODULES = 10
+
+
+def _ledger_module_paths(directory: Path, *, payloads_only: bool = False) -> tuple[Path, ...]:
+    """Keep renamed public modules and operation wrappers inside the ledger scan."""
+    return tuple(
+        path
+        for path in scan_directory(directory, pattern="*.py")
+        if "ledger" in path.stem.split("_")
+        and (not payloads_only or "payload" in path.stem or path.stem.endswith("_results"))
+    )
+
+
+def test_ledger_scan_keeps_public_results_private_payloads_and_operation_wrappers(tmp_path: Path) -> None:
+    enrolled = {"_ledger_llm_payloads.py", "ledger_business_payloads.py", "ledger_results.py"}
+    wrappers = {"_ledger_support.py", "ledger_commands.py", "operation_ledger_view.py"}
+    unrelated = {"calendar_results.py", "ledgerlike_payloads.py"}
+    for name in enrolled | wrappers | unrelated:
+        (tmp_path / name).write_text("", encoding="utf-8")
+
+    assert {path.name for path in _ledger_module_paths(tmp_path)} == enrolled | wrappers
+    assert {path.name for path in _ledger_module_paths(tmp_path, payloads_only=True)} == enrolled
 
 
 def test_ledger_payloads_do_not_redeclare_notice_or_recovery_prose() -> None:
@@ -218,12 +238,9 @@ def test_ledger_payloads_do_not_redeclare_notice_or_recovery_prose() -> None:
     failures: list[str] = []
     payload_directory = Path(inspect.getfile(ledger_results)).parent
     forbidden_suffixes = ("_notice", "_hint", "_suggestion", "_recovery")
-    payload_modules = tuple(scan_directory(payload_directory, pattern="_ledger*payload*.py"))
+    payload_modules = _ledger_module_paths(payload_directory, payloads_only=True)
 
-    # The corpus is a GLOB, and the pattern pins a leading underscore. This
-    # repository is actively promoting public symbols out of underscore
-    # modules, so a rename lands the file one character outside the pattern,
-    # the walk returns nothing, and an empty failure list reads as compliance.
+    # A public promotion or payload-to-results rename must retain coverage.
     assert len(payload_modules) >= _MINIMUM_PAYLOAD_MODULES, (
         f"only {len(payload_modules)} ledger payload module(s) matched; below this the walk "
         "has stopped finding its subject and an empty failure list proves nothing"
@@ -327,7 +344,7 @@ def test_every_ledger_translation_is_catalogue_owned_without_a_runtime_fallback(
     """Every ledger translation resolves from the authored locale catalogues."""
     ledger_directory = Path(inspect.getfile(ledger_commands)).parent
     failures: list[str] = []
-    ledger_modules = tuple(scan_directory(ledger_directory, pattern="_ledger*.py"))
+    ledger_modules = _ledger_module_paths(ledger_directory)
 
     assert len(ledger_modules) >= _MINIMUM_LEDGER_MODULES, (
         f"only {len(ledger_modules)} ledger module(s) matched the pattern; below this the "
