@@ -687,8 +687,8 @@ def test_former_aeat_product_forms_are_rejected(surface: str, expected_family: s
 _RELEASE = _WORKFLOWS_DIR / "release.yml"
 
 _DISTRIBUTION_STAGING_STEPS = {
-    "Refuse a distribution over the index file cap": "var/release-dist",
-    "Select the sealed distribution bytes": "dist",
+    "Refuse a distribution over the index file cap": "build/release-dist",
+    "Select the sealed distribution bytes": "build/release-dist",
 }
 
 
