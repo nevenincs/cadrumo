@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import json
 import sys
 from collections.abc import Iterator, Sequence
@@ -552,15 +553,19 @@ def test_bindings_resolve_rejects_malformed_override_syntax() -> None:
 
 
 def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
-    """The canonical ``bindings`` sub-Typer registration lives in
-    ``_modelo.py``. Any other module that re-implements a Typer
-    named ``bindings`` competes with the canonical surface and must
-    be removed."""
+    """Declarative bindings leaves admit no parallel imperative Typer registration."""
 
+    from cadrumo.entrypoints.cli._modelo_nonwork_bindings_command_specs import MODELO_NONWORK_BINDINGS_COMMAND_SPECS
+    from cadrumo.entrypoints.cli.modelo_discovery_commands import bindings_list, bindings_resolve
     from cadrumo.tests.inventory import REPO_ROOT
 
     cli_root = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
-    canonical = cli_root / "_modelo.py"
+    expected_handlers = {"list": bindings_list, "resolve": bindings_resolve}
+    assert {spec.token for spec in MODELO_NONWORK_BINDINGS_COMMAND_SPECS} == set(expected_handlers)
+    for spec in MODELO_NONWORK_BINDINGS_COMMAND_SPECS:
+        assert spec.handler is not None and spec.handler.target is not None
+        handler = expected_handlers[spec.token]
+        assert spec.handler.target.identity == f"{handler.__module__}:{handler.__qualname__}"
     forbidden_patterns = (
         'typer.Typer(\n    name="bindings"',
         'typer.Typer(name="bindings"',
@@ -568,8 +573,6 @@ def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
     offenders: list[Path] = []
     scanned = 0
     for py_file in scan_directory(cli_root, pattern="*.py", recursive=True):
-        if py_file == canonical:
-            continue
         if py_file.name.startswith("test_"):
             continue
         scanned += 1
@@ -581,7 +584,7 @@ def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
         "package relocation or rename), so an empty offender list would mean 'nothing was "
         "checked' rather than 'nothing is wrong'"
     )
-    assert offenders == [], f"Parallel bindings Typer outside the canonical _modelo.py: {[str(p) for p in offenders]}"
+    assert offenders == [], f"Parallel imperative bindings Typer: {[str(p) for p in offenders]}"
 
 
 def test_bindings_list_and_resolve_emit_no_bucket_event() -> None:
@@ -592,9 +595,11 @@ def test_bindings_list_and_resolve_emit_no_bucket_event() -> None:
     any bucket-event emission call. If a future change wires one
     in by accident, this test fails fast."""
 
-    from cadrumo.tests.inventory import REPO_ROOT
+    from cadrumo.entrypoints.cli.modelo_discovery_commands import bindings_list, bindings_resolve
 
-    canonical_text = (REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli" / "_modelo.py").read_text(encoding="utf-8")
+    canonical = inspect.getmodule(bindings_list)
+    assert canonical is not None and inspect.getmodule(bindings_resolve) is canonical
+    canonical_text = inspect.getsource(canonical)
     forbidden_emitters = (
         "emit_bucket_event",
         "emit_modelo_bucket_event",
@@ -604,7 +609,7 @@ def test_bindings_list_and_resolve_emit_no_bucket_event() -> None:
     for needle in forbidden_emitters:
         assert needle not in canonical_text, (
             f"Forbidden bucket-event emission pattern {needle!r} found in "
-            "_modelo.py; bindings list/resolve must remain read-only."
+            f"{canonical.__name__}; bindings list/resolve must remain read-only."
         )
 
 

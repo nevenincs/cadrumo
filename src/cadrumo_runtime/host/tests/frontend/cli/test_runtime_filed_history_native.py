@@ -98,6 +98,20 @@ def test_native_filed_history_requires_configured_provider_before_browser(tmp_pa
     error = require_error_document(refused.output)["error"]
     assert error["code"] == "REFUSED_AUTH_LOGIN_PRECONDITION", error
     context = cast(dict[str, object], error["context"])
-    assert context["reason"] == "REFUSED_AUTH_LOGIN_PRECONDITION"
+    assert set(context) == {
+        "provider",
+        "route",
+        "required_fields",
+        "reasons",
+        "effect",
+        "operation_id",
+        "terminal_condition",
+    }, error
+    assert context["effect"] == "none"
     assert context["terminal_condition"] == "refused"
-    assert isinstance(context["operation_id"], str)
+    assert isinstance(context["operation_id"], str) and len(context["operation_id"]) == 64
+    assert context["provider"] == context["route"] == ""
+    assert isinstance(context["required_fields"], str)
+    assert set(context["required_fields"].split(", ")) == {"identity.tax_id", "auth.provider"}
+    assert isinstance(context["reasons"], str) and context["reasons"]
+    assert "expired" not in context["reasons"].lower()

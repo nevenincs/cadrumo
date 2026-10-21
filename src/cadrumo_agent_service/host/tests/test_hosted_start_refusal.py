@@ -104,9 +104,10 @@ def test_a_start_whose_setup_fails_before_ready_is_a_refused_event_with_the_reas
         ),
     )
 
-    with caplog.at_level(logging.DEBUG), pytest.raises(AgentHostError) as refused:
-        controller.start()
-    event = service_failure(refused.value)
+    with caplog.at_level(logging.DEBUG, logger="cadrumo_agent_service.service"):
+        with pytest.raises(AgentHostError) as refused:
+            controller.start()
+        event = service_failure(refused.value)
 
     # The agent's own refused line, read as the agent's code, not as a tree that merely ended.
     assert refused.value.reason is AgentHostRefusal.AGENT_REFUSED

@@ -84,6 +84,7 @@ async def _discover(adapter: RuntimeMcpAdapter) -> dict[str, dict[str, Any]]:
         "family": await adapter.call("search", {"family": "auth", "limit": 200}),
         "read": await adapter.call("describe", {"definition_id": _READ}),
         "patch": await adapter.call("describe", {"definition_id": _PATCH}),
+        "patch_page": await adapter.call("describe", {"definition_id": _PATCH, "vocabulary_limit": 2}),
         "unregistered": await adapter.call("describe", {"definition_id": _UNREGISTERED}),
     }
 
@@ -148,5 +149,14 @@ async def test_under_a_session_the_runtime_answers_with_the_registrys_descriptio
     assert len(listed) < len([item for item in scope.operations if item.startswith("auth.")])
     for name, definition_id in (("read", _READ), ("patch", _PATCH)):
         assert _described(under[name]) == _registry().describe_public_definition(definition_id)
-    assert under["patch"]["payload_vocabulary"]["questions"]
+    assert under["patch"]["payload_vocabulary"] == {
+        "path": "values[].question_id",
+        "saved_answers_source": {"definition_id": "user-profile.view", "page_kind": "questions"},
+        "next_cursor": 0,
+    }
+    assert _described(under["patch_page"]) == _registry().describe_public_definition(_PATCH)
+    vocabulary_page = under["patch_page"]["payload_vocabulary"]
+    assert 0 < len(vocabulary_page["questions"]) <= 2
+    assert vocabulary_page["saved_answers_source"] == under["patch"]["payload_vocabulary"]["saved_answers_source"]
+    assert vocabulary_page["total"] >= len(vocabulary_page["questions"])
     assert under["unregistered"] == {"outcome": "refused", "code": "operation_denied"}

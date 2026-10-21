@@ -25,8 +25,8 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import p
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID
+from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
-from cadrumo.core.config import override_settings
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_mcp.mcp.protocol_contract import PERSON_ACT_REMEDY, PROFILE_CHANGED_REMEDY, SIGN_IN_REMEDY
 from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
@@ -64,34 +64,35 @@ async def test_mcp_works_only_inside_the_profile_the_person_is_signed_in_to(
 ) -> None:
     with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
         other = _another_profile()
+        with active_profile_pointer_transaction(runtime.root) as pointer:
+            pointer.select(str(runtime.profile_id))
         holder = holding_person(runtime)
         adapter = RuntimeMcpAdapter(profile_id=None, client=None, requests_attendance=True)
         try:
-            with override_settings(cadrumo_active_profile=str(runtime.profile_id)):
-                # Inside the signed-in profile the agent works.
-                inside = await attended_status(runtime, holder, adapter)
-                found = await adapter.call("search", _READ)
-                # The person's own acts stay the person's.
-                persons_act = await adapter.call(
-                    "describe", {"definition_id": PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID}
-                )
+            # Inside the runtime's selected, signed-in profile the agent works.
+            inside = await attended_status(runtime, holder, adapter)
+            found = await adapter.call("search", _READ)
+            # The person's own acts stay the person's.
+            persons_act = await adapter.call(
+                "describe", {"definition_id": PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID}
+            )
 
-                # The person retires the first sign-in before moving to another profile.
-                assert adapter.client is not None
-                attended_id = adapter.client.session_id
-                retired = await asyncio.to_thread(holder.human_sign_out)
-                assert attended_id in retired.session_ids
-                person = await open_installed_client(profile_id=other, frontend=OperationFrontendProjection.CLI)
-                try:
-                    await asyncio.to_thread(person.login_password, bytearray(PROFILE_INPUT.encode()), timeout=120)
-                    signed_out = await adapter.call("search", _READ)
-                    status_signed_out = await adapter.call("status", {})
-
-                    with override_settings(cadrumo_active_profile=str(other)):
-                        # The connection was made for the first profile and is never moved to the second.
-                        moved = await adapter.call("search", _READ)
-                finally:
-                    await asyncio.to_thread(person.close)
+            # Observe retirement before the person signs in to a different profile.
+            assert adapter.client is not None
+            attended_id = adapter.client.session_id
+            retired = await asyncio.to_thread(holder.human_sign_out)
+            assert attended_id in retired.session_ids
+            signed_out = await adapter.call("search", _READ)
+            status_signed_out = await adapter.call("status", {})
+            person = await open_installed_client(profile_id=other, frontend=OperationFrontendProjection.CLI)
+            try:
+                await asyncio.to_thread(person.login_password, bytearray(PROFILE_INPUT.encode()), timeout=120)
+                with active_profile_pointer_transaction(runtime.root) as pointer:
+                    pointer.select(str(other))
+                # The admitted connection is never moved to the second profile.
+                moved = await adapter.call("search", _READ)
+            finally:
+                await asyncio.to_thread(person.close)
         finally:
             try:
                 await adapter.close()

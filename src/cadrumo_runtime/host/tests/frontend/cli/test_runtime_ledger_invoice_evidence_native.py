@@ -12,6 +12,7 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.core.config_support import LLMProvider
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
@@ -102,6 +103,16 @@ def test_native_structured_extract_confirm_readback_and_stale_digest_refusal(tmp
         evidence_id = unwrap_cli_result(added)["evidence_id"]
         assert isinstance(evidence_id, str) and len(evidence_id) == 16
 
+        before_off_host = _invoke(profile, "app", "ledger", "invoice", "list")
+        assert before_off_host.exit_code == 0, (before_off_host.output, failures)
+        before_off_host_catalogue = unwrap_cli_result(before_off_host)
+        assert before_off_host_catalogue["count"] == 0
+        before_off_host_evidence = _invoke(profile, "app", "ledger", "evidence", "view", evidence_id)
+        assert before_off_host_evidence.exit_code == 0, (before_off_host_evidence.output, failures)
+        before_off_host_drafts = _invoke(profile, "app", "ledger", "evidence", "review", "list")
+        assert before_off_host_drafts.exit_code == 0, (before_off_host_drafts.output, failures)
+        assert unwrap_cli_result(before_off_host_drafts)["rows"] == []
+
         off_host_refusal = _invoke(
             profile,
             "app",
@@ -111,25 +122,41 @@ def test_native_structured_extract_confirm_readback_and_stale_digest_refusal(tmp
             "--evidence-id",
             evidence_id,
             "--off-host-provider",
-            "OPENAI",
+            LLMProvider.AGENT.value,
             "--acknowledge-off-host",
             env={"CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED": "false"},
         )
         assert off_host_refusal.exit_code != 0, off_host_refusal.output
         refusal_error = require_error_document(off_host_refusal.output)["error"]
         refusal_context = refusal_error["context"]
-        assert refusal_context["reason"] == "REFUSED_LLM_CONSENT"
-        assert refusal_context["refusal_code"] == "REFUSED_LLM_CONSENT"
-        assert refusal_context["terminal_condition"] == "refused"
+        assert refusal_error["code"] == "REFUSED_LLM_CONSENT", refusal_error
+        assert refusal_error["category"] == "REFUSED"
+        assert set(refusal_context) == {
+            "reason",
+            "refusal_code",
+            "effect",
+            "operation_id",
+            "terminal_condition",
+        }, refusal_error
+        assert refusal_context["reason"] == refusal_context["refusal_code"] == "REFUSED_LLM_CONSENT"
         assert refusal_context["effect"] == "none"
-        assert isinstance(refusal_context["operation_id"], str)
-        assert len(refusal_context["operation_id"]) == 64
+        assert refusal_context["terminal_condition"] == "refused"
+        assert isinstance(refusal_context["operation_id"], str) and len(refusal_context["operation_id"]) == 64
         assert refusal_error["action"]["failed_condition_id"] == "cli.refusal.completed"
         assert refusal_error["action"]["no_recovery_outcome"] == "operator_decision"
         assert any(
             item.stage == "profile_operation_returned" and item.definition_id == "ledger.evidence.extract"
             for item in failures
         )
+        after_off_host = _invoke(profile, "app", "ledger", "invoice", "list")
+        assert after_off_host.exit_code == 0, (after_off_host.output, failures)
+        assert unwrap_cli_result(after_off_host) == before_off_host_catalogue
+        after_off_host_evidence = _invoke(profile, "app", "ledger", "evidence", "view", evidence_id)
+        assert after_off_host_evidence.exit_code == 0, (after_off_host_evidence.output, failures)
+        assert unwrap_cli_result(after_off_host_evidence) == unwrap_cli_result(before_off_host_evidence)
+        after_off_host_drafts = _invoke(profile, "app", "ledger", "evidence", "review", "list")
+        assert after_off_host_drafts.exit_code == 0, (after_off_host_drafts.output, failures)
+        assert unwrap_cli_result(after_off_host_drafts) == unwrap_cli_result(before_off_host_drafts)
 
         extracted = _invoke(profile, "app", "ledger", "evidence", "extract", "--evidence-id", evidence_id)
         assert extracted.exit_code == 0, (extracted.output, failures)
@@ -204,12 +231,15 @@ def test_native_structured_extract_confirm_readback_and_stale_digest_refusal(tmp
         )
         assert refused.exit_code != 0, refused.output
         error = require_error_document(refused.output)["error"]
+        assert error["code"] == "REFUSED_INVOICE_EVIDENCE_REVIEW_CHANGED", error
+        assert error["category"] == "REFUSED"
         context = error["context"]
-        assert context["terminal_condition"] == "refused"
+        assert set(context) == {"reason", "refusal_code", "effect", "operation_id", "terminal_condition"}, error
+        assert context["reason"] == context["refusal_code"] == "REFUSED_INVOICE_EVIDENCE_REVIEW_CHANGED"
         assert context["effect"] == "none"
-        assert context["refusal_code"] == "REFUSED_INVOICE_EVIDENCE_REVIEW_CHANGED"
-        assert isinstance(context["reason"], str) and context["reason"]
+        assert context["terminal_condition"] == "refused"
         assert isinstance(context["operation_id"], str) and len(context["operation_id"]) == 64
+        assert isinstance(error["message"], str) and error["message"]
 
         viewed_after = _invoke(profile, "app", "ledger", "evidence", "view", evidence_id)
         assert viewed_after.exit_code == 0, (viewed_after.output, failures)

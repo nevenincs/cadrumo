@@ -8,8 +8,18 @@ from typing import Any
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.application.ledger.actions_import import (
+    persist_prepared_ledger_source_import,
+    prepare_ledger_source_import,
+)
+from cadrumo.application.ledger.models import LedgerSourceImportCommand
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.core.config import override_settings
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.currency.service import CurrencyNormalizationService
+from cadrumo.entrypoints.ledger_action_composition import compose_ledger_import_ports, compose_ledger_read_ports
 from cadrumo.tests.inventory import FIXTURES_DIR
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
@@ -47,16 +57,34 @@ _PROFILE_FACTS = {
 
 @pytest.fixture(scope="module")
 def _corpus_profile(tmp_path_factory: pytest.TempPathFactory) -> Iterator[NativeCliProfileFixture]:
-    """Seed one encrypted profile through the real authenticated CLI worker."""
+    """Seed recorded-rate imports, then review the encrypted profile through its real CLI worker."""
     with native_cli_profile_scope(tmp_path_factory.mktemp("ledger-corpus-review")) as profile:
         profile.register(label="native-ledger-corpus-review", facts=_PROFILE_FACTS)
-        close_active_bucket_session()
-        for name in _CORPUS_FILES:
-            result = _invoke(
-                profile,
-                ["app", "ledger", "import", "--file", str(_CORPUS / name), "--provider", "csv"],
-            )
-            assert result.exit_code == 0, f"{name}: {result.output}"
+        assert profile.label is not None
+        try:
+            with bundled_indexed_authority().operation() as operation:
+                authenticate_profile_for_invocation(
+                    name=profile.label,
+                    passphrase_callback=lambda: profile.passphrase,
+                    profile_decode_context=operation.profile_decode_context(),
+                )
+                bucket_id = resolve_login_target(profile.label).bucket_id
+                repositories = compose_ledger_read_ports(bucket_id=bucket_id, operation=operation)
+                normalizer = CurrencyNormalizationService(rate_provider=recorded_ecb_rate_provider())
+                for name in _CORPUS_FILES:
+                    prepared = prepare_ledger_source_import(
+                        LedgerSourceImportCommand(bucket_id=bucket_id, path=_CORPUS / name, provider="csv"),
+                        ports=compose_ledger_import_ports(),
+                    )
+                    result = persist_prepared_ledger_source_import(
+                        prepared,
+                        transaction_repository=repositories.transaction_repository,
+                        bucket_event_repository=repositories.bucket_event_repository,
+                        currency_normalizer=normalizer,
+                    )
+                    assert result.imported > 0, name
+        finally:
+            close_active_bucket_session()
         yield profile
 
 

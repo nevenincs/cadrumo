@@ -38,10 +38,14 @@ from cadrumo.application.user_profile.google_configuration_operation_contracts i
     GoogleStatusRequest,
 )
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
+from cadrumo.core.config_google import INSTALLATION_CLIENT_DATA_PARTS
+from cadrumo.core.config_google_client import decode_desktop_client
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
+from cadrumo.core.resources.bundled_data import packaged_data
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.tests.cli_envelope import require_error_document
 from cadrumo.tests.cli_fixture_ports import CliInvocation
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -102,6 +106,16 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
 ) -> None:
     """Retain complete local state through real CLI leaves; no leaf accepts a client from the operator."""
     refresh_value = "native-refresh-" + uuid4().hex
+    # The isolated worker reads the bundled publisher identity, independently of
+    # pytest's parent-only absent-client patch. Read that same resource for the
+    # synthetic token's binding; no OAuth flow or publisher metadata is output.
+    installation_client = decode_desktop_client(
+        packaged_data(*INSTALLATION_CLIENT_DATA_PARTS).read_text(encoding="utf-8")
+    )
+    assert installation_client is not None, "the native worker requires its bundled publisher client"
+    foreign_client_id = "synthetic-native-client.apps.googleusercontent.com"
+    if installation_client.client_id == foreign_client_id:
+        raise AssertionError("the negative-control client must differ from the installed publisher")
     original_operation = FrontendClient.operation
     original_result = FrontendClient.read_result_document
     definitions: dict[str, str] = {}
@@ -221,7 +235,7 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
                 profile_id,
                 OAuthToken(
                     refresh_token=refresh_value,
-                    client_id="synthetic-native-client.apps.googleusercontent.com",
+                    client_id=foreign_client_id,
                     token_uri=_OAUTH_ENDPOINT,
                 ),
             )
@@ -236,6 +250,31 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
         finally:
             close_active_bucket_session()
         assert unwrap_cli_result(invoke("folder", "view", invoke_cli=run_cadrumo_cli))["root_folder_id"] == folder_id
+        foreign_token = _invoke(profile, "status")
+        assert foreign_token.exit_code == 2, foreign_token.output
+        foreign_error = require_error_document(foreign_token.output)["error"]
+        assert foreign_error["code"] == "REFUSED_GOOGLE_SIGN_IN_REQUIRED"
+        assert foreign_error["action"]["failed_condition_id"] == "google.auth.sign_in_client.bound"
+        assert foreign_error["action"]["evidence"][0]["values"] == {
+            "stored_token_readable": True,
+            "token_client_matches": False,
+        }
+        authenticate_profile_for_invocation(
+            name=profile.label,
+            passphrase_callback=lambda: profile.passphrase,
+            profile_decode_context=authority_operation.profile_decode_context(),
+        )
+        try:
+            save_token(
+                profile_id,
+                OAuthToken(
+                    refresh_token=refresh_value,
+                    client_id=installation_client.client_id,
+                    token_uri=installation_client.token_uri,
+                ),
+            )
+        finally:
+            close_active_bucket_session()
         linked = unwrap_cli_result(invoke("status"))
         assert linked["session_present"] is True
         definition, effect, outcome = completions[-1]
