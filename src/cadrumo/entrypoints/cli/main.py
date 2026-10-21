@@ -26,7 +26,6 @@ from typing import TYPE_CHECKING
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
 from ...core.storage_environment import STORAGE_ROOT, storage_directory
-from ...core.terminal_encoding import encode_terminal_text
 from ...core.type_guards import is_object_collection, is_object_dict
 from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 
@@ -268,6 +267,7 @@ async def _emit_operator_progress(progress: object) -> None:
     import typer
 
     from ...core.operator_progress import OperatorProgress
+    from ...core.terminal_encoding import encode_terminal_text
 
     if not isinstance(progress, OperatorProgress):
         raise TypeError(f"progress must be OperatorProgress, got {type(progress).__name__}")
@@ -313,6 +313,7 @@ def _emit_command_surface_manifest() -> None:
 
     import typer
 
+    from ...core.terminal_encoding import encode_terminal_text
     from .command_schema import command_registration_projection, command_schema_refs, command_schema_type
     from .operator_surface_reconciliation import recorded_command_operation_join
     from .verb_input_schema import build_verb_input_schemas, is_exposable_command
