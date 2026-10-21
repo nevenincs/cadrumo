@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:fb8685ac878f5d7e63175abee7bbfc00683b4662184501c9f32705e8d8ef38d9'
+body_hash: 'sha256:47a1b131c8a76f1935dd5697b0f5013816b516a391dda126843d54d0c692f349'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
@@ -1498,6 +1498,7 @@ related:
 - `S04` `verify:` `acl-and-drain-fixture-lifetimes` -> `pass`
 - `S04` `verify:` `protected-desktop-readonly-inventory` -> `pass`
 - `S04` `verify:` `worktree-env-source` -> `pass`
+- `S04` `verify:` `browser-focused-repairs` -> `pass`
 
 ## Notes
 
@@ -1556,3 +1557,4 @@ related:
 - `S04` a040d6f6aa fixes confirmed Ctrl+C native-wait hang: unchanged1FAIL2PASS plus30stacks, then whole11PASS16.03s with supervised2.85s and original ignore control intact. 23b4c2a9be provisions MSI artifacts via CMake-only component preset; configure/buildPASS and40recipechecksPASS11.41s. Real WiX behavior, Windows fixture repairs, full payload ON build and other gates remain pending; S03/S04 open.
 - `S04` 914f869cbe:20distinct focusedWindows cases have passing followups including realWiX9.66s, all9ledgerreviewcases, currentGoogle/MCP/refusal contracts; failedintermediateprojections retained and validinvoice genericchecks restored. 021616c2dc:ACLwholefile8PASS1.50s. Protectedinventory2PASS0.47s. 0963912ab9:owneddrainsessionclosed, existingcasePASS4.96s withscratchremoved. OriginalWindows failedreceipt retained; old34entryroot laterabsent withunknownreclaimer. Browser/MCP/docs/capabilities/finalstatic/native remainopen.
 - `S04` User clarified current TUI env/.env is credential source, not sibling main. Existing canonical bridge loads137keys with ClaveMovil identity/support configured; values never emitted. No loader code changed; withdraw unnecessary sibling-file regression54ce4f231d and restore exact prior file. Sibling blank-credential readiness superseded. Browser partial304pass49fail9skip430unexecuted of792 retained; focused event-order repair and complete rerun pending. S03/S04 remain open.
+- `S04` 5063618728 preserves controlled first draft by observing input after React; activity3PASS and broader focused18PASS1laterAEATFAIL retained. a600d32fef focuses AEAT terminal after ready; unchanged2PASS1FAIL reproduced, final whole3PASS9.5s. Complete frontend check passes; full browser rerun active/no verdict. Current restored env-loader18PASS0.38s after17574b95ce. Root review passes, S03/S04 remain open.
