@@ -88,20 +88,21 @@ def test_config_list_refuses_cleanly_on_a_retired_custody_member() -> None:
 def test_overview_calendar_refuses_cleanly_on_a_retired_custody_member() -> None:
     """The overview calendar renders the same refusal rather than leaking it."""
     create_profile_via_cli("filer", log_in=False)
+    command = (
+        "app",
+        "overview",
+        "calendar",
+        "--from",
+        "2026-01-01",
+        "--to",
+        "2026-03-31",
+        "--all-profiles",
+        "--allow-incomplete",
+    )
+    # Admit the fixture's runtime while custody is valid, so the later refusal
+    # crosses the command boundary rather than the fixture's initial join.
+    admitted = _invoke(command)
+    assert admitted.exit_code == 0, admitted.output
     _stage_retired_custody_member(bucket_id=_LEGACY_BUCKET_ID)
 
-    result = _invoke(
-        (
-            "app",
-            "overview",
-            "calendar",
-            "--from",
-            "2026-01-01",
-            "--to",
-            "2026-03-31",
-            "--all-profiles",
-            "--allow-incomplete",
-        ),
-    )
-
-    _assert_clean_retired_custody_refusal(result)
+    _assert_clean_retired_custody_refusal(_invoke(command))
