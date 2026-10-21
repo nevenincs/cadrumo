@@ -225,3 +225,43 @@ def test_an_accept_wait_ends_for_a_wake_and_the_next_accepts_the_waiting_peer(tm
         server.close()
     finally:
         endpoint.close()
+
+
+@pytest.mark.parametrize("interruption", [InterruptedError, KeyboardInterrupt], ids=["handled-signal", "raised-signal"])
+def test_an_interrupted_accept_settles_its_io_before_the_next_accept(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, interruption: type[BaseException]
+) -> None:
+    import _winapi
+
+    root = tmp_path / "cadrumo-storage"
+    root.mkdir()
+    endpoint = WindowsEndpoint(storage_root=root)
+    endpoint.listen()
+    try:
+
+        def interrupt_wait(*_arguments: object) -> int:
+            raise interruption
+
+        with monkeypatch.context() as guard:
+            # ConnectNamedPipe and its OVERLAPPED are real. Interrupt only the
+            # wait, so cancellation must settle that pending native operation.
+            guard.setattr(_winapi, "WaitForMultipleObjects", interrupt_wait)
+            if interruption is InterruptedError:
+                with pytest.raises(RefusalError) as caught:
+                    endpoint.accept(timeout=None)
+                assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+            else:
+                with pytest.raises(KeyboardInterrupt):
+                    endpoint.accept(timeout=None)
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            accepted = pool.submit(endpoint.accept, timeout=5)
+            client = endpoint.connect(timeout=5)
+            server = accepted.result(timeout=5)
+        try:
+            client.write_all(b"after-interrupt", deadline=time.monotonic() + 5)
+            assert server.read_exact(15, deadline=time.monotonic() + 5) == b"after-interrupt"
+        finally:
+            client.close()
+            server.close()
+    finally:
+        endpoint.close()

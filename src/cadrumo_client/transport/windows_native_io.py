@@ -143,22 +143,34 @@ def finish_windows_io(
 ) -> int:
     """Join cancellation on the owning thread before releasing native I/O state.
 
-    A set wake ends the wait as an unmet deadline does; without a deadline,
-    only completion or a wake ends it.
+    A set wake or handled console interrupt ends the wait as an unmet
+    deadline does. A raised signal handler propagates after I/O settles.
     """
+    import _winapi
+
     import pywintypes
     import win32event
     import win32file
 
     try:
         waited = win32event.INFINITE if deadline is None else windows_deadline_milliseconds(deadline)
-        elapsed = win32event.WaitForMultipleObjects(
-            [overlapped.hEvent, *(wake.waitable for wake in wakes)], False, waited
-        )
+        try:
+            # CPython adds its SIGINT event on the main thread. A raw native
+            # wait can otherwise park forever before Python runs our handler
+            # and sets the runtime's stop wake.
+            elapsed = native_windows_call(
+                _winapi,
+                "WaitForMultipleObjects",
+                [int(overlapped.hEvent), *(wake.waitable for wake in wakes)],
+                False,
+                waited,
+            )
+        except InterruptedError:
+            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED) from None
         if elapsed != win32event.WAIT_OBJECT_0:
             raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
         return win32file.GetOverlappedResult(int(handle), overlapped, False)
-    except RefusalError:
+    except BaseException:
         # Cancellation must complete before releasing the OVERLAPPED/read buffer.
         # The operation and CancelIo run on the same thread.
         win32file.CancelIo(int(handle))
