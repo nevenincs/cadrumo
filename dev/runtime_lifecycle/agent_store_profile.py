@@ -29,15 +29,28 @@ from cadrumo_runtime.application.development_root import mark_development_root
 from .caller_owned_root import consumer_environment, require
 from .proof_support import package_identity
 
+_SAMPLE_INTERVAL_SECONDS = 0.05
+_DISCOVERY_INTERVAL_SECONDS = 0.25
+
 
 def _sample_resources(stopped: Event, observations: list[dict[str, Any]], started: float) -> None:
     """Observe only this driver's children; never enumerate unrelated command lines."""
     parent = psutil.Process(os.getpid())
+    try:
+        children = parent.children(recursive=True)
+    except psutil.Error:
+        return
+    next_discovery = time.perf_counter() + _DISCOVERY_INTERVAL_SECONDS
     while not stopped.is_set():
-        try:
-            children = parent.children(recursive=True)
-        except psutil.Error:
-            return
+        # Windows descendant discovery walks the host's process table. Repeating
+        # it for every counter sample makes the observer a significant workload.
+        now = time.perf_counter()
+        if now >= next_discovery:
+            try:
+                children = parent.children(recursive=True)
+            except psutil.Error:
+                return
+            next_discovery = time.perf_counter() + _DISCOVERY_INTERVAL_SECONDS
         for child in children:
             try:
                 with child.oneshot():
@@ -56,7 +69,7 @@ def _sample_resources(stopped: Event, observations: list[dict[str, Any]], starte
             except psutil.Error:
                 # A short-lived child can exit between any two observations.
                 continue
-        stopped.wait(0.01)
+        stopped.wait(_SAMPLE_INTERVAL_SECONDS)
 
 
 def _measure(
@@ -152,6 +165,8 @@ def main() -> None:
         "package": identity,
         "scope": "fresh processes and synthetic agent stores; warm OS caches; current load",
         "counter_limits": "sampled counters, including cached/non-disk I/O; not kernel file/handle events",
+        "sample_interval_seconds": _SAMPLE_INTERVAL_SECONDS,
+        "discovery_interval_seconds": _DISCOVERY_INTERVAL_SECONDS,
         "samples": rows,
     }
     for sample in range(arguments.samples):

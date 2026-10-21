@@ -47,6 +47,7 @@ _PHASE_MESSAGES = (
     "agent gateway timing ",
     "Gateway process up ",
     "Gateway startup timing ",
+    "Hosted temporary setup ",
     "Worker process up ",
     "Worker startup timing ",
     "worker operation composition ",
