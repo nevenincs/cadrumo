@@ -24,9 +24,6 @@ from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now
-from ...domain.deadlines.engine import DeadlineEngine
-from ...domain.deadlines.models import TaxpayerProfile
-from .calendar import build_overview_calendar
 from .calendar_models import (
     CalendarCompleteness,
     CalendarWarning,
@@ -39,6 +36,8 @@ from .errors import OverviewAgendaError
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.deadlines.engine import DeadlineEngine
+    from ...domain.deadlines.models import TaxpayerProfile
     from .applicability_evidence import FilingYearApplicabilityEvidence
 
 _DEFAULT_HORIZON_DAYS = 14
@@ -138,6 +137,10 @@ def build_overview_agenda(
 
     Returns an :class:`OverviewAgenda`.
     """
+    # Projection consumers (including the sign-in chrome) need the DTO, not
+    # calendar calculation, filing evidence or their persistence dependencies.
+    from .calendar import build_overview_calendar
+
     if horizon_days <= 0:
         raise OverviewAgendaError(
             translated_message="application.overview.errors.horizon_days_not_positive",

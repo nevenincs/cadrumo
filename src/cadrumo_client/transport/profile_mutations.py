@@ -14,10 +14,6 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
 )
-from cadrumo.application.user_profile.operations import (
-    USER_PROFILE_OPERATION_DEFINITIONS,
-    build_user_profile_operation_registrations,
-)
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationProjection,
     ProfileCompleteSetupOperationRequest,
@@ -132,6 +128,13 @@ def _registration(request_type: type[BaseModel]) -> OperationPublicDefinitionReg
     """Resolve the exact definition and schemas from the canonical owner."""
     if request_type not in _SUPPORTED_REQUEST_TYPES:
         raise TypeError("unsupported profile mutation request type")
+    # Reading a profile preference imports this transport too. Resolve the
+    # execution-backed registration only when a mutation actually needs it.
+    from cadrumo.application.user_profile.operations import (
+        USER_PROFILE_OPERATION_DEFINITIONS,
+        build_user_profile_operation_registrations,
+    )
+
     definition = next(
         (definition for definition in USER_PROFILE_OPERATION_DEFINITIONS if definition.request_type is request_type),
         None,

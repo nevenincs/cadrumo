@@ -51,17 +51,19 @@ def _root_named_options(root: CommandSpec, name: str) -> tuple[OptionSpec, ...]:
 
 def emit_version_report_and_exit(*, detail: bool) -> None:
     """Render the ``--version`` surface and exit without loading the registry."""
-    from ...application.diagnostics import build_cli_version_report, render_cli_version_text
-
-    report = build_cli_version_report()
     if detail:
+        from ...application.diagnostics import build_cli_version_report, render_cli_version_text
+
+        report = build_cli_version_report()
         typer.echo(render_cli_version_text(report))
     else:
+        from ...core.package_version import PACKAGE_VERSION
+
         # The short `aeat --version` line is machine-format semver
         # (e.g. "Cadrumo 1.2.3") consumed by CI tooling and package
         # managers. Cadrumo policy treats semver output as machine-format,
         # not operator text, so tr() wrapping is intentionally omitted.
-        typer.echo(f"{_PRODUCT_IDENTITY.display_name} {report.package_version}")
+        typer.echo(f"{_PRODUCT_IDENTITY.display_name} {PACKAGE_VERSION}")
     raise typer.Exit()
 
 

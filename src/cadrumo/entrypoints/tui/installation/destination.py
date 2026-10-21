@@ -24,7 +24,6 @@ from ..components.language import repaint_tables
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..navigation import TuiScreenContextV1
-from .act_screen import InstallationActScreen
 from .acts import OfferedAct, offered_acts
 from .door import InstallationClientOpener
 from .texts import act_label, act_summary, family_label, worded_in
@@ -140,6 +139,8 @@ class InstallationScreen(AccountChromeScreen):
 
     def open_act(self, act: InstallationAct) -> None:
         """Show one act's form over this list."""
+        from .act_screen import InstallationActScreen
+
         self.app.push_screen(
             InstallationActScreen(
                 self._offered[act.value],
