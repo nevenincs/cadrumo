@@ -971,7 +971,7 @@ def test_modelo_100_family_numerosa_ascendant_count_is_integer_count() -> None:
             f"aeat-dr-100-{filing_year}-xsd",
         }
 
-        assert casilla.label == "Indique el número de ascendientes que forman parte de la misma familia numerosa"
+        assert casilla.label == "Indica el número de ascendientes que forman parte de la misma familia numerosa"
         assert tuple(casilla.section) == ("resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res")
         assert casilla.data_type == "integer"
         assert casilla.semantic_role == "irpf_familia_numerosa_num_ascendientes"
