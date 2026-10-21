@@ -271,7 +271,7 @@ def _record_dynamic_targets(
 ) -> None:
     """Record dynamic targets."""
     for target in sorted(() if exhaustive_census else targets or ()):
-        resolved = dynamic_target(self.module, target, node, context)
+        resolved = dynamic_target(self.module, target, node, context, record_provenance=self.record_provenance)
         if (
             (resolved is not None and resolved)
             and resolved in self.known

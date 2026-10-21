@@ -5,13 +5,16 @@ from __future__ import annotations
 import ast
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from cadrumo.tests.module_target_inventory import MetadataTargetSetError, load_all_target_sets, load_target_set
 
 from .import_check_models import SourceModule
 from .import_module_syntax import qualified_name, resolve_from
 from .import_target_evaluation import TargetEvaluationContext
+
+if TYPE_CHECKING:
+    from .import_record_provenance import RecordTargetProvenance
 
 _MAX_CLOSED_DYNAMIC_TARGETS: Final[int] = 4096
 
@@ -101,11 +104,18 @@ def _metadata_target_set_loader(module: SourceModule, function: ast.AST) -> str 
     return expected.get(resolved)
 
 
-def dynamic_target(module: SourceModule, target: str, call: ast.Call, context: TargetEvaluationContext) -> str | None:
+def dynamic_target(
+    module: SourceModule,
+    target: str,
+    call: ast.Call,
+    context: TargetEvaluationContext,
+    *,
+    record_provenance: RecordTargetProvenance | None = None,
+) -> str | None:
     """Resolve one dynamic target against its explicit package anchor."""
     if not target.startswith("."):
         return target
-    package = _dynamic_package(module, call, context)
+    package = _dynamic_package(module, call, context, record_provenance)
     if package is None:
         return None
     level = len(target) - len(target.lstrip("."))
@@ -113,7 +123,12 @@ def dynamic_target(module: SourceModule, target: str, call: ast.Call, context: T
     return resolve_from(package, True, level, remainder)
 
 
-def _dynamic_package(module: SourceModule, call: ast.Call, context: TargetEvaluationContext) -> str | None:
+def _dynamic_package(
+    module: SourceModule,
+    call: ast.Call,
+    context: TargetEvaluationContext,
+    record_provenance: RecordTargetProvenance | None,
+) -> str | None:
     """Dynamic package."""
     package_node = next((keyword.value for keyword in call.keywords if keyword.arg == "package"), None)
     if package_node is None and len(call.args) > 1:
@@ -122,6 +137,8 @@ def _dynamic_package(module: SourceModule, call: ast.Call, context: TargetEvalua
         package = module.name if module.is_package else module.name.rpartition(".")[0]
     else:
         package_values = context.values_for(package_node, call.lineno)
+        if package_values is None and record_provenance is not None and package_node is not None:
+            package_values = record_provenance.targets(module.name, package_node)
         if package_values is None or len(package_values) != 1:
             return None
         package = next(iter(package_values))

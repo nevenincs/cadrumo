@@ -64,11 +64,14 @@ def test_conftest_modules_are_test_scoped(module: str) -> None:
 
 
 def _write_package(root: Path, dotted: str, source: str = "") -> None:
-    path = root / "src" / Path(*dotted.split("."))
-    path.mkdir(parents=True, exist_ok=True)
-    init = path / "__init__.py"
-    if source or not init.exists():
-        init.write_text(source, encoding=UTF_8, newline="\n")
+    parts = dotted.split(".")
+    for index in range(1, len(parts) + 1):
+        path = root / "src" / Path(*parts[:index])
+        path.mkdir(parents=True, exist_ok=True)
+        init = path / "__init__.py"
+        contents = source if index == len(parts) else ""
+        if contents or not init.exists():
+            init.write_text(contents, encoding=UTF_8, newline="\n")
 
 
 def _write_module(root: Path, dotted: str, source: str) -> None:

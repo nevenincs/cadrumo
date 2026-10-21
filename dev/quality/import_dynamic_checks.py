@@ -74,9 +74,10 @@ def _check_dynamic_target(
     is_raw_import: bool,
     computed_projection: bool,
     exhaustive_census: bool,
+    record_provenance: RecordTargetProvenance,
 ) -> None:
     """Check dynamic target."""
-    resolved = dynamic_target(module, target, node, context)
+    resolved = dynamic_target(module, target, node, context, record_provenance=record_provenance)
     if resolved is None or not resolved:
         findings.append(
             Finding(
@@ -178,6 +179,7 @@ def _check_dynamic_call(
             is_raw_import,
             computed_projection,
             exhaustive_census,
+            record_provenance,
         )
 
 

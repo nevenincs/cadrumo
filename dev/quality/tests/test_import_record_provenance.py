@@ -794,3 +794,37 @@ import_module(record.module)
     )
     assert categories == []
     assert edges == {("sample.loader", "sample.forbidden")}
+
+
+@pytest.mark.parametrize("package", ["'sample'", "unknown"])
+def test_relative_record_import_uses_only_its_explicit_closed_package(tmp_path: Path, package: str) -> None:
+    categories, edges = _check(
+        tmp_path,
+        {
+            "loader": """from importlib import import_module
+from sample.records import Target
+target = Target('.forbidden', package="""
+            + package
+            + """)
+import_module(target.module, target.package)
+"""
+        },
+    )
+    assert categories == (["UNRESOLVED_DYNAMIC_TARGET"] if package == "unknown" else [])
+    assert edges == (set() if package == "unknown" else {("sample.loader", "sample.forbidden")})
+
+
+def test_mixed_known_and_unknown_record_package_cannot_borrow_its_neighbor(tmp_path: Path) -> None:
+    categories, edges = _check(
+        tmp_path,
+        {
+            "loader": """from importlib import import_module
+from sample.records import Target
+records = (Target('.forbidden', package='sample'), Target('.allowed', package=unknown))
+for target in records:
+    import_module(target.module, target.package)
+"""
+        },
+    )
+    assert categories == ["UNRESOLVED_DYNAMIC_TARGET", "UNRESOLVED_DYNAMIC_TARGET"]
+    assert edges == set()
