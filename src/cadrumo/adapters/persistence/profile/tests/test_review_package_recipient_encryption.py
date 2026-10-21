@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import contextvars
 import functools
+import json
 import threading
 from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
@@ -60,6 +61,7 @@ from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.recipient_encryption import (
+    RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
     RecipientEncryptedPackage,
     RecipientEncryptionKeypair,
 )
@@ -443,13 +445,11 @@ def test_decrypt_refuses_a_package_presented_exactly_at_its_expiry(tmp_path: Pat
         )
 
 
-def test_expired_check_precedes_cryptographic_work_even_with_tampered_ciphertext(tmp_path: Path) -> None:
-    """The expiry refusal fires even when the ciphertext is also tampered.
+def test_authentication_precedes_the_expiry_judgement(tmp_path: Path) -> None:
+    """A tampered envelope is refused as unauthenticated even when it is also past its deadline.
 
-    Anti-tautology proof for the ordering claim in the docstring: if the
-    expiry check were skipped or performed after decryption, tampering the
-    ciphertext would surface as ``RecipientDecryptionError`` instead of the
-    more specific ``RecipientPackageExpiredError``.
+    The deadline is only trustworthy once AEAD has authenticated it, so an
+    unauthenticated envelope never reaches the expiry branch.
     """
     package_bytes = _build_package_bytes(tmp_path, bucket_id="recip-enc-l")
     recipient_private_key = X25519PrivateKey.generate()
@@ -467,11 +467,122 @@ def test_expired_check_precedes_cryptographic_work_even_with_tampered_ciphertext
     tampered_ciphertext = envelope.ciphertext[:-1] + bytes([envelope.ciphertext[-1] ^ 0xFF])
     tampered_and_expired = envelope.model_copy(update={"ciphertext": tampered_ciphertext})
 
-    with pytest.raises(RecipientPackageExpiredError):
+    with pytest.raises(RecipientDecryptionError) as exc_info:
         decrypt_review_package_for_recipient(
             tampered_and_expired,
             recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
             now=_NOW + timedelta(days=2),
+            recipient_encryption=_CRYPTO_CAPABILITY,
+        )
+    assert not isinstance(exc_info.value, RecipientPackageExpiredError)
+
+
+def _edited_envelope_json(envelope: RecipientEncryptedPackage, **edits: object) -> RecipientEncryptedPackage:
+    """Return ``envelope`` after an intermediary rewrites outer JSON fields, parsed as the import path does."""
+    wire = json.loads(envelope.model_dump_json())
+    wire.update(edits)
+    return RecipientEncryptedPackage.model_validate_json(json.dumps(wire))
+
+
+@pytest.mark.parametrize(
+    "edits",
+    (
+        pytest.param({"valid_until": (_NOW + timedelta(days=30)).isoformat()}, id="extended-valid-until"),
+        pytest.param({"valid_until": None}, id="removed-valid-until"),
+        pytest.param({"issued_at": (_NOW - timedelta(hours=1)).isoformat()}, id="issued-at"),
+        pytest.param({"envelope_nonce_hex": "ab" * 32}, id="replay-nonce"),
+        pytest.param({"review_only": False}, id="review-only"),
+    ),
+)
+def test_decrypt_refuses_an_independently_edited_outer_policy_field(tmp_path: Path, edits: dict[str, object]) -> None:
+    """Every outer lifecycle, replay and disposition field is bound to the ciphertext."""
+    package_bytes = _build_package_bytes(tmp_path, bucket_id="recip-enc-outer")
+    recipient_private_key = X25519PrivateKey.generate()
+    recipient_private_key_hex = recipient_private_key.private_bytes_raw().hex()
+    envelope = encrypt_review_package_for_recipient(
+        package_bytes,
+        recipient_public_key_hex=public_key_hex_from_raw_bytes(recipient_private_key.public_key().public_bytes_raw()),
+        review_only=True,
+        valid_for=timedelta(days=1),
+        issued_at=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY,
+    )
+    authentic = decrypt_review_package_for_recipient(
+        _edited_envelope_json(envelope),
+        recipient_private_key_hex=recipient_private_key_hex,
+        now=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY,
+    )
+    assert authentic.package_bytes == package_bytes
+
+    edited = _edited_envelope_json(envelope, **edits)
+    assert edited != envelope
+
+    with pytest.raises(RecipientDecryptionError) as exc_info:
+        decrypt_review_package_for_recipient(
+            edited,
+            recipient_private_key_hex=recipient_private_key_hex,
+            now=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY,
+        )
+    assert not isinstance(exc_info.value, RecipientPackageExpiredError)
+
+
+def test_identical_ciphertext_under_a_fresh_nonce_cannot_evade_the_replay_guard(tmp_path: Path) -> None:
+    """A consumed package re-presented with a fresh outer nonce never yields a new replay identity."""
+    package_bytes = _build_package_bytes(tmp_path, bucket_id="recip-enc-renonce")
+    recipient_private_key = X25519PrivateKey.generate()
+    recipient_private_key_hex = recipient_private_key.private_bytes_raw().hex()
+    envelope = encrypt_review_package_for_recipient(
+        package_bytes,
+        recipient_public_key_hex=public_key_hex_from_raw_bytes(recipient_private_key.public_key().public_bytes_raw()),
+        issued_at=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY,
+    )
+    renonced = _edited_envelope_json(envelope, envelope_nonce_hex="cd" * 32)
+    assert renonced.ciphertext == envelope.ciphertext
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="5b0a3f62-8f0e-4c3e-9d7a-2f6c1e4b9a10") as profile:
+        guard = RecipientReplayGuardRepository(objects=profile.repository)
+        decrypt_review_package_for_recipient(
+            envelope,
+            recipient_private_key_hex=recipient_private_key_hex,
+            now=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY,
+        )
+        guard.mark_consumed(envelope.envelope_nonce_hex, consumed_at=_NOW)
+
+        with pytest.raises(RecipientDecryptionError):
+            decrypt_review_package_for_recipient(
+                renonced,
+                recipient_private_key_hex=recipient_private_key_hex,
+                now=_NOW,
+                recipient_encryption=_CRYPTO_CAPABILITY,
+            )
+        assert [record.nonce_hex for record in guard.load().records] == [envelope.envelope_nonce_hex]
+
+
+@pytest.mark.parametrize("version", (0, 1, 3))
+def test_envelope_refuses_an_unsupported_version_exactly(tmp_path: Path, version: int) -> None:
+    """Only the current envelope version parses, and the adapter refuses any other that bypasses parsing."""
+    package_bytes = _build_package_bytes(tmp_path, bucket_id="recip-enc-version")
+    recipient_private_key = X25519PrivateKey.generate()
+    envelope = encrypt_review_package_for_recipient(
+        package_bytes,
+        recipient_public_key_hex=public_key_hex_from_raw_bytes(recipient_private_key.public_key().public_bytes_raw()),
+        issued_at=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY,
+    )
+    assert envelope.envelope_version == RECIPIENT_ENCRYPTION_ENVELOPE_VERSION
+
+    with pytest.raises(ValidationError, match="envelope_version"):
+        _edited_envelope_json(envelope, envelope_version=version)
+
+    with pytest.raises(RecipientDecryptionError, match="unsupported envelope version"):
+        decrypt_review_package_for_recipient(
+            envelope.model_copy(update={"envelope_version": version}),
+            recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
+            now=_NOW,
             recipient_encryption=_CRYPTO_CAPABILITY,
         )
 

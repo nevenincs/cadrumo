@@ -10,14 +10,16 @@ Core types:
 
 from __future__ import annotations
 
+import json
 import secrets
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from ....application.modelo.recipient_encryption import (
+    RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
     RecipientDecryptedPackage,
     RecipientEncryptedPackage,
     RecipientEncryptionCapability,
@@ -32,6 +34,7 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.identity.bucket import canonical_bucket_id
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....core.time.clock import now as _utc_now
+from ....core.time.utc import UtcInstant
 from ..storage.crypto.aead import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 from ..storage.errors import (
     DecryptionError,
@@ -48,6 +51,9 @@ from ..storage.sql.secure_objects import SecureObjectRepository
 
 _HKDF_CONTEXT_PREFIX = b"cadrumo.review_package.recipient_encryption.v1"
 _REPLAY_NONCE_BYTES = 32
+_ASSOCIATED_DATA_PREFIX = b"cadrumo.review_package.recipient_envelope"
+_EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
+_UTC_INSTANT: TypeAdapter[datetime] = TypeAdapter(UtcInstant)
 
 
 def _hkdf_context(recipient_public_key_hex: str) -> bytes:
@@ -55,9 +61,36 @@ def _hkdf_context(recipient_public_key_hex: str) -> bytes:
     return _HKDF_CONTEXT_PREFIX + b":" + recipient_public_key_hex.encode("ascii")
 
 
-def _associated_data(recipient_public_key_hex: str) -> bytes:
-    """Return the AEAD associated data binding ciphertext to one recipient."""
-    return b"cadrumo.review_package.recipient:" + recipient_public_key_hex.encode("ascii")
+def _epoch_microseconds(instant: datetime) -> int:
+    """Return a representation-independent integer for one UTC instant."""
+    return (instant - _EPOCH) // timedelta(microseconds=1)
+
+
+def _associated_data(
+    *,
+    envelope_version: int,
+    ephemeral_public_key_hex: str,
+    recipient_public_key_hex: str,
+    envelope_nonce_hex: str,
+    issued_at: datetime,
+    valid_until: datetime | None,
+    review_only: bool,
+) -> bytes:
+    """Return the canonical AEAD associated data for every outer envelope field.
+
+    Expiry, replay identity and disposition travel outside the ciphertext, so
+    they are authenticated here; editing any of them fails decryption.
+    """
+    fields = {
+        "envelope_version": envelope_version,
+        "ephemeral_public_key_hex": ephemeral_public_key_hex,
+        "recipient_public_key_hex": recipient_public_key_hex,
+        "envelope_nonce_hex": envelope_nonce_hex,
+        "issued_at_us": _epoch_microseconds(issued_at),
+        "valid_until_us": _epoch_microseconds(valid_until) if valid_until is not None else None,
+        "review_only": review_only,
+    }
+    return _ASSOCIATED_DATA_PREFIX + b":" + json.dumps(fields, sort_keys=True, separators=(",", ":")).encode("ascii")
 
 
 def _recipient_encryption_key_object_key(bucket_id: str) -> str:
@@ -210,6 +243,10 @@ class RecipientEncryptionAdapter:
                 translated_message="application.modelo.errors.recipient_encryption_invalid_key",
             )
 
+        envelope_issued_at = _UTC_INSTANT.validate_python(issued_at or _utc_now())
+        envelope_valid_until = envelope_issued_at + valid_for if valid_for is not None else None
+        envelope_nonce_hex = secrets.token_hex(_REPLAY_NONCE_BYTES)
+
         try:
             ephemeral_private_key = X25519PrivateKey.generate()
             ephemeral_public_key = ephemeral_private_key.public_key()
@@ -223,7 +260,15 @@ class RecipientEncryptionAdapter:
             encrypted = encrypt_record(
                 package_bytes,
                 key=derived_key,
-                associated_data=_associated_data(recipient_public_key_hex),
+                associated_data=_associated_data(
+                    envelope_version=RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
+                    ephemeral_public_key_hex=ephemeral_public_key_bytes.hex(),
+                    recipient_public_key_hex=recipient_public_key_hex,
+                    envelope_nonce_hex=envelope_nonce_hex,
+                    issued_at=envelope_issued_at,
+                    valid_until=envelope_valid_until,
+                    review_only=review_only,
+                ),
             )
         except (EncryptionError, KeyDerivationError, TypeError, ValueError, UnicodeError) as exc:
             raise RecipientEncryptionError(
@@ -231,13 +276,12 @@ class RecipientEncryptionAdapter:
                 translated_message="application.modelo.errors.recipient_encryption_invalid_key",
             ) from exc
 
-        envelope_issued_at = issued_at or _utc_now()
-        envelope_valid_until = envelope_issued_at + valid_for if valid_for is not None else None
         return RecipientEncryptedPackage(
+            envelope_version=RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
             ephemeral_public_key_hex=ephemeral_public_key_bytes.hex(),
             recipient_public_key_hex=recipient_public_key_hex,
             ciphertext=encrypted.to_wire(),
-            envelope_nonce_hex=secrets.token_hex(_REPLAY_NONCE_BYTES),
+            envelope_nonce_hex=envelope_nonce_hex,
             issued_at=envelope_issued_at,
             valid_until=envelope_valid_until,
             review_only=review_only,
@@ -250,11 +294,14 @@ class RecipientEncryptionAdapter:
         recipient_private_key_hex: str,
         now: datetime | None = None,
     ) -> RecipientDecryptedPackage:
-        """Open one recipient envelope and return its application DTO."""
-        evaluated_at = now or _utc_now()
-        if envelope.valid_until is not None and evaluated_at >= envelope.valid_until:
-            raise RecipientPackageExpiredError(
-                "recipient-encrypted package has expired; the recipient must request a fresh package",
+        """Open one recipient envelope and return its application DTO.
+
+        Expiry is judged only after AEAD has authenticated the outer envelope
+        fields, so the deadline and disposition acted on are the sealer's.
+        """
+        if envelope.envelope_version != RECIPIENT_ENCRYPTION_ENVELOPE_VERSION:
+            raise RecipientDecryptionError(
+                "recipient-encrypted package uses an unsupported envelope version",
                 translated_message="application.modelo.errors.recipient_decryption_failed",
             )
 
@@ -284,13 +331,28 @@ class RecipientEncryptionAdapter:
             recovered = decrypt_record(
                 EncryptedBlob.from_wire(envelope.ciphertext),
                 key=derived_key,
-                associated_data=_associated_data(envelope.recipient_public_key_hex),
+                associated_data=_associated_data(
+                    envelope_version=envelope.envelope_version,
+                    ephemeral_public_key_hex=envelope.ephemeral_public_key_hex,
+                    recipient_public_key_hex=envelope.recipient_public_key_hex,
+                    envelope_nonce_hex=envelope.envelope_nonce_hex,
+                    issued_at=envelope.issued_at,
+                    valid_until=envelope.valid_until,
+                    review_only=envelope.review_only,
+                ),
             )
         except (DecryptionError, EncryptionError, KeyDerivationError, TypeError, ValueError, UnicodeError) as exc:
             raise RecipientDecryptionError(
                 "recipient-encrypted package failed AEAD authentication",
                 translated_message="application.modelo.errors.recipient_decryption_failed",
             ) from exc
+
+        evaluated_at = now or _utc_now()
+        if envelope.valid_until is not None and evaluated_at >= envelope.valid_until:
+            raise RecipientPackageExpiredError(
+                "recipient-encrypted package has expired; the recipient must request a fresh package",
+                translated_message="application.modelo.errors.recipient_decryption_failed",
+            )
 
         try:
             return RecipientDecryptedPackage(package_bytes=recovered, review_only=envelope.review_only)

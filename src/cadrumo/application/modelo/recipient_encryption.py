@@ -21,7 +21,12 @@ from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import UtcInstant
 
-_RECIPIENT_ENCRYPTION_ENVELOPE_VERSION = 1
+RECIPIENT_ENCRYPTION_ENVELOPE_VERSION = 2
+"""The only envelope layout this release seals or opens.
+
+Version 2 authenticates every outer envelope field as AEAD associated data;
+version 1 envelopes authenticated only the recipient key and are refused.
+"""
 
 
 class RecipientEncryptionKeypair(BaseModel):
@@ -41,11 +46,20 @@ class RecipientEncryptionKeypair(BaseModel):
 
 
 class RecipientEncryptedPackage(BaseModel):
-    """Wire envelope for a review package sealed for one recipient."""
+    """Wire envelope for a review package sealed for one recipient.
+
+    Every field other than ``ciphertext`` is policy metadata that the sealing
+    adapter binds into the AEAD associated data, so an edited version, key,
+    replay nonce, timestamp or disposition fails authentication.
+    """
 
     model_config = _STRICT_FROZEN
 
-    envelope_version: int = Field(default=_RECIPIENT_ENCRYPTION_ENVELOPE_VERSION, ge=1)
+    envelope_version: int = Field(
+        default=RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
+        ge=RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
+        le=RECIPIENT_ENCRYPTION_ENVELOPE_VERSION,
+    )
     ephemeral_public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     recipient_public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     ciphertext: bytes = Field(min_length=1)
@@ -132,6 +146,7 @@ class RecipientEncryptionCapabilityFactory(Protocol):
 
 
 __all__ = [
+    "RECIPIENT_ENCRYPTION_ENVELOPE_VERSION",
     "RecipientDecryptedPackage",
     "RecipientEncryptedPackage",
     "RecipientEncryptionCapability",
