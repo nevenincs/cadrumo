@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:1759e2b5716077615e8e1eba9cccafe1f9f6bcb872291c934edb071baf4a728c'
+body_hash: 'sha256:200f32ab75a72836e45dbccb1ef42064f36ad87c6fa515fd30c6c736c5fe5bc2'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
@@ -1468,6 +1468,9 @@ related:
 - `S04` `verify:` `prefix55-composer29-gateway7-protocol1-lane49-platform-resolver` -> `pass`
 - `S04` `verify:` `frontend-check-person-activity2` -> `pass`
 - `S04` `verify:` `bundle-installation-ipc-crash-recovery` -> `pass`
+- `S04` `verify:` `locale-parity-audit-scanner-focused` -> `pass`
+- `S04` `verify:` `format-types-and-worker46` -> `pass`
+- `S04` `verify:` `controlled-packaging-temp49` -> `pass`
 
 ## Notes
 
@@ -1514,3 +1517,4 @@ related:
 - `S04` Bundle build and installer bootstrap passed. Fifteen packaged CTest groups completed: fourteen passed, lifecycle group had three failures and one teardown error; its six passing cases include crash recovery with the production lease and manager replacement. Preserve lifecycle-full-20261021.xml; exact failed client/service cases are being rechecked. Full Python gates remain active. Ledger diagnostics stale AGENT expectation repaired, focused real-supervisor case passed and committed 3bdbabcb01. S03/S04 remain open.
 - `S04` Runtime portable evidence union3817pass77expectedskip; original full red receipt retained. Production JSON routing committed0b853e1207; runtime fixture65files725364a503; service bounded reads830b557c2e. Core/native independent review accepted. Full product/dev test-gate remains active, new import package-anchor/coverage-enrollment repairs underway. Bundle refresh source snapshot changed due concurrent external profile-custody edit; no immutable all-green claim. S03/S04 remain open.
 - `S04` Canonical environment ownership committed535c7919d8. Windows1083 and keychain54 collected and assigned; held until stable package refresh. Full portable suite and final static aggregate remain active. Fresh locale parity reproduces and is assigned; S03/S04 remain open.
+- `S04` Locale repair eb06cb0954 preserves external catalogue edits; fixture repairs7aa0d3233e,24003cd8c3,c2f88fb3c6 and controlled-temp cbb6255728 verified. Obsolete bundle64882 deliberately cancelled11:40UTC to reduce measured disk contention; not a passing receipt. Keychain54 before Windows1083, portable full suite active; final bundle/static/docs checks remain. S03/S04 open.
