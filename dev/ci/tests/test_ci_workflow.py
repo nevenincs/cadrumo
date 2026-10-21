@@ -315,7 +315,7 @@ def test_ci_contracts_builds_real_docs_before_running_deployment_tests() -> None
     """Provision the real HTML corpus before deployment preflight tests read it.
 
     The deployment search-index contracts intentionally copy real built pages
-    from ``docs/_build/html``.  A clean checkout therefore needs the small
+    from ``build/docs/html``. A clean checkout therefore needs the small
     single-page build before any pytest pass; a full docs build would make this
     CI contract unnecessarily expensive.
     """
@@ -336,6 +336,29 @@ def test_ci_contracts_builds_real_docs_before_running_deployment_tests() -> None
     pytest_indices = [index for index, line in enumerate(body) if " pytest " in f" {line} "]
     assert pytest_indices, "the CI contract has no pytest pass to exercise deployment tests"
     assert build_index < min(pytest_indices), "the docs corpus must be built before any CI-contract pytest pass"
+
+
+@pytest.mark.parametrize("platform", ("unix", "windows"))
+def test_full_gate_provisions_ci_docs_before_running_selected_tests(platform: str) -> None:
+    """Full selections include artifact readers before the aggregate's later stages."""
+    lines = _JUSTFILE.read_text(encoding="utf-8").splitlines()
+    start = next(
+        index
+        for index, line in enumerate(lines)
+        if line.startswith("test-gate ") and lines[index - 1] == f"[{platform}]"
+    )
+    body: list[str] = []
+    for line in lines[start + 1 :]:
+        if line and not line.startswith((" ", "\t")):
+            break
+        body.append(line.strip())
+
+    owner = "just test-ci-contracts-gate"
+    assert body.count(owner) == 1, "run the artifact-owning CI contract recipe exactly once"
+    pytest_indices = [index for index, line in enumerate(body) if " pytest " in f" {line} "]
+    assert pytest_indices, "the full gate has no selected pytest pass"
+    assert body.index(owner) < min(pytest_indices), "real docs HTML must exist before selected tests read it"
+    assert not any("dev.docs.build" in line for line in body), "reuse the canonical artifact producer"
 
 
 def test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates() -> None:

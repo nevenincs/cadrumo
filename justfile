@@ -1125,7 +1125,8 @@ benchmark-modelo-runtime *ARGS:
 # `too_broad`, with `targets` already collapsed to the fixed contract set --
 # this recipe prints that as a visible advisory rather than silently narrowing
 # further. `ci_contracts` additionally gates the tooling/workflow contract
-# population, and this recipe's own last line runs the harness verdict
+# population before scoped tests, provisioning their real documentation HTML
+# through its owning recipe. This recipe's own last line runs the harness verdict
 # unconditionally, on every path through it. That sentence used to cite
 # `pr.yml`, which no longer exists; the behaviour outlived the workflow, and
 # a reader tracing the dead citation concluded the harness ran nowhere.
@@ -1161,15 +1162,15 @@ test-gate changed_files="":
         echo "# reason: $reason"
         echo "############################################################"
     fi
+    if [ "$ci_contracts" = "true" ]; then
+        just test-ci-contracts-gate
+    fi
     uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} "${targets[@]}"
     serial_status=0
     uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} "${targets[@]}" || serial_status=$?
     # Exit 5 means the scoped targets hold no serial tests.
     if [ "$serial_status" -ne 0 ] && [ "$serial_status" -ne 5 ]; then
         exit "$serial_status"
-    fi
-    if [ "$ci_contracts" = "true" ]; then
-        just test-ci-contracts-gate
     fi
     just test-pytest-harness
 
@@ -1191,15 +1192,15 @@ test-gate changed_files="":
         Write-Host "############################################################"
     }
     $targets = @($scope.targets)
+    if ($scope.ci_contracts) {
+        just test-ci-contracts-gate
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
     uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} @targets
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} @targets
     # Exit 5 means the scoped targets hold no serial tests.
     if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 5) { exit $LASTEXITCODE }
-    if ($scope.ci_contracts) {
-        just test-ci-contracts-gate
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    }
     just test-pytest-harness
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
