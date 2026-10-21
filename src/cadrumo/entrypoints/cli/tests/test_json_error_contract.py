@@ -285,9 +285,14 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
     )
     assert logged_run.returncode == 6, logged_run.stderr
     assert "Traceback" not in logged_run.stderr
+    logged_error = _assert_shared_spine(require_error_document(logged_run.stderr))
+    trace_id = logged_error["trace_id"]
+    assert isinstance(trace_id, str) and len(trace_id) == 32
     diagnostic_log = state_root / storage_location(StorageCategory.LOG_FILE).relative_path()
     assert diagnostic_log.is_file(), f"no diagnostic log under {state_root}"
     logged = diagnostic_log.read_text(encoding="utf-8", errors="replace")
-    assert "cli terminal boundary: unexpected exception type=ValueError" in logged
+    assert f"boundary failure at cli_terminal trace_id={trace_id} chain: " in logged
+    assert "CliUnexpectedBoundaryError[INTERNAL_CLI_UNEXPECTED_BOUNDARY" in logged
+    assert " <- ValueError" in logged
     assert "Traceback" not in logged
     assert "synthetic crash for the terminal funnel" not in logged
