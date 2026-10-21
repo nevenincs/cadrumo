@@ -75,6 +75,7 @@ _INVOCATIONS = [
         "agent-gateway",
         _literals(*_MODULE, "stores-state"),
     ),
+    ("agent-gateway", _literals(*_MODULE, "preflight")),
     ("agent-gateway", _literals(*_MODULE, "setup")),
     (
         "agent-gateway",
@@ -94,6 +95,7 @@ _INVOCATIONS = [
         ],
     ),
     ("agent-providers", _literals(*_MODULE, "providers", "--declared", "--json")),
+    ("agent-auth", _literals(*_MODULE, "auth", "status", "--json")),
     (
         "agent-auth",
         [*_literals(*_MODULE, "auth", "login", "--provider"), {"slot": "provider", "kind": "identifier", "minimum": 0}],
@@ -165,7 +167,7 @@ def test_the_contract_compiles_exactly_the_declared_invocations_of_the_agent_ima
         "agent-providers",
         "agent-auth",
     }
-    assert generated.count('LaunchInvocation { profile: "agent-gateway"') == 5
+    assert generated.count('LaunchInvocation { profile: "agent-gateway"') == 6
     assert 'LaunchArgument { literal: None, option: Some("--expect-from"), slot: Some("expected_from"), ' in generated
     assert 'kind: Some("revision"), minimum: 0 }' in generated
     assert '"cadrumo-agent"' in (tmp_path / "contract.h").read_text(encoding="utf-8")
@@ -208,6 +210,7 @@ def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile
     gateway = next(profile for profile in section["profiles"] if profile["name"] == "agent-gateway")
     assert {slot["name"]: slot["kind"] for slot in gateway["slots"]} == {
         "CADRUMO_LOCAL_STORAGE_ROOT": "directory",
+        "CADRUMO_PROFILE_ROOT": "directory",
         "CADRUMO_AGENT_HOSTED_ROOT": "directory",
         "CADRUMO_AGENT_PORT": "port",
         "CADRUMO_AGENT_WORKER_PORT": "port",
@@ -321,7 +324,8 @@ def test_only_the_service_pins_the_agent_location_and_generic_hosts_take_no_agen
     assert agent_location in service_fixed
     for profile_name in ("cadrumo-runtime", "python"):
         assert profiles[profile_name]["fixed"] == []
-        assert profiles[profile_name]["slots"] == []
+    assert profiles["cadrumo-runtime"]["slots"] == []
+    assert profiles["python"]["slots"] == [{"name": "CADRUMO_PROFILE_ROOT", "kind": "directory", "required": False}]
     # The image that fixes a package fact cannot also take it from its parent.
     relay = '  { name = "CADRUMO_PACKAGE_PYTHON_EXECUTABLE", image = "python" },\n]\n'
     planted = _SOURCE.replace(
