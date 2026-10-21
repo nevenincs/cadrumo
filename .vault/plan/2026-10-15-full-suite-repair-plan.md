@@ -13,7 +13,7 @@ related:
   - '[[2026-10-13-startup-performance-operation-contract-manifest-adr]]'
 modified: '2026-10-21'
 body_schema: body-v2
-body_hash: 'sha256:44c9e73ec5865f1ac2f2c08224ae00431718a8fd1d8fe77d47105c92e6545f8c'
+body_hash: 'sha256:97fd6355df80ac2488c462638a35720d6c10c9bd25eb1337813aa59586894ba9'
 ---
 
 # `full-suite-repair` plan
@@ -33,7 +33,7 @@ Historical evidence and command logs are in `.logs/test-repair/`; current verifi
 - [x] `S01` - Enroll computed casillas and validate published authority; `verification declarations for modelos 303, 308, 322, 369 and 390`.
 - [x] `S02` - Compile fixed Google publisher identity into every package launch environment; `native environment contract, build provisioning, runtime settings and identity tests`.
 - [ ] `S03` - Repair behavior, fixture and tooling contracts exposed by the full suite; `fixtures, CLI ownership, registry migrations and reconciliation, actor contract compatibility, import isolation and packaging guards`.
-- [ ] `S04` - Verify the configured test populations, targeted repairs and final review; `portable Python gates, desktop browser and native package checks, recorded failures and review`.
+- [ ] `S04` - Verify the configured test populations, targeted repairs and final review; `portable Python gates, Windows and OS-keychain host lanes, desktop browser and native package checks, recorded failures and review`.
 
 ## Parallelization
 
