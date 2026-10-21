@@ -1,16 +1,7 @@
-@step Authenticate the profile to be removed before closing its shared sign-in.
-aeat --format json config login docs-sequence-sandbox
+@step Review the named profile without deleting it or entering its password.
+aeat --format json config profile delete docs-sequence-sandbox
 @expect status == "success"
-@expect result.active_profile == "docs-sequence-sandbox"
-@expect exit_code == 0
-@step Close the selected profile's shared sign-in before deletion.
-aeat --format json config logout
-@expect status == "success"
-@expect exit_code == 0
-@step Authenticate another existing profile so it becomes the default selection.
-aeat --format json config login docs-sequence-replacement
-@expect status == "success"
-@expect result.active_profile == "docs-sequence-replacement"
+@expect result.deleted == false
 @expect exit_code == 0
 @step Delete only the named sandbox profile after confirming the irreversible operation.
 @result aeat --format json config profile delete docs-sequence-sandbox --yes

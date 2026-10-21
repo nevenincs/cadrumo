@@ -606,6 +606,24 @@ desktop:
       unknown: Pot ser que el perfil s'hagi creat. Revisa la llista de perfils abans
         de tornar-ho a provar.
     first_run_lead: Crea un perfil per començar.
+    manage:
+      acknowledge: Entenc que les dades locals d’aquest perfil es perdran permanentment.
+      cancel: Cancel·la
+      confirm_name: Escriu {name} per confirmar
+      delete: Suprimeix el perfil
+      delete_title: Vols suprimir {name}?
+      deleted: S’ha suprimit {name}.
+      failed: No s’ha pogut confirmar la supressió. Actualitza la llista de perfils
+        i revisa-la abans de tornar-ho a provar.
+      loading: S’estan carregant els perfils…
+      loss: Se suprimiran permanentment les dades locals d’aquest perfil, incloses
+        factures, declaracions, documents i converses, i es tancaran les seves sessions.
+        No se suprimiran els comptes externs ni les còpies exportades.
+      retained: No pots suprimir aquest perfil mentre els registres estiguin protegits
+        o no se’n pugui comprovar la conservació.
+      scope: Perfils desats al teu compte del sistema.
+      sign_out_create: Tanca la sessió per crear un perfil
+      title: Gestiona els perfils
     new_profile: Perfil nou
     no_profile: Cap perfil actiu
     no_profile_lead: Encara no hi ha cap perfil en aquest ordinador.

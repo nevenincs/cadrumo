@@ -1,6 +1,7 @@
 //! Short-lived canonical CLI invocations for sign-in acts, and one pushed
 //! status observation. No runtime connection or credential is retained here.
 mod observation;
+mod profiles;
 mod watch;
 // The child runner and the envelope decoder are also the provider settings'
 // channel: one set of lanes, one deadline, one output bound, one settlement.
@@ -9,6 +10,10 @@ pub(crate) mod wire;
 use observation::{
     __cmd__sign_in_subscribe, __cmd__sign_in_unsubscribe, __tauri_command_name_sign_in_subscribe,
     __tauri_command_name_sign_in_unsubscribe, sign_in_subscribe, sign_in_unsubscribe,
+};
+use profiles::{
+    __cmd__profile_delete, __cmd__profile_delete_review, __tauri_command_name_profile_delete,
+    __tauri_command_name_profile_delete_review, profile_delete, profile_delete_review,
 };
 
 use crate::environment::Launch;
@@ -250,6 +255,16 @@ impl SignIn {
         label: Option<&str>,
         secret: Option<Zeroizing<Vec<u8>>>,
     ) -> Result<process::Output> {
+        self.output_with_options(call, label, secret, &[])
+    }
+
+    fn output_with_options(
+        &self,
+        call: &Call,
+        label: Option<&str>,
+        secret: Option<Zeroizing<Vec<u8>>>,
+        options: &[String],
+    ) -> Result<process::Output> {
         let _mutation = (!call.reads).then(|| self.watch.mutation());
         let image = if call.runtime {
             &self.runtime
@@ -257,7 +272,11 @@ impl SignIn {
             &self.child
         };
         let mut command = image.as_ref().map_err(Clone::clone)?.command();
-        command.args(arguments(call, label, secret.is_some()));
+        command.args(arguments(call, None, secret.is_some()));
+        command.args(options);
+        if let Some(label) = label {
+            command.args(["--", label]);
+        }
         let identity = HelperIdentity {
             command: call.command,
             executable: if call.runtime {
@@ -360,7 +379,9 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         sign_in_submit,
         sign_out,
         profile_list,
-        profile_create
+        profile_create,
+        profile_delete_review,
+        profile_delete
     ]
 }
 

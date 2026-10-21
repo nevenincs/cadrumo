@@ -34,7 +34,6 @@ class ProfilePreconditionCondition(StrEnum):
     PROFILE_SELECTION_KNOWN = "profile.selection.known"
     PROFILE_SELECTION_UNAMBIGUOUS = "profile.selection.unambiguous"
     PROFILE_SELECTION_LIVE = "profile.selection.live"
-    PROFILE_TARGET_NOT_SELECTED = "profile.target.not_selected"
     SESSION_LOGGED_IN = "profile.session.logged_in"
     HUMAN_INPUT_CHANNEL_AVAILABLE = "profile.human.input_channel_available"
     SESSION_CURRENT = "profile.session.current"
@@ -103,29 +102,6 @@ def inspect_active_profile_precondition(
     return PreconditionVerdict(
         failed_condition_id=condition_id,
         evidence=(evidence,),
-        action=ActionReference(action_id="operator.profile.login"),
-        argument_bindings=(_missing_argument("name"),),
-        missing_argument_names=("name",),
-        conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
-    )
-
-
-def profile_deletion_requires_other_selection_verdict(*, requested_profile: str) -> PreconditionVerdict:
-    """Require selection of another profile; human sign-out preserves selection."""
-    condition_id = ProfilePreconditionCondition.PROFILE_TARGET_NOT_SELECTED.value
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            _evidence(
-                condition_id=condition_id,
-                evidence_id=ProfilePreconditionEvidence.PROFILE_SELECTION.value,
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                values={
-                    "requested_profile": requested_profile,
-                    "target_is_selected_profile": True,
-                },
-            ),
-        ),
         action=ActionReference(action_id="operator.profile.login"),
         argument_bindings=(_missing_argument("name"),),
         missing_argument_names=("name",),
@@ -314,7 +290,6 @@ __all__ = [
     "ProfileSelectionFailure",
     "former_product_state_verdict",
     "inspect_active_profile_precondition",
-    "profile_deletion_requires_other_selection_verdict",
     "profile_password_channel_failure_verdict",
     "profile_selection_failure_verdict",
     "profile_session_failure_verdict",

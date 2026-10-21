@@ -808,6 +808,12 @@ export type ProfileList = {
   complete: boolean;
 };
 
+export type ProfileDeleteReview = {
+  name: string;
+  profileId: string;
+  digest: string;
+};
+
 /**
  * sign_in_submit and profile_create name a profile in the
  * `x-cadrumo-profile` header: its label as UTF-8, percent-encoded, since a
@@ -1201,6 +1207,18 @@ export interface HostCommands {
   sign_out: { args: Authorized; result: SignOutResult };
   /** Needs no password, session or runtime, and changes nothing. */
   profile_list: { args: Authorized; result: ProfileList };
+  profile_delete_review: {
+    args: Authorized & { name: string };
+    result: ProfileDeleteReview;
+  };
+  profile_delete: {
+    args: Authorized & {
+      review: ProfileDeleteReview;
+      confirmation: string;
+      acknowledged: boolean;
+    };
+    result: null;
+  };
   desktop_language_read: { args: Authorized; result: DesktopLanguage };
   desktop_language_set: {
     args: Authorized<{ language: string }>;

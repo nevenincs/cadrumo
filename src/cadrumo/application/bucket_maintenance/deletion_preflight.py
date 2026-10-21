@@ -5,8 +5,7 @@ observation, which destroys nothing and unlocks nothing, and then the
 runtime's deletion transaction, which accepts only the fingerprint this
 observation reported. The decisions made here are the ones a person is told
 about before authorising the destruction: which profile the name resolves to,
-that the selected profile is never the target, and that filed records still
-inside the legal retention window are not erased.
+and that filed records still inside the legal retention window are not erased.
 
 A refusal is returned as data, not raised. Each frontend reports it in its own
 vocabulary, and a retention refusal still carries the observation the person
@@ -21,7 +20,6 @@ from pathlib import Path
 
 from ...domain.retention.floor import erase_is_blocked
 from ..user_profile.custody_ports import ProfileBucketStoragePort
-from ..user_profile.profile_summary import selected_profile_id
 from ..workflow.errors import ProfileLabelAmbiguousError
 from ..workflow.profile_bucket_scan import read_profile_bucket
 from .contracts import AssessBucketDeletionCommand, BucketDeletionAssessment
@@ -33,7 +31,6 @@ class ProfileDeletionRefusal(StrEnum):
 
     UNKNOWN_PROFILE = "unknown_profile"
     PROFILE_LABEL_AMBIGUOUS = "profile_label_ambiguous"
-    PROFILE_SELECTED = "profile_selected"
     RETENTION_FLOOR = "retention_floor"
 
 
@@ -43,8 +40,7 @@ class ProfileDeletionPreflight:
 
     ``profile_id`` and ``label`` are present once the name resolved to exactly
     one profile. ``assessment`` is present once that profile was observed on
-    disk, which a retention refusal has done and a selected-profile refusal
-    has not.
+    disk, including when retention prevents deletion.
     """
 
     requested_name: str
@@ -80,10 +76,6 @@ def assess_named_profile_deletion(
         return ProfileDeletionPreflight(name, ProfileDeletionRefusal.UNKNOWN_PROFILE)
     if pointer is None:
         return ProfileDeletionPreflight(name, ProfileDeletionRefusal.UNKNOWN_PROFILE)
-    if selected_profile_id(root=root) == pointer.bucket_id:
-        return ProfileDeletionPreflight(
-            name, ProfileDeletionRefusal.PROFILE_SELECTED, profile_id=pointer.bucket_id, label=pointer.label
-        )
     assessment = BucketMaintenanceService(bucket_storage=bucket_storage, root=root).assess_deletion(
         AssessBucketDeletionCommand(bucket_id=pointer.bucket_id)
     )

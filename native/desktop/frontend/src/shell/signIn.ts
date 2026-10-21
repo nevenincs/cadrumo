@@ -909,6 +909,12 @@ export function useSignIn(host: Host) {
     },
     /** Read the status again: something else has shown it may be stale. */
     recheck: () => refresh(),
+    profilesChanged: () => {
+      listed.current = null;
+      setProfiles(null);
+      setChosen(null);
+      return refresh(true);
+    },
     /** The TUI's session ended: what it did to the account is read again. */
     tuiExited: () => {
       setRefusal(null);

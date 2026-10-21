@@ -22,6 +22,7 @@ export function AccountMenu({
   onCreate,
   onAbout,
   onProfile,
+  onManage,
   google,
 }: {
   account: SignInController;
@@ -31,6 +32,7 @@ export function AccountMenu({
   /** Opens the About dialog, where the host can say what is installed. */
   onAbout?: () => void;
   onProfile?: () => void;
+  onManage?: () => void;
   google?: ReactNode;
 }) {
   const t = useStrings();
@@ -66,6 +68,7 @@ export function AccountMenu({
     choices.length > 0 ||
     account.canSignIn ||
     (account.offering && account.canCreate) ||
+    !!onManage ||
     !!onAbout;
   return (
     <DropdownMenu
@@ -180,6 +183,15 @@ export function AccountMenu({
                 </DropdownMenuItem>
               )}
             </>
+          )}
+          {onManage && (
+            <DropdownMenuItem
+              disabled={account.busy}
+              onSelect={() => transfer(onManage)}
+            >
+              <Icon name="user" />
+              {t("desktop.account.manage.title")}
+            </DropdownMenuItem>
           )}
           {onAbout && (
             <>

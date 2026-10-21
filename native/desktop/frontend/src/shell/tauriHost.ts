@@ -258,6 +258,11 @@ export function tauriHost(): Host {
     profiles: {
       list: () => call("profile_list", {}),
       create: (name, password) => submit("profile_create", password, name),
+      reviewDelete: (name) => call("profile_delete_review", { name }),
+      delete: (review, confirmation, acknowledged) =>
+        call("profile_delete", { review, confirmation, acknowledged }).then(
+          () => undefined,
+        ),
     },
     openTerminal: (kind, size, listener) =>
       token

@@ -595,6 +595,24 @@ desktop:
       unknown: Lehet, hogy a profil létrejött. Ellenőrizd a profillistát, mielőtt
         újra próbálkozol.
     first_run_lead: A kezdéshez hozz létre egy profilt.
+    manage:
+      acknowledge: Tudomásul veszem, hogy a profil helyi adatai végleg elvesznek.
+      cancel: Mégse
+      confirm_name: 'A megerősítéshez írd be: {name}'
+      delete: Profil törlése
+      delete_title: 'Törlöd ezt a profilt: {name}?'
+      deleted: A(z) {name} profil törölve.
+      failed: A törlés nem igazolható. Frissítsd és ellenőrizd a profillistát, mielőtt
+        újra próbálkozol.
+      loading: Profilok betöltése…
+      loss: A profil helyi adatai, köztük a számlák, bevallások, dokumentumok és beszélgetések
+        végleg törlődnek, és a munkamenetei lezárulnak. A külső fiókok és az exportált
+        másolatok megmaradnak.
+      retained: Ez a profil nem törölhető, amíg az adatai védettek, vagy a megőrzési
+        állapotuk nem ellenőrizhető.
+      scope: Az operációs rendszerbeli fiókodban tárolt profilok.
+      sign_out_create: Kijelentkezés új profil létrehozásához
+      title: Profilok kezelése
     new_profile: Új profil
     no_profile: Nincs aktív profil
     no_profile_lead: Ezen a számítógépen még nincs profil.

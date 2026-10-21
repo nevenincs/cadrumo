@@ -584,6 +584,25 @@ desktop:
       unknown: The profile may have been created. Check the profile list before trying
         again.
     first_run_lead: Create a profile to start.
+    manage:
+      acknowledge: I understand that this profile’s local data will be permanently
+        lost.
+      cancel: Cancel
+      confirm_name: Type {name} to confirm
+      delete: Delete profile
+      delete_title: Delete {name}?
+      deleted: '{name} was deleted.'
+      failed: Deletion could not be confirmed. Refresh the profile list and review
+        it before trying again.
+      loading: Loading profiles…
+      loss: This permanently deletes this profile’s local data, including invoices,
+        filings, documents and conversations, and ends its open sessions. External
+        accounts and exported copies are not deleted.
+      retained: This profile cannot be deleted while its records are protected or
+        their retention status cannot be checked.
+      scope: Profiles stored in your OS account.
+      sign_out_create: Sign out to create a profile
+      title: Manage profiles
     new_profile: New profile
     no_profile: No active profile
     no_profile_lead: There's no profile on this computer yet.

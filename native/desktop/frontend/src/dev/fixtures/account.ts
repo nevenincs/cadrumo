@@ -63,6 +63,7 @@ export function accountFixture(
     signOut: async () => undefined,
     settle: () => undefined,
     recheck: async () => undefined,
+    profilesChanged: async () => undefined,
     tuiExited: () => undefined,
     ...rest,
     profiles,

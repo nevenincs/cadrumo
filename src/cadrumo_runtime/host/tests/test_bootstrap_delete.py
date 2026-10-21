@@ -22,6 +22,7 @@ from cadrumo.application.bucket_maintenance.contracts import AssessBucketDeletio
 from cadrumo.application.bucket_maintenance.service import BucketMaintenanceService
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile import login_session
+from cadrumo.application.user_profile.access_contracts import OsLoginContext
 from cadrumo.application.user_profile.custody_repository import ProfileCustodyTransactionRepository
 from cadrumo.application.user_profile.custody_transactions import (
     ProfileCustodyDeleteConfirmation,
@@ -29,6 +30,7 @@ from cadrumo.application.user_profile.custody_transactions import (
 )
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.bootstrap_delete import (
     ProfileDelete,
     ProfileDeleted,
@@ -57,7 +59,18 @@ pytestmark = [
 
 
 @pytest.mark.parametrize(
-    "case", ["selected", "stale", "delete-replay", "unknown-after-prepare", "cleanup-retry", "disconnect", "hosted"]
+    "case",
+    [
+        "selected",
+        "stale",
+        "delete-replay",
+        "unknown-after-prepare",
+        "cleanup-retry",
+        "disconnect",
+        "hosted",
+        "selected-hosted",
+        "other-os-owner",
+    ],
 )
 def test_runtime_bootstrap_delete_uses_existing_custody_journal(
     tmp_path: Path,
@@ -101,7 +114,7 @@ def test_runtime_bootstrap_delete_uses_existing_custody_journal(
         profile = subject.store.binding.profile_id
         capsule = load_committed_profile_password_material(profile, root=root).capsule_path
         close_active_bucket_session()
-        if case != "selected":
+        if case not in {"selected", "selected-hosted"}:
             with active_profile_pointer_transaction(root) as pointer:
                 pointer.clear()
         with composed_profile_persistence_ports() as ports:
@@ -140,7 +153,7 @@ def test_runtime_bootstrap_delete_uses_existing_custody_journal(
                     running.result()
                 assert observed == "ready"
                 hosted_wire = None
-                if case == "hosted":
+                if case in {"hosted", "selected-hosted"}:
                     hosted_wire = _connect(endpoint)
                     admitted = _login(hosted_wire, profile, method="password", proof=PROFILE_INPUT.encode())
                     assert not isinstance(admitted, AccessRefusal), admitted
@@ -154,6 +167,15 @@ def test_runtime_bootstrap_delete_uses_existing_custody_journal(
                     fingerprint = current.fingerprint
                 wire = _connect(endpoint)
                 try:
+                    if case == "other-os-owner":
+                        original_observe = login.observe
+
+                        def foreign_owner(*, credential_facilities: Availability) -> OsLoginContext:
+                            return original_observe(credential_facilities=credential_facilities).model_copy(
+                                update={"os_owner_id": "another-os-account"}
+                            )
+
+                        monkeypatch.setattr(login, "observe", foreign_owner)
                     prepared = wire.delete_profile(
                         ProfileDeletePrepare(
                             request_id=uuid4(),
@@ -163,9 +185,14 @@ def test_runtime_bootstrap_delete_uses_existing_custody_journal(
                         ),
                         deadline=time.monotonic() + 30,
                     )
-                    if case in {"selected", "stale"}:
+                    if case == "other-os-owner":
+                        assert isinstance(prepared, AccessRefusal)
+                        assert prepared.code.value == "needs_user"
+                        assert capsule.exists()
+                        return
+                    if case == "stale":
                         assert isinstance(prepared, ProfileDeleteRefused)
-                        assert prepared.code == ("selected_profile" if case == "selected" else "custody_changed")
+                        assert prepared.code == "custody_changed"
                         assert capsule.exists()
                         assert not profiles._profiles
                         return
@@ -207,6 +234,9 @@ def test_runtime_bootstrap_delete_uses_existing_custody_journal(
                     deleted = wire.delete_profile(request, deadline=time.monotonic() + 30)
                     assert isinstance(deleted, ProfileDeleted), deleted
                     assert not capsule.exists()
+                    if case in {"selected", "selected-hosted"}:
+                        with active_profile_pointer_transaction(root) as pointer:
+                            assert pointer.read().bucket_id is None
                     replay = wire.delete_profile(
                         request.model_copy(update={"request_id": uuid4()}), deadline=time.monotonic() + 30
                     )
@@ -345,8 +375,7 @@ def test_native_bootstrap_delete_fresh_admission_after_an_actual_poll_handoff(
                 prepared = preparing.result()
                 assert poll_finished.is_set()
                 if overlap == "selected":
-                    assert isinstance(prepared, ProfileDeleteRefused)
-                    assert prepared.code == "selected_profile"
+                    assert isinstance(prepared, ProfileDeletePrepared)
                 elif overlap == "shutdown":
                     assert isinstance(prepared, AccessRefusal)
                     assert prepared.code is RefusalCode.DRAINING
@@ -368,7 +397,8 @@ def test_native_bootstrap_delete_fresh_admission_after_an_actual_poll_handoff(
                     assert not capsule.exists()
                 if overlap != "handoff":
                     assert capsule.exists()
-                    assert {path.name: path.read_bytes() for path in journal_root.glob("*.json")} == journals_before
+                    if overlap == "shutdown":
+                        assert {path.name: path.read_bytes() for path in journal_root.glob("*.json")} == journals_before
             finally:
                 # Always settle the held poll before waiting on serving requests or original native cleanup.
                 release_poll.set()

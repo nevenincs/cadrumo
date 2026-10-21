@@ -121,48 +121,32 @@ class RuntimeBootstrapDeleteMixin:
             with composed_profile_persistence_ports(automation_secrets_store=self._secret_store()) as ports:
                 lifecycle = ProfileCapsuleLifecycle(root=self.root)
                 if isinstance(request, ProfileDeletePrepare):
-                    with active_profile_pointer_transaction(self.root) as pointer:
+                    with active_profile_pointer_transaction(self.root):
                         require_login()
-                        if pointer.read().bucket_id == str(request.profile_id):
-                            result = ProfileDeleteRefused.model_validate({**coordinates, "code": "selected_profile"})
-                        else:
-                            assessment = BucketMaintenanceService(
-                                bucket_storage=ports.bucket_storage(),
-                                root=self.root,
-                            ).assess_deletion(AssessBucketDeletionCommand(bucket_id=str(request.profile_id)))
-                            if not assessment.exists or assessment.fingerprint != request.fingerprint:
-                                raise ProfileCustodyTransactionConflictError("deletion preflight changed")
-                            # The lifecycle owner checks current retention/holds and
-                            # records the exact inventory before any destructive step.
-                            journal = lifecycle.prepare_delete(
-                                profile_id=request.profile_id,
-                                requires_inactive_target=True,
-                            )
-                            transaction_id = journal.transaction_id
-                            result = ProfileDeletePrepared.model_validate(
-                                {
-                                    **coordinates,
-                                    "confirmation": lifecycle.confirm_delete(journal),
-                                }
-                            )
+                        assessment = BucketMaintenanceService(
+                            bucket_storage=ports.bucket_storage(),
+                            root=self.root,
+                        ).assess_deletion(AssessBucketDeletionCommand(bucket_id=str(request.profile_id)))
+                        if not assessment.exists or assessment.fingerprint != request.fingerprint:
+                            raise ProfileCustodyTransactionConflictError("deletion preflight changed")
+                        journal = lifecycle.prepare_delete(
+                            profile_id=request.profile_id,
+                            requires_inactive_target=False,
+                        )
+                        transaction_id = journal.transaction_id
+                        result = ProfileDeletePrepared.model_validate(
+                            {**coordinates, "confirmation": lifecycle.confirm_delete(journal)}
+                        )
                 else:
                     transaction_id = request.confirmation.transaction_id
                     repository = ProfileCustodyTransactionRepository(root=self.root)
                     journal = repository.load_journal(transaction_id)
                     if (
                         journal.operation is not ProfileCustodyTransactionOperation.DELETE
-                        or not journal.requires_inactive_target
                         or journal.retention_override is not None
                         or lifecycle.confirm_delete(journal) != request.confirmation
                     ):
                         raise ProfileCustodyTransactionConflictError("deletion confirmation changed")
-                    # This check is repeated by execute_delete under its root lock.
-                    # No root/profile guard is retained while native workers settle.
-                    with active_profile_pointer_transaction(self.root) as pointer:
-                        if repository.load_receipt(transaction_id) is None and pointer.read().bucket_id == str(
-                            request.profile_id
-                        ):
-                            raise ProfileCustodyTransactionConflictError("deletion target is selected")
                     require_login()
                     if host is not None:
                         with host.guard:
@@ -180,6 +164,7 @@ class RuntimeBootstrapDeleteMixin:
                     with active_profile_pointer_transaction(self.root):
                         require_login()
                         receipt = lifecycle.delete(request.confirmation)
+                    self._sign_in_changed()
                     result = ProfileDeleted.model_validate({**coordinates, "receipt": receipt})
         except ProfileCustodyTransactionConflictError:
             result = ProfileDeleteRefused.model_validate(

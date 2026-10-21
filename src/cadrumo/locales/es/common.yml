@@ -613,6 +613,24 @@ desktop:
       unknown: Puede que el perfil se haya creado. Revisa la lista de perfiles antes
         de volver a intentarlo.
     first_run_lead: Crea un perfil para empezar.
+    manage:
+      acknowledge: Entiendo que los datos locales de este perfil se perderán permanentemente.
+      cancel: Cancelar
+      confirm_name: Escribe {name} para confirmar
+      delete: Eliminar perfil
+      delete_title: ¿Eliminar {name}?
+      deleted: Se ha eliminado {name}.
+      failed: No se ha podido confirmar la eliminación. Actualiza la lista de perfiles
+        y revísala antes de intentarlo de nuevo.
+      loading: Cargando perfiles…
+      loss: Se eliminarán permanentemente los datos locales de este perfil, incluidas
+        facturas, declaraciones, documentos y conversaciones, y se cerrarán sus sesiones.
+        No se eliminarán las cuentas externas ni las copias exportadas.
+      retained: No puedes eliminar este perfil mientras sus registros estén protegidos
+        o no se pueda comprobar su conservación.
+      scope: Perfiles guardados en tu cuenta del sistema.
+      sign_out_create: Cerrar sesión para crear un perfil
+      title: Gestionar perfiles
     new_profile: Nuevo perfil
     no_profile: Ningún perfil activo
     no_profile_lead: Todavía no hay ningún perfil en este equipo.

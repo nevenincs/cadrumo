@@ -2490,16 +2490,14 @@ cli:
         pot restablir una contrasenya oblidada; activa-la quan vulguis amb l'ordre
         'config profile recovery enable'.
       delete:
+        expected_digest_help: Exigeix l’empremta del contingut de la revisió prèvia.
+        expected_profile_id_help: Exigeix la identitat del perfil de la revisió prèvia.
         help: Elimina un perfil i el seu estat local; --yes confirma l'eliminació
         name_help: Nom del perfil que vols eliminar
         notices:
           deleted: Perfil eliminat juntament amb el seu estat local.
           preflight: 'Comprovació prèvia: no s''ha eliminat res. Torna a executar
             amb --yes per eliminar.'
-        refusal:
-          active_profile: No pots eliminar el perfil seleccionat '{name}'. Inicia
-            sessió en un altre perfil amb 'aeat config login NAME' i torna-ho a provar.
-            Tancar la sessió conserva el perfil seleccionat.
         yes_help: Confirma explícitament l'eliminació
       descendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].

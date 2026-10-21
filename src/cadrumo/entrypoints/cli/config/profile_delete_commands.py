@@ -12,9 +12,8 @@ behind a durable journal, a typed confirmation and an explicit acknowledgement:
   ``--yes`` the verb reports the label, the observed content fingerprint and
   the legal retention position, exits successfully, and writes no bytes. The
   operator sees exactly what would be destroyed before authorising it.
-- **The selected profile is refused outright.** Human sign-out preserves the
-  selected login target. The operator must select another profile through
-  its supported login before deleting the original capsule.
+- **Runtime owns active-profile teardown.** It drains the target's worker,
+  retires sessions and clears its selection through the deletion journal.
 - **The legal retention floor is enforced here, at the point bytes are
   destroyed.** The assessment comes from the one sessionless authority that
   computes it (:meth:`BucketMaintenanceService.assess_deletion`), and the
@@ -70,24 +69,7 @@ def _refused(preflight: ProfileDeletionPreflight) -> Exception | None:
         # A name that resolved to a capsule no longer on disk is reported by
         # the identifier that was observed, since the name did resolve.
         return unknown_profile_refusal(preflight.profile_id or preflight.requested_name)
-    if refusal is ProfileDeletionRefusal.PROFILE_SELECTED:
-        return _selected_profile_refusal(preflight)
     return _retention_floor_refusal(preflight)
-
-
-def _selected_profile_refusal(preflight: ProfileDeletionPreflight) -> Exception:
-    """Refuse the selected profile: sign-out keeps the selection, so another must be selected first."""
-    from ....application.profile_preconditions import profile_deletion_requires_other_selection_verdict
-    from ..common import attach_cli_policy_verdict
-
-    label = preflight.label or preflight.requested_name
-    return attach_cli_policy_verdict(
-        CliRefusedBoundaryError(
-            translated_message="cli.config.profile.delete.refusal.active_profile",
-            context={"name": label, "profile_id": preflight.profile_id},
-        ),
-        verdict=profile_deletion_requires_other_selection_verdict(requested_profile=label),
-    )
 
 
 def _retention_floor_refusal(preflight: ProfileDeletionPreflight) -> Exception:
@@ -171,6 +153,8 @@ def config_profile_delete(
     name: str,
     yes: bool = False,
     output_language: OutputLanguage | None = None,
+    expected_profile_id: str | None = None,
+    expected_digest: str | None = None,
 ) -> None:
     """Destroy one named profile capsule, after a preflight the operator confirms."""
     from ....application.bucket_maintenance.deletion_preflight import assess_named_profile_deletion
@@ -183,6 +167,16 @@ def config_profile_delete(
         raise refused
     assessment, label = preflight.assessment, preflight.label
     if assessment is None or label is None:
+        raise CliRefusedBoundaryError("custody_changed")
+    # Desktop confirmation binds the name and content seen in its review.
+    # Never silently re-resolve a reused label into a different capsule.
+    if (expected_profile_id is None) != (expected_digest is None):
+        raise CliRefusedBoundaryError("custody_changed")
+    if expected_profile_id is not None and (
+        assessment.bucket_id != expected_profile_id
+        or assessment.fingerprint is None
+        or assessment.fingerprint.digest != expected_digest
+    ):
         raise CliRefusedBoundaryError("custody_changed")
     completed_at = _destroy(ctx, assessment) if yes else None
     result, lines, notices = _result_and_lines(

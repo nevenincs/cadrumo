@@ -204,6 +204,27 @@ export function scenarioHost(
     : {};
 
   const profiles: ProfileAccounts = {
+    async reviewDelete(name) {
+      say("reviewProfileDelete");
+      await wait(options.latencyMs);
+      if (!accounts.includes(name)) throw failure("invalid_arguments", "cli");
+      return { name, profileId: name, digest: "fixture" };
+    },
+    async delete(review, confirmation, acknowledged) {
+      say("deleteProfile");
+      await wait(options.latencyMs);
+      if (
+        !acknowledged ||
+        confirmation !== review.name ||
+        !accounts.includes(review.name)
+      )
+        throw failure("invalid_arguments", "cli");
+      accounts.splice(accounts.indexOf(review.name), 1);
+      if (active === review.name) {
+        active = null;
+        presence = "absent";
+      }
+    },
     async list() {
       say("profiles");
       // A process of the product's, as every other read is.

@@ -47,6 +47,7 @@ export function SignInDialog({
   onOpening,
   create,
   onCreateChange,
+  onManage,
 }: {
   account: SignInController;
   open: boolean;
@@ -58,6 +59,7 @@ export function SignInDialog({
   /** The person asked to create a profile rather than sign in to one. */
   create?: boolean;
   onCreateChange?: (create: boolean) => void;
+  onManage?: () => void;
 }) {
   const t = useStrings();
   const input = useRef<HTMLInputElement>(null);
@@ -411,6 +413,11 @@ export function SignInDialog({
             )}
           </>
         ) : null}
+        {!creating && onManage && (
+          <Button variant="ghost" disabled={busy} onClick={onManage}>
+            {t("desktop.account.manage.title")}
+          </Button>
+        )}
       </DialogContent>
     </Dialog>
   );

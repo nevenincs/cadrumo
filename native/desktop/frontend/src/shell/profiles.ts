@@ -8,6 +8,7 @@ import type {
   ProfileChoice,
   ProfileCreateResult,
   ProfileList,
+  ProfileDeleteReview,
 } from "../ipc/contract";
 
 export interface ProfileAccounts {
@@ -15,6 +16,12 @@ export interface ProfileAccounts {
   /** Creates a profile and selects it. It does not sign in: the password
    * is consumed, and zeroed, by this one call. */
   create(name: string, password: Uint8Array): Promise<ProfileCreateResult>;
+  reviewDelete(name: string): Promise<ProfileDeleteReview>;
+  delete(
+    review: ProfileDeleteReview,
+    confirmation: string,
+    acknowledged: boolean,
+  ): Promise<void>;
 }
 
 /** The product's own bounds, so that what it would refuse is said before

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 from click.testing import Result
@@ -66,7 +67,7 @@ def test_the_command_prints_the_observation_and_gives_the_refusals_the_preflight
     offered = _preflight("doomed")
     printed = command_result("config", "profile", "delete", "doomed", invoke_cli=run_cadrumo_cli)
     selected = _preflight("survivor")
-    selected_error = command_error("config", "profile", "delete", "survivor", invoke_cli=run_cadrumo_cli)
+    selected_result = command_result("config", "profile", "delete", "survivor", invoke_cli=run_cadrumo_cli)
     unknown = _preflight("nobody-by-this-name")
     unknown_error = command_error("config", "profile", "delete", "nobody-by-this-name", invoke_cli=run_cadrumo_cli)
 
@@ -78,13 +79,31 @@ def test_the_command_prints_the_observation_and_gives_the_refusals_the_preflight
     assert printed == as_the_command_line_renders(result)
     assert printed["deleted"] is False
 
-    assert selected.refusal is ProfileDeletionRefusal.PROFILE_SELECTED
-    assert (selected.label, selected.assessment) == ("survivor", None)
-    assert selected_error["code"] == "REFUSED_CLI_BOUNDARY"
-    selected_context = selected_error["context"]
-    assert isinstance(selected_context, dict) and selected_context["name"] == "survivor"
+    assert selected.refusal is None
+    assert selected.label == "survivor" and selected.assessment is not None
+    assert selected_result["deleted"] is False
 
     assert unknown.refusal is ProfileDeletionRefusal.UNKNOWN_PROFILE
     assert (unknown.profile_id, unknown.label, unknown.assessment) == (None, None, None)
     assert unknown_error["code"] == "REFUSED_PROFILE_NOT_FOUND"
     assert unknown_error["context"] == {"name": "nobody-by-this-name"}
+
+
+@pytest.mark.parametrize("changed", ["identity", "content", "missing-digest", "unchanged"])
+def test_reviewed_delete_is_bound_to_identity_and_content(run_cadrumo_cli: Callable[..., Result], changed: str) -> None:
+    register_cli_profile(label="reviewed", facts={**_FACTS, "identity.tax_id": "00000001R"}, log_in=False)
+    observed = _preflight("reviewed")
+    assert observed.assessment is not None and observed.assessment.fingerprint is not None
+    identity = str(uuid4()) if changed == "identity" else str(observed.profile_id)
+    digest = "0" * 64 if changed == "content" else observed.assessment.fingerprint.digest
+    args = ["config", "profile", "delete", "reviewed", "--yes", "--expected-profile-id", identity]
+    if changed != "missing-digest":
+        args += ["--expected-digest", digest]
+    if changed == "unchanged":
+        result = command_result(*args, invoke_cli=run_cadrumo_cli)
+        assert result["deleted"] is True and result["completed_at"]
+        assert _preflight("reviewed").refusal is ProfileDeletionRefusal.UNKNOWN_PROFILE
+    else:
+        refused = command_error(*args, invoke_cli=run_cadrumo_cli)
+        assert refused["code"] == "REFUSED_CLI_BOUNDARY"
+        assert _preflight("reviewed").profile_id == observed.profile_id

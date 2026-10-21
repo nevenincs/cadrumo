@@ -2476,16 +2476,14 @@ cli:
         jelszó nem állítható vissza; bármikor bekapcsolható a 'config profile recovery
         enable' paranccsal.
       delete:
+        expected_digest_help: A korábban ellenőrzött adattartalom lenyomatának megkövetelése.
+        expected_profile_id_help: A korábban ellenőrzött profilazonosító megkövetelése.
         help: Töröl egy profilt és a helyi állapotát; a --yes megerősíti a törlést
         name_help: A törlendő profil neve
         notices:
           deleted: A profil a helyi állapotával együtt törölve.
           preflight: 'Csak előzetes ellenőrzés: semmi sem lett törölve. Futtasd újra
             a --yes kapcsolóval a törléshez.'
-        refusal:
-          active_profile: Nem törölheted a kijelölt '{name}' profilt. Jelentkezz be
-            egy másik profilba az 'aeat config login NAME' paranccsal, majd próbáld
-            újra. A kijelentkezés megtartja a kijelölt profilt.
         yes_help: Kifejezetten megerősíti a törlést
       descendiente:
         add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].

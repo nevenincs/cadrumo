@@ -2507,16 +2507,14 @@ cli:
         puede restablecer una contraseña olvidada; actívala cuando quieras con el
         comando 'config profile recovery enable'.
       delete:
+        expected_digest_help: Exige la huella del contenido de la revisión previa.
+        expected_profile_id_help: Exige la identidad del perfil de la revisión previa.
         help: Elimina un perfil y su estado local; --yes confirma la eliminación
         name_help: Nombre del perfil que quieres eliminar
         notices:
           deleted: Perfil eliminado junto con su estado local.
           preflight: 'Comprobación previa: no se ha eliminado nada. Vuelve a ejecutarlo
             con --yes para eliminar.'
-        refusal:
-          active_profile: No puedes eliminar el perfil seleccionado '{name}'. Inicia
-            sesión en otro perfil con 'aeat config login NAME' y vuelve a intentarlo.
-            Cerrar sesión conserva el perfil seleccionado.
         yes_help: Confirma explícitamente la eliminación
       descendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].

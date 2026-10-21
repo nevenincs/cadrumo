@@ -2320,15 +2320,13 @@ cli:
         cannot be reset; enable it any time with the 'config profile recovery enable'
         command.
       delete:
+        expected_digest_help: Require the content fingerprint from the reviewed preflight.
+        expected_profile_id_help: Require the profile identity from the reviewed preflight.
         help: Delete a profile and its local state; --yes confirms the deletion
         name_help: Name of the profile to delete
         notices:
           deleted: Profile deleted along with its local state.
           preflight: 'Preflight only: nothing was deleted. Re-run with --yes to delete.'
-        refusal:
-          active_profile: Cannot delete the selected profile '{name}'. Sign in to
-            another profile with 'aeat config login NAME', then retry. Logout preserves
-            the selected profile.
         yes_help: Explicitly confirm the deletion
       descendiente:
         add_flag_help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].

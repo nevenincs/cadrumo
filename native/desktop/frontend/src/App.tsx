@@ -63,6 +63,7 @@ import { SignedOut, SignInDialog } from "./components/SignIn";
 import { AboutDialog } from "./components/AboutDialog";
 import { UserProfilePage } from "./components/profile/UserProfilePage";
 import { AccountMenu } from "./components/AccountMenu";
+import { ManageProfiles } from "./components/account/ManageProfiles";
 import { Titlebar } from "./components/Titlebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useFilingCalendar } from "./shell/calendar";
@@ -262,6 +263,7 @@ export function App({ host }: { host: Host }) {
   const [signInDismissed, setSignInDismissed] = useState(false);
   // The dialog as the form that creates a profile, where one was asked for.
   const [creatingProfile, setCreatingProfile] = useState(false);
+  const [managingProfiles, setManagingProfiles] = useState(false);
   const signInButton = useRef<HTMLButtonElement>(null);
   const defaultFilters = useMemo(
     () => ({
@@ -2592,6 +2594,14 @@ export function App({ host }: { host: Host }) {
               }
               onSignOut={signOut}
               onCreate={askNewProfile}
+              onManage={
+                host.profiles
+                  ? () => {
+                      setSignInDismissed(true);
+                      setManagingProfiles(true);
+                    }
+                  : undefined
+              }
               onAbout={
                 about
                   ? () => {
@@ -2968,15 +2978,34 @@ export function App({ host }: { host: Host }) {
                 />
               </>
             )}
+            {managingProfiles && host.profiles && (
+              <ManageProfiles
+                profiles={host.profiles}
+                account={account}
+                onClose={() => setManagingProfiles(false)}
+                onCreate={() => {
+                  setManagingProfiles(false);
+                  askNewProfile();
+                }}
+              />
+            )}
             <SignInDialog
               account={account}
-              open={account.gated && !signInDismissed}
+              open={account.gated && !signInDismissed && !managingProfiles}
               onOpenChange={(open) => {
                 setSignInDismissed(!open);
                 if (!open) accountRef.current.settle();
               }}
               create={creatingProfile}
               onCreateChange={setCreatingProfile}
+              onManage={
+                host.profiles
+                  ? () => {
+                      setSignInDismissed(true);
+                      setManagingProfiles(true);
+                    }
+                  : undefined
+              }
               // Opened by the gate closing rather than by a press, the dialog
               // still took focus from somewhere: that is where it returns.
               onOpening={(from) => {

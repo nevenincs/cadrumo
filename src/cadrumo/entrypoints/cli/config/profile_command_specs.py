@@ -794,6 +794,20 @@ PROFILE_COMMAND_SPECS = (
         (
             _argument("name", TEXT_VALUE, "cli.config.profile.delete.name_help"),
             _option("yes", ("--yes",), FLAG_VALUE, "cli.config.profile.delete.yes_help", default=False, flag=True),
+            _option(
+                "expected_profile_id",
+                ("--expected-profile-id",),
+                TEXT_VALUE,
+                "cli.config.profile.delete.expected_profile_id_help",
+                default=None,
+            ),
+            _option(
+                "expected_digest",
+                ("--expected-digest",),
+                TEXT_VALUE,
+                "cli.config.profile.delete.expected_digest_help",
+                default=None,
+            ),
             _LANGUAGE,
         ),
     ),
