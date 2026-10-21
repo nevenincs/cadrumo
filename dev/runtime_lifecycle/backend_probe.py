@@ -228,21 +228,22 @@ def main(arguments: list[str] | None = None) -> int:
     selection.add_argument("--source", action="store_true", help="This checkout's environment; no agent phase.")
     parser.add_argument("--skip-agent", action="store_true", help="Probe sign-in and activity only.")
     options = parser.parse_args(arguments)
-    scratch = Path(tempfile.mkdtemp(prefix="cadrumo-probe-", dir=prepare_temporary_directory()))
-    probe = Probe()
-    if options.source:
-        signed_in_phase(probe, source_programs(), scratch / "signed-in", source=True)
-    else:
-        package = options.package.resolve(strict=True)
-        signed_in_phase(probe, Programs.of(package), scratch / "signed-in", source=False)
-        if not options.skip_agent:
-            agent_phase(probe, package, scratch / "agent")
-    problems = logged_problems(scratch)
-    print(json.dumps({"logged_problems": len(problems), "root": str(scratch)}), flush=True)
-    for line in problems:
-        print(line, flush=True)
-    print(json.dumps({"passed": not probe.failed, "failed_steps": [s["step"] for s in probe.steps if not s["ok"]]}))
-    return 1 if probe.failed else 0
+    with tempfile.TemporaryDirectory(prefix="cadrumo-probe-", dir=prepare_temporary_directory()) as temporary:
+        scratch = Path(temporary)
+        probe = Probe()
+        if options.source:
+            signed_in_phase(probe, source_programs(), scratch / "signed-in", source=True)
+        else:
+            package = options.package.resolve(strict=True)
+            signed_in_phase(probe, Programs.of(package), scratch / "signed-in", source=False)
+            if not options.skip_agent:
+                agent_phase(probe, package, scratch / "agent")
+        problems = logged_problems(scratch)
+        print(json.dumps({"logged_problems": len(problems), "root": str(scratch)}), flush=True)
+        for line in problems:
+            print(line, flush=True)
+        print(json.dumps({"passed": not probe.failed, "failed_steps": [s["step"] for s in probe.steps if not s["ok"]]}))
+        return 1 if probe.failed else 0
 
 
 if __name__ == "__main__":

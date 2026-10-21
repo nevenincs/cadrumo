@@ -612,45 +612,46 @@ def main(arguments: list[str] | None = None) -> int:
     selection.add_argument("--source", action="store_true", help="This checkout's environment.")
     parser.add_argument("--stop-after", choices=tuple(_PHASES), help="Run the phases up to this one only.")
     options = parser.parse_args(arguments)
-    scratch = Path(tempfile.mkdtemp(prefix="cadrumo-concurrent-", dir=prepare_temporary_directory()))
-    root, secrets = scratch / "storage", scratch / "secrets"
-    root.mkdir()
-    secrets.mkdir()
-    environment = consumer_environment(root, secrets)
-    if options.source:
-        programs = source_programs()
-        python = [sys.executable]
-        environment.update(_DEVELOPMENT_SESSION, CADRUMO_AUTHORITY_ROOT=str(REPO_ROOT / ".authority"))
-    else:
-        package = options.package.resolve(strict=True)
-        programs = Programs.of(package)
-        python = [str(package / "python.exe"), "-I"]
-    mark_development_root(root)
-    context = Context(programs, environment, python, scratch)
-    run = Run()
-    started = time.monotonic()
-    with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
-        if run.check("runtime_ready", runtime.ready().get("kind") is not None) and _setup(run, context):
-            asyncio.run(phases(run, context, runtime, stop_after=options.stop_after))
-    problems = logged_problems(scratch)
-    run.check(
-        "no_error_records",
-        # A refusal's traceback belongs to its WARNING record; only error records are failures here.
-        not any("[ERROR]" in line or "[CRITICAL]" in line for line in problems),
-    )
-    for line in problems:
-        print(line, flush=True)
-    print(
-        json.dumps(
-            {
-                "passed": not run.failed,
-                "failed": run.failed,
-                "seconds": round(time.monotonic() - started, 1),
-                "root": str(scratch),
-            }
+    with tempfile.TemporaryDirectory(prefix="cadrumo-concurrent-", dir=prepare_temporary_directory()) as temporary:
+        scratch = Path(temporary)
+        root, secrets = scratch / "storage", scratch / "secrets"
+        root.mkdir()
+        secrets.mkdir()
+        environment = consumer_environment(root, secrets)
+        if options.source:
+            programs = source_programs()
+            python = [sys.executable]
+            environment.update(_DEVELOPMENT_SESSION, CADRUMO_AUTHORITY_ROOT=str(REPO_ROOT / ".authority"))
+        else:
+            package = options.package.resolve(strict=True)
+            programs = Programs.of(package)
+            python = [str(package / "python.exe"), "-I"]
+        mark_development_root(root)
+        context = Context(programs, environment, python, scratch)
+        run = Run()
+        started = time.monotonic()
+        with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
+            if run.check("runtime_ready", runtime.ready().get("kind") is not None) and _setup(run, context):
+                asyncio.run(phases(run, context, runtime, stop_after=options.stop_after))
+        problems = logged_problems(scratch)
+        run.check(
+            "no_error_records",
+            # A refusal's traceback belongs to its WARNING record; only error records are failures here.
+            not any("[ERROR]" in line or "[CRITICAL]" in line for line in problems),
         )
-    )
-    return 1 if run.failed else 0
+        for line in problems:
+            print(line, flush=True)
+        print(
+            json.dumps(
+                {
+                    "passed": not run.failed,
+                    "failed": run.failed,
+                    "seconds": round(time.monotonic() - started, 1),
+                    "root": str(scratch),
+                }
+            )
+        )
+        return 1 if run.failed else 0
 
 
 if __name__ == "__main__":

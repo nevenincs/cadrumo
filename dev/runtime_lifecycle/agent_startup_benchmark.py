@@ -221,7 +221,10 @@ def measure(package: Path, scratch: Path) -> dict[str, Any]:
 
 
 def main() -> None:
-    """Alternate two built packages, recording each completed sample immediately."""
+    """Record completed samples durably and reclaim this invocation's synthetic profiles.
+
+    Resume reads completed observations; each remaining sample starts fresh.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--baseline", type=Path, required=True)
     parser.add_argument("--candidate", type=Path, required=True)
@@ -235,95 +238,100 @@ def main() -> None:
     output = arguments.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     identities = {name: package_identity(package) for name, package in packages.items()}
-    report: dict[str, Any]
-    if arguments.resume:
-        report = json.loads(output.read_text(encoding="utf-8"))
-        require(report["packages"] == identities, "cannot resume with changed packages")
-        scratch = Path(report["scratch"]).resolve(strict=True)
-        require(scratch.parent == output.parent, "benchmark scratch must remain beside its report")
-        require(all(sample["sample"] <= arguments.samples for sample in report["samples"]), "cannot reduce samples")
-    else:
-        require(not output.exists(), "output already exists; use --resume or a new output path")
-        scratch = Path(tempfile.mkdtemp(prefix="agent-startup-", dir=output.parent))
-        report = {
-            "scope": "Real Release packages; synthetic unconfigured profiles; no model, AEAT or desktop rendering",
-            "cache_scope": "Fresh processes, warm OS caches; current-store starts keep the profile worker alive",
-            "scratch": str(scratch),
-            "packages": identities,
-            "samples": [],
-        }
-    report.setdefault("load_policy_history", []).append(
-        "wait for observed builds" if arguments.wait_for_builds else "measure under current load"
-    )
-    output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    for index in range(arguments.samples):
-        order = ("baseline", "candidate") if index % 2 == 0 else ("candidate", "baseline")
-        for name in order:
-            if any(sample["package"] == name and sample["sample"] == index + 1 for sample in report["samples"]):
-                continue
-            if arguments.wait_for_builds:
-                _wait_for_builds()
-            require(package_identity(packages[name]) == report["packages"][name], "package changed before sample")
-            print(json.dumps({"starting": name, "sample": index + 1}), flush=True)
-            sample_root = Path(tempfile.mkdtemp(prefix=f"{name}-{index + 1}-", dir=scratch))
-            sample = measure(packages[name], sample_root)
-            sample["scratch"] = str(sample_root)
-            require(package_identity(packages[name]) == report["packages"][name], "package changed during sample")
-            report["samples"].append({"package": name, "sample": index + 1, **sample})
-            output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-            print(
-                json.dumps(
-                    {
-                        "completed": name,
-                        "sample": index + 1,
-                        "starts": [
-                            {
-                                k: v
-                                for k, v in start.items()
-                                if k.endswith("_seconds") or k == "store_state_before_start"
-                            }
-                            for start in sample["starts"]
-                        ],
-                    }
-                ),
-                flush=True,
-            )
-    report["medians_seconds"] = {
-        name: {
-            state: {
-                key: statistics.median(
-                    start[key]
-                    for sample in report["samples"]
-                    if sample["package"] == name
-                    for start in sample["starts"]
-                    if start["store_state_before_start"] == state
+    with tempfile.TemporaryDirectory(prefix="agent-startup-", dir=output.parent) as temporary:
+        scratch = Path(temporary)
+        report: dict[str, Any]
+        if arguments.resume:
+            report = json.loads(output.read_text(encoding="utf-8"))
+            require(report["packages"] == identities, "cannot resume with changed packages")
+            previous_scratch = Path(report["scratch"]).resolve()
+            require(previous_scratch.parent == output.parent, "benchmark scratch must remain beside its report")
+            require(all(sample["sample"] <= arguments.samples for sample in report["samples"]), "cannot reduce samples")
+        else:
+            require(not output.exists(), "output already exists; use --resume or a new output path")
+            report = {
+                "scope": "Real Release packages; synthetic unconfigured profiles; no model, AEAT or desktop rendering",
+                "cache_scope": "Fresh processes, warm OS caches; current-store starts keep the profile worker alive",
+                "scratch": str(scratch),
+                "packages": identities,
+                "samples": [],
+            }
+        report["scratch"] = str(scratch)
+        report["scratch_retained"] = False
+        report.setdefault("load_policy_history", []).append(
+            "wait for observed builds" if arguments.wait_for_builds else "measure under current load"
+        )
+        output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        for index in range(arguments.samples):
+            order = ("baseline", "candidate") if index % 2 == 0 else ("candidate", "baseline")
+            for name in order:
+                if any(sample["package"] == name and sample["sample"] == index + 1 for sample in report["samples"]):
+                    continue
+                if arguments.wait_for_builds:
+                    _wait_for_builds()
+                require(package_identity(packages[name]) == report["packages"][name], "package changed before sample")
+                print(json.dumps({"starting": name, "sample": index + 1}), flush=True)
+                sample_root = scratch / f"{name}-{index + 1}"
+                sample_root.mkdir()
+                sample = measure(packages[name], sample_root)
+                sample["scratch"] = str(sample_root)
+                sample["scratch_retained"] = False
+                require(package_identity(packages[name]) == report["packages"][name], "package changed during sample")
+                report["samples"].append({"package": name, "sample": index + 1, **sample})
+                output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+                print(
+                    json.dumps(
+                        {
+                            "completed": name,
+                            "sample": index + 1,
+                            "starts": [
+                                {
+                                    k: v
+                                    for k, v in start.items()
+                                    if k.endswith("_seconds") or k == "store_state_before_start"
+                                }
+                                for start in sample["starts"]
+                            ],
+                        }
+                    ),
+                    flush=True,
                 )
+        report["medians_seconds"] = {
+            name: {
+                state: {
+                    key: statistics.median(
+                        start[key]
+                        for sample in report["samples"]
+                        if sample["package"] == name
+                        for start in sample["starts"]
+                        if start["store_state_before_start"] == state
+                    )
+                    for key in (
+                        "service_ready_seconds",
+                        "gateway_ready_seconds",
+                        "worker_available_seconds",
+                        "worker_warmed_seconds",
+                    )
+                }
+                for state in ("absent", "current")
+            }
+            for name in packages
+        }
+        report["setup_medians_seconds"] = {
+            name: {
+                key: statistics.median(sample[key] for sample in report["samples"] if sample["package"] == name)
                 for key in (
-                    "service_ready_seconds",
-                    "gateway_ready_seconds",
-                    "worker_available_seconds",
-                    "worker_warmed_seconds",
+                    "runtime_ready_seconds",
+                    "profile_create_and_login_seconds",
+                    "holder_start_seconds",
+                    "profile_language_first_seconds",
+                    "profile_language_cached_seconds",
                 )
             }
-            for state in ("absent", "current")
+            for name in packages
         }
-        for name in packages
-    }
-    report["setup_medians_seconds"] = {
-        name: {
-            key: statistics.median(sample[key] for sample in report["samples"] if sample["package"] == name)
-            for key in (
-                "runtime_ready_seconds",
-                "profile_create_and_login_seconds",
-                "holder_start_seconds",
-                "profile_language_first_seconds",
-                "profile_language_cached_seconds",
-            )
-        }
-        for name in packages
-    }
-    output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps(report["medians_seconds"], indent=2), flush=True)
+        output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps(report["medians_seconds"], indent=2), flush=True)
 
 
 if __name__ == "__main__":
