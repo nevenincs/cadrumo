@@ -60,9 +60,9 @@ export function PaneHeader({
       {/* The note gives way first: the title is cut only once the note has
           gone. Cut, it still says all of itself to a pointer that rests on
           it. */}
-      <span className="pane-title min-w-0 truncate font-semibold text-foreground">
+      <h2 className="pane-title min-w-0 truncate font-semibold text-foreground">
         {title}
-      </span>
+      </h2>
       {status?.note && (
         <span
           title={status.note}

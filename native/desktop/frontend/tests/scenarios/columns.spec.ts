@@ -30,11 +30,16 @@ test.beforeEach(async ({ page: target }) => {
   await target.addInitScript(() => {
     if (sessionStorage.getItem("layout-cleared")) return;
     localStorage.clear();
+    // Column tests arrange an explicit workspace beside the agent.
+    localStorage.setItem(
+      "cadrumo-shell-layout",
+      JSON.stringify({ layout: { page: "docs", tuiShown: true } }),
+    );
     sessionStorage.setItem("layout-cleared", "1");
   });
 });
 
-test("the window opens on the agent and the TUI, with the documentation put away", async ({
+test("an explicitly saved workspace opens beside the agent with documentation put away", async ({
   page: target,
 }) => {
   await open(target);

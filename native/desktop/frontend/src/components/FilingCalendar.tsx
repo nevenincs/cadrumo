@@ -79,6 +79,7 @@ export function FilingCalendarView({
   locale,
   today: localToday,
   defaultView = "months",
+  onViewChange,
   memory,
   refreshing = false,
   page,
@@ -99,6 +100,7 @@ export function FilingCalendarView({
   today?: string;
   /** The face a page too narrow for both shows first. */
   defaultView?: "months" | "list";
+  onViewChange?: (view: "months" | "list") => void;
   /** Where the reader's use of the page is kept while it is away. Left
    * out, the page keeps it only for as long as it is shown. */
   memory?: RefObject<CalendarMemory>;
@@ -133,6 +135,7 @@ export function FilingCalendarView({
   const setView = (next: "months" | "list") => {
     remembered.current.view = next;
     setViewNow(next);
+    onViewChange?.(next);
   };
   const [asked, setAsked] = useState<ReadonlySet<string>>(
     () => remembered.current.asked ?? new Set(),

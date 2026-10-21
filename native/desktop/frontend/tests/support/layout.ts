@@ -11,7 +11,7 @@ type Seed = {
  * column: the window a test of that split is about. */
 export const DOCS_BESIDE_TUI: Seed = {
   prefs: { order: "docs" },
-  layout: { agentShown: false, docsShown: true },
+  layout: { agentShown: false, docsShown: true, tuiShown: true, page: "docs" },
 };
 
 /**

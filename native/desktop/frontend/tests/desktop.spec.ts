@@ -293,6 +293,13 @@ async function signInHost(
       about: ABOUT_FIXTURE,
     },
   );
+  await target.addInitScript(() => {
+    if (localStorage.getItem("cadrumo-shell-layout")) return;
+    localStorage.setItem(
+      "cadrumo-shell-layout",
+      JSON.stringify({ layout: { page: "docs", tuiShown: true } }),
+    );
+  });
   await serveDocs(target);
   await target.goto("/");
 }
@@ -481,7 +488,7 @@ test("optional terminals start on first opening and survive hiding and switching
   expect((await signInState(target)).terminalCloses).toBe(0);
 });
 
-test("a previously open panel starts collapsed and retains its chosen tab", async ({
+test("a previously open panel restores its visibility and chosen tab", async ({
   page: target,
 }) => {
   await target.addInitScript(() => {
@@ -492,13 +499,8 @@ test("a previously open panel starts collapsed and retains its chosen tab", asyn
   });
   await signInHost(target);
   await expect(target.locator(".sign-in")).toBeVisible();
-  await expect(target.locator("section.panel")).toBeHidden();
-  expect((await signInState(target)).terminalStarts).toEqual([]);
-  await expect(
-    target.getByLabel(label("desktop.signin.password"), { exact: true }),
-  ).toBeFocused();
   await target.keyboard.press("Escape");
-  await panelToggle(target).click();
+  await expect(target.locator("section.panel")).toBeVisible();
   await expect
     .poll(async () => (await signInState(target)).terminalStarts)
     .toEqual(["python"]);
@@ -1414,9 +1416,9 @@ test("the single rail toggle opens and closes the panel and preserves its tab", 
   await target.keyboard.press("Control+Backquote");
   await expect(panel).toBeVisible();
   await rail.getByRole("button", { name: label("desktop.rail.tui") }).click();
-  await expect(target.locator(".pane-tui")).toBeHidden();
-  await rail.getByRole("button", { name: label("desktop.rail.tui") }).click();
   await expect(target.locator(".pane-tui")).toBeVisible();
+  await rail.getByRole("button", { name: label("desktop.rail.tui") }).click();
+  await expect(target.locator(".pane-tui")).toBeHidden();
 });
 
 test("maximize, swap, orientation and hide never reload the documentation", async ({
@@ -1555,8 +1557,7 @@ test("the remembered layout survives a reload", async ({ page: target }) => {
     .toBe("python");
   await target.reload();
   await expect(target.locator(".split")).toHaveClass(/split-column/);
-  await expect(target.locator("section.panel")).toBeHidden();
-  await panelToggle(target).click();
+  await expect(target.locator("section.panel")).toBeVisible();
   await expect(
     target.getByRole("tab", { name: label("desktop.rail.python") }),
   ).toHaveAttribute("aria-selected", "true");

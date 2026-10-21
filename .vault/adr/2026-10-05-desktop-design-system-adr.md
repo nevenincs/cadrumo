@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-design-system'
 date: '2026-10-05'
-modified: '2026-10-18'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:65cd79d3aa8df1dcca3b8f29851fa54d6d5d23a69b19fa66f6ef897e5081f95b'
+body_hash: 'sha256:a5ada921a60de961b3cce973862923809fa5ebff372d6bbce3f57d31f0f71d2b'
 related:
   - "[[2026-10-05-desktop-design-system-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -148,8 +148,14 @@ Settings and the palette reuse the existing select and styling. Supported langua
 
 ### Amendment 2026-10-09: one bottom-panel rail toggle
 
-Authorized by the user's sidebar simplification request. The 2026-10-06 rail-order amendment is refined: after the shortcuts group, one bottom-panel toggle replaces the Console, Python and Logs rail buttons. Search and documentation home retain their first two positions, Settings remains in the last group, and the panel retains its three tabs and action-registry shortcuts. The log error badge moves to the single toggle; the Messages notification badge stays unchanged. The application starts with the panel collapsed on each launch, retaining its tab and size preferences, as the desktop-shell amendment now specifies. This authorizes the corresponding browser presentation selectors and rail-count assertions to follow the new visible controls; packaged assertions that address Search and Docs home by position stay unchanged. Shared primitives, token ownership and native host boundaries remain binding.
+Authorized by the user's sidebar simplification request. The 2026-10-06 rail-order amendment is refined: after the shortcuts group, one bottom-panel toggle replaces the Console, Python and Logs rail buttons. Search and documentation home retain their first two positions, Settings remains in the last group, and the panel retains its three tabs and action-registry shortcuts. The log error badge moves to the single toggle; the Messages notification badge stays unchanged. The original ruling started the panel collapsed on every launch. That clause is superseded by the desktop-shell 2026-10-21 amendment: the panel now restores its saved visibility, tab and size. This authorizes the corresponding browser presentation selectors and rail-count assertions to follow the new visible controls; packaged assertions that address Search and Docs home by position stay unchanged. Shared primitives, token ownership and native host boundaries remain binding.
 
 ### Amendment 2026-10-18: component setup surfaces
 
 Accepted under the owner's advance authorization of 2026-10-18 recorded in `2026-10-18-dependency-provisioning-unified-setup-adr` (D10). The Settings constraint, which read "Settings retains frontend preferences and no account section" after the 2026-10-09 amendment, gains one backend-reaching section, Components, built from the existing primitives. The setup dialog, progress bars, first-run and blocked-feature prompts, and the Settings rail badge compose existing primitives. A progress primitive may be added from the official registry on the already-bundled `radix-ui`, with no new runtime dependency. The development scenario host gains synthetic setup scenarios for every state, failure category and phase, labelled as simulated like the others. Rail order, stable hooks and the single colour authority are unchanged.
+
+### Amendment 2026-10-21: saved views and single pane headings
+
+Authorized by the user's design-polish request to remove repeated page titles, keep the TUI out of the default view, persist page view choices, and remember the selected log-level mode. The shell layout store is the single presentation preference owner. It restores the selected page, pane visibility and maximization, panel visibility/tab/size, calendar face and profile section/filter/disclosure choices, alongside existing appearance, arrangement and zoom preferences. The selected minimum log level overrides the host default until reset; resetting filters restores the host default. Fresh layouts open Profile and the agent where supported with the TUI closed. Existing saved TUI visibility remains an explicit saved arrangement.
+
+This replaces the 2026-10-09 always-collapsed panel startup clause only; the single panel toggle, notifications and mounted-session retention still apply. The canonical pane header owns the visible page title and maximize control; page content supplies its own actions without repeating them. Profile navigation offers one section selector at each size. Search text, drafts, taxpayer values, log records, authentication and transient dialogs are not presentation settings and are not persisted here. Stored preferences are validated and tolerate unavailable storage. No runtime or host authority changes. Evidence: `native/desktop/frontend/src/shell/layout.ts`, `src/App.tsx`, `src/components/profile/UserProfilePage.tsx`, and `src/components/FilingCalendar.tsx`.

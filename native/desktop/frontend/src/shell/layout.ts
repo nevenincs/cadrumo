@@ -22,7 +22,20 @@ export type Prefs = {
   fontSize: TerminalFontSize;
 };
 
+export type ProfileView = {
+  section: string;
+  filter: "all" | "missing" | "required" | "saved";
+  expanded: string[];
+  collapsed: string[];
+};
+
 export type Layout = {
+  page: "docs" | "calendar" | "profile";
+  maximized: Maximized;
+  /** Null follows the host default until the person chooses a level. */
+  logLevel: number | null;
+  calendarView: "months" | "list";
+  profileView: ProfileView;
   /** The agent column, always beside the rail. */
   agentShown: boolean;
   /** The agent column's share of the window width. */
@@ -47,9 +60,19 @@ export const DEFAULT_PREFS: Prefs = {
 };
 
 export const DEFAULT_LAYOUT: Layout = {
+  page: "profile",
+  maximized: null,
+  logLevel: null,
+  calendarView: "months",
+  profileView: {
+    section: "",
+    filter: "all",
+    expanded: ["identity", "contact"],
+    collapsed: [],
+  },
   agentShown: true,
   agentRatio: 0.24,
-  tuiShown: true,
+  tuiShown: false,
   // The documentation is opened on request: an empty first pane is not a
   // reason to show it.
   docsShown: false,
@@ -82,6 +105,18 @@ function share(
     : fallback;
 }
 
+function object(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function identifiers(value: unknown, fallback: string[]): string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string")
+    ? [...new Set(value)]
+    : fallback;
+}
+
 // Every stored field is validated: browser storage is a convenience that may
 // be missing, cleared or written by an older shell.
 export function loadState(): { prefs: Prefs; layout: Layout } {
@@ -95,7 +130,7 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
     prefs?: Record<string, unknown>;
     layout?: Record<string, unknown>;
   };
-  const p = stored.prefs ?? {};
+  const p = object(stored.prefs);
   // Retire the old independent language authority as soon as it is read,
   // including launches that leave before the debounced layout save.
   if (Object.hasOwn(p, "language")) {
@@ -111,7 +146,8 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
     }
   }
 
-  const l = stored.layout ?? {};
+  const l = object(stored.layout);
+  const profile = object(l.profileView);
   return {
     prefs: {
       appearance: pick(
@@ -141,6 +177,38 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
       fontSize: pick(p.fontSize, TERMINAL_FONT_SIZES, DEFAULT_PREFS.fontSize),
     },
     layout: {
+      page: pick(
+        l.page,
+        ["docs", "calendar", "profile"] as const,
+        l.page === undefined &&
+          (typeof l.tuiShown === "boolean" || typeof l.docsShown === "boolean")
+          ? "docs"
+          : DEFAULT_LAYOUT.page,
+      ),
+      maximized: pick(
+        l.maximized,
+        ["agent", "docs", "tui", "panel", null] as const,
+        null,
+      ),
+      logLevel: pick(l.logLevel, [0, 1, 2, 3, 4, null], null),
+      calendarView: pick(
+        l.calendarView,
+        ["months", "list"] as const,
+        DEFAULT_LAYOUT.calendarView,
+      ),
+      profileView: {
+        section: typeof profile.section === "string" ? profile.section : "",
+        filter: pick(
+          profile.filter,
+          ["all", "missing", "required", "saved"] as const,
+          "all",
+        ),
+        expanded: identifiers(
+          profile.expanded,
+          DEFAULT_LAYOUT.profileView.expanded,
+        ),
+        collapsed: identifiers(profile.collapsed, []),
+      },
       agentShown:
         typeof l.agentShown === "boolean"
           ? l.agentShown
@@ -153,9 +221,10 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
           ? l.docsShown
           : DEFAULT_LAYOUT.docsShown,
       splitRatio: share(l.splitRatio, DEFAULT_LAYOUT.splitRatio, 0.1, 0.9),
-      // The panel is opened explicitly in each window, even if an older
-      // shell saved it open. Its selected tab and dimensions are retained.
-      panelOpen: DEFAULT_LAYOUT.panelOpen,
+      panelOpen:
+        typeof l.panelOpen === "boolean"
+          ? l.panelOpen
+          : DEFAULT_LAYOUT.panelOpen,
       panelRatio: share(l.panelRatio, DEFAULT_LAYOUT.panelRatio, 0.1, 0.9),
       tab: pick(l.tab, TABS, DEFAULT_LAYOUT.tab),
       zoom: share(l.zoom, DEFAULT_LAYOUT.zoom, 0.5, 2),
@@ -165,21 +234,11 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
 
 export function saveState(prefs: Prefs, layout: Layout): void {
   try {
-    const persistedLayout: Omit<Layout, "panelOpen"> = {
-      agentShown: layout.agentShown,
-      agentRatio: layout.agentRatio,
-      tuiShown: layout.tuiShown,
-      docsShown: layout.docsShown,
-      splitRatio: layout.splitRatio,
-      panelRatio: layout.panelRatio,
-      tab: layout.tab,
-      zoom: layout.zoom,
-    };
     localStorage.setItem(
       STORE,
       JSON.stringify({
         prefs,
-        layout: persistedLayout,
+        layout,
       }),
     );
   } catch {

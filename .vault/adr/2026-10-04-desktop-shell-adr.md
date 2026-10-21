@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-19'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa451e3f94a02e45de023ba4af93abc187d0d3b3786aa79128babe49b955fdf2'
+body_hash: 'sha256:729e693aa613cf19772bdb4fb3f8212cbbaed5641fa595d747d617c587814972'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -18,7 +18,6 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
   - '[[2026-10-15-language-sync-reference]]'
 ---
-
 # `desktop-shell` adr: `Desktop shell` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -270,7 +269,7 @@ shell to documentation:
 **Persistence.**
 
 - Window size, position and maximized state go through a host window-state module. It stores them as `window-state.json` in the declared webview location, restores them on window ready within the visible monitors, and saves them atomically on close, with no JavaScript command. The window-state plugin was set aside because it creates an undeclared `%APPDATA%` directory, which `2026-10-04-canonical-environment-adr` forbids.
-- Settings, the split ratio, whether the TUI is shown, panel share, active tab and documentation zoom go in shell localStorage. Panel visibility is transient: every application launch starts collapsed, including when an older saved layout says the panel was open.
+- Settings and presentation choices go in shell localStorage: pane visibility, active page, maximized pane, split ratios, panel visibility and tab, documentation zoom, calendar face, profile section/filter/disclosures and the chosen minimum log level. A fresh layout shows Profile and the agent where available; the TUI is closed until requested. Existing explicit saved pane choices are retained. See the 2026-10-21 amendment.
 - Every read is guarded, so the layout falls back to defaults.
 
 ### Embedded terminal appearance amendment (2026-10-07)
@@ -321,6 +320,8 @@ Acceptance (user, 2026-10-04) doesn't mean that any part of this is implemented.
 
 ### Bottom-panel rail simplification amendment (2026-10-09)
 
+Its startup-collapse and non-persistence clauses are superseded by the 2026-10-21 amendment; the paragraph below preserves the prior ruling.
+
 Authorized by the user's request for one sidebar toggle instead of Console, Python and Logs buttons, retained notification counts, and a collapsed panel at application startup. The three rail buttons become one panel toggle using the existing panel-toggle action and shortcut. The existing log error count moves to this button, while the message notification count stays on Messages. Console, Python and Logs remain tabs in the panel, with their existing keyboard and palette actions. The active tab and panel size are remembered; open/closed state is local to the running window and is no longer restored or saved. Opening and collapsing preserve mounted terminal sessions within the same window. This refines frontend layout only and adds no host or runtime authority. Implementation: `native/desktop/frontend/src/App.tsx`, `src/shell/layout.ts`; browser assertions cover legacy saved-open startup, one toggle, both counts, tab retention and terminal reuse.
 
 Amended 2026-10-16 under `2026-10-16-idle-churn-adr`: the shell no longer polls `sign-in-status`. It learns sign-in changes from one long-lived `cadrumo-runtime session watch` child, which re-reads only on a runtime cue, a pointer change or a status deadline. The sign-in view, language and agent hosts share that one observation. The shell process itself still holds no runtime connection, session, receipt or credential.
@@ -340,3 +341,9 @@ Basis: operator review 2026-10-19, recorded with its full commitments in `2026-1
 - The palette's setup group offers Set up components, Check components, Set up the browser, Set up the local AI, Retry setup and Cancel setup. The account group gains "Authenticate with Google". No setup action names Google.
 - The setup dialog leads with one summary and one primary action, keeps per-component detail in a closed "Details" disclosure, and shows one overall progress bar while setup runs. Every row states its state once, by the product's sentence.
 - Unchanged: the shell holds no session, receipt, credential, token or DEK, and stores no setup or account state beyond the per-launch dismissal of the first-run dialog. Where Google tokens are stored is not the shell's concern and is unchanged.
+
+### Amendment 2026-10-21: saved views and single pane headings
+
+Authorized by the user's design-polish request to remove repeated page titles, keep the TUI out of the default view, persist page view choices, and remember the selected log-level mode. The shell layout store is the single presentation preference owner. It restores the selected page, pane visibility and maximization, panel visibility/tab/size, calendar face and profile section/filter/disclosure choices, alongside existing appearance, arrangement and zoom preferences. The selected minimum log level overrides the host default until reset; resetting filters restores the host default. Fresh layouts open Profile and the agent where supported with the TUI closed. Existing saved TUI visibility remains an explicit saved arrangement.
+
+This replaces the 2026-10-09 always-collapsed panel startup clause only; the single panel toggle, notifications and mounted-session retention still apply. The canonical pane header owns the visible page title and maximize control; page content supplies its own actions without repeating them. Profile navigation offers one section selector at each size. Search text, drafts, taxpayer values, log records, authentication and transient dialogs are not presentation settings and are not persisted here. Stored preferences are validated and tolerate unavailable storage. No runtime or host authority changes. Evidence: `native/desktop/frontend/src/shell/layout.ts`, `src/App.tsx`, `src/components/profile/UserProfilePage.tsx`, and `src/components/FilingCalendar.tsx`.
