@@ -110,8 +110,8 @@ CADRUMO_PACKAGE_PYTHON_EXECUTABLE = { kind = "executable", role = "fixed" }
 # image's profiles admit them by the prefix the agent table declares. Under that prefix
 # the runtime also tells the agent what Cadrumo supplies, as plain variables the agent
 # reads: the programs it may run, the tool server it may mount and that server's
-# arguments, the directories of Cadrumo's skills and rules, and the names it
-# forwards. Those advertised names are not declared here; the prefix admits them.
+# arguments, and the names it forwards. Those advertised names are not declared
+# here; the prefix admits them.
 CADRUMO_AGENT_HOSTED_ROOT = { kind = "directory", role = "slot" }
 CADRUMO_AGENT_PORT = { kind = "port", role = "slot" }
 CADRUMO_AGENT_WORKER_PORT = { kind = "port", role = "slot" }

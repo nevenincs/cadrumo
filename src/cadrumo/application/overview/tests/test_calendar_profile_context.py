@@ -15,7 +15,7 @@ from ..agenda import build_overview_agenda
 from ..backlog import build_overview_backlog
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendar, OverviewCalendarRange
-from ..calendar_warnings import _PROFILE_FIELD_WARNING_META
+from ..calendar_warnings import _PROFILE_FIELD_WARNING_LOCALE_KEYS
 from ..coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from ..read_calendar_projection import OverviewAgendaSnapshot, OverviewBacklogSnapshot, OverviewCalendarSnapshot
 from .calendar_test_support import profile
@@ -97,7 +97,7 @@ def test_saved_false_and_unknown_are_distinct_on_calendar_agenda_and_backlog_row
 def test_every_profile_gap_has_real_prose_in_every_supported_language(language: str, prefix: str) -> None:
     token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
-        for message_key, _action in _PROFILE_FIELD_WARNING_META.values():
+        for message_key in _PROFILE_FIELD_WARNING_LOCALE_KEYS.values():
             assert tr(message_key, locale=language).startswith(prefix)
     finally:
         I18N_STRICT_MISSING_KEYS.reset(token)

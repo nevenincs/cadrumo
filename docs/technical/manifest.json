@@ -1299,20 +1299,6 @@
       "body_sha256": "184018645c2d0a556db7e2d1afd6e06466c608f08382aad290cd048ee4f02df0"
     },
     {
-      "source": "map/stage-2/STAGE-2-186.md",
-      "source_sha256": "a14a34134a41325507be36f462e6fb5dbd8b6bdacd0fdcab8c8c7bc704d5cbea",
-      "page": "articles/186-agent-personas-operator-rules-and-workflow-skills.md",
-      "section": "article",
-      "body_sha256": "57d269c9d860c0c8cf23ce038734df352b198c9f4113ef3a77d66da5a8fb4963"
-    },
-    {
-      "source": "map/stage-2/STAGE-2-187.md",
-      "source_sha256": "e5809c4d92e9aa2ae7c60ba08d339428b10a50b6b4450c2e67da70a7fc1b4bc5",
-      "page": "articles/187-filing-skills-and-the-mcp-operator-harness.md",
-      "section": "article",
-      "body_sha256": "a72f4631422c01171f993a402adb84d310a401c2b07501d8a417046ad7ae10d4"
-    },
-    {
       "source": "map/stage-2/STAGE-2-188.md",
       "source_sha256": "0585dd1d2308fc8292f92b13e4b9dff0ba6eca92bd3796379860091b46c50ce2",
       "page": "articles/188-bundled-data-package-marker.md",

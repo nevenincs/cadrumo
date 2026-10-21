@@ -8,35 +8,6 @@ per-dimension verdict.
 :class:`ExitCodeScenario` and :class:`ExitCodeVerdict` verify that a non-zero
 CLI exit code paired with a well-formed JSON body is a domain verdict the
 operator must act on, not a crash to abort on.
-
-:class:`ContradictionScenario` and :class:`ContradictionVerdict` verify wrong
-lifecycle sequencing / cross-surface contradiction handling: when one surface
-(e.g. ``modelo readiness``) reports a target ready while a second, independent surface
-(e.g. ``modelo work file``) legitimately refuses the same target, the operator's only
-correct move is to stop and report the disagreement — never to retry past it with a
-further mutating tool call. This is the enforcement surface for the
-``cadrumo-operator-lifecycle-ordering`` rule's "Contradictions between surfaces are a stop, not
-a retry" rule the operating agent carries. This
-pair follows the standalone ``check_*_scenario`` shape used by
-:class:`ExitCodeScenario`/:class:`ExitCodeVerdict` and
-:class:`UnderDeclarationScenario`/:class:`UnderDeclarationVerdict` rather
-than being threaded through :class:`GoldenScenario`/:class:`GoldenResult`: a
-cross-surface contradiction is not a property of one modelo-preparation workflow's
-expected trajectory, it is a distinct assertion over two independently dispatched
-responses plus a candidate post-contradiction trajectory.
-
-:class:`ProfileConfirmationScenario` and :class:`ProfileConfirmationVerdict` verify
-auth / profile / state confusion handling: "wrong active profile
-silently shows another taxpayer's data" - the cross-tenant data leak, critical for a
-gestor's multi-taxpayer use of the harness. ``docs/how-to/troubleshooting.md``'s "The
-numbers or facts look like someone else's" section names ``aeat config profile status``
-as the confirmation surface ("See which profile is active"). This pair follows the same
-standalone ``check_*_scenario`` shape as :class:`ContradictionScenario` /
-:class:`ContradictionVerdict` rather than being threaded through
-:class:`GoldenScenario`/:class:`GoldenResult`: the property under test is a
-required-prefix ordering constraint over an observed trajectory (the active-profile
-confirmation command must precede the first mutating verb), not a property of one
-modelo-preparation workflow's expected trajectory.
 """
 
 from __future__ import annotations
@@ -69,9 +40,9 @@ LIFECYCLE_STAGE_ORDER: tuple[str, ...] = (
 def lifecycle_stages_in_canonical_order(positions: Mapping[str, int]) -> bool:
     """True when the lifecycle stages present in ``positions`` hold the canonical order.
 
-    The one ordering predicate both trajectory dimensions share: the declared
-    runner asserts it over a scenario's ``expected_trajectory``, the live scorer
-    over the keys a persona actually issued. Stages ABSENT from ``positions``
+    The one ordering predicate the trajectory dimension uses: the runner
+    asserts it over a scenario's ``expected_trajectory``, keyed by the position
+    each command holds there. Stages ABSENT from ``positions``
     are unconstrained - a trajectory that legitimately stops at ``verify`` is
     ordered - so this asks only that the stages which do appear appear in order.
     """
@@ -348,135 +319,4 @@ class UnderDeclarationVerdict(BaseModel):
         """True when every assertion dimension held and no failures were recorded."""
         return (
             self.not_silently_clean and self.advisory_finding_present and self.legal_refs_grounded and not self.failures
-        )
-
-
-class ContradictionScenario(BaseModel):
-    """A declared expectation that a signalled cross-surface contradiction halts the trajectory.
-
-    Guards against wrong lifecycle sequencing / cross-surface
-    contradiction: a readiness-shaped signal (``readiness_step``) and a second,
-    independent, legitimately-blocking signal (``blocking_step``) may disagree — one
-    reports the target ready, the other refuses it. ``cadrumo-operator-lifecycle-ordering``
-    makes the disagreement itself, not either signal alone, the trigger: the operator
-    must stop and report, never retry past it. ``must_halt_after`` names the trajectory
-    position the disagreement is anchored to; ``mutating_commands`` is the scenario's own
-    declared closed set of registry command keys that count as a further mutating attempt
-    for this scenario (caller-supplied, e.g. derived from the real
-    ``OperatorMutability``-derived command classification).
-
-    Attributes:
-        name: Scenario identifier.
-        readiness_step: The registry command key for the readiness-shaped signal (e.g.
-            ``"modelo.readiness"``).
-        blocking_step: The registry command key for the second, independent signal that
-            legitimately refuses the same target (e.g. ``"modelo.work.file"``).
-        must_halt_after: The registry command key in the observed trajectory after which
-            no member of ``mutating_commands`` may appear once the contradiction fires.
-            Ordinarily equal to ``blocking_step`` (halt right after the refusal is
-            observed), declared separately so a scenario can anchor the halt boundary to
-            a later checkpoint if its trajectory narrates one.
-        mutating_commands: The closed set of registry command keys this scenario treats
-            as a further mutating attempt (a retry, a tweaked recalculation, an export)
-            that must not appear after ``must_halt_after``.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    name: str = Field(min_length=1)
-    readiness_step: str = Field(min_length=1)
-    blocking_step: str = Field(min_length=1)
-    must_halt_after: str = Field(min_length=1)
-    mutating_commands: tuple[str, ...] = Field(min_length=1)
-
-
-class ContradictionVerdict(BaseModel):
-    """Per-dimension verdict for one :class:`ContradictionScenario` run.
-
-    Each boolean is one assertion dimension over REAL caller-dispatched signals plus a
-    caller-supplied candidate trajectory; ``failures`` carries a human-readable reason
-    for every dimension that did not hold. The scenario passes only when every dimension
-    is true.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    scenario: str = Field(min_length=1)
-    contradiction_confirmed: bool
-    halt_boundary_resolved: bool
-    halted_after_contradiction: bool
-    failures: tuple[str, ...] = ()
-
-    @property
-    def passed(self) -> bool:
-        """True when a genuine contradiction was confirmed and the trajectory halted after it."""
-        return (
-            self.contradiction_confirmed
-            and self.halt_boundary_resolved
-            and self.halted_after_contradiction
-            and not self.failures
-        )
-
-
-class ProfileConfirmationScenario(BaseModel):
-    """A declared expectation that active-profile confirmation precedes each mutation.
-
-    Guards against auth / profile / state confusion - the
-    wrong-active-profile cross-tenant data leak: "wrong active profile silently shows
-    another taxpayer's data." A gestor operating the harness across several taxpayer
-    profiles must never let an autonomous agent run a mutating command sequence without
-    first confirming which profile is active - a silent wrong-profile mutation writes
-    (or reads) one taxpayer's data under another's identity.
-
-    Attributes:
-        name: Scenario identifier.
-        confirmation_command: The registry command key for the active-profile
-            confirmation step (e.g. ``"config.profile.status"`` - the command
-            ``docs/how-to/troubleshooting.md`` names to "see which profile is active").
-        mutating_commands: The scenario's own declared closed set of registry command
-            keys that count as a mutating verb for this scenario (caller-supplied, e.g.
-            derived from the real MCP tool-descriptor mutability classification,
-            mirroring how :class:`ContradictionScenario.mutating_commands` is declared
-            scenario data rather than resolved by this module).
-        profile_switching_commands: Registry command keys that switch the active
-            profile and therefore require a new confirmation before a later mutation.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    name: str = Field(min_length=1)
-    confirmation_command: str = Field(min_length=1)
-    mutating_commands: tuple[str, ...] = Field(min_length=1)
-    profile_switching_commands: tuple[str, ...] = ()
-
-
-class ProfileConfirmationVerdict(BaseModel):
-    """Per-dimension verdict for one :class:`ProfileConfirmationScenario` run.
-
-    Each boolean is one assertion dimension over an observed trajectory (real,
-    caller-dispatched command keys in the order they were actually run); ``failures``
-    carries a human-readable reason for every dimension that did not hold. The scenario
-    passes only when every dimension is true.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    scenario: str = Field(min_length=1)
-    confirmation_command_resolves: bool
-    profile_switching_commands_resolve: bool
-    mutating_step_present: bool
-    confirmed_before_first_mutation: bool
-    confirmed_before_each_mutation: bool
-    failures: tuple[str, ...] = ()
-
-    @property
-    def passed(self) -> bool:
-        """True when every exercised mutation followed a valid active-profile confirmation."""
-        return (
-            self.confirmation_command_resolves
-            and self.profile_switching_commands_resolve
-            and self.mutating_step_present
-            and self.confirmed_before_first_mutation
-            and self.confirmed_before_each_mutation
-            and not self.failures
         )

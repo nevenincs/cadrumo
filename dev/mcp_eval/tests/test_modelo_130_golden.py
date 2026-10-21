@@ -1,8 +1,8 @@
 """Golden-task eval gate for the modelo-130 preparation workflow.
 
 Asserts the shipped scenario passes every dimension - its tool trajectory resolves
-against the live CLI surface, follows the modelo lifecycle order, is consistent
-with the shipped skill playbook, and the resolved revision's casillas carry their
+against the live CLI surface, follows the modelo lifecycle order, and the
+resolved revision's casillas carry their
 registry legal grounding - and includes an anti-tautology proof that the runner
 rejects a broken scenario (a fabricated verb and an out-of-order lifecycle), so a
 green pass means the assertions actually have teeth.

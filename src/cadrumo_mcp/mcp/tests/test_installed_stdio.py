@@ -58,7 +58,16 @@ _UNADMITTED: tuple[tuple[str, dict[str, object]], ...] = (
 """Every kind of call but status: none of them answers without a session."""
 
 _REMOVED_TOOLS = frozenset(
-    {"session", "installation", "authenticate", "authorization_prepare", "authorization_request", "authorization_poll"}
+    {
+        "session",
+        "installation",
+        "authenticate",
+        "authorization_prepare",
+        "authorization_request",
+        "authorization_poll",
+        # The retired floor tool that served the operating rules and skills.
+        "harness_load",
+    }
 )
 
 

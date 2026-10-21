@@ -224,9 +224,8 @@ llm = [
 pdf = [
   "reportlab>=5.0.1,<6",
 ]
-# Deliberately absent: an `agent` extra. The operator agent harness, its
-# reviewed operating data, accessors, and MCP runtime are a separate
-# `cadrumo_mcp` package shipped alongside it in this distribution.
+# Deliberately absent: an `agent` extra. The deterministic MCP service is a
+# separate `cadrumo_mcp` package shipped alongside it in this distribution.
 #
 # Deliberately absent: a `search` extra. The on-host grounding search stack
 # needs none — the lexical index (stdlib sqlite3 FTS5 plus the core

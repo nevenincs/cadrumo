@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-180` · **Topic:** [Installed runtime, terminal workbench, and agent harness](../topics/runtime-tui-and-agent-harness.md)
+**Report:** `STAGE-2-180` · **Topic:** [Installed runtime, terminal workbench, and MCP service](../topics/runtime-tui-and-agent-harness.md)
 
 <!-- preserved:article -->
 ## Scope and limits

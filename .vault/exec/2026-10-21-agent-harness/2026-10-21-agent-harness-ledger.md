@@ -5,7 +5,7 @@ tags:
 date: '2026-10-21'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:48bd6d5e21690f02e5ecf403401c04b261cb1c73ac4a19c47ae5b3d97956405a'
+body_hash: 'sha256:4ca9e30ee5432d70d8295501de63c19fdc4f5c2517e21be46ea94163a6658c9f'
 related:
   - "[[2026-10-21-agent-harness-plan]]"
 ---
@@ -173,6 +173,32 @@ related:
 - `S06` `verify:` `pytest -m integration src/cadrumo_mcp/mcp/tests/test_installed_stdio.py` -> `pass`
 - `S06` `verify:` `pytest dev/quality/tests dev/tests` -> `pass`
 - `S06` `by:` `implementation-engineer-high`
+- `S07` `M` `dev/mcp_eval/_runner.py`
+- `S07` `M` `dev/mcp_eval/_models.py`
+- `S07` `A` `dev/mcp_eval/tests/test_lifecycle_stage_order.py`
+- `S07` `M` `dev/mcp_eval/tests/test_modelo_130_golden.py`
+- `S07` `M` `src/cadrumo_mcp/mcp/tests/test_installed_stdio.py`
+- `S07` `M` `src/cadrumo/application/overview/tests/test_calendar_profile_context.py`
+- `S07` `M` `pyproject.toml`
+- `S07` `M` `.importlinter`
+- `S07` `M` `docs/technical/architecture.md`
+- `S07` `M` `docs/technical/topics/runtime-tui-and-agent-harness.md`
+- `S07` `M` `docs/technical/assessments/knowledge-and-provenance.md`
+- `S07` `M` `docs/technical/articles/catalogue.md`
+- `S07` `M` `docs/technical/reading-guide.md`
+- `S07` `M` `docs/technical/manifest.json`
+- `S07` `D` `docs/technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md`
+- `S07` `D` `docs/technical/articles/187-filing-skills-and-the-mcp-operator-harness.md`
+- `S07` `M` `native/application-environment.toml`
+- `S07` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S07` `verify:` `just check-style` -> `pass`
+- `S07` `verify:` `just check-format` -> `pass`
+- `S07` `verify:` `just check-types` -> `pass`
+- `S07` `verify:` `pytest dev/mcp_eval src/cadrumo_mcp/mcp/tests/test_installed_stdio.py dev/tests/test_native_build_recipes.py` -> `pass`
+- `S07` `verify:` `pytest -m integration dev/mcp_eval/tests/test_modelo_130_golden.py src/cadrumo_mcp/mcp/tests/test_installed_stdio.py` -> `pass`
+- `S07` `verify:` `pytest dev/audit/tests/test_dead_code_scan.py dev/audit/tests/test_dead_code.py src/cadrumo_agent_service/host/tests/test_launch_environment.py` -> `pass`
+- `S07` `verify:` `pytest src/cadrumo/application/overview/tests/test_calendar_profile_context.py` -> `pass`
+- `S07` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -182,3 +208,4 @@ related:
 - `S04` The one failure in that run, `dev/tests/test_no_home_directory_cache_paths.py,` reports `dev/smoke/acquisition_lane.py:262,` a file no Step of this plan touches; it arrived with commit bbd9f1f340 from concurrent type-gate work.
 - `S05` The type gate's single diagnostic and the one failing operation-contract test name files outside this plan: `src/cadrumo/application/overview/tests/test_calendar_profile_context.py` (its import was removed by concurrent commit eb06cb0954) and `src/cadrumo_runtime/host/session_watch.py` (commit 91c2bc5231). `docs/technical/**` keeps the old package name on purpose: those pages are dated snapshot analyses of code that no longer exists, so renaming the path in them would misstate what was analysed. The docs catalogue generator could not run whole (it would prune 705 committed catalogues), so the three architecture catalogues were refreshed with its per-page mode, which marks the changed paragraph fuzzy and leaves the translation to a later batch.
 - `S06` The new gate immediately reported a real leftover: the installed-stdio test still named cadrumo://rule/cadrumo-operator-grounding to prove a resource read reaches no handler. The assertion is about the absent resources capability, so the URI became cadrumo://any/document.
+- `S07` The type gate's last diagnostic came from concurrent commit eb06cb0954, which renamed `_PROFILE_FIELD_WARNING_META` to `_PROFILE_FIELD_WARNING_LOCALE_KEYS` and left one test importing the old name; the two-line test repair is in this Step so the gate closes. native/CONTRACT.md's `SKILLS_DIR` and `RULES_DIR` removal is applied but left uncommitted: another session holds uncommitted profile-delete edits in that file. `dev/docs/tests/test_docs_catalogue_drift.py` fails for four how-to pages whose sources another session is editing; architecture/index.md, the page this plan changed, is in sync.

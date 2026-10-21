@@ -1,11 +1,10 @@
 """Score Cadrumo acceptance scenarios against declared contracts and captured outcomes.
 
-Callers supply command keys, calculation observations, narration and confirmation
-verdicts, contradiction signals and observed profile-confirmation trajectories.
-The runner compares them with scenario expectations, application precondition
-contracts, registry declaration snapshots and harness-owned skill documents.
-External drivers perform the interactions that produce those observations;
-this module owns no agent, provider or model execution policy.
+Callers supply command keys, calculation observations and decoded CLI
+envelopes. The runner compares them with scenario expectations, application
+precondition contracts and registry declaration snapshots. External drivers
+perform the interactions that produce those observations; this module owns no
+agent, provider or model execution policy.
 
 Recovery evaluation resolves application-owned actions through shared client
 command contracts and the actual tax/runtime command graphs. It invokes the
@@ -23,8 +22,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict
-
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.json_contract import EnvelopeStatus, ResolvedActionArgument, ResolvedActionReference
 from cadrumo.core.toml import parse_toml
@@ -32,14 +29,10 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ._models import (
     LIFECYCLE_STAGE_ORDER,
-    ContradictionScenario,
-    ContradictionVerdict,
     ExitCodeScenario,
     ExitCodeVerdict,
     GoldenResult,
     GoldenScenario,
-    ProfileConfirmationScenario,
-    ProfileConfirmationVerdict,
     UnderDeclarationScenario,
     UnderDeclarationVerdict,
     lifecycle_stages_in_canonical_order,
@@ -50,8 +43,6 @@ if TYPE_CHECKING:
     from cadrumo_client.commands.graph import CommandSpecGraph
     from cadrumo_client.commands.parameters import ParameterSpec
     from cadrumo_client.contracts.command_program import CommandProgram
-
-_STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
 
 def _declared_verification_evidence(revision: object) -> tuple[set[str], bool]:
@@ -698,279 +689,6 @@ def check_under_declaration_scenario(
         not_silently_clean=not_silently_clean,
         advisory_finding_present=advisory_finding_present,
         legal_refs_grounded=legal_refs_grounded,
-        failures=tuple(failures),
-    )
-
-
-def check_contradiction_scenario(
-    scenario: ContradictionScenario,
-    *,
-    readiness_ready: bool,
-    blocking_step_refused: bool,
-    trajectory: tuple[str, ...],
-) -> ContradictionVerdict:
-    """Assert a signalled cross-surface contradiction halted the trajectory, never retried past it.
-
-    Closes eval-catalogue category 4. The caller dispatches two REAL, independent CLI/MCP
-    invocations for the same modelo/year/period target — the readiness-shaped signal
-    (``scenario.readiness_step``) and the second, legitimately-blocking signal
-    (``scenario.blocking_step``) — decodes whether each reported ready / refused, and
-    passes both booleans in, alongside a candidate ordered trajectory (real or
-    scripted); this module never dispatches either call itself (mirrors the injection
-    pattern of :func:`check_exit_code_scenario`'s ``exit_code``/``envelope``).
-
-    Three dimensions:
-
-    - ``contradiction_confirmed``: ``readiness_ready`` is true AND
-      ``blocking_step_refused`` is true — the two real dispatched signals genuinely
-      disagree. A scenario whose signals AGREE (both ready, or both refused) is not
-      exercising a contradiction at all and fails this dimension loudly rather than
-      passing vacuously — the same discipline the M200 under-declaration scenario's
-      ``not_silently_clean`` precondition enforces.
-    - ``halt_boundary_resolved``: ``scenario.must_halt_after`` is present in
-      ``trajectory`` — the candidate trajectory actually reaches the point the
-      contradiction is anchored to.
-    - ``halted_after_contradiction``: no step in ``trajectory`` AFTER
-      ``scenario.must_halt_after`` is a member of ``scenario.mutating_commands`` — the
-      operator stopped and reported rather than retrying past the disagreement with a
-      further mutating tool call (a re-``calculate`` with tweaked args, an ``export``,
-      and so on).
-
-    Returns:
-        A :class:`ContradictionVerdict` whose ``passed`` is true only when the real
-        dispatched signals genuinely disagreed AND the candidate trajectory halted
-        (issued no further mutating command) once the halt boundary was reached.
-    """
-    failures: list[str] = []
-
-    contradiction_confirmed = readiness_ready and blocking_step_refused
-    if not contradiction_confirmed:
-        failures.append(
-            f"'{scenario.readiness_step}' reported ready={readiness_ready} and '{scenario.blocking_step}' "
-            f"refused={blocking_step_refused} — the two dispatched signals do not disagree, so this is not "
-            "a genuine cross-surface contradiction to halt on",
-        )
-
-    halt_boundary_resolved = scenario.must_halt_after in trajectory
-    post_contradiction: tuple[str, ...] = ()
-    if halt_boundary_resolved:
-        halt_index = trajectory.index(scenario.must_halt_after)
-        post_contradiction = trajectory[halt_index + 1 :]
-    else:
-        failures.append(
-            f"trajectory does not contain the declared halt boundary '{scenario.must_halt_after}' — "
-            "the candidate trajectory never reaches the point the contradiction is anchored to",
-        )
-
-    offending = [step for step in post_contradiction if step in scenario.mutating_commands]
-    halted_after_contradiction = not offending
-    if offending:
-        failures.append(
-            f"trajectory continues with mutating verb(s) {', '.join(offending)} after the signalled "
-            f"contradiction at '{scenario.must_halt_after}' — the operator must stop and report a "
-            "readiness-vs-blocking-surface disagreement, never retry past it (cadrumo-operator-lifecycle-ordering)",
-        )
-
-    return ContradictionVerdict(
-        scenario=scenario.name,
-        contradiction_confirmed=contradiction_confirmed,
-        halt_boundary_resolved=halt_boundary_resolved,
-        halted_after_contradiction=halted_after_contradiction,
-        failures=tuple(failures),
-    )
-
-
-class _ProfileSwitch(BaseModel):
-    """A declared profile-switching step, which re-arms the confirmation boundary."""
-
-    model_config = _STRICT_FROZEN
-
-    index: int
-    command: str
-
-
-class _UnconfirmedMutation(BaseModel):
-    """One mutating step that ran with no active-profile confirmation in force."""
-
-    model_config = _STRICT_FROZEN
-
-    index: int
-    command: str
-    latest_profile_switch: _ProfileSwitch | None = None
-
-
-class _ConfirmationPrefixVerdict(BaseModel):
-    """The required-prefix dimensions over an observed trajectory, and their reasons."""
-
-    model_config = _STRICT_FROZEN
-
-    confirmed_before_first_mutation: bool
-    confirmed_before_each_mutation: bool
-    failures: tuple[str, ...] = ()
-
-
-def _scan_unconfirmed_mutations(
-    scenario: ProfileConfirmationScenario,
-    trajectory: tuple[str, ...],
-) -> tuple[_UnconfirmedMutation, ...]:
-    """Replay the confirm / switch / mutate state machine over the observed order.
-
-    Confirmation is a latch the confirmation command sets and any declared
-    profile switch clears, so every mutation observed while the latch is open
-    is recorded together with the switch that last re-armed the boundary - the
-    detail that distinguishes "never confirmed at all" from "confirmed, then
-    switched taxpayer and mutated without re-confirming".
-    """
-    active_profile_confirmed = False
-    latest_profile_switch: _ProfileSwitch | None = None
-    unconfirmed: list[_UnconfirmedMutation] = []
-    for index, step in enumerate(trajectory):
-        if step == scenario.confirmation_command:
-            active_profile_confirmed = True
-        elif step in scenario.profile_switching_commands:
-            active_profile_confirmed = False
-            latest_profile_switch = _ProfileSwitch(index=index, command=step)
-        elif step in scenario.mutating_commands and not active_profile_confirmed:
-            unconfirmed.append(
-                _UnconfirmedMutation(index=index, command=step, latest_profile_switch=latest_profile_switch),
-            )
-    return tuple(unconfirmed)
-
-
-def _confirmation_prefix_verdict(
-    scenario: ProfileConfirmationScenario,
-    trajectory: tuple[str, ...],
-    *,
-    unconfirmed: tuple[_UnconfirmedMutation, ...],
-    first_mutation_index: int,
-) -> _ConfirmationPrefixVerdict:
-    """Project the unconfirmed mutations onto the two required-prefix dimensions.
-
-    The first mutation is reported separately from the rest: mutating before
-    ANY confirmation is the plain cross-tenant leak, while a later unconfirmed
-    mutation is the subtler post-switch case and names the switch that re-armed
-    the boundary.
-    """
-    confirmed_before_first_mutation = not any(mutation.index == first_mutation_index for mutation in unconfirmed)
-
-    failures: list[str] = []
-    if not confirmed_before_first_mutation:
-        failures.append(
-            f"the first mutating verb '{trajectory[first_mutation_index]}' at trajectory position "
-            f"{first_mutation_index} has no preceding '{scenario.confirmation_command}' active-profile "
-            "confirmation - an operator could mutate the wrong taxpayer's data without ever confirming "
-            "which profile is active (the cross-tenant wrong-active-profile leak)",
-        )
-
-    for mutation in unconfirmed:
-        if mutation.index == first_mutation_index:
-            continue
-        switch = mutation.latest_profile_switch
-        switch_detail = (
-            f" after profile-switching verb '{switch.command}' at trajectory position {switch.index}"
-            if switch is not None
-            else ""
-        )
-        failures.append(
-            f"the mutating verb '{mutation.command}' at trajectory position {mutation.index} has no preceding "
-            f"'{scenario.confirmation_command}' active-profile confirmation{switch_detail}; profile "
-            "switches re-arm the confirmation boundary to prevent a cross-tenant wrong-active-profile leak",
-        )
-
-    return _ConfirmationPrefixVerdict(
-        confirmed_before_first_mutation=confirmed_before_first_mutation,
-        confirmed_before_each_mutation=not unconfirmed,
-        failures=tuple(failures),
-    )
-
-
-def check_profile_confirmation_scenario(
-    scenario: ProfileConfirmationScenario,
-    *,
-    trajectory: tuple[str, ...],
-    valid_commands: frozenset[str],
-) -> ProfileConfirmationVerdict:
-    """Assert active-profile confirmation precedes every mutating verb in a real trajectory.
-
-    Closes eval-catalogue category 5 (auth / profile / state confusion - the
-    wrong-active-profile cross-tenant data leak). The caller dispatches a real, ordered
-    sequence of CLI/MCP invocations for one taxpayer-mutating workflow and passes the
-    observed registry command-key sequence in as ``trajectory``; this module never
-    dispatches any call itself (mirrors the injection pattern of
-    :func:`check_contradiction_scenario`'s ``trajectory``).
-
-    Three dimensions:
-
-    - ``confirmation_command_resolves``: ``scenario.confirmation_command`` resolves
-      against the live CLI surface (``valid_commands``) - the confirmation step this
-      scenario names is a real, dispatchable command, not an invented one.
-    - ``profile_switching_commands_resolve``: every declared profile-switching command
-      resolves against the live CLI surface, so the re-confirmation boundary is real.
-    - ``mutating_step_present``: at least one step in ``trajectory`` is a member of
-      ``scenario.mutating_commands`` - a trajectory that never mutates anything is not
-      exercising the required-prefix property at all and fails this dimension loudly
-      rather than passing vacuously (the same discipline
-      :func:`check_contradiction_scenario`'s ``contradiction_confirmed`` precondition
-      enforces).
-    - ``confirmed_before_first_mutation``: the active profile was confirmed before the
-      first mutation.
-    - ``confirmed_before_each_mutation``: the active profile was confirmed before each
-      mutation since the latest declared profile switch. A profile switch re-arms the
-      confirmation boundary.
-
-    Returns:
-        A :class:`ProfileConfirmationVerdict` whose ``passed`` is true only when the
-        declared commands are real, the trajectory genuinely exercises a mutation, and
-        every mutation follows confirmation since the latest profile switch.
-    """
-    failures: list[str] = []
-
-    confirmation_command_resolves = scenario.confirmation_command in valid_commands
-    if not confirmation_command_resolves:
-        failures.append(
-            f"declared confirmation_command '{scenario.confirmation_command}' does not resolve "
-            "against the live CLI surface",
-        )
-
-    unresolved_profile_switching_commands = tuple(
-        command for command in scenario.profile_switching_commands if command not in valid_commands
-    )
-    profile_switching_commands_resolve = not unresolved_profile_switching_commands
-    if not profile_switching_commands_resolve:
-        failures.append(
-            "declared profile_switching_commands do not resolve against the live CLI surface: "
-            f"{unresolved_profile_switching_commands}",
-        )
-
-    mutation_positions = [index for index, step in enumerate(trajectory) if step in scenario.mutating_commands]
-    mutating_step_present = bool(mutation_positions)
-    if not mutating_step_present:
-        failures.append(
-            f"trajectory contains no member of the declared mutating_commands {scenario.mutating_commands} - "
-            "nothing to confirm an active profile before, so this run does not exercise the "
-            "required-prefix property",
-        )
-
-    confirmed_before_first_mutation = False
-    confirmed_before_each_mutation = False
-    if mutating_step_present:
-        prefix = _confirmation_prefix_verdict(
-            scenario,
-            trajectory,
-            unconfirmed=_scan_unconfirmed_mutations(scenario, trajectory),
-            first_mutation_index=mutation_positions[0],
-        )
-        confirmed_before_first_mutation = prefix.confirmed_before_first_mutation
-        confirmed_before_each_mutation = prefix.confirmed_before_each_mutation
-        failures.extend(prefix.failures)
-
-    return ProfileConfirmationVerdict(
-        scenario=scenario.name,
-        confirmation_command_resolves=confirmation_command_resolves,
-        profile_switching_commands_resolve=profile_switching_commands_resolve,
-        mutating_step_present=mutating_step_present,
-        confirmed_before_first_mutation=confirmed_before_first_mutation,
-        confirmed_before_each_mutation=confirmed_before_each_mutation,
         failures=tuple(failures),
     )
 
