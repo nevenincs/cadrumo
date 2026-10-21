@@ -241,7 +241,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 #### `agent-gateway`
 
 - **Program:** `cadrumo-agent`
-- **Started with:** `-m cadrumo_agent.cli.main serve`; `-m cadrumo_agent.cli.main stores-state`; `-m cadrumo_agent.cli.main setup`; `-m cadrumo_agent.cli.main migrate [--expect-from <expected_from:revision>] [--expect-head <expected_head:revision>]`; `-m cadrumo_agent.cli.main version --json`
+- **Started with:** `-m cadrumo_agent.cli.main serve`; `-m cadrumo_agent.cli.main stores-state`; `-m cadrumo_agent.cli.main preflight`; `-m cadrumo_agent.cli.main setup`; `-m cadrumo_agent.cli.main migrate [--expect-from <expected_from:revision>] [--expect-head <expected_head:revision>]`; `-m cadrumo_agent.cli.main version --json`
 - **Starts from:** only the operating-system group `system`
 - **Passes from its caller:** the names `CADRUMO_EXTERNAL_BIN_DIRS` and every name that starts with `CADRUMO_AGENT_` except `CADRUMO_AGENT_ENV_FILE`, `CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE` and `CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE`
 - **Accepts from its parent:** `CADRUMO_LOCAL_STORAGE_ROOT` (directory, optional), `CADRUMO_PROFILE_ROOT` (directory, optional), `CADRUMO_AGENT_HOSTED_ROOT` (directory, optional), `CADRUMO_AGENT_PORT` (port, optional) and `CADRUMO_AGENT_WORKER_PORT` (port, optional)
