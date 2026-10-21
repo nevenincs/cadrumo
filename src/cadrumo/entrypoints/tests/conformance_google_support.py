@@ -16,6 +16,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
+
 from ...adapters.outbound.google.records import (
     REQUIRED_SCOPES,
     DriveConfig,
@@ -120,6 +122,7 @@ def _prepare_folder_organize(context: ConformanceFamilyContext) -> ConformancePr
         message_key="errors.refused.refused_outbound_storage_conflict",
         facts=GoogleConfigurationPresentationFacts(profile=context.profile_id),
         verdict=None,
+        failure_category=DependencyFailureCategory.NEEDS_SIGN_IN,
     )
 
     def verify(_outcome: ConformanceOutcome) -> None:
@@ -153,6 +156,7 @@ def _client_metadata_unavailable(profile_id: UUID) -> GoogleConfigurationRefusal
         message_key="errors.refused.refused_google_client_metadata_unavailable",
         facts=GoogleConfigurationPresentationFacts(profile=profile_id),
         verdict=PreconditionVerdictSnapshot.from_verdict(verdict),
+        failure_category=DependencyFailureCategory.NOT_IN_THIS_BUILD,
     )
 
 
