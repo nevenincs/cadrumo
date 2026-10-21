@@ -110,7 +110,6 @@ msgstr ""
 "presentación en directo está ausente, no simplemente protegida."
 
 #: ../../architecture/index.md:36
-#, fuzzy
 msgid ""
 "The structure that follows is hexagonal: business rules sit at the "
 "center, and the parsers, browsers, and storage that touch the outside "
@@ -125,9 +124,9 @@ msgstr ""
 "el mundo exterior se sitúan en el borde. Las dependencias apuntan hacia "
 "dentro: los adaptadores implementan puertos que declara la capa de "
 "aplicación, y solo las raíces de composición (los puntos de entrada y el "
-"servidor MCP `cadrumo_harness`) conectan los adaptadores con los "
-"servicios de aplicación. Esto mantiene la lógica tributaria comprobable "
-"por sí sola y permite cambiar un adaptador sin tocar una regla."
+"servidor MCP `cadrumo_mcp`) conectan los adaptadores con los servicios de"
+" aplicación. Esto mantiene la lógica tributaria comprobable por sí sola y"
+" permite cambiar un adaptador sin tocar una regla."
 
 #: ../../architecture/index.md:44
 msgid "How to read this page"
@@ -899,4 +898,3 @@ msgid ""
 msgstr ""
 "**Contribuir**: el código fuente del proyecto y el gestor de incidencias "
 "están en [GitHub](https://github.com/nevenincs/cadrumo)."
-

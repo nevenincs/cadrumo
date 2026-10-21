@@ -110,7 +110,6 @@ msgstr ""
 "benyújtás nem védett, hanem egyszerűen nem létezik."
 
 #: ../../architecture/index.md:36
-#, fuzzy
 msgid ""
 "The structure that follows is hexagonal: business rules sit at the "
 "center, and the parsers, browsers, and storage that touch the outside "
@@ -124,8 +123,8 @@ msgstr ""
 "középpontban helyezkednek el, a külvilággal érintkező elemzők, böngészők "
 "és tárolók pedig a peremen. A függőségek befelé mutatnak: az adapterek "
 "olyan portokat valósítanak meg, amelyeket az alkalmazási réteg deklarál, "
-"és csak a kompozíciós gyökerek (a belépési pontok és a `cadrumo_harness` "
-"MCP-szerver) kötik az adaptereket az alkalmazásszolgáltatásokhoz. Így az "
+"és csak a kompozíciós gyökerek (a belépési pontok és a `cadrumo_mcp` MCP-"
+"szerver) kötik az adaptereket az alkalmazásszolgáltatásokhoz. Így az "
 "adólogika önmagában tesztelhető marad, és egy adapter megváltoztatható "
 "anélkül, hogy egy szabályhoz hozzá kellene nyúlni."
 
@@ -891,4 +890,3 @@ msgid ""
 msgstr ""
 "**Közreműködés** - a projekt forráskódja és hibajegykövetője a "
 "[GitHubon](https://github.com/nevenincs/cadrumo) található."
-
