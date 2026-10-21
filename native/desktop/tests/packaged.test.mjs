@@ -16,7 +16,7 @@ import {
   statSync,
   statfsSync,
 } from "node:fs";
-import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { dirname, isAbsolute, resolve } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -43,6 +43,7 @@ import {
   fingerprint,
   fingerprintChanges,
   freeSpaceVerdict,
+  guardedChange,
   isolatedEnvironment,
   probe,
   realStorageVerdict,
@@ -1847,38 +1848,6 @@ function realStorageRoots() {
   ];
 }
 
-const GUARDED_MEMBERS = new Set([
-  "components",
-  "models",
-  "buckets",
-  "active-profile",
-  "keystore",
-  "secrets",
-  "tokens",
-]);
-
-/** A change a setup or a profile of this run could have made, not another program's. */
-function guardedChange(change, roots, marks) {
-  const path = change.slice(change.indexOf(" ") + 1).replace(/\|absent$/, "");
-  if (
-    marks.some(
-      (mark) => mark && path.toLowerCase().includes(mark.toLowerCase()),
-    )
-  )
-    return true;
-  const root = roots.find(
-    (candidate) => path === candidate || path.startsWith(candidate + sep),
-  );
-  if (!root) return true;
-  if (root.toLowerCase().endsWith(`${sep}ms-playwright`)) return true;
-  const parts = relative(root, path).split(sep).filter(Boolean);
-  const member = parts[0] === "development" ? parts[1] : parts[0];
-  return (
-    member !== undefined &&
-    (GUARDED_MEMBERS.has(member) || member.startsWith("profile-custody"))
-  );
-}
-
 const SETUP_ACCEPTANCE = {
   timeout: 90 * 60 * 1000,
   skip: !SETUP_RUN && `set ${SETUP_VARIABLE}=1 to run the setup acceptance`,
@@ -2231,8 +2200,15 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
         const after = fingerprint(realStorageRoots());
         summary.realStorageEntriesAfter = after.size;
         const changes = fingerprintChanges(before, after);
-        const roots = realStorageRoots();
-        const marks = [layout.root, profileId];
+        const local = process.env.LOCALAPPDATA;
+        const context = {
+          roots: realStorageRoots(),
+          marks: [layout.root, profileId],
+          browserCache: local ? resolve(local, "ms-playwright") : null,
+          runCommandLines: [...seen.values()].map(
+            (tracked) => tracked.commandLine ?? "",
+          ),
+        };
         evidence("setup-real-storage-changes.json", changes);
         await check(
           "setup-real-storage-unchanged",
@@ -2240,10 +2216,10 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
           async () =>
             realStorageVerdict({
               guarded: changes.filter((change) =>
-                guardedChange(change, roots, marks),
+                guardedChange(change, context),
               ),
               observed: changes.filter(
-                (change) => !guardedChange(change, roots, marks),
+                (change) => !guardedChange(change, context),
               ),
             }),
         );

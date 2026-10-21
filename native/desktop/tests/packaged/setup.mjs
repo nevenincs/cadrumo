@@ -14,7 +14,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, lstatSync, readdirSync, rmSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { connect as netConnect } from "node:net";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { basename, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { descendants, survivors } from "./os.mjs";
@@ -365,6 +365,64 @@ export function secondSetupVerdict({
     });
   }
   return pass(`nothing to do; ${wireBytes} bytes moved, no file changed`);
+}
+
+const GUARDED_MEMBERS = new Set([
+  "components",
+  "models",
+  "buckets",
+  "active-profile",
+  "keystore",
+  "secrets",
+  "tokens",
+]);
+
+/** The log a Chromium build writes beside its executable while it runs, whichever program launched it. */
+const BROWSER_RUNTIME_LOG = "debug.log";
+
+/**
+ * Whether a real-storage change is one a setup or a profile of this run could
+ * have made, rather than another program's. A change naming one of `marks` or
+ * lying outside every watched root always counts. Under the per-user browser
+ * cache every change counts but one: a browser's own runtime log, written
+ * while no process of this run ran a browser from that cache. Another program
+ * running its browser writes that log; a setup installing there would add,
+ * replace or remove build files, and a browser this run launched from there
+ * would itself be a failure of isolation.
+ */
+export function guardedChange(
+  change,
+  { roots, marks, browserCache, runCommandLines },
+) {
+  const kind = change.slice(0, change.indexOf(" "));
+  const path = change.slice(change.indexOf(" ") + 1).replace(/\|absent$/, "");
+  if (
+    marks.some(
+      (mark) => mark && path.toLowerCase().includes(mark.toLowerCase()),
+    )
+  )
+    return true;
+  const root = roots.find(
+    (candidate) => path === candidate || path.startsWith(candidate + sep),
+  );
+  if (!root) return true;
+  if (browserCache && root.toLowerCase() === browserCache.toLowerCase()) {
+    const cache = browserCache.toLowerCase();
+    const runUsedCache = runCommandLines.some((line) =>
+      (line ?? "").toLowerCase().includes(cache),
+    );
+    return (
+      runUsedCache ||
+      kind === "removed" ||
+      basename(path).toLowerCase() !== BROWSER_RUNTIME_LOG
+    );
+  }
+  const parts = relative(root, path).split(sep).filter(Boolean);
+  const member = parts[0] === "development" ? parts[1] : parts[0];
+  return (
+    member !== undefined &&
+    (GUARDED_MEMBERS.has(member) || member.startsWith("profile-custody"))
+  );
 }
 
 /**

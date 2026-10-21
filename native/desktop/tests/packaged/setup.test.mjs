@@ -20,6 +20,7 @@ import {
   fingerprint,
   fingerprintChanges,
   freeSpaceVerdict,
+  guardedChange,
   isolatedEnvironment,
   itemEvidenceVerdict,
   planApprovalVerdict,
@@ -313,6 +314,84 @@ test("real storage fails on any guarded change and reports the others", () => {
     FAIL,
   );
   assert.equal(realStorageVerdict({ guarded: [] }).verdict, FAIL);
+});
+
+const STORAGE = resolve(tmpdir(), "real", "var", "storage");
+const CACHE = resolve(tmpdir(), "real", "Local", "ms-playwright");
+const RUN_ROOT = resolve(tmpdir(), "testing", "run-1");
+const storageContext = (runCommandLines = []) => ({
+  roots: [STORAGE, CACHE],
+  marks: [RUN_ROOT, "profile-7"],
+  browserCache: CACHE,
+  runCommandLines,
+});
+const shellLog = join(
+  CACHE,
+  "chromium_headless_shell-1243",
+  "chrome-headless-shell-win64",
+  "debug.log",
+);
+
+test("another program's browser writing its own log in the real cache is reported, not charged to the run", () => {
+  const context = storageContext([`"${join(RUN_ROOT, "app", "cadrumo.exe")}"`]);
+
+  assert.equal(guardedChange(`changed ${shellLog}`, context), false);
+  assert.equal(guardedChange(`added ${shellLog}`, context), false);
+});
+
+test("an install, a removal or this run's own browser in the real cache is charged to the run", () => {
+  const context = storageContext();
+  const build = join(CACHE, "chromium-1248");
+
+  assert.equal(guardedChange(`added ${build}`, context), true);
+  assert.equal(
+    guardedChange(`added ${join(build, "INSTALLATION_COMPLETE")}`, context),
+    true,
+  );
+  assert.equal(
+    guardedChange(
+      `changed ${join(build, "chrome-win64", "chrome.exe")}`,
+      context,
+    ),
+    true,
+  );
+  assert.equal(guardedChange(`removed ${shellLog}`, context), true);
+  const ranFromCache = storageContext([
+    `"${join(CACHE, "chromium_headless_shell-1243", "chrome-headless-shell-win64", "chrome-headless-shell.exe")}" --headless`,
+  ]);
+  assert.equal(guardedChange(`changed ${shellLog}`, ranFromCache), true);
+});
+
+test("setup and profile members, marks and unwatched paths are charged; other storage members are not", () => {
+  const context = storageContext();
+
+  assert.equal(
+    guardedChange(`added ${join(STORAGE, "components", "x")}`, context),
+    true,
+  );
+  assert.equal(
+    guardedChange(
+      `added ${join(STORAGE, "development", "buckets", "b")}`,
+      context,
+    ),
+    true,
+  );
+  assert.equal(
+    guardedChange(`added ${join(STORAGE, "profile-custody-1")}`, context),
+    true,
+  );
+  assert.equal(
+    guardedChange(`added ${join(STORAGE, "logs", "x.log")}`, context),
+    false,
+  );
+  assert.equal(
+    guardedChange(`added ${join(STORAGE, "logs", "profile-7.log")}`, context),
+    true,
+  );
+  assert.equal(
+    guardedChange(`added ${resolve(tmpdir(), "elsewhere", "x")}`, context),
+    true,
+  );
 });
 
 test("fingerprints see additions, removals and changes, and the root is removed only inside its parent", async (t) => {
