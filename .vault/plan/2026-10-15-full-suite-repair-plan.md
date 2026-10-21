@@ -26,7 +26,7 @@ Approved 2026-10-15. The user explicitly requested running the complete justfile
 
 Repair existing behavior under the accepted verification-reconcile-when-present, application-sign-in, MCP signed-in-profile, provider-settings, Google application identity and canonical environment decisions. No test exclusion, suppression, weakened assertion or increased timeout is authorized. Preserve unrelated edits in this shared worktree.
 
-Current evidence and full command logs are in `.logs/test-repair/`. Read the actual logs and process status before resuming commands. The latest user instruction forbids full-lane runs and limits test execution to previously known failures; do not represent these moving-tree observations as an immutable all-green checkpoint.
+Historical evidence and command logs are in `.logs/test-repair/`; current verification receipts also use `build/verification/` and the configured native/frontend output directories. Read the actual logs and process status before resuming commands. The earlier selector-only instruction is superseded by the 2026-10-21 full verification request; do not represent moving-tree observations as an immutable all-green checkpoint.
 
 ## Steps
 
@@ -37,7 +37,7 @@ Current evidence and full command logs are in `.logs/test-repair/`. Read the act
 
 ## Parallelization
 
-Current 2026-10-21 assignments supersede the historical batches below: `python_gates` owns the product/development Python gates, dependencies, import provenance and their fixtures; `a11y_language` owns portable tests and static repairs in cadrumo_client, cadrumo_runtime and cadrumo_agent_service; `layout_scenarios` owns the development bootstrap and calendar browser regressions. The root owns remaining frontend checks, native/package verification, touch layout fixtures, review, metadata and commits. All workers preserve concurrent edits, use disjoint outputs and complete self-contained work independently. The root does not directly wait on worker command sessions. Shared expensive builds are sequenced to avoid output contention.
+Current 2026-10-21 assignments supersede the historical batches below: `python_gates` owns static Python and registry gates, dependencies, import provenance and their fixtures; `a11y_language` owns portable and serial tests and repairs in cadrumo_client, cadrumo_runtime and cadrumo_agent_service; `layout_scenarios` owns the complete configured `just test-gate` population after completing the development bootstrap and calendar browser regressions and independent review. The root owns remaining frontend checks, native/package verification, touch layout fixtures, review, metadata and commits. All workers preserve concurrent edits, use disjoint outputs and complete self-contained work independently. The root does not directly wait on worker command sessions. Shared expensive builds are sequenced to avoid output contention.
 
 Authorized 2026-10-16 by the user: use GPT-6.1 Sol medium agents. S03 assignments may run concurrently with disjoint write ownership: frontend worker owns native/desktop/frontend, typing worker owns the six files from the recorded type diagnostics, calculation worker owns the recorded Modelo 322/353 calculation failures, and supervisor owns remaining runtime/TUI repairs. The supervisor serializes shared metadata and commits. Reuse applicable passing repair evidence. No full-lane tests may run; select only previously known failing cases.
 

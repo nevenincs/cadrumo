@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:bcfc36b3e33ea345838f68f304bec24e7c2fce4f538b7e8789944941406a774b'
+body_hash: 'sha256:f058da118f75e4203c0a066616046a4fe5a135b3e8b554caeb9cf4101ffa2d35'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
@@ -1463,6 +1463,7 @@ related:
 - `S04` `verify:` `2026-10-21 npm run check (types, lint, architecture 11 tests, formatting)` -> `pass`
 - `S04` `verify:` `2026-10-21 CTest manager.supervision installer.rust native.identity-coverage application.rust (4 groups)` -> `pass`
 - `S04` `verify:` `2026-10-21 browser failures rerun after repairs (all 13 original failures)` -> `pass`
+- `S04` `verify:` `native_bundle=pass;packaged_ctest=14_pass_1_fail;approval_scenarios=32_pass;frontend_check` -> `pass`
 
 ## Notes
 
@@ -1506,3 +1507,4 @@ related:
 - `S03` Clean original IVA journey passes without diagnostic hooks; independent integrated review no findings. Twelve genuine live failures remain. No full test lanes; S03/S04 stay open and no shared-source Step commit is claimed.
 - `S04` Current user authorizes full verification and autonomous Sol6.1 high workers; historical selector-only restriction superseded. Browser and Python repairs remain active; no all-green claim.
 - `S04` Independent desktop review found no concrete defects; HMR regression reproduced failure before fix and passes after. Browser 9 live-agent opt-in skips remain classified. Native bundle, refreshed host checks and Python gates remain active.
+- `S04` Bundle build and installer bootstrap passed. Fifteen packaged CTest groups completed: fourteen passed, lifecycle group had three failures and one teardown error; its six passing cases include crash recovery with the production lease and manager replacement. Preserve lifecycle-full-20261021.xml; exact failed client/service cases are being rechecked. Full Python gates remain active. Ledger diagnostics stale AGENT expectation repaired, focused real-supervisor case passed and committed 3bdbabcb01. S03/S04 remain open.
