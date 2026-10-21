@@ -448,6 +448,10 @@ def test_public_table_row_selection_uses_semantic_key_not_position() -> None:
             self.table = table
             self.screen = Screen()
 
+        @property
+        def focused(self) -> Table | None:
+            return self.table if self.table.focused else None
+
         def query_one(self, selector: str, expected_type: object | None = None) -> object:
             assert selector == "#ledger-navigation"
             return self.table
@@ -456,12 +460,15 @@ def test_public_table_row_selection_uses_semantic_key_not_position() -> None:
         def __init__(self, table: Table) -> None:
             self.app = App(table)
             self.keys: list[str] = []
+            self.pauses = 0
 
         async def press(self, key: str) -> None:
             self.keys.append(key)
 
         async def pause(self) -> None:
-            raise AssertionError("public table should be immediately visible")
+            assert self.app.focused is self.app.table
+            assert self.app.table.cursor_row == 1
+            self.pauses += 1
 
     table = Table()
     pilot = Pilot(table)
@@ -476,6 +483,7 @@ def test_public_table_row_selection_uses_semantic_key_not_position() -> None:
     assert table.focused is True
     assert table.cursor_row == 1
     assert pilot.keys == ["enter"]
+    assert pilot.pauses == 1
 
 
 def test_profile_manager_choice_uses_visible_option_list_highlight_and_save(monkeypatch) -> None:
