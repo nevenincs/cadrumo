@@ -216,7 +216,7 @@ async def test_async_close_retains_owner_until_stderr_drainer_finishes(
     monkeypatch.setattr(session_holder, "_CLOSE_SECONDS", 0.05)
     owner = await _AsyncPipeOwner.launch(
         Path(sys.executable).resolve(strict=True),
-        ("-u", "-c", "import sys; sys.stdin.buffer.read()"),
+        ("-u", "-c", "pass"),
         os.environ,
     )
     original_stderr_task = owner._stderr_task
@@ -227,12 +227,16 @@ async def test_async_close_retains_owner_until_stderr_drainer_finishes(
 
     delayed_stderr_task = asyncio.create_task(wait_for_stderr_release())
     owner._stderr_task = delayed_stderr_task
+    # Reap the child before close so the only unsettled resource is the held drainer; a
+    # reaping deadline under load is the subject of the termination tests, not this one.
+    assert await owner.process.wait() == 0
 
     with pytest.raises(BaseExceptionGroup) as stderr_failure:
         await owner.close()
 
-    assert any("stderr drainer did not stop" in str(error) for error in stderr_failure.value.exceptions)
-    assert owner.process.returncode is not None
+    failures = [str(error) for error in stderr_failure.value.exceptions]
+    assert any("stderr drainer did not stop" in failure for failure in failures)
+    assert not any("could not be reaped" in failure for failure in failures)
     assert not owner._closed
     gate.set()
     await original_stderr_task
