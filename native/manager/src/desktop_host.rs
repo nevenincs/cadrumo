@@ -630,7 +630,10 @@ mod tests {
                 record.publish(status);
             }
         });
-        ready.recv_timeout(Duration::from_secs(5)).unwrap();
+        // Fixture setup includes durable disk writes, whose speed is not this
+        // notification test's contract. A setup panic disconnects the channel;
+        // only the armed observer's waits below have notification deadlines.
+        ready.recv().expect("external owner setup failed");
         assert!(owner_publishes(&root, &session));
         let mut external = None;
         // Finding the owner arms the watches; nothing has happened since.
