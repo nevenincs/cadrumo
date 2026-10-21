@@ -16,10 +16,12 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from io import BytesIO, StringIO
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 from xml.etree.ElementTree import ParseError
 from zipfile import BadZipFile
 
@@ -33,6 +35,10 @@ from ...core.external_constants import XLSX_MIME_TYPE as _XLSX_MIME_TYPE
 from ...core.hashing import sha256_hex
 from ...core.models import STRICT_FROZEN_CONFIG
 from .errors import ExportFieldError, ExportFormatError
+
+if TYPE_CHECKING:
+    from openpyxl.cell.cell import Cell
+    from openpyxl.worksheet.worksheet import Worksheet
 
 
 class ExportSerializationFormat(StrEnum):
@@ -70,6 +76,14 @@ _EXTENSION_MISMATCH_REASON = "filename_extension_mismatch"
 _ROW_COUNT_MISMATCH_REASON = "row_count_mismatch"
 _PAYLOAD_DECODE_INVALID_REASON = "payload_decode_invalid"
 _JSONL_RECORD_INVALID_REASON = "jsonl_record_invalid"
+
+#: Leading characters a spreadsheet client may read as the start of a formula
+#: (``=``, ``+``, ``-``, ``@``) or that some clients strip before doing so.
+_SPREADSHEET_FORMULA_TRIGGERS = frozenset("=+-@\t\r")
+_SPREADSHEET_LITERAL_PREFIX = "'"
+#: A plain signed decimal evaluates to itself, so it stays unprefixed and
+#: numeric columns such as amounts remain numbers in the opened sheet.
+_PLAIN_DECIMAL = re.compile(r"[+-]?\d+(?:\.\d+)?")
 
 
 class TabularExportResult(BaseModel):
@@ -317,11 +331,49 @@ def _xlsx_payload_row_count(payload: bytes) -> int:
         raise _payload_decode_error(ExportSerializationFormat.XLSX) from exc
 
 
+def spreadsheet_literal(value: str) -> str:
+    """Return ``value`` encoded so a spreadsheet client opens it as inert text.
+
+    A value whose first character -- or first non-whitespace character -- could
+    start a formula gains one leading apostrophe, the spreadsheet convention for
+    literal text. A value that already starts with an apostrophe gains one more
+    when its remainder would itself be encoded, which keeps the encoding a
+    bijection: :func:`restore_spreadsheet_literal` recovers the original exactly.
+    Plain signed decimals are left untouched.
+    """
+    if _needs_spreadsheet_literal_prefix(value):
+        return _SPREADSHEET_LITERAL_PREFIX + value
+    return value
+
+
+def restore_spreadsheet_literal(value: str) -> str:
+    """Invert :func:`spreadsheet_literal`, removing the one prefix it added."""
+    if value.startswith(_SPREADSHEET_LITERAL_PREFIX) and _needs_spreadsheet_literal_prefix(value[1:]):
+        return value[1:]
+    return value
+
+
+def _needs_spreadsheet_literal_prefix(value: str) -> bool:
+    if value.startswith(_SPREADSHEET_LITERAL_PREFIX):
+        return _needs_spreadsheet_literal_prefix(value[1:])
+    if not value or _PLAIN_DECIMAL.fullmatch(value):
+        return False
+    if value[0] in _SPREADSHEET_FORMULA_TRIGGERS:
+        return True
+    unindented = value.lstrip()
+    return unindented != value and bool(unindented) and unindented[0] in _SPREADSHEET_FORMULA_TRIGGERS
+
+
 def _serialize_csv(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, ...]) -> bytes:
+    """Serialize rows as CSV with every value passed through :func:`spreadsheet_literal`.
+
+    CSV carries no cell types, so quoting alone leaves a formula-looking value
+    live in the client that opens the file.
+    """
     buffer = StringIO()
     writer = csv.DictWriter(buffer, fieldnames=fieldnames, lineterminator="\n")
     writer.writeheader()
-    writer.writerows(rows)
+    writer.writerows({field: spreadsheet_literal(value) for field, value in row.items()} for row in rows)
     return buffer.getvalue().encode(_UTF_8_ENCODING)
 
 
@@ -331,11 +383,21 @@ def _serialize_jsonl(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str,
     return text.encode(_UTF_8_ENCODING)
 
 
+def _xlsx_string_cell(worksheet: Worksheet, *, row: int, column: int, value: str) -> Cell:
+    from openpyxl.cell.cell import Cell
+
+    cell = Cell(worksheet, row=row, column=column, value=value)
+    # Assigning the value infers a formula from a leading "="; caller text never is one.
+    cell.data_type = "s"
+    return cell
+
+
 def _serialize_xlsx(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, ...]) -> bytes:
     """Serialize rows into a single-worksheet XLSX workbook (header + data rows).
 
-    Every cell is written as text so a deterministic, locale-independent
-    round-trip is preserved; the workbook re-reads through
+    Every cell is typed as a string cell so a deterministic, locale-independent
+    round-trip is preserved and caller text is never inferred to be a formula;
+    the workbook re-reads through
     :class:`~adapters.inbound.financial.providers.xlsx.XlsxProvider`,
     which shares the CSV bank-layout catalogue.
     """
@@ -346,9 +408,14 @@ def _serialize_xlsx(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, 
     if worksheet is None:
         raise ExportFormatError("a fresh workbook carries no active worksheet to write the ledger into")
     worksheet.title = "ledger"
-    worksheet.append(list(fieldnames))
-    for row in rows:
-        worksheet.append([row.get(field, "") for field in fieldnames])
+    records = (list(fieldnames), *([row.get(field, "") for field in fieldnames] for row in rows))
+    for row_index, record in enumerate(records, start=1):
+        worksheet.append(
+            [
+                _xlsx_string_cell(worksheet, row=row_index, column=column_index, value=value)
+                for column_index, value in enumerate(record, start=1)
+            ],
+        )
     buffer = BytesIO()
     workbook.save(buffer)
     return buffer.getvalue()

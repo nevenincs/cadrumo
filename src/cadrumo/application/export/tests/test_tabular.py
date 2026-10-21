@@ -15,9 +15,73 @@ from ....core.errors.error_codes import build_error_envelope
 from ....core.external_constants import CSV_MIME_TYPE, JSONL_MIME_TYPE, UTF_8_ENCODING, XLSX_MIME_TYPE
 from ....tests.locale_catalogue import CATALOGUE_LANGUAGES, catalogue_shard_path, shard_payload
 from ..errors import ExportFieldError, ExportFormatError
-from ..tabular import ExportSerializationFormat, serialize_tabular_rows
+from ..tabular import (
+    ExportSerializationFormat,
+    restore_spreadsheet_literal,
+    serialize_tabular_rows,
+    spreadsheet_literal,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_FORMULA_LOOKING_VALUES = (
+    '=HYPERLINK("http://attacker.example","x")',
+    "+1+1",
+    "-2+3",
+    "@SUM(A1:A2)",
+    "\t=1+1",
+    "\r=1+1",
+    "  =1+1",
+    "'=1+1",
+)
+
+
+@pytest.mark.parametrize("value", _FORMULA_LOOKING_VALUES)
+def test_csv_export_prefixes_formula_looking_values_with_a_literal_apostrophe(value: str) -> None:
+    result = serialize_tabular_rows(
+        ({"description": value},),
+        fieldnames=("description",),
+        export_format=ExportSerializationFormat.CSV,
+    )
+
+    (parsed,) = tuple(csv.DictReader(StringIO(result.payload.decode(UTF_8_ENCODING))))
+    assert parsed["description"] == "'" + value
+    assert restore_spreadsheet_literal(parsed["description"]) == value
+
+
+@pytest.mark.parametrize("value", ("", "Coffee", "-12.50", "+3", "42", "'quoted", "a=b", " plain"))
+def test_csv_export_leaves_inert_values_and_plain_decimals_unchanged(value: str) -> None:
+    result = serialize_tabular_rows(
+        ({"description": value},),
+        fieldnames=("description",),
+        export_format=ExportSerializationFormat.CSV,
+    )
+
+    (parsed,) = tuple(csv.DictReader(StringIO(result.payload.decode(UTF_8_ENCODING))))
+    assert parsed["description"] == value
+
+
+@pytest.mark.parametrize(
+    "value",
+    (*_FORMULA_LOOKING_VALUES, "", "x", "'", "''", "'x", "''=1", "-5", "'-5", " ", "'\t=1"),
+)
+def test_spreadsheet_literal_is_reversible(value: str) -> None:
+    assert restore_spreadsheet_literal(spreadsheet_literal(value)) == value
+
+
+def test_xlsx_export_writes_formula_looking_values_as_string_cells() -> None:
+    result = serialize_tabular_rows(
+        tuple({"description": value} for value in _FORMULA_LOOKING_VALUES),
+        fieldnames=("description",),
+        export_format=ExportSerializationFormat.XLSX,
+    )
+
+    workbook = load_workbook(BytesIO(result.payload))
+    worksheet = workbook.active
+    assert worksheet is not None
+    cells = [row[0] for row in worksheet.iter_rows(min_row=2)]
+    assert [cell.value for cell in cells] == list(_FORMULA_LOOKING_VALUES)
+    assert {cell.data_type for cell in cells} == {"s"}
 
 
 def test_serialize_tabular_rows_writes_stable_csv_payload() -> None:
