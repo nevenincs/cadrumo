@@ -17,6 +17,7 @@ from typing import TypedDict
 from urllib.parse import quote_from_bytes
 from uuid import uuid4
 
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev.packaging.native.build_directory import require_enrolled_build
 
 from .agent import agent_wheel
@@ -61,7 +62,7 @@ def _provider_icons_module(archive: zipfile.ZipFile) -> Generator[ModuleType]:
             raise ProviderIconGenerationError("The provider icon directory has duplicate artwork")
         assets[filename] = _read_once(archive, member)
 
-    with tempfile.TemporaryDirectory(prefix="cadrumo-provider-icons-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-provider-icons-", dir=prepare_temporary_directory()) as temporary:
         package_name = f"_cadrumo_provider_icons_{uuid4().hex}"
         package = Path(temporary) / package_name
         icon_directory = package / "icons"

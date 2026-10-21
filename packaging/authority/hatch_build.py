@@ -325,6 +325,7 @@ class CustomBuildHook(_CustomBuildHookBase):
             sys.path[:0] = (str(build_root), str(build_root / "src"))
             from cadrumo.core.config_google import CLIENT_METADATA_MAX_BYTES
             from cadrumo.core.config_google_client import decode_desktop_client
+            from cadrumo.core.storage_environment import prepare_temporary_directory
 
             embedded = build_root / "src/cadrumo/_data/google/oauth_client.json"
             if (build_root / "dev/packaging/google_oauth.py").is_file() or not embedded.is_file():
@@ -342,7 +343,7 @@ class CustomBuildHook(_CustomBuildHookBase):
                     raise ValueError("Invalid packaged Google Desktop OAuth configuration") from None
                 if decode_desktop_client(encoded) is None:
                     raise ValueError("Invalid packaged Google Desktop OAuth configuration")
-            stage = tempfile.TemporaryDirectory(prefix="cadrumo-oauth-build-")
+            stage = tempfile.TemporaryDirectory(prefix="cadrumo-oauth-build-", dir=prepare_temporary_directory())
             stage_root = Path(stage.name)
             staged = stage_root / "src/cadrumo/_data/google/oauth_client.json"
             staged.parent.mkdir(parents=True, exist_ok=True)

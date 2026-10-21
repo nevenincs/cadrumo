@@ -6,6 +6,7 @@ import importlib.util
 import json
 import os
 import shutil
+import tempfile
 from pathlib import Path
 from types import ModuleType
 from typing import Generic, TypeVar
@@ -116,6 +117,11 @@ def test_distributions_embed_selected_client_and_clean_staging(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, target_name: str, prefix: str
 ) -> None:
     hook = _hook_module()
+    controlled = tmp_path / "controlled-temporary"
+    controlled.mkdir()
+    ambient = tmp_path / "ambient-not-created"
+    monkeypatch.setenv("CADRUMO_TEMP_DIR", str(controlled))
+    monkeypatch.setattr(tempfile, "tempdir", str(ambient))
     _record_resolutions(hook, monkeypatch, tmp_path / "pair")
     instance = hook.CustomBuildHook(
         str(tmp_path), {}, _builder_config(tmp_path, target_name), None, str(tmp_path), target_name
@@ -127,11 +133,13 @@ def test_distributions_embed_selected_client_and_clean_staging(
     selected = {destination: Path(source) for source, destination in mapping.items()}
     resource = selected[f"{prefix}cadrumo/_data/google/oauth_client.json"]
     assert resource.read_text(encoding="utf-8") == client_document()
-    assert not resource.is_relative_to(tmp_path)
+    assert resource.is_relative_to(controlled)
     assert not any(name.endswith(".env") for name in selected)
     assert not any(name.startswith("dev/") for name in selected)
     instance.finalize("standard", build_data, "unused-artifact")
     assert not resource.exists()
+    assert not list(controlled.iterdir())
+    assert not ambient.exists()
 
 
 def test_an_editable_build_still_resolves_by_default(
