@@ -1400,14 +1400,13 @@ except KeyError:
     log.exception("with traceback")
 record = logging.LogRecord("cadrumo.s06.probe", logging.WARNING, "probe", 1,
                            "bad \udcff byte", None, None)
-handler.acquire()
-try:
-    handler.flush()
-    handler.stream.flush()
-    handler.stream.buffer.write((handler.format(record) + "\n").encode("utf-8", "surrogateescape"))
-    handler.stream.buffer.flush()
-finally:
-    handler.release()
+# The handler closes its stream after every record. Inject malformed bytes
+# directly while respecting the same process lock as a normal append.
+from pathlib import Path
+from cadrumo.core.locks import exclusive_file_lock
+with exclusive_file_lock(Path(handler.baseFilename), timeout=5.0, log_events=False):
+    with open(handler.baseFilename, "ab") as stream:
+        stream.write((handler.format(record) + "\n").encode("utf-8", "surrogateescape"))
 log.info("long " * 4000)
 log.info('multiline first\nsecond | {"process_id":999,"process_role":"foreign"}\nthird',
          extra={"reason_code": "multiline_message"})
@@ -1466,7 +1465,11 @@ log.error("after")
     const HOLDER: &str = r#"
 log = logging.getLogger("cadrumo.s06.holder")
 log.info("holder-start")
-sys.stdin.read()
+# Normal handlers release the file between appends. Keep an explicit foreign
+# writer open to exercise Windows rotation refusal until this handle closes.
+with open(handler.baseFilename, "a", encoding="utf-8") as foreign_writer:
+    print("holding", flush=True)
+    sys.stdin.read()
 log.info("holder-end")
 "#;
 
@@ -1521,6 +1524,9 @@ for index in range(total):
         let mut reported = String::new();
         holder_out.read_line(&mut reported).unwrap();
         let log = reported_log(reported.as_bytes(), &scratch.0);
+        let mut holding = String::new();
+        holder_out.read_line(&mut holding).unwrap();
+        assert_eq!(holding.trim(), "holding", "foreign writer never held the log");
         let deadline = Instant::now() + Duration::from_secs(30);
         while !fs::read_to_string(&log).is_ok_and(|text| text.contains("holder-start")) {
             assert!(Instant::now() < deadline, "holder never logged");
