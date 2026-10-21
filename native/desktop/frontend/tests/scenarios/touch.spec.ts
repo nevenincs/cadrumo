@@ -1,5 +1,6 @@
 import { openPanelTab } from "../support/panel";
 import { expect, test, type Page } from "@playwright/test";
+import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 
 // The shell on a small touch screen: a phone-sized viewport with a coarse
@@ -231,6 +232,7 @@ test("a tap on messages says why there is no count", async ({
 test("a narrow header gives up a duplicate control before it cuts its title", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=es",
   );
@@ -260,6 +262,7 @@ test("a narrow header gives up a duplicate control before it cuts its title", as
 test("the shell stacks its panes and never scrolls sideways", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target);
   await expect(target.locator(".split")).toHaveClass(/split-column/);
   expect(await overflowing(target)).toBe(false);
