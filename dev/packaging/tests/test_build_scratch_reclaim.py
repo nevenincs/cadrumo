@@ -184,7 +184,7 @@ def _live_var_members() -> frozenset[str]:
 
 
 def test_discovered_live_var_members_cover_the_readiness_gate_inputs() -> None:
-    """The discovery finds the directories the release gates actually read.
+    """The discovery finds the readiness inputs that remain under ``var/``.
 
     Asserted before the discovery is used as evidence anywhere else: a regex
     that silently matched nothing would make the sparing test below pass
@@ -193,12 +193,13 @@ def test_discovered_live_var_members_cover_the_readiness_gate_inputs() -> None:
     """
     discovered = _live_var_members()
     assert {
-        "release-cohort",
         "packaging-smoke",
         "packaging-smoke-evidence",
         "distribution-install-readiness",
         "packaging-smoke-cohort",
     } <= discovered
+    # The release cohort is now build-owned, so it is no longer a var input.
+    assert "release-cohort" not in discovered
 
 
 def test_discovery_reaches_the_surfaces_outside_the_python_tree() -> None:
