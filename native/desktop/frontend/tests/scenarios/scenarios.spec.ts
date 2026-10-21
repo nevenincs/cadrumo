@@ -2162,10 +2162,18 @@ test("the rail keeps its order: search, window toggles, shortcuts, panel toggle"
   );
 });
 
-const calendarButton = (target: Page) =>
+const calendarButton = (target: Page, locale = "en") =>
   target
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.calendar.title") });
+    .getByRole("navigation", { name: label("desktop.rail.label", {}, locale) })
+    .getByRole("button", { name: label("desktop.calendar.title", {}, locale) });
+
+/** Navigating to another fixture restores the selected page. */
+const showCalendar = async (target: Page, locale = "en") => {
+  const toggle = calendarButton(target, locale);
+  if ((await toggle.getAttribute("aria-pressed")) !== "true")
+    await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+};
 
 /** How many times the shell has asked the host for the filing calendar. */
 const calendarReads = (target: Page) => () =>
@@ -2506,12 +2514,7 @@ test("the months begin the week on the day the language does", async ({
     ["hu", new Date(2026, 9, 5)],
   ] as const) {
     await open(target, "signed-in", `&lang=${language}`);
-    await target
-      .getByRole("button", {
-        name: label("desktop.calendar.title", {}, language),
-        exact: true,
-      })
-      .click();
+    await showCalendar(target, language);
     const october = target.locator('.calendar-month[data-month="2026-10"]');
     // The first of its weekday letters, and the day under it in the first
     // whole week: a Sunday in English, a Monday in Spanish and Hungarian.
@@ -2626,7 +2629,7 @@ test("the calendar's mark stands where the past ends in each shape of range, and
   const today = new RegExp(`^${said.format(0, "day")} · `, "i");
   const shown = async (shape: string) => {
     await open(target, "signed-in", `&calendar=${shape}`);
-    await calendarButton(target).click();
+    await showCalendar(target);
     const page = target.getByRole("region", {
       name: label("desktop.calendar.title"),
     });
@@ -2819,7 +2822,7 @@ test("the calendar says what its marks are, and has a way back to where it stand
   // A calendar worked out for another day names the way back by that day.
   await target.clock.setFixedTime(new Date(2026, 9, 7, 9));
   await open(target, "signed-in");
-  await calendarButton(target).click();
+  await showCalendar(target);
   // The day alone is what is shown; read aloud it says where it goes.
   const toDay = page.getByRole("button", {
     name: label("desktop.calendar.to_day", {
@@ -3372,7 +3375,7 @@ test("a month that makes the page scroll when drawn whole does not change the pa
   // A page with nothing to scroll keeps no room for a scrollbar: what it
   // says stays in the middle.
   await open(target, "empty");
-  await calendarButton(target).click();
+  await showCalendar(target);
   await expect(page).toContainText(label("desktop.calendar.empty"));
   expect(
     await page.evaluate(
@@ -4669,8 +4672,14 @@ test("with the TUI hidden, the sign-in dialog leaves the keyboard in the documen
 });
 
 for (const [beside, layout] of [
-  ["the rail", { agentShown: false, tuiShown: false }],
-  ["the TUI's way in", { agentShown: false }],
+  [
+    "the rail",
+    { agentShown: false, docsShown: false, tuiShown: false, page: "docs" },
+  ],
+  [
+    "the TUI's way in",
+    { agentShown: false, docsShown: false, tuiShown: true, page: "docs" },
+  ],
 ] as const)
   test(`a calendar put away with no documentation behind it leaves the keyboard on ${beside}`, async ({
     page: target,

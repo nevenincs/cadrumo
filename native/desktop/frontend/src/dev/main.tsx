@@ -179,7 +179,11 @@ const root = document.getElementById("root");
 if (!root) throw new Error("Application root is missing.");
 // Strict mode runs every effect twice in development, which is how a missing
 // cleanup shows itself here instead of in the desktop window.
-ReactDOM.createRoot(root).render(
+const shell = ReactDOM.createRoot(root);
+// Reevaluating this entry must remove the previous shell's effects and portals
+// before a new root mounts, including when Fast Refresh requests a full reload.
+import.meta.hot?.dispose(() => shell.unmount());
+shell.render(
   <StrictMode>
     <Scenarios />
   </StrictMode>,
