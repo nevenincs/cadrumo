@@ -128,7 +128,9 @@ def test_runtime_leaf_receives_explicit_api_method_before_local_session(
             graph=COMMAND_GRAPH,
             spec=spec,
             arguments=cast(Mapping[str, object], confirmations),
-            activate_connection=lambda ctx, **kwargs: events.append((kwargs["root_selection"], kwargs["method"])),
+            load_connection_activator=lambda: (
+                lambda ctx, **kwargs: events.append((kwargs["root_selection"], kwargs["method"]))
+            ),
         )
     assert events == [(ProfileSecretSelection(ProfileSecretChannel.STDIN), ProfileAuthenticationMethod.API_KEY)] * len(
         raw_key_leaves

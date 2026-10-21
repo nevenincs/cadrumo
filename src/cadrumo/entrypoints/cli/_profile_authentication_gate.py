@@ -629,7 +629,7 @@ def preflight_parsed_leaf(
     graph: CommandSpecGraph,
     spec: CommandSpec,
     arguments: Mapping[str, object],
-    activate_connection: ProfileConnectionActivator = require_bound_profile_connection,
+    load_connection_activator: Callable[[], ProfileConnectionActivator] | None = None,
 ) -> None:
     """Preflight parsed root/leaf sources, then run the ordinary root gate."""
     node = graph.node(spec.key)
@@ -694,7 +694,7 @@ def preflight_parsed_leaf(
         credential_reference,
         uses_profile_connection,
         node.path[1:],
-        activate_connection=activate_connection,
+        load_connection_activator=load_connection_activator,
     ):
         return
     _activate_parsed_profile_session(
@@ -862,7 +862,7 @@ def _activate_profile_connection_leaf(
     uses_profile_connection: bool,
     command_path: tuple[str, ...],
     *,
-    activate_connection: ProfileConnectionActivator = require_bound_profile_connection,
+    load_connection_activator: Callable[[], ProfileConnectionActivator] | None = None,
 ) -> bool:
     """Apply a profile-connection route before the ordinary session gate."""
     if _diagnose_unregistered_profile(spec=spec, root=root, credential_reference=credential_reference is not None):
@@ -884,6 +884,9 @@ def _activate_profile_connection_leaf(
 
             if resolve_active_bucket_id() is None:
                 raise _no_active_profile_refusal()
+        activate_connection = (
+            require_bound_profile_connection if load_connection_activator is None else load_connection_activator()
+        )
         activate_connection(
             ctx,
             target_bucket_id=explicit_target,

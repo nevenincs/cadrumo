@@ -89,7 +89,7 @@ def test_reference_refuses_invalid_routes_before_storage_or_secret_reads(
             graph=COMMAND_GRAPH,
             spec=COMMAND_GRAPH.node(key).spec,
             arguments=arguments,
-            activate_connection=lambda *_args, **_kwargs: pytest.fail("refusal opened a runtime client"),
+            load_connection_activator=lambda: pytest.fail("refusal loaded runtime admission"),
         )
     assert caught.value.translated_message is not None
     assert caught.value.translated_message.endswith(reason)
@@ -109,7 +109,7 @@ def test_reference_routes_only_one_exact_migrated_profile_without_root_secret(
         graph=COMMAND_GRAPH,
         spec=COMMAND_GRAPH.node("config_profile_view").spec,
         arguments={},
-        activate_connection=lambda ctx, **kwargs: observed.append(kwargs),
+        load_connection_activator=lambda: lambda ctx, **kwargs: observed.append(kwargs),
     )
     assert observed == [
         {

@@ -13,7 +13,7 @@ from cadrumo_client.commands.compiler import runs_in_governed_fact_scope
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.spec import CommandSpec
 
-from .profile_connection import ProfileConnectionActivator, require_bound_profile_connection
+from .profile_connection import ProfileConnectionActivator
 
 
 def dispatch_cli_behavior(
@@ -22,7 +22,7 @@ def dispatch_cli_behavior(
     bound: BoundArguments,
     behavior: Callable[[], object],
     *,
-    activate_connection: ProfileConnectionActivator = require_bound_profile_connection,
+    load_connection_activator: Callable[[], ProfileConnectionActivator] | None = None,
 ) -> object:
     """Apply AEAT profile admission, governed scope, provisioning and cleanup."""
     context_parameter = spec.invocation.context_parameter
@@ -54,7 +54,7 @@ def dispatch_cli_behavior(
                     graph=graph,
                     spec=spec,
                     arguments=bound.arguments,
-                    activate_connection=activate_connection,
+                    load_connection_activator=load_connection_activator,
                 )
                 return behavior()
         except Exception as error:
