@@ -6,7 +6,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:81d84062ad4a044cfe43ee1b4af5fe4c37d98ac680e0d445009e316af817a10a'
+body_hash: 'sha256:8b4fee2efad0b1278d9dad8f2fe772ec7f8881b1e655e2ac868c5161a5f471fa'
 related:
   - '[[2026-06-30-agent-harness-adr]]'
   - '[[2026-06-30-agent-harness-audit]]'
@@ -15,6 +15,8 @@ related:
   - '[[2026-07-01-agent-harness-research]]'
   - '[[2026-07-02-agent-harness-audit]]'
   - '[[2026-07-06-agent-harness-audit]]'
+  - '[[2026-10-21-agent-harness-boundary-review-audit]]'
+  - '[[2026-10-21-agent-harness-ledger]]'
   - '[[2026-10-21-agent-harness-plan]]'
 ---
 
@@ -34,6 +36,11 @@ Auto-generated index of all documents tagged with `#agent-harness`.
 - `2026-06-30-agent-harness-audit` - `agent-harness` audit: `campaign close honesty review`
 - `2026-07-02-agent-harness-audit` - `agent-harness` audit: `git index sweep incident 84f84166f`
 - `2026-07-06-agent-harness-audit` - `agent-harness` audit: `Response formula provenance hardening review`
+- `2026-10-21-agent-harness-boundary-review-audit` - `agent-harness` audit: `boundary review`
+
+### exec
+
+- `2026-10-21-agent-harness-ledger` - `agent-harness` ledger
 
 ### plan
 

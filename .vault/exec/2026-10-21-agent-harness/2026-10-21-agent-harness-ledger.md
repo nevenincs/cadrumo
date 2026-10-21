@@ -5,40 +5,14 @@ tags:
 date: '2026-10-21'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:31c7c8db715d74060d0fc4e47c88aecc44ab37a9a2323ad5cf9f35277dc404c1'
+body_hash: 'sha256:895719b0de4ec773d135c15aa49d9ec78dc66f1259d76416fec9e53bcb800556'
 related:
   - "[[2026-10-21-agent-harness-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `agent-harness` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `verify:` `git -C Y:/code/cadrumo-agent-worktrees/main log --diff-filter=A --format=%h-%cI-%s -- src/cadrumo_agent/harness/_data/agent: fork point 5bdf185 2026-10-16T09:18:40+02:00` -> `pass`
 - `S01` `verify:` `git -C Y:/code/cadrumo-worktrees/tui log --format=%h-%cI-%s e4188cc067 -- src/cadrumo_harness/_data/agent: only post-fork change is 72cd94bc66 to reference/command-operations.md` -> `pass`
@@ -207,6 +181,10 @@ related:
 - `S07` `verify:` `just check-types` -> `pass`
 - `S07` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
 - `S07` `verify:` `python -m dev.docs.build --single-page technical/topics/runtime-tui-and-agent-harness` -> `pass`
+- `S08` `A` `refs/heads/wip/main-worktree-harness-rename-20261015`
+- `S08` `M` `refs/heads/main`
+- `S08` `verify:` `git -C Y:/code/cadrumo-worktrees/main show --stat 8c6fa6d561 (230 files preserved)` -> `pass`
+- `S08` `by:` `orchestrator`
 
 ## Notes
 
@@ -218,3 +196,4 @@ related:
 - `S06` The new gate immediately reported a real leftover: the installed-stdio test still named cadrumo://rule/cadrumo-operator-grounding to prove a resource read reaches no handler. The assertion is about the absent resources capability, so the URI became cadrumo://any/document.
 - `S07` The type gate's last diagnostic came from concurrent commit eb06cb0954, which renamed `_PROFILE_FIELD_WARNING_META` to `_PROFILE_FIELD_WARNING_LOCALE_KEYS` and left one test importing the old name; the two-line test repair is in this Step so the gate closes. native/CONTRACT.md's `SKILLS_DIR` and `RULES_DIR` removal is applied but left uncommitted: another session holds uncommitted profile-delete edits in that file. `dev/docs/tests/test_docs_catalogue_drift.py` fails for four how-to pages whose sources another session is editing; architecture/index.md, the page this plan changed, is in sync.
 - `S07` Fix-forward on the re-review: the serving scan now reads production sources only, through `dev.first_party_source.is_production_source,` so a test may name a retired channel to prove it answers `unknown_tool;` a new fixture proves a planted channel in a production module beside that test surface is still caught. A third check refuses a reintroduced `src/cadrumo_harness,` proven on a planted fixture. Separately, the seven `dev/mcp_eval` integration failures carried since S03 are fixed at their root: their `runtime_profile` fixtures bound the public CLI runner but not the injected fixture ports, so the product's own work-unit helper had no invocation.
+- `S08` S08 squash is built from the tui tree at the commit that records this Step; local main is not pushed (no PR, no CI, per user instruction).
