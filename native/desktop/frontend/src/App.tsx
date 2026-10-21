@@ -290,20 +290,19 @@ export function App({ host }: { host: Host }) {
     (update: SetStateAction<RecordFilters>) => {
       const next =
         typeof update === "function" ? update(filtersRef.current) : update;
-      const levelChanged = next.minLevel !== filtersRef.current.minLevel;
       filtersRef.current = next;
       setFilterOverride(next);
-      setLayout((current) => ({
-        ...current,
-        logLevel:
-          update === defaultFilters
-            ? null
-            : levelChanged
-              ? next.minLevel
-              : current.logLevel,
-      }));
+      if (update === defaultFilters)
+        setLayout((current) => ({ ...current, logLevel: null }));
     },
     [defaultFilters],
+  );
+  const selectLogLevel = useCallback(
+    (minLevel: number) => {
+      setFilters((current) => ({ ...current, minLevel }));
+      setLayout((current) => ({ ...current, logLevel: minLevel }));
+    },
+    [setFilters],
   );
   const docs = useRef<DocsFrameApi>(null);
   const terminals = useRef<Partial<Record<TerminalKind, TerminalApi>>>({});
@@ -1314,7 +1313,7 @@ export function App({ host }: { host: Host }) {
         group: "logs",
         icon: "logs",
         run: () => {
-          setFilters((f) => ({ ...f, minLevel: 3 }));
+          selectLogLevel(levelRank("ERROR"));
           openTab("logs", { toggle: false });
         },
       },
@@ -1647,6 +1646,7 @@ export function App({ host }: { host: Host }) {
       copy,
       paste,
       setFilters,
+      selectLogLevel,
       defaultFilters,
       setup,
       setupOffered,
@@ -1905,18 +1905,14 @@ export function App({ host }: { host: Host }) {
               level: (record.level ?? "INFO").toLowerCase(),
             }),
             enabled: !!record.level,
-            run: () =>
-              setFilters((f) => ({
-                ...f,
-                minLevel: Math.max(0, levelRank(record.level)),
-              })),
+            run: () => selectLogLevel(Math.max(0, levelRank(record.level))),
           },
         ],
         at,
         pointer,
       );
     },
-    [openMenu, t, copy, copyLogs, setFilters],
+    [openMenu, t, copy, copyLogs, setFilters, selectLogLevel],
   );
 
   const searchDocs: DocsSearch = useMemo(
@@ -2850,6 +2846,7 @@ export function App({ host }: { host: Host }) {
                       filters={filters}
                       defaultFilters={defaultFilters}
                       setFilters={setFilters}
+                      onLevelChange={selectLogLevel}
                       onMenu={recordMenu}
                       onCopy={copyLogs}
                       onExport={(text) => void exportLogs(text)}

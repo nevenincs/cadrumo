@@ -2,9 +2,12 @@ import { expect, test, type Page } from "@playwright/test";
 import { seedLayout } from "../support/layout";
 import { openLogFilters, openPanelTab, panelToggle } from "../support/panel";
 import { label } from "../support/strings";
+import type { LogLevel } from "../../src/ipc/contract";
 
-const open = (page: Page) =>
-  page.goto("/scenarios.html?scenario=user-profile&latency=0&bar=off");
+const open = (page: Page, logLevel: LogLevel = "INFO") =>
+  page.goto(
+    `/scenarios.html?scenario=user-profile&latency=0&bar=off&logLevel=${logLevel}`,
+  );
 const rail = (page: Page, key: string) =>
   page.locator(".rail").getByRole("button", { name: label(key), exact: true });
 const saved = (page: Page) =>
@@ -114,6 +117,84 @@ for (const level of ["0", "2", "4"]) {
     await expect(page.locator("section.panel")).toBeHidden();
   });
 }
+
+for (const selection of ["errors", "record"] as const) {
+  test(`${selection} pins an explicit log level even when it matches the host default`, async ({
+    page,
+  }) => {
+    const selectedLevel = selection === "errors" ? 3 : 1;
+    await open(page, selection === "errors" ? "ERROR" : "INFO");
+    await openPanelTab(page, "logs");
+    await openLogFilters(page);
+    const minimum = page.getByLabel(label("desktop.logs.minimum_level"), {
+      exact: true,
+    });
+    await expect(minimum).toHaveValue(String(selectedLevel));
+    await expect.poll(() => saved(page)).toMatchObject({ logLevel: null });
+    await page.keyboard.press("Escape");
+    if (selection === "errors") {
+      await page.keyboard.press("Control+Shift+k");
+      await page
+        .locator(".palette")
+        .getByRole("combobox", { name: label("desktop.palette.label") })
+        .fill(label("desktop.action.logs_errors"));
+      await page
+        .getByRole("listbox")
+        .getByRole("option", {
+          name: label("desktop.action.logs_errors"),
+          exact: true,
+        })
+        .click();
+    } else {
+      await page.locator('.record[data-seq="4"]').click({ button: "right" });
+      await page
+        .getByRole("menuitem", {
+          name: label("desktop.menu.only_level", { level: "info" }),
+          exact: true,
+        })
+        .click();
+    }
+    await expect
+      .poll(() => saved(page))
+      .toMatchObject({ logLevel: selectedLevel });
+    await open(page, "DEBUG");
+    await openPanelTab(page, "logs");
+    await openLogFilters(page);
+    await expect(minimum).toHaveValue(String(selectedLevel));
+    await page
+      .getByRole("button", {
+        name: label("desktop.action.logs_reset"),
+        exact: true,
+      })
+      .click();
+    await expect(minimum).toHaveValue("0");
+    await expect.poll(() => saved(page)).toMatchObject({ logLevel: null });
+    await page.reload();
+    await openLogFilters(page);
+    await expect(minimum).toHaveValue("0");
+  });
+}
+
+test("text and logger filters keep following the host default until a level is selected", async ({
+  page,
+}) => {
+  await open(page);
+  await openPanelTab(page, "logs");
+  await page
+    .getByRole("searchbox", { name: label("desktop.logs.filter"), exact: true })
+    .fill("Workbench");
+  await openLogFilters(page);
+  await page
+    .getByLabel(label("desktop.logs.logger"), { exact: true })
+    .selectOption({ index: 1 });
+  await expect.poll(() => saved(page)).toMatchObject({ logLevel: null });
+  await open(page, "WARNING");
+  await openPanelTab(page, "logs");
+  await openLogFilters(page);
+  await expect(
+    page.getByLabel(label("desktop.logs.minimum_level"), { exact: true }),
+  ).toHaveValue("2");
+});
 
 test("calendar page and list view survive reload", async ({ page }) => {
   await page.setViewportSize({ width: 720, height: 900 });

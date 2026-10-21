@@ -12,6 +12,7 @@ import type {
   DesktopLanguage,
   HostFailure,
   LogBatch,
+  LogLevel,
   ManagerStatus,
   SignInSignal,
   SignInStatus,
@@ -81,6 +82,8 @@ export type ScenarioHostOptions = {
   /** Keep the log growing: a batch of records every this many milliseconds
    * after the backlog, as a process writing its log sends them. */
   logFeedMs?: number;
+  /** The default minimum level reported by the host environment. */
+  logLevel?: LogLevel;
   /** Another shape of the fixture calendar: everything behind the day it
    * was evaluated on, everything ahead, that day inside a month, or the
    * turn of a year with many windows open at once. */
@@ -546,7 +549,7 @@ export function scenarioHost(
         return Promise.reject(failure("environment_failed", "environment"));
       return Promise.resolve({
         outputLanguage: options.language,
-        logLevel: "INFO",
+        logLevel: options.logLevel ?? "INFO",
         docs:
           new URLSearchParams(window.location.search).get("docs") === "none"
             ? { state: "notBundled" }

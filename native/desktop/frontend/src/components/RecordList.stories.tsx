@@ -31,6 +31,9 @@ function View({ records, sourceStates, dropped, filters: initial }: Args) {
         dropped={dropped}
         filters={filters}
         setFilters={setFilters}
+        onLevelChange={(minLevel) =>
+          setFilters((current) => ({ ...current, minLevel }))
+        }
         onMenu={() => undefined}
         shown
       />

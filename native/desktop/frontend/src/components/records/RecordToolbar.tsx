@@ -29,6 +29,7 @@ export function RecordToolbar({
   filters,
   defaultFilters,
   setFilters,
+  onLevelChange,
   filterInput,
   follow,
   onFollow,
@@ -42,6 +43,7 @@ export function RecordToolbar({
   filters: RecordFilters;
   defaultFilters: RecordFilters;
   setFilters: (filters: RecordFilters) => void;
+  onLevelChange: (minLevel: number) => void;
   filterInput: RefObject<HTMLInputElement | null>;
   follow: boolean;
   onFollow: () => void;
@@ -135,12 +137,7 @@ export function RecordToolbar({
               <NativeSelect
                 aria-label={t("desktop.logs.minimum_level")}
                 value={filters.minLevel}
-                onChange={(event) =>
-                  setFilters({
-                    ...filters,
-                    minLevel: Number(event.target.value),
-                  })
-                }
+                onChange={(event) => onLevelChange(Number(event.target.value))}
               >
                 <option value={levelRank("DEBUG")}>
                   {t("desktop.logs.level_all")}

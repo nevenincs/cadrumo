@@ -138,6 +138,7 @@ export const RecordList = memo(function RecordList({
   filters,
   defaultFilters = DEFAULT_FILTERS,
   setFilters,
+  onLevelChange,
   onMenu,
   onCopy,
   onExport,
@@ -151,6 +152,7 @@ export const RecordList = memo(function RecordList({
   filters: RecordFilters;
   defaultFilters?: RecordFilters;
   setFilters: (filters: RecordFilters) => void;
+  onLevelChange: (minLevel: number) => void;
   onMenu: (request: RecordMenuRequest) => void;
   onCopy?: (text: string) => void;
   onExport?: (text: string) => void;
@@ -637,6 +639,7 @@ export const RecordList = memo(function RecordList({
         filters={filters}
         defaultFilters={defaultFilters}
         setFilters={setFilters}
+        onLevelChange={onLevelChange}
         filterInput={filterInput}
         follow={follow}
         onFollow={() => {

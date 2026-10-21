@@ -8,6 +8,7 @@ import { identity } from "virtual:desktop-content";
 import { port as docsPort } from "virtual:docs-fixture";
 import { App } from "../App";
 import type { DocsLanguage } from "../ipc/contract";
+import { LOG_LEVELS } from "../shell/records";
 import "./index.css";
 import { ScenarioBar, type HostCallLine } from "./ScenarioBar";
 import {
@@ -59,6 +60,7 @@ function readParams() {
     logRecords: Math.max(0, Math.trunc(Number(params.get("records")) || 0)),
     // A batch of records every this many milliseconds, for a log that grows.
     logFeedMs: Math.max(0, Math.trunc(Number(params.get("feed")) || 0)),
+    logLevel: LOG_LEVELS.find((level) => level === params.get("logLevel")),
     // Another shape of the fixture calendar, for where its mark for the
     // evaluated day stands.
     calendar: ((shape) =>
@@ -133,6 +135,7 @@ function Scenarios() {
         : null,
       logRecords: initial.logRecords,
       logFeedMs: initial.logFeedMs,
+      logLevel: initial.logLevel,
       calendar: initial.calendar,
       agentStream: initial.agentStream,
       agentAsks: initial.agentAsks,
