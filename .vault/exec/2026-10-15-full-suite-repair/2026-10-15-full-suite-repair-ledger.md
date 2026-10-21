@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ab555069bc39d57ec691fc99b008f148b8dfb2664b3eced46ae713564056f66'
+body_hash: 'sha256:35e5f9434678a34768db8a7ff3cf184179e3f3b7a8c05c47042d65b80a34b5c5'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
@@ -1492,6 +1492,8 @@ related:
 - `S04` `verify:` `current-import-worker7` -> `pass`
 - `S04` `verify:` `explicit-main-dotenv-and-whole-loader` -> `pass`
 - `S04` `verify:` `complete-windows-lane` -> `fail`
+- `S04` `verify:` `windows-console-interrupt-and-native-io` -> `pass`
+- `S04` `verify:` `msi-cmake-prerequisites-and-recipe-controls` -> `pass`
 
 ## Notes
 
@@ -1547,3 +1549,4 @@ related:
 - `S04` Original main run completed57973:57381pass241skip177fail174error; all351 outcomes mapped and original red receipt retained. Eight scratch cleanup messages remain unresolved; DACL fixture lifetime repair awaits native proof. Corpus configured in ignored local env and canonical71pass; fresh dotenv1pass. Docs budget095f1f8401 passes18 controls. Migration109 historical outcomes48retired61moved pending, no pass credit. Captured host, Windows, docs, browser, capabilities, current migration, native and static work remain; S03/S04 open.
 - `S04` Capturedfive4pass1fail retained; final current TUI module1pass after reviewed fixture-only admission/privacy correction ab32a19878. Retired custody warm admission1fdb2aa9ad and external guarded warmup26fb72a1b5 fresh3pass. Current4858module canonical metadata unchanged,7worker casespass. ExternalPO3ee542eb96 preserved; only2Catalan forms corrected7741844772 via canonical writer. Windows1085selected active; browser/docs/migration/capability/native/static remain pending. S03/S04 open.
 - `S04` 54ce4f231d: main dotenv bridge loads163 persisted keys; live opt-ins disabled and seven AEAT credential fields unconfigured, no secret values copied or printed. Whole env-loader20PASS0.47s. Windows run20261021T150712.294250Z-pytest-61236-043fb394 exits1065PASS9FAIL2SKIP9setupERROR/1085selected6792.44s; failures assigned,34scratch entries retained, quiet shutdown proof and remaining gates pending. S03/S04 remain open.
+- `S04` a040d6f6aa fixes confirmed Ctrl+C native-wait hang: unchanged1FAIL2PASS plus30stacks, then whole11PASS16.03s with supervised2.85s and original ignore control intact. 23b4c2a9be provisions MSI artifacts via CMake-only component preset; configure/buildPASS and40recipechecksPASS11.41s. Real WiX behavior, Windows fixture repairs, full payload ON build and other gates remain pending; S03/S04 open.
