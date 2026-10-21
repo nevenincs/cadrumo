@@ -1,10 +1,12 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -141,7 +143,7 @@ export function ManageProfiles({
         }}
       >
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="wrap-anywhere">
             {t(
               review
                 ? "desktop.account.manage.delete_title"
@@ -188,14 +190,14 @@ export function ManageProfiles({
         )}
         {review ? (
           <form
-            className="grid gap-4"
+            className="grid min-w-0 gap-4"
             onSubmit={(event) => {
               event.preventDefault();
               void remove();
             }}
           >
-            <div className="grid gap-2">
-              <Label htmlFor={confirmationId}>
+            <div className="grid min-w-0 gap-2">
+              <Label htmlFor={confirmationId} className="wrap-anywhere">
                 {t("desktop.account.manage.confirm_name", {
                   name: review.name,
                 })}
@@ -214,16 +216,16 @@ export function ManageProfiles({
               htmlFor={acknowledgementId}
               className="flex items-start gap-2"
             >
-              <input
+              <Checkbox
                 id={acknowledgementId}
-                type="checkbox"
+                className="mt-1"
                 checked={acknowledged}
                 disabled={busy}
                 onChange={(event) => setAcknowledged(event.target.checked)}
               />
               {t("desktop.account.manage.acknowledge")}
             </Label>
-            <div className="flex justify-end gap-2">
+            <DialogFooter>
               <Button
                 variant="ghost"
                 type="button"
@@ -240,30 +242,30 @@ export function ManageProfiles({
               >
                 {t("desktop.account.manage.delete")}
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid min-w-0 gap-4">
             {!list ? (
-              <p role="status">
-                {t(
-                  error
-                    ? "desktop.signin.profiles_unread"
-                    : "desktop.account.manage.loading",
-                )}
-              </p>
+              !error && (
+                <p role="status">{t("desktop.account.manage.loading")}</p>
+              )
             ) : !list.complete ? (
-              <Alert tone="warning">
-                {t("desktop.signin.profiles_unread")}
-              </Alert>
+              !error && (
+                <Alert tone="warning">
+                  {t("desktop.signin.profiles_unread")}
+                </Alert>
+              )
             ) : (
-              <ul className="grid gap-2 overflow-y-auto">
+              <ul className="grid min-w-0 gap-2 overflow-y-auto">
                 {list.profiles.map((profile) => (
                   <li
                     key={profile.name}
-                    className="flex items-center justify-between gap-3 rounded-md border p-3"
+                    className="flex min-w-0 items-center justify-between gap-3 rounded-md border p-3"
                   >
-                    <span className="min-w-0 break-words">{profile.name}</span>
+                    <span className="min-w-0 flex-1 wrap-anywhere">
+                      {profile.name}
+                    </span>
                     <Button
                       variant="outline"
                       size="sm"

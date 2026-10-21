@@ -2,6 +2,7 @@ import { useId, useState, type FormEvent } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
@@ -293,10 +294,9 @@ function IssueForm({
         {t("desktop.automation_access.issue_lead")}
       </p>
       <div className="flex items-start gap-2">
-        <input
+        <Checkbox
           id={taxId}
-          type="checkbox"
-          className="mt-1 size-icon-sm shrink-0 accent-primary"
+          className="mt-1"
           checked={taxValues}
           disabled={issuing}
           onChange={(event) => setTaxValues(event.currentTarget.checked)}
