@@ -375,6 +375,7 @@ def test_admin_uses_the_actual_typed_service_request_and_bounded_wire(tmp_path: 
 @pytest.mark.parametrize("action", ["catalog", "status"])
 def test_admin_observes_the_same_bounded_read_after_its_busy_answer(action: AdminAction) -> None:
     expected_action = action
+
     class DelayedRead:
         def __init__(self) -> None:
             self.release = Event()
