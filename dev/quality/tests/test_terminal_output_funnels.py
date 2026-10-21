@@ -7,6 +7,9 @@ call, or through a named funnel below whose argument is already encoded output
 or a machine protocol line on a supervision pipe. Writes through a stream
 variable inside a funnel (``target.write``) are the funnels themselves and are
 covered by their behaviour tests.
+
+Full-screen Textual frames are filtered rather than encoded, by the line filter
+``QuietApp`` installs, so every shipped Textual app must derive from it.
 """
 
 from __future__ import annotations
@@ -103,14 +106,40 @@ def _sinks(source: str, path: str) -> list[_Sink]:
     return found
 
 
-def _shipped_sinks() -> list[_Sink]:
-    sinks: list[_Sink] = []
+def _shipped_sources() -> list[tuple[str, str]]:
+    sources: list[tuple[str, str]] = []
     for relative in repository_files(REPO_ROOT, under=_SHIPPED_PACKAGES):
         parts = PurePosixPath(relative).parts
-        if not relative.endswith(".py") or "tests" in parts:
-            continue
-        sinks.extend(_sinks((REPO_ROOT / relative).read_text(encoding=UTF_8), relative))
-    return sinks
+        if relative.endswith(".py") and "tests" not in parts:
+            sources.append((relative, (REPO_ROOT / relative).read_text(encoding=UTF_8)))
+    return sources
+
+
+def _shipped_sinks() -> list[_Sink]:
+    return [sink for relative, source in _shipped_sources() for sink in _sinks(source, relative)]
+
+
+def _direct_textual_apps(source: str) -> list[str]:
+    """Classes subclassing Textual's ``App`` directly, bypassing ``QuietApp``'s control filter."""
+    tree = ast.parse(source)
+    imports_app = any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "textual.app"
+        and any(alias.name == "App" and alias.asname is None for alias in node.names)
+        for node in ast.walk(tree)
+    )
+    if not imports_app:
+        return []
+    return [
+        node.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ClassDef) and any(_base_name(base) == "App" for base in node.bases)
+    ]
+
+
+def _base_name(base: ast.expr) -> str | None:
+    generic = base.value if isinstance(base, ast.Subscript) else base
+    return generic.id if isinstance(generic, ast.Name) else None
 
 
 def test_shipped_terminal_writes_are_encoded_or_named_funnels() -> None:
@@ -169,3 +198,24 @@ def test_gate_ignores_stream_variable_writes_and_unrelated_echo() -> None:
     source = "def emit(target, logger):\n    target.write(text)\n    logger.echo(text)\n"
 
     assert _sinks(source, "fixture.py") == []
+
+
+def test_every_shipped_textual_app_inherits_the_terminal_control_filter() -> None:
+    direct = [
+        f"{relative}::{name}"
+        for relative, source in _shipped_sources()
+        for name in _direct_textual_apps(source)
+        if (relative, name) != ("src/cadrumo/entrypoints/tui/components/quiet_app.py", "QuietApp")
+    ]
+
+    assert not direct, "derive these Textual apps from QuietApp so their frames filter terminal controls: " + ", ".join(
+        direct
+    )
+
+
+def test_app_gate_flags_a_direct_textual_app_and_accepts_quiet_app() -> None:
+    direct = "from textual.app import App\n\nclass Workbench(App[None]):\n    pass\n"
+    quiet = "from .quiet_app import QuietApp\n\nclass Workbench(QuietApp[None]):\n    pass\n"
+
+    assert _direct_textual_apps(direct) == ["Workbench"]
+    assert _direct_textual_apps(quiet) == []

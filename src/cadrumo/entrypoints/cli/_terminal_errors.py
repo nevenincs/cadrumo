@@ -31,6 +31,7 @@ the flag probe (e.g. ``--format`` with no value) renders text.
 
 from __future__ import annotations
 
+import io
 import re
 import sys
 from collections.abc import Callable, Generator, Sequence
@@ -338,7 +339,13 @@ def _render_click_exception_text(exc: BaseException) -> None:
     # being told which option had rejected it.
     show = getattr(exc, "show", None)
     if callable(show):
-        show()
+        # A parse refusal quotes the rejected argument, which a script may have
+        # taken from imported data, so the rendering crosses the stderr funnel.
+        from .errors import write_stderr
+
+        rendered = io.StringIO()
+        show(file=rendered)
+        write_stderr(rendered.getvalue())
     else:
         sys.stderr.write(encode_terminal_text(str(exc)) + "\n")
 

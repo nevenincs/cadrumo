@@ -16,9 +16,13 @@ from ....core.config import Settings
 from ....core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
+from .terminal_controls import TerminalControlFilter
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from rich.console import RenderableType
+    from textual.filter import LineFilter
 
 
 class TuiRunFailedError(CadrumoError):
@@ -37,6 +41,9 @@ class QuietApp[ReturnType](App[ReturnType]):
     the screen on each blink, with no app-wide switch for that, so a text
     widget's cursor is held steady as the widget takes focus. On Windows the
     console input loop waits for input instead of waking every 100 ms.
+
+    Every rendered line also passes :class:`TerminalControlFilter`, so text an
+    operator imported cannot carry live terminal controls into the frame.
     """
 
     DEFER_TERMINAL_READY: ClassVar[bool] = False
@@ -51,6 +58,8 @@ class QuietApp[ReturnType](App[ReturnType]):
         # in the CLI, so it keeps colour here.
         if "NO_COLOR" in os.environ and not Settings().no_color:
             del os.environ["NO_COLOR"]
+        # One instance for the app's lifetime: Textual caches filtered strips per filter object.
+        self._terminal_control_filter = TerminalControlFilter()
         super().__init__(ansi_color=True if os.environ.get("TERM_PROGRAM") == "cadrumo" else None)
         self._terminal_presented = False
 
@@ -142,6 +151,11 @@ class QuietApp[ReturnType](App[ReturnType]):
 
                 return QuietWindowsDriver
         return driver
+
+    @override
+    def get_line_filters(self) -> Sequence[LineFilter]:
+        """Apply Textual's filters, then remove terminal controls carried by displayed text."""
+        return [*super().get_line_filters(), self._terminal_control_filter]
 
     def on_descendant_focus(self, event: DescendantFocus) -> None:
         """Hold the cursor of the text widget taking focus steady."""

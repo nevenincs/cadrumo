@@ -14,6 +14,7 @@ exercised end to end.
 
 from __future__ import annotations
 
+import io
 from collections.abc import Iterator
 from typing import cast, override
 
@@ -108,8 +109,10 @@ def test_the_click_exception_funnel_calls_the_renderer_rather_than_writing_the_b
         def __init__(self) -> None:
             self.rendered = False
 
-        def show(self) -> None:
+        def show(self, file: io.StringIO | None = None) -> None:
             self.rendered = True
+            if file is not None:
+                file.write("Error: rendered\n")
 
         @override
         def __str__(self) -> str:
@@ -123,3 +126,19 @@ def test_the_click_exception_funnel_calls_the_renderer_rather_than_writing_the_b
         "the funnel wrote the bare message instead of calling the exception's renderer, so "
         "every parse refusal loses its prefix, usage block, hint, and parameter name"
     )
+
+
+def test_a_parse_refusal_quoting_terminal_controls_reaches_stderr_inert(capsys: pytest.CaptureFixture[str]) -> None:
+    """The rejected value a refusal echoes is rendered with its controls visibly escaped."""
+    escape, bell, override_mark = chr(0x1B), chr(0x07), chr(0x202E)
+    with override_settings(cadrumo_output_language=OutputLanguage.EN.value):
+        clear_output_language_cache()
+        with pytest.raises(typer.BadParameter) as excinfo:
+            parse_decimal_amount(f"1{escape}]52;c;eA=={bell}{override_mark}", label="taxable-base", signed=False)
+
+        _render_click_exception_text(excinfo.value)
+
+    written = capsys.readouterr().err
+    assert not {escape, bell, override_mark} & set(written)
+    assert "taxable-base" in written
+    assert "1\\u001b]52;c;eA==\\u0007\\u202e" in written

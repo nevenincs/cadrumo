@@ -60,3 +60,22 @@ def encode_terminal_text(text: str) -> str:
 def encode_terminal_field(value: str) -> str:
     r"""Return one untrusted value with every control, including ``\n`` and ``\t``, escaped."""
     return value.translate(_FIELD_TABLE)
+
+
+_STRIP_TABLE: dict[int, None] = {codepoint: None for codepoint in _FIELD_TABLE}
+
+
+def strip_terminal_controls(text: str) -> str:
+    """Return ``text`` without the characters :func:`encode_terminal_field` would escape.
+
+    For a cell-measured surface such as a full-screen frame, whose layout was
+    computed before the text reaches the terminal: every removed character
+    occupies zero cells, so deleting it leaves that geometry exact, where a
+    visible escape would widen the line the layout already placed.
+    """
+    return text.translate(_STRIP_TABLE)
+
+
+def has_terminal_controls(text: str) -> bool:
+    """Report whether :func:`strip_terminal_controls` would change ``text``."""
+    return not _STRIP_TABLE.keys().isdisjoint(map(ord, text))

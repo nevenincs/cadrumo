@@ -2980,6 +2980,7 @@
         "cadrumo.entrypoints.tui.components.language",
         "cadrumo.entrypoints.tui.components.quiet_app",
         "cadrumo.entrypoints.tui.components.status",
+        "cadrumo.entrypoints.tui.components.terminal_controls",
         "cadrumo.entrypoints.tui.components.theme",
         "cadrumo.entrypoints.tui.components.widgets",
         "cadrumo.entrypoints.tui.components.workspace_host",
