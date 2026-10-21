@@ -5,7 +5,7 @@ tags:
 date: '2026-10-21'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ca9e30ee5432d70d8295501de63c19fdc4f5c2517e21be46ea94163a6658c9f'
+body_hash: 'sha256:31c7c8db715d74060d0fc4e47c88aecc44ab37a9a2323ad5cf9f35277dc404c1'
 related:
   - "[[2026-10-21-agent-harness-plan]]"
 ---
@@ -199,6 +199,14 @@ related:
 - `S07` `verify:` `pytest dev/audit/tests/test_dead_code_scan.py dev/audit/tests/test_dead_code.py src/cadrumo_agent_service/host/tests/test_launch_environment.py` -> `pass`
 - `S07` `verify:` `pytest src/cadrumo/application/overview/tests/test_calendar_profile_context.py` -> `pass`
 - `S07` `by:` `implementation-engineer-high`
+- `S07` `M` `dev/quality/tests/test_no_authored_agent_content.py`
+- `S07` `M` `dev/mcp_eval/tests/test_response_provenance_golden.py`
+- `S07` `M` `dev/mcp_eval/tests/test_under_declaration_golden.py`
+- `S07` `verify:` `pytest dev/quality/tests src/cadrumo_mcp dev/mcp_eval` -> `pass`
+- `S07` `verify:` `pytest -m integration src/cadrumo_mcp dev/mcp_eval` -> `pass`
+- `S07` `verify:` `just check-types` -> `pass`
+- `S07` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S07` `verify:` `python -m dev.docs.build --single-page technical/topics/runtime-tui-and-agent-harness` -> `pass`
 
 ## Notes
 
@@ -209,3 +217,4 @@ related:
 - `S05` The type gate's single diagnostic and the one failing operation-contract test name files outside this plan: `src/cadrumo/application/overview/tests/test_calendar_profile_context.py` (its import was removed by concurrent commit eb06cb0954) and `src/cadrumo_runtime/host/session_watch.py` (commit 91c2bc5231). `docs/technical/**` keeps the old package name on purpose: those pages are dated snapshot analyses of code that no longer exists, so renaming the path in them would misstate what was analysed. The docs catalogue generator could not run whole (it would prune 705 committed catalogues), so the three architecture catalogues were refreshed with its per-page mode, which marks the changed paragraph fuzzy and leaves the translation to a later batch.
 - `S06` The new gate immediately reported a real leftover: the installed-stdio test still named cadrumo://rule/cadrumo-operator-grounding to prove a resource read reaches no handler. The assertion is about the absent resources capability, so the URI became cadrumo://any/document.
 - `S07` The type gate's last diagnostic came from concurrent commit eb06cb0954, which renamed `_PROFILE_FIELD_WARNING_META` to `_PROFILE_FIELD_WARNING_LOCALE_KEYS` and left one test importing the old name; the two-line test repair is in this Step so the gate closes. native/CONTRACT.md's `SKILLS_DIR` and `RULES_DIR` removal is applied but left uncommitted: another session holds uncommitted profile-delete edits in that file. `dev/docs/tests/test_docs_catalogue_drift.py` fails for four how-to pages whose sources another session is editing; architecture/index.md, the page this plan changed, is in sync.
+- `S07` Fix-forward on the re-review: the serving scan now reads production sources only, through `dev.first_party_source.is_production_source,` so a test may name a retired channel to prove it answers `unknown_tool;` a new fixture proves a planted channel in a production module beside that test surface is still caught. A third check refuses a reintroduced `src/cadrumo_harness,` proven on a planted fixture. Separately, the seven `dev/mcp_eval` integration failures carried since S03 are fixed at their root: their `runtime_profile` fixtures bound the public CLI runner but not the injected fixture ports, so the product's own work-unit helper had no invocation.

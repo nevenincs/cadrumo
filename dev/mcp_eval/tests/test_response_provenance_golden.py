@@ -42,7 +42,9 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider, bind_cli_fixture_ports
 from cadrumo.tests.cli_envelope import require_schema_envelope
+from cadrumo.tests.cli_fixture_ports import CliInvocation
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import (
     bind_public_cli_runner,
     invoke_cached_cli,
@@ -61,10 +63,21 @@ _REVISION = "2019-y-siguientes"
 
 
 @pytest.fixture
-def runtime_profile(tmp_path: Path, run_cadrumo_cli: Callable[..., Result]) -> Iterator[TestRuntimeProfile]:
-    """Real-session backend (real KEK/DEK, real SQLite per active bucket)."""
+def runtime_profile(
+    tmp_path: Path,
+    run_cadrumo_cli: Callable[..., Result],
+    cli_world_provider: CliWorldProvider,
+    invoke_cli: CliInvocation,
+) -> Iterator[TestRuntimeProfile]:
+    """Real-session backend (real KEK/DEK, real SQLite per active bucket).
+
+    The product's own CLI helpers reach the operator through the injected
+    fixture ports, so this fixture binds them as the owning package's conftest
+    does; without them the work-unit helper has no invocation.
+    """
     with (
         bind_public_cli_runner(run_cadrumo_cli),
+        bind_cli_fixture_ports(cli_world_provider, invoke_cli),
         runtime_cli_profile(
             tmp_path=tmp_path,
             label="Response-provenance golden-eval test profile",

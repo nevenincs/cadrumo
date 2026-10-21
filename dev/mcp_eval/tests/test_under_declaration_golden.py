@@ -54,8 +54,10 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider, bind_cli_fixture_ports
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
+from cadrumo.tests.cli_fixture_ports import CliInvocation
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import (
     bind_public_cli_runner,
     invoke_cached_cli,
@@ -76,10 +78,21 @@ _EXPECTED_LEGAL_REFS = ("ley-27-2014:art-10", "ley-27-2014:art-30")
 
 
 @pytest.fixture
-def runtime_profile(tmp_path: Any, run_cadrumo_cli: Callable[..., Result]) -> Iterator[TestRuntimeProfile]:
-    """Real-session backend (real KEK/DEK, real SQLite per active bucket)."""
+def runtime_profile(
+    tmp_path: Any,
+    run_cadrumo_cli: Callable[..., Result],
+    cli_world_provider: CliWorldProvider,
+    invoke_cli: CliInvocation,
+) -> Iterator[TestRuntimeProfile]:
+    """Real-session backend (real KEK/DEK, real SQLite per active bucket).
+
+    The product's own CLI helpers reach the operator through the injected
+    fixture ports, so this fixture binds them as the owning package's conftest
+    does; without them ``create_modelo_work_unit_via_cli`` has no invocation.
+    """
     with (
         bind_public_cli_runner(run_cadrumo_cli),
+        bind_cli_fixture_ports(cli_world_provider, invoke_cli),
         runtime_cli_profile(
             tmp_path=tmp_path,
             label="Under-declaration golden-eval test profile",

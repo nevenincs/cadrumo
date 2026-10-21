@@ -10,12 +10,19 @@ The first is authored prose returning to the shipped tree: a reviewed
 ``_data/agent`` subtree, a ``SKILL.md`` document, or a directory of persona,
 rule or skill markdown under a shipped package. The second is a serving
 channel for it: the retired ``harness_load`` tool, or the ``cadrumo://skill``
-and ``cadrumo://rule`` resource families the server no longer advertises.
+and ``cadrumo://rule`` resource families the server no longer advertises. A
+third case is the retired package itself: the service is ``cadrumo_mcp``, and a
+new ``cadrumo_harness`` beside it would carry neither name's contract.
 
-Both gates walk the filesystem under the shipped source roots. Neither asks
-Git what it tracks: an untracked file in a working tree is as shipped as a
-committed one once a wheel is built from it, and this repository's tooling
-reads the filesystem and its inclusion policy rather than a checkout's
+The content scan reads every path below a shipped root. The serving scan reads
+the production Python sources of those roots only, as
+:func:`dev.first_party_source.is_production_source` classifies them: a test may
+name a retired channel to prove it answers ``unknown_tool``, and a bundled data
+file is the content scan's subject rather than this one's.
+
+No gate here asks Git what it tracks: an untracked file in a working tree is as
+shipped as a committed one once a wheel is built from it, and this repository's
+tooling reads the filesystem and its inclusion policy rather than a checkout's
 history.
 """
 
@@ -30,7 +37,7 @@ from typing import Final
 import pytest
 
 from dev._paths import REPO_ROOT, UTF_8
-from dev.first_party_source import MCP_PACKAGE, PRODUCT_SOURCE_ROOTS, SERVICE_PACKAGE
+from dev.first_party_source import MCP_PACKAGE, PRODUCT_SOURCE_ROOTS, SERVICE_PACKAGE, is_production_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -38,6 +45,12 @@ _SHIPPED_ROOTS: Final[tuple[Path, ...]] = tuple(
     REPO_ROOT / root for root in (*PRODUCT_SOURCE_ROOTS, MCP_PACKAGE, SERVICE_PACKAGE)
 )
 """Every package a Cadrumo wheel ships, each read from the filesystem as it stands."""
+
+_SOURCE_ROOT: Final = REPO_ROOT / "src"
+"""The directory every shipped package sits in, where a retired package would reappear."""
+
+_RETIRED_PACKAGE: Final = "cadrumo_harness"
+"""The name the MCP service was shipped under while it carried authored agent content."""
 
 _SKILL_DOCUMENT: Final = "SKILL.md"
 """The file name a workflow skill is authored under; cadrumo-agent owns every one."""
@@ -49,8 +62,6 @@ _SERVING_TOKENS: Final = ("harness_load", "cadrumo://skill", "cadrumo://rule")
 """The retired floor tool and the two resource families that served skills and rules."""
 
 _PRUNED_DIRECTORIES: Final = frozenset({"__pycache__"})
-
-_PYTHON_SUFFIX: Final = ".py"
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,14 +113,32 @@ def authored_agent_content_findings(root: Path) -> tuple[AgentContentFinding, ..
     return tuple(findings)
 
 
+def retired_package_findings(source_root: Path) -> tuple[AgentContentFinding, ...]:
+    """Report a package directory below ``source_root`` named for the retired harness."""
+    return tuple(
+        AgentContentFinding(
+            path=_relative(parent / name, source_root),
+            reason=f"retired package {_RETIRED_PACKAGE!r}; the MCP service ships as 'cadrumo_mcp'",
+        )
+        for parent, directories, _files in _walk(source_root)
+        for name in directories
+        if name == _RETIRED_PACKAGE
+    )
+
+
 def skill_serving_findings(root: Path) -> tuple[AgentContentFinding, ...]:
-    """Report every Python module below ``root`` that names a retired skill or rule channel."""
+    """Report every production Python module below ``root`` that names a retired channel.
+
+    Test modules, their directories and bundled data are outside the scan: a
+    test names a retired channel to prove the service answers ``unknown_tool``
+    for it, which is evidence of the boundary rather than a breach of it.
+    """
     findings: list[AgentContentFinding] = []
     for parent, _directories, files in _walk(root):
         for name in files:
-            if not name.endswith(_PYTHON_SUFFIX):
-                continue
             path = parent / name
+            if not is_production_source(path, root=root):
+                continue
             source = path.read_text(encoding=UTF_8)
             for token in _SERVING_TOKENS:
                 if token in source:
@@ -123,7 +152,12 @@ def skill_serving_findings(root: Path) -> tuple[AgentContentFinding, ...]:
 
 
 def _modules_read(root: Path) -> int:
-    return sum(1 for _parent, _directories, files in _walk(root) for name in files if name.endswith(_PYTHON_SUFFIX))
+    return sum(
+        1
+        for parent, _directories, files in _walk(root)
+        for name in files
+        if is_production_source(parent / name, root=root)
+    )
 
 
 def _reported(findings: tuple[AgentContentFinding, ...]) -> str:
@@ -179,7 +213,9 @@ def test_the_content_gate_reports_an_authored_tree_planted_in_a_fixture(tmp_path
         ('_RULE_URI_PREFIX = "cadrumo://rule/"\n', "cadrumo://rule"),
     ],
 )
-def test_the_serving_gate_reports_a_channel_planted_in_a_fixture(tmp_path: Path, served: str, token: str) -> None:
+def test_the_serving_gate_reports_a_channel_planted_in_a_production_module(
+    tmp_path: Path, served: str, token: str
+) -> None:
     package = tmp_path / "cadrumo_mcp" / "mcp"
     package.mkdir(parents=True)
     (package / "operating_layer.py").write_text(served, encoding=UTF_8)
@@ -190,4 +226,41 @@ def test_the_serving_gate_reports_a_channel_planted_in_a_fixture(tmp_path: Path,
 
     assert [(finding.path, finding.reason) for finding in findings] == [
         ("operating_layer.py", f"serves authored agent content through {token!r}")
+    ]
+
+
+def test_the_serving_gate_leaves_the_test_surface_to_name_the_retired_channels(tmp_path: Path) -> None:
+    """A test proving a retired tool answers ``unknown_tool`` has to name it."""
+    package = tmp_path / "cadrumo_mcp" / "mcp"
+    tests = package / "tests"
+    tests.mkdir(parents=True)
+    removed = '_REMOVED_TOOLS = frozenset({"harness_load"})\n'
+    (tests / "test_installed_stdio.py").write_text(removed, encoding=UTF_8)
+    (tests / "support.py").write_text(removed, encoding=UTF_8)
+    (package / "conftest.py").write_text(removed, encoding=UTF_8)
+    (package / "test_inline_case.py").write_text(removed, encoding=UTF_8)
+
+    assert skill_serving_findings(package) == ()
+
+    # The same text in a production module beside them is still a finding.
+    (package / "runtime_adapter.py").write_text(removed, encoding=UTF_8)
+
+    assert [finding.path for finding in skill_serving_findings(package)] == ["runtime_adapter.py"]
+
+
+def test_no_retired_harness_package_sits_beside_the_shipped_ones() -> None:
+    assert _SOURCE_ROOT.is_dir(), f"{_SOURCE_ROOT} holds the shipped packages"
+    findings = retired_package_findings(_SOURCE_ROOT)
+
+    assert not findings, f"retired package under src:\n{_reported(findings)}"
+
+
+def test_the_package_gate_reports_a_retired_package_planted_in_a_fixture(tmp_path: Path) -> None:
+    (tmp_path / "cadrumo_mcp" / "mcp").mkdir(parents=True)
+    (tmp_path / _RETIRED_PACKAGE / "mcp").mkdir(parents=True)
+
+    findings = retired_package_findings(tmp_path)
+
+    assert [(finding.path, finding.reason) for finding in findings] == [
+        (_RETIRED_PACKAGE, f"retired package {_RETIRED_PACKAGE!r}; the MCP service ships as 'cadrumo_mcp'")
     ]
