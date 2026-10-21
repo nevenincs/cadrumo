@@ -5,7 +5,7 @@ tags:
 date: '2026-10-21'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:2ab8022634fbe8f2f47851219fa8054de5f1721991b71a3fe97b99f41ca8afb9'
+body_hash: 'sha256:ed9b8c0eae9828c4a4ba64e299615a82c8b34373fc041d32a94920f103aff485'
 related:
   - "[[2026-10-21-agent-harness-plan]]"
 ---
@@ -59,8 +59,31 @@ related:
 - `S02` `verify:` `pytest -m integration src/cadrumo_harness/mcp/tests/test_installed_stdio.py test_tool_annotations.py test_mcp_surface_pins.py test_mcp_surfaces.py` -> `pass`
 - `S02` `verify:` `ty check src/cadrumo_harness` -> `pass`
 - `S02` `by:` `implementation-engineer-high`
+- `S03` `D` `src/cadrumo_harness/_data`
+- `S03` `D` `src/cadrumo_harness/_resources.py`
+- `S03` `D` `src/cadrumo_harness/resources.py`
+- `S03` `D` `src/cadrumo_harness/_skill_metadata.py`
+- `S03` `D` `src/cadrumo_harness/workspace.py`
+- `S03` `D` `src/cadrumo_harness/tests`
+- `S03` `D` `dev/harness_data`
+- `S03` `D` `dev/agent_eval/tests/test_rule_surface_conformance.py`
+- `S03` `M` `dev/agent_eval/_runner.py`
+- `S03` `M` `dev/agent_eval/_models.py`
+- `S03` `M` `dev/agent_eval/tests/test_modelo_130_golden.py`
+- `S03` `M` `dev/packaging/tests/test_verdict_cache_not_distributed.py`
+- `S03` `M` `pyproject.toml`
+- `S03` `M` `.importlinter`
+- `S03` `M` `dev/quality/metadata/import_load_targets.json`
+- `S03` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
+- `S03` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S03` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S03` `verify:` `pytest src/cadrumo_harness dev/agent_eval` -> `pass`
+- `S03` `verify:` `pytest -n0 dev/packaging/tests/test_verdict_cache_not_distributed.py` -> `pass`
+- `S03` `verify:` `ty check src/cadrumo_harness dev/agent_eval` -> `pass`
+- `S03` `by:` `implementation-engineer-high`
 
 ## Notes
 
 - `S01` No skill or rule semantic changes found after the cadrumo-agent fork date (2026-10-16T09:18:40+02:00); last rules/skills commit before e4188cc067 was ca427b0666 (2026-10-15), which predates the fork. The only post-fork Cadrumo commit touching `src/cadrumo_harness/_data/agent` is 72cd94bc66, editing reference/command-operations.md only; that generated operation catalogue is explicitly out of scope per the plan (cadrumo-agent derives operation knowledge from MCP discovery) and no cadrumo-agent skill references it. No port was applicable; no cadrumo-agent file was edited.
 - `S01` Concurrent cadrumo-agent dirty files (rules/cadrumo-operator-operating-rules.md, skills/cadrumo-alta-contribuyente/SKILL.md, skills/cadrumo-calendario-fiscal/SKILL.md) were left untouched per instruction; no port was owed to them since no qualifying post-fork Cadrumo-side change existed.
+- `S03` Seven integration tests in `dev/agent_eval` `(test_under_declaration_golden.py,` `test_response_provenance_golden.py)` fail with 'CLI scenario requires the injected `invoke_cli` fixture'. No file on that failure path changed in this plan; the seam dates from the 2026-10-19 CLI-rename repair and belongs to the concurrent full-suite repair work.

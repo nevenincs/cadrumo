@@ -93,7 +93,6 @@ _SCAFFOLD: Final[dict[str, str]] = {
     "src/cadrumo/core/external_constants.toml": "placeholder = 1\n",
     "src/cadrumo_harness/__init__.py": "",
     "src/cadrumo_harness/py.typed": "",
-    "src/cadrumo_harness/_data/placeholder.json": "{}\n",
 }
 
 #: The build hook both targets declare. The subject carries the repository's own

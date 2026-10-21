@@ -3364,8 +3364,6 @@
       },
       "targets": [
         "cadrumo_harness",
-        "cadrumo_harness._resources",
-        "cadrumo_harness._skill_metadata",
         "cadrumo_harness.access",
         "cadrumo_harness.access.automation_key",
         "cadrumo_harness.mcp",
@@ -3388,9 +3386,7 @@
         "cadrumo_harness.mcp.runtime_admission",
         "cadrumo_harness.mcp.runtime_cleanup",
         "cadrumo_harness.mcp.server",
-        "cadrumo_harness.mcp.surfaces",
-        "cadrumo_harness.resources",
-        "cadrumo_harness.workspace"
+        "cadrumo_harness.mcp.surfaces"
       ]
     },
     "cadrumo_runtime": {
@@ -4078,9 +4074,6 @@
         "dev.env.temp_reaper",
         "dev.exit_codes",
         "dev.first_party_source",
-        "dev.harness_data",
-        "dev.harness_data.command_frontend_counterparts",
-        "dev.harness_data.command_operation_reference",
         "dev.identity",
         "dev.identity.__main__",
         "dev.identity._tree_scan",

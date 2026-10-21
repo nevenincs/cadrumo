@@ -52,7 +52,6 @@ def test_every_golden_scenario_passes_all_dimensions(scenario_path: Path) -> Non
     assert result.passed, f"{scenario_path.stem} failures: {result.failures}"
     assert result.trajectory_resolves
     assert result.lifecycle_ordered
-    assert result.skill_consistent
     assert result.provenance_present
     # No live dispatch is wired for this cross-scenario sweep, so the
     # response-provenance dimension holds trivially; the real dispatch + its

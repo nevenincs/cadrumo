@@ -470,7 +470,6 @@ include = [
   "src/cadrumo_harness/py.typed",
   "src/cadrumo_agent_service/py.typed",
   "src/cadrumo_agent_service/locales/**",
-  "src/cadrumo_harness/_data/**",
 ]
 
 # The published authority — the `authority.current.json` descriptor and the one

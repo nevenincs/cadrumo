@@ -23,8 +23,7 @@ lifecycle sequencing / cross-surface contradiction handling: when one surface
 correct move is to stop and report the disagreement — never to retry past it with a
 further mutating tool call. This is the enforcement surface for the
 ``cadrumo-operator-lifecycle-ordering`` rule's "Contradictions between surfaces are a stop, not
-a retry" section
-(``src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md``). This
+a retry" rule the operating agent carries. This
 pair follows the standalone ``check_*_scenario`` shape used by
 :class:`ExitCodeScenario`/:class:`ExitCodeVerdict` and
 :class:`UnderDeclarationScenario`/:class:`UnderDeclarationVerdict` rather
@@ -244,7 +243,6 @@ class GoldenResult(BaseModel):
     scenario: str = Field(min_length=1)
     trajectory_resolves: bool
     lifecycle_ordered: bool
-    skill_consistent: bool
     provenance_present: bool
     response_provenance_present: bool
     verification_grounded: bool
@@ -264,11 +262,10 @@ class GoldenResult(BaseModel):
 
     @property
     def _workflow_dimensions_passed(self) -> bool:
-        """Require the ordered workflow, skill, and evidence dimensions first."""
+        """Require the ordered workflow and evidence dimensions first."""
         return (
             self.trajectory_resolves
             and self.lifecycle_ordered
-            and self.skill_consistent
             and self.provenance_present
             and self.response_provenance_present
             and self.verification_grounded

@@ -18,7 +18,6 @@ owning product APIs.
 from __future__ import annotations
 
 import json
-import re
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -29,7 +28,6 @@ from pydantic import BaseModel, ConfigDict
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.json_contract import EnvelopeStatus, ResolvedActionArgument, ResolvedActionReference
 from cadrumo.core.toml import parse_toml
-from cadrumo_harness.resources import iter_skill_documents
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ._models import (
@@ -166,21 +164,6 @@ def load_scenario(path: Path) -> GoldenScenario:
 def _cli_form(command_key: str) -> str:
     """Render a registry command key as its ``aeat app ...`` CLI form."""
     return "aeat app " + command_key.replace(".", " ")
-
-
-def _skill_text(skill_name: str) -> str | None:
-    for skill in iter_skill_documents():
-        # Each skill's SKILL.md lives under skills/<skill_name>/SKILL.md.
-        if skill_name in _skill_path_parts(skill):
-            return skill.read_text(encoding=_UTF_8)
-    return None
-
-
-def _skill_path_parts(skill: object) -> set[str]:
-    # ``Traversable`` does not expose a parent reliably across backends; recover the
-    # owning skill directory name from the joined path string.
-    text = str(skill)
-    return set(text.replace("\\", "/").split("/"))
 
 
 def _resolve_revision(scenario: GoldenScenario) -> object:
@@ -389,29 +372,6 @@ def _check_declared_lifecycle_order(scenario: GoldenScenario, failures: list[str
     return False
 
 
-def _check_skill_consistency(scenario: GoldenScenario, failures: list[str]) -> bool:
-    """Assert the shipped skill playbook cites every verb the trajectory declares.
-
-    The operator follows the skill, so a trajectory verb the playbook never
-    mentions is a workflow the operator has no documented route to.
-    """
-    skill_text = _skill_text(scenario.skill_name)
-    if skill_text is None:
-        failures.append(f"skill '{scenario.skill_name}' not found among shipped skills")
-        return False
-    # Markdown wraps a single cited command across lines without changing its
-    # words. Normalize only within each existing backtick span; do not merge
-    # separate citations or accept a missing trajectory verb.
-    skill_text = re.sub(r"`([^`]+)`", lambda match: "`" + " ".join(match[1].split()) + "`", skill_text)
-    missing = [verb for verb in scenario.expected_trajectory if _cli_form(verb) not in skill_text]
-    if not missing:
-        return True
-    failures.append(
-        "skill playbook does not cite trajectory verbs: " + ", ".join(_cli_form(v) for v in missing),
-    )
-    return False
-
-
 def _iter_casillas(casillas: object) -> Iterable[object]:
     if isinstance(casillas, dict):
         return tuple(casillas.values())
@@ -455,8 +415,7 @@ def run_golden_scenario(
 
     Returns:
         A :class:`GoldenResult` whose ``passed`` is true only when the trajectory
-        resolves, follows the lifecycle order, is consistent with the shipped
-        skill, the revision's casillas carry provenance (when required), the
+        resolves, follows the lifecycle order, the revision's casillas carry provenance (when required), the
         RESPONSE payload's own observations carry that same provenance (when a
         live response was dispatched), no injected narration-faithfulness check
         hard-blocks (an advisory-only unfaithful check does not fail the
@@ -468,8 +427,6 @@ def run_golden_scenario(
     trajectory_resolves = _check_trajectory_resolution(scenario, valid_commands, failures)
 
     lifecycle_ordered = _check_declared_lifecycle_order(scenario, failures)
-
-    skill_consistent = _check_skill_consistency(scenario, failures)
 
     revision = _resolve_revision(scenario)
 
@@ -489,7 +446,6 @@ def run_golden_scenario(
         scenario=scenario.name,
         trajectory_resolves=trajectory_resolves,
         lifecycle_ordered=lifecycle_ordered,
-        skill_consistent=skill_consistent,
         provenance_present=provenance_present,
         response_provenance_present=response_provenance_present,
         verification_grounded=verification_grounded,
