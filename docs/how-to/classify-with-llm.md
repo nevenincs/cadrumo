@@ -40,8 +40,10 @@ To set up everything in one run, use:
 Setup installs the runtime with the platform package manager (winget on
 Windows, Homebrew on macOS), starts it, downloads a model for each reader
 role, loads the models, and verifies them. On Linux, install the runtime
-yourself. Without `--confirm`, setup stops before it installs anything. Steps
-that are already done are reported as unchanged. See
+yourself. Setup prints its download and installation plan before proceeding.
+The `--yes` option approves that plan; omit it to review and answer at the
+terminal. Non-interactive setup without `--yes` stops before installing
+anything. Steps that are already done are reported as unchanged. See
 [Install Cadrumo](../workstation-setup.md) for the whole sequence.
 
 Text reads use the `qwen3:1.7b` model by default. Scanned and image reads use
