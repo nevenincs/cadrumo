@@ -2061,6 +2061,9 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
       },
     );
     if (launched.verdict !== PASS) return;
+    // The host installs its sign-in state while startup assembles the workspace,
+    // so nothing is asked of it before the workspace has loaded, as in the main suite.
+    await session.waitDocs(60000);
     const authenticated = await check(
       "canonical-sign-in",
       "real password form signs in to the throwaway profile",
