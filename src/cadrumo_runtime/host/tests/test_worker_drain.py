@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
+from contextlib import closing
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -60,16 +61,19 @@ def test_drain_contains_worker_and_preserves_created_operation_for_recovery(tmp_
         try:
             assert win32event.WaitForSingleObject(retained_process_handle, 0) == win32event.WAIT_TIMEOUT
             opened = datetime.now(UTC)
-            with activate_session(
-                BucketSession.open_resumed(
-                    bucket_id=str(identity.binding.profile_id),
-                    dek=key,
-                    idle_minutes=15,
-                    opened_at=opened,
-                    idle_deadline=opened + timedelta(minutes=15),
-                    absolute_deadline=opened + timedelta(minutes=240),
-                    storage_root=root,
-                )
+            with (
+                closing(
+                    BucketSession.open_resumed(
+                        bucket_id=str(identity.binding.profile_id),
+                        dek=key,
+                        idle_minutes=15,
+                        opened_at=opened,
+                        idle_deadline=opened + timedelta(minutes=15),
+                        absolute_deadline=opened + timedelta(minutes=240),
+                        storage_root=root,
+                    )
+                ) as session,
+                activate_session(session),
             ):
                 profile_record = load_test_profile_record(identity.binding.profile_id, root=root)
             admitted = lease(identity)
