@@ -24,7 +24,6 @@ import sys
 from pathlib import Path
 
 from cadrumo.adapters.outbound.browser_runtime.installer import (
-    measure_browser_downloads,
     remove_browser_builds,
     run_browser_install,
 )
@@ -49,7 +48,6 @@ def browser_full_check() -> DependencyProbeReading:
     """Run the browser item's full check with the real adapters and return its reading."""
     item = PlaywrightBrowserItem(
         install=run_browser_install,
-        measure=measure_browser_downloads,
         launch=launch_headless_browser,
         remove_builds=remove_browser_builds,
         receipts=DependencyReceiptStore(dependency_receipts_root()),

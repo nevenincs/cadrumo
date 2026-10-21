@@ -16,7 +16,6 @@ import asyncio
 from dataclasses import dataclass
 
 from ..adapters.outbound.browser_runtime.installer import (
-    measure_browser_downloads,
     remove_browser_builds,
     run_browser_install,
 )
@@ -63,7 +62,6 @@ def build_dependency_registry_factory(
         spawn = spawn_runtime_server if owner_start is None else owner_started_spawner(owner_start, identity, loop)
         browser = PlaywrightBrowserItem(
             install=run_browser_install,
-            measure=measure_browser_downloads,
             launch=launch_headless_browser,
             remove_builds=remove_browser_builds,
             receipts=DependencyReceiptStore(dependency_receipts_root()),

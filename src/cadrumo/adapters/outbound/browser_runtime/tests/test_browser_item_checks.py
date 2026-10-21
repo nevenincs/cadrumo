@@ -30,7 +30,7 @@ from .....application.provisioning_browser import (
     browser_host_platform,
 )
 from .....application.provisioning_browser import required_browser_builds as pinned_builds
-from ..installer import measure_browser_downloads, remove_browser_builds, run_browser_install
+from ..installer import remove_browser_builds, run_browser_install
 from ..launch_check import launch_headless_browser
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -43,7 +43,6 @@ def _provisioned_root() -> Path:
 def _item(root: Path) -> PlaywrightBrowserItem:
     return PlaywrightBrowserItem(
         install=run_browser_install,
-        measure=measure_browser_downloads,
         launch=launch_headless_browser,
         remove_builds=remove_browser_builds,
         browsers_root=lambda: root,

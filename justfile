@@ -147,6 +147,15 @@ doctor-python:
 setup-browser:
     uv run --no-sync python -m dev.env.playwright_setup
 
+# Regenerate the browser archive pins after a Playwright upgrade: the size and
+# SHA-256 of every archive `playwright install chromium` downloads, per
+# platform. The product's browser setup accepts no other bytes. `--check`
+# compares the table with the locked driver without downloading.
+[doc('Pin the browser archives the bundled Playwright downloads.')]
+[group('setup')]
+pin-browser-archives *args:
+    uv run --no-sync python -m dev.env.browser_archive_pins {{args}}
+
 # Verify the managed browser with the browser setup item's own full check,
 # the one `dependencies.verify` runs: required builds, receipt digests and a
 # headless launch whose version must match the bundled Playwright manifest.

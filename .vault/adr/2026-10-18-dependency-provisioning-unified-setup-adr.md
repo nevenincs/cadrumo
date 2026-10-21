@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#dependency-provisioning'
 date: '2026-10-18'
-modified: '2026-10-19'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:f643ea4bbdcdd98db2b0d672017f795a4bafb2447b52ce4b6ac692fcacf8bac9'
+body_hash: 'sha256:39e583826ffc95994dae2e25391172a282db3687fde000e0f03e0c41e1275389'
 related:
   - "[[2026-10-18-dependency-provisioning-mechanisms-reference]]"
   - "[[2026-06-15-dependency-provisioning-adr]]"
@@ -36,7 +36,7 @@ Pieces exist for each dependency, but they do not form one system (`2026-10-18-d
 - The shell holds no runtime connection. Its narrow exceptions run through token-checked host commands and the held person bridge (`2026-10-04-desktop-shell-adr`, language amendment of 2026-10-15).
 - The Google client is a fixed package fact with `drive.file` only, and a token is bound to its client (`2026-10-04-google-app-identity-adr`).
 - Browsers, models and the model runtime are not package data. The model runtime is an external program with its own process tree (`2026-10-13-application-distribution-native-bundle-llm-extra-adr`, `2026-10-17-single-binary-process-tree-adr` constraint 7). Playwright's Python package and driver are being added to the native bundle in a parallel lane; this record assumes they are present.
-- Ollama verifies layer digests and resumes partial pulls itself. Playwright installs per build and publishes no content hashes. Cadrumo can check what it installed, but cannot prove where a download came from beyond HTTPS to the publisher's hosts.
+- Ollama verifies layer digests and resumes partial pulls itself. Playwright installs per build and publishes no content hashes, and the Chrome for Testing builds carry no code signature. Cadrumo therefore pins the size and SHA-256 of every browser archive itself (amendment of 2026-10-21).
 
 ## Considered options
 
@@ -224,8 +224,8 @@ The registry is what makes "the same everywhere" checkable: a surface either ren
 - The CLI's `config provision` verbs keep their names but now need the runtime. Their results and the removed operation and actions change public schemas, with no forwarding.
 - More protocol: a pushed setup event on the person bridge, a subject on progress events, and a receipt category.
 - Readiness is only as current as the last check. Nothing watches the network, so an offline change shows at the next action or check.
-- The authenticity of Chromium and model bytes still rests on HTTPS to the publishers and Ollama's own layer checks. The receipt detects later damage, not a compromised publisher.
-- Reconsider if Playwright publishes hashes, if the model runtime becomes a Cadrumo binary, or if parallel download proves necessary.
+- The authenticity of model bytes still rests on HTTPS to the publisher and Ollama's own layer checks. Browser archives must match the digests this release pins, which proves they are the bytes the release was built against, not that the publisher's copy was genuine when it was pinned. The receipt detects later damage.
+- Reconsider if Playwright publishes hashes or signatures, which would replace the pinned table as the browser's trust anchor, if the model runtime becomes a Cadrumo binary, or if parallel download proves necessary.
 
 ### Amendment 2026-10-19: operator review of the setup experience
 
@@ -248,3 +248,14 @@ Basis: operator review 2026-10-19. The operator reviewed the setup dialog in the
 5. **A simpler setup flow.** The setup dialog leads with one summary and one primary action. Each component's detail (rows, plan entries with their parts, hosts and folders, and per-item progress) sits in a "Details" disclosure that is closed by default. While setup runs, the summary is one overall progress bar over every planned item in order, naming the item and step now running. What an approval also agrees to stays visible without opening the disclosure: the total size, the free-space reading, any outside-program install and every licence notice.
 
 Before this amendment the registry held four kinds (`browser`, `model_runtime`, `local_model.<role>`, `google`), Google was an item set up by the person's sign-in, Settings embedded a Components section, and each row showed a status pill beside its sentence.
+
+### Amendment 2026-10-21: browser archives are pinned and fetched by Cadrumo
+
+Basis: the operator's selection of 2026-10-21 ("Pinned digests"), answering a security finding that setup approved hosts measured by a separate HEAD request while the vendor installer downloaded on its own, followed any redirect, checked no content, and the full check then launched the result.
+
+- The repository pins every archive `playwright install chromium` downloads for the bundled Playwright driver on each supported platform (`win-x64`, `linux-x64`, `linux-arm64`, `mac-x64`, `mac-arm64`): its build directory, its path under the download host, the vendor's sources in order, its size and its SHA-256, with the driver version, in `src/cadrumo/_data/dependencies/browser_archives.toml`. `just pin-browser-archives` regenerates the table from the driver's own dry-run listing and one download of each archive. A gate test refuses a table that differs from the locked driver's listing or names a source outside the declared browser hosts, so a Playwright upgrade needs new pins. Native package assembly, which CMake runs for every package target, reads the staged pin table and the staged Playwright driver and refuses a package whose pins do not cover that driver's Chromium builds on its target platform.
+- D4: the browser's plan entry takes its size from the pins of the archives still missing and names exactly the declared browser hosts. Nothing is measured over the network, and no host a source answers with widens the plan.
+- D6: setup downloads each pending archive itself, at the moment the vendor installer asks for it, so builds still finish one at a time and an interruption keeps every finished build. Every hop must be HTTPS, on the default port and without credentials, to a host that is both declared and in the approved plan, and a chain may take at most five redirects. The body must have the pinned size and SHA-256. A mismatch is `damaged_download` and an unapproved hop is `blocked_by_network`; neither is retried, and no other source is tried after them. A network failure on one source gives way to the vendor's next source.
+- The vendor installer still extracts each build and writes its completion marker, but its only download host is a loopback server that answers each pending archive's pinned path and nothing else, fetching it once and remembering a failed fetch rather than repeating it behind the setup's retry policy. The server hashes every response as it sends it and withholds the final chunk unless the bytes match the pin. The installer's environment carries no inherited Playwright, Node, npm or proxy variable.
+- When this build pins no archives for the installed driver on this platform, a missing browser reads blocked `not_in_this_build`, so no surface offers its setup, the plan's size is unknown, and setup refuses with `not_in_this_build` before downloading anything. An installed browser stays ready.
+- D7: nothing downloaded is extracted or launched before its bytes have matched a pin, so the full check's launch is never the first check of what was downloaded.

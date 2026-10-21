@@ -1,4 +1,4 @@
-"""Tolerant reading of the vendor installer's output for progress and failure cause."""
+"""Tolerant reading of the vendor installer's output for a failure's cause."""
 
 from __future__ import annotations
 
@@ -6,37 +6,9 @@ import pytest
 
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
-from ..installer_output import InstallerProgressParser, classify_installer_output
+from ..installer_output import classify_installer_output
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-
-_MIB = 1024 * 1024
-_BAR = "|" + "■" * 16 + " " * 64 + "|  20% of 10 MiB"
-
-
-def test_progress_without_an_exact_size_uses_the_printed_mebibytes() -> None:
-    parser = InstallerProgressParser()
-
-    assert parser.feed("Downloading X 1 (playwright chromium v1248) from https://h/a.zip") is None
-    assert parser.feed(_BAR) == 2 * _MIB
-    assert parser.feed(_BAR) is None
-    assert parser.feed("X 1 (playwright chromium v1248) downloaded to /pw/chromium-1248") == 10 * _MIB
-
-
-def test_the_installers_own_retry_restarts_the_archive_without_double_counting() -> None:
-    parser = InstallerProgressParser()
-    parser.feed("Downloading X (playwright chromium v1248) from https://h/a.zip")
-    parser.feed("pw:install -- total bytes: 1000 +1ms")
-    assert parser.feed("|xxxx|  50% of 0 MiB") == 500
-    parser.feed("Downloading X (playwright chromium v1248) from https://h/b.zip")
-    parser.feed("pw:install -- total bytes: 1000 +1ms")
-
-    assert parser.feed("|xxxx|  10% of 0 MiB") == 100
-
-
-@pytest.mark.parametrize("line", ("", "random text", "|| abc% of MiB", "Downloading nothing in particular"))
-def test_unrecognised_lines_change_nothing(line: str) -> None:
-    assert InstallerProgressParser().feed(line) is None
 
 
 @pytest.mark.parametrize(

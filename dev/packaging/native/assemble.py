@@ -25,6 +25,7 @@ from ..runtime_wheelhouse_contract import target_platform
 from .agent import resolved_requirements
 from .agent_runtime import load_runtime_declaration, stage_agent_runtime
 from .assembly_transaction import AssemblyReuse, assembly_candidate
+from .browser_archive_coverage import verify_browser_archive_coverage
 from .build_directory import require_enrolled_build, require_enrolled_output
 from .build_log import BuildLog, display_path
 from .build_paths import build_paths
@@ -742,6 +743,10 @@ def _assemble_candidate(
             else platform.assemble_native(python, packages, native, root, native_layout)
         )
     modules = native_manifest["modules"]
+    if not interpreter:
+        # The packaged browser setup refuses archives no pin authenticates, so a package whose own
+        # pins do not cover its own Playwright driver could never set its browser up.
+        verify_browser_archive_coverage(packages, target)
     service_descriptors = None if interpreter else stage_service_descriptors(root, contract, staged_images)
     paths = native_manifest["python_paths"]
     relocation = native_manifest.pop("relocation")

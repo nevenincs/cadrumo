@@ -3,8 +3,9 @@
 The manifest parser, the cache observation, the receipt comparison, the retry
 schedule and the state the registry derives all run for real against files on
 disk. The injected seams are the outside effects only: the installer stands in
-for the vendor download by writing the cache layout the real installer
-produces, the sizer returns a measurement, and the launcher reports a version.
+for the verified download by writing the cache layout the real installer
+produces, the pin table is a small synthetic one, and the launcher reports a
+version.
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ from pydantic import ValidationError
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
 from ...core.storage_taxonomy import StorageCategory
+from ..browser_archive_pins import BrowserArchivePin, BrowserArchivePins
 from ..dependency_contracts import (
     DependencyBlockedReason,
     DependencyCheckMode,
@@ -33,13 +35,12 @@ from ..dependency_contracts import (
     DependencySetupStep,
     DependencyState,
 )
+from ..dependency_network import dependency_hosts
 from ..dependency_receipts import DependencyReceipt, DependencyReceiptStore, build_file_manifest
 from ..dependency_registry import BROWSER_DECLARATION, derive_dependency_row
 from ..dependency_transfer import DEPENDENCY_RETRY_POLICY
 from ..provisioning_browser import (
-    BrowserArchive,
     BrowserBuild,
-    BrowserDownloadMeasurement,
     BrowserInstallerExit,
     BrowserInstallerRequest,
     BrowserInstallObserver,
@@ -57,6 +58,25 @@ _VERSION = "156.0.8078.4"
 _FULL = BrowserBuild(name="chromium", revision="1248", browser_version=_VERSION)
 _SHELL = BrowserBuild(name="chromium-headless-shell", revision="1248", browser_version=_VERSION)
 _BOTH = (_FULL.directory_name, _SHELL.directory_name)
+_DRIVER = "1.64.0"
+
+
+def _pinned(directory: str, size: int) -> BrowserArchivePin:
+    path = f"builds/{directory}.zip"
+    return BrowserArchivePin(
+        platform=_HOST,
+        directory_name=directory,
+        path=path,
+        urls=(f"https://cdn.playwright.dev/{path}",),
+        download_bytes=size,
+        sha256="ab" * 32,
+    )
+
+
+_PINS = BrowserArchivePins(
+    playwright_driver=_DRIVER,
+    archives=(_pinned(_FULL.directory_name, 200), _pinned("ffmpeg-1013", 7), _pinned(_SHELL.directory_name, 120)),
+)
 
 
 def _manifest(tmp_path: Path, *, overrides: bool = False) -> Path:
@@ -66,6 +86,9 @@ def _manifest(tmp_path: Path, *, overrides: bool = False) -> Path:
         shell["revisionOverrides"] = {"mac14": "1200"}
     document = {"browsers": [{"name": "chromium", "revision": "1248", "browserVersion": _VERSION}, shell]}
     path.write_text(json.dumps(document), encoding="utf-8")
+    (tmp_path / "package.json").write_text(
+        json.dumps({"name": "playwright-core", "version": _DRIVER}), encoding="utf-8"
+    )
     return path
 
 
@@ -174,7 +197,7 @@ def _item(
     tmp_path: Path,
     *,
     installer: _Installer | None = None,
-    measurement: BrowserDownloadMeasurement | None = None,
+    pins: BrowserArchivePins | None = _PINS,
     launcher: _Launcher | None = None,
     receipts: DependencyReceiptStore | None = None,
     manifest: Path | str | None = "default",
@@ -185,12 +208,12 @@ def _item(
     assert not isinstance(manifest_path, str)
     return PlaywrightBrowserItem(
         install=installer or _Installer(root, []),
-        measure=lambda _request: measurement,
         launch=launcher or _Launcher(BrowserLaunchReading(version=_VERSION)),
         remove_builds=_remove,
         receipts=receipts,
         browsers_root=lambda: root,
         manifest_path=lambda: manifest_path,
+        archive_pins=lambda: pins,
         host_platform=lambda: host,
         sleep=_no_sleep,
         jitter=lambda: 0.5,
@@ -288,6 +311,29 @@ def test_without_the_playwright_package_the_browser_is_not_in_this_build(tmp_pat
 
     assert reading.outcome is DependencyProbeOutcome.BLOCKED
     assert reading.blocked_reason is DependencyBlockedReason.NOT_IN_THIS_BUILD
+
+
+@pytest.mark.parametrize(
+    "pins", (None, _PINS.model_copy(update={"playwright_driver": "1.65.0"})), ids=("no-table", "other-driver")
+)
+def test_a_missing_browser_no_pin_can_authenticate_is_not_offered_for_setup(
+    tmp_path: Path, pins: BrowserArchivePins | None
+) -> None:
+    reading = _check(_item(tmp_path, pins=pins))
+
+    assert reading.outcome is DependencyProbeOutcome.BLOCKED
+    assert reading.blocked_reason is DependencyBlockedReason.NOT_IN_THIS_BUILD
+    assert reading.facts["browser_archives_pinned"] is False
+
+
+def test_an_installed_browser_stays_present_without_pins(tmp_path: Path) -> None:
+    root = tmp_path / "cache"
+    _lay_down(root, _FULL)
+    _lay_down(root, _SHELL)
+
+    reading = _check(_item(tmp_path, pins=None))
+
+    assert reading.outcome is DependencyProbeOutcome.PRESENT
 
 
 @pytest.mark.parametrize("cause", ("overrides", "malformed", "platform"))
@@ -392,43 +438,34 @@ def test_the_full_check_compares_every_recorded_file_where_the_quick_check_compa
 # -- plan --------------------------------------------------------------------
 
 
-def _archive(directory: str, size: int | None, *hosts: str) -> BrowserArchive:
-    return BrowserArchive(
-        directory_name=directory, url=f"https://cdn.playwright.dev/{directory}.zip", download_bytes=size, hosts=hosts
-    )
+def test_the_plan_sums_the_pinned_archives_still_to_download_from_the_declared_hosts(tmp_path: Path) -> None:
+    _lay_down(tmp_path / "cache", BrowserBuild(name="ffmpeg", revision="1013"), executable=None)
 
-
-def test_the_plan_sums_the_archives_still_to_download(tmp_path: Path) -> None:
-    root = tmp_path / "cache"
-    _lay_down(root, BrowserBuild(name="ffmpeg", revision="1013"), executable=None)
-    measurement = BrowserDownloadMeasurement(
-        archives=(
-            _archive(_FULL.directory_name, 200, "cdn.playwright.dev", "storage.googleapis.com"),
-            _archive("ffmpeg-1013", 7, "cdn.playwright.dev"),
-            _archive(_SHELL.directory_name, 120, "cdn.playwright.dev", "storage.googleapis.com"),
-        )
-    )
-
-    entry = asyncio.run(_item(tmp_path, measurement=measurement).plan(model_name=None))
+    entry = asyncio.run(_item(tmp_path).plan(model_name=None))
 
     assert entry.download_bytes == 320
     assert entry.destination is StorageCategory.PLAYWRIGHT_BROWSERS
     assert entry.target_version == _VERSION
-    assert entry.source_hosts[-1] == "storage.googleapis.com"
-    assert "cdn.playwright.dev" in entry.source_hosts
+    # The plan names the declared hosts and nothing a source answered with.
+    assert entry.source_hosts == dependency_hosts("browser")
 
 
 @pytest.mark.parametrize(
-    "measurement",
-    (None, BrowserDownloadMeasurement(archives=(_archive("chromium-1248", None, "cdn.playwright.dev"),))),
+    "pins",
+    (
+        None,
+        _PINS.model_copy(update={"playwright_driver": "1.65.0"}),
+        _PINS.model_copy(update={"archives": _PINS.archives[:2]}),
+    ),
+    ids=("no-table", "other-driver", "build-unpinned"),
 )
-def test_an_unmeasured_plan_leaves_the_size_unknown(
-    tmp_path: Path, measurement: BrowserDownloadMeasurement | None
+def test_without_pins_covering_the_install_the_plan_size_is_unknown(
+    tmp_path: Path, pins: BrowserArchivePins | None
 ) -> None:
-    entry = asyncio.run(_item(tmp_path, measurement=measurement).plan(model_name=None))
+    entry = asyncio.run(_item(tmp_path, pins=pins).plan(model_name=None))
 
     assert entry.download_bytes is None
-    assert entry.source_hosts
+    assert entry.source_hosts == dependency_hosts("browser")
 
 
 # -- setup -------------------------------------------------------------------
@@ -576,6 +613,37 @@ def test_cancel_during_the_download_stops_the_install(tmp_path: Path) -> None:
 
     assert result.failure_category is DependencyFailureCategory.CANCELLED
     assert DependencySetupStep.CLEANUP not in events.steps
+
+
+def test_setup_offers_the_installer_only_the_missing_pinned_archives_and_the_approved_declared_hosts(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "cache"
+    _lay_down(root, BrowserBuild(name="ffmpeg", revision="1013"), executable=None)
+    installer = _Installer(root, [None])
+    approved = _entry().model_copy(update={"source_hosts": ("cdn.playwright.dev", "downloads.attacker.example")})
+
+    result = asyncio.run(_item(tmp_path, installer=installer).provision(approved, _Events()))
+
+    assert result.failure_category is None
+    (request,) = installer.requests
+    assert [pin.directory_name for pin in request.archives] == list(_BOTH)
+    assert request.allowed_hosts == ("cdn.playwright.dev",)
+
+
+@pytest.mark.parametrize(
+    "pins", (None, _PINS.model_copy(update={"playwright_driver": "1.65.0"})), ids=("no-table", "other-driver")
+)
+def test_setup_without_pins_for_the_installed_driver_downloads_nothing(
+    tmp_path: Path, pins: BrowserArchivePins | None
+) -> None:
+    installer = _Installer(tmp_path / "cache", [None])
+
+    result = asyncio.run(_item(tmp_path, installer=installer, pins=pins).provision(_entry(), _Events()))
+
+    assert result.failure_category is DependencyFailureCategory.NOT_IN_THIS_BUILD
+    assert result.changed is False
+    assert installer.requests == []
 
 
 def test_a_plan_for_other_builds_is_refused_before_anything_runs(tmp_path: Path) -> None:

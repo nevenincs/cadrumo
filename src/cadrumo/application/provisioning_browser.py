@@ -11,10 +11,12 @@ can hang inside the CLI process, so nothing here launches it.
 registry. Its quick check reads the manifest, the completion markers and the
 revision-exact executables; its full check also compares the executables with
 the install receipt's digests and launches the headless build once, comparing
-the version it reports with the manifest. Setting it up runs the vendor
-installer through injected adapters: the installer's output is read for byte
-progress, Cadrumo's proxy settings are passed on, partial builds are deleted
-before each attempt, transient failures are retried, and a cancel stops the
+the version it reports with the manifest. Setting it up goes through injected
+adapters and admits only the archives this build pins
+(:mod:`.browser_archive_pins`): each is downloaded from the approved hosts and
+must match its pinned size and SHA-256 before the vendor installer extracts it,
+so nothing unauthenticated is ever launched. Partial builds are deleted before
+each attempt, transient failures are retried, and a cancel stops the
 installer's whole process tree. Only once the setup's own full check passes
 does :meth:`PlaywrightBrowserItem.after_verified` write the receipt and remove
 the revisions the new builds supersede.
@@ -38,7 +40,7 @@ from importlib.util import find_spec
 from pathlib import Path
 from typing import Annotated, Final, Protocol
 
-from pydantic import BaseModel, NonNegativeInt, StringConstraints, model_validator
+from pydantic import BaseModel, StringConstraints, ValidationError, model_validator
 
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
@@ -51,11 +53,11 @@ from ..core.storage_taxonomy import StorageCategory
 from ..core.storage_taxonomy_locations import storage_location
 from ..core.time.clock import now
 from ..core.type_guards import is_object_dict, is_object_list
+from .browser_archive_pins import BrowserArchivePin, BrowserArchivePins, load_browser_archive_pins
 from .dependency_contracts import (
     DEPENDENCY_FULL_CHECK_ITEM_BUDGET_S,
     DependencyBlockedReason,
     DependencyCheckMode,
-    DependencyHostName,
     DependencyItemDeclaration,
     DependencyPlanEntry,
     DependencyProbeOutcome,
@@ -98,11 +100,8 @@ __all__ = [
     "BROWSER_PROVISION_ACTION_ID",
     "PLAYWRIGHT_BROWSER_INSTALL_TIMEOUT_S",
     "PLAYWRIGHT_BROWSER_SERVICE",
-    "BrowserArchive",
     "BrowserBuild",
     "BrowserBuildRemover",
-    "BrowserDownloadMeasurement",
-    "BrowserDownloadSizer",
     "BrowserInstallObserver",
     "BrowserInstallProcess",
     "BrowserInstallerExit",
@@ -114,6 +113,7 @@ __all__ = [
     "browser_executable",
     "browser_host_platform",
     "browser_not_provisioned_verdict",
+    "installed_playwright_driver_version",
     "playwright_browsers_root",
     "probe_playwright_browser",
     "required_browser_builds",
@@ -220,6 +220,16 @@ def _browser_build_from_manifest(
     )
 
 
+def installed_playwright_driver_version(manifest_path: Path) -> str | None:
+    """Return the version of the Playwright driver whose ``browsers.json`` is ``manifest_path``."""
+    try:
+        document: object = json.loads((manifest_path.parent / "package.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    version = document.get("version") if is_object_dict(document) else None
+    return version if isinstance(version, str) and version else None
+
+
 def required_browser_builds(manifest_path: Path | None = None) -> tuple[BrowserBuild, ...] | None:
     """Return the Chromium builds the installed Playwright pins, or ``None`` when unreadable.
 
@@ -324,9 +334,6 @@ def probe_playwright_browser(
 #: Bound for the single headless launch of a full check, inside the item's 60 s budget.
 BROWSER_FULL_CHECK_LAUNCH_TIMEOUT_S: Final = 45.0
 
-#: Bound for asking the installer which archives it would download and how large they are.
-_MEASURE_TIMEOUT_S: Final = 30.0
-
 _FULL_BUILD: Final = "chromium"
 _HEADLESS_BUILD: Final = "chromium-headless-shell"
 
@@ -352,8 +359,6 @@ _EXECUTABLE_LAYOUT: Final[Mapping[str, Mapping[str, tuple[str, ...]]]] = {
 }
 
 _SUPERSEDABLE_PREFIXES: Final = tuple(f"{name.replace('-', '_')}-" for name in _REQUIRED_MANIFEST_NAMES)
-
-type _BuildDirectoryName = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]*-\d+$", max_length=96)]
 
 
 def browser_host_platform(*, system: str | None = None, machine: str | None = None) -> str | None:
@@ -381,11 +386,18 @@ def browser_executable(root: Path, build: BrowserBuild, host_platform: str) -> P
 
 @dataclass(frozen=True, slots=True)
 class BrowserInstallerRequest:
-    """One run of the vendor installer: where it installs, how long it may take, and through which proxy."""
+    """One install run: where it installs, how long it may take, and exactly what it may download.
+
+    ``archives`` are the pinned archives still to fetch, each only from
+    ``allowed_hosts`` and through ``proxy``; the vendor installer is offered
+    nothing else.
+    """
 
     browsers_root: Path
     timeout_s: float
     proxy: DependencyProxy | None = None
+    archives: tuple[BrowserArchivePin, ...] = ()
+    allowed_hosts: tuple[str, ...] = ()
 
 
 class BrowserInstallerExit(BaseModel):
@@ -433,33 +445,6 @@ class BrowserInstallProcess(Protocol):
 
     def __call__(self, request: BrowserInstallerRequest, observer: BrowserInstallObserver, /) -> BrowserInstallerExit:
         """Run one install of the pinned Chromium builds."""
-        ...
-
-
-class BrowserArchive(BaseModel):
-    """One archive the installer would download, with its size when the source states it."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    directory_name: _BuildDirectoryName
-    url: Annotated[str, StringConstraints(pattern=r"^https://", max_length=2048)]
-    download_bytes: NonNegativeInt | None = None
-    hosts: tuple[DependencyHostName, ...] = ()
-
-
-class BrowserDownloadMeasurement(BaseModel):
-    """Every archive the installer would fetch for the pinned builds, before any byte moves."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    archives: tuple[BrowserArchive, ...]
-
-
-class BrowserDownloadSizer(Protocol):
-    """Asks the installer what it would download and the sources how large it is; downloads nothing."""
-
-    def __call__(self, request: BrowserInstallerRequest, /) -> BrowserDownloadMeasurement | None:
-        """Return the measurement, or ``None`` when the installer or the sources could not be read."""
         ...
 
 
@@ -584,9 +569,9 @@ def _target_version(builds: Sequence[BrowserBuild]) -> str:
     return full.browser_version or f"revision {full.revision}"
 
 
-def _merged_hosts(declared: Sequence[str], observed: Sequence[str]) -> tuple[str, ...]:
-    extra = sorted({host for host in observed if host not in declared})
-    return (*declared, *extra)
+def _pending_archives(root: Path, pins: Sequence[BrowserArchivePin]) -> tuple[BrowserArchivePin, ...]:
+    """Return the pinned archives whose build the installer would still download: no completion marker."""
+    return tuple(pin for pin in pins if not (root / pin.directory_name / _INSTALLATION_COMPLETE_MARKER).is_file())
 
 
 class _TransferBridge:
@@ -644,28 +629,37 @@ class _SetupProgress:
     facts: dict[str, ProvisioningFactValue] = field(default_factory=dict)
 
 
+@dataclass(frozen=True, slots=True)
+class _Sources:
+    """What one setup may download and from where: the pinned archives, the approved hosts, the proxy."""
+
+    pins: tuple[BrowserArchivePin, ...]
+    hosts: tuple[str, ...]
+    proxy: DependencyProxy | None
+
+
 type _LocatedBuilds = tuple[Path, tuple[BrowserBuild, ...], _CacheObservation]
 
 
 class PlaywrightBrowserItem:
     """The ``browser`` setup item: the two Chromium builds the bundled Playwright launches.
 
-    Every outside effect is injected: the installer run, the size measurement,
-    the headless launch and the build-directory removal. The receipt store is
-    the shared setup receipt store; without one the checks rest on the files
-    alone.
+    Every outside effect is injected: the installer run, the headless launch
+    and the build-directory removal. ``archive_pins`` supplies the table of
+    archives this build trusts. The receipt store is the shared setup receipt
+    store; without one the checks rest on the files alone.
     """
 
     def __init__(
         self,
         *,
         install: BrowserInstallProcess,
-        measure: BrowserDownloadSizer,
         launch: BrowserLauncher,
         remove_builds: BrowserBuildRemover,
         receipts: DependencyReceiptStore | None = None,
         browsers_root: Callable[[], Path] = playwright_browsers_root,
         manifest_path: Callable[[], Path | None] = _installed_manifest_path,
+        archive_pins: Callable[[], BrowserArchivePins | None] = load_browser_archive_pins,
         proxy: Callable[[], DependencyProxy | None] = _settings_proxy,
         host_platform: Callable[[], str | None] = browser_host_platform,
         install_timeout_s: float = PLAYWRIGHT_BROWSER_INSTALL_TIMEOUT_S,
@@ -676,12 +670,12 @@ class PlaywrightBrowserItem:
     ) -> None:
         """Bind the adapters and the location resolvers the item reads and acts through."""
         self._install = install
-        self._measure = measure
         self._launch = launch
         self._remove_builds = remove_builds
         self._receipts = receipts
         self._browsers_root = browsers_root
         self._manifest_path = manifest_path
+        self._archive_pins = archive_pins
         self._proxy = proxy
         self._host_platform = host_platform
         self._install_timeout_s = install_timeout_s
@@ -711,6 +705,20 @@ class PlaywrightBrowserItem:
         path = self._manifest_path()
         return None if path is None else required_browser_builds(path)
 
+    def _pinned_archives(self, builds: Sequence[BrowserBuild], host: str) -> tuple[BrowserArchivePin, ...] | None:
+        """Return this platform's pinned archives when they cover the installed driver's builds."""
+        path = self._manifest_path()
+        if path is None:
+            return None
+        try:
+            pins = self._archive_pins()
+        except (OSError, ValidationError):
+            return None
+        if pins is None:
+            return None
+        names = [build.directory_name for build in builds]
+        return pins.covering(host, installed_playwright_driver_version(path), names)
+
     def _read_receipt(self) -> DependencyReceiptReading | None:
         return None if self._receipts is None else self._receipts.read(BROWSER_DECLARATION.item_id)
 
@@ -735,6 +743,13 @@ class PlaywrightBrowserItem:
             facts["superseded_builds"] = ",".join(observation.superseded)
         if observation.missing:
             facts["missing_builds"] = ",".join(observation.missing)
+            if self._pinned_archives(builds, host) is None:
+                # Setup would refuse to download what no pin can authenticate, so none is offered.
+                facts["browser_archives_pinned"] = False
+                blocked = _reading(
+                    mode, DependencyProbeOutcome.BLOCKED, blocked=DependencyBlockedReason.NOT_IN_THIS_BUILD, facts=facts
+                )
+                return blocked, None
             return _reading(mode, DependencyProbeOutcome.ABSENT, facts=facts), None
         stored = self._read_receipt()
         executables = _executable_paths(root, observation)
@@ -787,11 +802,13 @@ class PlaywrightBrowserItem:
 
     # -- setup ---------------------------------------------------------------
 
-    def _request(self, root: Path, proxy: DependencyProxy | None) -> BrowserInstallerRequest:
-        return BrowserInstallerRequest(browsers_root=root, timeout_s=self._install_timeout_s, proxy=proxy)
-
     async def plan(self, *, model_name: str | None) -> DependencyPlanEntry:
-        """Return what setting the browser up downloads, measured without moving any archive."""
+        """Return what setting the browser up downloads: the pinned archives still missing, from the declared hosts.
+
+        Nothing is fetched or asked of the network. The size is unknown when
+        this build pins no archives for the installed driver on this platform,
+        and setup then refuses.
+        """
         del model_name
         declared = dependency_hosts(BROWSER_DECLARATION.network_host_group)
         builds = await asyncio.to_thread(self._required_builds)
@@ -802,28 +819,16 @@ class PlaywrightBrowserItem:
                 source_hosts=declared,
                 destination=StorageCategory.PLAYWRIGHT_BROWSERS,
             )
-        root = self._browsers_root()
-        try:
-            request = self._request(root, self._proxy())
-            measurement = await asyncio.wait_for(asyncio.to_thread(self._measure, request), timeout=_MEASURE_TIMEOUT_S)
-        except (DependencyProxyConfigurationError, OSError, TimeoutError):
-            measurement = None
+        host = self._host_platform()
+        pins = None if host is None else await asyncio.to_thread(self._pinned_archives, builds, host)
         download_bytes: int | None = None
-        observed: list[str] = []
-        if measurement is not None:
-            pending = [
-                archive
-                for archive in measurement.archives
-                if not (root / archive.directory_name / _INSTALLATION_COMPLETE_MARKER).is_file()
-            ]
-            sizes = [archive.download_bytes for archive in pending]
-            if all(size is not None for size in sizes):
-                download_bytes = sum(size for size in sizes if size is not None)
-            observed = [host for archive in pending for host in archive.hosts]
+        if pins is not None:
+            pending = await asyncio.to_thread(_pending_archives, self._browsers_root(), pins)
+            download_bytes = sum(pin.download_bytes for pin in pending)
         return DependencyPlanEntry(
             item_id=BROWSER_DECLARATION.item_id,
             download_bytes=download_bytes,
-            source_hosts=_merged_hosts(declared, observed),
+            source_hosts=declared,
             destination=StorageCategory.PLAYWRIGHT_BROWSERS,
             target_version=_target_version(builds),
         )
@@ -843,8 +848,18 @@ class PlaywrightBrowserItem:
             return _result(
                 changed=False, failure=DependencyFailureCategory.UNEXPECTED, facts={"plan_matches_builds": False}
             )
+        pins = await asyncio.to_thread(self._pinned_archives, builds, host)
+        if pins is None:
+            # Without a pin nothing could authenticate the download, so nothing is downloaded.
+            return _result(
+                changed=False,
+                failure=DependencyFailureCategory.NOT_IN_THIS_BUILD,
+                facts={"browser_archives_pinned": False},
+            )
+        declared = dependency_hosts(BROWSER_DECLARATION.network_host_group)
+        approved = tuple(source for source in entry.source_hosts if source in declared)
         try:
-            proxy = self._proxy()
+            sources = _Sources(pins=pins, hosts=approved, proxy=self._proxy())
         except DependencyProxyConfigurationError:
             return _result(
                 changed=False, failure=DependencyFailureCategory.UNEXPECTED, facts={"proxy_settings_usable": False}
@@ -856,7 +871,7 @@ class PlaywrightBrowserItem:
         progress = _SetupProgress(reinstall=await asyncio.to_thread(self._receipt_finds_damage, root, builds, host))
         try:
             await run_with_retry(
-                lambda: self._attempt(root, builds, host, entry, proxy, events, progress),
+                lambda: self._attempt(root, builds, host, entry, sources, events, progress),
                 events=events,
                 policy=self._retry_policy,
                 sleep=self._sleep,
@@ -900,7 +915,7 @@ class PlaywrightBrowserItem:
         builds: tuple[BrowserBuild, ...],
         host: str,
         entry: DependencyPlanEntry,
-        proxy: DependencyProxy | None,
+        sources: _Sources,
         events: DependencySetupEvents,
         progress: _SetupProgress,
     ) -> None:
@@ -918,10 +933,17 @@ class PlaywrightBrowserItem:
         if any((root / name).exists() for name in pending):
             removed = await asyncio.to_thread(self._remove_builds, root, pending)
             progress.changed = progress.changed or bool(removed)
+        request = BrowserInstallerRequest(
+            browsers_root=root,
+            timeout_s=self._install_timeout_s,
+            proxy=sources.proxy,
+            archives=await asyncio.to_thread(_pending_archives, root, sources.pins),
+            allowed_hosts=sources.hosts,
+        )
         bridge = _TransferBridge(events, total=entry.download_bytes, loop=asyncio.get_running_loop())
         pump = asyncio.create_task(bridge.pump())
         try:
-            ended = await asyncio.to_thread(self._install, self._request(root, proxy), bridge)
+            ended = await asyncio.to_thread(self._install, request, bridge)
         finally:
             bridge.close()
             await pump

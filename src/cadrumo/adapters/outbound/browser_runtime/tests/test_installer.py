@@ -1,42 +1,51 @@
-"""The installer run: its environment, bounded output reading, progress, failure cause and cancel.
+"""The installer run: verified downloads first, then the vendor installer on a loopback host.
 
-The runs below start a real child process that prints the vendor installer's
-own output format, so the pipe reading, the progress parser, the failure
-classification and the process-tree stop all run for real. Only the argv is
-replaced; the environment is the one the product builds.
+The fetch refusals run the real downloader over an ``httpx.MockTransport``
+playing a hostile source, and prove the installer never starts. The end-to-end
+run drives the real bundled Playwright driver against the loopback host with
+synthetic archives pinned for this computer's platform, so the environment,
+the download-host override, the serving and the vendor's own extraction all
+run for real without the network. The remaining runs start a child that prints
+the vendor installer's output format, so the pipe reading, the failure
+classification and the process-tree stop run for real.
 """
 
 from __future__ import annotations
 
+import hashlib
 import io
 import os
 import sys
 import textwrap
 import time
-from collections.abc import Iterator
+import zipfile
+from collections.abc import Callable, Iterator
 from pathlib import Path
+from typing import override
 
+import httpx
 import pytest
 from playwright._impl._driver import compute_driver_executable
 
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
-from .....application.dependency_network import DependencyProxy
-from .....application.provisioning_browser import BrowserInstallerRequest
+from .....application.browser_archive_pins import BrowserArchivePin, load_browser_archive_pins
+from .....application.dependency_network import DependencyProxy, dependency_hosts
+from .....application.provisioning_browser import (
+    BrowserBuild,
+    BrowserInstallerRequest,
+    browser_executable,
+    browser_host_platform,
+)
 from .....core.child_console import WINDOWS_CREATE_NO_WINDOW, ChildConsole, child_console_binding
 from .....core.config import override_settings
 from .. import installer
-from ..installer import (
-    browser_installer_environment,
-    measure_browser_downloads,
-    remove_browser_builds,
-    run_browser_install,
-)
+from ..installer import browser_installer_environment, remove_browser_builds, run_browser_install
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_MIB = 1024 * 1024
 _PROXY_WORD = "p@ss"
+_ORIGIN = "http://127.0.0.1:9"
 
 
 class _Observer:
@@ -60,16 +69,6 @@ def say(line):
     print(line, flush=True)
 """
 
-_TWO_ARCHIVES = """
-say("Downloading Chrome for Testing 156.0.8078.4 (playwright chromium v1248) from https://cdn.playwright.dev/a.zip")
-say("pw:install -- total bytes: 200000000 +0ms")
-say("|" + "\\u25a0" * 8 + " " * 72 + "|  10% of 190.7 MiB")
-say("|" + "\\u25a0" * 80 + "| 100% of 190.7 MiB")
-say("Chrome for Testing 156.0.8078.4 (playwright chromium v1248) downloaded to C:\\\\x\\\\chromium-1248")
-say("Downloading FFmpeg (playwright ffmpeg v1013) from https://cdn.playwright.dev/f.zip")
-say("|" + "\\u25a0" * 40 + " " * 40 + "|  50% of 1.6 MiB")
-"""
-
 
 def _script(tmp_path: Path, body: str) -> list[str]:
     path = tmp_path / "driver.py"
@@ -78,9 +77,19 @@ def _script(tmp_path: Path, body: str) -> list[str]:
 
 
 def _request(
-    tmp_path: Path, *, timeout_s: float = 30.0, proxy: DependencyProxy | None = None
+    tmp_path: Path,
+    *,
+    timeout_s: float = 30.0,
+    proxy: DependencyProxy | None = None,
+    archives: tuple[BrowserArchivePin, ...] = (),
 ) -> BrowserInstallerRequest:
-    return BrowserInstallerRequest(browsers_root=tmp_path / "browsers", timeout_s=timeout_s, proxy=proxy)
+    return BrowserInstallerRequest(
+        browsers_root=tmp_path / "browsers",
+        timeout_s=timeout_s,
+        proxy=proxy,
+        archives=archives,
+        allowed_hosts=dependency_hosts("browser"),
+    )
 
 
 @pytest.fixture
@@ -91,20 +100,34 @@ def _storage(tmp_path: Path) -> Iterator[None]:
         yield
 
 
+# -- environment ---------------------------------------------------------------
+
+
 @pytest.mark.usefixtures("_storage")
-def test_the_environment_carries_the_roots_and_only_cadrumos_proxy(
+def test_the_environment_offers_only_the_verified_host_and_withholds_every_override(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("HTTPS_PROXY", "http://inherited.example:1")
-    monkeypatch.setenv("no_proxy", "inherited.example")
-    monkeypatch.setenv("CADRUMO_PROXY_URL", f"http://ana:{_PROXY_WORD}@proxy.example:8080")
-    monkeypatch.setenv("CADRUMO_PROXY_PASSWORD_SECRET", _PROXY_WORD)
-    proxy = DependencyProxy(
-        host="proxy.example", port=8080, username="ana maria", password=_PROXY_WORD, bypass=("intranet.example",)
-    )
+    inherited = {
+        "HTTPS_PROXY": "http://inherited.example:1",
+        "no_proxy": "inherited.example",
+        "npm_config_https_proxy": "http://inherited.example:1",
+        "CADRUMO_PROXY_URL": f"http://ana:{_PROXY_WORD}@proxy.example:8080",
+        "CADRUMO_PROXY_PASSWORD_SECRET": _PROXY_WORD,
+        "PLAYWRIGHT_DOWNLOAD_HOST": "https://downloads.attacker.example",
+        "PLAYWRIGHT_CHROMIUM_DOWNLOAD_HOST": "https://downloads.attacker.example",
+        "PLAYWRIGHT_HOST_PLATFORM_OVERRIDE": "ubuntu24.04-x64",
+        "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
+        "PW_TEST_CDN_THAT_SHOULD_WORK": "https://downloads.attacker.example",
+        "NODE_TLS_REJECT_UNAUTHORIZED": "0",
+        "NODE_EXTRA_CA_CERTS": str(tmp_path / "attacker-ca.pem"),
+        "NODE_OPTIONS": "--require ./hook.js",
+    }
+    for name, value in inherited.items():
+        monkeypatch.setenv(name, value)
 
-    environment = browser_installer_environment(_request(tmp_path, proxy=proxy))
+    environment = browser_installer_environment(_request(tmp_path), download_origin=_ORIGIN)
 
+    assert environment["PLAYWRIGHT_DOWNLOAD_HOST"] == _ORIGIN
     assert environment["PLAYWRIGHT_BROWSERS_PATH"] == str(tmp_path / "browsers")
     assert (
         environment["TEMP"]
@@ -112,34 +135,126 @@ def test_the_environment_carries_the_roots_and_only_cadrumos_proxy(
         == environment["TMPDIR"]
         == str((tmp_path / "storage" / "tmp").resolve())
     )
-    assert environment["HTTPS_PROXY"] == environment["HTTP_PROXY"] == "http://ana%20maria:p%40ss@proxy.example:8080"
-    assert environment["NO_PROXY"] == "intranet.example"
-    assert environment["no_proxy"] == "intranet.example"
     assert environment["DEBUG"] == "pw:install"
-    # Cadrumo's own settings reach the installer only as the standard proxy variables.
-    assert not any(name.upper().startswith("CADRUMO_PROXY_") for name in environment)
-
-
-@pytest.mark.usefixtures("_storage")
-def test_without_a_cadrumo_proxy_inherited_proxy_settings_are_dropped(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setenv("HTTPS_PROXY", "http://inherited.example:1")
-
-    environment = browser_installer_environment(_request(tmp_path))
-
+    # The driver's own language markers survive; nothing inherited that could steer it does.
+    assert environment["PW_LANG_NAME"] == "python"
+    withheld = {name.upper() for name in inherited} - {"PLAYWRIGHT_DOWNLOAD_HOST"}
+    assert not withheld & {name.upper() for name in environment}
     assert not {name.lower() for name in environment} & {"https_proxy", "http_proxy", "no_proxy", "all_proxy"}
 
 
+# -- verified downloads ----------------------------------------------------------
+
+
+#: Where each vendor build keeps the executable the installer marks runnable, by platform.
+_TOOL_EXECUTABLES = {
+    "ffmpeg": {
+        "win-x64": "ffmpeg-win64.exe",
+        "linux-x64": "ffmpeg-linux",
+        "linux-arm64": "ffmpeg-linux",
+        "mac-x64": "ffmpeg-mac",
+        "mac-arm64": "ffmpeg-mac",
+    },
+    "winldd": {"win-x64": "PrintDeps.exe"},
+}
+
+
+def _executable(directory_name: str, platform: str) -> str:
+    name, _, revision = directory_name.rpartition("-")
+    if name in _TOOL_EXECUTABLES:
+        return _TOOL_EXECUTABLES[name][platform]
+    build = BrowserBuild(name=name.replace("_", "-"), revision=revision)
+    path = browser_executable(Path(), build, platform)
+    assert path is not None
+    return path.relative_to(build.directory_name).as_posix()
+
+
+def _synthetic_archive(pin: BrowserArchivePin, executable: str) -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr(executable, f"synthetic {pin.directory_name}".encode())
+    return buffer.getvalue()
+
+
+def _synthetic_pins(platform: str) -> tuple[tuple[BrowserArchivePin, ...], dict[str, bytes]]:
+    """Return this platform's pins rebound to small synthetic archives, and each primary source's bytes."""
+    table = load_browser_archive_pins()
+    assert table is not None
+    served: dict[str, bytes] = {}
+    pins: list[BrowserArchivePin] = []
+    for pin in table.for_platform(platform):
+        body = _synthetic_archive(pin, _executable(pin.directory_name, platform))
+        served[pin.urls[0]] = body
+        pins.append(pin.model_copy(update={"download_bytes": len(body), "sha256": hashlib.sha256(body).hexdigest()}))
+    return tuple(pins), served
+
+
 @pytest.mark.usefixtures("_storage")
-def test_a_run_reports_running_bytes_across_archives(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("hostile", "category"),
+    (
+        (
+            lambda _body: httpx.Response(307, headers={"location": "https://downloads.attacker.example/chrome.zip"}),
+            DependencyFailureCategory.BLOCKED_BY_NETWORK,
+        ),
+        (
+            lambda body: httpx.Response(200, stream=httpx.ByteStream(body[:-4] + b"evil")),
+            DependencyFailureCategory.DAMAGED_DOWNLOAD,
+        ),
+    ),
+    ids=("redirect-off-plan", "substituted-bytes"),
+)
+def test_a_download_that_is_not_the_pinned_archive_is_never_extracted(
+    tmp_path: Path, hostile: Callable[[bytes], httpx.Response], category: DependencyFailureCategory
+) -> None:
+    platform = browser_host_platform()
+    assert platform is not None
+    pins, served = _synthetic_pins(platform)
+    requested: list[str] = []
+
+    def network(request: httpx.Request) -> httpx.Response:
+        requested.append(str(request.url))
+        return hostile(served[str(request.url)])
+
+    ended = run_browser_install(
+        _request(tmp_path, timeout_s=120.0, archives=pins), _Observer(), transport=httpx.MockTransport(network)
+    )
+
+    assert ended.failure_category is category
+    assert ended.transient is False
+    # The first archive the installer asked for was refused once and never fetched again.
+    assert len(requested) == 1
+    root = tmp_path / "browsers"
+    assert not any((root / pin.directory_name).exists() for pin in pins)
+    assert not any((tmp_path / "storage" / "tmp").glob("browser-archives-*"))
+
+
+@pytest.mark.usefixtures("_storage")
+def test_the_vendor_installer_extracts_exactly_the_verified_archives(tmp_path: Path) -> None:
+    platform = browser_host_platform()
+    assert platform is not None
+    pins, served = _synthetic_pins(platform)
     observer = _Observer()
 
-    ended = run_browser_install(_request(tmp_path), observer, command=_script(tmp_path, _TWO_ARCHIVES))
+    ended = run_browser_install(
+        _request(tmp_path, timeout_s=120.0, archives=tuple(pins)),
+        observer,
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(200, stream=httpx.ByteStream(served[str(request.url)]))
+        ),
+    )
 
     assert ended.exit_code == 0
     assert ended.failure_category is None
-    assert observer.figures == [20_000_000, 200_000_000, 200_000_000, 200_000_000 + round(1.6 * _MIB) // 2]
+    assert observer.figures[-1] == sum(len(body) for body in served.values())
+    root = tmp_path / "browsers"
+    for pin in pins:
+        assert (root / pin.directory_name / "INSTALLATION_COMPLETE").is_file()
+        extracted = root / pin.directory_name / _executable(pin.directory_name, platform)
+        assert extracted.read_bytes() == f"synthetic {pin.directory_name}".encode()
+
+
+# -- installer process -------------------------------------------------------------
 
 
 @pytest.mark.usefixtures("_storage")
@@ -183,6 +298,19 @@ while True:
 """
 
 
+class _CancelWhenStarted(_Observer):
+    """Asks to cancel once the installer's child has proved it is running."""
+
+    def __init__(self, beat: Path) -> None:
+        super().__init__()
+        self._beat = beat
+
+    @property
+    @override
+    def cancellation_requested(self) -> bool:
+        return self._beat.exists()
+
+
 @pytest.mark.usefixtures("_storage")
 def test_cancel_stops_the_installer_and_the_children_it_started(tmp_path: Path) -> None:
     child = tmp_path / "child.py"
@@ -191,19 +319,24 @@ def test_cancel_stops_the_installer_and_the_children_it_started(tmp_path: Path) 
     flags = "0x08000000" if sys.platform == "win32" else "0"
     body = f"""
     subprocess.Popen([sys.executable, "-I", {str(child)!r}, {str(beat)!r}], creationflags={flags})
-    while not __import__("pathlib").Path({str(beat)!r}).exists():
-        time.sleep(0.02)
-    say("Downloading Chrome for Testing 1 (playwright chromium v1248) from https://cdn.playwright.dev/a.zip")
-    say("|" + "x" * 8 + "|  10% of 100 MiB")
     time.sleep(60)
     """
 
     started = time.monotonic()
-    ended = run_browser_install(_request(tmp_path), _Observer(cancel_at_bytes=1), command=_script(tmp_path, body))
+    ended = run_browser_install(_request(tmp_path), _CancelWhenStarted(beat), command=_script(tmp_path, body))
 
     assert ended.cancelled is True
     assert time.monotonic() - started < 30
+    # Terminating the tree completes asynchronously, so a write already under way may still land;
+    # a child that kept running would keep changing the beat and never settle.
     settled = beat.read_text(encoding="utf-8")
+    settle_by = time.monotonic() + 5
+    while time.monotonic() < settle_by:
+        time.sleep(0.3)
+        current = beat.read_text(encoding="utf-8")
+        if current == settled:
+            break
+        settled = current
     time.sleep(0.5)
     assert beat.read_text(encoding="utf-8") == settled
 
@@ -216,45 +349,6 @@ def test_a_run_past_its_deadline_is_stopped_as_a_transient_failure(tmp_path: Pat
 
     assert ended.timed_out is True
     assert ended.transient is True
-
-
-_DRY_RUN = r"""
-say("Chrome for Testing 156.0.8078.4 (playwright chromium v1248)")
-say("  Install location:    C:\\pw\\chromium-1248")
-say("  Download url:        https://cdn.playwright.dev/builds/cft/156.0.8078.4/win64/chrome-win64.zip")
-say("")
-say("FFmpeg (playwright ffmpeg v1013)")
-say("  Install location:    /pw/ffmpeg-1013")
-say("  Download url:        https://cdn.playwright.dev/dbazure/download/playwright/builds/ffmpeg/1013/ffmpeg-win64.zip")
-say("  Download fallback 1: https://playwright.download.prss.microsoft.com/x.zip")
-say("")
-say("Something (playwright odd v1)")
-say("  Install location:    <system>")
-"""
-
-
-@pytest.mark.usefixtures("_storage")
-def test_the_dry_run_listing_names_each_archive_once(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    measured: list[tuple[str, str]] = []
-
-    def record(directory: str, url: str, proxy: object) -> object:
-        del proxy
-        measured.append((directory, url))
-        return installer.BrowserArchive(directory_name=directory, url=url, download_bytes=10)
-
-    # The sizes come from the network; here only the listing is under test.
-    monkeypatch.setattr(installer, "_measure_archive", record)
-
-    measurement = measure_browser_downloads(_request(tmp_path), command=_script(tmp_path, _DRY_RUN))
-
-    assert measurement is not None
-    assert [archive.directory_name for archive in measurement.archives] == ["chromium-1248", "ffmpeg-1013"]
-    assert measured[1][1].endswith("/ffmpeg/1013/ffmpeg-win64.zip")
-
-
-@pytest.mark.usefixtures("_storage")
-def test_an_unreadable_listing_measures_nothing(tmp_path: Path) -> None:
-    assert measure_browser_downloads(_request(tmp_path), command=_script(tmp_path, "sys.exit(2)\n")) is None
 
 
 def test_build_removal_stays_inside_the_root(tmp_path: Path) -> None:
@@ -296,27 +390,19 @@ def test_the_driver_runs_directly_and_never_opens_a_window(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, console: ChildConsole
 ) -> None:
     started: list[_FinishedProcess] = []
-    listed: list[dict[str, object]] = []
 
     def popen(argv: list[str], **kwargs: object) -> _FinishedProcess:
         process = _FinishedProcess(argv, **kwargs)
         started.append(process)
         return process
 
-    def run(argv: list[str], **kwargs: object) -> object:
-        listed.append(kwargs)
-        return type("Completed", (), {"returncode": 1, "stdout": b""})()
-
     monkeypatch.setattr(installer.subprocess, "Popen", popen)
-    monkeypatch.setattr(installer.subprocess, "run", run)
 
     with child_console_binding.override(console):
         ended = run_browser_install(_request(tmp_path), _Observer())
-        measure_browser_downloads(_request(tmp_path))
 
     no_window = WINDOWS_CREATE_NO_WINDOW if sys.platform == "win32" else 0
     assert ended.exit_code == 0
     # The driver runs directly: an interpreter child would filter the browser location out.
     assert started[0].argv == [*compute_driver_executable(), "install", "chromium"]
     assert started[0].kwargs["creationflags"] == no_window
-    assert listed[0]["creationflags"] == no_window

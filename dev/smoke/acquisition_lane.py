@@ -888,7 +888,7 @@ def run_browser_lane(report: LaneReport, *, scratch: Path, environment: dict[str
     report.record("second_run", again)
     report.require(_result_field(again, "changed") is False, f"the second run changed something: {again.result}")
     report.require(_result_field(again, "transferred_bytes") == 0, f"the second run transferred: {again.result}")
-    # Planning sizes each archive with one HEAD request; a second run may spend that, and nothing more.
+    # A second run moves nothing but the setup's own reachability preflight.
     measuring = report.scenarios["plan"]["downstream_bytes"]
     ceiling = (measuring if isinstance(measuring, int) else 0) + _NO_TRANSFER_ALLOWANCE
     report.require(
@@ -1179,6 +1179,8 @@ def run_lane(items: Sequence[str], *, accept_size: bool = False, path: str = "di
                 ["plan"], environment=environment, scratch=scratch, budget_bytes=report.budget_bytes, proxy=proxy
             )
             report.record("plan", plan)
+            # The plan's sizes come from the pinned archives: planning reaches no network at all.
+            report.require(plan.downstream_bytes == 0, f"planning moved {plan.downstream_bytes} bytes")
             planned = _result_field(plan, "download_bytes")
             report.plan_download_bytes = planned if isinstance(planned, int) else None
             report.free_bytes_at_start = shutil.disk_usage(parent).free
@@ -1257,7 +1259,6 @@ class _LaneEvents:
 
 def _browser_item() -> object:
     from cadrumo.adapters.outbound.browser_runtime.installer import (
-        measure_browser_downloads,
         remove_browser_builds,
         run_browser_install,
     )
@@ -1269,7 +1270,6 @@ def _browser_item() -> object:
 
     return PlaywrightBrowserItem(
         install=run_browser_install,
-        measure=measure_browser_downloads,
         launch=launch_headless_browser,
         remove_builds=remove_browser_builds,
         receipts=DependencyReceiptStore(storage_path(StorageCategory.DEPENDENCY_RECEIPTS)),
