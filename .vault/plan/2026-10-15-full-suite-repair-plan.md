@@ -11,13 +11,16 @@ related:
   - '[[2026-10-05-google-outbound-review-adr]]'
   - '[[2026-10-11-mcp-parity-full-parity-adr]]'
   - '[[2026-10-13-startup-performance-operation-contract-manifest-adr]]'
-modified: '2026-10-17'
+modified: '2026-10-21'
 body_schema: body-v2
-body_hash: 'sha256:8c01a9a4b31f7b7f611d8c7393399c8b27a00b0fc80a57a1ff32d6dfbcdf737a'
+body_hash: 'sha256:44c9e73ec5865f1ac2f2c08224ae00431718a8fd1d8fe77d47105c92e6545f8c'
 ---
+
 # `full-suite-repair` plan
 
 ## Description
+
+Continuation approved 2026-10-21. The current user requests every test passing and all issues repaired, explicitly authorizes autonomous GPT-6.1 Sol high agents for self-contained repairs, and asks to continue. This supersedes the earlier restriction to previously failing selectors for this verification pass. Run the configured portable Python gates, frontend suite and native CMake/CTest checks; retain existing prerequisite classifications and report any unavailable live or attended verification separately. The current pass follows the desktop design polish and TUI readiness changes already committed in this worktree.
 
 Approved 2026-10-15. The user explicitly requested running the complete justfile test populations including live tests and fixing all failures. The user further required the publisher Google OAuth client to be a fixed, bundled, non-overridable application identity inherited by every native image.
 
@@ -30,9 +33,11 @@ Current evidence and full command logs are in `.logs/test-repair/`. Read the act
 - [x] `S01` - Enroll computed casillas and validate published authority; `verification declarations for modelos 303, 308, 322, 369 and 390`.
 - [x] `S02` - Compile fixed Google publisher identity into every package launch environment; `native environment contract, build provisioning, runtime settings and identity tests`.
 - [ ] `S03` - Repair behavior, fixture and tooling contracts exposed by the full suite; `fixtures, CLI ownership, registry migrations and reconciliation, actor contract compatibility, import isolation and packaging guards`.
-- [ ] `S04` - Verify targeted repairs using only previously known failing test cases and final review; `recorded failures, scoped static checks and final review`.
+- [ ] `S04` - Verify the configured test populations, targeted repairs and final review; `portable Python gates, desktop browser and native package checks, recorded failures and review`.
 
 ## Parallelization
+
+Current 2026-10-21 assignments supersede the historical batches below: `python_gates` owns the product/development Python gates, dependencies, import provenance and their fixtures; `a11y_language` owns portable tests and static repairs in cadrumo_client, cadrumo_runtime and cadrumo_agent_service; `layout_scenarios` owns the development bootstrap and calendar browser regressions. The root owns remaining frontend checks, native/package verification, touch layout fixtures, review, metadata and commits. All workers preserve concurrent edits, use disjoint outputs and complete self-contained work independently. The root does not directly wait on worker command sessions. Shared expensive builds are sequenced to avoid output contention.
 
 Authorized 2026-10-16 by the user: use GPT-6.1 Sol medium agents. S03 assignments may run concurrently with disjoint write ownership: frontend worker owns native/desktop/frontend, typing worker owns the six files from the recorded type diagnostics, calculation worker owns the recorded Modelo 322/353 calculation failures, and supervisor owns remaining runtime/TUI repairs. The supervisor serializes shared metadata and commits. Reuse applicable passing repair evidence. No full-lane tests may run; select only previously known failing cases.
 
@@ -45,6 +50,8 @@ Other-unreconciled follow-up authorized 2026-10-16: source-file-disjoint exact f
 Additional targeted S03 ownership under the user's other-unreconciled follow-up: the Sol calculation worker owns installed IVA/income-tax acceptance helpers, session_authority_activity.py, runtime_workbench.py, the new runtime_ledger_classification.py and their directly connected TUI Ledger models/controller/classification/injection/routes and legacy type-narrowing assertions. The precise fourteen-file snapshot is recorded in var/verification-resume/reconcile-iva-tui-final-review.json. The Sol typing worker owns the bounded backend_probe.py record annotation and the per-node historical inventory. The Sol frontend worker performs independent read-only integrated review of those repairs. The supervisor owns command target-string, keychain and Rust fixture reconciliation, canonical import-load metadata generation, final configured type/import checks and serialized vault evidence. These routine repairs preserve existing registered-operation, registry authority, profile/session custody and immutable projection contracts; no new authority or timeout policy is introduced. Test selection remains exact known failures only.
 
 ## Verification
+
+Current 2026-10-21 verification: run `just check-code`, `just check-registry-gate`, `just test-gate`, the separately owned runtime/client/agent-service portable and serial populations, `npm run check`, the complete browser suite, and applicable native CMake/CTest groups. Repair reproduced failures and rerun their owning checks. Reuse applicable passing receipts for unchanged sources; distinguish interrupted runs, environmental teardown failures, configured prerequisite skips and actual product failures. Never suppress assertions or weaken checks to obtain a passing result. Earlier selector-only restrictions below describe the prior checkpoint and are superseded for this pass by the current user request.
 
 User instruction of 2026-10-16 supersedes the earlier full-lane verification requirement: run only exact previously known failing test selectors. Use scoped lint, formatting and type checks for changed files; reuse applicable passing receipts. Preserve real prerequisites and explicit failures rather than skipping them. Do not increase deadlines, weaken assertions or fabricate credentials or authority evidence. Final review must distinguish repaired failures, already-fixed cases and unresolved prerequisites.
 

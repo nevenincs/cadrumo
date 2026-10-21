@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#full-suite-repair'
 date: '2026-10-15'
-modified: '2026-10-17'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:b7ead9fa5837dc0bf91f57ab99602a08dee495c07187ebdff9b9eeba21d037be'
+body_hash: 'sha256:bcfc36b3e33ea345838f68f304bec24e7c2fce4f538b7e8789944941406a774b'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
@@ -1457,6 +1457,12 @@ related:
 - `S03` `verify:` `just check-types` -> `pass`
 - `S03` `verify:` `uv run --no-sync python -m dev.quality.import_load_probe --compile-targets` -> `pass`
 - `S03` `verify:` `just check-import-boundaries` -> `pass`
+- `S04` `verify:` `2026-10-21 complete desktop browser run (744 passed, 13 failed, 9 configured skips)` -> `fail`
+- `S04` `verify:` `2026-10-21 focused touch layout, busy log and Google setup browser rerun (4 tests)` -> `pass`
+- `S04` `verify:` `2026-10-21 desktop host tests (464 passed, 1 ignored, 1 filtered)` -> `pass`
+- `S04` `verify:` `2026-10-21 npm run check (types, lint, architecture 11 tests, formatting)` -> `pass`
+- `S04` `verify:` `2026-10-21 CTest manager.supervision installer.rust native.identity-coverage application.rust (4 groups)` -> `pass`
+- `S04` `verify:` `2026-10-21 browser failures rerun after repairs (all 13 original failures)` -> `pass`
 
 ## Notes
 
@@ -1498,3 +1504,5 @@ related:
 - `S03` Regenerated canonical import-load inventory after actual defining-module and test-owner moves. Final fresh unused measurement confirms legitimate orphan removals without extra roots, baselines, skips or suppressions. Three lower-confidence findings retained with actual runtime evidence. Earlier final gates refused changing snapshots and unequal source census; preserved exit7 receipts. Exact comparison found one harness test omitted by Grimp because its nested test directory lacked a package marker. Added inert `__init__.py` to enroll the genuine file in both checkers, without exclusions or relaxed comparison; reran whole strict gate. Current source provenance controls reject unknown/bound/rebound/rewritten sources; all25 direction contracts and non-test loadability remain enforced. Import/unused slice accepted on final evidence; overall S03/S04 and original strict live prerequisites remain open. No full pytest population rerun.
 - `S03` User forbids full test lanes. Per-node inventory664 and qualified identity replacements are indexed in var/verification-resume/reconciliation-summary.json. Live failures remain real prerequisites/challenges; installed IVA exact rerun remains active. Shared S03/S04 stay open.
 - `S03` Clean original IVA journey passes without diagnostic hooks; independent integrated review no findings. Twelve genuine live failures remain. No full test lanes; S03/S04 stay open and no shared-source Step commit is claimed.
+- `S04` Current user authorizes full verification and autonomous Sol6.1 high workers; historical selector-only restriction superseded. Browser and Python repairs remain active; no all-green claim.
+- `S04` Independent desktop review found no concrete defects; HMR regression reproduced failure before fix and passes after. Browser 9 live-agent opt-in skips remain classified. Native bundle, refreshed host checks and Python gates remain active.
