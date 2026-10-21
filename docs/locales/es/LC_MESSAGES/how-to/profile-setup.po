@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 02:04+0200\n"
+"POT-Creation-Date: 2026-10-21 17:01+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -1153,32 +1153,49 @@ msgstr "Eliminar un perfil de forma permanente"
 
 #: ../../how-to/profile-setup.md:469
 msgid ""
-"Sign in to the profile you want to remove, then sign out to close its "
-"shared sign-in before deleting it. This also works after the earlier "
-"logout example. Logout keeps that profile selected, and Cadrumo refuses "
-"to delete the selected profile. Log in to another existing profile to "
-"change the default selection, then confirm the irreversible deletion of "
-"the original named profile. The example assumes `docs-sequence-"
-"replacement` already exists; login asks for its passphrase. It comes "
-"after every operation on the original profile because that profile cannot"
-" be used again:"
+"Open **Manage profiles** from the profile menu or sign-in screen. You can"
+" create a profile or delete one stored under your current OS account. You"
+" do not need the profile's password to delete it. Profiles in other OS "
+"accounts are not listed."
 msgstr ""
-"Inicia sesión en el perfil que quieras eliminar y después cierra sesión "
-"para cerrar su inicio de sesión compartido antes de eliminarlo. Esto "
-"también funciona después del ejemplo anterior de cierre de sesión. Cerrar"
-" sesión mantiene ese perfil seleccionado, y Cadrumo se niega a eliminar "
-"el perfil seleccionado. Inicia sesión en otro perfil existente para "
-"cambiar la selección predeterminada y confirma después la eliminación "
-"irreversible del perfil original, indicándolo por su nombre. El ejemplo "
-"supone que `docs-sequence-replacement` ya existe; el inicio de sesión "
-"pide su frase de contraseña. Va después de todas las operaciones sobre el"
-" perfil original porque ese perfil no puede volver a usarse:"
+"Abre **Gestionar perfiles** desde el menú del perfil o la pantalla de "
+"inicio de sesión. Puedes crear un perfil o eliminar uno almacenado bajo "
+"tu cuenta actual del sistema operativo. No necesitas la contraseña del "
+"perfil para eliminarlo. Los perfiles de otras cuentas del sistema "
+"operativo no aparecen en la lista."
 
-#: ../../how-to/profile-setup.md:483
+#: ../../how-to/profile-setup.md:473
+msgid ""
+"Choose **Delete profile**, type its displayed name exactly, and "
+"acknowledge the data loss. This permanently removes its local invoices, "
+"filings, documents and conversations. External accounts and exported "
+"copies remain. Cadrumo closes the profile's sessions and clears its "
+"selection if necessary; you can also delete the last profile. Records "
+"under retention protection cannot be deleted."
+msgstr ""
+"Elige **Eliminar perfil**, escribe su nombre tal como se muestra y "
+"reconoce la pérdida de datos. Esto elimina de forma permanente sus "
+"facturas, presentaciones, documentos y conversaciones locales. Las "
+"cuentas externas y las copias exportadas permanecen. Cadrumo cierra las "
+"sesiones del perfil y borra su selección si es necesario; también puedes "
+"eliminar el último perfil. Los registros sujetos a protección de "
+"conservación no se pueden eliminar."
+
+#: ../../how-to/profile-setup.md:479
+msgid ""
+"On the command line, first review the named profile without `--yes`; "
+"nothing is deleted. Add `--yes` only when you intend to remove that "
+"profile permanently:"
+msgstr ""
+"En la línea de comandos, revisa primero el perfil indicado por su nombre "
+"sin `--yes`; no se elimina nada. Añade `--yes` solo cuando quieras "
+"eliminar ese perfil de forma permanente:"
+
+#: ../../how-to/profile-setup.md:486
 msgid "If setup looks wrong"
 msgstr "Si la configuración parece incorrecta"
 
-#: ../../how-to/profile-setup.md:485
+#: ../../how-to/profile-setup.md:488
 msgid ""
 "If a command reports no active profile, an invalid field value, or that "
 "you're working under the wrong profile, see [Diagnose and repair your "
@@ -1188,7 +1205,7 @@ msgstr ""
 "no válido o de que estás trabajando bajo el perfil equivocado, consulta "
 "[Diagnosticar y reparar tu configuración local](troubleshooting.md)."
 
-#: ../../how-to/profile-setup.md:489
+#: ../../how-to/profile-setup.md:492
 msgid ""
 "When the troubleshooting steps don't resolve it, follow [Prepare a "
 "privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-"
@@ -1201,26 +1218,26 @@ msgstr ""
 "Indica las salidas que debes incluir y los datos personales que debes "
 "omitir antes de llevar el problema al gestor de incidencias del proyecto."
 
-#: ../../how-to/profile-setup.md:495
+#: ../../how-to/profile-setup.md:498
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/profile-setup.md:497
+#: ../../how-to/profile-setup.md:500
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importar y gestionar movimientos](import-bank-statements.md)"
 
-#: ../../how-to/profile-setup.md:498
+#: ../../how-to/profile-setup.md:501
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Mantener los datos censales del Modelo 036 en tu perfil](censo-update.md)"
 
-#: ../../how-to/profile-setup.md:499
+#: ../../how-to/profile-setup.md:502
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planificar tu calendario de presentaciones](filing-calendar.md)"
 
-#: ../../how-to/profile-setup.md:500
+#: ../../how-to/profile-setup.md:503
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisar y aportar las entradas de cálculo](review-calculation-values.md)"
 
-#: ../../how-to/profile-setup.md:501
+#: ../../how-to/profile-setup.md:504
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"

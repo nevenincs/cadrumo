@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-11 06:31+0200\n"
+"POT-Creation-Date: 2026-10-21 17:01+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -452,17 +452,22 @@ msgid ""
 "For bulk review, `classify --file` reads a CSV with columns "
 "`transaction_id`, `classification`, and optional classification facts "
 "such as `category_id`, `business_pct`, `usage_ratio_id`, taxable-base and"
-" VAT columns, `iva_category`, and `irpf_category`. Prepare a narrow CSV "
-"holding only the rows you mean to change, one row per transaction:"
+" VAT columns, `iva_category`, `irpf_category`, and `notes`. Use notes to "
+"record why the category fits; quote cells containing commas. Blank "
+"optional cells preserve saved values. Prepare a narrow CSV holding only "
+"the rows you mean to change, one row per transaction:"
 msgstr ""
 "Per a la revisió massiva, `classify --file` llegeix un CSV amb les "
 "columnes `transaction_id`, `classification` i dades de classificació "
 "opcionals com ara `category_id`, `business_pct`, `usage_ratio_id`, "
-"columnes de base imposable i IVA, `iva_category` i `irpf_category`. "
-"Prepara un CSV reduït que contingui només les files que vols canviar, una"
-" fila per moviment:"
+"columnes de base imposable i IVA, `iva_category`, `irpf_category` i "
+"`notes`. Fes servir les notes per deixar constància de per què encaixa la"
+" categoria; posa entre cometes les cel·les que continguin comes. Les "
+"cel·les opcionals en blanc conserven els valors desats. Prepara un CSV "
+"reduït que contingui només les files que vols canviar, una fila per "
+"moviment:"
 
-#: ../../how-to/classify-transactions.md:187
+#: ../../how-to/classify-transactions.md:189
 msgid ""
 "In the file, amounts such as the taxable base and the VAT amount take at "
 "most two decimals. A business share and a VAT rate are fractions from `0`"
@@ -477,7 +482,7 @@ msgstr ""
 "`0.052` o `0.0175`. `classify` aplica els mateixos límits a una sola "
 "fila."
 
-#: ../../how-to/classify-transactions.md:192
+#: ../../how-to/classify-transactions.md:194
 msgid ""
 "The following sequence starts from the imported quarter. It lists the "
 "rows still needing a decision, exports a review snapshot to work from, "
@@ -487,32 +492,38 @@ msgstr ""
 " encara necessiten una decisió, exporta una instantània de revisió per "
 "treballar-hi, aplica un CSV preparat i confirma el resultat:"
 
-#: ../../how-to/classify-transactions.md:200
+#: ../../how-to/classify-transactions.md:202
 msgid ""
 "Use the CSV path when filtered review shows many rows you can classify "
 "safely from their descriptions, counterparties, and supporting documents."
 " Keep a copy of the file. It gives you a record of how you classified "
 "that period if you are later asked to justify your return. The CSV has no"
 " column for the deduction kind; set it with `classify` or `add` on each "
-"purchase row. This path does not batch-update amounts, descriptions, "
-"notes, attachments, deduction kinds, or split/merge state; use the "
-"transaction workflow for those row-level edits."
+"purchase row. This path does not batch-update payment amounts, "
+"descriptions, attachments, deduction kinds, or split/merge state; use the"
+" transaction workflow for those row-level edits. Check the "
+"applied/skipped counts and every failed row. A batch can partially "
+"succeed; correct only the failed rows rather than repeating the whole "
+"file."
 msgstr ""
-"Utilitza la via del CSV quan la revisió filtrada mostri moltes files que "
-"pots classificar amb seguretat a partir de les seves descripcions, "
+"Fes servir la via del CSV quan la revisió filtrada mostri moltes files "
+"que pots classificar amb seguretat a partir de les seves descripcions, "
 "contraparts i justificants. Conserva una còpia del fitxer. Et dona un "
-"registre de com has classificat aquell període si més endavant se't "
-"demana justificar la declaració. El CSV no té cap columna per al tipus de"
-" deducció; estableix-lo amb `classify` o `add` a cada fila de compra. "
-"Aquesta via no actualitza per lots imports, descripcions, notes, adjunts,"
-" tipus de deducció ni l'estat de divisió/fusió; utilitza el flux de "
-"treball de moviments per a aquestes edicions a nivell de fila."
+"registre de com vas classificar aquell període per si més endavant et "
+"demanen que justifiquis la declaració. El CSV no té columna per al tipus "
+"de deducció; estableix-lo amb `classify` o `add` a cada fila de compra. "
+"Aquesta via no actualitza de manera massiva imports de pagament, "
+"descripcions, adjunts, tipus de deducció ni l'estat de divisió/fusió; fes"
+" servir el flux de moviments per a aquestes edicions a escala de fila. "
+"Comprova els recomptes d'aplicades i ometudes i cada fila fallida. Un lot"
+" pot reeixir només en part; corregeix únicament les files fallides en "
+"lloc de repetir el fitxer sencer."
 
-#: ../../how-to/classify-transactions.md:208
+#: ../../how-to/classify-transactions.md:212
 msgid "Apply stored rules automatically"
 msgstr "Aplica regles desades automàticament"
 
-#: ../../how-to/classify-transactions.md:210
+#: ../../how-to/classify-transactions.md:214
 msgid ""
 "Rules automatically classify transactions whose description contains a "
 "word or phrase you specify. Matching ignores uppercase and lowercase "
@@ -527,7 +538,7 @@ msgstr ""
 "l'aplica. Els registres de l'exemple no tenen cap fila, de manera que ni "
 "la previsualització ni l'aplicació coincideixen amb res:"
 
-#: ../../how-to/classify-transactions.md:219
+#: ../../how-to/classify-transactions.md:223
 msgid ""
 "Run `--dry-run` first. Add `--reaffirm` only if you want the rule to "
 "overwrite classifications you already set by hand."
@@ -535,11 +546,11 @@ msgstr ""
 "Executa `--dry-run` primer. Afegeix `--reaffirm` només si vols que la "
 "regla sobreescrigui classificacions que ja has establert a mà."
 
-#: ../../how-to/classify-transactions.md:222
+#: ../../how-to/classify-transactions.md:226
 msgid "Use an LLM suggestion"
 msgstr "Utilitza un suggeriment d'un LLM"
 
-#: ../../how-to/classify-transactions.md:224
+#: ../../how-to/classify-transactions.md:228
 msgid ""
 "Cadrumo can use a configured language model to suggest how to classify "
 "each transaction. The suggestion is a starting point. You must confirm or"
@@ -551,7 +562,7 @@ msgstr ""
 " confirmar o corregir. No emplena imports fiscals com ara la base "
 "imposable, el tipus d'IVA o la categoria d'IRPF."
 
-#: ../../how-to/classify-transactions.md:229
+#: ../../how-to/classify-transactions.md:233
 msgid ""
 "Use [Classify transactions with an LLM](classify-with-llm.md) for the "
 "full provider, preview, apply, and override flow."
@@ -560,11 +571,11 @@ msgstr ""
 "al flux complet de proveïdor, previsualització, aplicació i "
 "sobreescriptura."
 
-#: ../../how-to/classify-transactions.md:233
+#: ../../how-to/classify-transactions.md:237
 msgid "See everything that still needs a decision"
 msgstr "Consulta tot el que encara necessita una decisió"
 
-#: ../../how-to/classify-transactions.md:235
+#: ../../how-to/classify-transactions.md:239
 msgid ""
 "The review queue is one profile-wide list of everything that still wants "
 "your attention before a filing: transactions without a classification, "
@@ -584,7 +595,7 @@ msgstr ""
 "corregeixes el registre subjacent. L'exemple parteix del trimestre "
 "importat i llegeix després la cua:"
 
-#: ../../how-to/classify-transactions.md:247
+#: ../../how-to/classify-transactions.md:251
 msgid ""
 "Each row shows the item id, its kind, the affected record, the period, a "
 "severity (`critical`, `high`, `normal`, or `info`), and a final column "
@@ -595,7 +606,7 @@ msgstr ""
 "columna final amb l'ordre a executar tot seguit. Acota la llista per "
 "mena, model o estat:"
 
-#: ../../how-to/classify-transactions.md:255
+#: ../../how-to/classify-transactions.md:259
 msgid ""
 "Accepted `--kind` tokens are `ledger_transaction`, "
 "`purchase_invoice_evidence`, `payable_invoice`, `collectible_invoice`, "
@@ -614,7 +625,7 @@ msgstr ""
 "utilitza l'opció global `--format json` (abans de l'ordre) per obtenir un"
 " camp `legal_refs` a cada fila."
 
-#: ../../how-to/classify-transactions.md:263
+#: ../../how-to/classify-transactions.md:267
 msgid ""
 "Transaction items clear when you classify the row (this page). Invoice "
 "items clear when you link or update the invoice - see [Attach invoices "
@@ -629,11 +640,11 @@ msgstr ""
 "els valors indicats i tornes a comprovar: consulta [Comprova un esborrany"
 " de declaració i actua segons les incidències](verification-reports.md)."
 
-#: ../../how-to/classify-transactions.md:268
+#: ../../how-to/classify-transactions.md:272
 msgid "Confirm readiness"
 msgstr "Confirma la preparació"
 
-#: ../../how-to/classify-transactions.md:270
+#: ../../how-to/classify-transactions.md:274
 msgid ""
 "Run preflight after classification. The example starts from the "
 "classified quarter, then runs preflight and reads the status of your "
@@ -643,7 +654,7 @@ msgstr ""
 "trimestre classificat, executa el preflight i llegeix l'estat dels teus "
 "registres:"
 
-#: ../../how-to/classify-transactions.md:277
+#: ../../how-to/classify-transactions.md:281
 msgid ""
 "Preflight names rows that still need category, taxable base, VAT amount, "
 "VAT rate, currency, or proportionality reference."
@@ -652,11 +663,11 @@ msgstr ""
 "imposable, import d'IVA, tipus d'IVA, divisa o referència de "
 "proporcionalitat."
 
-#: ../../how-to/classify-transactions.md:280
+#: ../../how-to/classify-transactions.md:284
 msgid "Correct a classification"
 msgstr "Corregeix una classificació"
 
-#: ../../how-to/classify-transactions.md:282
+#: ../../how-to/classify-transactions.md:286
 msgid ""
 "Re-run `classify` on the same transaction id. A manual decision replaces "
 "the previous classification. The example starts from a row classified as "
@@ -666,23 +677,23 @@ msgstr ""
 "manual substitueix la classificació anterior. L'exemple parteix d'una "
 "fila classificada com a professional i la corregeix després a personal:"
 
-#: ../../how-to/classify-transactions.md:290
+#: ../../how-to/classify-transactions.md:294
 msgid "Inspect the row again with `ledger view` before calculating."
 msgstr "Inspecciona la fila de nou amb `ledger view` abans de calcular."
 
-#: ../../how-to/classify-transactions.md:292
+#: ../../how-to/classify-transactions.md:296
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/classify-transactions.md:294
+#: ../../how-to/classify-transactions.md:298
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importa i gestiona els moviments](import-bank-statements.md)"
 
-#: ../../how-to/classify-transactions.md:295
+#: ../../how-to/classify-transactions.md:299
 msgid "[Classify transactions with an LLM](classify-with-llm.md)"
 msgstr "[Classifica els moviments amb un LLM](classify-with-llm.md)"
 
-#: ../../how-to/classify-transactions.md:296
+#: ../../how-to/classify-transactions.md:300
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md)"
@@ -690,15 +701,14 @@ msgstr ""
 "[Com els teus registres es converteixen en xifres "
 "tributàries](../explanation/from-records-to-figures.md)"
 
-#: ../../how-to/classify-transactions.md:297
+#: ../../how-to/classify-transactions.md:301
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/classify-transactions.md:298
+#: ../../how-to/classify-transactions.md:302
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr "[Revisa càlculs amb Google Sheets](review-with-google-sheets.md)"
 
-#: ../../how-to/classify-transactions.md:299
+#: ../../how-to/classify-transactions.md:303
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"
-
