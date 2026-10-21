@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:80220b2333754bd8bd3fd2001e7b840a008799cc665de67e88897a638a8e161f'
+body_hash: 'sha256:c65bad72c88a3ab6545dd592974cf1bf611f7006ae5653368d591ef146453bda'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
@@ -1500,6 +1500,7 @@ related:
 - `S04` `verify:` `worktree-env-source` -> `pass`
 - `S04` `verify:` `browser-focused-repairs` -> `pass`
 - `S04` `verify:` `complete-current-browser` -> `pass`
+- `S04` `verify:` `current-mcp-language` -> `pass`
 
 ## Notes
 
@@ -1560,3 +1561,4 @@ related:
 - `S04` User clarified current TUI env/.env is credential source, not sibling main. Existing canonical bridge loads137keys with ClaveMovil identity/support configured; values never emitted. No loader code changed; withdraw unnecessary sibling-file regression54ce4f231d and restore exact prior file. Sibling blank-credential readiness superseded. Browser partial304pass49fail9skip430unexecuted of792 retained; focused event-order repair and complete rerun pending. S03/S04 remain open.
 - `S04` 5063618728 preserves controlled first draft by observing input after React; activity3PASS and broader focused18PASS1laterAEATFAIL retained. a600d32fef focuses AEAT terminal after ready; unchanged2PASS1FAIL reproduced, final whole3PASS9.5s. Complete frontend check passes; full browser rerun active/no verdict. Current restored env-loader18PASS0.38s after17574b95ce. Root review passes, S03/S04 remain open.
 - `S04` Canonical product+scenario browser793 cases exits0:784PASS9SKIP0FAIL14.7min; prior interruptedattempt retained. 50b6d7e3f0 sharedcheckbox/profilelayout12PASS, b3c58d805a explicitloglevels/preferences10PASS incl3new. Startup11/AEAT3/activity3PASS; rootreview/fullfrontendstaticPASS. Nine skipped realdesktopagent cases queued afternative, no executioncredit. MCP/docs/static/native/capabilities remain; S03/S04 open.
+- `S04` Current45module246definition MCPcohort388expanded plus ambientlanguage LASTsameprocess=389PASS0FAIL0SKIP244.01s run20261021T175128.332521Z-pytest-73108-30eb1c73. Stablefingerprints; all61movedhistoricalerrors mapactualpassingIDs,48retiredremainnoPASScredit. Originalbroadreceipt retained. LayoutCI/docs/serial nowrunning, finalstatic/native/capabilities/populationreconciliationpending; S03/S04 open.
