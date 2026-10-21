@@ -8,7 +8,7 @@ import pytest
 from cadrumo.application.operations.registry import OperationFrontendProjection
 
 from ...contracts.contracts import RefusalError
-from ...contracts.session_events import ProfileLanguageChanged
+from ...contracts.session_events import ProfileLanguageChanged, ProfileRecordsChanged
 from ..framing import VerifiedConnection
 from ..frontend_client import FrontendClient
 
@@ -31,6 +31,7 @@ def test_language_notification_ignores_retired_session_and_refuses_foreign_profi
     )
     client._session_retired(event)
     assert seen == [event]
+
     assert client.session_id == session_id
     client._session_retired(event.model_copy(update={"session_id": uuid4()}))
     assert seen == [event]
@@ -44,3 +45,27 @@ def test_language_notification_ignores_retired_session_and_refuses_foreign_profi
     client._session_id = session_id
     client._session_retired(event)
     assert seen == [event]
+
+
+def test_record_notification_keeps_exact_session_and_unsubscribes() -> None:
+    profile_id, session_id = uuid4(), uuid4()
+    client = FrontendClient(
+        cast(VerifiedConnection, object()), profile_id=profile_id, frontend=OperationFrontendProjection.DESKTOP
+    )
+    client._session_id = session_id
+    client._event_subscription = lambda: None
+    seen: list[bool] = []
+    unsubscribe = client.subscribe_profile_record_changes(lambda: seen.append(True))
+    event = ProfileRecordsChanged(
+        runtime_boot_id=uuid4(), connection_id=uuid4(), profile_id=profile_id, session_id=session_id
+    )
+    client._session_retired(event)
+    assert seen == [True]
+    assert client.session_id == session_id
+    client._session_retired(event.model_copy(update={"session_id": uuid4()}))
+    assert seen == [True]
+    with pytest.raises(RefusalError):
+        client._session_retired(event.model_copy(update={"profile_id": uuid4()}))
+    unsubscribe()
+    client._session_retired(event)
+    assert seen == [True]

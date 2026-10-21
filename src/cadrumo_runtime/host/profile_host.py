@@ -222,7 +222,7 @@ class RuntimeProfileHost:
         worker_script: Path | None = None,
         wall_clock: Callable[[], datetime] = now,
         retired: Callable[[SessionEvent], None] | None = None,
-        operations_advanced: Callable[[tuple[OperationId, ...]], None] | None = None,
+        operations_advanced: Callable[[tuple[OperationId, ...], bool], None] | None = None,
         model_runs: Callable[[WorkerModelRun, bytearray], tuple[ModelRunOutcome, bytearray]] | None = None,
     ) -> None:
         """Compose existing authorities without opening keys or selecting a profile."""
@@ -304,10 +304,10 @@ class RuntimeProfileHost:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         return self._recipient(requester)
 
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...]) -> None:
+    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
         """Hand the worker's report of committed operations to whoever cues their observers."""
         if self._operations_advanced is not None:
-            self._operations_advanced(operation_ids)
+            self._operations_advanced(operation_ids, records_changed)
 
     def approval_preflight(self, request: WorkerApprovalRequest) -> None:
         """Validate the exact worker and current human before any password frame."""

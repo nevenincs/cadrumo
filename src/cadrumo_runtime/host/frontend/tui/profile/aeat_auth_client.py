@@ -25,6 +25,8 @@ from cadrumo.application.auth.sync_readiness import AuthSyncReadiness
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.user_profile.overview import ProfileOverview
 from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
+from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.logging import get_logger
 from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
 from cadrumo.entrypoints.tui.profile.auth_fields import AeatAuthFieldSaveError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -121,10 +123,21 @@ class AeatAuthClient:
     async def snapshot(self) -> tuple[ProfileOverview, AuthSyncReadiness]:
         """Reread the exact profile and its authentication requirements."""
         self._pin()
+        started = time.monotonic()
         overview = await asyncio.to_thread(self._overview)
+        overview_seconds = time.monotonic() - started
         self._pin()
         readiness = await self.read_readiness()
         self._baseline = overview
+        diagnostic_event(
+            get_logger(__name__),
+            "aeat_setup_snapshot",
+            fields={
+                "overview_seconds": round(overview_seconds, 3),
+                "readiness_seconds": round(time.monotonic() - started - overview_seconds, 3),
+                "elapsed_seconds": round(time.monotonic() - started, 3),
+            },
+        )
         return overview, readiness
 
     async def save(

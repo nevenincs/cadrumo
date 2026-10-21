@@ -26,6 +26,7 @@ from ..application.operations.contract_manifest import (
     OperationGroupBuild,
     load_operation_contract_manifest,
 )
+from ..application.operations.persistence.journal import OperationPersistedSnapshot
 from ..application.operations.registry import OperationPublicContractSetV1, OperationRegistry
 from ..application.operations.registry_schema_validation import operation_schema_compilation_scope
 from ..core.config import Settings, load_settings
@@ -78,7 +79,6 @@ if TYPE_CHECKING:
     from ..application.operations.authorization import OperationExecutionAuthority
     from ..application.operations.composition import OperationComposedServices
     from ..application.operations.execution_actor import OperationExecutionCallerReader
-    from ..application.operations.models import OperationId
     from ..application.operations.operation_definition import OperationDefinition
     from ..application.operations.registry import OperationPublicDefinitionRegistrationV1
     from ..application.overview.pipeline_read_ports import PipelineReadPortsFactory
@@ -3120,7 +3120,7 @@ def compose_operation_dependencies(
     modelo_profile_resolver: ModeloWorkVerifyProfileResolver | None = None,
     execution_caller_reader: OperationExecutionCallerReader | None = None,
     runtime_server_owner_start: RuntimeServerOwnerStart | None = None,
-    journal_committed: Callable[[OperationId], None] | None = None,
+    journal_committed: Callable[[OperationPersistedSnapshot], None] | None = None,
 ) -> OperationComposedServices:
     """Compose the manifest-backed production registry and all public services.
 

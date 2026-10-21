@@ -15,7 +15,9 @@ and the MCP SDK uses its memory transport.
 from __future__ import annotations
 
 import asyncio
+import json
 import os
+import statistics
 import sys
 import time
 from pathlib import Path
@@ -28,7 +30,9 @@ from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEF
 from cadrumo.application.operations.person_acts import ACCESS_ADMINISTRATION_OPERATIONS
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID
+from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from cadrumo.core.config import override_settings
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -37,8 +41,9 @@ from cadrumo_harness.mcp.protocol_contract import PERSON_ACT_REMEDY, sign_in_rem
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.runtime_admission import McpAdmission
 from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.agent_key_reads import edit_profile_and_read_back
+from cadrumo_harness.mcp.tests.agent_key_reads import edit_profile_and_read_back, tool_document
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_runtime.host.frontend.tui.profile.manager_client import ProfileManagerClientComposition
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
 
 from ..proof_support import ProcessIdentity
@@ -65,9 +70,11 @@ def _adapter() -> RuntimeMcpAdapter:
     return RuntimeMcpAdapter(profile_id=None, client=None, requests_attendance=True)
 
 
-async def _holding(runtime: StoredSignInRuntime) -> FrontendClient:
+async def _holding(
+    runtime: StoredSignInRuntime, frontend: OperationFrontendProjection = OperationFrontendProjection.CLI
+) -> FrontendClient:
     """The person signs in at the command line, keeps no stored sign-in, and holds it for attendance."""
-    holder = await open_installed_client(profile_id=runtime.profile_id, frontend=OperationFrontendProjection.CLI)
+    holder = await open_installed_client(profile_id=runtime.profile_id, frontend=frontend)
     await asyncio.to_thread(holder.login_password, bytearray(PROFILE_INPUT.encode()), timeout=120)
     await asyncio.to_thread(holder.attendance_inventory)
     return holder
@@ -242,4 +249,106 @@ async def test_an_approved_attended_connection_edits_the_profile_and_reads_each_
             finally:
                 await adapter.close()
         finally:
+            await asyncio.to_thread(holder.close)
+
+
+@pytest.mark.anyio
+async def test_aeat_setup_handoff_through_admitted_mcp_measures_calls_and_keeps_person_authority(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Exercise real MCP, native runtime and profile worker; no provider/network needed."""
+    with (
+        stored_sign_in_runtime(tmp_path, monkeypatch, signed_in=False) as runtime,
+        override_settings(cadrumo_active_profile=str(runtime.profile_id)),
+    ):
+        holder = await _holding(runtime, OperationFrontendProjection.TUI)
+        adapter = _adapter()
+        try:
+            async with connected_server_and_client_session(build_server(adapter)) as sdk:
+                status = await _status_while_deciding(sdk, holder, approve=True)
+                assert status.structured_content["session"] == McpAdmission.ATTENDED.value
+                description_started = time.perf_counter()
+                description = tool_document(await sdk.call_tool("describe", {"definition_id": "auth.local-read"}))
+                assert description["outcome"] == "described", description
+                description_ms = (time.perf_counter() - description_started) * 1000
+                timings: list[float] = []
+                inline_count = 0
+                for _ in range(5):
+                    started = time.perf_counter()
+                    submitted = tool_document(
+                        await sdk.call_tool(
+                            "execute",
+                            {
+                                "definition_id": "auth.local-read",
+                                "payload": {"profile_id": str(runtime.profile_id), "kind": "setup"},
+                                "wait_seconds": 5,
+                            },
+                        )
+                    )
+                    completion = submitted.get("completion")
+                    assert completion is not None, submitted
+                    inline_count += 1
+                    projection = completion["document"]["projection"]
+                    timings.append(time.perf_counter() - started)
+                    assert projection["kind"] == "setup"
+                    assert projection["setup"]["url"] == f"cadrumo://profiles/{runtime.profile_id}/aeat-auth"
+                    assert projection["sync_readiness"]["ready"] is False
+                    assert any(item["field"] == "auth.provider" for item in projection["setup"]["missing"])
+                denied = await sdk.call_tool(
+                    "execute",
+                    {
+                        "definition_id": "auth.provider.configure",
+                        "payload": {"provider": "clave_movil", "clave_movil_route": "app_request"},
+                    },
+                )
+                assert denied.is_error
+                assert denied.structured_content["code"] == "human_authority_required"
+                assert denied.structured_content["remedy"] == PERSON_ACT_REMEDY
+                assert denied.structured_content["next_call"]["arguments"]["payload"]["kind"] == "setup"
+                editor = ProfileManagerClientComposition(
+                    holder, profile_label="AEAT setup test", output_language=OutputLanguage.EN
+                ).auth_setup()
+                editor_started = time.perf_counter()
+                await editor.snapshot()
+                snapshot_ms = (time.perf_counter() - editor_started) * 1000
+                save_started = time.perf_counter()
+                _, saved_readiness = await editor.save(
+                    AuthProviderKind.CLAVE_MOVIL,
+                    ClaveMovilRoute.APP_REQUEST,
+                    {"identity.tax_id": "X1234567L", "auth.dni_nie": "X1234567L", "auth.numero_soporte": "E12345678"},
+                    "",
+                    None,
+                )
+                save_ms = (time.perf_counter() - save_started) * 1000
+                assert saved_readiness.ready
+                resumed = tool_document(
+                    await sdk.call_tool(
+                        "execute",
+                        {
+                            "definition_id": "auth.local-read",
+                            "payload": {"profile_id": str(runtime.profile_id), "kind": "setup"},
+                            "wait_seconds": 5,
+                        },
+                    )
+                )
+                after = resumed["completion"]["document"]["projection"]
+                assert after["sync_readiness"]["ready"] is True
+                assert after["setup"]["missing"] == []
+                assert "E12345678" not in json.dumps(after)
+                print(
+                    json.dumps(
+                        {
+                            "benchmark": "aeat_setup_admitted_mcp",
+                            "samples_ms": [round(value * 1000, 2) for value in timings],
+                            "median_ms": round(statistics.median(timings) * 1000, 2),
+                            "tool_calls_per_check": 1,
+                            "inline_results": inline_count,
+                            "cold_describe_ms": round(description_ms, 2),
+                            "editor_snapshot_ms": round(snapshot_ms, 2),
+                            "editor_save_and_readback_ms": round(save_ms, 2),
+                        }
+                    )
+                )
+        finally:
+            await adapter.close()
             await asyncio.to_thread(holder.close)

@@ -843,6 +843,87 @@ desktop:
     label: Panell inferior
     resize: Canvia la mida del panell inferior
     show: Mostra el panell inferior
+  profile:
+    add: Afegeix un registre
+    all_fields: Totes les dades
+    all_sections: Totes les seccions
+    auth: Configura l’accés a l’AEAT
+    cancel: Cancel·la
+    censo:
+      absent: L’AEAT no ha proporcionat aquesta dada. Sense canvis.
+      adopt: Utilitza la dada de l’AEAT en desar.
+      apply: Desa els canvis revisats
+      cancel: Atura la sincronització
+      close: Tanca
+      current: Desat
+      device: Aprova la sol·licitud d’accés a l’aplicació Cl@ve.
+      done: Sincronització completada. Revisa les dades que encara falten al perfil.
+      field: Dada del perfil
+      identity: Afegeix el NIF o NIE
+      incoming: AEAT
+      preserve: Conserva la resposta desada.
+      pull: Consulta les dades censals
+      reading: Consultant les dades censals…
+      ready: L’accés a l’AEAT està configurat. Podràs revisar les dades obtingudes
+        abans de desar-les.
+      reject: Descarta els canvis
+      return: Torna al perfil
+      review: Revisa les dades de l’AEAT.
+      scope: Importa el domicili fiscal, el codi postal i la referència cadastral
+        del Cens. La resta de dades del perfil requereixen les teves respostes.
+      setup: Configura l’accés a l’AEAT
+      stopped: Sincronització aturada. No s’han desat canvis al perfil.
+      title: Sincronitza amb l’AEAT
+      unavailable: No s’ha pogut comprovar la sincronització. Prova d’actualitzar.
+      unknown: El resultat no està confirmat. Actualitza abans d’iniciar una altra
+        sincronització.
+      unsupported: Aquest accés requereix una interacció disponible al terminal. Cancel·la
+        aquest intent i sincronitza el Cens des del terminal.
+    close: Tanca el perfil
+    collapse_all: Plega-ho tot
+    complete: Finalitza la configuració del perfil
+    conflict: El teu perfil ha canviat en una altra pantalla. Tanca aquest editor,
+      revisa les dades actualitzades i torna a obrir el camp. No s’ha desat l’esborrany.
+    description: Revisa les dades desades i completa el que falta. Els canvis es desen
+      en aquest perfil.
+    edit: Edita
+    edit_field: Edita {field}
+    edit_help: Només es desaran les dades que canviïs. Deixa les altres com estan.
+    empty: Cap dada coincideix amb aquests filtres. Prova una altra cerca o secció.
+    expand_all: Desplega-ho tot
+    field_help: Sobre aquest camp
+    filled: Dades obligatòries completes
+    filter: Mostra els camps
+    loading: S’està carregant el teu perfil…
+    maximize: Pantalla completa
+    missing: Falten {count} dades obligatòries
+    missing_count: En falten {count}
+    missing_filter: Dades pendents
+    not_set: Sense completar
+    refresh: Actualitza
+    refused: No s’han pogut desar aquests canvis. Revisa les indicacions dels camps
+      i actualitza el perfil abans de tornar-ho a provar.
+    remove: Elimina el registre
+    remove_help: Vols eliminar aquest registre del teu perfil? Se n’eliminaran tots
+      els camps.
+    required: Obligatori
+    required_filter: Obligatoris pendents
+    restore: Vista dividida
+    results: Es mostren {count} camps
+    save: Desa els canvis
+    saved_filter: Dades desades
+    saved_notice: Desat
+    saved_unread: S’han desat els canvis, però no s’ha pogut carregar el perfil actualitzat.
+      Actualitza per comprovar-los.
+    saving: S’està desant…
+    search: Cerca dades del perfil
+    sections: Secció del perfil
+    signed_out: Inicia sessió per veure i editar el teu perfil.
+    title: El teu perfil
+    unavailable: No s’ha pogut carregar el teu perfil. Actualitza per tornar-ho a
+      provar.
+    unknown: No hem pogut confirmar si s’han desat els canvis. Actualitza i comprova
+      els valors desats abans de tornar-ho a provar.
   rail:
     aeat: Seu de l'AEAT
     console: Consola

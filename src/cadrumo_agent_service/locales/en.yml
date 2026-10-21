@@ -1,6 +1,11 @@
 desktop:
   agent:
     add_files: Add files
+    aeat_setup_title: Set up AEAT access
+    aeat_setup_help: Save your authentication details here, then close the editor to return to your conversation. Credentials stay out of chat.
+    aeat_setup_return: Return to conversation
+    aeat_setup_check: Check setup and continue
+    aeat_setup_resume_message: I have finished with AEAT settings. Please check my saved setup again, help with any remaining requirements, and continue our task when it is ready.
     agent_replied: Agent replied
     approval_allow_always: Allow
     approval_allow_once: Allow once

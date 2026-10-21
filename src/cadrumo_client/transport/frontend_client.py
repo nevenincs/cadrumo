@@ -78,6 +78,7 @@ from ..contracts.session_events import (
     LifecycleNotice,
     OperationChanged,
     ProfileLanguageChanged,
+    ProfileRecordsChanged,
     ServiceLeaseChanged,
     SignInChanged,
 )
@@ -148,6 +149,7 @@ class FrontendClient(ProfileViewFrontend):
         self._event_subscription: Callable[[], None] | None = None
         self._notice_receivers: list[Callable[[LifecycleNotice], None]] = []
         self._language_receivers: list[Callable[[ProfileLanguageChanged], None]] = []
+        self._record_receivers: list[Callable[[], None]] = []
         self._lifecycle_notice: LifecycleNotice | None = None
         self._sign_in_receivers: list[Callable[[], None]] = []
         self._attendance_receivers: list[Callable[[], None]] = []
@@ -189,6 +191,12 @@ class FrontendClient(ProfileViewFrontend):
                 receivers_operation = tuple(self._operation_receivers) if event.session_id == self._session_id else ()
             for receive_operation in receivers_operation:
                 receive_operation()
+            return
+        if isinstance(event, ProfileRecordsChanged):
+            with self._event_guard:
+                receivers_records = tuple(self._record_receivers) if event.session_id == self._session_id else ()
+            for receive_records in receivers_records:
+                receive_records()
             return
         if isinstance(event, ProfileLanguageChanged):
             with self._event_guard:
@@ -272,6 +280,22 @@ class FrontendClient(ProfileViewFrontend):
             with self._event_guard:
                 if receive in self._language_receivers:
                     self._language_receivers.remove(receive)
+
+        return unsubscribe
+
+    def subscribe_profile_record_changes(self, receive: Callable[[], None]) -> Callable[[], None]:
+        """Observe record invalidation without reading values or extending authority."""
+        if self._event_subscription is None:
+            self._event_subscription = self._connection.subscribe_session_events(
+                self._session_retired, disconnected=self._connection_failed
+            )
+        with self._event_guard:
+            self._record_receivers.append(receive)
+
+        def unsubscribe() -> None:
+            with self._event_guard:
+                if receive in self._record_receivers:
+                    self._record_receivers.remove(receive)
 
         return unsubscribe
 

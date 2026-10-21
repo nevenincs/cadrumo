@@ -21,6 +21,7 @@ export function AccountMenu({
   onSignOut,
   onCreate,
   onAbout,
+  onProfile,
   google,
 }: {
   account: SignInController;
@@ -29,6 +30,7 @@ export function AccountMenu({
   onCreate: () => void;
   /** Opens the About dialog, where the host can say what is installed. */
   onAbout?: () => void;
+  onProfile?: () => void;
   google?: ReactNode;
 }) {
   const t = useStrings();
@@ -124,6 +126,12 @@ export function AccountMenu({
         >
           {signedIn ? (
             <>
+              {onProfile && (
+                <DropdownMenuItem onSelect={() => transfer(onProfile)}>
+                  <Icon name="user" />
+                  {t("desktop.profile.title")}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 disabled={account.busy}
                 onSelect={(event) => {

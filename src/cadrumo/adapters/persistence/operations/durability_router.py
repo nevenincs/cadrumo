@@ -61,7 +61,7 @@ class DurabilityRoutedOperationPersistence(
         leases: OperationLeaseRepository,
         operands: OperationSecureReferenceStore,
         ephemeral: EphemeralOperationStore | None = None,
-        committed: Callable[[OperationId], None] | None = None,
+        committed: Callable[[OperationPersistedSnapshot], None] | None = None,
     ) -> None:
         """Wrap the durable ports; ephemeral operations go to ``ephemeral`` or a fresh store.
 
@@ -147,7 +147,7 @@ class DurabilityRoutedOperationPersistence(
         else:
             await self._journal.commit(snapshot, expected_revision=expected_revision, lease=lease)
         if self._committed is not None:
-            self._committed(snapshot.operation_id)
+            self._committed(snapshot)
 
     @override
     async def commit_settlement(
@@ -164,7 +164,7 @@ class DurabilityRoutedOperationPersistence(
         else:
             await self._journal.commit_settlement(snapshot, expected_revision=expected_revision, lease=lease)
         if self._committed is not None:
-            self._committed(snapshot.operation_id)
+            self._committed(snapshot)
 
     @override
     async def read_after(

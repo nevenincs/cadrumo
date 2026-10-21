@@ -134,6 +134,8 @@ def sign_in_remedy(code: str, facts: Mapping[str, Any] | None = None) -> str | N
     """
     if code == AccessDenialCode.PROFILE_MISMATCH.value:
         return PROFILE_CHANGED_REMEDY
+    if code in {AccessDenialCode.PERSON_ACT_REQUIRED.value, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value}:
+        return PERSON_ACT_REMEDY
     if code == AccessDenialCode.PRIVILEGE_EXPANSION.value:
         return (
             "Cadrumo could not authorize this tool connection within its parent session. "

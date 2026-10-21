@@ -1,5 +1,10 @@
 desktop:
   agent:
+    aeat_setup_title: Configurar l'accés a l'AEAT
+    aeat_setup_help: Desa aquí les dades d'autenticació i tanca l'editor per tornar a la conversa. Les credencials no s'envien al xat.
+    aeat_setup_return: Tornar a la conversa
+    aeat_setup_check: Comprovar la configuració i continuar
+    aeat_setup_resume_message: He acabat amb els ajustos de l'AEAT. Comprova la configuració desada, ajuda'm amb els requisits pendents i continua la nostra tasca quan estigui llesta.
     add_files: Afegeix fitxers
     agent_replied: L'agent ha respost
     approval_allow_always: Permet-ho

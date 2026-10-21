@@ -23,6 +23,7 @@ import type {
   SetupItemId,
   WindowAction,
   WindowPresentation,
+  TerminalTarget,
 } from "../ipc/contract";
 import type { ProfileAccounts } from "./profiles";
 import type { AgentAccess } from "./agentAccess";
@@ -110,6 +111,8 @@ export type Setup = {
 };
 
 export interface Host {
+  readonly censo?: import("./profileCenso").CensoPort;
+  readonly userProfile?: import("./userProfile").UserProfilePort;
   readonly attendance?: Attendance;
   /** Absent in a browser: native window behavior is never simulated as real. */
   readonly window?: {
@@ -147,7 +150,7 @@ export interface Host {
   signIn(password: Uint8Array, profile?: string): Promise<SignInResult>;
   signOut(): Promise<SignOutResult>;
   openTerminal(
-    kind: TerminalKind,
+    kind: TerminalTarget,
     size: { cols: number; rows: number },
     listener: (event: TerminalEvent) => void,
   ): Promise<TerminalSession>;

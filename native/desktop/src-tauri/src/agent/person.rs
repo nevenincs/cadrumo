@@ -47,6 +47,7 @@ pub fn request_id() -> Result<String> {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PersonEvent {
     LanguageChanged,
+    RecordsChanged,
     AttendanceChanged,
     /// A registered operation this session relayed may have advanced.
     OperationChanged,
@@ -60,6 +61,7 @@ fn pushed(value: &Value) -> Option<Option<PersonEvent>> {
     match value["kind"].as_str() {
         Some("runtime_event") => Some(match value["event"].as_str() {
             Some("profile_language_changed") => Some(PersonEvent::LanguageChanged),
+            Some("profile_records_changed") => Some(PersonEvent::RecordsChanged),
             Some("attendance_changed") => Some(PersonEvent::AttendanceChanged),
             Some("operation_changed") => Some(PersonEvent::OperationChanged),
             _ => None,

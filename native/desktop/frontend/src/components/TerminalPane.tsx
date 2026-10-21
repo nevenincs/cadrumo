@@ -36,6 +36,7 @@ const RESET = "\x1b[0m";
 type Props = {
   host: Host;
   kind: TerminalKind;
+  target?: import("../ipc/contract").TerminalTarget;
   shown: boolean;
   theme: ITheme;
   fontSize: number;
@@ -52,6 +53,7 @@ type Props = {
 export function TerminalPane({
   host,
   kind,
+  target,
   shown,
   theme,
   fontSize,
@@ -176,33 +178,37 @@ export function TerminalPane({
       term.reset();
       status({ phase: "starting" });
       host
-        .openTerminal(kind, { cols: term.cols, rows: term.rows }, (event) => {
-          if (disposed) return;
-          if (event.type === "data") {
-            // Acknowledge only what xterm has drawn: the host pauses the PTY
-            // instead of dropping output when the view falls behind.
-            term.write(event.bytes, event.drawn);
-          } else if (event.type === "started") {
-            status({ phase: "running" });
-          } else if (event.type === "exited") {
-            clearOpeningInput();
-            session = null;
-            exited = true;
-            mouseTracking = false;
-            term.write(
-              `\r\n${DIM}${live.current.t("desktop.session.exit_line", { code: event.code ?? "?" })}${RESET}\r\n`,
-            );
-            status({ phase: "exited", code: event.code });
-          } else {
-            clearOpeningInput();
-            session = null;
-            exited = true;
-            term.write(
-              `\r\n${DIM}${live.current.t("desktop.session.failed", { reason: event.message })}${RESET}\r\n`,
-            );
-            status({ phase: "failed", message: event.message });
-          }
-        })
+        .openTerminal(
+          target ?? kind,
+          { cols: term.cols, rows: term.rows },
+          (event) => {
+            if (disposed) return;
+            if (event.type === "data") {
+              // Acknowledge only what xterm has drawn: the host pauses the PTY
+              // instead of dropping output when the view falls behind.
+              term.write(event.bytes, event.drawn);
+            } else if (event.type === "started") {
+              status({ phase: "running" });
+            } else if (event.type === "exited") {
+              clearOpeningInput();
+              session = null;
+              exited = true;
+              mouseTracking = false;
+              term.write(
+                `\r\n${DIM}${live.current.t("desktop.session.exit_line", { code: event.code ?? "?" })}${RESET}\r\n`,
+              );
+              status({ phase: "exited", code: event.code });
+            } else {
+              clearOpeningInput();
+              session = null;
+              exited = true;
+              term.write(
+                `\r\n${DIM}${live.current.t("desktop.session.failed", { reason: event.message })}${RESET}\r\n`,
+              );
+              status({ phase: "failed", message: event.message });
+            }
+          },
+        )
         .then((opened) => {
           if (disposed || exited) {
             clearOpeningInput();
@@ -309,7 +315,7 @@ export function TerminalPane({
       term.dispose();
       terminal.current = null;
     };
-  }, [host, kind, activated, fontFamily]);
+  }, [host, kind, target, activated, fontFamily]);
 
   useEffect(() => {
     if (terminal.current) terminal.current.term.options.theme = theme;

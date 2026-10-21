@@ -266,7 +266,7 @@ async def test_each_committed_snapshot_and_settlement_is_reported_and_a_refused_
         reader=journal,
         leases=OperationLeaseFilesystemRepository(storage_root=storage_root),
         operands=EphemeralOperationStore(),
-        committed=reported.append,
+        committed=lambda snapshot: reported.append(snapshot.operation_id),
     )
     supervisor = OperationSupervisor(
         registry=synthetic_routed_registry(),

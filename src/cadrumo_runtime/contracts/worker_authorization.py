@@ -102,6 +102,7 @@ class WorkerOperationsAdvanced(BaseModel):
     kind: Literal["operations_advanced"] = "operations_advanced"
     request_id: UUID
     operation_ids: Annotated[tuple[OperationId, ...], Field(min_length=1, max_length=WORKER_OPERATIONS_ADVANCED_MAX)]
+    records_changed: bool = False
 
 
 type WorkerAuthorityRequest = Annotated[
@@ -298,7 +299,7 @@ class WorkerAuthorizationOwner(Protocol):
         """Read inventory for the original human session while its fence is held."""
         ...
 
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...]) -> None:
+    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
         """Cue the connections observing these operations of the worker's profile; never blocks."""
         ...
 

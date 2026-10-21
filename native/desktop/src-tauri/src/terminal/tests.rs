@@ -429,6 +429,34 @@ pub(crate) fn unit_launch() -> crate::environment::Launch {
     }
 }
 
+#[test]
+fn aeat_setup_has_a_separate_slot_and_only_an_exact_profile_argument() {
+    let launch = unit_launch();
+    let profile = "5aa00000-0000-4000-8000-0000000000aa";
+    let program = Program::for_aeat_setup(&launch, profile).unwrap();
+    assert_eq!(
+        program.arguments,
+        [
+            "-I",
+            "-m",
+            "cadrumo_runtime.host.frontend.tui",
+            "--aeat-auth-profile",
+            profile
+        ]
+        .map(OsString::from)
+        .to_vec()
+    );
+    assert_ne!(Kind::Tui.slot(), Kind::AeatSetup.slot());
+    for invalid in [
+        "",
+        "../profile",
+        "00000000-0000-0000-0000-000000000000",
+        "5aa00000-0000-4000-8000-0000000000aa?secret=x",
+    ] {
+        assert!(Program::for_aeat_setup(&launch, invalid).is_err());
+    }
+}
+
 fn open_request(frames: &str) -> InvokeRequest {
     InvokeRequest {
         cmd: "terminal_open".into(),
@@ -914,7 +942,12 @@ fn every_kind_uses_workspace_and_bundled_command_search_path() {
     let bin = console::package_bin(launch.child.executable()).unwrap();
     let python = launch.child.executable().parent().unwrap();
     for kind in Kind::ALL {
-        let program = Program::for_kind(&launch, kind).unwrap();
+        let program = if kind == Kind::AeatSetup {
+            Program::for_aeat_setup(&launch, "5aa00000-0000-4000-8000-0000000000aa")
+        } else {
+            Program::for_kind(&launch, kind)
+        }
+        .unwrap();
         assert_eq!(program.directory, launch.console_workspace);
         let (_, value) = program
             .environment

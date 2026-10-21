@@ -38,7 +38,7 @@ from cadrumo_client.contracts.operation_access import (
     OperationSubmitPayload,
 )
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SecretReady
-from cadrumo_client.contracts.session_events import OperationChanged
+from cadrumo_client.contracts.session_events import OperationChanged, ProfileRecordsChanged
 from cadrumo_client.contracts.submission_payload import (
     SUBMISSION_PAYLOAD_TIMEOUT_SECONDS,
     FinancialOperandInputDescriptor,
@@ -214,9 +214,26 @@ class ProfileConnectionOperationMixin:
                 del self._operation_watches[connection.context.connection_id]
 
     def _operations_advanced(
-        self: RuntimeProfileConnections, profile_id: UUID, operation_ids: tuple[OperationId, ...]
+        self: RuntimeProfileConnections,
+        profile_id: UUID,
+        operation_ids: tuple[OperationId, ...],
+        records_changed: bool = False,
     ) -> None:
         """Cue each connection of this profile still observing one of the operations its worker reported."""
+        if records_changed:
+            with self._guard:
+                record_cues = [
+                    ProfileRecordsChanged(
+                        runtime_boot_id=self.boot,
+                        connection_id=connection_id,
+                        profile_id=profile_id,
+                        session_id=connection.session_id,
+                    )
+                    for connection_id, connection in self._connections.items()
+                    if connection.profile_id == profile_id and connection.session_id is not None
+                ]
+            for cue in record_cues:
+                self._events.publish_cue(cue)
         reported = set(operation_ids)
         with self._guard:
             cues = [

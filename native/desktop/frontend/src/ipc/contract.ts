@@ -386,6 +386,9 @@ export type ContextMenuResult = { chosen: string | null };
  * user's home; `tui` is the Cadrumo TUI, started in the storage root.
  */
 export type TerminalKind = "console" | "python" | "tui";
+/** A protected editor has its own session and an exact profile target. */
+export type TerminalTarget =
+  TerminalKind | { aeat_setup: { profile_id: string } };
 
 /** A session id from `terminal_open`; a replaced or closed id is refused. */
 export type TerminalSessionId = number;
@@ -467,7 +470,7 @@ export type TerminalFrame =
   | TerminalFailedFrame;
 
 export type TerminalOpenArguments = TerminalSize & {
-  kind: TerminalKind;
+  kind: TerminalTarget;
   /** Receives the session's frames, each as an `ArrayBuffer`. */
   frames: Channel<ArrayBuffer>;
 };
@@ -1097,6 +1100,39 @@ export type StartupProgress = {
 };
 
 export interface HostCommands {
+  user_profile_read: {
+    args: { language: string };
+    result: import("../shell/userProfile").UserProfile;
+  };
+  profile_censo_readiness: {
+    args: { profile: string };
+    result: import("../shell/profileCenso").CensoReadiness;
+  };
+  profile_censo_observe: { args: { updates: Channel<null> }; result: number };
+  profile_censo_unobserve: { args: { subscription: number }; result: null };
+  profile_censo_start: {
+    args: { profile: string };
+    result: import("../shell/profileCenso").CensoSnapshot;
+  };
+  profile_censo_status: {
+    args: { profile: string; operation: string };
+    result: import("../shell/profileCenso").CensoSnapshot;
+  };
+  profile_censo_answer: {
+    args: {
+      profile: string;
+      operation: string;
+      reviewDigest: string | null;
+      decision: import("../shell/profileCenso").CensoDecision;
+    };
+    result: import("../shell/profileCenso").CensoSnapshot;
+  };
+  user_profile_change: {
+    args: { change: import("../shell/userProfile").ProfileChange };
+    result: null;
+  };
+  user_profile_observe: { args: { updates: Channel<null> }; result: number };
+  user_profile_unobserve: { args: { subscription: number }; result: null };
   startup_begin: { args: Authorized; result: void };
   startup_status: { args: Authorized; result: StartupProgress };
 

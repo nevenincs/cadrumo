@@ -28,6 +28,7 @@ from cadrumo_client.contracts.service_access import InstalledServiceDescriptor, 
 from cadrumo_client.contracts.session_events import (
     AttendanceChanged,
     OperationChanged,
+    ProfileRecordsChanged,
     ServiceLeaseChanged,
     SessionEvent,
     SignInChanged,
@@ -289,3 +290,20 @@ def test_operation_cues_reach_only_connections_still_observing_a_reported_operat
     profiles.disconnect(watcher)
     profiles._operations_advanced(profile_id, (operation,))
     assert watcher.connection_id not in profiles._operation_watches
+
+
+def test_record_effect_cues_other_editors_once_without_values_or_operation_watches(tmp_path: Path) -> None:
+    profiles = _runtime(tmp_path)
+    profile_id = uuid4()
+    editor, foreign, retired = _person(profiles, profile_id), _person(profiles, uuid4()), _person(profiles, profile_id)
+    profiles._connections[retired.connection_id].session_id = None
+    profiles._operations_advanced(profile_id, ("a" * 64,))
+    assert profiles.take_events(editor) == ()
+    for _ in range(100):
+        profiles._operations_advanced(profile_id, ("b" * 64,), records_changed=True)
+    (cue,) = profiles.take_events(editor)
+    assert isinstance(cue, ProfileRecordsChanged)
+    assert cue.profile_id == profile_id
+    assert set(cue.model_dump()) == {"kind", "runtime_boot_id", "connection_id", "profile_id", "session_id"}
+    assert profiles.take_events(foreign) == ()
+    assert profiles.take_events(retired) == ()

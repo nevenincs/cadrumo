@@ -260,7 +260,11 @@ async fn language_pushed(events: &mut tokio::sync::broadcast::Receiver<PersonEve
             Ok(PersonEvent::LanguageChanged | PersonEvent::Retired) | Err(RecvError::Lagged(_)) => {
                 return;
             }
-            Ok(PersonEvent::AttendanceChanged | PersonEvent::OperationChanged) => {}
+            Ok(
+                PersonEvent::AttendanceChanged
+                | PersonEvent::OperationChanged
+                | PersonEvent::RecordsChanged,
+            ) => {}
             // The window is closing; nothing more will be pushed.
             Err(RecvError::Closed) => std::future::pending::<()>().await,
         }

@@ -50,6 +50,9 @@ class FakeClient:
     def subscribe_session_retirement(self, callback):
         pass
 
+    def subscribe_profile_record_changes(self, callback):
+        return lambda: None
+
     def subscribe_profile_language_changes(self, callback):
         self.language_changed = callback
         return lambda: None

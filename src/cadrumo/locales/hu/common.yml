@@ -831,6 +831,84 @@ desktop:
     label: Alsó panel
     resize: Alsó panel átméretezése
     show: Alsó panel megjelenítése
+  profile:
+    add: Bejegyzés hozzáadása
+    all_fields: Minden adat
+    all_sections: Minden szakasz
+    auth: AEAT-hozzáférés beállítása
+    cancel: Mégse
+    censo:
+      absent: Az AEAT nem adott meg értéket. Nincs változás.
+      adopt: Mentéskor az AEAT értékének használata.
+      apply: Ellenőrzött módosítások mentése
+      cancel: Szinkronizálás leállítása
+      close: Bezárás
+      current: Mentett
+      device: Hagyd jóvá a bejelentkezést a Cl@ve alkalmazásban.
+      done: A szinkronizálás befejeződött. Ellenőrizd a profil még hiányzó adatait.
+      field: Profiladat
+      identity: Adóazonosító megadása
+      incoming: AEAT
+      preserve: A mentett válasz megőrzése.
+      pull: Censo-adatok lekérése
+      reading: Censo-adatok lekérése…
+      ready: Az AEAT-bejelentkezés be van állítva. Mentés előtt áttekintheted a lekért
+        adatokat.
+      reject: Módosítások elvetése
+      return: Vissza a profilhoz
+      review: Ellenőrizd az AEAT adatait.
+      scope: Adócím, irányítószám és kataszteri azonosító átvétele a Censóból. A profil
+        többi adatát neked kell megadnod.
+      setup: AEAT-bejelentkezés beállítása
+      stopped: A szinkronizálás leállt. A profil nem módosult.
+      title: Szinkronizálás az AEAT-tól
+      unavailable: A szinkronizálás nem ellenőrizhető. Próbálj frissíteni.
+      unknown: Az eredmény nem igazolt. Új szinkronizálás előtt frissíts.
+      unsupported: Ehhez a bejelentkezéshez a terminálban elérhető művelet szükséges.
+        Szakítsd meg ezt a próbálkozást, és használd a terminál Censo-szinkronizálását.
+    close: Profil bezárása
+    collapse_all: Összes összecsukása
+    complete: Profil beállításának befejezése
+    conflict: A profilod máshol megváltozott. Zárd be a szerkesztőt, nézd át a friss
+      adatokat, majd nyisd meg újra a mezőt. A piszkozatodat nem mentettük.
+    description: Nézd át a mentett adataidat, és pótold a hiányzókat. A módosítások
+      ebbe a profilba kerülnek.
+    edit: Szerkesztés
+    edit_field: '{field} szerkesztése'
+    edit_help: Csak a módosított adatokat mentjük. A többit hagyd változatlanul.
+    empty: Nincs a szűrőknek megfelelő adat. Próbálj más keresést vagy szakaszt.
+    expand_all: Összes kibontása
+    field_help: A mezőről
+    filled: A kötelező adatok kitöltve
+    filter: Mezők megjelenítése
+    loading: Profil betöltése…
+    maximize: Teljes képernyő
+    missing: '{count} kötelező adat hiányzik'
+    missing_count: '{count} hiányzik'
+    missing_filter: Hiányzó adatok
+    not_set: Nincs kitöltve
+    refresh: Frissítés
+    refused: Nem sikerült menteni a módosításokat. Ellenőrizd a mezők útmutatóját,
+      és frissítsd a profilt az újabb próbálkozás előtt.
+    remove: Bejegyzés törlése
+    remove_help: Törlöd ezt a bejegyzést a profilodból? Minden mezője törlődik.
+    required: Kötelező
+    required_filter: Hiányzó kötelező adatok
+    restore: Osztott nézet
+    results: '{count} mező látható'
+    save: Módosítások mentése
+    saved_filter: Mentett adatok
+    saved_notice: Mentve
+    saved_unread: A módosításokat mentettük, de a friss profilt nem sikerült betölteni.
+      Frissíts az ellenőrzéshez.
+    saving: Mentés…
+    search: Profiladatok keresése
+    sections: Profil szakasza
+    signed_out: Jelentkezz be a profilod megtekintéséhez és szerkesztéséhez.
+    title: A profilod
+    unavailable: Nem sikerült betölteni a profilodat. Frissíts az újrapróbálkozáshoz.
+    unknown: Nem tudtuk ellenőrizni, hogy a módosítások mentése megtörtént-e. Frissíts,
+      és ellenőrizd a mentett értékeket, mielőtt újra próbálkozol.
   rail:
     aeat: Az AEAT honlapja
     console: Konzol

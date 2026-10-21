@@ -72,6 +72,52 @@ export function tauriHost(): Host {
       : Promise.reject(new Error("Missing desktop launch token."));
 
   return {
+    censo: {
+      async observe(changed) {
+        let active = true;
+        const updates = new Channel<null>();
+        updates.onmessage = () => {
+          if (active) changed();
+        };
+        const subscription = await call("profile_censo_observe", { updates });
+        return () => {
+          active = false;
+          void call("profile_censo_unobserve", { subscription }).catch(
+            () => undefined,
+          );
+        };
+      },
+      readiness: (profile) => call("profile_censo_readiness", { profile }),
+      start: (profile) => call("profile_censo_start", { profile }),
+      status: (profile, operation) =>
+        call("profile_censo_status", { profile, operation }),
+      answer: (profile, operation, reviewDigest, decision) =>
+        call("profile_censo_answer", {
+          profile,
+          operation,
+          reviewDigest,
+          decision,
+        }),
+    },
+    userProfile: {
+      read: (language) => call("user_profile_read", { language }),
+      change: (change) =>
+        call("user_profile_change", { change }).then(() => undefined),
+      async observe(changed) {
+        let active = true;
+        const updates = new Channel<null>();
+        updates.onmessage = () => {
+          if (active) changed();
+        };
+        const subscription = await call("user_profile_observe", { updates });
+        return () => {
+          active = false;
+          void call("user_profile_unobserve", { subscription }).catch(
+            () => undefined,
+          );
+        };
+      },
+    },
     attendance: {
       async inventory() {
         const reply = (await call("runtime_attendance_inventory", {})) as {

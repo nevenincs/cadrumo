@@ -105,6 +105,9 @@ class FakeClient:
         timer.daemon = True
         timer.start()
 
+    def subscribe_profile_record_changes(self, callback):
+        return lambda: None
+
     def subscribe_profile_language_changes(self, callback):
         return lambda: None
 
@@ -204,6 +207,9 @@ class FakeClient:
 
     def subscribe_session_retirement(self, callback):
         self.receivers["retired"] = callback
+
+    def subscribe_profile_record_changes(self, callback):
+        return lambda: None
 
     def subscribe_profile_language_changes(self, callback):
         self.receivers["language"] = lambda: callback(None)

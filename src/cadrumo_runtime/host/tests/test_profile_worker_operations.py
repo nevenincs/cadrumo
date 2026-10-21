@@ -156,7 +156,7 @@ class BoundaryAuthority:
     ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...]) -> None:
+    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
         with self.guard:
             self.advanced.append(operation_ids)
 

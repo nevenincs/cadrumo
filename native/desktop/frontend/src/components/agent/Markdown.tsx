@@ -1,5 +1,6 @@
 import { Fragment, useMemo, type ReactNode } from "react";
 import { cn } from "@/components/ui/cn";
+import { aeatSetupProfile } from "./aeatSetupLink";
 
 // The agent writes Markdown. This reads the part of it a reply uses (the
 // CommonMark blocks, GitHub's tables and strikethrough, and bare addresses)
@@ -339,7 +340,8 @@ function Link({
 }) {
   // An address the host would refuse is not a door that does not open: its
   // words stay, and the address is there to read.
-  if (!OPENABLE.test(url)) return <span title={url}>{children}</span>;
+  if (!OPENABLE.test(url) && !aeatSetupProfile(url))
+    return <span title={url}>{children}</span>;
   return (
     <a
       href={url}
@@ -629,9 +631,8 @@ export function markdownBlocks(text: string): Block[] {
   return parseBlocks(text.replace(/\r\n?/g, "\n").split("\n"));
 }
 
-/** A reply's Markdown, drawn as rich text. Links open outside the window
- * through `onOpenLink`; only `https:` and `mailto:` addresses are links, as
- * the host opens no other. */
+/** A reply's Markdown, drawn as rich text. The host handles external links
+ * and the exact local AEAT setup route; no other scheme is actionable. */
 export function Markdown({
   text,
   onOpenLink,

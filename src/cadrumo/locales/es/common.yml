@@ -850,6 +850,85 @@ desktop:
     label: Panel inferior
     resize: Cambiar el tamaño del panel inferior
     show: Mostrar el panel inferior
+  profile:
+    add: Añadir registro
+    all_fields: Todos los datos
+    all_sections: Todas las secciones
+    auth: Configurar acceso a la AEAT
+    cancel: Cancelar
+    censo:
+      absent: La AEAT no ha proporcionado este dato. Sin cambios.
+      adopt: Usar el dato de la AEAT al guardar.
+      apply: Guardar cambios revisados
+      cancel: Detener sincronización
+      close: Cerrar
+      current: Guardado
+      device: Aprueba la solicitud de acceso en tu aplicación Cl@ve.
+      done: Sincronización completada. Revisa los datos que aún faltan en tu perfil.
+      field: Dato del perfil
+      identity: Añadir NIF o NIE
+      incoming: AEAT
+      preserve: Conservar tu respuesta guardada.
+      pull: Consultar datos censales
+      reading: Consultando datos censales…
+      ready: El acceso a la AEAT está configurado. Podrás revisar los datos obtenidos
+        antes de guardarlos.
+      reject: Descartar cambios
+      return: Volver al perfil
+      review: Revisa los datos de la AEAT.
+      scope: Importa tu domicilio fiscal, código postal y referencia catastral del
+        Censo. Los demás datos del perfil requieren tus respuestas.
+      setup: Configurar acceso a la AEAT
+      stopped: Sincronización detenida. No se han guardado cambios en el perfil.
+      title: Sincronizar con la AEAT
+      unavailable: No se ha podido comprobar la sincronización. Prueba a actualizar.
+      unknown: El resultado no está confirmado. Actualiza antes de iniciar otra sincronización.
+      unsupported: Este acceso requiere una interacción disponible en el terminal.
+        Cancela este intento y sincroniza el Censo desde el terminal.
+    close: Cerrar perfil
+    collapse_all: Contraer todo
+    complete: Finalizar la configuración del perfil
+    conflict: Tu perfil ha cambiado en otra pantalla. Cierra este editor, revisa los
+      datos actualizados y vuelve a abrir el campo. Tu borrador no se ha guardado.
+    description: Revisa tus datos guardados y completa lo que falta. Los cambios se
+      guardan en este perfil.
+    edit: Editar
+    edit_field: Editar {field}
+    edit_help: Solo se guardarán los datos que cambies. Deja los demás como están.
+    empty: Ningún dato coincide con estos filtros. Prueba otra búsqueda o sección.
+    expand_all: Expandir todo
+    field_help: Sobre este campo
+    filled: Datos obligatorios completos
+    filter: Mostrar campos
+    loading: Cargando tu perfil…
+    maximize: Pantalla completa
+    missing: Faltan {count} datos obligatorios
+    missing_count: Faltan {count}
+    missing_filter: Datos sin completar
+    not_set: Sin completar
+    refresh: Actualizar
+    refused: No se han podido guardar estos cambios. Revisa las indicaciones de los
+      campos y actualiza el perfil antes de volver a intentarlo.
+    remove: Eliminar registro
+    remove_help: ¿Quieres eliminar este registro de tu perfil? Se eliminarán todos
+      sus campos.
+    required: Obligatorio
+    required_filter: Obligatorios pendientes
+    restore: Vista dividida
+    results: Se muestran {count} campos
+    save: Guardar cambios
+    saved_filter: Datos guardados
+    saved_notice: Guardado
+    saved_unread: Tus cambios se han guardado, pero no se ha podido cargar el perfil
+      actualizado. Actualiza para comprobarlos.
+    saving: Guardando…
+    search: Buscar datos del perfil
+    sections: Sección del perfil
+    signed_out: Inicia sesión para ver y editar tu perfil.
+    title: Tu perfil
+    unavailable: No se ha podido cargar tu perfil. Actualiza para volver a intentarlo.
+    unknown: No hemos podido confirmar si se guardaron los cambios. Actualiza y comprueba
+      los valores guardados antes de volver a intentarlo.
   rail:
     aeat: Sede de la AEAT
     console: Consola

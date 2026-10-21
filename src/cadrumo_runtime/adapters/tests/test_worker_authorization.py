@@ -102,7 +102,7 @@ class Authority:
     ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
-    def operations_advanced(self, operation_ids: tuple[str, ...]) -> None:
+    def operations_advanced(self, operation_ids: tuple[str, ...], *, records_changed: bool = False) -> None:
         self.advanced.append(operation_ids)
 
     def approval_preflight(self, request: WorkerApprovalRequest) -> None:

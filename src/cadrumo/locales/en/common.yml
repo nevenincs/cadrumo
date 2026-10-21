@@ -815,6 +815,85 @@ desktop:
     label: Bottom panel
     resize: Resize the bottom panel
     show: Show the bottom panel
+  profile:
+    add: Add entry
+    all_fields: All details
+    all_sections: All sections
+    auth: Set up AEAT access
+    cancel: Cancel
+    censo:
+      absent: AEAT did not supply this value. No change.
+      adopt: Use the AEAT value when you save.
+      apply: Save reviewed changes
+      cancel: Stop synchronization
+      close: Close
+      current: Saved
+      device: Approve the sign-in request in your Cl@ve app.
+      done: Synchronization complete. Review any remaining gaps in your profile.
+      field: Profile detail
+      identity: Add tax ID
+      incoming: AEAT
+      preserve: Keep your saved answer.
+      pull: Retrieve Censo data
+      reading: Retrieving Censo data…
+      ready: AEAT sign-in is set up. You can review the retrieved information before
+        saving.
+      reject: Discard changes
+      return: Back to profile
+      review: Review the information from AEAT.
+      scope: Import your fiscal address, postcode and cadastral reference from Censo.
+        Other profile details still need your answers.
+      setup: Set up AEAT sign-in
+      stopped: Synchronization stopped. No profile changes were saved.
+      title: Sync from AEAT
+      unavailable: Could not check synchronization. Try refreshing.
+      unknown: The result is not confirmed. Refresh before starting another synchronization.
+      unsupported: This sign-in needs an interaction available in the terminal. Cancel
+        this attempt and use Censo sync in the terminal.
+    close: Close profile
+    collapse_all: Collapse all
+    complete: Finish profile setup
+    conflict: Your profile changed elsewhere. Close this editor, review the updated
+      details, and open the field again. Your draft has not been saved.
+    description: Review your saved details and fill in what is missing. Changes are
+      saved to this profile.
+    edit: Edit
+    edit_field: Edit {field}
+    edit_help: Only the details you change will be saved. Leave unchanged details
+      as they are.
+    empty: No details match these filters. Try another search or section.
+    expand_all: Expand all
+    field_help: About this field
+    filled: Required details filled in
+    filter: Show fields
+    loading: Loading your profile…
+    maximize: Full screen
+    missing: '{count} required details to complete'
+    missing_count: '{count} missing'
+    missing_filter: Missing details
+    not_set: Not filled in
+    refresh: Refresh
+    refused: These changes could not be saved. Check the field guidance and refresh
+      your profile before trying again.
+    remove: Remove entry
+    remove_help: Remove this entry from your profile? This includes all its fields.
+    required: Required
+    required_filter: Required and missing
+    restore: Split view
+    results: '{count} fields shown'
+    save: Save changes
+    saved_filter: Saved details
+    saved_notice: Saved
+    saved_unread: Your changes were saved, but the updated profile could not be loaded.
+      Refresh to check them.
+    saving: Saving…
+    search: Search profile details
+    sections: Profile section
+    signed_out: Sign in to view and edit your profile.
+    title: Your profile
+    unavailable: Your profile could not be loaded. Refresh to try again.
+    unknown: We could not confirm whether the changes were saved. Refresh and check
+      the saved values before trying again.
   rail:
     aeat: AEAT website
     console: Console

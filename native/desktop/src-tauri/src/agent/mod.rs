@@ -278,6 +278,7 @@ async fn runtime_attendance_subscribe(
                 Ok(PersonEvent::AttendanceChanged) | Err(RecvError::Lagged(_)) => true,
                 Ok(
                     PersonEvent::LanguageChanged
+                    | PersonEvent::RecordsChanged
                     | PersonEvent::OperationChanged
                     | PersonEvent::Retired,
                 ) => false,

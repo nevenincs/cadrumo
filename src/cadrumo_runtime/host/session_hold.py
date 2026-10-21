@@ -33,7 +33,9 @@ _MAXIMUM_RESPONSE_LINE_BYTES = MAXIMUM_FRAME_BYTES + 1
 _MAXIMUM_PASSWORD_BYTES = 4_096
 _LOGGER = get_logger(__name__)
 
-type _Arrival = Literal["line", "retired", "profile_language_changed", "attendance_changed", "operation_changed"]
+type _Arrival = Literal[
+    "line", "retired", "profile_language_changed", "profile_records_changed", "attendance_changed", "operation_changed"
+]
 
 
 def _read_stdin_bytes(fd: int, size: int) -> bytearray:
@@ -181,6 +183,7 @@ async def _hold(
 
         client.subscribe_session_retirement(retire)
         client.subscribe_profile_language_changes(language_changed)
+        client.subscribe_profile_record_changes(lambda: inbox.put(("profile_records_changed", b"")))
         client.subscribe_attendance_changes(lambda: inbox.put(("attendance_changed", b"")))
 
         relay = OperationRelay(client)

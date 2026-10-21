@@ -24,6 +24,7 @@ export type SubmitOutcome =
   | { kind: "fail"; code: HostErrorCode };
 
 export type Scenario = {
+  censo?: "ready" | "nie" | "uncertain";
   id: string;
   title: string;
   summary: string;
@@ -147,6 +148,69 @@ const base = {
 } as const satisfies Partial<Scenario>;
 
 export const SCENARIOS: readonly Scenario[] = [
+  {
+    ...base,
+    id: "censo-ready",
+    title: "Censo: Review imported data",
+    summary:
+      "Open Your profile, then Sync from AEAT. This is a simulation; no AEAT request is sent.",
+    censo: "ready",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "censo-nie",
+    title: "Censo: Missing NIE support number",
+    summary:
+      "Open Your profile, then Sync from AEAT. This is a simulation; no AEAT request is sent.",
+    censo: "nie",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "censo-uncertain",
+    title: "Censo: Interrupted retrieval",
+    summary:
+      "Open Your profile, then Sync from AEAT. This is a simulation; no AEAT request is sent.",
+    censo: "uncertain",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+
+  {
+    ...base,
+    id: "user-profile",
+    title: "User profile: edit and filter",
+    summary:
+      "Open Your profile in the rail: search saved details, select sections, fill the missing tax ID, and add, edit or remove partners. All changes are in-memory demo data.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-setup",
+    title: "AEAT setup handoff",
+    summary: "A conversation opens the protected editor for its exact profile.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "5aa00000-0000-4000-8000-0000000000aa",
+      submit: { kind: "accept" },
+    },
+  },
   {
     ...base,
     id: "account-duplicate-observation",

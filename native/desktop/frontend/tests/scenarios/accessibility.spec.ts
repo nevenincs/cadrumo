@@ -72,6 +72,33 @@ const SURFACES: {
   unchecked?: readonly string[];
 }[] = [
   {
+    name: "the Censo review",
+    scenario: "censo-ready",
+    reach: async (target) => {
+      await target
+        .locator(".rail")
+        .getByRole("button", {
+          name: label("desktop.profile.title"),
+          exact: true,
+        })
+        .click();
+      await target
+        .getByRole("button", {
+          name: label("desktop.profile.censo.title"),
+          exact: true,
+        })
+        .click();
+      await target
+        .getByRole("dialog")
+        .getByRole("button", {
+          name: label("desktop.profile.censo.pull"),
+          exact: true,
+        })
+        .click();
+      await expect(target.getByRole("dialog")).toContainText("Calle Nueva 1");
+    },
+  },
+  {
     name: "Google authentication in the profile menu",
     scenario: "google-account",
     extra: "&setup=ready",
@@ -91,6 +118,30 @@ const SURFACES: {
       await expect(target.locator(".sign-in")).toBeVisible();
     },
   },
+  ...[false, true].map((editing) => ({
+    name: editing ? "the user profile editor" : "the user profile page",
+    scenario: "aeat-setup",
+    reach: async (target: Page) => {
+      await target
+        .locator(".rail")
+        .getByRole("button", {
+          name: label("desktop.profile.title"),
+          exact: true,
+        })
+        .click();
+      await expect(target.locator(".user-profile-page")).toContainText(
+        "Soler Vidal",
+      );
+      if (editing)
+        await target
+          .locator(".user-profile-page")
+          .getByRole("button", {
+            name: label("desktop.profile.edit_field", { field: "Given name" }),
+            exact: true,
+          })
+          .click();
+    },
+  })),
   {
     name: "a refused sign-in",
     scenario: "wrong-password",
@@ -246,6 +297,7 @@ const SURFACES: {
     name: "the filing calendar as a list",
     scenario: "signed-in",
     reach: async (target) => {
+      await target.setViewportSize({ width: 720, height: 900 });
       await target
         .getByRole("navigation", { name: label("desktop.rail.label") })
         .getByRole("button", { name: label("desktop.calendar.title") })

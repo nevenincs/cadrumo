@@ -331,6 +331,7 @@ const RICH_REPLY = [
   "- 42 apuntes leídos\n- 1 factura por revisar: `2026-031`",
   "| Casilla | Importe |\n|:--|--:|\n| 27 | 3.150,00 |",
   "Más en [la sede electrónica](https://sede.agenciatributaria.gob.es).",
+  "[Set up AEAT access](cadrumo://profiles/5aa00000-0000-4000-8000-0000000000aa/aeat-auth).",
 ].join("\n\n");
 // A tool the product refuses, as the host passes the refusal on: for a
 // component that is not set up, for something setup does not recover, and

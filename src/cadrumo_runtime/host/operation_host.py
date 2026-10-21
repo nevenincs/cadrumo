@@ -44,13 +44,14 @@ from cadrumo.application.operations.models import (
     OperationStoredInvocation,
     new_operation_id,
 )
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement, zeroize_secret_buffer
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.logging import get_logger
-from cadrumo.core.operations import OperationDurability, OperationLifecycle
+from cadrumo.core.operations import OperationDurability, OperationEffect, OperationLifecycle
 from cadrumo.core.request_faults import registered_error_fault, request_faults
 from cadrumo.core.startup_phase_log import startup_phase
 from cadrumo.core.time.clock import now
@@ -127,6 +128,8 @@ class ProfileWorkerOperationHost:
         self._services: OperationComposedServices | None = None
         self._client = authorization
         # Committed operations reach the runtime as a cue to their observers.
+        self._record_effects: set[OperationId] = set()
+        self._record_effects_guard = RLock()
         self._progress = OperationProgressReporter(self._report_progress)
         self._execution: ProfileWorkerOperationAuthority | None = None
         self._closed = False
@@ -145,7 +148,18 @@ class ProfileWorkerOperationHost:
         self._composition_lock = RLock()
 
     def _report_progress(self, operation_ids: tuple[OperationId, ...]) -> None:
-        self._client.operations_advanced(operation_ids)
+        with self._record_effects_guard:
+            affected = self._record_effects.intersection(operation_ids)
+        self._client.operations_advanced(operation_ids, records_changed=bool(affected))
+        with self._record_effects_guard:
+            self._record_effects.difference_update(affected)
+
+    def _journal_committed(self, snapshot: OperationPersistedSnapshot) -> None:
+        """Queue progress and a value-free invalidation after a settled record effect."""
+        if snapshot.lifecycle is OperationLifecycle.TERMINAL and snapshot.effect is not OperationEffect.NONE:
+            with self._record_effects_guard:
+                self._record_effects.add(snapshot.operation_id)
+        self._progress.committed(snapshot.operation_id)
 
     def _bind_execution(self, registry: OperationRegistry) -> ProfileWorkerOperationAuthority:
         from .operation_authority import ProfileWorkerOperationAuthority
@@ -208,7 +222,7 @@ class ProfileWorkerOperationHost:
                 modelo_profile_resolver=self._modelo_profile,
                 execution_caller_reader=self._execution_caller,
                 runtime_server_owner_start=RuntimeServerOwnerStart(self._start_runtime_server),
-                journal_committed=self._progress.committed,
+                journal_committed=self._journal_committed,
             )
 
     def in_flight_operation_count(self) -> int:

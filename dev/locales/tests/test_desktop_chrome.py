@@ -37,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FRONTEND_SOURCE = REPO_ROOT / "native" / "desktop" / "frontend" / "src"
 # A whole key in quotes, or the fixed head of a template literal up to `${`.
-_LITERAL_KEY = re.compile(r"""["'`](desktop\.[A-Za-z0-9_.]+)["'`]""")
+_LITERAL_KEY = re.compile(r"""["'`]((?:desktop|auth\.sync\.requirement)\.[A-Za-z0-9_.]+)["'`]""")
 _TEMPLATE_HEAD = re.compile(r"`(desktop\.[A-Za-z0-9_.]*)\$\{")
 
 

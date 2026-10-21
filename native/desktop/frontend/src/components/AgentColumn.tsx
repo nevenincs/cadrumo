@@ -8,6 +8,7 @@ import {
   type Ref,
 } from "react";
 import { Button } from "@/components/ui/button";
+import { aeatSetupProfile } from "./agent/aeatSetupLink";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { failureCode } from "../errors";
@@ -172,6 +173,7 @@ export function AgentColumn({
   onMenu,
   onToolRefused,
   onOpenLink,
+  onAeatSetup,
 }: {
   agent: AgentViews | undefined;
   /** Sending and the live stream, where the host offers them. */
@@ -202,8 +204,13 @@ export function AgentColumn({
   onToolRefused?: (key: string, refusal: AgentToolRefusal) => void;
   /** Opens an address a reply links to, in the system browser. */
   onOpenLink?: (url: string) => void;
+  onAeatSetup?: (profile: string, done: () => void) => void;
 }) {
   const t = useStrings();
+  const [setupCheck, setSetupCheck] = useState<{
+    reader: string;
+    conversation: string | null;
+  } | null>(null);
   const currentReader = useRef(reader);
   currentReader.current = reader;
   // What the column is showing belongs to the profile it was shown for: a
@@ -1011,7 +1018,19 @@ export function AgentColumn({
               items={history.value}
               locale={locale}
               onOpenProviderSettings={openSettings}
-              onOpenLink={onOpenLink}
+              onOpenLink={(url) => {
+                const profile = aeatSetupProfile(url);
+                if (!profile) {
+                  if (!url.startsWith("cadrumo:")) onOpenLink?.(url);
+                  return;
+                }
+                if (profile !== reader || !onAeatSetup) return;
+                const origin = {
+                  reader: profile,
+                  conversation: conversationId,
+                };
+                onAeatSetup(profile, () => setSetupCheck(origin));
+              }}
             />
           </>
         ) : (
@@ -1022,6 +1041,21 @@ export function AgentColumn({
           composer would sit under a list it does not write to. */}
       {!historyOpen && !settingsOpen && (
         <div className="grid shrink-0 gap-2 p-3 pt-0">
+          {setupCheck?.reader === reader &&
+            setupCheck?.conversation === conversationId && (
+              <Button
+                disabled={!send || !!live.open}
+                onClick={() => {
+                  if (!send) return;
+                  send(t("desktop.agent.aeat_setup_resume_message"), {
+                    skills: [],
+                  });
+                  setSetupCheck(null);
+                }}
+              >
+                {t("desktop.agent.aeat_setup_check")}
+              </Button>
+            )}
           {live.approvals.map((approval) => (
             <ApprovalPrompt
               key={approval.request_id}

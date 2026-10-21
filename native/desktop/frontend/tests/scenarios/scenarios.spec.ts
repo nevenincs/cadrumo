@@ -41,6 +41,11 @@ test.beforeEach(async ({ page: target }) => {
   await target.addInitScript(() => {
     if (sessionStorage.getItem("layout-cleared")) return;
     localStorage.clear();
+    // These terminal scenarios explicitly exercise the workspace arrangement.
+    localStorage.setItem(
+      "cadrumo-shell-layout",
+      JSON.stringify({ layout: { page: "docs", tuiShown: true } }),
+    );
     sessionStorage.setItem("layout-cleared", "1");
   });
 });
@@ -2148,6 +2153,7 @@ test("the rail keeps its order: search, window toggles, shortcuts, panel toggle"
       "desktop.rail.agent",
       "desktop.rail.tui",
       "desktop.rail.docs",
+      "desktop.profile.title",
       "desktop.calendar.title",
       "desktop.rail.messages",
       "desktop.rail.aeat",

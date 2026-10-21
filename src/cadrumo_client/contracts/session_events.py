@@ -58,6 +58,17 @@ class ProfileLanguageChanged(BaseModel):
     session_id: UUID
 
 
+class ProfileRecordsChanged(BaseModel):
+    """Exact-session invalidation after a record effect; carries no values or authority."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["profile_records_changed"] = "profile_records_changed"
+    runtime_boot_id: UUID
+    connection_id: UUID
+    profile_id: UUID
+    session_id: UUID
+
+
 class SignInChanged(BaseModel):
     """A watched sign-in may have changed; the watcher re-reads its status, which grants nothing."""
 
@@ -118,6 +129,7 @@ type ConnectionEvent = (
     SessionEvent
     | LifecycleNotice
     | ProfileLanguageChanged
+    | ProfileRecordsChanged
     | SignInChanged
     | ServiceLeaseChanged
     | AttendanceChanged
@@ -130,6 +142,7 @@ CONNECTION_EVENT_TYPES = (
     SessionEvent,
     LifecycleNotice,
     ProfileLanguageChanged,
+    ProfileRecordsChanged,
     SignInChanged,
     ServiceLeaseChanged,
     AttendanceChanged,

@@ -271,7 +271,7 @@ class WorkerAuthorizationServer:
         """Cue observers of the reported operations; a report holds no authority, so nothing here contains."""
         if self._owner is not None:
             try:
-                self._owner.operations_advanced(report.operation_ids)
+                self._owner.operations_advanced(report.operation_ids, records_changed=report.records_changed)
             except Exception as error:
                 # A missed cue costs a client its wait, bounded by its deadline.
                 diagnostic_event(

@@ -12,6 +12,7 @@ pub mod setup;
 pub mod sign_in;
 pub mod single_instance;
 pub mod token;
+pub mod user_profile;
 #[cfg(windows)]
 pub mod webview;
 #[cfg(windows)]

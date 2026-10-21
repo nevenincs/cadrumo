@@ -53,6 +53,7 @@ import { Settings } from "./components/Settings";
 import { GoogleAccount } from "./components/GoogleAccount";
 import { SetupAdvisory } from "./components/setup/SetupAdvisory";
 import { SetupDialog } from "./components/setup/SetupDialog";
+import { AeatSetupDialog } from "./components/agent/AeatSetupDialog";
 import { SetupPrompt } from "./components/setup/SetupPrompt";
 import { canSignInGoogle, outcomeToast } from "./components/setup/setupWords";
 import { liveRun, needsSetup, setupTargetOf, useSetup } from "./shell/setup";
@@ -60,6 +61,7 @@ import { useAbout } from "./shell/about";
 import { accountLabel } from "./components/accountWords";
 import { SignedOut, SignInDialog } from "./components/SignIn";
 import { AboutDialog } from "./components/AboutDialog";
+import { UserProfilePage } from "./components/profile/UserProfilePage";
 import { AccountMenu } from "./components/AccountMenu";
 import { Titlebar } from "./components/Titlebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -210,11 +212,26 @@ export function App({ host }: { host: Host }) {
   const initial = useMemo(loadState, []);
   const [prefs, setPrefs] = useState<Prefs>(initial.prefs);
   const [layout, setLayout] = useState<Layout>(initial.layout);
-  const [maximized, setMaximized] = useState<Maximized>(null);
+  const setMaximized = useCallback((update: SetStateAction<Maximized>) => {
+    setLayout((current) => ({
+      ...current,
+      maximized:
+        typeof update === "function" ? update(current.maximized) : update,
+    }));
+  }, []);
+  // Account gating affects presentation without erasing the saved arrangement.
+  const maximized =
+    layout.maximized === "agent" && account.phase !== "signed-in"
+      ? null
+      : layout.maximized;
   // What the first pane shows: the documentation, or a view of the profile
   // where the host offers one. The documentation stays loaded underneath.
-  const [page, setPage] = useState<"docs" | "calendar">("docs");
+  const page = layout.page;
+  const setPage = useCallback((page: Layout["page"]) => {
+    setLayout((current) => ({ ...current, page }));
+  }, []);
   const calendarPage = useRef<HTMLElement>(null);
+  const profilePage = useRef<HTMLElement>(null);
   // The agent column was asked for: it takes focus once it is laid out.
   const wantsAgent = useRef(false);
   const agentColumn = useRef<HTMLElement>(null);
@@ -258,14 +275,31 @@ export function App({ host }: { host: Host }) {
   const [filterOverride, setFilterOverride] = useState<RecordFilters | null>(
     null,
   );
-  const filters = filterOverride ?? defaultFilters;
+  const filters = useMemo(
+    () => ({
+      ...(filterOverride ?? defaultFilters),
+      minLevel: layout.logLevel ?? defaultFilters.minLevel,
+    }),
+    [filterOverride, defaultFilters, layout.logLevel],
+  );
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
   const setFilters = useCallback(
     (update: SetStateAction<RecordFilters>) => {
-      setFilterOverride((current) =>
-        typeof update === "function"
-          ? update(current ?? defaultFilters)
-          : update,
-      );
+      const next =
+        typeof update === "function" ? update(filtersRef.current) : update;
+      const levelChanged = next.minLevel !== filtersRef.current.minLevel;
+      filtersRef.current = next;
+      setFilterOverride(next);
+      setLayout((current) => ({
+        ...current,
+        logLevel:
+          update === defaultFilters
+            ? null
+            : levelChanged
+              ? next.minLevel
+              : current.logLevel,
+      }));
     },
     [defaultFilters],
   );
@@ -297,7 +331,7 @@ export function App({ host }: { host: Host }) {
     setPage("docs");
     setMaximized((area) => (area === "docs" ? area : null));
     patch({ docsShown: true });
-  }, [patch]);
+  }, [patch, setPage, setMaximized]);
 
   const unsaved = useRef({ prefs, layout });
   useEffect(() => {
@@ -320,8 +354,6 @@ export function App({ host }: { host: Host }) {
   const phase = account.phase;
   const signedIn = phase === "signed-in";
   usePersonActivity(host, signedIn);
-  // Signed out, the agent is not there to fill the window.
-  if (!signedIn && maximized === "agent") setMaximized(null);
   const accountRef = useRef(account);
   accountRef.current = account;
   const signOut = useCallback(() => {
@@ -356,11 +388,12 @@ export function App({ host }: { host: Host }) {
   // shown. The first pane holds the documentation or a view of the profile,
   // and is on screen while either is asked for.
   const unhidden = (area: Area) => maximized === null || maximized === area;
+  const profileOn = host.userProfile !== undefined && page === "profile";
   const calendarOn = views !== undefined && page === "calendar";
   const firstPaneShown =
-    (layout.docsShown || calendarOn || maximized === "docs") &&
+    (layout.docsShown || calendarOn || profileOn || maximized === "docs") &&
     unhidden("docs");
-  const docsVisible = firstPaneShown && !calendarOn;
+  const docsVisible = firstPaneShown && !calendarOn && !profileOn;
   const calendarVisible = calendarOn && firstPaneShown;
   const tuiVisible =
     (layout.tuiShown || maximized === "tui") && unhidden("tui");
@@ -504,6 +537,15 @@ export function App({ host }: { host: Host }) {
     },
     [host, say, t],
   );
+  const [aeatSetup, setAeatSetup] = useState<{
+    profile: string;
+    done: () => void;
+  } | null>(null);
+  useEffect(() => {
+    setAeatSetup((held) =>
+      held?.profile === reader && signedIn ? held : null,
+    );
+  }, [reader, signedIn]);
 
   const copy = useCallback(
     (text: string) => {
@@ -754,7 +796,7 @@ export function App({ host }: { host: Host }) {
     setMaximized((area) => (area === "tui" ? area : null));
     patch({ tuiShown: true });
     focusView("tui");
-  }, [patch, focusView]);
+  }, [patch, focusView, setMaximized]);
   // Whether the last render showed a gate the person could act on, with
   // the dialog put aside. The first status read is a gate too, but not one
   // anybody was standing at: being let through it at startup moves no
@@ -791,7 +833,7 @@ export function App({ host }: { host: Host }) {
       patch({ panelOpen: true, tab });
       focusView(tab);
     },
-    [layout.panelOpen, layout.tab, maximized, patch, focusView],
+    [layout.panelOpen, layout.tab, maximized, patch, focusView, setMaximized],
   );
 
   const toggleMaximize = useCallback(
@@ -802,7 +844,7 @@ export function App({ host }: { host: Host }) {
       }
       if (area === "agent" && !layout.agentShown) patch({ agentShown: true });
       if (area === "tui" && !layout.tuiShown) patch({ tuiShown: true });
-      if (area === "docs" && !layout.docsShown && !calendarOn)
+      if (area === "docs" && !layout.docsShown && !calendarOn && !profileOn)
         patch({ docsShown: true });
       if (area === "panel" && !layout.panelOpen) patch({ panelOpen: true });
       setMaximized(area);
@@ -810,11 +852,13 @@ export function App({ host }: { host: Host }) {
     },
     [
       maximized,
+      setMaximized,
       layout.agentShown,
       layout.tuiShown,
       layout.docsShown,
       layout.panelOpen,
       calendarOn,
+      profileOn,
       patch,
       focusView,
     ],
@@ -833,7 +877,7 @@ export function App({ host }: { host: Host }) {
       } else
         patch(column === "agent" ? { agentShown: false } : { tuiShown: false });
     },
-    [patch],
+    [patch, setMaximized, setPage],
   );
   // A column asked for from the rail, the palette or a shortcut: put away
   // when it is on screen, else shown with the layout restored around it.
@@ -872,6 +916,7 @@ export function App({ host }: { host: Host }) {
       docsVisible,
       maximized,
       closeColumn,
+      setMaximized,
       showDocs,
       patch,
       focusView,
@@ -886,8 +931,16 @@ export function App({ host }: { host: Host }) {
       type Stop = [Area | "rail", boolean, () => void];
       const docsStop: Stop = [
         "docs",
-        firstPaneShown && (calendarPage.current !== null || !!docs.current),
-        () => (calendarPage.current ?? docs.current)?.focus(),
+        firstPaneShown &&
+          (profilePage.current !== null ||
+            calendarPage.current !== null ||
+            !!docs.current),
+        () =>
+          (
+            profilePage.current ??
+            calendarPage.current ??
+            docs.current
+          )?.focus(),
       ];
       const tuiStop: Stop = [
         "tui",
@@ -1029,7 +1082,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "back",
         chords: [{ alt: true, code: "ArrowLeft", key: "←", scope: "docs" }],
-        enabled: () => !calendarOn,
+        enabled: () => !calendarOn && !profileOn,
         run: () => docs.current?.back(),
       },
       {
@@ -1038,7 +1091,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "forward",
         chords: [{ alt: true, code: "ArrowRight", key: "→", scope: "docs" }],
-        enabled: () => !calendarOn,
+        enabled: () => !calendarOn && !profileOn,
         run: () => docs.current?.forward(),
       },
       {
@@ -1047,7 +1100,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "zoomIn",
         chords: [{ mod: true, code: "Equal", key: "=", scope: "docs" }],
-        enabled: () => !calendarOn,
+        enabled: () => !calendarOn && !profileOn,
         run: () =>
           patch({
             zoom: Math.min(2, Math.round((layout.zoom + 0.1) * 10) / 10),
@@ -1059,7 +1112,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "zoomOut",
         chords: [{ mod: true, code: "Minus", key: "-", scope: "docs" }],
-        enabled: () => !calendarOn,
+        enabled: () => !calendarOn && !profileOn,
         run: () =>
           patch({
             zoom: Math.max(0.5, Math.round((layout.zoom - 0.1) * 10) / 10),
@@ -1071,7 +1124,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "reset",
         chords: [{ mod: true, code: "Digit0", key: "0", scope: "docs" }],
-        enabled: () => !calendarOn,
+        enabled: () => !calendarOn && !profileOn,
         run: () => patch({ zoom: 1 }),
       },
       {
@@ -1265,7 +1318,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.action.logs_reset"),
         group: "logs",
         icon: "logs",
-        run: () => setFilterOverride(null),
+        run: () => setFilters(defaultFilters),
       },
       {
         id: "logs.reveal",
@@ -1547,6 +1600,8 @@ export function App({ host }: { host: Host }) {
     ],
     [
       t,
+      setMaximized,
+      setPage,
       about,
       agentVisible,
       tuiVisible,
@@ -1565,6 +1620,7 @@ export function App({ host }: { host: Host }) {
       say,
       showTui,
       calendarOn,
+      profileOn,
       calendarVisible,
       askSignIn,
       askNewProfile,
@@ -1586,6 +1642,7 @@ export function App({ host }: { host: Host }) {
       copy,
       paste,
       setFilters,
+      defaultFilters,
       setup,
       setupOffered,
       setupSnapshot,
@@ -1914,8 +1971,11 @@ export function App({ host }: { host: Host }) {
       signInButton.current !== null ||
       (!gated && status.tui.phase !== "unavailable");
     if (tuiVisible && tuiFocusable) focusView("tui");
-    else if (firstPaneShown && (calendarPage.current ?? docs.current))
-      (calendarPage.current ?? docs.current)?.focus();
+    else if (
+      firstPaneShown &&
+      (profilePage.current ?? calendarPage.current ?? docs.current)
+    )
+      (profilePage.current ?? calendarPage.current ?? docs.current)?.focus();
     else if (agentVisible) agentBody.current?.focus();
     else focusRail();
   }, [
@@ -2057,6 +2117,20 @@ export function App({ host }: { host: Host }) {
       pressed: docsVisible,
       onClick: () => runAction("docs.toggle"),
     },
+    ...(host.userProfile
+      ? [
+          {
+            id: "profile",
+            icon: "user",
+            label: t("desktop.profile.title"),
+            pressed: profileOn && firstPaneShown,
+            onClick: () => {
+              setPage("profile");
+              setLayout((current) => ({ ...current, maximized: null }));
+            },
+          } satisfies RailItem,
+        ]
+      : []),
     // Shortcuts, between the window's own toggles and the bottom panel's:
     // the profile's views where the host offers them, then the ways out of
     // the window.
@@ -2194,26 +2268,41 @@ export function App({ host }: { host: Host }) {
   const docsPane = (
     <div className={cn(pane, "pane-docs")}>
       <PaneHeader
-        title={t(calendarOn ? "desktop.calendar.title" : "desktop.pane.docs")}
+        title={t(
+          profileOn
+            ? "desktop.profile.title"
+            : calendarOn
+              ? "desktop.calendar.title"
+              : "desktop.pane.docs",
+        )}
         onToggleMaximize={() => toggleMaximize("docs")}
         controls={[
           maximizeControl(
             "docs",
-            calendarOn
-              ? "desktop.calendar.maximize"
-              : "desktop.pane.maximize_docs",
+            profileOn
+              ? "desktop.profile.maximize"
+              : calendarOn
+                ? "desktop.calendar.maximize"
+                : "desktop.pane.maximize_docs",
           ),
           // The split's controls are on the TUI's header too: narrow, this
           // header gives them up before it cuts its title.
           ...splitControls.map((control) => ({ ...control, yields: true })),
           // Every column is put away by its own close. The calendar's puts
           // the calendar away, back to the documentation where that is shown.
-          calendarOn
+          calendarOn || profileOn
             ? {
                 id: "close",
                 icon: "close",
-                label: t("desktop.calendar.close"),
-                run: () => setPage("docs"),
+                label: t(
+                  profileOn
+                    ? "desktop.profile.close"
+                    : "desktop.calendar.close",
+                ),
+                run: () => {
+                  setPage("docs");
+                  setMaximized(null);
+                },
               }
             : {
                 id: "close",
@@ -2224,6 +2313,34 @@ export function App({ host }: { host: Host }) {
               },
         ]}
       />
+      {profileOn &&
+        (reader !== null ? (
+          <UserProfilePage
+            maximized={maximized === "docs"}
+            view={layout.profileView}
+            onViewChange={(update) =>
+              setLayout((current) => ({
+                ...current,
+                profileView: update(current.profileView),
+              }))
+            }
+            page={profilePage}
+            key={reader}
+            host={host}
+            reader={reader}
+            language={locale}
+            shown={firstPaneShown}
+            theme={scheme === "dark" ? DARK_TUI : LIGHT_TUI}
+            fontSize={terminalFontSize}
+          />
+        ) : (
+          <SignedOut
+            account={account}
+            lead={t("desktop.profile.signed_out")}
+            quiet
+            onSignIn={askSignIn}
+          />
+        ))}
       {calendarOn && (
         <FilingCalendarView
           page={calendarPage}
@@ -2231,6 +2348,8 @@ export function App({ host }: { host: Host }) {
           attempt={calendar.attempt}
           today={calendar.today}
           memory={calendarMemory}
+          defaultView={layout.calendarView}
+          onViewChange={(calendarView) => patch({ calendarView })}
           // Withheld, it says what the TUI pane says of the account, with
           // the same ways on.
           withheld={
@@ -2247,7 +2366,7 @@ export function App({ host }: { host: Host }) {
         />
       )}
       {/* Put aside, not unloaded: the page it was on is there on return. */}
-      <div className={calendarOn ? "hidden" : "contents"}>
+      <div className={calendarOn || profileOn ? "hidden" : "contents"}>
         {environment.state === "ready" &&
         environment.value.docs.state === "bundled" &&
         docsEntry ? (
@@ -2373,6 +2492,7 @@ export function App({ host }: { host: Host }) {
         onMenu={openMenu}
         onToolRefused={onToolRefused}
         onOpenLink={openLink}
+        onAeatSetup={(profile, done) => setAeatSetup({ profile, done })}
         trailing={[
           maximizeControl("agent", "desktop.pane.maximize_agent"),
           {
@@ -2458,6 +2578,14 @@ export function App({ host }: { host: Host }) {
                     onSignOut={setup.signOutGoogle}
                   />
                 ) : undefined
+              }
+              onProfile={
+                host.userProfile
+                  ? () => {
+                      setPage("profile");
+                      setLayout((current) => ({ ...current, maximized: null }));
+                    }
+                  : undefined
               }
               onSignOut={signOut}
               onCreate={askNewProfile}
@@ -2739,7 +2867,12 @@ export function App({ host }: { host: Host }) {
                 }
                 onReset={() => {
                   setPrefs(DEFAULT_PREFS);
-                  setLayout(DEFAULT_LAYOUT);
+                  setLayout((current) => ({
+                    ...DEFAULT_LAYOUT,
+                    logLevel: current.logLevel,
+                    calendarView: current.calendarView,
+                    profileView: current.profileView,
+                  }));
                   setMaximized(null);
                   say(t("desktop.settings.layout_reset"));
                 }}
@@ -2797,6 +2930,20 @@ export function App({ host }: { host: Host }) {
               />
             )}
             <Toast>{toast}</Toast>
+            {aeatSetup && signedIn && aeatSetup.profile === reader && (
+              <AeatSetupDialog
+                key={aeatSetup.profile}
+                host={host}
+                profile={aeatSetup.profile}
+                theme={scheme === "dark" ? DARK_TUI : LIGHT_TUI}
+                fontSize={terminalFontSize}
+                onClose={() => setAeatSetup(null)}
+                onDone={() => {
+                  aeatSetup.done();
+                  setAeatSetup(null);
+                }}
+              />
+            )}
             {setupOffered && (
               <>
                 <SetupDialog

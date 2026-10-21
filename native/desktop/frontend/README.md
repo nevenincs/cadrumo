@@ -286,6 +286,35 @@ To add a primitive from the shadcn registry, run its CLI from this directory
 wrote to roles and tokens and remove any dependency it added beyond the ones
 already declared. The class merger is the local `@/components/ui/cn`.
 
+### Editing your profile
+
+Open **Your profile** from the rail or account menu. Search saved details, select
+a section, or filter to missing required information. Individual fields and
+repeatable entries use the same registered operations and validation as the CLI
+and TUI. Sections collapse individually; full screen adds a section sidebar.
+Name, contact and address fields provide browser autofill hints. AEAT
+authentication opens the protected setup editor.
+
+**Sync from AEAT** checks the saved taxpayer identity and authentication method
+before a Censo pull. Missing details link to the tax-ID field or protected AEAT
+setup, then return to synchronization. The current importer covers the fiscal
+address, postcode and cadastral reference; it does not complete all profile
+sections. Review shows saved and incoming values and preserves manual answers.
+Saving or discarding is bound to the exact runtime review. Runtime notifications
+update progress; a 30-second recovery check covers missed notifications.
+
+Browser scenarios `censo-ready`, `censo-nie` and `censo-uncertain` exercise review,
+missing NIE support-number setup and an interrupted request. They do not contact
+AEAT. `user-profile` uses the canonical schema projection with synthetic values;
+regenerate it with `uv run --no-sync python -m dev.desktop_profile_fixture`.
+
+The desktop's `Host.userProfile` port reads a complete revision-pinned overview
+through the held runtime connection. Changes made by another frontend trigger
+a value-free runtime signal and a coalesced refresh. Open drafts retain their
+original revision: conflicting edits cannot overwrite newer data. An uncertain
+save keeps its draft and requires a refresh before retrying. Signing out removes
+the page and rejects late read responses.
+
 ### Profile views
 
 The window can show read-only views of the signed-in profile: the filing
@@ -599,3 +628,12 @@ manager records have `source: "manager"` and scrubbed lifecycle facts in
 | `virtual:desktop-strings`, `…-palette.css`      | The generated chrome strings and palette, resolved from the build directory    |
 | `scripts/`                                      | The development server, the catalogue launcher, its screenshots, the benchmark |
 | `tests/`                                        | The browser tests                                                              |
+
+Presentation preferences share the validated `cadrumo-shell-layout` store. Fresh
+windows show Profile and the agent where available; the workspace opens on
+request. Page selection, pane visibility and maximization, panel tab and size,
+calendar face, profile filters and section expansion, and the chosen minimum
+log level survive reloads. Resetting log filters returns to the host's level.
+Search text, drafts and private page data are not saved as view preferences.
+The pane header owns each page's title and maximize control; page toolbars
+supply only their own actions.

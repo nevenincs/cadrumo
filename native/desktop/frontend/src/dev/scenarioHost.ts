@@ -16,6 +16,8 @@ import type {
   SignInSignal,
   SignInStatus,
 } from "../ipc/contract";
+import { censoFixture } from "./censoFixture";
+import { userProfileFixture } from "./userProfileFixture";
 import type { Host } from "../shell/host";
 import type { AgentServiceStatus } from "../shell/agentSession";
 import type { ProfileAccounts } from "../shell/profiles";
@@ -387,6 +389,7 @@ export function scenarioHost(
       completeLanguageSet = null;
     },
   };
+  const userProfile = userProfileFixture(scenario.censo);
   return {
     language: {
       read: () => {
@@ -433,6 +436,8 @@ export function scenarioHost(
         });
       },
     },
+    userProfile,
+    censo: censoFixture(userProfile, scenario.censo),
     available: true,
     ...(scenario.views === "none"
       ? {}
@@ -623,7 +628,9 @@ export function scenarioHost(
     },
 
     openTerminal(kind, size, listener) {
-      say(`openTerminal ${kind} ${size.cols}x${size.rows}`);
+      say(
+        `openTerminal ${typeof kind === "string" ? kind : JSON.stringify(kind)} ${size.cols}x${size.rows}`,
+      );
       if (scenario.terminals === "pending") return never();
       if (scenario.terminals === "failed")
         return Promise.reject(failure("spawn_failed", "terminal"));

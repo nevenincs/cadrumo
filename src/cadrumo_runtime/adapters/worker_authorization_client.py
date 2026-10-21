@@ -82,9 +82,11 @@ class WorkerAuthorizationClient:
             asyncio.to_thread(self._approval_phase, request, password), task_name="worker-approval-phase"
         )
 
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...]) -> None:
+    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
         """Report committed operations to the runtime parent; it acknowledges and grants nothing."""
-        report = WorkerOperationsAdvanced(request_id=uuid4(), operation_ids=operation_ids)
+        report = WorkerOperationsAdvanced(
+            request_id=uuid4(), operation_ids=operation_ids, records_changed=records_changed
+        )
         with ExitStack() as resources:
             channel = self._verified_parent_channel(resources, time.monotonic() + 5)
             deadline = time.monotonic() + 5

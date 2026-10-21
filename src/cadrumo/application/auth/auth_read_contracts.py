@@ -17,6 +17,7 @@ from .diagnostics import (
 )
 from .operator_results import AuthStatusResult, AuthTestResult
 from .probes import ProviderProbeResult
+from .setup_handoff import AuthSetupHandoff
 from .sync_readiness import AuthSyncReadiness
 
 AUTH_READ_OPERATION_DEFINITION_ID = "auth.local-read"
@@ -25,7 +26,7 @@ AUTH_READ_OPERATION_DEFINITION_ID = "auth.local-read"
 AUTH_READ_RESULT_SCHEMA_ID = "auth.local-read.result"
 
 
-type AuthReadKind = Literal["status", "test", "sync_readiness", "diagnostics_list", "diagnostics_view"]
+type AuthReadKind = Literal["status", "test", "sync_readiness", "setup", "diagnostics_list", "diagnostics_view"]
 
 
 class AuthReadRequest(CredentialFreeOperationRequest):
@@ -72,7 +73,8 @@ class AuthReadResult(BaseModel):
             "sync_readiness": self.sync_readiness,
             "diagnostics_list": self.diagnostics_list,
         }
-        if any((item is not None) != (name == self.kind) for name, item in fields.items()):
+        result_kind = "sync_readiness" if self.kind == "setup" else self.kind
+        if any((item is not None) != (name == result_kind) for name, item in fields.items()):
             raise ValueError("auth read result does not match requested kind")
         if self.kind == "diagnostics_view":
             if self.diagnostic_found is None or (self.diagnostics_view is not None) != self.diagnostic_found:
@@ -187,6 +189,7 @@ class AuthReadProjection(BaseModel):
     status: AuthStatusSnapshot | None = None
     test: AuthTestSnapshot | None = None
     sync_readiness: AuthSyncReadiness | None = None
+    setup: AuthSetupHandoff | None = None
     diagnostics_rows: tuple[AuthDiagnosticSummarySnapshot, ...] | None = None
     diagnostics_view: AuthDiagnosticDetailSnapshot | None = None
     diagnostic_found: bool | None = None

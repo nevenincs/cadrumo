@@ -37,6 +37,7 @@ from .operation_contract_cache import OperationContractCache
 from .protocol_contract import (
     MCP_TOOL_NAMES,
     PERSON_ACT_REMEDY,
+    has_refusal,
     public_value,
     refusal_code,
     refusal_facts,
@@ -396,10 +397,25 @@ class RuntimeMcpAdapter:
             status = reply.get("status")
             denial = reply.get("denial") or (status.get("denial") if isinstance(status, dict) else None)
             code = reply.get("code") if reply.get("outcome") == "refused" else denial
-            if code:
+            if code in {AccessDenialCode.PERSON_ACT_REQUIRED.value, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value}:
+                reply["remedy"] = PERSON_ACT_REMEDY
+                if (
+                    self.profile_id is not None
+                    and name == "execute"
+                    and args.get("definition_id") in {"auth.provider.configure", "auth.credential.save"}
+                ):
+                    reply["next_call"] = {
+                        "tool": "execute",
+                        "arguments": {
+                            "definition_id": "auth.local-read",
+                            "payload": {"profile_id": str(self.profile_id), "kind": "setup"},
+                            "wait_seconds": 2,
+                        },
+                    }
+            if code or has_refusal(reply):
                 # These replies are protocol successes, so transport exception
                 # logging cannot see them. Never log arguments or tool results.
-                _LOGGER.warning("MCP tool refused: tool=%s reason=%s", name, code)
+                _LOGGER.warning("MCP tool refused: tool=%s reason=%s", name, code or "operation_refused")
             self._notices.annotate(name, reply)
             return reply
 
@@ -469,7 +485,7 @@ class RuntimeMcpAdapter:
                 # The runtime has ended the held session, whether or not its notice has arrived yet: let it
                 # go, so this answer sends the agent to the person and the next call asks the runtime again.
                 await self._release_lease(task_name="mcp-ended-session-close")
-        if code == AccessDenialCode.PERSON_ACT_REQUIRED.value:
+        if code in {AccessDenialCode.PERSON_ACT_REQUIRED.value, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value}:
             # The runtime refused the person's own act; the agent is told to ask the person.
             reply["remedy"] = PERSON_ACT_REMEDY
         elif (remedy := connection_unavailable_remedy(code)) is not None and remedy:
