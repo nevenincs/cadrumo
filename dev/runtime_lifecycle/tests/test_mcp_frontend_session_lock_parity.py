@@ -87,9 +87,9 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_client.transport.windows import WindowsEndpoint
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_mcp.mcp.server import build_server
+from cadrumo_mcp.mcp.tests.session import connected_server_and_client_session
 from cadrumo_runtime.adapters.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH

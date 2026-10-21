@@ -37,12 +37,12 @@ from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installed_client import open_installed_client
-from cadrumo_harness.mcp.protocol_contract import PERSON_ACT_REMEDY, sign_in_remedy
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.runtime_admission import McpAdmission
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.agent_key_reads import edit_profile_and_read_back, tool_document
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_mcp.mcp.protocol_contract import PERSON_ACT_REMEDY, sign_in_remedy
+from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_mcp.mcp.runtime_admission import McpAdmission
+from cadrumo_mcp.mcp.server import build_server
+from cadrumo_mcp.mcp.tests.agent_key_reads import edit_profile_and_read_back, tool_document
+from cadrumo_mcp.mcp.tests.session import connected_server_and_client_session
 from cadrumo_runtime.host.frontend.tui.profile.manager_client import ProfileManagerClientComposition
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
 

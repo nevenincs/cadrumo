@@ -369,7 +369,7 @@ def test_only_code_quality_primitives_are_enrolled() -> None:
     roots = dependency_command[1 : dependency_command.index("--known-first-party")]
     assert set(roots) == {
         "src/cadrumo",
-        "src/cadrumo_harness",
+        "src/cadrumo_mcp",
         "src/cadrumo_agent_service",
         "src/cadrumo_client",
         "src/cadrumo_runtime",

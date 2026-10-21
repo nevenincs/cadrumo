@@ -267,7 +267,7 @@ live-agent acceptance. They run no evaluation model.
 Installed CLI/MCP/runtime acceptance, native credential admission, modelo
 projection journeys and revocation fences also live in `tests/`: their real
 frontend fixtures make them cross-product consumers. Inward-only MCP authority
-queries live in `src/cadrumo_harness/mcp/tests/integration`. Evaluation scenarios, conduct scoring,
+queries live in `src/cadrumo_mcp/mcp/tests/integration`. Evaluation scenarios, conduct scoring,
 trajectories, reports, golden expectations and their tax-value oracles remain in
 `dev/mcp_eval/tests`. A suite is owned by the behavior it measures, rather than
 by whether an MCP client or runtime participates in its setup.

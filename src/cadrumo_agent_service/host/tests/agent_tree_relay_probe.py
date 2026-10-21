@@ -16,10 +16,10 @@ import os
 from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.agent_key_reads import edit_profile_and_read_back
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_mcp.mcp.server import build_server
+from cadrumo_mcp.mcp.tests.agent_key_reads import edit_profile_and_read_back
+from cadrumo_mcp.mcp.tests.session import connected_server_and_client_session
 
 
 async def _relay(profile_id: UUID) -> dict[str, object]:

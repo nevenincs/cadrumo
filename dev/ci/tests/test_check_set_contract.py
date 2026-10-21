@@ -373,7 +373,7 @@ def test_no_command_runs_twice_in_one_workflow_run() -> None:
 def test_shipped_packages_cannot_detect_the_test_runner() -> None:
     """Executable shipped code has no pytest or under-test detection tokens."""
     violations: list[str] = []
-    for package in (REPO_ROOT / "src" / "cadrumo", REPO_ROOT / "src" / "cadrumo_harness"):
+    for package in (REPO_ROOT / "src" / "cadrumo", REPO_ROOT / "src" / "cadrumo_mcp"):
         for path in package.rglob("*.py"):
             if "tests" in path.parts or path.name == "conftest.py":
                 continue

@@ -52,9 +52,9 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 from cadrumo_client.contracts.projection_pages import ProjectionPage, ProjectionPageRequest
 from cadrumo_client.transport import credentials
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_mcp.mcp.server import build_server
+from cadrumo_mcp.mcp.tests.session import connected_server_and_client_session
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 from cadrumo_runtime.commands.lifecycle import dispatch_runtime_behavior
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session

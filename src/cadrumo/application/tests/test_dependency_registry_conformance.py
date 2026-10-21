@@ -361,7 +361,7 @@ def _read_sources(roots: Iterable[Path], suffixes: frozenset[str]) -> dict[str, 
 _PYTHON_SURFACES: Final = {
     "CLI": _PACKAGE_ROOT / "entrypoints" / "cli" / "config" / "provision_cli.py",
     "TUI": _PACKAGE_ROOT / "entrypoints" / "tui" / "setup",
-    "MCP": _SOURCE_ROOT / "cadrumo_harness" / "mcp",
+    "MCP": _SOURCE_ROOT / "cadrumo_mcp" / "mcp",
 }
 _REGISTRY_REFERENCE: Final = re.compile(
     r"\bdependencies\.(?:status|setup|verify)\b|import[^\n]*\bdependency_(?:contracts|registry|wording)\b"
@@ -678,7 +678,7 @@ def test_the_removed_browser_operation_has_no_alias_or_caller_anywhere() -> None
         _PACKAGE_ROOT,
         _SOURCE_ROOT / "cadrumo_client",
         _SOURCE_ROOT / "cadrumo_runtime",
-        _SOURCE_ROOT / "cadrumo_harness",
+        _SOURCE_ROOT / "cadrumo_mcp",
         _FRONTEND_SOURCE,
     ]
     sources = _read_sources(roots, _PYTHON | _SCRIPT | frozenset({".json", ".yml", ".toml"}))

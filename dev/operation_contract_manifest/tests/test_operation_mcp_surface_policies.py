@@ -47,7 +47,7 @@ from cadrumo.entrypoints.tests.registered_executor_case_support import (
 )
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
-from cadrumo_harness.mcp.surfaces import MCP_SURFACES, McpSurfaceName
+from cadrumo_mcp.mcp.surfaces import MCP_SURFACES, McpSurfaceName
 from dev.operation_contract_manifest.tests.test_operation_frontend_parity import _PROBE_PROFILE, _probe_requests
 from dev.runtime_lifecycle.tests.test_operation_mcp_surfaces import (
     ALLOWED_OPERATION_ACCESS,

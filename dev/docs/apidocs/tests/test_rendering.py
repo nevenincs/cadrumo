@@ -18,9 +18,9 @@ from cadrumo.application.operations.models import CredentialFreeOperationRequest
 from cadrumo.application.user_profile.access_administration import FreshPasswordAuthorization
 from cadrumo.application.user_profile.access_contracts import AccessEvaluationContext, AccessSession
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.surfaces import McpSurface
+from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_mcp.mcp.server import build_server
+from cadrumo_mcp.mcp.surfaces import McpSurface
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerSettlementRequest
 from cadrumo_runtime.host.frontend.tui.secret.runtime_login_contracts import (
     RuntimeClientOpener as ContractRuntimeClientOpener,
@@ -180,11 +180,11 @@ def _build_type_alias_and_regex_probe(tmp_path: Path) -> None:
     assert tuple((value.__module__, value.__qualname__) for value in dependency_types) == (
         ("uuid", "UUID"),
         ("cadrumo_client.transport.frontend_client", "FrontendClient"),
-        ("cadrumo_harness.mcp.surfaces", "McpSurface"),
+        ("cadrumo_mcp.mcp.surfaces", "McpSurface"),
     )
     dependency_targets = "\n\n".join(_canonical_class_target(value) for value in dependency_types)
     assert (RuntimeMcpAdapter.__module__, RuntimeMcpAdapter.__qualname__) == (
-        "cadrumo_harness.mcp.runtime_adapter",
+        "cadrumo_mcp.mcp.runtime_adapter",
         "RuntimeMcpAdapter",
     )
     runtime_adapter_target = (
@@ -288,7 +288,7 @@ def setup(app):
         ".. autoattribute:: cadrumo.application.operations.models.CredentialFreeOperationRequest.model_config\n"
         "   :annotation:\n"
         "   :no-value:\n\n"
-        ".. autofunction:: cadrumo_harness.mcp.server.build_server\n\n"
+        ".. autofunction:: cadrumo_mcp.mcp.server.build_server\n\n"
         ".. autofunction:: dev.docs.apidocs.tests.test_rendering._fresh_password_signature_probe\n\n"
         ".. autofunction:: dev.docs.apidocs.tests.test_rendering._access_session_signature_probe\n\n"
         ".. autofunction:: dev.docs.apidocs.tests.test_rendering._access_context_signature_probe\n\n"

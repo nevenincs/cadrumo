@@ -8,7 +8,7 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 modified: '2026-10-21'
 body_schema: body-v2
-body_hash: 'sha256:5d08f1f1e6ac6c4d23ad8a21dc04db9cb169d32d5647f648132589f209bce33e'
+body_hash: 'sha256:d5c82fb245163715720cec436aca1fb0a7d2987775ad1bbb3fdc87c80f012fad'
 ---
 
 <!-- LINK RULES:
@@ -129,7 +129,7 @@ Open items carried from the amended ADRs, settled in implementation as follows. 
 - [x] `S02` - Remove skill and rule serving from the MCP surface: operating layer, harness_load, cadrumo skill and rule resources, workspace flag and skill-loading tool descriptions; `src/cadrumo_harness/mcp`.
 - [x] `S03` - Delete harness content and accessors with their tests, the command-operation reference generator and the wheel data include; `src/cadrumo_harness/_data, src/cadrumo_harness/resources.py, src/cadrumo_harness/workspace.py, dev/harness_data, pyproject.toml`.
 - [x] `S04` - Reduce agent evaluation to deterministic MCP conformance in dev/mcp_eval, removing the live persona lane, scoring, flywheel, persona scenarios and eval-agent recipes; `dev/agent_eval, justfile`.
-- [ ] `S05` - Rename the package cadrumo_harness to cadrumo_mcp across code, packaging, import contracts, tooling and documentation; `src/cadrumo_harness, pyproject.toml, .importlinter, justfile, dev, docs`.
+- [x] `S05` - Rename the package cadrumo_harness to cadrumo_mcp across code, packaging, import contracts, tooling and documentation; `src/cadrumo_harness, pyproject.toml, .importlinter, justfile, dev, docs`.
 - [ ] `S06` - Add a protective gate that rejects authored agent content and skill or rule serving in Cadrumo, proven against an isolated defect fixture; `dev/quality/tests`.
 - [ ] `S07` - Run import, style, format and type gates and the affected test suites, fixing every failure; `src, dev`.
 - [ ] `S08` - Save the main worktree's stale refactor to a side branch and put one squash commit of tui onto local main without pushing; `Y:/code/cadrumo-worktrees/main`.

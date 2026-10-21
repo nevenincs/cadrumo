@@ -24,7 +24,7 @@ from cadrumo.tests.module_target_inventory import load_all_target_sets
 _SCHEMA_VERSION: Final[int] = 1
 _ENCODING: Final[str] = "utf-8"
 _CORE_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.cadrumo.json"
-_HARNESS_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.cadrumo_harness.json"
+_MCP_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.cadrumo_mcp.json"
 _SERVICE_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.cadrumo_agent_service.json"
 _CLIENT_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.cadrumo_client.json"
 _RUNTIME_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.cadrumo_runtime.json"
@@ -38,7 +38,7 @@ def load_declared_targets(repository: Path) -> dict[str, object]:
     # target limit. Literal inventories keep the probe exhaustive, including
     # private modules, without making an open or silently truncated import set.
     core_targets = load_all_target_sets(_CORE_TARGET_METADATA, repository=repository)
-    harness_targets = load_all_target_sets(_HARNESS_TARGET_METADATA, repository=repository)
+    mcp_targets = load_all_target_sets(_MCP_TARGET_METADATA, repository=repository)
     service_targets = load_all_target_sets(_SERVICE_TARGET_METADATA, repository=repository)
     client_targets = load_all_target_sets(_CLIENT_TARGET_METADATA, repository=repository)
     runtime_targets = load_all_target_sets(_RUNTIME_TARGET_METADATA, repository=repository)
@@ -50,11 +50,11 @@ def load_declared_targets(repository: Path) -> dict[str, object]:
             importlib.import_module(core_target)
         except BaseException as exc:  # import-time SystemExit is also a broken load surface
             failures.append(_failure(core_target, exc))
-    for harness_target in harness_targets:
+    for mcp_target in mcp_targets:
         try:
-            importlib.import_module(harness_target)
+            importlib.import_module(mcp_target)
         except BaseException as exc:
-            failures.append(_failure(harness_target, exc))
+            failures.append(_failure(mcp_target, exc))
     for dev_target in dev_targets:
         try:
             importlib.import_module(dev_target)
@@ -84,7 +84,7 @@ def load_declared_targets(repository: Path) -> dict[str, object]:
         sorted(
             {
                 *core_targets,
-                *harness_targets,
+                *mcp_targets,
                 *service_targets,
                 *client_targets,
                 *runtime_targets,

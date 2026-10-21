@@ -1,6 +1,6 @@
 """Construct an MCP enrollment's explicit operation grant from its contract snapshot.
 
-The harness selects the operation ids before approval. Later registered
+The MCP service selects the operation ids before approval. Later registered
 operations require a new grant. The runtime mints and verifies the destination
 identity and owns approval, encrypted credential custody and revocation.
 """

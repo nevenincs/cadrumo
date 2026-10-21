@@ -31,7 +31,7 @@ FIRST_PARTY_MODULE_ROOTS: Final[tuple[str, ...]] = (
     "cadrumo_client",
     "cadrumo_runtime",
     "cadrumo_agent_service",
-    "cadrumo_harness",
+    "cadrumo_mcp",
 )
 _MAX_LINKS: Final = 16
 _MAX_INVARIANT_TEXT: Final = 240

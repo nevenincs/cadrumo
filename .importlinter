@@ -1,12 +1,13 @@
 [importlinter]
-# Every first-party root is named here.  The source tree, separately shipped
-# harness, repository-only tooling, documentation namespace, test support, and
-# generated companion namespace are all part of the closed classification.
+# Every first-party root is named here.  The source tree, the separately
+# shipped MCP service, repository-only tooling, documentation namespace, test
+# support, and generated companion namespace are all part of the closed
+# classification.
 root_packages =
     cadrumo
     cadrumo_client
     cadrumo_runtime
-    cadrumo_harness
+    cadrumo_mcp
     cadrumo_agent_service
     dev
     docs
@@ -27,10 +28,10 @@ layers =
     _data : adapters : application : conftest : core : domain : entrypoints : tests : (locales)
 exhaustive = True
 
-[importlinter:contract:closed-harness-classification]
+[importlinter:contract:closed-mcp-classification]
 type = layers
-name = Every harness source package has a declared lane
-containers = cadrumo_harness
+name = Every MCP service source package has a declared lane
+containers = cadrumo_mcp
 layers =
     access : mcp
 exhaustive = True
@@ -86,7 +87,7 @@ source_modules =
     cadrumo
     cadrumo_client
     cadrumo_runtime
-    cadrumo_harness
+    cadrumo_mcp
 forbidden_modules =
     dev
     docs
@@ -106,7 +107,7 @@ allow_indirect_imports = False
 # Inward dependency direction
 # ---------------------------------------------------------------------------
 
-[importlinter:contract:tax-has-no-agent-or-harness-dependency]
+[importlinter:contract:tax-has-no-agent-or-mcp-dependency]
 type = forbidden
 name = Tax and runtime source do not know the agent products
 source_modules =
@@ -114,7 +115,7 @@ source_modules =
     cadrumo_runtime
 forbidden_modules =
     cadrumo_agent_service
-    cadrumo_harness
+    cadrumo_mcp
 allow_indirect_imports = False
 
 [importlinter:contract:core-is-innermost]
@@ -130,7 +131,7 @@ forbidden_modules =
     cadrumo_client
     cadrumo_runtime
     cadrumo_agent_service
-    cadrumo_harness
+    cadrumo_mcp
     dev
     docs
 allow_indirect_imports = False
@@ -147,7 +148,7 @@ forbidden_modules =
     cadrumo_client
     cadrumo_runtime
     cadrumo_agent_service
-    cadrumo_harness
+    cadrumo_mcp
     dev
     docs
 allow_indirect_imports = False
@@ -164,7 +165,7 @@ forbidden_modules =
     cadrumo_client.transport
     cadrumo_runtime
     cadrumo_agent_service
-    cadrumo_harness
+    cadrumo_mcp
     dev
     docs
 allow_indirect_imports = False
@@ -182,7 +183,7 @@ forbidden_modules =
     cadrumo_client
     cadrumo_runtime
     cadrumo_agent_service
-    cadrumo_harness
+    cadrumo_mcp
     dev
     docs
 allow_indirect_imports = False
@@ -201,16 +202,16 @@ forbidden_modules =
     cadrumo_client
     cadrumo_runtime
     cadrumo_agent_service
-    cadrumo_harness
+    cadrumo_mcp
     dev
     docs
 allow_indirect_imports = False
 
-[importlinter:contract:harness-has-no-entrypoint-or-repository-dependency]
+[importlinter:contract:mcp-has-no-entrypoint-or-repository-dependency]
 type = forbidden
-name = Separately shipped harness consumes inward code only
+name = The separately shipped MCP service consumes inward code only
 source_modules =
-    cadrumo_harness
+    cadrumo_mcp
 forbidden_modules =
     cadrumo.entrypoints
     dev
@@ -226,11 +227,11 @@ forbidden_modules =
     cadrumo_runtime
 allow_indirect_imports = False
 
-[importlinter:contract:harness-never-reaches-runtime-host]
+[importlinter:contract:mcp-never-reaches-runtime-host]
 type = forbidden
-name = The MCP harness is a runtime client and cannot import the runtime host
+name = The MCP service is a runtime client and cannot import the runtime host
 source_modules =
-    cadrumo_harness
+    cadrumo_mcp
 forbidden_modules =
     cadrumo_runtime
 allow_indirect_imports = False
@@ -324,7 +325,7 @@ source_modules =
     cadrumo.adapters
 forbidden_modules =
     cadrumo.entrypoints
-    cadrumo_harness
+    cadrumo_mcp
     dev
     docs
 allow_indirect_imports = False

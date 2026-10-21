@@ -34,11 +34,11 @@ from cadrumo_client.contracts.access_vocabulary import AuthorityState
 from cadrumo_client.contracts.sign_in import SignInPresence
 from cadrumo_client.transport import credentials
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE, sign_in_remedy
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.runtime_admission import McpAdmission
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_mcp.mcp.protocol_contract import MCP_TOOL_CATALOGUE, sign_in_remedy
+from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_mcp.mcp.runtime_admission import McpAdmission
+from cadrumo_mcp.mcp.server import build_server
+from cadrumo_mcp.mcp.tests.session import connected_server_and_client_session
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
 
 from .attended_mcp_support import attended_status, holding_person

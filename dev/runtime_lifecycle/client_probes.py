@@ -111,7 +111,7 @@ from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
 from cadrumo_client.transport.automation_requester import AutomationRequesterJourney
 from cadrumo_client.transport.installed_client import open_installed_client
-from cadrumo_harness.access.automation_key import agent_key_proposal, agent_key_scope
+from cadrumo_mcp.access.automation_key import agent_key_proposal, agent_key_scope
 async def request():
     client = await open_installed_client(profile_id=UUID(sys.argv[1]), frontend=OperationFrontendProjection.CLI)
     try:

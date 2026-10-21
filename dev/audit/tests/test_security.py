@@ -104,7 +104,7 @@ def test_command_uses_json_not_the_text_report() -> None:
     assert "--json" in command
     assert "--quiet" in command
     assert set(SOURCE_PACKAGES) <= set(command), "every package under src/ is one semgrep scope"
-    assert {"src/cadrumo_harness", "src/cadrumo_agent_service"} <= set(command)
+    assert {"src/cadrumo_mcp", "src/cadrumo_agent_service"} <= set(command)
     assert not any("\\" in arg for arg in command), f"a backslash path reached semgrep: {command}"
 
 

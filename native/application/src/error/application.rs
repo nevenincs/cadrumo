@@ -338,7 +338,7 @@ pub mod admit {
             "cadrumo_client",
             "cadrumo_runtime",
             "cadrumo_agent_service",
-            "cadrumo_harness",
+            "cadrumo_mcp",
         ]
         .iter()
         .any(|root| {

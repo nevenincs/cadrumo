@@ -141,7 +141,7 @@ dependencies = [
 
 [project.scripts]
 aeat = "cadrumo_runtime.host.frontend.cli.bootstrap:main"
-cadrumo-mcp = "cadrumo_harness.mcp.main:main"
+cadrumo-mcp = "cadrumo_mcp.mcp.main:main"
 cadrumo-runtime = "cadrumo_runtime.host.bootstrap:main"
 cadrumo-agent-service = "cadrumo_agent_service.main:main"
 
@@ -226,7 +226,7 @@ pdf = [
 ]
 # Deliberately absent: an `agent` extra. The operator agent harness, its
 # reviewed operating data, accessors, and MCP runtime are a separate
-# `cadrumo_harness` package shipped alongside it in this distribution.
+# `cadrumo_mcp` package shipped alongside it in this distribution.
 #
 # Deliberately absent: a `search` extra. The on-host grounding search stack
 # needs none — the lexical index (stdlib sqlite3 FTS5 plus the core
@@ -281,7 +281,7 @@ only-include = [
   "src/cadrumo",
   "src/cadrumo_client",
   "src/cadrumo_runtime",
-  "src/cadrumo_harness",
+  "src/cadrumo_mcp",
   "src/cadrumo_agent_service",
   # The build hook that admits the published authority. It must travel in the
   # sdist: a wheel built from the sdist runs the same hook and refuses to build
@@ -312,13 +312,13 @@ exclude = [
   "src/cadrumo/_data/registry/authority/authority-candidate-*/**",
   "src/cadrumo/tests",
   "src/cadrumo/tests/**",
-  "src/cadrumo_harness/tests",
+  "src/cadrumo_mcp/tests",
   "src/cadrumo_agent_service/tests",
-  "src/cadrumo_harness/tests/**",
+  "src/cadrumo_mcp/tests/**",
   "src/cadrumo_agent_service/tests/**",
-  "src/cadrumo_harness/**/tests",
+  "src/cadrumo_mcp/**/tests",
   "src/cadrumo_agent_service/**/tests",
-  "src/cadrumo_harness/**/tests/**",
+  "src/cadrumo_mcp/**/tests/**",
   "src/cadrumo_agent_service/**/tests/**",
   "src/cadrumo_client/tests",
   "src/cadrumo_client/tests/**",
@@ -334,9 +334,9 @@ exclude = [
   # conftests that sit outside the excluded test directories.
   "src/cadrumo/conftest.py",
   "src/cadrumo/**/conftest.py",
-  "src/cadrumo_harness/conftest.py",
+  "src/cadrumo_mcp/conftest.py",
   "src/cadrumo_agent_service/conftest.py",
-  "src/cadrumo_harness/**/conftest.py",
+  "src/cadrumo_mcp/**/conftest.py",
   "src/cadrumo_agent_service/**/conftest.py",
   "src/cadrumo_client/conftest.py",
   "src/cadrumo_client/**/conftest.py",
@@ -374,7 +374,7 @@ packages = [
   "src/cadrumo",
   "src/cadrumo_client",
   "src/cadrumo_runtime",
-  "src/cadrumo_harness",
+  "src/cadrumo_mcp",
   "src/cadrumo_agent_service",
 ]
 # Test modules and fixtures serve no installed consumer: the suites run from
@@ -385,13 +385,13 @@ exclude = [
   "src/cadrumo/tests/**",
   "src/cadrumo/**/tests",
   "src/cadrumo/**/tests/**",
-  "src/cadrumo_harness/tests",
+  "src/cadrumo_mcp/tests",
   "src/cadrumo_agent_service/tests",
-  "src/cadrumo_harness/tests/**",
+  "src/cadrumo_mcp/tests/**",
   "src/cadrumo_agent_service/tests/**",
-  "src/cadrumo_harness/**/tests",
+  "src/cadrumo_mcp/**/tests",
   "src/cadrumo_agent_service/**/tests",
-  "src/cadrumo_harness/**/tests/**",
+  "src/cadrumo_mcp/**/tests/**",
   "src/cadrumo_agent_service/**/tests/**",
   "src/cadrumo_client/tests",
   "src/cadrumo_client/tests/**",
@@ -405,9 +405,9 @@ exclude = [
   # conftests that sit outside the excluded test directories.
   "src/cadrumo/conftest.py",
   "src/cadrumo/**/conftest.py",
-  "src/cadrumo_harness/conftest.py",
+  "src/cadrumo_mcp/conftest.py",
   "src/cadrumo_agent_service/conftest.py",
-  "src/cadrumo_harness/**/conftest.py",
+  "src/cadrumo_mcp/**/conftest.py",
   "src/cadrumo_agent_service/**/conftest.py",
   "src/cadrumo_client/conftest.py",
   "src/cadrumo_client/**/conftest.py",
@@ -467,7 +467,7 @@ include = [
   "src/cadrumo_client/py.typed",
   "src/cadrumo_runtime/py.typed",
   "src/cadrumo_runtime/_data/**",
-  "src/cadrumo_harness/py.typed",
+  "src/cadrumo_mcp/py.typed",
   "src/cadrumo_agent_service/py.typed",
   "src/cadrumo_agent_service/locales/**",
 ]
@@ -760,8 +760,8 @@ convention = "google"
 "src/cadrumo/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
 "src/cadrumo/tests/**/*.py" = ["S101", "T20", "D"]
 "src/cadrumo/**/conftest.py" = ["S101", "D"]
-"src/cadrumo_harness/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
-"src/cadrumo_harness/**/conftest.py" = ["S101", "D"]
+"src/cadrumo_mcp/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
+"src/cadrumo_mcp/**/conftest.py" = ["S101", "D"]
 "src/cadrumo_agent_service/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
 "src/cadrumo_agent_service/**/conftest.py" = ["S101", "D"]
 "src/cadrumo_client/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
@@ -1243,7 +1243,7 @@ testpaths = [
   "src/cadrumo",
   "src/cadrumo_client",
   "src/cadrumo_runtime",
-  "src/cadrumo_harness",
+  "src/cadrumo_mcp",
   "src/cadrumo_agent_service",
 ]
 pythonpath = ["src"]
@@ -1383,7 +1383,7 @@ exclude = 'tests|test_'
 # the dashboard tracks code that is plausibly dead in production paths.
 [tool.vulture]
 min_confidence = 80
-paths = ["src/cadrumo", "src/cadrumo_client", "src/cadrumo_runtime", "src/cadrumo_harness", "src/cadrumo_agent_service"]
+paths = ["src/cadrumo", "src/cadrumo_client", "src/cadrumo_runtime", "src/cadrumo_mcp", "src/cadrumo_agent_service"]
 # The test surface and bundled data of every package under src/, as
 # dev.first_party_source classifies them. fnmatch's `*` crosses separators, so
 # one pattern per shape covers every package and nesting depth.

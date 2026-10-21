@@ -54,7 +54,7 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
             "--known-first-party",
             "cadrumo",
             "--known-first-party",
-            "cadrumo_harness",
+            "cadrumo_mcp",
             "--known-first-party",
             "cadrumo_agent_service",
             "--known-first-party",

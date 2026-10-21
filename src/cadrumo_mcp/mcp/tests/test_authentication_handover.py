@@ -16,8 +16,8 @@ from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthoritySta
 from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
-from cadrumo_harness.mcp.access_scope import surface_scope
-from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
+from cadrumo_mcp.mcp.access_scope import surface_scope
+from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
 
 from .. import runtime_adapter as mcp_runtime
 from .. import runtime_admission as mcp_admission

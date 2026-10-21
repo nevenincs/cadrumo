@@ -44,7 +44,7 @@ def main() -> None:
         parser.error(f"unknown surface {args.surface!r}; the surfaces this version serves are: {known}")
     from cadrumo.core.logging import configure_logging, register_first_party_logger
 
-    register_first_party_logger("cadrumo_harness")
+    register_first_party_logger("cadrumo_mcp")
     configure_logging()
     from cadrumo.core.diagnostic_log import diagnostic_process
 

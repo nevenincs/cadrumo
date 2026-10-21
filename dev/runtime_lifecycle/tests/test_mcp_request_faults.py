@@ -30,7 +30,7 @@ from cadrumo.application.modelo.query_read_operation import MODELO_BINDINGS_LIST
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import build_error_envelope
 from cadrumo.core.period import PeriodError
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
 
 from .attended_mcp_support import attended_status, holding_person

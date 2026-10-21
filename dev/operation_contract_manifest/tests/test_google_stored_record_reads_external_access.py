@@ -51,8 +51,8 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDecision, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
-from cadrumo_harness.mcp.access_scope import surface_scope
-from cadrumo_harness.mcp.surfaces import MCP_SURFACES, McpSurfaceName
+from cadrumo_mcp.mcp.access_scope import surface_scope
+from cadrumo_mcp.mcp.surfaces import MCP_SURFACES, McpSurfaceName
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

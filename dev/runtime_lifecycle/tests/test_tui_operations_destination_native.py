@@ -70,10 +70,10 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.operation_controller import OperationController
 from cadrumo_client.transport.windows import WindowsEndpoint
-from cadrumo_harness.mcp.admitted_operations import call_admitted_operation
-from cadrumo_harness.mcp.operation_contract_cache import OperationContractCache
-from cadrumo_harness.mcp.runtime_admission import AdmissionDenial, McpAdmission
-from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, mcp_surface
+from cadrumo_mcp.mcp.admitted_operations import call_admitted_operation
+from cadrumo_mcp.mcp.operation_contract_cache import OperationContractCache
+from cadrumo_mcp.mcp.runtime_admission import AdmissionDenial, McpAdmission
+from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE, mcp_surface
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections

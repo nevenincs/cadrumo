@@ -150,5 +150,5 @@ def test_a_root_with_no_production_module_refuses_beside_a_populated_one(tmp_pat
     _module(product, "solo.py", _SHARED)
 
     assert run((product,), ["import_overlap"]) == []
-    with pytest.raises(SystemExit, match=r"no production modules found under .*cadrumo_harness"):
-        run((product, tmp_path / "cadrumo_harness"), ["import_overlap"])
+    with pytest.raises(SystemExit, match=r"no production modules found under .*cadrumo_mcp"):
+        run((product, tmp_path / "cadrumo_mcp"), ["import_overlap"])

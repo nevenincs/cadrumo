@@ -49,7 +49,7 @@ def test_command_passes_a_posix_source_path() -> None:
     command = jscpd_command("npx")
 
     assert set(SOURCE_PACKAGES) <= set(command), "every package under src/ is one jscpd scope"
-    assert {"src/cadrumo_harness", "src/cadrumo_agent_service"} <= set(command)
+    assert {"src/cadrumo_mcp", "src/cadrumo_agent_service"} <= set(command)
     assert not any("\\" in arg for arg in command), f"a backslash path reached jscpd: {command}"
 
 

@@ -163,7 +163,7 @@ def check_mcp_script() -> None:
             _fail(f"{MCP_SCRIPT} --help does not offer {option}: {result.stdout.strip()[:200]}")
     imported = asyncio.run(
         _run_async(
-            [sys.executable, "-c", "from cadrumo_harness.mcp.server import serve; assert callable(serve)"],
+            [sys.executable, "-c", "from cadrumo_mcp.mcp.server import serve; assert callable(serve)"],
             dict(os.environ),
         )
     )

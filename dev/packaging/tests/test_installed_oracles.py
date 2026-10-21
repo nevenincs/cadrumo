@@ -6,7 +6,7 @@ the public tax-work oracle and checks the MCP server's current stdio contract
 from that same installation.
 
 Both console scripts come from the one ``cadrumo`` distribution. The wheel
-target packs the ``cadrumo`` and ``cadrumo_harness`` source packages together,
+target packs the ``cadrumo`` and ``cadrumo_mcp`` source packages together,
 so ``cadrumo-mcp`` is a root-distribution entry point and there is no separate
 harness wheel to build, install, or attest.
 """
@@ -458,7 +458,7 @@ def _write_evidence(path: Path, document: dict[str, Any]) -> None:
 def _legacy_cohort_fallbacks(source: str) -> tuple[str, ...]:
     forbidden = (
         "var/packaging-smoke-cohort",
-        "packaging/cadrumo_harness",
+        "packaging/cadrumo_mcp",
         "attest_command_specs",
     )
     normalized = source.replace("\\", "/")
@@ -621,11 +621,11 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
     assert metadata["console_scripts"]["aeat"] == "cadrumo_runtime.host.frontend.cli.bootstrap:main"
     # The package split is internal to one distribution: the wheel target packs
     # both source packages, so the root distribution declares the server script
-    # and installing the root wheel is what puts `cadrumo_harness` on disk.
-    assert metadata["console_scripts"]["cadrumo-mcp"] == "cadrumo_harness.mcp.main:main"
-    assert {"cadrumo", "cadrumo_harness"} <= set(metadata["root_top_level"])
+    # and installing the root wheel is what puts `cadrumo_mcp` on disk.
+    assert metadata["console_scripts"]["cadrumo-mcp"] == "cadrumo_mcp.mcp.main:main"
+    assert {"cadrumo", "cadrumo_mcp"} <= set(metadata["root_top_level"])
     # No harness distribution is required to obtain either command.
-    assert not any(_requirement_name(requirement) == "cadrumo-harness" for requirement in requirements)
+    assert not any(_requirement_name(requirement) == "cadrumo-mcp" for requirement in requirements)
 
     authority_prefix = "cadrumo/_data/registry/authority/"
     descriptor_member = authority_prefix + "authority.current.json"
@@ -1042,7 +1042,7 @@ def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort:
     assert initialize["result"]["serverInfo"]["name"] == "cadrumo"
     tool_names = [tool["name"] for tool in tools["result"]["tools"]]
     assert len(tool_names) == len(set(tool_names))
-    from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_NAMES
+    from cadrumo_mcp.mcp.protocol_contract import MCP_TOOL_NAMES
 
     # The default surface advertises every tool of the catalogue.
     assert set(tool_names) == MCP_TOOL_NAMES
@@ -1120,7 +1120,7 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
     from cadrumo_client.transport.framing import VerifiedConnection
     from cadrumo_client.transport.installation import installation
     from cadrumo_client.transport.windows import WindowsEndpoint
-    from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
+    from cadrumo_mcp.mcp.protocol_contract import SIGN_IN_REMEDY
     from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 
     mcp_executable = Path(sysconfig.get_path("scripts")) / "cadrumo-mcp.exe"

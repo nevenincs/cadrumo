@@ -59,7 +59,7 @@ import site
 import sys
 
 def first_party(name):
-    return name in ("cadrumo", "cadrumo_harness") or name.startswith(("cadrumo.", "cadrumo_harness."))
+    return name in ("cadrumo", "cadrumo_mcp") or name.startswith(("cadrumo.", "cadrumo_mcp."))
 
 site.addsitedir(os.environ["AEAT_INSTALL_SITE"])
 for dependency_site in os.environ["AEAT_DEPENDENCY_SITE"].split(os.pathsep):

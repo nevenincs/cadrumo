@@ -63,7 +63,7 @@ def test_command_targets_the_configured_paths() -> None:
         *SOURCE_PACKAGES,
         "dev/audit/vulture_whitelist.py",
     ]
-    assert {"src/cadrumo", "src/cadrumo_harness", "src/cadrumo_agent_service"} <= set(command)
+    assert {"src/cadrumo", "src/cadrumo_mcp", "src/cadrumo_agent_service"} <= set(command)
 
 
 def test_parse_vulture_output_reads_real_captured_lines() -> None:

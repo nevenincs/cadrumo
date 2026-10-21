@@ -22,11 +22,11 @@ from dev._paths import REPO_ROOT
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _PACKAGE_ROOT = REPO_ROOT / "src/cadrumo"
-"""``src/cadrumo``: the production modules the gate reads live below it and the harness."""
+"""``src/cadrumo``: the production modules the gate reads live below it and the MCP service."""
 
 _RUNTIME_ROOT = REPO_ROOT / "src/cadrumo_runtime"
-_HARNESS_ROOT = REPO_ROOT / "src/cadrumo_harness"
-"""``src/cadrumo_harness``: the shipped external client harness, which owns no receipt mutation."""
+_MCP_ROOT = REPO_ROOT / "src/cadrumo_mcp"
+"""``src/cadrumo_mcp``: the separately shipped MCP service, which owns no receipt mutation."""
 
 _RECEIPT = "adapters/persistence/storage/custody/acceleration_receipt.py"
 _ADAPTER = "adapters/persistence/storage/profile_login_session.py"
@@ -85,13 +85,13 @@ class ReceiptOwnershipFinding:
 
 
 def _production_modules(
-    root: Path, harness_root: Path | None = None, runtime_root: Path | None = None
+    root: Path, mcp_root: Path | None = None, runtime_root: Path | None = None
 ) -> Iterator[tuple[str, Path]]:
     """Yield tax-relative paths and sibling paths prefixed by their actual package.
 
-    No owner path starts with ``cadrumo_harness``, so every harness reference is a finding.
+    No owner path starts with ``cadrumo_mcp``, so every MCP-service reference is a finding.
     """
-    for base, prefix in ((root, ""), (harness_root, "cadrumo_harness/"), (runtime_root, "cadrumo_runtime/")):
+    for base, prefix in ((root, ""), (mcp_root, "cadrumo_mcp/"), (runtime_root, "cadrumo_runtime/")):
         if base is None:
             continue
         for path in sorted(base.rglob("*.py")):
@@ -114,11 +114,11 @@ def _named(node: ast.AST) -> str | None:
 
 
 def receipt_ownership_findings(
-    root: Path, harness_root: Path | None = None, runtime_root: Path | None = None
+    root: Path, mcp_root: Path | None = None, runtime_root: Path | None = None
 ) -> list[ReceiptOwnershipFinding]:
     """Return every reference to receipt mutation outside its owners under the roots."""
     findings: list[ReceiptOwnershipFinding] = []
-    for module, path in _production_modules(root, harness_root, runtime_root):
+    for module, path in _production_modules(root, mcp_root, runtime_root):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             name = _named(node)
@@ -134,14 +134,14 @@ def receipt_ownership_findings(
 
 def test_no_production_module_outside_the_owner_mutates_a_receipt() -> None:
     assert (_PACKAGE_ROOT / _RECEIPT).is_file()
-    assert any(_HARNESS_ROOT.rglob("*.py")), "the harness the gate scans must exist"
-    assert receipt_ownership_findings(_PACKAGE_ROOT, _HARNESS_ROOT, _RUNTIME_ROOT) == []
+    assert any(_MCP_ROOT.rglob("*.py")), "the MCP service the gate scans must exist"
+    assert receipt_ownership_findings(_PACKAGE_ROOT, _MCP_ROOT, _RUNTIME_ROOT) == []
 
 
 def test_every_declared_owner_still_names_what_it_owns() -> None:
     """A stale allowance would let a future second owner in unnoticed."""
     named: dict[str, set[str]] = {}
-    for module, path in _production_modules(_PACKAGE_ROOT, _HARNESS_ROOT, _RUNTIME_ROOT):
+    for module, path in _production_modules(_PACKAGE_ROOT, _MCP_ROOT, _RUNTIME_ROOT):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             name = _named(node)
@@ -192,23 +192,21 @@ def test_the_gate_reports_a_planted_second_owner(tmp_path: Path, planted: str) -
 
 
 @pytest.mark.parametrize("planted", sorted(_PLANTED))
-def test_the_gate_reports_a_second_owner_planted_in_the_harness(tmp_path: Path, planted: str) -> None:
+def test_the_gate_reports_a_second_owner_planted_in_the_mcp_service(tmp_path: Path, planted: str) -> None:
     source, name = _PLANTED[planted]
     package = tmp_path / "cadrumo"
     owner = package / _RECEIPT
     owner.parent.mkdir(parents=True)
     owner.write_text("def mint_profile_session(**kwargs):\n    return None\n", encoding="utf-8")
-    harness = tmp_path / "cadrumo_harness"
-    intruder = harness / "mcp" / "sign_in_shortcut.py"
+    mcp = tmp_path / "cadrumo_mcp"
+    intruder = mcp / "mcp" / "sign_in_shortcut.py"
     intruder.parent.mkdir(parents=True)
     intruder.write_text(source, encoding="utf-8")
-    harness_test = harness / "mcp" / "tests" / "test_sign_in_shortcut.py"
-    harness_test.parent.mkdir(parents=True)
-    harness_test.write_text(source, encoding="utf-8")
+    mcp_test = mcp / "mcp" / "tests" / "test_sign_in_shortcut.py"
+    mcp_test.parent.mkdir(parents=True)
+    mcp_test.write_text(source, encoding="utf-8")
 
-    findings = receipt_ownership_findings(package, harness)
+    findings = receipt_ownership_findings(package, mcp)
 
-    assert {(finding.module, finding.name) for finding in findings} == {
-        ("cadrumo_harness/mcp/sign_in_shortcut.py", name)
-    }
+    assert {(finding.module, finding.name) for finding in findings} == {("cadrumo_mcp/mcp/sign_in_shortcut.py", name)}
     assert receipt_ownership_findings(package) == []

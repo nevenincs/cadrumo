@@ -16,7 +16,7 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
-from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
+from cadrumo_mcp.mcp.protocol_contract import SIGN_IN_REMEDY
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
 from .test_installed_authenticated_stdio import (

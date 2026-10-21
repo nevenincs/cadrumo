@@ -7,7 +7,7 @@ importing it.
 
 Recognised restatements
     * a first-party root spelled as a literal: ``"src/cadrumo"`` or
-      ``"src/cadrumo_harness"`` (with or without a trailing slash), a path
+      ``"src/cadrumo_mcp"`` (with or without a trailing slash), a path
       chain ending at one of them (``root / "src" / "cadrumo"``), a tool root
       joined straight onto a repository root (``repo_root / "dev"``), or a
       collection naming two or more roots;

@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT
-from dev.first_party_source import HARNESS_PACKAGE, PRODUCT_SOURCE_ROOTS
+from dev.first_party_source import MCP_PACKAGE, PRODUCT_SOURCE_ROOTS
 
 PRODUCT_SOURCE_DIRS: Final[tuple[Path, ...]] = tuple(REPO_ROOT / root for root in PRODUCT_SOURCE_ROOTS)
 SRC_DIR: Final[Path] = PRODUCT_SOURCE_DIRS[0]
@@ -45,12 +45,12 @@ DOCS_SRC_DIR: Final[Path] = REPO_ROOT / "dev" / "docs"
 #: deliberately unlocalized English). A scan that stopped at the product roots
 #: would report every one of its catalogue keys as an extra key with no
 #: codebase site, for exactly the reason :data:`DOCS_SRC_DIR` exists.
-HARNESS_SRC_DIR: Final[Path] = REPO_ROOT / HARNESS_PACKAGE
+MCP_SRC_DIR: Final[Path] = REPO_ROOT / MCP_PACKAGE
 
 LOCALE_SOURCE_EXTRA_DIRS: Final[tuple[Path, ...]] = (
     *PRODUCT_SOURCE_DIRS[1:],
     DOCS_SRC_DIR,
-    HARNESS_SRC_DIR,
+    MCP_SRC_DIR,
 )
 
 #: Verified staged catalogue awaiting installation by the casilla collapse.

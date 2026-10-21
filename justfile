@@ -366,7 +366,7 @@ check-import-boundaries:
 [doc('Verify dependency declarations against the source tree; read-only and blocking.')]
 [group('check')]
 check-dependency-declarations:
-    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo src/cadrumo_client src/cadrumo_runtime src/cadrumo_harness src/cadrumo_agent_service dev/registry --known-first-party cadrumo --known-first-party cadrumo_harness --known-first-party cadrumo_agent_service --known-first-party cadrumo_client --known-first-party cadrumo_runtime --known-first-party dev --non-dev-dependency-groups registry --extend-exclude '(?:^|[\\/])test_.*[.]py$' --extend-exclude '(?:^|[\\/])_test_.*[.]py$' --extend-exclude '.*[\\/]tests[\\/].*' --extend-exclude '(?:^|[\\/])_data[\\/]' --extend-exclude '(?:^|[\\/])conftest[.]py$'
+    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo src/cadrumo_client src/cadrumo_runtime src/cadrumo_mcp src/cadrumo_agent_service dev/registry --known-first-party cadrumo --known-first-party cadrumo_mcp --known-first-party cadrumo_agent_service --known-first-party cadrumo_client --known-first-party cadrumo_runtime --known-first-party dev --non-dev-dependency-groups registry --extend-exclude '(?:^|[\\/])test_.*[.]py$' --extend-exclude '(?:^|[\\/])_test_.*[.]py$' --extend-exclude '.*[\\/]tests[\\/].*' --extend-exclude '(?:^|[\\/])_data[\\/]' --extend-exclude '(?:^|[\\/])conftest[.]py$'
 
 [doc('Verify every src/ package module is reachable from a shipped entrypoint or used by dev/; read-only and blocking.')]
 [group('check')]
@@ -1249,7 +1249,7 @@ test-integration-serial:
 [doc('Run Windows-only packaging, registry publication, authentication and native I/O tests.')]
 [group('test')]
 test-windows:
-    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/mcp_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/core/tests/test_log_file_handler.py src/cadrumo/adapters/outbound/model_runtime/tests src/cadrumo_harness/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_client/transport/tests/test_channel_readiness_wait.py src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
+    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/mcp_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/core/tests/test_log_file_handler.py src/cadrumo/adapters/outbound/model_runtime/tests src/cadrumo_mcp/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_client/transport/tests/test_channel_readiness_wait.py src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
 
 [doc('Run native macOS and Linux peer, worker containment, and custody tests on their owning host.')]
 [group('test')]

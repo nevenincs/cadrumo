@@ -34,7 +34,7 @@ from cadrumo.core.storage_environment import (
     child_environment,
     normalize_storage_path,
 )
-from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE
+from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE
 
 if TYPE_CHECKING:
     from uuid import UUID

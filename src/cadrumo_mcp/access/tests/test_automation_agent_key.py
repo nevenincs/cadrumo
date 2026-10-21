@@ -21,7 +21,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 from cadrumo_client.contracts.enrollment_proposal import GRANT_DEFAULT_VALIDITY, EnrollmentKind
-from cadrumo_harness.access.automation_key import agent_key_proposal, agent_key_scope, agent_operations
+from cadrumo_mcp.access.automation_key import agent_key_proposal, agent_key_scope, agent_operations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

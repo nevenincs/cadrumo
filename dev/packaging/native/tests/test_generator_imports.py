@@ -76,7 +76,7 @@ def _outside_imports(closure: dict[str, set[str]]) -> set[str]:
         for imported in closure.values()
         for name in imported
         if name.split(".")[0]
-        in {"cadrumo", "cadrumo_client", "cadrumo_runtime", "cadrumo_harness", "cadrumo_agent_service", "dev"}
+        in {"cadrumo", "cadrumo_client", "cadrumo_runtime", "cadrumo_mcp", "cadrumo_agent_service", "dev"}
         and not name.startswith(_PACKAGE_NAME + ".")
     }
 

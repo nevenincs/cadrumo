@@ -28,9 +28,9 @@ from cadrumo.application.user_profile.profile_operation_contracts import PROFILE
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import override_settings
 from cadrumo_client.transport.installed_client import open_installed_client
-from cadrumo_harness.mcp.protocol_contract import PERSON_ACT_REMEDY, PROFILE_CHANGED_REMEDY, SIGN_IN_REMEDY
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.runtime_admission import McpAdmission
+from cadrumo_mcp.mcp.protocol_contract import PERSON_ACT_REMEDY, PROFILE_CHANGED_REMEDY, SIGN_IN_REMEDY
+from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_mcp.mcp.runtime_admission import McpAdmission
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import stored_sign_in_runtime
 
 from .attended_mcp_support import attended_status, holding_person

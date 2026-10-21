@@ -10,8 +10,8 @@ Roots
     :data:`PRODUCT_PACKAGE` is the tax-filing application. Its neutral shared
     and installed-host boundaries are :data:`CLIENT_PACKAGE` and
     :data:`RUNTIME_PACKAGE`; :data:`PRODUCT_SOURCE_ROOTS` is their complete
-    application cohort. :data:`HARNESS_PACKAGE`
-    is the separately shipped agent harness. :data:`DEVELOPMENT_TOOLING` builds
+    application cohort. :data:`MCP_PACKAGE`
+    is the separately shipped MCP service. :data:`DEVELOPMENT_TOOLING` builds
     and verifies them, and :data:`PACKAGING_HOOKS` holds the distribution build
     hooks. :data:`FIRST_PARTY_ROOTS` names all maintained roots.
 
@@ -60,7 +60,7 @@ PRODUCT_PACKAGE: Final[str] = "src/cadrumo"
 CLIENT_PACKAGE: Final[str] = "src/cadrumo_client"
 RUNTIME_PACKAGE: Final[str] = "src/cadrumo_runtime"
 PRODUCT_SOURCE_ROOTS: Final[tuple[str, ...]] = (PRODUCT_PACKAGE, CLIENT_PACKAGE, RUNTIME_PACKAGE)
-HARNESS_PACKAGE: Final[str] = "src/cadrumo_harness"
+MCP_PACKAGE: Final[str] = "src/cadrumo_mcp"
 SERVICE_PACKAGE: Final[str] = "src/cadrumo_agent_service"
 DEVELOPMENT_TOOLING: Final[str] = "dev"
 PACKAGING_HOOKS: Final[str] = "packaging"
@@ -69,7 +69,7 @@ FIRST_PARTY_ROOTS: Final[tuple[str, ...]] = (
     PRODUCT_PACKAGE,
     CLIENT_PACKAGE,
     RUNTIME_PACKAGE,
-    HARNESS_PACKAGE,
+    MCP_PACKAGE,
     SERVICE_PACKAGE,
     DEVELOPMENT_TOOLING,
     PACKAGING_HOOKS,
@@ -78,14 +78,14 @@ SOURCE_PACKAGES: Final[tuple[str, ...]] = (
     PRODUCT_PACKAGE,
     CLIENT_PACKAGE,
     RUNTIME_PACKAGE,
-    HARNESS_PACKAGE,
+    MCP_PACKAGE,
     SERVICE_PACKAGE,
 )
 DEPENDENCY_DECLARATION_ROOTS: Final[tuple[str, ...]] = (
     PRODUCT_PACKAGE,
     CLIENT_PACKAGE,
     RUNTIME_PACKAGE,
-    HARNESS_PACKAGE,
+    MCP_PACKAGE,
     SERVICE_PACKAGE,
     f"{DEVELOPMENT_TOOLING}/registry",
 )

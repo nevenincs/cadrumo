@@ -5,7 +5,7 @@ tags:
 date: '2026-10-21'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:4561850639bcfc2faaf7f4cb96c402b010012c5b77579be1e71d87918168a174'
+body_hash: 'sha256:096b50e47c048bc837de0806374569cad38705a10538a6f971ce6940d15f9148'
 related:
   - "[[2026-10-21-agent-harness-plan]]"
 ---
@@ -123,6 +123,50 @@ related:
 - `S04` `verify:` `pytest dev/mcp_eval dev/tests dev/identity/tests dev/runtime_lifecycle/tests/test_package_copy.py` -> `fail`
 - `S04` `verify:` `ty check dev/mcp_eval dev/runtime_lifecycle dev/identity dev/tests` -> `pass`
 - `S04` `by:` `implementation-engineer-high`
+- `S05` `R` `src/cadrumo_harness` -> `src/cadrumo_mcp`
+- `S05` `R` `dev/quality/metadata/import_load_targets.cadrumo_harness.json` -> `dev/quality/metadata/import_load_targets.cadrumo_mcp.json`
+- `S05` `M` `pyproject.toml`
+- `S05` `M` `.importlinter`
+- `S05` `M` `justfile`
+- `S05` `M` `dev/first_party_source.py`
+- `S05` `M` `dev/locales/_paths.py`
+- `S05` `M` `dev/ci/change_scope.py`
+- `S05` `M` `dev/quality/import_load_worker.py`
+- `S05` `M` `dev/quality/suite.py`
+- `S05` `M` `dev/packaging/dependency_contract.py`
+- `S05` `M` `dev/packaging/installed_wheel_binding.py`
+- `S05` `M` `dev/packaging/command_spec_attestation.py`
+- `S05` `M` `dev/runtime_lifecycle`
+- `S05` `M` `dev/audit/tests`
+- `S05` `M` `dev/docs/apidocs/tests`
+- `S05` `M` `dev/operation_contract_manifest/tests`
+- `S05` `M` `dev/quality/tests`
+- `S05` `M` `dev/tests`
+- `S05` `M` `dev/smoke/smoke_check.py`
+- `S05` `M` `src/cadrumo/core/errors/failure_report.py`
+- `S05` `M` `src/cadrumo/application/tests/test_dependency_registry_conformance.py`
+- `S05` `M` `src/cadrumo_agent_service/host/launch_environment.py`
+- `S05` `M` `src/cadrumo_agent_service/host/tests/test_launch_environment.py`
+- `S05` `M` `src/cadrumo_agent_service/host/tests/agent_tree_relay_probe.py`
+- `S05` `M` `native/application/src/error/application.rs`
+- `S05` `M` `native/desktop/src-tauri/src/logs/severity.rs`
+- `S05` `M` `docs/api/index.md`
+- `S05` `M` `docs/architecture/index.md`
+- `S05` `M` `docs/locales/ca/LC_MESSAGES/architecture/index.po`
+- `S05` `M` `docs/locales/es/LC_MESSAGES/architecture/index.po`
+- `S05` `M` `docs/locales/hu/LC_MESSAGES/architecture/index.po`
+- `S05` `M` `.vaultspec/skills/cadrumo-start`
+- `S05` `M` `.claude/skills/cadrumo-start`
+- `S05` `M` `.agents/skills/cadrumo-start`
+- `S05` `M` `src/cadrumo_mcp/mcp/tests/test_handshake_free_revision.py`
+- `S05` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S05` `verify:` `just check-style` -> `pass`
+- `S05` `verify:` `just check-format` -> `pass`
+- `S05` `verify:` `just check-types` -> `fail`
+- `S05` `verify:` `pytest src/cadrumo_mcp src/cadrumo_agent_service` -> `pass`
+- `S05` `verify:` `pytest -m integration src/cadrumo_mcp` -> `pass`
+- `S05` `verify:` `pytest dev/quality/tests dev/packaging/tests dev/audit/tests dev/ci/tests dev/docs/apidocs/tests dev/operation_contract_manifest/tests dev/locales/tests` -> `fail`
+- `S05` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -130,3 +174,4 @@ related:
 - `S01` Concurrent cadrumo-agent dirty files (rules/cadrumo-operator-operating-rules.md, skills/cadrumo-alta-contribuyente/SKILL.md, skills/cadrumo-calendario-fiscal/SKILL.md) were left untouched per instruction; no port was owed to them since no qualifying post-fork Cadrumo-side change existed.
 - `S03` Seven integration tests in `dev/agent_eval` `(test_under_declaration_golden.py,` `test_response_provenance_golden.py)` fail with 'CLI scenario requires the injected `invoke_cli` fixture'. No file on that failure path changed in this plan; the seam dates from the 2026-10-19 CLI-rename repair and belongs to the concurrent full-suite repair work.
 - `S04` The one failure in that run, `dev/tests/test_no_home_directory_cache_paths.py,` reports `dev/smoke/acquisition_lane.py:262,` a file no Step of this plan touches; it arrived with commit bbd9f1f340 from concurrent type-gate work.
+- `S05` The type gate's single diagnostic and the one failing operation-contract test name files outside this plan: `src/cadrumo/application/overview/tests/test_calendar_profile_context.py` (its import was removed by concurrent commit eb06cb0954) and `src/cadrumo_runtime/host/session_watch.py` (commit 91c2bc5231). `docs/technical/**` keeps the old package name on purpose: those pages are dated snapshot analyses of code that no longer exists, so renaming the path in them would misstate what was analysed. The docs catalogue generator could not run whole (it would prune 705 committed catalogues), so the three architecture catalogues were refreshed with its per-page mode, which marks the changed paragraph fuzzy and leaves the translation to a later batch.

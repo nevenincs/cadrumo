@@ -458,7 +458,7 @@ def test_repository_api_scope_covers_every_canonical_package_and_cross_package_o
         "cadrumo_client.contracts.profile_access",
         "cadrumo_client.transport.profile_password_rotation",
         "cadrumo_runtime.commands.main",
-        "cadrumo_harness.mcp.main",
+        "cadrumo_mcp.mcp.main",
         "cadrumo_agent_service.main",
     }
     discovered_names = {name for name, _ in modules}

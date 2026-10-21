@@ -33,11 +33,11 @@ from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
-from cadrumo_harness.mcp.access_scope import surface_scope
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.surfaces import MCP_SURFACES, McpSurfaceName
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_mcp.mcp.access_scope import surface_scope
+from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_mcp.mcp.server import build_server
+from cadrumo_mcp.mcp.surfaces import MCP_SURFACES, McpSurfaceName
+from cadrumo_mcp.mcp.tests.session import connected_server_and_client_session
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
 
 pytestmark = [

@@ -33,10 +33,10 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     synthetic_legal_identity,
 )
 from cadrumo.domain.portals.registry import PORTAL_REGISTRY
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.server import build_server
-from cadrumo_harness.mcp.tests.admitted_lease import admitted_adapter
-from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
+from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_mcp.mcp.server import build_server
+from cadrumo_mcp.mcp.tests.admitted_lease import admitted_adapter
+from cadrumo_mcp.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from dev._paths import REPO_ROOT
-from dev.first_party_source import HARNESS_PACKAGE, SOURCE_PACKAGES
+from dev.first_party_source import MCP_PACKAGE, SOURCE_PACKAGES
 from dev.packaging.command_execution import run_command
 
 from ..dead_code import (
@@ -202,10 +202,10 @@ def test_product_exclusions_match_a_real_vulture_scan(tmp_path: Path) -> None:
         "src/cadrumo/domain/tests/helper.py",
         "src/cadrumo/domain/_data/content.py",
         "src/cadrumo/domain/conftest.py",
-        "src/cadrumo_harness/mcp/test_one.py",
-        "src/cadrumo_harness/mcp/tests/helper.py",
-        "src/cadrumo_harness/_data/content.py",
-        "src/cadrumo_harness/conftest.py",
+        "src/cadrumo_mcp/mcp/test_one.py",
+        "src/cadrumo_mcp/mcp/tests/helper.py",
+        "src/cadrumo_mcp/_data/content.py",
+        "src/cadrumo_mcp/conftest.py",
         "native/desktop/src-tauri/src/python/cli.py",
         "dev/packaging/native/build.py",
         "build/runtime/copied.py",
@@ -228,7 +228,7 @@ def test_product_exclusions_match_a_real_vulture_scan(tmp_path: Path) -> None:
             "--config",
             str(tmp_path / "pyproject.toml"),
             str(tmp_path / "src/cadrumo"),
-            str(tmp_path / "src/cadrumo_harness"),
+            str(tmp_path / "src/cadrumo_mcp"),
             str(whitelist),
         ],
         cwd=_REPO_ROOT,
@@ -271,13 +271,13 @@ def test_a_source_package_offering_nothing_refuses_before_launch(tmp_path: Path)
     _populated_tree(tmp_path)
     assert run_dead_code_scan(tmp_path).outcome is DeadCodeOutcome.FINDINGS
 
-    (tmp_path / HARNESS_PACKAGE / "__init__.py").unlink()
+    (tmp_path / MCP_PACKAGE / "__init__.py").unlink()
 
     result = run_dead_code_scan(tmp_path, timeout=0.0)
 
     assert result.outcome is DeadCodeOutcome.ERROR
     assert result.is_green is False
-    assert f"no module from {HARNESS_PACKAGE}" in result.reason
+    assert f"no module from {MCP_PACKAGE}" in result.reason
     assert "timeout" not in result.reason
 
 

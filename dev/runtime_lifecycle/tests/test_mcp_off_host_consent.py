@@ -35,8 +35,8 @@ from cadrumo.core.operations import profile_operation_subject
 from cadrumo_client.contracts.operation_access import OperationSubmit, OperationSubmitted
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
-from cadrumo_harness.mcp.protocol_contract import PERSON_ACT_REMEDY
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_mcp.mcp.protocol_contract import PERSON_ACT_REMEDY
+from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import stored_sign_in_runtime
 
 from .attended_mcp_support import attended_status, holding_person

@@ -10,7 +10,7 @@ use cadrumo_application::process::status::ProcessRole;
 const PROJECT_LOGGER_ROOTS: [&str; 5] = [
     "cadrumo",
     "cadrumo_client",
-    "cadrumo_harness",
+    "cadrumo_mcp",
     "cadrumo_runtime",
     "cadrumo_agent_service",
 ];
@@ -300,7 +300,7 @@ mod tests {
             "cadrumo",
             "cadrumo.application.workflow",
             "cadrumo_client.commands.stdio",
-            "cadrumo_harness.mcp",
+            "cadrumo_mcp.mcp",
             "cadrumo_runtime.adapters.server",
             "cadrumo_agent_service.host.controller",
         ] {
@@ -308,7 +308,7 @@ mod tests {
         }
         for name in [
             "cadrumo_clientish.commands",
-            "cadrumo_harness_vendor.mcp",
+            "cadrumo_mcp_vendor.mcp",
             "cadrumo_runtimeish.adapters.server",
             "cadrumo_agent_service_vendor.host.controller",
             "foreign_runtime.adapters.server",

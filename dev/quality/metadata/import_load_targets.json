@@ -3349,7 +3349,7 @@
         "cadrumo_client.transport.workbench_generation"
       ]
     },
-    "cadrumo_harness": {
+    "cadrumo_mcp": {
       "kind": "python-module-names",
       "source": {
         "exclude_test_module_prefixes": [
@@ -3358,35 +3358,35 @@
           "conftest"
         ],
         "exclude_test_packages": true,
-        "package": "cadrumo_harness",
-        "source_root": "src/cadrumo_harness",
+        "package": "cadrumo_mcp",
+        "source_root": "src/cadrumo_mcp",
         "subpackages": []
       },
       "targets": [
-        "cadrumo_harness",
-        "cadrumo_harness.access",
-        "cadrumo_harness.access.automation_key",
-        "cadrumo_harness.mcp",
-        "cadrumo_harness.mcp.access_scope",
-        "cadrumo_harness.mcp.admitted_operations",
-        "cadrumo_harness.mcp.authority_query",
-        "cadrumo_harness.mcp.corpus_query",
-        "cadrumo_harness.mcp.lifecycle_notices",
-        "cadrumo_harness.mcp.main",
-        "cadrumo_harness.mcp.operation_contract_cache",
-        "cadrumo_harness.mcp.operation_discovery",
-        "cadrumo_harness.mcp.operation_guidance",
-        "cadrumo_harness.mcp.operation_search",
-        "cadrumo_harness.mcp.payload_vocabulary",
-        "cadrumo_harness.mcp.progress_relay",
-        "cadrumo_harness.mcp.protocol_contract",
-        "cadrumo_harness.mcp.request_diagnostics",
-        "cadrumo_harness.mcp.result_request",
-        "cadrumo_harness.mcp.runtime_adapter",
-        "cadrumo_harness.mcp.runtime_admission",
-        "cadrumo_harness.mcp.runtime_cleanup",
-        "cadrumo_harness.mcp.server",
-        "cadrumo_harness.mcp.surfaces"
+        "cadrumo_mcp",
+        "cadrumo_mcp.access",
+        "cadrumo_mcp.access.automation_key",
+        "cadrumo_mcp.mcp",
+        "cadrumo_mcp.mcp.access_scope",
+        "cadrumo_mcp.mcp.admitted_operations",
+        "cadrumo_mcp.mcp.authority_query",
+        "cadrumo_mcp.mcp.corpus_query",
+        "cadrumo_mcp.mcp.lifecycle_notices",
+        "cadrumo_mcp.mcp.main",
+        "cadrumo_mcp.mcp.operation_contract_cache",
+        "cadrumo_mcp.mcp.operation_discovery",
+        "cadrumo_mcp.mcp.operation_guidance",
+        "cadrumo_mcp.mcp.operation_search",
+        "cadrumo_mcp.mcp.payload_vocabulary",
+        "cadrumo_mcp.mcp.progress_relay",
+        "cadrumo_mcp.mcp.protocol_contract",
+        "cadrumo_mcp.mcp.request_diagnostics",
+        "cadrumo_mcp.mcp.result_request",
+        "cadrumo_mcp.mcp.runtime_adapter",
+        "cadrumo_mcp.mcp.runtime_admission",
+        "cadrumo_mcp.mcp.runtime_cleanup",
+        "cadrumo_mcp.mcp.server",
+        "cadrumo_mcp.mcp.surfaces"
       ]
     },
     "cadrumo_runtime": {

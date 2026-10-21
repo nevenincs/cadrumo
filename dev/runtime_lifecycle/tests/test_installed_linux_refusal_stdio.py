@@ -35,7 +35,7 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.posix import posix_owner_uid
 from cadrumo_client.transport.posix_endpoint import PosixEndpoint
-from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
+from cadrumo_mcp.mcp.protocol_contract import SIGN_IN_REMEDY
 from cadrumo_runtime.host.tests.test_installed_runtime import connect, launch
 
 pytestmark = [

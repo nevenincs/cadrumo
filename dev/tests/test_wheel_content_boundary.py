@@ -74,7 +74,7 @@ _ALLOWED_WHEEL_ROOTS = frozenset(
         "cadrumo",
         "cadrumo_client",
         "cadrumo_runtime",
-        "cadrumo_harness",
+        "cadrumo_mcp",
         "cadrumo_agent_service",
         f"cadrumo-{_PROJECT_VERSION}.dist-info",
     },
@@ -103,7 +103,7 @@ _ALLOWED_SDIST_PREFIXES = (
     "src/cadrumo/",
     "src/cadrumo_client/",
     "src/cadrumo_runtime/",
-    "src/cadrumo_harness/",
+    "src/cadrumo_mcp/",
     "src/cadrumo_agent_service/",
     "packaging/authority/",
 )

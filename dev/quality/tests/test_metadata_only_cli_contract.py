@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _FORBIDDEN_PREFIXES = (
     "cadrumo.domain.calculations.registry",
     "cadrumo.adapters.persistence.storage",
-    "cadrumo_harness",
+    "cadrumo_mcp",
     "cadrumo_runtime.host.frontend.tui",
     "cryptography",
     "keyring",

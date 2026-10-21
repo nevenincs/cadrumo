@@ -361,7 +361,7 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
         ),
         (
             "harness-to-product-entrypoint",
-            "cadrumo_harness.mcp.bad",
+            "cadrumo_mcp.mcp.bad",
             "import cadrumo.entrypoints.module\n",
             ("cadrumo.entrypoints.module",),
         ),
@@ -386,8 +386,8 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
         (
             "adapter-to-harness",
             "cadrumo.adapters.inbound.bad",
-            "import cadrumo_harness.mcp.module\n",
-            ("cadrumo_harness.mcp.module",),
+            "import cadrumo_mcp.mcp.module\n",
+            ("cadrumo_mcp.mcp.module",),
         ),
         (
             "non-entrypoint-to-entrypoint",
@@ -810,7 +810,7 @@ def test_harness_package_keeps_absolute_product_imports(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     _write_module(
         root,
-        "cadrumo_harness.mcp.consumer",
+        "cadrumo_mcp.mcp.consumer",
         "from cadrumo.core.module import VALUE\n",
     )
     _write_module(root, "cadrumo.core.module", "VALUE = 1\n")

@@ -23,13 +23,13 @@ from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
-from cadrumo_harness.mcp.protocol_contract import (
+from cadrumo_mcp.mcp.protocol_contract import (
     KEYCHAIN_REMEDY,
     SIGN_IN_REMEDY,
     refusal_code,
     sign_in_remedy,
 )
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
 
 pytestmark = [

@@ -18,10 +18,10 @@ from cadrumo_client.contracts.attendance import AttendancePending
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_harness.mcp.access_scope import surface_scope
-from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
-from cadrumo_harness.mcp.runtime_admission import McpAdmission
-from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
+from cadrumo_mcp.mcp.access_scope import surface_scope
+from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_mcp.mcp.runtime_admission import McpAdmission
+from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import StoredSignInRuntime
 
 from ..proof_support import ProcessIdentity

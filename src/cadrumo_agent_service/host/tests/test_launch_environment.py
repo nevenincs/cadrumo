@@ -11,7 +11,7 @@ from uuid import UUID
 import pytest
 
 from cadrumo.core.storage_environment import STORAGE_ROOT, normalize_storage_path
-from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE
+from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE
 
 from ..launch_environment import (
     ADVERTISED_VARIABLES,

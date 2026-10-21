@@ -31,7 +31,7 @@ the fastest way to land in the right subpackage.
 - {doc}`cadrumo.entrypoints <cadrumo.entrypoints>` owns the process surfaces:
   the `aeat` command-line interface and its full-screen workbench. The
   `cadrumo-mcp` Model Context Protocol server ships in the separate
-  `cadrumo_harness` package and drives the same application services.
+  `cadrumo_mcp` package and drives the same application services.
 
 ## Where to start
 
@@ -53,6 +53,6 @@ so they are never committed or edited by hand.
 cadrumo
 cadrumo_client
 cadrumo_runtime
-cadrumo_harness
+cadrumo_mcp
 cadrumo_agent_service
 ```

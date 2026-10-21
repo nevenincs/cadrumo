@@ -51,9 +51,9 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessPolicy,
     OperationAccessRequest,
 )
-from cadrumo_harness.mcp.access_scope import surface_scope
-from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_NAMES
-from cadrumo_harness.mcp.surfaces import MCP_SURFACES, McpSurfaceName
+from cadrumo_mcp.mcp.access_scope import surface_scope
+from cadrumo_mcp.mcp.protocol_contract import MCP_TOOL_NAMES
+from cadrumo_mcp.mcp.surfaces import MCP_SURFACES, McpSurfaceName
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

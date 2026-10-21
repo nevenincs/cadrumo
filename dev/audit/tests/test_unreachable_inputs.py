@@ -187,9 +187,9 @@ def test_a_console_script_outside_the_audited_packages_is_refused(tmp_path: Path
         {
             "src/cadrumo/__init__.py": "",
             "src/cadrumo/cli.py": "def main(): pass\n",
-            "pyproject.toml": _pyproject("cadrumo_harness.mcp.main:main"),
+            "pyproject.toml": _pyproject("cadrumo_mcp.mcp.main:main"),
         },
     )
 
-    with pytest.raises(ValueError, match=r"cadrumo_harness\.mcp\.main:main"):
+    with pytest.raises(ValueError, match=r"cadrumo_mcp\.mcp\.main:main"):
         ShippedTreeSpec.from_repository(tmp_path)

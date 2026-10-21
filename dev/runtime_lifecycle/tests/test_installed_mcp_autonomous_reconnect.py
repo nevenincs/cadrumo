@@ -61,7 +61,7 @@ from cadrumo_client.commands.compiler import build_command_app
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
-from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
+from cadrumo_mcp.mcp.protocol_contract import SIGN_IN_REMEDY
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 from cadrumo_runtime.commands.lifecycle import dispatch_runtime_behavior
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections

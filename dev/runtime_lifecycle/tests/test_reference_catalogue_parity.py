@@ -22,7 +22,7 @@ from cadrumo.core.i18n.render import tr
 from cadrumo.domain.portals.registry import PORTAL_REGISTRY
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
-from cadrumo_harness.mcp.tests.admitted_lease import admitted_adapter
+from cadrumo_mcp.mcp.tests.admitted_lease import admitted_adapter
 
 __all__ = ["_isolated_cli_backend"]
 

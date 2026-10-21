@@ -87,7 +87,7 @@ async def test_a_client_that_never_initializes_speaks_the_newest_revision_and_li
 
 
 @pytest.mark.anyio
-async def test_the_server_tells_a_discovering_client_that_it_serves_tools_and_resources() -> None:
+async def test_the_server_tells_a_discovering_client_that_it_serves_tools_and_nothing_else() -> None:
     adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
     try:
         async with connected_handshake_free_client(build_server(adapter)) as modern:
@@ -96,10 +96,9 @@ async def test_the_server_tells_a_discovering_client_that_it_serves_tools_and_re
         await adapter.close()
 
     assert discovered is not None and discovered.capabilities.tools is not None
-    # The operating layer's documents are resources; nothing is subscribed to, since bundled text never changes.
-    resources = discovered.capabilities.resources
-    assert resources is not None and resources.subscribe is False
-    # It offers no prompts, and a client is told as much instead of finding out by error.
+    # Every answer is a tool call: the service serves no document of its own, and
+    # offers no prompt, so a client is told as much instead of finding out by error.
+    assert discovered.capabilities.resources is None
     assert discovered.capabilities.prompts is None
 
 

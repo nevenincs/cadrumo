@@ -18,7 +18,7 @@ import pytest
 
 from cadrumo.application.operations.access_facts import operation_access_facts
 from cadrumo.domain.calculations.registry.remote_state_guard import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
-from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE
+from cadrumo_mcp.mcp.protocol_contract import MCP_TOOL_CATALOGUE
 from dev.operation_contract_manifest.tests.test_operation_catalogue import (
     production_operation_registry,
     production_operation_source_tree,

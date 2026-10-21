@@ -37,7 +37,7 @@ The structure that follows is hexagonal: business rules sit at the center, and
 the parsers, browsers, and storage that touch the outside world sit at the edge.
 Dependencies point inward: adapters implement ports that the application layer
 declares, and only the composition roots (the entrypoints and the
-`cadrumo_harness` MCP server) wire adapters to application services. This
+`cadrumo_mcp` MCP server) wire adapters to application services. This
 keeps tax logic testable on its own and lets an adapter change without touching
 a rule.
 

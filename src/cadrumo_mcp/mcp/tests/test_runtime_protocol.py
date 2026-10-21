@@ -13,8 +13,8 @@ from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
-from cadrumo_harness.mcp.access_scope import surface_scope
-from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
+from cadrumo_mcp.mcp.access_scope import surface_scope
+from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
 
 from .. import runtime_adapter as mcp_runtime
 from ..protocol_contract import SIGN_IN_REMEDY

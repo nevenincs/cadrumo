@@ -32,8 +32,8 @@ from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
-from cadrumo_harness.mcp.access_scope import surface_scope
-from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
+from cadrumo_mcp.mcp.access_scope import surface_scope
+from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import SessionReply, StoredSignInRuntime, stored_sign_in_runtime
 
 from .attended_mcp_support import attended_client, holding_person

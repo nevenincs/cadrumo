@@ -66,7 +66,7 @@ def test_console_scripts_expose_only_the_canonical_cadrumo_commands() -> None:
 
     assert pyproject["project"]["scripts"] == {
         "aeat": "cadrumo_runtime.host.frontend.cli.bootstrap:main",
-        "cadrumo-mcp": "cadrumo_harness.mcp.main:main",
+        "cadrumo-mcp": "cadrumo_mcp.mcp.main:main",
         "cadrumo-runtime": "cadrumo_runtime.host.bootstrap:main",
         "cadrumo-agent-service": "cadrumo_agent_service.main:main",
     }

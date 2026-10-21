@@ -2,7 +2,7 @@
 
 This is a census, not a sample. Its denominator is the live source tree under
 ``src/cadrumo``, the runtime TUI frontend and the installed external client
-adapter under ``src/cadrumo_harness/mcp``, walked from disk without consulting
+adapter under ``src/cadrumo_mcp/mcp``, walked from disk without consulting
 version-control state, so a peer's new source file enters the census
 immediately.
 
@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _REPO_ROOT = REPO_ROOT
 _PACKAGE_PREFIX = "src/cadrumo/"
-_MCP_PACKAGE_PREFIX = "src/cadrumo_harness/mcp/"
+_MCP_PACKAGE_PREFIX = "src/cadrumo_mcp/mcp/"
 _TUI_PACKAGE_PREFIX = "src/cadrumo/entrypoints/tui/"
 _RUNTIME_CLI_PACKAGE_PREFIX = "src/cadrumo_runtime/commands/"
 _CLIENT_CLI_PACKAGE_PREFIX = "src/cadrumo_client/commands/"
@@ -93,7 +93,7 @@ _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = ()
 @cache
 def _source_files() -> tuple[str, ...]:
     """Every Python file under tax, shared/runtime CLI, client contracts, runtime host/TUI and MCP packages."""
-    mcp_root = _REPO_ROOT / "src" / "cadrumo_harness" / "mcp"
+    mcp_root = _REPO_ROOT / "src" / "cadrumo_mcp" / "mcp"
     paths = tuple(
         path.relative_to(_REPO_ROOT).as_posix()
         for path in (
@@ -127,7 +127,7 @@ def production_operation_source_tree() -> SourceTree:
     return releases_parsed_sources(
         SourceTree(
             _REPO_ROOT,
-            packages=frozenset({"cadrumo", "cadrumo_harness", "cadrumo_runtime", "cadrumo_client"}),
+            packages=frozenset({"cadrumo", "cadrumo_mcp", "cadrumo_runtime", "cadrumo_client"}),
             prefix="src",
             contains=census_files.__contains__,
         )
@@ -407,7 +407,7 @@ def test_the_census_denominator_is_the_repository_visible_tree() -> None:
     assert any(path.startswith(_CLIENT_CLI_PACKAGE_PREFIX) for path in sources)
     assert any(path.startswith(_RUNTIME_HOST_PACKAGE_PREFIX) for path in sources)
     assert any(path.startswith(_MCP_PACKAGE_PREFIX) for path in sources)
-    assert any(path == "src/cadrumo_harness/mcp/server.py" for path in sources)
+    assert any(path == "src/cadrumo_mcp/mcp/server.py" for path in sources)
 
 
 def test_every_declared_operation_id_joins_exactly_one_registered_definition() -> None:

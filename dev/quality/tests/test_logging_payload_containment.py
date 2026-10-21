@@ -143,7 +143,7 @@ def test_first_party_data_uri_and_raw_bytes_payloads_are_contained(log_file: Pat
     assert "RAW-DOCUMENT-BYTES" not in written, "raw decrypted bytes reached the plaintext diagnostic log"
 
 
-@pytest.mark.parametrize("namespace", ["cadrumo", "cadrumo_agent", "cadrumo_agent_service", "cadrumo_harness"])
+@pytest.mark.parametrize("namespace", ["cadrumo", "cadrumo_agent", "cadrumo_agent_service", "cadrumo_mcp"])
 def test_ordinary_first_party_debug_diagnostics_are_untouched(log_file: Path, namespace: str) -> None:
     """Positive control: containment must not cost us our own DEBUG channel."""
     register_first_party_logger(namespace)
