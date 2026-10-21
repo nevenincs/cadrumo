@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:200f32ab75a72836e45dbccb1ef42064f36ad87c6fa515fd30c6c736c5fe5bc2'
+body_hash: 'sha256:fb3a4a8121e372b25cef3103f7bad869c34276cb8c3473c5893cf987799b56a4'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
@@ -1471,6 +1471,8 @@ related:
 - `S04` `verify:` `locale-parity-audit-scanner-focused` -> `pass`
 - `S04` `verify:` `format-types-and-worker46` -> `pass`
 - `S04` `verify:` `controlled-packaging-temp49` -> `pass`
+- `S04` `verify:` `documentation-order-workflow57` -> `pass`
+- `S04` `verify:` `keychain-complete-lane` -> `fail`
 
 ## Notes
 
@@ -1518,3 +1520,4 @@ related:
 - `S04` Runtime portable evidence union3817pass77expectedskip; original full red receipt retained. Production JSON routing committed0b853e1207; runtime fixture65files725364a503; service bounded reads830b557c2e. Core/native independent review accepted. Full product/dev test-gate remains active, new import package-anchor/coverage-enrollment repairs underway. Bundle refresh source snapshot changed due concurrent external profile-custody edit; no immutable all-green claim. S03/S04 remain open.
 - `S04` Canonical environment ownership committed535c7919d8. Windows1083 and keychain54 collected and assigned; held until stable package refresh. Full portable suite and final static aggregate remain active. Fresh locale parity reproduces and is assigned; S03/S04 remain open.
 - `S04` Locale repair eb06cb0954 preserves external catalogue edits; fixture repairs7aa0d3233e,24003cd8c3,c2f88fb3c6 and controlled-temp cbb6255728 verified. Obsolete bundle64882 deliberately cancelled11:40UTC to reduce measured disk contention; not a passing receipt. Keychain54 before Windows1083, portable full suite active; final bundle/static/docs checks remain. S03/S04 open.
+- `S04` Documentation prerequisite ordering committed d387f405e4;57 workflow cases and both old-order negative controls pass. Keychain41pass4fail9skip; LLM focused passes unchanged, Hungarian repeated verification remains failed. All four selectors retained for combined quiet rerun with owner logs; protected Windows checks underway. Main full gate still active; source changed externally during collection. No all-green claim; S03/S04 remain open.
