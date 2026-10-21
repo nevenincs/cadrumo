@@ -261,9 +261,15 @@ class LifecycleHarness:
         finally:
             if payload is not None:
                 payload[:] = bytes(len(payload))
-        document = _cli_document(
-            result.stdout if result.returncode == 0 else result.stderr, success=result.returncode == 0
-        )
+        try:
+            document = _cli_document(
+                result.stdout if result.returncode == 0 else result.stderr, success=result.returncode == 0
+            )
+        except RuntimeError as error:
+            raise RuntimeError(
+                f"{error}; exit={result.returncode}, "
+                f"stdout_bytes={len(result.stdout.encode('utf-8'))}, stderr_bytes={len(result.stderr.encode('utf-8'))}"
+            ) from None
         if expect_success and result.returncode != 0:
             detail = document.get("error")
             code = detail.get("code") if isinstance(detail, dict) else None

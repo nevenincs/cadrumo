@@ -16,6 +16,7 @@ import pytest
 
 import dev.runtime_lifecycle.agent_service_session as session_module
 from cadrumo_agent_service.admin import AdminAction, AdminServer
+from cadrumo_agent_service.host.bounded_read import BoundedRead
 from cadrumo_client.contracts.service_access import ServiceConnected, ServiceLease
 from dev.runtime_lifecycle.caller_owned_root import Programs
 from dev.runtime_lifecycle.proof_support import Profile
@@ -371,6 +372,84 @@ def test_admin_uses_the_actual_typed_service_request_and_bounded_wire(tmp_path: 
         bearer[:] = bytes(len(bearer))
 
 
+@pytest.mark.parametrize("action", ["catalog", "status"])
+def test_admin_observes_the_same_bounded_read_after_its_busy_answer(action: AdminAction) -> None:
+    expected_action = action
+    class DelayedRead:
+        def __init__(self) -> None:
+            self.release = Event()
+            self.computations = 0
+            self.requests = 0
+            self.read = BoundedRead(self.compute, name="acceptance-read", fresh_seconds=5)
+
+        def compute(self) -> dict[str, Any]:
+            self.computations += 1
+            assert self.release.wait(timeout=5)
+            return {"providers": []}
+
+        def admin(self, action: AdminAction, **_fields: object) -> dict[str, Any]:
+            assert action == expected_action
+            self.requests += 1
+            result = self.read.answer("same-admitted-service", within=0.01)
+            if result == {"kind": "refused", "code": "busy"}:
+                self.release.set()
+            return result
+
+    target = DelayedRead()
+    bearer = bytearray(b"synthetic-test-admin-authority")
+    server = AdminServer(target, bearer=bearer)
+    process = object.__new__(session_module._PackagedServiceProcess)
+    process._bearer = bearer
+    try:
+        assert process.admin(server.port, action) == {"providers": []}
+        assert target.requests >= 2
+        assert target.computations == 1
+    finally:
+        target.release.set()
+        server.close()
+        bearer[:] = bytes(len(bearer))
+
+
+@pytest.mark.parametrize("code", ["signed_out", "catalog_unavailable", "service_failed"])
+def test_admin_does_not_replay_other_refusals(code: str) -> None:
+    class RefusedRead:
+        requests = 0
+
+        def admin(self, action: AdminAction, **_fields: object) -> dict[str, Any]:
+            self.requests += 1
+            return {"kind": "refused", "code": code}
+
+    target = RefusedRead()
+    bearer = bytearray(b"synthetic-test-admin-authority")
+    server = AdminServer(target, bearer=bearer)
+    process = object.__new__(session_module._PackagedServiceProcess)
+    process._bearer = bearer
+    try:
+        assert process.admin(server.port, "status") == {"kind": "refused", "code": code}
+        assert target.requests == 1
+    finally:
+        server.close()
+        bearer[:] = bytes(len(bearer))
+
+
+def test_admin_never_extends_its_budget_for_a_busy_read(monkeypatch: pytest.MonkeyPatch) -> None:
+    class BusyRead:
+        def admin(self, action: AdminAction, **_fields: object) -> dict[str, Any]:
+            return {"kind": "refused", "code": "busy"}
+
+    monkeypatch.setattr(session_module, "_ADMIN_EXCHANGE_SECONDS", 0.15)
+    bearer = bytearray(b"synthetic-test-admin-authority")
+    server = AdminServer(BusyRead(), bearer=bearer)
+    process = object.__new__(session_module._PackagedServiceProcess)
+    process._bearer = bearer
+    try:
+        with pytest.raises(session_module.AcceptanceError, match="exceeded its bound"):
+            process.admin(server.port, "status")
+    finally:
+        server.close()
+        bearer[:] = bytes(len(bearer))
+
+
 def test_service_lease_mismatch_is_rejected_before_exposing_session() -> None:
     holder = object.__new__(session_module.WindowsRuntimeSessionHolder)
     holder.identity = {
@@ -416,7 +495,7 @@ def test_service_stderr_retains_only_bounded_native_machine_codes() -> None:
         b"private-prefix: agent startup refused reason=agent_refused agent_code=NOT_A_MACHINE_CODE "
         b"private-suffix\n"
         b"private-prefix: agent startup refused reason=private_payload agent_code=safe_machine_code private-suffix\n"
-        b"private-prefix: agent stores not brought to current step=version outcome=timed_out "
+        b"private-prefix: agent stores not brought to current step=preflight outcome=timed_out "
         b"failed_stage=private-stage-token private-suffix\n"
         b"private-prefix: agent stores not brought to current step=private_step outcome=timed_out "
         b"failed_stage=private-stage-token private-suffix\n"
@@ -435,7 +514,7 @@ def test_service_stderr_retains_only_bounded_native_machine_codes() -> None:
         "agent_host_reason:credentials_unavailable",
         "agent_host_code:provider_unsupported",
         "agent_host_reason:agent_refused",
-        "agent_store_step:version",
+        "agent_store_step:preflight",
         "agent_store_outcome:timed_out",
     )
     assert "password-value" not in repr(process.stderr_machine_codes)

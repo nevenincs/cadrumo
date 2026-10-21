@@ -35,6 +35,7 @@ def test_runtime_and_service_share_the_admitted_boot(agent_service: AgentService
 
 def test_service_exposes_the_provider_catalog(agent_service: AgentServiceSession) -> None:
     catalog = agent_service.admin("catalog")
+    assert catalog.get("kind") != "refused", catalog
     assert catalog["api_version"] == "v1"
     providers = catalog["providers"]
     assert isinstance(providers, list) and providers
@@ -44,6 +45,8 @@ def test_service_exposes_the_provider_catalog(agent_service: AgentServiceSession
 def test_administration_reuses_the_live_service(agent_service: AgentServiceSession) -> None:
     first = agent_service.admin("status")
     second = agent_service.admin("status")
+    assert first.get("kind") != "refused", first
+    assert second.get("kind") != "refused", second
     providers = first["providers"]
     assert isinstance(providers, list) and len(providers) > 0
     assert first["providers"] == second["providers"]
