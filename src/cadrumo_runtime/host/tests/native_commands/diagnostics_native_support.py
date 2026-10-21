@@ -14,7 +14,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.core.config import override_settings
 from cadrumo.tests.cli_fixture_ports import CliInvocation
 
-from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
+from ....commands.tests.config.runtime_cli import invoke_runtime_cli
 from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 _ACTIVE_PROFILE: ContextVar[NativeCliProfileFixture | None] = ContextVar("diagnostics_native_profile", default=None)

@@ -34,10 +34,11 @@ import pytest
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.tests.cli_envelope import unwrap_cli_result
-from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
-from cadrumo_runtime.host.tests.frontend.cli._isolated_profile_storage_fixtures import active_profile_isolated_backend
-from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
+
+from .....commands.tests.config.runtime_cli import invoke_runtime_cli
+from ...native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
+from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
+from .cli_runner import invoke_cached_cli
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

@@ -16,8 +16,9 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.application.storage.calc_sheets.records import TabName
 from cadrumo.core.config import override_settings
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
+
+from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [
     pytest.mark.integration,

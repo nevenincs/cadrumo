@@ -592,8 +592,8 @@ def test_the_nif_iva_guard_refuses_without_contact(tmp_path: Path, offline_guard
     assert observed.contacts(offline_guard) == []
     assert exit_code != 0
     envelope = json.loads(output)
+    assert envelope["error"]["code"] == "REFUSED_APPLICATION_LIVE_NIF_IVA_CERTIFICATE_REQUIRED"
     context = envelope["error"]["context"]
-    assert context["refusal_code"] == "REFUSED_APPLICATION_LIVE_NIF_IVA_CERTIFICATE_REQUIRED"
     assert context["terminal_condition"] == "refused"
     assert context["effect"] == "none"
 

@@ -17,8 +17,9 @@ from cadrumo.entrypoints.cli.bienes_inversion_results import (
     BienInversionRecordPayload,
 )
 from cadrumo.tests.cli_envelope import unwrap_cli_result
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
+
+from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [
     pytest.mark.integration,

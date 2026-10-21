@@ -31,8 +31,9 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.portable_export import UserProfilePortableExport
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
+
+from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [
     pytest.mark.integration,

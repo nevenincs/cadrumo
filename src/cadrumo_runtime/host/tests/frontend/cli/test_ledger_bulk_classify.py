@@ -19,8 +19,8 @@ from cadrumo.entrypoints.cli.ledger_rule_results import (
     RuleApplyAppliedPayload,
     RuleApplyMatchPayload,
 )
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
+from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

@@ -33,7 +33,8 @@ class _Child(WindowsOwnedProcess):
         self.wait_timeouts: list[float] = []
 
     @override
-    def wait(self, *, timeout: float) -> int:
+    def wait(self, *, timeout: float | None) -> int:
+        assert timeout is not None, "profile worker startup must bound process waits"
         self.wait_timeouts.append(timeout)
         if self.failure is not None:
             raise self.failure

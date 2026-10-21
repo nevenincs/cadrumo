@@ -153,7 +153,9 @@ def test_real_pipe_is_forwarded_before_writer_closes(log_file: Path) -> None:
     try:
         os.write(writer, _line(1, service="gateway", message="live gateway"))
         deadline = time.monotonic() + 5
-        while time.monotonic() < deadline and "live gateway" not in _read(log_file):
+        while time.monotonic() < deadline:
+            if log_file.is_file() and "live gateway" in _read(log_file):
+                break
             time.sleep(0.01)
         assert "live gateway" in _read(log_file)
         assert '"process_role":"extension_service"' in _read(log_file)

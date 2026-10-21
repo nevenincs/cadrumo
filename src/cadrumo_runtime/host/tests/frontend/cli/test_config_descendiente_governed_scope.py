@@ -23,8 +23,8 @@ import pytest
 from cadrumo.core.config import load_settings
 from cadrumo.domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
+from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [

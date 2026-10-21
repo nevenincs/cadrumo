@@ -1,9 +1,9 @@
-"""Real-entrypoint coverage for profile-free commands on a host with no usable keychain.
+"""Real-entrypoint coverage for signed-in commands on a host with no usable keychain.
 
 A profile session is resumed from the OS keychain. On a host without one, a
-command that needs the profile refuses unless the passphrase reaches it; a
-command that declares nothing a profile holds must run regardless, even with an
-active profile selected. The child runs the real console script with a failing
+command that needs the profile refuses unless the passphrase reaches it.
+Provisioning checks are registered operations in that signed-in profile, even
+when their dependencies live outside profile storage. The child runs the real console script with a failing
 keyring backend and no console, so no passphrase prompt can be reached.
 """
 
@@ -17,8 +17,8 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
+from .config.tests.isolated_storage_fixture import native_profile_view_server
 from .fresh_process import run_fresh_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -32,8 +32,7 @@ def _passphrase() -> str:
 
 
 def _run(storage_root: Path, *args: str, stdin_payload: str | None = None) -> subprocess.CompletedProcess[str]:
-    # Profile-bound leaves submit to the runtime that serves the root, which
-    # keychain-less too; profile-free leaves never reach it.
+    # Profile-bound leaves submit to the keychainless runtime that serves the root.
     with native_profile_view_server(storage_root, keychain_backend=_NO_KEYCHAIN["PYTHON_KEYRING_BACKEND"]):
         return run_fresh_cli(
             args,
@@ -68,30 +67,30 @@ def _combined(result: subprocess.CompletedProcess[str]) -> str:
     return f"{result.stdout}\n{result.stderr}"
 
 
-def test_provision_status_runs_with_an_active_profile_and_no_keychain(active_profile_root: Path) -> None:
+def test_provision_status_requires_sign_in_without_a_keychain(active_profile_root: Path) -> None:
     result = _run(active_profile_root, "--format", "json", "config", "provision", "status")
 
-    assert result.returncode == 0, _combined(result)
-    envelope = json.loads(result.stdout)
-    assert envelope["status"] == "success"
-    assert envelope["result"]["runtime"]["reachable"] is False
-    assert envelope["result"]["extraction_ready"] is False
-    assert envelope["result"]["document_readiness"] == "text_layer_only"
-
-
-def test_provision_verify_runs_with_an_active_profile_and_no_keychain(active_profile_root: Path) -> None:
-    result = _run(active_profile_root, "--format", "json", "config", "provision", "verify", "--role", "text_extraction")
-
-    # The runtime is closed, so verify reports not ready -- and gets that far
-    # without the profile session it never needed.
     assert result.returncode == 2, _combined(result)
-    envelope = json.loads(result.stdout)
-    assert envelope["result"]["ready"] is False
-    assert "KEYRING" not in _combined(result)
+    assert result.stdout == "", _combined(result)
+    envelope = json.loads(result.stderr)
+    assert envelope["error"]["code"] == "REFUSED_CLI_BOUNDARY", result.stderr
+    assert envelope["error"]["action"]["failed_condition_id"] == "profile.session.logged_in"
+    assert envelope["error"]["context"] == {"reason": "absent", "sign_in_reason": "absent"}
+
+
+def test_provision_verify_requires_sign_in_without_a_keychain(active_profile_root: Path) -> None:
+    result = _run(active_profile_root, "--format", "json", "config", "provision", "verify", "--item", "browser")
+
+    assert result.returncode == 2, _combined(result)
+    assert result.stdout == "", _combined(result)
+    envelope = json.loads(result.stderr)
+    assert envelope["error"]["code"] == "REFUSED_CLI_BOUNDARY", result.stderr
+    assert envelope["error"]["action"]["failed_condition_id"] == "profile.session.logged_in"
+    assert envelope["error"]["context"] == {"reason": "absent", "sign_in_reason": "absent"}
 
 
 def test_a_profile_bound_command_still_refuses_without_a_keychain_or_a_console(active_profile_root: Path) -> None:
-    """Detector teeth: scoping frees only profile-free leaves, not the gate itself."""
+    """An encrypted profile read refuses through the same sign-in boundary."""
     result = _run(active_profile_root, "--format", "json", "config", "profile", "view", "keychainless")
 
     assert result.returncode != 0, _combined(result)

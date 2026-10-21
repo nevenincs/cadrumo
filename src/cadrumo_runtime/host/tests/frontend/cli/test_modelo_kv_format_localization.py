@@ -17,8 +17,9 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
-from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
+
+from ...native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [
     pytest.mark.integration,

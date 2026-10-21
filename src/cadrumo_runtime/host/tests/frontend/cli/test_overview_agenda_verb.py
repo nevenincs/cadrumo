@@ -10,8 +10,9 @@ from contextvars import ContextVar
 import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
-from cadrumo_runtime.host.tests.frontend.cli._overview_native_support import invoke_native_overview
+
+from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
+from ._overview_native_support import invoke_native_overview
 
 pytestmark = [
     pytest.mark.integration,

@@ -41,8 +41,8 @@ from cadrumo.entrypoints.cli.modelo_results_m145 import (
     M145CommunicationValidationResultPayload,
 )
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
+from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [

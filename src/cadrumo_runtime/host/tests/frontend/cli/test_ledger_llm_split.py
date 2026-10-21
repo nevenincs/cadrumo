@@ -13,12 +13,13 @@ from typing import Any
 import pytest
 
 from cadrumo.tests.cli_envelope import unwrap_cli_result
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
-from cadrumo_runtime.host.tests.frontend.cli._ledger_llm_support import (
+
+from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
+from ._ledger_llm_support import (
     _import_one_transaction as _shared_import_one_transaction,
 )
-from cadrumo_runtime.host.tests.frontend.cli._ledger_llm_support import ledger_llm_profile
-from cadrumo_runtime.host.tests.frontend.cli.ledger_ux_support import _invoke_exact_profile
+from ._ledger_llm_support import ledger_llm_profile
+from .ledger_ux_support import _invoke_exact_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["ledger_llm_profile"]

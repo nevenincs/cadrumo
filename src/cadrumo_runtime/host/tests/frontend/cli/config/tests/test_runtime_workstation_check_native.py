@@ -16,10 +16,9 @@ from cadrumo.core.capabilities import ServiceCapability
 from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.cli.config.check_payloads import ConfigCheckResult
 from cadrumo.tests.cli_envelope import unwrap_cli_result
-from cadrumo_runtime.host.tests.native_commands.diagnostics_native_support import (
-    diagnostics_native_profile as diagnostics_native_profile,
-)
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
+
+from .....native_commands.diagnostics_native_support import diagnostics_native_profile
+from .....native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 pytestmark = [
     pytest.mark.integration,
@@ -54,7 +53,8 @@ def test_config_check_preserves_the_full_worker_report_and_text_rows(
     assert "local-reader:vision_transcription" in dependency_rows
     assert "model-runtime-hardware-floor" in dependency_rows
     assert "playwright-chromium" in dependency_rows
-    assert {"extra:google", "extra:browser", "extra:anthropic"} <= set(dependency_rows)
+    assert {"extra:google", "extra:browser"} <= set(dependency_rows)
+    assert "extra:anthropic" not in dependency_rows
 
     preflight_rows = {row["check"]: row for row in payload["preflight"]}
     assert {

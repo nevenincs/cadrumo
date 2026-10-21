@@ -39,7 +39,6 @@ from cadrumo.application.user_profile.profile_pointer import (
 )
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.call_time_refusing_keyring import CALL_TIME_REFUSING_KEYRING
@@ -742,8 +741,8 @@ def test_explicit_root_source_authenticates_instead_of_borrowing_saved_sign_in(t
         assert refused_error["context"]["reason"] == "credential_rejected"
 
 
-def test_passphrase_change_resolves_target_before_reading_machine_secrets(tmp_path: Path) -> None:
-    """An absent active target refuses without parsing the supplied payload."""
+def test_passphrase_change_refuses_unavailable_runtime_before_reading_machine_secrets(tmp_path: Path) -> None:
+    """An unavailable selection authority refuses without parsing the supplied payload."""
     result = _run_runtime(
         tmp_path,
         ("--format", "json", "config", "passphrase", "change", "--secrets-stdin"),
@@ -752,9 +751,10 @@ def test_passphrase_change_resolves_target_before_reading_machine_secrets(tmp_pa
     )
     output = _combined_output(result)
     assert result.returncode == 2, output
+    assert result.stderr.lstrip().startswith("{"), output
     error = json.loads(result.stderr)["error"]
-    assert error["code"] == "REFUSED_CLI_BOUNDARY", output
-    assert error["message"] == lookup_translation("cli.config.passphrase.no_active_profile", locale="en"), output
+    assert error["code"] == "REFUSED_LOCAL_RUNTIME", output
+    assert error["context"] == {"reason": "runtime_unavailable"}, output
     assert "expected_fields" not in (error["context"] or {}), output
     assert "not-json-and-must-remain-unread" not in output
     assert not tmp_path.exists() or tuple(tmp_path.iterdir()) == ()

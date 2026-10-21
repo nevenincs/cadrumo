@@ -11,9 +11,9 @@ from cadrumo.application.auth.diagnostics import AuthDiagnosticPhoneState
 from cadrumo.core.config import Settings
 from cadrumo.core.hashing import canonical_json_bytes
 
+from ....commands.tests.config.runtime_cli import unwrap_cli_result
 from .diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
 from .runtime_profile_cli_fixture import NativeCliProfileFixture
-from cadrumo_runtime.commands.tests.config.runtime_cli import unwrap_cli_result
 
 pytestmark = [
     pytest.mark.integration,

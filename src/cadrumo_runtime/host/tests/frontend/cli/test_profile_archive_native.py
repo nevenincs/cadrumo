@@ -19,8 +19,8 @@ from cadrumo.application.user_profile.capsule_archive import inspect_profile_cap
 from cadrumo.application.user_profile.login_session import resolve_login_target
 from cadrumo.entrypoints.cli.command_schema import command_schema_type
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result, unwrap_envelope_notices
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
+from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [

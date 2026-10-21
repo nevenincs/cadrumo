@@ -10,8 +10,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-
+from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .ledger_ux_support import _imported_transaction_id_exact_profile, _invoke_exact_profile
 
 pytestmark = [

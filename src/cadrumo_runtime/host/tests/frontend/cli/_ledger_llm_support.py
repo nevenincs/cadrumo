@@ -9,7 +9,8 @@ import pytest
 from click.testing import Result
 
 from cadrumo.tests.cli_envelope import unwrap_cli_result
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+
+from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 _PROFILE_FACTS = {
     "taxpayer_type.entity_type": "natural_person",

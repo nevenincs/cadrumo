@@ -1,5 +1,6 @@
 # serial: shares the process-global master-key-provider / active-profile state
 # that flakes under `-n auto` worker interleaving; runs in the serial (-n0) pass.
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -13,12 +14,13 @@ from cadrumo_client.commands.payloads import (
     ApoderadoConfigureResult,
     ApoderadoStatusResult,
 )
-from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
-from cadrumo_runtime.host.tests.native_commands.diagnostics_native_support import (
+
+from ....commands.tests.config.runtime_cli import invoke_runtime_cli
+from .diagnostics_native_support import (
     diagnostics_native_profile,
     invoke_diagnostics_cli,
 )
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
+from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
 pytestmark = [
     pytest.mark.integration,
@@ -30,14 +32,14 @@ pytestmark = [
 __all__ = ["diagnostics_native_profile"]
 
 
-def test_apoderado_status_fails_without_profile(tmp_path: Path) -> None:
-    """Keep the root admission refusal clear when no profile exists."""
+def test_apoderado_status_refuses_when_runtime_is_unavailable(tmp_path: Path) -> None:
+    """An unavailable runtime cannot authoritatively declare that a profile is absent."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        result = invoke_runtime_cli(["--language", "en", "config", "auth", "apoderado", "status"])
-    assert result.exit_code != 0, result.output
-    assert "Traceback" not in result.output, result.output
-    assert "Refused" in result.output, result.output
-    assert "config profile create" in result.output, result.output
+        result = invoke_runtime_cli(["--format", "json", "--language", "en", "config", "auth", "apoderado", "status"])
+    assert result.exit_code == 2, result.output
+    envelope = json.loads(result.output)
+    assert envelope["error"]["code"] == "REFUSED_LOCAL_RUNTIME", result.output
+    assert envelope["error"]["context"] == {"reason": "runtime_unavailable"}, result.output
 
 
 def test_apoderado_scopes_list_remains_public() -> None:
@@ -128,8 +130,6 @@ def test_apoderado_configure_leaves_profile_facts_untouched(
     run_cadrumo_cli,
 ) -> None:
     """Profile facts remain stable while delegation state uses its own namespace."""
-    import json
-
     assert diagnostics_native_profile.label is not None
     profile_view = [
         "--format",

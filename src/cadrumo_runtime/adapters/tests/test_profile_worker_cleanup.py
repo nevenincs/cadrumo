@@ -191,7 +191,8 @@ class _Child(WindowsOwnedProcess):
         self.wait_calls = 0
 
     @override
-    def wait(self, *, timeout: float) -> int:
+    def wait(self, *, timeout: float | None) -> int:
+        assert timeout is not None, "profile worker startup must bound process waits"
         self.wait_calls += 1
         if self.exited:
             return 1
