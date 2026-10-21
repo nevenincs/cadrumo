@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:9d4d2dd6e486e4678cb3462325d55f884ba9d5c097b15d11b672b7c2a4281077'
+body_hash: 'sha256:4cb1f04ed8ada7e2072425f80f0a27683117ae2ca22c37ebe853a7b4dfd18a02'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
@@ -1481,6 +1481,8 @@ related:
 - `S04` `verify:` `ordinary-interface-focused21` -> `pass`
 - `S04` `verify:` `documentation-privacy8` -> `pass`
 - `S04` `verify:` `current-owner-followups` -> `pass`
+- `S04` `verify:` `lexical-source-and-census` -> `pass`
+- `S04` `verify:` `corpus-configuration` -> `pass`
 
 ## Notes
 
@@ -1532,3 +1534,4 @@ related:
 - `S04` Reviewed commits a069eeb438,f299e4ba08,95d07aede0,617ec39e69,2de6d5e614,e71d4914e9,3882b31533. External e4188cc067 absorbed initial corpus move and temp/Windows fixtures before outstanding functional qualification. Main57973 still active near70percent,184historicalfailureIDs retained. Quiet order main then capturedhost5 then Windows then heavydocs/capabilities; full corpus and separate installedTUI timeout remain open. No all-green claim; S03/S04 open.
 - `S04` Reviewed c4ee155e95,c8a89354fe,27e3de27e9,9e6903afff,2bba54bcc1. UX13file commit uses isolated8cataloguepatch preserving external account/CLI edits. Browser11 and final external-key catalogue check pending; no approval requested. Main57973 at83percent,195historicalfailureIDs retained. Quiet5 thenWindows thenheavydocs/capabilities and finalbundle/static remain. S03/S04 open; no all-green claim.
 - `S04` Reviewed and committed JSON diagnostic correlation 28c9237641 (6 passes), canonical acquisition observation 301d3c2240 (26 passes), and promoted Modelo architecture coverage b5b74d9bd2 (5 passes); capability dependent integration 7 passes. MCP migration accounts for 21 retired historical failures with zero pass credit and 55 moved definitions pending current-source qualification. Main broad run and quiet host, Windows, docs, browser, capability and final package lanes remain open.
+- `S04` Committed cd9d060e86 standalone probe package context (3 passes) and eb1fcd843a lexical source scanner plus technical type census (4+3 passes), preserving strict positive controls and removing obsolete exemptions. User-requested corpus configuration persisted only its root in ignored env/.env after exact pinned key and canonical loader validation; full corpus lane queued. Migration107 historical outcomes classify47retired and60moved pending, zero pass credit. Recovered empty stale Git lock only after age/process/exclusive-open checks, retained original lock beside index; other staging untouched. Main and final verification remain open.
