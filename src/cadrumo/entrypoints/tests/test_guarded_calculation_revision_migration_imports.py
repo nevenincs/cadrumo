@@ -25,6 +25,7 @@ import faulthandler
 import importlib.abc
 import json
 import os
+import platform
 import sys
 
 print(json.dumps({'pid': os.getpid(), 'interpreter': sys.executable}), flush=True)
@@ -34,6 +35,11 @@ blocked = {
     'cadrumo.adapters.persistence.profile.calculation_revision_override_migration',
     'cadrumo.adapters.persistence.profile.relation_binding_join',
 }
+
+# Establish host identity before observing registry construction. On Windows
+# the stdlib's first uname query may invoke cmd; SQLAlchemy later reads this
+# cached machine identity while its import remains under the effects guard.
+platform.machine()
 
 class UnavailableMigration(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path, target=None):
