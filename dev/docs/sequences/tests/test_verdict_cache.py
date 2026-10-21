@@ -9,6 +9,7 @@ import pytest
 from cadrumo.tests.env_scope import scoped_env_var
 from dev.cache_root import DEV_CACHE_ROOT_ENV
 
+from ..errors import SequenceEngineError
 from ..verdict_cache import (
     FORCE_ENV,
     check_reusing_verdict,
@@ -24,6 +25,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 def _tree(root: Path) -> tuple[Path, Path]:
     files = {
         "src/cadrumo/cli.py": "print('cli')\n",
+        "src/cadrumo_client/transport.py": "# client\n",
+        "src/cadrumo_runtime/host.py": "# runtime\n",
         "dev/docs/sequences/runner.py": "# engine\n",
         "dev/docs/build.py": "# build\n",
         "uv.lock": "lock\n",
@@ -51,6 +54,8 @@ def _key(repo: Path, docs: Path, authority_database: str = "db-1") -> str:
     ("relative", "text"),
     [
         ("src/cadrumo/cli.py", "print('changed')\n"),
+        ("src/cadrumo_client/transport.py", "# client changed\n"),
+        ("src/cadrumo_runtime/host.py", "# runtime changed\n"),
         ("dev/docs/sequences/runner.py", "# engine changed\n"),
         ("uv.lock", "lock changed\n"),
         ("docs/_sequences/how-to/page/seq.json", '{"frames": [1]}\n'),
@@ -168,12 +173,30 @@ def test_the_shared_flow_runs_once_reuses_after_a_pass_and_never_records_a_diver
         return ("frame 3 diverged",)
 
     with scoped_env_var(DEV_CACHE_ROOT_ENV, str(tmp_path / "cache")):
-        assert check_reusing_verdict("c" * 64, passing) == ((), None)
-        problems, reused = check_reusing_verdict("c" * 64, passing)
+        assert check_reusing_verdict(lambda: "c" * 64, passing) == ((), None)
+        problems, reused = check_reusing_verdict(lambda: "c" * 64, passing)
         assert problems == ()
         assert reused is not None
         assert calls == ["pass"]
 
-        assert check_reusing_verdict("d" * 64, diverging) == (("frame 3 diverged",), None)
-        assert check_reusing_verdict("d" * 64, diverging) == (("frame 3 diverged",), None)
+        assert check_reusing_verdict(lambda: "d" * 64, diverging) == (("frame 3 diverged",), None)
+        assert check_reusing_verdict(lambda: "d" * 64, diverging) == (("frame 3 diverged",), None)
         assert calls == ["pass", "diverge", "diverge"]
+
+
+def test_a_source_edit_during_execution_cannot_publish_a_clean_verdict(tmp_path: Path) -> None:
+    repo, docs = _tree(tmp_path / "repo")
+    before = _key(repo, docs)
+
+    def execute_with_source_edit() -> tuple[str, ...]:
+        (repo / "src/cadrumo_runtime/host.py").write_text("# changed during execution\n", encoding="utf-8")
+        return ()
+
+    with (
+        scoped_env_var(DEV_CACHE_ROOT_ENV, str(tmp_path / "cache")),
+        scoped_env_var(FORCE_ENV, ""),
+    ):
+        with pytest.raises(SequenceEngineError, match="inputs changed during execution"):
+            check_reusing_verdict(lambda: _key(repo, docs), execute_with_source_edit)
+        assert reused_verdict(before) is None
+        assert reused_verdict(_key(repo, docs)) is None

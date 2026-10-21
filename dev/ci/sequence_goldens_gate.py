@@ -60,12 +60,11 @@ def check_committed_goldens(
     check: Callable[[int], tuple[str, ...]] = _check_committed_goldens,
 ) -> tuple[str, ...]:
     """Check the committed corpus through its one content-keyed verdict authority."""
-    key = input_key()
-    problems, reused = check_reusing_verdict(key, lambda: check(jobs))
+    problems, reused = check_reusing_verdict(input_key, lambda: check(jobs))
     if reused is not None:
         print(f"cli-sequence goldens: clean ({reused})")
     elif not problems:
-        print(f"cli-sequence goldens: clean (recorded verdict {key[:12]})")
+        print("cli-sequence goldens: clean (recorded verdict)")
     return problems
 
 

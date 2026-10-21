@@ -199,6 +199,31 @@ def test_full_gate_bounds_actual_page_workers_and_keeps_failures(
     assert observed == [(tmp_path, tmp_path / "goldens", 2)]
 
 
+def test_source_change_refusal_fails_the_sphinx_build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from dev.cache_root import DEV_CACHE_ROOT_ENV
+
+    from ..sequences import authority_currency, checks, verdict_cache
+
+    app = cast(Sphinx, SimpleNamespace(srcdir=str(tmp_path), config=SimpleNamespace()))
+    source = tmp_path / "source.py"
+    source.write_text("before", encoding="utf-8")
+
+    def execute(**_kwargs: object) -> tuple[str, ...]:
+        source.write_text("after", encoding="utf-8")
+        return ()
+
+    monkeypatch.delenv("CADRUMO_DOCS_SKIP_SEQUENCE_CHECK", raising=False)
+    monkeypatch.delenv(verdict_cache.FORCE_ENV, raising=False)
+    monkeypatch.setenv(DEV_CACHE_ROOT_ENV, str(tmp_path / "cache"))
+    monkeypatch.setattr(authority_currency, "require_current_authority", lambda: None)
+    monkeypatch.setattr(verdict_cache, "published_verdict_key", lambda **_kwargs: source.read_text(encoding="utf-8"))
+    monkeypatch.setattr(checks, "check_sequences_in_subprocess", execute)
+
+    with pytest.raises(SphinxError, match="inputs changed during execution"):
+        check_sequence_goldens(app)
+    assert not list((tmp_path / "cache").rglob("*.json"))
+
+
 def test_no_golden_carries_a_version_literal() -> None:
     """A committed golden must not hardcode a package version.
 

@@ -34,9 +34,10 @@ from typing import Final, Protocol
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
-from dev.first_party_source import PRODUCT_PACKAGE
+from dev.first_party_source import PRODUCT_SOURCE_ROOTS
 
 from .authority_currency import require_current_authority
+from .errors import SequenceEngineError
 
 #: Set to bypass the cache and always execute the gate.
 FORCE_ENV: Final[str] = "CADRUMO_DOCS_FORCE_SEQUENCE_CHECK"
@@ -180,7 +181,8 @@ def verdict_key(
     digest.update(
         f"python:{sys.version}\nplatform:{platform.system()}\nauthority:{authority_database_sha256}\n".encode()
     )
-    _hash_tree(digest, repo_root / PRODUCT_PACKAGE, label="src")
+    for source_root in PRODUCT_SOURCE_ROOTS:
+        _hash_tree(digest, repo_root / source_root, label=source_root)
     _hash_tree(digest, repo_root / "dev" / "docs" / "sequences", label="engine")
     for relative in engine_import_closure(repo_root):
         _hash_tree(digest, repo_root / relative, label=f"engine-import/{relative}")
@@ -249,8 +251,10 @@ def published_verdict_key(*, docs_root: Path, goldens_root: Path | None) -> str:
     )
 
 
-def check_reusing_verdict(key: str, check: Callable[[], tuple[str, ...]]) -> tuple[tuple[str, ...], str | None]:
-    """Run ``check`` unless a clean verdict is recorded for ``key``, recording it when clean.
+def check_reusing_verdict(
+    input_key: Callable[[], str], check: Callable[[], tuple[str, ...]]
+) -> tuple[tuple[str, ...], str | None]:
+    """Check the current inputs, reusing or recording only a clean verdict for them.
 
     The docs build and the merge gate both go through this one flow, so neither
     can reuse or record a verdict on terms the other would not.
@@ -259,10 +263,13 @@ def check_reusing_verdict(key: str, check: Callable[[], tuple[str, ...]]) -> tup
         The problems ``check`` reported, and the description of the recorded
         verdict when one stood in for execution (``None`` when ``check`` ran).
     """
+    key = input_key()
     reused = reused_verdict(key)
     if reused is not None:
         return (), reused
     problems = check()
+    if input_key() != key:
+        raise SequenceEngineError("cli-sequence inputs changed during execution; no verdict was recorded")
     if not problems:
         record_clean_verdict(key)
     return problems, None

@@ -3,7 +3,7 @@
 This is the docs-build half of the two-surfaces-one-engine gate: the Sphinx
 build runs the engine's check mode from a ``builder-inited`` hook so a golden
 divergence or a failed ``@expect`` reds the docs build, and a peer pytest gate
-(``dev/docs/tests/test_sequence_goldens.py``) calls the same
+(``dev/docs/tests/test_sequence_corpus.py``) calls the same
 :func:`~dev.docs.sequences.checks.check_sequences` so CI catches drift without a full
 docs build. Neither surface re-implements execution or comparison — both wire
 the one engine.
@@ -44,7 +44,7 @@ _SKIP_EMIT_ENV = "CADRUMO_DOCS_SKIP_CLI_TREE"
 #: builds over one docs tree in one verification lane may run the check once
 #: and skip the byte-identical repeats. A caller that sets this owes the check
 #: elsewhere in the same lane: the pytest goldens gate
-#: (``dev/docs/tests/test_sequence_goldens.py``) for the test harness and the
+#: (``dev/docs/tests/test_sequence_corpus.py``) for the test harness and the
 #: POT extraction, and the first-built site root for the deploy, which refuses
 #: to publish unless exactly one of its four roots ran the check. A lone build
 #: never sets it; the hook stays connected and red-on-divergence.
@@ -169,10 +169,13 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
         # hermetic sandbox, so execution is unchanged — only the scheduling
         # is). Two page workers bound simultaneous cold runtime imports while
         # preserving each frame's assertions and operation deadlines.
-        full_problems, reused = check_reusing_verdict(
-            published_verdict_key(docs_root=docs_root, goldens_root=goldens_root),
-            lambda: check_sequences_in_subprocess(docs_root=docs_root, goldens_root=goldens_root, jobs=2),
-        )
+        try:
+            full_problems, reused = check_reusing_verdict(
+                lambda: published_verdict_key(docs_root=docs_root, goldens_root=goldens_root),
+                lambda: check_sequences_in_subprocess(docs_root=docs_root, goldens_root=goldens_root, jobs=2),
+            )
+        except SequenceEngineError as exc:
+            raise SphinxError(str(exc)) from exc
         if reused is not None:
             print(f"cli-sequence goldens: clean ({reused})", flush=True)
             return

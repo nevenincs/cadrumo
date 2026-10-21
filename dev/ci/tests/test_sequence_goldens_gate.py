@@ -10,7 +10,7 @@ from dev.cache_root import DEV_CACHE_ROOT_ENV
 from dev.docs.sequences.errors import SequenceEngineError
 from dev.docs.sequences.verdict_cache import FORCE_ENV
 
-from ..sequence_goldens_gate import DEFAULT_JOBS, main, run_sequence_goldens_gate
+from ..sequence_goldens_gate import DEFAULT_JOBS, check_committed_goldens, main, run_sequence_goldens_gate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -76,6 +76,49 @@ def test_a_changed_input_set_executes_again(verdict_root: Path) -> None:
     run_sequence_goldens_gate(_SELECTING, input_key=lambda: "b" * 64, check=check)
 
     assert check.jobs == [DEFAULT_JOBS, DEFAULT_JOBS]
+
+
+@pytest.mark.parametrize("first_surface", ("pytest", "cli"))
+def test_pytest_and_cli_share_the_same_recorded_verdict(verdict_root: Path, first_surface: str) -> None:
+    check = _Recorder()
+
+    def pytest_surface() -> None:
+        assert check_committed_goldens(jobs=3, input_key=lambda: "f" * 64, check=check) == ()
+
+    def cli_surface() -> None:
+        assert run_sequence_goldens_gate(None, jobs=3, input_key=lambda: "f" * 64, check=check) == 0
+
+    first, second = (pytest_surface, cli_surface) if first_surface == "pytest" else (cli_surface, pytest_surface)
+    first()
+    second()
+    assert check.jobs == [3], "the second surface must reuse the same bound clean verdict"
+
+
+def test_source_changing_during_execution_cannot_record_a_clean_verdict(verdict_root: Path) -> None:
+    current_key = ["a" * 64]
+
+    def change_inputs(_jobs: int) -> tuple[str, ...]:
+        current_key[0] = "b" * 64
+        return ()
+
+    with pytest.raises(SequenceEngineError, match="inputs changed during execution"):
+        check_committed_goldens(input_key=lambda: current_key[0], check=change_inputs)
+
+    assert not any(verdict_root.rglob("*.json"))
+
+
+def test_source_change_refusal_is_reported_as_a_failed_cli_gate(
+    verdict_root: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    current_key = ["a" * 64]
+
+    def change_inputs(_jobs: int) -> tuple[str, ...]:
+        current_key[0] = "b" * 64
+        return ()
+
+    assert run_sequence_goldens_gate(None, input_key=lambda: current_key[0], check=change_inputs) == 1
+    assert "inputs changed during execution" in capsys.readouterr().err
+    assert not any(verdict_root.rglob("*.json"))
 
 
 def test_force_bypasses_a_recorded_verdict(verdict_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
