@@ -93,7 +93,7 @@ The configured build-path manifests for build/windows-x64 and build/distribution
 | Installation candidate and published tree | installation/work, installation/stage |
 | Installation metadata and retained receipts | installation/metadata, installation/receipts |
 
-The Windows distribution publishes one packages/msi/application.msi and one installation/metadata/wix/application.wxs. Each completed configuration publishes its matching sibling stage/<Config>/services kit. Machine uv configuration remains authoritative; the observed machine cache is C:/Users/hello/scoop/persist/uv/cache. The removed var/storage/development/cache/uv root remains absent. Legacy unused _deps contents are not claimed to have been deleted by this cache cleanup.
+The Windows distribution publishes one packages/msi/application.msi and one installation/metadata/wix/application.wxs. Each completed configuration publishes its matching sibling stage/<Config>/services kit. Machine uv configuration remains authoritative; the observed machine cache is %USERPROFILE%/scoop/persist/uv/cache. The removed var/storage/development/cache/uv root remains absent. Legacy unused _deps contents are not claimed to have been deleted by this cache cleanup.
 
 ### Installer integration review, S04
 
