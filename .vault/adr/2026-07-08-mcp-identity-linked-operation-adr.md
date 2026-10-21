@@ -4,7 +4,7 @@ tags:
   - '#mcp-identity-linked-operation'
 date: '2026-07-08'
 modified: '2026-10-21'
-body_hash: 'sha256:49cf512091313269260e4eb9c57f1850038298cda4d66c6df7f738414a000de1'
+body_hash: 'sha256:c44a7e528fd47841c6ebdc33ebc72db78cff9e0ddf4538cc18b73866bfcab2de'
 related:
   - "[[2026-07-08-mcp-identity-linked-operation-research]]"
   - "[[2026-07-08-mcp-console-review-audit]]"
@@ -73,20 +73,16 @@ conformance debt against the two accepted MCP ADRs (which the companion
   the label but is not marketed or shaped as an identity check, and it is not the
   command the golden-eval anchors on, so an agent does not reliably reach for it
   to confirm identity.
-- **Chosen — a `whoami` always-on core read-only tool.** A console-native tool
-  wrapping `assess_active_profile_health` returns the active-profile label,
-  whether a tax id is present, readiness, and the next action; its description
-  states its safety job ("call before any mutating command to confirm which
-  taxpayer is active; call again after a profile switch"). `whoami` joins the
-  hand-built orientation core; it is a console tool like `search`/`execute`, not a
-  manifest slice member. (Amended 2026-10-21, drift repair toward cadrumo-agent
-  `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR: the
-  identity block was also added to the `harness.load` floor response, which no longer
-  exists, and the core counted 14 to 15 tools with that floor in it. No tool named
-  `whoami` shipped. The `status` tool, contracted at `src/cadrumo_mcp/mcp/protocol_contract.py:189`,
-  is the shipped identity read implementing I1 and the only identity-bearing orientation
-  tool; the advertised core is 12 tools (`src/cadrumo_mcp/mcp/surfaces.py:103`).) Identity is NOT stamped into every `search` result (noise); per-result
-  identity is I3.
+- **Chosen — the `status` always-on core read-only tool is the identity read.** A
+  console-native tool wrapping `assess_active_profile_health` returns the active-profile
+  label, whether a tax id is present, readiness, and the next action; its description
+  states its safety job ("call before any mutating command to confirm which taxpayer is
+  active; call again after a profile switch"). `status` is contracted at
+  `src/cadrumo_mcp/mcp/protocol_contract.py:189`, joins the hand-built orientation core
+  of 12 tools (`src/cadrumo_mcp/mcp/surfaces.py:103`), and is the only tool the runtime
+  adapter serves without admission (`src/cadrumo_mcp/mcp/runtime_adapter.py:431`). It is a
+  console tool like `search`/`execute`, not a manifest slice member. Identity is NOT
+  stamped into every `search` result (noise); per-result identity is I3.
 
 ### I2 — Live identity gate
 
@@ -98,36 +94,19 @@ conformance debt against the two accepted MCP ADRs (which the companion
 - **Chosen — block the first mutating call of a session, re-armed on any
   profile-changing verb, until an identity read has occurred.** The server
   refuses the first mutating call (mutating defined off the risk table) unless an
-  identity read (`whoami` / `config profile status` / `overview status`) happened
+  identity read (`status` / `config profile status` / `overview status`) happened
   since session start or since the last profile-changing verb (`config switch`,
   the `config profile` mutations); the refusal is deterministic, instructive, and
   localized, so an agent recovers in exactly one read-only round-trip. It runs in
   the pre-tool-use layer identically on the direct and `execute` paths. The gate
   proves the identity read HAPPENED, not that the agent reconciled it — the
   residual is covered by the I4 echo and scored by the golden eval.
-- **Implementation refinement — WITHDRAWN 2026-10-21.** The `harness.load` floor tool no
-  longer exists in Cadrumo, so the read set returns to `status` (the shipped I1 identity
-  read) / `config profile status` / `overview status`, keyed off tool identity. The gate, its re-arming on a profile-changing
-  verb and its deterministic instructive refusal are unchanged. The accepted cost is that
-  the first mutating call of a session is gated until one of those three reads happens;
-  `status` is the only tool the runtime adapter serves without admission
-  (`src/cadrumo_mcp/mcp/runtime_adapter.py:431`), so recovery is the single read-only
-  round-trip I2 was designed around. Reconsider if measurement shows the gate firing on a near-universal
-  first call again. The original refinement follows for the decision trail.
-- **Original refinement (superseded) — `harness.load` counts as an identity read.**
-  Because "mutating" is defined off the risk table and the manifest carries
-  per-family mutability, nearly every non-`overview` verb (including genuine
-  reads such as `ledger view` / `config profile show`) classifies non-read-only,
-  so a literal three-read set fires the gate on almost any first call. The
-  identity-read set is therefore widened to include the `harness.load` floor
-  tool, which — per I1 — now carries the active-profile identity block in its
-  response: an agent that loaded the harness has demonstrably seen who is active,
-  exactly the guarantee the gate exists to enforce. This sharply reduces friction
-  on the near-universal first call while preserving safety, because a
-  profile-changing verb still re-arms the gate (a post-switch mutation must
-  re-confirm identity). The read set is thus `whoami` / `config profile status` /
-  `overview status` / `harness.load`, keyed off tool identity, not a leaf-name
-  heuristic.
+- **Identity read set.** The read set is `status` / `config profile status` /
+  `overview status`, keyed off tool identity, not a leaf-name heuristic. The first
+  mutating call of a session is gated until one of those three reads happens; `status` is
+  always available (`src/cadrumo_mcp/mcp/runtime_adapter.py:431`), so recovery is the
+  single read-only round-trip I2 was designed around. Reconsider if measurement shows the
+  gate firing on a near-universal first call.
 
 ### I3 — Per-operation identity carrier
 
@@ -182,10 +161,8 @@ High-level layering; the paired plan owns steps and sequencing.
 - **Envelope spine (I3), first.** Add the optional `active_profile` label field to
   the shared `SchemaEnvelope` spine and the stderr `ErrorEnvelope`; populate it at
   emit for profile-bound commands; extend the shared-spine conformance test.
-- **Identity read tool (I1).** A console-native read-only core tool over the existing
-  profile-health assessment, added to the hand-built orientation core. (Amended
-  2026-10-21: it shipped as `status`, not `whoami`, and the `harness.load` identity
-  block is removed.)
+- **Identity read tool (I1).** The `status` tool: a console-native read-only core tool
+  over the existing profile-health assessment, in the hand-built orientation core.
 - **Identity gate (I2) + echo (I4).** Per-session identity-read state in the
   pre-tool-use layer, re-armed on any profile-changing verb; an instructive
   localized refusal on the first un-confirmed mutating call, byte-identical on
