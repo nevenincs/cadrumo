@@ -175,11 +175,34 @@ export class SignInFixture {
   }
 
   cliCall(args, input, revealIdentifiers = false, timeout = 120000) {
+    return this.programCall(
+      this.cli,
+      "canonical CLI",
+      args,
+      input,
+      revealIdentifiers,
+      timeout,
+    );
+  }
+
+  // Sign-in status is the runtime's own command; the aeat CLI refuses it at its boundary.
+  runtimeCall(args, revealIdentifiers = false) {
+    return this.programCall(
+      this.runtime,
+      "runtime CLI",
+      args,
+      undefined,
+      revealIdentifiers,
+      120000,
+    );
+  }
+
+  programCall(program, label, args, input, revealIdentifiers, timeout) {
     const payload =
       input === undefined ? undefined : Buffer.from(JSON.stringify(input));
     let result;
     try {
-      result = spawnSync(this.cli, ["--format", "json", ...args], {
+      result = spawnSync(program, ["--format", "json", ...args], {
         cwd: this.config.run,
         env: revealIdentifiers
           ? { ...this.env, CADRUMO_CLI_REVEAL_IDENTIFIERS: "true" }
@@ -201,7 +224,7 @@ export class SignInFixture {
     assert.equal(
       result.status,
       0,
-      `canonical CLI ${args.slice(0, 3).join(" ")} failed (exit ${result.status}; identifiers ${JSON.stringify(failure)})`,
+      `${label} ${args.slice(0, 3).join(" ")} failed (exit ${result.status}; identifiers ${JSON.stringify(failure)})`,
     );
     const envelope = JSON.parse(result.stdout);
     assert.equal(envelope.schema_version, "2");
@@ -330,7 +353,7 @@ export class SignInFixture {
       this.profileBound = true;
     });
     this.measure("initial-cli-status", () => {
-      const before = this.cliCall(["config", "sign-in-status"]);
+      const before = this.runtimeCall(["config", "sign-in-status"]);
       assert.equal(before.command, "config.sign-in-status");
       assert.equal(before.result.status.presence, "absent");
     });
@@ -527,7 +550,7 @@ export class SignInFixture {
       );
       assert.equal(present.active_profile, "Desktop Acceptance");
       assert.equal(
-        this.cliCall(["config", "sign-in-status"]).result.status.presence,
+        this.runtimeCall(["config", "sign-in-status"]).result.status.presence,
         "present",
       );
       return {
@@ -542,7 +565,7 @@ export class SignInFixture {
   }
 
   async signOut(session) {
-    const before = this.cliCall(["config", "sign-in-status"], undefined, true);
+    const before = this.runtimeCall(["config", "sign-in-status"], true);
     const profileId = this.messages.find(
       (message) => message.kind === "profile-ready",
     )?.profileId;
@@ -559,7 +582,7 @@ export class SignInFixture {
     assert.equal(after.ok, true);
     assert.equal(after.value.state, "absent");
     assert.equal(after.value.active_profile, "Desktop Acceptance");
-    const fresh = this.cliCall(["config", "sign-in-status"], undefined, true);
+    const fresh = this.runtimeCall(["config", "sign-in-status"], true);
     assert.equal(fresh.result.profile_id, profileId);
     assert.equal(fresh.result.status.presence, "absent");
     return {

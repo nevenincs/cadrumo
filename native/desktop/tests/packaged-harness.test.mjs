@@ -280,12 +280,14 @@ function signInControlFixture() {
   fixture.exited = Promise.resolve(0);
   fixture.cliCall = (args) => {
     calls.push(args.join(" "));
-    return args[1] === "profile"
-      ? { command: "config.profile.create" }
-      : {
-          command: "config.sign-in-status",
-          result: { status: { presence: "absent" } },
-        };
+    return { command: "config.profile.create" };
+  };
+  fixture.runtimeCall = (args) => {
+    calls.push(`runtime ${args.join(" ")}`);
+    return {
+      command: "config.sign-in-status",
+      result: { status: { presence: "absent" } },
+    };
   };
   return { fixture, calls, profileId };
 }
@@ -301,7 +303,7 @@ test("profile creation waits for a verified runtime and binds its exact profile"
   assert.deepEqual(calls, [
     "config profile create Desktop Acceptance --quiet --secrets-stdin",
     "profile-created",
-    "config sign-in-status",
+    "runtime config sign-in-status",
   ]);
   assert.equal(
     fixture.messages.find((message) => message.kind === "profile-ready")
@@ -456,8 +458,13 @@ test("sign-in phase timings retain monotonic boundaries and a closed lifecycle s
   };
   const cli = fixture.cliCall;
   fixture.cliCall = (...args) => {
-    clock += args[0][1] === "profile" ? 40 : 5;
+    clock += 40;
     return cli(...args);
+  };
+  const runtime = fixture.runtimeCall;
+  fixture.runtimeCall = (...args) => {
+    clock += 5;
+    return runtime(...args);
   };
   const write = fixture.child.stdin.write;
   fixture.child.stdin.write = (...args) => {
@@ -537,10 +544,8 @@ test("sign-in timing failures preserve the original error and exact-profile clea
     `private status diagnostic ${fixture.secret} ${profileId}`,
   );
   fixture.messages.push({ kind: "ready" });
-  const cli = fixture.cliCall;
-  fixture.cliCall = (args) => {
-    if (args[1] !== "profile") throw original;
-    return cli(args);
+  fixture.runtimeCall = () => {
+    throw original;
   };
   const artifacts = [];
   fixture.results.evidence = (_name, value) => artifacts.push(value);
@@ -620,7 +625,9 @@ test("sign-in UI phase timings distinguish rejected, throttled and successful ex
       }),
     },
   };
-  fixture.cliCall = () => ({ result: { status: { presence: "present" } } });
+  fixture.runtimeCall = () => ({
+    result: { status: { presence: "present" } },
+  });
   fixture.results.evidence = () => {};
   const input = { processes: async () => [] };
   const pending = fixture.signIn(session, input, 123);
