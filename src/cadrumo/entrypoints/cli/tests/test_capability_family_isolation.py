@@ -99,6 +99,8 @@ _PROBE = textwrap.dedent(
     paths = json.loads(sys.argv[1])
     prefixes = json.loads(sys.argv[2])
 
+    # The probe runs with python -c rather than as a package module.
+    __package__ = "cadrumo.entrypoints.cli.tests"
     from .cli_performance import _resolve_cli_path
 
     for path in paths:
