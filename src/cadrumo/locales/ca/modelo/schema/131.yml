@@ -276,7 +276,7 @@ modelo:
                 d'inversió). Import declarat per l'operador; el motor no modela un
                 registre de béns per element - consulteu l'Annex II, instrucció 2.2.b)
                 de l'Ordre HFP/1335/2021 per a 2022 o de l'Ordre HFP/1172/2022 per
-                a 2023, i la vostra pròpia taula d'amortització.
+                a 2023, i la teva pròpia taula d'amortització.
             modulos-pequena-dimension-ignorado-flag:
               label: 'Indicador intern (1/0): l''índex corrector per a empreses de
                 petita dimensió (b.1) declarat va ser ignorat per incompatibilitat
@@ -332,7 +332,7 @@ modelo:
                 material o intangible afecte, segons el seu llibre registre de béns
                 d'inversió). Import declarat per l'operador; el motor no modela un
                 registre de béns per element - consulteu l'Ordre HFP/1359/2023 Annex
-                II, instrucció 2.2.b) i la vostra pròpia taula d'amortització.
+                II, instrucció 2.2.b) i la teva pròpia taula d'amortització.
             modulos-pequena-dimension-ignorado-flag:
               label: 'Indicador intern (1/0): l''índex corrector per a empreses de
                 petita dimensió (b.1) declarat va ser ignorat per incompatibilitat
@@ -387,7 +387,7 @@ modelo:
                 material o intangible afecte, segons el seu llibre registre de béns
                 d'inversió). Import declarat per l'operador; el motor no modela un
                 registre de béns per element - consulteu l'Ordre HAC/1347/2024 Annex
-                II, instrucció 2.2.b) i la vostra pròpia taula d'amortització.
+                II, instrucció 2.2.b) i la teva pròpia taula d'amortització.
             modulos-pequena-dimension-ignorado-flag:
               label: 'Indicador intern (1/0): l''índex corrector per a empreses de
                 petita dimensió (b.1) declarat va ser ignorat per incompatibilitat
@@ -442,7 +442,7 @@ modelo:
                 material o intangible afecte, segons el seu llibre registre de béns
                 d'inversió). Import declarat per l'operador; el motor no modela un
                 registre de béns per element - consulteu l'Ordre HAC/1425/2025 Annex
-                II, instrucció 2.2.b) i la vostra pròpia taula d'amortització.
+                II, instrucció 2.2.b) i la teva pròpia taula d'amortització.
             modulos-pequena-dimension-ignorado-flag:
               label: 'Indicador intern (1/0): l''índex corrector per a empreses de
                 petita dimensió (b.1) declarat va ser ignorat per incompatibilitat

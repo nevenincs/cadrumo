@@ -18,33 +18,33 @@ modelo:
       casilla:
         continuidad:
           '00042':
-            help: Consigne la cifra media de personal asalariado no fijo del ejercicio
+            help: Consigna la cifra media de personal asalariado no fijo del ejercicio
               [00042].
             label: Personal asalariado (cifra media del ejercicio) Personal no fijo
               [00042]
           '00051':
-            help: Consigne el volumen de operaciones en el extranjero para la tributación
+            help: Consigna el volumen de operaciones en el extranjero para la tributación
               conjunta entre el Estado y las administraciones forales conforme al
               Concierto Económico [00051].
             label: Tributación conjunta Estado y Adm.Forales - Concierto económico
               - Volumen operaciones en el extranjero [00051]
           '00052':
-            help: Consigne el volumen de operaciones en Araba/Álava para la tributación
+            help: Consigna el volumen de operaciones en Araba/Álava para la tributación
               conjunta conforme al Concierto Económico [00052].
             label: Tributación conjunta Estado y Adm.Forales - Concierto económico
               - Volumen operaciones en Araba/Álava [00052]
           '00053':
-            help: Consigne el volumen de operaciones en Gipuzkoa para la tributación
+            help: Consigna el volumen de operaciones en Gipuzkoa para la tributación
               conjunta conforme al Concierto Económico [00053].
             label: Tributación conjunta Estado y Adm.Forales - Concierto económico
               - Volumen operaciones en Gipuzkoa [00053]
           '00054':
-            help: Consigne el volumen de operaciones en Bizkaia para la tributación
+            help: Consigna el volumen de operaciones en Bizkaia para la tributación
               conjunta conforme al Concierto Económico [00054].
             label: Tributación conjunta Estado y Adm.Forales - Concierto económico
               - Volumen operaciones en Bizkaia [00054]
           '00055':
-            help: Consigne el volumen de operaciones en Navarra para la tributación
+            help: Consigna el volumen de operaciones en Navarra para la tributación
               conjunta conforme al Convenio Económico [00055].
             label: Tributación conjunta Estado y Adm.Forales - Convenio económico
               - Volumen operaciones en Navarra [00055]
@@ -9590,7 +9590,7 @@ modelo:
             help: Indicador de gran empresa [00023].
             label: Gran empresa [00023]
           is-grupo-fiscal-numero:
-            help: Consigne el número de grupo fiscal cuando resulten aplicables las
+            help: Consigna el número de grupo fiscal cuando resulten aplicables las
               claves 00009 o 00010 [00040].
             label: Grupo fiscal - Claves 00009 ó 00010 - Nº de grupo fiscal [00040]
           is-hidrocarburos-amortizacion-intangibles-aumento:
@@ -9858,7 +9858,7 @@ modelo:
             label: Partícipe de agrupación de interés económico o de unión temporal
               de empresas [00089]
           is-personal-asalariado-cifra-media:
-            help: Consigne la cifra media de personal asalariado fijo del ejercicio
+            help: Consigna la cifra media de personal asalariado fijo del ejercicio
               [00041].
             label: Personal asalariado (cifra media del ejercicio) Personal fijo [00041]
           is-pyg-continuadas-amortizacion-del-inmovilizado:
@@ -10414,7 +10414,7 @@ modelo:
             label: Tributación conjunta Estado y Adm.Forales - Cálculo porcentajes
               tributación - Admón.del Estado [00625]
           is-tributacion-conjunta-proporcion:
-            help: Consigne el volumen total de operaciones para la tributación conjunta
+            help: Consigna el volumen total de operaciones para la tributación conjunta
               entre el Estado y las administraciones forales conforme al Concierto
               Económico [00050].
             label: Tributación conjunta Estado y Adm.Forales - Concierto económico

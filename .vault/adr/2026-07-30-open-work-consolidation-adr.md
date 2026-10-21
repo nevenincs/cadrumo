@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#open-work-consolidation'
 date: '2026-07-30'
-modified: '2026-07-30'
+modified: '2026-10-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:29695573610f745669ac167bdc3f33bab7524024da56b308bd1adfea7860ac33'
+body_hash: 'sha256:a280678b05d439bdaf8646b001de4c0e9a07834b4497f6980df97bbfe0963e3f'
 related:
   - "[[2026-07-30-open-work-consolidation-audit]]"
 ---
@@ -37,7 +37,7 @@ A decision is needed now because the failure mode is compounding. Two rows had b
 
 The flow depends on acts outside the tree and outside any agent's reach: repository settings that hold the publication variable and the environment approval, host configuration for a native runner and a sandbox feature, in-application interactions in two client products, an upstream repository's release process, and one live authentication approval bound to an operator device. None can be verified from the worktree, so the plan must state its preconditions as operator instructions and its verifications as forge-observable facts.
 
-Two rows carry an unresolved dependency of a different kind. The semantic-sweep row's instrument degraded to zero coverage while reporting success, and a rebuild did not converge it, so its repair is an infrastructure task of unknown size rather than a step with a known shape. The published-plugin defect depends on a package that does not yet exist on the index, so it cannot be fully closed before the first publication even though its diagnosis is complete.
+One row carries an unresolved dependency of a different kind. The semantic-sweep row's instrument degraded to zero coverage while reporting success, and a rebuild did not converge it, so its repair is an infrastructure task of unknown size rather than a step with a known shape.
 
 Because minted evidence lives in a git-ignored directory, no row in this plan may treat a local artefact as its verification.
 

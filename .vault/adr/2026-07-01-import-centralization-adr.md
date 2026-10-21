@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#import-centralization'
 date: '2026-07-01'
-modified: '2026-10-14'
-body_hash: 'sha256:a1f7b5ee533c91bbc582a718e0496e10b23fa3cbcf76264f78f0e1e56be1ae34'
+modified: '2026-10-21'
+body_hash: 'sha256:00274c286992ba3a864f734c53b45e6cef603fe6b86b3a220f4fa49c9698f320'
 related:
   - '[[2026-07-01-import-centralization-research]]'
   - '[[2026-07-02-import-centralization-audit]]'
@@ -86,7 +86,7 @@ The closed `cadrumo` lanes are:
 - `cadrumo._data`, `cadrumo.locales`, and generated `cadrumo_data` artifacts: passive resource/data surfaces reached through an inward resource boundary.
 - `cadrumo.tests`: neutral core-only test support. Tests below another package inherit that nearest owner's lane.
 - `cadrumo.llm`: migration-only; it is merged into `cadrumo.adapters.outbound.llm` and has no independent final-state lane.
-- `cadrumo_harness`: a separately shipped outer stub. `cadrumo` never imports it. Until it is retired or explicitly completed, it may consume canonical inward product modules but not `cadrumo.entrypoints` or repository-only roots. Its tests inherit the same restriction.
+- `cadrumo_mcp`: the separately shipped deterministic MCP service. `cadrumo` never imports it. It may consume canonical inward product modules but not `cadrumo.entrypoints` or repository-only roots. It carries no authored persona, skill or rule content and imports nothing from cadrumo-agent. Its tests inherit the same restriction. (Renamed from `cadrumo_harness` and narrowed on 2026-10-21, drift repair toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR; before that it was classified as a separately shipped outer stub pending retirement or completion.)
 
 Any new source root or package without an explicit classification is a gate error.
 

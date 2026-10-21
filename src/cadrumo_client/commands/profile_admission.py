@@ -133,6 +133,11 @@ def authenticate_profile_client(
     # A live sign-in on this OS login admits every client, attached to a terminal or not.
     try:
         client.resume_receipt()
+        # An interactive command is person input. Background helpers and
+        # redirected invocations may resume, but must not keep a login alive.
+        # The runtime still verifies the peer and the live human session.
+        if terminal_can_prompt_for_secrets():
+            client.note_activity()
     except ProfileReceiptRefusedError as error:
         refusal = error.reason
         if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:

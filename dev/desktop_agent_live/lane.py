@@ -58,6 +58,8 @@ from typing import Any, Final
 import httpx
 import psutil
 
+from cadrumo.core.storage_environment import prepare_temporary_directory
+
 from ..packaging.command_execution import run_command
 from ..runtime_lifecycle.caller_owned_root import AcceptanceError, require
 from .containment import LaneJob
@@ -1035,7 +1037,11 @@ def _main(argv: list[str] | None) -> int:
     parser.add_argument("--keep", action="store_true", help="Keep the run directory after a pass.")
     parser.add_argument("playwright", nargs="*", help="Arguments after -- go to Playwright, such as -g PATTERN.")
     options = parser.parse_args(argv)
-    run_directory = Path(tempfile.mkdtemp(prefix=f"desktop-agent-live-{datetime.now(UTC):%Y%m%dT%H%M%SZ}-"))
+    run_directory = Path(
+        tempfile.mkdtemp(
+            prefix=f"desktop-agent-live-{datetime.now(UTC):%Y%m%dT%H%M%SZ}-", dir=prepare_temporary_directory()
+        )
+    )
     base = run_directory.parent
     try:
         unproven = run(

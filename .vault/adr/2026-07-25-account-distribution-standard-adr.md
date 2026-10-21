@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#account-distribution-standard'
 date: '2026-07-25'
-modified: '2026-08-15'
-body_hash: 'sha256:cf90cf933c166246314019e76ca521536796ab775242f990775d3c0ad2053b36'
+modified: '2026-10-21'
+body_hash: 'sha256:2f11fcfd12f156dea59c9c6c1c70522ab63070f5ee04cf6306d184ef52d429c7'
 related:
   - "[[2026-07-25-distribution-repo-topology-adr]]"
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
@@ -143,7 +143,7 @@ hold the toolchain additionally ships the shared tap, the shared bucket, and the
 community Windows channel. Orthogonally, a product that is an extension of a host
 application also ships that host's own channel.
 
-Applied, this yields: the tax product at the full set plus its host marketplace,
+Applied, this yields: the tax product at the full set,
 because its users are taxpayers and advisers; the dashboard at the full set,
 because it is a served interface rather than an imported one; the two developer
 CLIs at registry plus executables; and the headless service at registry alone.

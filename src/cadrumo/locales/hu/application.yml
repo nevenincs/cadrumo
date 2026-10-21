@@ -160,7 +160,7 @@ application:
     sync:
       errors:
         requirements_missing: 'Az AEAT-szinkronizálás feltételei: {required_fields}.
-          Nyissa meg a hitelesítési beállításokat a szinkronizálás mellett az adatok
+          Nyisd meg a hitelesítési beállításokat a szinkronizálás mellett az adatok
           kitöltéséhez vagy szerkesztéséhez. {reasons}'
   calculations:
     bienes_inversion_regularizacion:
@@ -941,13 +941,13 @@ application:
           és ha kötelező, alkalmazd a különleges arányosítást.
       prorrata_volume_check_unavailable:
         what: Az éves főkönyvi összehasonlítás hiányos.
-        what_to_do: Osztályozza az értékesítéseket, és ellenőrizze a prorrata kizárásait.
+        what_to_do: Osztályozd az értékesítéseket, és ellenőrizd a prorrata kizárásait.
       prorrata_volume_declaration_missing:
         what: A főkönyv értékesítései összevethetők az éves prorrata forgalommal.
-        what_to_do: Adja meg az éves forgalmat; a főkönyv nem helyettesíti azt.
+        what_to_do: Add meg az éves forgalmat; a főkönyv nem helyettesíti azt.
       prorrata_volume_divergence:
         what: A bevallott éves prorrata forgalom eltér az osztályozott főkönyvtől.
-        what_to_do: Ellenőrizze a forgalmat és a kizárásokat. A bevallott adatok maradnak
+        what_to_do: Ellenőrizd a forgalmat és a kizárásokat. A bevallott adatok maradnak
           irányadók.
       rate_boxes_underaccount_total:
         what: A(z) {box} rovat áfa-összegének egy része egyetlen kulcsonkénti rovatban

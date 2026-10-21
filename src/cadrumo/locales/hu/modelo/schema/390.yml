@@ -73,7 +73,7 @@ modelo:
         ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbkclm6apjfdpng
         : label: 'Képviselő: telefonszám'
         ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqpj5cdk62bbgdti6ashdchi6qrb1c5gm2
-        : help: Adja meg a dátumot nap, hónap és év sorrendben, DDMMAAAA formátumban.
+        : help: Add meg a dátumot nap, hónap és év sorrendben, DDMMAAAA formátumban.
           label: 'Képviselő (jogi személy) 1: a meghatalmazás dátuma'
         x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqrj9co:
           label: 'Képviselő (jogi személy) 1: NIF'
@@ -82,7 +82,7 @@ modelo:
         x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqrjfehgn4qb1:
           label: 'Képviselő (jogi személy) 1: közjegyzőség'
         ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qpj5cdk62bbgdti6ashdchi6qrb1c5gm2
-        : help: Adja meg a dátumot nap, hónap és év sorrendben, DDMMAAAA formátumban.
+        : help: Add meg a dátumot nap, hónap és év sorrendben, DDMMAAAA formátumban.
           label: 'Képviselő (jogi személy) 2: a meghatalmazás dátuma'
         x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qrj9co:
           label: 'Képviselő (jogi személy) 2: NIF'
@@ -91,7 +91,7 @@ modelo:
         x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qrjfehgn4qb1:
           label: 'Képviselő (jogi személy) 2: közjegyzőség'
         ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kpiqpj5cdk62bbgdti6ashdchi6qrb1c5gm2
-        : help: Adja meg a dátumot nap, hónap és év sorrendben, DDMMAAAA formátumban.
+        : help: Add meg a dátumot nap, hónap és év sorrendben, DDMMAAAA formátumban.
           label: 'Képviselő (jogi személy) 3: a meghatalmazás dátuma'
         x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kpiqrj9co:
           label: 'Képviselő (jogi személy) 3: NIF'
@@ -114,7 +114,7 @@ modelo:
         ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmn8qbgdsmn4pb7d5mmarhdclpn0pb3d5gmobb1e1m6ior1c9m6abb1e9q2qc9m6cmn6pbod5in6bb3d5n66rpdedkiqrpddpng
         : label: 'Adóalany: a különleges szabályozás típusa, 163 sexies.cinco cikk'
         x-dlnm8pbcdsmj6e9g5po62pr5bsqisqbechkm6ob4dtp2qp355lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
-          help: Hagyja üresen, ha az oldal nem kiegészítő; ha az, adja meg a C jelet.
+          help: Hagyja üresen, ha az oldal nem kiegészítő; ha az, add meg a C jelet.
           label: Kiegészítő oldal jelölése
         ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dcdnm8qb7ds
         : label: 'Agrártevékenység 1: kód'
@@ -242,7 +242,7 @@ modelo:
           box_number: '66'
           label: 'Tevékenység 1: IAE-tétel'
         ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb5e1kmesj1cpiiqqb1ckmmirj4d5hm2p3fe8mm2tbod5m6iobi5li6abb1cdq6itj9chgm8bb5dommar1dcdgn6
-        : help: 'Csak a 691.9 és 722 tételekhez: a tevékenységtől függően adja meg
+        : help: 'Csak a 691.9 és 722 tételekhez: a tevékenységtől függően add meg
             az 1 vagy 2 értéket. Egyébként hagyja üresen.'
           label: 'Tevékenység 1: az IAE-tétel kiegészítő jelzője'
         x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb65lp6asrldhq62p3f:
@@ -302,7 +302,7 @@ modelo:
           box_number: '66'
           label: 'Tevékenység 2: IAE-tétel'
         ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb5e1kmesj1cpiiqqb1ckmmirj4d5hm2p3fe8mm2tbod5m6iobi5li6abb1cdq6itj9chgm8bb5dommar1dcdgn6
-        : help: 'Csak a 691.9 és 722 tételekhez: a tevékenységtől függően adja meg
+        : help: 'Csak a 691.9 és 722 tételekhez: a tevékenységtől függően add meg
             az 1 vagy 2 értéket. Egyébként hagyja üresen.'
           label: 'Tevékenység 2: az IAE-tétel kiegészítő jelzője'
         x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb65lp6asrldhq62p3f:
@@ -350,7 +350,7 @@ modelo:
         : box_number: '83'
           label: Az egyszerűsített rendszer eredménye
         x-dlnm8pbcdsmj6e9g5po62pr5bsrisqbechkm6ob4dtp2qp355lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
-          help: Hagyja üresen, ha az oldal nem kiegészítő; ha az, adja meg a C jelet.
+          help: Hagyja üresen, ha az oldal nem kiegészítő; ha az, add meg a C jelet.
           label: Kiegészítő oldal jelölése
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 1: végzett tevékenység'
@@ -368,7 +368,7 @@ modelo:
           label: 'Prorrata 1: prorrata százaléka'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dehkn0rpdchiiqs3idtp74obkc4:
           box_number: '117'
-          help: Adja meg a G vagy E értéket, vagy hagyja üresen.
+          help: Add meg a G vagy E értéket, vagy hagyja üresen.
           label: 'Prorrata 1: prorrata típusa'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 2: végzett tevékenység'
@@ -386,7 +386,7 @@ modelo:
           label: 'Prorrata 2: prorrata százaléka'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdehkn0rpdchiiqs3idtp74obkc4:
           box_number: '117'
-          help: Adja meg a G vagy E értéket, vagy hagyja üresen.
+          help: Add meg a G vagy E értéket, vagy hagyja üresen.
           label: 'Prorrata 2: prorrata típusa'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 3: végzett tevékenység'
@@ -404,7 +404,7 @@ modelo:
           label: 'Prorrata 3: prorrata százaléka'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdehkn0rpdchiiqs3idtp74obkc4:
           box_number: '117'
-          help: Adja meg a G vagy E értéket, vagy hagyja üresen.
+          help: Add meg a G vagy E értéket, vagy hagyja üresen.
           label: 'Prorrata 3: prorrata típusa'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 4: végzett tevékenység'
@@ -422,7 +422,7 @@ modelo:
           label: 'Prorrata 4: prorrata százaléka'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dehkn0rpdchiiqs3idtp74obkc4:
           box_number: '117'
-          help: Adja meg a G vagy E értéket, vagy hagyja üresen.
+          help: Add meg a G vagy E értéket, vagy hagyja üresen.
           label: 'Prorrata 4: prorrata típusa'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
           label: 'Prorrata 5: végzett tevékenység'
@@ -440,7 +440,7 @@ modelo:
           label: 'Prorrata 5: prorrata százaléka'
         x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dehkn0rpdchiiqs3idtp74obkc4:
           box_number: '117'
-          help: Adja meg a G vagy E értéket, vagy hagyja üresen.
+          help: Add meg a G vagy E értéket, vagy hagyja üresen.
           label: 'Prorrata 5: prorrata típusa'
       casilla:
         continuidad:

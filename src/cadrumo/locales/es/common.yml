@@ -1353,7 +1353,7 @@ google_review:
     snapshot_digest: Huella de la instantánea guardada
     work_unit_id: Referencia del trabajo
   notice:
-    calculation_required: Seleccione un cálculo guardado antes de publicar.
+    calculation_required: Selecciona un cálculo guardado antes de publicar.
     evidence_index: Se incluyen referencias de evidencias; no se publican los archivos
       adjuntos originales.
     external_copy: La publicación crea una copia legible en Google. Los usuarios autorizados
@@ -1365,10 +1365,10 @@ google_review:
       guardada.
     provisional: Esta revisión guardada es provisional.
     receipt_unavailable: No está disponible un recibo de publicación verificado.
-    staged_edits: Guarde o descarte los cambios pendientes antes de revisar el cálculo
+    staged_edits: Guarda o descarta los cambios pendientes antes de revisar el cálculo
       guardado.
     submission_unresolved: El resultado de la publicación está pendiente de resolver.
-      Consulte la operación existente antes de volver a solicitarla.
+      Consulta la operación existente antes de volver a solicitarla.
   offer:
     title: Revisar en Google Sheets
   open_document: Abrir hoja de cálculo

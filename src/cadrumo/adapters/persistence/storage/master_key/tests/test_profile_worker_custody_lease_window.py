@@ -274,10 +274,16 @@ def _attended_child_lapse(custody: ProfileWorkerCustody, clock: _Clock, key: byt
         child = _child(human, clock, minutes=5)
         custody.share(child)
         assert custody.require(child.session_id) == child
+        session = _key_session()
+        _read_storage()
     with clock.at(minutes=5):
         # The short child ran out under a live parent: a request on it hears that its session ended.
         _assert_expired(custody, child.session_id)
         assert custody.require(human.session_id) == human
+        assert _key_session() is session and not session.sealed
+        # Both the worker timer and the runtime may retire the same child.
+        assert custody.retire(child.session_id) == frozenset()
+        assert _key_session() is session and not session.sealed
         _read_storage()
     with clock.at(minutes=6):
         second = _child(human, clock, minutes=5)

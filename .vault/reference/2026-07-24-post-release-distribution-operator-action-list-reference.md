@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#post-release-distribution'
 date: '2026-07-24'
-modified: '2026-07-24'
-body_hash: 'sha256:8d5bdb4c53c4a4904cec233dba1a48d65e7b0d11d8a338b988aba3d392fcdec3'
+modified: '2026-10-21'
+body_hash: 'sha256:cef0fd3ac2a0b9049f759653d6d5cbcd450b4d5d2fa23f90355e8a7cbedbb9e8'
 related: []
 ---
 
@@ -190,12 +190,6 @@ bucket.
 B2. Make the Homebrew tap repository public. Same situation, same cost. Unblocks
 the public Homebrew tap reacquisition.
 
-B3. Create the marketplace repository. The repository variable names it and the
-push token already exists as a secret, but the repository itself does not, so the
-publication workflow's marketplace push would refuse. Cost: seconds. Unblocks the
-public marketplace plugin acquisition and the Claude artifact namespace and
-description reacquisition.
-
 B4. Register trusted publishing on PyPI for all three project names, with this
 repository as publisher, the publication workflow as the workflow, and `release`
 as the environment. The root `cadrumo` name does not exist on PyPI at all and is
@@ -228,7 +222,7 @@ B5 has put a reviewer gate in place.
 C4. Dispatch the publication workflow with the packaging run id, the Scoop and
 Homebrew run ids, and the Claude evidence release tag, then approve the
 environment prompt when it appears. Cost: minutes plus run time. This is the step
-that unblocks all five reacquisition steps at once, and it is the single highest
+that unblocks all four reacquisition steps at once, and it is the single highest
 -leverage action in the list.
 
 ### Stage D: the physical and in-app work
@@ -270,11 +264,11 @@ two entries are waiting on exactly those captures. Cost: nothing beyond D4 and D
 ### Stage E: reacquire, document, audit
 
 Everything here is mechanical once C4 has promoted a cohort. The tooling for all
-five reacquisition steps is already written and reviewed, and each executes
+four reacquisition steps is already written and reviewed, and each executes
 post-publication.
 
-E1. Run the five reacquisition steps: PyPI, the GitHub release cohort, the public
-Scoop bucket, the public Homebrew tap, and the marketplace plugin, plus the MCPB
+E1. Run the four reacquisition steps: PyPI, the GitHub release cohort, the public
+Scoop bucket, and the public Homebrew tap, plus the MCPB
 per-client repeat and the Claude namespace and description verification. Cost:
 minutes each, assuming their channels are public and promoted.
 
@@ -290,8 +284,8 @@ reconciliation of whichever way Decision one went.
 ## What the fastest useful path looks like
 
 If the goal is the shortest distance to a product a person can install, the
-ordering that matters is: do B1, B2, and B3 today because they are seconds and
-they unblock three steps between them; do B4 today because reserving the root
+ordering that matters is: do B1 and B2 today because they are seconds and
+they unblock two steps between them; do B4 today because reserving the root
 PyPI name costs minutes and its absence is embarrassing rather than merely
 blocking; do B5 before anything is armed; then spend the real effort on Stage A,
 because a green cohort is the one thing with no substitute and every remaining

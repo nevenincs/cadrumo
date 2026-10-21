@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#live-agent-evaluation'
 date: '2026-10-12'
-modified: '2026-10-17'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:2c2e1d43b834c046c098edef3e00436e9b4e599bd5f7d460787f1e33499491b5'
+body_hash: 'sha256:79f617d7a9dfc41a1427ad99d7244288930b044d17a204266b09bdd5fa5c56f6'
 related:
   - "[[2026-10-12-live-agent-evaluation-reference]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
@@ -55,19 +55,19 @@ The owner, 2026-10-12: "I'm concerned that you set up a non-reproducible adhoc t
   - The runtime's profile host resolves a presented key to its grant and scope before the access authority admits a lease (`src/cadrumo_runtime/host/profile_connection_sessions.py:128-147`).
   - The runtime serves the grant inventory (`src/cadrumo_runtime/host/operation_authority.py:235`).
   - The person issues, approves, denies, locks and resumes keys through `config automation` (`src/cadrumo/entrypoints/cli/config/runtime_access_management_specs.py:52-317`).
-  - `cadrumo-mcp` takes `--profile-id` and `--credential-reference` to run on an enrolled key (`src/cadrumo_harness/mcp/main.py:43-52`).
-  - Enrollment, revocation and lock are already proved with scripted clients (`dev/agent_eval/tests/test_installed_mcp_first_enrollment.py`, `test_mcp_revocation_runtime.py`, `test_runtime_automation_grant_lock_parity.py`). None of them is proved with a live agent.
+  - `cadrumo-mcp` takes `--profile-id` and `--credential-reference` to run on an enrolled key (`src/cadrumo_mcp/mcp/main.py:43-52`; locators as observed 2026-10-12, package renamed from `cadrumo_harness` on 2026-10-21).
+  - Enrollment, revocation and lock are already proved with scripted clients (`dev/mcp_eval/tests/test_installed_mcp_first_enrollment.py`, `test_mcp_revocation_runtime.py`, `test_runtime_automation_grant_lock_parity.py`). None of them is proved with a live agent.
 - The package the owner means is the CMake `bundle` target: `build/<preset>/stage/<Config>/app`. It holds the interpreter, the locked dependencies, `bin/aeat.exe`, `bin/cadrumo-mcp.exe`, `bin/cadrumo-runtime.exe`, `cadrumo-manager.exe` and the bundled authority. Its own `data/package-manifest.json` hashes every file, and `dev/packaging/native/installation.py:51-57` already checks a payload against that manifest. `dev/packaging/native/platforms/windows_verify.py:270-320` already copies a package and runs it on a temporary storage root.
 - The staged package on this host is from 2026-10-08. Of 3 284 first-party modules in it, 307 differ from `src/cadrumo`. A package run measures the package, not the checkout, unless the run checks that the two match.
 - The manager launches the packaged runtime with `--storage-root`, `--storage-identity`, `--expected-version` and `--supervised`. It uses a cleared, allow-listed environment pinned to `P/data/authority` (`native/manager/src/supervision/launch.rs:138-164`, `native/manager/src/supervision/environment.rs:110-140`). The shipping manager manages only the canonical root. Override roots "stay developer-owned and unmanaged" (`2026-10-04-runtime-manager-architecture-adr`). The supervisor stream protocol belongs to the manager, and unsupervised test launches are unchanged by it (`2026-10-04-runtime-manager-architecture-supervisor-contract-adr`). The 2026-10-12 scratch host spoke that protocol, which made it a stand-in manager.
 - MCP resume borrows the human sign-in receipt's proof from the platform credential store (`src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py:1099-1135`). A logon session the store refuses (WinError 1312 under SSH) yields `custody_unavailable` (`src/cadrumo_harness/mcp/runtime_admission.py:64-66`). Under the secrets ruling, an agent run therefore needs a logon whose credential store works.
 - Today MCP still accepts a password in several places, until the governing record's changes land:
-  - the `session` tool takes a typed `secret` (`src/cadrumo_harness/mcp/protocol_contract.py:536-545`, `src/cadrumo_harness/mcp/runtime_adapter.py:679-693`)
+  - the `session` tool takes a typed `secret` (`src/cadrumo_mcp/mcp/protocol_contract.py:536-545`, `src/cadrumo_mcp/mcp/runtime_adapter.py:679-693`)
   - `execute` and `installation` take typed secrets (`protocol_contract.py:426-427`, `:152`)
 
   The lane must hold the rule from its own side in the meantime.
 - `child_environment(STRICT)` keeps every ambient name it does not clear (`src/cadrumo/core/storage_environment.py:672-684`). That is how a host token reached the scratch `mcp.json`. An environment handed to a model-driven client must be built from an allow-list.
-- The `dev/agent_eval` claim that it imports only `cadrumo.core` is a docstring (`dev/agent_eval/__init__.py:12-21`). No import-linter contract enforces it, and the package already breaks it. No contract limits what `dev` imports from `src`.
+- The `dev/agent_eval` claim that it imports only `cadrumo.core` is a docstring (`dev/agent_eval/__init__.py:12-21`; the package is renamed `dev/mcp_eval` on 2026-10-21). No import-linter contract enforces it, and the package already breaks it. No contract limits what `dev` imports from `src`.
 - Verdict granularity follows determinism (`2026-08-05-ci-lane-deconflation-adr`). A harness lane is chosen by owned paths or recipe membership, not a cost marker (`2026-08-14-test-harness-sanity-successor-adr`). A gate carries positive controls (`2026-07-25-test-harness-honesty-adr`).
 
 ## Considered options
@@ -132,7 +132,7 @@ Binding:
 
 ## Implementation
 
-Agent-product evaluation tooling lives in `dev/agent_eval/live/`; it is independent of tax/runtime implementation and runs by two opt-in recipes:
+Agent-product evaluation tooling lives in cadrumo-agent (harness boundary amendment, 2026-10-21). Cadrumo keeps the deterministic conformance lane in `dev/mcp_eval`. The original wording placed the live lane at `dev/agent_eval/live/` behind two opt-in recipes:
 - `just eval-agent-floor` runs the scenario with a scripted MCP client and no model.
 - `just eval-agent-live SCENARIO RUNS` runs it with the live agent.
 
@@ -166,7 +166,7 @@ Hypotheses, free to change within the constraints:
 
 The `dev/agent_eval/__init__.py` docstring is corrected to state what the package imports. Pure parts are unit-tested in `dev/agent_eval/tests`, where they join the existing portable lanes. Those parts are the scrubber, the two stream-to-trajectory translators, the manifest-copy check against a synthetic manifest, and the verdict rules. Positive controls show that the scrubber fails on a planted secret, that the copy check fails on a changed byte, and that the oracle fails on a planted disagreement.
 
-LLM execution drivers and conduct scoring are agent-product responsibilities; deterministic runtime/MCP acceptance and oracle/person-side helpers remain local development tools. `src/cadrumo` and `src/cadrumo_runtime` host no LLM agent execution/evaluation policy. Separate MCP implementation is `src/cadrumo_harness`, shared clients `src/cadrumo_client`, and desktop-hosted process ownership `src/cadrumo_agent_service`. The existing local driver/oracle source is migration implementation, not a live proof or agent-repository decision.
+LLM execution drivers and conduct scoring are agent-product responsibilities; deterministic runtime/MCP acceptance and oracle/person-side helpers remain local development tools. `src/cadrumo` and `src/cadrumo_runtime` host no LLM agent execution/evaluation policy. Separate MCP implementation is `src/cadrumo_mcp`, shared clients `src/cadrumo_client`, and desktop-hosted process ownership `src/cadrumo_agent_service`. (Amended 2026-10-21; before that this named `src/cadrumo_harness` and kept the live drivers in Cadrumo as migration implementation. LLM execution drivers and conduct scoring are cadrumo-agent's; the deterministic oracle and person-side helpers stay in `dev/mcp_eval`.)
 
 The scratch folder's role ends here. Its runtime host, `env.json`, password file and `grep` parsing are not carried forward. Every capability they gave is listed above.
 
@@ -246,3 +246,38 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 >
 > The scratch folder's role ends here. Its runtime host, `env.json`, password file and `grep` parsing are not carried forward. Every capability they gave is listed above.
 >
+
+## Harness boundary amendment 2026-10-21: the live lane leaves Cadrumo
+
+Drift repair toward the cadrumo-agent vault's accepted `2026-10-15-agent-harness-adr`,
+authorized by the user in session TUI-REFACTOR. That record owns live persona evaluation,
+scoring and the failure-to-scenario flywheel. `dev/agent_eval` is renamed `dev/mcp_eval`
+and keeps deterministic MCP, CLI and operation conformance only; it loads no skill or rule
+text. The live persona lane, the live drivers, live scoring, the flywheel and the persona
+scenarios leave Cadrumo.
+
+Retained in Cadrumo, unchanged in substance: constraint 1 (the lane runs against a
+verified, unmodified copy of the CMake `bundle` package and never writes into the staged
+package), constraint 2 (a fresh storage root per run, the packaged runtime launched with
+the manager's arguments and without `--supervised`, inside a kill-on-close scope, no login
+or boot registration, the operator's real storage untouched), constraint 3 (each run
+records the build it measured and refuses a stale package unless the operator asks),
+constraint 7 (allow-listed environment; no provider credential or API key in the server or
+runtime environment or any artefact), constraint 8's independent oracle for the
+deterministic scenarios, constraint 10 (opt-in, never in a default lane, "unavailable"
+rather than a pass when a prerequisite is missing) and constraint 11 (nothing remains in
+scratch).
+
+Moved to cadrumo-agent: constraint 4's model and driver declaration, constraint 6's live
+access scenarios driven by a model, constraint 9's conduct invariants on a live agent, and
+every hypothesis about scenarios, pass rule, cadence and spend. Constraint 5's rule that no
+secret is ever given to an agent or travels in a tool call or artefact is a product rule of
+`2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr` and is unchanged everywhere.
+
+Supersession was considered and not taken. Constraints 1, 2, 3, 7, 10 and 11 still bind
+`dev/mcp_eval` and have no other home, and this record carries the owner's verbatim
+2026-10-12 rulings on environment, driver and secrets, which cadrumo-agent's lane inherits.
+Supersede only together with a `dev/mcp_eval` successor that re-states those constraints.
+
+Original acceptance, dates and quotations are unchanged. This amendment states ownership; it
+is not evidence that any of it is built.

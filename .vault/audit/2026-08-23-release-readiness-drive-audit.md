@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#release-readiness-drive'
 date: '2026-08-23'
-modified: '2026-10-03'
+modified: '2026-10-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:43dc6cd9b0a500176901fad584d2a0fcee4526300470ab191c1ca9e73e3bd826'
+body_hash: 'sha256:c61d0798f04809a7d123162ab083a587d7003188f099c1113e28059cd9680b08'
 related: []
 ---
 
@@ -39,8 +39,8 @@ Keep release blocked until platform wheel minima and each claimed channel have r
 - Restored `capture_owned_server_launch` and `_initialize_server_name` with
   their imports; three modules still imported the deleted symbol.
 - Restored the cohort fixture's harness-wheel and `mcpb` real-zip branches.
-  `REQUIRED_ARTIFACT_KINDS` still carries `cadrumo-harness-wheel`,
-  `claude-plugin`, `mcpb` and `claude-marketplace`, so the fixture was stale
+  `REQUIRED_ARTIFACT_KINDS` still carries `cadrumo-harness-wheel`
+  and `mcpb`, so the fixture was stale
   against its own authority.
 
 Preflight moved from 33 failed / 351 passed / 1 error to 25 failed / 365
@@ -69,21 +69,6 @@ in the same change.
 Raising the Linux floor drops only already-EOL distros. Raising the macOS
 floor drops Big Sur, Monterey and Ventura, which is a product support-policy
 decision and is escalated, not decided here.
-
-## Open: two channels claimed without an evidence path
-
-The shipped descriptor claims `claude-plugin` and `mcpb`, but the publish
-workflow declares only `packaging_run_id`, `scoop_run_id` and
-`homebrew_run_id`. One commit retired those lanes and a later one restored the
-channels without restoring their inputs. Wiring them or withdrawing the claim
-is a pipeline decision.
-
-## Open: a cohort-bound emitter with no cohort at the call site
-
-`materialise_plugin` and `materialise_marketplace` gained a required `cohort`;
-the distribution-identity verifier calls both without one. It accepts no
-cohort parameter and the protocol requires real built wheels, so this needs a
-design decision rather than a patch.
 
 ## Note on method
 

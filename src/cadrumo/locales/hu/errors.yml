@@ -1055,10 +1055,9 @@ errors:
     refused_filing_calculate: A benyújtás-számítás vagy összefoglalás nem ment át
       az invariáns-ellenőrzésen.
     refused_financial_aggregation_category_coverage: Egy tranzakcióhoz hiányzik a
-      kategória- vagy profil-lefedettség. Osztályozza a tranzakciót az összesítés
-      előtt.
+      kategória- vagy profil-lefedettség. Osztályozd a tranzakciót az összesítés előtt.
     refused_financial_aggregation_missing_classification: Néhány időszaki tranzakció
-      még osztályozásra szorul. Osztályozza mindegyiket az összesítés előtt.
+      még osztályozásra szorul. Osztályozd mindegyiket az összesítés előtt.
     refused_financial_aggregation_unsupported_modelo: Nincs összesítési szerződés
       a kért nyomtatványhoz.
     refused_financial_bank_statement_parse: A pénzügyi bankikivonás elemzése sikertelen.

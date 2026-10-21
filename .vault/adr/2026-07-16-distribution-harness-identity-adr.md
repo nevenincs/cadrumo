@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#distribution-harness-identity'
 date: '2026-07-16'
-modified: '2026-07-17'
-body_hash: 'sha256:7a7e4815ed059adcab93912ce4b0f609fb48e04b4c2503fb8d499b6ec62ee03c'
+modified: '2026-10-21'
+body_hash: 'sha256:af849ae2fecf0a4617df6b84cf8626ffc98708ca81484498ec341c95a2dc3873'
 related:
   - '[[2026-07-16-distribution-harness-identity-research]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
@@ -19,7 +19,7 @@ related:
 ## Problem statement
 
 Cadrumo distributes one authored operating harness through wheel data, Claude
-workspaces, plugins, marketplace artifacts, Model Context Protocol (MCP) resources and
+workspaces, Model Context Protocol (MCP) resources and
 prompts, and MCP Bundles (MCPBs). Its agent/persona, skill, and rule identifiers are
 generic. The authored tree exposes names such as `coordinator`,
 `preparar-modelo-200`, and `operator-grounding`; the materialiser preserves them in
@@ -30,7 +30,7 @@ agent definition, so both surfaces must carry the same prefixed identity.
 
 Generic harness identifiers can collide with host, user, or third-party components.
 They also hide which package supplied an installed capability. Top-level MCP identity is
-already Cadrumo-owned, but plugin, marketplace, and MCPB product descriptions are
+already Cadrumo-owned, but MCPB product descriptions are
 English-only or derive from separate English-only sources.
 
 Delivery needs one blocking acceptance invariant spanning the exact authored,
@@ -48,7 +48,7 @@ translation wording, compatibility alias, or artifact mutation.
   `cadrumo`, `cadrumo-mcp`, `cadrumo_`, and `cadrumo://` are compliant Cadrumo
   prefixes; this decision does not mechanically replace them with hyphenated forms.
 - Every user-facing MCP product description requires equivalent English and Spanish
-  text across plugin, marketplace, MCPB, and claimed-client display metadata. A
+  text across MCPB and claimed-client display metadata. A
   single-string schema carries both languages in a schema-supported representation.
 - This requirement does not localize model-facing operational tool, prompt, argument,
   or resource descriptions. Their existing English-only contract remains unchanged.
@@ -81,15 +81,16 @@ The accepted MCP-relevant subset of the Cadrumo identity tuple remains stable:
 - MCP executable: `cadrumo-mcp`
 - tool prefix: `cadrumo_`
 - resource Uniform Resource Identifier (URI) scheme: `cadrumo://`
-- plugin identifier: `cadrumo`
 
-This amendment creates no alias, executable, plugin identifier, tool prefix, resource
+This amendment creates no alias, executable, tool prefix, resource
 scheme, or server identity.
 
-The accepted harness and distribution decisions also remain stable. One harness source
-feeds the minimum MCP tool surface, resources, prompts, Claude materialisation, and
-packaged artifacts. The Claude plugin remains the primary consumer distribution. MCPB
-remains secondary, and immutable tested-cohort promotion remains the release path.
+The accepted distribution decisions also remain stable. (Amended 2026-10-21: the sentence
+"One harness source feeds the minimum MCP tool surface, resources, prompts, Claude
+materialisation, and packaged artifacts" no longer describes Cadrumo. Cadrumo's MCP surface
+serves no skill, rule or persona content, and the authored source and its materialisation
+are cadrumo-agent's. See the harness boundary amendment below.) MCPB
+remains a packaged consumer artifact, and immutable tested-cohort promotion remains the release path.
 
 Spanish-stem naming remains binding. `cadrumo-` is an outer product qualifier; it does
 not translate or replace an established workflow stem.
@@ -114,10 +115,10 @@ No product rename or translation change is authorized by this record.
 The distribution-readiness plan adds verification at five boundaries:
 
 1. Inventory the authored harness and every generated projection.
-2. Inspect plugin, marketplace, MCPB, and client-display metadata in the frozen cohort.
+2. Inspect MCPB and client-display metadata in the frozen cohort.
 3. Capture identifiers, the English MCP product description, and the Spanish MCP
    product description in every claimed installed Claude client.
-4. Repeat the comparison after public marketplace and MCPB reacquisition.
+4. Repeat the comparison after public MCPB reacquisition.
 5. Reconcile every observation in the close audit and leave failed deliverables open.
 
 A distribution identity verifier reads one immutable release-cohort manifest. It owns
@@ -150,8 +151,8 @@ unchanged.
 ## Consequences
 
 The current authored harness fails the namespace invariant because its skills, personas,
-and rules use unprefixed identifiers. Existing workspace and plugin tests preserve that
-source-name equality. The current plugin, marketplace, and MCPB product descriptions
+and rules use unprefixed identifiers. Existing workspace tests preserve that
+source-name equality. The current MCPB product descriptions
 also fail bilingual parity. Top-level MCP server identity is already compliant, but
 partial compliance cannot approve an artifact.
 
@@ -162,7 +163,7 @@ A later authorized migration has broad scope. It may change:
 - agent filenames and frontmatter
 - rule imports
 - prompt names and resource URIs
-- Claude workspace, plugin, marketplace, and MCPB metadata
+- Claude workspace and MCPB metadata
 - retained evidence, documentation, and tests
 
 Existing client references may break.
@@ -175,3 +176,25 @@ delivery defect rather than post-release polish.
 This amendment extends the accepted distribution-readiness, Claude-packaging,
 harness-refoundation, and active Cadrumo identity decisions. It does not edit or
 reinterpret those accepted records in place.
+
+## Harness boundary amendment 2026-10-21: harness identity parity follows the content
+
+Drift repair toward the cadrumo-agent vault's accepted `2026-10-15-agent-harness-adr`,
+authorized by the user in session TUI-REFACTOR. Cadrumo authors no persona, skill or rule,
+so the `cadrumo-` prefix invariant on harness identifiers, and identity parity for them
+across generation, installation, publication and public reacquisition, are cadrumo-agent's.
+The Considerations that define a harness identifier and require its prefix, the inventory
+step for the authored harness, and the consequence that the current authored harness fails
+the namespace invariant are read as cadrumo-agent's obligations from this date.
+
+Cadrumo retains the rest of this record for the surfaces it still owns: the identity tuple
+(`aeat`, MCP server identifier `cadrumo`, MCP executable `cadrumo-mcp`, tool prefix
+`cadrumo_`, resource scheme `cadrumo://`, plugin identifier `cadrumo`), bilingual English
+and Spanish MCP product descriptions with per-claim verdicts on capability, safety,
+privacy, on-host storage, human confirmation and never-files-live, and the rule that source
+inspection and schema validation never substitute for metadata observed in a client.
+
+The Python package behind `cadrumo-mcp` is renamed from `src/cadrumo_harness` to
+`src/cadrumo_mcp`; the executable name, server identifier, tool prefix and resource scheme
+are unchanged, and this amendment creates no alias. This amendment states ownership; it is
+not evidence that any of it is built or verified.

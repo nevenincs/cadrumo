@@ -8,9 +8,9 @@ related:
   - '[[2026-10-12-live-agent-evaluation-adr]]'
   - '[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
-modified: '2026-10-14'
+modified: '2026-10-21'
 body_schema: body-v2
-body_hash: 'sha256:d43b7a31de5306b255a35db1cfe16bed590eb00f5edd1d01ea4ac8bf3346ba78'
+body_hash: 'sha256:4d15bb8f3b1799de409fedce0a3a7fa91ef580829c9e72d4e57207bc119adc9d'
 ---
 
 # `live-agent-evaluation` plan
@@ -23,7 +23,7 @@ Approved 2026-10-12. Basis: the owner's first-hand "lgtm" on `2026-10-12-live-ag
 
 This plan builds `dev/agent_eval/live/` and its two recipes as the governing ADR's Implementation section lays out. Decision coverage: `2026-10-12-live-agent-evaluation-adr` governs every Step (package copy, isolated root, scenarios, drivers, capture, oracle, access scenarios, recipes, floor). `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr` governs the access rules the lane holds from its own side in S03, S05, S06 and S08: the agent never authenticates, never holds a secret, and is refused without a live sign-in or a valid key. `2026-07-02-agent-harness-refoundation-adr` R7 is the substrate the lane drives (`LiveTrajectory`, `score_live_trajectory`). No new costly decision is involved; the evidence is `2026-10-12-live-agent-evaluation-reference`.
 
-Scope bounds: the lane never edits `src/cadrumo_harness/mcp` or runtime code, which belong to the mcp-parity P10 work; it does not depend on the session, installation, authenticate or authorization tools that P10 removes. Person-side acts go through the packaged command line. A package built before P10 lands is expected to fail the no-secret-offered invariant. The live run (S11) waits for P10 and a rebuild, and needs an interactive logon whose credential store works; on an SSH logon the lane reports unavailable.
+Revised 2026-10-21, drift repair toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR: the live persona lane is cadrumo-agent's, so S11 no longer runs it here; it now carries that lane out of Cadrumo and reduces `dev/agent_eval` to the deterministic `dev/mcp_eval`. S01 to S10 stay closed as the record of what was built. Scope bounds: the lane never edits `src/cadrumo_mcp/mcp` or runtime code, which belong to the mcp-parity P10 work; it does not depend on the session, installation, authenticate or authorization tools that P10 removes. Person-side acts go through the packaged command line. A package built before P10 lands is expected to fail the no-secret-offered invariant. The live run (S11) waits for P10 and a rebuild, and needs an interactive logon whose credential store works; on an SSH logon the lane reports unavailable.
 
 ## Steps
 
@@ -37,7 +37,7 @@ Scope bounds: the lane never edits `src/cadrumo_harness/mcp` or runtime code, wh
 - [x] `S08` - Drive the access scenarios from the person's side through the packaged command line: key issue, use in scope, refusal out of scope, revocation mid-run, locked, signed out and expired, each requiring the agent to send the person back to Cadrumo; `dev/agent_eval/live/access.py`.
 - [x] `S09` - Add the opt-in recipes eval-agent-floor and eval-agent-live with a receipt, the three-run pass rule and distinct outcome classes and exit codes, kept out of every default lane; `justfile`.
 - [x] `S10` - Run the scripted floor on this host and prove that a refused credential store is classified unavailable, never a pass; `dev/agent_eval/live/lane.py`.
-- [ ] `S11` - Run the live lane, three runs per scenario, on the operator's interactive desktop logon after the mcp-parity P10 surface lands and the bundle is rebuilt, and record the receipt; `.logs/agent-eval`.
+- [ ] `S11` - Carry the live persona lane to cadrumo-agent and reduce Cadrumo's lane to deterministic MCP conformance: rename the package, delete the live drivers, live scoring, flywheel and persona scenarios, retire the eval-agent-live recipe, and keep the deterministic package-copy, isolated-root, oracle and floor paths under the retained constraints; `dev/mcp_eval, justfile`.
 
 ## Parallelization
 

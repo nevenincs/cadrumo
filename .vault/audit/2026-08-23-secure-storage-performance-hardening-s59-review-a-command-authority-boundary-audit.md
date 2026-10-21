@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#secure-storage-performance-hardening'
 date: '2026-08-23'
-modified: '2026-10-03'
+modified: '2026-10-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:699b2f0419f1a2d9ffb4b6639819b33e5febcf0c1edb55b1293ec2606d93a8df'
+body_hash: 'sha256:d98d4f45deaceb16a718ffd73ca76f025d5bc1a7f14316ee2068bc8fcfb3b77b'
 related:
   - "[[2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr]]"
 ---
@@ -72,8 +72,8 @@ regression controls.
 
 ## Converged boundary correction
 
-The operator rejected the later client-blind deletion premise. The harness, Claude
-plugin, MCPB, marketplace, and deployment lanes are separate protected products that
+The operator rejected the later client-blind deletion premise. The harness,
+MCPB, and deployment lanes are separate protected products that
 depend on the base CLI; separation does not mean deletion. A fresh independent review
 confirmed zero base-runtime imports of the harness but found `config --help` importing
 the calculation registry and storage through broad help and payload facades. The help

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#provider-settings'
 date: '2026-10-19'
-modified: '2026-10-19'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:921f6d641537ce3c24179560394c401fb2aef4225934a86d05f30e8e84effb0f'
+body_hash: 'sha256:f829c09100d819ed9122abb5a75bb62240cfceb9e9675111d961fc844b40af26'
 related:
   - "[[2026-10-13-provider-settings-adr]]"
   - "[[2026-10-04-canonical-environment-adr]]"

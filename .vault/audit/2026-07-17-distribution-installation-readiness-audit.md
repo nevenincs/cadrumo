@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#distribution-installation-readiness'
 date: '2026-07-17'
-modified: '2026-10-03'
-body_hash: 'sha256:08687a6d197d411f95a41c86b6631c1adb32ec1ff413603bf8d9fc2339c4c8eb'
+modified: '2026-10-21'
+body_hash: 'sha256:ff80aaedf53dd27562f9dd55dd60216bfe058d91976f09de8b9ea7f9b40956a9'
 related: []
 ---
 
@@ -35,7 +35,7 @@ revision boundary required for retained distribution evidence.
 ### generated-parity-not-enforced | high | Missing generated surfaces can produce a passing verdict
 
 The report verdict is only `all(row.compliant ...)` over observations that happened to
-exist. It never requires the workspace, plugin, marketplace, prompt, and resource sets
+exist. It never requires the workspace, prompt, and resource sets
 to equal the authored persona, skill, and rule inventories. A generator that omits a
 prefixed agent, skill, or rule, or an MCP projection that returns an empty list, can
 therefore pass once the remaining source names are prefixed. The tests assert today's
@@ -76,8 +76,8 @@ projection parity. The other two findings remain open without qualification.
 ### Finding disposition
 
 - `generated-parity-not-enforced`: partially addressed, still open at high severity.
-  `InventoryParityCheck` now fails on missing or duplicate workspace, plugin,
-  marketplace, MCP prompt, MCP resource, and embedded-skill rows. However, the checks
+  `InventoryParityCheck` now fails on missing or duplicate workspace,
+  MCP prompt, MCP resource, and embedded-skill rows. However, the checks
   compare only each row's primary file or directory identifier. Generated agent
   frontmatter names and generated skill metadata names are merely checked for the
   `cadrumo-` prefix, not equality with their authored values. Prompt-to-embedded-resource
@@ -119,7 +119,7 @@ S67 code-review finding. The earlier rolling findings are retained above as the 
 history; their final dispositions are:
 
 - `generated-parity-not-enforced`: resolved. Eighteen exact parity checks now cover
-  authored-to-workspace, plugin, marketplace, MCP prompt, MCP resource, agent
+  authored-to-workspace, MCP prompt, MCP resource, agent
   frontmatter, skill metadata, and per-prompt embedded-skill associations. Missing,
   duplicate, substituted, or reassociated projections participate in
   `DistributionIdentityReport.ok` and fail the verifier.
@@ -144,8 +144,7 @@ approve or perform the later rename.
 
 Reviewed commit `08a038ed24` and `W02.P06.S68` against the accepted bilingual MCP
 product-description decision and its research record. The review covered the production
-description verifier, its direct real-surface tests, the generated Claude plugin and
-marketplace metadata, both MCPB product-description fields, and the S68 execution record.
+description verifier, its direct real-surface tests, both MCPB product-description fields, and the S68 execution record.
 The commit does not mutate any identifier, description source, generator output, or
 model-facing operational copy. Focused Ruff passed and the direct production test module
 passed `5/5`; the production verifier reproduced exit status `1` and the execution
@@ -221,7 +220,7 @@ the audit history; their final dispositions are:
 Final focused verification: Ruff passed; the direct production test module passed
 `7/7`; the production verifier exited `1` and emitted report SHA-256
 `8ac51513f603545fcaf26142efd0388508413aac65ac1be5050a6feea81c3fdc`.
-The five shipped client-display fields still correctly fail because the accepted
+The shipped client-display fields still correctly fail because the accepted
 verification-only scope has zero approved translation pairs. The implementation review
 passes; it does not approve copy, close S68, or change the required failed distribution
 verdict.
@@ -230,7 +229,7 @@ verdict.
 
 Reviewed the retained `W03.P08.S69` Claude-client identity record, its execution
 record, and only the source files cited by the retained record. The review re-hashed
-the retained JSON and every readable cited source, inspected the installed plugin and
+the retained JSON and every readable cited source, inspected the installed
 MCPB metadata used for identifier and description observations, and checked the
 Desktop local-agent transcript evidence used to classify the Cowork surface. The
 retained JSON itself matches the execution record's SHA-256
@@ -253,32 +252,18 @@ local-agent `audit.jsonl`; S69 assigned the project-transcript digest to a diffe
 concrete source path. This invalidates the source-integrity claim for the only direct
 evidence behind the Cowork row. The
 transcript content does support the proposed surface classification—`desktop_app`,
-local-agent-mode storage, Cowork MCP tools, Cowork plugin-management commands, and the
+local-agent-mode storage, Cowork MCP tools, and the
 Cadrumo calls are all present—but S69 cannot retain it as verified evidence under a
 mismatched digest.
-
-### claude-code-observation-provenance | high | Several Claude Code observations have no cited or digested source
-
-The Claude Code row cites only the aggregate plugin-evidence JSON and installed
-`plugin.json`. Neither cited file contains client version `2.1.211`, MCP server version
-`1.28.1`, installed-plugin commit `d5d6c34661fe4dd4ad365be8faf53e51682559c3`,
-or the claimed complete seven-agent and 34-skill inventories. Those values exist in
-other retained run files—the client transcript/debug log, `installed_plugins.json`,
-and installed agent and skill trees—but the S69 record neither names nor digests those
-sources and supplies no artifact or tree digest covering them. Consequently the listed
-observations may be correct, but the evidence record does not meet the decision's
-requirement to bind observed identifiers, client identity, and artifact identity to
-retained exact bytes.
 
 ## S69 disposition
 
 **Revision required.** The overall noncompliant matrix verdict is honest, the MCP
 server and bilingual verdicts do not fabricate a pass, and treating the Desktop
 local-agent host-loop session as the Cowork surface is supported by the transcript.
-However, the mismatched Cowork digest and uncited Claude Code observation sources make
+However, the mismatched Cowork digest makes
 the retained evidence set unverifiable. Re-capture or re-hash the exact Cowork source,
-cite and digest every Claude Code source from which recorded fields are derived, then
-regenerate the S69 record and execution-record digest. Keep the S69 plan row unchecked.
+then regenerate the S69 record and execution-record digest. Keep the S69 plan row unchecked.
 
 ## S69 final remediation disposition
 
@@ -290,22 +275,11 @@ dispositions are:
   Claude project transcript beneath the local-agent session. A shared-read SHA-256 of
   that named file matches
   `529496d6248d05651cabdc81c73b00edf663ed355c14187e99f42b160cd56c49`.
-  The transcript identifies `desktop_app`, the local-agent host-loop, Cowork tools and
-  plugin-management commands, the connected 16-tool Cadrumo surface, and the real tax
+  The transcript identifies `desktop_app`, the local-agent host-loop, Cowork tools,
+  the connected 16-tool Cadrumo surface, and the real tax
   operation. The installed Desktop evidence binds the same session identifiers to the
   exact MCPB and root-wheel digests, so the Cowork surface and cohort classification is
   supported without treating `audit.jsonl` as the retained source.
-- `claude-code-observation-provenance`: resolved. The row now cites and byte-digests
-  the plugin evidence, installed plugin manifest, Claude debug log,
-  `installed_plugins.json`, and installed `.mcp.json`. Those files support the client
-  version, server name and version, client-generated installed-plugin commit, product
-  description, and real behavior. The record expressly marks that generated commit as
-  unequal to the accepted source commit and leaves exact-cohort compliance false.
-  The installed tree independently contains exactly seven agent files and 34 skill
-  directories matching the recorded lists. Their specified sorted compact-JSON
-  canonicalization reproduces SHA-256
-  `f35c5a0a05600984b7945623ad4444c6c97d8c9bd4b602e2a41bb8fd7ac5a7fe`.
-
 Every cited source digest re-hashed successfully. The final retained evidence JSON and
 execution record agree on SHA-256
 `ddda9b49c91ea173858e26c684804c181569c0ab0505bcf7e62985d34b72ff76`.

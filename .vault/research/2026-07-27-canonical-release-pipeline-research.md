@@ -3,15 +3,15 @@ tags:
   - '#research'
   - '#canonical-release-pipeline'
 date: '2026-07-27'
-modified: '2026-10-03'
-body_hash: 'sha256:0aea5a0c12bd821c5814fa3bea1216159d698feaff63a9b212b871c71713c1c5'
+modified: '2026-10-21'
+body_hash: 'sha256:7193fc8e98d63b60d5292493dea9c8f8055ed2e8da9cbda8fef89277fd26c76c'
 related:
   - '[[2026-07-27-canonical-release-pipeline-adr]]'
   - '[[2026-07-27-publication-lane-consolidation-adr]]'
   - '[[2026-07-27-pipeline-config-topology-adr]]'
 ---
 
-# `canonical-release-pipeline` research: `measured state of the docs, landing, and marketplace delivery surfaces`
+# `canonical-release-pipeline` research: `measured state of the docs and landing delivery surfaces`
 
 ## Findings
 
@@ -77,16 +77,6 @@ Free cap. No fresh full build existed to inventory (the worktree's
 `docs/_build/html` held 75 files, no Pagefind output) — the comparison is
 bounded, not freshly measured.
 
-**Marketplace state.** `nevenincs/neve-marketplace` carries a stale
-`plugins/aeat` subtree from 2026-07-04 under the old product identity,
-referencing `aeat-cli 0.1.1` — a distribution the current sealed cohort
-(v0.2.1, run `30216592706`) does not publish. the former source file
-replaces only the plugin subtrees the cohort declares and preserves every other
-path and index entry by design (sibling protection); it refuses cross-owner
-name takeovers via `published_by` and treats publisher-less entries as
-claimable. The cohort publishes under the `cadrumo` identity, so no publication
-will ever touch the stale `aeat` entry.
-
 **Release gate state (measured 2026-07-27).** `CADRUMO_PUBLISH_ENABLED` unset;
 the `release` environment exists with no protection rules; sealed cohort
 `30216592706` = v0.2.1 with complete evidence; 0.2.1 free on all three PyPI
@@ -111,8 +101,8 @@ release-please is configured (`release-type: python`,
 **The promotion failure this arms (step order verified).**
 `publish-release.yml` Gate 2 guards the destination with `--check-pypi-only`;
 its promote job orders: PyPI Trusted-Publishing upload, then
-`gh release create "v$VERSION"`, then the docs payload, Scoop, Homebrew,
-marketplace. PyPI 0.2.1 is genuinely free on all three projects, so a dispatch
+`gh release create "v$VERSION"`, then the docs payload, Scoop, Homebrew.
+PyPI 0.2.1 is genuinely free on all three projects, so a dispatch
 of the sealed cohort passes the guard, irreversibly uploads the new bytes as
 0.2.1, then fails at release creation because non-draft `v0.2.1` already
 exists; nothing after runs. PyPI has no un-publish.
@@ -129,22 +119,6 @@ to `v0.2.1` but is a free string — the lane is not version-pinned. Arming the
 one variable therefore arms two PyPI authorities that would ship different
 bytes under the same version.
 
-**Marketplace identity collision, decoded live (verified 2026-07-27).** The
-live `nevenincs/neve-marketplace` index (`.claude-plugin/marketplace.json`)
-carries name `neve`, owner `AEAT tax assistant project`, description naming
-"the aeat Spanish-tax assistant", and a single plugin entry
-`{name: "aeat", source: "./plugins/aeat"}` with NO `published_by` field — it
-predates ownership tracking, so under the merge tool's rules it is claimable
-by any product. The in-tree cohort manifest
-(`packaging/marketplace/.claude-plugin/marketplace.json`) carries the same
-marketplace name `neve`, owner `CADRUMO tax assistant project`, a bilingual
-description naming Cadrumo, and the single plugin `{name: "cadrumo"}`. The
-merge takes account-level metadata (name, description, owner) from the cohort
-and preserves every entry and path the cohort does not declare — so publishing
-v0.2.1 as-is would flip the account metadata to CADRUMO while leaving the
-broken `aeat` plugin (pinned to the unpublished `aeat-cli 0.1.1`) live beside
-`cadrumo`.
-
 ## Sources
 
 - Live headers: `cadrumo.neve.md`, `cadrumo.neve.md/docs/`, `neve.md`
@@ -160,9 +134,9 @@ broken `aeat` plugin (pinned to the unpublished `aeat-cli 0.1.1`) live beside
 - Semantic search was degraded during this pass (code index mid-rebuild);
   every conclusion rests on direct reads, live HTTP measurements, and the
   dispatching coordinator's same-day measurements re-verified where load-bearing.
-- `gh release view v0.2.1`, `gh api repos/nevenincs/neve-marketplace/...`
-  (read-only API queries, 2026-07-27); `pyproject.toml`,
+- `gh release view v0.2.1`
+  (read-only API query, 2026-07-27); `pyproject.toml`,
   `.release-please-manifest.json`, `release-please-config.json`,
-  `.github/workflows/pypi-upload.yml`, `packaging/marketplace/.claude-plugin/marketplace.json`
+  `.github/workflows/pypi-upload.yml`
   (direct reads, 2026-07-27); cohort byte counts and sha256 prefixes are the
   dispatching coordinator's same-day measurements, not re-derived here.

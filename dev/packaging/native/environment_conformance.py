@@ -237,8 +237,8 @@ def check_agent(reference: Reference, runtime: Mapping[str, Any], agent: Mapping
                 f"the agent speaks {agent['hosting_contract']}",
             )
         )
-    if agent["settings_file_variable"] not in declared["never_admitted"]:
-        findings.append(Finding(check, agent["settings_file_variable"], "is the agent's settings file and is admitted"))
+    if agent["settings_file_source"]:
+        findings.append(Finding(check, "settings file", "the bundled agent admits a dotenv settings source"))
     for name, entry in reference.declaration.names.items():
         if name.startswith(declared["prefix"]):
             label = agent["settings"].get(name)

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#account-distribution-standard'
 date: '2026-07-25'
-modified: '2026-10-14'
-body_hash: 'sha256:31744d09c05e6a88ba8268b43e522c30f00d2953a160cf70b7e4763295420390'
+modified: '2026-10-21'
+body_hash: 'sha256:01bf8256df45f51a641f6fda1b230de2b20da30a88d1fee7e3a27d063487c230'
 related:
   - '[[2026-07-25-distribution-repo-topology-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
@@ -189,9 +189,7 @@ Two acquisition workflows produce inputs `publish-release.yml` requires, and
 both fail unconditionally: `packaging-homebrew.yml` at 9 dispatches and 9
 failures, `packaging-scoop.yml` at 8 and 8.
 
-The repository variables are set: `HOMEBREW_TAP_REPO=nevenincs/homebrew-tap` and
-`CLAUDE_MARKETPLACE_REPO=nevenincs/neve-marketplace`. The marketplace repository
-exists and is public. **`nevenincs/homebrew-tap` returns 404** — the tap the
+The repository variables are set: `HOMEBREW_TAP_REPO=nevenincs/homebrew-tap`. **`nevenincs/homebrew-tap` returns 404** — the tap the
 publish authority would push to has not been created, so the Homebrew leg would
 refuse at Gate 3 even with every gate opened.
 
@@ -248,9 +246,7 @@ does not make.
 ### What was not investigated
 
 Download or install counts for the two live packages were not gathered, so
-relative channel value is unmeasured. The `neve-marketplace` tree was not read,
-so the plugin-name mismatch recorded in the product-scope topology record is
-taken as given rather than re-verified. No workflow was executed and nothing was
+relative channel value is unmeasured. No workflow was executed and nothing was
 published, so every claim about a pipeline's behaviour is read from its
 definition plus its recorded run history, not from an observed run.
 

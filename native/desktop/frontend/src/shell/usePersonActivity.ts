@@ -19,12 +19,23 @@ export function usePersonActivity(host: Host, signedIn: boolean): void {
       // The ordinary status observer owns connection/session presentation.
       // A rejected activity report must never become an unhandled rejection.
       void noteActivity()
-        .catch(() => undefined)
+        .catch(() => {
+          // Retry on the next real input after a transient refusal. A failed
+          // exchange did not establish a renewed runtime deadline.
+          lastSent = -Infinity;
+        })
         .finally(() => {
           pending = false;
         });
     };
-    const names = ["keydown", "pointerdown", "wheel", "paste"] as const;
+    const names = [
+      "keydown",
+      "pointerdown",
+      "pointermove",
+      "wheel",
+      "paste",
+      "input",
+    ] as const;
     names.forEach((name) =>
       window.addEventListener(name, observe, { capture: true, passive: true }),
     );

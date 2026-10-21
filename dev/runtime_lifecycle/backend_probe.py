@@ -37,6 +37,7 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.core.errors.failure_report import failure_chain
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo_runtime.application.development_root import mark_development_root
 from dev._paths import REPO_ROOT
 
@@ -227,7 +228,7 @@ def main(arguments: list[str] | None = None) -> int:
     selection.add_argument("--source", action="store_true", help="This checkout's environment; no agent phase.")
     parser.add_argument("--skip-agent", action="store_true", help="Probe sign-in and activity only.")
     options = parser.parse_args(arguments)
-    scratch = Path(tempfile.mkdtemp(prefix="cadrumo-probe-"))
+    scratch = Path(tempfile.mkdtemp(prefix="cadrumo-probe-", dir=prepare_temporary_directory()))
     probe = Probe()
     if options.source:
         signed_in_phase(probe, source_programs(), scratch / "signed-in", source=True)

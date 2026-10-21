@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-authority-boundary'
 date: '2026-10-18'
-modified: '2026-10-18'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:c3745e992ecc128c36723c82b3428dd1ec92ae01437e060526ec88f7f96ee80b'
+body_hash: 'sha256:d191e44f408ede73074773bb74356cc90d8dfcc97877ad664a0afd19bc9ea27b'
 related:
   - "[[2026-10-18-runtime-authority-boundary-reference]]"
   - "[[2026-07-01-import-centralization-adr]]"
@@ -163,8 +163,8 @@ This record decides where that authority lives, the contract through which front
   6. relocation of the adapters;
   7. enforcement.
 - Each move is atomic under `2026-07-01-import-centralization-adr`.
-- Some files are owned by `2026-10-18-dependency-provisioning-plan`: `_PROFILE_CONNECTION_KEYS`, the TUI navigation registration and `src/cadrumo_harness/mcp/`. Work touching them waits for the owning lane, or coordinates through its orchestrator.
-- The same applies to the parallel boundary-fix workstream's files: `reset_cli`, `operation_installation`, `storage_materialization`, the harness `runtime_admission`, and `.importlinter`.
+- Some files are owned by `2026-10-18-dependency-provisioning-plan`: `_PROFILE_CONNECTION_KEYS`, the TUI navigation registration and `src/cadrumo_mcp/mcp/`. Work touching them waits for the owning lane, or coordinates through its orchestrator.
+- The same applies to the parallel boundary-fix workstream's files: `reset_cli`, `operation_installation`, `storage_materialization`, the MCP service's `runtime_admission`, and `.importlinter`.
 
 ### Open decisions, outside the accepted scope
 
@@ -291,3 +291,7 @@ Each amendment is applied in the named record as a dated section that keeps the 
   - `2026-07-01-import-centralization-adr`: this record executes its 2026-10-15 correction.
   - `2026-10-04-runtime-manager-architecture-adr`: the manager holds no authority either way.
   - `2026-10-10-mcp-parity-shared-sign-in-door-adr`: "No surface keeps login state" already holds.
+
+## Package rename note 2026-10-21
+
+(Locators as observed on their original dates; the MCP package was renamed from `cadrumo_harness` to `cadrumo_mcp` on 2026-10-21, drift repair toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR. See the harness boundary amendment of `2026-07-02-agent-harness-refoundation-adr`. No commitment of this record changes.)

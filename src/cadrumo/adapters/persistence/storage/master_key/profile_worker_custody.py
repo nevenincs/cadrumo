@@ -214,6 +214,10 @@ class ProfileWorkerCustody:
                         self._ended[identity] = AccessDenialCode.AUTHENTICATION_REQUIRED
             while len(self._ended) > _ENDED_MEMORY:
                 del self._ended[next(iter(self._ended))]
+            if not dropped:
+                # The worker's expiry sweep may already have retired this id.
+                # Acknowledging the runtime's matching retirement is idempotent.
+                return frozenset(dropped)
             if not self._leases:
                 self._release_material()
             else:
@@ -233,6 +237,19 @@ class ProfileWorkerCustody:
             return
         opened = min(lease.issued_at for lease in leases.values())
         deadline = max(lease.expires_at for lease in leases.values())
+        previous = current_active_bucket_session()
+        if (
+            previous is not None
+            and not previous.sealed
+            and previous.opened_at == opened
+            and previous.idle_deadline == previous.absolute_deadline == deadline
+            and previous.dek == dek
+        ):
+            # A child lapse does not change its parent's storage lifetime.
+            # Keep the live engine and key session instead of disposing them
+            # at every attended lease boundary.
+            self._leases = leases
+            return
         # Each request is admitted against its own lease, so a key session that
         # went idle sooner would refuse work a live lease still admits. A window
         # no shorter than the whole lease span clamps every storage access to
@@ -247,7 +264,6 @@ class ProfileWorkerCustody:
             absolute_deadline=deadline,
             storage_root=self.root,
         )
-        previous = current_active_bucket_session()
         try:
             bind_active_bucket_session(successor)
             if previous is not None:

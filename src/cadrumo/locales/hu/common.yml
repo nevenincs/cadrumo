@@ -295,21 +295,21 @@ auth:
     clave_permanente_label: Cl@ve Permanente
   sync:
     requirement:
-      auth_method_required: Válasszon hitelesítési módot.
-      certificate_file_required: Válasszon egy létező PKCS#12 tanúsítványfájlt.
-      certificate_passphrase_required: Mentse el a tanúsítvány jelszavát.
-      clave_identity_required: Adjon meg érvényes Cl@ve DNI/NIE azonosítót.
-      clave_password_required: Mentse el a Cl@ve Permanente jelszavát.
-      corrupt: A tanúsítvány nem nyitható meg. Ellenőrizze a fájlt és a jelszót.
-      dni_validity_required: Adja meg a DNI érvényességi dátumát az alkalmazáskéréshez.
+      auth_method_required: Válassz hitelesítési módot.
+      certificate_file_required: Válassz egy létező PKCS#12 tanúsítványfájlt.
+      certificate_passphrase_required: Mentsd el a tanúsítvány jelszavát.
+      clave_identity_required: Adj meg érvényes Cl@ve DNI/NIE azonosítót.
+      clave_password_required: Mentsd el a Cl@ve Permanente jelszavát.
+      corrupt: A tanúsítvány nem nyitható meg. Ellenőrizd a fájlt és a jelszót.
+      dni_validity_required: Add meg a DNI érvényességi dátumát az alkalmazáskéréshez.
       expired: A tanúsítvány lejárt.
       expiring: A tanúsítvány hamarosan lejár.
       file_missing: A tanúsítványfájl nem létezik.
-      nie_support_required: Adja meg a NIE támogatási számát az alkalmazáskéréshez.
+      nie_support_required: Add meg a NIE támogatási számát az alkalmazáskéréshez.
       ok: A helyi ellenőrzés sikeres.
       profile_identity_must_match: A Cl@ve DNI/NIE és az adózó NIF/NIE azonosítójának
         egyeznie kell.
-      profile_tax_id_required: Adja meg az adózó NIF/NIE azonosítóját.
+      profile_tax_id_required: Add meg az adózó NIF/NIE azonosítóját.
       unavailable: A szükséges helyi ellenőrzés nem fejezhető be.
       unreadable: A tanúsítványfájl nem olvasható.
 categories:
@@ -1329,7 +1329,7 @@ google_review:
     snapshot_digest: Mentett pillanatkép lenyomata
     work_unit_id: Munka hivatkozása
   notice:
-    calculation_required: Közzététel előtt válasszon mentett számítást.
+    calculation_required: Közzététel előtt válassz mentett számítást.
     evidence_index: A bizonyítékhivatkozások szerepelnek a másolatban; az eredeti
       mellékletek tartalma nem kerül közzétételre.
     external_copy: A közzététel olvasható másolatot hoz létre a Google rendszerében.
@@ -1341,10 +1341,10 @@ google_review:
     prerequisite_unavailable: A mentett áttekintés előfeltételei nem érhetők el.
     provisional: Ez a mentett áttekintés ideiglenes.
     receipt_unavailable: Ellenőrzött közzétételi bizonylat nem érhető el.
-    staged_edits: A mentett számítás áttekintése előtt mentse vagy vesse el a függő
+    staged_edits: A mentett számítás áttekintése előtt mentsd vagy vesd el a függő
       módosításokat.
     submission_unresolved: A közzététel eredménye még nem tisztázott. Új beküldés
-      előtt ellenőrizze a meglévő műveletet.
+      előtt ellenőrizd a meglévő műveletet.
   offer:
     title: Áttekintés a Google Táblázatokban
   open_document: Táblázat megnyitása
@@ -1816,16 +1816,16 @@ transactions:
     verified: Az import sikeresen ellenőrizve.
 tui:
   aeat_auth:
-    blocked: 'A szinkronizálás előtt teljesítse ezeket a feltételeket:'
+    blocked: 'A szinkronizálás előtt teljesítsd ezeket a feltételeket:'
     certificate_path: Tanúsítványfájl útvonala (üresen a mentett érték marad)
     certificate_secret: Tanúsítvány jelszava (üresen a mentett érték marad)
     close: Vissza
-    document_hint: Alkalmazáskéréshez adja meg a DNI érvényességi dátumát vagy a NIE
-      támogatási számát az okmánya szerint.
+    document_hint: Alkalmazáskéréshez add meg a DNI érvényességi dátumát vagy a NIE
+      támogatási számát az okmányod szerint.
     edit: AEAT-hitelesítés beállítása / szerkesztése
-    failed: A hitelesítés nem menthető. Ellenőrizze a kötelező mezőket, és próbálja
+    failed: A hitelesítés nem menthető. Ellenőrizd a kötelező mezőket, és próbáld
       újra.
-    field_failed: '{field} nem menthető. Ellenőrizze a formátumát, és próbálja újra.'
+    field_failed: '{field} nem menthető. Ellenőrizd a formátumát, és próbáld újra.'
     method: Hitelesítési mód
     password: Cl@ve Permanente jelszó (üresen a mentett érték marad)
     ready: Szinkronizálásra kész
@@ -1833,7 +1833,7 @@ tui:
     save: Hitelesítés mentése
     saved: Mentve. A feltételek a tárolt profilt tükrözik.
     title: AEAT-hitelesítés
-    unknown: A hitelesítés állapota nem olvasható. Nyissa meg újra a beállításokat.
+    unknown: A hitelesítés állapota nem olvasható. Nyisd meg újra a beállításokat.
   aeat_sync:
     action:
       pull_filed: Benyújtott bevallások lekérése

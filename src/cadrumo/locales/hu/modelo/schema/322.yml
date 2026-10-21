@@ -1150,8 +1150,8 @@ modelo:
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
               label: IAE besorolás - Egyéb 5.
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              label: Azonosítás. Ön a pénzforgalmi különös rendszer alá tartozó ügyletek
-                címzettje?
+              label: Azonosítás. Te vagy a pénzforgalmi különös rendszer alá tartozó
+                ügyletek címzettje?
             x-chim6r1ecll6asj3d5hmiro:
               help: A Modelo 322 nyomtatvány ejercicio. rovata, 2008. adóév.
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:

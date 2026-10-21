@@ -10,7 +10,7 @@ import {
   realpathSync,
   rmSync,
 } from "node:fs";
-import { dirname, isAbsolute, relative, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
 // The host manifest names its sibling crates by relative path. The copies keep
 // the source tree's layout beneath one root so those paths resolve unchanged
@@ -71,7 +71,12 @@ function owned(root, path) {
   }
 }
 
-export function syncBackendSource(source, destination, buildRoot) {
+export function syncBackendSource(
+  source,
+  destination,
+  buildRoot,
+  excluded = [],
+) {
   const root = realpathSync(buildRoot);
   function copy(from, to) {
     owned(root, to);
@@ -80,9 +85,10 @@ export function syncBackendSource(source, destination, buildRoot) {
       throw new Error("Backend sources cannot contain linked paths.");
     if (kind.isDirectory()) {
       mkdirSync(to, { recursive: true });
-      const names = readdirSync(from);
+      const ignored = resolve(from) === resolve(source) ? excluded : [];
+      const names = readdirSync(from).filter((name) => !ignored.includes(name));
       for (const stale of readdirSync(to)) {
-        if (names.includes(stale)) continue;
+        if (names.includes(stale) || ignored.includes(stale)) continue;
         const path = resolve(to, stale);
         owned(root, path);
         rmSync(path, { recursive: true });
@@ -130,10 +136,18 @@ export function snapshotHostSources(
   ]) {
     const source = resolve(native, member);
     const destination = resolve(layout.root, member);
-    if (incremental) syncBackendSource(source, destination, layout.root);
+    // Local compiler output is not a source dependency. In particular a
+    // leftover Cargo target tree can contain gigabytes and thousands of files.
+    const excluded = PATH_CRATES.includes(member) ? ["target", ".exe"] : [];
+    if (incremental)
+      syncBackendSource(source, destination, layout.root, excluded);
     else {
       owned(layout.root, destination);
-      cpSync(source, destination, { recursive: true });
+      cpSync(source, destination, {
+        recursive: true,
+        filter: (path) =>
+          !excluded.includes(relative(source, path).split(sep)[0]),
+      });
     }
   }
   return layout;

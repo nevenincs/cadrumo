@@ -598,7 +598,8 @@ def test_an_activity_read_reads_no_custody_and_leaves_idle_custody_expiry_asleep
     assert not context.changed.is_set(), "a heartbeat's activity read woke idle custody expiry"
 
 
-def test_idle_custody_validation_keeps_worker_loop_responsive() -> None:
+@pytest.mark.parametrize("phase", ["live_sessions", "custody_deadline", "human_deadline"])
+def test_idle_custody_validation_keeps_worker_loop_responsive(phase: str) -> None:
     """A storage-bound custody check must permit concurrent IPC task progress."""
 
     async def exercise() -> None:
@@ -606,23 +607,89 @@ def test_idle_custody_validation_keeps_worker_loop_responsive() -> None:
         stop, failed = asyncio.Event(), asyncio.Event()
         heartbeat = threading.Event()
 
+        def wait_for_loop() -> None:
+            loop.call_soon_threadsafe(heartbeat.set)
+            assert heartbeat.wait(2), "custody validation blocked the worker loop"
+            loop.call_soon_threadsafe(stop.set)
+
         class Custody(_ServeCustody):
             @override
             def live_sessions(self) -> tuple[UUID, ...]:
-                loop.call_soon_threadsafe(heartbeat.set)
-                assert heartbeat.wait(2), "custody validation blocked the worker loop"
-                loop.call_soon_threadsafe(stop.set)
+                if phase == "live_sessions":
+                    wait_for_loop()
                 return ()
+
+            @override
+            def seconds_until_expiry(self) -> float | None:
+                if phase == "custody_deadline":
+                    wait_for_loop()
+                return None
+
+        class Human(_IdleHuman):
+            @override
+            def seconds_until_expiry(self) -> float | None:
+                if phase == "human_deadline":
+                    wait_for_loop()
+                return None
 
         await worker_service._expire_custody(
             stop,
             failed,
             cast(ProfileWorkerCustody, Custody()),
             cast(worker_service.WorkerSubmissionStaging, _IdleUploads()),
-            cast(ProfileWorkerHumanLogin, _IdleHuman()),
+            cast(ProfileWorkerHumanLogin, Human()),
             _handled(),
         )
         assert not failed.is_set()
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("phase", ["discard", "retire", "live_sessions"])
+def test_retirement_keeps_worker_loop_responsive(phase: str) -> None:
+    """Lock contention during a child lapse cannot starve guard replies or settlement."""
+
+    async def exercise() -> None:
+        loop = asyncio.get_running_loop()
+        progressed = threading.Event()
+        parent = uuid4()
+
+        def wait_for_loop(selected: str) -> None:
+            if selected == phase:
+                loop.call_soon_threadsafe(progressed.set)
+                assert progressed.wait(2), "retirement blocked the worker event loop"
+
+        class Custody(_ServeCustody):
+            def retire(self, session_id: UUID) -> None:
+                wait_for_loop("retire")
+
+            @override
+            def live_sessions(self) -> tuple[UUID, ...]:
+                wait_for_loop("live_sessions")
+                return (parent,)
+
+        class Human:
+            def discard(self, session_id: UUID) -> None:
+                wait_for_loop("discard")
+
+        class Uploads:
+            def expire(self, *, live_sessions: tuple[UUID, ...]) -> None:
+                assert live_sessions == (parent,)
+
+        context = worker_service._WorkerControl(
+            channel=cast(WorkerChannel, object()),
+            custody=cast(ProfileWorkerCustody, Custody()),
+            human=cast(ProfileWorkerHumanLogin, Human()),
+            operations=cast(ProfileWorkerOperationHost, object()),
+            uploads=cast(worker_service.WorkerSubmissionStaging, Uploads()),
+            failed=asyncio.Event(),
+            operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+            upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+            changed=asyncio.Event(),
+        )
+        request = ProfileWorkerRetireRequest(request_id=uuid4(), session_id=uuid4())
+        assert await worker_service._handle_custody_control(context, request) == "status"
+        assert progressed.is_set()
 
     asyncio.run(exercise())
 

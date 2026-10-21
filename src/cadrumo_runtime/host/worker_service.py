@@ -178,9 +178,9 @@ async def _expire_custody(
             deadlines = [
                 seconds
                 for seconds in (
-                    custody.seconds_until_expiry(),
+                    await asyncio.to_thread(custody.seconds_until_expiry),
                     uploads.seconds_until_expiry(),
-                    human.seconds_until_expiry(),
+                    await asyncio.to_thread(human.seconds_until_expiry),
                 )
                 if seconds is not None
             ]
@@ -205,16 +205,29 @@ async def _handle_custody_control(context: _WorkerControl, request: object) -> _
             context.operations.prepare()
         elif request.action == "refresh":
             if request.lease.kind is SessionKind.HUMAN:
-                context.human.refresh(request.lease)
+                await await_cancellation_complete(
+                    asyncio.to_thread(context.human.refresh, request.lease), task_name="worker-human-refresh"
+                )
             else:
-                context.custody.refresh(request.lease)
+                await await_cancellation_complete(
+                    asyncio.to_thread(context.custody.refresh, request.lease), task_name="worker-lease-refresh"
+                )
         else:
-            context.custody.share(request.lease)
+            await await_cancellation_complete(
+                asyncio.to_thread(context.custody.share, request.lease), task_name="worker-lease-share"
+            )
         return "status"
     if isinstance(request, ProfileWorkerRetireRequest):
-        context.human.discard(request.session_id)
-        context.custody.retire(request.session_id)
-        live_sessions = context.custody.live_sessions()
+        # Expiry can already be inspecting custody on another thread. Never
+        # block the event loop on its locks: operation settlement and native
+        # guard replies still need that loop while retirement waits.
+        await await_cancellation_complete(
+            asyncio.to_thread(context.human.discard, request.session_id), task_name="worker-human-discard"
+        )
+        await await_cancellation_complete(
+            asyncio.to_thread(context.custody.retire, request.session_id), task_name="worker-lease-retire"
+        )
+        live_sessions = await asyncio.to_thread(context.custody.live_sessions)
         context.uploads.expire(live_sessions=live_sessions)
         if not live_sessions:
             # Locking or signing out ends the last session but not this worker.
@@ -471,7 +484,7 @@ async def _serve_control_requests(context: _WorkerControl) -> None:
                 result = ProfileWorkerStatus(
                     identity=context.custody.identity,
                     request_id=request.request_id,
-                    sessions=context.custody.live_sessions(),
+                    sessions=await asyncio.to_thread(context.custody.live_sessions),
                     in_flight_operations=context.operations.in_flight_operation_count(),
                 )
                 write_document(context.channel, result, deadline=time.monotonic() + 5)

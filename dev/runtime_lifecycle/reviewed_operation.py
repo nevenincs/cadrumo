@@ -40,6 +40,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from cadrumo.core.storage_environment import prepare_temporary_directory
+
 from .caller_owned_root import (
     AcceptanceError,
     Programs,
@@ -335,7 +337,7 @@ def main(arguments: list[str] | None = None) -> int:
     )
     options = parser.parse_args(arguments)
     package = Path(options.package).resolve(strict=True)
-    scratch = Path(tempfile.mkdtemp(prefix="reviewed-operation-"))
+    scratch = Path(tempfile.mkdtemp(prefix="reviewed-operation-", dir=prepare_temporary_directory()))
     try:
         receipt = asyncio.run(run(Programs.of(package), package, scratch, models=model_store(options.ollama_models)))
     except (AcceptanceError, BaseExceptionGroup) as failure:

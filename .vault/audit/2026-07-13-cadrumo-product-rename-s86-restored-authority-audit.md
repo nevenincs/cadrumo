@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s86-restored-authority'
 date: '2026-07-13'
-modified: '2026-10-03'
-body_hash: 'sha256:21338bcefcb4a7d5103839db567ec53f6aeb65748e254ad28faa3ca0be9d37f1'
+modified: '2026-10-21'
+body_hash: 'sha256:46443595398197839b2c00bffdf38c29c2ea2a1934c9c4288b65895ed5625230'
 related:
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"
 ---
@@ -29,7 +29,7 @@ its Stage-A scope and is struck only for the Stage-B console-script rename.
 The same binding ADR nevertheless lists that decision under `supersedes`, while
 the July 13 ADR carries `superseded_by` and declares its status `superseded`.
 Vault consumers therefore see the entire Stage-A decision as nonbinding even
-though the prose says its distribution, repository, marketplace, and marketing
+though the prose says its distribution, repository, and marketing
 scope remains accepted. S86 claims to leave one active authority chain, but the
 machine-readable graph and the ratified narrative encode different authority.
 
@@ -51,8 +51,7 @@ The S86 record says the immutable runtime identity and its focused test already
 match the complete binding tuple. They assert only
 `display_name="CADRUMO"`; neither exposes nor proves the ratified
 `Cadrumo` sentence-prose value. The distinction is observable: current consumers
-interpolate `PRODUCT_IDENTITY.display_name` into sentence copy, including
-`Operate CADRUMO through ...` in the plugin generator. Those downstream paths
+interpolate `PRODUCT_IDENTITY.display_name` into sentence copy. Those downstream paths
 remain assigned to later steps, but that makes the runtime proof partial rather
 than complete. The record contains no command-level verification transcript to
 bound this claim, even though it closes a step whose scope names the runtime

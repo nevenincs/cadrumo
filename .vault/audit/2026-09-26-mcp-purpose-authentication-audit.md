@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-03'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:b26eaad6f68cb3401d5dd011c81984127794f4f0981ac43c082a076c3ec62def'
+body_hash: 'sha256:047c2d2a9bc5a737579af8f914eac453c94673c7d294622c1a7b885ec49cad1f'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-plan]]"
   - "[[2026-09-26-mcp-purpose-authentication-adr]]"
@@ -657,7 +657,7 @@ The pipeline worker binds exact profile and subject, requires whole-profile peri
 
 ### Integrated replacement review — 2026-09-28, current batch
 
-Review found and corrected duplicate MCP tool registration, loss of a durable submission receipt on an unexpected start failure, plugin launch arguments targeting the removed server contract, and direct construction of guarded registry tokens during invoice rendering. The native invoice list/exact/prefix journey passed after the token restoration correction; the replacement protocol and packaging batch passed. Exact run evidence is in the execution ledger.
+Review found and corrected duplicate MCP tool registration, loss of a durable submission receipt on an unexpected start failure, and direct construction of guarded registry tokens during invoice rendering. The native invoice list/exact/prefix journey passed after the token restoration correction; the replacement protocol and packaging batch passed. Exact run evidence is in the execution ledger.
 
 Authentication-read review rejected an opaque JSON result-schema workaround and a duplicated transport wait loop. The corrected implementation uses closed snapshots, the shared typed precondition projection and the existing registered-operation driver. Runtime-control review preserved connection-bound owner consent and reserved TUI busy state before stop scheduling. Windows managed-stop refusal remains explicit; no native lifecycle acceptance is claimed.
 

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-12'
-modified: '2026-10-18'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:faa94c500115cb6111737b3f0eb3ceee05a28d19d5bea108c50d26b6bb0370f0'
+body_hash: 'sha256:d978bfe3aca62d64dfc26a3ea99fcecba1b2b573cb387956707906eba8190f81'
 related:
   - "[[2026-10-11-mcp-parity-full-parity-adr]]"
   - "[[2026-10-10-mcp-parity-shared-sign-in-door-adr]]"
@@ -37,10 +37,10 @@ Under the parity ruling of 2026-10-11, the records were amended so that MCP carr
   - Expiry: `src/cadrumo/application/user_profile/access_contracts.py:132-147`, enforced at `session_authority_policy.py:180`.
   - Revocation: `automation_lifecycle.py:24-35` and `automation_lifecycle_service.py:362`, with the runtime wire type at `src/cadrumo_runtime/host/access_management.py:18-23`.
   - The person's commands: `config automation` (`src/cadrumo/entrypoints/cli/config/runtime_access_management_specs.py:52-317`).
-  - Launch by reference: `cadrumo-mcp` takes `--profile-id` and `--credential-reference` (`src/cadrumo_harness/mcp/main.py:43-52`).
+  - Launch by reference: `cadrumo-mcp` takes `--profile-id` and `--credential-reference` (`src/cadrumo_mcp/mcp/main.py:43-52`).
 - In code the MCP server today does the following:
-  - It takes a typed secret or a secret reference on `session`, `execute` and `installation` (`src/cadrumo_harness/mcp/protocol_contract.py:426-427`, `:491-550`, `:229-260`).
-  - It signs in by password or key (`src/cadrumo_harness/mcp/runtime_adapter.py:679-700`).
+  - It takes a typed secret or a secret reference on `session`, `execute` and `installation` (`src/cadrumo_mcp/mcp/protocol_contract.py:426-427`, `:491-550`, `:229-260`).
+  - It signs in by password or key (`src/cadrumo_mcp/mcp/runtime_adapter.py:679-700`).
   - It runs an enrollment flow in which the agent proposes its own scope, and the key is delivered into the installed automation store for the agent to name in `authenticate` (`runtime_adapter.py:747-890`).
   - It serves installation acts across profiles (`src/cadrumo_client/contracts/installation_requests.py:89-110`).
 - The runtime keeps a host per profile (`src/cadrumo_runtime/host/profile_connections.py:116`, `profile_connection_admission.py:112`). A sign-in to one profile leaves another profile's sign-in in place (`src/cadrumo/application/user_profile/login_session.py:128-130`; `2026-10-04-application-sign-in-adr`, the 2026-10-06 profiles amendment). Several profiles can therefore be signed in at once today.
@@ -99,7 +99,7 @@ We will remove every credential and authentication act from MCP and bind each MC
   - Refuse every installation and session-administration request from the MCP frontend.
   - Refuse an operation that requires a secret on MCP.
   - Refuse, or end, a human sign-in to a second profile while another profile is signed in.
-  - These refusals are keyed on the act, not on a frontend's choice. The frontend is a client claim, so the decisive control is that the MCP harness has no way to send these acts. The runtime refusal is defence in depth.
+  - These refusals are keyed on the act, not on a frontend's choice. The frontend is a client claim, so the decisive control is that the MCP service has no way to send these acts. The runtime refusal is defence in depth.
 - **Desktop.** Show the sign-in view on expiry, inactivity, profile lock and absence, from pushed session events where they exist and from the status poll otherwise.
 - **Tests.** Replace the tests that prove MCP sign-in, sign-out, lock, secret carriage and installation acts with tests that prove their refusal. The live-agent lane (`2026-10-12-live-agent-evaluation-adr`, proposed) exercises API-key access and its management with a live agent: the person issues a key, the agent works with it inside its scope, a call outside the scope is refused, and after revocation the agent is refused. Signing in and issuing the key are done by the harness acting as the person, never by the agent.
 
@@ -144,3 +144,7 @@ Amended 2026-10-13, then withdrawn the same day on the owner's correction. On th
 Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
 
 The wording of constraint 2, "by resuming the person's live sign-in for the active profile, through the runtime", is kept as accepted history. "The active profile" now means the profile the runtime names in its no-session active-profile answer. The MCP server never resolves it from the active-profile pointer file or any other local record; the CLI and the TUI ask the same question in the same way, and only the runtime writes the pointer. The answer grants nothing by itself. Admission is still only by resuming the sign-in, by attendance, or by the configured key. Constraint 5's binding to one profile for the server's life, and its refusal when the signed-in profile later differs, are unchanged.
+
+## Package rename note 2026-10-21
+
+(Locators as observed on their original dates; the MCP package was renamed from `cadrumo_harness` to `cadrumo_mcp` on 2026-10-21, drift repair toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR. See the harness boundary amendment of `2026-07-02-agent-harness-refoundation-adr`. No commitment of this record changes.)

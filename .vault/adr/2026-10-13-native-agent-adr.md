@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#native-agent'
 date: '2026-10-13'
-modified: '2026-10-17'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:4bda2178bb62e5da32f94c561e88392b8705e5949d2b45dd2291a41610855abb'
+body_hash: 'sha256:2c63f41c9bcabd295ee103c9c04acb366ace42c4dbb8c1a57efc3acfeba227e1'
 related:
   - "[[2026-10-13-native-agent-audit]]"
   - '[[2026-10-13-canonical-environment-application-internals-adr]]'
@@ -36,7 +36,7 @@ This settles the open source-provisioning choice in the proposed desktop-agent-h
 
 CMake selects the local source directory through cache-only `CADRUMO_PACKAGE_AGENT_SOURCE_DIR`, builds the private wheel in `agent_project`, composes its hashed dependency closure in `python_dependencies`, installs the wheel in `python_product`, and assembles the canonical custom site-packages. Explicit install, uninstall, rebuild, checksum and lock-update targets retain their existing lifecycle and source/checksum receipts.
 
-The same package declares `cadrumo-agent-service` with fixed Python entrypoint `cadrumo_agent_service.main:main`, separate from the agent image. Desktop supervises that service; the service consumes the bundled agent image and owns its version/catalog/store/start invocations and contained tree. Neither the tax root `src/cadrumo`, `aeat`, nor `src/cadrumo_runtime` imports or starts cadrumo-agent. Runtime owns generic login/custody/authorization; neutral client contracts live in `src/cadrumo_client` and MCP in `src/cadrumo_harness`.
+The same package declares `cadrumo-agent-service` with fixed Python entrypoint `cadrumo_agent_service.main:main`, separate from the agent image. Desktop supervises that service; the service consumes the bundled agent image and owns its version/catalog/store/start invocations and contained tree. Neither the tax root `src/cadrumo`, `aeat`, nor `src/cadrumo_runtime` imports or starts cadrumo-agent. Runtime owns generic login/custody/authorization; neutral client contracts live in `src/cadrumo_client` and MCP in `src/cadrumo_mcp`. (Renamed `cadrumo_mcp` on 2026-10-21, drift repair toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR; see the harness boundary amendment of `2026-07-02-agent-harness-refoundation-adr`.) Cadrumo's build surface generates no agent content: `dev/packaging/claude_plugin.py` and the `build-claude-plugin` recipe are removed, so no CMake or `just` target produces personas, rules or skills.
 
 Package integration proofs use the assembled service/agent/relay images and actual outer service ready/admin and inner hosting v1 contracts. Existing CTest import/version/dependency/checksum probes remain package-integrity mechanisms, not proof of a hosted conversation. Sharing a locked wheel cohort is a build choice and grants no tax/runtime agent orchestration authority. The current user constraint permits no test or build invocation for this migration.
 

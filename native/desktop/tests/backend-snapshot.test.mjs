@@ -183,6 +183,29 @@ test("a full host snapshot drops renamed sources and keeps generated files", (t)
   assert.deepEqual(readdirSync(join(declared, "..")), ["host"]);
 });
 
+test("compiler output in sibling crates is never copied into a host snapshot", (t) => {
+  const { native, declared } = crates(t);
+  for (const output of ["target", ".exe"]) {
+    mkdirSync(join(native, "application", output));
+    writeFileSync(
+      join(native, "application", output, "compiler-output"),
+      "not source",
+    );
+  }
+  for (const incremental of [false, true]) {
+    const snapshot = snapshotHostSources(native, declared, { incremental });
+    for (const output of ["target", ".exe"])
+      assert.equal(
+        existsSync(join(snapshot.root, "application", output)),
+        false,
+      );
+    assert.equal(
+      readFileSync(join(snapshot.root, "application/src/old.rs"), "utf8"),
+      "application",
+    );
+  }
+});
+
 test("a host snapshot refuses a linked root or a linked crate", (t) => {
   const { root, native, declared } = crates(t);
   const outside = join(root, "outside");

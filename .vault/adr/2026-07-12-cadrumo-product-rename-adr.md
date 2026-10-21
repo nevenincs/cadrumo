@@ -6,8 +6,8 @@ date: '2026-07-12'
 related:
   - "[[2026-07-12-cadrumo-product-rename-research]]"
 superseded_by: '2026-07-12-cadrumo-cli-executable-adr'
-modified: '2026-07-17'
-body_hash: 'sha256:961099e75f9dfdbba255579cb2ee99c1d4e5b628c84cc513bf7c952ea5443f7c'
+modified: '2026-10-21'
+body_hash: 'sha256:69070b91fccaaeafcb7dc7c62541c0bbd1a33f8d27c872ac01e0fa60730a0f34'
 ---
 
 # `cadrumo-product-rename` adr: `Canonical Cadrumo product identity and rename boundary` | (**status:** `superseded`)
@@ -15,7 +15,7 @@ body_hash: 'sha256:961099e75f9dfdbba255579cb2ee99c1d4e5b628c84cc513bf7c952ea5443
 ## Problem Statement
 
 The unreleased product currently uses `aeat` as its package, command,
-distribution, MCP, plugin, configuration, persistence, repository, and
+distribution, MCP, configuration, persistence, repository, and
 documentation identity. That spelling also correctly names the external Spanish
 tax authority. A mechanical replacement would corrupt authority adapters,
 official URLs, legal provenance, registry taxonomy, filing terminology, and
@@ -30,21 +30,21 @@ historical records, and externally reserved names.
 
 The project is pre-release and governed by the no-legacy-compatibility rule.
 Existing decisions require a single authoritative runtime/package path,
-installed-artifact proofs, reviewed bundled legal data, generator-owned derived
-artifacts, and the Claude marketplace as the primary agent distribution.
+installed-artifact proofs, reviewed bundled legal data, and generator-owned derived
+artifacts.
 
 `AEAT` remains the legal name of the counterparty. Authority-owned concepts
 include the outbound AEAT adapter, official endpoints and credentials,
 authority-assigned fields, the `registry/aeat` taxonomy, official corpus
 identifiers, citations, hashes, and statements about interaction with AEAT.
 Product-owned concepts include the Python root, executable and distribution
-names, plugin and MCP namespaces, application configuration and state,
+names, MCP namespaces, application configuration and state,
 repository identity, documentation branding, and generated product metadata.
 
 The rename crosses imports and resource lookup, dynamic callable strings,
 entry points, MCP wire names, companion distributions, environment variables,
 platform state, storage namespaces, tests, locales, CI/release tooling, API
-references, marketplace output, lockfiles, and publication registrations.
+references, lockfiles, and publication registrations.
 These surfaces must converge at one breaking boundary. Availability checks are
 signals only; they reserve no project, account, identifier, domain, or mark.
 
@@ -66,11 +66,10 @@ signals only; they reserve no project, account, identifier, domain, or mark.
 
 The canonical tuple is display name `Cadrumo`; Python package, root
 distribution, human CLI, repository, MCP server, tool prefix, resource URI
-scheme, and plugin identifier `cadrumo`; MCP executable `cadrumo-mcp`;
+scheme `cadrumo`; MCP executable `cadrumo-mcp`;
 product environment prefix `CADRUMO_`; companion distributions
 `cadrumo-data-manuals` and `cadrumo-data-official`; and companion namespace
-`cadrumo_data`. An independently named publisher marketplace may keep its
-publisher identity, but its product entry and source path become `cadrumo`.
+`cadrumo_data`.
 
 AEAT names remain when they denote the authority, portals, protocols,
 credentials, official artifacts, legal provenance, or registry classification.
@@ -79,7 +78,7 @@ Mixed settings and prose are classified by referent. Product controls move to
 `AEAT_*`. The plan must classify every ambiguous public setting.
 
 There will be no `aeat` import shim, old console alias, dual environment
-reader, MCP or plugin alias, namespace fallback, or automatic old-state
+reader, MCP alias, namespace fallback, or automatic old-state
 migration. Old product state is incompatible and is never silently opened as
 Cadrumo state. Product persistence changes as one cut. Cadrumo starts with new
 state or clearly refuses detected old state. Any export/import facility needs
@@ -91,7 +90,7 @@ hashes, and legal corpus content are never rebranded. Generated files are not
 hand-edited; their authorities change first and derivatives are regenerated.
 
 Public release is blocked until the root and companion package names,
-repository/organization and marketplace identifiers, executable expectations,
+repository/organization identifiers, executable expectations,
 relevant domains, and Spanish/EU trademark position are reserved or cleared.
 A passing availability query does not satisfy this gate.
 
@@ -103,15 +102,15 @@ identity, not architecture, safety policy, or authority semantics.
 ## Implementation
 
 Introduce one authoritative product-identity definition consumed by packaging,
-runtime, CLI, MCP, plugin generation, persistence naming, diagnostics, and
+runtime, CLI, MCP, persistence naming, diagnostics, and
 release tooling. Move the Python and companion trees atomically, then update
 static imports, resource lookups, dynamic strings, registry targets, error
 registries, build mappings, extras, and installed-artifact probes before
 removing old roots.
 
-Project the identity into console scripts and MCP/plugin wire surfaces,
+Project the identity into console scripts and MCP wire surfaces,
 including executable, server, tool prefix, resource scheme, subprocess argv,
-manifests, marketplace entry, allowlists, name budgets, and generated config.
+manifests, allowlists, name budgets, and generated config.
 Apply persistence as a coordinated boundary: Cadrumo writes only Cadrumo roots,
 filenames, namespaces, and bundles. Boundaries may detect old state and refuse;
 they do not read, move, re-key, or delete it.
@@ -119,7 +118,7 @@ they do not read, move, re-key, or delete it.
 Classify settings, modules, locale strings, and documentation by referent.
 Rename product uses and retain authority uses through mandated locale and
 documentation workflows. Change generators before regenerating lockfiles,
-wheels, plugin output, MCPB, API references, indexes, and snapshots. Verify
+wheels, MCPB, API references, indexes, and snapshots. Verify
 positive Cadrumo behavior plus scoped residue gates that allow documented AEAT
 authority uses. Publish nothing until external reservation is evidenced.
 
@@ -132,7 +131,7 @@ status makes this the lowest-risk point to break product names and abandon old
 local state.
 
 One tuple prevents drift between packaging, imports, commands, MCP clients,
-plugins, configuration, persistence, and release automation. Keeping AEAT for
+configuration, persistence, and release automation. Keeping AEAT for
 the authority clarifies the architecture: Cadrumo is the application; AEAT is
 an external institution it models and interacts with under existing gates.
 
@@ -149,7 +148,7 @@ branding from correct authority terminology, and contributors gain a durable
 naming boundary.
 
 The change is intentionally breaking. Existing imports, commands, product
-environment variables, MCP/plugin identifiers, package pins, and application
+environment variables, MCP identifiers, package pins, and application
 state stop working. Operators and developers must reinstall, update integrations
 and configuration, and create fresh state. Avoiding a compatibility window
 reduces long-term complexity but increases cutover coordination.

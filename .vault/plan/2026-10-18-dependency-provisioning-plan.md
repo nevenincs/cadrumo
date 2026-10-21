@@ -11,9 +11,9 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
   - '[[2026-10-04-google-app-identity-adr]]'
   - '[[2026-10-11-mcp-parity-full-parity-adr]]'
-modified: '2026-10-18'
+modified: '2026-10-21'
 body_schema: body-v2
-body_hash: 'sha256:00a199472c938f8036d9a2a8f8c5f8668b1a005b0eb1e83426f046bb3b748796'
+body_hash: 'sha256:5e270798a423eff60c745bd12e7a5210711c8d6c9563e2bb8313a2d626bd325c'
 ---
 
 # `dependency-provisioning` plan

@@ -1,19 +1,26 @@
 desktop:
   agent:
     add_files: Add files
-    aeat_setup_title: Set up AEAT access
-    aeat_setup_help: Save your authentication details here, then close the editor to return to your conversation. Credentials stay out of chat.
-    aeat_setup_return: Return to conversation
     aeat_setup_check: Check setup and continue
-    aeat_setup_resume_message: I have finished with AEAT settings. Please check my saved setup again, help with any remaining requirements, and continue our task when it is ready.
+    aeat_setup_help: Save your authentication details here, then close the editor
+      to return to your conversation. Credentials stay out of chat.
+    aeat_setup_resume_message: I have finished with AEAT settings. Please check my
+      saved setup again, help with any remaining requirements, and continue our task
+      when it is ready.
+    aeat_setup_return: Return to conversation
+    aeat_setup_title: Set up AEAT access
     agent_replied: Agent replied
     approval_allow_always: Allow
     approval_allow_once: Allow once
+    approval_allow_server_session: Allow all {server} tools for this session
     approval_allow_session: Allow for this session
+    approval_attachment: 'Attachment: {target}'
+    approval_operation: 'Operation: {target}'
     approval_reject_always: Don't allow
     approval_reject_once: Don't allow
     approval_review_title: Review this before Cadrumo does it
     approval_tool_title: The agent is asking for permission
+    approval_workspace_file: 'Workspace file: {target}'
     archive: Archive
     archived_empty: Nothing archived
     archived_toggle: Archived ({count})

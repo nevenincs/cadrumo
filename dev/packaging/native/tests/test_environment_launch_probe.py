@@ -425,8 +425,9 @@ def test_a_worker_is_the_agent_image_run_with_exactly_the_worker_invocation() ->
             probe.check_worker_reexecution(children, image, arguments)
 
 
-def test_the_declared_path_is_the_packages_directories_then_the_systems(stand_in: StandIn) -> None:
+def test_the_declared_path_is_the_packages_directories_then_the_systems(stand_in: StandIn, tmp_path: Path) -> None:
     contract = probe.read_contract(stand_in.package, stand_in.contract)
+    contract.section["path"]["external_defaults"] = []
     package = str(stand_in.package)
     if sys.platform == "win32":
         system = [str(Path(r"C:\Windows", "System32"))]
@@ -435,9 +436,29 @@ def test_the_declared_path_is_the_packages_directories_then_the_systems(stand_in
         system = ["/usr/bin", "/bin"]
         environment = {}
     assert probe.declared_path(contract, environment) == [package, str(stand_in.package / "bin"), *system]
-    external = os.pathsep.join(["first", "second"])
+    first, second = tmp_path / "first", tmp_path / "second"
+    first.mkdir()
+    second.mkdir()
+    external = os.pathsep.join([str(first), str(tmp_path / "absent"), str(second)])
     relocated = probe.declared_path(contract, {**environment, "CADRUMO_EXTERNAL_BIN_DIRS": external})
-    assert relocated == [package, "first", "second", str(stand_in.package / "bin"), *system]
+    assert relocated == [package, str(first), str(second), str(stand_in.package / "bin"), *system]
+
+
+def test_declared_path_includes_existing_platform_defaults_once(stand_in: StandIn, tmp_path: Path) -> None:
+    contract = probe.read_contract(stand_in.package, stand_in.contract)
+    candidate = tmp_path / "tools"
+    candidate.mkdir()
+    contract.section["path"]["external_defaults"] = [
+        {"platform": probe._platform(), "variable": "USER_TOOLS", "path": "", "subpaths": ["tools"]},
+        {"platform": probe._platform(), "variable": "USER_TOOLS", "path": "", "subpaths": ["absent"]},
+    ]
+    environment = {"USER_TOOLS": str(tmp_path), "SystemRoot": r"C:\Windows"}
+    entries = probe.declared_path(contract, environment)
+    assert entries.count(str(candidate)) == 1
+    assert str(tmp_path / "absent") not in entries
+    assert entries.index(str(candidate)) == 2
+    system = str(Path(r"C:\Windows", "System32")) if contract.windows else "/usr/bin"
+    assert entries.count(system) == 1
 
 
 def test_a_program_that_outlives_its_timeout_is_killed_with_what_it_started(tmp_path: Path) -> None:

@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-10-03'
-body_hash: 'sha256:af7c23574d3010915c41cc8604af78ed671a8ccbb489ca61a07669ec30904cd4'
+modified: '2026-10-21'
+body_hash: 'sha256:932a1746e0aace16cd896c6b6aeb7e4670aab7d45aa7d6e427d13bf398ed3510'
 related:
   - "[[2026-07-15-distribution-installation-readiness-research]]"
 ---
@@ -13,7 +13,7 @@ related:
 
 Pinned source snapshot: commit `5372d95f1bcaecf5fd79dc3dbe6ddb09aed3e27c`
 on 2026-07-15. The reference covers packaging smoke runners, release readiness and
-publication, Claude plugin and marketplace materialisation, installed MCP behavior,
+publication, installed MCP behavior,
 MCPB construction, Python metadata, and the absent Scoop and Homebrew product surfaces.
 
 ## Summary
@@ -33,8 +33,7 @@ testing all three wheels at `dev/packaging/smoke_split_install.py:113`,
 `dev/packaging/smoke_split_install.py:159`, and
 `dev/packaging/smoke_split_install.py:196-260`.
 
-Generalise that primitive: one commit/tag produces the three wheels, sdist, plugin tree,
-marketplace snapshot, MCPB, Scoop release material, and Homebrew tap/formula material
+Generalise that primitive: one commit/tag produces the three wheels, sdist, MCPB, Scoop release material, and Homebrew tap/formula material
 once. Every subsequent local,
 platform, client, acquisition, and publish step consumes those exact paths after
 SHA-256 verification. Observed 0.2.1 diagnostic artifact hashes are:
@@ -93,18 +92,12 @@ The full protocol itinerary has been exercised through a real stdio SDK client a
 
 A scrubbed-PATH real installed-server run fails with `[WinError 2]`, while a PATH restricted to the exact three-wheel environment passes the full oracle. Replace ambient lookup with an absolute interpreter-local/sibling console-script resolution and fail closed if it is absent. The acceptance lane launches absolute installed `cadrumo-mcp`, removes checkout paths, scrubs PATH of all unrelated Cadrumo executables, and proves both executables belong to the same environment and cohort.
 
-### Plugin and marketplace generation are the right authority but need boot proof
-
-Preserve that boundary.
-
-Require strict validation on a declared Claude-capable row, install the generated complete marketplace through the real client, observe MCP startup, and call a cohort-pinned tool.
-
-The generated `cadrumo[agent]` bootstrap also omits the two data companions. Publishing
+The MCPB `cadrumo[agent]` bootstrap also omits the two data companions. Publishing
 it unchanged would still produce a clean server unable to perform the calculation.
-Generation must target the complete mandatory product dependency cohort, and validation
+Bundle generation must target the complete mandatory product dependency cohort, and validation
 must inspect the resolved distributions before the real client oracle runs.
 
-Byte-compare and publish the complete generated tree only after its bootstrap passes.
+Publish the bundle only after its bootstrap passes.
 
 ### MCPB remains an assembly artifact until a supported client runs it
 
@@ -129,9 +122,8 @@ The local recipes separately rebuild root and companion artifacts at `justfile:7
 and `justfile:779-802`. Both violate tested-byte promotion. One coordinated versioned
 publish must consume stored cohort files after digest verification.
 
-Publication authority is contradictory. The accepted Claude ADR requires local,
-human-gated publication and rejects Actions/OIDC at
-`.vault/adr/2026-07-03-claude-ecosystem-packaging-adr.md:52-59` and lines 156-160.
+Publication authority is contradictory. An earlier packaging decision required local,
+human-gated publication and rejected Actions/OIDC.
 The accepted readiness ADR also states local-only at
 `.vault/adr/2026-07-04-release-readiness-gate-adr.md:29-32` and lines 122-129, while
 the current workflow implements OIDC. The new ADR must choose one authority and
@@ -176,7 +168,7 @@ described as unavailable, staged, or source-only, never as an install command.
   removal for the Python, Scoop, and Homebrew channels, one channel per section,
   each section landing only with its evidence row.
 - `docs/how-to/connect-an-agent.md` owns the Claude Code, Claude Desktop, and
-  Cowork plugin plus MCPB acquisition paths, including the real verification
+  Cowork MCPB acquisition paths, including the real verification
   commands an operator runs after install.
 - `docs/updates.md` publishes the measured support matrix: operating system,
   architecture, Python, acquisition mechanism, client version, and the behavior
@@ -185,7 +177,7 @@ described as unavailable, staged, or source-only, never as an install command.
 
 Claim boundaries are machine-enforced, not editorial. Each channel-identifying
 instruction pattern (pip/PyPI, `uvx`, `scoop install`, `brew install`/tap,
-marketplace plugin, `.mcpb` download) maps to its distribution rows from the
+`.mcpb` download) maps to its distribution rows from the
 release-readiness required-row set, and `dev/docs/tests/test_distribution_claims.py`
 fails any page that advertises a channel lacking matching acquisition evidence,
 naming the file, the claim, and the missing rows. Verification commands quoted in

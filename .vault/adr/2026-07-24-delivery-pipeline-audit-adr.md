@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#delivery-pipeline-audit'
 date: '2026-07-24'
-modified: '2026-10-03'
-body_hash: 'sha256:c63c1c66bc61a61069399745d8f7545f75daa96bbee70b8f6a6e2fcfbbb2fd8d'
+modified: '2026-10-21'
+body_hash: 'sha256:336d3ef953bd01ad09aa9df6aec4b21e88b95df7b3f42a0078a0e3ea8096c28f'
 related:
   - "[[2026-07-24-delivery-pipeline-audit-audit]]"
 ---
@@ -53,8 +53,7 @@ session so an implementer can execute without re-deriving.
   declares `Development Status :: 4 - Beta`; both companions declare `3 - Alpha`.
 - Product identity is centrally owned by `src/cadrumo/core/product_identity.py`
   (`PRODUCT_IDENTITY`), per the cadrumo-product-authority-names rule and the accepted
-  product-rename decision (stem `2026-07-13-product-rename-adr`). The plugin and
-  marketplace manifests already derive their author/owner as
+  product-rename decision (stem `2026-07-13-product-rename-adr`). The single author-identity string is
   `f"{PRODUCT_IDENTITY.display_name} tax assistant project"` , while `packaging/mcpb/manifest.json` carries the
   hand literal `"Cadrumo project (neve.md)"`.
 - The root pyproject `authors` field names "Gergely Wootsch" — a PEP 621 legal-person
@@ -152,14 +151,12 @@ edit the root and let the gate force the companions in the same commit.
 **D4 — shipped-manifest author identity derives from `PRODUCT_IDENTITY`; the
 pyproject legal author is a distinct preserved fact.** The single product
 author-identity string is `f"{PRODUCT_IDENTITY.display_name} tax assistant project"`
-("CADRUMO tax assistant project"), already used by the plugin and marketplace
-manifests. `packaging/mcpb/manifest.json` corrects its committed `author.name` to
+("CADRUMO tax assistant project"). `packaging/mcpb/manifest.json` corrects its committed `author.name` to
 that value; `packaging/mcpb/build.py` enforces it twice — `stamped_manifest` stamps
 `author.name` from the derived value, and `load_manifest` (the `--check` template
 gate) refuses a committed template whose author diverges. The derived string is
-promoted to one shared constant (natural home: alongside the existing
-`_PLUGIN_AUTHOR_NAME` derivation, exposed through the owning package facade) so the
-plugin, marketplace, and MCPB surfaces read one declaration.
+promoted to one shared constant (natural home: the owning product-identity module) so the
+MCPB surface reads one declaration.
 `verify_distribution_identity.py` gains a product check asserting the MCPB
 manifest's author equals the derived value. The root pyproject `authors` entry is
 ruled a distinct correct fact — the PEP 621 legal author/copyright holder under

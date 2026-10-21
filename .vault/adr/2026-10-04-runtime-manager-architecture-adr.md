@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-17'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:4d51519550d3935c5ae273e54cf9c9be5a6be8a679d35a99ffa3bb30e498f7a9'
+body_hash: 'sha256:6e8a1fff37d925d629ebaf506d9af7560a4a3421010fdf6e3d54f761ecfdc578'
 related:
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
   - "[[2026-10-03-runtime-manager-architecture-research]]"

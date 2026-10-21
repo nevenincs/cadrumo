@@ -17,31 +17,31 @@ modelo:
       casilla:
         continuidad:
           '00042':
-            help: Adja meg az időszak átlagos nem állandó alkalmazotti létszámát [00042].
+            help: Add meg az időszak átlagos nem állandó alkalmazotti létszámát [00042].
             label: Alkalmazotti létszám (az időszak átlagos száma) nem állandó személyzet
               [00042]
           '00051':
-            help: Adja meg az állam és a forális közigazgatások közötti, gazdasági
+            help: Add meg az állam és a forális közigazgatások közötti, gazdasági
               megállapodás szerinti közös adózás külföldi ügyleteinek volumenét [00051].
             label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
               megállapodás - külföldi ügyletek volumene [00051]
           '00052':
-            help: Adja meg a gazdasági megállapodás szerinti közös adózáshoz kapcsolódó
+            help: Add meg a gazdasági megállapodás szerinti közös adózáshoz kapcsolódó
               Araba/Álava ügyleteinek volumenét [00052].
             label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
               megállapodás - Araba/Álava ügyleteinek volumene [00052]
           '00053':
-            help: Adja meg a gazdasági megállapodás szerinti közös adózáshoz kapcsolódó
+            help: Add meg a gazdasági megállapodás szerinti közös adózáshoz kapcsolódó
               Gipuzkoa ügyleteinek volumenét [00053].
             label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
               megállapodás - Gipuzkoa ügyleteinek volumene [00053]
           '00054':
-            help: Adja meg a gazdasági megállapodás szerinti közös adózáshoz kapcsolódó
+            help: Add meg a gazdasági megállapodás szerinti közös adózáshoz kapcsolódó
               Bizkaia ügyleteinek volumenét [00054].
             label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
               megállapodás - Bizkaia ügyleteinek volumene [00054]
           '00055':
-            help: Adja meg a gazdasági egyezmény szerinti közös adózáshoz kapcsolódó
+            help: Add meg a gazdasági egyezmény szerinti közös adózáshoz kapcsolódó
               navarrai ügyletek volumenét [00055].
             label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
               egyezmény - navarrai ügyletek volumene [00055]
@@ -9575,7 +9575,7 @@ modelo:
             help: Jelölő nagyvállalat esetén [00023].
             label: Nagyvállalat [00023]
           is-grupo-fiscal-numero:
-            help: Adja meg az adócsoport számát, ha a 00009 vagy 00010 kód alkalmazandó
+            help: Add meg az adócsoport számát, ha a 00009 vagy 00010 kód alkalmazandó
               [00040].
             label: Adócsoport - 00009 vagy 00010 kódok - adócsoport száma [00040]
           is-hidrocarburos-amortizacion-intangibles-aumento:
@@ -9840,7 +9840,7 @@ modelo:
             label: Gazdasági érdekcsoportosulás vagy vállalkozások ideiglenes társulásának
               résztvevője [00089]
           is-personal-asalariado-cifra-media:
-            help: Adja meg az időszak átlagos állandó alkalmazotti létszámát [00041].
+            help: Add meg az időszak átlagos állandó alkalmazotti létszámát [00041].
             label: Alkalmazotti létszám (az időszak átlagos száma) állandó személyzet
               [00041]
           is-pyg-continuadas-amortizacion-del-inmovilizado:
@@ -10388,7 +10388,7 @@ modelo:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Adóztatási
               százalékok számítása - Állami közigazgatás [00625]
           is-tributacion-conjunta-proporcion:
-            help: Adja meg az állam és a forális közigazgatások közötti, gazdasági
+            help: Add meg az állam és a forális közigazgatások közötti, gazdasági
               megállapodás szerinti közös adózás ügyleteinek teljes volumenét [00050].
             label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
               megállapodás - ügyletek teljes volumene [00050]

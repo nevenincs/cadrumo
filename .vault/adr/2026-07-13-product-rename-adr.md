@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#product-rename'
 date: '2026-07-13'
-modified: '2026-07-17'
-body_hash: 'sha256:7bbbc6e98e7f4c907f9a85a3b7d1f9ef03e1441691c93aee3611fa6660ca9408'
+modified: '2026-10-21'
+body_hash: 'sha256:3e90eb02198c46b59b8a9ac9a90a56999ffc24ab104dbc90f2ae533c69331b4e'
 related:
   - '[[2026-07-12-cadrumo-cli-executable-adr]]'
   - '[[2026-07-12-cadrumo-product-rename-research]]'
@@ -24,14 +24,14 @@ for executables, Python imports, MCP identities, or environment variables.
 
 ## Decision
 
-This ADR governs only distribution, repository, marketplace, marketing, legal,
+This ADR governs only distribution, repository, marketing, legal,
 and publication surfaces:
 
 - the root distribution is `cadrumo`;
 - mandatory data companions are `cadrumo-data-manuals` and
   `cadrumo-data-official`;
 - the repository is `nevenincs/cadrumo`;
-- release metadata, marketplace copy, package descriptions, install guidance,
+- release metadata, package descriptions, install guidance,
   and product prose use Cadrumo; and
 - official AEAT/BOE material is described as authority-owned content and is not
   relicensed or rebranded as first-party product material.
@@ -62,7 +62,7 @@ environment prefix `CADRUMO_`, and authority-owned vocabulary `AEAT`.
 `pyproject.toml`, both companion projects, release workflows, packaging cohort
 builders, channel generators, repository metadata, and marketing/legal copy use
 the Cadrumo distribution identity. The root metadata pins both companions at
-the exact root version. GitHub, PyPI, marketplace, MCPB, Scoop, Homebrew, and
+the exact root version. GitHub, PyPI, MCPB, Scoop, Homebrew, and
 documentation promotion consume the same cohort identity and hashes.
 
 Historical references may retain old project names only when they are necessary

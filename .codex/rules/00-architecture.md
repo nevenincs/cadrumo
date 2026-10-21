@@ -18,7 +18,7 @@ flowchart TD
   AS --> AG[cadrumo-agent]
   AS --> IPC
   DESK --> IPC
-  A[Scoped agent client] --> MCP[Separate MCP harness]
+  A[Scoped agent client] --> MCP[Separate deterministic MCP service]
   CLI --> IPC[Native local IPC]
   TUI --> IPC
   MCP --> IPC
@@ -36,7 +36,7 @@ The diagram shows execution and data relationships, not permission to import acr
 
 ## Authority and execution
 
-`src/cadrumo` owns the deterministic tax/profile application and AEAT CLI. `src/cadrumo_runtime` owns process hosting, native peer admission, login state, session authority and authentication administration. `src/cadrumo_client` owns the shared typed client API and native transport mechanisms. The tax application and client package never import `cadrumo_runtime`; the host composes the tax application through its public defining modules. AEAT retains direct profile login, logout and creation; all other authentication commands belong to the `cadrumo-runtime` executable. None of these packages owns agent/provider/harness orchestration. `src/cadrumo_agent_service` owns agent processes, provider policy, credentials interpretation, stores and conversations; it has no login authority. `src/cadrumo_harness` owns the separate MCP product, protocol projection and client admission translation. The desktop supervises the service, and the service supervises cadrumo-agent. Service admission requires exact packaged image/module/invocation and kernel peer evidence plus the exact runtime session; a common Python executable, declared client ID or JSON PID cannot grant it.
+`src/cadrumo` owns the deterministic tax/profile application and AEAT CLI. `src/cadrumo_runtime` owns process hosting, native peer admission, login state, session authority and authentication administration. `src/cadrumo_client` owns the shared typed client API and native transport mechanisms. The tax application and client package never import `cadrumo_runtime`; the host composes the tax application through its public defining modules. AEAT retains direct profile login, logout and creation; all other authentication commands belong to the `cadrumo-runtime` executable. None of these packages owns agent personas, rules, skills or provisioning; cadrumo-agent owns all authored agent content and serves it to the agent. `src/cadrumo_agent_service` owns agent processes, credentials interpretation, stores and conversations and hosts the bundled cadrumo-agent as a contained process; it has no login authority. `src/cadrumo_mcp` owns the separate deterministic MCP service: protocol contracts and tool declarations, operation projection, discovery and search, authority and corpus queries, and client admission translation. That service serves no skill, rule or persona content. The desktop supervises the service, and the service supervises cadrumo-agent. Service admission requires exact packaged image/module/invocation and kernel peer evidence plus the exact runtime session; a common Python executable, declared client ID or JSON PID cannot grant it.
 
 CLI, TUI and MCP submit through registered operations. Command declarations, UI state and agent prompts cannot grant authority. Native peer/login evidence anchors admission; client-supplied IDs alone do not. Bind boot, frontend, native client, exact profile, session/lease and authority generation, and recheck current authority at private submission, effects, interaction responses and disclosure.
 

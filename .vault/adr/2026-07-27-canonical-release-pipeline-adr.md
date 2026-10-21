@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#canonical-release-pipeline'
 date: '2026-07-27'
-modified: '2026-10-03'
-body_hash: 'sha256:9c1ace2048ea2ebb146da54bb6932276e98c62457f43e5254c7d4294ab1f1667'
+modified: '2026-10-21'
+body_hash: 'sha256:9e6e26267c762179dd6eeab1e0549048a223a3e24499198fdb80b70a4fb5dec7'
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-19-post-release-distribution-adr]]'
@@ -14,7 +14,7 @@ related:
   - '[[2026-07-27-publication-lane-consolidation-adr]]'
   - '[[2026-07-27-pipeline-config-topology-adr]]'
 ---
-# `canonical-release-pipeline` adr: `the docs and landing delivery leg of the canonical release pipeline: AWS stays for cadrumo.neve.md, docs publish is an automated release consequence, and the stale marketplace identity retires by declared supersession` | (**status:** `accepted`)
+# `canonical-release-pipeline` adr: `the docs and landing delivery leg of the canonical release pipeline: AWS stays for cadrumo.neve.md, and docs publish is an automated release consequence` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -22,7 +22,7 @@ The publication leg of the release pipeline is decided â€” sealed-cohort pr
 (`2026-07-15-distribution-installation-readiness-adr`), release-asset transport
 (`2026-07-20-release-asset-transport-adr`), the account channel standard
 (`2026-07-25-account-distribution-standard-adr`) â€” but its delivery leg is not:
-the documentation site, the landing page, and the marketplace's prior contents
+the documentation site and the landing page
 sit outside every accepted record, and they are drifting. Measured 2026-07-27:
 `https://cadrumo.neve.md/` and `/docs/` serve HTTP 200 from an `AmazonS3`-backed
 CloudFront distribution, the docs `Last-Modified` is 2026-07-12 â€” fifteen days
@@ -34,29 +34,24 @@ the former source file behind `just docs-deploy` /
 `_require_human_publish_environment` refuses to run under `CI` or
 `GITHUB_ACTIONS`.
 
-Two contradictions force this record now. First, the operator's
+One contradiction forces this record now. The operator's
 2026-06-25 hosting decision (recorded in the private planning vault, read
 verbatim 2026-07-27; source identifiers withheld by the repository boundary)
 chose Cloudflare Pages/Workers for the account's hosting, delegated `neve.md`
 DNS to Cloudflare, and rejected AWS "for core" because "egress charges +
 complexity make cost unpredictable" â€” yet the shipped docs stack is exactly
 S3 + CloudFront, and the note never mentions `cadrumo.neve.md`. Nobody recorded
-the divergence. Second, the first publication will write into
-`nevenincs/neve-marketplace`, which still carries a 2026-07-04 `plugins/aeat`
-subtree under the retired product identity, referencing an `aeat-cli 0.1.1`
-distribution the sealed cohort does not publish â€” and the publish tooling's
-sibling-protection design deliberately preserves every path a cohort does not
-declare, so the stale identity survives every future publication untouched.
+the divergence.
 
-A third contradiction â€” the version identity of v0.2.1 is already forked
+A second contradiction â€” the version identity of v0.2.1 is already forked
 between a published release and the sealed candidate cohort, and a second
 PyPI lane shares the one arming variable â€” was measured the same day and is
 ruled in the sibling record `2026-07-27-publication-lane-consolidation-adr`;
 the measurements live in `2026-07-27-canonical-release-pipeline-research`.
 
-This record rules the seven delivery couplings: hosting, docs trigger and
+This record rules the delivery couplings: hosting, docs trigger and
 ordering, the `download-latest.json` handshake, deploy credentials, localized
-roots, the stale marketplace identity, and the docs/landing coupling. It
+roots, and the docs/landing coupling. It
 changes no publication gate and arms nothing; publication remains HELD per
 `2026-07-19-post-release-distribution-adr`. The operator's stated end-state
 binds this record, its publication-leg sibling, and the configuration-topology
@@ -108,11 +103,6 @@ pipeline.
   Actions storage for that reason (`2026-07-20-release-asset-transport-adr`);
   docs automation adding hosted minutes or long-lived cloud secrets cuts
   against both standing choices.
-- the former source file replaces only the plugin subtrees the
-  cohort declares, keeps every other path and index entry (a sibling plugin, a
-  README, a LICENSE), refuses name takeovers across `published_by` owners, and
-  treats an entry with no recorded publisher as claimable. The cohort publishes
-  under the `cadrumo` identity, so it will never touch the stale `aeat` entry.
 - The localized roots build sequentially after the English root; every build
   and validation completes before any byte uploads, and the upload is a single
   whole-tree delete-sync â€” partial-language publication has no natural
@@ -121,20 +111,6 @@ pipeline.
   `docs/*` from its sync, and asserts `/docs/` still serves 200 after its own
   publish â€” a destruction tripwire on the shared bucket, not a build
   dependency.
-- `aeat` remains the product's one human CLI executable per the accepted
-  product-authority naming record; what retires is the marketplace plugin
-  identity of that name, not the command.
-
-- The live marketplace `aeat` entry carries no `published_by` â€” it predates
-  ownership tracking, so under the merge tool's own rules it is claimable by
-  ANY product today. A supersession mechanism bounded by the same ownership
-  rule therefore adds no authority over siblings that the claim rule does not
-  already grant; it adds only a remove verb with identical bounds.
-- The in-tree cohort marketplace manifest already carries the flipped
-  account-level metadata (owner `CADRUMO tax assistant project`, a bilingual
-  description naming Cadrumo), and the merge takes account metadata from the
-  cohort â€” so the metadata flip mechanically rides whichever publication
-  first lands, whatever is ruled about the plugin entry.
 
 ## Considered options
 
@@ -184,25 +160,7 @@ pipeline.
   publish. **Chosen** (the shipped semantics, now ratified).
 - Per-language partial publish. Rejected: asymmetric truth across roots.
 
-**Stale marketplace identity (ruling 6).**
-
-- Leave it. Rejected: a live install path to a distribution the pipeline does
-  not publish, and two product identities live at once.
-- Bare one-time operator hand-removal (this record's own first draft).
-  Rejected as the mechanism: unrepeatable, unauditable, and memory-less â€” the
-  tool retains no knowledge of the retirement, so nothing refuses a later
-  resurrection, and the publisher-less name stays claimable by anyone.
-  Retained only as an acceptable bootstrap the declared mechanism then
-  verifies.
-- A tool-side delete list (configuration in the publisher, not the cohort).
-  Rejected: standing delete authority decoupled from any release â€” the
-  original sibling-deletion incident is exactly why standing authority is the
-  hazard.
-- Weaken the guard to permit same-account deletions generally. Rejected: the
-  guard's founding incident (a wholesale tree replacement deleted every
-  sibling) recurs.
-- Declared supersession in the cohort manifest, executed by the merge tool
-  under the unchanged ownership rule. **Chosen.**
+**Ruling 6.** Withdrawn 2026-10-21: the Claude Code plugin is no longer delivered.
 
 **Docs/landing coupling (ruling 7).**
 
@@ -227,18 +185,12 @@ pipeline.
   intent but not necessarily the current one, and may not have been maintained
   since. The scoped supersession therefore stands as proposed until ratified
   (OP-2).
-- The marketplace removal is a write to a public repository this pipeline does
-  not own from this session; it is operator-executed (OP-4).
 - Depends on the accepted readiness, transport, and account-standard ADRs
   remaining in force; this record changes none of their gates and contradicts
   none of them. The one accepted decision it supersedes â€” scoped to one
   subdomain â€” is external to the vault (the 2026-06-25 hosting note), and the
   supersession is stated explicitly here because that note cannot carry a
   status stamp of its own.
-
-- The declared-supersession mechanism of R6 does not exist yet; it is a small,
-  testable extension of the merge tool and must land before the first
-  publication for the preflight to have teeth.
 
 ## Implementation
 
@@ -332,41 +284,7 @@ blocks an urgent English-only fix until repaired; the locale builds are strict
 and CI-gated on the docs lanes, so a publish-time surprise indicates a gate
 gap, not a tolerable path.
 
-**R6 â€” The stale marketplace identity: declared supersession, ownership rule
-unchanged.** The general case first, because the sibling-protection guard is
-behaving exactly as designed and the gap is conceptual: the mechanism has no
-way to say "this name is my own predecessor". The cohort's marketplace
-manifest gains a declared supersession axis â€” a list of plugin names this
-product retires (here: `aeat`). The merge tool honours it under the UNCHANGED
-ownership rule: it may remove a superseded entry and its subtree only when
-the entry is owned by this product (`published_by` equal) or carries no
-publisher (the claimable class it may already take over wholesale by name); a
-sibling-owned name in the supersession list is the same hard refusal as a
-name takeover. This adds no authority over siblings the claim rule does not
-already grant â€” the live `aeat` entry has no `published_by` and is claimable
-by any product today â€” it adds only a remove verb with identical bounds. The
-declaration is durable: it ships in every subsequent cohort manifest, the
-publish preflight verifies the retired names are absent (and refuses,
-naming the supersession, when one is present un-superseded), so the
-retirement is an enforced invariant rather than a one-time state, and a
-resurrection â€” by replay, by an older manifest, or by a stranger claiming
-the abandoned name into this account's index â€” is refused loudly. A product
-rename is thereby one publication: claim the new name, supersede the old,
-never both live at once. The operator's one-time hand-removal commit (OP-4)
-remains acceptable as bootstrap, but the declaration and preflight must exist
-by first publication regardless, or the retirement is an assumption.
-
-The account-level metadata flip (owner `AEAT tax assistant project` â†’
-`CADRUMO tax assistant project`, the description naming Cadrumo instead of
-aeat) is part of the same supersession event mechanically â€” the merge already
-takes name, description, and owner from the cohort, and the in-tree manifest
-already carries the flipped values â€” so no state exists in which the index
-advertises the retired identity beside the new plugin. The preflight extends
-to it: account metadata must not name a retired identity. One genuinely
-separate concern is flagged for the account standard rather than ruled here:
-an account-scoped marketplace description that names a single product will be
-stale the moment a sibling publishes. The `aeat` CLI executable name is
-untouched throughout; only the marketplace plugin identity retires.
+**R6.** Withdrawn 2026-10-21: the Claude Code plugin is no longer delivered.
 
 **R7 â€” Docs and landing: independent verbs, stated bootstrap order.** The two
 publishers stay separate and are never force-paired. Bootstrap order, once per
@@ -403,19 +321,6 @@ its degradation direction is a floor rather than a lie, which is precisely the
 property an operator-facing surface owes under the no-silent-under-declaration
 discipline.
 
-On the marketplace, the deciding observation is that the guard and the gap
-are different things: sibling protection is an ownership rule, and the rename
-problem is a vocabulary gap â€” the manifest can claim a name but cannot retire
-one. Declared supersession fills the vocabulary gap while binding the new
-verb to the existing ownership rule, so the guard is not weakened by a single
-bit: the set of entries this product can remove is exactly the set it could
-already claim and overwrite. Against that, hand-deletion fails not because it
-is unsafe but because it is forgetful â€” a retirement the tool cannot verify
-is re-broken by the next replay or the next claimant of the abandoned name â€”
-and every other alternative either grants standing delete authority or
-re-opens the founding incident. The supersession must be a property of the
-release that performs the rename, remembered by every release after it.
-
 ## Consequences
 
 - The fifteen-day docs staleness gets an owner and a bound: mechanical once
@@ -428,11 +333,6 @@ release that performs the rename, remembered by every release after it.
 - The account stays two-vendor (Cloudflare DNS and apex; AWS delivery for one
   subdomain). That is real operational spread, accepted knowingly and recorded
   â€” no longer an unrecorded divergence a future reader trips over.
-- The first publication cannot silently coexist with the retired identity:
-  the supersession is declared in the cohort, executed under the unchanged
-  ownership rule, verified by the preflight on every later release, and the
-  account metadata flips in the same event â€” no state advertises both
-  identities.
 - Delivery-leg consolidation becomes structural: one delivery authority per
   surface, delivery bound to the release as an automatic consequence, and the
   human-run interim scheduled to retire with OP-3. The publication leg's
@@ -447,10 +347,9 @@ release that performs the rename, remembered by every release after it.
   apparatus changes.
 - Not verified, stated honestly: a fresh full-site file inventory (the Pages
   cap comparison is bounded by a prior corpus measurement, not a new build);
-  whether `aeat-cli 0.1.1` ever reached an external registry (immaterial to
-  R6 â€” the entry is wrong-identity either way); which CloudFront plan the
+  which CloudFront plan the
   account is on; and whether the operator's hosting preference has moved
-  since 2026-06-25. Both marketplace manifests, the deploy tooling, and the
+  since 2026-06-25. The deploy tooling and the
   live site headers WERE verified first-hand on 2026-07-27; the publication
   leg's measurements are recorded and attributed in the shared research
   document and its sibling record.
@@ -461,10 +360,7 @@ release that performs the rename, remembered by every release after it.
   now SCHEDULED as the auto-publish prerequisite per R4: create the OIDC
   identity provider, the least-privilege docs deploy role, and the protected
   docs environment, so the consequence workflow can land and the CI-refusal
-  guard can fall with it; **OP-4** the marketplace
-  retirement: either land the bootstrap removal commit in
-  `nevenincs/neve-marketplace` or rely on the declared supersession's first
-  execution â€” the declaration and preflight land either way. OP-5 and OP-6 are owned by
+  guard can fall with it; **OP-4** withdrawn 2026-10-21 with the Claude Code plugin. OP-5 and OP-6 are owned by
   `2026-07-27-publication-lane-consolidation-adr`, OP-7 and OP-8 by
   `2026-07-27-pipeline-config-topology-adr`; each is listed once, in its
   owning record.
@@ -476,7 +372,7 @@ landing-page publisher, website source, website build or test commands, or websi
 release coupling. The separate `cadrumo-marketing` repository is the sole authority for
 that lifecycle.
 
-This amendment does not reverse the remaining product-documentation, marketplace,
+This amendment does not reverse the remaining product-documentation,
 cohort, or publication decisions in this record. Product documentation may still be
 published independently, but it is neither a product-release gate nor a website release
 owned by this repository.

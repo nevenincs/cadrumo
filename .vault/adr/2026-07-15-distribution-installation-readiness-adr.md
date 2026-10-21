@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-10-03'
-body_hash: 'sha256:1fede21aa189adf046c994c64b87400d953560d2225b6689c31c92cc9e7a00c4'
+modified: '2026-10-21'
+body_hash: 'sha256:2fd65712e5361d96128fbb53436c423fcbf4ee67dcd9a56bb310ecdd77099abf'
 related:
   - '[[2026-07-15-distribution-installation-readiness-research]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
@@ -60,8 +60,8 @@ paths are absent or stale, and documentation describes paths that outside users 
 complete.
 
 Construction and schema validation are not executable proof. A wheel must run its
-installed commands; an MCP server must complete a real protocol interaction; a Claude
-plugin and MCPB must install in their claimed clients and start their pinned server; a
+installed commands; an MCP server must complete a real protocol interaction; an
+MCPB must install in their claimed clients and start their pinned server; a
 Scoop distribution must install in a clean Windows environment; a Homebrew formula must
 install through a real tap on every claimed macOS/Linux row. Every channel must expose
 working commands and complete a grounded tax calculation. Platform neutrality is a
@@ -80,8 +80,7 @@ Trusted Publishing. A single authority and evidence contract are required.
   is insufficient.
 - Every distribution surface for one version must derive from one source commit and
   remain byte-identical through testing and promotion.
-- The cohort includes the root wheel and sdist, companion wheels, generated Claude
-  plugin tree, marketplace snapshot, MCPB, release metadata, Scoop material, and a
+- The cohort includes the root wheel and sdist, companion wheels, MCPB, release metadata, Scoop material, and a
   Homebrew tap/formula snapshot.
 - Evidence distinguishes construction, direct artifact installation, installed
   execution, client execution, channel acquisition, publication, and post-publication
@@ -93,7 +92,7 @@ Trusted Publishing. A single authority and evidence contract are required.
   tested is unacceptable.
 - Client-dependent claims require declared real client versions. An unavailable client
   cannot become a successful `skipped` result.
-- Python, plugin, MCPB, and platform requirements need one consistent authority.
+- Python, MCPB, and platform requirements need one consistent authority.
 - A user-facing install cannot be “slim” if it cannot load the registry and calculate.
   File-size-driven splitting is an internal artifact concern, not a degraded public
   product mode.
@@ -132,7 +131,7 @@ Trusted Publishing. A single authority and evidence contract are required.
   discovery, and a real calculation tool call.
 - The command-bearing `cadrumo` distribution declares both exact-version data companions
   as mandatory runtime dependencies. Default, agent, all-extras, PyPI, Scoop, Homebrew,
-  Claude plugin, and MCPB installs resolve the complete three-wheel cohort. There is no
+  and MCPB installs resolve the complete three-wheel cohort. There is no
   advertised slim-only CLI installation. Companion wheels remain separate files only
   for artifact-size limits; their individual claim is data integrity and namespace
   contribution, proved again by downstream cohort calculation.
@@ -155,9 +154,6 @@ Trusted Publishing. A single authority and evidence contract are required.
   invokes that absolute path. It never calls bare `aeat` through ambient PATH. Acceptance
   scrubs checkout imports and unrelated executable paths, records both executable origins,
   and requires them to belong to the same installed cohort.
-- Plugin proof validates the generated artifact, installs the complete marketplace-served
-  plugin through a declared Claude client, observes MCP startup, and completes a
-  cohort-pinned tool call.
 - MCPB proof enforces signing/publisher policy, reconciles its Python requirement,
   installs through every claimed client, starts the server, and completes a tool call.
 - Scoop proof uses versioned immutable URLs and hashes and supplies Windows wrappers or
@@ -191,7 +187,7 @@ Real-behavior lanes install cohort artifacts into clean environments with checko
 removed. They execute installed CLI and MCP commands, exercise split-package behavior
 and extras, and record cohort-bound evidence. Every applicable lane completes the same
 grounded Modelo 200 tax-work oracle through its installed transport. Client lanes install
-the generated Claude marketplace plugin and MCPB in declared supported clients, verify
+the MCPB in declared supported clients, verify
 server startup, and invoke the real calculation tool. Platform runners execute only
 matrix rows the product intends to claim.
 
@@ -216,7 +212,7 @@ installation, `brew test`, the installed tax-work oracle, and MCP calculation.
 A manually dispatched GitHub Actions release workflow, protected by the release
 environment and using OIDC Trusted Publishing, is the sole publication authority. It
 fetches the stored cohort, verifies manifest/hashes and the complete blocking evidence
-set, and publishes those exact bytes. It never builds or generates. Marketplace, GitHub
+set, and publishes those exact bytes. It never builds or generates. GitHub
 release, MCPB, Scoop, Homebrew, root Python package, and companions are coordinated for
 one version and cohort.
 
@@ -226,7 +222,7 @@ operator-triggered installed-artifact lanes append cohort-bound observations;
 they do not rebuild. Any blocking regression ends promotion for that cohort.
 
 After publication, verification lanes acquire from the advertised PyPI, GitHub,
-marketplace, MCPB, Scoop, and Homebrew paths and rerun installed behavior, including the
+MCPB, Scoop, and Homebrew paths and rerun installed behavior, including the
 grounded tax-work oracle. README and user-doc
 promotion is blocked until those records pass; beforehand the path is labelled
 unavailable, staged, or source-only.
@@ -243,7 +239,7 @@ release artifacts.
 The research proves local wheel, sdist, split-package, CLI, and MCP behavior can succeed,
 while public acquisition is absent, client proof is incomplete, Scoop and Homebrew do
 not exist, and current publication rebuilds outside the tested evidence chain. The reference
-identifies reusable clean-source, installation, MCP-client, plugin-generation, and MCPB
+identifies reusable clean-source, installation, MCP-client, and MCPB
 foundations.
 
 It also proves the current core manifest is a false readiness signal: a root wheel can

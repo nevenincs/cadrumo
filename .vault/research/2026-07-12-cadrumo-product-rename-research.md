@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#cadrumo-product-rename'
 date: '2026-07-12'
-modified: '2026-10-03'
-body_hash: 'sha256:01213c2773df8bbaaaeee70a7fe192380065898d455d3f8857ede75c584ad9c6'
+modified: '2026-10-21'
+body_hash: 'sha256:fb6f8decee23b6a1b9b90708151016f6ced866efa1bd1160f8b74124627ec1c6'
 related: []
 ---
 
@@ -36,10 +36,10 @@ corrupt legal meaning and bundled evidence.
 
 The pre-release no-legacy regime supports a hard cut with no aliases or shims.
 The recommended canonical tuple is display name `Cadrumo`, Python import and
-human CLI `cadrumo`, MCP executable `cadrumo-mcp`, MCP/plugin/server identity
+human CLI `cadrumo`, MCP executable `cadrumo-mcp`, MCP/server identity
 `cadrumo`, and product environment prefix `CADRUMO_`. The distribution name,
 companion corpus distributions, shared companion namespace, repository identity,
-and marketplace identity must be settled explicitly in the ADR rather than
+must be settled explicitly in the ADR rather than
 derived mechanically from the old tuple.
 
 No `aeat` import shim, old console alias, dual environment-variable parser, or
@@ -57,11 +57,9 @@ registry callable targets embedded in TOML, error registries, import-smoke tests
 and generated API references as one coherent wave.
 
 The MCP surface carries product identity in tool prefixes, client prefixes,
-resource URI schemes, server names, subprocess argv, plugin metadata, allowlists,
+resource URI schemes, server names, subprocess argv, allowlists,
 snapshots, and generated `.mcp.json`. Tool-name budgets must be recomputed after
-the prefix changes. The generator  is the
-authority for generated marketplace artifacts and must change before regeneration.
-
+the prefix changes.
 Product persistence identity is embedded in the application directory, database
 filename, authentication-session root, logical storage namespaces, and bundle
 extension. These names are durable format boundaries and cannot be changed in
@@ -77,9 +75,7 @@ Their project metadata, build hooks, source mappings, root dependency sources,
 smoke tests, and publication workflow form one packaging seam. `uv.lock` is a
 generated result and should be regenerated only after all project metadata moves.
 
-The Claude plugin marketplace is primary and MCPB is a demoted secondary
-artifact under the accepted Claude ecosystem packaging decision. The plugin
-generator, marketplace manifest, MCPB manifest/build/test, release workflows,
+MCPB manifest/build/test, release workflows,
 `justfile`, packaging smoke tools, and release documentation all embed exact
 product names. PyPI Trusted Publisher registrations are external exact-name state;
 new project registrations must exist before publication can succeed.
@@ -87,7 +83,7 @@ new project registrations must exist before publication can succeed.
 As of 2026-07-12, direct checks returned no existing exact PyPI project or GitHub
 account for `cadrumo`. This is only an availability signal, not reservation or
 trademark clearance. The root and companion project names, repository/organization,
-plugin identifiers, PATH executable, domains, and Spanish/EU trademarks require
+PATH executable, domains, and Spanish/EU trademarks require
 reservation or clearance before a public launch claim.
 
 ### Documentation, locale, and generated-content policy
@@ -108,12 +104,12 @@ repository's staged documentation workflow and approval gates.
 
 1. Approve an identity matrix separating product, authority, and historical uses,
    including the hard-cut compatibility and persistence policy.
-2. Reserve external distribution, repository, marketplace, and trademark names.
+2. Reserve external distribution, repository, and trademark names.
 3. Establish one product-identity authority, then atomically move the root package,
    dynamic import targets, and both companion distributions/namespaces.
 4. Update distribution metadata, scripts, extras, build hooks, and regenerate the
    lockfile and wheels.
-5. Change product configuration, persistence, CLI, MCP, plugin, and generated
+5. Change product configuration, persistence, CLI, MCP, and generated
    integration identities without transitional aliases.
 6. Update tests, developer tooling, CI/release automation, locales, and active docs;
    regenerate all derived artifacts.

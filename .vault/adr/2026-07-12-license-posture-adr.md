@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#license-posture'
 date: '2026-07-12'
-modified: '2026-07-17'
-body_hash: 'sha256:8112ab749d714d5438cc6234c4e82d4d16b40d103c2d80c66f99fe15fa6f72ac'
+modified: '2026-10-21'
+body_hash: 'sha256:1656c1336f2f61cd2b9a14b04a33307ecced2e0cb59499dadbad4377d46aa6b7'
 related:
   - "[[2026-07-12-license-posture-research]]"
 ---
@@ -51,7 +51,7 @@ relicense.
   the `ofxtools` dependency. Rejected for the same adoption cost; AGPL's
   network clause is moot for a local-only tool.
 - **Dual licence / proprietary core:** rejected — contradicts the published
-  open-source commitments (README, site, marketplace) and adds friction with
+  open-source commitments (README, site) and adds friction with
   no current commercial counterparty.
 
 ## Constraints
@@ -108,8 +108,7 @@ all cheaper to fix than a licence migration.
   GPL-3.0-governed — disclosed rather than latent.
 - The Apache-2.0 stamp on the data companions is scoped honestly, removing
   an over-claim a rights-holder could challenge.
-- Retaining Apache-2.0 keeps the plugin/marketplace channel friction-free
-  and published metadata consistent across PyPI, the site JSON-LD, and the
-  marketplace listing.
+- Retaining Apache-2.0 keeps distribution channels friction-free
+  and published metadata consistent across PyPI and the site JSON-LD.
 - The licence sweep must be re-run at each release; dependency licences
   drift and the posture is only as current as the last sweep.

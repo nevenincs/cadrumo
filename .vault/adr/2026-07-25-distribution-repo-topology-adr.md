@@ -8,8 +8,8 @@ related:
   - "[[2026-07-22-scoop-runner-topology-adr]]"
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
 superseded_by: '2026-07-25-shared-distribution-repository-adr'
-modified: '2026-10-03'
-body_hash: 'sha256:88200953989da151009f8405c80e3337137fea951b178067f6b135688222c0c7'
+modified: '2026-10-21'
+body_hash: 'sha256:dfb4a1e5bd5a46a464b121b61a7e7a923b7f4779d7a2b0171efb8ae4b6f0577f'
 ---
 # `distribution-repo-topology` adr: `Distribution channels are shared and product-neutral, and Scoop needs no repository at all` | (**status:** `superseded`)
 
@@ -17,7 +17,6 @@ body_hash: 'sha256:88200953989da151009f8405c80e3337137fea951b178067f6b135688222c
 
 **Status qualification — the Scoop transport choice in this record is
 PROVISIONAL.** Everything else here is settled: the shared product-neutral tap,
-the corrected marketplace target, the marketplace merge-rather-than-replace fix,
 the retirement of the artifacts landing repository, and the product-neutral
 variable names. But the decision to serve Scoop from this repository's own
 `bucket/` directory is under review at account scope, because it was costed on
@@ -31,21 +30,16 @@ consider. A later account-scope record governs; treat the Scoop half of this one
 as input, not as settled law.
 
 The account publishing this product publishes several others under the same
-name. Distribution for this product accreted four repositories — a Scoop
-bucket, a Homebrew tap, a plugin marketplace, and an artifacts landing repo —
-of which three are product-scoped and private, while the fourth is
+name. Distribution for this product accreted three repositories — a Scoop
+bucket, a Homebrew tap, and an artifacts landing repo —
+of which two are product-scoped and private, while the third is
 account-scoped and public. None of the sibling products has any such
-repository, so the shape has never been reused, and the publish authority's
-marketplace target names a repository that does not exist. A topology ruling
+repository, so the shape has never been reused. A topology ruling
 is needed before the held publication proceeds, because publishing is what
 makes these names permanent in users' install commands and in their local
 package-manager state.
 
-Three defects are load-bearing on the decision rather than incidental to it.
-The marketplace repository variable names a slug that returns 404, so the
-publish authority's marketplace push would refuse at Gate 3. The public
-marketplace still declares its plugin under the pre-rename product name, so
-the documented install command cannot resolve against it. The artifacts
+One defect is load-bearing on the decision rather than incidental to it. The artifacts
 landing repository carries a README and nothing else, and no code path in the
 tree references it.
 
@@ -80,13 +74,12 @@ tree references it.
   per-product repository. That is direct evidence of the pattern the account
   already treats as standard.
 - The publish authority's bucket and tap pushes already write exactly one file
-  each, so they are safe against sibling content in a shared repository. The
-  marketplace push instead replaces the tracked tree wholesale.
+  each, so they are safe against sibling content in a shared repository.
 
 ## Considered options
 
 - **Keep per-product repositories, fix only the broken variable.** Minimal
-  change; leaves four repositories for one product and a shape that multiplies
+  change; leaves three repositories for one product and a shape that multiplies
   by the number of products. Rejected — it preserves the fragmentation that
   prompted the review and teaches the next product to add two more repositories.
 - **A dedicated account-scoped Scoop bucket repository.** One bucket repo
@@ -102,19 +95,18 @@ tree references it.
   the three Homebrew evidence rows already exist and pass, so retiring them
   discards working, evidenced capability. Retained in part: the channels stay
   supplementary and are not claimed in documentation without evidence.
-- **Zero Scoop repository, one shared tap, marketplace kept, landing
+- **Zero Scoop repository, one shared tap, landing
   repository retired (chosen).** Scoop is served from this repository's own
   `bucket/` directory, so no bucket repository exists at all; Homebrew gets one
   product-neutral `homebrew-tap` for the account, because its mandatory
-  `homebrew-` prefix leaves no in-repo option; the existing account marketplace
-  is kept and corrected; the artifacts landing repository is retired. One
+  `homebrew-` prefix leaves no in-repo option; the artifacts landing repository is retired. One
   distribution repository total, and it does not grow per product.
 
 ## Constraints
 
 - Repository creation, deletion, and visibility changes are operator actions.
-  This ruling can retarget every reference in the tree, but the public bucket,
-  tap, and marketplace only become reachable when the operator creates and
+  This ruling can retarget every reference in the tree, but the public bucket
+  and tap only become reachable when the operator creates and
   publishes them. Publication is outward-facing and effectively irreversible
   once indexed, so it stays an operator decision.
 - The account is a user account, not an organization, so there are no
@@ -132,8 +124,7 @@ tree references it.
   and targeted pattern search, not by semantic search: the code index was
   serving roughly a fifth of the tree while reporting itself healthy, so a
   semantic miss was not evidence of absence. The one conclusion that depended
-  on absence — that no existing packaging module already published a plugin
-  tree or merged a marketplace index — was confirmed against the real module
+  on absence — that no existing packaging module already published a shared channel — was confirmed against the real module
   listing and their declarations rather than a search result.
 - The product repository is public and its release assets are anonymously
   downloadable, verified by an unauthenticated fetch of a v0.2.1 asset. The
@@ -163,7 +154,7 @@ The tap is one product-neutral account repository carrying the mandatory
 addresses the product as a path within the account's tap. A second product adds
 one formula file and nothing else.
 
-The two remaining channel variables are renamed off the product prefix so a
+The remaining channel variable is renamed off the product prefix so a
 sibling product copies the same configuration verbatim. Every site naming the
 old targets is retargeted in one sweep — the channel descriptor that is the
 single source of truth for install commands, the acquisition entry points that
@@ -176,13 +167,6 @@ gate asserting each push names its own file and carries none of the sweeping
 forms — stage-everything or a wholesale delete of the checkout — that would
 take a sibling product's file with it. That gate is the acceptance test for the
 design, and it fails against the previous workflow.
-
-The marketplace push does need a structural change. It currently deletes every
-tracked path except the git directory and replaces the tree from the release
-bundle, which is correct only while the marketplace serves exactly one product.
-Against an account-scoped marketplace that is a latent sibling-deletion defect,
-so the replacement narrows to this product's own plugin subtree, and the
-marketplace index entry is merged rather than overwritten.
 
 The artifacts landing repository is retired rather than retargeted: nothing in
 the tree references it, and the release assets it advertises are already served
@@ -212,20 +196,20 @@ The ecosystem research resolves the part of the current shape that is not a
 mistake and should not be reported as one. Separate bucket and tap
 repositories genuinely are the convention in these two ecosystems, and the
 `homebrew-` prefix genuinely is mandatory. What is wrong is the per-product
-axis, the count, the private visibility that makes the channels unusable by
-anyone, and a variable pointing at nothing. Distinguishing these matters,
+axis, the count, and the private visibility that makes the channels unusable by
+anyone. Distinguishing these matters,
 because a review that condemned taps wholesale would push toward discarding
 working evidenced capability.
 
-The chosen shape also removes the growth term. Four repositories for one
+The chosen shape also removes the growth term. Three repositories for one
 product is a pattern that reads, to the next product, as an instruction to
 create two more; one bucket and one tap for the account is a pattern where the
 next product adds one file to each.
 
 ## Consequences
 
-One repository replaces four, and the count stays flat as products are added.
-The tap and marketplace become reachable by ordinary users once the operator
+One repository replaces three, and the count stays flat as products are added.
+The tap becomes reachable by ordinary users once the operator
 creates and publishes the tap, which unblocks the acquisition evidence rows
 that have been blocked on private targets rather than on any missing
 capability. Scoop needs no such step at all.
@@ -239,11 +223,6 @@ The install commands change shape, addressing the product within an
 account-scoped bucket and tap. Because nothing has been published, no user is
 carrying the old commands, so this is a rename with no migration cost — a
 window that closes permanently at first publication.
-
-The marketplace fix is the one place where consolidation exposes a defect
-rather than merely relocating a name: a wholesale tree replacement is safe for
-a single-product marketplace and destructive for a shared one, and the shared
-case is the one this ruling commits to.
 
 Two things remain outside this ruling and stay open. The Windows community
 package channel is now viable, because the release location it needs is

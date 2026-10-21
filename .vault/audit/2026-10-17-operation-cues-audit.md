@@ -3,32 +3,13 @@ tags:
   - '#audit'
   - '#operation-cues'
 date: '2026-10-17'
-modified: '2026-10-17'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:a0015b5cbc5eacb276605d21de0be4e98d77a6bef6a7971ec3b06ee60d124011'
+body_hash: 'sha256:f198fea41fbb7e16a562e645bed398eda4e25bc937847912c1d3cd1714fc4c34'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
   - "[[2026-10-17-idle-churn-operation-observation-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace operation-cues with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
 
 # `operation-cues` audit: `Operation cues plan-close review`
 

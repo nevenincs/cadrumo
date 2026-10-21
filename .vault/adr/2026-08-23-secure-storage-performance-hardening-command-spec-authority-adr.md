@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#secure-storage-performance-hardening'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:de8ecf40484e994f04a8d591e1c24c2db378efe670098b3c6370270326e482fa'
+body_hash: 'sha256:1597787ebfc4154f8657f74508e1dd176a61d6d6d280a52acbf3798265f73c04'
 related:
   - "[[2026-08-23-cli-runtime-resource-architecture-convergence-research]]"
   - "[[2026-08-22-secure-storage-performance-hardening-research]]"
@@ -124,7 +124,7 @@ resolution, policy and schema identity, locale completeness, and selected-path
 import budgets.
 
 The canonical Python cohort builds once from a clean pinned archive. Downstream
-smoke, Scoop, Homebrew, MCPB, marketplace, and publish lanes consume that sealed
+smoke, Scoop, Homebrew, MCPB, and publish lanes consume that sealed
 cohort without rebuilding or regenerating command authority. Promotion binds
 the tested cohort identity to installed behavior; missing, duplicate, or
 mismatched specs are release-blocking.

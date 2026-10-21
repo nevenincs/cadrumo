@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-authority-lock'
 date: '2026-07-13'
-modified: '2026-10-03'
-body_hash: 'sha256:946465155354117fea7418c9703cdaf4f749699fa43a175c0658da787ebcdc4c'
+modified: '2026-10-21'
+body_hash: 'sha256:7b205bf6d6ea3ba85da0e78ffdc79fb0be1396d6afc19dab59a0e279ef878eb3'
 related: []
 ---
 
@@ -41,7 +41,7 @@ The binding CLI ADR says the human executable is the sole parent-tuple element
 it overrides and later says it only changes that element. This commit also
 changes the accepted display casing from `Cadrumo` to `CADRUMO`. Its section
 labelled the canonical identity tuple also omits the exact repository, MCP
-server/tool/resource/plugin, and companion-distribution identifiers that the
+server/tool/resource, and companion-distribution identifiers that the
 superseded parent decision defined. Although the runtime tuple and promoted
 rule cover most of those values, the accepted superseding decision is internally
 inaccurate and does not itself provide the complete referent matrix downstream
@@ -50,8 +50,8 @@ work is expected to obey.
 **Re-review state: resolved by `e34952e37bacf9509ba3ba8a5733ee61cfd5bbaf`.**
 The ADR now names both overrides explicitly: display casing `CADRUMO` and sole
 human executable `aeat`. Its complete matrix also records the lowercase
-`cadrumo` package, distribution, repository, MCP server/tool/resource, and
-plugin identifiers; `cadrumo-mcp`; `CADRUMO_`; both companion distributions;
+`cadrumo` package, distribution, repository, MCP server/tool/resource
+identifiers; `cadrumo-mcp`; `CADRUMO_`; both companion distributions;
 `cadrumo_data`; and the external authority short name `AEAT`.
 
 ### plan-closure-honesty | high | Checked steps now claim behavior the commit tree does not provide
@@ -73,7 +73,7 @@ The plan reopens exactly 24 contradicted Steps: S25; S37-S40; S43 and S45;
 S48-S55; S57-S58; S62-S67; and S78. Direct target-tree evidence justifies
 each lane: the CLI pins and parses `cadrumo`; core/extras/Docker/split smoke
 probes expect or invoke the wrong human command/version identity; MCP server
-and prompt copy remains title-case; agent generator, generated marketplace,
+and prompt copy remains title-case; agent generator,
 MCPB, recipes, CI, and smoke workflows retain stale product or command copy;
 all four locale catalogues retain stale display and command strings; and their
 dependent regeneration, validation, and aggregate behavior gates must rerun.

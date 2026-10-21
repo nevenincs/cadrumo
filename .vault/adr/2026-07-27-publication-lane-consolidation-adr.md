@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#publication-lane-consolidation'
 date: '2026-07-27'
-modified: '2026-07-27'
-body_hash: 'sha256:7fcd51c49602b3518b9c0c5248e6515a324a7ed4a6ab4c8f812d6a77c3e874e3'
+modified: '2026-10-21'
+body_hash: 'sha256:bbbc24d1ec5d038496d9af942fe63496aecce77eeac78f638f996a29c171d22a'
 related:
   - '[[2026-07-27-canonical-release-pipeline-adr]]'
   - '[[2026-07-27-canonical-release-pipeline-research]]'
@@ -38,7 +38,7 @@ destination that does not yet own 0.2.1. The promote job then orders PyPI
 upload (irreversible) before the release creation step. Dispatching the
 sealed cohort today would pass Gates 1 and 2, irreversibly upload new bytes
 to PyPI as 0.2.1, then fail on the already-existing release; the docs
-payload, Scoop, Homebrew, and marketplace steps never run. PyPI would
+payload, Scoop, and Homebrew steps never run. PyPI would
 permanently hold bytes matching no GitHub release, and no channel would be
 served — the partial, non-atomic publication that immutable-cohort promotion
 (`2026-07-15-distribution-installation-readiness-adr`) exists to prevent.
@@ -53,8 +53,7 @@ verified first-hand the same day: no complete release has ever shipped to any
 destination. PyPI `cadrumo` does not exist (HTTP 404); the two data
 companions carry only `0.0.0` name reservations; the two GitHub releases
 (`v0.2.0` of 2026-07-04, `v0.2.1` of 2026-07-21) are both partial,
-GitHub-only artefacts; the tap and bucket hold `.gitkeep`; the marketplace
-holds the stale old-identity plugin. The operator's ruling, verbatim: "0.2.1
+GitHub-only artefacts; the tap and bucket hold `.gitkeep`. The operator's ruling, verbatim: "0.2.1
 is absolutely not something we should keep. we have never released a complete
 package yet." Version 0.2.1 is abandoned, not delivered — there is no owed
 delivery, no released data to protect, no user holding a complete install,
@@ -116,7 +115,7 @@ design obligation on the un-armed pipeline.
 - The delivery sibling's rationale establishes the immutability asymmetry
   (registry bytes cannot be retried; everything else can) and is cited here,
   not restated.
-- The managed channels (Scoop, Homebrew, marketplace) acquire from GitHub
+- The managed channels (Scoop, Homebrew) acquire from GitHub
   release assets, not from PyPI, so no channel's function depends on the PyPI
   leg having completed.
 - The dual-authority configuration was already rejected once on principle:
@@ -278,9 +277,9 @@ violated.** The invariant: a cohort is not promotable under a version that
 any published release, any tag, or any package index already owns. The guard
 stops being PyPI-only and verifies, before ANY destination write: the three
 PyPI projects; the `v<version>` tag and release namespace, draft or published
-— the check whose absence arms today's stranding; the tap and bucket pointer
+— the check whose absence arms today's stranding; and the tap and bucket pointer
 manifests (the monotonic backward-bump guard the account standard already
-mandates); and the marketplace preflight owned by the delivery sibling. The
+mandates). The
 guard additionally enforces two memory clauses, because the destination's
 live state forgets. First, the monotonic floor: the candidate version must
 be strictly greater than the release-please manifest's recorded version —
@@ -327,7 +326,7 @@ recorded rather than silently rewritten.
 **P5 — Promotion atomicity: reversible writes first, the irreversible act
 last.** The promote job's internal order inverts around irreversibility:
 every reversible destination write — the GitHub release with its assets and
-docs payload, the Scoop push, the Homebrew push, the marketplace push, all
+docs payload, the Scoop push, the Homebrew push, all
 git-revertible or deletable — lands before the sole irreversible one, and the
 PyPI upload moves from first to last. What must be proven before the first
 irreversible act is then simply everything: the P3 all-destination guard has

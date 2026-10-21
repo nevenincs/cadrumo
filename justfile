@@ -544,14 +544,6 @@ test-python-compatibility:
 build-packaging-cohort: test-packaging-source
     @uv run --no-sync python -B -m dev.packaging.python_cohort build --output build/packaging-smoke-cohort/python
 
-# The Claude plugin is generated from one sealed cohort, reused only while it
-# still verifies and matches the current source. The tree is a local candidate:
-# nothing here installs it into a client, publishes a marketplace or uploads.
-[doc('Generate and verify the Claude plugin tree in build/claude-plugin/plugin from a current Python cohort; local only.')]
-[group('build')]
-build-claude-plugin:
-    @uv run --no-sync python -B -m dev.packaging.claude_plugin --output build/claude-plugin/plugin --cohort-dir build/claude-plugin/cohort
-
 # Own the rest of the serial contracts in this directory. The preflight lane
 # selects `not serial` because these must not run concurrently, and the oracle
 # lane above names one module, so without this recipe the remaining serial
@@ -859,7 +851,7 @@ tui-harness *ARGS:
 pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
 
 # The dedicated harness verdict's members: the ONE declaration of which proofs
-# reach their subject by spawning a real child pytest. Each path is written
+# own a child verification pool. Each path is written
 # exactly once in this file. The enrolling recipe below runs exactly these, and
 # every corpus-walking lane excludes exactly these -- derived with `prepend`,
 # never restated, because a member list repeated at five call sites is five
@@ -869,11 +861,11 @@ pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
 # `src/cadrumo/tests`, so naming its directory would drag that whole corpus into
 # an outer-serial lane and out of every parallel one; only the file is named.
 harness_worker_hook := "src/cadrumo/tests/test_worker_count_hook_harness.py"
-harness_members := harness_worker_hook
+harness_members := harness_worker_hook + " dev/docs/tests/test_sequence_corpus.py"
 harness_exclusions := prepend("--ignore=", harness_members)
 calculation_exclusions := "--ignore=src/cadrumo/application/calculations --ignore=src/cadrumo/domain/calculations/registry/tests"
 
-[doc('Run the tooling-owned pytest harness verdict before product populations.')]
+[doc('Run the verification harness outside outer worker pools, including the whole sequence corpus.')]
 [group('test')]
 test-pytest-harness:
     @uv run --no-sync pytest -q -m integration --collect-only -n0 {{harness_worker_hook}}
@@ -1642,7 +1634,8 @@ docs-availability-check:
 [doc('Run blocking read-only documentation checks; stream failure identities as they happen.')]
 [group('docs')]
 docs-check workers="auto":
-    @uv run --no-sync pytest -v -n {{workers}} dev/docs/tests dev/docs/apidocs/tests -m "docs or unit or (integration and not serial)"
+    @uv run --no-sync pytest -v -n {{workers}} {{harness_exclusions}} dev/docs/tests dev/docs/apidocs/tests -m "docs or unit or (integration and not serial)"
+    @just test-pytest-harness
     @uv run --no-sync doc8 docs
     @uv run --no-sync interrogate -c pyproject.toml src/cadrumo
 

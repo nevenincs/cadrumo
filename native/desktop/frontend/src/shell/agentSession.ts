@@ -338,11 +338,12 @@ export type AgentApproval = {
   /** The tool the agent wants to call, as the agent names it, or the
    * operation under review. Absent when its source names none. */
   tool_call?: string | null;
+  /** The declared server that owns the requested tool. */
+  tool_server?: string | null;
   /** What kind of tool it is, one of cadrumo-agent's ten. The card words it. */
   tool_kind?: AgentToolKind | null;
-  /** Up to 4096 characters. The agent's is a fixed line naming the tool, and
-   * it serves no input of the call: the person decides on the tool's name
-   * alone, and nothing here may suggest otherwise. */
+  /** Bounded description supplied by the service, including supported targets.
+   * It is not the call's full argument document. */
   description?: string | null;
   /** What the person can decide, one to sixteen options. A decision is the id
    * of one of them. */

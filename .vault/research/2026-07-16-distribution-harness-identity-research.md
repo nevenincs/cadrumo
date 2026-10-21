@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#distribution-harness-identity'
 date: '2026-07-16'
-modified: '2026-10-03'
-body_hash: 'sha256:3ea041942f0749702dc80f0dcdf37d68caa430ad2068e5a068400e0d38b57d93'
+modified: '2026-10-21'
+body_hash: 'sha256:90c338a6080d1ceeead8c7f3cae45ff9fb6a81ba118da11fb353700b6ab2d4cc'
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-12-cadrumo-cli-executable-adr]]'
@@ -19,7 +19,7 @@ This research checks whether the distribution-readiness architecture already mak
 Cadrumo's bundled operating harness distinguishable from host or third-party harnesses.
 It also checks whether the Model Context Protocol (MCP) product description reaches
 users in English and Spanish. The review covers the authored harness, generated Claude
-workspace and plugin layouts, marketplace and MCP Bundle (MCPB) metadata, protocol
+workspace layout, MCP Bundle (MCPB) metadata, protocol
 discovery, real-client acceptance, and public reacquisition.
 
 ## Findings
@@ -38,13 +38,13 @@ The relevant source locations are `src/cadrumo/_data/agent/personas`,
 the former source file, `297-372`, `608-634`. Existing generation
 tests assert source-name equality, so they prove faithful copying but do not prove a
 Cadrumo namespace. Generic installed names can collide with harness components supplied
-by a user, another plugin, or the host.
+by a user or the host.
 
 ### F2 - Product-level MCP identity is Cadrumo-branded, but the namespace is incomplete
 
-The plugin name, MCP server name, executable, MCPB name, and MCPB display name already
+The MCP server name, executable, MCPB name, and MCPB display name already
 derive from or spell the Cadrumo identity. The protocol server is created from
-`PRODUCT_IDENTITY.mcp_server`. Generated plugin configuration uses the same canonical
+`PRODUCT_IDENTITY.mcp_server`. Generated launch configuration uses the same canonical
 source. These files define the values: the former source file,
 `401-417`, the former source file, and
 `packaging/mcpb/manifest.json:4-7`.
@@ -56,8 +56,7 @@ bundled harness identifier is distinguishable.
 
 ### F3 - The MCP product description is English-only and has multiple sources
 
-The plugin generator has an English-only `_PLUGIN_DESCRIPTION`, the marketplace has an
-English-only `_MARKETPLACE_DESCRIPTION`, and the MCPB manifest has English-only
+The MCPB manifest has English-only
 `description` and `long_description` product copy. The relevant locations are
 the former source file, `128`, and
 `packaging/mcpb/manifest.json:7-8`.
@@ -76,8 +75,7 @@ that contract.
 ### F4 - Existing decisions require identity coherence and generated-output parity
 
 The accepted active Cadrumo identity decision establishes the product, package, command,
-MCP, plugin, and environment naming tuple. The accepted Claude-packaging decision
-generates the plugin's skills and agents from one authored harness source. The accepted
+MCP, and environment naming tuple. The accepted
 distribution-readiness decision requires one immutable cohort and real installed-client
 evidence before an artifact claim closes.
 
@@ -89,8 +87,7 @@ must be bilingual.
 
 Source inspection alone cannot prove the user-visible result because generation,
 archiving, installation, client discovery, publication, and reacquisition can each
-change or omit metadata. The existing distribution plan already checks generated plugin
-parity, MCPB construction, Claude Code, Claude Desktop, Cowork, public acquisition,
+change or omit metadata. The existing distribution plan already checks MCPB construction, Claude Code, Claude Desktop, Cowork, public acquisition,
 documentation claims, and the final artifact audit.
 
 The new invariant should extend those checks with an inventory of emitted identifiers

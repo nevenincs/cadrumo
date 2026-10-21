@@ -1061,6 +1061,7 @@ export function AgentColumn({
               key={approval.request_id}
               source={approval.source}
               toolCall={approval.tool_call}
+              toolServer={approval.tool_server}
               toolKind={approval.tool_kind}
               description={approval.description}
               options={approval.options}

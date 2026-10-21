@@ -20,8 +20,7 @@ const ORDER: readonly AgentApprovalOption["kind"][] = [
   "allow_once",
 ];
 
-/** Fallback labels. Named options describe their exact scope, including a
- * server-wide session grant. Session grants end with the current run. */
+/** Localized labels for the agent's canonical choices and unnamed options. */
 function kindWords(t: Translate, kind: AgentApprovalOption["kind"]): string {
   switch (kind) {
     case "allow_once":
@@ -35,6 +34,55 @@ function kindWords(t: Translate, kind: AgentApprovalOption["kind"]): string {
     case "reject_always":
       return t("desktop.agent.approval_reject_always");
   }
+}
+
+/** The agent owns these stable option IDs. Custom review choices retain their
+ * supplied wording; their scope cannot safely be inferred from English prose. */
+function optionWords(
+  t: Translate,
+  source: AgentApproval["source"],
+  option: AgentApprovalOption,
+  server?: string | null,
+): string {
+  if (source === "agent_tool") {
+    if (
+      option.option_id === "allow_server_session" &&
+      option.kind === "allow_session" &&
+      server
+    )
+      return t("desktop.agent.approval_allow_server_session", { server });
+    if (option.option_id === option.kind) return kindWords(t, option.kind);
+  }
+  return option.name?.trim() || kindWords(t, option.kind);
+}
+
+/** Remove only the exact generated repetition. Keep custom explanations and
+ * complete targets, including the agent's escaped file/attachment names. */
+function descriptionWords(
+  t: Translate,
+  source: AgentApproval["source"],
+  tool: string | null | undefined,
+  description: string | null | undefined,
+): string | null | undefined {
+  if (source !== "agent_tool" || !tool || !description) return description;
+  const repeated = `Permission required: ${tool}`;
+  if (description === repeated || description === tool) return null;
+  const filePrefix = `${repeated}; workspace file path: `;
+  if (description.startsWith(filePrefix))
+    return t("desktop.agent.approval_workspace_file", {
+      target: description.slice(filePrefix.length),
+    });
+  const attachmentPrefix = `${repeated}; attachment: `;
+  if (description.startsWith(attachmentPrefix))
+    return t("desktop.agent.approval_attachment", {
+      target: description.slice(attachmentPrefix.length),
+    });
+  const operation = /^Cadrumo operation: ([a-z][a-z0-9_.-]{0,127})$/.exec(
+    description,
+  );
+  if (operation)
+    return t("desktop.agent.approval_operation", { target: operation[1]! });
+  return description;
 }
 
 /**
@@ -51,6 +99,7 @@ function kindWords(t: Translate, kind: AgentApprovalOption["kind"]): string {
 export function ApprovalPrompt({
   source,
   toolCall,
+  toolServer,
   toolKind,
   description,
   options,
@@ -60,6 +109,7 @@ export function ApprovalPrompt({
   source: AgentApproval["source"];
   /** What would run, as the agent names it. */
   toolCall?: string | null;
+  toolServer?: string | null;
   /** What kind of tool it is, one of the agent's ten. */
   toolKind?: AgentApproval["tool_kind"];
   description?: string | null;
@@ -71,6 +121,8 @@ export function ApprovalPrompt({
 }) {
   const t = useStrings();
   const headingId = useId();
+  const detail = descriptionWords(t, source, toolCall, description);
+  const showKind = toolKind && toolKind !== "other";
   // A stable sort: options of one kind keep the order the agent gave them.
   const ordered = offeredOptions(options).sort(
     (a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind),
@@ -87,25 +139,33 @@ export function ApprovalPrompt({
           className="mt-0.5 text-muted-foreground"
         />
         <div className="grid min-w-0 gap-1">
-          <h3 id={headingId} className="font-semibold text-foreground">
-            {title ??
+          {toolCall && (
+            <p id={headingId} className="text-sm text-muted-foreground">
+              {title ??
+                (source === "agent_tool"
+                  ? t("desktop.agent.approval_tool_title")
+                  : t("desktop.agent.approval_review_title"))}
+            </p>
+          )}
+          <h3
+            id={toolCall ? undefined : headingId}
+            className="text-base font-semibold text-foreground wrap-anywhere"
+          >
+            {toolCall ||
+              title ||
               (source === "agent_tool"
                 ? t("desktop.agent.approval_tool_title")
                 : t("desktop.agent.approval_review_title"))}
           </h3>
-          {(toolCall || toolKind) && (
+          {(toolServer || showKind) && (
             <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-              {toolCall && (
-                <p className="font-medium text-foreground wrap-anywhere">
-                  {toolCall}
-                </p>
-              )}
-              {toolKind && <Badge>{toolKindWords(t, toolKind)}</Badge>}
+              {toolServer && <Badge>{toolServer}</Badge>}
+              {showKind && <Badge>{toolKindWords(t, toolKind)}</Badge>}
             </div>
           )}
-          {description && (
+          {detail && (
             <p className="text-sm whitespace-pre-wrap text-muted-foreground wrap-anywhere">
-              {description}
+              {detail}
             </p>
           )}
         </div>
@@ -120,7 +180,7 @@ export function ApprovalPrompt({
             className="h-auto min-h-control-sm max-w-full py-1 text-left whitespace-normal wrap-anywhere"
             onAction={onDecide ? () => onDecide(option.option_id) : undefined}
           >
-            {option.name?.trim() ? option.name : kindWords(t, option.kind)}
+            {optionWords(t, source, option, toolServer)}
           </AgentTextAction>
         ))}
       </div>

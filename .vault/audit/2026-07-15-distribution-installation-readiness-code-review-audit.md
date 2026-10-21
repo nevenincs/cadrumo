@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-10-03'
-body_hash: 'sha256:a99f7f81df6945a17625022cfb1dc69a00dd296370e1cd4ac0b0e557c7b4cdf8'
+modified: '2026-10-21'
+body_hash: 'sha256:e34d89feaaecb993044a12ae0f2de920fa4a38d6bf88dcd88a58158c2aac84f1'
 related:
   - "[[2026-07-16-distribution-harness-identity-adr]]"
   - "[[2026-07-17-distribution-installation-readiness-audit]]"
@@ -32,7 +32,7 @@ Axis 2 confirmed the identity verifier fails honestly. `report.ok` ANDs five sub
 
 ### test-integrity-real-behavior | confirmed | Distribution tests exercise real behavior with no doubles
 
-Axis 3 confirmed real-behavior testing: real workspace, plugin, and marketplace generators; a real MCP subprocess projection; real wheel and sdist builds plus their refusal paths. No test doubles were found.
+Axis 3 confirmed real-behavior testing: real workspace generator; a real MCP subprocess projection; real wheel and sdist builds plus their refusal paths. No test doubles were found.
 
 ### completeness-honest-open-steps | confirmed | Open steps carry faithful failing evidence
 

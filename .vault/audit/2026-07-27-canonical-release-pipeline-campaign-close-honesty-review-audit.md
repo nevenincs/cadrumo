@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#canonical-release-pipeline'
 date: '2026-07-27'
-modified: '2026-07-27'
-body_hash: 'sha256:030cc53d94412efb50b63b71d0b031eadf026f9ea03f404d46bc8648fb50c33e'
+modified: '2026-10-21'
+body_hash: 'sha256:41a9ccc8bcd6ebb0303632f35c86af1aadff9367bfb426f3afe4d924709bab1f'
 related: []
 ---
 
@@ -18,8 +18,7 @@ delivered. Every gate the campaign claims was re-run at the head current when
 this review ran, not trusted from the transcript that claimed it.
 
 The campaign closed sixteen of eighteen Steps across seven phases: version
-identity, ordering, retirement of the second index lane, marketplace
-supersession, the privacy detector, documentation delivery, and test-lane
+identity, ordering, retirement of the second index lane, the privacy detector, documentation delivery, and test-lane
 coverage.
 
 ## Findings
@@ -113,17 +112,6 @@ role is an operator act that has not happened. Removing the guard alone would
 strip a safety property in exchange for nothing, since the workflow still could
 not authenticate. The workflow therefore ships inert and refuses instructively,
 naming the operator decision that unblocks it, before checking anything out.
-
-### The marketplace mechanism exists but has never run against the real target
-
-Supersession is built, bounded by the unchanged ownership rule, and proven by
-mutation against constructed trees. It has never executed against the live
-marketplace, which still carries the retired identity with no recorded
-publisher.
-
-This is expected rather than a gap, because nothing has been published. It is
-recorded so the first publication is understood as the first real exercise of
-that mechanism, not as a routine repeat of something already demonstrated.
 
 ## Recommendations
 

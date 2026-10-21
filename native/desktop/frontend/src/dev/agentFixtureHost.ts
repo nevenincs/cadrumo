@@ -163,6 +163,44 @@ const TOOL_OPTIONS: AgentApprovalOption[] = [
   { option_id: "reject-once", name: "Skip this read", kind: "reject_once" },
 ];
 
+// Built-in options from cadrumo-agent's graph/acp_options.py, with distinct
+// tool-session and server-session scopes despite their shared kind.
+const CANONICAL_OPTIONS: AgentApprovalOption[] = [
+  { option_id: "allow_once", name: "Allow once", kind: "allow_once" },
+  {
+    option_id: "allow_session",
+    name: "Allow for this session",
+    kind: "allow_session",
+  },
+  {
+    option_id: "allow_server_session",
+    name: "Allow all cadrumo tools for this session",
+    kind: "allow_session",
+  },
+  { option_id: "reject_once", name: "Reject", kind: "reject_once" },
+];
+
+const PERMISSION_TARGETS: Record<
+  string,
+  { tool: string; description: string }
+> = {
+  status: { tool: "status", description: "Permission required: status" },
+  file: {
+    tool: "write_file",
+    description:
+      'Permission required: write_file; workspace file path: "reports/2026 IVA.csv"',
+  },
+  attachment: {
+    tool: "read_attachment",
+    description:
+      'Permission required: read_attachment; attachment: "invoice.pdf"',
+  },
+  operation: {
+    tool: "execute",
+    description: "Cadrumo operation: user-profile.censo-prepare",
+  },
+};
+
 const REVIEW_OPTIONS: AgentApprovalOption[] = [
   { option_id: "allow-once", name: "Registrar la factura", kind: "allow_once" },
   { option_id: "reject-once", name: "No registrar", kind: "reject_once" },
@@ -706,7 +744,10 @@ export function fixtureAgent({
       const remembered = !review && /solo recuerdos/i.test(text);
       // The agent says a tool's name and a line that repeats it, and serves
       // nothing of the call's input. A Cadrumo review words itself.
-      const toolName = "ledger_list";
+      const canonical =
+        !review && /permission (status|file|attachment|operation)/.exec(text);
+      const target = canonical ? PERMISSION_TARGETS[canonical[1]!] : undefined;
+      const toolName = target?.tool ?? "ledger_list";
       schedule(held, [
         started(held),
         ...write(held, "Para eso necesito tu permiso."),
@@ -723,14 +764,21 @@ export function fixtureAgent({
                 : most
                   ? MOST_TOOL_CALL
                   : toolName,
-            tool_kind: review || unnamed ? null : "read",
+            tool_kind: review || unnamed ? null : target ? "other" : "read",
+            tool_server:
+              review ||
+              unnamed ||
+              target?.tool === "write_file" ||
+              target?.tool === "read_attachment"
+                ? null
+                : "cadrumo",
             description: review
               ? "Añade la factura al libro de ingresos del tercer trimestre."
               : unnamed
                 ? null
                 : most
                   ? MOST_DESCRIPTION
-                  : `Permission required: ${toolName}`,
+                  : (target?.description ?? `Permission required: ${toolName}`),
             options: review
               ? REVIEW_OPTIONS
               : unnamed
@@ -739,7 +787,14 @@ export function fixtureAgent({
                   ? MOST_OPTIONS
                   : remembered
                     ? REMEMBERED_OPTIONS
-                    : TOOL_OPTIONS,
+                    : target
+                      ? CANONICAL_OPTIONS.filter(
+                          (option) =>
+                            option.option_id !== "allow_server_session" ||
+                            target.tool === "status" ||
+                            target.tool === "execute",
+                        )
+                      : TOOL_OPTIONS,
           }),
           then: (option) =>
             goOn(

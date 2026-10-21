@@ -31,12 +31,16 @@ class _ReceiptClient:
     def __init__(self, refusal: ProfileSessionRefusalReason | None = None) -> None:
         self.profile_id = uuid4()
         self.resumes = 0
+        self.activities = 0
         self.refusal = refusal
 
     def resume_receipt(self) -> None:
         self.resumes += 1
         if self.refusal is not None:
             raise ProfileReceiptRefusedError(self.refusal)
+
+    def note_activity(self) -> None:
+        self.activities += 1
 
 
 def _authenticate(client: _ReceiptClient) -> None:
@@ -57,6 +61,7 @@ def test_a_live_sign_in_admits_with_or_without_a_terminal(monkeypatch: pytest.Mo
     _authenticate(client)
 
     assert client.resumes == 1
+    assert client.activities == int(interactive)
 
 
 def test_no_live_sign_in_refuses_with_the_login_action_without_a_terminal(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#distribution-installation-readiness'
 date: '2026-07-16'
-modified: '2026-07-16'
-body_hash: 'sha256:6be1d7ccc22b9ad04a83b4a458f7a416dca112cdc7040a201fb16ee818bf4597'
+modified: '2026-10-21'
+body_hash: 'sha256:04db498ad83e1d70eca9b0ba0ef1d39b179c00286b8a8906290484baf5353152'
 related:
   - "[[2026-07-03-claude-ecosystem-packaging-adr]]"
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
@@ -45,8 +45,7 @@ authority.
 
 ### packaging-adr-reconciliation | high | Whole-ADR supersession would regress unrelated accepted capability
 
-The earlier ADR also owns the Claude plugin vehicle, generated marketplace
-surface, physical corpus-file split, mirrored namespace, single resource
+The earlier ADR also owns the physical corpus-file split, mirrored namespace, single resource
 resolution seam, and present-byte integrity enforcement. Those decisions do
 not conflict with the successor and remain implemented. Marking the entire ADR
 superseded would discard valid architecture and make the corpus less accurate.
@@ -87,7 +86,7 @@ found no optional companion or `corpus-sources` runtime surface.
 
 - Treat the 2026-07-15 ADR as current authority for mandatory dependency
   closure and publication; retain the 2026-07-03 ADR as accepted for its
-  non-conflicting plugin, physical-split, namespace, resolution, and integrity
+  non-conflicting physical-split, namespace, resolution, and integrity
   decisions.
 - Do not use whole-document `supersedes` metadata between these ADRs because
   the relationship is partial and the canonical edge would falsely retire

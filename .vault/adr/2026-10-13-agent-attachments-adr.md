@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#agent-attachments'
 date: '2026-10-13'
-modified: '2026-10-17'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:e754b615a2ec44aae4e65d1efecb297f98e6352930a960266252c67fc6f003a4'
+body_hash: 'sha256:5953533e0ba7390011164216b7a4cf2d69f26855b41a386afbd490562c5ea3b0'
 related:
   - "[[2026-10-12-desktop-agent-host-adr]]"
   - "[[2026-10-13-provider-settings-adr]]"
@@ -107,7 +107,7 @@ Binding, amended 2026-10-14:
 
 ## Implementation
 
-The attachment intake, conversation reference/grant store and release policy are service responsibilities under `src/cadrumo_agent_service`; generic encrypted documents/tax evidence and neutral custody/projection primitives are runtime responsibilities under `src/cadrumo_runtime`; MCP adaptation is `src/cadrumo_harness`. Native desktop presents the file selection and trusted approval card through authenticated service commands. No `aeat` attachment grant/provider/agent door is introduced.
+The attachment intake, conversation reference/grant store and release policy are service responsibilities under `src/cadrumo_agent_service`; generic encrypted documents/tax evidence and neutral custody/projection primitives are runtime responsibilities under `src/cadrumo_runtime`; MCP adaptation is `src/cadrumo_mcp`. (Renamed `cadrumo_mcp` on 2026-10-21, drift repair toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR; see the harness boundary amendment of `2026-07-02-agent-harness-refoundation-adr`.) Native desktop presents the file selection and trusted approval card through authenticated service commands. No `aeat` attachment grant/provider/agent door is introduced.
 
 These are outstanding capability obligations. Current service process/provider migration and admin readiness do not prove attachment intake, projection, grants or encrypted agent retention. The native `agent_documents` path currently refuses; Add files stays unavailable until the full custody, consent, agent encryption/reference/per-chain deletion and image-relay contracts exist. Agent process implementation, permission wiring and store encryption remain cadrumo-agent-owned. Actual inner ready is gateway port, agent version and hosting contract; service workspace metadata belongs only to the distinct outer protocol.
 

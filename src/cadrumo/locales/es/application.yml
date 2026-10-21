@@ -986,15 +986,15 @@ application:
           la prorrata especial si es obligatoria.
       prorrata_volume_check_unavailable:
         what: La comparación anual con el libro está incompleta.
-        what_to_do: Clasifique las operaciones de salida y revise las exclusiones
-          de prorrata.
+        what_to_do: Clasifica las operaciones de salida y revisa las exclusiones de
+          prorrata.
       prorrata_volume_declaration_missing:
         what: El libro contiene operaciones de salida para comparar con los volúmenes
           anuales de prorrata.
-        what_to_do: Declare los volúmenes anuales; el libro no los sustituye.
+        what_to_do: Declara los volúmenes anuales; el libro no los sustituye.
       prorrata_volume_divergence:
         what: Los volúmenes anuales de prorrata declarados difieren del libro clasificado.
-        what_to_do: Revise los volúmenes y las exclusiones. Las cifras declaradas
+        what_to_do: Revisa los volúmenes y las exclusiones. Las cifras declaradas
           siguen siendo la autoridad.
       rate_boxes_underaccount_total:
         what: Una parte del total de IVA de la casilla {box} no está en ninguna casilla

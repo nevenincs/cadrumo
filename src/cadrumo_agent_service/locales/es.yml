@@ -1,19 +1,27 @@
 desktop:
   agent:
-    aeat_setup_title: Configurar el acceso a la AEAT
-    aeat_setup_help: Guarda aquí los datos de autenticación y cierra el editor para volver a la conversación. Las credenciales no se envían al chat.
-    aeat_setup_return: Volver a la conversación
-    aeat_setup_check: Comprobar la configuración y continuar
-    aeat_setup_resume_message: He terminado con los ajustes de la AEAT. Comprueba la configuración guardada, ayúdame con los requisitos pendientes y continúa nuestra tarea cuando esté lista.
     add_files: Añadir archivos
+    aeat_setup_check: Comprobar la configuración y continuar
+    aeat_setup_help: Guarda aquí los datos de autenticación y cierra el editor para
+      volver a la conversación. Las credenciales no se envían al chat.
+    aeat_setup_resume_message: He terminado con los ajustes de la AEAT. Comprueba
+      la configuración guardada, ayúdame con los requisitos pendientes y continúa
+      nuestra tarea cuando esté lista.
+    aeat_setup_return: Volver a la conversación
+    aeat_setup_title: Configurar el acceso a la AEAT
     agent_replied: El agente respondió
     approval_allow_always: Permitir
     approval_allow_once: Permitir una vez
+    approval_allow_server_session: Permitir todas las herramientas de {server} durante
+      esta sesión
     approval_allow_session: Permitir durante esta sesión
+    approval_attachment: 'Adjunto: {target}'
+    approval_operation: 'Operación: {target}'
     approval_reject_always: No permitir
     approval_reject_once: No permitir
     approval_review_title: Revisa esto antes de que Cadrumo lo haga
     approval_tool_title: El agente te pide permiso
+    approval_workspace_file: 'Archivo del espacio de trabajo: {target}'
     archive: Archivar
     archived_empty: No hay nada archivado
     archived_toggle: Archivadas ({count})

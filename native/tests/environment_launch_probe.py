@@ -385,18 +385,36 @@ def _same_path(left: str, right: str) -> bool:
 def declared_path(contract: Contract, environment: Mapping[str, str]) -> list[str]:
     """Compose a ``PATH`` the way the package declares: its directories, then the system's."""
     declared = contract.section["path"]
+    received = {_folded(contract, name): value for name, value in environment.items()}
     entries: list[str] = []
     for entry in declared["entries"]:
         if entry["kind"] == "package":
             entries.append(str(contract.package if entry["value"] in {"", "."} else contract.package / entry["value"]))
         elif entry["kind"] == "external":
-            entries.extend(part for part in environment.get(entry["value"], "").split(os.pathsep) if part)
-        elif contract.windows:
-            system = {_folded(contract, name): value for name, value in environment.items()}
-            base = system[_folded(contract, declared["windows_system"]["variable"])]
+            entries.extend(
+                part
+                for part in received.get(_folded(contract, entry["value"]), "").split(os.pathsep)
+                if part and Path(part).is_absolute() and Path(part).is_dir()
+            )
+        elif entry["kind"] == "external_defaults":
+            for default in declared["external_defaults"]:
+                platform = default["platform"]
+                if platform != _platform() and not (platform == "posix" and not contract.windows):
+                    continue
+                variable = default["variable"]
+                base = received.get(_folded(contract, variable), "") if variable else default["path"]
+                if not base or not Path(base).is_absolute():
+                    continue
+                candidate = Path(base, *default["subpaths"])
+                if candidate.is_dir():
+                    entries.append(str(candidate))
+        elif entry["kind"] == "system" and contract.windows:
+            base = received[_folded(contract, declared["windows_system"]["variable"])]
             entries.append(str(Path(base, *declared["windows_system"]["subpaths"])))
-        else:
+        elif entry["kind"] == "system":
             entries.extend(declared["posix_system"])
+        else:
+            raise ProbeFailedError(f"unknown declared PATH entry kind: {entry['kind']}")
     return entries
 
 

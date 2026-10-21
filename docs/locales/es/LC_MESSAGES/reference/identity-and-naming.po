@@ -99,10 +99,6 @@ msgid "Unprefixed names advertised by `tools/list`"
 msgstr "Nombres sin prefijo anunciados por `tools/list`"
 
 #: ../../reference/identity-and-naming.md
-msgid "Plugin identifier"
-msgstr "Identificador del complemento"
-
-#: ../../reference/identity-and-naming.md
 msgid "Product environment prefix"
 msgstr "Prefijo de entorno del producto"
 

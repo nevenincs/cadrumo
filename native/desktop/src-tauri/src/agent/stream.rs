@@ -135,6 +135,9 @@ pub struct Approval {
     pub source: &'static str,
     /// The tool the agent wants to call, as the agent names it.
     pub tool_call: Option<String>,
+    /// The host-declared server that owns this tool, when supplied.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_server: Option<String>,
     pub description: Option<String>,
     /// One of the agent's ten tool kinds.
     pub tool_kind: Option<String>,
@@ -499,6 +502,7 @@ impl Mapping {
                 reply_id: self.reply_id.clone(),
                 source: "agent_tool",
                 tool_call: text(frame, "tool_call").map(str::to_owned),
+                tool_server: text(frame, "tool_server").map(str::to_owned),
                 description: text(frame, "description").map(str::to_owned),
                 // A kind the agent's vocabulary does not hold is not shown.
                 tool_kind: text(frame, "tool_kind")
@@ -1058,6 +1062,7 @@ mod tests {
             json!({
                 "request_id": "perm-1",
                 "tool_call": "cadrumo.ledger_import",
+                "tool_server": "cadrumo",
                 "tool_kind": "edit",
                 "description": "Import the statement",
                 "options": [
@@ -1073,6 +1078,7 @@ mod tests {
             json!({"type": "approval", "reply_id": "run-1", "approval": {
                 "request_id": "perm-1", "reply_id": "run-1", "source": "agent_tool",
                 "tool_call": "cadrumo.ledger_import", "description": "Import the statement",
+                "tool_server": "cadrumo",
                 "tool_kind": "edit",
                 "options": [
                     {"option_id": "allow", "name": "Allow once", "kind": "allow_once"},

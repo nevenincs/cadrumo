@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#release-pipeline-full-automation'
 date: '2026-08-02'
-modified: '2026-10-03'
+modified: '2026-10-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:1f55e8376af0075119209afa40402e3abc16d63786ba6b8d495f8ebce74e3361'
+body_hash: 'sha256:2f18bcb55ae3d0237290a3c2aa26fa5ff1e3fd96b03ec1fb4c4281240d9313c1'
 related:
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
   - "[[2026-07-27-publication-lane-consolidation-adr]]"
@@ -147,7 +147,7 @@ supersessions by ruling rather than contradicting them silently.
 - The four `claude-*` rows cannot be automated without voiding their meaning;
   the emit guard refuses SDK-driven runs deliberately.
 - Those rows are not currently in the loop. `docs/_data/download_channels.toml`
-  marks `scoop`, `homebrew`, `claude-plugin`, and `mcpb` as `public_launch`, so
+  marks `scoop`, `homebrew`, and `mcpb` as `public_launch`, so
   only the registry-tier `python` channel is claimed and
   the former source file demands `packaging_run_id` alone for the
   first release.
@@ -384,8 +384,7 @@ burned-version ledger, run at cohort seal and again at Gate 2; the readiness
 gate's complete blocking evidence set, derived from the claimed channels and
 re-run in CI rather than trusted from a local aggregation; per-run identity
 verification and per-asset digest verification of every evidence draft; the
-fail-closed leak sweep over every byte about to be attached; the marketplace
-supersession preflight; the immutable-candidate soak; reversible destination
+fail-closed leak sweep over every byte about to be attached; the immutable-candidate soak; reversible destination
 writes first with the sole irreversible index upload last; per-destination
 idempotent convergence on re-dispatch; and the `dry_run` rehearsal mode. Three
 additions the click's removal obliges, and they are additions rather than

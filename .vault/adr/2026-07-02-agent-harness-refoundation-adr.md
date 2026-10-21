@@ -13,8 +13,8 @@ related:
 supersedes:
   - '2026-06-30-agent-harness-adr'
   - '2026-07-01-agent-harness-adr'
-modified: '2026-10-14'
-body_hash: 'sha256:de0de3739a1940022595554e2719905f6f92d0cf573b80249feae2cadd3cf339'
+modified: '2026-10-21'
+body_hash: 'sha256:c00e084bec738638d3964ca513a0e752c5893e208e27e795a9d8d6bf46139db0'
 ---
 # `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `accepted`)
 
@@ -70,9 +70,10 @@ harness targets the user's existing client rather than a bespoke runtime.
 
 - **Q1:** prove the rules and one golden workflow over the manifest-backed JSON
   CLI first, then use the same manifest as the MCP tool authority.
-- **Q2:** authored harness data lives at `src/cadrumo_harness/_data/agent/`; MCP is a
-  sibling entry point and packaging is governed by the current Cadrumo
-  distribution decisions.
+- **Q2:** MCP is a sibling entry point and packaging is governed by the current Cadrumo
+  distribution decisions. (Drift repair 2026-10-21 toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR; see the harness boundary amendment below.) Before that, authored harness
+  data lived at `src/cadrumo_harness/_data/agent/`; authored agent content is now owned by
+  cadrumo-agent and absent from Cadrumo, and the MCP package is `src/cadrumo_mcp`.
 - **Q3:** manifest mutability annotations drive client confirmation while the
   CLI's deterministic guards remain the non-bypassable backstop; live submit is
   never exposed.
@@ -104,10 +105,12 @@ harness targets the user's existing client rather than a bespoke runtime.
   and lifecycle ordering; a manifest-derived negative gate rejects internal
   package, private-module, and test names in operator rules.
 - **D5:** Tier-A itinerary skills derive from explicit taxpayer-profile facts;
-  they are never an open-ended hand-curated roster.
+  they are never an open-ended hand-curated roster. (Ownership moved to cadrumo-agent
+  2026-10-21; Drift repair 2026-10-21 toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR; see the harness boundary amendment below.. Retained here as decision history.)
 - **D6:** the executable unit is one skill per registry-modelled modelo, authored
   by difference from one shared lifecycle spine; category material is reference
-  content and personas are thin entry itineraries.
+  content and personas are thin entry itineraries. (Ownership moved to cadrumo-agent
+  2026-10-21, same basis. Retained here as decision history.)
 - **D7:** verifier context must be constructible from tool-result JSON without
   the preparer's transcript. Separate invocation is structural enforcement;
   self-report is explicitly degraded trust.
@@ -158,11 +161,15 @@ storage-root promises. The original ruling follows for the decision trail.
 
 ### R4 — Operating-layer delivery
 
+**Status: the four delivery channels are WITHDRAWN FROM CADRUMO.** Drift repair 2026-10-21 toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR; see the harness boundary amendment below. Cadrumo's MCP surface serves no skill, rule or persona content: the `harness.load` floor tool, the `cadrumo://skill|rule|persona/{name}` resource templates, the skill-bearing prompts and the optional materialisation are removed, and the authored source is cadrumo-agent's. What survives of R4 and continues to bind R2, R3 and R6 is its design rule: a universal floor on tools, richer channels as progressive enhancements, each degrading cleanly when its capability is absent. The original ruling follows for the decision trail.
+
 *Materialise a workspace as the primary vehicle (status quo):* rejected as primary — it is a dead-end export no in-repo consumer reads, is Claude-shaped, and does not reach an arbitrary client through the protocol.
 
 **Chosen — one authored source, four channels, floor-first.** The universal floor is a `harness.load` tool returning the operator rules and active persona as text — the only channel guaranteed to reach a model on a minimal tools-only client. Layered on top: resource templates `cadrumo://skill|rule|persona/{name}` for enumerable pull; MCP prompts as slash-command guided workflows that embed the matching skill plus its grounding excerpt; and optional `.claude/skills` materialisation (owned by the separate harness product, absent from `aeat`) as a Claude-native enhancement, never the baseline. A single authored source in `src/cadrumo_harness/_data/agent/` feeds all four channels, matching the one-authored-source/generated-outputs discipline. Each channel above the floor degrades cleanly when its capability is absent.
 
 ### R5 — Skill taxonomy and metadata
+
+**Status: OWNERSHIP MOVED TO CADRUMO-AGENT.** Drift repair 2026-10-21 toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR; see the harness boundary amendment below. Skill taxonomy, the WHEN-layer situation skills, and the `applies_when` frontmatter field and its validation are cadrumo-agent's. Cadrumo keeps no authored skill and no skill metadata schema. How the TaxpayerProfile vocabulary that `applies_when` predicates read reaches cadrumo-agent is open item 2 of that amendment. The original ruling follows for the decision trail.
 
 *Tax-domain-primary:* rejected — situations and users both span domains, so a domain-primary tree fractures every real itinerary.
 
@@ -182,17 +189,15 @@ storage-root promises. The original ruling follows for the decision trail.
 
 *External SaaS trajectory eval:* rejected — it ships trajectories (and the figures in them) off-host, against the on-host posture.
 
-**Chosen — a self-hosted live subagent-persona harness** (operator directive, 2026-07-02). Capabilities are measured by **live subagent personas**: spawned language-model subagents playing the harness personas, operating the console end-to-end against golden scenarios. The substrate (a) starts the real `cadrumo-mcp` server, (b) connects a real MCP client session driven by a subagent persona, (c) captures the full trajectory (tools selected, arguments, elicitation responses, narration), and (d) scores it against the existing golden-scenario models plus the faithfulness and confirmation checks **now applied to observed calls**, not caller-injected verdicts. Hard invariants: **zero live-submit attempts and zero faithfulness violations at the handoff boundary**. A data flywheel promotes live failures into new golden scenarios. A real-client handshake conformance test (`initialize` / tools-list / call round-trip) is the floor beneath the live harness.
+**Chosen — a self-hosted live subagent-persona harness** (operator directive, 2026-07-02). Capabilities are measured by **live subagent personas**: spawned language-model subagents playing the harness personas, operating the console end-to-end against golden scenarios. The substrate (a) starts the real `cadrumo-mcp` server, (b) connects a real MCP client session driven by a subagent persona, (c) captures the full trajectory (tools selected, arguments, elicitation responses, narration), and (d) scores it against the existing golden-scenario models plus the faithfulness and confirmation checks **now applied to observed calls**, not caller-injected verdicts. Hard invariants: **zero live-submit attempts and zero faithfulness violations at the handoff boundary**. A data flywheel promotes live failures into new golden scenarios. A real-client handshake conformance test (`initialize` / tools-list / call round-trip) is the floor beneath the live harness. (Amended 2026-10-21: toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR; see the harness boundary amendment below. The live persona lane, its scoring and the flywheel are cadrumo-agent's and leave Cadrumo. R7's ruling that capabilities are measured by a live model driving the real console is unchanged; Cadrumo retains only the deterministic floor, namely this handshake conformance test and deterministic MCP, CLI and operation conformance in `dev/mcp_eval`.)
 
 ### R8 — Distribution
 
-**Status: AMENDED by the accepted `2026-07-03-claude-ecosystem-packaging-adr` (D3a).** The
-Claude plugin (marketplace-served, generated from the single authored harness source,
-launching `cadrumo-mcp` from the declared installed harness entrypoint) replaces the signed `.mcpb` as the
-consumer path; the `.mcpb` artifact is demoted to a secondary kept only if measurement
-shows classic-Desktop demand. R8's INTENT — one-click install for a non-technical
-taxpayer, the identical server reachable by any MCP client — carries over unchanged;
-only the vehicle is superseded. The original ruling follows for the decision trail.
+**Status: the `.mcpb` consumer-path ruling below stands.** A Claude plugin vehicle was
+once ruled here and is withdrawn 2026-10-21 by operator instruction; the signed `.mcpb`
+and the identical server reachable by any MCP client (launching `cadrumo-mcp` from the
+declared installed harness entrypoint) remain. R8's INTENT — one-click install for a
+non-technical taxpayer, the identical server reachable by any MCP client — is unchanged.
 
 **Chosen — a signed `.mcpb` Desktop Extension as the consumer path, the same server for any MCP client.** The console ships as a signed Desktop Extension (a local server beside the encrypted store) so a non-technical taxpayer installs it with one click and no JSON editing; the identical server is reachable by any MCP client for power users. It is packaged by the separate harness product. Transport is `stdio` now; HTTP is deferred and added only if a remote-client need materialises. No alternative was preferred: a developer-only manual-config path is strictly weaker for the target user, and an embedded runtime contradicts the "any client, one console" definition.
 
@@ -220,10 +225,10 @@ A high-level layering; no code accompanies this ADR. Notably, **the CLI surface 
 
 - **Console server evolution.** Group the manifest-derived tools into domain toolsets; attach `readOnlyHint`/`destructiveHint` annotations to every tool; surface per-verb input schemas in place of the `{args: [string]}` bag; add the `search`+`execute` meta-tool fallback for the long tail.
 - **Grounding surface.** Build the on-host hybrid index from the bundled `.extracted` triples; expose the hybrid search tool over corpus, citations, manuals, and terminology; add `cadrumo://corpus/{ref}` resources resolving citations to verbatim text.
-- **Operating-layer channels.** Add the `harness.load` floor tool; the `cadrumo://skill|rule|persona/{name}` resource templates; the guided-workflow prompts embedding skill plus grounding; and the optional `.claude/skills` materialisation, all fed from the single `src/cadrumo_harness/_data/agent/` source.
-- **Skill metadata and situation skills.** Lift each skill's selection predicate into the structured `applies_when` frontmatter field; author the six WHEN-layer skills, `regularizar-atrasos` first over the already-built backlog/recargo surface.
+- **Operating-layer channels.** (Withdrawn from Cadrumo, 2026-10-21 drift repair toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR; see the harness boundary amendment. Cadrumo's MCP surface serves no skill, rule or persona content. The original item follows for the trail.) Add the `harness.load` floor tool; the `cadrumo://skill|rule|persona/{name}` resource templates; the guided-workflow prompts embedding skill plus grounding; and the optional `.claude/skills` materialisation, all fed from the single `src/cadrumo_harness/_data/agent/` source.
+- **Skill metadata and situation skills.** (Moved to cadrumo-agent, 2026-10-21 drift repair toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR; see the harness boundary amendment. The original item follows for the trail.) Lift each skill's selection predicate into the structured `applies_when` frontmatter field; author the six WHEN-layer skills, `regularizar-atrasos` first over the already-built backlog/recargo surface.
 - **Gate wiring.** Wire the CONFIRM tier to elicitation with the degradation matrix; wire faithfulness into the serving path with the handoff hard block; add the per-verb handoff deny rules over the family-granular persona scope.
-- **Live eval.** Build the live subagent-persona harness (real server, real client session, trajectory capture, scoring on observed calls), the real-client handshake conformance floor, and the flywheel that promotes live failures to golden scenarios.
+- **Live eval.** Cadrumo builds the real-client handshake conformance floor and the deterministic MCP, CLI and operation conformance lane in `dev/mcp_eval`. The live subagent-persona harness, trajectory scoring and the flywheel are cadrumo-agent's (2026-10-21 drift repair toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR; see the harness boundary amendment). Before that this item read: build the live subagent-persona harness (real server, real client session, trajectory capture, scoring on observed calls), the real-client handshake conformance floor, and the flywheel that promotes live failures to golden scenarios.
 - **Packaging.** Assemble and sign the `.mcpb` Desktop Extension from the separately owned harness payload, `stdio` transport.
 
 ## Rationale
@@ -270,4 +275,75 @@ Accepted under `2026-10-11-mcp-parity-full-parity-adr`, which supersedes `2026-1
 
 ## Boundary amendment 2026-10-14
 
-Authorized by the user's explicit deletion/migration instruction. Authored rules, personas and skills are owned and packaged under `src/cadrumo_harness`; `cadrumo-mcp` is the separate entrypoint. Optional materialization belongs to the harness and is absent from `aeat`. Runtime exposes deterministic registered operations and imports/manages no harness. Floor/enhancement delivery, safety, licensing, parity and the July decision history remain binding within their existing scope. Former Q2/R4 source was `src/cadrumo/_data/agent/`, materialization used `aeat app agent`, and distribution referenced `cadrumo[agent]`; those are historical ownership facts, no longer current requirements.
+Authorized by the user's explicit deletion/migration instruction. Authored rules, personas and skills are owned and packaged under `src/cadrumo_harness`; `cadrumo-mcp` is the separate entrypoint. Optional materialization belongs to the harness and is absent from `aeat`. Runtime exposes deterministic registered operations and imports/manages no harness. Floor/enhancement delivery, safety, licensing, parity and the July decision history remain binding within their existing scope. Former Q2/R4 source was `src/cadrumo/_data/agent/`, materialization used `aeat app agent`, and distribution referenced `cadrumo[agent]`; those are historical ownership facts, no longer current requirements. (Superseded in part by the 2026-10-21 drift repair toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR; see the harness boundary amendment below: the placement of authored rules, personas and skills under `src/cadrumo_harness`, and of optional materialization with that harness, no longer holds.)
+
+## Harness boundary amendment 2026-10-21: authored agent content leaves Cadrumo
+
+Drift repair toward the cadrumo-agent vault's accepted `2026-10-15-agent-harness-adr`,
+authorized by the user in session TUI-REFACTOR. That record already rules that
+cadrumo-agent owns all personas, operator rules, workflow skills and provisioning and
+that Cadrumo carries no copy of them. The boundary amendment of 2026-10-14 above placed
+that same content under `src/cadrumo_harness`, and the live persona lane under
+`dev/agent_eval`. Those two placements are withdrawn. This amendment reconciles the
+wording; it decides nothing the cadrumo-agent record has not already decided.
+
+cadrumo-agent is the single owner of: authored agent content (personas, operator rules,
+workflow skills and their reference documents); skill metadata schema and validation of
+`applies_when` predicates, and resource accessors; workspace materialisation
+and provisioning; serving skills and rules
+to the agent, conversations and provider execution; and live persona evaluation, scoring
+and the failure-to-scenario flywheel.
+
+Cadrumo owns, and carries no copy of anything above:
+
+- The deterministic MCP service: the `cadrumo-mcp` executable and its package, renamed
+  from `src/cadrumo_harness` to `src/cadrumo_mcp`. The word "harness" leaves Cadrumo. Its
+  scope is protocol contracts and tool declarations, operation projection, discovery and
+  search, deterministic operation-derived guidance, authority and corpus queries, runtime
+  admission and cleanup, progress relay and diagnostics.
+- An MCP surface that serves no skill, rule or persona content: no `harness_load` tool, no
+  `cadrumo://skill/*` or `cadrumo://rule/*` resources, no workspace materialisation flag.
+  Tool descriptions do not instruct a client to load skills or rules.
+- The agent-key grant scope (`access/automation_key`: which operations an automation key
+  may be granted) as Cadrumo runtime authority, moving with the MCP package.
+- `src/cadrumo_agent_service`: the host and supervisor that launches the bundled
+  cadrumo-agent as a contained process, delivers credentials by frame, brokers runtime
+  authority, and declares Cadrumo's MCP tool server to cadrumo-agent through
+  `CADRUMO_AGENT_TOOL_SERVER_<NAME>`.
+- `dev/mcp_eval`, renamed from `dev/agent_eval`: deterministic MCP, CLI and operation
+  conformance only. It loads no skill or rule text. The live persona lane, live scoring,
+  the flywheel and the persona scenarios leave Cadrumo.
+
+Removed from Cadrumo with no compatibility facade and no duplicate definition:
+`cadrumo_harness/_data/agent/**`, `_resources.py`, `resources.py`, `_skill_metadata.py`,
+`workspace.py`, `mcp/operating_layer.py`, and the live and persona parts of `dev/agent_eval`.
+
+Interface: cadrumo-agent reaches Cadrumo only through the declared MCP tool server and the
+runtime contracts it fronts; it imports no Cadrumo package. Cadrumo does not import
+cadrumo-agent's harness content.
+
+Unchanged: R2, R3, R6 and R8 within their existing scope, R9's consent posture, the
+never-live-submit rail, every parity amendment of 2026-09-26 through 2026-10-18, and all
+original dates, acceptances and quotations. This amendment states ownership obligations; it
+is not evidence that any of it is built.
+
+Open, recorded and not decided here:
+
+1. `cadrumo_agent_service/adapters/provider_catalog_metadata.py` imports `cadrumo_agent`
+   modules in process, hash verified, to build the provider catalog, and
+   `cadrumo_agent_service/providers/application` performs provider lane choice and
+   credential resolution. Whether that provider policy belongs in Cadrumo or in
+   cadrumo-agent is unresolved. The standing ruling is that cadrumo-agent decides providers
+   and lanes and Cadrumo makes no agent rulings. Governed separately;
+   `2026-10-14-agent-service-boundary-plan` is in flight.
+2. Skill `applies_when` metadata is validated in Cadrumo against Cadrumo's TaxpayerProfile
+   model, and cadrumo-agent's validator must not import Cadrumo. How the profile vocabulary
+   reaches cadrumo-agent, by published schema or by MCP discovery, is settled in
+   implementation.
+3. `reference/command-operations.md` is generated in Cadrumo from Cadrumo's operation
+   catalogue (`dev/harness_data/command_operation_reference.py`). Its replacement source
+   for cadrumo-agent, MCP operation discovery at runtime or a published artifact, is
+   settled in implementation.
+4. Content divergence: Cadrumo's 34 skills and 7 rules differ from cadrumo-agent's 37
+   skills and 8 rules. Before deletion, Cadrumo-only changes made after cadrumo-agent
+   forked the content are reviewed and ported into cadrumo-agent where still valid.

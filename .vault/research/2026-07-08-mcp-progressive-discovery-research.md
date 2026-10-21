@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#mcp-progressive-discovery'
 date: '2026-07-08'
-modified: '2026-10-03'
-body_hash: 'sha256:3d951e12b6770089624de436258fc414045fbaab93b8def3937e277cde9a6da1'
+modified: '2026-10-21'
+body_hash: 'sha256:5ea519210dc2bc8e16aa409e61712d195df9518c33985b9bd884d2f9c5cbfa4f'
 related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-audit]]'
@@ -31,8 +31,7 @@ discovery-architecture findings that seed the `mcp-progressive-discovery` ADR.
 ### F1 — Governing decisions and their honest delivery state
 
 The accepted refoundation ADR resolved the console architecture (R1–R9) and
-the accepted packaging ADR resolved distribution (D1–D4, amending R8 to the
-Claude-plugin path). Both plans are 100% executed; two close honesty reviews
+the accepted packaging ADR resolved distribution (D1–D4, amending R8). Both plans are 100% executed; two close honesty reviews
 ran; the operability follow-up landed nearly its whole deferred register on
 2026-07-03 (live-model measurement, semantic grounding provisioning,
 consent-on-floor, evidence-scrubbing gate, e2e gated-session test, hardening).
@@ -53,7 +52,7 @@ no persona is active. The five curated toolsets (`_toolsets.py`,
 unit-tested — and never called from any server registration path: finished,
 tested, dead capacity. There is no `tools/listChanged` support (no
 notification handlers registered, so the SDK-derived capability declaration
-advertises none), no dynamic exposure, and the generated Claude plugin does
+advertises none), no dynamic exposure, and the generated launch configuration does
 not constrain the surface either — its `.mcp.json` launches the full server;
 the only scoping lever is the optional `userConfig.persona` env value, fixed
 for the process lifetime. The meta-tool pair, designed as the long-tail
@@ -66,11 +65,9 @@ not about what a client sees.
 ### F3 — Tool naming exceeds client budgets and duplicates the namespace
 
 `tool_name_for_command` (`_dispatch.py`, lines 30–35) concatenates
-`"aeat_" + command_key.replace(".", "_")` with no length budget. The plugin is
-named `aeat` (`agent/_workspace.py`, `_PLUGIN_NAME`) and the MCP server is
-also named `aeat` (`_server.py`, `_SERVER_NAME`), so Claude-side names carry
-the 23-char prefix `mcp__plugin_aeat_aeat__` before the tool's own name
-begins. Four current names exceed 64 characters prefixed
+`"aeat_" + command_key.replace(".", "_")` with no length budget. The MCP server is
+named `aeat` (`_server.py`, `_SERVER_NAME`), so client-side names carry
+a server prefix before the tool's own name begins. Four current names exceed 64 characters prefixed
 (`aeat_modelo_review_package_verify_signature`,
 `aeat_modelo_work_preview_maritime_exemption`,
 `aeat_config_auth_certificate_secret_remove`,
@@ -175,7 +172,7 @@ advertised surface.
   10–20 tools relevant to the current itinerary. Degrades cleanly to Option
   B semantics on clients that ignore the notification.
 - **Option D — per-persona/pre-filtered launch profiles:** extend the
-  plugin/server config so an installation chooses a toolset slice at launch
+  server config so an installation chooses a toolset slice at launch
   (GitHub-server pattern). Complementary, not primary — it cannot follow the
   conversation.
 - The candidate resolution the ADR should weigh is B as the floor, C layered

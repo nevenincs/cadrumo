@@ -563,7 +563,6 @@
         "dev.packaging.build_scratch_reclaim",
         "dev.packaging.build_storage",
         "dev.packaging.campaign",
-        "dev.packaging.claude_plugin",
         "dev.packaging.cohort_attestation",
         "dev.packaging.cohort_manifest",
         "dev.packaging.command_execution",

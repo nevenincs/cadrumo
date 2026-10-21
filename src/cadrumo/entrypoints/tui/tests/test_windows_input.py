@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import subprocess
 import sys
 import time
@@ -41,7 +40,7 @@ def test_a_lone_escape_reaches_the_app_after_the_input_loop_sleeps(tmp_path: Pat
     result = tmp_path / "result.txt"
     child = subprocess.Popen(
         [sys.executable, "-m", "cadrumo.entrypoints.tui.tests.windows_input_apps", "escape"],
-        env={**os.environ, "CADRUMO_TEST_RESULT": str(result)},
+        cwd=tmp_path,
         **_hidden_console(),
     )
     try:
@@ -56,7 +55,7 @@ def _idle_child(resumed: bool, result: Path) -> subprocess.Popen[Any]:
         # Textual closes the driver on a suspend and starts it again on resume.
         return subprocess.Popen(
             [sys.executable, "-m", "cadrumo.entrypoints.tui.tests.windows_input_apps", "resumed"],
-            env={**os.environ, "CADRUMO_TEST_RESULT": str(result)},
+            cwd=result.parent,
             **_hidden_console(),
         )
     return subprocess.Popen(

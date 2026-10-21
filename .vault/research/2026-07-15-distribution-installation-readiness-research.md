@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-10-03'
-body_hash: 'sha256:0e26a8ee401b182efbd3fc888cff28eafa0ac5f4a5da8e0fb99d75e3db65ab1f'
+modified: '2026-10-21'
+body_hash: 'sha256:3aec2933a99b14c3ea248ac1ffa84c8095a6db24d35a052f7ce0075d6e357cd2'
 related:
   - '[[2026-06-28-product-packaging-adr]]'
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
@@ -17,7 +17,7 @@ related:
 This research tests the distribution system against one acceptance rule: a generated
 artifact is approvable only when the artifact acquired through its advertised path is
 installed and performs its claims. It covers the Python distributions, installed CLI
-and MCP server, Claude plugin and marketplace, MCPB bundle, release promotion,
+and MCP server, MCPB bundle, release promotion,
 platform coverage, Scoop and Homebrew acquisition, and user-facing install guidance.
 
 ## Findings
@@ -26,22 +26,18 @@ platform coverage, Scoop and Homebrew acquisition, and user-facing install guida
 
 Anonymous checks on 2026-07-15 returned HTTP 404 for the PyPI JSON endpoints for
 `cadrumo`, `cadrumo-data-manuals`, and `cadrumo-data-official`, and for the latest
-GitHub release URL. The public `nevenincs/neve-marketplace` repository still serves
-the former `aeat` plugin and launches `aeat-cli[agent]` / `aeat-mcp`; it has one commit
-and no releases. The local marketplace source already describes `cadrumo`, so the
-published marketplace is stale rather than absent.
+GitHub release URL.
 
 `README.md:19-46` honestly limits installation to authorized source access. In
 contrast, `docs/workstation-setup.md:21-31`, `docs/workstation-setup.md:125-152`,
 `docs/how-to/connect-an-agent.md:26-57`, and `docs/updates.md:17-23` describe PyPI,
-GitHub release, marketplace, and MCPB acquisition as available. Those instructions
+GitHub release, and MCPB acquisition as available. Those instructions
 cannot currently succeed for an outside user.
 
 Source locators: `https://pypi.org/pypi/cadrumo/json`,
 `https://pypi.org/pypi/cadrumo-data-manuals/json`,
 `https://pypi.org/pypi/cadrumo-data-official/json`,
-`https://github.com/nevenincs/cadrumo/releases/latest`,
-`https://github.com/nevenincs/neve-marketplace`, `packaging/marketplace/README.md:1`.
+`https://github.com/nevenincs/cadrumo/releases/latest`.
 
 ### F2 - Existing build and isolated-install lanes are substantial, but the evidence contract is fragmented
 
@@ -122,7 +118,7 @@ PATH.
 The checked-in handshake test instead launches the PATH-visible `cadrumo-mcp`, and the
 main packaging recipes never run it from the installed wheel. The manual proof must be
 promoted into a tracked cohort lane before release approval. It also cannot establish
-PyPI or plugin acquisition while the package is unpublished.
+PyPI acquisition while the package is unpublished.
 
 Source locators: the former source file,
 
@@ -137,30 +133,6 @@ rename migration is incomplete. A release still fails because its required gate 
 certify the correct product identity.
 
 Source locator: the former source file.
-
-### F5 - Claude plugin proof stops at schema validation and its real bootstrap is broken
-
-On Claude Code 2.1.210, a fresh generated plugin passed
-`claude plugin validate --strict` and contained 34 skills and 7 agents. Validation is
-only schema proof. the former source file returns success with a
-`skipped` status when Claude is unavailable and is not part of the aggregate packaging
-or CI matrix.
-
-The generated plugin and MCPB both launch `uvx --from cadrumo[agent]==0.2.1
-cadrumo-mcp`. That exact command cannot acquire anything while the PyPI project is
-absent. Even after publication it would install neither data companion because
-`cadrumo[agent]` contains only MCP runtime dependencies and `corpus-sources` is a
-separate extra; the resulting clean process cannot load the complete registry for tax
-work. No retained evidence proves the current Cadrumo plugin was acquired from the
-public marketplace, installed into Claude Code/Desktop/Cowork, booted its MCP server,
-or completed a claimed tool call. The Claude ecosystem plan nevertheless marks those
-operator-gated steps complete; its own close-honesty audit says they were deferred.
-
-Source locators: the former source file,
-the former source file, `packaging/mcpb/manifest.json:1`,
-`pyproject.toml:144-201`,
-`.vault/plan/2026-07-03-claude-ecosystem-packaging-plan.md:138-147`,
-`.vault/audit/2026-07-03-claude-ecosystem-packaging-close-honesty-review-audit.md:76-100`.
 
 ### F6 - MCPB construction is real, but installability and publisher trust are unproven
 
@@ -219,7 +191,7 @@ The acceptance matrix must name each promised operating system, architecture, Py
 version, client version, acquisition mechanism, and supported command/tool call. A
 surface remains unsupported or release-blocking until the same promoted cohort passes
 there. Scoop is Windows-specific; Homebrew is proved independently on each claimed
-macOS/Linux row; Python/PyPI, Claude plugin, and MCPB claims need their own applicable
+macOS/Linux row; Python/PyPI and MCPB claims need their own applicable
 platform rows.
 
 Source locators: the former source file,
@@ -255,7 +227,7 @@ storage, or reproduce calculation logic. Version/help, schema validation, handsh
 and harness-only checks remain prerequisites but cannot satisfy functional acceptance.
 
 The experiments refine “artifact” into two roles. Command-bearing user installables
-(Python/PyPI, Scoop, Homebrew, plugin bootstrap, and MCPB) must install the complete
+(Python/PyPI, Scoop, Homebrew, and MCPB) must install the complete
 three-wheel cohort and pass the tax oracle. The data-only companion wheels claim no
 executable; each is accepted only as a cohort component after archive/data integrity,
 namespace joining, exact-version dependency, and downstream calculation are proved.
@@ -267,15 +239,14 @@ Source locators: `src/cadrumo/entrypoints/cli/tests/test_modelo_calculation_thro
 
 ### F11 - Distribution authority is contradictory
 
-The accepted Claude ecosystem ADR chooses local human-gated token publication and
-defers Trusted Publishing. The current publish workflow and release guide choose OIDC
+An earlier packaging decision chose local human-gated token publication and
+deferred Trusted Publishing. The current publish workflow and release guide choose OIDC
 Trusted Publishing, while live local token-publish recipes remain in `justfile`. No
 superseding ADR was found. A single authority must own build, staging, evidence,
-promotion, PyPI, companion packages, GitHub release, marketplace, MCPB, Scoop, and
+promotion, PyPI, companion packages, GitHub release, MCPB, Scoop, and
 Homebrew.
 
-Source locators: `.vault/adr/2026-07-03-claude-ecosystem-packaging-adr.md`,
-`.github/workflows/publish.yml:1-101`, `RELEASING.md:5-6`,
+Source locators: `.github/workflows/publish.yml:1-101`, `RELEASING.md:5-6`,
 `RELEASING.md:170-173`, `justfile:705-834`.
 
 ## Decision frame

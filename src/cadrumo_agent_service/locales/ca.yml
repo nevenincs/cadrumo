@@ -1,19 +1,27 @@
 desktop:
   agent:
-    aeat_setup_title: Configurar l'accés a l'AEAT
-    aeat_setup_help: Desa aquí les dades d'autenticació i tanca l'editor per tornar a la conversa. Les credencials no s'envien al xat.
-    aeat_setup_return: Tornar a la conversa
-    aeat_setup_check: Comprovar la configuració i continuar
-    aeat_setup_resume_message: He acabat amb els ajustos de l'AEAT. Comprova la configuració desada, ajuda'm amb els requisits pendents i continua la nostra tasca quan estigui llesta.
     add_files: Afegeix fitxers
+    aeat_setup_check: Comprovar la configuració i continuar
+    aeat_setup_help: Desa aquí les dades d'autenticació i tanca l'editor per tornar
+      a la conversa. Les credencials no s'envien al xat.
+    aeat_setup_resume_message: He acabat amb els ajustos de l'AEAT. Comprova la configuració
+      desada, ajuda'm amb els requisits pendents i continua la nostra tasca quan estigui
+      llesta.
+    aeat_setup_return: Tornar a la conversa
+    aeat_setup_title: Configurar l'accés a l'AEAT
     agent_replied: L'agent ha respost
     approval_allow_always: Permet-ho
     approval_allow_once: Permet-ho un cop
+    approval_allow_server_session: Permet totes les eines de {server} durant aquesta
+      sessió
     approval_allow_session: Permet-ho durant aquesta sessió
+    approval_attachment: 'Adjunt: {target}'
+    approval_operation: 'Operació: {target}'
     approval_reject_always: No ho permetis
     approval_reject_once: No ho permetis
     approval_review_title: Revisa això abans que Cadrumo ho faci
     approval_tool_title: L'agent et demana permís
+    approval_workspace_file: 'Fitxer de l''espai de treball: {target}'
     archive: Arxiva
     archived_empty: No hi ha res arxivat
     archived_toggle: Arxivades ({count})

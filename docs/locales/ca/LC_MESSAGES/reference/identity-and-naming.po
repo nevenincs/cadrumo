@@ -99,10 +99,6 @@ msgid "Unprefixed names advertised by `tools/list`"
 msgstr "Noms sense prefix anunciats per `tools/list`"
 
 #: ../../reference/identity-and-naming.md
-msgid "Plugin identifier"
-msgstr "Identificador del connector"
-
-#: ../../reference/identity-and-naming.md
 msgid "Product environment prefix"
 msgstr "Prefix d'entorn del producte"
 

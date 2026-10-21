@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-12'
-modified: '2026-10-18'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:bc036b63a6931f2021e8b48a9e31645aac50f70b3f6a417e85dd62c844c7f9d6'
+body_hash: 'sha256:302be3366c68178a563976a64bfc2d951a4154a77abdd6036d7de9b2fc94a651'
 related:
   - "[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]"
   - "[[2026-10-10-mcp-parity-shared-sign-in-door-adr]]"
@@ -79,7 +79,7 @@ If approved, we will:
 - add the runtime requests for attendance, pending inventory and decision, plus the hold lifetime;
 - wire them to `SessionAuthorityAdmission.delegate` with the human-parent rule;
 - add the CLI hold command and the leaf-proven logout;
-- add the MCP attendance path in `src/cadrumo_harness/mcp/runtime_adapter.py` and `runtime_admission.py`;
+- add the MCP attendance path in `src/cadrumo_mcp/mcp/runtime_adapter.py` and `runtime_admission.py`;
 - add the locale keys in every supported locale;
 - add unit and integration tests through the real runtime;
 - extend `dev/runtime_lifecycle/caller_owned_root.py` to prove the whole flow on the rebuilt package.
@@ -129,3 +129,7 @@ The authorized active-use amendment in `2026-10-04-application-sign-in-adr` repl
 Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
 
 The wording "Direct `aeat config login`, `aeat config logout` and profile creation remain tax commands." above is kept as accepted history. It now reads together with this ruling: They remain tax doors that present the secret to the runtime and render its typed outcome; they perform no authentication themselves.
+
+## Package rename note 2026-10-21
+
+(Locators as observed on their original dates; the MCP package was renamed from `cadrumo_harness` to `cadrumo_mcp` on 2026-10-21, drift repair toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR. See the harness boundary amendment of `2026-07-02-agent-harness-refoundation-adr`. No commitment of this record changes.)

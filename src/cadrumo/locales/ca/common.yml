@@ -1343,7 +1343,7 @@ google_review:
     snapshot_digest: Empremta de la instantània desada
     work_unit_id: Referència del treball
   notice:
-    calculation_required: Seleccioneu un càlcul desat abans de publicar.
+    calculation_required: Selecciona un càlcul desat abans de publicar.
     evidence_index: S’hi inclouen referències de proves; no es publiquen els fitxers
       adjunts originals.
     external_copy: La publicació crea una còpia llegible a Google. Els usuaris autoritzats
@@ -1355,10 +1355,9 @@ google_review:
       desada.
     provisional: Aquesta revisió desada és provisional.
     receipt_unavailable: No està disponible un rebut de publicació verificat.
-    staged_edits: Deseu o descarteu els canvis pendents abans de revisar el càlcul
-      desat.
+    staged_edits: Desa o descarta els canvis pendents abans de revisar el càlcul desat.
     submission_unresolved: El resultat de la publicació està pendent de resoldre.
-      Consulteu l’operació existent abans de tornar-la a sol·licitar.
+      Consulta l’operació existent abans de tornar-la a sol·licitar.
   offer:
     title: Revisar a Google Sheets
   open_document: Obrir el full de càlcul

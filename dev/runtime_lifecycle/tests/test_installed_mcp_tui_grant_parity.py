@@ -21,7 +21,6 @@ from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
 import pytest
-from click.testing import Result
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 from textual.pilot import Pilot
@@ -79,6 +78,7 @@ from cadrumo_client.transport.credentials import open_installed_credential_clien
 from cadrumo_client.transport.enrollment_client import NativeEnrollmentClient
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
+from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 from cadrumo_runtime.host.frontend.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
 from cadrumo_runtime.host.frontend.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
 from cadrumo_runtime.host.profile_host import RuntimeProfileHost
@@ -274,7 +274,6 @@ async def _settle_delivery(delivery: asyncio.Task[AutomationRequesterCompletion]
 async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_revokes_grant(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
-    run_cadrumo_cli: Callable[..., Result],
 ) -> None:
     """The TUI reviews exact consent; SDK private release and denial use real custody."""
     if sys.platform == "win32":
@@ -425,7 +424,7 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
         override_settings(cadrumo_output_language="en", cadrumo_profile_kdf_measure_calibration=False),
         native_api_cli_session(
             tmp_path,
-            invoke_cli=run_cadrumo_cli,
+            invoke_cli=invoke_runtime_cli,
             scope_for_destination=_scope_for_auth_read,
             prepare_profile=lambda _profile_id, _root: None,
             server_native_store=native_store,

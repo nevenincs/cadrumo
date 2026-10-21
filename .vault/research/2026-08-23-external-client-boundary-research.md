@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#external-client-boundary'
 date: '2026-08-23'
-modified: '2026-10-05'
+modified: '2026-10-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:4b6ffc4fe710ed5df7fe6631b14f00e69401af59d315e4085db7f398fee32805'
+body_hash: 'sha256:e02b116cb650551bb6bc94cd029e0f341ef78b3ffece0d3aaf86d06663c78c02'
 related: []
 ---
 # `external-client-boundary` research: base product and external client dependency boundary
@@ -28,11 +28,11 @@ Base corpus-search documentation names harness mapper and resource functions  an
 
 ### The product release cohort also treats the client as a base artifact
 
-`dev/packaging/python_cohort.py:100` and `dev/packaging/release_cohort.py:139` identify the harness inside the product cohort. `.github/workflows/publish-release.yml:605` publishes a client marketplace destination from the product release. This coupling can cause an external-client defect or credential gap to alter the base product release outcome.
+`dev/packaging/python_cohort.py:100` and `dev/packaging/release_cohort.py:139` identify the harness inside the product cohort. This coupling can cause an external-client defect to alter the base product release outcome.
 
 ### Existing decisions conflict and need explicit supersession
 
-`2026-06-30-agent-harness-adr` and `2026-07-03-claude-ecosystem-packaging-adr` required a base-mounted materializer and later `aeat app agent`. `2026-07-02-agent-harness-refoundation-adr` instead describes the CLI as a black box, but retains later implementation coupling. The new direction is a pivot, not a clarification, so the client-aware clauses cannot remain accepted alongside it.
+`2026-06-30-agent-harness-adr` required a base-mounted materializer and later `aeat app agent`. `2026-07-02-agent-harness-refoundation-adr` instead describes the CLI as a black box, but retains later implementation coupling. The new direction is a pivot, not a clarification, so the client-aware clauses cannot remain accepted alongside it.
 
 ### Options
 
@@ -47,7 +47,5 @@ Keeping only the command deletion is insufficient because base policy and releas
 
 - `dev/packaging/python_cohort.py:100`
 - `dev/packaging/release_cohort.py:139`
-- `.github/workflows/publish-release.yml:605`
 - `2026-06-30-agent-harness-adr`
 - `2026-07-02-agent-harness-refoundation-adr`
-- `2026-07-03-claude-ecosystem-packaging-adr`

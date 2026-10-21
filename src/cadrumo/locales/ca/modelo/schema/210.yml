@@ -24,7 +24,7 @@ modelo:
           irnr-deduccion-donativos:
             label: Deducció per donatius
           irnr-exencion-dividendos:
-            help: 'Consulteu la informació d''aquesta casella: Exempció aplicada a
+            help: 'Consulta la informació d''aquesta casella: Exempció aplicada a
               dividends (límit anual de 1.500 euros).'
             label: Exempció aplicada a dividends (límit anual de 1.500 euros)
           irnr-exenciones-ley-irnr-indicador:
@@ -52,7 +52,7 @@ modelo:
           irnr-ingreso-devolucion-anterior:
             label: Ingrés/Devolució anterior (exclusivament autoliquidació complementària)
           irnr-limite-convenio:
-            help: 'Consulteu la informació d''aquesta casella: Límit segons conveni.'
+            help: 'Consulta la informació d''aquesta casella: Límit segons conveni.'
             label: Límit segons conveni
           irnr-mejora-diferencia:
             label: Millora o 2a adquisició. Diferència (210 H)
@@ -66,7 +66,7 @@ modelo:
           irnr-porcentaje-convenio:
             label: Percentatge Conveni (%)
           irnr-reduccion-convenio:
-            help: 'Consulteu la informació d''aquesta casella: Reducció per aplicació
+            help: 'Consulta la informació d''aquesta casella: Reducció per aplicació
               del conveni.'
             label: Reducció per aplicació del conveni
           irnr-rendimientos-integros:

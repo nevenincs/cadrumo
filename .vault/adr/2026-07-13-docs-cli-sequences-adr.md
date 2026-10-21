@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#docs-cli-sequences'
 date: '2026-07-13'
-modified: '2026-10-03'
-body_hash: 'sha256:5dfd9b94fee474d853e2defecf958d46d72b5f141a21becf575a2bf06ffdffa2'
+modified: '2026-10-21'
+body_hash: 'sha256:80eee2c490b271ad634916bd6d95307351f519827d0a952e94aea07198245e91'
 related:
   - "[[2026-07-13-docs-cli-sequences-research]]"
   - '[[2026-06-01-docs-cli-buildtime-adr]]'
@@ -438,8 +438,8 @@ nothing, so it requires no `@result` and REFUSES the `:verify:` option (a
 verification sentence would overclaim), while `:verify:` stays mandatory on a
 sequence with executed frames. `@expect` and `@capture` on a `@static` frame are
 parse errors, because a non-executed frame produces no output to assert or
-capture. Non-`aeat` commands (`pip`, `playwright`, `ollama`, `python -m`,
-`/plugin`) remain ordinary plain fences. The mandate is scoped to the `aeat`
+capture. Non-`aeat` commands (`pip`, `playwright`, `ollama`, `python -m`)
+remain ordinary plain fences. The mandate is scoped to the `aeat`
 executable. Enforcement is a ratcheting gate: a plain shell fence carrying an
 `aeat` invocation in a user-docs page is a violation, governed by a checked-in
 per-page baseline that only ratchets down (no page may exceed its baseline; an

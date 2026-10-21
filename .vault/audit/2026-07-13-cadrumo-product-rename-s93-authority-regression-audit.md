@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s93-authority-regression'
 date: '2026-07-13'
-modified: '2026-10-03'
-body_hash: 'sha256:e69c2cde35d7d35107c983c0257ce3a6cf4ccbb587705dab8e31b86f1238ce1b'
+modified: '2026-10-21'
+body_hash: 'sha256:32029a4cf6a26d2374340114c1f829a102d6304194095fd9e5e27827b37c6bb1'
 related: []
 ---
 
@@ -20,7 +20,7 @@ related: []
 
 ### s93-false-descendant-closures | high | The plan closes descendants that still implement the repudiated title-case contract
 
-S93 cross-commits fourteen pre-existing checkbox changes from open to closed. Committed records exist, but thirteen of those scopes still contain or validate product-name `Cadrumo` under the false casing mandate that S93 removes. The affected closures are S37 (`smoke_core.py` prose), S43 (MCP server tool copy), S45 (MCP prompts), S48 (workspace and plugin copy), S49 (generator expectations), S50 (generated marketplace copy), S51 (validation evidence accepting that output), S52 (MCPB manifest display), S53 (MCPB build diagnostics), S54 (MCPB expectations), S57 (workflow labels), S76 (residue audit and bookkeeping based on title case), and S78 (acceptance evidence based on title-case assertions). Only S38's direct scope is free of this residue. These are not truthful closures under the restored `CADRUMO` authority and must not remain checked merely because their evidence was committed under the now-rejected contract. This blocks S92.
+S93 cross-commits fourteen pre-existing checkbox changes from open to closed. Committed records exist, but thirteen of those scopes still contain or validate product-name `Cadrumo` under the false casing mandate that S93 removes. The affected closures are S37 (`smoke_core.py` prose), S43 (MCP server tool copy), S45 (MCP prompts), S48 (workspace copy), S49 (generator expectations), S51 (validation evidence accepting that output), S52 (MCPB manifest display), S53 (MCPB build diagnostics), S54 (MCPB expectations), S57 (workflow labels), S76 (residue audit and bookkeeping based on title case), and S78 (acceptance evidence based on title-case assertions). Only S38's direct scope is free of this residue. These are not truthful closures under the restored `CADRUMO` authority and must not remain checked merely because their evidence was committed under the now-rejected contract. This blocks S92.
 
 ### s76-bookkeeping-commit-attribution | low | Three closure mappings cite the wrong evidence commit
 
@@ -28,7 +28,7 @@ The S76 bookkeeping appendix maps S49 to `1c02648450`, although the generator-te
 
 No critical or medium findings were found. Verdict: **FAIL** because the HIGH plan-closure defect contradicts the required cross-commit honesty gate.
 
-The S93 authority repair itself is exact. The accepted ADR, `product_identity.py`, and its focused contract have the same Git blobs as S90. The false second operator re-confirmation, wordmark-only casing section, and title-case runtime mandate are absent, while the complete matrix remains `CADRUMO`, `aeat`, lowercase `cadrumo` package/distribution/repository/plugin/MCP identities, `cadrumo-mcp`, `CADRUMO_`, both companion distributions, `cadrumo_data`, and authority `AEAT`. The one surviving `Cadrumo` in the ADR is inside the verbatim historical commit title in the valid first operator re-confirmation.
+The S93 authority repair itself is exact. The accepted ADR, `product_identity.py`, and its focused contract have the same Git blobs as S90. The false second operator re-confirmation, wordmark-only casing section, and title-case runtime mandate are absent, while the complete matrix remains `CADRUMO`, `aeat`, lowercase `cadrumo` package/distribution/repository/MCP identities, `cadrumo-mcp`, `CADRUMO_`, both companion distributions, `cadrumo_data`, and authority `AEAT`. The one surviving `Cadrumo` in the ADR is inside the verbatim historical commit title in the valid first operator re-confirmation.
 
 The S89 and S90 execution records are byte-identical to their original committed blobs and contain no false supersession appendix. S90 remains checked and is never described as superseded. S05, S86, and S62-S67 are open; S89 and S90 are checked; S91 and S92 are open; S93 is checked. S93 changes no S92, locale YAML, parity, render, i18n facade, locale manager/CLI/test, runtime CLI implementation, or descendant CLI-prose path. Its five-path commit excludes the foreign S76 audit and record paths, which landed separately in ancestor `d9ca03a353`.
 
@@ -42,4 +42,4 @@ Vault plan checking succeeds with only the known non-monotonic `PLAN022` warning
 - Keep S38 closed if its direct extras-smoke scope remains green; do not reopen clean machine-only work solely because neighboring steps are defective.
 - Correct the S49, S51, and S54 evidence-commit mappings in the S76 bookkeeping record.
 - Continue the already-open S62-S67 remediation for overlap commits `38894cae07` and `258abf7977`, and complete S92 for the `e097d0f8ea` render/test regression.
-- Extend descendant remediation to the MCP, agent/marketplace, MCPB, packaging workflow, residue-audit, and acceptance surfaces exposed by this review before re-closing their plan steps.
+- Extend descendant remediation to the MCP, agent, MCPB, packaging workflow, residue-audit, and acceptance surfaces exposed by this review before re-closing their plan steps.

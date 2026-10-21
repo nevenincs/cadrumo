@@ -1187,7 +1187,7 @@ cli:
         export_button: Bevallási eltérések exportálása (XLSX)
         export_event_id_help: A mentett egyeztetési esemény pontos azonosítója.
         export_help: Mentett egyeztetési eltérések exportálása helyi áttekintő munkafüzetbe.
-        export_selector_required: 'Pontosan egyet válasszon: --event-id, --work-unit-id
+        export_selector_required: 'Pontosan egyet válassz: --event-id, --work-unit-id
           vagy --all-history.'
         export_work_unit_id_help: A mentett bevallás pontos azonosítója (64 karakteres
           SHA-256).
@@ -1913,7 +1913,7 @@ cli:
     console_required: 'A hitelesítés szerkesztéséhez interaktív terminál szükséges:
       {command}. Feltételek: {requirements}.'
     field: '{field} (üresen a mentett érték marad)'
-    field_failed: '{field} nem menthető. Ellenőrizze a formátumát, és próbálja újra;
+    field_failed: '{field} nem menthető. Ellenőrizd a formátumát, és próbáld újra;
       a korábban mentett mezők megmaradnak.'
     method: Hitelesítési mód
     offer: Beállítja az AEAT-hitelesítést a szinkronizálás előtt?

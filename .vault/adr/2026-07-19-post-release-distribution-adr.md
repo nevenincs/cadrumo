@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#post-release-distribution'
 date: '2026-07-19'
-modified: '2026-10-03'
-body_hash: 'sha256:1783d8137d0edc65a696ad508013095c2e00ec10905a9c80e1ad513888d66410'
+modified: '2026-10-21'
+body_hash: 'sha256:cfb5a28704c6920335c222eaa7670ef0363fcefc0a784492fc8badb70c1e914a'
 related:
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
   - "[[2026-07-16-distribution-harness-identity-adr]]"
@@ -14,7 +14,7 @@ related:
 
 ## Problem Statement
 
-The distribution-installation-readiness campaign built and locally proved every generated distribution artifact (the cohort manifest, the Python wheel and sdist lanes, the Scoop and Homebrew generators, the plugin, marketplace, and MCPB artifacts, and the release-readiness evidence schema). A tail of that campaign cannot be completed from the development worktree because it requires real external access: multi-operating-system CI runners, real public registries, real Claude clients, the operator's held publish approval, and post-publication public reacquisition. That tail needs its own lifecycle home so the parent plan can close its local scope without falsely completing work only the post-release environment can prove, and so the steps already satisfied against real external evidence can carry execution records. This ADR is that home; it records no new architectural decision.
+The distribution-installation-readiness campaign built and locally proved every generated distribution artifact (the cohort manifest, the Python wheel and sdist lanes, the Scoop and Homebrew generators, the MCPB artifacts, and the release-readiness evidence schema). A tail of that campaign cannot be completed from the development worktree because it requires real external access: multi-operating-system CI runners, real public registries, real Claude clients, the operator's held publish approval, and post-publication public reacquisition. That tail needs its own lifecycle home so the parent plan can close its local scope without falsely completing work only the post-release environment can prove, and so the steps already satisfied against real external evidence can carry execution records. This ADR is that home; it records no new architectural decision.
 
 ## Considerations
 

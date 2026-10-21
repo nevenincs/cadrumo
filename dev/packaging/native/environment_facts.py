@@ -246,6 +246,20 @@ def worker_environment_writes(module: str, setting_env: Callable[[str], str]) ->
     return sorted(names)
 
 
+def settings_uses_dotenv(settings_type: Any) -> bool:
+    """Inspect the installed source policy without loading files or constructing settings."""
+    from pydantic_settings import DotEnvSettingsSource, EnvSettingsSource, InitSettingsSource, SecretsSettingsSource
+
+    sources = settings_type.settings_customise_sources(
+        settings_type,
+        init_settings=InitSettingsSource(settings_type, init_kwargs={}),
+        env_settings=EnvSettingsSource(settings_type),
+        dotenv_settings=DotEnvSettingsSource(settings_type, env_file=None),
+        file_secret_settings=SecretsSettingsSource(settings_type, secrets_dir=None),
+    )
+    return any(isinstance(source, DotEnvSettingsSource) for source in sources)
+
+
 def collect_agent() -> dict[str, Any] | None:
     """Collect the bundled agent's settings, credentials, contract and worker environment; ``None`` if absent."""
     if importlib.util.find_spec("cadrumo_agent") is None:
@@ -260,12 +274,15 @@ def collect_agent() -> dict[str, Any] | None:
         label = kind_label(info.annotation)
         for name in field_env_names(config.Settings, field):
             settings.setdefault(name, label)
+    # Browser handoff is a CLI-only input, deliberately outside gateway Settings.
+    browser = importlib.import_module("cadrumo_agent.cli._auth_browser")
+    settings[browser.AUTH_BROWSER_EXECUTABLE_ENV] = "path"
     return {
         "prefix": importlib.import_module("cadrumo_agent.control.env_prefix").ENV_PREFIX,
         "hosting_contract": importlib.import_module("cadrumo_agent.control.hosting_contract").HOSTING_CONTRACT,
         "settings": dict(sorted(settings.items())),
         "credentials": sorted(registry.CREDENTIAL_ENV_NAMES),
-        "settings_file_variable": registry.ENV_FILE_VARIABLE.env_name,
+        "settings_file_source": settings_uses_dotenv(config.Settings),
         "worker_environment_writes": worker_environment_writes(
             "cadrumo_agent.control.worker_management", config.setting_env
         ),

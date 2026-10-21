@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename'
 date: '2026-07-15'
-modified: '2026-10-03'
-body_hash: 'sha256:182b7426ddaa834311151c450359b342627486b7b3f9db670be6016828503058'
+modified: '2026-10-21'
+body_hash: 'sha256:4ad5f2e9c9f1ff61dbf8bdc2b1ad489e4982a1f70a1857e8c54df3dd7733a7d8'
 related:
   - "[[2026-07-14-cadrumo-product-rename-s76-residue-audit]]"
 ---
@@ -55,8 +55,8 @@ introduced anywhere in the rename.
 ### authority-referent-law | low | Verified sound: AEAT retained by referent, product renamed by ownership
 
 Sampled `Aeat*` classes (`AeatSession`, `AeatLoginAssertion`,
-`AeatCorpusDriftError`) all name genuine AEAT-portal/authority concepts. MCP,
-plugin, and marketplace manifests carry product identity as
+`AeatCorpusDriftError`) all name genuine AEAT-portal/authority concepts. MCP
+manifests carry product identity as
 `cadrumo`/`Cadrumo`/`CADRUMO` with lowercase `aeat` only as the CLI surface.
 The registry taxonomy, official corpus paths, and the AEAT drift-detector
 workflow correctly retain the authority name. Storage crypto

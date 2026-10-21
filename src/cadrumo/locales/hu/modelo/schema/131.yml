@@ -46,8 +46,7 @@ modelo:
           label: 'Tevékenység 5: a százalék alkalmazásának eredménye'
         x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bb7cln6asj1dhin6bbgdtp66pbeehgmkp8:
           help: Ha a részletfizetés (pago fraccionado) kiszámításához a szabályozásban
-            előírtnál magasabb százalékot kíván alkalmazni, itt adja meg a kívánt
-            százalékot.
+            előírtnál magasabb százalékot kíván alkalmazni, itt add meg a kívánt százalékot.
           label: 'Mezőgazdasági bevétel a negyedévben: alkalmazandó magasabb százalék'
         x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbfe9i6irj1e9km2spdcdinat315lmmar39dhm62:
           help: Az IRPF-törvény 68.4. cikke szerinti levonásra jogosító jövedelem.
@@ -71,9 +70,9 @@ modelo:
           label: 'Mezőgazdasági bevétel a negyedévben: kiemelt gazdaságok'
         x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbkclp74qbkdtp6iobcclpiqs3fe9hmarjkc5l6a:
           help: Ha a részletfizetés (pago fraccionado) kiszámításához a szabályozásban
-            előírtnál magasabb százalékot kíván alkalmazni, itt adja meg a kívánt
-            százalékot. Az IRPF-törvény 68.4. cikke szerinti levonással érintett jövedelemre
-            vonatkozik (Ceuta, Melilla, 2024-ben és 2025-ben La Palma).
+            előírtnál magasabb százalékot kíván alkalmazni, itt add meg a kívánt százalékot.
+            Az IRPF-törvény 68.4. cikke szerinti levonással érintett jövedelemre vonatkozik
+            (Ceuta, Melilla, 2024-ben és 2025-ben La Palma).
           label: 'Területi levonásos jövedelem: alkalmazandó magasabb százalék'
         x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9depkncqb5dpi62bb2c5pma:
           help: Levonás az elsődleges lakóingatlan megszerzésére vagy felújítására
@@ -95,14 +94,13 @@ modelo:
           label: Kiegészítő bevallás
         x-dlnm8pbcdsmj2cph5po62pr564n68pb4elhm6qbfdomm2sjk5koj2c1dcdqm2rjkd5gg:
           help: 'Csak abban a kivételes esetben, ha a negyedévben a Modelo 130 (részletfizetés)
-            nyomtatványt is be kell nyújtania: adja meg az ott e levonásként szereplő
+            nyomtatványt is be kell nyújtania: add meg az ott e levonásként szereplő
             összeget.'
           label: 'A 110.3.c cikk szerinti levonás: a Modelo 130-ban szereplő összeg'
         x-dlnm8pbcdsmj2cph5po62pr564n68pb4elhm6qbfdomm2sjk5koj2c1dehp62rbf:
           help: 'Ha az előző adóév gazdasági tevékenységből származó nettó jövedelme
-            nem haladta meg a 12 000 eurót, válassza ki a sávot: legfeljebb 9000,
-            9000,01 és 10 000, 10 000,01 és 11 000, illetve 11 000,01 és 12 000 euró
-            között.'
+            nem haladta meg a 12 000 eurót, válaszd ki a sávot: legfeljebb 9000, 9000,01
+            és 10 000, 10 000,01 és 11 000, illetve 11 000,01 és 12 000 euró között.'
           label: 'A 110.3.c cikk szerinti levonás: az előző adóév jövedelmi sávja'
         x-dlnm8pbcdsmj2cph5po62pr564n68qbjcdgn0ob3d5i62p1d6cpg:
           label: Legalább 33 %-os fokú fogyatékossággal élő adózó
@@ -115,8 +113,7 @@ modelo:
             után'
         x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmn0rricdimst31d9ig:
           help: Ha a részletfizetés (pago fraccionado) kiszámításához a szabályozásban
-            előírtnál magasabb százalékot kíván alkalmazni, itt adja meg a kívánt
-            százalékot.
+            előírtnál magasabb százalékot kíván alkalmazni, itt add meg a kívánt százalékot.
           label: 'Alapadat nélkül: alkalmazandó magasabb százalék'
         x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncqbmd5imsp315lh62sr5:
           help: Levonás az elsődleges lakóingatlan megszerzésére vagy felújítására
@@ -141,10 +138,11 @@ modelo:
             negyedéveiben.
           label: 'Lakáslevonás: a korábbi negyedévekben alkalmazott összeg'
         x-dlnm8pbcdsmj2cph5po62pr564n7cqbmd5imsp315li6asj5cdk6ubb4cli7aor3d5nms:
-          help: Jelölje X-szel, ha jogosult a lakáscélú hitelből finanszírozott, elsődleges
-            lakóingatlan megszerzésére vagy felújítására fordított összegek utáni
-            levonásra. Nincs jogosultság, ha a megszerzés vagy felújítás 2013. január
-            1-jén vagy azt követően történt, és ezt megelőzően nem történt rá kifizetés.
+          help: Jelöld X-szel, ha jogosult vagy a lakáscélú hitelből finanszírozott,
+            elsődleges lakóingatlan megszerzésére vagy felújítására fordított összegek
+            utáni levonásra. Nincs jogosultság, ha a megszerzés vagy felújítás 2013.
+            január 1-jén vagy azt követően történt, és ezt megelőzően nem történt
+            rá kifizetés.
           label: 'Lakáslevonás: a levonás alkalmazására való jogosultság'
       casilla:
         continuidad:
@@ -179,9 +177,9 @@ modelo:
               nézd meg a tevékenység együtthatóit.
             label: A tevékenység IAE-tételszáma az objektív becslési (modulos) rendszerben.
               A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet ugyanazon
-              kód alatt csoportosítanak, esetén használja az "a" vagy "b" utótagot
+              kód alatt csoportosítanak, esetén használd az "a" vagy "b" utótagot
               (pl. "659.4a", "691.9b") a tevékenységnek megfelelően - a pontos hozzárendeléshez
-              tekintse meg az m131-modulos-coeficientes együttható paramétert.
+              tekintsd meg az m131-modulos-coeficientes együttható paramétert.
           irpf-pf-modulos-rendimiento-neto-actividad:
             label: 'A tevékenység nettó jövedelme (4. szakasz: modulok − a modulrendelet
               által az adóévre megállapított általános csökkentés)'

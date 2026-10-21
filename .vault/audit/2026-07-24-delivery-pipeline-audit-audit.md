@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#delivery-pipeline-audit'
 date: '2026-07-24'
-modified: '2026-10-03'
-body_hash: 'sha256:8fce926b918f7015b6d52c80967c7acc5c30b310d5c70b50dc39d22705ac7485'
+modified: '2026-10-21'
+body_hash: 'sha256:2427dbdcbc97a29376ed6894d10a9d0b491257dbde33242b59ff44ae2ff7aedd'
 related: []
 ---
 
@@ -12,13 +12,13 @@ related: []
 
 ## Scope
 
-Operator-ordered full audit of the plugin delivery pipeline on self-hosted
+Operator-ordered full audit of the delivery pipeline on self-hosted
 runners (2026-07-24), forked into seven lanes: organization structure,
 correctness, naming, metadata, secret scrubbing, end-to-end delivery
 pipeline, and documentation/artifact cross-linking. Surfaces:
 `.github/workflows/` (packaging-*, publish-release, pypi-upload),
 `dev/packaging/`, `dev/release/`, `dev/runners/`, `dev/deploy/`,
-`packaging/` (scoop, homebrew, mcpb, marketplace), `docs/download.md` and
+`packaging/` (scoop, homebrew, mcpb), `docs/download.md` and
 the docs frontend. A fix wave applied every confirmed finding; a
 fresh-context close review (independent reviewer) then re-verified the
 whole commit range `30d4c53ce5..14719d463e` and its own blocking finding

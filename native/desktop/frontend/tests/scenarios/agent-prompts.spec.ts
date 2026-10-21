@@ -594,6 +594,100 @@ test("a decline is taken whatever was asked", async ({ page: target }) => {
 const shownOptions = (prompt: Locator) =>
   prompt.getByRole("button").allTextContents();
 
+for (const locale of ["en", "es", "ca", "hu"]) {
+  test(`canonical permission choices are localized and retain their exact scope in ${locale}`, async ({
+    page,
+  }) => {
+    scenarioOnly(
+      "uses the agent's canonical option identities in the scenario host",
+    );
+    await page.goto(
+      `/scenarios.html?scenario=signed-in&latency=0&bar=off&asks=approval&lang=${locale}`,
+    );
+    const column = agentColumn(page);
+    const input = column.getByRole("textbox", {
+      name: label("desktop.agent.message_label", {}, locale),
+    });
+    const prompt = column.getByRole("region", {
+      name: label("desktop.agent.approval_tool_title", {}, locale),
+    });
+    const choices = [
+      "reject_once",
+      "allow_session",
+      "allow_server_session",
+      "allow_once",
+    ];
+    for (const choice of choices) {
+      await page.goto(
+        `/scenarios.html?scenario=signed-in&latency=0&bar=off&asks=approval&lang=${locale}`,
+      );
+      await input.fill("permission status");
+      await input.press("Enter");
+      await expect(prompt).toBeVisible();
+      await expect(prompt.getByRole("heading")).toHaveText("status");
+      await expect(prompt.locator("[data-slot=badge]")).toHaveText(["cadrumo"]);
+      await expect(prompt.locator("p")).toHaveText([
+        label("desktop.agent.approval_tool_title", {}, locale),
+      ]);
+      const names = choices.map((id) =>
+        label(`desktop.agent.approval_${id}`, { server: "cadrumo" }, locale),
+      );
+      expect(await shownOptions(prompt)).toEqual(names);
+      await prompt
+        .getByRole("button", {
+          name: names[choices.indexOf(choice)],
+          exact: true,
+        })
+        .click();
+      await expect(prompt).toHaveCount(0);
+      const calls = await page.evaluate(() => window.__scenarioHostCalls ?? []);
+      expect(
+        calls.filter((call) => call.startsWith("agentDecideApproval ")).at(-1),
+      ).toMatch(new RegExp(` ${choice}$`));
+    }
+  });
+
+  test(`permission targets remain complete with localized labels in ${locale}`, async ({
+    page,
+  }) => {
+    scenarioOnly(
+      "bounded descriptions from the agent are preserved in the scenario host",
+    );
+    await page.goto(
+      `/scenarios.html?scenario=signed-in&latency=0&bar=off&asks=approval&lang=${locale}`,
+    );
+    const column = agentColumn(page);
+    const input = column.getByRole("textbox", {
+      name: label("desktop.agent.message_label", {}, locale),
+    });
+    const prompt = column.getByRole("region", {
+      name: label("desktop.agent.approval_tool_title", {}, locale),
+    });
+    for (const [kind, key, target] of [
+      ["file", "approval_workspace_file", '"reports/2026 IVA.csv"'],
+      ["attachment", "approval_attachment", '"invoice.pdf"'],
+      ["operation", "approval_operation", "user-profile.censo-prepare"],
+    ]) {
+      await page.goto(
+        `/scenarios.html?scenario=signed-in&latency=0&bar=off&asks=approval&lang=${locale}`,
+      );
+      await input.fill(`permission ${kind}`);
+      await input.press("Enter");
+      await expect(prompt).toContainText(
+        label(`desktop.agent.${key}`, { target: target! }, locale),
+      );
+      await expect(prompt).not.toContainText("Permission required:");
+      await prompt
+        .getByRole("button", {
+          name: label("desktop.agent.approval_reject_once", {}, locale),
+          exact: true,
+        })
+        .click();
+      await expect(prompt).toHaveCount(0);
+    }
+  });
+}
+
 test("a tool's options are named as the agent names them, refusals first, allowing once last and primary", async ({
   page: target,
 }) => {
@@ -613,18 +707,20 @@ test("a tool's options are named as the agent names them, refusals first, allowi
     TOOL.reject_once,
     TOOL.allow_once,
   ]);
-  // Of the tool, the agent says its name and a line that repeats it: no
-  // input of the call is served, and none is shown.
+  // The generated description repeats the tool name and is omitted.
   await expect(prompt).toContainText("ledger_list");
   await expect(prompt.locator("p")).toHaveText([
-    "ledger_list",
-    "Permission required: ledger_list",
+    label("desktop.agent.approval_tool_title"),
   ]);
+  await expect(prompt.getByRole("heading", { level: 3 })).toHaveText(
+    "ledger_list",
+  );
   // Of what kind of tool it is, the agent says one of ten words, and the card
   // says it in ours.
-  await expect(prompt.locator("[data-slot=badge]")).toHaveText(
+  await expect(prompt.locator("[data-slot=badge]")).toHaveText([
+    "cadrumo",
     label("desktop.agent.tool_kind_read"),
-  );
+  ]);
   // Allowing once is the primary action, and the only one.
   const buttons = prompt.getByRole("button");
   await expect(buttons).toHaveCount(2);

@@ -10,7 +10,7 @@ import sys
 import tomllib
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import pytest
 
@@ -89,13 +89,36 @@ def _conforming_agent(reference: Reference, runtime: dict[str, Any]) -> dict[str
         },
         # A credential the agent accepts under its prefix, which the prefix admits and no profile declares.
         "credentials": [f"{worker['prefix']}SAMPLE_TOKEN"],
-        "settings_file_variable": next(name for name in declared["never_admitted"] if name.endswith("ENV_FILE")),
+        "settings_file_source": False,
         "worker_environment_writes": sorted(admitted),
     }
 
 
 def _rendered(findings: list[Any]) -> list[str]:
     return [finding.render() for finding in findings]
+
+
+def test_dotenv_fact_reads_the_source_policy_without_loading_a_file(tmp_path: Path) -> None:
+    from pydantic_settings import BaseSettings, PydanticBaseSettingsSource
+
+    class DefaultSources(BaseSettings):
+        model_config = {"env_file": tmp_path / "absent.env"}
+
+    class NoDotenv(DefaultSources):
+        @classmethod
+        @override
+        def settings_customise_sources(
+            cls,
+            settings_cls: type[BaseSettings],
+            init_settings: PydanticBaseSettingsSource,
+            env_settings: PydanticBaseSettingsSource,
+            dotenv_settings: PydanticBaseSettingsSource,
+            file_secret_settings: PydanticBaseSettingsSource,
+        ) -> tuple[PydanticBaseSettingsSource, ...]:
+            return init_settings, env_settings, file_secret_settings
+
+    assert environment_facts.settings_uses_dotenv(DefaultSources)
+    assert not environment_facts.settings_uses_dotenv(NoDotenv)
 
 
 def test_the_installed_components_conform_to_the_package_declaration(
@@ -369,7 +392,7 @@ def _first_agent_name(agent: dict[str, Any], kind: str) -> str:
 _PLANTED_AGENTS: list[tuple[str, Callable[[dict[str, Any]], None], str]] = [
     ("another-prefix", lambda agent: agent.update(prefix="OTHER_"), "prefix"),
     ("another-contract", lambda agent: agent.update(hosting_contract=2), "hosting contract"),
-    ("setting-file-admitted", lambda agent: agent.update(settings_file_variable="SOMETHING_ELSE"), "is admitted"),
+    ("setting-file-admitted", lambda agent: agent.update(settings_file_source=True), "dotenv settings source"),
     ("no-worker-handover", lambda agent: agent.update(worker_environment_writes=[]), "found no environment"),
     (
         "worker-write-unadmitted",
@@ -378,7 +401,7 @@ _PLANTED_AGENTS: list[tuple[str, Callable[[dict[str, Any]], None], str]] = [
     ),
     (
         "worker-write-never-admitted",
-        lambda agent: agent["worker_environment_writes"].append(agent["settings_file_variable"]),
+        lambda agent: agent["worker_environment_writes"].append(f"{agent['prefix']}ENV_FILE"),
         "does not admit",
     ),
     (
@@ -544,6 +567,7 @@ def test_the_facts_module_runs_by_path_so_it_imports_no_packaging_tool() -> None
             imported.update(alias.name.split(".")[0] for alias in node.names)
     assert imported <= set(sys.stdlib_module_names) | {
         "pydantic",
+        "pydantic_settings",
         "cadrumo",
         "cadrumo_client",
         "cadrumo_agent_service",

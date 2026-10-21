@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#release-asset-transport'
 date: '2026-07-20'
-modified: '2026-10-03'
-body_hash: 'sha256:b41055192e4d8915a2be4334381a3d54fc76153cd65e3a5f58d0432fb527ee62'
+modified: '2026-10-21'
+body_hash: 'sha256:79fcf92cc69a6302b477f57cbc21bf7bf07823d62f0e9261b0d84bfca5e5ac3d'
 related:
   - "[[2026-07-20-release-asset-transport-adr]]"
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
@@ -35,7 +35,7 @@ in this pass.
 | `2026-04-12-release-please-adr` | AMEND — partially superseded | AMENDED: added a current-authority section retiring the "no GitHub Actions workflow ever" absolute and the "no PyPI publishing" non-goal (superseded by the OIDC publication authority); the local versioning/CHANGELOG/tag surface survives as governing |
 | `2026-07-19-post-release-distribution-adr` | GOVERNING (lifecycle home, purely derivative) | none |
 | `2026-07-19-post-release-distribution-reference` | AMEND — stale transport prescriptions | AMENDED: dated supersession note — the G4/G5/G6 artifact-upload and `gh run download` remedies are superseded by the transport ADR; the gap diagnoses remain valid |
-| `2026-07-03-claude-ecosystem-packaging-adr` | GOVERNING (plugin, split, integrity) — already carries its 2026-07-15 amendment section | none |
+| `2026-07-03-claude-ecosystem-packaging-adr` | GOVERNING (split, integrity) — already carries its 2026-07-15 amendment section | none |
 | `2026-07-16-distribution-harness-identity-adr` | GOVERNING | none |
 | `2026-07-18-mcpb-signing-publisher-adr` | GOVERNING — coheres with the transport ADR (the release-manifest SHA-256 integrity channel is preserved; drafts are collaborator-only, published rows are scrubbed at birth per D9) | none |
 | `2026-06-28-product-packaging-adr` | AMEND — internal status contradiction | AMENDED: heading said accepted while two body paragraphs still said "remains proposed"; body prose updated to record the ratification (status flip landed 2026-07-17 in `ba2d7d494d`) |
@@ -103,7 +103,7 @@ routed to the pipeline implementation owner, not edited here.
   publication authority, transport ADR owns the storage substrate, readiness-gate
   ADR owns soak/rollback, release-please ADR owns local version hygiene,
   product-packaging ADR owns the cohort shape, ecosystem-packaging ADR owns the
-  plugin/split, harness-identity ADR owns naming parity, mcpb ADR owns the
+  split, harness-identity ADR owns naming parity, mcpb ADR owns the
   unsigned posture.
 
 ### public-repo-voids-transport-premise | high | The private-Free-plan constraint the transport was built for no longer exists

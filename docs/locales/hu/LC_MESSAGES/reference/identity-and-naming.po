@@ -99,10 +99,6 @@ msgid "Unprefixed names advertised by `tools/list`"
 msgstr "A `tools/list` által hirdetett előtag nélküli nevek"
 
 #: ../../reference/identity-and-naming.md
-msgid "Plugin identifier"
-msgstr "Bővítményazonosító"
-
-#: ../../reference/identity-and-naming.md
 msgid "Product environment prefix"
 msgstr "Termék környezeti előtag"
 

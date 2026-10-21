@@ -74,6 +74,16 @@ if not root:
             root = str(Path(value, *candidate["subpath"], declaration.root["channel"]["product_directory"]))
             break
 root = faults.get("root") or root
+existing_dirs = set()
+for default in declaration.external_path_defaults:
+    base = lookup(default.variable) if default.variable else default.path
+    if base and Path(base).is_absolute():
+        candidate = Path(base, *default.subpaths)
+        if candidate.is_dir():
+            existing_dirs.add(str(candidate))
+for directory in (lookup(declaration.path_external) or "").split(os.pathsep):
+    if directory and Path(directory).is_absolute() and Path(directory).is_dir():
+        existing_dirs.add(str(Path(directory)))
 try:
     defined = reference_define(
         declaration,
@@ -84,6 +94,7 @@ try:
         root=root,
         layout_paths=layout["paths"],
         suffix=layout["entrypoint_suffix"],
+        existing_dirs=existing_dirs,
     )
 except LaunchRefusedError as error:
     refuse(error.code, error.subject)

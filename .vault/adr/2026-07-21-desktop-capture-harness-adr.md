@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#desktop-capture-harness'
 date: '2026-07-21'
-modified: '2026-10-12'
-body_hash: 'sha256:e05a8aae592ab0ce38a2b42a4ce815d6adaec1b890ffb9b1fc2aaafe9918b536'
+modified: '2026-10-21'
+body_hash: 'sha256:4e12e4c45f0f25136d1021dc82a7306c0da347d3ad666719cbf06a4cbbf5524a'
 related:
   - '[[2026-07-21-desktop-capture-harness-reference]]'
   - '[[2026-07-19-post-release-distribution-adr]]'
@@ -15,7 +15,7 @@ related:
 
 ## Problem Statement
 
-The `claude-desktop-mcpb` and `claude-desktop-plugin` distribution rows are real-Claude-client claims: the honesty guard in `dev/packaging/distribution_evidence_emit.py` refuses an SDK-driven record for them and requires a real client session. The `2026-07-19-post-release-distribution-adr` deferred these rows to an operator-tail of MANUAL in-app captures. The operator has now directed that the capture be an automated test — a proper harness with a reproducible, clean environment every run, with the Claude Desktop application installed — so the manual-capture assumption of that ADR's tail is superseded for the Desktop rows. This ADR records how the automation is achievable on Windows and the decisions that shape it.
+The `claude-desktop-mcpb` distribution row is a real-Claude-client claim: the honesty guard in `dev/packaging/distribution_evidence_emit.py` refuses an SDK-driven record for it and requires a real client session. The `2026-07-19-post-release-distribution-adr` deferred this row to an operator-tail of MANUAL in-app captures. The operator has now directed that the capture be an automated test — a proper harness with a reproducible, clean environment every run, with the Claude Desktop application installed — so the manual-capture assumption of that ADR's tail is superseded for the Desktop row. This ADR records how the automation is achievable on Windows and the decisions that shape it.
 
 ## Considerations
 
@@ -26,7 +26,7 @@ The `claude-desktop-mcpb` and `claude-desktop-plugin` distribution rows are real
 - Desktop pipes each MCP server's stderr to `logs/mcp-server-<name>.log` inside the active profile; the cadrumo server's log there carries the typed transport field and attested CLI identity (commit `60d7120e22`), giving a client-side proof of a REAL tool call stronger than model narration.
 - Coordinator posture rulings (2026-07-21): captures run against an ISOLATED per-run platform root on the MCP server side too (never the operator's real storage; a default-root launch can hit the retired-aeat-state refusal), and capture success gates on the tool call RESULT succeeding, not merely being dispatched.
 - The model may not tool-call on the first prompt; the loop must be bounded-retry, fail-closed with full per-attempt diagnostics.
-- Seeded auth material must never persist into retained evidence; the fail-closed leak scan of `smoke_plugin_install` is the required pattern.
+- Seeded auth material must never persist into retained evidence; the fail-closed leak scan of the existing install smokes is the required pattern.
 
 ## Considered options
 
