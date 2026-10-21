@@ -525,7 +525,7 @@ def _first_business_day(
         candidate = candidate + timedelta(days=1)
     raise DeadlineValidationError(
         f"could not find a business day within 14 days of {start.isoformat()} "
-        f"(ccaa={ccaa_code.value if ccaa_code else 'none'}); the calendar may "
+        f"(ccaa={ccaa_code.value if (ccaa_code is not None and ccaa_code) else 'none'}); the calendar may "
         f"have invalid contiguous holidays",
     )
 

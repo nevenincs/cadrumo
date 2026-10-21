@@ -62,6 +62,11 @@ def _leaf_values(value: object, prefix: tuple[str, ...] = ()) -> dict[tuple[str,
     return leaves
 
 
+def _enum_value(value: object) -> object:
+    """Return an enum member's value; any other value is returned unchanged."""
+    return value.value if isinstance(value, Enum) else value
+
+
 def _typed_equal(left: object, right: object) -> bool:
     """Compare registry values without Python's bool/int or container coercions.
 
@@ -70,10 +75,8 @@ def _typed_equal(left: object, right: object) -> bool:
     Sequences compare in order; tables compare by field, whatever order their
     keys were written in.
     """
-    if isinstance(left, Enum):
-        left = left.value
-    if isinstance(right, Enum):
-        right = right.value
+    left = _enum_value(left)
+    right = _enum_value(right)
     if isinstance(left, Mapping) or isinstance(right, Mapping):
         return _mapping_equal(left, right)
     if isinstance(left, list | tuple) or isinstance(right, list | tuple):

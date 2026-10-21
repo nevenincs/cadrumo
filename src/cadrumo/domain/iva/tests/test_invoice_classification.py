@@ -18,14 +18,13 @@ from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...invoices.enums import IvaRate
 from ...invoices.errors import InvoiceValidationError
-from ..classification import InvoiceKind
 from ..deduction_facts import IvaDeductionClassificationProvenance
 from ..flow import IvaFlowDirection, IvaSettlementSide
 from ..invoice_classification import (
     IvaInvoiceClassification,
     classify_invoice_line_for_iva,
 )
-from ..schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from ..schema import InvoiceKind, IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

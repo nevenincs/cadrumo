@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import date, datetime
-from typing import ClassVar, Final, cast
+from typing import ClassVar, Final, cast, override
 
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.message import Message
 from textual.widgets import DataTable, Static
@@ -40,6 +41,7 @@ from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
 from ..action_target import require_action_target
 from ..components.account_chrome import AccountChromeScreen
+from ..components.language import repaint_tables, reword_navigation
 from ..components.theme import BASE_CSS, tokenised
 from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiScreenContextV1
@@ -254,6 +256,12 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
         self.controller = controller
         self.requested_target: DeclarationsRouteTargetV1 | None = None
 
+    @override
+    async def refresh_language(self) -> None:
+        """Reword navigation without replacing forms or restarting their workers."""
+        await super().refresh_language()
+        reword_navigation(self, "#declarations-navigation", self.populate_navigation)
+
     def populate_navigation(self) -> None:
         """Populate every closed internal destination exactly once."""
         table = cast("DataTable[str]", self.query_one("#declarations-navigation", DataTable))
@@ -329,6 +337,29 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
         from .routes import resolve_declarations_screen
 
         replace_workspace_body(self.app, resolve_declarations_screen(self.controller, event.target))
+
+
+class DeclarationsProjectionScreen(DeclarationsWorkspaceScreen):
+    """A Declarations body whose tables are painted entirely from the safe projection."""
+
+    def compose_notices(self) -> ComposeResult:
+        """Yield the muted empty line and the warning line this shell writes to."""
+        yield Static(id="declarations-empty", classes="declarations-empty", markup=False)
+        yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the existing projection, preserving semantic cursors and controls."""
+        await super().refresh_language()
+        repaint_tables(self, self._populate_view)
+
+    def on_mount(self) -> None:
+        """Populate the initially mounted projection."""
+        self._populate_view()
+
+    def _populate_view(self) -> None:
+        """Paint navigation and this body's tables from the current projection."""
+        raise NotImplementedError
 
 
 class DeclarationsRouteRequested(Message):
@@ -446,8 +477,11 @@ def calendar_address_focus_key(modelo: object, year: object, period: str) -> str
 
     Separate from :func:`calendar_focus_key` so a caller holding only the
     natural address -- a Home agenda row -- lands on the same calendar row.
+    Registry period tokens contain hyphens but never underscores; encode
+    those separators for NamespacedId without changing the filing address.
     """
-    return f"declarations.calendar.m{modelo}.y{year}.p{period.casefold()}"
+    period_segment = period.casefold().replace("-", "_")
+    return f"declarations.calendar.m{modelo}.y{year}.p{period_segment}"
 
 
 def _calendar_search_text(row: DeclarationsCalendarEntryRefV1) -> str:
@@ -514,6 +548,7 @@ def calendar_aeat_label(value: OverviewAeatSubmissionState | None) -> str:
 
 __all__ = [
     "DeclarationsCalendarController",
+    "DeclarationsProjectionScreen",
     "DeclarationsRouteRequested",
     "DeclarationsWorkspaceController",
     "DeclarationsWorkspaceScreen",

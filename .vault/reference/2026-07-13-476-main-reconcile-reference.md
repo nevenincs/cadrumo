@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#476-main-reconcile'
 date: '2026-07-13'
-modified: '2026-10-03'
-body_hash: 'sha256:f374b0d95cfb35d8090b478597770de91787726ee442d77548dd966e357f5642'
+modified: '2026-10-21'
+body_hash: 'sha256:3a9d96b42cdfaa34f3a46c61b58beb05556f650c308812bdfaf1aa87eb072809'
 related: []
 ---
 
@@ -126,8 +126,7 @@ Raw inventory (recompute before the real merge):
    operator web-UI action; then publish the root `cadrumo` wheel and
    deprecate the old `aeat-cli` / `aeat-data-*` projects with tombstone
    notices.
-3. Update the `nevenincs/neve-marketplace` listing to the plugin identity the
-   476 ADRs decide, and re-verify the MCPB bundle against the merged tree.
+3. Re-verify the MCPB bundle against the merged tree.
 4. Re-run the licence sweep and the packaging gates against the merged tree
    (the import-root rename moves `src/aeat` to `src/cadrumo`, which the
    publish workflow's wheel-content guard and the corpus locator reference).

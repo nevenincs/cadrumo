@@ -39,13 +39,9 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.resources.bundled_data import bundled_path
-from ..classification import (
-    InvoiceKind,
-    IvaInvoiceClassificationCriteria,
-    resolve_iva_classification_catalogue,
-)
+from ..classification import IvaInvoiceClassificationCriteria, resolve_iva_classification_catalogue
 from ..place_of_supply import place_of_supply_rule
-from ..schema import IvaCategory
+from ..schema import InvoiceKind, IvaCategory
 from ..supply_nature import SupplyNature
 from .classification_authority_support import classify_with_registry_rules
 

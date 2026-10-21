@@ -20,13 +20,13 @@ from uuid import UUID
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ....application.invoices.bulk_import import BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
-from ....application.invoices.catalogue_intake_contracts import (
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.application.invoices.bulk_import import BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
+from cadrumo.application.invoices.catalogue_intake_contracts import (
     InvoiceImportProjection,
     InvoiceImportRowFailure,
 )
-from ....entrypoints.cli._ledger_business_invoice_cli import (
+from cadrumo.entrypoints.cli.ledger_business_invoice_commands import (
     _invoice_import_all_refused_report,
     _invoice_import_mapping_reports,
     _invoice_import_payload,
@@ -34,9 +34,9 @@ from ....entrypoints.cli._ledger_business_invoice_cli import (
     _invoice_import_summary_lines,
     _invoice_import_unmapped_report,
 )
-from ....tests.cli_envelope import require_error_document, unwrap_cli_result, unwrap_envelope_notices
-from .cli_runner import invoke_cached_cli
-from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result, unwrap_envelope_notices
+
+from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke_joined_cli
 
 pytestmark = [pytest.mark.hex_entrypoint]
 
@@ -61,6 +61,7 @@ def _projection(
 ) -> InvoiceImportProjection:
     return InvoiceImportProjection(
         profile_id=_PROFILE_ID,
+        source_sha256="a" * 64,
         rows=rows,
         created=created,
         skipped_duplicate=skipped_duplicate,
@@ -140,7 +141,7 @@ def test_all_refused_import_uses_warning_notice_and_only_refused_rows() -> None:
 
 @pytest.mark.unit
 def test_import_help_keeps_file_kind_and_country_options() -> None:
-    result = invoke_cached_cli(["app", "ledger", "invoice", "import", "--help"])
+    result = invoke_joined_cli(["app", "ledger", "invoice", "import", "--help"])
     assert result.exit_code == 0, result.output
     assert "--file" in result.output
     assert "--kind" in result.output
@@ -162,7 +163,7 @@ def test_missing_import_file_keeps_the_typed_clean_refusal(tmp_path: Path) -> No
     in ``test_ledger_import_ux.py`` for the same contract on another import verb.
     """
     missing = tmp_path / "does-not-exist.csv"
-    result = invoke_cached_cli(
+    result = invoke_joined_cli(
         ["--format", "json", "app", "ledger", "invoice", "import", "--file", str(missing), "--kind", "received"]
     )
     assert result.exit_code == 2, result.output
@@ -192,11 +193,11 @@ _PROFILE_FACTS = {
 }
 
 
-def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
+def _invoke(profile: RegisteredCliProfile, *command: str) -> Result:
     """Run one command through a fresh protected-stdin profile binding."""
     assert profile.label is not None
     close_active_bucket_session()
-    result = invoke_cached_cli(
+    result = invoke_joined_cli(
         ("--language", "en", "--format", "json", "--profile", profile.label, "--profile-secrets-stdin", *command),
         input=json.dumps({"profile_passphrase": profile.passphrase}),
     )
@@ -204,14 +205,14 @@ def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
     return result
 
 
-def _import(profile: NativeCliProfileFixture, book: Path, *, kind: str, country: str | None = "ES") -> Result:
+def _import(profile: RegisteredCliProfile, book: Path, *, kind: str, country: str | None = "ES") -> Result:
     command = ["app", "ledger", "invoice", "import", "--file", str(book), "--kind", kind]
     if country is not None:
         command += ["--country", country]
     return _invoke(profile, *command)
 
 
-def _listed_rows(profile: NativeCliProfileFixture, *, kind: str) -> tuple[Mapping[str, object], ...]:
+def _listed_rows(profile: RegisteredCliProfile, *, kind: str) -> tuple[Mapping[str, object], ...]:
     listed = _invoke(profile, "app", "ledger", "invoice", "list", "--kind", kind)
     assert listed.exit_code == 0, listed.output
     rows = cast(Sequence[Mapping[str, object]], unwrap_cli_result(listed)["rows"])
@@ -245,7 +246,7 @@ def test_every_valid_row_becomes_one_invoice_carrying_its_own_source_provenance(
     )
     digest = hashlib.sha256(book.read_bytes()).hexdigest()
 
-    with native_cli_profile_scope(tmp_path) as profile:
+    with cli_world_provider().native_profile(tmp_path) as profile:
         profile.register(label="native-invoice-book", facts=_PROFILE_FACTS)
 
         imported = _import(profile, book, kind="received")
@@ -280,7 +281,7 @@ def test_the_declared_kind_decides_which_side_of_the_catalogue_a_book_lands_on(t
         encoding="utf-8",
     )
 
-    with native_cli_profile_scope(tmp_path) as profile:
+    with cli_world_provider().native_profile(tmp_path) as profile:
         profile.register(label="native-invoice-book-issued", facts=_PROFILE_FACTS)
 
         imported = _import(profile, book, kind="issued")
@@ -317,7 +318,7 @@ def test_an_unknown_column_is_named_rather_than_costing_the_operator_the_whole_b
         encoding="utf-8",
     )
 
-    with native_cli_profile_scope(tmp_path) as profile:
+    with cli_world_provider().native_profile(tmp_path) as profile:
         profile.register(label="native-invoice-book-columns", facts=_PROFILE_FACTS)
 
         tolerated = _import(profile, extra_column, kind="received")
@@ -355,7 +356,7 @@ def test_a_book_whose_every_row_fails_exits_nonzero_and_says_so(tmp_path: Path) 
         encoding="utf-8",
     )
 
-    with native_cli_profile_scope(tmp_path) as profile:
+    with cli_world_provider().native_profile(tmp_path) as profile:
         profile.register(label="native-invoice-book-refusals", facts=_PROFILE_FACTS)
 
         refused = _import(profile, all_bad, kind="received")

@@ -13,6 +13,11 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, SecretBytes
 
+from cadrumo_client.contracts.access_refusals import AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AuthorityState, Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
+
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.identity.digest import ContentDigest
 from .access_administration import (
@@ -21,16 +26,8 @@ from .access_administration import (
     FreshPasswordAuthorization,
     evaluate_access_administration,
 )
-from .access_contracts import (
-    AccessDenied,
-    AccessSession,
-    AuthorityState,
-    AutomationGrant,
-    Availability,
-    SessionKind,
-)
+from .access_contracts import AccessSession, AutomationGrant, SessionKind
 from .access_projections import project_api_key, project_automation_grant
-from .automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from .automation_enrollment import (
     AdministrationFacts,
     AutomationInventory,
@@ -39,8 +36,6 @@ from .automation_enrollment import (
     EnrollmentControlState,
     EnrollmentCustodyPort,
     EnrollmentGrant,
-    EnrollmentKind,
-    EnrollmentProposal,
     EnrollmentReceipt,
     EnrollmentRecord,
     EnrollmentReview,
@@ -59,7 +54,7 @@ def enrollment_review_digest(record: EnrollmentRecord) -> ContentDigest:
     """Bind immutable consent, with deterministic encoding of the scope allow sets."""
     proposal = record.proposal.model_dump(mode="json")
     scope = record.proposal.scope.model_dump(mode="json")
-    for name in ("operations", "actions", "disclosures", "periods"):
+    for name in ("operations", "actions", "disclosures", "disclosure_categories", "periods"):
         if scope[name] is not None:
             scope[name] = sorted(scope[name], key=canonical_json_bytes)
     proposal["scope"] = scope

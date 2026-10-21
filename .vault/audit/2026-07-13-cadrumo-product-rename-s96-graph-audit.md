@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s96-graph'
 date: '2026-07-13'
-modified: '2026-10-03'
-body_hash: 'sha256:de912720717e983f8f09f79770558df7e7ed18a7a3df2da16ad3dd4e60bbac46'
+modified: '2026-10-21'
+body_hash: 'sha256:56c7ff4be443a451eadbbe028461bb0bbfd40498c0da7cc5b95b3d77c8ee322b'
 related:
   - "[[2026-07-13-cadrumo-product-rename-s95-concurrent-merge-authority-audit]]"
 ---
@@ -14,7 +14,7 @@ related:
 ## Scope
 
 - Independently re-review commit `db4976fdc08d804e5d1fdee483c3b8b756f50061` against the S95 HIGH finding recorded by audit commit `bb97babbd5dfec1d17dd68269107d21ff06633c7`.
-- Verify exact four-path scope, reciprocal supersession, modified stamps, status and historical-body clarity, absence of the false binding-ADR status note, plan preservation, graph integrity, and exclusion of concurrent marketplace README and S58 work.
+- Verify exact four-path scope, reciprocal supersession, modified stamps, status and historical-body clarity, absence of the false binding-ADR status note, plan preservation, graph integrity, and exclusion of concurrent S58 work.
 - Run read-only graph, frontmatter, ADR-status, modified-stamp, Markdown, plan, and exact-diff checks. Make no authority, plan, or execution-record fix and commit only this audit.
 
 ## Findings
@@ -27,7 +27,7 @@ The July 13 ADR's frontmatter and H1 now mark it superseded, but its retained `S
 
 The mechanical graph remediation is otherwise correct. The accepted binding CLI ADR supersedes both the 2026-07-12 and 2026-07-13 rename ADRs; each superseded ADR points back to the binding ADR through `superseded_by`. No reciprocal-edge cycle exists, and all three modified stamps are `2026-07-13`. The binding ADR body is unchanged from S95 and contains no false status note, wordmark-only claim, or third-reconfirmation claim.
 
-Commit scope is exactly four paths: the two ADRs, the new S96 execution record, and the shared plan. The plan diff adds only checked S96; every earlier checkbox is unchanged. S07, S87, S90, and S93 remain open, as do all other previously open casing lanes. The staged marketplace README and unstaged dirty S58 record remain outside the commit.
+Commit scope is exactly four paths: the two ADRs, the new S96 execution record, and the shared plan. The plan diff adds only checked S96; every earlier checkbox is unchanged. S07, S87, S90, and S93 remain open, as do all other previously open casing lanes. The unstaged dirty S58 record remains outside the commit.
 
 Focused frontmatter, modified-stamp, and Markdown checks pass for both ADR feature tags. Repository ADR-status checking reports only two unrelated pre-existing quoting warnings. Plan validation exits successfully with only known `PLAN022`, and the exact four-path commit passes `git diff --check`. Later concurrent commits do not change any S96-owned blob.
 
@@ -35,4 +35,4 @@ Focused frontmatter, modified-stamp, and Markdown checks pass for both ADR featu
 
 - Keep the formal reciprocal supersession metadata and the historical decision prose, but rewrite the July 13 ADR's trailing status note as an explicitly historical supersession note. It must not claim the ADR "remains accepted" or direct readers to a deleted binding-ADR status note.
 - Re-review the semantic authority graph after that narrow remediation. A future PASS should clear only the authority graph, not any still-open casing or implementation lane.
-- Preserve S07, S87, S90, S93, and every other open plan lane. Keep the staged marketplace README and dirty S58 work outside the remediation commit.
+- Preserve S07, S87, S90, S93, and every other open plan lane. Keep dirty S58 work outside the remediation commit.

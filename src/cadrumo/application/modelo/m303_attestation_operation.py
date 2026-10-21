@@ -10,6 +10,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
@@ -38,17 +40,17 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_errors import M303Exonerado390AttestationUnadmissibleError
 from .m303_exonerado_390_applicability_attestation import (
@@ -64,7 +66,11 @@ MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID = "modelo.work.m303_attesta
 
 
 class ModeloWorkM303AttestationRequest(CredentialFreeOperationRequest):
-    """Exact profile and one explicit work-unit or period target."""
+    """Exact profile and one explicit work-unit or period target.
+
+    ``actor`` is recorded as sent for a person's session. An automation's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -119,9 +125,11 @@ class ModeloWorkM303AttestationExecutor:
         *,
         work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory,
         attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
     ) -> None:
         self._work_lifecycle_ports_factory = work_lifecycle_ports_factory
         self._attachment_store_factory = attachment_store_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self, request: OperationRequest[ModeloWorkM303AttestationRequest], context: OperationExecutorContext
@@ -135,6 +143,7 @@ class ModeloWorkM303AttestationExecutor:
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         await context.events.phase("modelo.work.m303_attestation.preconditions")
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
 
         def admit() -> ModeloWorkM303AttestationPublicResultV2:
             bucket_id = str(payload.profile_id)
@@ -174,7 +183,7 @@ class ModeloWorkM303AttestationExecutor:
                     asserted_value=M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE,
                     observed_at=payload.observed_at,
                 ),
-                actor=payload.actor,
+                actor=actor,
                 operation=context.authority_operation,
                 store=self._attachment_store_factory(bucket_id),
                 profile=profile,
@@ -202,6 +211,7 @@ def build_modelo_work_m303_attestation_definition(
     *,
     work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory,
     attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Bind the canonical secure-attachment admission as a worker operation."""
 
@@ -209,11 +219,13 @@ def build_modelo_work_m303_attestation_definition(
         return ModeloWorkM303AttestationExecutor(
             work_lifecycle_ports_factory=work_lifecycle_ports_factory,
             attachment_store_factory=attachment_store_factory,
+            execution_caller_reader=execution_caller_reader,
         )
 
     return OperationDefinition(
         definition_id=MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkM303AttestationRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field_or_profile("work_unit_id"),
         result_type=ModeloWorkM303AttestationPublicResultV2,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloWorkM303AttestationRequest,
@@ -236,7 +248,6 @@ def build_modelo_work_m303_attestation_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

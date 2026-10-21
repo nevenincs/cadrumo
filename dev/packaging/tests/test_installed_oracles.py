@@ -6,7 +6,7 @@ the public tax-work oracle and checks the MCP server's current stdio contract
 from that same installation.
 
 Both console scripts come from the one ``cadrumo`` distribution. The wheel
-target packs the ``cadrumo`` and ``cadrumo_harness`` source packages together,
+target packs the ``cadrumo`` and ``cadrumo_mcp`` source packages together,
 so ``cadrumo-mcp`` is a root-distribution entry point and there is no separate
 harness wheel to build, install, or attest.
 """
@@ -35,7 +35,9 @@ from dev.source_tree import repository_files, snapshot
 
 from .._distribution_names import normalise_distribution_name
 from ..authority_staging import AUTHORITY_ROOT_ENV, authoring_authority_root
+from ..google_oauth import build_client_json, stage_build_client
 from ..hashing import sha256_path
+from ..installed_runtime import run_installed_tax_oracle_with_runtime
 from ..installed_tax_oracle import (
     InstalledTaxOracleError,
     isolated_product_environment,
@@ -456,7 +458,7 @@ def _write_evidence(path: Path, document: dict[str, Any]) -> None:
 def _legacy_cohort_fallbacks(source: str) -> tuple[str, ...]:
     forbidden = (
         "var/packaging-smoke-cohort",
-        "packaging/cadrumo_harness",
+        "packaging/cadrumo_mcp",
         "attest_command_specs",
     )
     normalized = source.replace("\\", "/")
@@ -464,7 +466,7 @@ def _legacy_cohort_fallbacks(source: str) -> tuple[str, ...]:
 
 
 def test_installed_oracle_has_no_prebuilt_or_manual_cohort_fallback() -> None:
-    """A pre-existing var cohort cannot bypass the canonical clean cohort builder."""
+    """A pre-existing cohort cannot bypass the canonical clean cohort builder."""
     assert _legacy_cohort_fallbacks('root = "var/packaging-smoke-cohort"')
     assert _legacy_cohort_fallbacks(inspect.getsource(installed_cohort)) == ()
 
@@ -478,18 +480,19 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     work_dir = tmp_path_factory.mktemp("installed-oracle-cohort")
     clean_repo = work_dir / "clean-repository"
     # An isolated copy of the enumerated tree, not the live one: this fixture
-    # needs a private `var/` to build the cohort into, isolated from whatever
-    # a concurrent agent is doing to the real repository's own `var/`.
+    # needs a private `build/` to build the cohort into, isolated from the
+    # shared checkout's canonical build outputs.
     snapshot(_REPO_ROOT, repository_files(_REPO_ROOT), clean_repo)
     _stage_authority_candidate(clean_repo)
-    # Under the snapshot's OWN var/, not beside it. `build_python_cohort` refuses
-    # an output that is not below `<repo_root>/var`, and repo_root here is the
+    stage_build_client(clean_repo, build_client_json(_REPO_ROOT))
+    # Under the snapshot's OWN build/, not beside it. `build_python_cohort` refuses
+    # an output that is not below `<repo_root>/build`, and repo_root here is the
     # snapshot -- so a sibling of it can never satisfy it and this fixture
     # raised SystemExit on every platform. The SystemExit then escaped a
     # module-scoped fixture, which left pytest's finalizer bookkeeping
     # inconsistent and reported the module's other tests as bare internal
     # AssertionErrors naming nothing.
-    cohort_dir = clean_repo / "var" / "python-cohort"
+    cohort_dir = clean_repo / "build" / "python-cohort"
     supplied = build_python_cohort(clean_repo, cohort_dir)
     source_digest = supplied.source_digest
     root_wheel = supplied.root_wheel
@@ -564,7 +567,7 @@ def _stage_authority_candidate(clean_repo: Path) -> None:
     from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 
     raw_candidate = os.environ.get(_AUTHORITY_CANDIDATE_ENV)
-    if raw_candidate:
+    if raw_candidate is not None and raw_candidate:
         candidate = Path(raw_candidate).resolve(strict=True)
     else:
         # Once accepted bytes are promoted, the cohort builds from the promoted
@@ -615,14 +618,14 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
         f"cadrumo-data-official=={version}",
         f"cadrumo-data-normatives=={version}",
     } <= requirements
-    assert metadata["console_scripts"]["aeat"] == "cadrumo.entrypoints.cli.bootstrap:main"
+    assert metadata["console_scripts"]["aeat"] == "cadrumo_runtime.host.frontend.cli.bootstrap:main"
     # The package split is internal to one distribution: the wheel target packs
     # both source packages, so the root distribution declares the server script
-    # and installing the root wheel is what puts `cadrumo_harness` on disk.
-    assert metadata["console_scripts"]["cadrumo-mcp"] == "cadrumo_harness.mcp.main:main"
-    assert {"cadrumo", "cadrumo_harness"} <= set(metadata["root_top_level"])
+    # and installing the root wheel is what puts `cadrumo_mcp` on disk.
+    assert metadata["console_scripts"]["cadrumo-mcp"] == "cadrumo_mcp.mcp.main:main"
+    assert {"cadrumo", "cadrumo_mcp"} <= set(metadata["root_top_level"])
     # No harness distribution is required to obtain either command.
-    assert not any(_requirement_name(requirement) == "cadrumo-harness" for requirement in requirements)
+    assert not any(_requirement_name(requirement) == "cadrumo-mcp" for requirement in requirements)
 
     authority_prefix = "cadrumo/_data/registry/authority/"
     descriptor_member = authority_prefix + "authority.current.json"
@@ -750,7 +753,7 @@ def test_installed_cli_refuses_an_unusable_authority_before_durable_work(
     installation = _fresh_installation(installed_cohort, tmp_path / damage)
     assert sha256_path(installation.authority_descriptor) == installation.authority_descriptor_sha256
     assert sha256_path(installation.authority_database) == installation.authority_database_sha256
-    baseline_cli = run_installed_tax_oracle(
+    baseline_cli = run_installed_tax_oracle_with_runtime(
         installation.cli,
         storage_root=installation.root / "cli-baseline-state",
         work_dir=installation.root / "cli-baseline",
@@ -840,7 +843,7 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
     )
 
     execution_root = cohort.work_dir / "source-isolation-outside-checkout"
-    cli_before = run_installed_tax_oracle(
+    cli_before = run_installed_tax_oracle_with_runtime(
         cohort.cli,
         storage_root=cohort.work_dir / "source-isolation-cli-before-state",
         work_dir=execution_root / "cli-before",
@@ -866,7 +869,7 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
         assert sha256_path(installed_descriptor) == installed_descriptor_digest
         assert sha256_path(installed_database) == installed_database_digest
 
-        cli_after = run_installed_tax_oracle(
+        cli_after = run_installed_tax_oracle_with_runtime(
             cohort.cli,
             storage_root=cohort.work_dir / "source-isolation-cli-after-state",
             work_dir=execution_root / "cli-after",
@@ -1039,26 +1042,14 @@ def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort:
     assert initialize["result"]["serverInfo"]["name"] == "cadrumo"
     tool_names = [tool["name"] for tool in tools["result"]["tools"]]
     assert len(tool_names) == len(set(tool_names))
-    assert set(tool_names) == {
-        "status",
-        "authorization_prepare",
-        "authorization_request",
-        "authorization_poll",
-        "authenticate",
-        "authority",
-        "search",
-        "describe",
-        "execute",
-        "observe",
-        "result",
-        "result_page",
-        "review",
-        "respond",
-        "control",
-    }
-    # The degradation is visible, never silent: the startup note names the
-    # storage-root refusal on stderr, which the client's MCP log captures.
-    assert "serving without run records" in stderr_text
+    from cadrumo_mcp.mcp.protocol_contract import MCP_TOOL_NAMES
+
+    # The default surface advertises every tool of the catalogue.
+    assert set(tool_names) == MCP_TOOL_NAMES
+    # The server writes no run records, so a refusing storage root has no startup
+    # degradation to announce: the refusal surfaces on the calls that need
+    # storage, and stderr carries no note about it.
+    assert "serving without" not in stderr_text
 
 
 async def _call_dev_installed_mcp_authenticate(
@@ -1068,7 +1059,7 @@ async def _call_dev_installed_mcp_authenticate(
     profile_id: str,
     credential_reference: str,
 ) -> tuple[bool, dict[str, Any], bool, dict[str, Any]]:
-    """Call authenticate and status on the active development environment's stdio process."""
+    """Start the stdio process with a launch-configured key, then ask for the removed key tool and the status."""
     from mcp import ClientSession
     from mcp.client.stdio import StdioServerParameters, stdio_client
 
@@ -1076,7 +1067,7 @@ async def _call_dev_installed_mcp_authenticate(
     environment.update({"CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root), "PYTHONIOENCODING": "utf-8"})
     server = StdioServerParameters(
         command=str(executable.resolve(strict=True)),
-        args=["--profile-id", profile_id],
+        args=["--profile-id", profile_id, "--credential-reference", credential_reference],
         env=environment,
         cwd=storage_root,
     )
@@ -1115,10 +1106,6 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
     from importlib.metadata import version
     from uuid import uuid4
 
-    from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-    from cadrumo.adapters.local_runtime.installation import runtime_installation
-    from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-    from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
     from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
     from cadrumo.adapters.persistence.storage.custody.automation_store_composition import (
         installed_automation_secret_store,
@@ -1128,8 +1115,13 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
     )
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
     from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-    from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
-    from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+    from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+    from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
+    from cadrumo_client.transport.framing import VerifiedConnection
+    from cadrumo_client.transport.installation import installation
+    from cadrumo_client.transport.windows import WindowsEndpoint
+    from cadrumo_mcp.mcp.protocol_contract import SIGN_IN_REMEDY
+    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 
     mcp_executable = Path(sysconfig.get_path("scripts")) / "cadrumo-mcp.exe"
     runtime_executable = Path(sysconfig.get_path("scripts")) / "cadrumo-runtime.exe"
@@ -1139,11 +1131,11 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
     profile_id, credential_reference = uuid4(), uuid4()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root, ExitStack() as cleanup:
         storage_root.mkdir(parents=True, exist_ok=True)
-        endpoint = WindowsRuntimeEndpoint(storage_root=storage_root)
+        endpoint = WindowsEndpoint(storage_root=storage_root)
         cleanup.callback(endpoint.close)
         process_scope = WindowsProcessScope()
         cleanup.callback(process_scope.terminate, timeout=5)
-        runtime_installation(
+        installation(
             storage_root=storage_root,
             os_owner_id=endpoint.os_owner_id,
             storage_identity=endpoint.storage_identity,
@@ -1184,17 +1176,17 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
         deadline = time.monotonic() + 30
         while True:
             try:
-                connection = VerifiedRuntimeConnection(
+                connection = VerifiedConnection(
                     endpoint.connect(timeout=0.2),
-                    expected=RuntimeClientHello(
+                    expected=ClientHello(
                         product_version=version("cadrumo"), storage_identity=endpoint.storage_identity
                     ),
                     deadline=deadline,
                 )
                 connection.close()
                 break
-            except RuntimeRefusalError as error:
-                if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
+            except RefusalError as error:
+                if error.reason is not RefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
                     raise
                 time.sleep(0.05)
 
@@ -1206,12 +1198,16 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
                 credential_reference=str(credential_reference),
             )
         )
+        # No tool presents a key; the one the launch configuration names was refused, and status says why.
         assert authentication_error is True
-        assert authentication == {"outcome": "refused", "code": expected_refusal}
+        assert authentication == {"outcome": "refused", "code": "unknown_tool"}
         assert status_error is False
         assert status == {
             "outcome": "status",
             "profile_id": str(profile_id),
             "authenticated": False,
-            "denial": "authentication_required",
+            "session": "none",
+            "surface": "full",
+            "denial": expected_refusal,
+            "remedy": SIGN_IN_REMEDY,
         }

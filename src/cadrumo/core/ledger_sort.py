@@ -11,7 +11,7 @@ than raw strings.
 ledger projection service both use these enum members rather than raw
 string tokens, threading them through
 :data:`cadrumo.entrypoints.cli._app_ledger_command_specs.LEDGER_COMMAND_SPECS`,
-:func:`cadrumo.entrypoints.cli._ledger_read_cli.ledger_list`,
+:func:`cadrumo.entrypoints.cli.ledger_read_commands.ledger_list`,
 :func:`cadrumo.entrypoints.cli._ledger_list.project_ledger_list`, and the stable
 ``cadrumo.entrypoints.cli._ledger_list._sort_results`` helper.
 

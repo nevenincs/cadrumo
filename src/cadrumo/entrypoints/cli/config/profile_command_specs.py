@@ -5,22 +5,28 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, Final
 
-from cadrumo.application.operator_surface.command_ports import (
-    CommandNodeKind,
-    ProfileAuthenticationPosture,
+from cadrumo_client.commands.execution_policies import (
+    BOOTSTRAP_DESTRUCTIVE,
+    BOOTSTRAP_WRITE,
+    CALCULATION_READ,
+    ENCRYPTED_DESTRUCTIVE,
+    ENCRYPTED_READ,
+    ENCRYPTED_WRITE,
+    GOOGLE_WRITE,
+    LIVE_PROFILE_WRITE,
+    PROFILE_DESTRUCTIVE,
+    PROFILE_READ,
+    STATE_FREE,
 )
-
-from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from .._command_secret_contracts import (
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.secret_contracts import (
     MachineSecretChannelKind,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
     RecoveryHandoffSpec,
 )
-from ..command_parameter_contracts import ArgumentSpec, OptionSpec
-from ..command_shared_contracts import (
+from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
     PATH_VALUE,
     TEXT_VALUE,
@@ -34,21 +40,15 @@ from ..command_shared_contracts import (
     SchemaState,
     ValueContract,
 )
-from ..command_shared_contracts import translation_key as _key
-from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
-from ._spec_policies import (
-    BOOTSTRAP_DESTRUCTIVE,
-    BOOTSTRAP_WRITE,
-    CALCULATION_READ,
-    ENCRYPTED_DESTRUCTIVE,
-    ENCRYPTED_READ,
-    ENCRYPTED_WRITE,
-    GOOGLE_WRITE,
-    LIVE_PROFILE_WRITE,
-    PROFILE_DESTRUCTIVE,
-    PROFILE_READ,
-    STATE_FREE,
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import (
+    CommandNodeKind,
+    ProfileAuthenticationPosture,
 )
+
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 
 if TYPE_CHECKING:
     pass
@@ -87,20 +87,19 @@ _SITUACION_FAMILIAR_METAVAR: Final = (
 # these modules read as orphaned while backing live verbs. A wrong key now raises
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
-    "_archive_cli": "._archive_cli",
+    "_archive_cli": ".archive_commands",
     "archive_reconcile": ".archive_reconcile",
-    "_bucket_history": "._bucket_history",
-    "_capabilities_cli": "._capabilities_cli",
-    "_censo_transport": "._censo_transport",
-    "_complete_setup_cli": "._complete_setup_cli",
+    "_bucket_history": ".profile_history_commands",
+    "_capabilities_cli": ".capability_commands",
+    "_censo_transport": ".censo_commands",
+    "_complete_setup_cli": ".profile_setup_commands",
     "_descendiente": ".descendiente",
     "_google": ".google",
-    "_manager_dispatch": "._manager_dispatch",
+    "_manager_dispatch": ".profile_commands",
     "_plantilla_media": ".plantilla_media",
-    "_profile_delete": "._profile_delete",
-    "_profile_inspect": "._profile_inspect",
-    "_profile_repeatable_row": "._profile_repeatable_row",
-    "recovery": ".recovery",
+    "_profile_delete": ".profile_delete_commands",
+    "_profile_inspect": ".profile_inspect_commands",
+    "_profile_repeatable_row": ".profile_row_commands",
     "restore_cli": ".restore_cli",
 }
 
@@ -250,9 +249,9 @@ def _plantilla_media_leaf(
     )
 
 
-_PAYLOADS = "..config_payloads"
-_PAYLOADS_ARCHIVE_RECONCILE = "._archive_reconcile_payloads"
-_PAYLOADS_ARCHIVE_PUSH = "._archive_push_payloads"
+_PAYLOADS = "cadrumo_client.commands.payloads"
+_PAYLOADS_ARCHIVE_RECONCILE = ".archive_reconcile_results"
+_PAYLOADS_ARCHIVE_PUSH = ".archive_push_results"
 _CONFIG = "..config"
 #: Both wizard result schemas are defined in this module. The package
 #: namespace above it is inert and re-exports nothing, so naming the package
@@ -476,34 +475,6 @@ _WIZARD_CREATE_PARAMETERS = (
         machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
     ),
 )
-_RECOVERY_SECRET_OPTIONS = (
-    _option(
-        "secrets_stdin",
-        ("--secrets-stdin",),
-        FLAG_VALUE,
-        "cli.config.custody.secrets_stdin_help",
-        default=False,
-        flag=True,
-        machine_secret_channel=MachineSecretChannelKind.STDIN,
-    ),
-    _option(
-        "secrets_fd",
-        ("--secrets-fd",),
-        WHOLE_NUMBER_VALUE,
-        "cli.config.custody.secrets_fd_help",
-        machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
-    ),
-)
-_RECOVERY_PASSPHRASE_SECRET = MachineSecretSpec(
-    (
-        MachineSecretVariantSpec(
-            "passphrase",
-            (MachineSecretFieldSpec("passphrase"),),
-            DeferredTarget(".recovery", "RecoveryEnableSecrets", __package__),
-        ),
-    )
-)
-
 PROFILE_COMMAND_SPECS = (
     _group("config_profile", "config", "profile", "cli.config.profile.help"),
     _group("config_profile_archive", "config_profile", "archive", "cli.config.profile.archive.help"),
@@ -712,7 +683,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.censo.import_help",
         "_censo_transport",
         "censo_import",
-        f"{_CONFIG}._censo_payloads",
+        f"{_CONFIG}.censo_results",
         "CensoFileIngestResult",
         ENCRYPTED_WRITE,
         (
@@ -737,7 +708,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.censo.pull_help",
         "_censo_transport",
         "censo_pull",
-        f"{_CONFIG}._censo_payloads",
+        f"{_CONFIG}.censo_results",
         "CensoPullResult",
         LIVE_PROFILE_WRITE,
         (
@@ -746,6 +717,14 @@ PROFILE_COMMAND_SPECS = (
                 ("--apply",),
                 FLAG_VALUE,
                 "cli.config.profile.censo.pull_apply_help",
+                default=False,
+                flag=True,
+            ),
+            _option(
+                "configure_auth",
+                ("--configure-auth",),
+                FLAG_VALUE,
+                "cli.censo_auth.configure_help",
                 default=False,
                 flag=True,
             ),
@@ -758,7 +737,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.censo.show_help",
         "_censo_transport",
         "censo_show",
-        f"{_CONFIG}._censo_payloads",
+        f"{_CONFIG}.censo_results",
         "CensoStoredResult",
         ENCRYPTED_READ,
         (),
@@ -770,7 +749,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.complete_setup.help",
         "_complete_setup_cli",
         "profile_complete_setup",
-        f"{_CONFIG}._complete_setup_payloads",
+        f"{_CONFIG}.profile_setup_results",
         "ProfileCompleteSetupResult",
         ENCRYPTED_WRITE,
     ),
@@ -802,78 +781,6 @@ PROFILE_COMMAND_SPECS = (
             )
         ),
     ),
-    _group("config_profile_recovery", "config_profile", "recovery", "cli.config.profile.recovery.help"),
-    _leaf(
-        "config_profile_recovery_enable",
-        "config_profile_recovery",
-        "enable",
-        "cli.config.profile.recovery.enable_help",
-        "recovery",
-        "profile_recovery_enable",
-        _PAYLOADS,
-        "ConfigProfileRecoveryResult",
-        ENCRYPTED_DESTRUCTIVE,
-        (
-            *_RECOVERY_SECRET_OPTIONS,
-            _option(
-                "recovery_handoff_fd",
-                ("--recovery-handoff-fd",),
-                WHOLE_NUMBER_VALUE,
-                "cli.config.profile.recovery.handoff_fd_help",
-            ),
-            _option(
-                "recovery_verification_fd",
-                ("--recovery-verification-fd",),
-                WHOLE_NUMBER_VALUE,
-                "cli.config.profile.recovery.verification_fd_help",
-            ),
-            _LANGUAGE,
-        ),
-        _RECOVERY_PASSPHRASE_SECRET,
-        recovery_handoff=RecoveryHandoffSpec(
-            handoff_parameter="recovery_handoff_fd",
-            handoff_direction="write",
-            verification_parameter="recovery_verification_fd",
-            verification_direction="read",
-            required_together=True,
-            json_fields=("recovery_code",),
-            maximum_bytes=8192,
-            strict_utf8_object=True,
-            duplicate_extra_missing_fields_refused=True,
-            descriptors_closed=True,
-            reserved_descriptors=(0, 1, 2),
-            descriptors_must_differ=True,
-            collides_with_parameters=("secrets_fd",),
-            windows_handle_bootstrap="cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
-        ),
-        profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
-    ),
-    _leaf(
-        "config_profile_recovery_disable",
-        "config_profile_recovery",
-        "disable",
-        "cli.config.profile.recovery.disable_help",
-        "recovery",
-        "profile_recovery_disable",
-        _PAYLOADS,
-        "ConfigProfileRecoveryResult",
-        ENCRYPTED_DESTRUCTIVE,
-        (*_RECOVERY_SECRET_OPTIONS, _LANGUAGE),
-        _RECOVERY_PASSPHRASE_SECRET,
-        profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
-    ),
-    _leaf(
-        "config_profile_recovery_status",
-        "config_profile_recovery",
-        "status",
-        "cli.config.profile.recovery.status_help",
-        "recovery",
-        "profile_recovery_status",
-        _PAYLOADS,
-        "ConfigProfileRecoveryStatusResult",
-        PROFILE_READ,
-        (_LANGUAGE,),
-    ),
     _leaf(
         "config_profile_delete",
         "config_profile",
@@ -887,6 +794,20 @@ PROFILE_COMMAND_SPECS = (
         (
             _argument("name", TEXT_VALUE, "cli.config.profile.delete.name_help"),
             _option("yes", ("--yes",), FLAG_VALUE, "cli.config.profile.delete.yes_help", default=False, flag=True),
+            _option(
+                "expected_profile_id",
+                ("--expected-profile-id",),
+                TEXT_VALUE,
+                "cli.config.profile.delete.expected_profile_id_help",
+                default=None,
+            ),
+            _option(
+                "expected_digest",
+                ("--expected-digest",),
+                TEXT_VALUE,
+                "cli.config.profile.delete.expected_digest_help",
+                default=None,
+            ),
             _LANGUAGE,
         ),
     ),
@@ -1005,7 +926,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.history_help",
         "_bucket_history",
         "profile_history",
-        ".._config_bucket_history_payloads",
+        "..profile_history_results",
         "BucketHistoryResult",
         ENCRYPTED_READ,
         (

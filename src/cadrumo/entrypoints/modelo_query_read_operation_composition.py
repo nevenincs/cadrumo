@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..application.modelo.query_read_contracts import ModeloQueryReadPorts
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.identity.bucket import canonical_bucket_id

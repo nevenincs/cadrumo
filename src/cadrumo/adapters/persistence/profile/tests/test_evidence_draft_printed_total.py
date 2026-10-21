@@ -33,10 +33,10 @@ from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_
 from cadrumo.core.config import Settings
 from cadrumo.core.confirmation_gate import FindingResolutionAction
 from cadrumo.domain.invoices.enums import InvoiceClass
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
+from .....domain.iva.schema import InvoiceKind
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     InvoiceAuthorityFixture,

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -13,6 +13,9 @@ from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -45,7 +48,6 @@ from ...application.operations.persistence.journal import OperationPersistedSnap
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.operations import (
     OperationEffect,
@@ -114,7 +116,7 @@ class _ExecutionAuthority:
         self.events.append(f"require:{action.value}")
 
     @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncIterator[None]:
+    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
         assert identity is not None
         self.events.append("guard-enter")
         try:
@@ -146,7 +148,7 @@ def _access_context(profile_id: UUID, contract: Any) -> OperationAccessContext:
         profile_id=profile_id,
         destination_id=uuid4(),
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         contract=contract,
         published_authority=Availability.AVAILABLE,
     )
@@ -373,7 +375,7 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
 
     class Cancellation:
         @asynccontextmanager
-        async def irreversible_section(self) -> AsyncIterator[None]:
+        async def irreversible_section(self) -> AsyncGenerator[None]:
             events.append("guard-enter")
             try:
                 yield
@@ -475,7 +477,7 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
     guard_count = events.count("guard-enter")
 
     @asynccontextmanager
-    async def allow_local_write() -> AsyncIterator[None]:
+    async def allow_local_write() -> AsyncGenerator[None]:
         yield
 
     with pytest.raises(ProfileAccessRefusedError) as denial:

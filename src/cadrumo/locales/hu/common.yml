@@ -293,6 +293,25 @@ auth:
       személyazonosság-szolgáltatón keresztül. Az AEAT olvasási folyamataihoz automatizálható
       felügyelet nélkül; DNI/NIE és jelszó szükséges.
     clave_permanente_label: Cl@ve Permanente
+  sync:
+    requirement:
+      auth_method_required: Válassz hitelesítési módot.
+      certificate_file_required: Válassz egy létező PKCS#12 tanúsítványfájlt.
+      certificate_passphrase_required: Mentsd el a tanúsítvány jelszavát.
+      clave_identity_required: Adj meg érvényes Cl@ve DNI/NIE azonosítót.
+      clave_password_required: Mentsd el a Cl@ve Permanente jelszavát.
+      corrupt: A tanúsítvány nem nyitható meg. Ellenőrizd a fájlt és a jelszót.
+      dni_validity_required: Add meg a DNI érvényességi dátumát az alkalmazáskéréshez.
+      expired: A tanúsítvány lejárt.
+      expiring: A tanúsítvány hamarosan lejár.
+      file_missing: A tanúsítványfájl nem létezik.
+      nie_support_required: Add meg a NIE támogatási számát az alkalmazáskéréshez.
+      ok: A helyi ellenőrzés sikeres.
+      profile_identity_must_match: A Cl@ve DNI/NIE és az adózó NIF/NIE azonosítójának
+        egyeznie kell.
+      profile_tax_id_required: Add meg az adózó NIF/NIE azonosítóját.
+      unavailable: A szükséges helyi ellenőrzés nem fejezhető be.
+      unreadable: A tanúsítványfájl nem olvasható.
 categories:
   registry:
     amortizacion_vivienda_afecto:
@@ -517,6 +536,38 @@ core:
       output_language_type: A profil kimeneti nyelvének támogatott nyelvi kódnak kell
         lennie szöveges formában.
 desktop:
+  about:
+    agent: Ügynök
+    agent_version: Az ügynök verziója
+    application: Alkalmazás
+    build_date: Fordítás dátuma
+    build_id: Fordítás
+    build_type: Fordítás típusa
+    build_type_debug: Hibakereső
+    build_type_release: Kiadás
+    channel: Csatorna
+    close: Bezárás
+    copy: Másolás
+    debug_badge: Hibakereső
+    dependencies: Függőségek ({count})
+    description: A telepítés verzió- és fordítási adatai.
+    desktop_host: Asztali alkalmazás
+    interpreter: Értelmező
+    load_failed: A verzióadatok nem olvashatók ({code}).
+    loading: Verzióadatok beolvasása…
+    manager: Kezelő
+    managers: Kezelők
+    open: A Cadrumo névjegye
+    packages: Mellékelt csomagok ({count})
+    python: Python
+    runtime: Futtatókörnyezet
+    settings_hint: Verzió- és fordítási adatok
+    target: Platform
+    title: A Cadrumo névjegye
+    tools: Eszközök
+    unavailable: Nem érhető el
+    version: Verzió
+    version_row: Cadrumo {version}
   account:
     create:
       back: Vissza a bejelentkezéshez
@@ -536,23 +587,40 @@ desktop:
       password_long: Használj rövidebb jelszót.
       password_short: Használj legalább {min} karaktert.
       policy: Legalább {min} karakter.
-      refused: A profil nem jött létre ({code}).
+      refused: A profilt nem sikerült létrehozni. Ellenőrizd az adatait, és próbáld
+        újra.
       submit: Profil létrehozása
       submitting: Létrehozás…
       title: Profil létrehozása
-      unknown: Nem tudni, hogy a profil létrejött-e ({code}). Mielőtt újra próbálod,
-        keresd meg a profilok között.
-      wait: 'Ez körülbelül fél percig tart: a profil kulcsa most készül a jelszavából.'
-    create_profile: Profil beállítása
+      unknown: Lehet, hogy a profil létrejött. Ellenőrizd a profillistát, mielőtt
+        újra próbálkozol.
     first_run_lead: A kezdéshez hozz létre egy profilt.
-    in_tui: A TUI-ban folytatod
+    manage:
+      acknowledge: Tudomásul veszem, hogy a profil helyi adatai végleg elvesznek.
+      cancel: Mégse
+      confirm_name: 'A megerősítéshez írd be: {name}'
+      delete: Profil törlése
+      delete_title: 'Törlöd ezt a profilt: {name}?'
+      deleted: A(z) {name} profil törölve.
+      failed: A törlés nem igazolható. Frissítsd és ellenőrizd a profillistát, mielőtt
+        újra próbálkozol.
+      loading: Profilok betöltése…
+      loss: A profil helyi adatai, köztük a számlák, bevallások, dokumentumok és beszélgetések
+        végleg törlődnek, és a munkamenetei lezárulnak. A külső fiókok és az exportált
+        másolatok megmaradnak.
+      retained: Ez a profil nem törölhető, amíg az adatai védettek, vagy a megőrzési
+        állapotuk nem ellenőrizhető.
+      scope: Az operációs rendszerbeli fiókodban tárolt profilok.
+      sign_out_create: Kijelentkezés új profil létrehozásához
+      title: Profilok kezelése
     new_profile: Új profil
     no_profile: Nincs aktív profil
-    no_profile_lead: Hozz létre vagy válassz egy profilt a TUI-ban.
-    remaining_access: Az általad engedélyezett ügynöki hozzáférés bekapcsolva marad.
+    no_profile_lead: Ezen a számítógépen még nincs profil.
+    remaining_access: Kijelentkezés után az általad külső alkalmazásoknak kiadott
+      kulcsok közül legalább egy még hozzáférést adhat ehhez a profilhoz.
     services_down: A háttérszolgáltatások nem futnak
     sign_out: Kijelentkezés
-    sign_out_failed: A kijelentkezés nem sikerült ({code}).
+    sign_out_failed: Nem sikerült kijelentkezni. Próbáld újra.
     sign_out_hint: Minden Cadrumo-ablakból kijelentkeztet.
     signed_in: Bejelentkezve
     signed_out: Nincs bejelentkezve
@@ -570,6 +638,63 @@ desktop:
     zoom_in: Dokumentáció nagyítása
     zoom_out: Dokumentáció kicsinyítése
     zoom_reset: Dokumentáció nagyításának visszaállítása
+  automation_access:
+    cancel: Mégse
+    cleanup_pending: Eltávolítva. A Cadrumo még törli a tárolt kulcsot erről a számítógépről.
+    copied: Másolva
+    copy: Kód másolása
+    copy_failed: Nem sikerült a másolás. Jelöld ki a kódot, és másold ki magad.
+    done: Kész
+    empty: Még nincs hozzáférési kulcs.
+    expired_on: 'Lejárt: {date}'
+    expires_on: 'Lejár: {date}'
+    issue: Új hozzáférési kulcs
+    issue_lead: Az alkalmazás olvashatja a profilod adatait, látja az általa végzett
+      műveleteket, és használhatja a Cadrumo összes, csatlakoztatott alkalmazások
+      számára elérhető műveletét.
+    issue_submit: Hozzáférési kulcs létrehozása
+    issued_lead: Ezt a csatlakozási kódot illeszd be a másik alkalmazásba, amikor
+      beállítod. Maga a kulcs biztonságosan ezen a számítógépen marad.
+    issued_once: Csak egyszer jelenik meg. Ha bezárod, többé nem láthatod.
+    issued_title: Hozzáférési kulcs létrehozva
+    issuing: Létrehozás…
+    key_title: 'Hozzáférési kulcs, létrehozva: {date}'
+    key_title_undated: Hozzáférési kulcs
+    last_used: 'Utoljára használva: {date}'
+    lead: A hozzáférési kulcsokkal a számítógépeden lévő más MI-alkalmazások dolgozhatnak
+      ezzel a profillal. Kulcsot csak te hozhatsz létre vagy távolíthatsz el.
+    never_used: Még nem használták
+    reference_label: Csatlakozási kód
+    refresh: Frissítés
+    refused_failed: Nem sikerült befejezni. Próbáld újra.
+    refused_not_found: Ez a kulcs már nincs a listában.
+    refused_not_signed_in: Jelentkezz be a beállítások módosításához.
+    refused_outcome_unknown: A Cadrumo nem tudta megerősíteni, hogy létrejött-e a
+      kulcs. Frissíts az ellenőrzéshez.
+    refused_person_act_required: Ezeket a beállításokat csak te módosíthatod, ebből
+      az ablakból.
+    refused_profile_locked: Oldd fel a profilodat a beállítások módosításához.
+    revoke: Eltávolítás
+    revoke_confirm: Eltávolítod ezt a kulcsot? Az ezt használó alkalmazások azonnal
+      elveszítik a hozzáférést. Ez nem vonható vissza.
+    revoke_confirm_action: Kulcs eltávolítása
+    revoking: Eltávolítás…
+    scope_all_operations: A Cadrumo minden, csatlakoztatott alkalmazások számára elérhető
+      műveletét használhatja
+    scope_no_tax_values: Nem olvassa az adóösszegeket
+    scope_operations_seen: Látja az általa végzett műveleteket
+    scope_profile_values: Olvassa a profil adatait
+    scope_some_operations: Csak néhány műveletet használhat
+    scope_tax_values: Olvassa az adóösszegeket
+    standing_active: Aktív
+    standing_expired: Lejárt
+    standing_pending: Jóváhagyásra vár
+    standing_revoked: Eltávolítva
+    standing_suspended: Szüneteltetve
+    tax_values: Az adóösszegeket is olvashatja
+    tax_values_note: A kiszámított adókra és a bevallások adataira is kiterjed. Hagyd
+      kikapcsolva, ha nem szeretnéd, hogy az alkalmazás lássa ezeket.
+    title: Hozzáférési kulcsok más MI-alkalmazásoknak
   calendar:
     aeat:
       accepted: Elfogadva
@@ -583,7 +708,7 @@ desktop:
     event:
       filing: Bevallás
       message: Üzenet
-    failed: A naptárat nem sikerült beolvasni ({code}).
+    failed: A naptárt nem sikerült betölteni. Próbáld frissíteni.
     loading: A naptár betöltése…
     local:
       external_baseline_imported: Korábbi bevallásból importálva
@@ -594,7 +719,7 @@ desktop:
     more: még {count}
     moved: 'Áthelyezve erről: {date}'
     observed: Bevallási előzmények és üzenetek
-    open_tui: Megnyitás a TUI-ban
+    open_tui: Megnyitás a munkaterületen
     payment_cutoff: 'Beszedési megbízás eddig: {date}'
     refresh: Frissítés
     show_all: Összes megjelenítése
@@ -614,36 +739,74 @@ desktop:
     view_months: Naptár
     warnings: Hiányoznak profiladatok, ezért ezek a dátumok alapértékeket használnak.
     window_unknown: A kezdő dátum nincs megadva
+  canvas:
+    lead: Válassz munkaterületet alább, vagy nyisd meg az oldalsávból. A dokumentációt
+      mindkét helyről megnyithatod.
+    title: Nincs semmi megnyitva
   docs:
     frame_title: Cadrumo-dokumentáció
+    hide: Dokumentáció elrejtése
     loading: A dokumentáció betöltése…
+    not_bundled: A dokumentáció ebben a telepítésben nem érhető el.
+    show: Dokumentáció megjelenítése
+    unavailable: A dokumentációt nem sikerült megnyitni. Próbáld újra később.
+  google:
+    checking: A Google-bejelentkezés ellenőrzése…
+    not_in_this_build: A Google-bejelentkezés most nem érhető el.
+    open_drive: A profil mappájának megnyitása a Google Drive-ban
+    palette_sign_in: Hitelesítés a Google-lel
+    sign_in: Bejelentkezés
+    sign_in_label: Bejelentkezés a Google-be
+    sign_out: Kijelentkezés
+    sign_out_label: Kijelentkezés a Google-ből
+    signed_in: 'Bejelentkezve: {email}.'
+    signed_in_plain: Bejelentkezve.
+    signed_out: Nem vagy bejelentkezve.
+    signing_out: Kijelentkezés a Google-ből…
+    title: Google-fiók
+    unknown: A Google-bejelentkezést most nem sikerült beolvasni.
+    waiting: Fejezd be a bejelentkezést a Google-be a böngésződben.
   host:
     failed: Ezt a részt nem sikerült betölteni.
     unavailable: Ehhez a részhez az asztali alkalmazás kell.
   logs:
+    all_loggers: Minden naplózó
+    all_origins: Minden forrás
     clear_logger: Loggerszűrő törlése
+    copy_all: Összes másolása
     details: Részletek
     dropped: 'A nézetből elvetett régebbi bejegyzések: {count}'
     empty: A napló üres.
     errors: 'Hibák: {count}'
+    export: Naplók exportálása
+    export_all: Összes exportálása
+    export_failed: A naplók exportálása sikertelen.
+    export_visible: Láthatók exportálása
+    exported: 'Exportálva ide: {path}'
     filter: Szűrés
+    filters: Naplószűrők
     follow: Követés
     follow_hint: A legújabb bejegyzés maradjon látható
     level_all: Minden szint
+    level_critical: Csak kritikus
     level_error: Csak hibák
     level_info: Info és súlyosabb
     level_warning: Figyelmeztetés és súlyosabb
     loading: A napló betöltése…
+    logger: Naplózó
     minimum_level: Minimális szint
     no_match: Egy bejegyzés sem felel meg ezeknek a szűrőknek.
+    origin: Forrás
     rejected: '{count} bejegyzés kimaradt érvénytelen diagnosztikai formátum miatt.'
+    reveal: Napló helyének megnyitása
+    selected: '{count} bejegyzés kijelölve'
     source_host: Asztali alkalmazás
     source_python: Python
-    sources: Források
     state_available: cadrumo.log
     state_missing_detail: Még nincs naplófájl. A bejegyzések akkor jelennek meg, amikor
       egy Cadrumo-folyamat naplózni kezd.
     state_unreadable: A napló nem olvasható
+    visible_count: '{visible} / {total} bejegyzés'
     warnings: 'Figyelmeztetések: {count}'
   menu:
     clear: Törlés
@@ -656,7 +819,7 @@ desktop:
     paste: Beillesztés
     select_all: Az összes kijelölése
   messages:
-    failed: Nem sikerült beolvasni ({code})
+    failed: Az értesítéseket nem sikerült betölteni. Próbáld újra később.
     never: Még nincs szinkronizálva az AEAT-tal
     none_unread: A legutóbbi szinkronizáláskor nem volt olvasatlan
     unread: '{count} olvasatlan'
@@ -678,17 +841,88 @@ desktop:
     maximize_docs: Dokumentáció teljes méretben
     maximize_focused: Aktív terület teljes méretben
     maximize_panel: Alsó panel teljes méretben
-    maximize_tui: TUI teljes méretben
+    maximize_tui: Munkaterület teljes méretre
     restore: Elrendezés visszaállítása
-    tui: TUI
+    tui: Munkaterület
   panel:
     hide: Alsó panel elrejtése
     label: Alsó panel
     resize: Alsó panel átméretezése
     show: Alsó panel megjelenítése
+  profile:
+    add: Bejegyzés hozzáadása
+    all_fields: Minden adat
+    all_sections: Minden szakasz
+    cancel: Mégse
+    censo:
+      absent: Az AEAT nem adott meg értéket. Nincs változás.
+      adopt: Mentéskor az AEAT értékének használata.
+      apply: Ellenőrzött módosítások mentése
+      cancel: Szinkronizálás leállítása
+      close: Bezárás
+      current: Mentett
+      device: Hagyd jóvá a bejelentkezést a Cl@ve alkalmazásban.
+      done: A szinkronizálás befejeződött. Ellenőrizd a profil még hiányzó adatait.
+      field: Profiladat
+      identity: Adóazonosító megadása
+      incoming: AEAT
+      preserve: A mentett válasz megőrzése.
+      pull: Censo-adatok lekérése
+      reading: Censo-adatok lekérése…
+      ready: Az AEAT-bejelentkezés be van állítva. Mentés előtt áttekintheted a lekért
+        adatokat.
+      reject: Módosítások elvetése
+      return: Vissza a profilhoz
+      review: Ellenőrizd az AEAT adatait.
+      scope: Adócím, irányítószám és kataszteri azonosító átvétele a Censóból. A profil
+        többi adatát neked kell megadnod.
+      setup: AEAT-bejelentkezés beállítása
+      stopped: A szinkronizálás leállt. A profil nem módosult.
+      title: Szinkronizálás az AEAT-tól
+      unavailable: A szinkronizálás nem ellenőrizhető. Próbálj frissíteni.
+      unknown: Az eredmény nem igazolt. Új szinkronizálás előtt frissíts.
+      unsupported: Ehhez a bejelentkezéshez a terminálban elérhető művelet szükséges.
+        Szakítsd meg ezt a próbálkozást, és használd a terminál Censo-szinkronizálását.
+    close: Profil bezárása
+    collapse_all: Összes összecsukása
+    complete: Profil beállításának befejezése
+    conflict: A profilod máshol megváltozott. Zárd be a szerkesztőt, nézd át a friss
+      adatokat, majd nyisd meg újra a mezőt. A piszkozatodat nem mentettük.
+    edit: Szerkesztés
+    edit_field: '{field} szerkesztése'
+    empty: Nincs a szűrőknek megfelelő adat. Próbálj más keresést vagy szakaszt.
+    expand_all: Összes kibontása
+    field_help: A mezőről
+    filter: Mezők megjelenítése
+    loading: Profil betöltése…
+    maximize: Teljes képernyő
+    missing_count: '{count} hiányzik'
+    missing_filter: Hiányzó adatok
+    not_set: Nincs kitöltve
+    refresh: Frissítés
+    refused: Nem sikerült menteni a módosításokat. Ellenőrizd a mezők útmutatóját,
+      és frissítsd a profilt az újabb próbálkozás előtt.
+    remove: Bejegyzés törlése
+    remove_help: Törlöd ezt a bejegyzést a profilodból? Minden mezője törlődik.
+    required: Kötelező
+    required_filter: Hiányzó kötelező adatok
+    save: Módosítások mentése
+    saved_filter: Mentett adatok
+    saved_notice: Mentve
+    saved_unread: A módosításokat mentettük, de a friss profilt nem sikerült betölteni.
+      Frissíts az ellenőrzéshez.
+    saving: Mentés…
+    search: Profiladatok keresése
+    sections: Profil szakasza
+    signed_out: Jelentkezz be a profilod megtekintéséhez és szerkesztéséhez.
+    title: A profilod
+    unavailable: Nem sikerült betölteni a profilodat. Frissíts az újrapróbálkozáshoz.
+    unknown: Nem tudtuk ellenőrizni, hogy a módosítások mentése megtörtént-e. Frissíts,
+      és ellenőrizd a mentett értékeket, mielőtt újra próbálkozol.
   rail:
     aeat: Az AEAT honlapja
     console: Konzol
+    docs: Dokumentáció
     docs_home: Dokumentáció kezdőlapja
     label: Munkaterület
     logs: Naplók
@@ -696,74 +930,184 @@ desktop:
     python: Python-shell
     search: Keresés
     settings: Beállítások
-    tui: TUI
+    tui: Munkaterület
   session:
     enter_restarts: Enter újraindítja
     exit_line: '[A folyamat {code} kóddal kilépett. Nyomd meg az Entert az újraindításhoz.]'
     exited: kilépett ({code})
-    failed: 'A munkamenet nem tudott elindulni: {reason}'
+    failed: A munkamenet nem tudott elindulni.
   settings:
     always_dark: Mindig sötét
     appearance: Megjelenés
     dark: Sötét
-    docs_and_tui: Dokumentáció és TUI
+    docs_and_tui: Dokumentáció és munkaterület
     first_pane: Első panel
-    follow_cadrumo: Ugyanaz, mint a Cadrumo
     follow_docs: A dokumentáció szerint
     language: Nyelv
     layout_reset: Elrendezés visszaállítva
     light: Világos
     match_appearance: A megjelenés szerint
     reset_layout: Elrendezés alaphelyzetbe
-    session: Bejelentkezés
     side_by_side: Egymás mellett
     stacked: Egymás alatt
     terminal_text: Terminál szövegmérete
     terminals: Terminálok
     title: Beállítások
     window: Ablak
+  setup:
+    advisory_incomplete: A Cadrumo beállítása nem teljes. Kattints ide a befejezéséhez.
+    advisory_running: A Cadrumo beállítása folyamatban van. Kattints ide, hogy lásd,
+      hol tart.
+    approve: Letöltés és beállítás
+    approve_at_least: Legalább {size} letöltése és beállítás
+    approve_size: '{size} letöltése és beállítás'
+    cancel: Beállítás megszakítása
+    cancelling: Leáll a mostani lépés után…
+    checking: Az összetevők ellenőrzése…
+    close: Bezárás
+    copy_details: Részletek másolása
+    details: Részletek
+    hide: Elrejtés
+    lead: A Cadrumo működéséhez ezekre az összetevőkre van szükség.
+    lead_review: Nézd át, mi töltődik le és hová kerül, majd hagyd jóvá.
+    lead_running: Ezt bezárhatod; a beállítás folytatódik, és a Beállításokban látod,
+      hogy áll.
+    not_now: Most nem
+    open: Beállítás megnyitása
+    outcome_cancelled: A beállítás megszakadt. Ami már letöltődött, megmarad.
+    outcome_completed: Minden be van állítva.
+    outcome_failed: A beállítás nem fejeződött be.
+    outcome_interrupted: A beállítás befejezés előtt leállt. Folytasd, hogy onnan
+      menjen tovább, ahol abbamaradt.
+    outcome_not_enough_space: Nem volt elég szabad hely, ezért semmi sem töltődött
+      le.
+    outcome_nothing_to_do: Már minden be volt állítva.
+    outcome_plan_changed: Az indulás előtt megváltozott, mire van szükség. Nézd át
+      az új tervet, és hagyd jóvá.
+    outcome_rejected: Semmi sem töltődött le.
+    overall_progress: A beállítás állapota
+    palette_browser: A böngésző beállítása
+    palette_cancel: Beállítás megszakítása
+    palette_check: Összetevők ellenőrzése
+    palette_local_ai: A helyi MI beállítása
+    palette_open: Összetevők beállítása
+    palette_retry: Beállítás újrapróbálása
+    plan_destination: 'Hely: {folder}'
+    plan_from: 'Forrás: {hosts}'
+    plan_nothing: Nincs mit letölteni.
+    plan_outside_program: Ez egy külön programot telepít erre a számítógépre, amely
+      engedélyt kérhet tőled.
+    plan_shared: 'Ezzel együtt töltődik le: {name}.'
+    plan_size: '{size} letöltése.'
+    plan_size_at_least: Legalább {size} letöltése.
+    planning: Annak kiszámítása, mit kell letölteni…
+    progress_bytes: '{done} / {total}'
+    progress_item: '{index}/{count}: {name} - {step}'
+    progress_label: 'Haladás: {name}'
+    rail_busy: Az összetevők beállítása folyamatban
+    rail_incomplete: A beállítás nem fejeződött be
+    refused_busy: Máshol már fut egy beállítás. Várd meg, amíg befejeződik.
+    refused_not_cancellable: A beállítás most nem állítható le. Hamarosan befejeződik.
+    refused_not_pending: Ez a terv már nem vár válaszra.
+    refused_not_signed_in: Előbb jelentkezz be a profilodba.
+    refused_other: A beállítás nem érhető el. Próbáld újra egy kicsit később.
+    refused_plan_changed: Megváltozott, mire van szükség. Nézd át az új tervet, majd
+      hagyd jóvá.
+    refused_unavailable: A Cadrumo szolgáltatásai nem válaszolnak. Próbáld újra egy
+      kicsit később.
+    reject: Ne töltsd le
+    result_already: Már be volt állítva
+    result_done: Beállítva
+    result_not_finished: Nem fejeződött be
+    resume: Folytatás
+    show_new_plan: Az új terv megjelenítése
+    size_unknown: A méret induláskor derül ki
+    space: '{required} szabad hely kell hozzá; {free} szabad.'
+    space_short: Nincs elég szabad hely. Szabadíts fel valamennyit, majd próbáld újra.
+    space_unread: '{required} szabad hely kell hozzá; a szabad helyet nem sikerült
+      kiolvasni.'
+    start: Beállítás
+    step_checking: Ellenőrzés
+    step_connecting: Kapcsolódás
+    step_downloading: Letöltés
+    step_installing: Telepítés
+    step_tidying: Rendrakás
+    step_waiting: Indulásra vár
+    summary_complete: Minden be van állítva, amire a Cadrumónak szüksége van.
+    summary_hardware: Ez a számítógép nem tud mindent futtatni, amire a Cadrumónak
+      szüksége van; a többi be van állítva.
+    summary_incomplete: A Cadrumónak szükséges összetevők egy része még nincs beállítva.
+    summary_running: A beállítás folyamatban van.
+    title: A Cadrumo beállítása
+    toast_cancelled: Beállítás megszakítva
+    toast_done: Az összetevők be vannak állítva
+    toast_not_finished: A beállítás nem fejeződött be
+    try_again: Újrapróbálás
+    unavailable: Az összetevőket most nem lehet ellenőrizni. Próbáld újra egy kicsit
+      később.
   signin:
     checking: A bejelentkezésed ellenőrzése…
     choose_profile: Válassz profilt
     dismiss: Most nem
     hide_password: Jelszó elrejtése
+    install_machine_permission: A minden felhasználóra érvényes telepítéshez rendszergazdai
+      engedély szükséges.
+    install_machine_services: Telepítés minden felhasználónak
+    install_user_services: Telepítés ennek a felhasználónak
     lead: Add meg a profilod jelszavát a munkaterületed megnyitásához.
-    open_tui: TUI megnyitása
-    open_tui_hint: Első beállítás, másik profil vagy helyreállítás? Használd a TUI-t.
     password: Jelszó
     profile: Profil
     profiles_unread: A számítógépen lévő profilokat nem sikerült beolvasni.
-    recovery_hint: Elvesztetted a jelszót, vagy zárolva van a profil? Használd a TUI-t.
+    recovering_services: Háttérszolgáltatások helyreállítása…
     refused:
+      busy: A bejelentkezés túl sokáig tartott, mert a számítógép le van terhelve.
+        Próbáld újra egy kicsit később.
       custody_changed: A profil jelszava vagy helyreállítási beállításai megváltoztak.
         Jelentkezz be újra.
       generation_changed: Máshol kijelentkeztettek. Jelentkezz be újra.
+      installation_cancelled: A telepítés megszakítva.
+      installation_failed: A háttérszolgáltatások telepítése nem sikerült.
+      installation_refused: A telepítőcsomag nem ellenőrizhető. Használj azonos verziójú,
+        teljes terjesztést.
+      installation_unavailable: Hiányzik a telepítőcsomag. Használd a teljes Cadrumo
+        terjesztést.
+      installation_unsettled: A telepítés nem igazolható. Újrapróbálkozás előtt ellenőrizd
+        a naplókat.
       invalid: Ez a jelszó nem működött. Próbáld újra.
-      keyring_unavailable: A Cadrumo ezen az eszközön nem tud bejelentkezve tartani,
-        ezért a TUI kérni fogja a jelszavadat.
+      keyring_unavailable: A Cadrumo ezen az eszközön nem tud bejelentkezve tartani.
+        A rendszer kulcstartója nem érhető el.
       login_mismatch: A bejelentkezésed egy korábbi munkamenetből származik ezen a
         számítógépen. Jelentkezz be újra.
-      other: A bejelentkezés nem sikerült ({code}).
-      profile_locked: Ez a profil zárolva van. A feloldásához folytasd a TUI-ban.
+      manager: A Cadrumo nem tudott elindulni. A részletekért nyisd meg a naplókat.
+      other: Nem sikerült bejelentkezni. Próbáld újra.
+      profile_locked: Ez a profil zárolva van. A feloldásához jelentkezz be a jelszavával.
       receipt_absent: Nem vagy bejelentkezve.
       receipt_expired: A bejelentkezésed lejárt. Jelentkezz be újra.
       runtime_unavailable: A Cadrumo háttérszolgáltatásai nem futnak.
       throttled: Túl sok próbálkozás. {seconds} mp múlva próbálhatod újra.
+    services_recovered: A háttérszolgáltatások készen állnak. Bejelentkezés ellenőrzése…
     show_password: Jelszó megjelenítése
-    signed_out_lead: Jelentkezz be, hogy megnyisd a munkaterületedet a TUI-ban.
+    signed_out_lead: Jelentkezz be a munkaterületed megnyitásához.
     start_services: Háttérszolgáltatások indítása
     starting_services: Háttérszolgáltatások indítása…
     submit: Bejelentkezés
     submitting: Bejelentkezés…
     title: Jelentkezz be a Cadrumóba
-    unnameable: Az olyan profil, amelynek nevében * ? [ % vagy $ szerepel, a TUI-ban
-      nyitható meg.
-    unsupported: Ezen a rendszeren a TUI-ban jelentkezz be.
+    unnameable: Nyisd meg a munkaterületet, hogy bejelentkezz ebbe a profilba.
+    unsupported: Ezen a rendszeren a munkaterületen jelentkezhetsz be.
   split:
-    resize: Dokumentáció és TUI átméretezése
-    side_by_side: Dokumentáció és TUI egymás mellé
-    stack: Dokumentáció és TUI egymás alá
-    swap: Dokumentáció és TUI felcserélése
+    resize: Dokumentáció és munkaterület átméretezése
+    side_by_side: Dokumentáció és munkaterület egymás mellé
+    stack: Dokumentáció és munkaterület egymás alá
+    swap: Dokumentáció és munkaterület felcserélése
+  titlebar:
+    close: Ablak bezárása
+    failed: Az ablakműveletet nem sikerült végrehajtani.
+    label: Az alkalmazás címsora
+    maximize: Ablak teljes méretre állítása
+    minimize: Ablak kis méretre állítása
+    profile_menu: Profilmenü
+    restore: Ablak méretének visszaállítása
   toast:
     copied: Másolva
     copy_failed: Nem sikerült a másolás.
@@ -771,9 +1115,9 @@ desktop:
     paste_failed: Nem sikerült a beillesztés.
     paste_too_large: Ez túl sok szöveg egyszerre a beillesztéshez.
   tui:
-    hide: TUI elrejtése
-    label: Cadrumo TUI
-    show: TUI megjelenítése
+    hide: Munkaterület elrejtése
+    label: Cadrumo-munkaterület
+    show: Munkaterület megjelenítése
 entries:
   portal_calendario_contribuyente:
     label: Adófizetői naptár
@@ -1003,7 +1347,7 @@ google_review:
     snapshot_digest: Mentett pillanatkép lenyomata
     work_unit_id: Munka hivatkozása
   notice:
-    calculation_required: Közzététel előtt válasszon mentett számítást.
+    calculation_required: Közzététel előtt válassz mentett számítást.
     evidence_index: A bizonyítékhivatkozások szerepelnek a másolatban; az eredeti
       mellékletek tartalma nem kerül közzétételre.
     external_copy: A közzététel olvasható másolatot hoz létre a Google rendszerében.
@@ -1015,10 +1359,10 @@ google_review:
     prerequisite_unavailable: A mentett áttekintés előfeltételei nem érhetők el.
     provisional: Ez a mentett áttekintés ideiglenes.
     receipt_unavailable: Ellenőrzött közzétételi bizonylat nem érhető el.
-    staged_edits: A mentett számítás áttekintése előtt mentse vagy vesse el a függő
+    staged_edits: A mentett számítás áttekintése előtt mentsd vagy vesd el a függő
       módosításokat.
     submission_unresolved: A közzététel eredménye még nem tisztázott. Új beküldés
-      előtt ellenőrizze a meglévő műveletet.
+      előtt ellenőrizd a meglévő műveletet.
   offer:
     title: Áttekintés a Google Táblázatokban
   open_document: Táblázat megnyitása
@@ -1111,7 +1455,7 @@ operation:
       response_not_pending: Ez a művelet nem vár választ.
       stale_operation_revision: A művelet továbblépett, amíg döntöttél. Várd meg a
         frissítést, és próbáld újra.
-      unknown_operation: A háttérrendszer már nem ismeri ezt a műveletet.
+      unknown_operation: Ez a művelet nem található.
       unsupported_cancellation_version: Ez a verzió nem tudja megszakítani azt a műveletet.
         Frissítsd a Cadrumót.
       unsupported_detach_version: Ez a verzió nem tudja leválasztani azt a műveletet.
@@ -1150,22 +1494,17 @@ overview:
     Az automatikus lekérés nem tudja lekérni a társasági adó (Modelo 200/202) benyújtási
     előzményeit; ellenőrizd közvetlenül az AEAT elektronikus ügyfélkapuján.
 provisioning:
-  condition:
-    role_model_fit_for_role: A(z) %{model} válaszolt a tesztdokumentumra, de a válasza
-      nem használható számla beolvasására. Válassz másik szövegmodellt.
-    role_model_fitness_verified: 'A(z) %{model} jelenlegi súlyaihoz nincs rögzített
-      alkalmassági ellenőrzés. Ez nem jelenti azt, hogy a modell alkalmatlan: az ellenőrzéshez
-      futtasd az `aeat config provision verify` parancsot.'
-    role_model_fitness_within_timeout: A(z) %{model} nem fejezte be a tesztválaszt
-      az időkorlát lejárta előtt. Lehet, hogy túl lassú ehhez a géphez; válassz kisebb
-      modellt, vagy növeld az LLM időkorlátját, majd futtasd újra az `aeat config
-      provision verify` parancsot.
   model:
     licence:
       non_commercial_advisory: A(z) %{model} modellre a(z) %{licence} vonatkozik,
         amely nem engedélyezi a kereskedelmi felhasználást. Ezt kifejezetten te adtad
         meg, ezért a Cadrumo használni fogja, de kereskedelmi könyvelői tevékenységhez
         külön licencet kell kérni a kiadótól.
+  role:
+    column_role_mapping: táblázatoszlopokhoz
+    supply_nature_proposal: az eladás vagy vásárlás típusához
+    text_extraction: dokumentumszöveghez
+    vision_transcription: beolvasott oldalakhoz
 review:
   adapters:
     errors:
@@ -1414,8 +1753,8 @@ topic:
   authentication:
     body: 'Az AEAT-hitelesítés Cl@ve Móvil (push a regisztrált telefonra) vagy digitális
       tanúsítvány (FNMT / azzal egyenértékű) segítségével működik. Konfigurálj egy
-      szolgáltatót: `aeat config auth configure --provider certificate`, majd ellenőrizd:
-      `aeat config auth test`.'
+      szolgáltatót: `cadrumo-runtime config auth configure --provider certificate`,
+      majd ellenőrizd: `cadrumo-runtime config auth test`.'
     title: Hitelesítés az AEAT-nál
   calendar:
     body: A naptár adott időtartományon belül mutatja a benyújtási kötelezettségeket
@@ -1459,8 +1798,8 @@ topic:
     title: Adóalany profilja
   providers:
     body: Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő előfeltételei
-      vannak. A `aeat config auth providers` parancs felsorolja azokat a követelményekkel
-      együtt.
+      vannak. A `cadrumo-runtime config auth providers` parancs felsorolja azokat
+      a követelményekkel együtt.
     title: Hitelesítési szolgáltatók
   recargo-extemporaneo:
     body: 'A határidő utáni benyújtás – előzetes AEAT-értesítés nélkül – az első évben
@@ -1494,6 +1833,25 @@ transactions:
     unreadable: Olvashatatlan fájl vagy nem támogatott formátum.
     verified: Az import sikeresen ellenőrizve.
 tui:
+  aeat_auth:
+    blocked: 'A szinkronizálás előtt teljesítsd ezeket a feltételeket:'
+    certificate_path: Tanúsítványfájl útvonala (üresen a mentett érték marad)
+    certificate_secret: Tanúsítvány jelszava (üresen a mentett érték marad)
+    close: Vissza
+    document_hint: Alkalmazáskéréshez add meg a DNI érvényességi dátumát vagy a NIE
+      támogatási számát az okmányod szerint.
+    edit: AEAT-hitelesítés beállítása / szerkesztése
+    failed: A hitelesítés nem menthető. Ellenőrizd a kötelező mezőket, és próbáld
+      újra.
+    field_failed: '{field} nem menthető. Ellenőrizd a formátumát, és próbáld újra.'
+    method: Hitelesítési mód
+    password: Cl@ve Permanente jelszó (üresen a mentett érték marad)
+    ready: Szinkronizálásra kész
+    route: Cl@ve Móvil útvonal
+    save: Hitelesítés mentése
+    saved: Mentve. A feltételek a tárolt profilt tükrözik.
+    title: AEAT-hitelesítés
+    unknown: A hitelesítés állapota nem olvasható. Nyisd meg újra a beállításokat.
   aeat_sync:
     action:
       pull_filed: Benyújtott bevallások lekérése
@@ -1688,6 +2046,7 @@ tui:
     delegation: Továbbadási jog
     destination: Cél
     details: Részletek
+    disclosure_categories: Teljes kategóriák
     disclosures: Hozzáférhető adatok
     empty: Nincs elem
     expires: Lejárat
@@ -2042,8 +2401,12 @@ tui:
     aeat_sync: AEAT-szinkron
     declarations: Bevallások
     home: Kezdőlap
+    installation: Telepítés
     ledger: Nyilvántartás
+    operations: Műveletek
     profile: Profil
+    reference: Kézikönyv
+    setup: Összetevők
     withholding: Levonások
   home:
     account_fallback: Fiók
@@ -2130,7 +2493,179 @@ tui:
       locked: A profil zárolva van
       no_profile: Nincs kiválasztott profil
     title: Kezdőlap
+  installation:
+    act:
+      archive_import:
+        label: Profil visszaállítása mentésből
+        summary: Visszaállít egy profilt mentésfájlból vagy -mappából, miután igazoltad
+          a jelszavát.
+      archive_import_prepare:
+        label: Mentés beolvasása visszaállítás előtt
+        summary: Beolvas egy mentésfájlt vagy -mappát, és visszaadja a beolvasott
+          tartalom lenyomatát. Semmit sem állít vissza.
+      archive_inspect:
+        label: Profilmentés megvizsgálása
+        summary: Megmutatja, mit árul el magáról egy mentésfájl, visszafejtés nélkül.
+      profile_create:
+        label: Profil létrehozása
+        summary: Létrehoz és kiválaszt egy profilt az első jelszavával. A profilba
+          külön kell bejelentkezned.
+      profile_list:
+        label: Profilok felsorolása
+        summary: Felsorolja a gépen lévő profilokat anélkül, hogy bármelyiket feloldaná.
+      recovery_disable:
+        label: Helyreállítási kód eltávolítása
+        summary: Eltávolítja egy profil helyreállítási kódját, miután igazoltad az
+          aktuális jelszavát.
+      recovery_enroll:
+        label: Helyreállítási kód beállítása
+        summary: Helyreállítási kódot hoz létre egy profilhoz, miután igazoltad a
+          jelszavát. A kód egyszer jelenik meg.
+      repair_logs:
+        label: Legutóbbi naplósorok
+        summary: Megmutatja, hol van a naplófájl, és kiírja a legutóbbi sorait.
+      repair_profile:
+        label: Aktív profil javítása
+        summary: Ellenőrzi, hogy olvasható-e egy profil rekordja, vagy törli az aktívprofil-beállítást,
+          ha az semmi használhatóra nem mutat.
+      repair_report:
+        label: Telepítés diagnosztikája
+        summary: Ellenőrzi a helyi konfigurációt, az aktív profilt, a bejelentkezést
+          és a naplót.
+      report_verify_document:
+        label: Számítási összesítő ellenőrzése
+        summary: A számítási összesítő fájlt a saját tartalma alapján ellenőrzi, és
+          egyetlen profilhoz sem köti.
+      reset_resume:
+        label: Visszaállítás folytatása
+        summary: Végigviszi a félbemaradt visszaállítást.
+      reset_start:
+        label: Minden profil visszaállítása
+        summary: Elindítja a gépen tárolt összes profil visszafordíthatatlan eltávolítását.
+      reset_status:
+        label: Visszaállítás állapota
+        summary: Megmutatja, meddig jutott egy visszaállítás, de nem folytatja.
+      review_package_verify:
+        label: Felülvizsgálati csomag ellenőrzése
+        summary: A felülvizsgálati csomag minden fájlját összeveti az ellenőrzőösszeg-listájával.
+      review_package_verify_receipt:
+        label: Ellenjegyzett átvételi igazolás ellenőrzése
+        summary: Ellenőrzi a felülvizsgálati csomag ellenjegyzett átvételi igazolásának
+          mindkét aláírását.
+      review_package_verify_signature:
+        label: Csomag aláírásának ellenőrzése
+        summary: A felülvizsgálati csomag aláírását egy általad megbízhatónak tartott
+          nyilvános kulccsal ellenőrzi.
+      storage_check:
+        label: Tárolás ellenőrzése
+        summary: Összeveti a lemezen lévő tárolómappákat azzal, aminek lenniük kellene,
+          és semmit sem javít.
+      storage_init:
+        label: Tárolómappák létrehozása
+        summary: Létrehoz minden hiányzó mappát, és megtart mindent, ami már megvan.
+      storage_inventory:
+        label: Tárolási leltár
+        summary: Megmutatja, hol található az egyes tárolási területek, és mi van
+          bennük.
+      storage_reclaim:
+        label: Tárolási terület felszabadítása
+        summary: Törli egy terület újra előállítható tartalmát.
+    action:
+      close: Vissza
+      read_outcome: 'Nézd meg, hogyan végződött: {act}'
+      run: Futtatás
+    column:
+      act: Művelet
+      effect: Hatás
+      family: Terület
+    confirm:
+      accept: Futtatás
+      cancel: Ne futtasd
+      question: Futtatod most? Ez adatokat módosít ezen a gépen.
+      title: 'Megerősítés: {act}'
+    effect:
+      changes: Adatokat módosít
+      reads: Csak olvas
+    family:
+      other: Egyéb
+      profiles: Profilok
+      repair: Javítás
+      reset: Visszaállítás
+      storage: Tárolás
+      verification: Ellenőrzés
+    field:
+      acknowledge_retention_override: Profilok eltávolítása akkor is, ha a törvényes
+        megőrzési idejük még nem járt le
+      area: Tárolási terület
+      clear_active: Az aktívprofil-beállítás törlése
+      counter_signer_public_key: Az ellenjegyző nyilvános kulcsa
+      label: Profil neve
+      lines: Sorok száma
+      operation_id: Visszaállítás azonosítója
+      operator_public_key: A te nyilvános kulcsod
+      package: A felülvizsgálati csomag fájlja
+      path: Fájl vagy mappa
+      profile: Profil neve vagy azonosítója
+      profile_id: Profilazonosító
+      public_key: Nyilvános kulcs
+      receipt: Az átvételi igazolás fájlja
+      retention_override_reason: A korai eltávolítás oka
+      signature: Aláírásfájl
+      source_digest: A mentés lenyomata
+      trusted_key: Általad megbízhatónak tartott kulcs
+    hint:
+      json: Egy JSON-érték.
+      optional: Nem kötelező.
+      path: Egy elérési út ezen a gépen.
+      supplied: Hagyd üresen, és előbb a mentésből lesz kiolvasva.
+    intro: A telepítésen végzett műveletek, amelyekhez nem kell bejelentkezett profil.
+      Mindegyiket a helyi szolgáltatás hajtja végre.
+    inventory_unavailable: Nem sikerült felsorolni a gépen lévő profilokat ({reason}).
+      A telepítést innen így is megvizsgálhatod és megjavíthatod.
+    list_hint: Egy sor megnyitásához nyomd meg rajta az Enter billentyűt.
+    passphrase:
+      label: Profiljelszó
+      required: Add meg a profil jelszavát.
+    profiles:
+      column:
+        active: Aktív
+        id: Azonosító
+        label: Név
+    result:
+      remedy: 'Javasolt következő lépés: {action}'
+    status:
+      completed: Kész.
+      effect_unknown: A kapcsolat megszakadt, mielőtt válasz érkezett volna ({code}).
+        Lehet, hogy mégis lefutott; ellenőrizd, mielőtt újra futtatod.
+      failed: A helyi szolgáltatás hiba miatt leállt ({act}). A részletek a naplójában
+        vannak.
+      failed_unknown: A helyi szolgáltatás hiba miatt leállt ({act}). Lehet, hogy
+        néhány adat már megváltozott; ellenőrizd, mielőtt újra futtatod.
+      invalid_fields: 'Ellenőrizd: {fields}.'
+      preview: Még semmi sem változott. Ez történne.
+      progress: Kérés a helyi szolgáltatáshoz…
+      recovery_declined: Nem erősítetted meg a helyreállítási kódot, ezért egy sem
+        lett beállítva.
+      refused: Elutasítva ({code}).
+      unreachable: A helyi szolgáltatás nem fogadta el a kérést ({code}).
+    title: Telepítés és javítás
+    verdict:
+      invalid: Nem érvényes.
+      outcome: 'Az ellenőrzés eredménye: {outcome}'
+      valid: Érvényes.
   ledger:
+    activity_asset:
+      asset_id: Eszközazonosító
+      claim: Értékcsökkenés rögzítése
+      correct: Javítás
+      create: Létrehozás
+      filing: Adónyomtatványra átvitel előkészítése
+      forecast: Előrejelzés kiszámítása
+      free_amount: Szabad értékcsökkenés összege (nem kötelező)
+      inspect: Megtekintés
+      revision: Eszközverzió (JSON)
+      supersedes: Felülírandó elszámolt értékcsökkenés (nem kötelező)
+      title: Értékcsökkenthető eszközök
     area:
       classification: Besorolás
       entries: Tételek
@@ -2351,6 +2886,9 @@ tui:
         xlsx: Excel-munkafüzet
       provider_label: Kivonat formátuma
       refusal:
+        empty_directory: a mappában nincs importálható kivonatfájl
+        file_limit: az importálás több fájlt tartalmaz, mint amennyit egy importálás
+          elfogad, ezért egyiket sem olvastuk be; importálj egyszerre kevesebbet
         own_account_mismatch: a kivonat más számlát nevez meg, mint amit választottál
         result_limit: az importálás e fájl előtt elérte a sorkorlátot
         source_changed: a fájl az előnézet után megváltozott, ezért semmi sem került
@@ -3366,6 +3904,153 @@ tui:
       value:
         not_applicable: nem alk.
       was: 'korábban: {value}'
+  operations:
+    action:
+      close: Bezárás
+      edit_fields: Szerkesztés mezőnként
+      edit_json: Szerkesztés JSON-ként
+      next_page: Következő oldal
+      previous_page: Előző oldal
+      run: Futtatás
+    form:
+      choose: Válassz
+      error:
+        choice: Válassz a felkínált értékek közül.
+        integer: Adj meg egy egész számot.
+        json: Ez nem érvényes JSON.
+        json_object: A kérésnek egyetlen érvényes JSON-objektumnak kell lennie. Semmi
+          sem lett elküldve.
+        json_unknown_fields: A JSON olyan mezőket nevez meg, amelyek ebben a kérésben
+          nincsenek. Töröld őket, vagy szerkeszd tovább JSON-ként.
+        number: Adj meg egy számot.
+      fixed: a munkamenet határozza meg
+      hint:
+        date: Dátum ÉÉÉÉ-HH-NN formában
+        datetime: Dátum és idő ÉÉÉÉ-HH-NNTÓÓ:PP:MMZ formában
+        decimal: Pontos összeg, például 1234.56
+        integer: Egész szám
+        number: Szám
+        path: Fájl vagy mappa elérési útja
+        text: Szöveg
+        uuid: Azonosító
+      invalid: A kérés még nem érvényes. Semmi sem lett elküldve.
+      profile: Profil
+      replay_key: Ismétlési kulcs (opcionális)
+      replay_key_hint: Küldd el ugyanazt a kulcsot ugyanazzal a kéréssel még egyszer,
+        és az első műveletet kapod vissza új indítása helyett.
+      required: kötelező
+      secret: Titok (gépelés közben rejtve, a kéréstől külön kerül elküldésre)
+      secret_required: Ehhez a művelethez meg kell adnod a titkot. Írd be, és futtasd
+        újra. Semmi sem lett elküldve.
+      session: Munkamenet
+      subject: Tárgy
+      subject_entry: A munkaegység, amelyre a kérés vonatkozik
+      subject_missing: A kérés még nem adja meg, mire vonatkozik. Töltsd ki az ezt
+        megnevező mezőt. Semmi sem lett elküldve.
+      subject_pending: a kérés még nem adja meg
+    interaction:
+      expires: Lejárat
+      kind:
+        choice: A művelet egy választásra vár.
+        input: A művelet egy adat megadására vár.
+      no_answer: 'Erre a kéréstípusra még nem lehet válaszolni sem itt, sem a parancssorból:
+        csak egy felülvizsgálatot lehet alkalmazni vagy elutasítani. Megszakíthatod
+        a műveletet, vagy várakozni hagyhatod.'
+      presentation: Kérés tárgya
+    palette:
+      help: A művelet kérésűrlapjának megnyitása
+    receipt:
+      effect: Hatás
+      operation: Művelet
+      outcome: Kimenetel
+    result:
+      page: Eredmény, {page}. oldal, összesen {pages}
+    run:
+      busy_holder: 'Az ezt lefoglaló művelet: {operation_id}'
+      contract_changed: Ez a művelet megváltozott, amíg az űrlap nyitva volt. Nyisd
+        meg újra a Műveleteket, és próbáld újra.
+      detached: Kiléptél a műveletből, miközben még futott. Az eredménye itt nem ismert.
+      start_unconfirmed: A kérés rögzítésre került, de az indítása nem lett megerősítve.
+        Semmi sem lett megismételve.
+      unknown: A válasz elveszett, ezért nem tudni, hogy a kérés rögzítésre került-e.
+        Semmi sem lett megismételve.
+      unobserved: A műveletet nem sikerült megfigyelni, ezért az állapota itt nem
+        ismert.
+    search:
+      placeholder: Keress azonosító vagy leírás szerint
+    status:
+      count: '{shown} / {total} művelet'
+      loading: A regisztrált műveletek beolvasása folyamatban.
+      unavailable: A regisztrált műveleteket nem sikerült beolvasni.
+    stopped:
+      code: Kód
+      remedy: Mi kell a folytatáshoz
+      remedy_command: 'Megoldó parancs: {command}'
+    title: Műveletek
+  reference:
+    action:
+      close: Vissza
+      show: Megjelenítés
+    column:
+      read: Referencia
+    filter:
+      any: Bármelyik
+      as_of: Ezen a napon érvényes (ÉÉÉÉ-HH-NN)
+      casilla: Mező
+      casilla_number: Mező száma vagy azonosítója
+      category: Kategória
+      domain: Adózási terület
+      form_number: Hivatalos rovatszám
+      input_kind: Honnan kap értéket
+      modelo: Nyomtatvány
+      period: Időszak (0A, 1T–4T, 01–12)
+      portal: Portálazonosító
+      required: Csak a kötelezők
+      year: Adóév
+    filters: Mit mutasson
+    intro: A Cadrumóval együtt érkező nyilvános referenciaadatok. Az olvasásukhoz
+      nem kell profil, és senkivel sem lép kapcsolatba.
+    list_hint: Egy sor megnyitásához nyomd meg rajta az Enter billentyűt.
+    read:
+      apoderado_scopes: Meghatalmazási körök
+      auth_providers: AEAT-azonosítási módok
+      bindings: Nyomtatvány rovatforrásai
+      casilla: Egy mező
+      casillas: Nyomtatvány mezői
+      categories: Nyilvántartási kategóriák
+      describe: Nyomtatvány leírása
+      formulas: Nyomtatvány képletei
+      modelos: Nyomtatványkatalógus
+      portal: Egy AEAT-portál
+      portals: AEAT-portálok
+      support_matrix: Képességmátrix
+    section:
+      irpf_categories: IRPF-kategóriák
+      spending_categories: Kiadási kategóriák
+    status:
+      failed: A referenciát nem sikerült beolvasni. A részletek a naplóban vannak.
+      invalid: 'Ellenőrizd: {fields}.'
+      loading: Olvasás…
+      rows: 'Sorok: {count}'
+    summary:
+      apoderado_scopes: Mire kaphat felhatalmazást egy meghatalmazott valaki más nevében.
+      auth_providers: Azok a módok, ahogyan a Cadrumo azonosítani tud téged az AEAT
+        felé.
+      bindings: Honnan származnak egy nyomtatványváltozat értékei.
+      casilla: 'Egy mező: a hivatalos megnevezése, a jogalapja és, ha számított, a
+        képlete.'
+      casillas: Egy nyomtatványváltozat mezői, szűrőkkel.
+      categories: A nyilvántartási tételekhez rendelhető kiadási és IRPF-kategóriák.
+      describe: Egy nyomtatvány változatai, időszakai és darabszámai.
+      formulas: Egy nyomtatványváltozat képletei, és hogy melyik miből számol.
+      modelos: A Cadrumo által ismert összes nyomtatvány, igény szerint egy adóévre
+        vagy adózási területre szűkítve.
+      portal: 'Egy AEAT-weboldal: a címe, a célja és az azonosítási módjai.'
+      portals: Az AEAT Cadrumo által ismert weboldalai kategória vagy nyomtatvány
+        szerint. A felsorolás egyet sem nyit meg.
+      support_matrix: 'Mire képes a Cadrumo az egyes nyomtatványokkal: számítás, exportálás,
+        benyújtott példányok olvasása.'
+    title: Referencia
   restricted:
     actions: 'Engedélyezett tevékenységek: {values}'
     all_periods: Minden időszak
@@ -3373,6 +4058,11 @@ tui:
       {provider}'
     change_user: Felhasználóváltás
     close: Bezárás
+    disclosure_page: 'Felfedhető adatok: {first}–{last} / {total}'
+    disclosure_page_empty: Ez a munkamenet semmit sem fedhet fel.
+    disclosure_page_stale: A felfedhető adatok megváltoztak, mióta megszámoltuk őket.
+      Várd meg, amíg az állapot frissül, majd olvasd be őket újra.
+    disclosures_next: Felfedhető adatok, következő oldal
     grant: 'Engedély érvényes: {valid}; lejár: {expires_at}'
     lock: Munkamenet zárolása
     'no': Nem
@@ -3419,6 +4109,8 @@ tui:
     opening: A Cadrumo megnyitása…
     palette:
       placeholder: Területek, bejegyzések és műveletek keresése…
+    read_unavailable: Ez a nézet nem tölthető be. Próbáld újra.
+    retry: Újrapróbálás
     system:
       quit: Kilépés
       quit_help: Kilépés a Cadrumo alkalmazásból; a profil munkamenete változatlan
@@ -3495,16 +4187,25 @@ tui:
       aeat_sync: AEAT-szinkron megnyitása
       declarations: Bevallások megnyitása
       home: Kezdőlap megnyitása
+      installation: Telepítés megnyitása
       ledger: Nyilvántartás megnyitása
+      operations: Műveletek megnyitása
       profile: Profil megnyitása
+      reference: Kézikönyv megnyitása
+      setup: Összetevők megnyitása
       unknown: Terület megnyitása
       withholding: Levonások megnyitása
     destination_help:
       aeat_sync: Amit az AEAT-tól már beolvastunk, és amit legközelebb be lehet olvasni
       declarations: Bevallások, korábbi számítások, benyújtási előzmények és naptár
       home: Következő teendők, bevallások és határidők egy pillantással
+      installation: Tárhely, javítás, visszaállítás és a számítógépen lévő profilok
       ledger: Tételek, ellenőrzés, besorolás és bizonylatok
+      operations: 'A Cadrumo minden futtatható művelete: kereshető, kitölthető és
+        futtatható'
       profile: A profil adatai és az azokat kitöltő források
+      reference: Modelók, rovatok, kategóriák, portálok és bejelentkezési módok
+      setup: A böngésző és a helyi MI
       withholding: Számla-levonások rögzítése és megtekintése a kiválasztott adóévben
     refusal:
       not_composed: Még nem sikerült minden területet beolvasni.
@@ -3558,3 +4259,48 @@ tui:
         reconciliation_resolved: Rendezett
         revision_current: Aktuális
         revision_superseded: Felváltva
+  setup:
+    check_again: Újraellenőrzés
+    checking: Ellenőrzés…
+    column:
+      action: Művelet
+      item: Összetevő
+      state: Állapot
+    complete: A Cadrumo elő van készítve.
+    hardware_limited: Ennek a számítógépnek nincs elég memóriája a helyi MI-hez.
+    hint: Az Enter futtatja a kijelölt sor műveletét. Előkészítéskor megjelenik a
+      terv, és a Cadrumo megkérdez, mielőtt bármit letöltene.
+    incomplete: Néhány összetevő még nem áll készen.
+    intro: 'Amire a Cadrumónak szüksége van ezen a számítógépen: az adóhivatal webhelyéhez
+      használt böngésző és a helyi MI. Válassz egy sort a műveletének futtatásához.'
+    outcome:
+      cancelled: Megszakítottad az előkészítést.
+      completed: Az előkészítés befejeződött.
+      interrupted: Az előkészítés befejezés előtt megszakadt. A folytatáshoz válaszd
+        a Folytatás lehetőséget.
+      not_enough_space: Nincs elég szabad hely a lemezen, ezért semmi sem töltődött
+        le.
+      nothing_to_do: Már minden elő van készítve.
+      plan_changed: A terv megváltozott, miután jóváhagytad, ezért semmi sem töltődött
+        le. Kezdd újra az új terv megtekintéséhez.
+      rejected: Semmi sem töltődött le.
+    plan:
+      destination: '  Helye: %{path}'
+      entry: '%{name}: %{size}, innen: %{hosts}'
+      heading: 'A Cadrumo ezeket készíti elő:'
+      installs_program: '  Ez egy programot telepít erre a számítógépre. A telepítője
+        engedélyt kérhet tőled.'
+      part: '    %{name}: %{size}'
+      shared: '  Ugyanazt a letöltést használja, mint: %{name}.'
+      size_unknown: a méret még nem ismert
+      total: 'Teljes letöltés: %{size}.'
+      total_unknown: 'Teljes letöltés: legalább %{size}. Néhány méret csak a letöltés
+        kezdetekor derül ki.'
+    set_up_all: Mindent előkészít
+    size:
+      gigabytes: '%{value} GB'
+      megabytes: '%{value} MB'
+    title: Összetevők
+    unavailable: A Cadrumo háttérszolgáltatása nem érhető el, ezért az összetevők
+      most nem ellenőrizhetők és nem készíthetők elő.
+    working: A terv készül…

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#mcp-identity-linked-operation'
 date: '2026-07-08'
-modified: '2026-09-26'
-body_hash: 'sha256:e31ce705c6d9f4c8d8e80d8632e9b29db22130ea3f47544c39eaabf834c807f6'
+modified: '2026-10-21'
+body_hash: 'sha256:c44a7e528fd47841c6ebdc33ebc72db78cff9e0ddf4538cc18b73866bfcab2de'
 related:
   - "[[2026-07-08-mcp-identity-linked-operation-research]]"
   - "[[2026-07-08-mcp-console-review-audit]]"
@@ -73,16 +73,16 @@ conformance debt against the two accepted MCP ADRs (which the companion
   the label but is not marketed or shaped as an identity check, and it is not the
   command the golden-eval anchors on, so an agent does not reliably reach for it
   to confirm identity.
-- **Chosen — a `whoami` always-on core read-only tool.** A console-native tool
-  wrapping `assess_active_profile_health` returns the active-profile label,
-  whether a tax id is present, readiness, and the next action; its description
-  states its safety job ("call before any mutating command to confirm which
-  taxpayer is active; call again after a profile switch"). The same identity
-  block is added to the `harness.load` floor response, since session orientation
-  is that tool's job. `whoami` joins the hand-built orientation core (14 → 15
-  tools); it is a console tool like `search`/`execute`, not a manifest slice
-  member. Identity is NOT stamped into every `search` result (noise); per-result
-  identity is I3.
+- **Chosen — the `status` always-on core read-only tool is the identity read.** A
+  console-native tool wrapping `assess_active_profile_health` returns the active-profile
+  label, whether a tax id is present, readiness, and the next action; its description
+  states its safety job ("call before any mutating command to confirm which taxpayer is
+  active; call again after a profile switch"). `status` is contracted at
+  `src/cadrumo_mcp/mcp/protocol_contract.py:189`, joins the hand-built orientation core
+  of 12 tools (`src/cadrumo_mcp/mcp/surfaces.py:103`), and is the only tool the runtime
+  adapter serves without admission (`src/cadrumo_mcp/mcp/runtime_adapter.py:431`). It is a
+  console tool like `search`/`execute`, not a manifest slice member. Identity is NOT
+  stamped into every `search` result (noise); per-result identity is I3.
 
 ### I2 — Live identity gate
 
@@ -94,27 +94,19 @@ conformance debt against the two accepted MCP ADRs (which the companion
 - **Chosen — block the first mutating call of a session, re-armed on any
   profile-changing verb, until an identity read has occurred.** The server
   refuses the first mutating call (mutating defined off the risk table) unless an
-  identity read (`whoami` / `config profile status` / `overview status`) happened
+  identity read (`status` / `config profile status` / `overview status`) happened
   since session start or since the last profile-changing verb (`config switch`,
   the `config profile` mutations); the refusal is deterministic, instructive, and
   localized, so an agent recovers in exactly one read-only round-trip. It runs in
   the pre-tool-use layer identically on the direct and `execute` paths. The gate
   proves the identity read HAPPENED, not that the agent reconciled it — the
   residual is covered by the I4 echo and scored by the golden eval.
-- **Implementation refinement — `harness.load` counts as an identity read.**
-  Because "mutating" is defined off the risk table and the manifest carries
-  per-family mutability, nearly every non-`overview` verb (including genuine
-  reads such as `ledger view` / `config profile show`) classifies non-read-only,
-  so a literal three-read set fires the gate on almost any first call. The
-  identity-read set is therefore widened to include the `harness.load` floor
-  tool, which — per I1 — now carries the active-profile identity block in its
-  response: an agent that loaded the harness has demonstrably seen who is active,
-  exactly the guarantee the gate exists to enforce. This sharply reduces friction
-  on the near-universal first call while preserving safety, because a
-  profile-changing verb still re-arms the gate (a post-switch mutation must
-  re-confirm identity). The read set is thus `whoami` / `config profile status` /
-  `overview status` / `harness.load`, keyed off tool identity, not a leaf-name
-  heuristic.
+- **Identity read set.** The read set is `status` / `config profile status` /
+  `overview status`, keyed off tool identity, not a leaf-name heuristic. The first
+  mutating call of a session is gated until one of those three reads happens; `status` is
+  always available (`src/cadrumo_mcp/mcp/runtime_adapter.py:431`), so recovery is the
+  single read-only round-trip I2 was designed around. Reconsider if measurement shows the
+  gate firing on a near-universal first call.
 
 ### I3 — Per-operation identity carrier
 
@@ -169,9 +161,8 @@ High-level layering; the paired plan owns steps and sequencing.
 - **Envelope spine (I3), first.** Add the optional `active_profile` label field to
   the shared `SchemaEnvelope` spine and the stderr `ErrorEnvelope`; populate it at
   emit for profile-bound commands; extend the shared-spine conformance test.
-- **`whoami` tool (I1).** A console-native read-only core tool over the existing
-  profile-health assessment, added to the hand-built orientation core and to the
-  `harness.load` identity block.
+- **Identity read tool (I1).** The `status` tool: a console-native read-only core tool
+  over the existing profile-health assessment, in the hand-built orientation core.
 - **Identity gate (I2) + echo (I4).** Per-session identity-read state in the
   pre-tool-use layer, re-armed on any profile-changing verb; an instructive
   localized refusal on the first un-confirmed mutating call, byte-identical on
@@ -227,3 +218,7 @@ Accepted under the operator's instruction to continue the presented mcp-purpose-
 Identity/status tools observe a proven profile session; reading them cannot create authorization. Every private read, mutation and result/resource access validates the immutable profile binding, credential/grant, session and current revocation state. A human profile switch cannot retarget an agent. The label remains a human display value, not a security identifier; envelope and confirmation labels derive from the operation's captured binding rather than the ambient profile at emit time.
 
 I1's accessible identity orientation, I3's shared envelope presentation, I4's clear target echo and applicable redaction rules remain. Their old fixed tool counts and observation-before-mutation ordering are not replacement implementation constraints. Direct and execute-style paths share application admission. The new accepted records own that policy; this record does not duplicate it.
+
+## Amendment 2026-10-12: confirmation is not a gate
+
+Accepted under `2026-10-11-mcp-parity-full-parity-adr`. The CONFIRM elicitation that I4 has name the active profile label no longer gates any operation on MCP. Where a client shows a confirmation, or the result echoes its target, the label still derives from the operation's captured binding, as the 2026-09-26 amendment says.

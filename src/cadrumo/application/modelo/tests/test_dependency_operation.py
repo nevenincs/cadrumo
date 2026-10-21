@@ -9,6 +9,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability, OperationAccessRequest
+
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -16,13 +19,6 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.public_period import PublicPeriod
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    Availability,
-    OperationAccessRequest,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ...user_profile.operation_access_policy import operation_scope_refusal
 from ..dependency_operation import (
@@ -75,12 +71,13 @@ def _context(
     profile_id: UUID = _PROFILE,
     action: AccessAction = AccessAction.SUBMIT,
     admitted: OperationAccessRequest | None = None,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=action,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
         admitted_request=admitted,
@@ -116,6 +113,22 @@ def test_period_request_covers_published_source_union_and_target_only_scope_deni
     )
     denied = operation_scope_refusal(request=resolved.request, policy=resolved.policy, scope=target_only)
     assert denied is not None and denied.code is AccessDenialCode.PERIOD_DENIED
+
+
+def test_dependency_read_is_admitted_on_the_external_client_frontend_without_a_commit_door(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    registry, registration = _registry()
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(),
+        context=_context(registration, authority_operation, frontend=OperationFrontendProjection.EXTERNAL_CLIENT),
+    )
+
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
+    assert resolved.request.profile_id == _PROFILE
+    assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 def test_inventory_is_independent_and_historical_result_keeps_admitted_source_scope(

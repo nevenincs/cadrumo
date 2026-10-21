@@ -274,7 +274,7 @@ def _refs_net_of(values: object, own: frozenset[str]) -> frozenset[str]:
 
 def _source_default(revision: ModeloRevision) -> frozenset[str] | None:
     default = revision.casilla_source_refs
-    return None if not default else frozenset(str(ref) for ref in default)
+    return None if not (default is not None and default) else frozenset(str(ref) for ref in default)
 
 
 def _orden_default(revision: ModeloRevision) -> tuple[str, ...]:
@@ -418,7 +418,7 @@ def _row_judgement(
 def _predecessor_rows_by_lineage(predecessor: ModeloRevision) -> dict[str, list[CasillaDefinition]]:
     by_chain: dict[str, list[CasillaDefinition]] = collections.defaultdict(list)
     for candidate in predecessor.casillas:
-        if candidate.continuidad_id:
+        if candidate.continuidad_id is not None and candidate.continuidad_id:
             by_chain[str(candidate.continuidad_id)].append(candidate)
     return by_chain
 
@@ -460,7 +460,7 @@ def _judge_stated_casilla(
     modelo_id: str,
 ) -> RowJudgement:
     revision_id = str(revision.id)
-    chain = str(casilla.continuidad_id) if casilla.continuidad_id else None
+    chain = str(casilla.continuidad_id) if (casilla.continuidad_id is not None and casilla.continuidad_id) else None
     if chain is None:
         return _row_judgement(
             modelo_id,

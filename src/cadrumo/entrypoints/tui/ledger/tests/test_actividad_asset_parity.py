@@ -11,21 +11,21 @@ from threading import Event
 import pytest
 from textual.widgets import Button, Input, Static
 
-from cadrumo.application.actividad_asset.history import ActivityAssetHistoryClaimResult
-from cadrumo.application.actividad_asset.operations import ActivityAssetFilingHandoff
-from cadrumo.application.calculations.actividad_asset_schedule import vehicle_affectation_verdict
-from cadrumo.domain.renta.actividad_asset.claims import ClaimProjection
-from cadrumo.domain.renta.actividad_asset.election import (
+from .....application.actividad_asset.history import ActivityAssetHistoryClaimResult
+from .....application.actividad_asset.operations import ActivityAssetFilingHandoff
+from .....application.calculations.actividad_asset_schedule import vehicle_affectation_verdict
+from .....domain.renta.actividad_asset.claims import ClaimProjection
+from .....domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
     AmortizationMethod,
     DirectEstimationRegime,
 )
-from cadrumo.domain.renta.actividad_asset.errors import (
+from .....domain.renta.actividad_asset.errors import (
     ActividadAssetIncompleteError,
     VehicleAffectationRecovery,
 )
-from cadrumo.domain.renta.actividad_asset.lifecycle import (
+from .....domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
     ActivityAssetBasis,
@@ -35,17 +35,17 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
-from cadrumo.domain.renta.actividad_asset.schedule import (
+from .....domain.renta.actividad_asset.schedule import (
     AssetScheduleHistory,
     ScheduleAuthority,
     ScheduledAmortizationCharge,
     schedule_charge,
 )
-from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
-from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-from cadrumo.entrypoints.tui.ledger.actividad_asset import ActivityAssetScreen
-from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
-from cadrumo.entrypoints.tui.ledger.models_actividad_asset import (
+from ...account import AccountSessionExpiredError
+from ...components.host import ScreenHostApp
+from ..actividad_asset import ActivityAssetScreen
+from ..controller import LedgerWorkspaceController
+from ..models_actividad_asset import (
     ActivityAssetClaimRequestV1,
     ActivityAssetCorrectionRequestV1,
     ActivityAssetCreationRequestV1,
@@ -53,8 +53,7 @@ from cadrumo.entrypoints.tui.ledger.models_actividad_asset import (
     ActivityAssetForecastRequestV1,
     ActivityAssetInspectionV1,
 )
-from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
-
+from ..workspace_injection import LedgerWorkspaceInjection
 from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

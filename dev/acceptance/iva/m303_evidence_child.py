@@ -49,7 +49,7 @@ def _run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
     reopen: list[ReopenReadback] = []
     failure: list[InstalledTuiChildError] = []
 
-    from cadrumo.entrypoints.tui.launcher import main as launch
+    from cadrumo_runtime.host.frontend.tui.launcher import main as launch
 
     async def drive(pilot: Any) -> None:
         try:

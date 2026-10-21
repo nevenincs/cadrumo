@@ -2,7 +2,7 @@
 
 None of the private state or connection facts is a frontend request schema.
 The runtime supplies connection provenance and the recipient capability. A name
-or UUID supplied by an agent cannot construct either authority.
+or UUID supplied by an automation cannot construct either authority.
 """
 
 from __future__ import annotations
@@ -16,32 +16,32 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, SecretBytes, model_validator
 
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    DisclosureCategoryGrant,
+    DisclosurePage,
+    DisclosureSummary,
+    disclosure_digest,
+    ordered_disclosures,
+    summarize_disclosures,
+)
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
+
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import UtcInstant
 from .access_contracts import (
     ACCESS_LEASE_MAXIMUM,
-    AccessAction,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
-    AuthorityState,
     AutomationGrant,
-    DisclosurePermission,
     ProfileAccessBinding,
     ProfileAccessState,
 )
 from .access_projections import PublicApiKey, PublicAutomationGrant
 from .automation_custody_port import AutomationKeyVerifier
-
-
-class EnrollmentKind(StrEnum):
-    """Exactly reviewed grant changes; a rotation never extends grant validity."""
-
-    ENROLL = "enroll"
-    ROTATE = "rotate"
-    RENEW = "renew"
-    CHANGE_SCOPE = "change_scope"
 
 
 class EnrollmentStage(StrEnum):
@@ -51,34 +51,6 @@ class EnrollmentStage(StrEnum):
     CANDIDATE = "candidate"
     COMPLETE = "complete"
     DECLINED = "declined"
-
-
-class EnrollmentProposal(BaseModel):
-    """Private consent operand, submitted only through the ephemeral channel."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    kind: EnrollmentKind
-    scope: AccessScope
-    expires_at: UtcInstant
-    key_expires_at: UtcInstant | None
-    unattended: bool
-    allow_os_lock: bool
-    target_grant_id: UUID | None = None
-    target_key_id: UUID | None = None
-
-    @model_validator(mode="after")
-    def _targets(self) -> EnrollmentProposal:
-        if (self.kind is EnrollmentKind.ENROLL) != (self.target_grant_id is None):
-            raise ValueError("grant target does not match enrollment kind")
-        if (self.kind is EnrollmentKind.ROTATE) != (self.target_key_id is not None):
-            raise ValueError("key target does not match enrollment kind")
-        if (self.kind in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE}) != (self.key_expires_at is not None):
-            raise ValueError("key validity must match the reviewed key change")
-        if (self.key_expires_at is not None and self.key_expires_at > self.expires_at) or (
-            self.allow_os_lock and not self.unattended
-        ):
-            raise ValueError("invalid enrollment bounds")
-        return self
 
 
 class EnrollmentRequester(BaseModel):
@@ -206,6 +178,8 @@ class AutomationInventory(BaseModel):
     grants: tuple[PublicAutomationGrant, ...]
     keys: tuple[PublicApiKey, ...]
     requests: tuple[EnrollmentReview, ...]
+    disclosure_page: DisclosurePage | None = None
+    """One page of one grant's or request's disclosures, when the read named one."""
 
 
 class AutomationPeriodProjection(BaseModel):
@@ -218,36 +192,45 @@ class AutomationPeriodProjection(BaseModel):
 
 
 class AutomationScopeProjection(BaseModel):
-    """Typed public scope with explicit stable ordering for allow sets."""
+    """Typed public scope with explicit stable ordering for allow sets.
+
+    Listed disclosures are counted by category, not listed: the full list is
+    read a page at a time by naming the grant or request in an inventory read.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     operations: tuple[str, ...]
     actions: tuple[AccessAction, ...]
-    disclosures: tuple[DisclosurePermission, ...]
+    disclosure_count: Annotated[int, Field(ge=0)]
+    disclosure_summary: DisclosureSummary
+    disclosure_digest: ContentDigest
     periods: tuple[AutomationPeriodProjection, ...] | None
     allow_period_independent: bool
     allow_delegation: bool
+    disclosure_categories: tuple[DisclosureCategoryGrant, ...] = ()
 
     @classmethod
     def from_scope(cls, scope: AccessScope) -> Self:
-        """Flatten a domain scope into its stable public ordering."""
+        """Flatten a domain scope into its stable public ordering, its disclosures counted."""
+        ordered = ordered_disclosures(scope.disclosures)
         return cls(
             operations=tuple(sorted(scope.operations)),
             actions=tuple(sorted(scope.actions)),
-            disclosures=tuple(
-                sorted(
-                    scope.disclosures, key=lambda item: (str(item.destination_id), item.projection_id, item.category)
-                )
-            ),
+            disclosure_count=len(ordered),
+            disclosure_summary=summarize_disclosures(ordered),
+            disclosure_digest=disclosure_digest(ordered),
             periods=None
             if scope.periods is None
             else tuple(
-                AutomationPeriodProjection(filing_year=item.filing_year, code=str(item.code))
-                for item in sorted(scope.periods, key=lambda item: (item.filing_year, str(item.code)))
+                AutomationPeriodProjection(filing_year=item.filing_year, code=item.code)
+                for item in sorted(scope.periods, key=lambda item: (item.filing_year, item.code))
             ),
             allow_period_independent=scope.allow_period_independent,
             allow_delegation=scope.allow_delegation,
+            disclosure_categories=tuple(
+                sorted(scope.disclosure_categories, key=lambda item: (item.category.value, str(item.destination_id)))
+            ),
         )
 
 
@@ -330,6 +313,7 @@ class AutomationInventoryProjection(BaseModel):
     grants: tuple[AutomationGrantProjection, ...]
     keys: tuple[AutomationKeyProjection, ...]
     requests: tuple[AutomationReviewProjection, ...]
+    disclosure_page: DisclosurePage | None = None
 
 
 class AdministrationFacts(BaseModel):

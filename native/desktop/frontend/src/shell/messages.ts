@@ -25,6 +25,7 @@ export function useMessages(
   views: ProfileViews | undefined,
   reader: string | null,
   onRefused: () => void,
+  locale = "",
 ): MessagesState {
   const [state, setState] = useState<MessagesState>({ kind: "unknown" });
   const request = useRef(0);
@@ -63,7 +64,7 @@ export function useMessages(
     };
     window.addEventListener("focus", focus);
     return () => window.removeEventListener("focus", focus);
-  }, [reader, read]);
+  }, [reader, read, locale]);
 
   return state;
 }

@@ -350,7 +350,10 @@ def _identity_candidates(
                 value=value,
                 anchor=anchors.get(field),
                 role_evidence=(
-                    claimed if claimed and printed_excerpt_occurs(claimed, transcription=transcription) else ""
+                    claimed
+                    if (claimed is not None and claimed)
+                    and printed_excerpt_occurs(claimed, transcription=transcription)
+                    else ""
                 ),
             ),
         )

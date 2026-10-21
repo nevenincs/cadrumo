@@ -49,7 +49,7 @@ class WizardPromptedCasillaPayload(OutputSchema):
 class WorkWizardResult(CalculationRevisionProjectionFields):
     """Successful ``aeat app modelo work wizard`` result payload.
 
-    Mirrors the shape of :class:`~entrypoints.cli._modelo_payloads.WorkCalculateResult`
+    Mirrors the shape of :class:`~entrypoints.cli.modelo_results.WorkCalculateResult`
     (the wizard composes the exact same calculation path, and both share the
     full persisted-revision projection) plus the
     ``prompted_casillas`` audit trail of what the wizard asked and what the

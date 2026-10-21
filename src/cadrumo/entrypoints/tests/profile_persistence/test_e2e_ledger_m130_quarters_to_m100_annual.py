@@ -80,6 +80,7 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -835,7 +836,7 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
     assert receipt.output_path == output
     assert receipt.byte_size == len(payload)
     assert root.findtext("./Aux/Idioma") == "E"
-    assert root.findtext("./Aux/VERSION") == "051"
+    assert root.findtext("./Aux/VERSION") == PACKAGE_VERSION.replace(".", "")
 
 
 def test_m100_base_only_gate_still_blocks_missing_renta_taxable_base(

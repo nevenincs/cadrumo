@@ -193,7 +193,7 @@ def seed(
     """
     try:
         if source is SeedSource.IATE:
-            domains = frozenset(domain) if domain else None
+            domains = frozenset(domain) if (domain is not None and domain) else None
             entries: tuple[SeedEntry, ...] = parse_iate_tbx(
                 export_path,
                 min_reliability=min_reliability,

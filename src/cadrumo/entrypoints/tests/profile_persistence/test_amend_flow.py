@@ -28,6 +28,10 @@ from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
+from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -102,10 +106,6 @@ from ...adapter_composition import (
 from ..filing_record_read_support import persisted_filing_record
 from .file_flow_test_support import (
     workflow_profile,
-)
-from .verification_repository_support import (
-    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()

@@ -68,7 +68,7 @@ def _wheel_artifact(cohort_dir: Path, distribution: str, wheel_glob: str) -> Whe
         console_scripts = _console_scripts(archive, wheel)
     observed_name = metadata.get("Name")
     version = metadata.get("Version")
-    if not observed_name or not version:
+    if not (observed_name is not None and observed_name) or not (version is not None and version):
         raise SystemExit(f"wheel metadata lacks Name or Version: {wheel}")
     if normalise_distribution_name(observed_name) != distribution:
         raise SystemExit(

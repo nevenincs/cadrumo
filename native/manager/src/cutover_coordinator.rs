@@ -3,6 +3,7 @@ use crate::{
     cutover_parent::{Parent, Progress},
     failed_versions::FailedVersions,
     ipc::windows::Server,
+    lifecycle::CutoverRuntime,
     session::{
         claim::StartClaim,
         instance::{SessionLock, claim_session},
@@ -11,7 +12,6 @@ use crate::{
 use cadrumo_application::{component::Cancellation, installation::Selection};
 use std::{
     io,
-    path::Path,
     sync::{
         Arc,
         mpsc::{self, Receiver},
@@ -19,60 +19,24 @@ use std::{
     time::{Duration, Instant},
 };
 
-pub trait Runtime {
-    fn root(&self) -> Option<&Path> {
-        None
-    }
-    fn can_cutover(&self) -> bool {
-        false
-    }
-    fn stopping(&self) -> bool {
-        false
-    }
-    fn resume_session(&mut self) {}
-    fn begin_cutover(&mut self) -> io::Result<Option<StartClaim>> {
-        Ok(None)
-    }
-    fn idle_stopped(&self) -> bool {
-        false
-    }
-    fn retry_idle(&self) {}
-    fn abandon_cutover(&mut self) {}
-    fn rollback(&mut self, _claim: StartClaim) {}
-}
-impl Runtime for crate::background::Background {
-    fn root(&self) -> Option<&Path> {
-        Some(self.storage_root())
-    }
-    fn can_cutover(&self) -> bool {
-        self.can_cutover()
-    }
-    fn stopping(&self) -> bool {
-        self.stopping()
-    }
-    fn resume_session(&mut self) {
-        self.cancel_session_end();
-    }
-    fn begin_cutover(&mut self) -> io::Result<Option<StartClaim>> {
-        self.begin_cutover()
-    }
-    fn idle_stopped(&self) -> bool {
-        self.idle_stopped()
-    }
-    fn retry_idle(&self) {
-        self.retry_idle();
-    }
-    fn abandon_cutover(&mut self) {
-        self.abandon_cutover();
-    }
-    fn rollback(&mut self, claim: StartClaim) {
-        self.rollback(claim);
-    }
-}
+// Pacing: a cutover child's progress and a refused session claim publish no
+// notification to this thread.
+const ACTIVE_PACE: Duration = Duration::from_millis(250);
+// Pacing: a pending candidate waits for cutover eligibility, which includes a
+// blocked runtime's process exit and a contended start claim.
+const CANDIDATE_PACE: Duration = Duration::from_secs(1);
+
+// Pacing: a deferred or resumed update looks for the same candidate again
+// after this delay, since nothing it waits on publishes a change.
+const REDISCOVERY_DELAY: Duration = Duration::from_secs(60);
 
 pub struct Coordinator {
     current: Selection,
-    next: Instant,
+    /// When discovery is next due without a change to the versions directory.
+    next: Option<Instant>,
+    /// The versions directory and everything published below it.
+    versions: crate::change_watch::ChangeWatch,
+    versions_changed: bool,
     query: Option<Receiver<io::Result<Option<Selection>>>>,
     cancellation: Arc<Cancellation>,
     candidate: Option<Selection>,
@@ -85,12 +49,19 @@ pub struct Coordinator {
     announced: Option<[u32; 3]>,
     cancelled: bool,
     resume_requested: bool,
+    notify: crate::wake::Slot,
 }
 impl Coordinator {
     pub fn new(current: Selection) -> Self {
+        let mut versions = crate::change_watch::ChangeWatch::default();
+        if let Some(directory) = versions_directory(&current) {
+            versions.directory(directory, true);
+        }
         Self {
             current,
-            next: Instant::now(),
+            next: Some(Instant::now()),
+            versions,
+            versions_changed: false,
             query: None,
             cancellation: Arc::new(Cancellation::default()),
             candidate: None,
@@ -103,6 +74,47 @@ impl Coordinator {
             announced: None,
             cancelled: false,
             resume_requested: false,
+            notify: crate::wake::Slot::default(),
+        }
+    }
+    /// Signal `notify` when a version discovery query finishes.
+    pub fn notify_with(&self, notify: crate::wake::Notify) {
+        self.notify.install(notify);
+    }
+    /// When the next poll is due. A discovery query in flight notifies instead,
+    /// and so does a version published while none is.
+    pub fn readiness<'a>(
+        &'a self,
+        runtime: &dyn CutoverRuntime,
+        into: &mut crate::wake::windows::Readiness<'a>,
+    ) {
+        // Every poll takes these changes first, so a signaled one never repeats.
+        self.versions.readiness(into);
+        if runtime.stopping() && !self.cancelled {
+            into.now();
+            return;
+        }
+        if self.cancelled {
+            // Without a child or a resumption, one poll releases the rest.
+            if self.parent.is_some() || self.resume_requested {
+                into.after(ACTIVE_PACE);
+            } else if self.claim.is_some() || self.recovering.is_some() || self.candidate.is_some()
+            {
+                into.now();
+            }
+            return;
+        }
+        if self.recovering.is_some() || self.parent.is_some() {
+            into.after(ACTIVE_PACE);
+        } else if self.claim.is_some() {
+            into.at(self.deadline);
+            into.at(self.idle_retry);
+        } else if self.candidate.is_some() {
+            into.after(CANDIDATE_PACE);
+        } else if self.query.is_none()
+            && let Some(next) = self.next
+        {
+            into.at(next);
         }
     }
     pub fn take_notice(&mut self) -> Option<&'static str> {
@@ -124,10 +136,11 @@ impl Coordinator {
     }
     pub fn poll(
         &mut self,
-        runtime: &mut dyn Runtime,
+        runtime: &mut dyn CutoverRuntime,
         session: &mut Option<SessionLock>,
         ipc: &mut Option<Server>,
     ) -> io::Result<bool> {
+        self.versions_changed |= self.versions.take();
         if runtime.stopping() && !self.cancelled {
             self.cancel();
         }
@@ -159,7 +172,7 @@ impl Coordinator {
                 self.resume_requested = false;
                 self.cancelled = false;
                 self.cancellation = Arc::new(Cancellation::default());
-                self.next = Instant::now() + Duration::from_secs(60);
+                self.next = Some(Instant::now() + REDISCOVERY_DELAY);
             }
             return Ok(false);
         }
@@ -262,7 +275,7 @@ impl Coordinator {
                 self.claim = None;
                 self.candidate = None;
                 self.notice = Some("update_deferred");
-                self.next = Instant::now() + Duration::from_secs(60);
+                self.next = Some(Instant::now() + REDISCOVERY_DELAY);
             } else if Instant::now() >= self.idle_retry {
                 runtime.retry_idle();
                 self.idle_retry = Instant::now() + Duration::from_secs(5);
@@ -296,23 +309,33 @@ impl Coordinator {
             match query.try_recv() {
                 Ok(result) => {
                     self.query = None;
-                    self.next = Instant::now() + Duration::from_secs(30);
+                    self.next = None;
                     self.candidate = result?;
                 }
                 Err(mpsc::TryRecvError::Disconnected) => {
                     self.query = None;
-                    self.next = Instant::now() + Duration::from_secs(30);
+                    self.next = None;
                 }
                 Err(mpsc::TryRecvError::Empty) => {}
             }
         }
-        if self.query.is_none() && self.candidate.is_none() && Instant::now() >= self.next {
+        if self.query.is_none()
+            && self.candidate.is_none()
+            && (self.versions_changed || self.next.is_some_and(|next| Instant::now() >= next))
+        {
+            self.versions_changed = false;
+            self.next = None;
             let selected = self.current.clone();
             let cancellation = self.cancellation.clone();
             let (send, receive) = mpsc::sync_channel(1);
+            let notify = self.notify.clone();
             std::thread::Builder::new()
                 .name("manager-version-discovery".into())
                 .spawn(move || {
+                    // Dropped after the sender, so a woken consumer observes the
+                    // result or the disconnection.
+                    let _notify = crate::wake::NotifyOnDrop(notify);
+                    let send = send;
                     let _ = send.send(crate::installation::newer(&selected, &cancellation));
                 })?;
             self.query = Some(receive);
@@ -326,14 +349,22 @@ impl Drop for Coordinator {
     }
 }
 
+fn versions_directory(current: &Selection) -> Option<std::path::PathBuf> {
+    let contract: cadrumo_application::installation::DiscoveryContract =
+        serde_json::from_str(crate::contract::INSTALLATION_CONTRACT).ok()?;
+    let prefix = current.entrypoint.parent()?;
+    Some(contract.layout.installation.versions.under(prefix))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::Path;
     struct Busy {
         root: std::path::PathBuf,
         abandoned: bool,
     }
-    impl Runtime for Busy {
+    impl CutoverRuntime for Busy {
         fn root(&self) -> Option<&Path> {
             Some(&self.root)
         }
@@ -341,6 +372,71 @@ mod tests {
             self.abandoned = true;
         }
     }
+    /// Poll once the coordinator's own readiness ends its wait, bounded by `bound`.
+    fn poll_when_ready(coordinator: &mut Coordinator, runtime: &mut Busy, bound: Duration) {
+        {
+            let mut readiness = crate::wake::windows::Readiness::default();
+            coordinator.readiness(&*runtime, &mut readiness);
+            readiness.after(bound);
+            readiness.wait().unwrap();
+        }
+        assert!(!coordinator.poll(runtime, &mut None, &mut None).unwrap());
+    }
+
+    #[test]
+    fn a_published_version_starts_discovery_and_nothing_else_does() {
+        let root = std::env::temp_dir().join(format!(
+            "manager-cutover-discovery-{}-{}",
+            std::process::id(),
+            crate::cutover_windows::nonce().unwrap()
+        ));
+        crate::custody::ensure_local_directory(&root).unwrap();
+        let current = Selection {
+            entrypoint: root.join("manager.exe"),
+            package: root.clone(),
+            manager: root.join("manager.exe"),
+            version: [1, 0, 0],
+            lease: None,
+            registration: None,
+        };
+        let versions = versions_directory(&current).unwrap();
+        std::fs::create_dir_all(&versions).unwrap();
+        let mut coordinator = Coordinator::new(current);
+        let finished = crate::wake::windows::Event::new().unwrap();
+        coordinator.notify_with(finished.notifier());
+        let mut runtime = Busy {
+            root: root.clone(),
+            abandoned: false,
+        };
+        // The first poll discovers once; an empty versions directory names no candidate.
+        assert!(
+            !coordinator
+                .poll(&mut runtime, &mut None, &mut None)
+                .unwrap()
+        );
+        assert!(coordinator.query.is_some());
+        while coordinator.query.is_some() {
+            poll_when_ready(&mut coordinator, &mut runtime, Duration::from_secs(10));
+        }
+        assert!(coordinator.candidate.is_none());
+        assert_eq!(coordinator.next, None, "no interval discovery is pending");
+        // Nothing published: the wait ends only at its own bound, and no discovery starts.
+        let started = Instant::now();
+        poll_when_ready(&mut coordinator, &mut runtime, Duration::from_millis(500));
+        assert!(started.elapsed() >= Duration::from_millis(450));
+        assert!(coordinator.query.is_none());
+        // A new entry in the versions directory wakes the wait and starts discovery again.
+        // Named as no version, so the started discovery again finds no candidate.
+        std::fs::create_dir(versions.join("incoming")).unwrap();
+        poll_when_ready(&mut coordinator, &mut runtime, Duration::from_secs(10));
+        assert!(coordinator.query.is_some());
+        while coordinator.query.is_some() {
+            poll_when_ready(&mut coordinator, &mut runtime, Duration::from_secs(10));
+        }
+        drop(coordinator);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
     #[test]
     fn busy_deferral_and_cancel_release_only_the_reservation_without_launch() {
         let root = std::env::temp_dir().join(format!(

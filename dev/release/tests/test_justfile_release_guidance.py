@@ -107,7 +107,7 @@ def _build_moved_into_the_worker_pool(source: str) -> str:
     # the call sits one level inside ``main``; relocating it leaves ``pass``.
     block = (
         "        _run_step(\n"
-        '            [sys.executable, "-m", "dev.packaging.python_cohort", "build", "--output", COHORT_DIR],\n'
+        '            [sys.executable, "-B", "-m", "dev.packaging.python_cohort", "build", "--output", COHORT_DIR],\n'
         "            repo_root,\n"
         '            "build-cohort",\n'
         "        )\n"
@@ -182,7 +182,7 @@ def test_packaging_smoke_builds_one_cohort_before_every_consumer() -> None:
 
     from dev.packaging.campaign import COHORT_DIR, PROFILES, resolve_form
 
-    assert COHORT_DIR == "var/packaging-smoke-cohort/python"
+    assert COHORT_DIR == "build/packaging-smoke-cohort/python"
     assert all(resolve_form(selector)[1].takes_cohort for selector in PROFILES["portable"])
 
     build_index, fanout_index, total = _cohort_build_and_fanout_positions(_CAMPAIGN_SOURCE.read_text(encoding="utf-8"))

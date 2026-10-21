@@ -83,9 +83,10 @@ class OperationEventEmitter(Protocol):
         completed: int,
         total: int,
         unit_code: OperationEventCode | None = None,
+        subject_code: OperationEventCode | None = None,
     ) -> None:
-        """Publish bounded unit progress."""
-        del unit_code
+        """Publish bounded unit progress, optionally naming the subject it belongs to."""
+        del unit_code, subject_code
 
     async def log(
         self,

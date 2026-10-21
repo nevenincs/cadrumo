@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#cli-distribution-consolidation'
 date: '2026-09-02'
-modified: '2026-10-03'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:6cfaf664e857b0ee7da98f11bf70d41cfa5a4c26ca072a8e848b4297c8626a58'
+body_hash: 'sha256:e0c44aeb651c9c0443bb0728abf573c63e0720ae997d0360bff6fdff14a6660b'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -61,19 +61,15 @@ feeding a cross-product tier rule. Every channel is `availability = "public_laun
 ### Both siblings ship their MCP server inside the product wheel
 
 `vaultspec-core` declares console scripts `vaultspec-core` and `vaultspec-mcp`;
-`vaultspec-rag` declares `vaultspec-rag` and `vaultspec-search-mcp`. Neither ships a
-Claude plugin, a marketplace listing, or an MCPB bundle.
+`vaultspec-rag` declares `vaultspec-rag` and `vaultspec-search-mcp`. Neither ships an MCPB bundle.
 
 Cadrumo's `cadrumo-mcp` lives in a separate distribution, `src/cadrumo-harness`, at
 version 0.1.0 against the product's 0.2.2. It is built into the release cohort but
 uploaded to no index, and excluded from the Homebrew and Scoop artifacts by design.
 Its dependency direction is one-way, asserted by
 `src/cadrumo/entrypoints/cli/tests/test_metadata_only_cli_contract.py`. It is the sole
-justification for `extends_host_application = true`, which is what selects the Claude
-plugin and MCPB channels for this product.
-
-The published marketplace still serves plugin `aeat` at 0.1.1 under the pre-rename
-owner name, referencing an `aeat-mcp` server.
+justification for `extends_host_application = true`, which is what selects the MCPB
+channel for this product.
 
 ### The full-screen surface is already a mode, and its root entry is one line short
 
@@ -302,7 +298,7 @@ then a full campaign minting the rows, before any name is claimed on the index.
 ### The index credential is absent by design, not by oversight
 
 No PyPI credential exists in the environment, the user configuration, the operating
-system keyring, or the repository's secrets - which hold only a marketplace token and a
+system keyring, or the repository's secrets - which hold only a
 tap token. That is consistent rather than missing: publication was designed for Trusted
 Publishing over OIDC, so a long-lived token was never meant to exist.
 
@@ -475,7 +471,7 @@ The base-image singularity gate names a container proof retired with the nested-
 install path. The wall advisory's consumer-parity check reads a benchmark file deleted in
 the import promotion. The distribution-readiness suite builds a fixture wheel from a
 harness directory folded into the product package. The external-client boundary asserts a
-workflow retired with the plugin channel. And the recipe-guidance suite asserted the
+retired workflow. And the recipe-guidance suite asserted the
 contents of an evidence-collection recipe removed one step earlier in this phase - that
 last one introduced by this work and repaired in the same run that found it.
 
@@ -862,11 +858,10 @@ Nothing outstanding for this decision.
 - https://pypi.org/pypi/vaultspec-rag/json
 - https://pypi.org/pypi/cadrumo/json
 - https://github.com/nevenincs/homebrew-tap
-- https://github.com/nevenincs/neve-marketplace
 - PyPI release metadata for `cryptography`, `argon2-cffi-bindings`, `pikepdf`,
   `pypdfium2`, `pillow`, `lxml`, `rtoml` and `pydantic-core`, read from their
   respective `https://pypi.org/pypi/<name>/json` endpoints
 - The canonical runner-fleet manifest and the two sibling publish workflows are read
-  from sibling checkouts outside this repository, at `Y:/code/ci-fleet/fleet.yml`,
-  `Y:/code/vaultspec-core-worktrees/main/.github/workflows/publish.yml` and
-  `Y:/code/vaultspec-core-worktrees/main/.github/workflows/release-please.yml`.
+  from sibling checkouts outside this repository, at `<code-root>/ci-fleet/fleet.yml`,
+  `<vaultspec-core-repo>/.github/workflows/publish.yml` and
+  `<vaultspec-core-repo>/.github/workflows/release-please.yml`.

@@ -18,8 +18,7 @@ from ....core.config import override_settings
 from ....core.errors.error_codes import build_error_envelope
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva.classification import InvoiceKind
-from ....domain.iva.schema import IvaCategory
+from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ..invoice_retencion import (
     InvoiceRetencionProjectionDefect,
     InvoiceWithholdingDefectsError,

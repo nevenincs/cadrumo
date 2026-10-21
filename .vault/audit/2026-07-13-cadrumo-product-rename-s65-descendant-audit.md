@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s65-descendant'
 date: '2026-07-13'
-modified: '2026-10-03'
-body_hash: 'sha256:a10f9650f81d9b6d62141ebc8509598465e34c56c39e42e78edcb1fe45c0faca'
+modified: '2026-10-21'
+body_hash: 'sha256:5caaf6555489e69cac1b1e553f0ecca31740e359e5a9d8d92b907acd3c8a85ee'
 related:
   - "[[2026-07-13-cadrumo-product-rename-s65-catalan-catalogue-audit]]"
 ---
@@ -23,7 +23,7 @@ Exactly three paths change. Parent and result retain 3,702 string leaves with id
 
 Catalan has zero exact `Cadrumo` and zero command-leading lowercase `cadrumo`. The sole lowercase occurrence is valid `cadrumo-vault/`; `AEAT`, `AEAT_*`, `CADRUMO_`, `registry/aeat/treaties/`, and `aeat` guidance remain correctly classified. Recorded ancestry, lengths, hashes, and residue are honest.
 
-Locale `audit` and `scaffold --check` pass all catalogues; the real formatter, audit, parity, and translation-honesty slice passes 54 tests; live Catalan help passes the exact identity matrix. Diff hygiene passes. Plan validation has only known `PLAN022`, and only S65 closes; S66-S67 remain open. Concurrent docs, marketplace README, and dirty S58 are excluded.
+Locale `audit` and `scaffold --check` pass all catalogues; the real formatter, audit, parity, and translation-honesty slice passes 54 tests; live Catalan help passes the exact identity matrix. Diff hygiene passes. Plan validation has only known `PLAN022`, and only S65 closes; S66-S67 remain open. Concurrent docs and dirty S58 are excluded.
 
 ## Recommendations
 

@@ -24,7 +24,7 @@ written.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 
 from cadrumo.core.external_constants import OutputLanguage
@@ -170,7 +170,7 @@ _PAGE: str | None = None
 
 
 @contextmanager
-def markup_page(docname: str) -> Iterator[None]:
+def markup_page(docname: str) -> Generator[None]:
     """Declare that the chrome resolved inside stands as markup on *docname*.
 
     A single-language build parses each chrome string as part of the page's own
@@ -334,7 +334,7 @@ def docs_line(render: Callable[[OutputLanguage], str | None], language: OutputLa
     # platform that wrote it (:func:`~dev.docs.language_roots.compose_root`).
     def line(carried: OutputLanguage) -> str:
         element = render(carried)
-        return f"\n{element}" if element else ""
+        return f"\n{element}" if (element is not None and element) else ""
 
     return docs_fragment(line, language)
 

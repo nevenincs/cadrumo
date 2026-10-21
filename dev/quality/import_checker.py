@@ -15,8 +15,8 @@ from dev.quality.import_authority import read_authority
 from dev.quality.import_binding_inventory import check_initializers, read_modules
 from dev.quality.import_check_models import Authority, CheckResult, Finding, ImportOccurrence
 from dev.quality.import_dynamic_checks import check_dynamic_imports
-from dev.quality.import_dynamic_targets import discover_closed_attribute_targets
 from dev.quality.import_occurrences import collect_import_occurrences
+from dev.quality.import_record_provenance import RecordTargetProvenance
 from dev.quality.import_static_checks import check_static_imports
 
 
@@ -49,10 +49,9 @@ def check_authority(authority: Authority) -> CheckResult:
             return _result(findings, 0, authority.repository)
         check_initializers(authority, modules, findings)
         check_static_imports(authority, modules, findings)
-        known = frozenset((*modules, *authority.root_packages))
-        closed_attribute_targets = discover_closed_attribute_targets(modules, authority.root_names, known)
-        check_dynamic_imports(authority, modules, findings, closed_attribute_targets)
-        occurrences = collect_import_occurrences(authority, modules, closed_attribute_targets)
+        record_provenance = RecordTargetProvenance(modules)
+        check_dynamic_imports(authority, modules, findings, record_provenance)
+        occurrences = collect_import_occurrences(authority, modules, record_provenance)
         return _result(findings, len(modules), authority.repository, occurrences)
     except Exception as exc:  # broad: the checker boundary must fail closed
         return CheckResult(

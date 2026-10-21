@@ -35,9 +35,10 @@ def unknown_profile_refusal(name: str) -> ProfileNotFoundError:
 
 
 def resolve_profile_by_label(name: str) -> ProfileBucketPointer:
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ....application.workflow.errors import ProfileLabelAmbiguousError
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
-    from ..errors import CliRefusedBoundaryError
 
     try:
         pointer = read_profile_bucket(name)
@@ -67,7 +68,7 @@ def require_active_profile_pointer() -> ProfileBucketPointer:
     wrapped the optional result in the same refusal and so each decided
     independently which message a missing profile produces.
     """
-    from ..errors import CliRefusedBoundaryError
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
     pointer = resolve_active_profile_pointer()
     if pointer is None:

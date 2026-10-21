@@ -66,10 +66,9 @@ from ...domain.invoices.business_premises import SITUACIONES_CON_REFERENCIA_CATA
 from ...domain.invoices.decomposition import InvoiceDecomposition, InvoiceDecompositionDefect, decompose_invoice
 from ...domain.invoices.enums import invoice_class_rectificativa, resolve_invoice_legal_mention
 from ...domain.invoices.models import Invoice
-from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.establishment import SPAIN_COUNTRY_CODE
 from ...domain.iva.flow import derive_flow_for_classification, is_inversion_sujeto_pasivo_flow
-from ...domain.iva.schema import IvaCategory
+from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.modelos.row_models import Modelo349OperadorRow, validate_m349_country_prefix_context
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
@@ -567,7 +566,7 @@ def _m349_incoherence_diagnostics(
     return tuple(
         CalculationSourceDiagnostic(
             reason="ungrounded_income_substrate",
-            source_kind=str(_invoice_source_kind(invoice)),
+            source_kind=_invoice_source_kind(invoice),
             resolver_id=resolver_id,
             source_ref=f"invoice:{invoice.invoice_id}",
             message=(
@@ -607,7 +606,7 @@ def _unconverted_foreign_diagnostics(
     return tuple(
         CalculationSourceDiagnostic(
             reason="unconverted_foreign_currency",
-            source_kind=str(_invoice_source_kind(invoice)),
+            source_kind=_invoice_source_kind(invoice),
             resolver_id=resolver_id,
             source_ref=f"invoice:{invoice.invoice_id}",
             message=(
@@ -654,7 +653,7 @@ def _m347_role_fact_advisories(
             diagnostics.append(
                 CalculationSourceDiagnostic(
                     reason="unclassified_declarant_role_fact",
-                    source_kind=str(_invoice_source_kind(invoice)),
+                    source_kind=_invoice_source_kind(invoice),
                     resolver_id=resolver_id,
                     source_ref=f"invoice:{invoice.invoice_id}",
                     message=(
@@ -669,7 +668,7 @@ def _m347_role_fact_advisories(
             diagnostics.append(
                 CalculationSourceDiagnostic(
                     reason="unclassified_declarant_role_fact",
-                    source_kind=str(_invoice_source_kind(invoice)),
+                    source_kind=_invoice_source_kind(invoice),
                     resolver_id=resolver_id,
                     source_ref=f"invoice:{invoice.invoice_id}",
                     message=(

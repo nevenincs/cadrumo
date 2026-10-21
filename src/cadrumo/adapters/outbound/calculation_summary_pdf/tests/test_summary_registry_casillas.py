@@ -62,5 +62,5 @@ def test_every_declared_casilla_number_reads_back_from_the_summary(
 
         assert verification.outcome is CalculationSummaryVerificationOutcome.VERIFIED, (
             revision_id,
-            [check.detail for check in verification.checks if check.reason],
+            [check.detail for check in verification.checks if (check.reason is not None and check.reason)],
         )

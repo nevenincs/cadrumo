@@ -11,7 +11,6 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl
 
-from cadrumo.adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from cadrumo.adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from cadrumo.adapters.outbound.aeat.sede.schema import (
     FiledDeclaracionArtefact,
@@ -27,6 +26,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_profile_storage_root,
     isolated_runtime_profile,
 )
+from cadrumo.application.live.expedientes_ports import ExpedientesDeclaration
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -562,8 +562,8 @@ def filed_declaration(
     expediente_id: str,
     estado: str,
     presented_at: datetime,
-) -> Declaracion:
-    return Declaracion(
+) -> ExpedientesDeclaration:
+    return ExpedientesDeclaration(
         modelo="303",
         ejercicio=2026,
         period=Period.from_year_and_code(2026, period),

@@ -28,7 +28,13 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.i18n.render import tr
 from .common import bad
 
-__all__ = ["optional_decimal_text", "parse_decimal_amount", "parse_optional_decimal_amount"]
+__all__ = [
+    "optional_decimal_text",
+    "parse_decimal_amount",
+    "parse_fraction",
+    "parse_optional_decimal_amount",
+    "parse_optional_fraction",
+]
 
 
 # One accepted grammar for every manual-entry numeric input: a dot decimal
@@ -82,6 +88,27 @@ def parse_optional_decimal_amount(raw: str | None, *, label: str, signed: bool =
     if raw is None:
         return None
     return parse_decimal_amount(raw, label=label, signed=signed)
+
+
+def parse_fraction(raw: str, *, label: str) -> Decimal:
+    """Parse a required share or rate of one.
+
+    The same canonical grammar as an amount, without the euro-cent cap: a
+    recargo or reduced IVA rate such as ``0.052`` or ``0.0175`` needs the
+    fraction digits it has. Thousands-style ambiguity (``1.234``) still refuses.
+    The caller bounds the value to ``0..1`` with its own refusal.
+    """
+    parsed = try_parse_canonical_decimal(raw, signed=True)
+    if parsed is None:
+        raise bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw))
+    return parsed
+
+
+def parse_optional_fraction(raw: str | None, *, label: str) -> Decimal | None:
+    """Parse an optional share or rate of one, or ``None`` when unset."""
+    if raw is None:
+        return None
+    return parse_fraction(raw, label=label)
 
 
 def optional_decimal_text(value: Decimal | None) -> str | None:

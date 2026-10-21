@@ -17,6 +17,23 @@ declare module "virtual:desktop-strings" {
  * An output of the build directory in use. */
 declare module "virtual:desktop-palette.css";
 
+/** Provider marks and their required upstream attribution, generated from the
+ * checksummed agent wheel admitted by this build. */
+declare module "virtual:desktop-provider-icons" {
+  const artwork: {
+    providers: Record<string, { mono: string; color?: string }>;
+    attribution: {
+      title: string;
+      url: string;
+      pin: string;
+      licence: string;
+      notice: string;
+      trademarks: string;
+    };
+  };
+  export default artwork;
+}
+
 /** The documentation fixture's own port; null where no development server
  * runs it. */
 declare module "virtual:docs-fixture" {

@@ -143,7 +143,7 @@ def _offenders() -> list[str]:
                 # source kind entirely; it is out of scope rather than passing.
                 if binding is None or not _selector_supports_rates(binding):
                     continue
-                if not _pinned_rates(binding):
+                if not bool(_pinned_rates(binding)):
                     offenders.append(
                         f"modelo {modelo.id} revision {revision_id!r}: casilla {casilla.id!r} is "
                         f"exported to box [{number}], which the design labels with a rate, but its "

@@ -13,7 +13,11 @@ import pytest
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    open_test_profile_session,
+    set_active_test_profile_facts,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.workflow.persistence import workflow_state_repository
@@ -40,6 +44,7 @@ from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInsta
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from cadrumo.domain.user_profile.values import UserProfileFact
 
 from .....domain.calculations.registry.tests.tax_id_fixture import runtime_nif_check_letter
 from .published_authority_support import published_authority_operation
@@ -124,7 +129,6 @@ def _ensure_operator_storage_span() -> None:
 
 
 def seed_profile(*, tax_id: str | None = None, profile_overrides: dict[str, str] | None = None) -> str:
-    _ensure_operator_storage_span()
     overrides = {
         "identity.name": "Test",
         "identity.surnames": "Operator",
@@ -137,6 +141,14 @@ def seed_profile(*, tax_id: str | None = None, profile_overrides: dict[str, str]
     }
     if tax_id is not None:
         overrides["identity.tax_id"] = tax_id
+    live = current_active_bucket_session()
+    if _ACTIVE_STORAGE_STACK is None and live is not None:
+        # A command-line world already registered a password-custodied profile
+        # whose runtime admits the commands; seed its facts rather than a
+        # test-custody profile that no runtime would admit.
+        set_active_test_profile_facts(UserProfileFact(path=path, value=value) for path, value in overrides.items())
+        return live.bucket_id
+    _ensure_operator_storage_span()
     # Seeded through a detached WorkflowState, never a repository read: the
     # capsule publishes by an atomic no-replace rename onto
     # ``buckets/<profile-id>``, which a workflow-state repository

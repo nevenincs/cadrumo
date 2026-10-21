@@ -1,4 +1,4 @@
-"""Agent timeline exposes only vetted event metadata under exact authority."""
+"""automation timeline exposes only vetted event metadata under exact authority."""
 
 from __future__ import annotations
 
@@ -9,6 +9,14 @@ from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, ValidationError
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 
 from ....core.operations import profile_operation_subject
 from ....core.period import Period
@@ -22,13 +30,6 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..history_ports import ModeloHistoryPorts
 from ..history_timeline_operation import (
@@ -64,17 +65,18 @@ def _request(*, year: int | None = None, period: str | None = None) -> Operation
     )
 
 
-def test_timeline_mcp_result_disclosure_and_full_period_scope(authority_operation: PinnedAuthorityOperation) -> None:
+def test_timeline_external_client_result_disclosure_and_full_period_scope(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     registry = _registry()
     contract = registry.lookup_public_contract(MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID)
-    assert contract.permitted_frontends == frozenset({OperationFrontendProjection.MCP})
     assert contract.result_schema is not None
     destination = uuid4()
     context = OperationAccessContext(
         profile_id=_PROFILE,
         destination_id=destination,
         action=AccessAction.RESULT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         contract=contract,
         published_authority=Availability.AVAILABLE,
         authority_operation=authority_operation,

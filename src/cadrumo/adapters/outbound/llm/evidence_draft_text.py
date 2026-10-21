@@ -74,12 +74,12 @@ from ....application.ledger.invoice_extraction_authority import (
 )
 from ....core.config import Settings, load_settings
 from ....core.config_support import LLMProvider
+from ....core.model_catalogue import ModelRole
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
 from .client import LLMClient
 from .consent import EvidenceConsentToken
-from .errors import LLMConfigError
 from .invoice_extraction_prompt import (
     CompiledInvoiceExtractionPrompt,
     default_extraction_period,
@@ -232,24 +232,13 @@ class TextInvoiceFieldExtractor:
         self._consent_token = consent_token
         self._public_corpus = public_corpus
         self._fields = fields
-        if provider is LLMProvider.LOCAL:
-            self._model = model if model is not None else resolved_settings.cadrumo_llm_ollama_text_model
-        elif model is None:
-            # Mirrors the vision reader's guard, and closes the same hole from
-            # the other side. The only default that exists is the local text
-            # model, so forwarding that identifier to a vendor asks for a model
-            # it does not serve -- and doing so SILENTLY is what let a
-            # taxpayer's document reach a cloud provider by configuration alone.
-            raise LLMConfigError(
-                context={"provider": provider.value, "off_host_model_named": False},
-                precondition_verdict=llm_no_recovery_verdict(
-                    LLMPreconditionCondition.OFF_HOST_MODEL_NAMED,
-                    facts={"provider": provider.value, "off_host_model_named": False},
-                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                ),
-            )
-        else:
-            self._model = model
+        # Off-host, the agent service picks the lane and model for the role, so
+        # this reader names none.
+        self._model: str | None = (
+            (model if model is not None else resolved_settings.cadrumo_llm_ollama_text_model)
+            if provider is LLMProvider.LOCAL
+            else None
+        )
         self._authority_values = (
             authority_values
             if authority_values is not None
@@ -361,6 +350,8 @@ class TextInvoiceFieldExtractor:
             model_override=self._model,
             evidence_derived=not self._public_corpus,
             consent_token=self._consent_token,
+            model_role=ModelRole.TEXT_EXTRACTION,
+            expects_json=True,
         )
 
     def _compiled_prompt(self) -> CompiledInvoiceExtractionPrompt:

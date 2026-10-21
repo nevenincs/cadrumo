@@ -315,7 +315,7 @@ class FormFieldBlock(RegistryModel):
         if self.choices:
             if self.casilla_id is None or self.design_constant is not None:
                 raise RegistryValidationError("form choices require one variable casilla")
-            _require_unique(str(self.id), "choice values", tuple(choice.value for choice in self.choices))
+            _require_unique(self.id, "choice values", tuple(choice.value for choice in self.choices))
         _validate_literal_scale(self.design_constant, self.literal_decimals)
         return self
 
@@ -445,7 +445,7 @@ class FormContextFieldBlock(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _unique_choices(self) -> FormContextFieldBlock:
-        _require_unique(str(self.id), "choice values", tuple(choice.value for choice in self.choices))
+        _require_unique(self.id, "choice values", tuple(choice.value for choice in self.choices))
         return self
 
 

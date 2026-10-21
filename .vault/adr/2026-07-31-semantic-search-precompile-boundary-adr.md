@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#semantic-search-precompile-boundary'
 date: '2026-07-31'
-modified: '2026-08-02'
+modified: '2026-10-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:825dea8093d20289f441105cf94ed71c1d246ad998b96f3e9bcef791859e9acf'
+body_hash: 'sha256:79824bf0745e3e3b2a8259ab85e4764ac08fe6923b594c0131813b11e3fd3f49'
 related:
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
@@ -28,7 +28,7 @@ The operator directive of 2026-07-31 makes the intent explicit: semantic search 
 
 - The runtime semantic stack is a decided architecture, not silent drift: R3 of `2026-07-02-agent-harness-refoundation-adr` chose it deliberately, behind a licence gate that was later satisfied (MIT model). Retiring it is an amendment of R3, and this record says so; the drift framing is only accurate for the implementation defects the 2026-07-31 audit documents.
 - F3 of `2026-06-10-docs-terminology-search-research` states the decisive structural constraint: arbitrary user queries cannot be pre-embedded; what can be precompiled is a term-to-result mapping, with embeddings used only as the build-time relevance oracle.
-- The consumer install closure never carried the semantic stack: every consumer acquisition path (`dev/packaging` acquire and oracle scripts, the Claude plugin launch) installs `cadrumo[agent]`; `cadrumo[search]` is reachable only by a manual opt-in install. The default consumer experience is already the degraded lexical-only mode.
+- The consumer install closure never carried the semantic stack: every consumer acquisition path (`dev/packaging` acquire and oracle scripts) installs `cadrumo[agent]`; `cadrumo[search]` is reachable only by a manual opt-in install. The default consumer experience is already the degraded lexical-only mode.
 - The rule `shipped-search-licence-clean` bars shipping vectors, sparse weights, and raw scores in the package or built docs, and bars committing the heavy generated index; only laundered light data (identifiers, orderings, ratified synonyms) ships.
 - The rule `no-legacy-compatibility` and the pre-release regime prefer deletion to shims; `retired-enum-members-need-consumer-reconciliation` governs the `RetrievalMode` narrowing; `aeat-docs-scaffolding-cli`, `aeat-locales-cli`, and `operator-harness-cites-live-cli-surface` bind the deletion sweep's collateral surfaces.
 - Uncommitted peer work is in flight on exactly this surface (working-tree modifications to `_model_loader.py`, `_embed_build.py`, `pyproject.toml`, and the recall tests) implementing the 2026-07-31 audit's hardening recommendation. That recommendation is overtaken by this ruling; coordination is required before implementation so the peer's work is not clobbered and the peer does not harden a surface scheduled for deletion.

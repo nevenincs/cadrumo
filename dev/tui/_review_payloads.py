@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import cast
 
 from ._artifacts import DEFAULT_RUN_NAME
 from ._review_catalogue import CatalogueFrame, ElementView, RunView, viewport_grid
@@ -175,7 +174,7 @@ def _view_frame_payloads(view: RunView | None, frames: tuple[CatalogueFrame, ...
 
 def _note_payload(note: Note, elements: dict[str, ElementView], frame_digests: dict[str, str]) -> dict[str, object]:
     """Bind each stored note to the current element and optional frame identities."""
-    payload = {
+    return {
         **note.model_dump(mode="json"),
         "element_state": str(
             image_state(note.element_sha256, _digest_of(elements.get(note.element_key))),
@@ -184,5 +183,3 @@ def _note_payload(note: Note, elements: dict[str, ElementView], frame_digests: d
         if note.frame_key is None or note.frame_sha256 is None
         else str(image_state(note.frame_sha256, frame_digests.get(note.frame_key))),
     }
-    # Note.model_dump has declared string field names; the extra keys are literals.
-    return cast("dict[str, object]", payload)

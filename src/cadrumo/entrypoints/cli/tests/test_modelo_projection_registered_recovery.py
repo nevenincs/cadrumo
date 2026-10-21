@@ -10,9 +10,9 @@ import typer
 
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
-from .. import _modelo_projection_cli
-from ..errors import CliRefusedBoundaryError
+from .. import modelo_projection_commands
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -49,10 +49,10 @@ def test_project_recovery_uses_admitted_year_and_retains_write_effect(
         calls += 1
         raise _failed(code, effect="updated")
 
-    monkeypatch.setattr(_modelo_projection_cli, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
-    monkeypatch.setattr(_modelo_projection_cli, "run_modelo_project", refuse)
+    monkeypatch.setattr(modelo_projection_commands, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
+    monkeypatch.setattr(modelo_projection_commands, "run_modelo_project", refuse)
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        _modelo_projection_cli.modelo_project(cast(typer.Context, object()), year=2025, ccaa="madrid")
+        modelo_projection_commands.modelo_project(cast(typer.Context, object()), year=2025, ccaa="madrid")
     assert calls == 1
     assert str(caught.value) == tr(key, year=2025)
     assert caught.value.context == {
@@ -73,10 +73,10 @@ def test_compare_does_not_invent_which_of_two_years_failed(monkeypatch: pytest.M
         calls += 1
         raise _failed(code)
 
-    monkeypatch.setattr(_modelo_projection_cli, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
-    monkeypatch.setattr(_modelo_projection_cli, "run_modelo_compare", refuse)
+    monkeypatch.setattr(modelo_projection_commands, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
+    monkeypatch.setattr(modelo_projection_commands, "run_modelo_compare", refuse)
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        _modelo_projection_cli.modelo_compare(cast(typer.Context, object()), year=[2025, 2024], modelo="100")
+        modelo_projection_commands.modelo_compare(cast(typer.Context, object()), year=[2025, 2024], modelo="100")
     assert calls == 1
     assert str(caught.value) == tr(
         "cli.app.modelo.compare.recover_no_work_units", modelo="100", year_a=2024, year_b=2025

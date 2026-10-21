@@ -28,7 +28,7 @@ import http.server
 import shutil
 import sys
 import threading
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import NamedTuple, override
@@ -59,7 +59,7 @@ class _Origin(NamedTuple):
 
 
 @contextmanager
-def _index_answering(status: int) -> Iterator[_Origin]:
+def _index_answering(status: int) -> Generator[_Origin]:
     """Serve ``status`` from loopback and yield the endpoint that answers it."""
     requested: list[str] = []
 

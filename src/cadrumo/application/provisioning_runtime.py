@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import json
+import threading
 import time
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
+from enum import StrEnum
+from http import HTTPStatus
+from pathlib import Path
 from time import monotonic
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Final, TypedDict
 
 import httpx
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
@@ -16,7 +20,10 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.hardware import AcceleratorKind, ContentionCause
+from ..core.hashing import sha256_hex
 from ..core.models import STRICT_FROZEN_CONFIG
+from ..core.storage_taxonomy import StorageCategory
+from ..core.storage_taxonomy_locations import storage_path
 from ..core.time.clock import now
 from ..core.type_guards import is_object_dict, is_object_list
 from .provisioning_contracts import (
@@ -25,6 +32,7 @@ from .provisioning_contracts import (
     OLLAMA_PROBE_TIMEOUT_S,
     OLLAMA_PULL_TIMEOUT_S,
     OLLAMA_READINESS_TIMEOUT_S,
+    OLLAMA_STORE_REGISTRY_HOST,
     ProvisioningFactValue,
     ProvisioningOutcome,
     ProvisioningPreconditionCondition,
@@ -788,13 +796,15 @@ class PullProgress(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     status: str = ""
+    digest: str | None = Field(default=None, min_length=1)
+    """The layer the figures describe; the runtime reports each layer of a model separately."""
     completed_bytes: int | None = Field(default=None, ge=0)
     total_bytes: int | None = Field(default=None, ge=0)
 
     @property
     def percent(self) -> int | None:
         """Return whole-percent progress, or ``None`` when the total is not yet known."""
-        if not self.total_bytes or self.completed_bytes is None:
+        if not (self.total_bytes is not None and self.total_bytes) or self.completed_bytes is None:
             return None
         return min(100, int(self.completed_bytes * 100 / self.total_bytes))
 
@@ -838,98 +848,144 @@ def _record_pull(outcome: PullOutcome) -> PullOutcome:
     return outcome
 
 
-class PullOutcome(ProvisioningOutcome):
-    """The result of an explicit model fetch, including a fetch that never started.
+class PullFailureKind(StrEnum):
+    """What stopped a model fetch, classified once where the runtime's answer is read.
 
-    ``contention`` is populated when the pre-fetch admission check refused, and
-    is the reason no bytes moved. Keeping the snapshot rather than flattening it
-    to a string is what lets the caller name WHICH cause applied -- unloading a
-    resident Cadrumo selected and closing a peer application are different
-    instructions and only one of them is ours to offer.
+    The runtime reports an upstream failure as prose inside its progress
+    stream, so the prose is read here against a closed table and never leaves
+    this module: callers receive the kind, which decides whether the fetch may
+    be retried and which plain sentence a person sees.
     """
+
+    RUNTIME_UNREACHABLE = "runtime_unreachable"
+    STALLED = "stalled"
+    TRUNCATED = "truncated"
+    CANCELLED = "cancelled"
+    NETWORK_TRANSIENT = "network_transient"
+    NAME_RESOLUTION = "name_resolution"
+    SECURE_CONNECTION = "secure_connection"
+    BLOCKED_BY_NETWORK = "blocked_by_network"
+    DISK_FULL = "disk_full"
+    NO_PERMISSION = "no_permission"
+    INTEGRITY = "integrity"
+    NOT_FOUND = "not_found"
+    OTHER = "other"
+
+
+#: Fetch failures a later attempt can clear: the network or the registry
+#: dropped, stalled or throttled the transfer. Everything else -- a full disk,
+#: a permission, a damaged download, an unknown model -- fails the same way again and is never retried.
+TRANSIENT_PULL_FAILURES: Final = frozenset(
+    {
+        PullFailureKind.STALLED,
+        PullFailureKind.TRUNCATED,
+        PullFailureKind.NETWORK_TRANSIENT,
+        PullFailureKind.NAME_RESOLUTION,
+    }
+)
+
+
+class PullOutcome(ProvisioningOutcome):
+    """The result of one model fetch; ``failure_kind`` is present exactly when it did not complete."""
 
     model: str = Field(min_length=1)
     pulled: bool
-    contention: ContentionSnapshot | None = None
     bytes_fetched: int | None = Field(default=None, ge=0)
+    failure_kind: PullFailureKind | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_pull_outcome(self) -> PullOutcome:
         require_provisioning_verdict(failed=not self.pulled, verdict=self.precondition_verdict)
+        if self.pulled != (self.failure_kind is None):
+            raise ValueError("a fetch names what stopped it exactly when it did not complete")
         return self
 
 
-def pull_runtime_model(
+def fetch_runtime_model(
     model: str,
-    requirement_bytes: int,
     *,
-    profile: HardwareProfile | None = None,
     settings: Settings | None = None,
     on_progress: Callable[[PullProgress], None] | None = None,
+    stop: threading.Event | None = None,
 ) -> PullOutcome:
-    """Fetch ``model`` into the local runtime, refusing BEFORE any bytes move.
+    """Fetch ``model`` into the local runtime's store, with no memory admission.
 
-    The admission check runs first and a refusal returns without contacting the
-    runtime at all. That ordering is the point of the action: a multi-gigabyte
-    download that completes and then cannot be loaded has spent the operator's
-    bandwidth to arrive at the refusal it could have been given immediately.
+    Run for a setup a person approved: having the model on disk does not depend
+    on how much memory is free at this moment, so momentary contention is
+    checked when the model is loaded, not here. Setting ``stop`` ends the transfer between progress
+    reports; the runtime keeps what it has already written, so a later fetch
+    resumes rather than restarts.
 
-    Never raises, in keeping with every other action here. An unreachable
-    runtime is a typed closed outcome -- this function does not
-    start a daemon, and nothing on this path pulls implicitly: reaching it at
-    all requires an operator to have asked.
-
-    Args:
-        model: Runtime identifier to fetch.
-        requirement_bytes: The model's declared memory requirement, checked
-            against measured headroom before fetching.
-        profile: A measured hardware profile; probed when omitted.
-        settings: Resolved settings; loaded when omitted.
-        on_progress: Called for each progress report the runtime emits. Failures
-            in the callback are the caller's to handle; nothing here swallows
-            them.
-
-    Returns:
-        A :class:`PullOutcome`. ``pulled`` false with ``contention`` populated
-        means the fetch was refused before it began.
+    Never raises. Every failure carries the :class:`PullFailureKind` that
+    decides whether it may be retried.
     """
     resolved = settings if settings is not None else load_settings()
-    outcome = _pull_runtime_model(model, requirement_bytes, profile=profile, settings=resolved, on_progress=on_progress)
+    outcome = _pull_stream_outcome(model, _observe_pull_stream(model, resolved, on_progress, stop))
     if outcome.pulled:
         # Re-fetched weights may answer differently; their fitness must be earned again.
         invalidate_role_fitness(resolved)
     return _record_pull(outcome)
 
 
-def _pull_contention_refusal(
-    model: str,
-    requirement_bytes: int,
-    *,
-    profile: HardwareProfile | None,
-    settings: Settings,
-) -> PullOutcome | None:
-    snapshot = assess_model_load_contention(model, requirement_bytes, profile=profile, settings=settings)
-    if snapshot.admitted:
-        return None
-    verdict = snapshot.precondition_verdict
-    if verdict is None:
-        raise ValueError("a refused model-load contention snapshot must carry its precondition verdict")
-    return PullOutcome(
-        model=model,
-        pulled=False,
-        contention=snapshot,
-        facts={"model": model, "admitted": False, "contention_condition": verdict.failed_condition_id},
-        precondition_verdict=verdict,
-    )
-
-
 @dataclass(slots=True)
 class _PullStreamObservation:
+    layers: dict[str, int] = field(default_factory=dict)
     bytes_fetched: int | None = None
     completed: bool = False
-    runtime_refused: bool = False
+    cancelled: bool = False
+    runtime_error: PullFailureKind | None = None
+    transport_error: PullFailureKind | None = None
     http_error_type: str | None = None
+
+
+#: Fragments of the runtime's in-stream error prose, most specific first. The
+#: runtime words an upstream failure the way its HTTP and TLS libraries do, so
+#: the table names those libraries' phrases; anything unmatched is ``OTHER``
+#: and is never retried.
+_RUNTIME_ERROR_FRAGMENTS: Final[tuple[tuple[str, PullFailureKind], ...]] = (
+    ("no space left on device", PullFailureKind.DISK_FULL),
+    ("not enough space", PullFailureKind.DISK_FULL),
+    ("disk full", PullFailureKind.DISK_FULL),
+    ("permission denied", PullFailureKind.NO_PERMISSION),
+    ("access is denied", PullFailureKind.NO_PERMISSION),
+    ("digest mismatch", PullFailureKind.INTEGRITY),
+    ("tls handshake timeout", PullFailureKind.NETWORK_TRANSIENT),
+    ("x509", PullFailureKind.SECURE_CONNECTION),
+    ("certificate", PullFailureKind.SECURE_CONNECTION),
+    ("tls:", PullFailureKind.SECURE_CONNECTION),
+    ("proxy authentication required", PullFailureKind.BLOCKED_BY_NETWORK),
+    ("forbidden", PullFailureKind.BLOCKED_BY_NETWORK),
+    ("407", PullFailureKind.BLOCKED_BY_NETWORK),
+    ("403", PullFailureKind.BLOCKED_BY_NETWORK),
+    ("file does not exist", PullFailureKind.NOT_FOUND),
+    ("manifest unknown", PullFailureKind.NOT_FOUND),
+    ("no such host", PullFailureKind.NAME_RESOLUTION),
+    ("temporary failure in name resolution", PullFailureKind.NAME_RESOLUTION),
+    ("server misbehaving", PullFailureKind.NAME_RESOLUTION),
+    ("connection reset", PullFailureKind.NETWORK_TRANSIENT),
+    ("connection refused", PullFailureKind.NETWORK_TRANSIENT),
+    ("i/o timeout", PullFailureKind.NETWORK_TRANSIENT),
+    ("timeout", PullFailureKind.NETWORK_TRANSIENT),
+    ("unexpected eof", PullFailureKind.NETWORK_TRANSIENT),
+    ("max retries exceeded", PullFailureKind.NETWORK_TRANSIENT),
+    ("too many requests", PullFailureKind.NETWORK_TRANSIENT),
+    ("service unavailable", PullFailureKind.NETWORK_TRANSIENT),
+    ("bad gateway", PullFailureKind.NETWORK_TRANSIENT),
+    ("gateway timeout", PullFailureKind.NETWORK_TRANSIENT),
+    ("internal server error", PullFailureKind.NETWORK_TRANSIENT),
+    ("429", PullFailureKind.NETWORK_TRANSIENT),
+    ("500", PullFailureKind.NETWORK_TRANSIENT),
+    ("502", PullFailureKind.NETWORK_TRANSIENT),
+    ("503", PullFailureKind.NETWORK_TRANSIENT),
+    ("504", PullFailureKind.NETWORK_TRANSIENT),
+)
+
+
+def classify_runtime_pull_error(message: str) -> PullFailureKind:
+    """Classify the runtime's own error prose for a fetch into a closed kind."""
+    text = message.casefold()
+    return next((kind for fragment, kind in _RUNTIME_ERROR_FRAGMENTS if fragment in text), PullFailureKind.OTHER)
 
 
 def _record_pull_stream_line(
@@ -937,8 +993,9 @@ def _record_pull_stream_line(
     observation: _PullStreamObservation,
     on_progress: Callable[[PullProgress], None] | None,
 ) -> None:
-    if _pull_error_reported(line):
-        observation.runtime_refused = True
+    reported = _pull_error_message(line)
+    if reported is not None:
+        observation.runtime_error = classify_runtime_pull_error(reported)
         return
     progress = _pull_progress(line)
     if progress is None:
@@ -946,15 +1003,40 @@ def _record_pull_stream_line(
     if progress.status == "success":
         observation.completed = True
     if progress.completed_bytes is not None:
-        observation.bytes_fetched = progress.completed_bytes
+        # The runtime reports each layer on its own, so the model's figure is
+        # the sum of the latest figure per layer.
+        observation.layers[progress.digest or ""] = progress.completed_bytes
+        observation.bytes_fetched = sum(observation.layers.values())
     if on_progress is not None:
         on_progress(progress)
+
+
+def _transport_failure_kind(exc: httpx.HTTPError) -> PullFailureKind:
+    if isinstance(exc, httpx.ConnectError | httpx.ConnectTimeout):
+        return PullFailureKind.RUNTIME_UNREACHABLE
+    if isinstance(exc, httpx.TimeoutException | httpx.RemoteProtocolError | httpx.ReadError):
+        return PullFailureKind.STALLED
+    return PullFailureKind.OTHER
+
+
+def _status_failure_kind(response: httpx.Response) -> PullFailureKind:
+    response.read()
+    message = _pull_error_message(response.text)
+    if message is not None:
+        kind = classify_runtime_pull_error(message)
+        if kind is not PullFailureKind.OTHER:
+            return kind
+    status = response.status_code
+    if status == HTTPStatus.TOO_MANY_REQUESTS or status >= HTTPStatus.INTERNAL_SERVER_ERROR:
+        return PullFailureKind.NETWORK_TRANSIENT
+    return PullFailureKind.OTHER
 
 
 def _observe_pull_stream(
     model: str,
     settings: Settings,
     on_progress: Callable[[PullProgress], None] | None,
+    stop: threading.Event | None = None,
 ) -> _PullStreamObservation:
     observation = _PullStreamObservation()
     url = ollama_endpoint(settings.cadrumo_llm_ollama_chat_url, "pull")
@@ -963,48 +1045,73 @@ def _observe_pull_stream(
             httpx.Client(timeout=OLLAMA_PULL_TIMEOUT_S) as client,
             client.stream("POST", url, json={"model": model, "stream": True}) as response,
         ):
-            response.raise_for_status()
+            if response.is_error:
+                observation.runtime_error = _status_failure_kind(response)
+                observation.http_error_type = "HTTPStatusError"
+                return observation
             for line in response.iter_lines():
+                if stop is not None and stop.is_set():
+                    # Closing the stream ends the runtime's transfer; what it
+                    # already wrote stays in its store for the next fetch.
+                    observation.cancelled = True
+                    break
                 _record_pull_stream_line(line, observation, on_progress)
     except httpx.HTTPError as exc:
         # Keep the latest stream state: a transport or progress-callback error
         # can happen after useful progress has already reached the caller.
         observation.http_error_type = exc.__class__.__name__
+        observation.transport_error = _transport_failure_kind(exc)
     return observation
+
+
+def _stream_failure_kind(observation: _PullStreamObservation) -> PullFailureKind | None:
+    if observation.cancelled:
+        return PullFailureKind.CANCELLED
+    if observation.runtime_error is not None:
+        return observation.runtime_error
+    if observation.transport_error is not None:
+        return observation.transport_error
+    return None if observation.completed else PullFailureKind.TRUNCATED
 
 
 def _pull_stream_outcome(model: str, observation: _PullStreamObservation) -> PullOutcome:
     fetched = observation.bytes_fetched
-    if observation.http_error_type is not None:
-        facts = {
+    kind = _stream_failure_kind(observation)
+    if kind is PullFailureKind.RUNTIME_UNREACHABLE:
+        facts: dict[str, ProvisioningFactValue] = {
             "model": model,
             "runtime_reachable": False,
-            "runtime_error_type": observation.http_error_type,
+            "runtime_error_type": observation.http_error_type or "ConnectError",
             "bytes_fetched_known": fetched is not None,
         }
         return PullOutcome(
             model=model,
             pulled=False,
             bytes_fetched=fetched,
+            failure_kind=kind,
             facts=facts,
             precondition_verdict=provisioning_no_recovery_verdict(
                 ProvisioningPreconditionCondition.RUNTIME_REACHABLE,
                 facts=facts,
             ),
         )
-    if observation.runtime_refused or not observation.completed:
-        # The runtime answered 200 and then reported failure in-stream, or the
-        # stream ended without its terminal success line. Neither is a pull.
-        facts: dict[str, ProvisioningFactValue] = {
+    if kind is not None:
+        # The runtime reported failure, the transfer dropped or was stopped, or
+        # the stream ended without its terminal success line. None is a pull.
+        facts = {
             "model": model,
             "runtime_reachable": True,
-            "runtime_reported_error": observation.runtime_refused,
+            "runtime_reported_error": observation.runtime_error is not None,
             "pull_completed": False,
+            "pull_failure": kind.value,
         }
+        if observation.http_error_type is not None:
+            facts["runtime_error_type"] = observation.http_error_type
         return PullOutcome(
             model=model,
             pulled=False,
             bytes_fetched=fetched,
+            failure_kind=kind,
             facts=facts,
             precondition_verdict=provisioning_no_recovery_verdict(
                 ProvisioningPreconditionCondition.MODEL_PULL_SUCCEEDED,
@@ -1019,28 +1126,16 @@ def _pull_stream_outcome(model: str, observation: _PullStreamObservation) -> Pul
     )
 
 
-def _pull_runtime_model(
-    model: str,
-    requirement_bytes: int,
-    *,
-    profile: HardwareProfile | None,
-    settings: Settings,
-    on_progress: Callable[[PullProgress], None] | None,
-) -> PullOutcome:
-    refusal = _pull_contention_refusal(model, requirement_bytes, profile=profile, settings=settings)
-    if refusal is not None:
-        return refusal
-    observation = _observe_pull_stream(model, settings, on_progress)
-    return _pull_stream_outcome(model, observation)
-
-
-def _pull_error_reported(line: str) -> bool:
-    """Return whether one NDJSON line is the runtime's in-stream error report."""
+def _pull_error_message(line: str) -> str | None:
+    """Return the runtime's error text in one NDJSON line, or ``None`` when it reports none."""
     try:
         payload = json.loads(line.strip() or "null")
     except ValueError:
-        return False
-    return isinstance(payload, dict) and "error" in payload
+        return None
+    if not is_object_dict(payload) or "error" not in payload:
+        return None
+    error = payload.get("error")
+    return error if isinstance(error, str) else ""
 
 
 def _pull_progress(line: str) -> PullProgress | None:
@@ -1057,8 +1152,10 @@ def _pull_progress(line: str) -> PullProgress | None:
     completed = payload.get("completed")
     total = payload.get("total")
     status = payload.get("status")
+    digest = payload.get("digest")
     return PullProgress(
         status=status if isinstance(status, str) else "",
+        digest=digest if isinstance(digest, str) and digest else None,
         completed_bytes=completed if isinstance(completed, int) and completed >= 0 else None,
         total_bytes=total if isinstance(total, int) and total >= 0 else None,
     )
@@ -1085,13 +1182,18 @@ class ReadinessOutcome(ProvisioningOutcome):
         return self
 
 
-def verify_model_ready(
+def load_and_verify_model(
     model: str,
     *,
     settings: Settings | None = None,
     timeout_s: float | None = None,
 ) -> ReadinessOutcome:
-    """Confirm ``model`` is resident and answers a trivial prompt within a bound.
+    """Load ``model`` when it is not resident, and confirm it answers a trivial prompt within a bound.
+
+    This loads: the one-token prompt brings a model that is on disk but not in
+    memory into memory, with the same keep-alive as an explicit load, so a
+    verification leaves the model resident exactly as long as a load would.
+    A caller that must not load without admission checks it first.
 
     The prompt is deliberately minimal and its CONTENT is irrelevant -- this
     verifies the transport and the load, not the model's quality, so nothing
@@ -1140,7 +1242,13 @@ def verify_model_ready(
             # from a reasoning model measures its verbosity instead.
             response = client.post(
                 url,
-                json={"model": model, "prompt": "ok", "stream": False, "options": {"num_predict": 1}},
+                json={
+                    "model": model,
+                    "prompt": "ok",
+                    "stream": False,
+                    "keep_alive": OLLAMA_LOAD_KEEP_ALIVE,
+                    "options": {"num_predict": 1},
+                },
             )
             response.raise_for_status()
     except httpx.HTTPError as exc:
@@ -1246,6 +1354,109 @@ def read_installed_models(settings: Settings | None = None) -> tuple[InstalledMo
     """
     resolved = settings if settings is not None else load_settings()
     return _installed_from_payload(_read_runtime_json(resolved, "tags"))
+
+
+def normalised_weights_digest(digest: str) -> str:
+    """Return a runtime weights digest as bare lowercase hex, with or without its algorithm prefix."""
+    return digest.removeprefix("sha256:").lower()
+
+
+class StoredWeightsState(StrEnum):
+    """What the runtime's on-disk store holds for one model, read without the runtime answering.
+
+    ``complete`` means the manifest is present and every layer it names is on
+    disk at its declared size; ``incomplete`` means the manifest is present but
+    a layer is missing or short, which is not a usable model.
+    """
+
+    ABSENT = "absent"
+    COMPLETE = "complete"
+    INCOMPLETE = "incomplete"
+    UNREADABLE = "unreadable"
+
+
+class StoredWeights(BaseModel):
+    """One model's manifest digest in Cadrumo's model store and whether its layers are all there."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    state: StoredWeightsState
+    digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _digest_follows_state(self) -> StoredWeights:
+        present = self.state in {StoredWeightsState.COMPLETE, StoredWeightsState.INCOMPLETE}
+        if present != (self.digest is not None):
+            raise ValueError("a stored manifest carries its digest exactly when it is present")
+        return self
+
+
+def _stored_manifest_path(models_root: Path, model: str) -> Path | None:
+    name, _, tag = model.partition(":")
+    parts = [part for part in name.split("/") if part]
+    if not parts or any(part in {".", ".."} for part in parts) or tag in {".", ".."} or "/" in tag:
+        return None
+    if len(parts) == 1:
+        parts = [OLLAMA_STORE_REGISTRY_HOST, "library", *parts]
+    elif len(parts) == 2:
+        parts = [OLLAMA_STORE_REGISTRY_HOST, *parts]
+    return models_root.joinpath("manifests", *parts, tag or "latest")
+
+
+def _layers_complete(models_root: Path, manifest: object) -> bool:
+    if not is_object_dict(manifest):
+        return False
+    config = manifest.get("config")
+    layers = manifest.get("layers")
+    if not is_object_list(layers):
+        return False
+    for entry in (config, *layers):
+        if not is_object_dict(entry):
+            return False
+        digest = entry.get("digest")
+        size = entry.get("size")
+        if not isinstance(digest, str) or not isinstance(size, int):
+            return False
+        blob = models_root / "blobs" / digest.replace(":", "-")
+        try:
+            if blob.stat().st_size != size:
+                return False
+        except OSError:
+            return False
+    return True
+
+
+def read_stored_weights(model: str, settings: Settings | None = None) -> StoredWeights:
+    """Read ``model``'s manifest from Cadrumo's model store on disk, without asking the runtime.
+
+    The runtime keeps one manifest file per installed tag and names the
+    installed weights by the SHA-256 of that file, so hashing it observes the
+    same identity the runtime reports while the runtime is not running. Only
+    Cadrumo's own store is read: a runtime started elsewhere keeps its models
+    wherever it was configured to, which only its own answer can report.
+    """
+    resolved = settings if settings is not None else load_settings()
+    models_root = storage_path(StorageCategory.OLLAMA_MODELS, settings=resolved)
+    path = _stored_manifest_path(models_root, model)
+    if path is None:
+        return StoredWeights(state=StoredWeightsState.ABSENT)
+    try:
+        payload = path.read_bytes()
+    except FileNotFoundError:
+        return StoredWeights(state=StoredWeightsState.ABSENT)
+    except OSError:
+        return StoredWeights(state=StoredWeightsState.UNREADABLE)
+    digest = sha256_hex(payload)
+    try:
+        manifest = json.loads(payload)
+    except ValueError:
+        return StoredWeights(state=StoredWeightsState.INCOMPLETE, digest=digest)
+    complete = _layers_complete(models_root, manifest)
+    return StoredWeights(
+        state=StoredWeightsState.COMPLETE if complete else StoredWeightsState.INCOMPLETE,
+        digest=digest,
+    )
 
 
 class RemoveOutcome(ProvisioningOutcome):

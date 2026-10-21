@@ -26,7 +26,7 @@ from ......core.external_constants import OutputLanguage
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
 from ..casilla_list_models import CasillaListHeading
-from ..installed import InstalledModeloWorkbench
+from ..factory import InstalledModeloWorkbench
 from ..navigator import NavigatorState, looks_like_identifier, navigator_rows, presented_form
 from ..page_items import page_items, workbench_pages
 from ..screen import ModeloWorkbenchScreen
@@ -51,7 +51,10 @@ def workbench(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathF
 def _headed(form: ModeloWorkForm) -> dict[tuple[str, str], ModeloFormSection]:
     """Every section the layout heads with official words, by page and section id."""
     return {
-        (page.id, section.id): section for page in form.pages for section in page.sections if section.official_heading
+        (page.id, section.id): section
+        for page in form.pages
+        for section in page.sections
+        if (section.official_heading is not None and section.official_heading)
     }
 
 

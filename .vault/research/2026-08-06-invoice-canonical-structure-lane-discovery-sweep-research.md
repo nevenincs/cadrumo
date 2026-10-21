@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#invoice-canonical-structure'
 date: '2026-08-06'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:e0cfde0a8f9132f22e2bdbce0b853c21b072db244c80ecb21eb6a72077269123'
+body_hash: 'sha256:4d2cd589e5f083dea1cb5cf1b096e92135ef144a2842e84beec5ddc629af9b6c'
 related:
   - "[[2026-08-06-invoice-canonical-structure-adr]]"
   - "[[2026-08-06-invoice-canonical-structure-audit]]"
@@ -48,7 +48,7 @@ mislabelled as delivered by an unrelated decision and is now decided on its own 
 
 The sweep as written follows, with its headings demoted one level to nest here.
 
-Discovery pass, read-only. Repo `Y:\code\aeat-worktrees\main`, HEAD `0b1e3f040b`
+Discovery pass, read-only. Repo `<code-root>/aeat-worktrees\main`, HEAD `0b1e3f040b`
 ("feat(aggregation): attribute an invoice to the period it devengo'd in").
 All `path:line` citations verified at that HEAD. No files modified.
 

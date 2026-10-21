@@ -12,7 +12,7 @@ from ....application.state_projection import (
 )
 from ....application.state_projection_auth import ProjectionAuthReadiness
 from ....core.json_contract import strict_round_trip
-from .._overview_payloads import OverviewStatusResult
+from ..overview_results import OverviewStatusResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#open-work-consolidation'
 date: '2026-07-30'
-modified: '2026-10-03'
+modified: '2026-10-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:749000d1261e93c3075bc26afa175aaefe5271fcfc51b933e2d3d50ead704479'
+body_hash: 'sha256:b65660e3eda161d3ac2e6ba6c105557ceba9e3f7abb7e16586ce0f83d0903340'
 related: []
 ---
 
@@ -61,10 +61,6 @@ The Homebrew acquisition row is annotated as partially green and blocked on an o
 
 The artefacts that evidence rows are minted from live under `var/`, which is git-ignored. Every such file is therefore untracked and absent from any fresh clone, from CI, and from a peer's tree. The durable record of a green acquisition is the run itself, not the local directory. Any row closure that cites a local path rather than a run identifier is unverifiable by anyone but the machine that produced it, which is the same class of defect as evidence captured from a dirty worktree.
 
-### published-plugin-broken-for-users | high | a live install path is broken independently of any plan
-
-The published plugin at version 0.1.1 wires its server to resolve a package that returns 404 on the index, having been deleted during the product rename, while the replacement package is not yet published. Anyone installing that plugin today gets a broken install and there is no working alternative to point them at. This is live user-facing breakage rather than plan bookkeeping, it sits outside every open row's dependency chain, and it is the only finding in this audit whose cost is borne by users rather than by the project.
-
 ### submission-row-not-ripe | low | a package-name correction has nothing to submit
 
 The winget package-name correction is to be made forward, by submitting subsequent versions under the correct identifier and leaving the wrongly-named published version orphaned, since a published identifier cannot be renamed in place. The wrong identifier is confirmed published and the correct one confirmed absent, as the row states. But the latest release of the product being submitted carries zero assets, so no installable artefact exists to submit. The blocker is a defect in that repository's own release process, outside the scope of any plan in this fleet, and the row cannot be actioned even by the operator until an asset-bearing release is cut.
@@ -86,7 +82,5 @@ Consolidate the residue. Twenty of the twenty-one open rows are blocked on an op
 Correct before closing. Nine rows carry text that is false at `HEAD`, and one of those, the container-mode blocker, is a hazard rather than an inaccuracy. Correction precedes any closure decision, because a reader who trusts the current text will either act dangerously or conclude that cleared blockers still stand.
 
 Cite runs, never paths. Because minted evidence lives in an ignored directory, every closure must name the run identifier and the commit whose ancestry was checked. Applied immediately to the Homebrew evidence row, whose blocker is resolved and whose closure cites a run.
-
-Treat the broken published plugin as unscheduled work. It is the only finding here that harms users, it is independent of the publication cascade, and it should not wait behind a plan.
 
 Track the Permanente gap or rule it out deliberately. An unexamined question recorded only in a step record is indistinguishable, six months on, from a question that was answered.

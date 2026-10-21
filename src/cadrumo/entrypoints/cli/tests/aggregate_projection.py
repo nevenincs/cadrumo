@@ -6,8 +6,8 @@ from collections.abc import Sequence
 
 from ....application.aggregation.service import PerModeloAggregationResult
 from ....domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
-from .._modelo_payloads import ModeloAggregateResult, WithholdingWindowReadbackPayload
 from ..modelo_aux_payloads import WithholdingClaveBreakdownPayload
+from ..modelo_results import ModeloAggregateResult, WithholdingWindowReadbackPayload
 
 
 def from_aggregation_result(

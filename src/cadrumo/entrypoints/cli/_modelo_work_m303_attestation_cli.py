@@ -7,6 +7,8 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.profile_binding import require_profile_client
+
 from ...application.modelo.m303_attestation_operation import (
     ModeloWorkM303AttestationRequest,
 )
@@ -15,10 +17,9 @@ from ...core.external_constants import OutputLanguage
 from ...core.time.utc import parse_iso_datetime
 from ._modelo_behavior_support import resolve_year_period
 from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
-from ._modelo_payloads import M303Exonerado390AttestationResult
 from .common import activate_subcommand_output_language, emit_envelope
-from .runtime_modelo_attestation import run_modelo_m303_attestation
-from .runtime_profile_binding import require_profile_client
+from .modelo_results import M303Exonerado390AttestationResult
+from .operation_modelo_attestation import run_modelo_m303_attestation
 
 
 def work_attest_m303_exonerado_390(

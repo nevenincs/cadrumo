@@ -6,9 +6,9 @@ may not, because the something else removes a taxpayer's document from the
 machine. An automatic fallback would do it at exactly the moment nobody is
 watching -- a failure -- and without anyone choosing it.
 
-The behavioural cases run a real local outage with the cloud route fully
-configured (a real API key, and the vendor endpoint pointed at a loopback
-recorder) and assert on what the CLOUD received, which is zero. Asserting on
+The behavioural cases run a real local outage with the off-host route fully
+available (an agent service bound for the operation, recording every run) and
+assert on what the OFF-HOST route received, which is zero. Asserting on
 the raised exception alone would not distinguish "no fallback exists" from "a
 fallback exists and happened to fail too".
 """
@@ -20,25 +20,16 @@ import asyncio
 import socket
 from collections.abc import Generator
 from contextlib import closing, contextmanager
-from http import HTTPStatus
 from pathlib import Path
-from typing import override
 
 import pytest
-from pydantic import SecretStr
 
 from .....core.config import override_settings
 from .....core.config_support import LLMProvider
 from .....core.directory_scan import scan_directory
 from .....core.errors.error_codes import build_error_envelope
+from .....core.model_catalogue import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from .....tests.loopback_llm import (
-    SilentLoopbackHandler,
-    openai_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.run_records import LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
@@ -46,6 +37,7 @@ from ..client import LLMClient, LLMRetryPolicy
 from ..errors import LLMConsentError, LLMError
 from ..models import LLMRequest
 from ._arena_fixtures import _fresh_arena
+from .model_run_support import RecordingModelRuns, serving_agent
 
 __all__ = ["_fresh_arena"]
 
@@ -55,38 +47,16 @@ _NO_RETRY = LLMRetryPolicy(max_attempts=1)
 
 
 @contextmanager
-def _cloud_recorder() -> Generator[tuple[str, list[str]]]:
-    """Serve a loopback endpoint standing in for the vendor, recording arrivals.
+def _cloud_recorder() -> Generator[RecordingModelRuns]:
+    """Stand in for the agent service, recording every run that reaches it.
 
-    A real HTTP listener rather than an assertion about code paths: the question
-    is whether a request reached an off-host endpoint, and only the endpoint can
-    answer it. It is on loopback because a test that could genuinely reach a
-    vendor would be the very thing this file exists to forbid.
+    The question is whether a request reached the off-host route, and only the
+    route can answer it. The stand-in answers a real dispatch with a completion,
+    so a request that legitimately reaches it COMPLETES; every case asserting it
+    stayed empty would otherwise be satisfied by a route nothing could reach.
     """
-    arrivals: list[str] = []
-
-    class _Endpoint(SilentLoopbackHandler):
-        @override
-        def do_POST(self) -> None:
-            read_json_body(self)
-            arrivals.append(self.path)
-            # A well-formed vendor answer, so a request that legitimately
-            # reaches here COMPLETES. The recorder has to be able to serve a
-            # real dispatch, or every case asserting it stayed empty would be
-            # satisfied by a recorder nothing could ever reach.
-            write_json_response(
-                self,
-                openai_chat_reply(
-                    "cloud completion",
-                    prompt_tokens=3,
-                    completion_tokens=2,
-                    response_id="probe-response",
-                ),
-                status=HTTPStatus.OK,
-            )
-
-    with serving_loopback(_Endpoint, path="/v1/chat/completions") as endpoint:
-        yield endpoint, arrivals
+    with serving_agent(replies=("cloud completion",)) as service:
+        yield service
 
 
 def _dead_local_endpoint() -> str:
@@ -104,11 +74,9 @@ def _dead_local_endpoint() -> str:
 
 def _client(tmp_path: Path) -> LLMClient:
     settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model="gpt-oss",
-        # The cloud route is fully usable: a key is present and the endpoint
-        # answers. If a fallback existed, nothing here would stop it.
-        cadrumo_llm_openai_api_key=SecretStr("sk-test-key-present"),
+        # The off-host route is fully usable: a service is bound and answers.
+        # If a fallback existed, nothing here would stop it.
+        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -124,17 +92,16 @@ def _client(tmp_path: Path) -> LLMClient:
 
 def test_a_local_outage_does_not_reach_the_cloud(tmp_path: Path) -> None:
     """The front door: the configured local provider is down and the cloud is ready."""
-    with _cloud_recorder() as (cloud_url, arrivals):
+    with _cloud_recorder() as service:
         with (
             override_settings(
                 cadrumo_llm_ollama_chat_url=_dead_local_endpoint(),
-                cadrumo_llm_openai_chat_completions_url=cloud_url,
             ),
             pytest.raises(LLMError),
         ):
             asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="read this")))
 
-        assert arrivals == []
+        assert service.runs == []
 
 
 def test_an_unmarked_request_does_not_reach_the_cloud_either(tmp_path: Path) -> None:
@@ -146,18 +113,17 @@ def test_an_unmarked_request_does_not_reach_the_cloud_either(tmp_path: Path) -> 
     only would leave the unwatched half untested -- and the unwatched half is
     where a silent fallback would actually live.
     """
-    with _cloud_recorder() as (cloud_url, arrivals):
+    with _cloud_recorder() as service:
         request = LLMRequest(prompt="a routine unmarked prompt", evidence_derived=False)
         with (
             override_settings(
                 cadrumo_llm_ollama_chat_url=_dead_local_endpoint(),
-                cadrumo_llm_openai_chat_completions_url=cloud_url,
             ),
             pytest.raises(LLMError),
         ):
             asyncio.run(_client(tmp_path).complete(request))
 
-        assert arrivals == []
+        assert service.runs == []
 
 
 def test_a_permitted_request_pinned_at_the_cloud_does_reach_the_recorder(tmp_path: Path) -> None:
@@ -179,19 +145,17 @@ def test_a_permitted_request_pinned_at_the_cloud_does_reach_the_recorder(tmp_pat
     NAMES its provider, which is the operator choosing, not a degradation
     choosing for them.
     """
-    with _cloud_recorder() as (cloud_url, arrivals):
+    with _cloud_recorder() as service:
         request = LLMRequest(
             prompt="a routine unmarked prompt",
             evidence_derived=False,
-            provider_override=LLMProvider.OPENAI,
+            provider_override=LLMProvider.AGENT,
+            model_role=ModelRole.TEXT_EXTRACTION,
         )
-        with override_settings(
-            cadrumo_llm_ollama_chat_url=_dead_local_endpoint(),
-            cadrumo_llm_openai_chat_completions_url=cloud_url,
-        ):
+        with override_settings(cadrumo_llm_ollama_chat_url=_dead_local_endpoint()):
             response = asyncio.run(_client(tmp_path).complete(request))
 
-        assert arrivals == ["/v1/chat/completions"]
+        assert len(service.runs) == 1
 
     assert response.text == "cloud completion"
 
@@ -205,22 +169,22 @@ def test_an_evidence_request_pinned_at_the_cloud_is_refused_before_dispatch(tmp_
     is what makes this empty recorder meaningful: the same endpoint, reached by
     a permitted request, does record.
     """
-    with _cloud_recorder() as (cloud_url, arrivals):
+    with _cloud_recorder() as service:
         request = LLMRequest(
             prompt="read this invoice",
             evidence_derived=True,
-            provider_override=LLMProvider.OPENAI,
+            provider_override=LLMProvider.AGENT,
+            model_role=ModelRole.TEXT_EXTRACTION,
         )
         with (
             override_settings(
                 cadrumo_llm_ollama_chat_url=_dead_local_endpoint(),
-                cadrumo_llm_openai_chat_completions_url=cloud_url,
             ),
             pytest.raises(LLMConsentError),
         ):
             asyncio.run(_client(tmp_path).complete(request))
 
-        assert arrivals == []
+        assert service.runs == []
 
 
 def test_a_local_degradation_has_no_invented_action(tmp_path: Path) -> None:
@@ -240,9 +204,7 @@ def _llm_package_modules() -> list[Path]:
     return sorted(path for path in scan_directory(root, pattern="*.py", recursive=True) if "tests" not in path.parts)
 
 
-_ADAPTER_CONSTRUCTORS = frozenset(
-    {"_build_adapter", "AnthropicAdapter", "OpenAIAdapter", "GeminiAdapter", "LocalAdapter"}
-)
+_ADAPTER_CONSTRUCTORS = frozenset({"_build_adapter", "AgentAdapter", "LocalAdapter"})
 
 
 def _called_names(node: ast.AST) -> set[str]:
@@ -300,15 +262,15 @@ def read(request):
     try:
         return local_adapter.complete(request)
     except LLMProviderError:
-        adapter = OpenAIAdapter(api_key="k", timeout_s=30)
-        return adapter.complete(request.model_copy(update={"provider_override": "openai"}))
+        adapter = AgentAdapter(port=port, role=role, lane=lane, consent=None, deadline_seconds=30, expects_json=False)
+        return adapter.complete(request.model_copy(update={"provider_override": "AGENT"}))
 
 
 def reroute(client, request):
     try:
         return client.complete(request)
     except LLMProviderError:
-        return client.complete(LLMRequest(prompt=request.prompt, provider_override="openai"))
+        return client.complete(LLMRequest(prompt=request.prompt, provider_override="AGENT"))
 '''
 
 

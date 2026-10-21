@@ -5,7 +5,7 @@ from __future__ import annotations
 import typer
 
 from ..common import emit_envelope
-from ..runtime_collab_recipient import (
+from ..operation_collab_recipient import (
     submit_collab_recipient_add,
     submit_collab_recipient_list,
     submit_collab_recipient_remove,

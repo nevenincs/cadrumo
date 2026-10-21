@@ -6,18 +6,18 @@ import json
 
 from click.testing import Result
 
-from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ....application.user_profile.login_session import authenticate_profile_for_invocation
-from ....core.config import override_settings
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .cli_runner import invoke_cached_cli
-from .runtime_profile_cli_fixture import NativeCliProfileFixture
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
+from cadrumo.core.config import override_settings
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
+from .cli_fixture_worlds import RegisteredCliProfile, invoke_joined_cli
 
 __all__ = ["invoke_native_cli", "reauthenticate_native_profile"]
 
 
 def reauthenticate_native_profile(
-    profile: NativeCliProfileFixture,
+    profile: RegisteredCliProfile,
     *,
     authority_operation: PinnedAuthorityOperation,
 ) -> str:
@@ -33,7 +33,7 @@ def reauthenticate_native_profile(
 
 
 def invoke_native_cli(
-    profile: NativeCliProfileFixture,
+    profile: RegisteredCliProfile,
     *command: str,
     output_format: str | None = "json",
 ) -> Result:
@@ -44,8 +44,8 @@ def invoke_native_cli(
     if output_format is not None:
         arguments.extend(("--format", output_format))
     arguments.extend(("--profile", profile.label, "--profile-secrets-stdin", *command))
-    with override_settings(cadrumo_cli_reveal_identifiers=True):
-        result = invoke_cached_cli(
+    with override_settings(cadrumo_cli_reveal_identifiers=True, cadrumo_output_language="en"):
+        result = invoke_joined_cli(
             arguments,
             input=json.dumps({"profile_passphrase": profile.passphrase}),
         )

@@ -16,6 +16,9 @@ pub const MAXIMUM_FRAME_BYTES: usize = 4096;
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(tag = "request", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Request {
+    Status {
+        schema: u32,
+    },
     Reveal {
         schema: u32,
     },
@@ -33,6 +36,11 @@ pub enum Request {
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum Outcome {
+    Running,
+    Starting,
+    Waiting,
+    Stopping,
+    Adopted,
     RevealQueued,
     DesignationAccepted,
     SuccessorObserved,
@@ -56,7 +64,8 @@ pub fn decode(bytes: &[u8]) -> io::Result<Request> {
     }
     let request: Request = serde_json::from_slice(bytes).map_err(io::Error::other)?;
     let schema = match request {
-        Request::Reveal { schema }
+        Request::Status { schema }
+        | Request::Reveal { schema }
         | Request::Retry { schema }
         | Request::SuccessorReady { schema, .. } => schema,
     };
@@ -73,12 +82,28 @@ pub fn respond(request: Request, retry: impl FnOnce() -> io::Result<()>) -> Resp
     Response {
         schema: 1,
         outcome: match request {
+            Request::Status { .. } => Outcome::Unavailable,
             Request::Reveal { .. } => Outcome::SurfaceUnavailable,
             Request::Retry { .. } => match retry() {
                 Ok(()) => Outcome::ReEvaluated,
                 Err(_) => Outcome::Unavailable,
             },
             Request::SuccessorReady { .. } => Outcome::DesignationRequired,
+        },
+    }
+}
+
+/// Read-only supervision state; an adopted process has no heartbeat channel.
+pub fn status(state: &str) -> Response {
+    Response {
+        schema: 1,
+        outcome: match state {
+            "running" => Outcome::Running,
+            "starting" => Outcome::Starting,
+            "waiting" => Outcome::Waiting,
+            "stopping" => Outcome::Stopping,
+            "adopted" => Outcome::Adopted,
+            _ => Outcome::Unavailable,
         },
     }
 }
@@ -136,5 +161,25 @@ mod tests {
             .outcome,
             Outcome::Unavailable
         );
+    }
+
+    #[test]
+    fn status_is_read_only_and_adoption_never_claims_heartbeat_readiness() {
+        assert_eq!(
+            decode(br#"{"schema":1,"request":"status"}"#).unwrap(),
+            Request::Status { schema: 1 }
+        );
+        assert!(decode(br#"{"schema":1,"request":"status","pid":1}"#).is_err());
+        assert_eq!(
+            respond(Request::Status { schema: 1 }, || panic!(
+                "status cannot retry"
+            ))
+            .outcome,
+            Outcome::Unavailable
+        );
+        assert_eq!(status("adopted").outcome, Outcome::Adopted);
+        assert_ne!(status("adopted").outcome, Outcome::Running);
+        assert_eq!(status("running").outcome, Outcome::Running);
+        assert_eq!(status("unknown").outcome, Outcome::Unavailable);
     }
 }

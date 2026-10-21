@@ -56,7 +56,7 @@ def declared_claims(*, skip_export_checks: bool) -> tuple[str, ...]:
         "pip dependency check",
         "installed bundled data resources",
         "attachment storage round-trip",
-        "core LLM missing-extra boundary",
+        "core LLM agent dispatch refuses without a service",
         "installed CLI config/profile smoke",
     ]
     if not skip_export_checks:

@@ -9,6 +9,9 @@ from pathlib import Path
 from typing import Any
 
 from ...runtime_wheelhouse_contract import target_platform
+from ..build_stamp import BuildStamp
+from ..identity import DistributionIdentity
+from ..linux_desktop_runtime import desktop_path, external_sonames
 from .posix import (
     acquire_sdk,
     assemble,
@@ -26,6 +29,10 @@ def relocate(images: list[Path], root: Path, contract: dict[str, Any]) -> None:
     tools = contract["native_tools"]
     system = set(contract["native_system_libraries"])
     names = dependencies_by_name(images)
+    desktop = desktop_path(contract)
+    external = external_sonames(contract, root)
+    if external.intersection(names):
+        raise ValueError("Bundled image shadows a desktop system dependency")
     machine = {"x86_64": 62, "aarch64": 183}[target.platform_machine]
     floor = (*map(int, target.floor.removeprefix("glibc-").split(".")), 0)
     for path in images:
@@ -43,6 +50,8 @@ def relocate(images: list[Path], root: Path, contract: dict[str, Any]) -> None:
         needed = command(tools["patchelf"], "--print-needed", str(path)).splitlines()
         directories = set()
         for dependency in needed:
+            if path.relative_to(root).as_posix() == desktop and dependency in external:
+                continue
             if dependency in system:
                 if dependency in names:
                     raise ValueError(f"Bundled image shadows a system dependency: {dependency}")
@@ -77,11 +86,22 @@ def external_probe(destination: Path) -> list[str]:
 
 
 def resources(
-    destination: Path, version: str, number: int, date: str, tools: Path, entrypoints: dict[str, str]
+    destination: Path,
+    version: str,
+    stamp: BuildStamp,
+    tools: Path,
+    entrypoints: dict[str, str],
+    product: DistributionIdentity,
+    *,
+    shared: Path | None = None,
 ) -> None:
     """Validate embedded build identity; ELF hosts need no additional resource compiler."""
     metadata = json.loads((destination / "build.json").read_text(encoding="utf-8"))
-    if target_platform(metadata["target"]).sys_platform != "linux" or metadata["version"] != version:
+    if (
+        target_platform(metadata["target"]).sys_platform != "linux"
+        or metadata["version"] != version
+        or metadata["application_id"] != product.application_id
+    ):
         raise ValueError("ELF build metadata does not match the selected product/target")
 
 

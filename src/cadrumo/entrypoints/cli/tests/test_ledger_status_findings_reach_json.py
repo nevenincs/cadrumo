@@ -22,7 +22,7 @@ from ....application.ledger.models import LedgerStatusReport
 from ....application.ledger.readiness_query import LedgerReadinessIssueV1
 from ....application.ledger.stale_filing_query import LedgerStaleFilingV1
 from ....core.json_contract import strict_round_trip
-from .._ledger_payloads import (
+from ..ledger_results import (
     LedgerReadinessIssuePayload,
     LedgerStaleFilingPayload,
     LedgerStatusResult,

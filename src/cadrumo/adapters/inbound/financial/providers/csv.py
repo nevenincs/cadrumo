@@ -280,7 +280,7 @@ class CsvProvider(FinancialProvider):
             )
         warnings: list[str] = []
         lookup = header_lookup(rows[header_index])
-        if not find_column(lookup, layout.columns.currency):
+        if not bool(find_column(lookup, layout.columns.currency)):
             warnings.append(
                 f"{_currency_warning_subject(layout, lookup)} has no currency column; "
                 f"falling back to {default_currency()}",
@@ -295,14 +295,14 @@ class CsvProvider(FinancialProvider):
     @override
     def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:
         """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from the CSV source."""
-        _logger.debug("csv_provider ingest: loading %s", path.name)
+        _logger.debug("csv_provider ingest: loading source")
         rows, source_sha256, _, _ = self._load_rows(path)
         if _has_aeat_ledger_export_header(rows):
             raise InvalidFinancialSourceError(_AEAT_LEDGER_EXPORT_REFUSAL)
         header_index, layout, headers, lookup = self._locate_header(rows)
         if layout is None or headers is None or lookup is None:
             raise InvalidFinancialSourceError("CSV headers do not match any supported bank layout")
-        _logger.info("csv_provider ingest: matched layout=%s path=%s", layout.bank_name, path.name)
+        _logger.info("csv_provider ingest: matched layout=%s", layout.bank_name)
         data_rows = rows[header_index + 1 :]
         for source_row_index, row in enumerate(data_rows, start=header_index + 2):
             raw_fields = _row_to_mapping(headers, row)
@@ -321,14 +321,14 @@ class CsvProvider(FinancialProvider):
                 )
             except (ValueError, FinancialValidationError) as exc:
                 _logger.warning(
-                    "csv_provider: parse error row=%d file=%s",
+                    "csv_provider: parse error row=%d reason=%s",
                     source_row_index,
-                    path.name,
-                    exc_info=True,
+                    "financial_validation" if isinstance(exc, FinancialValidationError) else "invalid_value",
                 )
                 raise InvalidFinancialSourceError(
-                    f"CSV row {source_row_index} could not be parsed: {resolve_error_message(exc)}",
-                ) from exc
+                    f"CSV row {source_row_index} could not be parsed: "
+                    f"{str(exc) if isinstance(exc, FinancialValidationError) else 'invalid field value'}",
+                ) from None
             yield build_provider_row(
                 provider=self,
                 path=path,
@@ -420,7 +420,7 @@ def layout_score(lookup: Mapping[str, str], layout: CsvBankLayout) -> int:
         layout.columns.external_id,
     )
     for aliases in optional_groups:
-        if aliases and find_column(lookup, aliases):
+        if aliases and bool(find_column(lookup, aliases)):
             score += 1
     return score
 
@@ -494,7 +494,7 @@ def parse_tabular_transaction_row(
 ) -> ParsedTabularTransactionRow:
     """Project one bank-layout row into typed transaction fields."""
     transaction_id = _value_from_aliases(raw_fields, lookup, layout.columns.external_id)
-    if not transaction_id:
+    if not (transaction_id is not None and transaction_id):
         transaction_id = synthesize_transaction_id(
             provider_name=synthetic_provider_name,
             source_sha256=source_sha256,
@@ -616,10 +616,10 @@ def _currency_from_aliases(
         return default_currency()
     try:
         return normalise_iso_4217_currency(raw)
-    except CoreValidationError as exc:
+    except CoreValidationError:
         raise FinancialValidationError(
-            f"{context} currency column {header!r} must be a three-letter ISO 4217 code; got {raw!r}",
-        ) from exc
+            "currency field must be a three-letter ISO 4217 code",
+        ) from None
 
 
 def _typed_value_from_aliases(
@@ -663,9 +663,9 @@ def _direction_from_aliases(
     normalized = "_".join(raw.replace("-", " ").replace("_", " ").upper().split())
     try:
         return TransactionDirection(normalized)
-    except ValueError as exc:
+    except ValueError:
         expected = ", ".join(direction.value for direction in TransactionDirection)
-        raise FinancialValidationError(f"unsupported direction value: {raw!r}; expected one of {expected}") from exc
+        raise FinancialValidationError(f"unsupported direction value; expected one of {expected}") from None
 
 
 def _required_value(

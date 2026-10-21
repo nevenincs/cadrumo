@@ -237,7 +237,7 @@ class StampableReviewStatus(StrEnum):
 
     Because the values ARE the core values, this class is also the coercion
     :func:`stamp_revision` applies to whatever it is handed: a caller passing
-    the core ``AGENT_REVIEWED`` member, or the bare string, resolves to the
+    the core ``AUTOMATION_REVIEWED`` member, or the bare string, resolves to the
     member here and is served, while ``operator_reviewed`` in any spelling
     raises. The refusal therefore keys on the VALUE a manifest would carry, not
     on which enum class the caller happened to import.
@@ -585,7 +585,7 @@ def _stampable_status(value: ReviewStatusInput | None) -> StampableReviewStatus 
     EFFECTIVE status off the file.
 
     Coercion rather than an identity check on purpose. The narrowed enum's
-    values are byte-identical to the core ones, so the core ``AGENT_REVIEWED``
+    values are byte-identical to the core ones, so the core ``AUTOMATION_REVIEWED``
     member and the bare string both resolve to a served member; only the value
     a manifest would actually carry decides. A check like
     ``isinstance(value, StampableReviewStatus)`` would instead refuse a

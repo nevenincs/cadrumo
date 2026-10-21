@@ -940,7 +940,7 @@ def relation_source_endpoints_for_casilla(
     return tuple(
         ModeloWorkspaceRelationSourceEndpointReferenceV1(relation_id=binding_id, casilla_id=source_casilla_id)
         for binding_id, provider in fold_slots(bindings)
-        if str(provider.source_modelo) == source_modelo
+        if provider.source_modelo == source_modelo
         for source_casilla_id in provider.declared_source_casilla_ids
         if source_casilla_id == casilla_id
     )
@@ -2014,7 +2014,7 @@ def graded_snapshot_materialization_records(
                 f"calculation revision row casilla value {(casilla_id, row_index)!r} has no "
                 "row_casilla_provenance entry naming its source binding"
             )
-        grouped.setdefault((str(provenance.source_binding_id), row_index), []).append((casilla_id, value))
+        grouped.setdefault((provenance.source_binding_id, row_index), []).append((casilla_id, value))
 
     repeated_records: tuple[ModeloWorkspaceMaterializationRecordV1, ...] = tuple(
         ModeloWorkspaceRepeatedRowMaterializationRecordV1(
@@ -2327,7 +2327,7 @@ def resolve_graded_snapshot_result(
             facts=(
                 ModeloWorkspaceEvidenceFactV1(
                     name="work_unit_id",
-                    value=ModeloWorkspaceTextFactValueV1(value=str(work_unit.work_unit_id)),
+                    value=ModeloWorkspaceTextFactValueV1(value=work_unit.work_unit_id),
                 ),
             ),
             evidence=_schema_family_evidence(

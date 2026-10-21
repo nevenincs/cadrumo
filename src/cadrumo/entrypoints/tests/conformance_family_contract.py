@@ -105,8 +105,12 @@ class ConformanceFamily:
     ``prepare`` is called once per case, inside the composed runtime, with
     the case's own definition. ``closes_model_runtime`` points the local
     model runtime at a closed port for every case in the family.
+    ``host_environment`` is entered around every case of the family, for
+    scenarios that need something of the machine arranged before the runtime
+    is composed.
     """
 
     cases: tuple[RegisteredExecutorConformanceCase, ...]
     prepare: Callable[[ConformanceFamilyContext], ConformancePreparation]
     closes_model_runtime: bool = False
+    host_environment: Callable[[], AbstractContextManager[object]] | None = None

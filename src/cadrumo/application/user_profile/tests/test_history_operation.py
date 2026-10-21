@@ -10,6 +10,17 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessRequest,
+)
+
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
 from ....domain.buckets.event import (
@@ -29,21 +40,11 @@ from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ..access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
     LoginEligibility,
-    OperationAccessRequest,
     OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
@@ -112,7 +113,6 @@ def _access_request() -> OperationRequest[BaseModel]:
 def test_history_contract_requires_all_periods_and_exact_result_destination() -> None:
     registry = _registry()
     contract = registry.lookup_public_contract(PROFILE_HISTORY_OPERATION_DEFINITION_ID)
-    assert contract.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
     assert contract.result_schema is not None
     destination = uuid4()
     base = OperationAccessContext(
@@ -244,7 +244,7 @@ def test_history_entry_actions_resolve_under_held_authority_not_the_admission(ac
         profile_id=_OTHER,
         definition_id="user-profile.other",
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         periods=frozenset({Period.from_year_and_code(2026, "1T")}),
         period_independent=False,
         destination_id=uuid4(),

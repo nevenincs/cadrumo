@@ -2,7 +2,21 @@ from __future__ import annotations
 
 from typing import Final
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    FLAG_VALUE,
+    PATH_VALUE,
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._modelo_nonwork_command_spec_policies import (
@@ -16,20 +30,6 @@ from ._modelo_nonwork_common_command_parameters import (
     _optional_text_option,
     _optional_whole_number_option,
 )
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
-    FLAG_VALUE,
-    PATH_VALUE,
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-    ValueContract,
-)
-from .command_spec import CommandSpec, InvocationSpec
 
 RECONCILE_TARGET_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
     _optional_text_argument("work_unit_id", "cli.app.modelo.reconcile.work_unit_id_help"),
@@ -112,7 +112,7 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 declarations=("--source",),
                 value=ValueContract(
                     DeferredTarget(
-                        "...application.modelo.reconciliation_records",
+                        "...application.modelo.reconciliation_evidence_kind",
                         "ModeloReconciliationEvidenceKind",
                         __package__,
                     )
@@ -126,10 +126,10 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_BROWSER_MODEL_WRITE,
-        handler=LazyBinding.available(DeferredTarget("._modelo_reconcile_cli", "reconcile_pull_verb", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_reconcile_commands", "reconcile_pull_verb", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._payloads_modelo_reconcile", "ModeloReconcileResult", __package__),
+            DeferredTarget(".modelo_reconcile_results", "ModeloReconcileResult", __package__),
             identity="modelo.reconcile.pull",
         ),
     ),
@@ -163,7 +163,9 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 declarations=("--kind",),
                 value=ValueContract(
                     DeferredTarget(
-                        "...application.modelo.reconciliation_records", "ModeloReconciliationEvidenceKind", __package__
+                        "...application.modelo.reconciliation_evidence_kind",
+                        "ModeloReconciliationEvidenceKind",
+                        __package__,
                     )
                 ),
                 default=ParameterDefault.value(None),
@@ -175,10 +177,10 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_HANDOFF,
-        handler=LazyBinding.available(DeferredTarget("._modelo_reconcile_cli", "reconcile_file_verb", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_reconcile_commands", "reconcile_file_verb", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._payloads_modelo_reconcile", "ModeloReconcileResult", __package__),
+            DeferredTarget(".modelo_reconcile_results", "ModeloReconcileResult", __package__),
             identity="modelo.reconcile.import",
         ),
     ),
@@ -196,10 +198,10 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_reconcile_cli", "reconcile_list_verb", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_reconcile_commands", "reconcile_list_verb", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads_m036", "ModeloReconciliationHistoryResult", __package__),
+            DeferredTarget(".modelo_results_m036", "ModeloReconciliationHistoryResult", __package__),
             identity="modelo.reconcile.list",
         ),
     ),

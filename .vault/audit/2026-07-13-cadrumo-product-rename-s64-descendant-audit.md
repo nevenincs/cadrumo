@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s64-descendant'
 date: '2026-07-13'
-modified: '2026-10-03'
-body_hash: 'sha256:7b472b4a52ebf8ceb7aed36d225a2e81c88d8217b95029bcae7f67495b305128'
+modified: '2026-10-21'
+body_hash: 'sha256:2af7aa39ed4eaac415653a2a7bf9673656a126bd98a744b5ba97da83fda99fcc'
 related:
   - "[[2026-07-13-cadrumo-product-rename-s64-spanish-catalogue-audit]]"
   - "[[2026-07-13-cadrumo-product-rename-s63-descendant-audit]]"
@@ -27,11 +27,11 @@ Spanish now contains zero exact `Cadrumo` and zero command-leading lowercase `ca
 
 Production locale `audit` and `scaffold --check` report all four catalogues healthy. The locale audit, S92 grammar, placeholder parity, catalogue parity, and translation-honesty slice passes 54 real tests. Isolated live Spanish help contains `CADRUMO`, `AEAT`, and `aeat`, with neither stale title case nor a lowercase product command.
 
-The exact commit passes `git diff --check`; Spanish YAML changes seven insertions and seven deletions. Plan validation exits successfully with only known `PLAN022`, and the plan closes only S64 while S65-S67 and all other open descendants remain unchanged. The record's ancestry, hashes, residue, and gate disclosures are accurate. Staged marketplace README, concurrent docs work, and dirty S58 are excluded.
+The exact commit passes `git diff --check`; Spanish YAML changes seven insertions and seven deletions. Plan validation exits successfully with only known `PLAN022`, and the plan closes only S64 while S65-S67 and all other open descendants remain unchanged. The record's ancestry, hashes, residue, and gate disclosures are accurate. Concurrent docs work and dirty S58 are excluded.
 
 ## Recommendations
 
 - Accept S64 and allow S65 to proceed through the production locale CLI.
 - Keep S65-S66 responsible for their language catalogues and S67 responsible for final scaffold and parity proof.
 - Preserve contextual authority, environment, command, and lowercase machine identifiers.
-- Keep concurrent docs, marketplace README, and S58 work outside locale commits.
+- Keep concurrent docs and S58 work outside locale commits.

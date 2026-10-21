@@ -138,7 +138,8 @@ def test_the_scan_flags_a_planted_export_consumer(tmp_path: Path) -> None:
     )
     tree = ast.parse(leaking.read_text(encoding="utf-8"), filename=str(leaking))
     assert _imports_symbol(tree, _PAYLOAD_SYMBOL), "an export-side import must be detected"
-    assert _outside_display_layer([leaking]) == [str(leaking).replace("\\", "/")]
+    shown = leaking.relative_to(REPO_ROOT) if leaking.is_relative_to(REPO_ROOT) else leaking
+    assert _outside_display_layer([leaking]) == [str(shown).replace("\\", "/")]
 
     # ...and a module not importing the symbol is not flagged, so the predicate
     # is not simply returning True.

@@ -26,7 +26,7 @@ from ......core.i18n.render import tr
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
 from ..editor import CasillaEditorPanel, CasillaEditorScreen
-from ..installed import InstalledModeloWorkbench
+from ..factory import InstalledModeloWorkbench
 from ..screen import ModeloWorkbenchScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

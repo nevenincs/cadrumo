@@ -53,18 +53,20 @@ impl Parent {
         };
         let server =
             ipc::windows::Server::bind_cutover(&designation.endpoint(), &selected.manager)?;
-        let child = Command::new(&selected.manager)
-            .args(["--cutover", &designation.argument()])
-            .env_clear()
-            .envs(cadrumo_platform::storage::strict_host_environment(
-                std::env::vars_os(),
-            ))
-            .current_dir(&selected.package)
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .creation_flags(0x0800_0000)
-            .spawn()?;
+        let child = cadrumo_application::process::creation::run(|| {
+            Command::new(&selected.manager)
+                .args(["--cutover", &designation.argument()])
+                .env_clear()
+                .envs(cadrumo_platform::storage::strict_host_environment(
+                    std::env::vars_os(),
+                ))
+                .current_dir(&selected.package)
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .creation_flags(0x0800_0000)
+                .spawn()
+        })?;
         // No launch exemption can be issued before this held direct child is observed.
         let child_created = crate::supervision::process::open_process(child.id())
             .ok()

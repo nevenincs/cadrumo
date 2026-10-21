@@ -276,7 +276,7 @@ class _Modelo347Fixture:
       "EJERCICIO â€” Las cuatro cifras del ejercicio fiscal al que corresponde la declaraciÃ³n."
     Source:
       src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/files/
-        01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf
+        01-347-ejercicio-2025-y-siguientes-modificados-p.pdf
       page 1, TIPO DE REGISTRO 1, positions 5-8.
 
     The AEAT M347 justificante/declaracion prints the short label "Ejercicio:"
@@ -368,7 +368,7 @@ class _Modelo184Fixture:
         DR_100_199/DR_Modelo_184_2025.pdf
     Saved at:
       src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/
-        01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf
+        01-184-ejercicio-2025-y-siguientes-modificados-p.pdf
 
     Registro de tipo 1, positions 5-8: "EJERCICIO"
       "Las cuatro cifras del ejercicio fiscal al que corresponde la declaracion"

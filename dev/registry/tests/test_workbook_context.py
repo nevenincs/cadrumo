@@ -32,7 +32,7 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry import form_context
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
-from cadrumo.domain.calculations.registry.export_semantics import ExportDraftAttribute
+from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 from cadrumo.domain.calculations.registry.form_context import resolve_form_context_field
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema_exports import ExportRecordRepeat
@@ -193,14 +193,18 @@ def _alter_target(snapshot, block, *, field_change=None, repeat=False, duplicate
     return tuple(changed)
 
 
-@pytest.mark.parametrize("invalid", ("noncontext", "repeating", "duplicate", "unsupported_draft"))
+@pytest.mark.parametrize("invalid", ("noncontext", "repeating", "duplicate", "unsupported_computed"))
 def test_invalid_export_semantics_are_refused(snapshot, monkeypatch, invalid):
-    block = _blocks(snapshot)["ejercicio" if invalid == "unsupported_draft" else "nif"]
+    block = _blocks(snapshot)["ejercicio" if invalid == "unsupported_computed" else "nif"]
     change = (
         {"kind": CasillaFieldKind.FILLER, "producer_key": None}
         if invalid == "noncontext"
-        else {"draft_attribute": ExportDraftAttribute.PERIOD_START_DATE}
-        if invalid == "unsupported_draft"
+        else {
+            "kind": CasillaFieldKind.COMPUTED,
+            "draft_attribute": None,
+            "computed_key": ExportComputedKey.ENVELOPE_CLOSING_TAG,
+        }
+        if invalid == "unsupported_computed"
         else None
     )
     layouts = _alter_target(

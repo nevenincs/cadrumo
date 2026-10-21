@@ -28,12 +28,7 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from cadrumo.application.user_profile.automation_administration import inspect_automation_inventory
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from cadrumo.application.user_profile.automation_enrollment import (
-    AutomationInventoryProjection,
-    EnrollmentKind,
-    EnrollmentStage,
-)
+from cadrumo.application.user_profile.automation_enrollment import AutomationInventoryProjection, EnrollmentStage
 from cadrumo.application.user_profile.automation_operations import (
     AutomationOperationRequest,
     build_automation_operation_definitions,
@@ -43,6 +38,8 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests.automation_administration_test_support import ThreadedAutomationAdministration
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#wrong-surface-gates'
 date: '2026-08-01'
-modified: '2026-10-03'
+modified: '2026-10-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:b32be6327bced5ef8d4a7d62d4a6732bd972929dfd8e8e8768160c71fae79eb8'
+body_hash: 'sha256:0f99030f63db5fb6c0b652d740da5c75c8e7fbeeac0b1ffd6fa38e5ee2589e07'
 related:
   - "[[2026-07-25-test-harness-honesty-adr]]"
   - "[[2026-07-25-test-harness-honesty-false-green-gates-audit]]"
@@ -127,12 +127,11 @@ The precedent for both: `vacuity_screen.py` reports a 106-item worklist across 2
 
 ### What landed, for anyone tracing the fixes
 
-Publish preflight reads the index rather than its size, at both the default and every localized root (`dev/deploy/docs_static_site.py`). Post-publish verification compares served against built in both publishers. `assert_supersession_complete` distinguishes VERIFIED from NOTHING_RETIRED and NOTHING_PUBLISHED, and refuses a missing marketplace directory as UNVERIFIED rather than reporting it clean. Landing-page validation requires the bundles `index.html` actually names. The search index is written once rather than twice — the second, unpathed write was depositing a ~10,000-file tree in the process working directory on every build, and is the mechanism behind the incident that motivated the committed-index rule. The campaign-metadata gate's roots now include `packaging/`, which was invisible to it.
+Publish preflight reads the index rather than its size, at both the default and every localized root (`dev/deploy/docs_static_site.py`). Post-publish verification compares served against built in both publishers. `assert_supersession_complete` distinguishes VERIFIED from NOTHING_RETIRED and NOTHING_PUBLISHED. Landing-page validation requires the bundles `index.html` actually names. The search index is written once rather than twice — the second, unpathed write was depositing a ~10,000-file tree in the process working directory on every build, and is the mechanism behind the incident that motivated the committed-index rule. The campaign-metadata gate's roots now include `packaging/`, which was invisible to it.
 
 Every fix carries a mutation proof against real artefacts, and each pairs the refusal with the assertion that the OLD predicate still holds on the same artefact — so the record shows the previous check passing on what the new one rejects, rather than claiming that in prose.
 
 ### Open, not closed
 
 - ~35 of the ~45 preflight-band validation functions were not read. Not a claim they are sound.
-- How `--marketplace` is populated in the real release flow was not traced, so the reachability of the wrong-path case is unknown. The fix does not depend on the answer.
 - `test_source_test_comments_and_docstrings_do_not_reference_campaign_metadata` remains red on two pre-existing violations at HEAD in a file owned by another campaign.

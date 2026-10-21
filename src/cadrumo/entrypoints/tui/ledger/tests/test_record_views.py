@@ -17,7 +17,7 @@ from .....core.config import override_settings
 from .....core.i18n.render import lookup_translation
 from .....domain.invoices.enums import IvaRate
 from .....domain.invoices.models import Invoice, InvoiceLine
-from .....domain.iva.classification import InvoiceKind
+from .....domain.iva.schema import InvoiceKind
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.errors import TransactionValidationError
 from .....domain.transactions.models import Transaction

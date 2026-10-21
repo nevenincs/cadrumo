@@ -26,8 +26,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva.classification import InvoiceKind
-from ....domain.iva.schema import IvaCategory
+from ....domain.iva.schema import InvoiceKind, IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -164,7 +163,7 @@ def test_cli_evidence_shape_refuses_a_caller_authored_recognition_date() -> None
 
 def test_capital_cli_evidence_derives_the_123_exigibility_period_without_a_payment() -> None:
     """The public request carries evidence, never a caller-selected 123 quarter."""
-    from .._modelo_aggregate_cli import _parse_typed_cli_observations
+    from ..modelo_aggregate_commands import _parse_typed_cli_observations
 
     invoice = _invoice()
     parsed = _parse_typed_cli_observations(
@@ -202,7 +201,7 @@ def test_capital_cli_evidence_refuses_partial_underlying_events(
     message: str,
 ) -> None:
     """A CLI payload cannot create an event identity without its legal date."""
-    from .._modelo_aggregate_cli import _parse_typed_cli_observations
+    from ..modelo_aggregate_commands import _parse_typed_cli_observations
 
     invoice = _invoice()
     payload = json.loads(_capital_request(invoice).model_dump_json()) | update
@@ -219,10 +218,10 @@ def test_capital_cli_evidence_refuses_partial_underlying_events(
 
 def test_modelo_aggregate_module_no_longer_exposes_direct_retencion_persistence() -> None:
     """The 111/115/123 CLI module has no direct set-replace mutation helper."""
-    from .. import _modelo_aggregate_cli
+    from .. import modelo_aggregate_commands
 
-    assert not hasattr(_modelo_aggregate_cli, "_persist_retencion_observations")
-    assert not hasattr(_modelo_aggregate_cli, "_persist_cli_owned_observations")
+    assert not hasattr(modelo_aggregate_commands, "_persist_retencion_observations")
+    assert not hasattr(modelo_aggregate_commands, "_persist_cli_owned_observations")
 
 
 def test_modelo_aggregate_keeps_capital_out_of_the_raw_mutation_path() -> None:
@@ -231,10 +230,10 @@ def test_modelo_aggregate_keeps_capital_out_of_the_raw_mutation_path() -> None:
     Its window is only read back, never written from invoice evidence: capital
     withholding enters through the paying ledger transaction.
     """
-    from .. import _modelo_aggregate_cli
+    from .. import modelo_aggregate_commands
 
-    assert "123" in _modelo_aggregate_cli._PERIODIC_WINDOW_MODELOS
-    assert "123" not in _modelo_aggregate_cli._INVOICE_EVIDENCE_MODELOS
+    assert "123" in modelo_aggregate_commands._PERIODIC_WINDOW_MODELOS
+    assert "123" not in modelo_aggregate_commands._INVOICE_EVIDENCE_MODELOS
 
 
 def test_rent_cli_evidence_refuses_missing_property_detail() -> None:

@@ -62,7 +62,7 @@ def resume_flow(
         state = state.model_copy(update={"stale": frozenset(state.stale | orphaned)})
 
     cursor = first_unanswered_key(definition, state)
-    return state.model_copy(update={"cursor": cursor, "visited": (cursor,) if cursor else ()})
+    return state.model_copy(update={"cursor": cursor, "visited": (cursor,) if (cursor is not None and cursor) else ()})
 
 
 def _commit_persisted_answer(

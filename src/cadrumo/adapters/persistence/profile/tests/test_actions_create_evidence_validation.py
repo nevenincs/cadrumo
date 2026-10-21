@@ -11,7 +11,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_manual import attach_manual_transaction_evidence, create_manual_transaction
+from cadrumo.application.ledger.actions_manual import attach_manual_transaction_evidence
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.models import Attachment
@@ -20,6 +20,7 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,

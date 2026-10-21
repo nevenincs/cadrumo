@@ -358,7 +358,7 @@ def seed_modelo_ready_profile_record(
             context=create_context,
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=profile_id,
-            facts=_facts_with_tax_id(tax_id) if tax_id else MODELO_READY_PROFILE_FACTS,
+            facts=_facts_with_tax_id(tax_id) if (tax_id is not None and tax_id) else MODELO_READY_PROFILE_FACTS,
             created_at=clock,
             updated_at=clock,
         )

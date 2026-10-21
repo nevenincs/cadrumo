@@ -7,11 +7,15 @@ every account number is a synthetic published example.
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import get_args
 from uuid import UUID
 
 import pydantic
 import pytest
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
+from ....core.operations import profile_operation_subject
 from ....core.period import Period
 from ....domain.transactions.own_accounts import (
     OwnAccountHolding,
@@ -33,17 +37,30 @@ from ...filing.producer_snapshot_m360 import (
     Modelo360SolicitudFacts,
     Modelo360SolicitudRegister,
 )
+from ...ledger.own_account_ports import OwnAccountRepositoryProtocol
+from ...operations.access_resolution import (
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    resolve_operation_access,
+)
+from ...operations.models import OperationRequest
+from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ..m360_solicitud_operation import (
     Modelo360RepresentanteAccountInput,
+    Modelo360SolicitudAction,
     Modelo360SolicitudRefusedError,
+    Modelo360SolicitudRepositoryProtocol,
     Modelo360SolicitudRequest,
     apply_solicitud_request,
+    build_modelo_360_solicitud_definition,
+    build_modelo_360_solicitud_registration,
     solicitud_period,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
+_DESTINATION = UUID("5aa00000-0000-4000-8000-0000000000ab")
 _ES_IBAN = "ES9121000418450200051332"
 _DE_IBAN = "DE89370400440532013000"
 
@@ -242,3 +259,71 @@ def test_a_solicitud_cannot_select_a_year_outside_the_shared_filing_window(year:
     """The request cannot accept a year that its persisted period refuses."""
     with pytest.raises(pydantic.ValidationError):
         Modelo360SolicitudRequest(profile_id=_PROFILE, action="remove", filing_year=year)
+
+
+_CHANGES = ("declare", "remove")
+
+
+def _unused_solicitudes(*, bucket_id: str) -> Modelo360SolicitudRepositoryProtocol:
+    raise AssertionError(f"access resolution reached the solicitud register for {bucket_id}")
+
+
+def _unused_own_accounts(*, bucket_id: str) -> OwnAccountRepositoryProtocol:
+    raise AssertionError(f"access resolution reached the own-account register for {bucket_id}")
+
+
+def _action_request(action: str) -> Modelo360SolicitudRequest:
+    if action == "declare":
+        return _declare_own()
+    if action == "remove":
+        return Modelo360SolicitudRequest(profile_id=_PROFILE, action="remove", filing_year=2025)
+    return Modelo360SolicitudRequest(profile_id=_PROFILE, action="list")
+
+
+def _resolve(
+    action: str, frontend: OperationFrontendProjection, access: AccessAction = AccessAction.SUBMIT
+) -> ResolvedOperationAccess:
+    """Ask the registered resolver, through the registry's own door, for one action on one frontend."""
+    definition = build_modelo_360_solicitud_definition(_unused_solicitudes, _unused_own_accounts)
+    registry = OperationRegistry(
+        definitions=(definition,),
+        public_registrations=(build_modelo_360_solicitud_registration(definition),),
+    )
+    payload = _action_request(action)
+    assert payload.action == action
+    request = OperationRequest[pydantic.BaseModel](
+        definition_id=definition.definition_id,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=payload,
+    )
+    context = OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=_DESTINATION,
+        action=access,
+        frontend=frontend,
+        contract=registry.lookup_public_contract(definition.definition_id),
+        published_authority=Availability.AVAILABLE,
+    )
+    return resolve_operation_access(registry=registry, request=request, context=context)
+
+
+def test_the_access_cases_cover_every_declared_action() -> None:
+    assert {*_CHANGES, "list"} == set(get_args(Modelo360SolicitudAction))
+
+
+@pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
+@pytest.mark.parametrize(
+    "access",
+    [AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT],
+)
+@pytest.mark.parametrize("action", [*_CHANGES, "list"])
+def test_every_frontend_is_admitted_to_every_action_under_one_policy_and_commits_only_a_change(
+    action: str, access: AccessAction, frontend: OperationFrontendProjection
+) -> None:
+    resolved = _resolve(action, frontend, access)
+    on_cli = _resolve(action, OperationFrontendProjection.CLI, access)
+
+    assert resolved.request == on_cli.request.model_copy(update={"frontend": frontend})
+    assert resolved.request.profile_id == _PROFILE
+    assert resolved.policy == on_cli.policy
+    assert (AccessAction.COMMIT in resolved.policy.actions) is (action in _CHANGES)

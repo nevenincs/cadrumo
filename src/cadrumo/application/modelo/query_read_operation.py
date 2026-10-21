@@ -13,6 +13,16 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.config import override_settings
 from ...core.operations import (
@@ -49,24 +59,14 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..state_projection import (
     ModeloReadinessRequest,
     ProjectionModeloReadiness,
     build_modelo_readiness_reports,
-)
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .binding_readiness import profile_resolvable_binding_ids
@@ -451,18 +451,15 @@ def _read_definition(
     *,
     sensitive: bool = False,
     public_error_detail: bool = False,
-    permitted_frontends: frozenset[OperationFrontendProjection] = frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
-    ),
 ) -> OperationDefinition:
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_type=executor_type,
         build=build_executor,
         capabilities=modelo_query_read_capabilities(sensitive=sensitive),
-        permitted_frontends=permitted_frontends,
         public_error_detail=public_error_detail,
     )
 
@@ -475,7 +472,6 @@ def build_modelo_bindings_list_definition() -> OperationDefinition:
         ModeloBindingsListProjection,
         ModeloBindingsListExecutor,
         ModeloBindingsListExecutor,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -499,7 +495,6 @@ def build_modelo_requires_definition() -> OperationDefinition:
         ModeloRequiresProjection,
         ModeloRequiresExecutor,
         ModeloRequiresExecutor,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

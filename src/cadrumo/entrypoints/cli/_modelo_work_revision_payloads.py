@@ -2,7 +2,7 @@
 
 ``aeat app modelo work revision`` and ``work observations`` both project a
 persisted :class:`CalculationRevision` through
-:func:`~cadrumo.entrypoints.cli.runtime_modelo_calculation.calculation_snapshot_payload`.
+:func:`~cadrumo.entrypoints.cli.operation_modelo_calculation.calculation_snapshot_payload`.
 They share the nested
 :class:`ObservationPayload`
 and
@@ -13,8 +13,8 @@ The application/modelo facade remains authoritative for revision lookup,
 selection, and Modelo 202 modality resolution; these classes only document the
 JSON transport shape that enters
 :class:`SchemaEnvelope` through
-:func:`emit_envelope`. The parent :mod:`_modelo_payloads` module re-exports
-these split schemas so modelo work emitters keep one payload import surface.
+:func:`emit_envelope`. They are imported directly by
+:mod:`_modelo_work_revision_cli`.
 """
 
 from __future__ import annotations

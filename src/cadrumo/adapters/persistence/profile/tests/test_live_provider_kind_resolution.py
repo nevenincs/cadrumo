@@ -163,7 +163,14 @@ async def _refuse_browser_launch(settings: Settings) -> BrowserSessionPort:
     raise _BrowserLaunchReachedError
 
 
-def test_the_live_lane_profile_reaches_the_provider_step_on_a_clean_storage_root(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("tax_id", "validity", "support"),
+    [(_TAX_ID, "2030-01-01", None), ("X1234567L", None, SecretStr("E12345678"))],
+    ids=("dni", "nie"),
+)
+def test_the_live_lane_profile_reaches_the_provider_step_on_a_clean_storage_root(
+    tmp_path: Path, tax_id: str, validity: str | None, support: SecretStr | None
+) -> None:
     """The live-lane fixture yields a logged-in profile on first use and on every later one.
 
     Without it, a clean environment refused every live test with ``no_session``
@@ -176,8 +183,9 @@ def test_the_live_lane_profile_reaches_the_provider_step_on_a_clean_storage_root
     operator_scope_ports = build_operator_scope_ports()
     ambient_keyring = keyring.get_keyring()
     with override_settings(
-        cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
-        cadrumo_clave_movil_dni_fecha="2030-01-01",
+        cadrumo_clave_movil_dni_nie=SecretStr(tax_id),
+        cadrumo_clave_movil_dni_fecha=validity,
+        cadrumo_clave_movil_nie_soporte=support,
         cadrumo_auth_provider=None,
     ):
         for _entry in range(2):
@@ -187,7 +195,15 @@ def test_the_live_lane_profile_reaches_the_provider_step_on_a_clean_storage_root
                     load_settings(), operator_scope_ports=operator_scope_ports
                 ) as bucket_id:
                     assert bucket_id == profile.profile_id
-                with bundled_indexed_authority().operation() as operation, pytest.raises(_BrowserLaunchReachedError):
+                with (
+                    override_settings(
+                        cadrumo_clave_movil_dni_nie=None,
+                        cadrumo_clave_movil_dni_fecha=None,
+                        cadrumo_clave_movil_nie_soporte=None,
+                    ),
+                    bundled_indexed_authority().operation() as operation,
+                    pytest.raises(_BrowserLaunchReachedError),
+                ):
                     asyncio.run(
                         ensure_authenticated_aeat_session(
                             load_settings(),

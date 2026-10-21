@@ -172,7 +172,6 @@ def _non_result_affects_text(card: ModeloCasillaHelpCardV1, reach: ModeloHelpRea
 
 
 def _reachable_affects_text(
-    card: ModeloCasillaHelpCardV1,
     reach: ModeloHelpReachV1,
     form: ModeloWorkForm | None,
     result: ResultView | None,
@@ -209,7 +208,7 @@ def affects_text(
         return tr("tui.modelo.workbench.editor.affects.is_result")
     if card.reach is None or not card.reach.path:
         return _non_result_affects_text(card, card.reach)
-    return _reachable_affects_text(card, card.reach, form, result)
+    return _reachable_affects_text(card.reach, form, result)
 
 
 __all__ = ["affects_text", "where_from_text"]

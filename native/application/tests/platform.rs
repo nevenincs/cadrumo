@@ -1,7 +1,7 @@
 #![cfg(feature = "platform")]
 
 use cadrumo_application::child::ChildConfiguration;
-use cadrumo_platform::{ROOT_VARIABLE, storage::Profile};
+use cadrumo_platform::ROOT_VARIABLE;
 use std::{collections::BTreeMap, ffi::OsString, fs, path::PathBuf};
 
 #[test]
@@ -24,7 +24,6 @@ fn platform_child_pins_root_without_mutating_host_environment() {
         std::env::current_exe().unwrap(),
         temporary.path().into(),
         &root,
-        Profile::Strict,
         before.clone(),
     )
     .unwrap();
@@ -45,11 +44,10 @@ fn platform_child_pins_root_without_mutating_host_environment() {
         .unwrap();
     assert!(output.status.success(), "platform-configured child failed");
     assert_eq!(std::env::vars_os().collect::<BTreeMap<_, _>>(), before);
-    let expected: BTreeMap<_, _> =
-        cadrumo_platform::storage::child_environment(Profile::Strict, before, &root)
-            .unwrap()
-            .into_iter()
-            .collect();
+    let expected: BTreeMap<_, _> = cadrumo_platform::storage::child_environment(before, &root)
+        .unwrap()
+        .into_iter()
+        .collect();
     assert_eq!(configuration.environment(), &expected);
 }
 
@@ -63,7 +61,6 @@ fn invalid_command_does_not_prepare_storage() {
             "relative-executable".into(),
             temporary.path().into(),
             &root,
-            Profile::Strict,
             BTreeMap::new(),
         )
         .is_err()
@@ -74,7 +71,6 @@ fn invalid_command_does_not_prepare_storage() {
             std::env::current_exe().unwrap(),
             temporary.path().into(),
             &root.join("../escape"),
-            Profile::Strict,
             BTreeMap::new(),
         )
         .is_err()

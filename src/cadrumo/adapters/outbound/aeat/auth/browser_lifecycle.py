@@ -6,8 +6,19 @@ import asyncio
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Protocol, runtime_checkable
 
 from .....application.auth.protocols import BrowserContextPort, BrowserSessionPort
+
+
+@runtime_checkable
+class _CleanupCompleteBrowserSession(Protocol):
+    """Optional owner evidence that a timed close still settled every resource."""
+
+    @property
+    def cleanup_complete(self) -> bool:
+        """Whether the owner has released the session and all dependent runtimes."""
+        ...
 
 
 class CloseIntentBarrier:
@@ -106,6 +117,13 @@ async def close_owned_browser_session(
             timeout=timeout_ms / 1000,
         )
     except TimeoutError:
+        if isinstance(session, _CleanupCompleteBrowserSession) and session.cleanup_complete:
+            logger.warning(
+                "%s: browser session close exceeded %d ms but its owner settled all resources",
+                owner,
+                timeout_ms,
+            )
+            return True
         logger.warning(
             "%s: browser session close exceeded %d ms",
             owner,

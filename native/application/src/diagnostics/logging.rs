@@ -114,6 +114,13 @@ impl LogFile {
             .map_err(|e| failure().caused_by(e))
     }
 }
+/// One complete line appended without the writer lock or rotation, for a
+/// process that may abort next. Append-mode writes land whole at the end even
+/// beside a locked writer; a concurrent rotation can move the line into a backup.
+pub(crate) fn append_unrotated(current: &Path, line: &[u8]) -> Result<()> {
+    let mut file = open(current)?;
+    file.write_all(line).map_err(|e| failure().caused_by(e))
+}
 fn open(path: &Path) -> Result<File> {
     filesystem::absolute_root(path).map_err(|e| failure().caused_by(e))?;
     let mut options = OpenOptions::new();

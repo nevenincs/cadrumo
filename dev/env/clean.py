@@ -57,7 +57,7 @@ from typing import Final, TextIO
 
 from cadrumo.core.link_safety import is_link_like
 from dev._paths import REPO_ROOT
-from dev.packaging.build_scratch_reclaim import report_var_scratch
+from dev.packaging.build_scratch_reclaim import matching_family, report_build_scratch, report_var_scratch
 from dev.source_tree import ignored_paths
 from dev.test_runs.reaper import assess_run_directories
 
@@ -179,7 +179,10 @@ entitled to read one back, so the whole root is regenerable by definition.
 # indefinitely, and it protected nothing else, so a live `audit-runs` or
 # `lane-runs` directory was reaped mid-write by the branch below.
 
-MIXED_ROOTS: Final[frozenset[str]] = frozenset({VAR_SCRATCH_OWNER, VAR_APPLICATION_STORAGE, LOGS_SCRATCH_OWNER})
+BUILD_OUTPUT_ROOT: Final = "build"
+MIXED_ROOTS: Final[frozenset[str]] = frozenset(
+    {VAR_SCRATCH_OWNER, VAR_APPLICATION_STORAGE, LOGS_SCRATCH_OWNER, BUILD_OUTPUT_ROOT}
+)
 """Ignored directories whose children are classified individually.
 
 Git collapses a wholly-ignored directory to one entry, which is normally the
@@ -548,6 +551,10 @@ def classify(repo_root: Path, relative: str, *, promoted: frozenset[str] = froze
     stripped = relative.strip("/")
     if stripped.startswith(f"{VAR_SCRATCH_OWNER}/") and not stripped.startswith(VAR_APPLICATION_STORAGE):
         return Verdict.KEEP, "release-build scratch, judged by its owning section below"
+    if stripped.startswith(f"{BUILD_OUTPUT_ROOT}/"):
+        if matching_family(Path(stripped).name) is not None:
+            return Verdict.KEEP, "registered build scratch, judged by its owning section below"
+        return Verdict.REAP, "generated build output"
     if stripped == LOGS_SCRATCH_OWNER or stripped.startswith(f"{LOGS_SCRATCH_OWNER}/"):
         live = _live_run_count(repo_root, stripped)
         if live:
@@ -772,6 +779,12 @@ def main(argv: list[str] | None = None) -> int:
             measure=measure,
             bloat_threshold=BLOAT_THRESHOLD_BYTES,
             ignore_names=frozenset({Path(VAR_APPLICATION_STORAGE).name}),
+        )
+        report_build_scratch(
+            sys.stdout,
+            repo_root / BUILD_OUTPUT_ROOT,
+            apply=arguments.apply,
+            measure=measure,
         )
 
     if TEMP_FAMILY in selected:

@@ -21,7 +21,7 @@ from typing import Final
 
 import pytest
 
-from ..command_shared_contracts import (
+from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
     PATH_VALUE,
     TEXT_VALUE,
@@ -34,6 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _CLI_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
 _CANONICAL_OWNER: Final[Path] = Path(inspect.getfile(ValueContract)).resolve()
+_CONTRACT_ROOT: Final[Path] = _CANONICAL_OWNER.parent
 #: The declared value types that have a canonical contract. `Path` is here for
 #: the same reason the builtins are: the contract is immutable and identical
 #: wherever it is constructed.
@@ -85,7 +86,7 @@ def test_no_cli_module_declares_its_own_builtin_value_contract() -> None:
     boundaries forbid, and it is how the drift described in this module's
     docstring gets in.
     """
-    modules = [path for path in _CLI_ROOT.rglob("*.py") if "tests" not in path.parts]
+    modules = [path for root in (_CLI_ROOT, _CONTRACT_ROOT) for path in root.rglob("*.py") if "tests" not in path.parts]
     assert _CANONICAL_OWNER in modules
     assert set(_defines_builtin_value_contract(_CANONICAL_OWNER)) == {
         "TEXT_VALUE",
@@ -95,7 +96,7 @@ def test_no_cli_module_declares_its_own_builtin_value_contract() -> None:
     }
 
     offenders = {
-        path.relative_to(_CLI_ROOT).as_posix(): names
+        path.as_posix(): names
         for path in modules
         if path != _CANONICAL_OWNER and (names := _defines_builtin_value_contract(path))
     }

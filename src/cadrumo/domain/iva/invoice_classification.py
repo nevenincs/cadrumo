@@ -46,14 +46,7 @@ from ...core.decimal.constants import ZERO
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
-
-# IvaRate (and the public ``iva_rate_kind`` accessor) are imported lazily
-# inside ``classify_invoice_line_for_iva``
-# to break a circular initialisation without violating the sibling-domain
-# ``_enums`` ban (clause 5 of the structural enum-import placement check).
-# At runtime the helpers are called only after the invoices package init
-# finishes, so the public-package import resolves cleanly.
-from .classification import InvoiceKind, domestic_categories_by_rate_kind
+from .classification import domestic_categories_by_rate_kind
 from .deduction_facts import IvaDeductionClassificationProvenance
 from .flow import (
     IvaFlowDirection,
@@ -61,7 +54,14 @@ from .flow import (
     flow_direction_for_invoice_kind,
     settlement_sides_for_flow,
 )
-from .schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+
+# IvaRate (and the public ``iva_rate_kind`` accessor) are imported lazily
+# inside ``classify_invoice_line_for_iva``
+# to break a circular initialisation without violating the sibling-domain
+# ``_enums`` ban (clause 5 of the structural enum-import placement check).
+# At runtime the helpers are called only after the invoices package init
+# finishes, so the public-package import resolves cleanly.
+from .schema import InvoiceKind, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 if TYPE_CHECKING:
     from ..calculations.registry.ledger_iva_bindings import IvaLedgerObservation

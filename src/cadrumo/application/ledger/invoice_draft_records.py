@@ -28,7 +28,7 @@ from ...core.field_origin import FieldOrigin
 from ...core.identity.digest import ContentDigest
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ...domain.iva.supply_nature import SupplyNature
 from .structured_invoice_ports import StructuredInvoiceClassification, StructuredInvoiceClassificationKind
 

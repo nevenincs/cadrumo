@@ -19,33 +19,33 @@ modelo:
       casilla:
         continuidad:
           '00042':
-            help: Introduïu la xifra mitjana de personal assalariat no fix de l'exercici
+            help: Introdueix la xifra mitjana de personal assalariat no fix de l'exercici
               [00042].
             label: Personal assalariat (xifra mitjana de l'exercici) personal no fix
               [00042]
           '00051':
-            help: Introduïu el volum d'operacions a l'estranger per a la tributació
+            help: Introdueix el volum d'operacions a l'estranger per a la tributació
               conjunta entre l'Estat i les administracions forals segons el concert
               econòmic [00051].
             label: Tributació conjunta Estat i Adm. forals - concert econòmic - volum
               d'operacions a l'estranger [00051]
           '00052':
-            help: Introduïu el volum d'operacions a Araba/Àlaba per a la tributació
+            help: Introdueix el volum d'operacions a Araba/Àlaba per a la tributació
               conjunta segons el concert econòmic [00052].
             label: Tributació conjunta Estat i Adm. forals - concert econòmic - volum
               d'operacions a Araba/Àlaba [00052]
           '00053':
-            help: Introduïu el volum d'operacions a Gipuzkoa per a la tributació conjunta
-              segons el concert econòmic [00053].
+            help: Introdueix el volum d'operacions a Gipuzkoa per a la tributació
+              conjunta segons el concert econòmic [00053].
             label: Tributació conjunta Estat i Adm. forals - concert econòmic - volum
               d'operacions a Gipuzkoa [00053]
           '00054':
-            help: Introduïu el volum d'operacions a Bizkaia per a la tributació conjunta
+            help: Introdueix el volum d'operacions a Bizkaia per a la tributació conjunta
               segons el concert econòmic [00054].
             label: Tributació conjunta Estat i Adm. forals - concert econòmic - volum
               d'operacions a Bizkaia [00054]
           '00055':
-            help: Introduïu el volum d'operacions a Navarra per a la tributació conjunta
+            help: Introdueix el volum d'operacions a Navarra per a la tributació conjunta
               segons el conveni econòmic [00055].
             label: Tributació conjunta Estat i Adm. forals - conveni econòmic - volum
               d'operacions a Navarra [00055]
@@ -9495,7 +9495,7 @@ modelo:
               pendents de deduir - Exercici de generació 2021 - Pendent d'aplicació
               a principi del període - Per límit [01098]
           is-grupo-fiscal-numero:
-            help: Introduïu el número de grup fiscal quan siguin aplicables les claus
+            help: Introdueix el número de grup fiscal quan siguin aplicables les claus
               00009 o 00010 [00040].
             label: Grup fiscal - claus 00009 o 00010 - núm. de grup fiscal [00040]
           is-hidrocarburos-amortizacion-intangibles-aumento:
@@ -9764,7 +9764,7 @@ modelo:
             label: Partícip d'agrupació d'interès econòmic o d'unió temporal d'empreses
               [00089]
           is-personal-asalariado-cifra-media:
-            help: Introduïu la xifra mitjana de personal assalariat fix de l'exercici
+            help: Introdueix la xifra mitjana de personal assalariat fix de l'exercici
               [00041].
             label: Personal assalariat (xifra mitjana de l'exercici) personal fix
               [00041]
@@ -10309,7 +10309,7 @@ modelo:
             label: Tributació conjunta Estat i Adm. forals - Càlcul de percentatges
               de tributació - Adm. de l'Estat [00625]
           is-tributacion-conjunta-proporcion:
-            help: Introduïu el volum total d'operacions per a la tributació conjunta
+            help: Introdueix el volum total d'operacions per a la tributació conjunta
               entre l'Estat i les administracions forals segons el concert econòmic
               [00050].
             label: Tributació conjunta Estat i Adm. forals - concert econòmic - volum

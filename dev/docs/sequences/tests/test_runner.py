@@ -28,13 +28,10 @@ import pytest
 from click.testing import Result
 from pydantic import JsonValue, SecretStr
 
-from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession, ProfileRecordStore
 from cadrumo.application.user_profile.custody_ports import (
     load_profile_custody_password_material,
@@ -42,10 +39,13 @@ from cadrumo.application.user_profile.custody_ports import (
 )
 from cadrumo.core.bucket_pointer import read_pointer_selection
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER, redact_structured_for_cli_output
+from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_field_names, differing_paths
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.installed_client import open_installed_client
 
 from ..errors import SequenceExecutionError
 from ..parser import parse_sequence
@@ -58,7 +58,7 @@ from ..runner import (
     sequence_sandbox,
 )
 from ..runtime_fixture import SANDBOX_INSTANT
-from ..schema import FrameKind, ParsedSequence
+from ..schema import CommandProgram, FrameKind, ParsedSequence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -181,13 +181,13 @@ def test_sandbox_runtime_admits_fresh_password_and_releases_real_profile_view(tm
     # instant, and must not bypass or artificially expire that record.
     with sequence_sandbox(sequence_id="native-password-refusal", sandbox_root=tmp_path / "refusal"):
         client = asyncio.run(
-            open_installed_runtime_client(profile_id=UUID(SANDBOX_PROFILE_ID), frontend=OperationFrontendProjection.CLI)
+            open_installed_client(profile_id=UUID(SANDBOX_PROFILE_ID), frontend=OperationFrontendProjection.CLI)
         )
         incorrect = bytearray(
             (load_settings().cadrumo_dev_test_database_password.get_secret_value() + "-incorrect").encode()
         )
         try:
-            with pytest.raises(RuntimeFrontendRefusedError) as refused:
+            with pytest.raises(FrontendRefusedError) as refused:
                 client.login_password(incorrect)
             assert refused.value.reason == AutomationCustodyCode.CREDENTIAL_REJECTED.value
             assert incorrect == bytearray(len(incorrect))
@@ -196,7 +196,7 @@ def test_sandbox_runtime_admits_fresh_password_and_releases_real_profile_view(tm
 
     with sequence_sandbox(sequence_id="native-profile-view", sandbox_root=tmp_path / "native"):
         client = asyncio.run(
-            open_installed_runtime_client(profile_id=UUID(SANDBOX_PROFILE_ID), frontend=OperationFrontendProjection.CLI)
+            open_installed_client(profile_id=UUID(SANDBOX_PROFILE_ID), frontend=OperationFrontendProjection.CLI)
         )
         proof = bytearray(load_settings().cadrumo_dev_test_database_password.get_secret_value().encode())
         try:
@@ -300,13 +300,13 @@ def test_delete_preserves_the_authenticated_replacement_selection(
     invoke = sequence_runner._invoke_frame
     observations: list[bool] = []
 
-    def observe_first_logout(args: tuple[str, ...]) -> Result:
-        if args[-2:] == ("config", "logout"):
+    def observe_first_logout(args: tuple[str, ...], *, program: CommandProgram) -> Result:
+        if program is CommandProgram.AEAT and args[-2:] == ("config", "logout"):
             root = Path(load_settings().cadrumo_local_storage_root)
             assert read_pointer_selection(root).bucket_id == SANDBOX_PROFILE_ID
             assert profile_session_path(storage_root=root, profile_id=UUID(SANDBOX_PROFILE_ID)).is_file()
             observations.append(True)
-        return invoke(args)
+        return invoke(args, program=program)
 
     monkeypatch.setattr(sequence_runner, "_invoke_frame", observe_first_logout)
     sequence = _result_sequence(
@@ -324,7 +324,9 @@ def test_delete_preserves_the_authenticated_replacement_selection(
     transcript = execute_sequence(sequence, sandbox_root=tmp_path / "delete")
 
     assert observations == [True]
-    assert _envelope_result(transcript.frames[0].envelope)["logged_out_profile"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert _envelope_result(transcript.frames[0].envelope)["logged_out_profile"] == "docs-sequence-sandbox", (
+        transcript.frames[0].envelope
+    )
     assert _envelope_result(transcript.frames[0].envelope)["already_logged_out"] is False
     assert _envelope_result(transcript.result_frame.envelope)["deleted"] is True
     assert read_pointer_selection(Path(transcript.storage_root)).bucket_id == SANDBOX_REPLACEMENT_PROFILE_ID
@@ -700,7 +702,7 @@ class TestSandboxEvictsBoundBucketSession:
 
         follower = execute_sequence(
             _result_sequence(
-                "@result aeat --format json config auth diagnostics list\n@expect exit_code == 0\n",
+                "@result cadrumo-runtime --format json config auth diagnostics list\n@expect exit_code == 0\n",
                 sequence_id="runner-session-leak-b",
             ),
             sandbox_root=tmp_path / "leak-b",
@@ -709,7 +711,14 @@ class TestSandboxEvictsBoundBucketSession:
         result_frame = follower.result_frame
         assert result_frame.exit_code == 0
         assert result_frame.envelope is not None
-        assert result_frame.envelope["status"] == "success"
+        # The sandbox pins the credential vault absent, so the follower's own
+        # per-command sign-in is not persisted and says so; nothing else is noted.
+        assert result_frame.envelope["status"] == "warning"
+        notices = result_frame.envelope["notices"]
+        assert isinstance(notices, list)
+        assert [notice["code"] for notice in notices if isinstance(notice, dict)] == [
+            "config.login.session_not_persisted"
+        ]
 
 
 class TestLiveAeatRefusal:
@@ -772,7 +781,7 @@ class TestStderrErrorDocument:
         assert refusal.envelope_source == "stderr"
         error = refusal.envelope["error"]
         assert isinstance(error, dict)
-        assert error["code"] == "REFUSED_CLI_BOUNDARY"
+        assert error["code"] == "REFUSED_CLI_BOUNDARY", error
 
         success = transcript.result_frame
         assert success.envelope_source == "stdout"

@@ -1187,7 +1187,7 @@ cli:
         export_button: Bevallási eltérések exportálása (XLSX)
         export_event_id_help: A mentett egyeztetési esemény pontos azonosítója.
         export_help: Mentett egyeztetési eltérések exportálása helyi áttekintő munkafüzetbe.
-        export_selector_required: 'Pontosan egyet válasszon: --event-id, --work-unit-id
+        export_selector_required: 'Pontosan egyet válassz: --event-id, --work-unit-id
           vagy --all-history.'
         export_work_unit_id_help: A mentett bevallás pontos azonosítója (64 karakteres
           SHA-256).
@@ -1376,7 +1376,7 @@ cli:
             megfigyelési tárból exportálás előtt (éves összesítések, előző negyedévre
             átvitt értékek stb.).
           root_folder_required: 'Ehhez a profilhoz még nem jött létre Drive-mappa;
-            futtasd először: `aeat config google login`.'
+            futtasd először: `cadrumo-runtime config google login`.'
           snapshot_failure: A Modelo {modelo} nyomtatvány ({period}, {year}) nyomtatványdefiníciós
             pillanatképe nem készíthető el.
         push_help: Egy nyomtatvány és időszak számításának exportálása a nyomtatványdefiníciók
@@ -1400,7 +1400,7 @@ cli:
           karakter).
         actor_too_long: A --by címke legfeljebb {limit} karakter lehet; {length} érkezett.
           A parancs által rögzített auditesemény szereplőjét nevezi meg, ezért adj
-          meg egy rövid nevet magadnak vagy az ügynöknek.
+          meg egy rövid nevet magadnak.
         allow_not_applicable_help: Bevallás létrehozása akkor is, ha a nyomtatvány
           nem vonatkozik az aktív profil adóalany-típusára.
         amend_help: Helyesbítés készítése egy a Cadrumón kívül benyújtott bevalláshoz.
@@ -1473,6 +1473,9 @@ cli:
           kizárólag a neki megadott értékekből számol. A teljes képernyős felületen
           (aeat app tui) korábban megadott értékek nem maradnak meg, hacsak itt újra
           meg nem adod őket; a teljes képernyős felület megőrzi őket.
+        calculate_reused_sealed: 'Ezek az adatok a(z) %{revision_id} számításnak felelnek
+          meg (állapot: %{state}). Nem készült új piszkozat. Válaszd ki ezt a mentett
+          számítást a verzióazonosítójával, vagy módosítsd az adatokat.'
         calculate_saved: 'Mentve tervezet számítási revízióként: %{revision_id} (állapot:
           %{state}). Megőrzött és később folytatható.'
         calculation_revision_id_help: Stabil 64 karakteres SHA-256 azonosító egy számítási
@@ -1903,6 +1906,23 @@ cli:
       app_help: 'Futtasd a teljes helyi nyomtatvány-benyújtási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít
         és exportál; soha nem nyújt be az AEAT-hoz'
+  censo_auth:
+    certificate: Tanúsítványfájl útvonala (üresen a mentett érték marad)
+    configure_help: Állítsa be vagy szerkessze a mentett AEAT-hitelesítést a népszámlálási
+      adatok lekérése előtt (interaktív terminál).
+    console_required: 'A hitelesítés szerkesztéséhez interaktív terminál szükséges:
+      {command}. Feltételek: {requirements}.'
+    field: '{field} (üresen a mentett érték marad)'
+    field_failed: '{field} nem menthető. Ellenőrizd a formátumát, és próbáld újra;
+      a korábban mentett mezők megmaradnak.'
+    method: Hitelesítési mód
+    offer: Beállítja az AEAT-hitelesítést a szinkronizálás előtt?
+    password: Jelszó (üresen a mentett érték marad)
+    required: 'Az AEAT-szinkronizálás feltételei: {requirements}. A hitelesítés itt
+      állítható be vagy szerkeszthető: {command}.'
+    route: Cl@ve Móvil útvonal
+    saved: Hitelesítési beállítások mentve.
+    still_missing: '{field} még hiányzik.'
   common:
     errors:
       invalid_iso_date: 'Érvénytelen dátumformátum a(z) %{label} mezőhöz: %{raw}.
@@ -1918,6 +1938,8 @@ cli:
         (negyedévek), 0A (éves), 01-12 (hónapok), és add meg az évet a --year kapcsolóval
         (pl. --period 1T --year 2024).'
   config:
+    activity:
+      help: Tevékenység rögzítése a bejelentkezett profilhoz jelszókérés nélkül.
     app_help: A helyi profil, a hitelesítő adatok, a tárolás és a Google-kapcsolat
       beállítása és javítása.
     auth:
@@ -1927,8 +1949,8 @@ cli:
         clear_help: Az apoderado-konfiguráció megszüntetése.
         configure:
           no_console_hint: 'Az apoderamiento interaktív beállításához konzol szükséges.
-            Állítsd be nem interaktív módon: aeat config auth apoderado configure
-            --represented-nif NIF --scope SCOPE.'
+            Állítsd be nem interaktív módon: cadrumo-runtime config auth apoderado
+            configure --represented-nif NIF --scope SCOPE.'
           represented_nif_help: A képviselt fél NIF-je.
           scope_help: Hatóköri tokenek (ismételhető).
           scope_required: 'Nincs megadva hatókör. Add meg a --scope kapcsolót az alábbiak
@@ -2021,7 +2043,7 @@ cli:
       status_summary_unconfigured: A hitelesítés még nincs beállítva.
       test_help: Helyi hitelesítési készség ellenőrzése.
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtasd:
-        `aeat config auth --help` az érvényes azonosítókhoz.'
+        `cadrumo-runtime config auth --help` az érvényes azonosítókhoz.'
     check:
       available: elérhető
       capability_label: Képesség
@@ -2032,6 +2054,8 @@ cli:
       missing: hiányzik
       preflight_label: Előzetes ellenőrzés
       profile_label: profil
+      setup_unavailable: Az előkészítés nem ellenőrizhető, mert a Cadrumo háttérszolgáltatása
+        nem válaszolt.
     collab:
       help: Bizalmi címzettek kezelése az ellenőrző csomag együttműködéshez.
       recipient:
@@ -2053,8 +2077,8 @@ cli:
           a kért jogosultságmódosítással.
         automation_change_proposal_required: A jogosultságmódosítási kérelmet a --secrets-stdin
           vagy --secrets-fd csatornán add meg.
-        automation_create_proposal_required: A jogosultsági kérelmet a --secrets-stdin
-          vagy --secrets-fd csatornán add meg.
+        automation_create_proposal_required: Add meg a jogosultsági kérelmet a --secrets-stdin
+          vagy --secrets-fd csatornán.
         echo_suppression_unavailable: Ez a terminál nem tudja elrejteni a beírt szöveget,
           így a titok láthatóvá válna a képernyőn; használd a --secrets-stdin vagy
           --secrets-fd kapcsolót.
@@ -2146,8 +2170,23 @@ cli:
         NÉV` egy regisztrált profil aktiválásához.'
       profile_session_absent: Nem vagy bejelentkezve. Futtasd az `aeat config login`
         parancsot a profilod feloldásához.
+      profile_session_custody_changed: Megváltozott a profil jelszava vagy helyreállítási
+        beállítása. Futtasd az `aeat config login` parancsot az újbóli bejelentkezéshez.
       profile_session_expired: A profil-munkameneted lejárt. Futtasd az `aeat config
         login` parancsot az újbóli bejelentkezéshez.
+      profile_session_login_mismatch: A mentett bejelentkezésed ennek a számítógépnek
+        egy másik munkamenetéhez tartozik. Futtasd az `aeat config login` parancsot,
+        hogy itt jelentkezz be.
+      profile_session_logout_unproven: A Cadrumo nem tudja igazolni ezt a kijelentkezést
+        használható mentett bejelentkezés nélkül. Futtasd az `aeat config login` parancsot,
+        majd jelentkezz ki újra.
+      profile_session_outdated: A mentett bejelentkezésedet a Cadrumo egy másik verziója
+        hozta létre, ezért nem használható. Futtasd az `aeat config login` parancsot
+        az újbóli bejelentkezéshez.
+      profile_session_signed_out: Máshol kijelentkeztettek ebből a profilból. Futtasd
+        az `aeat config login` parancsot az újbóli bejelentkezéshez.
+      profile_session_unreadable: A mentett bejelentkezésedet nem sikerült ellenőrizni,
+        ezért nem használtuk. Futtasd az `aeat config login` parancsot az újbóli bejelentkezéshez.
     google:
       detail:
         sync_push_limit_requires_dry_run: A Google sync push csak --dry-run mellett
@@ -2169,7 +2208,7 @@ cli:
         profile_unbound: Nincs aktív profil. Futtasd az aeat config login NÉV parancsot,
           vagy add meg a --profile kapcsolót.
         scope_insufficient: 'A Google-hozzáféréshez megadott engedélyek nem elegendők.
-          Futtasd: `aeat config google login` és fogadj el minden engedélyt.'
+          Futtasd: `cadrumo-runtime config google login` és fogadj el minden engedélyt.'
         storage: 'Nem sikerült elérni a Google Drive tárolót: {detail}'
         unsecured_mode: A Google-hozzáférés le van tiltva, amíg a titkos tár nem biztonságos
           módban fut valódi NIF-el rendelkező profil esetén.
@@ -2188,6 +2227,7 @@ cli:
       probe_read_only_help: Google Drive vizsgálata csak olvasási módban (nincs írási
         kísérlet).
       status_help: Az aktív profil aktuális Google OAuth-munkamenet állapotának megjelenítése.
+    help: Kezeld a bejelentkezést, a profilhozzáférést és a helyi hitelesítési beállításokat.
     list:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
     login:
@@ -2204,12 +2244,30 @@ cli:
         session_not_persisted: Nincs használható rendszerkulcstár, ezért ez a parancs
           csak a saját folyamatát hitelesítette; a következő folyamatnak ismét add
           meg a profilhitelesítést.
+        session_not_persisted_logon: 'Csak ehhez a parancshoz jelentkeztél be: a Windows
+          Hitelesítőadat-kezelő elutasította ezt a Windows-munkamenetet (1312-es hiba),
+          mert nem tartalmaz Windows-hitelesítőadatokat, így egyetlen folyamata sem
+          tudja megőrizni vagy követni a bejelentkezést, és a későbbi parancsok sem
+          használhatják. Futtasd a Cadrumót a Windows asztali bejelentkezésedből,
+          vagy add meg a profil jelszavát minden parancsnak a --profile-secrets-stdin
+          kapcsolóval.'
+        session_not_persisted_no_backend: 'Csak ehhez a parancshoz jelentkeztél be:
+          ennek a folyamatnak nincs elérhető rendszerkulcstára, így a bejelentkezés
+          nem őrizhető meg a későbbi parancsok számára. Kapcsold be a rendszerkulcstárat
+          ehhez a fiókhoz, vagy add meg a profil jelszavát minden parancsnak a --profile-secrets-stdin
+          kapcsolóval.'
+        session_not_persisted_unconfirmed: 'Csak ehhez a parancshoz jelentkeztél be:
+          a runtime nem őrizte meg ezt a bejelentkezést, pedig ez a folyamat eléri
+          a rendszerkulcstárat. Vagy megváltozott a bejelentkezés, amíg ez a belépés
+          befejeződött, vagy a runtime olyan bejelentkezésben fut, amely nem éri el
+          a kulcstárat. Jelentkezz be újra; ha ez ismétlődik, indítsd a runtime-ot
+          ugyanabból a bejelentkezésből, mint ezt a parancsot.'
       passphrase_channel_absent: Nem érhető el jelszócsatorna. Futtasd ezt a parancsot
         terminálban, vagy használd a --secrets-stdin vagy --secrets-fd kapcsolót.
       passphrase_prompt: 'Profil jelszava: '
     logout:
       help: Jelentkezz ki ebből a profilból az eszköz összes felhasználói munkamenetében.
-        Az ügynökök hozzáférése és az AEAT-munkamenetek aktívak maradnak.
+        Az AEAT-munkamenetek aktívak maradnak.
       notices:
         already_logged_out: Nincs kiválasztott profil; nincs miből kijelentkezni.
     passphrase:
@@ -2294,8 +2352,9 @@ cli:
             kérelmezése.
           kind_help: 'A módosítás típusa: rotate, renew vagy change_scope.'
         create:
-          help: API-jogosultság kérelmezése és a hitelesítő adat átvétele védett tárolóba,
-            külön felhasználói jóváhagyás után.
+          help: API-kulcs kiadása teljes kérelemből, amelyet a --secrets-stdin vagy
+            --secrets-fd csatornán adsz meg. A kulcs a külön jóváhagyásod után kerül
+            a védett tárolóba.
         decline:
           digest_help: Az inspect által megjelenített pontos felülvizsgálati kivonat.
           help: A felülvizsgált kérelem elutasítása.
@@ -2307,6 +2366,17 @@ cli:
           target_help: A visszavonandó kulcs vagy jogosultság UUID-azonosítója.
           target_mismatch: Kulcs vagy jogosultság visszavonásához szükséges a cél
             UUID-ja; az all típus nem fogad el célt.
+        disclosures:
+          expected_digest_help: Egy korábbi oldal által kiírt kivonat; az olvasást
+            elutasítja, ha a lista azóta megváltozott.
+          help: Egy engedély vagy függő kérelem kiadott adatainak megszámolása kategóriánként,
+            és a teljes lista egy oldalának kiírása.
+          invalid_page: A --offset legyen nulla vagy nagyobb egész szám, a --expected-digest
+            pedig egy korábbi oldal által kiírt kivonat.
+          offset_help: Az a bejegyzés, amelynél az oldal kezdődik; add meg az előző
+            oldal next_offset értékét.
+          target_help: Annak az engedélynek vagy függő kérelemnek az azonosítója,
+            amelynek kiadott adatait olvasni szeretnéd.
         help: A profil automatizált hozzáférésének kezelése.
         inspect:
           help: A felülvizsgált automatizálási kérelem pontos megjelenítése.
@@ -2385,7 +2455,7 @@ cli:
         szóló értesítéseket nem sikerült előállítani. A 'config profile status' megmutatja,
         mi van még hátra.
       create_help: Jelszóval védett profilt hoz létre. Terminálon ezután opcionális
-        helyreállítási kódot ajánl fel; kihagyható, vagy később hozzáadható az 'aeat
+        helyreállítási kódot ajánl fel; kihagyható, vagy később hozzáadható az 'cadrumo-runtime
         config profile recovery enable' paranccsal.
       create_login_required: A(z) '{profile}' profil elkészült, de még nincs megnyitott
         munkamenet hozzá. A folytatás előtt lépj be a 'config login {profile}' paranccsal
@@ -2406,16 +2476,14 @@ cli:
         jelszó nem állítható vissza; bármikor bekapcsolható a 'config profile recovery
         enable' paranccsal.
       delete:
+        expected_digest_help: A korábban ellenőrzött adattartalom lenyomatának megkövetelése.
+        expected_profile_id_help: A korábban ellenőrzött profilazonosító megkövetelése.
         help: Töröl egy profilt és a helyi állapotát; a --yes megerősíti a törlést
         name_help: A törlendő profil neve
         notices:
           deleted: A profil a helyi állapotával együtt törölve.
           preflight: 'Csak előzetes ellenőrzés: semmi sem lett törölve. Futtasd újra
             a --yes kapcsolóval a törléshez.'
-        refusal:
-          active_profile: Nem törölheted a kijelölt '{name}' profilt. Jelentkezz be
-            egy másik profilba az 'aeat config login NAME' paranccsal, majd próbáld
-            újra. A kijelentkezés megtartja a kijelölt profilt.
         yes_help: Kifejezetten megerősíti a törlést
       descendiente:
         add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
@@ -2444,6 +2512,12 @@ cli:
         remove_help: Egy leszármazott eltávolítása 0-alapú index szerint az aktív
           profilról.
         remove_index_help: Az eltávolítandó leszármazott 0-alapú indexe.
+      disclosures:
+        help: Kategóriánként megszámolja, mit fedhet fel ez a munkamenet, és kiírja
+          a teljes lista egy oldalát.
+        offset_help: Az a tétel, amelynél az oldal kezdődik; add meg az előző oldal
+          next_offset értékét. A parancs minden futása külön munkamenet, ezért a tételei
+          ezt a munkamenetet nevezik meg célként.
       edit_help: A varázsló újrafuttatása meglévő profil ellen, értékek frissítése
         helyben.
       edit_row:
@@ -2579,67 +2653,95 @@ cli:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
     provision:
+      approval_needed: Ehhez a jóváhagyásodra van szükség. Futtasd újra a parancsot
+        a --yes kapcsolóval a fenti terv jóváhagyásához.
+      approve_prompt: Letöltöd és előkészíted ezeket most?
       browser:
-        help: Letölti az AEAT-automatizálás által indított böngészőváltozatot. Ha
-          már telepítve van, nem tesz semmit.
-      help: 'Az ezen a gépen futó összetevők kezelése: az AEAT-automatizálás böngészője,
-        valamint a helyi dokumentumolvasó (futtatókörnyezet állapota, telepítés, indítás,
-        modellletöltés, -betöltés, -ellenőrzés és -eltávolítás, vagy az egész beállítása
-        egy lépésben).'
-      install:
-        confirm_help: Hozzájárulás a csomagkezelős telepítés letöltéséhez és futtatásához.
-          Enélkül semmi sem települ.
-        help: A helyi futtatókörnyezet telepítése a platform csomagkezelőjével (Windowson
-          winget, macOS-en Homebrew). Ha már telepítve van, nem tesz semmit; Linuxon
-          neked kell telepítened.
+        help: Előkészíti a böngészőt, amelyet a Cadrumo az adóhivatal webhelyéhez
+          használ. Előbb megmutatja a tervet és megkérdez.
+      complete: A Cadrumo elő van készítve.
+      fix: 'A javításhoz futtasd: %{command}'
+      hardware_limited: Ennek a számítógépnek nincs elég memóriája a helyi MI-hez.
+      help: 'Előkészíti és ellenőrzi, amire a Cadrumónak szüksége van ezen a számítógépen:
+        az adóhivatal webhelyéhez használt böngészőt és a helyi MI-t, a programjával
+        és a modelljeivel. Minden parancs a bejelentkezett profilodban fut.'
+      incomplete: Néhány összetevő még nem áll készen.
       load:
-        help: Modellek betöltése a helyi futtatókörnyezet memóriájába, hogy az első
-          beolvasásnak ne kelljen hidegindításra várnia; minden olvasói szerepkör
-          modelljét, hacsak a --role vagy a --model nem szűkíti. Betöltés előtt elutasítja,
-          ha kevés a memória; a már betöltött modellt nem módosítja.
-        model_help: A betöltendő modell azonosítója a futtatókörnyezetben. Már letöltöttnek
-          kell lennie. Alapértelmezés szerint a szerepkörhöz kiválasztott modell.
+        help: Betölti a modelleket a memóriába, hogy az első olvasásnak ne kelljen
+          várnia; minden szerep modelljét, hacsak a --role vagy a --model nem szűkíti.
+          Betöltés előtt elutasítja, ha kevés a memória.
+        model_help: A betöltendő modell neve. Már letöltöttnek kell lennie. Alapértelmezés
+          szerint a szerephez választott modell.
+      outcome:
+        cancelled: Megszakítottad az előkészítést.
+        completed: Az előkészítés befejeződött.
+        interrupted: Az előkészítés befejezés előtt megszakadt. Futtasd újra a parancsot
+          a folytatáshoz.
+        not_enough_space: Nincs elég szabad hely a lemezen, ezért semmi sem töltődött
+          le.
+        nothing_to_do: Már minden elő van készítve.
+        plan_changed: A terv megváltozott, miután jóváhagytad, ezért semmi sem töltődött
+          le. Futtasd újra a parancsot az új terv megtekintéséhez.
+        rejected: Semmi sem töltődött le.
+      plan:
+        destination: '  Helye: %{path}'
+        entry: '%{name}: %{size}, innen: %{hosts}'
+        heading: 'A Cadrumo ezeket készíti elő:'
+        installs_program: '  Ez egy programot telepít erre a számítógépre. A telepítője
+          engedélyt kérhet tőled.'
+        part: '    %{name}: %{size}'
+        shared: '  Ugyanazt a letöltést használja, mint: %{name}.'
+        size_unknown: a méret még nem ismert
+        total: 'Teljes letöltés: %{size}.'
+        total_unknown: 'Teljes letöltés: legalább %{size}. Néhány méret csak a letöltés
+          kezdetekor derül ki.'
       probe:
-        help: Most ellenőrzi a szövegmodell alkalmasságát ahelyett, hogy az `aeat
-          config provision verify` által rögzített ítéletet olvasná, és ezzel az eredménnyel
-          jelenti a helyi olvasó állapotát. Betölti a modellt; semmit sem rögzít.
+        help: 'Alaposan ellenőriz minden összetevőt: eléri a letöltési kiszolgálókat,
+          megnyitja a böngészőt és kipróbálja a modelleket. Semmit sem tölt le.'
+      progress: '%{name}: %{step}'
+      progress_bytes: '%{name}: letöltés, %{done} / %{total} (%{percent}%)'
       pull:
-        help: Modellek letöltése a helyi futtatókörnyezetbe, alapértelmezés szerint
-          minden olvasószerepkör modelljéé, hacsak a --role vagy a --model nem szűkíti.
-          Letöltés előtt elutasít, ha egy modell nem lenne betölthető.
-        model_help: A letöltendő modell futtatókörnyezeti azonosítója. Alapértelmezés
-          a szerepkörhöz választott modell.
+        help: 'Előkészíti a helyi MI-t: ha hiányzik, telepíti a programját, majd letölti
+          minden szerep modelljét. Előbb megmutatja a tervet és megkérdez; a program
+          telepítője is engedélyt kérhet.'
+        model_help: Egy katalógusbeli modell neve, amelyet a Cadrumo által választott
+          helyett használsz.
       remove:
-        help: Egy Cadrumo által kiválasztott modell törlése a helyi futtatókörnyezet
-          tárolójából, a felszabadított hely jelentésével.
-        model_help: A törlendő modell futtatókörnyezeti azonosítója. Csak a Cadrumo
-          által kiválasztott modellek törölhetők.
+        help: Töröl erről a számítógépről egy modellt, amelyet a Cadrumo választott,
+          és jelzi a felszabadult helyet.
+        model_help: A törlendő modell neve. Csak a Cadrumo által választott modellek
+          törölhetők.
       report:
-        help: Jelentés a mért hardverről, a szerepkörhöz választott modellről és a
-          betölthetőségről.
-      role_help: 'A kezelendő modellszerepkör (képátírás, szövegkinyerés, táblázatos
-        leképezés, teljesítés jellegére tett javaslat). Alapértelmezés: minden szerepkör.'
+        help: Jelzi a számítógép memóriáját, az egyes szerepekhez választott modellt,
+          és hogy most betölthető-e.
+      role_help: A modell szerepe, amelyre a művelet vonatkozik (képek átírása, szöveg
+        kinyerése, táblázatoszlopok megfeleltetése, ügylettípus javaslata). Alapértelmezés
+        szerint minden szerep.
       setup:
-        confirm_help: Hozzájárulás a csomagkezelős telepítés letöltéséhez és futtatásához,
-          ha hiányzik a futtatókörnyezet. Enélkül a beállítás a telepítési lépésnél
-          leáll, és nem telepít.
-        help: 'A helyi olvasó beállítása egy lépésben: a futtatókörnyezet telepítése
-          (csak --confirm esetén), indítása, minden szerepkör modelljének letöltése,
-          betöltése és ellenőrzése. A már elvégzett lépéseket változatlanként jelzi;
-          az első sikertelen lépés leállítja a futást.'
+        help: Előkészít minden összetevőt, amely még nem áll készen. Megmutatja, mi
+          töltődik le, mekkora és hová kerül, és megkérdez, mielőtt bármit letöltene.
+      size:
+        gigabytes: '%{value} GB'
+        megabytes: '%{value} MB'
       start:
-        help: Elindítja a telepített helyi futtatókörnyezetet, ha a beállított helyi
-          végpont nem válaszol. Ha már válaszol, nem tesz semmit.
+        help: Elindítja a telepített helyi MI-programot, ha nem válaszol. Nem csinál
+          semmit, ha már válaszol.
       status:
-        help: Jelenti, hogy a helyi futtatókörnyezet telepítve van-e és válaszol-e,
-          valamint hogy az egyes olvasószerepkörök modelljei telepítve vannak-e. Csak
-          olvas.
+        help: Megmutatja, hogy az egyes összetevők készen állnak-e, abból, ami már
+          megvan ezen a számítógépen. Gyors, semmit sem tölt le.
+      step:
+        cleanup: rendrakás
+        download: letöltés
+        install: telepítés
+        plan: tervezés
+        preflight: a kapcsolat ellenőrzése
+        verify: működés ellenőrzése
       verify:
-        help: Ellenőrzi, hogy a modellek betöltődnek és időkorláton belül válaszolnak
-          egy egyszerű kérésre, alapértelmezés szerint minden olvasószerepkör modelljére,
-          hacsak a --role vagy a --model nem szűkíti.
-        model_help: Az ellenőrizendő modell futtatókörnyezeti azonosítója. Alapértelmezés
-          a szerepkörhöz választott modell.
+        help: Alaposan ellenőriz egy összetevőt, vagy mindet, ha nem adsz meg egyet
+          sem. Semmit sem tölt le.
+        item_help: 'Az ellenőrzendő összetevő: browser vagy local_ai. Alapértelmezés
+          szerint mind.'
+      yes_help: Kérdés nélkül jóváhagyja a parancs által megmutatott tervet.
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.
       help: Helyi konfiguráció, nyomtatványdefiníciók, profil, hitelesítés és naplók
@@ -2675,6 +2777,8 @@ cli:
         mi törlődne.
       reset_progress_yes_help: Megszakított parancs mentett folyamatainak törlésének
         megerősítése.
+      setup_status_hint: Az előkészítés állapotát az alábbi állapotparancs mutatja
+        meg, miután bejelentkeztél.
       yes_help: Javítás megerősítése.
     reset:
       help: Elindítja, megjeleníti vagy folytatja az összes helyben tárolt profil
@@ -2932,8 +3036,7 @@ cli:
         invalid_date: A(z) {option} dátumot vár ÉÉÉÉ-HH-NN formában.
         nothing_to_update: 'Nincs mit módosítani a(z) {account} számlán: adj meg egy
           adatot, vagy küldj számlaadatokat a titkos csatornán.'
-      none: 'Még nincs saját számla. Adj hozzá egyet ezzel: aeat app ledger account
-        add'
+      none: Még nincs saját számla.
       prompts:
         bank_address: 'Bank címe: '
         bank_city: 'Bank városa: '
@@ -3276,6 +3379,8 @@ cli:
         napja) ebbe az AEAT-időszakba esik: 1T-4T (negyedévek), 0A (éves), 01-12 (hónapok).
         A --year megadása kötelező.'
       provider_help: Kivonatformátum-szolgáltató.
+      statement_refused: 'Kivonat elutasítva: a(z) {file} olyan tételt tartalmaz,
+        amely nem érvényes tranzakció, ezért semmi sem lett importálva.'
       verbose_help: Részletes információ megjelenítése importálás közben.
       verify_help: Tételek ellenőrzése importálás után.
       verify_source_help: Az importált sorok ellenőrzésére használt eredeti fájl.
@@ -3830,9 +3935,28 @@ cli:
       applicability_evidence_disagreement: A profilban adott válaszod és a rögzített
         számláid eltérnek abban, hogy ezek a kötelezettségek vonatkoznak-e rád; a
         sorok láthatók maradnak, amíg a kettő közül az egyiket ki nem javítod.
+      art109_activity_income_withholding_ge_70pct_unset: A profilodban még nem szerepel,
+        hogy vállalkozói vagy szakmai tevékenységed bevételének legalább 70%-ából
+        vonnak-e le adóelőleget.
+      estimacion_objetiva_unset: A profilodban még nem szerepel, hogy tevékenységedre
+        melyik személyijövedelemadó-megállapítási rendszer vonatkozik.
+      has_employees_unset: A profilodban még nem szerepel, hogy foglalkoztatsz-e alkalmazottakat.
+      intracomunitario_unset: A profilodban még nem szerepel, hogy vásárolsz vagy
+        értékesítesz-e árut vagy szolgáltatást uniós országok között.
+      iva_regime_unset: A profilodban még nem szerepel, hogy tevékenységedre melyik
+        áfarendszer vonatkozik.
       m303_simplificado_forfait_unavailable: A Modelo 303 alkalmazandó, de a simplificado
         forfait számítási motor még nem elérhető; beadás előtt ellenőrizd az egyszerűsített
         rezsim rovatait.
+      retencion_arrendamientos_unset: A profilodban még nem szerepel, hogy fizetsz-e
+        olyan bérleti díjat, amelyből adóelőleget vonsz le.
+      retencion_capital_unset: A profilodban még nem szerepel, hogy fizetsz-e adólevonással
+        járó tőkejövedelmet.
+      retencion_profesionales_unset: A profilodban még nem szerepel, hogy fizetsz-e
+        szakembereknek olyan díjat, amelyből adóelőleget vonsz le.
+      terceros_threshold_unset: A profilodban még nem szerepel, hogy valamely ügyfeleddel
+        vagy beszállítóddal folytatott ügyleteid meghaladják-e a Modelo 347 éves adatszolgáltatási
+        értékhatárát.
     year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
   review:
     app_help: 'A felülvizsgálati sorod: a nyilvántartás tranzakcióinak, a beérkezett

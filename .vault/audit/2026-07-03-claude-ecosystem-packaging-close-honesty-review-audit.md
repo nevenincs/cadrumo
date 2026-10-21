@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
-modified: '2026-10-03'
-body_hash: 'sha256:5e3b86a7ed5dd05f21961ef2748801565e1e504d762fb20fbd035c40cff2e5ba'
+modified: '2026-10-21'
+body_hash: 'sha256:3528e3790f5ed42239f841460b6c47377d45ada9efb11c874341272473556224'
 related:
   - '[[2026-07-03-claude-ecosystem-packaging-code-review-audit]]'
 ---
@@ -20,7 +20,7 @@ as a third-party report rather than trusted prior work — and re-confirmed all 
 dimensions the prior code-review audit had already passed clean: storage-root relocation,
 the corpus-companion integrity gate plus its anti-tautology proofs, the wheel split's
 single-pattern exclusion, the corpus-sources extra, the CRLF re-stamp fix, the MCP CONFIRM
-annotation, the plugin and marketplace generator, the publish recipes, and the agent-facing
+annotation, the publish recipes, and the agent-facing
 corpus surface. The verdict at review time was NOT-yet-closeable, carrying one blocker-grade
 finding, three deferred minors, and three additional notes.
 
@@ -40,7 +40,7 @@ now discoverable from either side.
 
 The build script's module docstring described the `.mcpb` bundling path as the primary
 distribution mechanism per ADR R8, but the harness refoundation had already demoted that
-path to a secondary, legacy-adjacent role behind the plugin and marketplace path. The
+path to a secondary, legacy-adjacent role behind the `uvx` path. The
 docstring now states its demoted-secondary status explicitly, so a reader of the script
 itself gets the current picture rather than a stale claim of primacy.
 
@@ -49,7 +49,7 @@ itself gets the current picture rather than a stale claim of primacy.
 The kickoff brief prepared for the harness-userdocs follow-on campaign described the
 Distribution and connect-a-client sections in terms of the superseded `.mcpb` bundling flow,
 which would have briefed the next campaign onto a path this campaign had already demoted.
-Both sections are rewritten to describe the plugin, marketplace, and `uvx` path that is now
+Both sections are rewritten to describe the `uvx` path that is now
 the actual primary distribution mechanism.
 
 ### code-review-minors-tracked-as-deferrals | medium | Code-review minors M2, M3, and M4 are DEFERRED and now tracked as named follow-up items
@@ -83,8 +83,7 @@ operator-gated follow-up item rather than left implicit.
 
 ### no-single-record-evidences-full-packaging-smoke-chain | low | All packaging-smoke sub-lanes are green, but no single record evidences a full `just packaging-smoke` pass in one run since the gate changed
 
-Each individual packaging-smoke sub-lane (dependencies, split-install, extras, browser,
-plugin, marketplace) is independently green, but the gate composition has changed enough
+Each individual packaging-smoke sub-lane (dependencies, split-install, extras, browser) is independently green, but the gate composition has changed enough
 during this campaign that no single execution record captures one complete, unbroken
 `just packaging-smoke` run exercising every lane together. This is tracked as part of the
 operator-gated follow-up rather than blocking closure, since each constituent lane's

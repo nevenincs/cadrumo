@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:36f906f61536bd78c98e3a67e5e20c0245b58f683751808be2bd4a7486151d63'
+body_hash: 'sha256:d4fa6706458ef124fc0fc815d4e8ecdefe8562e08187aa8e737ae801a7f2b353'
 related:
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
   - '[[2026-08-06-llm-package-split-ingest-cascade-reference]]'
@@ -405,3 +405,17 @@ None. The accepted doctor contract, the packaging ADR's extras rule,
 `no-silent-under-declaration` (the fail-closed act direction) and
 `aeat-architecture-boundaries` govern everything here; the durable artefacts
 are the licence gate and the contention refusal, carried as executable gates.
+
+## Note 2026-10-18: lifecycle decided elsewhere
+
+This record remains `proposed`. The accepted
+`2026-10-18-dependency-provisioning-unified-setup-adr` now decides the model
+lifecycle this record proposed in D5 and D6: downloads, plan-bound approval,
+progress, retry and backoff, verification, and the per-model expected
+digest. It adopts D2 to D4 (hardware profile, fail-closed contention,
+licence-aware catalogue) unchanged. D5's sentence that an unreachable
+runtime is "never a spawn" does not describe the shipped install and start
+actions (`src/cadrumo/application/provisioning_host.py:360`, `:440`). Under
+that record, installing the runtime program is a planned, approved setup
+item, and starting it is an action that downloads nothing. D7 to D9 are not
+affected.

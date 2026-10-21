@@ -139,7 +139,7 @@ def _append_entry_unit(
 
 
 def _entry_place(page: WorkbenchPage, item: CasillaListEntry, sections: Mapping[AddressKey, str]) -> str:
-    return _SEPARATOR.join(part for part in (page.heading.text, sections.get(item.key)) if part)
+    return _SEPARATOR.join(part for part in (page.heading.text, sections.get(item.key)) if (part is not None and part))
 
 
 def _entry_label(

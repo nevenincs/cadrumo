@@ -13,6 +13,17 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessRequest,
+)
+
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -22,21 +33,11 @@ from ...operations.owner import OperationExecutorContext
 from ...operations.public_scalar import PublicDecimal
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
     LoginEligibility,
-    OperationAccessRequest,
     OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
@@ -193,8 +194,6 @@ def test_public_report_is_lossless_for_precision_null_costs_order_and_reversed_d
 def test_real_registry_compiles_and_request_threshold_keeps_legacy_bounds() -> None:
     """The registered schema accepts the canonical default and unit endpoints."""
     registry = _registry()
-    definition = registry.lookup(_OPERATION_ID)
-    assert definition.permitted_frontends == frozenset(OperationFrontendProjection)
     assert (
         AccessAction.COMMIT
         not in resolve_ledger_llm_diagnostics_access(
@@ -203,7 +202,7 @@ def test_real_registry_compiles_and_request_threshold_keeps_legacy_bounds() -> N
                 profile_id=_PROFILE,
                 destination_id=uuid4(),
                 action=AccessAction.SUBMIT,
-                frontend=OperationFrontendProjection.MCP,
+                frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
                 contract=registry.lookup_public_contract(_OPERATION_ID),
                 published_authority=Availability.AVAILABLE,
                 authority_operation=_PIN,
@@ -234,7 +233,7 @@ def _submitted(
         profile_id=profile_id,
         definition_id=definition_id,
         action=action,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         periods=periods,
         period_independent=not periods,
         destination_id=uuid4(),
@@ -256,7 +255,7 @@ def _llm_context(
 
 
 @pytest.mark.parametrize("action", [AccessAction.OBSERVE, AccessAction.RESULT])
-@pytest.mark.parametrize("frontend", [OperationFrontendProjection.MCP, OperationFrontendProjection.CLI])
+@pytest.mark.parametrize("frontend", [OperationFrontendProjection.EXTERNAL_CLIENT, OperationFrontendProjection.CLI])
 def test_later_actions_replay_the_admission_from_a_fresh_session_and_any_frontend(
     action: AccessAction, frontend: OperationFrontendProjection
 ) -> None:
@@ -285,7 +284,7 @@ def test_later_actions_replay_the_admission_from_a_fresh_session_and_any_fronten
 
 @pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.START])
 def test_entry_actions_need_held_authority_even_with_a_matching_admission(action: AccessAction) -> None:
-    context = _llm_context(action, frontend=OperationFrontendProjection.MCP, admitted=_submitted())
+    context = _llm_context(action, frontend=OperationFrontendProjection.EXTERNAL_CLIENT, admitted=_submitted())
 
     with pytest.raises(ProfileAccessRefusedError) as refused:
         resolve_ledger_llm_diagnostics_access(_access_request(), context)
@@ -472,7 +471,7 @@ async def test_executor_identity_mismatch_refuses_on_caller_thread_before_bucket
 
 
 @pytest.mark.parametrize("missing", [DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES, None])
-def test_mcp_result_requires_both_categories_destination_and_all_periods(
+def test_external_client_result_requires_both_categories_destination_and_all_periods(
     missing: DisclosureCategory | None,
 ) -> None:
     """Actual access policy rejects a partial financial disclosure grant."""
@@ -487,7 +486,7 @@ def test_mcp_result_requires_both_categories_destination_and_all_periods(
             profile_id=_PROFILE,
             destination_id=destination,
             action=AccessAction.RESULT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=contract,
             published_authority=Availability.AVAILABLE,
             authority_operation=_PIN,

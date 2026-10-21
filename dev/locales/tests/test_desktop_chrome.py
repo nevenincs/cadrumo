@@ -18,6 +18,7 @@ import yaml
 
 from dev._paths import REPO_ROOT
 
+from .. import desktop_chrome
 from .._paths import LOCALES_DIR
 from ..desktop_chrome import (
     DESKTOP_CHROME_AWAITING_CONSUMER,
@@ -30,12 +31,13 @@ from ..desktop_chrome import (
 )
 from ..errors import LocaleError
 from ..manager import LocaleManager
+from ..service_catalogues import SERVICE_FAMILIES, SERVICE_KEYS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FRONTEND_SOURCE = REPO_ROOT / "native" / "desktop" / "frontend" / "src"
 # A whole key in quotes, or the fixed head of a template literal up to `${`.
-_LITERAL_KEY = re.compile(r"""["'`](desktop\.[A-Za-z0-9_.]+)["'`]""")
+_LITERAL_KEY = re.compile(r"""["'`]((?:desktop|auth\.sync\.requirement)\.[A-Za-z0-9_.]+)["'`]""")
 _TEMPLATE_HEAD = re.compile(r"`(desktop\.[A-Za-z0-9_.]*)\$\{")
 
 
@@ -158,6 +160,52 @@ def test_a_locale_without_a_catalogue_is_refused(tmp_path: Path) -> None:
         desktop_chrome_strings(root, keys=_KEYS, locales=("en", "es"))
 
 
+def test_generation_composes_runtime_and_service_catalogues(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    tax = _catalogues(tmp_path / "tax", {"en": {"desktop.rail.search": "Search"}})
+    runtime = _catalogues(tmp_path / "runtime", {"en": {"desktop.attendance.network": "Network access"}})
+    service = _catalogues(tmp_path / "service", {"en": {"desktop.agent.title": "Agent"}})
+    monkeypatch.setattr(desktop_chrome, "LOCALES_DIR", tax)
+    monkeypatch.setattr(desktop_chrome, "RUNTIME_LOCALES_DIR", runtime)
+    monkeypatch.setattr(desktop_chrome, "SERVICE_LOCALES_DIR", service)
+    expected = {
+        "desktop.rail.search": "Search",
+        "desktop.attendance.network": "Network access",
+        "desktop.agent.title": "Agent",
+    }
+
+    assert desktop_chrome_strings(tax, keys=frozenset(expected), locales=("en",)) == {"en": expected}
+
+
+@pytest.mark.parametrize("colliding_owner", ["tax", "service"])
+def test_runtime_catalogue_collisions_refuse_generation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, colliding_owner: str
+) -> None:
+    values = {
+        "tax": {"desktop.rail.search": "Search"},
+        "runtime": {"desktop.attendance.network": "Network access"},
+        "service": {"desktop.agent.title": "Agent"},
+    }
+    values[colliding_owner]["desktop.attendance.network"] = "Conflicting network access"
+    roots = {owner: _catalogues(tmp_path / owner, {"en": leaves}) for owner, leaves in values.items()}
+    monkeypatch.setattr(desktop_chrome, "LOCALES_DIR", roots["tax"])
+    monkeypatch.setattr(desktop_chrome, "RUNTIME_LOCALES_DIR", roots["runtime"])
+    monkeypatch.setattr(desktop_chrome, "SERVICE_LOCALES_DIR", roots["service"])
+
+    with pytest.raises(LocaleError, match="catalogue keys overlap"):
+        desktop_chrome_strings(roots["tax"], keys=frozenset({"desktop.attendance.network"}), locales=("en",))
+
+
+def test_missing_runtime_translation_refuses_generation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    tax = _catalogues(tmp_path / "tax", {"en": {}, "es": {}})
+    runtime = _catalogues(tmp_path / "runtime", {"en": {"desktop.attendance.network": "Network access"}, "es": {}})
+    monkeypatch.setattr(desktop_chrome, "LOCALES_DIR", tax)
+    monkeypatch.setattr(desktop_chrome, "RUNTIME_LOCALES_DIR", runtime)
+    monkeypatch.setattr(desktop_chrome, "SERVICE_LOCALES_DIR", tmp_path / "absent-service")
+
+    with pytest.raises(LocaleError, match=r"es:desktop\.attendance\.network is absent"):
+        desktop_chrome_strings(tax, keys=frozenset({"desktop.attendance.network"}), locales=("en", "es"))
+
+
 def test_every_declared_key_is_authored_in_all_four_canonical_catalogues(tmp_path: Path) -> None:
     output = tmp_path / "chrome-strings.json"
 
@@ -213,8 +261,6 @@ _AWAITING_CONSUMER_CEILING = frozenset(
         "desktop.account.unknown",
         "desktop.signin.checking",
         "desktop.signin.lead",
-        "desktop.signin.open_tui",
-        "desktop.signin.open_tui_hint",
         "desktop.signin.password",
         "desktop.signin.refused.custody_changed",
         "desktop.signin.refused.generation_changed",
@@ -268,7 +314,10 @@ def test_the_awaiting_check_sees_a_named_key(tmp_path: Path) -> None:
 
 
 def test_the_locale_key_scan_reads_the_declaration(tmp_path: Path) -> None:
-    # An empty source tree isolates this key source from every call-site scan.
+    # The tax key source excludes independently owned service chrome; generation merges both catalogues.
     keys = LocaleManager(tmp_path, LOCALES_DIR).get_codebase_keys()
 
-    assert keys >= DESKTOP_CHROME_KEYS
+    service_prefixes = tuple(f"{namespace}.{family}." for namespace, family in SERVICE_FAMILIES)
+    service_keys = {key for key in DESKTOP_CHROME_KEYS if key.startswith(service_prefixes) or key in SERVICE_KEYS}
+    assert keys >= DESKTOP_CHROME_KEYS - service_keys
+    assert keys.isdisjoint(service_keys)

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:408cae695b236f2425857cd5ef9dfd47d887523b57da8802aa00390085b9b511'
+body_hash: 'sha256:56e72ebb41b1d9c6b72a619aecb8e77430714ef29f7cda6a8aa55ba7a44b3204'
 related:
   - "[[2026-09-30-modelo-editor-workbench-reference]]"
 ---
@@ -20,7 +20,7 @@ Scope: the rich casilla row (`[num] [label] [value] [state] [edit] [help]` plus 
 description line), the closed state vocabulary, progress language from field to
 form, the Textual widget architecture that carries it at modelo-200 scale, the row
 keyboard model, and theme/glyph fitness. Measured on 2026-09-30 in worktree
-`Y:\code\cadrumo-worktrees\tui` (Textual 8.2.8, Rich 15.0.0, Python 3.13, Windows).
+`<repo-root>` (Textual 8.2.8, Rich 15.0.0, Python 3.13, Windows).
 
 Discovery note: `vaultspec-rag` code search refused (`index_unverifiable`), so code was
 located by targeted grep and full reads. Registry figures come from the worktree's

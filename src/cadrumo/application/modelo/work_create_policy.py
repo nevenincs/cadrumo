@@ -168,7 +168,7 @@ def guard_active_profile_foral_ccaa(record: UserProfileRecord | None) -> None:
     from ..user_profile.projections import fact_value
 
     raw_ccaa = fact_value(record, "tax_residence.ccaa")
-    if raw_ccaa:
+    if raw_ccaa is not None and raw_ccaa:
         parse_tax_region(raw_ccaa)
 
 

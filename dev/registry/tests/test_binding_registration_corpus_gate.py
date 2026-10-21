@@ -204,6 +204,8 @@ def test_every_grouped_corpus_row_declares_its_canonical_grouping() -> None:
                 continue
             expected = ROW_SET_GROUPING_FOR_BINDING_SOURCE.get(binding.source)
             declared = binding.value.row_grouping
-            if (expected.value if expected else None) != (declared.value if declared else None):
+            if (expected.value if (expected is not None and expected) else None) != (
+                declared.value if (declared is not None and declared) else None
+            ):
                 mismatches.append(f"{location}: {declared} != {expected}")
     assert mismatches == []

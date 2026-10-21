@@ -41,7 +41,7 @@ shape here keeps a field that carries one from silently admitting a value no
 producer emits, including an untruncated digest.
 
 Deliberately narrower than
-:data:`cadrumo.application.operations.OperationDiagnosticReference`, which
+:data:`cadrumo.application.operations.models.OperationDiagnosticReference`, which
 admits the twelve- and sixty-four-character forms because the operations
 supervisor emits both. Nothing on this axis emits the long form.
 """
@@ -70,6 +70,10 @@ class FiledCaptureEvidenceTally(BaseModel):
     #: one can answer whether a limited sweep was truncated.
     reached_count: int = 0
     observation_paths: tuple[str, ...]
+    #: The identifier each stored observation is addressed by, in the order of
+    #: ``observation_paths``. It is what reconciliation takes to name an
+    #: observation, so no caller derives it from a path.
+    observation_ids: tuple[str, ...] = ()
     artefact_refs: tuple[str, ...]
     justificante_metadata_count: int = 0
     justificante_csvs: tuple[str, ...] = ()

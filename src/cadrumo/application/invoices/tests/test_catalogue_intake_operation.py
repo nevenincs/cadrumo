@@ -15,20 +15,23 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.hashing import sha256_hex
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.buckets.event import BucketEvent
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, Availability
+from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import catalogue_intake_contracts as intake_contracts
 from .. import catalogue_intake_operation as intake_operation
@@ -46,6 +49,7 @@ from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("29292929-2929-4292-8292-292929292929")
+_SESSION_CLIENT = UUID("29292929-2929-4292-8292-2929292929dd")
 
 
 class _Events:
@@ -197,7 +201,12 @@ def test_both_public_contracts_compile_without_constructing_storage(
         )
         access = resolve_operation_access(registry=registry, request=request, context=context)
         assert access.policy.requires_all_periods and AccessAction.COMMIT in access.policy.actions
-        assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
+        on_external_client = resolve_operation_access(
+            registry=registry,
+            request=request,
+            context=replace(context, frontend=OperationFrontendProjection.EXTERNAL_CLIENT),
+        )
+        assert on_external_client.policy == access.policy and on_external_client.policy.requires_human is False
         assert definition.refusal_detail_codes == (
             frozenset({INVOICE_WIZARD_VALIDATION_REFUSAL_CODE})
             if isinstance(payload, intake_contracts.InvoiceWizardRequest)
@@ -252,6 +261,59 @@ def test_wizard_worker_preserves_noop_and_fences_only_actual_commit(
         with pytest.raises(ValueError, match="terminal receipt"):
             project_invoice_intake_result(operands.value, receipt.model_copy(update={"effect": wrong_effect}))
     assert len(creation.invoice_repository.load()) == 1 and len(creation.event_repository.load().events) == 1
+
+
+def _session_host(frontend: OperationFrontendProjection) -> OperationExecutionCallerReader:
+    """What a session host answers for a wizard entry it admitted on ``frontend``."""
+
+    def read(identity: OperationIdentity) -> OperationExecutionCaller:
+        assert identity.definition_id == intake_contracts.INVOICE_WIZARD_OPERATION_DEFINITION_ID
+        return OperationExecutionCaller(frontend=frontend, session_kind=SessionKind.ATTENDED, client_id=_SESSION_CLIENT)
+
+    return read
+
+
+@pytest.mark.parametrize(
+    ("frontend", "recorded"),
+    [
+        (OperationFrontendProjection.EXTERNAL_CLIENT, f"automation:external-client.attended.{_SESSION_CLIENT}"),
+        (OperationFrontendProjection.CLI, "cli"),
+    ],
+    ids=["external_client", "cli"],
+)
+def test_wizard_creation_event_names_the_session_for_automation_and_the_frontend_for_a_person(
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+    frontend: OperationFrontendProjection,
+    recorded: str,
+) -> None:
+    """The invoice carries no mark of who typed its amounts; the creation event's actor is that mark."""
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    creation = in_memory_catalogue_creation_ports()
+    request = _wire(_wizard(), intake_contracts.INVOICE_WIZARD_OPERATION_DEFINITION_ID)
+    context, _events, operands, fence = _context(request, authority_operation)
+
+    def factory(
+        *,
+        profile_id: UUID,
+        operation: PinnedAuthorityOperation,
+        commit: InvoiceIntakeCommit,
+        admit_provider: InvoiceIntakeProviderAdmission,
+    ) -> InvoiceIntakePorts:
+        ports = replace(creation, audit_commit=_PreparedFakeCommit(creation.audit_commit, commit, fence))
+        return InvoiceIntakePorts(profile_id, operation, lambda: ports, lambda _headers: None, lambda: ())
+
+    executor = InvoiceIntakeExecutor(factory, execution_caller_reader=_session_host(frontend))
+
+    assert asyncio.run(executor.execute(request, context)) == "d" * 64
+
+    assert isinstance(operands.value, intake_contracts.InvoiceIntakeExecutionResult)
+    assert isinstance(operands.value.projection, intake_contracts.InvoiceWizardOutcome)
+    created = operands.value.projection.result
+    assert created is not None and created.already_existed is False
+    (event,) = creation.event_repository.load().events.values()
+    assert event.object_id == created.invoice.invoice_id
+    assert event.actor == recorded
 
 
 def test_wizard_field_refusal_retains_order_and_correlates_only_prewrite_receipts(
@@ -328,8 +390,12 @@ def test_wizard_field_refusal_retains_order_and_correlates_only_prewrite_receipt
         project_invoice_intake_result(operands.value.model_copy(update={"effect": "updated"}), receipt)
 
 
+@pytest.mark.parametrize("digest_supplied", [True, False], ids=["digest-supplied", "no-digest"])
 def test_import_worker_retains_every_row_refusal_unmapped_header_and_repeat_noop(
-    tmp_path: Path, authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+    digest_supplied: bool,
 ) -> None:
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     path = tmp_path / "synthetic.csv"
@@ -340,7 +406,7 @@ def test_import_worker_retains_every_row_refusal_unmapped_header_and_repeat_noop
             profile_id=_PROFILE,
             kind=InvoiceKind.RECEIVED,
             source_path=str(path),
-            source_sha256=sha256_hex(source),
+            source_sha256=sha256_hex(source) if digest_supplied else None,
             country="ES",
         ),
         intake_contracts.INVOICE_IMPORT_OPERATION_DEFINITION_ID,
@@ -374,6 +440,8 @@ def test_import_worker_retains_every_row_refusal_unmapped_header_and_repeat_noop
         assert isinstance(operands.value, intake_contracts.InvoiceIntakeExecutionResult)
         projection = operands.value.projection
         assert isinstance(projection, intake_contracts.InvoiceImportProjection)
+        # The digest returned is of the bytes parsed, whether or not the caller supplied one.
+        assert projection.source_sha256 == sha256_hex(source)
         assert (
             projection.rows == 2
             and projection.created == int(not repeat)

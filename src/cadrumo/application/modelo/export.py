@@ -188,6 +188,7 @@ from .profile_export_binding import (
     resolve_declaration_contact,
     resolve_export_identity,
     resolve_profile_export_values,
+    taxpayer_identity_profile_facts,
 )
 from .result_disposition_resolution import require_admissible_charge_account, resolve_modelo_result_disposition
 from .revision_persistence import (
@@ -233,7 +234,7 @@ def _modelo_export_layout_readiness_refusal(
         return None
     context = {"modelo": modelo, "reason": reason}
     if layout is not None:
-        context["layout_id"] = str(layout.id)
+        context["layout_id"] = layout.id
         context["layout_format"] = str(layout.format)
     return ModeloExportReadinessRefusal(
         reason=reason,
@@ -1154,7 +1155,7 @@ def _build_export_producer_snapshot(
             # relacionarse" is a third party, and under a gestor it is routinely
             # neither the taxpayer nor the presenter.
             declaration_contact=resolve_declaration_contact(
-                bucket_id=str(work_unit.bucket_id),
+                bucket_id=work_unit.bucket_id,
                 operation=operation,
             ),
         )
@@ -1255,7 +1256,7 @@ def _require_export_identity(
     if command.presenter is not None and command.taxpayer_identity is not None:
         return command.presenter, command.taxpayer_identity
     derived = resolve_export_identity(
-        bucket_id=str(work_unit.bucket_id),
+        bucket_id=work_unit.bucket_id,
         operation=operation,
     )
     presenter = command.presenter or (derived[0] if derived else None)
@@ -1380,7 +1381,7 @@ def _resolve_m303_filing_facts_for_export(
         prorrata_register_repository=prorrata_register_repository,
         transaction_repository=export_ports.transaction,
         investment_asset_register=bienes_register,
-        investment_asset_profile_id=str(work_unit.bucket_id),
+        investment_asset_profile_id=work_unit.bucket_id,
         operation=operation,
     )
     (
@@ -1637,11 +1638,29 @@ def _write_export_staging(
         # be written to fichero-BOE), which reads as a misleading disk/IO failure.
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause": str(exc),
-            },
+            context=_export_write_failure_context(command, exc),
         ) from exc
+
+
+def _export_write_failure_context(command: ModeloExportCommand, exc: FilingExportError) -> dict[str, object]:
+    """Name what the operator must supply when the refusal is a missing identity fact.
+
+    The layout refuses a blank required field by its producer key, which is a
+    registry spelling the operator never sees; the profile fact it is read from
+    is what they declare. Any other export failure keeps its own cause.
+    """
+    missing_producer_key = (exc.context or {}).get("missing_producer_key")
+    profile_facts = (
+        taxpayer_identity_profile_facts(missing_producer_key) if isinstance(missing_producer_key, str) else ()
+    )
+    if not profile_facts:
+        return {"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)}
+    named = " or ".join(profile_facts)
+    return {
+        "calculation_revision_id": command.calculation_revision_id,
+        "cause": f"the export requires the profile fact {named}, which is not set",
+        "missing_profile_facts": list(profile_facts),
+    }
 
 
 def _emit_export_event(
@@ -1738,9 +1757,13 @@ def _emit_export_event(
     )
 
 
-def _raise_if_deductible_iva_evidence_missing(revision: CalculationRevision) -> None:
+def _raise_if_deductible_iva_evidence_missing(
+    revision: CalculationRevision,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Refuse legacy revisions whose deductible IVA evidence is incomplete."""
-    deductible_gap_transaction_ids = deductible_iva_evidence_gap_transaction_ids(revision)
+    deductible_gap_transaction_ids = deductible_iva_evidence_gap_transaction_ids(revision, operation=operation)
     if not deductible_gap_transaction_ids:
         return
     raise ModeloExportEvidenceMissingError(
@@ -1972,7 +1995,7 @@ def _prepare_modelo_export(
         operation=operation,
     )
     _raise_if_ledger_export_evidence_missing(revision)
-    _raise_if_deductible_iva_evidence_missing(revision)
+    _raise_if_deductible_iva_evidence_missing(revision, operation=operation)
     period, schema_provider = _prepare_modelo_export_schema(
         work_unit=work_unit,
         revision=revision,

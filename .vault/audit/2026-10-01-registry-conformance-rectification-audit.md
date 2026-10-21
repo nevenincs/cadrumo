@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-conformance-rectification'
 date: '2026-10-01'
-modified: '2026-10-02'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:8e1be6463515f5e999bc5192d7bdf793f5e101b3b182e5277c89aa32e70e34dc'
+body_hash: 'sha256:e83599cdc4930ba53ab2c1e51f452f8701f1c1e628586d4e346f0f26cc3b8b76'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
   - "[[2026-10-01-registry-conformance-rectification-remaining-issues-research]]"

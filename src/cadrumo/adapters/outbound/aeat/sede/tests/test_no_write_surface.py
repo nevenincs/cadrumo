@@ -65,7 +65,7 @@ def _absolute_import_module(node: ast.ImportFrom, package: str) -> str:
     if node.level == 0:
         return node.module or ""
     base = package.split(".")[: len(package.split(".")) - node.level + 1]
-    return ".".join((*base, node.module)) if node.module else ".".join(base)
+    return ".".join((*base, node.module)) if (node.module is not None and node.module) else ".".join(base)
 
 
 def _walk_scope(node: ast.AST) -> Iterator[ast.AST]:
@@ -88,13 +88,13 @@ def _bound_names(node: ast.AST) -> tuple[str, ...]:
         return (node.name,)
     if isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del)):
         return (node.id,)
-    if isinstance(node, ast.ExceptHandler) and node.name:
+    if isinstance(node, ast.ExceptHandler) and (node.name is not None and node.name):
         return (node.name,)
     if isinstance(node, (ast.Global, ast.Nonlocal)):
         return tuple(node.names)
-    if isinstance(node, (ast.MatchAs, ast.MatchStar)) and node.name:
+    if isinstance(node, (ast.MatchAs, ast.MatchStar)) and (node.name is not None and node.name):
         return (node.name,)
-    if isinstance(node, ast.MatchMapping) and node.rest:
+    if isinstance(node, ast.MatchMapping) and (node.rest is not None and node.rest):
         return (node.rest,)
     return ()
 

@@ -9,14 +9,34 @@
 
 import type {
   DocsLanguage,
+  DesktopLanguage,
   HostFailure,
   LogBatch,
+  ManagerStatus,
+  SignInSignal,
   SignInStatus,
 } from "../ipc/contract";
+import { censoFixture } from "./censoFixture";
+import { userProfileFixture } from "./userProfileFixture";
 import type { Host } from "../shell/host";
+import type { AgentServiceStatus } from "../shell/agentSession";
 import type { ProfileAccounts } from "../shell/profiles";
 import type { ProfileViews } from "../shell/views";
+import {
+  fixtureAgent,
+  type FixtureAsks,
+  type FixtureCatalog,
+  type FixtureDocuments,
+  type FixtureStream,
+} from "./agentFixtureHost";
+import { agentAccessFixture } from "./agentAccessFixture";
+import { ABOUT_FIXTURE } from "./fixtures/about";
+import type { FixtureSkills } from "./fixtures/agentSkills";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
+import {
+  providerSettingsFixture,
+  type ProviderSignInFixtureControls,
+} from "./providerSettingsFixture";
 import {
   AHEAD_CALENDAR,
   BEHIND_CALENDAR,
@@ -33,10 +53,12 @@ import {
   feedBatch,
   FEED_BATCH,
   generatedBatches,
+  MANAGER_AVAILABLE,
   MISSING,
   UNREADABLE,
 } from "./fixtures/logs";
 import { openFixtureTerminal } from "./fixtures/terminal";
+import { setupFixture, type SetupShape } from "./setupFixture";
 import { SCENARIO_HOST_MARKER } from "./marker";
 import type { Scenario } from "./scenarios";
 
@@ -63,6 +85,19 @@ export type ScenarioHostOptions = {
    * was evaluated on, everything ahead, that day inside a month, or the
    * turn of a year with many windows open at once. */
   calendar?: CalendarShape | null;
+  /** How the agent's reply streams: in order, or with a piece missing. */
+  agentStream?: FixtureStream;
+  /** What every agent reply stops to ask the person, if anything. */
+  agentAsks?: FixtureAsks;
+  /** What the agent's conversations have stored for `@` to name. */
+  agentDocuments?: FixtureDocuments;
+  /** How the agent serves its skills to `/`. */
+  agentSkills?: FixtureSkills;
+  /** How the service answers the agent's catalog. */
+  agentCatalog?: FixtureCatalog;
+  /** The shape of the made-up computer's component setup; where neither
+   * this nor the scenario names one, the host offers no setup. */
+  setup?: SetupShape | null;
   /** Receives one line per host call; never a password or its length. */
   onCall?: (call: string) => void;
 };
@@ -76,6 +111,25 @@ export const CALENDAR_SHAPES = {
 export type CalendarShape = keyof typeof CALENDAR_SHAPES;
 
 const never = <T>() => new Promise<T>(() => undefined);
+
+/** External runtime events and delayed transport answers for browser scenarios. */
+declare global {
+  interface Window {
+    __scenarioLanguage?: {
+      publish(state: DesktopLanguage): void;
+      switchAccount(profile: string, language: string): void;
+      cacheNextObservation(state: DesktopLanguage): void;
+      refuseNextRead(): void;
+      refuseNextSet(): void;
+      deferNextSet(): void;
+      completeSet(state: DesktopLanguage): void;
+    };
+    /** Controls for synthetic, presentation-only provider sign-in attempts. */
+    __scenarioProviderSignIn?: ProviderSignInFixtureControls;
+    /** Publishes the fixture agent's status, as its service does when ready. */
+    __scenarioAgentPublishStatus?: (status?: AgentServiceStatus) => void;
+  }
+}
 
 const wait = (ms: number) =>
   new Promise<void>((resolve) => window.setTimeout(resolve, ms));
@@ -97,6 +151,12 @@ export function scenarioHost(
   let managerDispatched = scenario.manager?.autoDispatched ?? false;
   let managerReads = 0;
   let clipboard = "";
+  const supervision = scenario.supervision;
+  let observedManager: ManagerStatus | undefined = supervision?.initial;
+  let managerRevision = 0;
+  let signInListener: ((signal: SignInSignal) => void) | null = null;
+  let statusDelayMs = 0;
+  let statusFailure: HostFailure["code"] | undefined;
 
   // The profiles of this made-up computer, and the one that is selected.
   // A host with no profile commands still has the one its status names.
@@ -144,6 +204,27 @@ export function scenarioHost(
     : {};
 
   const profiles: ProfileAccounts = {
+    async reviewDelete(name) {
+      say("reviewProfileDelete");
+      await wait(options.latencyMs);
+      if (!accounts.includes(name)) throw failure("invalid_arguments", "cli");
+      return { name, profileId: name, digest: "fixture" };
+    },
+    async delete(review, confirmation, acknowledged) {
+      say("deleteProfile");
+      await wait(options.latencyMs);
+      if (
+        !acknowledged ||
+        confirmation !== review.name ||
+        !accounts.includes(review.name)
+      )
+        throw failure("invalid_arguments", "cli");
+      accounts.splice(accounts.indexOf(review.name), 1);
+      if (active === review.name) {
+        active = null;
+        presence = "absent";
+      }
+    },
     async list() {
       say("profiles");
       // A process of the product's, as every other read is.
@@ -198,9 +279,9 @@ export function scenarioHost(
   // A view belongs to a signed-in profile; without one it is refused.
   // Where the platform signs in inside the TUI the host cannot tell, and
   // the fixture session stands for a signed-in one.
-  const readable = () =>
-    scenario.views !== "refused" &&
-    (presence === "present" || !scenario.signIn.status.supported);
+  const signedIn = () =>
+    presence === "present" || !scenario.signIn.status.supported;
+  const readable = () => scenario.views !== "refused" && signedIn();
   const views: ProfileViews = {
     async notifications() {
       say("notifications");
@@ -221,13 +302,242 @@ export function scenarioHost(
     },
   };
 
+  const providerFixture = providerSettingsFixture({
+    say,
+    wait: () => wait(options.latencyMs),
+    readable,
+  });
+
+  // The agent goes with the profile's views: offered, empty, refused or not
+  // offered together. Its conversations are read as the signed-in
+  // profile's too.
+  const {
+    agent,
+    session: agentSession,
+    publishStatus,
+  } = fixtureAgent({
+    say,
+    wait: () => wait(options.latencyMs),
+    signedIn,
+    readable,
+    empty: scenario.views === "empty",
+    stream: options.agentStream ?? "steady",
+    asks: options.agentAsks ?? null,
+    refused: () => failure("timed_out", "cli"),
+    turnedOff: providerFixture.turnedOffLanes,
+    documents: options.agentDocuments ?? "stored",
+    skills: options.agentSkills ?? "bundled",
+    catalog: options.agentCatalog ?? "served",
+  });
+  // Every host this page made publishes, as one service would for each.
+  const publishedBefore = window.__scenarioAgentPublishStatus;
+  window.__scenarioAgentPublishStatus = (status) => {
+    publishedBefore?.(status);
+    publishStatus(status);
+  };
+
+  const providerSettings = providerFixture.settings;
+  window.__scenarioProviderSignIn = providerFixture.signInControls;
+
+  const agentAccess = agentAccessFixture({
+    say,
+    wait: () => wait(options.latencyMs),
+    readable,
+  });
+
+  const setupShape = options.setup ?? scenario.setup ?? null;
+  const setup = setupShape
+    ? setupFixture({
+        shape: setupShape,
+        latencyMs: options.latencyMs,
+        say,
+        readable: () => presence === "present",
+      })
+    : undefined;
+
+  let languageRevision = 0;
+  let outputLanguage = options.language;
+  let refuseLanguageSet = false;
+  let refuseLanguageRead = false;
+  let cachedLanguage: DesktopLanguage | null = null;
+  let deferLanguageSet = false;
+  let completeLanguageSet: ((state: DesktopLanguage) => void) | null = null;
+  const languageListeners = new Set<(state: DesktopLanguage) => void>();
+  const languageState = (): DesktopLanguage => ({
+    language: outputLanguage,
+    persisted: presence === "present",
+    profile: presence === "present" ? (status().active_profile ?? null) : null,
+    revision: languageRevision,
+  });
+  const languageControls: NonNullable<Window["__scenarioLanguage"]> = {
+    publish(state) {
+      // Transport delivery can be stale; the canonical fixture stays current.
+      if (
+        state.profile === languageState().profile &&
+        state.revision >= languageRevision
+      ) {
+        outputLanguage = state.language;
+        languageRevision = state.revision;
+      }
+      languageListeners.forEach((listener) => listener(state));
+    },
+    switchAccount(profile, language) {
+      active = profile;
+      presence = "present";
+      outputLanguage = language;
+      languageRevision += 1;
+      signInListener?.({
+        kind: "sign-in-state",
+        revision: languageRevision,
+        status: status(),
+      });
+      languageListeners.forEach((listener) => listener(languageState()));
+    },
+    cacheNextObservation(state) {
+      cachedLanguage = state;
+    },
+    refuseNextRead() {
+      refuseLanguageRead = true;
+    },
+    refuseNextSet() {
+      refuseLanguageSet = true;
+    },
+    deferNextSet() {
+      deferLanguageSet = true;
+    },
+    completeSet(state) {
+      completeLanguageSet?.(state);
+      completeLanguageSet = null;
+    },
+  };
+  const userProfile = userProfileFixture(scenario.censo);
   return {
+    language: {
+      read: () => {
+        if (refuseLanguageRead) {
+          refuseLanguageRead = false;
+          return Promise.reject(failure("read_failed", "cli"));
+        }
+        return Promise.resolve(languageState());
+      },
+      set: (language) => {
+        say(`language.set ${language}`);
+        if (refuseLanguageSet) {
+          refuseLanguageSet = false;
+          return Promise.reject(failure("read_failed", "cli"));
+        }
+        if (deferLanguageSet) {
+          deferLanguageSet = false;
+          return new Promise<DesktopLanguage>((resolve) => {
+            completeLanguageSet = resolve;
+          });
+        }
+        outputLanguage = language;
+        languageRevision += 1;
+        const next = languageState();
+        languageListeners.forEach((listener) => listener(next));
+        return Promise.resolve(next);
+      },
+      observe: (listener) => {
+        languageListeners.add(listener);
+        window.__scenarioLanguage = languageControls;
+        if (cachedLanguage) {
+          const cached = cachedLanguage;
+          cachedLanguage = null;
+          listener(cached);
+        }
+        return Promise.resolve(() => {
+          languageListeners.delete(listener);
+          if (
+            languageListeners.size === 0 &&
+            window.__scenarioLanguage === languageControls
+          ) {
+            delete window.__scenarioLanguage;
+          }
+        });
+      },
+    },
+    userProfile,
+    censo: censoFixture(userProfile, scenario.censo),
     available: true,
-    ...(scenario.views === "none" ? {} : { views }),
+    ...(scenario.views === "none"
+      ? {}
+      : { views, agent, agentSession, providerSettings, agentAccess }),
+    ...(setup ? { setup } : {}),
     ...(scenario.profiles === "absent" ? {} : { profiles }),
     ...managerCommand,
+    ...(supervision
+      ? {
+          managerStatus() {
+            say("managerStatus");
+            return Promise.resolve(observedManager!);
+          },
+          observeManager: ((listener) => {
+            say("observeManager");
+            listener({
+              kind: "manager-state",
+              revision: 0,
+              status: observedManager!,
+            });
+            const timers = supervision.events.map((event) => ({
+              late: event.deliverAfterUnsubscribe,
+              timer: window.setTimeout(() => {
+                if (event.presence) presence = event.presence;
+                if (event.statusDelayMs !== undefined)
+                  statusDelayMs = event.statusDelayMs;
+                statusFailure = event.statusFailure;
+                if (event.manager) {
+                  if (event.manager.revision > managerRevision) {
+                    managerRevision = event.manager.revision;
+                    observedManager =
+                      event.manager.kind === "manager-state"
+                        ? event.manager.status
+                        : { state: "failed", failure: event.manager.error };
+                    runtimeAvailable = observedManager.state === "ready";
+                  }
+                  listener(event.manager);
+                }
+                if (event.signIn) signInListener?.(event.signIn);
+              }, event.afterMs),
+            }));
+            return Promise.resolve(() => {
+              say("managerUnsubscribe");
+              for (const timer of timers)
+                if (!timer.late) window.clearTimeout(timer.timer);
+            });
+          }) satisfies NonNullable<Host["observeManager"]>,
+        }
+      : {}),
+    observeSignIn: ((listener) => {
+      signInListener = listener;
+      return Promise.resolve(() => {
+        if (signInListener === listener) signInListener = null;
+      });
+    }) satisfies NonNullable<Host["observeSignIn"]>,
+    ...(manager?.installResult
+      ? {
+          async installManager(scope: "user" | "machine") {
+            say(`installManager ${scope}`);
+            const result = manager.installResult!;
+            if (result === "pending") return never<"dispatched">();
+            await wait(manager.delayMs ?? options.latencyMs);
+            if (typeof result === "object")
+              throw failure(result.code, "installation");
+            managerDispatched = true;
+            managerReads = 0;
+            return result;
+          },
+        }
+      : {}),
     // The shell draws its own menu here; the native popup is not simulated.
     nativeMenus: false,
+
+    about() {
+      say("about");
+      return scenario.services === "refused"
+        ? Promise.reject(failure("package_unavailable", "package"))
+        : Promise.resolve(ABOUT_FIXTURE);
+    },
 
     environment() {
       say("environment");
@@ -236,15 +546,40 @@ export function scenarioHost(
         return Promise.reject(failure("environment_failed", "environment"));
       return Promise.resolve({
         outputLanguage: options.language,
-        docs: options.docs,
+        logLevel: "INFO",
+        docs:
+          new URLSearchParams(window.location.search).get("docs") === "none"
+            ? { state: "notBundled" }
+            : { state: "bundled", ...options.docs },
       });
+    },
+
+    noteActivity() {
+      say("noteActivity");
+      return Promise.resolve();
     },
 
     signInStatus() {
       say("signInStatus");
+      if (statusFailure) {
+        const code = statusFailure;
+        statusFailure = undefined;
+        return Promise.reject(failure(code, "cli"));
+      }
+      if (statusDelayMs) {
+        const captured = status();
+        return wait(statusDelayMs).then(() => {
+          say("managerAuthResolved");
+          return captured;
+        });
+      }
       if (scenario.signIn.statusPending) return never();
       if (scenario.signIn.statusFailure)
-        return Promise.reject(failure(scenario.signIn.statusFailure, "cli"));
+        return Promise.reject(
+          typeof scenario.signIn.statusFailure === "string"
+            ? failure(scenario.signIn.statusFailure, "cli")
+            : scenario.signIn.statusFailure,
+        );
       if (managerDispatched && manager?.statusFailureAfterDispatch) {
         say("managerStatusRejected");
         return Promise.reject(
@@ -275,8 +610,11 @@ export function scenarioHost(
       const named = accounts.indexOf(profile ?? "");
       if (profile !== undefined) say(`signInProfile ${named + 1}`);
       const outcome = scenario.signIn.submit;
+      const acknowledged = supervision
+        ? { ...status(), state: "present" as const }
+        : null;
       if (outcome.kind === "pending") return never();
-      await wait(options.latencyMs);
+      await wait(supervision?.submitDelayMs ?? options.latencyMs);
       if (outcome.kind === "fail") throw failure(outcome.code, "cli");
       if (outcome.kind === "refuse")
         return {
@@ -287,7 +625,7 @@ export function scenarioHost(
       // A sign-in that is accepted is what selects the profile.
       if (named >= 0) active = accounts[named] ?? active;
       presence = "present";
-      return { kind: "signed-in", status: status() };
+      return { kind: "signed-in", status: acknowledged ?? status() };
     },
 
     async signOut() {
@@ -296,13 +634,24 @@ export function scenarioHost(
       if (scenario.signIn.signOutFailure)
         throw failure(scenario.signIn.signOutFailure, "cli");
       presence = "absent";
+      // The product's reply: the saved setting, which a sign-out keeps, and
+      // whether an issued key can still admit.
+      const access = scenario.signIn.signOutAccess;
       return {
-        remainingAccess: { automationEnabled: true, automationRevoked: false },
+        remainingAccess: {
+          automationEnabled: access ? access.automationEnabled : true,
+          automationAccessRemains: access
+            ? access.automationAccessRemains
+            : false,
+          automationRevoked: false,
+        },
       };
     },
 
     openTerminal(kind, size, listener) {
-      say(`openTerminal ${kind} ${size.cols}x${size.rows}`);
+      say(
+        `openTerminal ${typeof kind === "string" ? kind : JSON.stringify(kind)} ${size.cols}x${size.rows}`,
+      );
       if (scenario.terminals === "pending") return never();
       if (scenario.terminals === "failed")
         return Promise.reject(failure("spawn_failed", "terminal"));
@@ -346,12 +695,17 @@ export function scenarioHost(
                 },
               ];
       let subscribed = true;
-      if (scenario.managerLog) {
+      if (scenario.managerLog === "absent") {
+        for (const batch of batches) {
+          batch.states = { ...batch.states };
+          delete batch.states.manager;
+        }
+      } else if (scenario.managerLog) {
         for (const batch of batches) {
           batch.states = {
             ...batch.states,
             manager: {
-              ...AVAILABLE.manager,
+              ...MANAGER_AVAILABLE,
               kind:
                 scenario.managerLog === "rejected"
                   ? "available"
@@ -389,6 +743,10 @@ export function scenarioHost(
       return scenario.services === "refused"
         ? Promise.reject(failure("output_limit", "webview"))
         : Promise.resolve(clipboard);
+    },
+    revealLogs() {
+      say("revealLogs");
+      return Promise.resolve();
     },
 
     writeClipboard(text) {

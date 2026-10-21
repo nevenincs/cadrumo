@@ -99,6 +99,10 @@ _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
         # aggregate runs no network-fetched tool.
         "check-security-full",
         "check-workflow-security",
+        # Freshness check against a separate cadrumo-agent checkout named by
+        # CADRUMO_DEV_AGENT_CHECKOUT. It refuses with exit 2 where none is
+        # supplied, so the portable aggregate cannot run it on a plain checkout.
+        "check-provider-catalog",
     }
 )
 
@@ -119,6 +123,7 @@ _CODE_GATES: Final[frozenset[str]] = frozenset(
         "check-secure-store-write-paths",
         "check-persistence-write-paths",
         "check-docstring-references",
+        "check-operation-contract-manifest",
     }
 )
 
@@ -347,7 +352,7 @@ def test_each_gate_runs_the_same_command_its_recipe_does() -> None:
 def test_the_recipe_command_scan_reads_real_commands() -> None:
     """A scan returning nothing would make the drift check vacuous."""
     commands = _recipe_commands()
-    assert commands.get("check-style"), f"check-style recipe not parsed: {commands.get('check-style')!r}"
+    assert bool(commands.get("check-style")), f"check-style recipe not parsed: {commands.get('check-style')!r}"
 
 
 def test_only_code_quality_primitives_are_enrolled() -> None:
@@ -359,11 +364,18 @@ def test_only_code_quality_primitives_are_enrolled() -> None:
         "-m",
         "dev.quality.import_gate",
     )
-    assert commands["check-dependency-declarations"][:3] == (
-        "deptry",
+    dependency_command = commands["check-dependency-declarations"]
+    assert dependency_command[0] == "deptry"
+    roots = dependency_command[1 : dependency_command.index("--known-first-party")]
+    assert set(roots) == {
         "src/cadrumo",
-        "src/cadrumo_harness",
-    )
+        "src/cadrumo_mcp",
+        "src/cadrumo_agent_service",
+        "src/cadrumo_client",
+        "src/cadrumo_runtime",
+        "dev/registry",
+    }
+    assert len(roots) == len(set(roots))
     assert commands["check-persistence-write-paths"] == (
         sys.executable,
         "-m",

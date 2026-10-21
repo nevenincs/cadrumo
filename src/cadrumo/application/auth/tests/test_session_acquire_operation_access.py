@@ -26,10 +26,11 @@ from cadrumo.application.auth.session_acquire_operation_access import (
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.config import Settings
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ._operator_probe_fakes import fake_operator_probe_ports
 from ._operator_scope_fakes import build_inward_operator_scope_ports
@@ -84,13 +85,15 @@ def test_login_registration_requires_human_authority_and_exact_profile(action: A
     if action is AccessAction.RESULT:
         assert {item.projection_id for item in resolved.policy.disclosures} == {AUTH_SESSION_ACQUIRE_RESULT_SCHEMA_ID}
 
-    for changed, reason in (
-        (replace(context, profile_id=uuid4()), AccessDenialCode.PROFILE_MISMATCH),
-        (replace(context, frontend=OperationFrontendProjection.MCP), AccessDenialCode.FRONTEND_DENIED),
-    ):
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            resolve_operation_access(registry=registry, request=request, context=changed)
-        assert refused.value.reason is reason
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_operation_access(registry=registry, request=request, context=replace(context, profile_id=uuid4()))
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    for frontend in OperationFrontendProjection:
+        elsewhere = resolve_operation_access(
+            registry=registry, request=request, context=replace(context, frontend=frontend)
+        )
+        assert elsewhere.request.frontend is frontend
+        assert elsewhere.policy == resolved.policy
 
 
 def _result() -> AuthLoginResult:

@@ -19,7 +19,7 @@ from .....domain.bienes_inversion.register import BienesInversionIvaRegister
 from .....domain.calculations.registry.schema import ModeloRevision
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from .....domain.iva.classification import InvoiceKind as CatalogueInvoiceKind
+from .....domain.iva.schema import InvoiceKind as CatalogueInvoiceKind
 from .....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..catalogue_reads import InvoiceCatalogueReadAdapter

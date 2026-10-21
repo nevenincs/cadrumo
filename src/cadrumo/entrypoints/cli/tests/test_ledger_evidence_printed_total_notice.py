@@ -16,8 +16,8 @@ from ....application.ledger.invoice_evidence_operation_dtos import (
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.json_contract import NoticeSeverity
 from ....domain.invoices.enums import PaymentStatus
-from ....domain.iva.classification import InvoiceKind
-from .._ledger_evidence_cli import _evidence_confirm_notices
+from ....domain.iva.schema import InvoiceKind
+from ..ledger_evidence_commands import _evidence_confirm_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -258,6 +258,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.config_reset.ConfigResetRequestRefusedError",
+        ErrorCode(
+            code="REFUSED_CONFIG_RESET_REQUEST",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.config_reset_repository.ConfigResetJournalError",
         ErrorCode(
             code="ERROR_CONFIG_RESET_JOURNAL",
@@ -953,6 +963,56 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_FLOW_RUN_ABANDONED",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_flow_run_abandoned",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.reference_catalogue.ReferenceQueryError",
+        ErrorCode(
+            code="REFUSED_REFERENCE_QUERY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.reference_catalogue.CededAutonomicModeloError",
+        ErrorCode(
+            code="REFUSED_REFERENCE_CEDED_AUTONOMIC_MODELO",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.reference_catalogue.DiscoveryScopeIncompleteError",
+        ErrorCode(
+            code="REFUSED_REFERENCE_DISCOVERY_SCOPE_INCOMPLETE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.reference_catalogue.DiscoveryPeriodTokenError",
+        ErrorCode(
+            code="REFUSED_REFERENCE_DISCOVERY_PERIOD_TOKEN",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.reference_catalogue.PortalFilterConflictError",
+        ErrorCode(
+            code="REFUSED_REFERENCE_PORTAL_FILTER_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
             retryable=False,
             runbook_id=None,
         ),

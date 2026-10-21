@@ -22,7 +22,7 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ..evidence import MediaKind, PurchaseInvoiceEvidence
 from ..evidence_reference import (
     EvidenceReference,

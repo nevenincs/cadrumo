@@ -884,10 +884,10 @@ def _manifest_comparison_domain(snapshot: RegistrySnapshot) -> str:
         {
             "owner": "application.modelo.workspace_manifest",
             "namespace": "modelo.workspace_field_manifest",
-            "modelo": str(snapshot.modelo.id),
-            "revision": str(snapshot.revision.id),
+            "modelo": snapshot.modelo.id,
+            "revision": snapshot.revision.id,
             "filing_year": snapshot.filing_year,
-            "period": str(snapshot.period),
+            "period": snapshot.period,
             "process_incarnation": _manifest_capture_process_nonce.hex(),
         }
     )
@@ -907,8 +907,8 @@ def _inspection_manifest_comparison_domain(inspection: RegistryRevisionInspectio
         {
             "owner": "application.modelo.workspace_manifest",
             "namespace": "modelo.workspace_field_manifest.static_inspection",
-            "modelo": str(inspection.modelo_id),
-            "revision": str(inspection.revision_id),
+            "modelo": inspection.modelo_id,
+            "revision": inspection.revision_id,
             "process_incarnation": _manifest_capture_process_nonce.hex(),
         }
     )
@@ -936,7 +936,7 @@ def _capture_for_manifest(
     return ModeloWorkspaceManifestCapture(
         manifest=manifest,
         comparison_domain=domain,
-        generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
+        generation=_manifest_generation_for(domain, (manifest.manifest_digest,)),
     )
 
 
@@ -983,7 +983,7 @@ def read_modelo_workspace_manifest_current_coordinate(
         domain = _inspection_manifest_comparison_domain(authority)
     return ModeloWorkspaceManifestCurrentCoordinate(
         comparison_domain=domain,
-        generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
+        generation=_manifest_generation_for(domain, (manifest.manifest_digest,)),
     )
 
 

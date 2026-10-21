@@ -88,7 +88,7 @@ def printed_iva_advisory(
         differs from ``derived_iva_amount`` beyond ``tolerance``; otherwise ``None``
         (no evidence, no derived value, no parseable printed figure, or a match).
     """
-    if not evidence_text or derived_iva_amount is None:
+    if not (evidence_text is not None and evidence_text) or derived_iva_amount is None:
         return None
     match = _IVA_AMOUNT.search(evidence_text)
     if match is None:

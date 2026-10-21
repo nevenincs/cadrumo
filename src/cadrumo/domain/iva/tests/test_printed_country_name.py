@@ -40,13 +40,13 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
-from cadrumo.domain.iva.classification import IvaTerritorialScope
 
 from ..country_vocabulary import country_codes_by_printed_name, normalise_printed_country_name
 from ..establishment import (
     country_code_for_printed_country_name,
     territorial_scope_for_country,
 )
+from ..schema import IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

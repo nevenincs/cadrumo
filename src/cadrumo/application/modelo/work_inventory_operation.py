@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.modelos.work_unit import WorkUnitState
 from ..operations.access_resolution import (
@@ -21,10 +23,8 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .work_lifecycle import list_work_units
@@ -102,11 +102,11 @@ def build_modelo_work_list_definition(factory: ActiveWorkLifecyclePortsFactory) 
     return build_single_phase_definition(
         definition_id=MODELO_WORK_LIST_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkListRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloWorkListProjection,
         executor_type=ModeloWorkListExecutor,
         build=lambda: ModeloWorkListExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

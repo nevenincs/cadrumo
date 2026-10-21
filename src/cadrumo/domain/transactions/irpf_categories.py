@@ -5,11 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from ...core.i18n.render import tr
 from ...core.time.clock import today_madrid
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
 from .enums import TransactionDirection
+from .errors import TransactionValidationError
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,6 +112,23 @@ def ledger_irpf_category(
     if descriptor is None or (direction is not None and direction not in descriptor.directions):
         return None
     return descriptor
+
+
+def require_ledger_irpf_category(value: str, *, authority: GovernedFactSource | None = None) -> str:
+    """Return the normalized token of a category the published taxonomy declares.
+
+    Every ledger write that accepts an operator-typed ``irpf_category`` resolves
+    it here, so a token the taxonomy does not declare is refused identically
+    whichever frontend submitted it, and the refusal names the accepted ids.
+
+    Raises:
+        TransactionValidationError: When the token is blank or not declared.
+    """
+    token = normalize_irpf_category(value)
+    if token is not None and ledger_irpf_category(token, authority=authority) is not None:
+        return token
+    accepted = ", ".join(descriptor.id for descriptor in ledger_irpf_category_catalogue(authority=authority))
+    raise TransactionValidationError(tr("cli.ledger.errors.irpf_category_unknown", value=value, accepted=accepted))
 
 
 def has_non_work_irpf_category(

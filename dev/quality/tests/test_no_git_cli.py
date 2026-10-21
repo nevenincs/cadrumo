@@ -72,7 +72,7 @@ def python_invokes_git(source: str) -> bool:
         for node in ast.walk(tree)
         if isinstance(node, ast.ImportFrom)
         for alias in node.names
-        if alias.asname
+        if (alias.asname is not None and alias.asname)
     }
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
@@ -172,7 +172,7 @@ def test_repository_code_never_invokes_git() -> None:
             offenders.append(relative)
     assert checked, "the executable-source inventory is empty"
     required = {
-        "src/cadrumo/entrypoints/cli/bootstrap.py",
+        "src/cadrumo_runtime/host/frontend/cli/bootstrap.py",
         "dev/env/clean.py",
         "dev/ci/change_scope.py",
         "dev/packaging/smoke_scoop.ps1",

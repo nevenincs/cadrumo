@@ -6,18 +6,19 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from textual.screen import Screen
-from textual.widgets import Static
+from textual.widgets import Button, Static
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.logging import get_logger
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from .declarations.controller import calendar_address_focus_key
 from .home import HomeTarget, home_target_action_id, home_target_agenda_address, home_target_work_unit_id
-from .navigation import NavigationContractError, TuiFocusIdentityV1, TuiNavigationTargetV1
-from .secret.passphrase import PassphraseScreen
+from .navigation import DestinationFactoryError, NavigationContractError, TuiFocusIdentityV1, TuiNavigationTargetV1
 
 if TYPE_CHECKING:
     from .app import CadrumoTuiApp
+    from .secret.passphrase import PassphraseScreen
 
 
 class RootNavigationMixin:
@@ -31,16 +32,34 @@ class RootNavigationMixin:
             return
         try:
             screen = catalogue.create_screen(target)
-        except NavigationContractError:
+        except NavigationContractError as error:
+            # Factory defects share the contract-error base with expected
+            # unavailable routes, but must still produce failure diagnostics.
+            if isinstance(error, DestinationFactoryError):
+                diagnostic_event(
+                    get_logger(__name__),
+                    "tui_destination_open_failed",
+                    fields={
+                        **diagnostic_error_fields(error),
+                        "reason_code": target.destination,
+                        "outcome": "failed",
+                    },
+                    primary_error=error,
+                )
             self._refuse_navigation()
             return
-        except Exception:
+        except Exception as error:
             # A destination reads its sources as it opens, and the usual reason
             # those reads fail is that the session lapsed while the operator
             # sat on Home. Home's refresh is what tells expiry apart and
             # returns to sign-in; any other failure stays a visible refusal
             # rather than ending the session with a traceback.
-            get_logger("cadrumo.entrypoints.tui.app").warning("destination %s could not open", target.destination)
+            diagnostic_event(
+                get_logger(__name__),
+                "tui_destination_open_failed",
+                fields={**diagnostic_error_fields(error), "reason_code": target.destination, "outcome": "failed"},
+                primary_error=error,
+            )
             self._refuse_navigation()
             self._show_home(self._home_semantic_focus)
             return
@@ -95,6 +114,8 @@ class RootNavigationMixin:
         """
         if self._refresh_home is None:
             return
+        self.query_one("#root-retry", Button).display = False
+        self.query_one("#root-read-refusal", Static).update("")
         self._home_request = semantic_focus
         self._navigation_revision += 1
         self._home_navigation_revision = self._navigation_revision
@@ -134,14 +155,16 @@ class RootNavigationMixin:
     async def _return_home(self: CadrumoTuiApp, navigation_revision: int) -> None:
         try:
             await self._rebuild_workbench_search()
-            self._rebuild_destination_catalogue()
+            if not self._navigation_is_current(navigation_revision):
+                return
+            await self._rebuild_destination_catalogue(navigation_revision)
             await self._show_home_now(self._home_semantic_focus, navigation_revision)
         finally:
             self._returning_home = False
-            if self.is_running:
+            if self.is_running and not self._home_rebuilding:
                 self.query_one("#root-updating", Static).display = False
 
-    def _rebuild_destination_catalogue(self: CadrumoTuiApp) -> None:
+    async def _rebuild_destination_catalogue(self: CadrumoTuiApp, navigation_revision: int) -> None:
         """Re-admit destinations against the generation the factories now read.
 
         Availability is a property of the CURRENT capture, not of the first
@@ -154,9 +177,20 @@ class RootNavigationMixin:
         if refresh is None or self._destination_catalogue is None:
             return
         try:
-            refreshed = refresh()
-        except Exception:  # a refused re-admission must not end the session
-            self._workbench_search_refusal_code = "workbench.destinations.refresh_unavailable"
+            refreshed = await await_cancellation_complete(
+                asyncio.to_thread(refresh), task_name="tui-destination-refresh"
+            )
+        except Exception as error:  # a refused re-admission must not end the session
+            diagnostic_event(
+                get_logger(__name__),
+                "tui_destination_refresh_failed",
+                fields=diagnostic_error_fields(error),
+                primary_error=error,
+            )
+            if self._refresh_destination_catalogue is refresh and self._navigation_is_current(navigation_revision):
+                self._workbench_search_refusal_code = "workbench.destinations.refresh_unavailable"
+            return
+        if self._refresh_destination_catalogue is not refresh or not self._navigation_is_current(navigation_revision):
             return
         self._destination_catalogue = refreshed
         self._active_destination_catalogue = refreshed
@@ -174,7 +208,13 @@ class RootNavigationMixin:
             refreshed = await await_cancellation_complete(
                 asyncio.to_thread(refresh_workbench_search), task_name="tui-search-refresh"
             )
-        except Exception:  # projection failures must not leak protected diagnostics
+        except Exception as error:  # projection failures must not leak protected diagnostics
+            diagnostic_event(
+                get_logger(__name__),
+                "tui_search_refresh_failed",
+                fields=diagnostic_error_fields(error),
+                primary_error=error,
+            )
             if self._refresh_workbench_search is refresh_workbench_search and self.is_running:
                 self._workbench_search_refusal_code = "workbench.search.refresh_unavailable"
             return
@@ -231,6 +271,7 @@ class RootNavigationMixin:
             if not self._navigation_is_current(navigation_revision):
                 return
         await self.push_screen(screen, self._on_destination_dismissed if return_to_home else None)
+        self.call_after_refresh(self._record_initial_screen_ready, screen)
 
     def _navigation_is_current(self: CadrumoTuiApp, navigation_revision: int) -> bool:
         """Recheck navigation and application lifetime across an awaited swap."""
@@ -245,7 +286,10 @@ class RootNavigationMixin:
         self._sever_profile_root()
         for screen in self.screen_stack[1:]:
             screen.display = False
-        if outcome.reason is AccountRecomposeReasonV1.EXPIRED and password_screen is not None:
+        if (
+            outcome.reason in {AccountRecomposeReasonV1.EXPIRED, AccountRecomposeReasonV1.UNAVAILABLE}
+            and password_screen is not None
+        ):
             self.run_worker(
                 self._settle_expired_password(password_screen, outcome),
                 name="password-expiry-settlement",
@@ -282,3 +326,4 @@ class RootNavigationMixin:
         self._home_semantic_focus = None
         self._home_request = None
         self._read_account_session = None
+        self._note_activity = None

@@ -23,6 +23,7 @@ import functools
 import multiprocessing
 import os
 import stat
+import sys
 import tempfile
 import threading
 import time
@@ -37,6 +38,7 @@ from ...tests.attribute_scope import scoped_attribute
 from .. import atomic_write
 from ..atomic_write import (
     DurableWriteBatch,
+    StagedPublication,
     atomic_write_best_effort_bytes,
     atomic_write_best_effort_text,
     atomic_write_bytes,
@@ -93,6 +95,30 @@ _EXIT_READER_FAILURE = 23
 
 def _tmp_leftovers(directory: Path) -> list[Path]:
     return list(scan_directory(directory, pattern="*.tmp"))
+
+
+def _expect_open_reader_publication_refusal(
+    staged: StagedPublication,
+    *,
+    winerror: int | None = None,
+) -> None:
+    try:
+        staged.publish_with_open_readers()
+    except OSError as exc:
+        if winerror is not None:
+            if sys.platform != "win32":
+                pytest.fail("Windows error assertions require a Windows runtime")
+            assert exc.winerror == winerror
+    else:
+        pytest.fail("the staged publication should have refused")
+
+
+def _windows_os_error(winerror: int) -> OSError:
+    if sys.platform != "win32":
+        pytest.fail("Windows error construction requires a Windows runtime")
+    import ctypes
+
+    return ctypes.WinError(winerror)
 
 
 def _close_fd(fd: int) -> None:
@@ -793,6 +819,224 @@ def test_staged_publication_publishes_the_caller_written_bytes_and_removes_the_s
     assert {child.name for child in scan_directory(target.parent)} == {"declaracion.txt"}
     if os.name != "nt":
         assert stat.S_IMODE(target.stat().st_mode) == 0o600
+
+
+def test_staged_open_reader_publication_replaces_the_target(
+    tmp_path: Path,
+) -> None:
+    target = tmp_path / "active-profile"
+    target.write_bytes(b"old-record")
+
+    with hardened_staged_publication(target) as staged:
+        staged.path.write_bytes(b"new-record")
+        staged.publish_with_open_readers()
+        assert staged.published
+
+    assert target.read_bytes() == b"new-record"
+    assert {child.name for child in scan_directory(tmp_path)} == {"active-profile"}
+
+
+def test_staged_open_reader_publication_preserves_state_on_a_real_target_refusal(
+    tmp_path: Path,
+) -> None:
+    target = tmp_path / "active-profile"
+    target.mkdir()
+    (target / "occupant").write_bytes(b"held")
+
+    with hardened_staged_publication(target) as staged:
+        staged.path.write_bytes(b"new-record")
+        _expect_open_reader_publication_refusal(staged)
+        assert not staged.published
+        assert staged.path.read_bytes() == b"new-record"
+        assert (target / "occupant").read_bytes() == b"held"
+
+    assert {child.name for child in scan_directory(target.parent)} == {"active-profile"}
+
+
+def test_staged_bytes_identity_probe_failure_closes_the_descriptor_and_removes_the_stage(
+    tmp_path: Path,
+) -> None:
+    target = tmp_path / "active-profile"
+    real_open = os.open
+    real_close = os.close
+    opened: list[int] = []
+    closed: list[int] = []
+
+    def capture_open(*args: Any, **kwargs: Any) -> int:
+        descriptor = real_open(*args, **kwargs)
+        opened.append(descriptor)
+        return descriptor
+
+    def capture_close(descriptor: int) -> None:
+        if descriptor in opened:
+            closed.append(descriptor)
+        real_close(descriptor)
+
+    def fail_fstat(_descriptor: int) -> os.stat_result:
+        raise OSError("staging identity probe failed")
+
+    with (
+        pytest.raises(OSError, match="staging identity probe failed"),
+        scoped_attribute(os, "open", capture_open),
+        scoped_attribute(os, "close", capture_close),
+        scoped_attribute(os, "fstat", fail_fstat),
+        hardened_staged_bytes_publication(target, b"payload"),
+    ):
+        pytest.fail("the staging identity failure must happen before yielding")
+
+    assert opened and closed == opened
+    assert scan_directory(tmp_path) == ()
+
+
+@pytest.mark.parametrize("winerror", [1, 50], ids=["invalid-function", "not-supported"])
+@pytest.mark.windows_only
+def test_staged_publication_falls_back_to_os_replace_only_for_unsupported_rename_capability(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    winerror: int,
+) -> None:
+    from .. import atomic_write
+
+    target = tmp_path / "active-profile"
+    target.write_bytes(b"old-record")
+    real_replace = os.replace
+    replace_calls = 0
+
+    def unsupported_rename(_handle: int, _target_path: Path) -> None:
+        raise _windows_os_error(winerror)
+
+    def count_replace(source: Path, destination: Path) -> None:
+        nonlocal replace_calls
+        replace_calls += 1
+        real_replace(source, destination)
+
+    monkeypatch.setattr(atomic_write, "_windows_rename_staged_handle", unsupported_rename)
+    monkeypatch.setattr(os, "replace", count_replace)
+    with hardened_staged_publication(target) as staged:
+        staged.path.write_bytes(b"new-record")
+        staged.publish_with_open_readers()
+        assert staged.published
+
+    assert replace_calls == 1
+    assert target.read_bytes() == b"new-record"
+    assert {child.name for child in scan_directory(tmp_path)} == {"active-profile"}
+
+
+@pytest.mark.windows_only
+def test_pre_rs1_windows_uses_canonical_replace_for_a_noncontended_publication(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from .. import atomic_write
+
+    target = tmp_path / "active-profile"
+    target.write_bytes(b"old-record")
+
+    def unavailable_on_this_os() -> bool:
+        return False
+
+    def unsupported_api_was_called(_handle: int, _target_path: Path) -> None:
+        pytest.fail("FileRenameInfoEx must not run before its Windows 10 RS1 API floor")
+
+    monkeypatch.setattr(atomic_write, "_windows_file_rename_info_ex_supported_by_os", unavailable_on_this_os)
+    monkeypatch.setattr(atomic_write, "_windows_rename_staged_handle", unsupported_api_was_called)
+    with hardened_staged_publication(target) as staged:
+        staged.path.write_bytes(b"new-record")
+        staged.publish_with_open_readers()
+        assert staged.published
+
+    assert target.read_bytes() == b"new-record"
+    assert {child.name for child in scan_directory(tmp_path)} == {"active-profile"}
+
+
+@pytest.mark.windows_only
+def test_staged_publication_does_not_fallback_for_a_real_unreplaceable_target(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    target = tmp_path / "active-profile"
+    target.mkdir()
+    (target / "occupant").write_bytes(b"held")
+    real_replace = os.replace
+    replace_calls = 0
+
+    def count_replace(source: Path, destination: Path) -> None:
+        nonlocal replace_calls
+        replace_calls += 1
+        real_replace(source, destination)
+
+    monkeypatch.setattr(os, "replace", count_replace)
+    with hardened_staged_publication(target) as staged:
+        staged.path.write_bytes(b"new-record")
+        _expect_open_reader_publication_refusal(staged)
+        assert not staged.published
+        assert staged.path.read_bytes() == b"new-record"
+
+    assert replace_calls == 0
+    assert (target / "occupant").read_bytes() == b"held"
+    assert {child.name for child in scan_directory(target.parent)} == {"active-profile"}
+
+
+@pytest.mark.windows_only
+def test_staged_publication_refuses_a_replaced_reservation_path(
+    tmp_path: Path,
+) -> None:
+    target = tmp_path / "active-profile"
+    target.write_bytes(b"old-record")
+
+    with hardened_staged_publication(target) as staged:
+        displaced = staged.path.with_name(f"{staged.path.name}.displaced")
+        staged.path.write_bytes(b"reserved-record")
+        staged.path.rename(displaced)
+        staged.path.write_bytes(b"unowned-replacement")
+
+        try:
+            staged.publish_with_open_readers()
+        except InternalInvariantError:
+            pass
+        else:
+            pytest.fail("publication adopted a file that replaced the reserved stage")
+
+        assert not staged.published
+        assert staged.path.read_bytes() == b"unowned-replacement"
+        assert displaced.read_bytes() == b"reserved-record"
+        assert target.read_bytes() == b"old-record"
+        displaced.unlink()
+
+    assert {child.name for child in scan_directory(tmp_path)} == {"active-profile"}
+
+
+@pytest.mark.windows_only
+def test_invalid_parameter_from_file_rename_does_not_fallback_to_os_replace(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from .. import atomic_write
+
+    target = tmp_path / "active-profile"
+    target.write_bytes(b"old-record")
+    replace_calls = 0
+    real_replace = os.replace
+
+    def invalid_parameter(_handle: int, _target_path: Path) -> None:
+        raise _windows_os_error(87)
+
+    def count_replace(source: Path, destination: Path) -> None:
+        nonlocal replace_calls
+        replace_calls += 1
+        real_replace(source, destination)
+
+    monkeypatch.setattr(atomic_write, "_windows_rename_staged_handle", invalid_parameter)
+    monkeypatch.setattr(os, "replace", count_replace)
+    with hardened_staged_publication(target) as staged:
+        staged.path.write_bytes(b"new-record")
+        _expect_open_reader_publication_refusal(staged, winerror=87)
+        assert not staged.published
+        assert staged.path.read_bytes() == b"new-record"
+
+    assert replace_calls == 0
+    assert target.read_bytes() == b"old-record"
+    assert {child.name for child in scan_directory(tmp_path)} == {"active-profile"}
 
 
 def test_no_clobber_publication_refuses_an_existing_target_and_leaves_it_intact(tmp_path: Path) -> None:

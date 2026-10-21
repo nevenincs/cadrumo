@@ -279,13 +279,17 @@ class WorkCalculateInputBundle:
             casilla_inputs=dict(casilla_inputs),
             text_casilla_inputs=dict(text_casilla_inputs or {}),
             m210_official_tipo_renta_code=(
-                m210_official_tipo_renta_code.strip() if m210_official_tipo_renta_code else None
+                m210_official_tipo_renta_code.strip()
+                if (m210_official_tipo_renta_code is not None and m210_official_tipo_renta_code)
+                else None
             ),
             binding_values=dict(binding_values),
             enum_binding_values=dict(enum_binding_values),
             relation_values=dict(relation_values),
             detail_rows=detail_rows,
-            borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
+            borrador_snapshot_id=borrador_snapshot_id.strip()
+            if (borrador_snapshot_id is not None and borrador_snapshot_id)
+            else None,
             filing_instance_evidence=filing_instance_evidence,
             m210_gross_income_source_mode=m210_gross_income_source_mode,
             shortcut_diagnostics=shortcut_diagnostics,
@@ -896,13 +900,13 @@ def _validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str
 def _refuse_row_field_casilla_override(key: CasillaId, *, records: tuple[str, ...], work_unit: WorkUnit) -> NoReturn:
     """Refuse a casilla an export record fills once per detail row, naming those records."""
     raise ModeloCalculateCasillaInputError(
-        context={"casilla_ids": str(key), "record_ids": ",".join(records)},
+        context={"casilla_ids": key, "record_ids": ",".join(records)},
         translated_message="errors.calc.row_field_template_supplied_as_input",
         precondition_failure=_caller_override_failure(
             work_unit,
             scenario_id="modelo.work.calculate.caller_overrides.row_field_casilla_refused",
             evidence_id=_CASILLA_OVERRIDE_EVIDENCE_ID,
-            facts={"casilla_key": str(key)},
+            facts={"casilla_key": key},
             with_registry_listing=False,
         ),
     )
@@ -1122,9 +1126,8 @@ def _maternidad_ambiguous_relacion_advisory(
     and export — a repeated refusal on every recalculation of the ordinary case
     would obstruct the majority for the sake of a minority this application
     cannot itself distinguish. The Notice channel this advisory rides is the
-    operator harness's own structured, machine-readable surface (never a
-    scrolled terminal line an autonomous operator might miss), matching the
-    established shape of every other unmodelled-eligibility-condition advisory
+    structured operator surface, where it remains available for filer review,
+    matching the established shape of every other unmodelled-eligibility-condition advisory
     on this same casilla (the cotizaciones ceiling above, and the DT 12ª
     antiquity condition elsewhere): disclose rather than silently grant, and
     disclose rather than silently block a filer this application cannot prove

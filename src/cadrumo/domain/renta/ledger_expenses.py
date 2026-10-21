@@ -6,7 +6,7 @@
 :class:`RentaDeductibilityResult` values become
 :class:`RentaDeductibleExpenseObservation` records routed through the dated
 facts-registry mapping to :data:`CasillaId` bindings for
-:class:`~cadrumo.core.Modelo('100')`.
+:class:`~cadrumo.core.modelo.Modelo` (``Modelo('100')``).
 """
 
 from __future__ import annotations

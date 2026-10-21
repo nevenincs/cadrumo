@@ -31,9 +31,8 @@ from ....domain.calculations.registry.retenciones_bindings import resolve_retenc
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import IvaRetencionRole, category_components
-from ....domain.iva.schema import IvaCategory
+from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ..invoice_retencion import InvoiceRetencionProjectionDefect, invoice_retencion_liability_defects
 from ..retenciones import RetencionObservation, aggregate_retenciones_111
 

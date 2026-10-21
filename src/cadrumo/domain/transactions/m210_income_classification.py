@@ -179,25 +179,25 @@ def _selected_m210_revision(operation: PinnedAuthorityOperation, effective_date:
         filing_year=effective_date.year,
         on=effective_date,
     )
-    return operation.revision("210", str(selected.id))
+    return operation.revision("210", selected.id)
 
 
 def _m210_code_and_payer_sets(
     revision: ModeloRevision,
 ) -> tuple[frozenset[str], frozenset[str]]:
     code_parameter = next(
-        (parameter for parameter in revision.parameters if "tipo-renta-code" in str(parameter.id)),
+        (parameter for parameter in revision.parameters if "tipo-renta-code" in parameter.id),
         None,
     )
     payer_parameter = next(
-        (parameter for parameter in revision.parameters if "multiple-payers" in str(parameter.id)),
+        (parameter for parameter in revision.parameters if "multiple-payers" in parameter.id),
         None,
     )
     if code_parameter is None or payer_parameter is None:
         raise TransactionValidationError("selected M210 registry revision lacks income-code declarations")
     return (
-        frozenset(str(entry.key) for entry in code_parameter.keyed_brackets),
-        frozenset(str(entry.key) for entry in payer_parameter.keyed_brackets),
+        frozenset(entry.key for entry in code_parameter.keyed_brackets),
+        frozenset(entry.key for entry in payer_parameter.keyed_brackets),
     )
 
 

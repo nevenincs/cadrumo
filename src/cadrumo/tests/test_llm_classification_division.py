@@ -86,7 +86,7 @@ def test_core_run_health_diagnostics_does_not_depend_on_the_optional_subpackage(
     for node in ast.walk(tree):
         # `adapters.outbound.llm` is the canonical outbound LLM package and is
         # fine; no displaced top-level package may be reached.
-        if isinstance(node, ast.ImportFrom) and node.module:
+        if isinstance(node, ast.ImportFrom) and (node.module is not None and node.module):
             parts = node.module.split(".")
             if "llm" in parts and "adapters" not in parts:
                 reaches.append(f"line {node.lineno}: from {node.module}")
@@ -169,7 +169,9 @@ def test_the_review_workflow_does_not_import_across_the_boundary_inward() -> Non
             continue
         if node.level:
             base = workflow_package[: len(workflow_package) - (node.level - 1)]
-            resolved_modules.append(".".join([*base, node.module]) if node.module else ".".join(base))
+            resolved_modules.append(
+                ".".join([*base, node.module]) if (node.module is not None and node.module) else ".".join(base)
+            )
         else:
             resolved_modules.append(node.module or "")
 

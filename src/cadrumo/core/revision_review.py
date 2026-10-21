@@ -7,7 +7,7 @@ hydration rejects an unknown token at registry-load time rather than at a
 downstream branch on the string.
 
 The status is *declared*, not derived: authorship and signoff are facts about
-the humans and agents who built a revision, and nothing in the tree can compute
+the human and automated reviewers who built a revision, and nothing in the tree can compute
 them. Absence of the stamp block means :attr:`RevisionReviewStatus.PENDING_REVIEW`
 - the fail-closed reading, so an unreviewed revision is a visible backlog entry
 rather than a silent pass.
@@ -53,8 +53,10 @@ class RevisionReviewStatus(StrEnum):
     PENDING_REVIEW = "pending_review"
     """No review has been recorded for this revision - the fail-closed default."""
 
-    AGENT_REVIEWED = "agent_reviewed"
-    """An agent reviewed the revision; an operator has not yet countersigned."""
+    # The Python name describes the reviewer generically; the registry's authored
+    # and published provenance token remains unchanged.
+    AUTOMATION_REVIEWED = "agent_reviewed"
+    """An automated reviewer inspected the revision; an operator has not yet countersigned."""
 
     OPERATOR_REVIEWED = "operator_reviewed"
     """The operator reviewed and signed off the revision."""

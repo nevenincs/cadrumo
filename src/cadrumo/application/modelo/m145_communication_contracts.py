@@ -8,6 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.casilla_id import CasillaId
 from ...core.hashing import sha256_hex
 from ...core.hex import Hex64Str
@@ -17,7 +19,6 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...domain.calculations.registry.fixed_width_codec import ExportEncoding
 from ...domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .m145_communication_period import M145CommunicationPeriod
 from .m145_communication_records import (
@@ -137,7 +138,12 @@ class M145CommunicationFieldValueProjection(BaseModel):
 
 
 class M145CommunicationCreateRequest(BaseModel):
-    """Sensitive create intent held only as a secure operation reference."""
+    """Sensitive create intent held only as a secure operation reference.
+
+    The record it creates is a local draft in the ``created`` state. ``actor``
+    is recorded as sent for a person's session. An automation's session is recorded
+    under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -150,7 +156,7 @@ class M145CommunicationCreateRequest(BaseModel):
 
     @model_validator(mode="after")
     def _field_values_are_unique_and_sorted(self) -> M145CommunicationCreateRequest:
-        identifiers = tuple(str(item.casilla_id) for item in self.field_values)
+        identifiers = tuple(item.casilla_id for item in self.field_values)
         if identifiers != tuple(sorted(set(identifiers))):
             raise ValueError("M145 operation field values must be unique and sorted by casilla id")
         return self
@@ -170,7 +176,7 @@ class M145CommunicationCreateRequest(BaseModel):
             period_token=command.period_token,
             field_values=tuple(
                 M145CommunicationFieldValueProjection(casilla_id=key, value=value)
-                for key, value in sorted(command.field_values.items(), key=lambda pair: str(pair[0]))
+                for key, value in sorted(command.field_values.items(), key=lambda pair: pair[0])
             ),
             note=command.note,
             actor=actor,
@@ -200,19 +206,31 @@ class M145CommunicationValidateRequest(_M145RecordSelectionRequest):
 
 
 class M145CommunicationExportRequest(_M145RecordSelectionRequest):
-    """Registry-layout export of one full record id or existing prefix."""
+    """Registry-layout export of one full record id or existing prefix.
+
+    ``actor`` is recorded as sent for a person's session. An automation's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     actor: Annotated[str, Field(min_length=1, max_length=64)]
 
 
 class M145CommunicationMarkDeliveredRequest(_M145RecordSelectionRequest):
-    """Mark one valid communication as delivered to its payer."""
+    """Mark one valid communication as delivered to its payer.
+
+    ``actor`` is recorded as sent for a person's session. An automation's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     actor: Annotated[str, Field(min_length=1, max_length=64)]
 
 
 class M145CommunicationMarkCompletedRequest(_M145RecordSelectionRequest):
-    """Mark one payer-delivered communication as locally completed."""
+    """Mark one payer-delivered communication as locally completed.
+
+    ``actor`` is recorded as sent for a person's session. An automation's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     actor: Annotated[str, Field(min_length=1, max_length=64)]
 
@@ -250,7 +268,7 @@ class M145CommunicationRecordProjection(BaseModel):
 
     @model_validator(mode="after")
     def _field_values_are_unique_and_sorted(self) -> M145CommunicationRecordProjection:
-        identifiers = tuple(str(item.casilla_id) for item in self.field_values)
+        identifiers = tuple(item.casilla_id for item in self.field_values)
         if identifiers != tuple(sorted(set(identifiers))):
             raise ValueError("M145 projection field values must be unique and sorted by casilla id")
         return self
@@ -270,7 +288,7 @@ class M145CommunicationRecordProjection(BaseModel):
             state=record.state,
             field_values=tuple(
                 M145CommunicationFieldValueProjection(casilla_id=key, value=value)
-                for key, value in sorted(record.field_values.items(), key=lambda pair: str(pair[0]))
+                for key, value in sorted(record.field_values.items(), key=lambda pair: pair[0])
             ),
             legal_refs=tuple(record.legal_refs),
             source_refs=tuple(record.source_refs),
@@ -531,7 +549,7 @@ class M145CommunicationOperationResult(BaseModel):
 
 
 class M145CommunicationExecutionResult(BaseModel):
-    """Private encrypted operand wrapping the CLI-only terminal projection."""
+    """Private encrypted operand wrapping the terminal projection."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 

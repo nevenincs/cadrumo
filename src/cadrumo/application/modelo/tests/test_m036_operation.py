@@ -14,6 +14,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -24,14 +27,6 @@ from ...operations.access_resolution import OperationAccessContext, ResolvedOper
 from ...operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
-    Availability,
-    DisclosureCategory,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import m036_lifecycle as lifecycle_module
 from .. import m036_operation as module
@@ -106,7 +101,7 @@ def _result_access(subject: Subject, registry: OperationRegistry, *, definition_
             profile_id=PROFILE_ID,
             destination_id=uuid4(),
             action=AccessAction.RESULT,
-            frontend=OperationFrontendProjection.MCP
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT
             if definition_id == module.M036_QUERY_OPERATION_DEFINITION_ID
             else OperationFrontendProjection.CLI,
             contract=registry.lookup_public_contract(definition_id),
@@ -137,9 +132,6 @@ def test_real_family_registration_compiles_complete_human_and_safe_schemas(subje
     assert "sede_justificante" in module.M036DeclarationSnapshot.model_fields
     assert "note" not in module.M036QueryDeclaration.model_fields
     assert "sede_justificante" not in module.M036QueryDeclaration.model_fields
-    assert registry.lookup(module.M036_RECORD_OPERATION_DEFINITION_ID).permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI}
-    )
     assert (
         OperationEffect.PARTIAL
         not in registry.lookup(module.M036_RECORD_OPERATION_DEFINITION_ID).capabilities.permitted_effects
@@ -222,7 +214,7 @@ async def test_atomic_writer_authority_and_uncertain_failure_settle_truthfully(
 
 
 @pytest.mark.asyncio
-async def test_shared_read_preserves_full_human_rows_and_only_reviewed_agent_facts(subject: Subject) -> None:
+async def test_shared_read_preserves_full_human_rows_and_only_reviewed_automation_facts(subject: Subject) -> None:
     request = _record_request()
     await module.M036RecordExecutor(subject.compose).execute(request, subject.context(request.definition_id))
     record = cast(module.M036RecordExecutionResult, subject.operands.values[-1]).projection.declaration
@@ -232,9 +224,9 @@ async def test_shared_read_preserves_full_human_rows_and_only_reviewed_agent_fac
             request, subject.context(request.definition_id)
         )
     human = cast(module.M036ReadExecutionResult, subject.operands.values[-2]).projection
-    agent = cast(module.M036QueryExecutionResult, subject.operands.values[-1]).projection
+    automation = cast(module.M036QueryExecutionResult, subject.operands.values[-1]).projection
     assert human.declarations[0].model_dump() == record.model_dump()
-    row = agent.declarations[0]
+    row = automation.declarations[0]
     assert row.profile_id == PROFILE_ID and row.declaration_id == record.declaration_id
     assert (
         row.event_kind == record.event_kind
@@ -242,7 +234,7 @@ async def test_shared_read_preserves_full_human_rows_and_only_reviewed_agent_fac
         and row.recorded_at == record.recorded_at
     )
     assert row.note_present and row.justificante_present
-    assert _NOTE not in agent.model_dump_json() and _RECEIPT not in agent.model_dump_json()
+    assert _NOTE not in automation.model_dump_json() and _RECEIPT not in automation.model_dump_json()
     assert subject.repository.writes == subject.fence.entries == 1
     assert subject.events.effects[-1] is OperationEffect.NONE
 
@@ -378,8 +370,10 @@ def test_observation_is_only_metadata_and_record_commit_is_declared(subject: Sub
         permission.category is DisclosureCategory.OPERATION_METADATA
         and permission.projection_id == OPERATION_OBSERVATION_PROJECTION_ID
     )
-    with pytest.raises(ProfileAccessRefusedError):
-        module.resolve_m036_operation_access(public, replace(context, frontend=OperationFrontendProjection.MCP))
+    for frontend in OperationFrontendProjection:
+        on_frontend = module.resolve_m036_operation_access(public, replace(context, frontend=frontend))
+        assert on_frontend.policy == observed.policy, frontend
+        assert on_frontend.request == observed.request.model_copy(update={"frontend": frontend}), frontend
 
 
 def test_projector_correlates_purpose_and_write_effect(subject: Subject) -> None:

@@ -19,16 +19,12 @@ from cadrumo.application.operations.models import OperationIdentity, OperationRe
 from cadrumo.application.operations.projection_services import OperationResponseAuthorityBroker
 from cadrumo.application.operations.provenance import OperationAdmissionProvenance
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    OperationAccessRequest,
-    ProfileAccessBinding,
-)
+from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.core.hashing import content_hash_hex
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, OperationAccessRequest
 
+from .supervisor_test_support import _NOW, IdleExecutor, SupervisorRequest, _registry, _repositories, _supervisor
 from .test_journal import _claim_lease, _lease, _snapshot
-from .test_supervisor import _NOW, IdleExecutor, SupervisorRequest, _registry, _repositories, _supervisor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

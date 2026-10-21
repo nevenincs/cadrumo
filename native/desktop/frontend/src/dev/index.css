@@ -3,4 +3,4 @@
    development tooling and the stories. */
 
 @import "tailwindcss" source("..");
-@import "../shell.css";
+@import "../styles/shell.css";

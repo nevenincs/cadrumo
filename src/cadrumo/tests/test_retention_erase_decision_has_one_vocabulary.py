@@ -174,7 +174,7 @@ def test_the_decision_is_expressed_at_several_sites() -> None:
     sites = _decision_sites()
 
     assert len(sites) >= 4, f"expected the erase decision at several sites, found {sites}"
-    assert any("_profile_delete.py" in site for site in sites), (
+    assert any("application/bucket_maintenance/deletion_preflight.py" in site for site in sites), (
         "the delete verb's decision is no longer recognised; the marker or the verb moved"
     )
 

@@ -11,16 +11,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_operator_target_accepts_typed_core_period() -> None:
-    periods = (
-        Period.from_year_and_code(2026, "1T"),
-        Period.from_year_and_code(2026, "0A"),
-        Period.from_year_and_code(2026, "03"),
+    targets = (
+        ("303", Period.from_year_and_code(2026, "1T")),
+        ("390", Period.from_year_and_code(2026, "0A")),
+        ("303", Period.from_year_and_code(2026, "03")),
     )
 
-    for period in periods:
+    for modelo, period in targets:
         address = modelo_work_address_from_operator_target(
             work_unit_id=None,
-            modelo="303",
+            modelo=modelo,
             year=2026,
             period=period,
             registry_revision_id=None,
@@ -28,6 +28,21 @@ def test_operator_target_accepts_typed_core_period() -> None:
 
         assert address.period == period
         assert address.filing_year == 2026
+
+
+def test_operator_target_rejects_period_the_modelo_does_not_declare() -> None:
+    with pytest.raises(ModeloWorkPeriodTokenError) as exc_info:
+        modelo_work_address_from_operator_target(
+            work_unit_id=None,
+            modelo="303",
+            year=2026,
+            period=Period.from_year_and_code(2026, "0A"),
+            registry_revision_id=None,
+        )
+
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["modelo"] == "303"
+    assert "0A" not in str(exc_info.value.context["tokens"]).split(", ")
 
 
 def test_operator_target_rejects_period_year_mismatch() -> None:

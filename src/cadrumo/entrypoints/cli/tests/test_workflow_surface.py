@@ -28,7 +28,7 @@ from ....core.storage_taxonomy_locations import storage_path
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from .cli_runner import invoke_cached_cli
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -134,7 +134,7 @@ def _seed_profile(
         "iva.voluntary_sii_enrolled": "false",
         "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     }
-    if extra_values:
+    if extra_values is not None and extra_values:
         values.update(extra_values)
     return register_cli_profile(label=name, facts=values, log_in=False)
 
@@ -362,7 +362,9 @@ def test_app_surface_uses_singular_user_domains() -> None:
         assert removed_command not in result.output
 
 
-def test_modelo_introspection_surface_uses_registry_query_backend() -> None:
+def test_modelo_introspection_surface_uses_registry_query_backend(encrypted_user_cli: Path) -> None:
+    # The binding listing is read inside a profile; the other reads need none.
+    _seed_profile()
     listed = _invoke(["--format", "json", "app", "modelo", "list", "--year", "2026"])
     described = _invoke(
         ["--format", "json", "app", "modelo", "describe", "303", "--year", "2026", "--period", "1T"],
@@ -431,9 +433,6 @@ def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
         ["config", "--help"],
         ["config", "profile", "create", "--help"],
         ["config", "profile", "status", "--help"],
-        ["config", "auth", "--help"],
-        ["config", "auth", "providers", "--help"],
-        ["config", "auth", "configure", "--help"],
         ["config", "profile", "--help"],
         ["config", "profile", "edit", "--help"],
         ["config", "profile", "view", "--help"],
@@ -496,44 +495,6 @@ def test_review_filter_help_lists_supported_filter_keys() -> None:
         assert token in ledger.output
     for token in ("--kind", "--source-kind", "--state", "--modelo"):
         assert token in review.output
-
-
-def test_config_auth_accepts_supported_provider_and_rejects_others(
-    encrypted_user_cli: Path,
-) -> None:
-    register_cli_profile(
-        label="operator",
-        facts={
-            "identity.tax_id": "00000000T",
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.name": "Operator",
-            "identity.surnames": "Workflow",
-            "activities.description": "Servicios",
-        },
-        log_in=False,
-    )
-
-    configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
-    unsupported_spelling = _invoke(["config", "auth", "configure", "--provider", "clave-movil"])
-    unsupported = _invoke(["config", "auth", "configure", "--provider", "unknown_provider"])
-    unsupported_test = _invoke(["config", "auth", "test", "--provider", "unknown_provider"])
-    unsupported_login = _invoke(["config", "auth", "login", "--provider", "unknown_provider"])
-    unsupported_reset = _invoke(
-        ["--format", "json", "config", "auth", "reset", "--provider", "unknown_provider", "--yes"],
-    )
-
-    assert configure.exit_code == 0, configure.output
-    assert "clave_movil" in configure.output
-    assert unsupported_spelling.exit_code != 0
-    assert "clave-movil" in unsupported_spelling.output
-    assert unsupported.exit_code != 0
-    assert "unknown_provider" in unsupported.output
-    assert unsupported_test.exit_code != 0
-    assert "unknown_provider" in unsupported_test.output
-    assert unsupported_login.exit_code != 0
-    assert "unknown_provider" in unsupported_login.output
-    assert unsupported_reset.exit_code != 0
-    assert "unknown_provider" in unsupported_reset.output
 
 
 def test_ledger_import_accepts_n26_csv_dry_run(isolated_user_cli: Path) -> None:
@@ -661,7 +622,8 @@ def test_ledger_import_verify_source_records_original_file_digest(isolated_user_
     assert payload["dry_run"] is True
     assert payload["validations"][0]["valid"] is True
     assert payload["sources"][0]["requested"] is True
-    assert payload["sources"][0]["path"] == str(source.resolve())
+    # The operation returns no caller-controlled path; the digest names the source.
+    assert payload["sources"][0]["path"] is None
     assert payload["sources"][0]["sha256"] == hashlib.sha256(source_bytes).hexdigest()
 
 

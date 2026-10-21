@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#cmake-e2e-build'
 date: '2026-10-08'
-modified: '2026-10-08'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:9a07a5bbcb11676d4dfca52bca110687d5c568146671e162b144834ed360e20a'
+body_hash: 'sha256:24aa286f5c99be8d003a3c7bc5d3b6ff11db21f021da58c0912c76ecf711e975'
 related:
   - "[[2026-10-08-cmake-e2e-build-plan]]"
 ---
@@ -47,6 +47,42 @@ Five enrolled Python sources changed during the live checkout's 18:19 compile. S
 
 The required `build/windows-x64/_deps/builder/Scripts/python.exe -m dev.quality.types` run exited 1 with 54 Windows diagnostics, all in the concurrently edited `src/cadrumo/core/darwin_transport.py` (12 ty, 12 pyrefly, 30 basedpyright); Linux and Darwin scans reported zero. This is an external verification limitation, not a passing aggregate or a reason to alter unrelated transport work.
 
+### distribution-stages | low | User-directed separation of compilation and verification
+
+The user's latest instruction explicitly requires the complete uncompressed distribution as one core CMake producer, with ZIP and release verification separate. `app-distro` now owns assembly; `bundle` is its compatibility alias, ZIP is no longer an ALL target, and `release` delegates to `verify-release`. The latter requires an unfiltered `user_docs_verify` target. Packaging renders committed transcripts with strict Sphinx warnings; ordinary documentation compilation retains its previous sequence-check default. No runtime launch policy or Session 0 detection was changed. Generated Visual Studio references confirm default builds omit ZIP/release, ZIP consumes the distribution, and release requires live sequence verification.
+
+### search-staging | low | Search stamping must preserve the rendered page's line endings
+
+The first separated build rendered all four languages successfully, then failed its stored-documentation round-trip check for all 1316 HTML pages. The first differing byte in en/404.html was a line terminator: the indexed page had 818 LF line endings, while reconstruction had 818 CRLF endings; normalizing the terminators made the bytes identical. Both Pagefind stamping paths explicitly rewrote pages with LF, conflicting with native-platform reconstruction. Read and write now preserve existing line endings. Real Pagefind integration tests cover LF and CRLF pages in both indexed and excluded paths. All 44 CMake documentation-driver and Pagefind tests pass. No byte-identity assertion was removed. The corrected full distribution build remains pending at this checkpoint.
+
+### cmd-launch-acceptance | low | CMD compatibility correction and actual distribution integrity verified
+
+PASS for S02 against HEAD 5506eda9e7 plus the scoped working-tree correction. The Windows child validator now preserves a single leading equals sign in inherited environment names, retaining rejection of malformed names, NULs and case collisions. The regression suite proves the hidden entry survives a real child process. The package test compares actual CMD and direct version/help launches with default and explicit storage, always removing the package-root override. CMake `verify-app-distro` depends on the canonical `app-distro` and runs both bundle smoke tests and the existing full `application.package` verifier; ZIP and live release verification remain separate. No production desktop/session selection changed.
+
+Verification: `ctest --preset release -R '^application[.]rust$' --output-on-failure` passed all 111 Rust tests. `cmake --build --preset release --target verify-app-distro --parallel 4` exited 0; all eight package checks passed in 48.89 seconds, including actual file/delegated documentation inventory inspection before and after the packaged Python probe. The manifest declares an application distribution, bundled documentation, version 0.6.0 and 18489 directly inventoried files. From `<user-home>`, CMake launched `cmd.exe /d /c` with the packaged executable and no arguments, with package-root and local-storage overrides removed: application start/help output and exit 0. The accepted executable is `build/windows-x64/stage/Release/app/cadrumo.exe`. This supersedes the old nested snapshot handover. GUI interaction remains unverified in Session 0.
+
+Repository lint and type checks passed; changed Python/Rust formatting and `git diff --check` passed. Repository formatting still reports the previously identified unrelated `src/cadrumo/application/overview/calendar.py` line. An initial assembly attempt correctly refused documentation inputs changed by concurrent work; the final retry passed source stability. Initial CMD-based unit-fixture attempts failed in the headless child setup; the final unit fixture uses a real native test child to assert the inherited value, while the passing package acceptance separately exercises real CMD. The earlier CMD launch finding is resolved by these checks. Integrated review found no remaining high or critical issue in S02's scope.
+
 ## Recommendations
+
+### cmd-launch-correction | high | Previous smoke acceptance did not cover CMD's inherited environment
+
+On 2026-10-09 the user reported environment_failed from CMD. Direct invocation from <user-home> without a package-root or storage override passed, while the same CMake env invocation through cmd.exe reproduced the failure in Session 0. Native startup logs show admission success and immediate environment failure before any Python child. `ChildConfiguration::new` rejected every equals sign in environment names, including Windows hidden names such as =C:. The native projection preserves those inherited entries; the shared child validator then rejects them. S02 corrects the native Windows name boundary and adds real CMD/default-storage acceptance. The previous six smoke tests were insufficient to establish ordinary CMD startup, and the full `application.package` inventory test was not included in that bundle-only test selection. Validation is pending for this correction. Source lookup confirmed Windows hidden-drive entries in Microsoft's CreateProcess documentation and the pinned Rust 1.96.0 Windows environment-block serialization. Semantic vault lookup did not return within the bounded discovery attempt; existing accepted desktop/distribution coverage and exact code were used.
+
+### final-distribution-review | low | Complete directory and direct packaged launch accepted
+
+PASS for the user's requested uncompressed distribution. Reviewed the final CMake producer/consumer graph, strict rendering selection, newline preservation and CLI parser regression coverage as one workflow. The corrected `app-distro` build exited 0; documentation staging retained byte-for-byte reconstruction checks and the package manifest declares bundled documentation. All six package CTest tests passed (8.15 seconds) with `CADRUMO_DESKTOP_PACKAGE_ROOT` unset. From `Y:/`, CMake invoked the packaged EXE with version, help and no arguments; every invocation exited 0 and version reported CADRUMO 0.5.1. The complete artifact is `build/windows-x64/product/build/source/build/windows-x64/stage/Release/app`, including `cadrumo.exe`, manager, interpreter, native entrypoints, dependencies, authority, manifests and documentation. No standalone executable or runtime-only directory is used as handover evidence.
+
+Verification: 44 documentation-driver and real Pagefind tests pass, including LF/CRLF preservation and explicit/default sequence-check selection. Repository lint and type checks pass. Import loadability passed for 4542 modules, the subordinate checker passed, and the missing-PATH graph component passed when rerun through its owner with the absolute CMake-managed executable (15 contracts). Repository-wide formatting still reports an unrelated calendar.py line; all changed files pass formatting. ZIP/full live release verification were not run under the latest explicit scope. GUI interaction cannot be verified in Session 0; production selection code was not changed. Earlier failed-build entries are historical and remain intact.
+
+Latest scope follows the user's explicit requirement for an on-disk distribution. ZIP creation and full live release verification remain separate, subsequent operations.
+
+### Latest executable evidence
+
+Headless acceptance passed against the CMake runtime-only bundle at `build/windows-x64/product/build/source/build/windows-x64/stage/Release/app`. All five `ctest --preset release -R '^bundle\.' --output-on-failure` tests passed (8.93 seconds). The standard standalone desktop preset built `build/windows-x64/product/build/source/build/desktop-windows-x64/cargo/desktop/release/cadrumo.exe` using the full-source preset's pinned Rust root. `desktop-headless-test` passed exact CLI stdout/stderr/exit parity, Unicode arguments, hostile Python environment, launch guards and logs. `desktop-run` then displayed the real application start/help output and exited 0. Native logs confirm successful CLI exits for version, help and no arguments.
+
+The user explicitly prohibited coding a special Session 0 condition. Inspected `native/desktop/src-tauri/src/launch.rs` and `native/platform/src/desktop.rs`: the existing selection checks interactive desktop availability (visible window station and OpenInputDesktop), not a session-number comparison. No production launch logic or headless test was modified by this task. `CADRUMO_TEST_HEADLESS_SESSION=1` only enables the existing test assertions.
+
+Full desktop release acceptance remains PENDING: strict documentation compilation failed after 4940 seconds on a bank-import runtime deadline and a test-runtime shutdown refusal. Runtime-only mode intentionally omits bundled documentation and the desktop image. The independently built desktop host ran against this verified runtime package; this does not establish a complete GUI distribution or installer. S01 remains open. Code changes have since been incorporated into the shared checkout's HEAD by another workstream; these task records preserve the remaining acceptance gap.
 
 Finish the page-level check, diagnose any remaining runtime failure, then rerun `verify-release` and `desktop-headless-test` through CMake. Append the resulting evidence before closing S01. Do not mark a compiled prerequisite as executable acceptance.

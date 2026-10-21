@@ -135,7 +135,7 @@ def _root_help() -> HelpDocument:
             ),
             # Deliberately the CONFIG document's key, rendered here as well. An
             # operator cannot set what no surface names, and this operator is
-            # frequently an agent holding only the help text -- so the settable
+            # frequently an automation holding only the help text -- so the settable
             # storage variables have to be reachable from the root landing, not
             # only from a subcommand's help. Sharing the key rather than minting
             # a root one keeps one translated sentence instead of two that drift.
@@ -344,11 +344,11 @@ def _config_help() -> HelpDocument:
                         description=tr("cli.operator_surface.help.config.profile_delete"),
                     ),
                     HelpEntry(
-                        command="aeat config passphrase change",
+                        command="cadrumo-runtime config passphrase change",
                         description=tr("cli.operator_surface.help.config.profile_passphrase"),
                     ),
                     HelpEntry(
-                        command="aeat config profile recovery --help",
+                        command="cadrumo-runtime config profile recovery --help",
                         description=tr("cli.operator_surface.help.config.profile_recovery"),
                     ),
                     HelpEntry(
@@ -382,39 +382,39 @@ def _config_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.config.section_authentication"),
                 entries=(
                     HelpEntry(
-                        command="aeat config auth providers",
+                        command="cadrumo-runtime config auth providers",
                         description=tr("cli.operator_surface.help.config.auth_providers"),
                     ),
                     HelpEntry(
-                        command="aeat config auth configure",
+                        command="cadrumo-runtime config auth configure",
                         description=tr("cli.operator_surface.help.config.auth_configure"),
                     ),
                     HelpEntry(
-                        command="aeat config auth status",
+                        command="cadrumo-runtime config auth status",
                         description=tr("cli.operator_surface.help.config.auth_status"),
                     ),
                     HelpEntry(
-                        command="aeat config auth test",
+                        command="cadrumo-runtime config auth test",
                         description=tr("cli.operator_surface.help.config.auth_test"),
                     ),
                     HelpEntry(
-                        command="aeat config auth logout",
+                        command="cadrumo-runtime config auth logout",
                         description=tr("cli.operator_surface.help.config.auth_logout"),
                     ),
                     HelpEntry(
-                        command="aeat config auth reset",
+                        command="cadrumo-runtime config auth reset",
                         description=tr("cli.operator_surface.help.config.auth_reset"),
                     ),
                     HelpEntry(
-                        command="aeat config auth certificate check",
+                        command="cadrumo-runtime config auth certificate check",
                         description=tr("cli.operator_surface.help.config.certificate_check"),
                     ),
                     HelpEntry(
-                        command="aeat config auth certificate secret set",
+                        command="cadrumo-runtime config auth certificate secret set",
                         description=tr("cli.operator_surface.help.config.certificate_secret_set"),
                     ),
                     HelpEntry(
-                        command="aeat config auth certificate secret remove",
+                        command="cadrumo-runtime config auth certificate secret remove",
                         description=tr("cli.operator_surface.help.config.certificate_secret_remove"),
                     ),
                 ),

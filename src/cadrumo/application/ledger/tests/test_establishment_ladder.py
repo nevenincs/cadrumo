@@ -44,7 +44,7 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 
 from ....core.classifier_input_source import ClassifierInputSource
-from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope, resolve_iva_classification_catalogue
+from ....domain.iva.classification import resolve_iva_classification_catalogue
 from ....domain.iva.errors import IvaCatalogueError
 from ....domain.iva.establishment import (
     country_code_for_printed_tax_identifier,
@@ -53,7 +53,7 @@ from ....domain.iva.establishment import (
 )
 from ....domain.iva.identification import identification_state_for_printed_tax_identifier
 from ....domain.iva.regime_legend import resolve_regime_legends
-from ....domain.iva.schema import EUMemberState
+from ....domain.iva.schema import EUMemberState, InvoiceKind, IvaTerritorialScope
 from ....tests.attribute_scope import scoped_attribute
 from ..counterparty_establishment import (
     ConfirmedCounterpartyFacts,

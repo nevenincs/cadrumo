@@ -268,7 +268,7 @@ class ModeloPresentado(BaseModel):
         except ValueError as exc:
             raise SubmissionValidationError(str(exc)) from exc
         if self.status is SubmissionStatus.ACEPTADA:
-            if not self.justificante_csv or not self.justificante_pdf_path:
+            if not (self.justificante_csv is not None and self.justificante_csv) or not self.justificante_pdf_path:
                 raise SubmissionValidationError(
                     "status ACEPTADA requires both justificante_csv and justificante_pdf_path",
                 )

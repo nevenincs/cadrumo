@@ -48,7 +48,7 @@ findings below are the sites whose names or behaviour claim broader support auth
 
 Severity: high. Confidence: high.
 
-`src/cadrumo_harness/mcp/_completions.py:30` declares:
+`src/cadrumo_mcp/mcp/_completions.py:30` declares:
 
 ```python
 _FILING_YEARS = tuple(str(year) for year in range(2019, 2031))

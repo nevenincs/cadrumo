@@ -8,7 +8,7 @@ any locale, so both resolve to English regardless of the operator's language
 while every ``tr()``-bound string beside them localises correctly.
 
 The rebinds live in this defining module because they are one concern with one
-caller: :func:`~cadrumo.entrypoints.cli.main` runs them once
+caller: :func:`~cadrumo.entrypoints.cli.main.main` runs them once
 per console process, after the root language flag has been resolved and before
 the command tree is invoked. They are invocation-scoped by construction — a
 real ``aeat`` run is one process per invocation, so a module-global rebind
@@ -33,7 +33,7 @@ def localise_help_section_headers() -> None:
     but Typer/Click ship no translation catalogue for any locale, so the call
     resolves to the literal English string regardless of the process locale. The
     already-``tr()``-bound option *descriptions* localise via the
-    :func:`_apply_language_argv_to_environment` env promotion, but the
+    :func:`cadrumo.entrypoints.cli.language_argv.apply_language_argv_to_environment` env promotion, but the
     framework-owned section headings stayed English — the residual gap the
     operator-surface ``--language`` help-honesty contract leaves open. This
     rebinds :mod:`typer.core`'s ``_`` name to a small dispatch table so those

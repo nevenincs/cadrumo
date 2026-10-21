@@ -375,7 +375,7 @@ def build_calculation_summary_presentation(
             SUBTITLE_LOCALE_KEY,
             year=str(header.filing_year),
             period=header.period.registry_token,
-            registry_revision=str(snapshot.revision_id),
+            registry_revision=snapshot.revision_id,
         ),
         notice_title=chrome.raw(NOTICE_TITLE_LOCALE_KEY),
         notice_body=header.local_calculation_notice,
@@ -388,7 +388,7 @@ def build_calculation_summary_presentation(
         sections=_sections(report, chrome=chrome),
         trace_heading=chrome.raw(TRACE_HEADING_LOCALE_KEY),
         trace=tuple(
-            CalculationSummaryFact(label=chrome.raw(key), value=none_text if value is None else str(value))
+            CalculationSummaryFact(label=chrome.raw(key), value=none_text if value is None else value)
             for key, value in trace
         ),
         signature_meaning=chrome.raw(SIGNATURE_MEANING_LOCALE_KEY),

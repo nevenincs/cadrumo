@@ -166,7 +166,7 @@ def execute_request[ResponseBodyT](
     nested call is re-raised unchanged so ownership and validation refusals are
     never re-wrapped as network errors. A credential refresh that Google
     answers by ending the grant becomes
-    :exc:`~adapters.outbound.google.errors.GoogleAuthSignInRequiredError`; the
+    :exc:`~cadrumo_client.contracts.google_auth.GoogleAuthSignInRequiredError`; the
     request it was for has not taken effect, so no uncertainty is reported.
 
     Args:
@@ -179,7 +179,7 @@ def execute_request[ResponseBodyT](
         The deserialised API response payload.
 
     Raises:
-        :exc:`~adapters.outbound.google.errors.GoogleAuthSignInRequiredError`:
+        :exc:`~cadrumo_client.contracts.google_auth.GoogleAuthSignInRequiredError`:
             When Google reports the stored grant as revoked or expired.
         :exc:`~adapters.outbound.storage.errors.OutboundStorageError`: Re-raised
             unchanged when a nested call already raised a typed

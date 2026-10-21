@@ -26,7 +26,6 @@ def test_product_identity_matches_the_accepted_external_tuple() -> None:
         distribution="cadrumo",
         cli_executable="aeat",
         repository="nevenincs/cadrumo",
-        plugin_identifier="cadrumo",
         environment_prefix="CADRUMO_",
         companion_distributions=("cadrumo-data-manuals", "cadrumo-data-official", "cadrumo-data-normatives"),
         companion_namespace="cadrumo_data",

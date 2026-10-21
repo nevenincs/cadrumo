@@ -137,3 +137,25 @@ def test_every_nested_group_is_enrolled_in_its_family_toctree(rendered_pages: di
         "nothing about whether the generated group pages are enrolled in a family toctree"
     )
     assert not missing, f"these generated CLI group pages are absent from their family toctree: {missing}"
+
+
+def test_generation_prunes_only_stale_rst_outputs_and_is_repeatable(tmp_path: Path) -> None:
+    """A removed command group leaves no orphan page; unrelated files survive."""
+    from ..cli_reference import generate_cli_reference
+
+    output_dir = tmp_path / "cli"
+    stale_page = output_dir / "app" / "retired.rst"
+    stale_page.parent.mkdir(parents=True)
+    stale_page.write_text("retired group\n", encoding="utf-8")
+    unrelated_asset = output_dir / "app" / "operator-note.txt"
+    unrelated_asset.write_text("keep this asset\n", encoding="utf-8")
+
+    first = generate_cli_reference(tmp_path)
+
+    assert not stale_page.exists()
+    assert unrelated_asset.read_text(encoding="utf-8") == "keep this asset\n"
+
+    second = generate_cli_reference(tmp_path)
+
+    assert second == first
+    assert all((tmp_path / name).read_text(encoding="utf-8") == content for name, content in second.items())

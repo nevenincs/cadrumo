@@ -59,7 +59,14 @@ class DeadlineAccess:
 class EventEmitter:
     async def phase(self, phase_code: str) -> None: ...
 
-    async def progress(self, *, completed: int, total: int, unit_code: str | None = None) -> None: ...
+    async def progress(
+        self,
+        *,
+        completed: int,
+        total: int,
+        unit_code: str | None = None,
+        subject_code: str | None = None,
+    ) -> None: ...
 
     async def log(
         self,
@@ -187,6 +194,7 @@ def test_public_callable_parameters_retain_semantic_keyword_names() -> None:
         "completed",
         "total",
         "unit_code",
+        "subject_code",
     )
     assert tuple(inspect.signature(OperationSecureOperandLookup.resolve).parameters) == (
         "self",

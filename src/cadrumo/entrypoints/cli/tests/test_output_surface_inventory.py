@@ -81,9 +81,6 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "Click-generated help text (ctx.get_help()), composed by click from "
         "static command metadata. It carries no operator data to redact."
     ),
-    ("entrypoints/cli/_app_diagnostics.py", "diagnostics_root", "typer.echo"): (
-        "Group help fallback: renders the click-generated help text verbatim, not operator data subject to redaction."
-    ),
     ("entrypoints/cli/_root_support.py", "emit_version_report_and_exit", "typer.echo"): (
         "Product identity and version string only. It is emitted on the "
         "--version short-circuit, before an app root or renderer context exists."
@@ -116,13 +113,6 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "It replaced two entries that each held a private copy of the "
         "render-and-echo pair -- which is how one of them came to bypass the "
         "boundary while its sibling did not."
-    ),
-    ("entrypoints/cli/config/secure_input.py", "write_to_controlling_terminal", "write"): (
-        "Recovery-code display writes directly to the controlling terminal "
-        "device (CONOUT$ / /dev/tty), deliberately BYPASSING stdout so the "
-        "candidate code can never land in a redirected stream, JSON "
-        "envelope, or log. Routing it through the envelope renderer would be "
-        "the secret-serialization defect the channel exists to prevent."
     ),
     ("entrypoints/cli/_terminal_errors.py", "_render_click_exception_text", "write"): (
         "Last-resort crash-boundary fallback used only when typer/rich "

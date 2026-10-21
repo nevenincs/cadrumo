@@ -158,7 +158,7 @@ def assert_submit_eligible(definition: FlowDefinition, state: FlowState) -> Revi
 
     The domain flow calls this immediately before handing the typed
     answers to its persistence hook; the refusal enumerates every
-    blocking verdict so the operator (or the driving agent) sees the
+    blocking verdict so the operator (or the driving automation) sees the
     complete remaining-work list, never a bare denial.
     """
     projection = review(definition, state)

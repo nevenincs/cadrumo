@@ -9,8 +9,8 @@
 mod startup_cases;
 
 use cadrumo_manager::contract::{
-    CLEARED_NAMES, CLEARED_PREFIXES, HOST_INHERITED_ENV, NAMESPACE_PREFIX, PINNED_ENV,
-    RESERVED_ENV, ROOT_VARIABLE,
+    CLEARED_NAMES, CLEARED_PREFIXES, HOST_INHERITED_ENV, LAUNCH_NAMES, LAUNCH_PACKAGE_FIXED,
+    NAMESPACE_PREFIX, PINNED_ENV, ROOT_VARIABLE,
 };
 use cadrumo_manager::session::claim::StartClaim;
 use cadrumo_manager::session::ownership::{BootRecordLocator, Role, WaitReason, reserve_restart};
@@ -26,6 +26,7 @@ use cadrumo_manager::supervision::supervisor::{
     VersionProbe,
 };
 use serde_json::Value;
+use sha2::{Digest, Sha256};
 use std::io::{BufRead, BufReader, Write};
 use std::os::windows::process::CommandExt;
 use std::path::{Path, PathBuf};
@@ -128,6 +129,7 @@ struct Case {
     installed: bool,
     initial_permit: bool,
     end_before_start: bool,
+    activity: Option<Box<dyn SessionActivity>>,
 }
 
 impl Default for Case {
@@ -136,6 +138,7 @@ impl Default for Case {
             config: SupervisorConfig {
                 readiness_ceiling: Duration::from_secs(20),
                 heartbeat_interval: Duration::from_millis(30),
+                idle_heartbeat_interval: Duration::from_millis(30),
                 heartbeat_staleness: Duration::from_millis(600),
                 accept_tick_ceiling: Duration::from_millis(500),
                 drain_bound: Duration::from_millis(1500),
@@ -154,6 +157,7 @@ impl Default for Case {
             installed: true,
             initial_permit: false,
             end_before_start: false,
+            activity: None,
         }
     }
 }
@@ -167,7 +171,7 @@ struct Seen {
 impl Case {
     /// Run the core on `root`, letting `script` answer events, until an outcome.
     fn run(
-        self,
+        mut self,
         root: &Root,
         mut script: impl FnMut(&Event, &SupervisorHandle),
     ) -> (Vec<Seen>, Outcome) {
@@ -179,7 +183,10 @@ impl Case {
         )
         .expect("fixture target");
         let collaborators = Collaborators {
-            session: Box::new(Session(self.session)),
+            session: self
+                .activity
+                .take()
+                .unwrap_or_else(|| Box::new(Session(self.session))),
             probe: Box::new(Probe(self.probe)),
             versions: Box::new(Catalogue(self.installed)),
             stop_signal: Box::new(PlatformStopSignal::default()),
@@ -209,7 +216,11 @@ impl Case {
         let started = Instant::now();
         let mut seen = Vec::new();
         loop {
-            assert!(started.elapsed() < CASE_LIMIT, "the case did not end");
+            assert!(
+                started.elapsed() < CASE_LIMIT,
+                "the case did not end: {:?}",
+                self::events(&seen)
+            );
             match observed.recv_timeout(Duration::from_millis(10)) {
                 Ok(event) => {
                     script(&event, &handle);
@@ -232,6 +243,13 @@ fn events(seen: &[Seen]) -> Vec<&Event> {
 
 fn count(seen: &[Seen], matches: impl Fn(&Event) -> bool) -> usize {
     seen.iter().filter(|seen| matches(&seen.event)).count()
+}
+
+fn first_at(seen: &[Seen], matches: impl Fn(&Event) -> bool) -> Instant {
+    seen.iter()
+        .find(|seen| matches(&seen.event))
+        .expect("the event was observed")
+        .at
 }
 
 fn restarts(seen: &[Seen]) -> Vec<RestartClass> {
@@ -447,9 +465,14 @@ fn the_runtime_gets_the_supervised_arguments_and_canonical_strict_environment() 
     assert!(!environment.is_empty());
     for name in environment {
         let name = name.as_str().expect("variable name");
-        if !PINNED_ENV.contains(&name) {
+        if !PINNED_ENV.contains(&name)
+            && !LAUNCH_PACKAGE_FIXED.iter().any(|(fixed, _)| *fixed == name)
+        {
             assert!(
-                !CLEARED_NAMES.contains(&name) && !RESERVED_ENV.contains(&name),
+                !CLEARED_NAMES.contains(&name)
+                    && !LAUNCH_NAMES
+                        .iter()
+                        .any(|declared| declared.name == name && declared.role != "pin"),
                 "{name}"
             );
             assert!(
@@ -470,6 +493,23 @@ fn the_runtime_gets_the_supervised_arguments_and_canonical_strict_environment() 
             .iter()
             .any(|name| name.as_str() == Some(ROOT_VARIABLE))
     );
+    let fixed = launch["package_fixed_sha256"]
+        .as_object()
+        .expect("fixed package digests");
+    assert_eq!(fixed.len(), LAUNCH_PACKAGE_FIXED.len());
+    for (name, value) in LAUNCH_PACKAGE_FIXED {
+        let expected = format!("{:x}", Sha256::digest(value.as_bytes()));
+        assert_eq!(
+            fixed.get(*name).and_then(Value::as_str),
+            Some(expected.as_str()),
+            "{name}"
+        );
+        assert!(
+            environment
+                .iter()
+                .any(|entry| entry.as_str() == Some(*name))
+        );
+    }
 }
 
 #[test]
@@ -512,6 +552,23 @@ fn stop_if_idle_leaves_a_busy_runtime_serving() {
         [Event::Busy { .. }, Event::StopRequested { .. }]
     ));
     assert_eq!(root.launches(), 1);
+}
+
+#[test]
+fn a_runtime_exit_is_an_event_even_when_no_timer_would_wake_the_supervisor() {
+    let mut case = Case::default();
+    let hour = Duration::from_secs(3600);
+    case.config.poll_interval = hour;
+    case.config.heartbeat_interval = hour;
+    case.config.heartbeat_staleness = 2 * hour;
+    case.config.accept_tick_ceiling = 2 * hour;
+    let root = Root::new(&["exit code=3221225477 after_ready", "serve"]);
+    let started = Instant::now();
+    let (seen, outcome) = case.run(&root, stop_on_ready(2));
+    assert_eq!(outcome, SETTLED);
+    assert_eq!(exits(&seen)[0], RuntimeExit::Crash(0xC000_0005));
+    assert_eq!(root.launches(), 2);
+    assert!(started.elapsed() < Duration::from_secs(60));
 }
 
 #[test]
@@ -576,8 +633,30 @@ fn a_contended_restart_claim_never_launches_again() {
 
 #[test]
 fn quit_during_backoff_suppresses_the_restart_and_releases_the_claim() {
+    struct QuitBeforeRecheck {
+        assessments: AtomicUsize,
+        written: mpsc::Receiver<()>,
+    }
+    impl SessionActivity for QuitBeforeRecheck {
+        fn is_active(&self) -> bool {
+            // Ownership checks activity before and under its restart claim.
+            // Gate its later pre-launch recheck until the observer publishes
+            // Quit, even when the test observer is scheduled after backoff.
+            if self.assessments.fetch_add(1, Ordering::SeqCst) == 2 {
+                self.written
+                    .recv_timeout(Duration::from_secs(10))
+                    .expect("Quit published before launch recheck");
+            }
+            true
+        }
+    }
     let root = Root::new(&["exit code=3221225477 after_ready", "serve"]);
     let mut case = Case::default();
+    let (published, written) = mpsc::channel();
+    case.activity = Some(Box::new(QuitBeforeRecheck {
+        assessments: AtomicUsize::new(0),
+        written,
+    }));
     case.config.restart.initial_backoff = Duration::from_millis(500);
     case.config.restart.maximum_backoff = Duration::from_millis(500);
     let (_, outcome) = case.run(&root, |event, _| {
@@ -591,6 +670,7 @@ fn quit_during_backoff_suppresses_the_restart_and_releases_the_claim() {
                 },
             )
             .unwrap();
+            published.send(()).unwrap();
         }
     });
     assert_eq!(outcome, Outcome::RestartDeferred(WaitReason::Quit));
@@ -749,6 +829,83 @@ fn an_accept_loop_that_stopped_turning_counts_as_a_hang() {
     let (seen, outcome) = Case::default().run(&root, stop_on_ready(2));
     assert_eq!(outcome, SETTLED);
     assert_eq!(restarts(&seen), [RestartClass::Hang]);
+}
+
+#[test]
+fn an_idle_runtime_is_pinged_at_the_idle_interval_and_any_other_at_the_heartbeat_interval() {
+    // The idle case's interval leaves its first reply ample time to land before a second
+    // ping would be due.
+    for (plan, interval, idle) in [
+        ("serve", Duration::from_millis(100), true),
+        ("serve busy", Duration::from_millis(30), false),
+        ("serve unknown_in_flight", Duration::from_millis(30), false),
+    ] {
+        let mut case = Case::default();
+        case.config.heartbeat_interval = interval;
+        case.config.idle_heartbeat_interval = Duration::from_secs(30);
+        let root = Root::new(&[plan]);
+        let (_seen, outcome) = case.run(&root, |event, handle| {
+            if matches!(event, Event::Ready { .. }) {
+                // Several heartbeat intervals pass before the stop.
+                thread::sleep(Duration::from_millis(600));
+                handle.request(Request::Stop);
+            }
+        });
+        assert_eq!(outcome, SETTLED);
+        let answered: u64 = fs::read_to_string(root.path().join("fixture-pings"))
+            .expect("the answered pings")
+            .parse()
+            .expect("a ping count");
+        if idle {
+            // The first reply reported no work, so the next ping was due 30 s later.
+            assert_eq!(answered, 1, "{plan}");
+        } else {
+            // Work in flight, or a count the runtime could not give, is never idleness.
+            assert!(answered >= 5, "{plan}: {answered} pings");
+        }
+    }
+}
+
+#[test]
+fn a_hang_after_an_idle_heartbeat_is_found_after_the_idle_ping_goes_unanswered() {
+    let mut case = Case::default();
+    case.config.idle_heartbeat_interval = Duration::from_secs(1);
+    let root = Root::new(&["serve hang_after=1 hang=hard", "serve"]);
+    let (seen, outcome) = case.run(&root, stop_on_ready(2));
+    assert_eq!(outcome, SETTLED);
+    assert_eq!(restarts(&seen), [RestartClass::Hang]);
+    let ready = first_at(&seen, |event| matches!(event, Event::Ready { .. }));
+    let hang = first_at(&seen, |event| matches!(event, Event::HangDetected { .. }));
+    // The idle ping is due 1 s after the first reply, and the runtime then has the
+    // staleness bound less one heartbeat interval to answer: 1570 ms in all, where a
+    // busy runtime would count as hung 600 ms after its last reply.
+    let found = hang.duration_since(ready);
+    assert!(
+        found >= Duration::from_millis(1200) && found < Duration::from_secs(5),
+        "{found:?}"
+    );
+}
+
+#[test]
+fn a_runtime_busy_again_after_a_late_idle_reply_is_pinged_before_its_hang_bound() {
+    // The first reply reports no work but arrives after three more pings were sent; their
+    // replies report work. Each must bring the next ping back from the idle interval.
+    let mut case = Case::default();
+    case.config.idle_heartbeat_interval = Duration::from_secs(30);
+    let root = Root::new(&["serve first_reply_delay_ms=100 busy_after=1"]);
+    let (seen, outcome) = case.run(&root, |event, handle| {
+        if matches!(event, Event::Ready { .. }) {
+            // Past the 600 ms bound the busy replies set, so a missing ping would be a hang.
+            thread::sleep(Duration::from_millis(1500));
+            handle.request(Request::Stop);
+        }
+    });
+    assert_eq!(outcome, SETTLED);
+    assert_eq!(
+        count(&seen, |event| matches!(event, Event::HangDetected { .. })),
+        0
+    );
+    assert!(restarts(&seen).is_empty());
 }
 
 #[test]

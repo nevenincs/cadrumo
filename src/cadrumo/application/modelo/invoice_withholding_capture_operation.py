@@ -11,11 +11,11 @@ from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
     MODELO_INVOICE_WITHHOLDING_CAPTURE_PHASES,
@@ -40,6 +40,7 @@ def build_modelo_invoice_withholding_capture_definition(
     return OperationDefinition(
         definition_id=MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
         request_type=ModeloInvoiceWithholdingCaptureRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloInvoiceWithholdingCaptureReport,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloInvoiceWithholdingCaptureRequest,
@@ -50,7 +51,6 @@ def build_modelo_invoice_withholding_capture_definition(
         interaction_kinds=frozenset(),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODES,
     )
 

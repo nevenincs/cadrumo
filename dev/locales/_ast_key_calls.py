@@ -51,7 +51,7 @@ def _translation_call_names(tree: ast.AST) -> frozenset[str]:
     for node in _walk_nodes(tree):
         if isinstance(node, ast.ImportFrom):
             for alias in node.names:
-                if alias.name in {"tr", "t", "lookup_translation"} and alias.asname:
+                if alias.name in {"tr", "t", "lookup_translation"} and (alias.asname is not None and alias.asname):
                     names.add(alias.asname)
     return frozenset(names)
 

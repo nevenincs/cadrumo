@@ -5,10 +5,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING, Any, cast
 
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 if TYPE_CHECKING:
     pass

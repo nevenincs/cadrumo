@@ -10,6 +10,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.aggregation import IntracomOperationType
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.confirmation_gate import FindingResolutionAction
@@ -20,8 +22,7 @@ from ...core.operations import (
     OperationEffect,
 )
 from ...core.time.clock import now
-from ...domain.iva.classification import InvoiceKind
-from ...domain.iva.schema import IvaCategory
+from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationRequest, OperationTerminalReceipt
@@ -29,13 +30,10 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .confirmation_gate import FindingResolution
 from .invoice_confirmation import (
@@ -251,11 +249,11 @@ def build_ledger_evidence_confirm_definition(
     return build_single_phase_definition(
         definition_id=LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
         request_type=LedgerEvidenceConfirmRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerEvidenceConfirmExecutionResult,
         executor_type=LedgerEvidenceConfirmExecutor,
         build=lambda: LedgerEvidenceConfirmExecutor(ports_factory),
         capabilities=invoice_evidence_operation_capabilities(mutates=True),
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

@@ -57,7 +57,7 @@ def _make_request() -> LLMRequest:
 def _make_response(text: str) -> LLMResponse:
     return LLMResponse(
         text=text,
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         model="claude-test",
         input_tokens=10,
         output_tokens=20,
@@ -104,7 +104,7 @@ class TestCacheRedaction:
         request = _make_request()
         response = _make_response(text="non sensitive output")
         cache.write(request, response)
-        cached = cache.read(request, LLMProvider.ANTHROPIC, "claude-test")
+        cached = cache.read(request, LLMProvider.AGENT, "claude-test")
         assert cached is not None
         entry = CachedEntry(
             provider=cached.provider,
@@ -128,9 +128,9 @@ class TestCacheRedaction:
         request = _make_request()
         response = _make_response(text=f"the NIF is {_NIF_CANARY}")
         cache.write(request, response)
-        assert cache.read(request, LLMProvider.ANTHROPIC, "claude-test") is None
+        assert cache.read(request, LLMProvider.AGENT, "claude-test") is None
         cache.write(request, response)
-        assert cache.read(request, LLMProvider.ANTHROPIC, "claude-test") is None
+        assert cache.read(request, LLMProvider.AGENT, "claude-test") is None
         assert not (tmp_path / "probe-cache").exists()
         db_path = secure_object_test_profile.paths.database_file
         assert _NIF_CANARY.encode() not in read_db_at_rest_bytes(db_path)
@@ -144,7 +144,7 @@ class TestUsageRedaction:
             prompt_id="prompt-test",
             caller="test-caller",
             text=text,
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
             model="claude-test",
             input_tokens=10,
             output_tokens=20,

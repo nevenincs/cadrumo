@@ -39,6 +39,14 @@ def _collect_declared_locale_keys(value: ast.expr, findings: set[str]) -> None:
     Every other shape -- a tuple, list or set of keys, or a bare string -- has
     no such distinction, so it is collected whole as before.
     """
+    if (
+        isinstance(value, ast.Call)
+        and _callee_name(value.func) == "MappingProxyType"
+        and len(value.args) == 1
+        and not value.keywords
+    ):
+        _collect_declared_locale_keys(value.args[0], findings)
+        return
     if isinstance(value, ast.Dict):
         for item in value.values:
             _collect_dotted_literals(item, findings)
@@ -239,6 +247,8 @@ def _unwrapped_key_literal(node: ast.expr | None) -> str | None:
         return None
     argument = node.args[0]
     if isinstance(argument, ast.Constant) and isinstance(argument.value, str) and _is_dotted_literal(argument.value):
+        if _callee_name(node.func) == "_key" and not _is_dynamic_translation_prefix(argument.value):
+            return None
         return argument.value
     return None
 

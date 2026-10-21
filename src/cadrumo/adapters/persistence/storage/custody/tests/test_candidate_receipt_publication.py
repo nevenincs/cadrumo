@@ -18,18 +18,14 @@ from cadrumo.adapters.persistence.storage.profile_login_session import build_pro
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
-from cadrumo.application.user_profile.login_session import (
-    ProfileReceiptRefusedError,
-    authenticate_profile_candidate,
-    borrow_profile_receipt_key,
-    resume_profile_candidate,
-)
+from cadrumo.application.user_profile.login_session import authenticate_profile_candidate
 from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 from cadrumo.application.user_profile.passphrase_rotation import rotate_profile_passphrase
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -134,27 +130,6 @@ def test_password_candidate_publishes_once_without_promoting_custody(
             assert candidate.persist_acceleration_receipt(login_id=RECEIPT_LOGIN_ID, binding=binding, sign_in=captured)
             assert target_path.read_bytes() == persisted_bytes
             assert keyring.entries == entries and keyring.writes == writes
-            assert current_active_bucket_session() is active
-            assert resolve_active_bucket_id() == selected
-            original = candidate.outcome
-        with (
-            borrow_profile_receipt_key(bucket_id=profile_id) as proof,
-            resume_profile_candidate(
-                bucket_id=profile_id,
-                receipt_key=proof,
-                profile_decode_context=authority.profile_decode_context(),
-                login_id=RECEIPT_LOGIN_ID,
-                sign_in_binding=binding,
-            ) as resumed,
-        ):
-            assert resumed.outcome.session_persisted
-            assert resumed.outcome.already_authenticated
-            assert resumed.outcome.authenticated_at == original.authenticated_at
-            assert resumed.outcome.idle_deadline == original.idle_deadline
-            assert resumed.outcome.absolute_deadline == original.absolute_deadline
-            assert resumed.persist_acceleration_receipt(login_id=RECEIPT_LOGIN_ID, binding=binding, sign_in=captured)
-            assert target_path.read_bytes() == persisted_bytes
-            assert keyring.writes == writes
             assert current_active_bucket_session() is active
             assert resolve_active_bucket_id() == selected
     assert other_path.read_bytes() == other_bytes

@@ -102,9 +102,9 @@ def _legal_provision_display(
     # The authored ``section`` prose is the most human reading of a provision;
     # ``article`` is next (numeric articles take the ``art.`` prefix, worded
     # ones already read as prose); the id's own provision half is the floor.
-    if provision.section:
+    if provision.section is not None and provision.section:
         return name, provision.section
-    if provision.article:
+    if provision.article is not None and provision.article:
         prefix = "art. " if provision.article[:1].isdigit() else ""
         return name, f"{prefix}{provision.article}"
     if provision_part:
@@ -194,7 +194,7 @@ def _legal_id_parts(legal_id: str) -> tuple[str | None, str, str, str]:
     tokens = [token for token in document_part.split("-") if token]
     numeral, remainder = _legal_numeral(tokens)
     remainder = [token for token in remainder if token.lower() not in _LEGAL_KIND_TOKENS]
-    separator = "/" if numeral else "-"
+    separator = "/" if (numeral is not None and numeral) else "-"
     qualifier = separator.join(token.upper() if len(token) <= 4 else _humanise_token(token) for token in remainder)
 
     return numeral, qualifier, separator, provision_part
@@ -209,7 +209,7 @@ def _legal_instrument_display(
         instrument if instrument is not None else docs_chrome(f"docs.casilla.legal_kind.{provision.kind}", language)
     )
     name = " ".join(part for part in (kind_display, qualifier) if part)
-    if numeral:
+    if numeral is not None and numeral:
         name = f"{name}{separator if qualifier else ' '}{numeral}"
     name = name.strip()
     return name, provision_part

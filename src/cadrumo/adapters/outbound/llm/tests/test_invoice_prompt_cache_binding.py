@@ -173,7 +173,7 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         local = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=annual_2026_values)
         cloud = TextInvoiceFieldExtractor(
             model="m",
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
             operation=operation,
             authority_values=annual_2026_values,
         )
@@ -195,7 +195,7 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         """
         extractor = TextInvoiceFieldExtractor(
             model="claude-haiku-4-5-20251001",
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
             operation=operation,
             authority_values=annual_2026_values,
         )
@@ -213,17 +213,14 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         vendor only to a reader who already knows the catalogue.
         """
         local = LocalVisionDocumentTranscriber(model="qwen2.5vl:3b").transcriber_identity
-        cloud = LocalVisionDocumentTranscriber(
-            model="claude-haiku-4-5-20251001",
-            provider=LLMProvider.ANTHROPIC,
-        ).transcriber_identity
+        cloud = LocalVisionDocumentTranscriber(provider=LLMProvider.AGENT).transcriber_identity
 
         # The transport rides its own field now. It began folded into ``name``,
         # which is contracted to say WHICH reader produced the text and not to
         # carry a coarse label -- so asserting it there was asserting the
         # contract violation rather than the property.
         assert local.transport == "local"
-        assert cloud.transport == "anthropic"
+        assert cloud.transport == "agent"
         assert local.transport != cloud.transport
         assert local.name == "qwen2.5vl:3b", "the name is the reader, with nothing else folded in"
         assert local.revision.startswith("prompt-v")

@@ -129,9 +129,9 @@ class TestTheMintingPathIsUnreachableFromTheTui:
         Without this, a scan that silently parsed nothing — a changed package
         layout, an empty glob — would report a clean tree and read as proof.
         """
-        source = "from cadrumo.adapters.persistence.storage.recovery_key import generate_recovery_key\n"
+        source = "from ....adapters.persistence.storage.recovery_key import generate_recovery_key\n"
         assert "generate_recovery_key" in _imported_names(source)
-        aliased = "from cadrumo.adapters.persistence.storage.recovery_key import generate_recovery_key as _mint\n"
+        aliased = "from ....adapters.persistence.storage.recovery_key import generate_recovery_key as _mint\n"
         assert "generate_recovery_key" in _imported_names(aliased)
         attribute = (
             "import cadrumo\n"

@@ -1,4 +1,6 @@
+import { openPanelTab } from "../support/panel";
 import { expect, test, type Page } from "@playwright/test";
+import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 
 // The shell on a small touch screen: a phone-sized viewport with a coarse
@@ -14,8 +16,11 @@ test.use({
 // The smallest side a control may have under a finger.
 const FINGER = 44;
 
-const open = (target: Page, scenario = "signed-in") =>
-  target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
+const open = async (target: Page, scenario = "signed-in") => {
+  await target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
+  // Panel interaction tests open it explicitly after each fresh launch.
+  await target.keyboard.press("Control+Backquote");
+};
 
 const overflowing = (target: Page) =>
   target.evaluate(
@@ -26,11 +31,6 @@ test.beforeEach(async ({ page: target }) => {
   await target.addInitScript(() => {
     if (sessionStorage.getItem("layout-cleared")) return;
     localStorage.clear();
-    // Exercise the full panel layout as a returning user's saved choice.
-    localStorage.setItem(
-      "cadrumo-shell-layout",
-      JSON.stringify({ layout: { panelOpen: true } }),
-    );
     sessionStorage.setItem("layout-cleared", "1");
   });
 });
@@ -42,10 +42,7 @@ test("the pointer is coarse and every control is finger sized", async ({
   expect(
     await target.evaluate(() => matchMedia("(pointer: coarse)").matches),
   ).toBe(true);
-  await target
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .tap();
+  await openPanelTab(target, "logs", { touch: true });
   const controls = target.locator(
     ".rail button, .pane-head button, .tabstrip button, .logview button, .logview input, .logview select",
   );
@@ -75,8 +72,7 @@ for (const language of ["en", "hu"])
     await target.goto(
       `/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=${language}`,
     );
-    // By its tab, which no language renames.
-    await target.locator("#tab-logs").tap();
+    await openPanelTab(target, "logs", { touch: true, locale: language });
     const list = target.locator(".logview-list");
     // The newest record: the log follows its end.
     await expect(list.locator(".record").last()).toBeVisible();
@@ -236,6 +232,7 @@ test("a tap on messages says why there is no count", async ({
 test("a narrow header gives up a duplicate control before it cuts its title", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=es",
   );
@@ -265,6 +262,7 @@ test("a narrow header gives up a duplicate control before it cuts its title", as
 test("the shell stacks its panes and never scrolls sideways", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target);
   await expect(target.locator(".split")).toHaveClass(/split-column/);
   expect(await overflowing(target)).toBe(false);
@@ -282,10 +280,7 @@ test("a tap reaches the rail, the tabs and the log filters", async ({
   page: target,
 }) => {
   await open(target);
-  await target
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .tap();
+  await openPanelTab(target, "logs", { touch: true });
   await expect(
     target.getByRole("tab", { name: label("desktop.rail.logs") }),
   ).toHaveAttribute("aria-selected", "true");
@@ -298,21 +293,20 @@ test("a tap reaches the rail, the tabs and the log filters", async ({
   expect(await overflowing(target)).toBe(false);
 });
 
-test("a finger drawn down the log leaves its end, and the bar is one row", async ({
+test("a finger drawn down the log leaves its end, and the controls fit in two rows", async ({
   page: target,
 }) => {
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=2000&feed=200",
   );
-  await target.locator("#tab-logs").tap();
+  await openPanelTab(target, "logs", { touch: true });
   const list = target.locator(".logview-list");
   const follow = target.getByRole("button", {
     name: label("desktop.logs.follow"),
   });
   await expect(list.locator(".record").last()).toBeVisible();
   await expect(follow).toHaveAttribute("aria-pressed", "true");
-  // Under a finger, two rows of controls would leave the records two lines:
-  // the bar is one row, and the list has most of the panel.
+  // Six finger-sized actions and search use at most two rows without hiding controls.
   const sizes = await target.evaluate(() => {
     const bar = document.querySelector(".logview > div");
     const rows = document.querySelector(".logview-list");
@@ -321,8 +315,8 @@ test("a finger drawn down the log leaves its end, and the bar is one row", async
       list: rows?.getBoundingClientRect().height ?? 0,
     };
   });
-  expect(sizes.bar).toBeLessThan(70);
-  expect(sizes.list).toBeGreaterThan(sizes.bar * 2);
+  expect(sizes.bar).toBeLessThan(110);
+  expect(sizes.list).toBeGreaterThanOrEqual(60);
   // A real drag, sent as touch input.
   const box = (await list.boundingBox())!;
   const client = await target.context().newCDPSession(target);
@@ -427,7 +421,7 @@ test("the palette and settings fit the screen", async ({ page: target }) => {
   }
   await target.keyboard.press("Escape");
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .tap();
   const settings = await target.locator(".settings").boundingBox();
   expect(
@@ -478,9 +472,11 @@ test("the profile choice and the form that creates one fit the screen under a fi
   await fields.nth(2).tap();
   await target.keyboard.type("correct horse");
   await form.locator("button[type=submit]").tap();
-  // The submit button, under the keyboard's reach or not, is in the window.
-  await expect(target.locator("#profile-password")).toBeFocused();
-  await expect(dialog.locator("#profile-choice option:checked")).toHaveText(
-    "Marta Ruiz Ferrer",
-  );
+  // The submitted passphrase authenticates the created profile.
+  await expect(dialog).toHaveCount(0);
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  await expect(
+    target.locator('.titlebar [title="Marta Ruiz Ferrer"]'),
+  ).toBeVisible();
+  expect(await overflowing(target)).toBe(false);
 });

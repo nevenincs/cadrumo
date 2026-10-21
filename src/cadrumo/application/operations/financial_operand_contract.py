@@ -132,8 +132,8 @@ class OperationTransientFinancialOperandDeclarationV1(BaseModel):
         ):
             configuration = model_type.model_config
             if (
-                not configuration.get("frozen")
-                or not configuration.get("strict")
+                not bool(configuration.get("frozen"))
+                or not bool(configuration.get("strict"))
                 or configuration.get("extra") != "forbid"
             ):
                 raise ValueError("financial operand and baseline models must be strict frozen and closed")

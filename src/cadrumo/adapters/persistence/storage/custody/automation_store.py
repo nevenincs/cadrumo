@@ -9,16 +9,11 @@ from uuid import UUID
 
 from pydantic import SecretBytes
 
-from .....application.user_profile.access_contracts import (
-    ApiKeyRecord,
-    AuthorityState,
-    AutomationGrant,
-)
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationKeyVerifier,
-)
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
+from .....application.user_profile.access_contracts import ApiKeyRecord, AutomationGrant
+from .....application.user_profile.automation_custody_port import AutomationKeyVerifier
 from .....core.time.utc import UtcInstant
 from .automation_crypto import (
     api_key_verifier,

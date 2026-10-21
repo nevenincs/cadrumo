@@ -1,16 +1,23 @@
+pub mod about;
+pub mod agent_access;
 pub mod channel;
 mod clipboard;
 mod external;
 mod interrupts;
+pub mod language;
 mod menu;
 pub mod navigation;
+pub mod provider_settings;
+pub mod setup;
 pub mod sign_in;
 pub mod single_instance;
 pub mod token;
+pub mod user_profile;
 #[cfg(windows)]
 pub mod webview;
 #[cfg(windows)]
 pub mod webview_environment;
+pub mod window_controls;
 pub mod window_state;
 
 use crate::{app::Commands, docs, environment::Launch};
@@ -26,12 +33,14 @@ use tauri::{
 /// What the shell needs from the launch to describe its environment.
 struct Shell {
     output_language: String,
+    log_level: crate::logs::Level,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DesktopEnvironment {
     output_language: String,
+    log_level: crate::logs::Level,
     docs: docs::Published,
 }
 
@@ -65,6 +74,7 @@ fn desktop_environment(
 ) -> DesktopEnvironment {
     DesktopEnvironment {
         output_language: shell.output_language.clone(),
+        log_level: shell.log_level,
         docs: docs.inner().clone(),
     }
 }
@@ -144,8 +154,10 @@ fn show<R: Runtime>(
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let sign_in = Arc::new(sign_in::SignIn::new(launch));
     let output_language = launch.output_language.clone();
+    let log_level = launch.log_level;
     #[cfg(windows)]
     let diagnostics = launch.diagnostics.clone();
+    let about = Arc::new(about::About::new(launch));
     let popups = Arc::new(menu::Popups::default());
     let recorder = popups.clone();
     let activation = launch.diagnostics.clone();
@@ -158,23 +170,42 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
             #[cfg(windows)]
             interrupts::restore(&diagnostics);
             single_instance::verify(app.config())?;
-            app.manage(Shell { output_language });
+            app.manage(Shell {
+                output_language: output_language.clone(),
+                log_level,
+            });
+            app.manage(Arc::new(language::LanguageHost::new(
+                sign_in.clone(),
+                output_language,
+            )));
             app.manage(sign_in);
             app.manage(popups);
+            app.manage(about.clone());
             app.manage(channel::Deliveries::default());
+            app.manage(window_controls::Controls::default());
             Ok(())
         })
         .on_window_ready(move |window| {
             window_states.attach(&window);
             single_instance::attach(&window, activation.clone());
+            window_controls::attach(&window);
         })
-        .on_event(move |_, event| match event {
+        .on_event(move |app, event| match event {
             RunEvent::MenuEvent(event) => recorder.record(&event.id().0),
             RunEvent::WindowEvent {
+                label,
                 event: WindowEvent::Destroyed,
                 ..
+            } if app
+                .config()
+                .app
+                .windows
+                .first()
+                .is_some_and(|config| config.label == *label) =>
+            {
+                single_instance::close()
             }
-            | RunEvent::Exit => single_instance::close(),
+            RunEvent::Exit => single_instance::close(),
             _ => {}
         });
     #[cfg(windows)]

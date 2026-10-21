@@ -1392,7 +1392,7 @@ cli:
             des del magatzem local d'observacions abans d'exportar (resums anuals,
             arrossegament de trimestres anteriors, etc.)
           root_folder_required: No s'ha creat cap carpeta de Drive per a aquest perfil;
-            executa `aeat config google login` primer
+            executa `cadrumo-runtime config google login` primer
           snapshot_failure: No es pot construir la instantània de les definicions
             dels models per al model {modelo} ({period} {year}).
         push_help: Exporta el càlcul d'un model i període, tal com el fixen les definicions
@@ -1416,8 +1416,7 @@ cli:
         actor_help: Actor responsable de l'acció (etiqueta lliure de fins a 64 caràcters)
         actor_too_long: L'etiqueta --by ha de tenir com a màxim {limit} caràcters;
           se n'han rebut {length}. Identifica l'actor de l'esdeveniment d'auditoria
-          que registra aquesta ordre, així que indica un nom curt per a tu o per a
-          l'agent.
+          que registra aquesta ordre, així que indica un nom curt per a tu.
         allow_not_applicable_help: Crea la declaració encara que el model no s'apliqui
           al tipus de contribuent del perfil actiu.
         amend_help: Construir una correcció d'una declaració presentada fora de Cadrumo.
@@ -1488,6 +1487,9 @@ cli:
           introduïts abans a la interfície de pantalla completa (aeat app tui) no
           es conserven tret que es tornin a indicar aquí; la interfície de pantalla
           completa sí que els conserva.
+        calculate_reused_sealed: 'Aquestes dades coincideixen amb el càlcul %{revision_id}
+          (estat: %{state}). No s’ha creat cap esborrany nou. Selecciona aquest càlcul
+          desat pel seu identificador de revisió o canvia les dades.'
         calculate_saved: 'Desat com a revisió de càlcul en esborrany %{revision_id}
           (estat: %{state}). Està persistit i es pot reprendre més tard.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caràcters)
@@ -1911,6 +1913,23 @@ cli:
       app_help: 'Executa tota la cadena local de presentació d''un model en una sola
         ordre: preparació -> crear -> calcular -> comprovar -> exportar. Només construeix
         i exporta; mai presenta a l''AEAT'
+  censo_auth:
+    certificate: Ruta del certificat (en blanc conserva el valor desat)
+    configure_help: Configura o edita l’autenticació AEAT desada abans de consultar
+      el cens (terminal interactiu).
+    console_required: 'Per editar l’autenticació cal un terminal interactiu: {command}.
+      Requisits: {requirements}.'
+    field: '{field} (en blanc conserva el valor desat)'
+    field_failed: No s’ha pogut desar {field}. Revisa el format i reintenta; es conserven
+      els camps desats abans.
+    method: Mètode d’autenticació
+    offer: Vols configurar l’autenticació AEAT abans de sincronitzar?
+    password: Contrasenya (en blanc conserva el valor desat)
+    required: 'La sincronització AEAT requereix: {requirements}. Configura o edita
+      l’autenticació aquí: {command}.'
+    route: Via de Cl@ve Móvil
+    saved: Autenticació desada.
+    still_missing: Encara falta {field}.
   common:
     errors:
       invalid_iso_date: 'Format de data invàlid per a %{label}: %{raw}. Es requereix
@@ -1926,6 +1945,8 @@ cli:
         AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos), i indica l''any amb --year
         (p. ex. --period 1T --year 2024).'
   config:
+    activity:
+      help: Registrar activitat del perfil connectat sense demanar una contrasenya.
     app_help: Configurar i reparar el perfil local, les credencials, l'emmagatzematge
       i l'enllaç amb Google.
     auth:
@@ -1935,8 +1956,8 @@ cli:
         clear_help: Retirar la configuració d'apoderat
         configure:
           no_console_hint: 'La configuració interactiva de l''apoderament requereix
-            una consola. Configura''l de manera no interactiva amb: aeat config auth
-            apoderado configure --represented-nif NIF --scope SCOPE.'
+            una consola. Configura''l de manera no interactiva amb: cadrumo-runtime
+            config auth apoderado configure --represented-nif NIF --scope SCOPE.'
           represented_nif_help: NIF de la part representada
           scope_help: Tokens d'abast (es poden repetir)
           scope_required: 'No s''ha indicat cap àmbit. Afegeix --scope amb un o més
@@ -2029,7 +2050,7 @@ cli:
       status_summary_unconfigured: L'autenticació encara no està configurada.
       test_help: Comprovar la preparació d'autenticació local
       unknown_provider: 'Proveïdor d''autenticació desconegut: %{provider}. Executa
-        ''aeat config auth --help'' per veure els identificadors vàlids.'
+        ''cadrumo-runtime config auth --help'' per veure els identificadors vàlids.'
     check:
       available: disponible
       capability_label: Capacitat
@@ -2040,6 +2061,8 @@ cli:
       missing: absent
       preflight_label: Comprovació prèvia
       profile_label: perfil
+      setup_unavailable: No s'ha pogut comprovar la preparació perquè el servei en
+        segon pla de Cadrumo no ha respost.
     collab:
       help: Gestiona els destinataris de confiança per a la col.laboració amb paquets
         de revisió.
@@ -2160,8 +2183,24 @@ cli:
         login NAME' per activar un perfil registrat.
       profile_session_absent: No has iniciat la sessió. Executa `aeat config login`
         per desbloquejar el teu perfil.
+      profile_session_custody_changed: La contrasenya o la configuració de recuperació
+        d'aquest perfil han canviat. Executa `aeat config login` per tornar a iniciar
+        la sessió.
       profile_session_expired: La teva sessió de perfil ha caducat. Executa `aeat
         config login` per tornar a iniciar la sessió.
+      profile_session_login_mismatch: La teva sessió desada pertany a una altra sessió
+        d'aquest ordinador. Executa `aeat config login` per iniciar la sessió aquí.
+      profile_session_logout_unproven: Cadrumo no pot comprovar aquest tancament de
+        sessió sense un inici de sessió desat que serveixi. Executa `aeat config login`
+        i torna a tancar la sessió.
+      profile_session_outdated: El teu inici de sessió desat el va crear una altra
+        versió de Cadrumo i no es pot utilitzar. Executa `aeat config login` per tornar
+        a iniciar la sessió.
+      profile_session_signed_out: S'ha tancat la teva sessió en aquest perfil des
+        d'un altre lloc. Executa `aeat config login` per tornar a iniciar la sessió.
+      profile_session_unreadable: No s'ha pogut verificar el teu inici de sessió desat,
+        així que no s'ha utilitzat. Executa `aeat config login` per tornar a iniciar
+        la sessió.
     google:
       detail:
         sync_push_limit_requires_dry_run: La sincronització push de Google no pot
@@ -2184,7 +2223,7 @@ cli:
         profile_unbound: No hi ha cap perfil actiu. Executa aeat config login NAME
           o indica --profile.
         scope_insufficient: L'accés concedit a Google no inclou els permisos necessaris.
-          Executa `aeat config google login` i accepta tots els permisos.
+          Executa `cadrumo-runtime config google login` i accepta tots els permisos.
         storage: 'No s''ha pogut accedir a l''emmagatzematge de Google Drive: {detail}'
         unsecured_mode: L'accés a Google està blocat mentre el magatzem de secrets
           funciona en mode no segur per a un perfil amb un NIF real.
@@ -2204,6 +2243,8 @@ cli:
       probe_read_only_help: Comprova Google Drive en mode només lectura
       status_help: Mostrar l'estat actual de la sessió OAuth de Google per al perfil
         actiu
+    help: Gestiona l’inici de sessió, l’accés al perfil i la configuració d’autenticació
+      local.
     list:
       help: Llistar tots els perfils registrats i marcar l'actiu
     login:
@@ -2220,12 +2261,30 @@ cli:
         session_not_persisted: No hi ha cap magatzem de claus del sistema utilitzable,
           així que aquesta ordre només ha autenticat el seu propi procés; torna a
           proporcionar l'autenticació del perfil al procés següent.
+        session_not_persisted_logon: 'Sessió iniciada només per a aquesta ordre: l''Administrador
+          de credencials de Windows ha rebutjat aquesta sessió de Windows (error 1312)
+          perquè no conté credencials de Windows, així que cap procés d''aquesta sessió
+          no pot conservar ni seguir un inici de sessió, i les ordres següents no
+          el poden fer servir. Executa Cadrumo des de la teva sessió d''escriptori
+          de Windows o passa la contrasenya del perfil a cada ordre amb --profile-secrets-stdin.'
+        session_not_persisted_no_backend: 'Sessió iniciada només per a aquesta ordre:
+          aquest procés no té cap magatzem de claus del sistema disponible, així que
+          l''inici de sessió no es pot conservar per a les ordres següents. Activa
+          el magatzem de claus del sistema per a aquest compte o passa la contrasenya
+          del perfil a cada ordre amb --profile-secrets-stdin.'
+        session_not_persisted_unconfirmed: 'Sessió iniciada només per a aquesta ordre:
+          el runtime no ha conservat aquest inici de sessió, tot i que aquest procés
+          pot fer servir el magatzem de claus del sistema. O bé l''inici de sessió
+          ha canviat mentre acabava aquest accés, o bé el runtime s''executa en un
+          inici de sessió que no pot fer servir el magatzem de claus. Torna a iniciar
+          la sessió; si es repeteix, inicia el runtime des del mateix inici de sessió
+          que aquesta ordre.'
       passphrase_channel_absent: No hi ha cap canal de contrasenya disponible. Executa
         aquest verb en un terminal o fes servir --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contrasenya del perfil: '
     logout:
       help: Tanca la sessió d’aquest perfil a totes les sessions d’usuari d’aquest
-        dispositiu. L’accés dels agents i les sessions de l’AEAT continuen actius.
+        dispositiu. Les sessions de l’AEAT continuen actives.
       notices:
         already_logged_out: No hi ha cap perfil seleccionat; no hi ha cap sessió per
           tancar.
@@ -2310,8 +2369,9 @@ cli:
             API existent.
           kind_help: 'Canvi d''autorització: rotate, renew o change_scope.'
         create:
-          help: Sol·licita una autorització API i rep-ne la credencial en emmagatzematge
-            protegit després de l'aprovació humana per separat.
+          help: Emet una clau API a partir d'una proposta completa proporcionada mitjançant
+            --secrets-stdin o --secrets-fd. La clau arriba a l'emmagatzematge protegit
+            després de la teva aprovació per separat.
         decline:
           digest_help: Empremta exacta de revisió mostrada per inspect.
           help: Rebutjar la sol·licitud exacta revisada.
@@ -2322,6 +2382,17 @@ cli:
           target_help: UUID de la clau o concessió que es revocarà.
           target_mismatch: La revocació d'una clau o concessió requereix el seu UUID;
             all no admet cap destinació.
+        disclosures:
+          expected_digest_help: El resum criptogràfic que va mostrar una pàgina anterior;
+            la lectura es rebutja si la llista ha canviat des d'aleshores.
+          help: Compta per categoria les dades divulgades d'una concessió o sol·licitud
+            pendent i mostra una pàgina de la llista completa.
+          invalid_page: Indica --offset com un nombre enter igual o més gran que zero
+            i --expected-digest com un resum que hagi mostrat una pàgina anterior.
+          offset_help: L'entrada on comença la pàgina; passa el next_offset de la
+            pàgina anterior.
+          target_help: L'ID de la concessió o de la sol·licitud pendent les dades
+            divulgades de la qual vols llegir.
         help: Gestiona l'accés automatitzat d'aquest perfil.
         inspect:
           help: Mostrar la sol·licitud exacta d’automatització revisada.
@@ -2400,7 +2471,7 @@ cli:
         status' per veure què falta.
       create_help: Crea un perfil protegit per una contrasenya. En un terminal ofereix
         després un codi de recuperació opcional; pots ometre'l o afegir-lo més tard
-        amb 'aeat config profile recovery enable'.
+        amb 'cadrumo-runtime config profile recovery enable'.
       create_login_required: El perfil '{profile}' s'ha creat, però encara no tens
         cap sessió oberta. Inicia la sessió amb l'ordre 'config login {profile}' per
         desbloquejar-ne les dades abans de continuar.
@@ -2419,16 +2490,14 @@ cli:
         pot restablir una contrasenya oblidada; activa-la quan vulguis amb l'ordre
         'config profile recovery enable'.
       delete:
+        expected_digest_help: Exigeix l’empremta del contingut de la revisió prèvia.
+        expected_profile_id_help: Exigeix la identitat del perfil de la revisió prèvia.
         help: Elimina un perfil i el seu estat local; --yes confirma l'eliminació
         name_help: Nom del perfil que vols eliminar
         notices:
           deleted: Perfil eliminat juntament amb el seu estat local.
           preflight: 'Comprovació prèvia: no s''ha eliminat res. Torna a executar
             amb --yes per eliminar.'
-        refusal:
-          active_profile: No pots eliminar el perfil seleccionat '{name}'. Inicia
-            sessió en un altre perfil amb 'aeat config login NAME' i torna-ho a provar.
-            Tancar la sessió conserva el perfil seleccionat.
         yes_help: Confirma explícitament l'eliminació
       descendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
@@ -2454,6 +2523,12 @@ cli:
         list_help: Llista els descendents declarats al perfil actiu.
         remove_help: Elimina un descendent per índex (base 0) del perfil actiu.
         remove_index_help: Índex (base 0) del descendent a eliminar.
+      disclosures:
+        help: Compta per categoria les dades que aquesta sessió pot revelar i imprimeix
+          una pàgina de la llista completa.
+        offset_help: L'entrada on comença la pàgina; passa el next_offset de la pàgina
+          anterior. Cada execució de l'ordre és una sessió pròpia, així que les seves
+          entrades anomenen aquesta sessió com a destinació.
       edit_help: Torna a executar l'assistent sobre un perfil existent
       edit_row:
         clear_help: Camp declarat que es buida explícitament; repeteix-lo si cal.
@@ -2589,67 +2664,95 @@ cli:
         actiu.
       view_help: Mostrar els fets d'un perfil (per defecte el perfil actiu)
     provision:
+      approval_needed: Això necessita la teva aprovació. Torna a executar l'ordre
+        amb --yes per aprovar el pla anterior.
+      approve_prompt: Vols baixar i preparar això ara?
       browser:
-        help: Descarrega la versió del navegador que obre l'automatització de l'AEAT.
-          No fa res si ja hi és.
-      help: 'Gestiona el que s''executa en aquest ordinador: el navegador de l''automatització
-        de l''AEAT i el lector local de documents (estat del runtime, instal·lació,
-        arrencada, descàrrega, càrrega, verificació i eliminació de models, o prepara-ho
-        tot d''una vegada).'
-      install:
-        confirm_help: Accepta descarregar i executar la instal·lació del gestor de
-          paquets. Sense aquesta opció no s'instal·la res.
-        help: Instal·la el runtime local amb el gestor de paquets de la plataforma
-          (winget a Windows, Homebrew a macOS). No fa res si ja està instal·lat; a
-          Linux la instal·lació queda al teu càrrec.
+        help: Prepara el navegador que Cadrumo fa servir per al web de l'Agència Tributària.
+          Mostra el pla i et pregunta abans.
+      complete: Cadrumo està preparat.
+      fix: 'Per solucionar-ho, executa: %{command}'
+      hardware_limited: Aquest ordinador no té prou memòria per a la IA local.
+      help: 'Prepara i comprova el que Cadrumo necessita en aquest ordinador: el navegador
+        per al web de l''Agència Tributària i la IA local, amb el seu programa i els
+        seus models. Cada ordre s''executa al teu perfil amb la sessió iniciada.'
+      incomplete: Alguns components encara no estan a punt.
       load:
-        help: Carrega models a la memòria del runtime local perquè la primera lectura
-          no hagi d'esperar una arrencada en fred; el de cada funció del lector tret
-          que --role o --model ho acotin. Es nega abans de carregar si falta memòria;
-          un model ja carregat es deixa com està.
-        model_help: Identificador al runtime del model que es carregarà. Ja ha d'estar
-          baixat. Per defecte, el model seleccionat per a la funció.
+        help: Carrega els models a la memòria perquè la primera lectura no esperi,
+          el de cada rol tret que --role o --model ho limitin. Es nega abans de carregar
+          si falta memòria.
+        model_help: Nom del model que cal carregar. Ja ha d'estar baixat. Per defecte,
+          el model triat per al rol.
+      outcome:
+        cancelled: Has cancel·lat la preparació.
+        completed: La preparació ha acabat.
+        interrupted: La preparació es va interrompre abans d'acabar. Torna a executar
+          l'ordre per continuar.
+        not_enough_space: No hi ha prou espai lliure al disc, així que no s'ha baixat
+          res.
+        nothing_to_do: Tot ja està preparat.
+        plan_changed: El pla va canviar després que l'aprovessis, així que no s'ha
+          baixat res. Torna a executar l'ordre per veure el pla nou.
+        rejected: No s'ha baixat res.
+      plan:
+        destination: '  Es desa a %{path}'
+        entry: '%{name}: %{size} des de %{hosts}'
+        heading: 'Cadrumo prepararà:'
+        installs_program: '  Això instal·la un programa en aquest ordinador. El seu
+          instal·lador et pot demanar permís.'
+        part: '    %{name}: %{size}'
+        shared: '  Fa servir la mateixa baixada que %{name}.'
+        size_unknown: mida encara desconeguda
+        total: 'Baixada total: %{size}.'
+        total_unknown: 'Baixada total: com a mínim %{size}. Algunes mides només es
+          coneixen quan comença la baixada.'
       probe:
-        help: Comprova ara l'aptitud del model de text en lloc de llegir el veredicte
-          registrat per `aeat config provision verify` i informa del lector local
-          amb aquest resultat. Carrega el model; no registra res.
+        help: 'Comprova a fons cada component: contacta amb els servidors de baixada,
+          obre el navegador i prova cada model. No baixa res.'
+      progress: '%{name}: %{step}'
+      progress_bytes: '%{name}: baixant %{done} de %{total} (%{percent}%)'
       pull:
-        help: Descarrega models al runtime local, el de cada funció del lector llevat
-          que --role o --model ho acotin. Rebutja abans de descarregar si un model
-          no es podria carregar.
-        model_help: Identificador del model que es descarregarà. Per defecte, el model
-          seleccionat per a la funció.
+        help: 'Prepara la IA local: instal·la el seu programa si falta i després baixa
+          el model de cada rol. Mostra el pla i et pregunta abans; l''instal·lador
+          del programa també et pot demanar permís.'
+        model_help: Nom d'un model del catàleg que cal fer servir en lloc del que
+          tria Cadrumo.
       remove:
-        help: Elimina del magatzem del runtime local un model seleccionat per Cadrumo
-          i informa de l'espai recuperat.
-        model_help: Identificador del model que s'eliminarà. Només es poden eliminar
-          models seleccionats per Cadrumo.
+        help: Esborra d'aquest ordinador un model que va triar Cadrumo i indica l'espai
+          alliberat.
+        model_help: Nom del model que cal esborrar. Només es poden esborrar models
+          que va triar Cadrumo.
       report:
-        help: Informa del maquinari mesurat, el model seleccionat per funció i si
-          es pot carregar ara.
-      role_help: Funció del model sobre la qual actuar (transcripció d'imatges, extracció
-        de text, mapatge tabular, proposta de naturalesa del subministrament). Per
-        defecte, totes.
+        help: Indica la memòria d'aquest ordinador, el model triat per a cada rol
+          i si es pot carregar ara.
+      role_help: Rol del model sobre el qual actuar (transcripció d'imatges, extracció
+        de text, mapatge de taules, proposta de naturalesa de l'operació). Per defecte,
+        tots els rols.
       setup:
-        confirm_help: Accepta baixar i executar la instal·lació amb el gestor de paquets
-          si falta el runtime. Sense aquesta opció, la preparació s'atura al pas d'instal·lació
-          en lloc d'instal·lar.
-        help: 'Prepara el lector local d''una vegada: instal·la el runtime (només
-          amb --confirm), l''arrenca, baixa el model de cada funció, els carrega i
-          els verifica. Els passos ja fets s''indiquen sense canvis; el primer pas
-          que falla atura l''execució.'
+        help: Prepara tots els components que encara no estan a punt. Mostra què es
+          baixarà, quant ocupa i on es desa, i et pregunta abans de baixar res.
+      size:
+        gigabytes: '%{value} GB'
+        megabytes: '%{value} MB'
       start:
-        help: Arrenca el runtime local instal·lat quan l'endpoint local configurat
-          no respon. No fa res si ja respon.
+        help: Inicia el programa d'IA local instal·lat quan no respon. No fa res si
+          ja respon.
       status:
-        help: Informa de si el runtime local està instal·lat i respon, i de si el
-          model de cada funció del lector està instal·lat. Només llegeix.
+        help: Mostra si cada component està a punt, a partir del que aquest ordinador
+          ja té. És ràpid i no baixa res.
+      step:
+        cleanup: endreçant
+        download: baixant
+        install: instal·lant
+        plan: planificant
+        preflight: comprovant la connexió
+        verify: comprovant que funciona
       verify:
-        help: Verifica que els models es carreguen i responen una consulta trivial
-          dins d'un límit de temps, el de cada funció del lector llevat que --role
-          o --model ho acotin.
-        model_help: Identificador del model que es verificarà. Per defecte, el model
-          seleccionat per a la funció.
+        help: Comprova a fons un component, o tots si no n'indiques cap. No baixa
+          res.
+        item_help: 'Component que cal comprovar: browser o local_ai. Per defecte,
+          tots.'
+      yes_help: Aprova el pla que mostra l'ordre, sense preguntar.
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
       help: Diagnosticar i reparar configuració local, definicions dels models, perfil,
@@ -2685,6 +2788,8 @@ cli:
         amb --yes per confirmar o passa --dry-run per veure què s'esborraria.
       reset_progress_yes_help: Confirmar l'esborrat del progrés desat d'una ordre
         interrompuda
+      setup_status_hint: La preparació es mostra amb l'ordre d'estat de sota un cop
+        hagis iniciat la sessió.
       yes_help: Confirmar la reparació.
     reset:
       help: Inicia, consulta o reprèn el reinici irreversible de tots els perfils
@@ -2960,8 +3065,7 @@ cli:
         invalid_date: '{option} necessita una data amb format AAAA-MM-DD.'
         nothing_to_update: 'Res a canviar a {account}: indica una dada o envia camps
           del compte pel canal secret.'
-      none: 'Encara no hi ha comptes propis. Afegeix-ne un amb: aeat app ledger account
-        add'
+      none: Encara no hi ha comptes propis.
       prompts:
         bank_address: 'Adreça del banc: '
         bank_city: 'Ciutat del banc: '
@@ -3311,6 +3415,8 @@ cli:
         d''aquest període AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Requereix
         --year.'
       provider_help: Proveïdor del format de l'extracte.
+      statement_refused: 'Extracte rebutjat: {file} té un moviment que no és una transacció
+        vàlida, així que no s''ha importat res.'
       verbose_help: Mostrar informació detallada durant la importació
       verify_help: Comprovar els apunts després de la importació
       verify_source_help: Fitxer original usat per comprovar les files importades.
@@ -3864,9 +3970,28 @@ cli:
       applicability_evidence_disagreement: La teva resposta al perfil i les teves
         factures registrades no coincideixen sobre si aquestes obligacions s'apliquen;
         les files continuen visibles fins que corregeixis una de les dues.
+      art109_activity_income_withholding_ge_70pct_unset: Al teu perfil encara no consta
+        si almenys el 70% dels ingressos de la teva activitat empresarial o professional
+        estan subjectes a retenció.
+      estimacion_objetiva_unset: Al teu perfil encara no consta quin règim d’estimació
+        de l’IRPF s’aplica a la teva activitat.
+      has_employees_unset: Al teu perfil encara no consta si tens empleats.
+      intracomunitario_unset: Al teu perfil encara no consta si compres o vens béns
+        o serveis entre països de la UE.
+      iva_regime_unset: Al teu perfil encara no consta quin règim d’IVA s’aplica a
+        la teva activitat.
       m303_simplificado_forfait_unavailable: El Model 303 aplica, però el motor de
         càlcul forfait del règim simplificat encara no està disponible; revisa les
         caselles del règim simplificat abans de presentar.
+      retencion_arrendamientos_unset: Al teu perfil encara no consta si pagues lloguers
+        i hi practiques retencions.
+      retencion_capital_unset: Al teu perfil encara no consta si pagues rendiments
+        del capital subjectes a retenció.
+      retencion_profesionales_unset: Al teu perfil encara no consta si pagues honoraris
+        a professionals i hi practiques retencions.
+      terceros_threshold_unset: Al teu perfil encara no consta si les operacions amb
+        algun client o proveïdor superen el llindar anual de declaració del Model
+        347.
     year_help: Any de declaració per a --period (p. ex. 2024).
   review:
     app_help: 'La teva cua de revisió: classifica moviments dels teus registres, justificants

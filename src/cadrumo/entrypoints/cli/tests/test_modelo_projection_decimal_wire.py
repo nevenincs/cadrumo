@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from .._modelo_projection_cli import _decimal_wire
+from ..modelo_projection_commands import _decimal_wire
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

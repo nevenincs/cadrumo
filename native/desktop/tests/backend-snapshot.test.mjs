@@ -130,13 +130,29 @@ function crates(t) {
   );
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const native = join(root, "native");
-  for (const crate of ["application", "platform", "desktop/src-tauri"]) {
+  for (const crate of [
+    "application",
+    "platform",
+    "installer",
+    "manager",
+    "launch_guard",
+    "interpreter_host",
+    "desktop/src-tauri",
+  ]) {
     mkdirSync(join(native, crate, "src"), { recursive: true });
     writeFileSync(join(native, crate, "Cargo.toml"), crate);
     writeFileSync(join(native, crate, "src/old.rs"), crate);
   }
   for (const entry of ["Cargo.lock", "build.rs"])
     writeFileSync(join(native, "desktop/src-tauri", entry), entry);
+  mkdirSync(join(native, "interpreter/windows"), { recursive: true });
+  for (const source of [
+    "interpreter/windows/host.manifest",
+    "interpreter/windows/host.c",
+    "interpreter/launch_guard.h",
+    "interpreter/launch_profile.h",
+  ])
+    writeFileSync(join(native, source), source);
   return { root, native, declared: join(root, "build/desktop/host") };
 }
 
@@ -144,7 +160,15 @@ test("a full host snapshot drops renamed sources and keeps generated files", (t)
   const { native, declared } = crates(t);
   const snapshot = snapshotHostSources(native, declared);
   writeFileSync(join(snapshot.crate, "tauri.conf.json"), "generated");
-  for (const crate of ["application", "platform", "desktop/src-tauri"])
+  for (const crate of [
+    "application",
+    "platform",
+    "installer",
+    "manager",
+    "launch_guard",
+    "interpreter_host",
+    "desktop/src-tauri",
+  ])
     renameSync(
       join(native, crate, "src/old.rs"),
       join(native, crate, "src/new.rs"),
@@ -157,6 +181,29 @@ test("a full host snapshot drops renamed sources and keeps generated files", (t)
     "generated",
   );
   assert.deepEqual(readdirSync(join(declared, "..")), ["host"]);
+});
+
+test("compiler output in sibling crates is never copied into a host snapshot", (t) => {
+  const { native, declared } = crates(t);
+  for (const output of ["target", ".exe"]) {
+    mkdirSync(join(native, "application", output));
+    writeFileSync(
+      join(native, "application", output, "compiler-output"),
+      "not source",
+    );
+  }
+  for (const incremental of [false, true]) {
+    const snapshot = snapshotHostSources(native, declared, { incremental });
+    for (const output of ["target", ".exe"])
+      assert.equal(
+        existsSync(join(snapshot.root, "application", output)),
+        false,
+      );
+    assert.equal(
+      readFileSync(join(snapshot.root, "application/src/old.rs"), "utf8"),
+      "application",
+    );
+  }
 });
 
 test("a host snapshot refuses a linked root or a linked crate", (t) => {

@@ -293,4 +293,54 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.application.dependency_network.DependencyProxyConfigurationError",
+        ErrorCode(
+            code="REFUSED_DEPENDENCY_PROXY_CONFIGURATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_dependency_proxy_configuration",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.dependency_network._StageError",
+        ErrorCode(
+            code="FAIL_DEPENDENCY_PREFLIGHT_STAGE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_dependency_preflight_stage",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.dependency_registry.DependencySelectionError",
+        ErrorCode(
+            code="REFUSED_DEPENDENCY_SELECTION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_dependency_selection",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.dependency_transfer.DependencyTransferError",
+        ErrorCode(
+            code="FAIL_DEPENDENCY_TRANSFER",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_dependency_transfer",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.dependency_transfer.DependencyItemLockedError",
+        ErrorCode(
+            code="LOCKED_DEPENDENCY_ITEM",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_dependency_item",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
 )

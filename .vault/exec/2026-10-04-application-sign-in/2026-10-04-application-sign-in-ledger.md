@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#application-sign-in'
 date: '2026-10-04'
-modified: '2026-10-05'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:eac53fd594b06f24f196f08249dd058c1bb4d38fc384887ed3f988b87cff20a9'
+body_hash: 'sha256:d4adcfe017371af6609eb4761fae2bd28e569b8aec59e7409b0a030e6761b72e'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
 ---
@@ -208,6 +208,94 @@ related:
 - `S12` `M` `dev/quality/metadata/import_load_targets.dev.json`
 - `S12` `verify:` `principal-import-boundaries-final 20261005T173955.188479Z-principal-import-boundaries-final-44480-f3f817e0` -> `pass`
 - `S12` `verify:` `registration integration 20261005T173251.115363Z-pytest-524-88363ecb` -> `pass`
+- `S06` `verify:` `focused sign-in pytest over 28 runtime/adapter/CLI/TUI modules -n 4: 343 passed 7 failed; 6 of 7 pass rerun -n0 (load deadline timeouts), 1 fixed under S13` -> `pass`
+- `S06` `verify:` `test_recovery_revocation, test_sign_in_sweep_contention, test_session_authority, test_runtime_password_rotation, test_enrollment_lifecycle in that run` -> `pass`
+- `S06` `verify:` `just check-style` -> `pass`
+- `S06` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S06` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S06` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S07` `verify:` `focused sign-in pytest over 28 runtime/adapter/CLI/TUI modules -n 4: 343 passed 7 failed; 6 of 7 pass rerun -n0 (load deadline timeouts), 1 fixed under S13` -> `pass`
+- `S07` `verify:` `just check-style` -> `pass`
+- `S07` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S07` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S07` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S07` `verify:` `test_receipt_login, test_mcp_sign_in_door, test_runtime_logout, test_sign_in_observation in that run` -> `pass`
+- `S08` `verify:` `focused sign-in pytest over 28 runtime/adapter/CLI/TUI modules -n 4: 343 passed 7 failed; 6 of 7 pass rerun -n0 (load deadline timeouts), 1 fixed under S13` -> `pass`
+- `S08` `verify:` `just check-style` -> `pass`
+- `S08` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S08` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S08` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S08` `verify:` `test_sign_in_status, test_custody_payloads, test_sign_in_observation in that run` -> `pass`
+- `S10` `verify:` `focused sign-in pytest over 28 runtime/adapter/CLI/TUI modules -n 4: 343 passed 7 failed; 6 of 7 pass rerun -n0 (load deadline timeouts), 1 fixed under S13` -> `pass`
+- `S10` `verify:` `just check-style` -> `pass`
+- `S10` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S10` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S10` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S10` `verify:` `test_session_authority, test_session_events (runtime), test_recovery_revocation in that run` -> `pass`
+- `S11` `verify:` `focused sign-in pytest over 28 runtime/adapter/CLI/TUI modules -n 4: 343 passed 7 failed; 6 of 7 pass rerun -n0 (load deadline timeouts), 1 fixed under S13` -> `pass`
+- `S11` `verify:` `just check-style` -> `pass`
+- `S11` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S11` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S11` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S11` `verify:` `adapters/local_runtime test_session_events and entrypoints/runtime test_session_events in that run` -> `pass`
+- `S16` `verify:` `focused sign-in pytest over 28 runtime/adapter/CLI/TUI modules -n 4: 343 passed 7 failed; 6 of 7 pass rerun -n0 (load deadline timeouts), 1 fixed under S13` -> `pass`
+- `S16` `verify:` `just check-style` -> `pass`
+- `S16` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S16` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S16` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S16` `verify:` `test_runtime_session, test_runtime_admission, test_runtime_account_factories in that run` -> `pass`
+- `S09` `M` `src/cadrumo/entrypoints/cli/_profile_session_gate.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/runtime_profile_admission.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/config/custody.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_authentication_gate.py`
+- `S09` `A` `src/cadrumo/entrypoints/cli/tests/test_sign_in_refusal_rendering.py`
+- `S09` `M` `src/cadrumo/locales/en/cli.yml`
+- `S09` `M` `src/cadrumo/locales/es/cli.yml`
+- `S09` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S09` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S09` `verify:` `pytest test_sign_in_refusal_rendering + test_profile_authentication_gate: 241 passed` -> `pass`
+- `S09` `verify:` `dev.locales set-batch for three cli.config.errors keys in en es ca hu` -> `pass`
+- `S09` `verify:` `just check-style` -> `pass`
+- `S09` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S09` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S09` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S09` `verify:` `ruff check, ruff format --check, ty on the Step's files` -> `pass`
+- `S12` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_receipt_mutation_ownership.py`
+- `S12` `verify:` `pytest test_receipt_mutation_ownership: 6 passed, including 4 planted second owners caught in isolated fixtures` -> `pass`
+- `S12` `verify:` `census: auth.session.acquire/logout are AEAT provider sessions (login_operator_auth, certificate/browser), not profile sign-in; left untouched` -> `pass`
+- `S12` `verify:` `just check-style` -> `pass`
+- `S12` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S12` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S12` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S12` `verify:` `ruff check, ruff format --check, ty on the Step's files` -> `pass`
+- `S13` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py`
+- `S13` `verify:` `pytest test_installed_cli_resumes_other_profile_without_retiring_original -n0: 1 passed` -> `pass`
+- `S13` `verify:` `test_interactive_receipt_admission, test_runtime_login in the focused run` -> `pass`
+- `S13` `verify:` `just check-style` -> `pass`
+- `S13` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S13` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S13` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S13` `verify:` `ruff check, ruff format --check, ty on the Step's files` -> `pass`
+- `S14` `verify:` `dev.docs.cli_reference regenerated into scratch: docs/cli/config.rst identical (logout and sign-in-status current)` -> `pass`
+- `S14` `verify:` `test_runtime_logout, test_sign_in_observation, test_custody_payloads in the focused run` -> `pass`
+- `S14` `verify:` `just check-style` -> `pass`
+- `S14` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S14` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S14` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S14` `verify:` `ruff check, ruff format --check, ty on the Step's files` -> `pass`
+- `S15` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_form.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_attempt.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py`
+- `S15` `verify:` `pytest test_runtime_admission 20 passed x3 and test_runtime_login 53/55 (2 load timeouts pass alone)` -> `pass`
+- `S15` `verify:` `just check-style` -> `pass`
+- `S15` `verify:` `just check-format (4 findings, none in this Step's files)` -> `fail`
+- `S15` `verify:` `just check-types (31 ty findings in dev/ and adapters/local_runtime/tests/test_posix.py, none in this Step's files)` -> `fail`
+- `S15` `verify:` `just check-import-boundaries (unavailable: governed tree changed mid-run)` -> `fail`
+- `S15` `verify:` `ruff check, ruff format --check, ty on the Step's files` -> `pass`
+- `S18` `A` `.vault/audit/2026-10-12-application-sign-in-audit.md`
+- `S18` `verify:` `integrated review against sign-in ADR, parity and door ADRs: no critical/high, 7 lower findings in 2026-10-12-application-sign-in-audit` -> `pass`
+- `S18` `verify:` `focused sign-in pytest 35 modules -m '' -n 4: 633 passed 2 failed (CLI terminal-patch order dependence passes alone; TUI profile-lock deadline intermittent, recorded medium)` -> `fail`
 
 ## Notes
 
@@ -221,3 +309,15 @@ related:
 - `S15` Principal supplied translated `tui.runtime_login.stay_signed_in` in all four locales through dev.locales. Default-off checkbox and persistence request integration remain B4-owned; Step stays open.
 - `S12` Principal integration: corrected defining-module import and retired stale selection-revokes-receipt assertions. Two real-storage cases passed; three native-keyring cases skipped because Windows refused this logon. Entire stable import gate passed with no hard findings. Step remains open for runtime custody cleanup and real-keyring acceptance; shared B4 changes remain uncommitted.
 - `S14` B4 revision 9 reset notice correction applied through dev.locales in all four languages: saved human sign-in ends; recovery code and prior archive passphrases retain their existing scope. Strict rendering and fresh CLI logout help pass. Overall Step stays open.
+- `S06` Implementation landed in earlier commits outside this ledger `(profile_host` `observe_human_lock_down` and `revoke_human_sign_in,` `sign_in_sweep,` `passphrase_rotation,` `automation_lifecycle_service,` `custody_service` `fence_human_sign_in);` closed on test evidence only. Windows positive OS logout and lock acceptance remain with P06.S17.
+- `S07` Implemented before this ledger resumed `(profile_connection_sessions` human sign-out, `application/runtime/sign_in.py,` `frontend_client` `human_sign_out);` closed on test evidence.
+- `S08` Implemented before this ledger resumed `(profile_connection_sessions,` `entrypoints/runtime/sign_in_status.py);` closed on test evidence.
+- `S10` Implemented before this ledger resumed `(session_authority_core` retire point with SessionRetirementKind); closed on test evidence.
+- `S11` Implemented before this ledger resumed `(runtime_frame_io` event frames, `session_events` queue bound 64, `server_connection_handling,` `runtime_verified_transport);` closed on test evidence.
+- `S16` Implemented before this ledger resumed (tui `runtime_session,` app, `runtime_account);` closed on test evidence.
+- `S09` Runtime already carried THROTTLED seconds, `PROFILE_LOCKED,` receipt reasons and binding (generation changed, login mismatch) on the wire, and the TUI shows the typed code; the CLI collapsed them to absent/expired or a bare code. The CLI now names each reason, keeps the runtime code and context the desktop reads, and the throttle diagnostic was already present in `login_throttle.`
+- `S12` The registered in-process profile login/logout operations, the non-runtime unwrap callers and the CLI receipt extension were already retired by commit 5a09ab8082 `(login_handover,` `login_session` in-process paths); no extension code exists anywhere. Closed with the ownership gate over src/cadrumo.
+- `S13` Gate already implemented (custody.py `passphrase_channel_absent,` `runtime_profile_admission` terminal check). Three runtime-login tests expected a non-interactive resume; they now declare a terminal. Two of those hunks were already present uncommitted in the worktree for the same purpose and are committed here.
+- `S14` Generated CLI reference already current for config logout and config sign-in-status; regeneration shows unrelated drift (config google folder organize, schema paths) owned by other lanes, not committed. `command_operation_table` lists `human_sign_out` under config login because rows are a generated upper bound over the shared handler module, not a defect.
+- `S15` Resume-first ran only with a preselected profile and reported an ordinary no-saved-sign-in as a refusal. Absent and missing-keychain-entry now fall back quietly to the password; binding, expiry and keyring refusals still show their code. Resume stays off for an explicit profile choice (change user locks the session first). Stay signed in default-off already present.
+- `S18` Review gate passes; plan completion pending on P06.S17 disposable-host acceptance. `os_keychain` tests environmental here (WinError 1312). Discovery without semantic search (index updating).

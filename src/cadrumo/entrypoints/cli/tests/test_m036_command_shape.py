@@ -18,13 +18,11 @@ import pytest
 from click.testing import Result
 from pydantic import ValidationError
 
-from ....application.modelo.reconciliation_records import (
-    ModeloReconciliationEvidenceKind,
-    ModeloReconciliationVerdict,
-)
+from ....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
+from ....application.modelo.reconciliation_records import ModeloReconciliationVerdict
 from ....domain.modelos.filing_text import ACTOR_LABEL_MAX_LENGTH
-from .._modelo_m036_cli import m036_alta, m036_baja, m036_modificacion
-from .._modelo_payloads_m036 import (
+from ..modelo_m036_commands import m036_alta, m036_baja, m036_modificacion
+from ..modelo_results_m036 import (
     ModeloReconciliationHistoryResult,
     ModeloReconciliationHistoryRowPayload,
 )

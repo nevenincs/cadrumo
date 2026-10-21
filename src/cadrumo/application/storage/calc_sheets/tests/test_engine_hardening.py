@@ -52,7 +52,7 @@ def test_guide_paragraphs_resolve_through_output_language() -> None:
     assert plan.guide.paragraphs[0] == f"{snapshot.modelo.title} - period 1T / 2025."
     assert "Edit only the cells in the 'Entradas' tab." in plan.guide.paragraphs[1]
     assert plan.guide.paragraphs[2] == (
-        "To pull your edits into local storage, run 'aeat app modelo spreadsheet pull' from the CLI."
+        "Spreadsheet edits are not imported into the Cadrumo profile; review the changes and enter them in Cadrumo."
     )
 
 

@@ -16,7 +16,6 @@ from queue import Queue
 from typing import override
 
 import pytest
-from pydantic import SecretStr
 
 from .....core.config import override_settings
 from .....core.config_support import LLMProvider
@@ -40,8 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 def _settings(tmp_path: Path) -> EnvFileFreeSettings:
     return EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model="gpt-oss",
+        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "probe-cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -163,14 +161,3 @@ def test_client_records_run_record_on_provider_failure(tmp_path: Path) -> None:
     # A 5xx is the transient half of the provider boundary, so the recorded kind
     # names the class the retry policy actually classified on.
     assert records[0].error_kind == "LLMTransientTransportError"
-
-
-def test_secretstr_masks_llm_keys_in_settings_repr() -> None:
-    """LLM API keys should never appear in repr or serialized JSON."""
-    settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.ANTHROPIC,
-        cadrumo_llm_model="claude-sonnet-4-6",
-        cadrumo_llm_anthropic_api_key=SecretStr("sk-test-secret"),
-    )
-    assert "sk-test-secret" not in repr(settings)
-    assert "sk-test-secret" not in settings.model_dump_json()

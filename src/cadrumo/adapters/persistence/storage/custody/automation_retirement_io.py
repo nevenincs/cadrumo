@@ -5,11 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 from uuid import UUID
 
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
+from .....application.user_profile.automation_custody_port import AutomationSecretStore
 from .automation_native_identity import WRAP_NAMESPACE
 from .filesystem import (
     clear_profile_custody_local_record,

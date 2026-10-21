@@ -23,17 +23,19 @@ def test_source_and_authority_changes_refuse_completion(
     source, authority = tmp_path / "page.md", tmp_path / "authority.json"
     source.write_text("original page", encoding="utf-8")
     authority.write_text("original authority", encoding="utf-8")
-    selected = [authority]
+    database = tmp_path / "authority.sqlite3"
+    database.write_bytes(b"selected database")
+    selected = [authority, database]
+    monkeypatch.setattr(docs_build, "REPO_ROOT", tmp_path)
     configuration = build / "build-paths.json"
     configuration.write_text(
         json.dumps({"paths": {"user_docs_build": "docs", "user_docs_work": "work"}}), encoding="utf-8"
     )
     inputs = build / "inputs.txt"
     inputs.write_text(f"{source}\n{configuration}\n", encoding="utf-8")
-    destination, shared = build / "docs", tmp_path / "cache" / "docs"
+    destination, shared = build / "docs", build / "work/user-docs"
     monkeypatch.setattr(docs_build, "selected_published_authority", lambda _root: tuple(selected))
-    monkeypatch.setattr(docs_build, "dev_cache_dir", lambda _name: shared)
-    monkeypatch.setattr(docs_build, "_index_site", lambda _root, _languages: None)
+    monkeypatch.setattr(docs_build, "_index_site", lambda _root, _languages, _work: None)
 
     def produce(root: Path, _work: Path, _languages: tuple[str, ...]) -> None:
         root.mkdir(parents=True, exist_ok=True)
@@ -45,13 +47,13 @@ def test_source_and_authority_changes_refuse_completion(
         elif change == "selection":
             successor = tmp_path / "successor.json"
             successor.write_bytes(authority.read_bytes())
-            selected[:] = [successor]
+            selected[:] = [successor, database]
 
     monkeypatch.setattr(docs_build, "_compile_roots", produce)
     original_receipt = b""
     if change in {"none", "reuse"}:
         docs_build.build_roots(build, inputs, target="windows-x86-64")
-        assert current(destination, fingerprint(inputs, (authority,)))
+        assert current(destination, fingerprint(inputs, (authority, database)))
         assert (shared / "ready").is_file()
         if change == "none":
             return

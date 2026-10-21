@@ -11,6 +11,14 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
+
 from ....core.errors.hierarchy import NoActiveProfileError
 from ....core.identity_check_verdict import IdentityCheckVerdict, IdentityCheckVerdictValue
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -18,13 +26,6 @@ from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..verify import VerifyObservation, VerifySurface
 from ..verify_read_contracts import (

@@ -47,9 +47,9 @@ from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, 
 from cadrumo.core.period import Period
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 
+from .....domain.iva.schema import InvoiceKind
 from .retencion_observation_authoring import replace_retencion_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

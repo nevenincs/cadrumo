@@ -274,6 +274,7 @@ def _fold_progress(
             completed=progress_event.completed,
             total=progress_event.total,
             unit_code=progress_event.unit_code,
+            subject_code=progress_event.subject_code,
             phase_code=phase_code,
             event_sequence=progress_event.sequence,
             revision=progress_event.revision,
@@ -346,6 +347,7 @@ def _project_event(event: OperationEvent) -> OperationPublicEventV1:
             completed=event.completed,
             total=event.total,
             unit_code=event.unit_code,
+            subject_code=event.subject_code,
         )
     if isinstance(event, OperationLogRecord):
         return OperationPublicLogEventV1(

@@ -23,6 +23,8 @@ if TYPE_CHECKING:
 class LLMPreconditionCondition(StrEnum):
     """Closed failed-condition identities owned by LLM dispatch and readers."""
 
+    AGENT_MODEL_ROLE_NAMED = "llm.agent.model_role_named"
+    AGENT_MODEL_RUN_COMPLETED = "llm.agent.model_run_completed"
     COLUMN_MAPPING_HEADERS_PRESENT = "llm.column_mapping.headers_present"
     COLUMN_MAPPING_RESPONSE_PARSEABLE = "llm.column_mapping.response_parseable"
     COLUMN_MAPPING_RESPONSE_SCHEMA_VALID = "llm.column_mapping.response_schema_valid"
@@ -35,10 +37,7 @@ class LLMPreconditionCondition(StrEnum):
     EVIDENCE_TOKEN_EPHEMERAL = "llm.evidence." + "token_ephemeral"
     EVIDENCE_TRANSCRIPTION_NONEMPTY = "llm.evidence.transcription_nonempty"
     LOCAL_INFERENCE_SLOT_AVAILABLE = "llm.local_inference.slot_available"
-    OFF_HOST_MODEL_NAMED = "llm.off_host_model.named"
     PROMPT_DEFINITION_ID_VALID = "llm.prompt_definition.id_valid"
-    PROVIDER_CREDENTIALS_PRESENT = "llm.provider.credentials_present"
-    PROVIDER_SELECTION_VALID = "llm.provider.selection_valid"
     REQUEST_PROMPT_NONEMPTY = "llm.request.prompt_nonempty"
     VISION_INPUT_SUPPORTED = "llm.vision.input_supported"
 

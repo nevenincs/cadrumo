@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:43+0200\n"
+"POT-Creation-Date: 2026-10-21 17:01+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -179,23 +179,32 @@ msgstr "2. Lee documentos de notificaciones que ya hayas abierto"
 
 #: ../../how-to/check-aeat-notifications.md:60
 msgid ""
-"Read a notification document only after you have personally opened that "
-"notification in the AEAT sede. Opening an unread electronic notification "
-"is a legally consequential act: it serves the notification and starts its"
-" appeal and payment periods. The tool therefore refuses to pull a "
-"document unless AEAT already reports its notification as read. Open an "
-"unread notification yourself when you decide that those periods should "
-"begin."
+"Read a notification document only after AEAT records it as read. Opening "
+"an electronic notification can constitute legal service, so Cadrumo does "
+"not open unread notifications on your behalf. Check them yourself in "
+"**Mis notificaciones**. Leaving a notification unopened does not reliably"
+" postpone its legal effects: AEAT explains that electronic notifications "
+"can take effect after ten calendar days from being made available without"
+" access. Check the notification's actual service details and applicable "
+"response period; its issue date alone does not establish your deadline. "
+"See [AEAT's notification questions and "
+"answers](https://sede.agenciatributaria.gob.es/Sede/otros-"
+"servicios/notificaciones/notificaciones/preguntas-frecuentes.html)."
 msgstr ""
-"Lee un documento de notificación solo después de haber abierto "
-"personalmente esa notificación en la sede de la AEAT. Abrir una "
-"notificación electrónica no leída es un acto con consecuencias legales: "
-"da por practicada la notificación e inicia los plazos de recurso y pago. "
-"Por eso, la herramienta rechaza obtener un documento salvo que la AEAT ya"
-" informe de la notificación como leída. Abre tú una notificación no leída"
-" cuando decidas que deben comenzar esos plazos."
+"Lee un documento de notificación solo después de que la AEAT lo registre "
+"como leído. Abrir una notificación electrónica puede equivaler a su "
+"práctica legal, así que Cadrumo no abre por ti las notificaciones no "
+"leídas. Revísalas tú mismo en **Mis notificaciones**. Dejar una "
+"notificación sin abrir no aplaza de forma fiable sus efectos jurídicos: "
+"la AEAT explica que las notificaciones electrónicas pueden surtir efecto "
+"tras diez días naturales desde su puesta a disposición sin acceso. "
+"Comprueba los datos reales de la práctica de la notificación y el plazo "
+"de respuesta aplicable; la fecha de emisión por sí sola no determina tu "
+"plazo. Consulta las [preguntas y respuestas de la AEAT sobre "
+"notificaciones](https://sede.agenciatributaria.gob.es/Sede/otros-"
+"servicios/notificaciones/notificaciones/preguntas-frecuentes.html)."
 
-#: ../../how-to/check-aeat-notifications.md:67
+#: ../../how-to/check-aeat-notifications.md:69
 msgid ""
 "Identify a document by the `certificado` number AEAT gives its "
 "notification. Pull one eligible document into encrypted local custody, "
@@ -207,7 +216,7 @@ msgstr ""
 "cifrada, consulta un documento almacenado sin contactar con la AEAT o "
 "enumera las cifras que informa cada documento analizado:"
 
-#: ../../how-to/check-aeat-notifications.md:74
+#: ../../how-to/check-aeat-notifications.md:76
 msgid ""
 "Treat history as a document record, not as a balance. It does not total "
 "the figures, state what is currently payable, or replace the recaudación "
@@ -220,11 +229,11 @@ msgstr ""
 " documento por sí solo no demuestra si su importe se pagó, recurrió, "
 "redujo o sustituyó."
 
-#: ../../how-to/check-aeat-notifications.md:81
+#: ../../how-to/check-aeat-notifications.md:83
 msgid "3. Declaration history (expedientes)"
 msgstr "3. Historial de declaraciones (expedientes)"
 
-#: ../../how-to/check-aeat-notifications.md:83
+#: ../../how-to/check-aeat-notifications.md:85
 msgid ""
 "Expedientes are the official AEAT record of your past declarations: each "
 "filed return for each modelo and year, with its status and filing date."
@@ -233,7 +242,7 @@ msgstr ""
 "pasadas: cada declaración presentada para cada modelo y ejercicio, con su"
 " estado y su fecha de presentación."
 
-#: ../../how-to/check-aeat-notifications.md:86
+#: ../../how-to/check-aeat-notifications.md:88
 msgid ""
 "The example shows the expedientes reads: pull downloads the history for "
 "one form and year, pull with a year range covers several years at once "
@@ -250,11 +259,11 @@ msgstr ""
 "estado, fechas y enlaces a justificantes de la AEAT) y latest muestra la "
 "instantánea más reciente."
 
-#: ../../how-to/check-aeat-notifications.md:93
+#: ../../how-to/check-aeat-notifications.md:95
 msgid "4. Filed declaration detail"
 msgstr "4. Detalle de una declaración presentada"
 
-#: ../../how-to/check-aeat-notifications.md:95
+#: ../../how-to/check-aeat-notifications.md:97
 msgid ""
 "Download the box-by-box values from a return you have already filed with "
 "AEAT."
@@ -262,7 +271,7 @@ msgstr ""
 "Descarga los valores casilla por casilla de una declaración que ya hayas "
 "presentado ante la AEAT."
 
-#: ../../how-to/check-aeat-notifications.md:97
+#: ../../how-to/check-aeat-notifications.md:99
 msgid ""
 "The example shows the filed-detail reads. `filed list` lists the filed "
 "returns AEAT holds without saving their box values (it still reads from "
@@ -282,11 +291,11 @@ msgstr ""
 " de destino (por ejemplo, las declaraciones del Modelo 303 que necesita "
 "el resumen anual del Modelo 390)."
 
-#: ../../how-to/check-aeat-notifications.md:111
+#: ../../how-to/check-aeat-notifications.md:113
 msgid "5. NIF and EU VAT checks"
 msgstr "5. Comprobación de NIF y de IVA intracomunitario"
 
-#: ../../how-to/check-aeat-notifications.md:113
+#: ../../how-to/check-aeat-notifications.md:115
 msgid ""
 "Check whether a NIF is registered for intra-EU VAT purposes (the VIES "
 "register), or look up a Spanish NIF in the Spanish ROI register."
@@ -294,7 +303,7 @@ msgstr ""
 "Comprueba si un NIF está registrado a efectos de IVA intracomunitario (el"
 " registro VIES), o consulta un NIF español en el registro ROI español."
 
-#: ../../how-to/check-aeat-notifications.md:116
+#: ../../how-to/check-aeat-notifications.md:118
 msgid ""
 "The example shows the check reads. `verify nif-iva` checks whether a "
 "foreign EU VAT number is valid, and `verify tgvi` checks whether a "
@@ -311,11 +320,11 @@ msgstr ""
 " `verify view` abre una por su id de observación y `verify latest` "
 "muestra la última observación de un NIF."
 
-#: ../../how-to/check-aeat-notifications.md:123
+#: ../../how-to/check-aeat-notifications.md:125
 msgid "6. Official AEAT portal catalogue"
 msgstr "6. Catálogo oficial de portales de la AEAT"
 
-#: ../../how-to/check-aeat-notifications.md:125
+#: ../../how-to/check-aeat-notifications.md:127
 msgid ""
 "The portal catalogue is built into Cadrumo, so these commands work "
 "offline and never contact AEAT. The example shows the portal-catalogue "
@@ -337,11 +346,11 @@ msgstr ""
 "`calendar_reference`). Usa `--modelo` o `--category`, no ambos: son "
 "mutuamente excluyentes. `portals view` abre los detalles de un portal."
 
-#: ../../how-to/check-aeat-notifications.md:139
+#: ../../how-to/check-aeat-notifications.md:141
 msgid "7. Borrador (draft Modelo 100)"
 msgstr "7. Borrador (Modelo 100 en borrador)"
 
-#: ../../how-to/check-aeat-notifications.md:141
+#: ../../how-to/check-aeat-notifications.md:143
 msgid ""
 "The borrador is the pre-calculated Modelo 100 IRPF draft that AEAT makes "
 "available to taxpayers who meet its conditions. Cadrumo does not download"
@@ -367,11 +376,11 @@ msgstr ""
 " un borrador y latest muestra el último borrador activo de un ejercicio "
 "de presentación."
 
-#: ../../how-to/check-aeat-notifications.md:149
+#: ../../how-to/check-aeat-notifications.md:151
 msgid "8. VAT compensation balance"
 msgstr "8. Saldo de IVA a compensar"
 
-#: ../../how-to/check-aeat-notifications.md:151
+#: ../../how-to/check-aeat-notifications.md:153
 msgid ""
 "Your VAT compensation balance (saldo a compensar) is the amount of "
 "overpaid VAT from prior quarters that can be deducted from future Modelo "
@@ -392,23 +401,23 @@ msgstr ""
 " ejecución de solo lectura, y `history` enumera los saldos y las "
 "decisiones persistidos que se guardan localmente."
 
-#: ../../how-to/check-aeat-notifications.md:158
+#: ../../how-to/check-aeat-notifications.md:160
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/check-aeat-notifications.md:160
+#: ../../how-to/check-aeat-notifications.md:162
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planificar tu calendario de presentaciones](filing-calendar.md)"
 
-#: ../../how-to/check-aeat-notifications.md:161
+#: ../../how-to/check-aeat-notifications.md:163
 msgid "[Authenticate with AEAT](authenticate-with-aeat.md)"
 msgstr "[Autenticar Cadrumo ante la AEAT](authenticate-with-aeat.md)"
 
-#: ../../how-to/check-aeat-notifications.md:162
+#: ../../how-to/check-aeat-notifications.md:164
 msgid "[Set up your taxpayer profile](profile-setup.md)"
 msgstr "[Configurar tu perfil de contribuyente](profile-setup.md)"
 
-#: ../../how-to/check-aeat-notifications.md:163
+#: ../../how-to/check-aeat-notifications.md:165
 msgid "[Reconcile a filed modelo against its AEAT receipt](reconcile.md)"
 msgstr ""
 "[Conciliar un modelo presentado con tu justificante de la "

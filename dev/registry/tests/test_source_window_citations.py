@@ -45,9 +45,9 @@ def build_catalogue(legal: Path, entries: dict[str, tuple[str | None, str | None
     blocks = []
     for source_id, (applies_from, applies_to) in entries.items():
         lines = [f'[sources."{source_id}"]', 'evidence_tier = "layout_authority"']
-        if applies_from:
+        if applies_from is not None and applies_from:
             lines.append(f"applies_from = {applies_from}")
-        if applies_to:
+        if applies_to is not None and applies_to:
             lines.append(f"applies_to = {applies_to}")
         blocks.append("\n".join(lines))
     (legal / "planted.toml").write_text("\n\n".join(blocks) + "\n", encoding="utf-8")
@@ -66,7 +66,7 @@ def build_revision(
     root = modelos / modelo / "revisions" / revision
     root.mkdir(parents=True, exist_ok=True)
     body = [f'[revisions."{revision}"]', f"valid_from = {valid_from}"]
-    if valid_to:
+    if valid_to is not None and valid_to:
         body.append(f"valid_to = {valid_to}")
     (root / "revision.toml").write_text("\n".join(body) + "\n", encoding="utf-8")
     by_file: dict[str, list[str]] = {}

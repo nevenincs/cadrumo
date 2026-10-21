@@ -99,14 +99,16 @@ pub(crate) fn admit_selection(
         .ok_or_else(|| io::Error::from(io::ErrorKind::PermissionDenied))
 }
 
-/// Every successor repeats native admission, job escape and catalogue verification.
+/// Every successor repeats native ownership, job escape and catalogue verification.
 /// Dispatch acknowledgement conveys no runtime readiness or ownership.
-pub fn dispatch_newest(image: &Path, sign_in: bool) -> io::Result<DispatchOutcome> {
+pub fn dispatch_newest(
+    image: &Path,
+    intent: crate::invocation::Intent,
+) -> io::Result<DispatchOutcome> {
     let mut selected = select(image)?;
     let root = ManagedLocations::resolve(&selected.manager)?;
-    let failures = crate::failed_versions::FailedVersions::read(root.storage_root())?;
     let release = selected.version.map(|part| part.to_string()).join(".");
-    if let Some(previous) = failures.restoration(&release) {
+    if let Some(previous) = restoration(root.storage_root(), &release, intent)? {
         let contract: DiscoveryContract =
             serde_json::from_str(crate::contract::INSTALLATION_CONTRACT)
                 .map_err(io::Error::other)?;
@@ -117,7 +119,7 @@ pub fn dispatch_newest(image: &Path, sign_in: bool) -> io::Result<DispatchOutcom
         selected = contract
             .inspect_version_cancellable(
                 prefix,
-                previous,
+                &previous,
                 &cadrumo_application::component::Cancellation::default(),
             )
             .map_err(io::Error::other)?;
@@ -127,19 +129,41 @@ pub fn dispatch_newest(image: &Path, sign_in: bool) -> io::Result<DispatchOutcom
     if let Some(current) = current_installation(image, &selected, locations)? {
         return Ok(DispatchOutcome::Current(current));
     }
-    Command::new(selected.manager)
-        .args(sign_in.then_some("--sign-in"))
-        .env_clear()
-        .envs(cadrumo_platform::storage::strict_host_environment(
-            std::env::vars_os(),
-        ))
-        .current_dir(selected.package)
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .creation_flags(0x0800_0000)
-        .spawn()?;
+    if intent == crate::invocation::Intent::Retry {
+        // Restoration can select an older image whose activation grammar predates Retry.
+        crate::activation_probe::require_retry_support(&selected.manager, &selected.package)?;
+    }
+    cadrumo_application::process::creation::run(|| {
+        Command::new(selected.manager)
+            .args(intent.argument())
+            .env_clear()
+            .envs(cadrumo_platform::storage::strict_host_environment(
+                std::env::vars_os(),
+            ))
+            .current_dir(selected.package)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .creation_flags(0x0800_0000)
+            .spawn()
+    })?;
     Ok(DispatchOutcome::Dispatched)
+}
+
+fn restoration(
+    root: &Path,
+    release: &str,
+    intent: crate::invocation::Intent,
+) -> io::Result<Option<String>> {
+    // Preserve a verified restoration so activation can reach its exact-image
+    // IPC owner. Retry there clears failures and reassesses newer installations.
+    // A malformed record supplies no restoration authority; explicit recovery
+    // may still reach the selected owner, which alone can clear the record.
+    match crate::failed_versions::FailedVersions::read(root) {
+        Ok(failures) => Ok(failures.restoration(release).map(str::to_owned)),
+        Err(_) if intent == crate::invocation::Intent::Retry => Ok(None),
+        Err(error) => Err(error),
+    }
 }
 
 #[cfg(test)]
@@ -227,6 +251,7 @@ mod tests {
                         "fixture-dependency.bin": format!("{:x}", Sha256::digest(dependency)),
                     },
                     "user_docs": {"directory": "docs/user", "bundled": false},
+                    "startup_files": [member.as_str(), "fixture-dependency.bin"],
                 }))
                 .unwrap(),
             )
@@ -360,20 +385,54 @@ mod tests {
     }
 
     #[test]
-    fn catalogue_admission_refuses_absent_damaged_and_foreign_packages() {
+    fn catalogue_admission_refuses_absent_startup_files_and_foreign_packages() {
         let fixture = Fixture::new();
         let dependency = fixture.package.join("fixture-dependency.bin");
         fs::remove_file(&dependency).unwrap();
         assert!(fixture.admit().is_err());
         fs::write(&dependency, b"inventoried fixture dependency").unwrap();
         assert!(fixture.admit().is_ok());
+        // A launch hashes nothing: changed bytes in a present file are the installer's to find.
         fs::write(&dependency, b"damaged fixture dependency").unwrap();
-        assert!(fixture.admit().is_err());
+        assert!(fixture.admit().is_ok());
         fs::write(&dependency, b"inventoried fixture dependency").unwrap();
         fixture.amend_manifest(|manifest| {
             manifest["build"]["application_id"] = json!("fixture.foreign");
         });
         assert!(fixture.admit().is_err());
+    }
+
+    #[test]
+    fn retry_selection_preserves_failures_until_session_ownership() {
+        use crate::{failed_versions::FailedVersions, invocation::Intent};
+        let fixture = Fixture::new();
+        let release = crate::identity::VERSION;
+        FailedVersions::record(&fixture.storage, release, "0.0.0").unwrap();
+        for intent in [Intent::Manual, Intent::SignIn, Intent::Retry] {
+            assert_eq!(
+                restoration(&fixture.storage, release, intent).unwrap(),
+                Some("0.0.0".into())
+            );
+        }
+        assert!(
+            FailedVersions::read(&fixture.storage)
+                .unwrap()
+                .contains(release)
+        );
+        // Explicit recovery can reach an existing owner even with malformed state;
+        // ordinary launches still refuse it instead of silently clearing failures.
+        crate::custody::write_local_record(
+            &crate::failed_versions::path(&fixture.storage),
+            b"malformed",
+            4096,
+        )
+        .unwrap();
+        assert!(restoration(&fixture.storage, release, Intent::Manual).is_err());
+        assert_eq!(
+            restoration(&fixture.storage, release, Intent::Retry).unwrap(),
+            None
+        );
+        assert!(FailedVersions::read(&fixture.storage).is_err());
     }
 }
 

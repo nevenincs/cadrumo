@@ -43,13 +43,13 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import OperationRegistry
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from .supervision_support import run_to_settlement
-from .test_supervisor import _repositories, _supervisor
+from .supervisor_test_support import _repositories, _supervisor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

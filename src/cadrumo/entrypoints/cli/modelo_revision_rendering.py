@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from ...core.i18n.render import tr
 from ...domain.modelos.calculation_revision import CalculationRevisionState
-from ._modelo_payloads import CalculationRevisionPayload
+from .modelo_results import CalculationRevisionPayload
 
 
 def calculation_revision_state_label(state: str) -> str:

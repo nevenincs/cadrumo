@@ -31,7 +31,7 @@ from cadrumo.application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
 )
-from cadrumo.application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
+from cadrumo.application.ledger.actions_manual import update_manual_transaction_fields
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
 from cadrumo.application.modelo.calculation_actions import (
@@ -65,6 +65,7 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 from cadrumo.tests.env_scope import ready_clave_settings
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ....domain.calculations.registry.iva_regime_vocabulary import default_iva_regime
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()

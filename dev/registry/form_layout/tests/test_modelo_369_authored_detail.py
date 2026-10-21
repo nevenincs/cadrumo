@@ -93,7 +93,7 @@ def test_detail_grids_preserve_all_declared_export_bindings(scheme: str, count: 
         for export in revision.export_layouts
         for record in export.records
         for field in record.fields
-        if field.binding
+        if (field.binding is not None and field.binding)
     }
     actual = {cell.binding_id for grid in grids for row in grid.rows for cell in row.cells}
     actual.update(

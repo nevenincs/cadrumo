@@ -22,13 +22,14 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date, timedelta
 from functools import cache
-from itertools import pairwise
 from pathlib import Path
 from typing import cast
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.casilla_lineage_totality import judging_predecessor
+from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_formula import (
@@ -195,14 +196,20 @@ def _restates_open_row(
     return tuple(restated)
 
 
-def _editions(modelo: ModeloDefinition) -> list[ModeloRevision]:
-    return sorted(modelo.revisions.values(), key=lambda revision: (revision.valid_from, str(revision.id)))
-
-
 def _edition_pairs() -> Iterable[tuple[str, ModeloRevision, ModeloRevision]]:
+    """Yield the canonical row-judgment predecessors, not period-split neighbors."""
     for modelo in _modelos():
-        for earlier, later in pairwise(_editions(modelo)):
-            yield str(modelo.id), earlier, later
+        revisions = ordered_revisions(modelo)
+        for index, later in enumerate(revisions):
+            if (earlier := judging_predecessor(modelo, revisions, index)) is not None:
+                yield str(modelo.id), earlier, later
+
+
+def test_parameter_audits_follow_declared_predecessors_across_2026_period_split() -> None:
+    pairs = {(modelo_id, str(earlier.id), str(later.id)) for modelo_id, earlier, later in _edition_pairs()}
+
+    assert ("303", "2025", "2026-y-siguientes") in pairs
+    assert ("303", "2026-hasta-01-y-1t", "2026-y-siguientes") not in pairs
 
 
 def test_no_edition_restates_an_unchanged_row_its_predecessor_closed() -> None:

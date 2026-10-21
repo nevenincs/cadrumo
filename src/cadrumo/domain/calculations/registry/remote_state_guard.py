@@ -237,7 +237,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
     def _validate_hosts(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         for host in value:
             parsed = urlparse(f"https://{host}")
-            if not parsed.hostname or parsed.hostname != host.lower():
+            if not (parsed.hostname is not None and parsed.hostname) or parsed.hostname != host.lower():
                 raise RegistryValidationError(f"invalid allowed host {host!r}")
             if is_aeat_host(host):
                 continue
@@ -261,7 +261,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
         # widening cannot admit an arbitrary non-AEAT surface.
         for suffix in value:
             parsed = urlparse(f"https://{suffix}")
-            if not parsed.hostname or parsed.hostname != suffix.lower():
+            if not (parsed.hostname is not None and parsed.hostname) or parsed.hostname != suffix.lower():
                 raise RegistryValidationError(f"invalid allowed host suffix {suffix!r}")
             if is_aeat_host(suffix):
                 continue
@@ -498,7 +498,7 @@ def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -
             f"AEAT remote authority {raw_url!r} is not a bare {REMOTE_READ_SCHEME} host "
             "(scheme, user-info or port refused)",
         )
-    if reason := _http_policy_block_reason(policy, url, operation.action, host):
+    if (reason := _http_policy_block_reason(policy, url, operation.action, host)) is not None and reason:
         return _blocked(policy, reason)
     return RemoteStateGuardResult(decision="allowed", reason="read-only AEAT operation allowed", policy_id=policy.id)
 

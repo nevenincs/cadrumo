@@ -13,17 +13,18 @@ if TYPE_CHECKING:
     from .iva_remote_state_ports import IvaRemoteStatePort
 
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.contracts import RefusalError
+
 from ...core.async_cleanup import has_async_cleanup_failure
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.period import Period
 from ..auth.operator_scope_ports import OperatorScopePorts
-from ..runtime.contracts import RuntimeRefusalError
 from ..storage.sync_runs.records import (
     SyncRunRecordRepositoryProtocol,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from ..user_profile.automation_custody_port import AutomationCustodyError
 from .filed_data_capture import capture_filed_data_bulk
 from .filed_data_ports import (
     FiledDataCapturePort,
@@ -193,7 +194,7 @@ async def _capture_filed_history_iva_wallet(
             effect_guard=tracker.enter if tracker is not None else None,
             on_session_write=on_session_write,
         )
-    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+    except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
         raise
     except Exception as exc:
         if has_async_cleanup_failure(exc) or (tracker is not None and (tracker.started or tracker.failed)):
@@ -243,7 +244,7 @@ async def _capture_filed_history_notifications(
             effect_guard=tracker.enter if tracker is not None else None,
             on_session_write=on_session_write,
         )
-    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+    except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
         raise
     except Exception as exc:
         if has_async_cleanup_failure(exc) or (tracker is not None and (tracker.started or tracker.failed)):

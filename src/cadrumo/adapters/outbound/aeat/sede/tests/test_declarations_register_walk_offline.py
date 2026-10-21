@@ -31,7 +31,7 @@ import asyncio
 
 import pytest
 
-from ..declarations_schema import Declaracion
+from ......application.live.expedientes_ports import ExpedientesDeclaration
 from ..errors import SedeParseError
 from .declarations_register_test_support import (
     aeat_sede_fixture,
@@ -46,7 +46,7 @@ _TRUNCATED = "declaraciones-register-form-paginated-synthetic"
 _COMPLETE = "declaraciones-register-form-complete-synthetic"
 
 
-async def _walk_against(html: str, *, modelo: str, ejercicio: int) -> tuple[Declaracion, ...]:
+async def _walk_against(html: str, *, modelo: str, ejercicio: int) -> tuple[ExpedientesDeclaration, ...]:
     """Drive the real walk over one intercepted synthetic document."""
 
     async with open_routed_declarations_register((html,)) as (register, _routed):

@@ -1,10 +1,11 @@
 //! The supervision state machine for one storage root.
 //!
-//! It launches the runtime, awaits `ready` while the process lives, pings on an interval and
-//! escalates a stale heartbeat (`stop`, then the drain and watchdog bound, then termination,
-//! with effects left UNKNOWN), classifies every exit and restarts with exponential backoff on
-//! monotonic time up to a crash-loop ceiling. On OWNER_BUSY it adopts a runtime only by
-//! identity and reports a foreign one without ever stopping it.
+//! It launches the runtime, awaits `ready` while the process lives, pings on an interval that
+//! lengthens while the runtime reports no work in flight, and escalates a stale heartbeat
+//! (`stop`, then the drain and watchdog bound, then termination, with effects left UNKNOWN),
+//! classifies every exit and restarts with exponential backoff on monotonic time up to a
+//! crash-loop ceiling. On OWNER_BUSY it adopts a runtime only by identity and reports a foreign
+//! one without ever stopping it.
 
 use super::adoption::{ForeignReason, InstalledVersions, assess};
 use super::boot_record::{BootRecordUnavailable, read_boot_record};
@@ -39,9 +40,14 @@ pub const EVENT_QUEUE: usize = 512;
 pub struct SupervisorConfig {
     /// How long a live runtime may take to report `ready`, including first-run scanning.
     pub readiness_ceiling: Duration,
-    /// Interval between pings once the runtime is ready.
+    /// Interval between pings once the runtime is ready, while it reports work in flight or
+    /// has not shown that it has none.
     pub heartbeat_interval: Duration,
-    /// How long without a fresh heartbeat before the runtime counts as hung.
+    /// Interval after a fresh heartbeat that reported no work in flight; never shorter than
+    /// `heartbeat_interval`.
+    pub idle_heartbeat_interval: Duration,
+    /// How long without a fresh heartbeat before the runtime counts as hung. After an idle
+    /// heartbeat the bound starts from the later ping, so the reply allowance is unchanged.
     pub heartbeat_staleness: Duration,
     /// A heartbeat whose accept-loop tick is older than this is not fresh.
     pub accept_tick_ceiling: Duration,
@@ -61,6 +67,7 @@ impl Default for SupervisorConfig {
         Self {
             readiness_ceiling: Duration::from_secs(180),
             heartbeat_interval: Duration::from_secs(5),
+            idle_heartbeat_interval: Duration::from_secs(60),
             heartbeat_staleness: Duration::from_secs(30),
             accept_tick_ceiling: Duration::from_secs(30),
             // The runtime drains for 15 s and its watchdog forces an exit 2 s later.
@@ -264,6 +271,12 @@ enum Input {
     Closed {
         generation: u64,
     },
+    /// The exit watch returned: the process ended, or, when `observed` is
+    /// false, the watch failed and exit is polled instead.
+    Exited {
+        generation: u64,
+        observed: bool,
+    },
     Control(Request),
 }
 
@@ -274,6 +287,7 @@ pub struct SupervisorHandle(
     Arc<AtomicBool>,
     Arc<Mutex<()>>,
     Arc<AtomicU64>,
+    crate::wake::Slot,
 );
 
 impl SupervisorHandle {
@@ -296,6 +310,12 @@ impl SupervisorHandle {
     /// Take and reset the saturating count of observations the receiver did not accept.
     pub fn take_dropped_events(&self) -> u64 {
         self.3.swap(0, Ordering::Relaxed)
+    }
+
+    /// Signal `notify` after every later observation, accepted or dropped.
+    /// Observations queued before installation are drained by the caller.
+    pub fn notify_with(&self, notify: crate::wake::Notify) {
+        self.4.install(notify);
     }
 }
 
@@ -442,7 +462,8 @@ enum Phase {
     Ready {
         sent: u64,
         acknowledged: u64,
-        last_fresh: Instant,
+        /// When the runtime counts as hung unless a fresh heartbeat arrives first.
+        stale_at: Instant,
         next_ping: Instant,
     },
     /// An adopted runtime: no channel, so no readiness or heartbeat.
@@ -481,6 +502,8 @@ struct Watch {
     termination: Option<Termination>,
     inspection_failure: Option<(ErrorKind, Option<i32>)>,
     announced: Option<ExitReason>,
+    /// Exit arrives as an input event; otherwise every wait is capped at the poll interval.
+    exit_watched: bool,
 }
 
 struct Termination {
@@ -504,6 +527,7 @@ pub struct Supervisor {
     session_ending: Arc<AtomicBool>,
     launch_gate: Arc<Mutex<()>>,
     dropped_events: Arc<AtomicU64>,
+    notify: crate::wake::Slot,
 }
 
 impl Supervisor {
@@ -528,6 +552,7 @@ impl Supervisor {
             session_ending: Arc::new(AtomicBool::new(false)),
             launch_gate: Arc::new(Mutex::new(())),
             dropped_events: Arc::new(AtomicU64::new(0)),
+            notify: crate::wake::Slot::default(),
         }
     }
 
@@ -538,17 +563,23 @@ impl Supervisor {
             Arc::clone(&self.session_ending),
             Arc::clone(&self.launch_gate),
             Arc::clone(&self.dropped_events),
+            self.notify.clone(),
         )
     }
 
     fn emit(&self, event: Event) {
         if self.events.try_send(event).is_err() {
-            let _ =
-                self.dropped_events
-                    .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |count| {
-                        Some(count.saturating_add(1))
-                    });
+            let mut count = self.dropped_events.load(Ordering::Relaxed);
+            while let Err(current) = self.dropped_events.compare_exchange_weak(
+                count,
+                count.saturating_add(1),
+                Ordering::Relaxed,
+                Ordering::Relaxed,
+            ) {
+                count = current;
+            }
         }
+        self.notify.notify();
     }
 
     /// Supervise until a requested stop, a stand-down, a foreign owner or the ceiling.
@@ -851,7 +882,9 @@ impl Supervisor {
             termination: None,
             inspection_failure: None,
             announced: None,
+            exit_watched: false,
         };
+        watch.exit_watched = self.watch_exit(&watch.runtime);
         loop {
             if self.session_ending.load(Ordering::SeqCst) {
                 self.begin_stop(&mut watch, StopCause::SessionEnd);
@@ -899,8 +932,14 @@ impl Supervisor {
                 self.emit(Event::EffectsUnknown { pid: watch.pid });
             }
             self.advance(&mut watch, now);
-            let wait = self.next_wait(&watch, Instant::now());
-            match self.inputs.recv_timeout(wait) {
+            let input = match self.next_wait(&watch, Instant::now()) {
+                Some(wait) => self.inputs.recv_timeout(wait),
+                None => self
+                    .inputs
+                    .recv()
+                    .map_err(|_| RecvTimeoutError::Disconnected),
+            };
+            match input {
                 Ok(Input::Line { generation, line }) if generation == self.generation => {
                     self.announcement(&mut watch, line);
                 }
@@ -913,11 +952,15 @@ impl Supervisor {
                 Ok(Input::Control(Request::Stop)) => {
                     self.begin_stop(&mut watch, StopCause::Requested)
                 }
+                Ok(Input::Exited {
+                    generation,
+                    observed,
+                }) if generation == self.generation => watch.exit_watched &= observed,
                 Ok(Input::Control(Request::StopIfIdle)) => self.stop_if_idle(&mut watch),
                 Ok(Input::Control(Request::SessionEnd)) => {
                     self.begin_stop(&mut watch, StopCause::SessionEnd)
                 }
-                Ok(Input::Line { .. } | Input::Closed { .. })
+                Ok(Input::Line { .. } | Input::Closed { .. } | Input::Exited { .. })
                 | Err(RecvTimeoutError::Timeout | RecvTimeoutError::Disconnected) => {}
             }
         }
@@ -932,11 +975,11 @@ impl Supervisor {
             Phase::Starting { deadline } => (now >= *deadline).then_some(false),
             Phase::Ready {
                 sent,
-                last_fresh,
+                stale_at,
                 next_ping,
                 ..
             } => {
-                if now.saturating_duration_since(*last_fresh) >= self.config.heartbeat_staleness {
+                if now >= *stale_at {
                     Some(true)
                 } else {
                     if now >= *next_ping {
@@ -961,15 +1004,44 @@ impl Supervisor {
         }
     }
 
-    fn next_wait(&self, watch: &Watch, now: Instant) -> Duration {
+    /// Arm a thread that blocks on the process's exit and reports it as an
+    /// input; false when the platform cannot watch it, so exit is polled.
+    fn watch_exit(&self, runtime: &RuntimeProcess) -> bool {
+        let watch = match runtime.exit_watch() {
+            Ok(Some(watch)) => watch,
+            // Already ended: the next exit check observes it at once.
+            Ok(None) => return true,
+            Err(_) => return false,
+        };
+        let generation = self.generation;
+        let inputs = self.sender.clone();
+        thread::spawn(move || {
+            let observed = watch.wait().is_ok();
+            let _ = inputs.send(Input::Exited {
+                generation,
+                observed,
+            });
+        });
+        true
+    }
+
+    /// How long to wait for the next input: until the nearest deadline, or
+    /// without bound when exit is an event and nothing else is due.
+    fn next_wait(&self, watch: &Watch, now: Instant) -> Option<Duration> {
+        let bounded = |deadline: Instant| {
+            let wait = deadline.saturating_duration_since(now);
+            if watch.exit_watched {
+                wait
+            } else {
+                wait.min(self.config.poll_interval)
+            }
+        };
+        let unbounded = (!watch.exit_watched).then_some(self.config.poll_interval);
         if let Some(state) = &watch.termination {
             return if state.unconfirmed {
-                self.config.poll_interval
+                unbounded
             } else {
-                state
-                    .deadline
-                    .saturating_duration_since(now)
-                    .min(self.config.poll_interval)
+                Some(bounded(state.deadline))
             };
         }
         let deadline = match (&watch.phase, watch.stop_deadline) {
@@ -977,19 +1049,15 @@ impl Supervisor {
             (Phase::Starting { deadline }, None) => Some(*deadline),
             (
                 Phase::Ready {
-                    last_fresh,
+                    stale_at,
                     next_ping,
                     ..
                 },
                 None,
-            ) => Some((*next_ping).min(*last_fresh + self.config.heartbeat_staleness)),
+            ) => Some((*next_ping).min(*stale_at)),
             (Phase::Unmonitored, None) => None,
         };
-        deadline.map_or(self.config.poll_interval, |deadline| {
-            deadline
-                .saturating_duration_since(now)
-                .min(self.config.poll_interval)
-        })
+        deadline.map_or(unbounded, |deadline| Some(bounded(deadline)))
     }
 
     fn announcement(&mut self, watch: &mut Watch, line: Result<Announcement, LineRefusal>) {
@@ -1023,7 +1091,7 @@ impl Supervisor {
         watch.phase = Phase::Ready {
             sent: 0,
             acknowledged: 0,
-            last_fresh: now,
+            stale_at: now + self.config.heartbeat_staleness,
             next_ping: now,
         };
         self.reprobed = false;
@@ -1059,8 +1127,8 @@ impl Supervisor {
         let Phase::Ready {
             sent,
             acknowledged,
-            last_fresh,
-            ..
+            stale_at,
+            next_ping,
         } = &mut watch.phase
         else {
             return;
@@ -1071,8 +1139,28 @@ impl Supervisor {
         *acknowledged = heartbeat.seq;
         let ceiling =
             u64::try_from(self.config.accept_tick_ceiling.as_millis()).unwrap_or(u64::MAX);
-        if heartbeat.tick_age_ms.is_some_and(|age| age <= ceiling) {
-            *last_fresh = Instant::now();
+        let fresh = heartbeat.tick_age_ms.is_some_and(|age| age <= ceiling);
+        // Only an exact count of zero is evidence of idleness.
+        let idle = fresh && heartbeat.in_flight_operations == Some(0);
+        let now = Instant::now();
+        if !idle {
+            // A late idle reply may have pushed the next ping out; any other reply brings it
+            // back, so a runtime that is busy again is asked before its hang bound passes.
+            *next_ping = (*next_ping).min(now + self.config.heartbeat_interval);
+        }
+        if !fresh {
+            return;
+        }
+        *stale_at = now + self.config.heartbeat_staleness;
+        // An idle runtime is next asked an idle interval on, and its hang bound moves with
+        // that ask.
+        if idle {
+            let interval = self
+                .config
+                .idle_heartbeat_interval
+                .max(self.config.heartbeat_interval);
+            *next_ping = now + interval;
+            *stale_at += interval - self.config.heartbeat_interval;
         }
     }
 
@@ -1245,6 +1333,24 @@ mod tests {
     }
 
     #[test]
+    fn every_later_observation_notifies_its_consumer_whether_queued_or_dropped() {
+        let (supervisor, observed) = observation_supervisor();
+        let handle = supervisor.handle();
+        supervisor.emit(Event::AwaitingActiveSession);
+        let notified = Arc::new(AtomicU64::new(0));
+        let count = Arc::clone(&notified);
+        handle.notify_with(Arc::new(move || {
+            count.fetch_add(1, Ordering::Relaxed);
+        }));
+        for _ in 0..EVENT_QUEUE + 2 {
+            supervisor.emit(Event::AwaitingActiveSession);
+        }
+        assert_eq!(notified.load(Ordering::Relaxed), EVENT_QUEUE as u64 + 2);
+        assert_eq!(observed.try_iter().count(), EVENT_QUEUE);
+        assert_eq!(handle.take_dropped_events(), 3);
+    }
+
+    #[test]
     fn a_full_input_queue_refuses_ordinary_controls_but_accepts_session_end() {
         let (sender, inputs) = mpsc::sync_channel(INPUT_QUEUE);
         let ending = Arc::new(AtomicBool::new(false));
@@ -1253,6 +1359,7 @@ mod tests {
             Arc::clone(&ending),
             Arc::new(Mutex::new(())),
             Arc::new(AtomicU64::new(0)),
+            crate::wake::Slot::default(),
         );
         for _ in 0..INPUT_QUEUE {
             assert!(handle.request(Request::StopIfIdle));

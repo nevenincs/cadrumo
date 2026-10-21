@@ -5,7 +5,7 @@ as injected :class:`~application.provisioning.SystemMemoryReading` /
 :class:`~application.provisioning.AcceleratorReading` **measurements** through
 the probe's own arguments, so every branch runs the production model
 construction and the production comparison logic -- nothing about this host's
-actual GPU state (which changes minute to minute under an agent fleet) can reach
+actual GPU state (which changes minute to minute under an automation fleet) can reach
 the assertions. Runtime interaction runs against a real
 :class:`~http.server.ThreadingHTTPServer` speaking the runtime's wire shape, so
 the ``/api/ps`` read and the unload request exercise real HTTP through real
@@ -46,14 +46,15 @@ from ..provisioning import (
     select_model_for_role,
 )
 from ..provisioning_runtime import (
+    PullFailureKind,
     RuntimeResident,
     assess_model_load_contention,
     cadrumo_selected_models,
+    fetch_runtime_model,
     last_runtime_pull,
-    pull_runtime_model,
+    load_and_verify_model,
     read_runtime_residents,
     unload_runtime_model,
-    verify_model_ready,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -516,7 +517,10 @@ def test_a_selection_with_no_declared_requirement_declines_to_be_assessed() -> N
 
     Mutation that must trip this: return ``(runtime_id, requirement or 0)``.
     """
-    selection = select_model_for_role(ModelRole.VISION_TRANSCRIPTION)
+    selection = select_model_for_role(
+        ModelRole.VISION_TRANSCRIPTION,
+        profile=_profile(kind=AcceleratorKind.NONE, total_ram=128 * GIB, free_ram=96 * GIB),
+    )
     assert selection.candidate is not None, "this host catalogues no vision candidate; the case below is vacuous"
     # Positive control: fully declared, the load is assessable.
     assert selection.assessable_load is not None
@@ -628,43 +632,16 @@ def _paths(events: Queue[dict[str, object]]) -> list[str]:
     return seen
 
 
-def test_a_refused_pull_never_issues_the_fetch(runtime: tuple[str, Queue[dict[str, object]]]) -> None:
-    """The admission check runs BEFORE the fetch, and this is the whole point of the action.
-
-    Asserted on the REQUESTS the runtime received rather than on the outcome,
-    because an outcome saying ``pulled=False`` is satisfied equally by a pull
-    that ran, downloaded gigabytes, and then failed. The claim here is the one
-    that matters to an operator's bandwidth: ``/api/pull`` was never called.
-
-    The queue is not empty and must not be asserted so: attributing a shortfall
-    requires reading the runtime's resident set, so ``/api/ps`` is expected and
-    is part of the check rather than part of the fetch. An earlier version of
-    this case asserted an empty queue and failed against correct code.
-    """
+def test_a_fetch_issues_the_pull_without_an_admission_read(runtime: tuple[str, Queue[dict[str, object]]]) -> None:
+    """Fetching is a download a person approved; memory is admitted when the model loads, not here."""
     chat_url, events = runtime
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        outcome = pull_runtime_model("huge-model:70b", 40 * GIB, profile=_starved_profile())
-
-    assert outcome.pulled is False
-    assert outcome.contention is not None
-    assert outcome.contention.admitted is False
-    assert "/api/pull" not in _paths(events), "a refused pull must not have issued the fetch"
-
-
-def test_an_admitted_pull_does_issue_the_fetch(runtime: tuple[str, Queue[dict[str, object]]]) -> None:
-    """Positive control for the case above.
-
-    Without this, a ``pull_runtime_model`` that refused unconditionally -- or
-    that never issued a request under any circumstances -- would satisfy the
-    never-fetches assertion and look correct.
-    """
-    chat_url, events = runtime
-    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        outcome = pull_runtime_model("small-model:1b", 1 * GIB, profile=_roomy_profile())
+        outcome = fetch_runtime_model("small-model:1b")
 
     assert outcome.pulled is True
+    assert outcome.failure_kind is None
     assert outcome.bytes_fetched == GIB
-    assert "/api/pull" in _paths(events)
+    assert _paths(events) == ["/api/pull"]
 
 
 def test_a_pull_the_runtime_fails_in_stream_is_not_reported_as_pulled(
@@ -674,9 +651,10 @@ def test_a_pull_the_runtime_fails_in_stream_is_not_reported_as_pulled(
     chat_url, events = runtime
     _RuntimeLoopbackHandler.pull_lines = [{"status": "pulling manifest"}, {"error": "file does not exist"}]
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        outcome = pull_runtime_model("no-such-model:1b", 1 * GIB, profile=_roomy_profile())
+        outcome = fetch_runtime_model("no-such-model:1b")
 
     assert outcome.pulled is False
+    assert outcome.failure_kind is PullFailureKind.NOT_FOUND
     assert outcome.facts["runtime_reported_error"] is True
     assert outcome.precondition_verdict is not None
     assert outcome.precondition_verdict.failed_condition_id == "provisioning.model.pull_succeeded"
@@ -690,9 +668,10 @@ def test_a_pull_stream_that_ends_without_success_is_not_reported_as_pulled(
     chat_url, _events = runtime
     _RuntimeLoopbackHandler.pull_lines = [{"status": "downloading", "completed": 10, "total": GIB}]
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        outcome = pull_runtime_model("small-model:1b", 1 * GIB, profile=_roomy_profile())
+        outcome = fetch_runtime_model("small-model:1b")
 
     assert outcome.pulled is False
+    assert outcome.failure_kind is PullFailureKind.TRUNCATED
     assert outcome.facts["pull_completed"] is False
     assert outcome.bytes_fetched == 10
 
@@ -708,9 +687,7 @@ def test_http_error_from_progress_callback_keeps_the_last_streamed_byte_count(
         raise httpx.ReadError("progress transport failed")
 
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        outcome = pull_runtime_model(
-            "small-model:1b", 1 * GIB, profile=_roomy_profile(), on_progress=fail_after_progress
-        )
+        outcome = fetch_runtime_model("small-model:1b", on_progress=fail_after_progress)
 
     assert outcome.pulled is False
     assert outcome.bytes_fetched == GIB
@@ -718,17 +695,18 @@ def test_http_error_from_progress_callback_keeps_the_last_streamed_byte_count(
 
 
 def test_every_pull_attempt_is_recorded_as_the_last_pull(runtime: tuple[str, Queue[dict[str, object]]]) -> None:
-    """The status projection's last-pull row reflects the most recent attempt, refused or not."""
+    """The status projection's last-pull row reflects the most recent attempt, completed or not."""
     chat_url, _events = runtime
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        pull_runtime_model("small-model:1b", 1 * GIB, profile=_roomy_profile())
+        fetch_runtime_model("small-model:1b")
         pulled = last_runtime_pull()
-        pull_runtime_model("huge-model:70b", 40 * GIB, profile=_starved_profile())
-        refused = last_runtime_pull()
+        _RuntimeLoopbackHandler.pull_lines = [{"error": "file does not exist"}]
+        fetch_runtime_model("missing-model:1b")
+        failed = last_runtime_pull()
 
     assert pulled is not None and pulled.model == "small-model:1b" and pulled.pulled is True
-    assert refused is not None and refused.model == "huge-model:70b" and refused.pulled is False
-    assert refused.failed_condition_id == "provisioning.load_capacity.available"
+    assert failed is not None and failed.model == "missing-model:1b" and failed.pulled is False
+    assert failed.failed_condition_id == "provisioning.model.pull_succeeded"
 
 
 def test_a_pull_against_an_unreachable_runtime_refuses_naming_the_daemon_command() -> None:
@@ -739,10 +717,10 @@ def test_a_pull_against_an_unreachable_runtime_refuses_naming_the_daemon_command
     and never listening.
     """
     with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
-        outcome = pull_runtime_model("small-model:1b", 1 * GIB, profile=_roomy_profile())
+        outcome = fetch_runtime_model("small-model:1b")
 
     assert outcome.pulled is False
-    assert outcome.contention is None, "this is a transport failure, not an admission refusal"
+    assert outcome.failure_kind is PullFailureKind.RUNTIME_UNREACHABLE
     assert outcome.facts["runtime_reachable"] is False
     assert outcome.precondition_verdict is not None
 
@@ -750,7 +728,7 @@ def test_a_pull_against_an_unreachable_runtime_refuses_naming_the_daemon_command
 def test_a_readiness_check_against_an_unreachable_runtime_refuses_naming_the_daemon_command() -> None:
     """Same boundary on the verify path, and the same real closed port."""
     with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
-        outcome = verify_model_ready("small-model:1b")
+        outcome = load_and_verify_model("small-model:1b")
 
     assert outcome.ready is False
     assert outcome.answered is False
@@ -770,7 +748,7 @@ def test_a_readiness_check_reports_ready_when_the_runtime_answers(
     chat_url, events = runtime
     _RuntimeLoopbackHandler.residents = [{"name": "small-model:1b", "size": 1 * GIB, "size_vram": 1 * GIB}]
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        outcome = verify_model_ready("small-model:1b")
+        outcome = load_and_verify_model("small-model:1b")
 
     assert outcome.ready is True
     assert outcome.answered is True
@@ -787,7 +765,7 @@ def test_a_readiness_check_for_a_model_that_is_not_installed_names_the_pull_and_
     chat_url, events = runtime
     _RuntimeLoopbackHandler.installed = [{"name": "other-model:1b", "size": GIB}]
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        outcome = verify_model_ready("small-model:1b")
+        outcome = load_and_verify_model("small-model:1b")
 
     assert outcome.ready is False
     assert outcome.facts["model_installed"] is False

@@ -7,10 +7,10 @@ the helper performs no calculation, persistence, or selection policy itself.
 
 from __future__ import annotations
 
-from ....tests.cli_envelope import require_schema_envelope
-from .modelo_profile_seed import invoke_seeded_profile_cli
+from cadrumo.tests.cli_envelope import require_schema_envelope
+
+from .cli_fixture_worlds import RegisteredCliProfile, invoke_joined_cli
 from .native_profile_cli_support import invoke_native_cli
-from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
 
 def create_modelo_work_unit_via_cli(
@@ -19,7 +19,7 @@ def create_modelo_work_unit_via_cli(
     filing_year: int | str,
     period: str,
     revision: str,
-    native_profile: NativeCliProfileFixture | None = None,
+    native_profile: RegisteredCliProfile | None = None,
 ) -> str:
     """Create a real modelo work unit and return its validated envelope id.
 
@@ -41,7 +41,7 @@ def create_modelo_work_unit_via_cli(
         revision,
     ]
     if native_profile is None:
-        result = invoke_seeded_profile_cli(["--format", "json", *command])
+        result = invoke_joined_cli(["--format", "json", *command])
     else:
         result = invoke_native_cli(native_profile, *command)
     assert result.exit_code == 0, result.output

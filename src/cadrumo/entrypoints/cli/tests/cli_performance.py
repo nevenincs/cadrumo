@@ -29,7 +29,7 @@ import traceback
 import types
 import warnings
 from collections import Counter
-from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from math import isfinite
@@ -38,9 +38,8 @@ from statistics import median
 from typing import Any, Literal, Self, cast
 
 from cadrumo.tests.audited_process import run_audited_process
-
-from ....tests.inventory import SRC_CADRUMO
-from .subprocess_cli import as_text_completed_process, subprocess_cli_env
+from cadrumo.tests.inventory import SRC_CADRUMO
+from cadrumo.tests.subprocess_cli import as_text_completed_process, subprocess_cli_env
 
 __all__ = [
     "CliPerformanceCalibration",
@@ -465,7 +464,7 @@ def profile_cli_invocation(
 
 
 @contextmanager
-def _observed_root(storage_root: Path | None) -> Iterator[Path]:
+def _observed_root(storage_root: Path | None) -> Generator[Path]:
     """Yield the root to observe: the caller's, resolved, or a private temporary one."""
     if storage_root is None:
         with tempfile.TemporaryDirectory(prefix="cadrumo-cli-profile-") as directory:
@@ -822,7 +821,9 @@ def _resolve_cli_path(command_path: tuple[str, ...]) -> None:
     from typer._click.core import Context
     from typer.main import get_command
 
-    from ..main import app
+    from ..main import cli_app
+
+    app = cli_app()
 
     command = get_command(app)
     for token in command_path:
@@ -1028,7 +1029,9 @@ def measure_resolution_costs(
     probe_modules = _cadrumo_modules()
     from typer.main import get_command
 
-    from ..main import app
+    from ..main import cli_app
+
+    app = cli_app()
 
     get_command(app)
     baseline = _capture_baseline(probe_modules)
@@ -1082,7 +1085,7 @@ def _run_instrumentation_probe(storage_root: Path) -> None:
 
     from pydantic import BaseModel
 
-    from ....adapters.persistence.storage.path_safety import safe_repository_id as aliased_storage_call
+    from cadrumo.adapters.persistence.storage.path_safety import safe_repository_id as aliased_storage_call
 
     class ProbeModel(BaseModel):
         value: int

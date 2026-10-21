@@ -16,7 +16,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._modelo_bindings_payloads import (
+from ..modelo_bindings_results import (
     BindingGroundingPayload,
     BindingListRowPayload,
     BindingPreviewRowPayload,

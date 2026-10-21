@@ -4,7 +4,7 @@
 pointer mutation -- the active-profile pointer transaction and custody
 compare-and-swap both take this exact identity. It is what stands between two
 concurrent ``aeat config login`` invocations and a torn pointer, on a surface
-whose operator is an autonomous agent that retries.
+whose operator is an autonomous automation that retries.
 
 It had no direct test. Its bucket-lockfile sibling carries a whole module of
 cross-process cases; this primitive, which guards the more dangerous mutation,

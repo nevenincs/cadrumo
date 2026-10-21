@@ -29,7 +29,7 @@ from ..ledger_business_payloads import (
     InventoryMovementPayload,
     InventoryStockLayerPayload,
 )
-from ..runtime_ledger_inventory import _ledger_payload_json
+from ..operation_ledger_inventory import _ledger_payload_json
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

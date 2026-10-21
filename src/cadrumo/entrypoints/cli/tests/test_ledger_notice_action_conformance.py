@@ -14,22 +14,23 @@ import pytest
 
 from ....core.directory_scan import scan_directory
 from .. import (
-    _ledger,
-    _ledger_business_invoice_cli,
     _ledger_classify_cli,
-    _ledger_counterparty_cli,
-    _ledger_evidence_batch_cli,
-    _ledger_evidence_cli,
-    _ledger_evidence_consent_cli,
-    _ledger_evidence_review_cli,
-    _ledger_import_cli,
     _ledger_llm_cli,
-    _ledger_payloads,
-    _ledger_ratios_cli,
-    _ledger_read_cli,
-    _ledger_review_cli,
-    _ledger_rules_cli,
     _ledger_support,
+    ledger_business_invoice_commands,
+    ledger_commands,
+    ledger_counterparty_commands,
+    ledger_evidence_batch_commands,
+    ledger_evidence_commands,
+    ledger_evidence_consent_commands,
+    ledger_evidence_review_commands,
+    ledger_export_commands,
+    ledger_import_commands,
+    ledger_ratios_commands,
+    ledger_read_commands,
+    ledger_results,
+    ledger_review_commands,
+    ledger_rules_commands,
 )
 from .. import ledger_lifecycle_cli as _ledger_lifecycle_cli
 from .locale_catalogue import LocaleNode, load_locale
@@ -37,26 +38,27 @@ from .locale_catalogue import LocaleNode, load_locale
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LEDGER_NOTICE_MODULES: tuple[ModuleType, ...] = (
-    _ledger,
-    _ledger_business_invoice_cli,
+    ledger_commands,
+    ledger_business_invoice_commands,
     _ledger_classify_cli,
-    _ledger_counterparty_cli,
-    _ledger_evidence_batch_cli,
-    _ledger_evidence_cli,
-    _ledger_evidence_consent_cli,
-    _ledger_evidence_review_cli,
-    _ledger_import_cli,
+    ledger_counterparty_commands,
+    ledger_evidence_batch_commands,
+    ledger_evidence_commands,
+    ledger_evidence_consent_commands,
+    ledger_evidence_review_commands,
+    ledger_export_commands,
+    ledger_import_commands,
     _ledger_lifecycle_cli,
     _ledger_llm_cli,
-    _ledger_ratios_cli,
-    _ledger_read_cli,
-    _ledger_review_cli,
-    _ledger_rules_cli,
+    ledger_ratios_commands,
+    ledger_read_commands,
+    ledger_review_commands,
+    ledger_rules_commands,
     _ledger_support,
 )
 
 _COMMAND_PROSE = re.compile(r"(?i)\b(?:aeat\s+)?app\s+ledger\b")
-_PACKAGE_ROOT = Path(inspect.getfile(_ledger)).parents[2]
+_PACKAGE_ROOT = Path(inspect.getfile(ledger_commands)).parents[2]
 # ``_PACKAGE_ROOT`` already addresses ``src/cadrumo``; re-appending it doubled
 # the path, so every catalogue read here resolved to a file that cannot exist.
 _LOCALES_DIR = _PACKAGE_ROOT / "locales"
@@ -204,24 +206,41 @@ def test_ledger_notices_do_not_redeclare_actions_or_english_fallbacks() -> None:
     assert failures == []
 
 
-#: Floors for the two pattern-matched corpora below. Live: seven payload
-#: modules and twenty-six ledger modules, against 221 .py files in the same
-#: directory. Floors, not pinned counts.
+#: Floors for the two filename-selected corpora below. Public result modules
+#: and private payload modules belong to the same wire surface.
 _MINIMUM_PAYLOAD_MODULES = 3
 _MINIMUM_LEDGER_MODULES = 10
+
+
+def _ledger_module_paths(directory: Path, *, payloads_only: bool = False) -> tuple[Path, ...]:
+    """Keep renamed public modules and operation wrappers inside the ledger scan."""
+    return tuple(
+        path
+        for path in scan_directory(directory, pattern="*.py")
+        if "ledger" in path.stem.split("_")
+        and (not payloads_only or "payload" in path.stem or path.stem.endswith("_results"))
+    )
+
+
+def test_ledger_scan_keeps_public_results_private_payloads_and_operation_wrappers(tmp_path: Path) -> None:
+    enrolled = {"_ledger_llm_payloads.py", "ledger_business_payloads.py", "ledger_results.py"}
+    wrappers = {"_ledger_support.py", "ledger_commands.py", "operation_ledger_view.py"}
+    unrelated = {"calendar_results.py", "ledgerlike_payloads.py"}
+    for name in enrolled | wrappers | unrelated:
+        (tmp_path / name).write_text("", encoding="utf-8")
+
+    assert {path.name for path in _ledger_module_paths(tmp_path)} == enrolled | wrappers
+    assert {path.name for path in _ledger_module_paths(tmp_path, payloads_only=True)} == enrolled
 
 
 def test_ledger_payloads_do_not_redeclare_notice_or_recovery_prose() -> None:
     """Advisories have one typed envelope home, never bespoke payload strings."""
     failures: list[str] = []
-    payload_directory = Path(inspect.getfile(_ledger_payloads)).parent
+    payload_directory = Path(inspect.getfile(ledger_results)).parent
     forbidden_suffixes = ("_notice", "_hint", "_suggestion", "_recovery")
-    payload_modules = tuple(scan_directory(payload_directory, pattern="_ledger*payload*.py"))
+    payload_modules = _ledger_module_paths(payload_directory, payloads_only=True)
 
-    # The corpus is a GLOB, and the pattern pins a leading underscore. This
-    # repository is actively promoting public symbols out of underscore
-    # modules, so a rename lands the file one character outside the pattern,
-    # the walk returns nothing, and an empty failure list reads as compliance.
+    # A public promotion or payload-to-results rename must retain coverage.
     assert len(payload_modules) >= _MINIMUM_PAYLOAD_MODULES, (
         f"only {len(payload_modules)} ledger payload module(s) matched; below this the walk "
         "has stopped finding its subject and an empty failure list proves nothing"
@@ -249,7 +268,7 @@ _MINIMUM_IMPORT_UX_NODES = 1800
 
 def test_ledger_import_ux_has_no_rendered_message_or_forced_locale_assertions() -> None:
     """Import behavior tests bind machine contracts, not one rendered catalogue."""
-    path = Path(inspect.getfile(_ledger_import_cli)).parent / "tests" / "test_ledger_import_ux.py"
+    path = _PACKAGE_ROOT.parent / "cadrumo_runtime" / "host" / "tests" / "frontend" / "cli" / "test_ledger_import_ux.py"
     tree = ast.parse(path.read_text(encoding="utf-8"))
     failures: list[str] = []
     assert sum(1 for _ in ast.walk(tree)) >= _MINIMUM_IMPORT_UX_NODES, (
@@ -299,7 +318,7 @@ def test_ledger_locale_values_do_not_redeclare_command_guidance() -> None:
             "the claim below holds because that catalogue emptied, not because it is clean"
         )
         failures.extend(f"{locale}:{key}" for key, value in ledger_leaves if _COMMAND_PROSE.search(value))
-    assert failures == []
+    assert failures == [], failures
 
 
 def test_ledger_runtime_command_literals_are_provenance_only() -> None:
@@ -323,9 +342,9 @@ def test_ledger_runtime_command_literals_are_provenance_only() -> None:
 
 def test_every_ledger_translation_is_catalogue_owned_without_a_runtime_fallback() -> None:
     """Every ledger translation resolves from the authored locale catalogues."""
-    ledger_directory = Path(inspect.getfile(_ledger)).parent
+    ledger_directory = Path(inspect.getfile(ledger_commands)).parent
     failures: list[str] = []
-    ledger_modules = tuple(scan_directory(ledger_directory, pattern="_ledger*.py"))
+    ledger_modules = _ledger_module_paths(ledger_directory)
 
     assert len(ledger_modules) >= _MINIMUM_LEDGER_MODULES, (
         f"only {len(ledger_modules)} ledger module(s) matched the pattern; below this the "
@@ -400,8 +419,7 @@ def test_ledger_bad_parameters_do_not_embed_caught_exception_text() -> None:
     assert failures == []
 
 
-#: Floors for the parsed surface behind the absence claims below. Live: 89
-#: referenced names and exactly one except handler in the import CLI.
+#: Floor for the parsed surface behind the absence claims below.
 _MINIMUM_IMPORT_CLI_NAMES = 30
 
 
@@ -409,12 +427,12 @@ def test_ledger_import_does_not_aggregate_typed_refusals_into_prose() -> None:
     """Per-file typed failures cannot be reduced to refusal strings or one `_bad`.
 
     Both claims are absences over a parsed surface, so both are satisfied by a
-    module that does nothing. The handler claim is the tighter of the two: the
-    CLI carries exactly ONE except handler, so deleting it does not fail this
-    gate - it empties the loop and the CadrumoError claim becomes a statement
-    about no handlers at all.
+    module that does nothing; the name floor is what keeps them about a real
+    module. The operation plans and reads every file, so each refusal reaches
+    this CLI typed in the result and the module has no failure of its own to
+    catch: an except handler here would be a place to flatten one.
     """
-    tree = ast.parse(inspect.getsource(_ledger_import_cli))
+    tree = ast.parse(inspect.getsource(ledger_import_commands))
     forbidden_names = {"resolve_error_message", "_all_files_refused"}
     observed_names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
 
@@ -426,14 +444,7 @@ def test_ledger_import_does_not_aggregate_typed_refusals_into_prose() -> None:
 
     handlers = [node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)]
 
-    assert handlers, (
-        "the import CLI declares no except handler, so the CadrumoError claim below is "
-        "about nothing; either the typed refusal path was removed or this gate has lost "
-        "its subject"
-    )
-    for handler in handlers:
-        caught = _caught_names(handler)
-        assert "CadrumoError" not in caught
+    assert handlers == [], "the import CLI catches an exception; refusals arrive typed in the operation result"
 
 
 def test_ledger_locale_key_sets_match_source_and_each_other() -> None:

@@ -26,7 +26,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 
 from ....core.identity.documents import IdentityError
-from ...iva.classification import InvoiceKind
+from ...iva.schema import InvoiceKind
 from ..enums import PaymentStatus
 from ..errors import InvoiceValidationError
 from ..models import Invoice, InvoiceLine

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
@@ -29,7 +29,7 @@ def current_drive_receipts() -> GoogleArtifactReceiptStore | None:
 @contextmanager
 def drive_files_list_endpoint(
     *, pages: Sequence[Mapping[str, object]], status: int = 200, root_folder_id: str = "drive-root"
-) -> Iterator[DriveFilesListEndpoint]:
+) -> Generator[DriveFilesListEndpoint]:
     """Build acknowledged fixture creations separately from the remote list responses."""
     listed: dict[str, Mapping[str, object]] = {}
     for page in pages:
@@ -84,7 +84,7 @@ def drive_files_list_endpoint(
             metadata[identifier] = {
                 **original,
                 "id": identifier,
-                "parents": [parent] if parent else ["root"],
+                "parents": [parent] if (parent is not None and parent) else ["root"],
                 "trashed": False,
                 "mimeType": original.get("mimeType", artifact_mime_type(kind)),
                 "appProperties": props,

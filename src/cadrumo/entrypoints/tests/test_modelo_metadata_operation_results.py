@@ -33,7 +33,6 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.operations import (
@@ -47,9 +46,11 @@ from cadrumo.entrypoints.tests.modelo_operation_test_support import (
     MODELO_OPERATION_TEST_ACTOR,
     seeded_modelo_work_unit,
 )
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ..adapter_composition import build_work_lifecycle_ports
-from .test_registered_executor_conformance import _CloseWitness, _runtime
+from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -67,7 +68,11 @@ def test_registered_metadata_operation_projects_its_actual_settled_result(
     tmp_path: Path, definition_id: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A returned work-unit ID cannot masquerade as the declared result model."""
-    with _runtime(tmp_path / definition_id, cleanup=_CloseWitness()) as (driver, registry, profile_id):
+    with conformance_operation_runtime(tmp_path / definition_id, cleanup=OperationRuntimeCloseWitness()) as (
+        driver,
+        registry,
+        profile_id,
+    ):
         unit = seeded_modelo_work_unit(profile_id, operation=operation)
         if definition_id == "modelo.work.rename":
             payload = ModeloWorkRenameRequest(
@@ -137,7 +142,11 @@ def test_stale_metadata_observation_refuses_without_another_catalogue_or_event_w
     tmp_path: Path, definition_id: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The original observation cannot mutate a subsequently renamed unit."""
-    with _runtime(tmp_path / "stale", cleanup=_CloseWitness()) as (driver, _registry, profile_id):
+    with conformance_operation_runtime(tmp_path / "stale", cleanup=OperationRuntimeCloseWitness()) as (
+        driver,
+        _registry,
+        profile_id,
+    ):
         observed_unit = seeded_modelo_work_unit(profile_id, operation=operation)
         rename_work_unit(
             observed_unit.work_unit_id,
@@ -183,7 +192,11 @@ def test_metadata_read_uses_canonical_selection_and_persisted_period(
     tmp_path: Path, selector: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     """All operator selectors read the same encrypted unit without writing its catalogue."""
-    with _runtime(tmp_path / selector, cleanup=_CloseWitness()) as (driver, registry, profile_id):
+    with conformance_operation_runtime(tmp_path / selector, cleanup=OperationRuntimeCloseWitness()) as (
+        driver,
+        registry,
+        profile_id,
+    ):
         unit = seeded_modelo_work_unit(profile_id, operation=operation)
         payload = (
             ModeloWorkMetadataRequest(

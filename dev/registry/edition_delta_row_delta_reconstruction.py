@@ -40,12 +40,35 @@ def _simulate_merge(
     selection: _edition_delta_row_delta_selection.DropSelection,
     removals: Sequence[_edition_delta_source._Row],
 ) -> list[_edition_delta_source._Placed]:
+    return _simulate_storage_output(
+        revision_id=revision_id,
+        predecessor=predecessor,
+        inherited=inherited,
+        source=source,
+        stated_rows=stated_rows,
+        overrides=selection.overrides,
+        removals=removals,
+    )
+
+
+def _simulate_storage_output(
+    *,
+    revision_id: str,
+    predecessor: str,
+    inherited: Sequence[_edition_delta_source._Placed],
+    source: _edition_delta_source._EditionSource,
+    stated_rows: Sequence[_edition_delta_source._Row],
+    overrides: Sequence[_edition_delta_source._Row],
+    removals: Sequence[_edition_delta_source._Row],
+    positions: Sequence[_edition_delta_source._Row] = (),
+) -> list[_edition_delta_source._Placed]:
+    """Replay a planned row-storage representation through the production merger."""
     successor: dict[str, object] = {
         **source.table,
         _edition_delta_fields._CASILLAS: tuple(freeze_toml_value(row) for row in stated_rows),
-        "casilla_overrides": tuple(freeze_toml_value(override) for override in selection.overrides),
+        "casilla_overrides": tuple(freeze_toml_value(override) for override in overrides),
         "casilla_removals": tuple(freeze_toml_value(removal) for removal in removals),
-        "casilla_positions": (),
+        "casilla_positions": tuple(freeze_toml_value(position) for position in positions),
     }
     merged_rows, merged_origins, _text_origins = inherit_casillas(
         f"edition {revision_id!r} planned against {predecessor!r}",

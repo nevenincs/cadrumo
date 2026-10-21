@@ -9,6 +9,9 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -18,7 +21,7 @@ from ..operations.access_resolution import (
     ResolvedOperationAccess,
     bind_operation_access,
     operation_disclosures,
-    require_declared_frontend_and_action,
+    require_declared_action,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
@@ -26,18 +29,12 @@ from ..operations.operation_definition import OperationDefinition, OperationExec
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..state_projection_ports import StateProjectionReadPorts
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .auth_read_contracts import (
     AUTH_READ_OPERATION_DEFINITION_ID,
@@ -59,6 +56,8 @@ from .diagnostics_ports import AuthDiagnosticPersistencePort
 from .operator import inspect_operator_auth, test_operator_auth
 from .operator_probe_ports import OperatorProbePorts
 from .operator_scope_ports import OperatorScopePorts
+from .setup_handoff import auth_setup_handoff
+from .sync_readiness import build_auth_sync_readiness
 
 _ACTIONS = frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT})
 
@@ -94,7 +93,18 @@ class AuthReadExecutor:
             if require_active_bucket_id() != str(payload.profile_id):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             ports = self._ports_factory(payload.profile_id)
-            if payload.kind in {"status", "test"}:
+            if payload.kind in {"sync_readiness", "setup"}:
+                result = AuthReadResult(
+                    profile_id=payload.profile_id,
+                    kind=payload.kind,
+                    sync_readiness=build_auth_sync_readiness(
+                        payload.provider,
+                        certificate_secret_backend_factory=ports.certificate_secret_backend_factory,
+                        operator_probe_ports=ports.operator_probe_ports,
+                        operator_scope_ports=ports.operator_scope_ports,
+                    ),
+                )
+            elif payload.kind in {"status", "test"}:
                 if payload.kind == "status":
                     result = AuthReadResult(
                         profile_id=payload.profile_id,
@@ -157,7 +167,7 @@ def resolve_auth_read_access(
         payload_type=AuthReadRequest,
         access_profile_id=context.profile_id,
     )
-    require_declared_frontend_and_action(context, frontends=ALL_OPERATION_FRONTENDS, actions=_ACTIONS)
+    require_declared_action(context, actions=_ACTIONS)
     disclosures = operation_disclosures(
         context,
         observed_by=frozenset({AccessAction.OBSERVE}),
@@ -186,6 +196,12 @@ def project_auth_read_result(result: BaseModel, receipt: OperationTerminalReceip
         kind=validated.kind,
         status=AuthStatusSnapshot.from_status(validated.status) if validated.status else None,
         test=AuthTestSnapshot.from_test(validated.test) if validated.test else None,
+        sync_readiness=validated.sync_readiness,
+        setup=(
+            auth_setup_handoff(validated.profile_id, validated.sync_readiness)
+            if validated.kind == "setup" and validated.sync_readiness is not None
+            else None
+        ),
         diagnostics_rows=(
             tuple(
                 AuthDiagnosticSummarySnapshot.model_validate(row.model_dump())
@@ -223,6 +239,7 @@ def build_auth_read_definition(ports_factory: Callable[[UUID], AuthReadPorts]) -
     return OperationDefinition(
         definition_id=AUTH_READ_OPERATION_DEFINITION_ID,
         request_type=AuthReadRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=AuthReadResult,
         executor_factory=OperationExecutorFactory(
             request_type=AuthReadRequest,
@@ -233,7 +250,6 @@ def build_auth_read_definition(ports_factory: Callable[[UUID], AuthReadPorts]) -
         interaction_kinds=frozenset(),
         capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

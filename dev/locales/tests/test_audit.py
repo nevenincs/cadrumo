@@ -15,12 +15,13 @@ from cadrumo.core.product_identity import (
 )
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
-from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
+from .._paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, SRC_DIR
 from ..cli import app
 from ..errors import LocaleError
 from ..locale_tree import _flatten_leaf_values
 from ..locale_yaml import locale_catalogue_source
 from ..manager import LocaleManager
+from ..service_catalogues import SERVICE_LOCALES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -36,6 +37,18 @@ def _catalogue_source(locale: str) -> Path:
     if source is None:
         raise AssertionError(f"no committed catalogue found for locale {locale!r}")
     return source
+
+
+def _committed_leaf_values(manager: LocaleManager, locale: str) -> dict[str, str | None]:
+    """Read tax and service resources independently, preserving their distinct ownership."""
+    leaves = _flatten_leaf_values(manager.load_locale(_catalogue_source(locale)))
+    service_source = locale_catalogue_source(SERVICE_LOCALES_DIR, locale)
+    assert service_source is not None, f"no service catalogue found for locale {locale!r}"
+    service_manager = LocaleManager(src_dir=SERVICE_LOCALES_DIR.parent, locales_dir=SERVICE_LOCALES_DIR)
+    service_leaves = _flatten_leaf_values(service_manager.load_locale(service_source))
+    assert not leaves.keys() & service_leaves.keys(), f"{locale}: tax and service catalogue keys overlap"
+    leaves.update(service_leaves)
+    return leaves
 
 
 _LOCALES = ("ca", "en", "es", "hu")
@@ -100,26 +113,75 @@ _PROSE_KEYS = {
         "application.modelo.findings.ledger_snapshot_membership_unavailable",
         "application.modelo.lifecycle.file_confirm_message",
         "application.modelo.work_form.finding_action.file_another_way",
+        "application.provisioning.blocked.not_in_this_build",
+        "application.provisioning.failure.no_permission",
+        "application.provisioning.failure.not_in_this_build",
+        "application.provisioning.stale.different_model_version",
+        "application.provisioning.stale.program_too_old",
+        "application.provisioning.state.unknown",
+        "application.storage.calc_sheets.engine.guide.pull_command",
         "application.storage.calc_sheets.review.labels.external_notes_notice",
         "cli.app.modelo.export.development_file_not_accepted",
         "cli.app.modelo.filing_record.import_help",
         "cli.app.modelo.work.amend_help",
         "cli.app.modelo.work.compare_taxation_help",
         "cli.app.modelo.work.report.development_software_identity",
+        "cli.config.check.setup_unavailable",
+        "cli.config.errors.profile_session_logout_unproven",
+        "cli.config.errors.profile_session_outdated",
         "cli.config.google.folder.organize_help",
+        "cli.config.login.notices.session_not_persisted_logon",
+        "cli.config.provision.browser.help",
+        "cli.config.provision.complete",
+        "cli.config.provision.help",
+        "cli.config.provision.plan.heading",
+        "cli.config.provision.pull.model_help",
         "cli.config.provision.remove.help",
         "cli.config.provision.remove.model_help",
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
         "cli.ledger.counterparty.notices.evidence_contradicts_confirmation",
         "cli.operator_surface.help.root.paragraph_local_first",
+        "common.manager.open_application",
+        "desktop.about.open",
+        "desktop.about.title",
+        "desktop.about.version_row",
         "desktop.account.sign_out_hint",
+        "desktop.agent.approval_review_title",
+        "desktop.agent.delete_incomplete",
+        "desktop.agent.service_absent",
+        "desktop.agent.service_incompatible",
+        "desktop.agent.service_runtime_unavailable",
+        "desktop.automation_access.cleanup_pending",
+        "desktop.automation_access.issue_lead",
+        "desktop.automation_access.refused_outcome_unknown",
+        "desktop.automation_access.scope_all_operations",
         "desktop.docs.frame_title",
         "desktop.logs.state_missing_detail",
-        "desktop.settings.follow_cadrumo",
+        "desktop.providers.refused_runtime_unavailable",
+        "desktop.providers.sign_in_cancel_failed",
+        "desktop.providers.sign_in_cleanup_failed",
+        "desktop.providers.sign_in_host_disconnected",
+        "desktop.providers.sign_in_open_failed",
+        "desktop.providers.sign_in_profile_required",
+        "desktop.providers.sign_in_unavailable",
+        "desktop.providers.sign_in_unsupported_browser",
+        "desktop.providers.sign_in_unsupported_device",
+        "desktop.setup.advisory_incomplete",
+        "desktop.setup.advisory_running",
+        "desktop.setup.lead",
+        "desktop.setup.refused_unavailable",
+        "desktop.setup.summary_complete",
+        "desktop.setup.summary_hardware",
+        "desktop.setup.summary_incomplete",
+        "desktop.setup.title",
+        "desktop.signin.refused.installation_unavailable",
         "desktop.signin.refused.keyring_unavailable",
+        "desktop.signin.refused.manager",
         "desktop.signin.refused.runtime_unavailable",
         "desktop.signin.title",
+        "desktop.startup.failed",
+        "desktop.startup.starting",
         "desktop.tui.label",
         "docs.legal.index.intro",
         "docs.legal.page.intro",
@@ -154,9 +216,19 @@ _PROSE_KEYS = {
         "tui.modelo.workbench.rate.not_grounded",
         "tui.modelo.workbench.review.operator_entries_at_risk",
         "tui.modelo.workbench.review.operator_entries_unknown",
+        "tui.reference.intro",
+        "tui.reference.summary.auth_providers",
+        "tui.reference.summary.modelos",
+        "tui.reference.summary.portals",
+        "tui.reference.summary.support_matrix",
         "tui.root.opening",
         "tui.root.system.quit_help",
         "tui.root.title",
+        "tui.search.destination_help.operations",
+        "tui.setup.complete",
+        "tui.setup.intro",
+        "tui.setup.plan.heading",
+        "tui.setup.unavailable",
     },
     "en": {
         "adapters.google.oauth_flow.errors.profile_state_unresolved",
@@ -196,24 +268,73 @@ _PROSE_KEYS = {
         "application.modelo.findings.ledger_snapshot_membership_unavailable",
         "application.modelo.lifecycle.file_confirm_message",
         "application.modelo.work_form.finding_action.file_another_way",
+        "application.provisioning.blocked.not_in_this_build",
+        "application.provisioning.failure.no_permission",
+        "application.provisioning.failure.not_in_this_build",
+        "application.provisioning.stale.different_model_version",
+        "application.provisioning.stale.program_too_old",
+        "application.provisioning.state.unknown",
+        "application.storage.calc_sheets.engine.guide.pull_command",
         "application.storage.calc_sheets.review.labels.external_notes_notice",
         "cli.app.modelo.export.development_file_not_accepted",
         "cli.app.modelo.filing_record.import_help",
         "cli.app.modelo.work.amend_help",
         "cli.app.modelo.work.compare_taxation_help",
         "cli.app.modelo.work.report.development_software_identity",
+        "cli.config.check.setup_unavailable",
+        "cli.config.errors.profile_session_logout_unproven",
+        "cli.config.errors.profile_session_outdated",
         "cli.config.google.folder.organize_help",
+        "cli.config.login.notices.session_not_persisted_logon",
+        "cli.config.provision.browser.help",
+        "cli.config.provision.complete",
+        "cli.config.provision.help",
+        "cli.config.provision.plan.heading",
+        "cli.config.provision.pull.model_help",
         "cli.config.provision.remove.help",
         "cli.config.provision.remove.model_help",
         "cli.ledger.counterparty.notices.evidence_contradicts_confirmation",
         "cli.operator_surface.help.root.paragraph_local_first",
+        "common.manager.open_application",
+        "desktop.about.open",
+        "desktop.about.title",
+        "desktop.about.version_row",
         "desktop.account.sign_out_hint",
+        "desktop.agent.approval_review_title",
+        "desktop.agent.delete_incomplete",
+        "desktop.agent.service_absent",
+        "desktop.agent.service_incompatible",
+        "desktop.agent.service_runtime_unavailable",
+        "desktop.automation_access.cleanup_pending",
+        "desktop.automation_access.issue_lead",
+        "desktop.automation_access.refused_outcome_unknown",
+        "desktop.automation_access.scope_all_operations",
         "desktop.docs.frame_title",
         "desktop.logs.state_missing_detail",
-        "desktop.settings.follow_cadrumo",
+        "desktop.providers.refused_runtime_unavailable",
+        "desktop.providers.sign_in_cancel_failed",
+        "desktop.providers.sign_in_cleanup_failed",
+        "desktop.providers.sign_in_host_disconnected",
+        "desktop.providers.sign_in_open_failed",
+        "desktop.providers.sign_in_profile_required",
+        "desktop.providers.sign_in_unavailable",
+        "desktop.providers.sign_in_unsupported_browser",
+        "desktop.providers.sign_in_unsupported_device",
+        "desktop.setup.advisory_incomplete",
+        "desktop.setup.advisory_running",
+        "desktop.setup.lead",
+        "desktop.setup.refused_unavailable",
+        "desktop.setup.summary_complete",
+        "desktop.setup.summary_hardware",
+        "desktop.setup.summary_incomplete",
+        "desktop.setup.title",
+        "desktop.signin.refused.installation_unavailable",
         "desktop.signin.refused.keyring_unavailable",
+        "desktop.signin.refused.manager",
         "desktop.signin.refused.runtime_unavailable",
         "desktop.signin.title",
+        "desktop.startup.failed",
+        "desktop.startup.starting",
         "desktop.tui.label",
         "docs.legal.index.intro",
         "docs.legal.page.intro",
@@ -248,9 +369,19 @@ _PROSE_KEYS = {
         "tui.modelo.workbench.rate.not_grounded",
         "tui.modelo.workbench.review.operator_entries_at_risk",
         "tui.modelo.workbench.review.operator_entries_unknown",
+        "tui.reference.intro",
+        "tui.reference.summary.auth_providers",
+        "tui.reference.summary.modelos",
+        "tui.reference.summary.portals",
+        "tui.reference.summary.support_matrix",
         "tui.root.opening",
         "tui.root.system.quit_help",
         "tui.root.title",
+        "tui.search.destination_help.operations",
+        "tui.setup.complete",
+        "tui.setup.intro",
+        "tui.setup.plan.heading",
+        "tui.setup.unavailable",
     },
     "es": {
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
@@ -288,26 +419,75 @@ _PROSE_KEYS = {
         "application.modelo.findings.ledger_snapshot_membership_unavailable",
         "application.modelo.lifecycle.file_confirm_message",
         "application.modelo.work_form.finding_action.file_another_way",
+        "application.provisioning.blocked.not_in_this_build",
+        "application.provisioning.failure.no_permission",
+        "application.provisioning.failure.not_in_this_build",
+        "application.provisioning.stale.different_model_version",
+        "application.provisioning.stale.program_too_old",
+        "application.provisioning.state.unknown",
+        "application.storage.calc_sheets.engine.guide.pull_command",
         "application.storage.calc_sheets.review.labels.external_notes_notice",
         "cli.app.modelo.export.development_file_not_accepted",
         "cli.app.modelo.filing_record.import_help",
         "cli.app.modelo.work.amend_help",
         "cli.app.modelo.work.compare_taxation_help",
         "cli.app.modelo.work.report.development_software_identity",
+        "cli.config.check.setup_unavailable",
+        "cli.config.errors.profile_session_logout_unproven",
+        "cli.config.errors.profile_session_outdated",
         "cli.config.google.folder.organize_help",
+        "cli.config.login.notices.session_not_persisted_logon",
+        "cli.config.provision.browser.help",
+        "cli.config.provision.complete",
+        "cli.config.provision.help",
+        "cli.config.provision.plan.heading",
+        "cli.config.provision.pull.model_help",
         "cli.config.provision.remove.help",
         "cli.config.provision.remove.model_help",
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
         "cli.ledger.counterparty.notices.evidence_contradicts_confirmation",
         "cli.operator_surface.help.root.paragraph_local_first",
+        "common.manager.open_application",
+        "desktop.about.open",
+        "desktop.about.title",
+        "desktop.about.version_row",
         "desktop.account.sign_out_hint",
+        "desktop.agent.approval_review_title",
+        "desktop.agent.delete_incomplete",
+        "desktop.agent.service_absent",
+        "desktop.agent.service_incompatible",
+        "desktop.agent.service_runtime_unavailable",
+        "desktop.automation_access.cleanup_pending",
+        "desktop.automation_access.issue_lead",
+        "desktop.automation_access.refused_outcome_unknown",
+        "desktop.automation_access.scope_all_operations",
         "desktop.docs.frame_title",
         "desktop.logs.state_missing_detail",
-        "desktop.settings.follow_cadrumo",
+        "desktop.providers.refused_runtime_unavailable",
+        "desktop.providers.sign_in_cancel_failed",
+        "desktop.providers.sign_in_cleanup_failed",
+        "desktop.providers.sign_in_host_disconnected",
+        "desktop.providers.sign_in_open_failed",
+        "desktop.providers.sign_in_profile_required",
+        "desktop.providers.sign_in_unavailable",
+        "desktop.providers.sign_in_unsupported_browser",
+        "desktop.providers.sign_in_unsupported_device",
+        "desktop.setup.advisory_incomplete",
+        "desktop.setup.advisory_running",
+        "desktop.setup.lead",
+        "desktop.setup.refused_unavailable",
+        "desktop.setup.summary_complete",
+        "desktop.setup.summary_hardware",
+        "desktop.setup.summary_incomplete",
+        "desktop.setup.title",
+        "desktop.signin.refused.installation_unavailable",
         "desktop.signin.refused.keyring_unavailable",
+        "desktop.signin.refused.manager",
         "desktop.signin.refused.runtime_unavailable",
         "desktop.signin.title",
+        "desktop.startup.failed",
+        "desktop.startup.starting",
         "desktop.tui.label",
         "docs.legal.index.intro",
         "docs.legal.page.intro",
@@ -342,9 +522,19 @@ _PROSE_KEYS = {
         "tui.modelo.workbench.rate.not_grounded",
         "tui.modelo.workbench.review.operator_entries_at_risk",
         "tui.modelo.workbench.review.operator_entries_unknown",
+        "tui.reference.intro",
+        "tui.reference.summary.auth_providers",
+        "tui.reference.summary.modelos",
+        "tui.reference.summary.portals",
+        "tui.reference.summary.support_matrix",
         "tui.root.opening",
         "tui.root.system.quit_help",
         "tui.root.title",
+        "tui.search.destination_help.operations",
+        "tui.setup.complete",
+        "tui.setup.intro",
+        "tui.setup.plan.heading",
+        "tui.setup.unavailable",
     },
     "hu": {
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
@@ -376,23 +566,59 @@ _PROSE_KEYS = {
         "application.modelo.findings.iva_rectification_document_unrecordable",
         "application.modelo.findings.ledger_snapshot_membership_unavailable",
         "application.modelo.work_form.finding_action.file_another_way",
+        "application.provisioning.blocked.not_in_this_build",
+        "application.provisioning.failure.no_permission",
+        "application.provisioning.failure.not_in_this_build",
+        "application.provisioning.state.unknown",
+        "application.storage.calc_sheets.engine.guide.pull_command",
         "application.storage.calc_sheets.review.labels.external_notes_notice",
         "cli.app.modelo.export.development_file_not_accepted",
         "cli.app.modelo.work.compare_taxation_help",
         "cli.app.modelo.work.report.development_software_identity",
+        "cli.config.check.setup_unavailable",
+        "cli.config.errors.profile_session_logout_unproven",
+        "cli.config.errors.profile_session_outdated",
         "cli.config.google.folder.organize_help",
+        "cli.config.provision.browser.help",
+        "cli.config.provision.complete",
+        "cli.config.provision.plan.heading",
+        "cli.config.provision.pull.model_help",
         "cli.config.provision.remove.help",
         "cli.config.provision.remove.model_help",
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
         "cli.ledger.counterparty.notices.evidence_contradicts_confirmation",
         "cli.operator_surface.help.root.paragraph_local_first",
+        "common.manager.open_application",
+        "desktop.about.open",
+        "desktop.about.title",
+        "desktop.about.version_row",
         "desktop.account.sign_out_hint",
+        "desktop.agent.approval_review_title",
+        "desktop.agent.delete_incomplete",
+        "desktop.agent.service_incompatible",
+        "desktop.agent.service_runtime_unavailable",
+        "desktop.automation_access.cleanup_pending",
+        "desktop.automation_access.issue_lead",
+        "desktop.automation_access.refused_outcome_unknown",
+        "desktop.automation_access.scope_all_operations",
         "desktop.docs.frame_title",
         "desktop.logs.state_missing_detail",
-        "desktop.settings.follow_cadrumo",
+        "desktop.providers.sign_in_cancel_failed",
+        "desktop.providers.sign_in_host_disconnected",
+        "desktop.providers.sign_in_open_failed",
+        "desktop.providers.sign_in_unsupported_device",
+        "desktop.setup.advisory_incomplete",
+        "desktop.setup.advisory_running",
+        "desktop.setup.lead",
+        "desktop.setup.refused_unavailable",
+        "desktop.setup.title",
+        "desktop.signin.refused.installation_unavailable",
         "desktop.signin.refused.keyring_unavailable",
+        "desktop.signin.refused.manager",
         "desktop.signin.refused.runtime_unavailable",
+        "desktop.startup.failed",
+        "desktop.startup.starting",
         "desktop.tui.label",
         "docs.legal.index.intro",
         "docs.legal.page.intro",
@@ -422,9 +648,18 @@ _PROSE_KEYS = {
         "tui.modelo.workbench.rate.not_grounded",
         "tui.modelo.workbench.review.operator_entries_at_risk",
         "tui.modelo.workbench.review.operator_entries_unknown",
+        "tui.reference.summary.auth_providers",
+        "tui.reference.summary.modelos",
+        "tui.reference.summary.portals",
+        "tui.reference.summary.support_matrix",
         "tui.root.opening",
         "tui.root.system.quit_help",
         "tui.root.title",
+        "tui.search.destination_help.operations",
+        "tui.setup.complete",
+        "tui.setup.hint",
+        "tui.setup.plan.heading",
+        "tui.setup.unavailable",
     },
 }
 
@@ -648,7 +883,7 @@ def test_audit_accepts_matching_conversions_escaped_and_literal_braces(tmp_path:
 
 def test_committed_catalogues_pass_production_audit() -> None:
     """The shipped four-language catalogue is accepted by the real validator."""
-    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
+    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=LOCALE_SOURCE_EXTRA_DIRS)
 
     result = manager.audit()
 
@@ -656,8 +891,8 @@ def test_committed_catalogues_pass_production_audit() -> None:
 
 
 def test_committed_catalogues_follow_contextual_product_identity_contract() -> None:
-    """Shipped locale values preserve prose, identity, CLI, machine, and authority referents."""
-    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
+    """Tax and service resources preserve prose, identity, CLI, machine, and authority referents."""
+    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=LOCALE_SOURCE_EXTRA_DIRS)
 
     assert PRODUCT_IDENTITY.prose_name == "Cadrumo"
     assert PRODUCT_IDENTITY.display_name == "CADRUMO"
@@ -674,11 +909,7 @@ def test_committed_catalogues_follow_contextual_product_identity_contract() -> N
         # Filter them out, then prove the remainder is not a hollowed-out set: a
         # filter that swallowed everything would make the equality assertions pass
         # vacuously.
-        leaves = {
-            key: value
-            for key, value in _flatten_leaf_values(manager.load_locale(_catalogue_source(locale))).items()
-            if value is not None
-        }
+        leaves = {key: value for key, value in _committed_leaf_values(manager, locale).items() if value is not None}
         assert len(leaves) > 10_000, (
             f"{locale}: only {len(leaves)} non-null leaves survived filtering, so the product-identity "
             f"contract below would be asserted against a near-empty catalogue"
@@ -723,8 +954,7 @@ def test_committed_catalogues_carry_no_em_dash() -> None:
     manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR)
     violations: list[str] = []
     for locale in _LOCALES:
-        leaves = manager.load_locale(_catalogue_source(locale))
-        for key, value in _flatten_leaf_values(leaves).items():
+        for key, value in _committed_leaf_values(manager, locale).items():
             if value is None or _EM_DASH not in value:
                 continue
             if (locale, key) in _EM_DASH_EXEMPT_KEYS:

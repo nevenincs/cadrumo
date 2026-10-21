@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#duplication-burndown'
 date: '2026-09-03'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:3518a6d18aaa5f68e764d3baa71a9f66c13a88ce944b66553bd9d224f4d70160'
+body_hash: 'sha256:447a617ef09d21d84b3f106b01c7ce7571ceded3f52d411e0acbdc36bdf7bd19'
 related:
   - "[[2026-07-14-honest-all-green-adr]]"
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -130,4 +130,4 @@ ADR fixes the closure contract.
 - commit `23eadb38842c9b95a809b5df085cf47ef30fbc02`
 - `git show 23eadb38842c9b95a809b5df085cf47ef30fbc02^:the former source file`
 - `just audit-duplication`, executed 2026-09-03 in
-  `Y:/code/cadrumo-worktrees/main` against the live shared worktree
+  `<repo-root>` against the live shared worktree

@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from .....application.user_profile.automation_lifecycle import (
     AutomationDenial,
     AutomationDenialKind,

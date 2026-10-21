@@ -62,7 +62,11 @@ _QUOTAS_2024 = (
 
 def _non_recargo_terms(revision: ModeloRevision) -> frozenset[str]:
     printed = _QUOTAS_2022 if revision.id in {"2022", "2023"} else _QUOTAS_2024
-    owners = {p.box_number: p.casilla_id for p in revision.form_layouts[0].placements if p.box_number}
+    owners = {
+        p.box_number: p.casilla_id
+        for p in revision.form_layouts[0].placements
+        if (p.box_number is not None and p.box_number)
+    }
     return frozenset(owners[number] for number in printed.split())
 
 

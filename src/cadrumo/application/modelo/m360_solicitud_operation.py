@@ -21,6 +21,8 @@ from uuid import UUID
 import pydantic
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.filing_year import FilingYear
@@ -49,8 +51,8 @@ from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 
 MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID = "modelo.m360_solicitud"
@@ -342,11 +344,11 @@ def build_modelo_360_solicitud_definition(
     return build_single_phase_definition(
         definition_id=MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID,
         request_type=Modelo360SolicitudRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=Modelo360SolicitudResult,
         executor_type=Modelo360SolicitudExecutor,
         build=lambda: Modelo360SolicitudExecutor(repository_factory, own_account_repository_factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

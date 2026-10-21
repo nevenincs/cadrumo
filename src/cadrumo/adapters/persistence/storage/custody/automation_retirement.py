@@ -8,12 +8,9 @@ from contextlib import ExitStack
 from pathlib import Path
 from uuid import UUID
 
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-    NativeSecretBackend,
-)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
+from .....application.user_profile.automation_custody_port import AutomationSecretStore, NativeSecretBackend
 from .automation_control_storage import AutomationControlStorage
 from .automation_crypto import (
     canonical_record,

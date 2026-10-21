@@ -43,8 +43,8 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ....domain.iva.classification import IvaTerritorialScope
 from ....domain.iva.regime_legend import resolve_regime_legends
+from ....domain.iva.schema import IvaTerritorialScope
 from ..establishment_ladder import EstablishmentRung, RegistrationEstablishmentConflict, _printed_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

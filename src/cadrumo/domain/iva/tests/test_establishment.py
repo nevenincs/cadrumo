@@ -26,8 +26,8 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 
-from ..classification import IvaTerritorialScope
 from ..establishment import SPAIN_COUNTRY_CODE, territorial_scope_for_country
+from ..schema import IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

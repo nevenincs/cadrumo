@@ -276,6 +276,9 @@ errors:
       az IVA tárca egyeztetése szükséges'
     error_modelo_metadata_run: A munka metaadatain végzett művelet nem adott megerősített
       eredményt. Újrapróbálás előtt ellenőrizd a művelet azonosítóját.
+    error_modelo_verification_outcome_incomplete: 'A számítás-revízió ellenőrzése
+      nem fejeződött be: a jelentése elmentődött, de a revíziót nem jelölte meg ellenőrzöttként.
+      Futtasd újra az ellenőrzést a rendezéséhez.'
     error_modelo_verification_report_not_found: A kért ellenőrzési jelentés nem található.
     error_modelo_work_unit_already_discarded: A munkajegység már el van vetve.
     error_modelo_work_unit_mutation_refused: Egy elvetett munkajegység nem módosítható.
@@ -346,6 +349,8 @@ errors:
       rekord, amely megfelelne a kért azonosítónak.
     m145_communication_service: A Modelo 145 helyi kommunikációs szolgáltatás egyik
       művelete meghiúsult.
+    modelo_calculation_revision_pointer_not_found: A(z) %{work_unit_id} bevalláshoz
+      (%{modelo} nyomtatvány) nem érhető el számítási verzió a kért állapotban.
     modelo_calculation_revision_selector: A számítási revízió kiválasztása sikertelen.
     modelo_calculation_revision_selector_not_found: Nincs a megadott választónak megfelelő
       számítási revízió.
@@ -416,6 +421,9 @@ errors:
     fail_cli_command_group_unavailable: 'A(z) ''%{group}'' parancscsoport nem tölthető
       be: a szükséges ''%{module}'' modul hiányzik. A telepítés hiányos.'
     fail_declaracion_parse: A bevallás fájlját nem sikerült elemezni.
+    fail_dependency_preflight_stage: Egy összetevő letöltési kiszolgálójának hálózati
+      ellenőrzése nem fejeződött be.
+    fail_dependency_transfer: Egy összetevő letöltése nem sikerült.
     fail_filing_import: A bevallás importálása meghiúsult.
     fail_financial_attachments_attachment_persistence: A csatolmány-katalógust nem
       sikerült menteni vagy betölteni.
@@ -680,6 +688,8 @@ errors:
     canonical_schema_resolution: A parancsséma vetítése hiányos.
     canonical_structured_invoice_read: A kiválasztott olvasó nem tudta beolvasni a
       strukturált számlát.
+    canonical_tui_run_failed: A terminálfelület váratlanul leállt. Nézd meg a diagnosztikai
+      naplókat.
     canonical_tui_search_host: A TUI keresési palettájához a munkaterület gyökér-gazdagépe
       szükséges.
     cli_outbound_payload_boundary: A Cadrumo olyan belső rekordot épített, amely nem
@@ -741,6 +751,8 @@ errors:
       meg, amíg befejeződik, és próbáld újra.
     locked_cli_operation_still_running: A(z) {operation_id} művelet még fut. Az eredménye
       még nem ismert. Ellenőrizd az eredményét, mielőtt újra próbálkozol.
+    locked_dependency_item: Egy másik telepítés éppen módosítja ezt az összetevőt.
+      Próbáld újra, ha befejeződött.
     locked_google_keychain: A Google-hitelesítő adatokat tároló operációs rendszer
       kulcstára zárolt vagy elérhetetlen. Oldd fel a kulcstárat, és próbáld újra.
     locked_journal_busy: Egy naplófájlt egy másik program használatban tartott, ezért
@@ -769,6 +781,9 @@ errors:
       újra.
     auth_profile_identity_mismatch: Az aktív profil azonossága nem rendelkezhet a
       kért hitelesítési munkamenettel.
+    automation_requester_disconnected: A kulcsot kérő program már nem kapcsolódik,
+      ezért a kulcs nem juthat el hozzá. Kérd meg, hogy kérje újra a kulcsot, és hagyd
+      jóvá az új kérést.
     bootstrap_already_complete: A biztonságos tároló beállítása már befejeződött.
       Használd az aeat config login NÉV parancsot egy meglévő profil aktiválásához,
       vagy az aeat config profile create NÉV parancsot másik profil hozzáadásához.
@@ -1023,6 +1038,9 @@ errors:
     refused_config_reset_unconfirmed: A konfigurációs visszaállítást nem erősítette
       meg. Futtasd újra a parancsot, megerősítve a műveletet.
     refused_corpus_search_input: A korpuszkeresési kérés nem teljesíthető.
+    refused_dependency_proxy_configuration: A proxybeállítás nem http:// cím gépnévvel
+      és érvényes porttal.
+    refused_dependency_selection: Ez az összetevő itt nem állítható be.
     refused_diagnostic_model_invariant: A DiagnosticCheck konstrukciós invariánsa
       sérült; ellenőrizd, hogy az elmaradás/figyelmeztetés sorokban pontosan az egyik
       next_action vagy dead_end van-e beállítva, az ok sorokban pedig egyik sem.
@@ -1039,10 +1057,9 @@ errors:
     refused_filing_calculate: A benyújtás-számítás vagy összefoglalás nem ment át
       az invariáns-ellenőrzésen.
     refused_financial_aggregation_category_coverage: Egy tranzakcióhoz hiányzik a
-      kategória- vagy profil-lefedettség. Osztályozza a tranzakciót az összesítés
-      előtt.
+      kategória- vagy profil-lefedettség. Osztályozd a tranzakciót az összesítés előtt.
     refused_financial_aggregation_missing_classification: Néhány időszaki tranzakció
-      még osztályozásra szorul. Osztályozza mindegyiket az összesítés előtt.
+      még osztályozásra szorul. Osztályozd mindegyiket az összesítés előtt.
     refused_financial_aggregation_unsupported_modelo: Nincs összesítési szerződés
       a kért nyomtatványhoz.
     refused_financial_bank_statement_parse: A pénzügyi bankikivonás elemzése sikertelen.
@@ -1081,7 +1098,7 @@ errors:
     refused_google_profile_unbound: Nincs aktív profil kötve. Válassz profilt, vagy
       használd a --profile kapcsolót.
     refused_google_sign_in_required: 'A profil Google-hozzáférése lejárt vagy visszavonták.
-      Jelentkezz be újra: `aeat config google login`.'
+      Jelentkezz be újra: `cadrumo-runtime config google login`.'
     refused_google_validation: A megadott Google-paraméterek nem mentek át az érvényesítésen.
     refused_inventory_actividad_conflict: Már létezik készlet az adott tevékenységhez
       és évhez.

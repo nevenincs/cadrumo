@@ -1,6 +1,6 @@
-use crate::storage::{Profile, child_environment};
+use crate::storage::child_environment;
 use crate::*;
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub(crate) struct Scratch(pub PathBuf);
@@ -33,12 +33,26 @@ fn value<'a>(environment: &'a [(OsString, OsString)], name: &str) -> &'a OsStrin
     &environment.iter().find(|(key, _)| key == name).unwrap().1
 }
 
+/// The environment the operator-facing `aeat` image defines against a resolved `root`,
+/// with its pinned directories created.
+pub(crate) fn operator_environment(
+    mut ambient: Vec<(OsString, OsString)>,
+    root: &Path,
+) -> Result<Vec<(OsString, OsString)>, launch::DefineError> {
+    ambient.push((OsString::from("SYSTEMROOT"), OsString::from(r"C:\Windows")));
+    let profile = launch::select("aeat", &[])?;
+    let defined = launch::define_environment(profile, &ambient, &env::temp_dir(), &|_| {
+        Ok(root.to_path_buf())
+    })?;
+    launch::create_directories(&defined)?;
+    Ok(defined.environment)
+}
+
 #[test]
-fn child_pins_normalize_absolute_root_and_relative_temporary_member() {
+fn defined_pins_normalize_absolute_root_and_relative_temporary_member() {
     let scratch = Scratch::new("normalized");
     let root = scratch.0.join("unused").join("..").join("datos con ñ");
-    let environment = child_environment(
-        Profile::Operator,
+    let environment = operator_environment(
         vec![(
             OsString::from(TEMPORARY_ENV),
             OsString::from("unused-temp/../scratch"),
@@ -62,7 +76,7 @@ fn child_pins_normalize_absolute_root_and_relative_temporary_member() {
 }
 
 #[test]
-fn child_pins_expand_current_user_temporary_override_and_keep_inherited_pins() {
+fn temporary_override_expands_the_current_user_and_strict_children_keep_inherited_pins() {
     let scratch = Scratch::new("home");
     let root = scratch.0.join("root");
     let rule = INSTALLED_DEFAULTS
@@ -82,12 +96,12 @@ fn child_pins_expand_current_user_temporary_override_and_keep_inherited_pins() {
             .iter()
             .map(|name| (OsString::from(name), inherited.as_os_str().to_owned())),
     );
-    let operator = child_environment(Profile::Operator, ambient.clone(), &root).unwrap();
-    let strict = child_environment(Profile::Strict, ambient, &root).unwrap();
-    for environment in [&operator, &strict] {
-        for name in HOST_INHERITED_ENV {
-            assert_eq!(value(environment, name), inherited.as_os_str());
-        }
+    let operator = operator_environment(ambient.clone(), &root).unwrap();
+    let strict = child_environment(ambient, &root).unwrap();
+    for name in HOST_INHERITED_ENV {
+        assert_eq!(value(&strict, name), inherited.as_os_str());
+        // A defined image takes its authority from its own package, never its caller.
+        assert_ne!(value(&operator, name), inherited.as_os_str());
     }
     for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
         assert_eq!(
@@ -132,7 +146,16 @@ fn abi_mismatch_and_invalid_arguments_return_declared_statuses() {
             2
         );
         assert_eq!(cadrumo_platform_path(ptr::null_mut(), 0, &mut error), 2);
-        assert_eq!(cadrumo_platform_prepare(ptr::null_mut(), &mut error), 2);
+        assert_eq!(
+            cadrumo_platform_define(
+                ptr::null_mut(),
+                c"python".as_ptr(),
+                0,
+                ptr::null(),
+                &mut error
+            ),
+            2
+        );
         cadrumo_platform_release(ptr::null_mut());
         cadrumo_platform_destroy(ptr::null_mut());
     }
@@ -157,6 +180,61 @@ fn abi_paths_preserve_utf8_bytes_and_provider_owned_buffer_lifetime() {
         );
         cadrumo_platform_release(&mut output);
         assert!(output.data.is_null() && output.len == 0);
+    }
+}
+
+/// Native, NUL-terminated spellings of `arguments`, as a C host passes them.
+fn native_arguments(arguments: &[&str]) -> Vec<Vec<NativeChar>> {
+    arguments
+        .iter()
+        .map(|argument| {
+            #[cfg(windows)]
+            {
+                argument.encode_utf16().chain(Some(0)).collect()
+            }
+            #[cfg(unix)]
+            {
+                argument
+                    .bytes()
+                    .map(|byte| byte as std::ffi::c_char)
+                    .chain(Some(0))
+                    .collect()
+            }
+        })
+        .collect()
+}
+
+#[test]
+fn abi_refuses_an_undeclared_agent_arrangement_with_the_one_declared_line_and_defines_nothing() {
+    let mut context = Context {
+        paths: vec![PathBuf::from("package")],
+    };
+    let line = br#"{"native_refusal":"invocation_undeclared","subject":"cadrumo-agent"}"#;
+    let module = ["-m", "cadrumo_agent.cli.main"];
+    for tail in [
+        vec!["migrate", "--expect-from"],
+        vec!["migrate", "--expect-head", "0002", "--expect-from", "0001"],
+        vec!["migrate", "--expect-from", "0001;rm"],
+        vec!["stores-state", "extra"],
+    ] {
+        let arguments: Vec<&str> = module.iter().copied().chain(tail.iter().copied()).collect();
+        let owned = native_arguments(&arguments);
+        let pointers: Vec<*const NativeChar> =
+            owned.iter().map(|argument| argument.as_ptr()).collect();
+        let mut error = empty_buffer();
+        let status = unsafe {
+            cadrumo_platform_define(
+                &mut context,
+                c"cadrumo-agent".as_ptr(),
+                pointers.len() as u32,
+                pointers.as_ptr(),
+                &mut error,
+            )
+        };
+        assert_eq!(status, 4, "{arguments:?}");
+        let written = unsafe { std::slice::from_raw_parts(error.data, error.len as usize) };
+        assert_eq!(written, line, "{arguments:?}");
+        unsafe { cadrumo_platform_release(&mut error) };
     }
 }
 
@@ -191,10 +269,12 @@ fn invalid_temporary_override_refuses_without_effects_or_lossy_replacement() {
     let scratch = Scratch::new("invalid-temp");
     let root = scratch.0.join("root");
     let invalid = vec![(OsString::from(TEMPORARY_ENV), invalid_unicode())];
-    let error = child_environment(Profile::Operator, invalid.clone(), &root).unwrap_err();
-    assert_eq!(error.kind(), std::io::ErrorKind::InvalidInput);
+    assert!(matches!(
+        operator_environment(invalid.clone(), &root),
+        Err(launch::DefineError::Failed(_))
+    ));
     assert!(!root.exists());
-    let strict = child_environment(Profile::Strict, invalid, &root).unwrap();
+    let strict = child_environment(invalid, &root).unwrap();
     assert!(!strict.iter().any(|(name, _)| name == TEMPORARY_ENV));
 }
 
@@ -297,20 +377,47 @@ fn generated_filesystem_vectors_preserve_original_link_evidence_and_have_no_effe
 }
 
 #[test]
+fn member_overrides_reproduce_every_generated_member_vector() {
+    let host = if cfg!(windows) { "windows" } else { "posix" };
+    let vectors: Vec<_> = STORAGE_MEMBER_VECTORS
+        .iter()
+        .filter(|vector| vector.platform == host)
+        .collect();
+    assert!(
+        vectors.len() >= 3,
+        "the contract carries this platform's member vectors"
+    );
+    for vector in vectors {
+        let scratch = Scratch::new("member");
+        let root = scratch.0.join("root");
+        let lookup = |name: &str| (name == vector.variable).then(|| OsString::from(vector.value));
+        let outcome = storage::member_path(&root, vector.variable, "default", &lookup);
+        match (outcome, vector.expected_components, vector.refusal) {
+            (Ok(path), Some(parts), None) => assert_eq!(
+                path,
+                root.join(parts.iter().collect::<PathBuf>()),
+                "{}",
+                vector.name
+            ),
+            (Err(refused), None, Some(code)) => assert_eq!(refused.code, code, "{}", vector.name),
+            outcome => panic!("{}: {outcome:?}", vector.name),
+        }
+        assert!(!root.exists(), "{}", vector.name);
+    }
+}
+
+#[test]
 fn inherited_path_pins_refuse_relative_and_invalid_values_before_creation() {
-    for profile in [Profile::Operator, Profile::Strict] {
-        for field in HOST_INHERITED_FIELDS
-            .iter()
-            .filter(|field| field.kind == INHERITED_KIND_DIRECTORY_PATH)
-        {
-            for value in [OsString::from("relative"), invalid_unicode()] {
-                let scratch = Scratch::new("inherited-refusal");
-                let root = scratch.0.join("root");
-                let error = child_environment(profile, vec![(field.name.into(), value)], &root)
-                    .unwrap_err();
-                assert_eq!(error.kind(), std::io::ErrorKind::InvalidInput);
-                assert!(!root.exists());
-            }
+    for field in HOST_INHERITED_FIELDS
+        .iter()
+        .filter(|field| field.kind == INHERITED_KIND_DIRECTORY_PATH)
+    {
+        for value in [OsString::from("relative"), invalid_unicode()] {
+            let scratch = Scratch::new("inherited-refusal");
+            let root = scratch.0.join("root");
+            let error = child_environment(vec![(field.name.into(), value)], &root).unwrap_err();
+            assert_eq!(error.kind(), std::io::ErrorKind::InvalidInput);
+            assert!(!root.exists());
         }
     }
 }
@@ -325,7 +432,7 @@ fn child_and_public_root_share_normalized_spelling_without_discarded_creation() 
             .unwrap();
     assert_eq!(resolved.root, scratch.0.join("selected"));
     assert!(!resolved.root.exists() && !scratch.0.join("unused").exists());
-    let environment = child_environment(Profile::Strict, Vec::new(), &resolved.root).unwrap();
+    let environment = child_environment(Vec::new(), &resolved.root).unwrap();
     assert_eq!(
         value(&environment, ROOT_VARIABLE),
         resolved.root.as_os_str()
@@ -344,8 +451,7 @@ fn absolute_temporary_override_normalizes_without_changing_the_root_pin() {
     let scratch = Scratch::new("absolute-member");
     let root = scratch.0.join("root");
     let temporary = scratch.0.join("unused-member/../temporary con ñ");
-    let environment = child_environment(
-        Profile::Operator,
+    let environment = operator_environment(
         vec![(
             OsString::from(TEMPORARY_ENV),
             temporary.as_os_str().to_owned(),
@@ -364,22 +470,18 @@ fn absolute_temporary_override_normalizes_without_changing_the_root_pin() {
 }
 
 #[test]
-fn abi_prepare_filesystem_refusal_returns_a_provider_error_without_panicking() {
-    let scratch = Scratch::new("prepare-refusal");
+fn defined_directory_refusal_reports_a_failure_and_keeps_the_existing_file() {
+    let scratch = Scratch::new("define-refusal");
     let file = scratch.0.join("file");
     fs::write(&file, b"preserved").unwrap();
-    let mut context = Context {
-        paths: vec![file.clone(); 9],
+    let defined = launch::Defined {
+        environment: Vec::new(),
+        directories: vec![file.join("child")],
     };
-    let mut error = empty_buffer();
-    unsafe {
-        assert_eq!(cadrumo_platform_prepare(&mut context, &mut error), 3);
-        assert!(!error.data.is_null() && error.len > 0);
-        let bytes = std::slice::from_raw_parts(error.data, error.len as usize);
-        assert!(std::str::from_utf8(bytes).is_ok());
-        cadrumo_platform_release(&mut error);
-        assert!(error.data.is_null() && error.len == 0);
-    }
+    assert!(matches!(
+        launch::create_directories(&defined),
+        Err(launch::DefineError::Failed(_))
+    ));
     assert_eq!(fs::read(file).unwrap(), b"preserved");
 }
 
@@ -404,12 +506,10 @@ fn windows_environment_names_follow_the_declarations_unicode_uppercase_rule() {
         ),
     ];
     assert!(storage::authority_override_present(ambient.clone()));
-    let environment = child_environment(Profile::Operator, ambient, &root).unwrap();
+    let environment = operator_environment(ambient.clone(), &root).unwrap();
     assert_eq!(value(&environment, TEMPORARY_ENV), "worker-temp");
-    assert_eq!(
-        value(&environment, HOST_INHERITED_ENV[0]),
-        authority.as_os_str()
-    );
+    let strict = child_environment(ambient, &root).unwrap();
+    assert_eq!(value(&strict, HOST_INHERITED_ENV[0]), authority.as_os_str());
     for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
         assert_eq!(
             value(&environment, name),
@@ -428,5 +528,218 @@ fn abi_unrepresentable_path_returns_failure_and_an_empty_buffer() {
         assert_eq!(cadrumo_platform_path(&mut context, 0, &mut output), 3);
         assert!(output.data.is_null() && output.len == 0);
         cadrumo_platform_release(&mut output);
+    }
+}
+
+fn normal(value: &OsStr) -> String {
+    let text = value.to_string_lossy().into_owned();
+    if cfg!(windows) {
+        text.replace('\\', "/")
+    } else {
+        text
+    }
+}
+
+fn existing_installation_path_defaults(
+    profile: &LaunchProfile,
+    ambient: &[(OsString, OsString)],
+) -> Vec<PathBuf> {
+    let Some(external) = LAUNCH_PATH_ENTRIES
+        .iter()
+        .find(|entry| entry.kind == "external_defaults")
+        .map(|entry| entry.value)
+    else {
+        return Vec::new();
+    };
+    if !profile.operator.contains(&external) && !profile.pass.contains(&external) {
+        return Vec::new();
+    }
+    let mut existing = Vec::new();
+    for default in LAUNCH_EXTERNAL_PATH_DEFAULTS {
+        let applies = match default.platform {
+            "windows" => cfg!(windows),
+            "posix" => !cfg!(windows),
+            "macos" => cfg!(target_os = "macos"),
+            _ => false,
+        };
+        if !applies {
+            continue;
+        }
+        let mut directory = if let Some(variable) = default.variable {
+            if !profile.base.contains(&variable) {
+                continue;
+            }
+            let Some(root) = launch::lookup(ambient, variable) else {
+                continue;
+            };
+            PathBuf::from(root)
+        } else {
+            PathBuf::from(default.path)
+        };
+        if !directory.is_absolute() {
+            continue;
+        }
+        directory.extend(default.subpaths);
+        if directory.is_dir() && !existing.contains(&directory) {
+            existing.push(directory);
+        }
+    }
+    existing
+}
+
+#[test]
+fn launch_profiles_reproduce_every_generated_launch_vector() {
+    let auth_profile = LAUNCH_PROFILES
+        .iter()
+        .find(|profile| profile.name == "agent-auth")
+        .expect("the contract declares the agent authentication profile");
+    let auth_slot = |kind: &str, required: bool| {
+        let mut slots = auth_profile.slots.iter().filter(|slot| slot.kind == kind);
+        let slot = slots.next().expect("the authentication slot is declared");
+        assert!(slots.next().is_none(), "the typed slot is unambiguous");
+        assert_eq!(slot.required, required);
+        slot.name
+    };
+    let auth_root_name = auth_slot("directory", true);
+    let auth_executable_name = auth_slot("executable", false);
+    let (package, root) = if cfg!(windows) {
+        (r"C:\launch-vector\package", r"C:\launch-vector\state")
+    } else {
+        ("/launch-vector/package", "/launch-vector/state")
+    };
+    assert!(
+        !LAUNCH_VECTORS.is_empty(),
+        "the contract carries this family's vectors"
+    );
+    for vector in LAUNCH_VECTORS {
+        let arguments: Vec<OsString> = vector.arguments.iter().map(OsString::from).collect();
+        let auth_hosted_root = [
+            "windows-agent-auth-admits-browser-connect-in-its-profile",
+            "posix-agent-auth-admits-device-connect-in-its-profile",
+            "windows-agent-auth-keeps-the-legacy-login-invocation",
+        ]
+        .contains(&vector.name)
+        .then(|| Scratch::new("agent-auth-hosted-root"));
+        let auth_browser_executable = [
+            "windows-agent-auth-admits-browser-connect-in-its-profile",
+            "posix-agent-auth-admits-device-connect-in-its-profile",
+        ]
+        .contains(&vector.name)
+        .then(|| {
+            let scratch = Scratch::new("agent-auth-browser-executable");
+            let executable = scratch.0.join(if cfg!(windows) {
+                "browser.exe"
+            } else {
+                "browser"
+            });
+            fs::write(&executable, b"fixture").unwrap();
+            (scratch, executable)
+        });
+        let mut ambient: Vec<(OsString, OsString)> = vector
+            .ambient
+            .iter()
+            .map(|(name, value)| (OsString::from(name), OsString::from(value)))
+            .collect();
+        if let Some(scratch) = &auth_hosted_root {
+            let Some((_, value)) = ambient.iter_mut().find(|(name, _)| name == auth_root_name)
+            else {
+                panic!("{} declares its hosted-root slot", vector.name);
+            };
+            *value = scratch.0.as_os_str().to_owned();
+        }
+        if let Some((_, executable)) = &auth_browser_executable {
+            let Some((_, value)) = ambient
+                .iter_mut()
+                .find(|(name, _)| name == auth_executable_name)
+            else {
+                panic!(
+                    "{} declares its optional browser executable slot",
+                    vector.name
+                );
+            };
+            *value = executable.as_os_str().to_owned();
+        }
+        let selected = launch::select(vector.image, &arguments);
+        let defined = selected.clone().and_then(|profile| {
+            launch::define_environment(profile, &ambient, Path::new(package), &|_| {
+                Ok(PathBuf::from(root))
+            })
+        });
+        match (defined, vector.refusal) {
+            (Err(launch::DefineError::Refused(refusal)), Some((code, subject))) => {
+                assert_eq!(
+                    (refusal.code(), refusal.subject()),
+                    (code, subject),
+                    "{}",
+                    vector.name
+                );
+            }
+            (Ok(defined), None) => {
+                let selected_profile = selected.clone().unwrap();
+                assert_eq!(
+                    Some(selected_profile.name),
+                    vector.profile,
+                    "{}",
+                    vector.name
+                );
+                let mut actual: Vec<(String, String)> = defined
+                    .environment
+                    .iter()
+                    .map(|(name, value)| (name.to_string_lossy().into_owned(), normal(value)))
+                    .collect();
+                if let Some(path) = vector.path {
+                    let position = actual.iter().position(|(name, _)| name == "PATH").unwrap();
+                    let (_, value) = actual.remove(position);
+                    let entries: Vec<String> = env::split_paths(&OsString::from(value))
+                        .map(|entry| normal(entry.as_os_str()))
+                        .collect();
+                    let mut expected: Vec<String> =
+                        path.iter().map(|entry| normal(OsStr::new(entry))).collect();
+                    let defaults = existing_installation_path_defaults(selected_profile, &ambient);
+                    let system_count = if cfg!(windows) {
+                        1
+                    } else {
+                        LAUNCH_POSIX_SYSTEM_PATH.len()
+                    };
+                    let insertion = expected.len().saturating_sub(system_count);
+                    expected.splice(
+                        insertion..insertion,
+                        defaults
+                            .iter()
+                            .map(|directory| normal(directory.as_os_str())),
+                    );
+                    assert_eq!(entries, expected, "{}", vector.name);
+                }
+                let mut expected: Vec<(String, String)> = vector
+                    .environment
+                    .iter()
+                    .map(|(name, value)| ((*name).to_owned(), normal(OsStr::new(value))))
+                    .collect();
+                if let Some(scratch) = &auth_hosted_root {
+                    let Some((_, value)) =
+                        expected.iter_mut().find(|(name, _)| name == auth_root_name)
+                    else {
+                        panic!("{} defines its hosted-root slot", vector.name);
+                    };
+                    *value = normal(scratch.0.as_os_str());
+                }
+                if let Some((_, executable)) = &auth_browser_executable {
+                    let Some((_, value)) = expected
+                        .iter_mut()
+                        .find(|(name, _)| name == auth_executable_name)
+                    else {
+                        panic!(
+                            "{} defines its optional browser executable slot",
+                            vector.name
+                        );
+                    };
+                    *value = normal(executable.as_os_str());
+                }
+                actual.sort();
+                expected.sort();
+                assert_eq!(actual, expected, "{}", vector.name);
+            }
+            (outcome, refusal) => panic!("{}: {outcome:?}, expected {refusal:?}", vector.name),
+        }
     }
 }

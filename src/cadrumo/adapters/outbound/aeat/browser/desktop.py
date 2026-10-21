@@ -6,7 +6,7 @@ import os
 import sys
 from pathlib import Path
 
-from .....application.runtime.contracts import RuntimeRefusalError
+from cadrumo_client.contracts.contracts import RefusalError
 
 
 def interactive_desktop_available() -> bool:
@@ -16,11 +16,11 @@ def interactive_desktop_available() -> bool:
     process actually launching Chromium is checked here.
     """
     if sys.platform == "win32":
-        from ....local_runtime.windows_desktop_logon import current_windows_desktop_logon
+        from cadrumo_client.transport.windows_desktop_logon import current_windows_desktop_logon
 
         try:
             current_windows_desktop_logon()
-        except RuntimeRefusalError:
+        except RefusalError:
             return False
         return True
     if sys.platform == "darwin":

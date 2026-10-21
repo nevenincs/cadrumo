@@ -88,3 +88,22 @@ min_coverage = "0"
 discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure"]
+
+[[revisions."2022".verification_expectations]]
+id = "modelo-390-2022-additional-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = [
+    "iva.anual.territorio.resultado-atribuible-comun",
+    "iva.anual.territorio.resultado-anual-atribuible-comun",
+    "iva.anual.volumen.total",
+    "iva.anual.total-bases-iva",
+    "iva.anual.sector-diferenciado-1.suma-deducciones",
+    "iva.anual.sector-diferenciado-2.suma-deducciones",
+    "iva.anual.sector-diferenciado-3.suma-deducciones",
+]
+tolerance = "0.00"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-modelo-390-procedure"]

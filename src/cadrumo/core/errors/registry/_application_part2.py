@@ -99,7 +99,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.runtime.contracts.RuntimeRefusalError",
+        "cadrumo_client.contracts.contracts.RefusalError",
         ErrorCode(
             code="REFUSED_LOCAL_RUNTIME",
             category=ErrorCategory.REFUSED,
@@ -109,7 +109,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.runtime.contracts.RuntimeShutdownIncompleteError",
+        "cadrumo_client.contracts.contracts.ShutdownIncompleteError",
         ErrorCode(
             code="REFUSED_LOCAL_RUNTIME_SHUTDOWN",
             category=ErrorCategory.REFUSED,
@@ -119,7 +119,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile.automation_custody_port.AutomationCustodyError",
+        "cadrumo_client.contracts.automation_codes.AutomationCustodyError",
         ErrorCode(
             code="REFUSED_AUTOMATION_CUSTODY",
             category=ErrorCategory.REFUSED,
@@ -134,6 +134,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_AUTOMATION_ADMINISTRATION",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_storage_profile_custody",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile.automation_operations.AutomationRequesterDisconnectedError",
+        ErrorCode(
+            code="REFUSED_AUTOMATION_REQUESTER_DISCONNECTED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.automation_requester_disconnected",
             retryable=False,
             runbook_id=None,
         ),
@@ -724,7 +734,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile.login_session.ProfileLoginThrottledError",
+        "cadrumo_client.contracts.sign_in_outcomes.ProfileLoginThrottledError",
         ErrorCode(
             code="REFUSED_PROFILE_LOGIN_THROTTLED",
             category=ErrorCategory.REFUSED,
@@ -734,7 +744,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile.login_session.ProfileReceiptRefusedError",
+        "cadrumo_client.contracts.sign_in_outcomes.ProfileReceiptRefusedError",
         ErrorCode(
             code="REFUSED_PROFILE_RECEIPT",
             category=ErrorCategory.REFUSED,

@@ -16,9 +16,9 @@ related:
 supersedes:
   - '2026-05-14-secure-backend-passkey-custody-adr'
   - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
-modified: '2026-10-04'
+modified: '2026-10-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:db405a79456dc8fd4e23f38cd0fefecd2aa94ae26f8b2525ca71d6ab20395f0c'
+body_hash: 'sha256:41006a5322c71abcf535b0fcd838c7f03552017503cbe735b60258918c50da96'
 ---
 
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
@@ -76,6 +76,8 @@ Every Argon2 operation runs in a killable supervised child. The child performs A
 
 Windows uses an assigned Job Object with kill-on-close, active-process, memory, and CPU limits. `STARTUPINFOEX` supplies an explicit handle list; every other handle is non-inheritable. POSIX uses a new process group, hard resource limits, close-from semantics, and exact `pass_fds`. The parent transmits no secret until the worker proves the limits in a ready handshake. Setup failure returns `KDF_SUPERVISION_UNAVAILABLE`; there is no in-process, thread, unsupervised, inherited-environment, or weaker fallback.
 
+Amended 2026-10-13. A process that performs password proofs may launch one KDF child ahead of need and keep it idle once it has passed the ready handshake. The child receives no request and no secret until it is handed to exactly one wrap or unwrap, and is handed over only while its process is still running inside its containment; otherwise it is discarded and a fresh child is launched. Each derivation still gets its own freshly launched child, which performs one operation and exits; the parent launches the next spare only afterwards, and closing the owner contains any idle spare. On Windows the child runs the base interpreter without `site`, receiving its import roots through its allowlisted environment, and its first-party import closure is pinned by an allow-list gate. The wrap and unwrap wall-clock bound returns to 15 seconds. This moves interpreter start-up, which cost seconds against a derivation of tens of milliseconds, off the sign-in path. It follows the owner's ruling of 2026-10-13 that sign-in must be near-instant ("login should be instantanous"); authorized by the owner through the coordinating session on 2026-10-13 and flagged as a security-sensitive change.
+
 Per-profile online backoff and global/cross-process KDF concurrency protect resources only. Missing or corrupt throttle state means clear, never permanent denial. The product states that stolen envelopes support offline guessing.
 
 Amended 2026-09-24. The failed-attempt counter clears only on a successful proof, by password or recovery code, or when its own wait expires; revoking a session, including logout, never touches it. The earlier behaviour, a counter that also reset on logout, came from the superseded `2026-07-24-profile-login-session-adr` backoff row. Because selecting a profile needs no secret and logout revokes whatever is selected, that reset let any caller clear the backoff between guesses, for login and for recovery reset alike. Accepted 2026-09-24 under the user's standing pre-approval of modifications.
@@ -89,7 +91,7 @@ This protocol is enforced at the application enrollment boundary, not only by op
 Password login must not stat, open, parse, digest, or validate the recovery record. Missing, inaccessible, malformed, corrupt, or removed recovery cannot affect password login, activation, password rotation, normal backup, or normal restore. Recovery rotation applies only to already-enrolled recovery and verifies the candidate before atomic replacement. Recovery removal requires current-password authentication; only a fresh enrollment restores recovery. Recovery-based password reset, once deferred by `2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr`, is decided by `2026-09-23-profile-password-custody-passphrase-reset-adr` (proposed); it increments the password-envelope generation and preserves the epoch through the canonical rotation primitive.
 
 A portable `profile-recovery-artifact/v1` is a restore proof only. It contains UUID, `dek_epoch`, recovery generation and bounded KDF, recovery wrap, AAD descriptor, and canonical self-digest, but no mnemonic, password envelope, data, session, or keyring state. Export requires current-password authentication and exclusive creation. An artifact cannot import, replace, or create enrolled recovery. Explicit recovery restore requires a named capsule source, a named artifact, UUID and epoch agreement, mnemonic unwrap, and sentinel proof. Warnings identify offline-guessing exposure, separate-storage requirements, retained exported copies, and the fact that recovery loss does not harm password login.
-Amended 2026-09-23. Recovery is optional and independent, as `2026-08-13-recovery-mnemonic-presentation-successor-adr` records and as the product implements: creation publishes the profile before recovery is offered (`src/cadrumo/entrypoints/cli/config/scripted_registration.py:26`), and `config profile recovery enable`, `disable` and `status` enroll and remove it afterwards under current-password proof (`src/cadrumo/entrypoints/cli/config/recovery.py:1`). The earlier text made verified recovery mandatory at creation and denied any post-creation enrollment writer; that text contradicted both the successor decision and the code and is replaced above. Accepted 2026-09-23 under the user's standing pre-approval of modifications.
+Amended 2026-09-23. Recovery is optional and independent, as `2026-08-13-recovery-mnemonic-presentation-successor-adr` records and as the product implements: creation publishes the profile before recovery is offered (`src/cadrumo/entrypoints/cli/config/scripted_registration.py:26`), and `cadrumo-runtime config profile recovery enable`, `cadrumo-runtime config profile recovery disable` and `cadrumo-runtime config profile recovery status` enroll and remove it afterwards under current-password proof (`src/cadrumo_runtime/commands/recovery.py:1`). The earlier text made verified recovery mandatory at creation and denied any post-creation enrollment writer; that text contradicted both the successor decision and the code and is replaced above. Accepted 2026-09-23 under the user's standing pre-approval of modifications.
 
 ### Transactions and immutable capsule publication
 
@@ -146,3 +148,13 @@ Profile handover is scoped to one frontend context and its candidate session. Ot
 Portable backups exclude all automation records and protected secrets, in addition to existing session exclusions; restore never restores delegation. Existing password/recovery formats, KDF/sentinel rules, transactional publication, local deletion scope and the limit on detecting coherent full-state rollback remain unchanged. The new decision owns the delegated contract and its CLI/TUI controls.
 
 Amendment accepted 2026-10-04 under the operator's acceptance of `2026-10-04-application-sign-in-adr`. The human acceleration receipt also binds the originating login and the profile's durable sign-in generation. It is minted only after its session is published, stamped with the generation captured at publication. Only the runtime profile host mints, extends or deletes it. Frontends present the proof and never unwrap the DEK. The throttle rule, where missing or corrupt state means clear, is unchanged.
+
+### Amendment 2026-10-14: runtime-owned recovery commands
+
+Recovery-code administration is now served by `cadrumo-runtime config profile recovery enable|disable|status`, defined in `cadrumo_runtime.commands.recovery`. Direct `aeat config login`, `aeat config logout`, and `aeat config profile create` remain AEAT commands. This changes the current command owner and source locator only; the recovery proof, storage, and custody rules in this record remain unchanged.
+
+## Amendment 2026-10-18: runtime authority boundary
+
+Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
+
+The wording "This protocol is enforced at the application enrollment boundary" above is kept as accepted history. It now reads together with this ruling: The password envelope, bounded KDF supervision, recovery enrolment and proof, capsule publication transactions, the failed-attempt throttle and the human receipt are implemented and enforced in `src/cadrumo_runtime`. Every Argon2 child is spawned by a runtime-owned process only, and no frontend process generates, wraps or unwraps a DEK. Formats, parameters, throttle rules, recovery independence and deletion scope in this record are unchanged; the move changes code location, not bytes.

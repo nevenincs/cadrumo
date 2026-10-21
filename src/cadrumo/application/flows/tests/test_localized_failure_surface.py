@@ -151,7 +151,7 @@ def test_engine_validation_failure_renders_localized() -> None:
     state = start_flow(definition, mode=FlowMode.CREATE)
     state = answer(definition, state, "p1", "")
     verdicts = state.verdicts.get("p1")
-    assert verdicts, "blank answer on a required page must record a failing verdict"
+    assert verdicts is not None and verdicts, "blank answer on a required page must record a failing verdict"
     key = verdicts[0].message_key
     assert key is not None
     rendered = {locale: tr(key, locale=locale, default=_SENTINEL, **verdicts[0].context) for locale in _LOCALES}

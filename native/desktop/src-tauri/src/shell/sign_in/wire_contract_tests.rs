@@ -52,6 +52,32 @@ fn python_login_refusals_project_only_the_shell_code_and_typed_countdown() {
 }
 
 #[test]
+fn diagnostic_stderr_keeps_one_final_refusal_without_accepting_ambiguous_envelopes() {
+    let envelope = serde_json::to_vec(&fixture("credential-rejected")).unwrap();
+    let mut stderr = b"ERROR runtime startup refused\r\n".to_vec();
+    stderr.extend_from_slice(&envelope);
+    stderr.extend_from_slice(b"\r\n");
+    let mut output = Output {
+        success: false,
+        stdout: Zeroizing::new(Vec::new()),
+        stderr: Zeroizing::new(stderr),
+    };
+    assert_eq!(
+        serde_json::to_value(login(decode("login", &output).unwrap()).unwrap()).unwrap(),
+        json!({"kind": "refused", "code": "CREDENTIAL_REJECTED", "retryAfterSeconds": null})
+    );
+    output.stderr.extend_from_slice(&envelope);
+    assert!(decode("login", &output).is_err());
+    output.stderr = Zeroizing::new(envelope.clone());
+    output.stderr.extend_from_slice(b"\ntrailing diagnostic");
+    assert!(decode("login", &output).is_err());
+    output.success = true;
+    output.stdout = Zeroizing::new(b"unexpected prefix\n".to_vec());
+    output.stdout.extend_from_slice(&envelope);
+    assert!(decode("login", &output).is_err());
+}
+
+#[test]
 fn throttle_metadata_is_required_and_never_inferred_from_a_message_or_wait_alone() {
     for seconds in [
         Value::Null,
@@ -84,36 +110,6 @@ fn throttle_metadata_is_required_and_never_inferred_from_a_message_or_wait_alone
             "kind":"refused", "code":"authentication_required", "retryAfterSeconds":null
         })
     );
-}
-
-#[test]
-fn python_status_distinguishes_presence_unavailability_and_untrusted_runtime() {
-    for (case, presence, available, refusal) in [
-        ("status-present", "present", true, Value::Null),
-        ("status-absent", "absent", true, Value::Null),
-        ("status-unknown", "unknown", true, Value::Null),
-        (
-            "runtime-unavailable",
-            "unknown",
-            false,
-            json!({"code":"runtime_unavailable","retryAfterSeconds":null}),
-        ),
-        (
-            "runtime-untrusted",
-            "unknown",
-            true,
-            json!({"code":"runtime_peer_untrusted","retryAfterSeconds":null}),
-        ),
-    ] {
-        assert_eq!(
-            serde_json::to_value(status(from_document(fixture(case)).unwrap()).unwrap()).unwrap(),
-            json!({
-                "supported":true, "state":presence, "active_profile":"Test profile",
-                "runtimeAvailable":available, "refusal":refusal
-            }),
-            "{case}"
-        );
-    }
 }
 
 #[test]
@@ -183,17 +179,22 @@ fn persisted_login_observation_requires_a_coherent_authenticated_label() {
 
 #[test]
 fn python_logout_keeps_known_and_unknown_automation_separate_and_propagates_refusal() {
-    for (case, enabled) in [
-        ("logout-true", json!(true)),
-        ("logout-false", json!(false)),
-        ("logout-none", Value::Null),
+    for (case, enabled, access_remains) in [
+        ("logout-true", json!(true), json!(true)),
+        ("logout-false", json!(false), json!(false)),
+        ("logout-none", Value::Null, Value::Null),
     ] {
         let outcome = logout(from_document(fixture(case)).unwrap()).ok().unwrap();
         assert_eq!(
             serde_json::to_value(outcome).unwrap(),
             json!({
-                "remainingAccess":{"automationEnabled":enabled,"automationRevoked":false}
-            })
+                "remainingAccess":{
+                    "automationEnabled":enabled,
+                    "automationAccessRemains":access_remains,
+                    "automationRevoked":false
+                }
+            }),
+            "{case}"
         );
     }
     let refusal = logout(from_document(fixture("logout-refused")).unwrap())
@@ -206,6 +207,36 @@ fn python_logout_keeps_known_and_unknown_automation_separate_and_propagates_refu
     let mut revoked = fixture("logout-true");
     revoked["result"]["automation_revoked"] = json!(true);
     assert!(logout(from_document(revoked).unwrap()).is_err());
+}
+
+#[test]
+fn python_logout_access_is_carried_for_both_values_and_refused_when_absent() {
+    // A key the person issued that can still admit, and one that cannot.
+    for remains in [json!(true), json!(false), Value::Null] {
+        let mut document = fixture("logout-true");
+        document["result"]["automation_access_remains"] = remains.clone();
+        let outcome = logout(from_document(document).unwrap()).ok().unwrap();
+        assert_eq!(
+            serde_json::to_value(outcome).unwrap()["remainingAccess"]["automationAccessRemains"],
+            remains
+        );
+    }
+    // The producer writes the field in every logout result. Its absence is a
+    // product that does not know the question, so it is not read as an answer.
+    for case in ["logout-true", "logout-false", "logout-none"] {
+        let mut document = fixture(case);
+        document["result"]
+            .as_object_mut()
+            .unwrap()
+            .remove("automation_access_remains")
+            .unwrap();
+        assert!(logout(from_document(document).unwrap()).is_err(), "{case}");
+    }
+    for malformed in [json!("true"), json!(0), json!(1), json!({}), json!([])] {
+        let mut document = fixture("logout-true");
+        document["result"]["automation_access_remains"] = malformed;
+        assert!(logout(from_document(document).unwrap()).is_err());
+    }
 }
 
 fn output_of(document: Value) -> Output {

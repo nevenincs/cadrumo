@@ -9,13 +9,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.capabilities import ServiceCapability
 from .auth.operator_probe_ports import OperatorProbePorts
 from .preflight import PreflightCheck, run_preflight_checks
 from .provisioning import DependencyStatus, HardwareProfile
 from .provisioning_runtime import ContentionSnapshot
-from .user_profile.access_contracts import AccessDenialCode
 from .user_profile.access_errors import ProfileAccessRefusedError
 from .user_profile.capabilities import CapabilityDecision, resolve_active_capability
 

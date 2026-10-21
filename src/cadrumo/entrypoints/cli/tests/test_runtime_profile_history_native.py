@@ -10,22 +10,22 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ....application.user_profile.login_session import resolve_login_target
-from ....core.redaction.rules import redact_structured_for_cli_output
-from ....core.type_guards import is_str_keyed_dict
-from ....domain.buckets.event import (
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.application.user_profile.login_session import resolve_login_target
+from cadrumo.core.redaction.rules import redact_structured_for_cli_output
+from cadrumo.core.type_guards import is_str_keyed_dict
+from cadrumo.domain.buckets.event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
     BucketEventObjectType,
     BucketEventType,
     derive_bucket_event_id,
 )
-from ....tests.cli_envelope import require_error_document, unwrap_cli_result
-from .._config_bucket_history_payloads import BucketHistoryEventPayload, BucketHistoryResult
-from .cli_runner import invoke_cached_cli
-from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
+
+from ..profile_history_results import BucketHistoryEventPayload, BucketHistoryResult
+from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke_joined_cli
 
 pytestmark = [
     pytest.mark.integration,
@@ -36,14 +36,14 @@ pytestmark = [
 
 
 def _invoke(
-    profile: NativeCliProfileFixture,
+    profile: RegisteredCliProfile,
     *command: str,
     json_output: bool = True,
 ) -> Result:
     assert profile.label is not None
     close_active_bucket_session()
     output_args = ("--format", "json" if json_output else "text")
-    result = invoke_cached_cli(
+    result = invoke_joined_cli(
         (*output_args, "--profile", profile.label, "--profile-secrets-stdin", *command),
         input=json.dumps({"profile_passphrase": profile.passphrase}),
     )
@@ -93,7 +93,7 @@ def _redacted_cli_payload(payload: object) -> dict[str, object]:
 
 def test_native_profile_history_preserves_full_events_filters_and_exact_target(tmp_path: Path) -> None:
     """Both parsed target forms return complete history; an unknown exact target refuses."""
-    with native_cli_profile_scope(tmp_path) as profile:
+    with cli_world_provider().native_profile(tmp_path) as profile:
         profile.register(label="native-profile-history", facts={})
         assert profile.label is not None
         profile_id = resolve_login_target(profile.label).bucket_id

@@ -7,8 +7,6 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
     AccessSession,
     ProfileAccessBinding,
     SessionKind,
@@ -19,16 +17,16 @@ from cadrumo.application.user_profile.automation_administration import (
     enrollment_review_digest,
     reconcile_automation_receipt,
 )
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentControlState,
-    EnrollmentKind,
-    EnrollmentProposal,
     EnrollmentRecord,
     EnrollmentRequester,
     EnrollmentStage,
 )
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -77,7 +75,7 @@ def record() -> EnrollmentRecord:
 
 
 @pytest.mark.parametrize("field", ["client_id", "approved", "password", "dek", "api_key", "proof"])
-def test_agent_cannot_submit_identity_consent_or_secret_fields(record: EnrollmentRecord, field: str) -> None:
+def test_external_client_cannot_submit_identity_consent_or_secret_fields(record: EnrollmentRecord, field: str) -> None:
     data = {**record.proposal.model_dump(mode="json"), field: "UNTRUSTED-INPUT-SENTINEL"}
     with pytest.raises(ValidationError) as failure:
         EnrollmentProposal.model_validate_json(canonical_json_bytes(data))

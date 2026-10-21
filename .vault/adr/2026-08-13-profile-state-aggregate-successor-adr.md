@@ -7,9 +7,9 @@ related:
   - "[[2026-08-13-profile-password-custody-research]]"
 supersedes:
   - '2026-05-21-profile-state-aggregate-adr'
-modified: '2026-08-14'
+modified: '2026-10-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:485d2aa22fa2a06a21e2a6382f1a5e608b0e85dc140348f207d5e339b1e7a4da'
+body_hash: 'sha256:0c63517c792b6acfddf262a59d8dfbd3ef1b1508d325f95ef48a5a5002a145a0'
 ---
 # `profile-state-aggregate` adr: `non-authoritative profile state projection` | (**status:** `accepted`)
 
@@ -50,3 +50,9 @@ Separating physical lifecycle, encrypted semantic state, and presentation projec
 ## Consequences
 
 Locked listing remains available without decrypting profile facts, while fact-dependent commands require an authenticated profile session. Callers must handle typed unavailable projections and stale-write refusal. The retired mixed lifecycle repository, generic mutation doors, duplicated display name, tombstone, and reactivation semantics cannot remain as compatibility surfaces.
+
+## Amendment 2026-10-18: runtime authority boundary
+
+Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
+
+The wording "`ProfileLifecycleService` is the sole physical lifecycle writer." above is kept as accepted history. It now reads together with this ruling: The physical lifecycle writer is hosted in `src/cadrumo_runtime`. `ProfileRecordRepository` stays tax-owned in `src/cadrumo`; inside the profile worker it receives key material only through an inward port the tax package defines and the runtime binds, and it never opens, extends or closes the session that supplies it. Locked discovery and listing remain tax-owned and need no runtime.

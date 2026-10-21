@@ -147,7 +147,17 @@ class PersistenceSurfaceSpec:
 
     @classmethod
     def for_repository(cls) -> PersistenceSurfaceSpec:
-        """The anchor this repository's live snapshot services actually use."""
+        """The anchor this repository's live snapshot services actually use.
+
+        The anchor is the tax product's AEAT snapshot lifecycle, so it lives in
+        ``cadrumo``. Subclasses, writers and readers are still resolved across
+        every audited source package, so a surface defined or filled from the
+        client, runtime, harness or agent service is seen. Those packages keep
+        their own state through other mechanisms (runtime custody descriptors,
+        agent-service stores) that have no capture/read verb split for this
+        scan to measure; the gate stops at this hierarchy and does not claim
+        their stores have writers.
+        """
         return cls(
             base_module="cadrumo.application.live.snapshot_base",
             base_classes=("SnapshotService", "StatelessSnapshotService"),
@@ -599,9 +609,7 @@ def _script_reachable(spec: ShippedTreeSpec, modules: dict[str, ShippedModule]) 
     """Modules a declared console script reaches, the audit's strongest liveness."""
     known = frozenset(modules)
     edges = {name: module_edges(module, known)[0] for name, module in modules.items()}
-    companion_entries = tuple(entry for companion in spec.companions for entry in companion.entry_points)
-    roots = [entry.module for entry in spec.entry_points] + [entry.module for entry in companion_entries]
-    return reachable_closure(roots, modules, edges)
+    return reachable_closure([entry.module for entry in spec.entry_points], modules, edges)
 
 
 def _surface_findings(

@@ -20,7 +20,7 @@ registry (``schemas.rst``).
 
 The generator is documentation tooling.  It lives under ``dev/docs`` and
 introspects the production package from outside rather than being part of the
-``cadrumo`` runtime package.
+``cadrumo`` tax application package.
 
 Language pinning
 ----------------
@@ -60,7 +60,7 @@ from dev.product_environment import ambient_product_settings_removed
 from ._locale_chrome import chrome_anchor, docs_chrome, markup_page, same_wording
 
 if TYPE_CHECKING:
-    from cadrumo.entrypoints.cli.command_spec import CommandSpecNode
+    from cadrumo_client.commands.spec import CommandSpecNode
 
 #: Group-callback emit sites - keys registered under a group callback rather
 #: than a leaf command.  These are excluded from the per-command reference
@@ -211,8 +211,8 @@ def _rst_heading(text: str, char: str) -> str:
 def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec: object) -> str:
     """Render one authored command specification without runtime tree inspection."""
     from cadrumo.core.i18n.render import tr
-    from cadrumo.entrypoints.cli.command_parameter_contracts import ArgumentSpec
-    from cadrumo.entrypoints.cli.command_spec import CommandSpec
+    from cadrumo_client.commands.parameters import ArgumentSpec
+    from cadrumo_client.commands.spec import CommandSpec
 
     if not isinstance(spec, CommandSpec):
         raise TypeError("CLI reference received a non-CommandSpec node")
@@ -546,6 +546,27 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
         schemas = _render_schemas_page(language, schema_registry, group_entries)
     rendered["cli/schemas.rst"] = schemas
     _write_text_if_changed(output_dir / "schemas.rst", schemas)
+
+    # The command graph can lose a group while the generated source tree still
+    # contains its old page. Leaving that page behind makes it an orphan in the
+    # Sphinx toctree and can fail strict documentation builds. Every RST page
+    # beneath ``docs/cli`` is owned by this projection; keep unrelated assets
+    # and directories, and remove only stale RST files within this output root.
+    output_root = output_dir.resolve()
+    expected_pages = set(rendered)
+    for candidate in scan_directory(output_dir, pattern="*.rst", recursive=True):
+        relative = candidate.relative_to(output_dir).as_posix()
+        if f"cli/{relative}" in expected_pages:
+            continue
+        if candidate.is_symlink():
+            raise RuntimeError(f"refusing to prune symlink from generated CLI reference: {candidate}")
+        resolved_candidate = candidate.resolve()
+        try:
+            resolved_candidate.relative_to(output_root)
+        except ValueError as exc:
+            raise RuntimeError(f"refusing to prune CLI page outside generated output root: {candidate}") from exc
+        if candidate.is_file():
+            candidate.unlink()
     return rendered
 
 

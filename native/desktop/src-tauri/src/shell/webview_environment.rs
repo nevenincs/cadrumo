@@ -109,6 +109,39 @@ pub fn refuse_overrides() -> Result<()> {
     check(std::env::vars_os(), Policy::of_this_build())
 }
 
+/// The port the packaged test host's workspace window serves DevTools on.
+/// Read only by that host; no other build knows the name. The browser
+/// arguments variable reaches every window's browser, and the loading
+/// window's, started first, takes the port, so the workspace's could never
+/// serve it once the loading window closes.
+#[cfg(feature = "webview2-remote-debugging")]
+pub const DEVTOOLS_PORT: &str = "CADRUMO_DEV_DESKTOP_DEVTOOLS_PORT";
+
+/// The arguments the WebView2 runtime would otherwise get from Tauri.
+#[cfg(any(test, feature = "webview2-remote-debugging"))]
+const DEFAULT_BROWSER_ARGUMENTS: &str =
+    "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection";
+
+/// The workspace window's browser arguments when the lane names a DevTools
+/// port, which must be one a remote debugging argument admits.
+#[cfg(feature = "webview2-remote-debugging")]
+pub fn workspace_browser_arguments() -> Option<String> {
+    workspace_arguments(std::env::var_os(DEVTOOLS_PORT)?)
+}
+
+#[cfg(any(test, feature = "webview2-remote-debugging"))]
+fn workspace_arguments(port: OsString) -> Option<String> {
+    let argument = format!("--remote-debugging-port={}", port.to_str()?);
+    remote_debugging_port(&OsString::from(&argument))
+        .then(|| format!("{DEFAULT_BROWSER_ARGUMENTS} {argument}"))
+}
+
+/// Every other build leaves the workspace window's arguments to Tauri.
+#[cfg(not(feature = "webview2-remote-debugging"))]
+pub fn workspace_browser_arguments() -> Option<String> {
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -153,6 +186,19 @@ mod tests {
         "WEBVIEW2_CHANNEL_SEARCH_KIND",
         "WEBVIEW2_USE_EDGE_VIEW",
     ];
+
+    #[test]
+    fn the_workspace_port_is_one_remote_debugging_port_or_none() {
+        assert_eq!(
+            workspace_arguments("9222".into()).as_deref(),
+            Some(
+                "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --remote-debugging-port=9222"
+            )
+        );
+        for refused in ["", "0", "09222", "65536", "9222 --inspect", "-1", "port"] {
+            assert_eq!(workspace_arguments(refused.into()), None, "{refused}");
+        }
+    }
 
     #[test]
     fn every_override_is_refused_in_a_packaged_build() {

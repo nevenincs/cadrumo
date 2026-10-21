@@ -18,7 +18,7 @@ deductible-evidence promotion depends on.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import replace
 from datetime import UTC, date, datetime
@@ -42,7 +42,6 @@ from cadrumo.application.aggregation.ledger_membership import LedgerSourceMember
 from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.actions_manual import (
     attach_manual_transaction_evidence,
-    create_manual_transaction,
     update_manual_transaction_fields,
 )
 from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
@@ -81,6 +80,8 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 )
 from cadrumo.tests.env_scope import ready_clave_settings
 
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
+
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -102,7 +103,7 @@ def _ledger_ports(
     objects: SecureObjectRepository,
     tx_repo: TransactionCatalogueRepository,
     event_repo: BucketEventHistoryRepository,
-) -> Iterator[LedgerActionPorts]:
+) -> Generator[LedgerActionPorts]:
     """Yield canonical ledger ports over the isolated repositories."""
     with ledger_ports_for_test(
         bucket_id=BUCKET_ID,

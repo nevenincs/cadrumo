@@ -71,7 +71,7 @@ pub fn manager_entry_points(application_id: &str) -> io::Result<ManagerEntryPoin
         if result != 0 {
             return Err(io::Error::from_raw_os_error(result));
         }
-        if bytes < 2 || bytes as usize > data.len() * 2 || bytes % 2 != 0 {
+        if bytes < 2 || bytes as usize > data.len() * 2 || !bytes.is_multiple_of(2) {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
                 "invalid entry point size",

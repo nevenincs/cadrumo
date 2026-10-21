@@ -12,7 +12,7 @@ from ....application.ledger.invoice_evidence_operation_dtos import (
 )
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.i18n.render import tr
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from .models import LedgerEvidenceDraftV1
 
 _KIND_LOCALE_KEYS: Final[dict[InvoiceKind, str]] = {

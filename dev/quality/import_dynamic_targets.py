@@ -3,112 +3,20 @@
 from __future__ import annotations
 
 import ast
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from cadrumo.tests.module_target_inventory import MetadataTargetSetError, load_all_target_sets, load_target_set
 
 from .import_check_models import SourceModule
-from .import_module_syntax import is_first_party, qualified_name, resolve_from
+from .import_module_syntax import qualified_name, resolve_from
 from .import_target_evaluation import TargetEvaluationContext
 
+if TYPE_CHECKING:
+    from .import_record_provenance import RecordTargetProvenance
+
 _MAX_CLOSED_DYNAMIC_TARGETS: Final[int] = 4096
-
-
-def discover_closed_attribute_targets(
-    modules: Mapping[str, SourceModule], root_names: frozenset[str], known: frozenset[str]
-) -> frozenset[str]:
-    """Derive the finite module values carried by object ``.module`` fields.
-
-    The product's outer resolvers pass immutable target records into
-    ``import_module`` rather than keeping a second import map beside the
-    declarations.  A checker that only evaluates bare strings would therefore
-    mistake ``import_module(target.module)`` for an open computation.  Harvest
-    the literal constructor values that can populate a module field, resolving
-    relative values against the constructor's explicit package argument.  This
-    is a closed set derived from source, not an allowlist: an unknown or
-    unbounded constructor expression contributes nothing and remains a finding.
-    """
-    targets: set[str] = set()
-    module_record_classes = _module_record_classes(modules)
-    if not module_record_classes:
-        return frozenset[str]()
-    return _collect_closed_attribute_targets(modules, root_names, known, targets, module_record_classes)
-
-
-def _module_record_classes(modules: Mapping[str, SourceModule]) -> frozenset[str]:
-    """Find record classes that declare a ``module`` field."""
-    classes: set[str] = set()
-    for module in modules.values():
-        for node in module.tree.body:
-            _collect_module_record_class(node, module, classes)
-    return frozenset(classes)
-
-
-def _is_module_record_constructor(module: SourceModule, call: ast.Call, module_record_classes: frozenset[str]) -> bool:
-    """Return whether a call names a locally or explicitly imported module record."""
-    if not isinstance(call.func, ast.Name):
-        return False
-    local_name = call.func.id
-    if f"{module.name}.{local_name}" in module_record_classes:
-        return True
-    binding = module.bindings.get(local_name)
-    if binding is None or binding.target is None or binding.imported_name is None:
-        return False
-    return f"{binding.target}.{binding.imported_name}" in module_record_classes
-
-
-def _constructor_argument(node: ast.Call, name: str, *, positional_index: int) -> ast.AST | None:
-    """Return one constructor field expression without naming a product class."""
-    for keyword in node.keywords:
-        if keyword.arg == name:
-            return keyword.value
-    return node.args[positional_index] if len(node.args) > positional_index else None
-
-
-def _resolve_constructor_target(
-    module: SourceModule,
-    value: str,
-    package_node: ast.AST | None,
-    call: ast.Call,
-    context: TargetEvaluationContext,
-) -> str | None:
-    """Resolve one literal constructor module value, or reject it as open."""
-    if not value.startswith("."):
-        return value
-    if package_node is None:
-        return None
-    if isinstance(package_node, ast.Name) and package_node.id == "__package__":
-        package = module.name if module.is_package else module.name.rpartition(".")[0]
-    else:
-        package_values = context.values_for(package_node, call.lineno)
-        if package_values is None or len(package_values) != 1:
-            return None
-        package = next(iter(package_values))
-    level = len(value) - len(value.lstrip("."))
-    remainder = value[level:] or None
-    return resolve_from(package, True, level, remainder)
-
-
-def computed_attribute_targets(
-    target_node: ast.AST,
-    lineno: int,
-    context: TargetEvaluationContext,
-    closed_attribute_targets: frozenset[str],
-) -> frozenset[str] | None:
-    """Return the closed set for a projected module field, if one exists."""
-    if isinstance(target_node, ast.Attribute) and target_node.attr == "module" and closed_attribute_targets:
-        return closed_attribute_targets
-    if isinstance(target_node, ast.Name) and closed_attribute_targets:
-        scope = context.nearest_function(target_node)
-        assignments = context.latest_values(target_node.id, lineno, scope)
-        if assignments and any(
-            _is_module_projection_expression(assignment.value, context, lineno, scope, set())
-            for assignment in assignments
-        ):
-            return closed_attribute_targets
-    return None
 
 
 def metadata_target_set_targets(
@@ -161,7 +69,7 @@ def _metadata_target_set_candidate_nodes(
     if key in resolving:
         return
     assignments = context.latest_values(node.id, lineno, scope)
-    if not assignments:
+    if not (assignments is not None and assignments):
         return
     resolving.add(key)
     for assignment in assignments:
@@ -196,34 +104,18 @@ def _metadata_target_set_loader(module: SourceModule, function: ast.AST) -> str 
     return expected.get(resolved)
 
 
-def _is_module_projection_expression(
-    node: ast.AST,
+def dynamic_target(
+    module: SourceModule,
+    target: str,
+    call: ast.Call,
     context: TargetEvaluationContext,
-    lineno: int,
-    scope: ast.AST | None,
-    resolving: set[str],
-) -> bool:
-    """Recognise a finite expression that projects target records' module fields."""
-    if isinstance(node, (ast.SetComp, ast.ListComp, ast.GeneratorExp)):
-        return isinstance(node.elt, ast.Attribute) and node.elt.attr == "module"
-    if isinstance(node, ast.Name) and node.id not in resolving:
-        assignments = context.latest_values(node.id, lineno, scope)
-        if assignments:
-            resolving.add(node.id)
-            result = any(
-                _is_module_projection_expression(assignment.value, context, lineno, scope, resolving)
-                for assignment in assignments
-            )
-            resolving.remove(node.id)
-            return result
-    return False
-
-
-def dynamic_target(module: SourceModule, target: str, call: ast.Call, context: TargetEvaluationContext) -> str | None:
+    *,
+    record_provenance: RecordTargetProvenance | None = None,
+) -> str | None:
     """Resolve one dynamic target against its explicit package anchor."""
     if not target.startswith("."):
         return target
-    package = _dynamic_package(module, call, context)
+    package = _dynamic_package(module, call, context, record_provenance)
     if package is None:
         return None
     level = len(target) - len(target.lstrip("."))
@@ -231,23 +123,12 @@ def dynamic_target(module: SourceModule, target: str, call: ast.Call, context: T
     return resolve_from(package, True, level, remainder)
 
 
-def _collect_module_record_class(node: ast.stmt, module: SourceModule, classes: set[str]) -> None:
-    """Collect module record class."""
-    if not isinstance(node, ast.ClassDef):
-        return
-    fields = {
-        item.target.id for item in node.body if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name)
-    }
-    fields.update(
-        item.targets[0].id
-        for item in node.body
-        if isinstance(item, ast.Assign) and len(item.targets) == 1 and isinstance(item.targets[0], ast.Name)
-    )
-    if "module" in fields:
-        classes.add(f"{module.name}.{node.name}")
-
-
-def _dynamic_package(module: SourceModule, call: ast.Call, context: TargetEvaluationContext) -> str | None:
+def _dynamic_package(
+    module: SourceModule,
+    call: ast.Call,
+    context: TargetEvaluationContext,
+    record_provenance: RecordTargetProvenance | None,
+) -> str | None:
     """Dynamic package."""
     package_node = next((keyword.value for keyword in call.keywords if keyword.arg == "package"), None)
     if package_node is None and len(call.args) > 1:
@@ -256,59 +137,12 @@ def _dynamic_package(module: SourceModule, call: ast.Call, context: TargetEvalua
         package = module.name if module.is_package else module.name.rpartition(".")[0]
     else:
         package_values = context.values_for(package_node, call.lineno)
+        if package_values is None and record_provenance is not None and package_node is not None:
+            package_values = record_provenance.targets(module.name, package_node)
         if package_values is None or len(package_values) != 1:
             return None
         package = next(iter(package_values))
     return package
-
-
-def _collect_closed_attribute_targets(
-    modules: Mapping[str, SourceModule],
-    root_names: frozenset[str],
-    known: frozenset[str],
-    targets: set[str],
-    module_record_classes: frozenset[str],
-) -> frozenset[str]:
-    """Collect closed attribute targets."""
-    for module in modules.values():
-        constructors = [
-            node
-            for node in ast.walk(module.tree)
-            if isinstance(node, ast.Call) and _is_module_record_constructor(module, node, module_record_classes)
-        ]
-        if not constructors:
-            continue
-        context = TargetEvaluationContext(module.tree, module.name)
-        for node in constructors:
-            if not _collect_constructor_targets(node, module, context, targets, root_names, known):
-                return frozenset[str]()
-    return frozenset(targets)
-
-
-def _collect_constructor_targets(
-    node: ast.Call,
-    module: SourceModule,
-    context: TargetEvaluationContext,
-    targets: set[str],
-    root_names: frozenset[str],
-    known: frozenset[str],
-) -> bool:
-    """Collect bounded canonical targets from one constructor."""
-    module_node = _constructor_argument(node, "module", positional_index=0)
-    if module_node is None:
-        return True
-    values = context.values_for(module_node, node.lineno)
-    if values is None:
-        return True
-    package_node = _constructor_argument(node, "package", positional_index=2)
-    for value in values:
-        resolved = _resolve_constructor_target(module, value, package_node, node, context)
-        if resolved is None or not is_first_party(resolved, root_names) or resolved not in known:
-            continue
-        targets.add(resolved)
-        if len(targets) > _MAX_CLOSED_DYNAMIC_TARGETS:
-            return False
-    return True
 
 
 def _load_metadata_paths(

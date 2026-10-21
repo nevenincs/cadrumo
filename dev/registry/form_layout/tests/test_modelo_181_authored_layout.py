@@ -21,7 +21,7 @@ def test_181_summary_preserves_official_boxes_and_all_registry_fields() -> None:
     assert layout.review.state.value == "generated"
     assert len(layout.placements) == len(revision.casillas) == 62
     assert {p.casilla_id for p in layout.placements} == {c.id for c in revision.casillas}
-    assert {p.casilla_id: p.box_number for p in layout.placements if p.box_number} == {
+    assert {p.casilla_id: p.box_number for p in layout.placements if (p.box_number is not None and p.box_number)} == {
         "numero-total-declarados": "01",
         "importe-total-capital-amortizado": "02",
         "importe-total-intereses": "03",

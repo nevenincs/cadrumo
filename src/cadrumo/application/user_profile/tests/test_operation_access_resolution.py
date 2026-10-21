@@ -10,7 +10,6 @@ import pytest
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
@@ -20,6 +19,8 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     ProfileFieldMutationOperationRequest,
 )
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from .foreign_operation_payload import ForeignProfilePayload
 
@@ -37,7 +38,7 @@ def test_profile_owner_resolves_only_exact_registered_work(wrong_coordinate: str
         profile_id=profile,
         destination_id=uuid4(),
         action=AccessAction.COMMIT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         contract=registry.lookup_public_contract(PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID),
         published_authority=Availability.AVAILABLE,
     )

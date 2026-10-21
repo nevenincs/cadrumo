@@ -30,7 +30,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.invoices.enums import InvoiceLegalMention, resolve_iva_rate_token
 
 from ....core.resources.bundled_data import bundled_path
-from ...iva.classification import InvoiceKind
+from ...iva.schema import InvoiceKind
 from ..enums import PaymentStatus
 from ..models import Invoice, InvoiceLine
 

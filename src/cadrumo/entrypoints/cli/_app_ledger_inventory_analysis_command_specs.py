@@ -1,17 +1,7 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ._app_ledger_command_spec_policies import (
-    _POLICY_4,
-    _POLICY_6,
-)
-from .app_ledger_inventory_common_command_parameters import (
-    INVENTORY_ACTIVIDAD_ID_OPTION,
-    INVENTORY_YEAR_OPTION,
-)
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -21,7 +11,17 @@ from .command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from .command_spec import CommandSpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._app_ledger_command_spec_policies import (
+    _POLICY_4,
+    _POLICY_6,
+)
+from .app_ledger_inventory_common_command_parameters import (
+    INVENTORY_ACTIVIDAD_ID_OPTION,
+    INVENTORY_YEAR_OPTION,
+)
 
 LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -151,7 +151,9 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("._ledger_inventory_cli", "inventory_movement_add", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".ledger_inventory_commands", "inventory_movement_add", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "InventoryMovementAddResult", __package__),
@@ -172,7 +174,7 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_6,
         handler=LazyBinding.available(
-            DeferredTarget("._ledger_inventory_cli", "inventory_valuation_preview", __package__)
+            DeferredTarget(".ledger_inventory_commands", "inventory_valuation_preview", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,

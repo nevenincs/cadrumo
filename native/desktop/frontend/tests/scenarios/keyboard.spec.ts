@@ -1,11 +1,31 @@
+import { openPanelTab } from "../support/panel";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 
 // The shell by keyboard alone: tab stops, arrow-key patterns, shortcuts, and
 // where focus goes when a surface opens and closes.
 
-const open = (target: Page, scenario = "signed-in") =>
-  target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
+const open = async (target: Page, scenario = "signed-in") => {
+  await target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
+  // Panel interaction tests open it explicitly after each fresh launch.
+  if (scenario === "signed-in") {
+    await expect(
+      target
+        .getByRole("navigation", { name: label("desktop.rail.label") })
+        .getByRole("button", {
+          name: label("desktop.rail.agent"),
+          exact: true,
+        }),
+    ).not.toHaveAttribute("aria-disabled", "true");
+    await openPanelTab(target, "console");
+    await expect(
+      target.locator('[data-terminal="console"] textarea'),
+    ).toBeFocused();
+  } else if (scenario === "loading") {
+    await openPanelTab(target, "console");
+  } else await target.keyboard.press("Control+Backquote");
+};
 
 const rail = (target: Page) =>
   target.getByRole("navigation", { name: label("desktop.rail.label") });
@@ -16,11 +36,6 @@ test.beforeEach(async ({ page: target }) => {
   await target.addInitScript(() => {
     if (sessionStorage.getItem("layout-cleared")) return;
     localStorage.clear();
-    // Exercise the full panel layout as a returning user's saved choice.
-    localStorage.setItem(
-      "cadrumo-shell-layout",
-      JSON.stringify({ layout: { panelOpen: true } }),
-    );
     sessionStorage.setItem("layout-cleared", "1");
   });
 });
@@ -46,6 +61,11 @@ test("a rail button names itself to a keyboard user", async ({
   page: target,
 }) => {
   await open(target);
+  // The panel opened takes the keyboard as it starts; the rail is focused
+  // after that, or its tooltip closes under the test.
+  await expect(
+    target.locator('[data-terminal="console"] textarea'),
+  ).toBeFocused();
   await rail(target).getByRole("button").first().focus();
   await expect(target.getByRole("tooltip")).toContainText(
     label("desktop.rail.search"),
@@ -80,6 +100,7 @@ test("the panel tabs follow the arrow keys and keep focus in the row", async ({
 test("both splitters move by the arrow keys and report their position", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target);
   // Each reports the share of the area it sizes: the documentation pane for
   // the split, which the left arrow narrows, and the bottom panel for its
@@ -145,13 +166,21 @@ test("the palette opens by chord, runs by Enter and returns focus", async ({
   const palette = target.getByRole("dialog", {
     name: label("desktop.palette.label"),
   });
-  await expect(palette.getByRole("combobox")).toBeFocused();
+  await expect(
+    palette.getByRole("combobox", {
+      name: label("desktop.palette.label"),
+    }),
+  ).toBeFocused();
   // The arrow keys move the choice while focus stays in the input.
-  const options = palette.getByRole("option");
+  const options = palette.getByRole("listbox").getByRole("option");
   await expect(options.first()).toHaveAttribute("aria-selected", "true");
   await target.keyboard.press("ArrowDown");
   await expect(options.nth(1)).toHaveAttribute("aria-selected", "true");
-  await expect(palette.getByRole("combobox")).toBeFocused();
+  await expect(
+    palette.getByRole("combobox", {
+      name: label("desktop.palette.label"),
+    }),
+  ).toBeFocused();
   await target.keyboard.press("Escape");
   await expect(palette).toBeHidden();
   await expect(opener).toBeFocused();
@@ -164,10 +193,12 @@ test("an action run from the palette keeps the focus it takes", async ({
   await rail(target).getByRole("button").nth(1).focus();
   await target.keyboard.press("Control+KeyK");
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.rail.python"));
-  await expect(palette.getByRole("option").first()).toContainText(
-    label("desktop.rail.python"),
-  );
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.rail.python"));
+  await expect(
+    palette.getByRole("listbox").getByRole("option").first(),
+  ).toContainText(label("desktop.rail.python"));
   await target.keyboard.press("Enter");
   await expect(palette).toHaveCount(0);
   await expect(
@@ -175,7 +206,9 @@ test("an action run from the palette keeps the focus it takes", async ({
   ).toBeFocused();
   // Chosen by name, a view is shown, not toggled: choosing it again keeps it.
   await target.keyboard.press("Control+Shift+KeyK");
-  await palette.getByRole("combobox").fill(label("desktop.rail.python"));
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.rail.python"));
   await target.keyboard.press("Enter");
   await expect(target.locator('[data-terminal="python"]')).toBeVisible();
   await expect(
@@ -190,10 +223,12 @@ test("settings opened from the palette inside a terminal stays open", async ({
   await target.locator('[data-terminal="console"] .xterm-screen').click();
   await target.keyboard.press("Control+Shift+KeyK");
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.settings.title"));
-  await expect(palette.getByRole("option").first()).toContainText(
-    label("desktop.settings.title"),
-  );
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.settings.title"));
+  await expect(
+    palette.getByRole("listbox").getByRole("option").first(),
+  ).toContainText(label("desktop.settings.title"));
   await target.keyboard.press("Enter");
   const settings = target.locator(".settings");
   await expect(settings).toBeVisible();
@@ -211,6 +246,7 @@ test("settings opened from the palette inside a terminal stays open", async ({
 test("no chord reaches the shell from under the sign-in dialog", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-out");
   const dialog = target.locator(".sign-in");
   await expect(target.locator("#profile-password")).toBeFocused();
@@ -277,6 +313,7 @@ test("in settings taller than the window, the keyboard is never on something out
 test("F6 reaches the calendar where the documentation would be", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   // Short enough that the calendar has more than it can show at once.
   await target.setViewportSize({ width: 1280, height: 520 });
   await open(target);
@@ -351,6 +388,7 @@ test("F6 reaches the calendar where the documentation would be", async ({
 test("the calendar's chord shows it from a terminal and puts it away again", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target);
   await target.locator('[data-terminal="tui"] .xterm-screen').click();
   await expect(target.locator('[data-terminal="tui"] textarea')).toBeFocused();
@@ -374,6 +412,7 @@ test("the calendar's chord shows it from a terminal and puts it away again", asy
 test("the calendar's chord does nothing on a host without profile views", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "no-views");
   await expect(target.locator(".docs-frame")).toBeVisible();
   await rail(target).getByRole("button").first().focus();
@@ -383,6 +422,7 @@ test("the calendar's chord does nothing on a host without profile views", async 
 });
 
 test("F6 moves focus from area to area and back", async ({ page: target }) => {
+  await seedLayout(target);
   await open(target);
   await expect(target.locator(".docs-frame")).toBeVisible();
   await rail(target).getByRole("button").first().focus();
@@ -402,6 +442,36 @@ test("F6 moves focus from area to area and back", async ({ page: target }) => {
   await expect(
     target.locator('[data-terminal="console"] textarea'),
   ).toBeFocused();
+});
+
+test("F6 keeps a terminal focus request while its fonts load", async ({
+  page: target,
+}) => {
+  const waiting: (() => Promise<void>)[] = [];
+  const fonts = /jetbrains-mono.*\.woff2/;
+  await target.route(fonts, (route) => {
+    waiting.push(() => route.continue());
+  });
+  await seedLayout(target, {
+    layout: { agentShown: false, docsShown: false, tuiShown: true },
+  });
+  await target.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off", {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(
+    rail(target).getByRole("button", {
+      name: label("desktop.rail.agent"),
+      exact: true,
+    }),
+  ).not.toHaveAttribute("aria-disabled", "true");
+  await expect.poll(() => waiting.length).toBeGreaterThan(0);
+  const input = target.locator('[data-terminal="tui"] textarea');
+  await expect(input).toHaveCount(0);
+  await rail(target).getByRole("button").first().focus();
+  await target.keyboard.press("F6");
+  await Promise.all(waiting.map((release) => release()));
+  await target.unroute(fonts);
+  await expect(input).toBeFocused();
 });
 
 test("settings opens on the current choice, moves by arrows and returns focus", async ({
@@ -456,6 +526,9 @@ test("one Escape closes settings while a tooltip is showing elsewhere", async ({
   page: target,
 }) => {
   await open(target);
+  await rail(target)
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
+    .focus();
   await target.keyboard.press("Control+Comma");
   const settings = target.locator(".settings");
   await expect(settings).toBeVisible();
@@ -472,6 +545,7 @@ test("one Escape closes settings while a tooltip is showing elsewhere", async ({
 test("the shell's chords reach their actions from the chrome", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target);
   await rail(target).getByRole("button").first().focus();
   await target.keyboard.press("Control+Shift+KeyT");
@@ -509,6 +583,7 @@ test("a focused terminal keeps its own keys and yields only the global chords", 
 test("the sign-in dialog keeps Tab inside it and Escape hands focus on", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-out");
   const dialog = target.locator(".sign-in");
   await expect(target.locator("#profile-password")).toBeFocused();
@@ -552,10 +627,8 @@ test("a log record's detail opens and closes by keyboard", async ({
   page: target,
 }) => {
   await open(target);
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
-  const toggle = target.getByRole("button", {
+  await openPanelTab(target, "logs");
+  const toggle = target.locator('.record[data-seq="9"]').getByRole("button", {
     name: label("desktop.logs.details"),
   });
   await toggle.focus();
@@ -574,9 +647,7 @@ test("log records are reached, marked and given their menu by keyboard", async (
   page: target,
 }) => {
   await open(target);
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   const rows = target.locator(".logview-list .record");
   const count = await rows.count();
   expect(count).toBeGreaterThan(3);
@@ -639,13 +710,8 @@ test("log records are reached, marked and given their menu by keyboard", async (
 
 test("Enter on a record opens its detail", async ({ page: target }) => {
   await open(target);
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
-  const row = target
-    .locator(".logview-list .record")
-    .filter({ has: target.locator("[aria-expanded]") })
-    .first();
+  await openPanelTab(target, "logs");
+  const row = target.locator('.logview-list .record[data-seq="9"]');
   await row.focus();
   await target.keyboard.press("Enter");
   await expect(row.locator("pre")).toContainText("Traceback");
@@ -657,9 +723,7 @@ test("the menu stand-in follows the arrow keys and closes on Escape", async ({
   page: target,
 }) => {
   await open(target);
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   await target.locator(".record").first().click({ button: "right" });
   const menu = target.getByRole("menu");
   await expect(menu).toBeVisible();
@@ -676,8 +740,12 @@ test("a view chosen in the palette from inside a terminal takes focus every time
   const palette = target.locator(".palette");
   const choose = async (key: string) => {
     await target.keyboard.press("Control+Shift+KeyK");
-    await palette.getByRole("combobox").fill(label(key));
-    await expect(palette.getByRole("option").first()).toContainText(label(key));
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label(key));
+    await expect(
+      palette.getByRole("listbox").getByRole("option").first(),
+    ).toContainText(label(key));
     await target.keyboard.press("Enter");
     await expect(palette).toHaveCount(0);
   };
@@ -717,6 +785,7 @@ test("chords work while the sign-in state is still being read", async ({
 test("a chord sent from the documentation does not act under the sign-in dialog", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-out");
   await expect(target.locator("#profile-password")).toBeFocused();
   const page = target.frameLocator(".docs-frame").locator("body");
@@ -734,9 +803,7 @@ test("a press outside a record's menu keeps what it pressed", async ({
   page: target,
 }) => {
   await open(target);
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   const rows = target.locator(".logview-list .record");
   const menu = target.getByRole("menu");
   await rows.nth(1).click({ button: "right" });
@@ -762,9 +829,7 @@ test("the log is one tab stop however many records have a detail", async ({
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=2000",
   );
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   const list = target.locator(".logview-list");
   await expect(list.locator(".record").first()).toBeAttached();
   const stops = await list.evaluate(
@@ -782,9 +847,7 @@ test("bringing in earlier records leaves the view on the record it was on", asyn
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000",
   );
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   const list = target.locator(".logview-list");
   const rows = list.locator(".record");
   await expect(rows).toHaveCount(400);
@@ -812,6 +875,7 @@ test("bringing in earlier records leaves the view on the record it was on", asyn
 test("a chord pressed in the documentation focuses the view it shows", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target);
   const page = target.frameLocator(".docs-frame").locator("body");
   await expect(page).toContainText("Stand-in documentation");
@@ -831,9 +895,7 @@ test("the arrow keys move on from a record's detail toggle", async ({
   page: target,
 }) => {
   await open(target);
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   const rows = target.locator(".logview-list .record");
   const withDetail = rows.filter({ has: target.locator("[aria-expanded]") });
   // A click leaves focus on the toggle; the keyboard carries on from there.
@@ -847,10 +909,9 @@ test("the arrow keys move on from a record's detail toggle", async ({
 test("a press in the documentation while a menu is open keeps focus there", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target);
-  await rail(target)
-    .getByRole("button", { name: label("desktop.rail.logs") })
-    .click();
+  await openPanelTab(target, "logs");
   await target
     .locator(".logview-list .record")
     .nth(1)

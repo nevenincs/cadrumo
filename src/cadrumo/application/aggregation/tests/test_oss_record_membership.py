@@ -12,9 +12,9 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.invoices.enums import IvaRate, PaymentStatus, operation_performed_role
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ....domain.iva.classification import InvoiceKind, TransactionKind
+from ....domain.iva.classification import TransactionKind
 from ....domain.iva.oss import OssIossRegime
-from ....domain.iva.schema import IvaRateKind
+from ....domain.iva.schema import InvoiceKind, IvaRateKind
 from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from .. import oss_ioss

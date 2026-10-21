@@ -28,7 +28,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_lifecycle import archive_manual_transaction
-from cadrumo.application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
+from cadrumo.application.ledger.actions_manual import update_manual_transaction_fields
 from cadrumo.application.ledger.actions_split_merge import split_transaction
 from cadrumo.application.ledger.models import (
     ManualLedgerTransactionCommand,
@@ -46,6 +46,7 @@ from cadrumo.domain.transactions.enums import (
 )
 from cadrumo.domain.transactions.models import TransactionCatalogue
 
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ._split_test_support import _BUCKET_ID, _create_parent, _repositories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

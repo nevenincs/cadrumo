@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#post-release-distribution'
 date: '2026-07-25'
-modified: '2026-10-03'
-body_hash: 'sha256:f64c8126e7f3941c1722ae6475cbc5018fc0e7cde3440c25827dcf10735a3055'
+modified: '2026-10-21'
+body_hash: 'sha256:4b41dedef179dbdc55b2f41aab72f663afdfbbacc991ddd9a091bee02bf5f1c0'
 related: []
 ---
 
@@ -17,14 +17,12 @@ closure summary by a reviewer with no prior involvement in it, on the standing
 requirement that a campaign is not structurally complete until an inherited
 reading has listed what is missing, vague, or assumed-but-unverified.
 
-Reviewed: the topology decision record, the distribution plan, the marketplace
-publish module and its tests, the channel descriptor, the publish workflow, and
+Reviewed: the topology decision record, the distribution plan, the channel descriptor, the publish workflow, and
 the documentation-claims gate. Commits examined: `33acaea32a`, `daee60fe7a`,
 `157e31ce06`, and `90287d349d` — the last of which landed during this review.
 
-Two claims were supplied as already verified and were not re-verified: the
-merged community-package publisher namespace, and the stale pre-rename plugin
-name in the public marketplace.
+One claim was supplied as already verified and was not re-verified: the
+merged community-package publisher namespace.
 
 Semantic search was unavailable for this review. The code index reported 1027
 sections against roughly 4546 files with its generation still running, and a
@@ -112,10 +110,7 @@ three.
 `P03.S18` (`:51`) states the dangling repository variable "is FIXED". That
 variable is a continuous-integration repository variable whose value lives in
 the hosting account's settings, not in the tree, and no commit, exec record, or
-captured evidence in the tree can establish that the operator changed it. The
-step then concedes the acquisition still cannot resolve, pending an operator
-deletion of the stale plugin entry — so the blocker moved from "the repository
-does not exist" to "the repository exists but serves the wrong plugin name".
+captured evidence in the tree can establish that the operator changed it.
 
 What is lost is the ability to read the plan for remaining risk. An annotation
 that reports motion where there was none inflates apparent progress precisely on
@@ -130,9 +125,8 @@ falsely checked.
 
 ### plan-names-retired-variables | high | Plan rows name distribution variables the workflow has since renamed or deleted outright
 
-Three plan rows name `CADRUMO_SCOOP_BUCKET_REPO` and `CADRUMO_MARKETPLACE_REPO`.
-The workflow now reads `CLAUDE_MARKETPLACE_REPO` and `CLAUDE_MARKETPLACE_TOKEN`
-(`.github/workflows/publish-release.yml:507-508`) and `HOMEBREW_TAP_REPO` /
+Three plan rows name `CADRUMO_SCOOP_BUCKET_REPO`.
+The workflow now reads `HOMEBREW_TAP_REPO` /
 `HOMEBREW_TAP_TOKEN` (`:478-479`), and the Scoop pair no longer exists at all,
 with the retired test asserting its
 absence.
@@ -192,77 +186,6 @@ Remediation: anchor the scan per line rather than per file, and re-anchor the
 pattern on the product path segment so an unrelated tap does not match. Add the
 three strings above to the negative assertions the previous finding requires.
 
-### publish-is-not-atomic | medium | A multi-plugin cohort that refuses partway leaves the marketplace tree mutated and its index unmerged, and no test covers a cohort declaring more than one plugin
-
-`publish_cohort_plugins` validates and mutates in a single loop
-, so a refusal on the Nth plugin
-occurs after plugins 1..N-1 have already been removed and replaced, while the
-index merge at `:119-126` never runs. Executed against a cohort declaring two
-plugins whose second has no tree, the first plugin's tree was replaced with the
-cohort version and the index left unmerged, with the function refusing as
-designed — a torn state that is neither the old nor the new.
-
-Every test cohort declares exactly one plugin: the `_cohort` helper at
-The retired test hardcoded a single entry
-and no test constructs a multi-entry cohort. The scenario is therefore entirely
-uncovered.
-
-Severity is medium rather than high because the blast radius is currently
-contained: the module runs against an ephemeral clone
-(`.github/workflows/publish-release.yml:526`), a non-zero exit fails the step
-before the commit and push, and the torn tree is discarded. The defect is real
-at the module boundary rather than at the remote today. The module docstring's
-claim that "both operations are idempotent" is nonetheless false on the refusal
-path.
-
-Remediation: stage into a temporary tree and move into place once every declared
-plugin has validated, so a refusal mutates nothing. Add a multi-plugin cohort
-test asserting the marketplace is byte-identical after a refusal, and correct the
-idempotence claim in the docstring to name the refusal path.
-
-### plugin-name-has-no-owner-check | medium | A cohort silently takes over a sibling product's plugin when the two declare the same plugin name
-
-Ownership is keyed on plugin name alone. `merge_marketplace_index` retains only
-published entries whose name the cohort does not declare
-, and the tree copy removes and
-replaces `plugins/<name>` regardless of which product published it (`:113-117`).
-A cohort declaring a name a sibling already owns therefore overwrites the
-sibling's tree and its index entry with no refusal and no warning — the exact
-class of loss the account-scoped narrowing was introduced to prevent, reachable
-by a different route.
-
-The single merge test at `:190` asserts same-name replacement as the desired
-behaviour, which is correct for one product publishing a new version of its own
-plugin, but nothing distinguishes that from a different product claiming the
-name.
-
-What is lost is the sibling-safety property the campaign states as the reason
-the module exists. It holds for plugins a cohort does not name and fails for
-plugins it names by collision.
-
-Remediation: carry the publishing product's identity on the index entry and
-refuse when a cohort declares a name an entry attributes to another product,
-rather than merging by bare name.
-
-### concurrent-publishes-unhandled | medium | Two products releasing into the shared marketplace can race, and the shared marketplace makes that a designed-in condition rather than a hypothetical
-
-The marketplace step clones, mutates, commits, and pushes
-(`.github/workflows/publish-release.yml:525-542`) with no lease, no retry, and
-no concurrency group. A sibling product's push landing between this job's clone
-and its push makes the push a non-fast-forward, failing the release.
-
-The topology ruling's central premise is that several products publish into one
-account-scoped marketplace, so concurrent publication is now an expected
-operating condition rather than an edge case. Nothing in the campaign records it
-as considered.
-
-What is lost is release reliability at exactly the moment the new topology
-starts paying off — the first release where two products are live.
-
-Remediation: add a retry that re-clones and re-applies on a rejected push, or a
-repository-level concurrency group serialising marketplace publication across
-products. Record whichever is chosen as a constraint on the topology ruling.
-
 ### scoop-runner-adr-unreconciled | low | The prior Scoop runner ruling is named only in frontmatter while the new ruling moves where Scoop manifests live
 
 `2026-07-22-scoop-runner-topology-adr` appears in the topology record's
@@ -277,28 +200,6 @@ stands. Both records are `accepted`, and they are about the same channel.
 Remediation: add an explicit prior-decision reconciliation to the topology
 record stating which parts of the runner ruling stand, which are amended, and
 whether its evidence lane is affected by the manifest relocation.
-
-### sibling-regression-proof-is-sound | low | The anti-regression claim survives execution, though its wording describes something the tree cannot run
-
-The claim that the sibling-survival test fails against the retired wholesale tree
-replacement was tested rather than accepted. The retired behaviour was
-reconstructed faithfully from `17abf9c021` — the top-level delete preserving only
-the git directory, followed by the recursive copy — and the shipped test's
-scenario was run against it. All three of the test's survival assertions fail:
-the sibling plugin tree is gone, the unrelated top-level file is gone, and the
-merged index retains only the publishing product. The regression test is genuine
-and is not a false positive.
-
-One wording caveat is worth recording. The retired behaviour was a shell command
-inside the publish workflow and the replacement is a Python function, so there is
-no seam at which the shipped test can be run against the old behaviour; the
-docstring at the retired test asserted an
-executable counterfactual that requires an out-of-tree reconstruction to check.
-The suite itself is real: `8 passed in 4.44s` on a confirmed non-empty selection.
-
-Remediation: soften the docstring to say the property was verified against a
-reconstruction of the retired behaviour, so a later reader does not go looking
-for a test seam that does not exist.
 
 ### homebrew-core-bar-stated-as-terminal | low | The core-submission question is now closed rather than deferred, which resolves a concern this review carried
 
@@ -343,11 +244,6 @@ chosen topology rests on reasoning the record no longer contains.
 Make the claims gate assert its own behaviour. Per-pattern positive and negative
 assertions are a small change that converts an inert gate into a real one, and
 they are the precondition for trusting any future widening.
-
-Harden the publish module on the three uncovered paths — atomicity across a
-multi-plugin cohort, plugin-name ownership, and concurrent publication. The first
-two are module-local; the third needs a workflow-level decision on serialisation
-versus retry.
 
 Sweep the plan: current variable names, and blocked reasons that name the single
 remaining action and its actor rather than reporting motion. Every finding above

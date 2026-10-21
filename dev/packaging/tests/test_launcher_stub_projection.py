@@ -2,26 +2,23 @@
 
 ``assert_installed_console_entry_point`` compares an installed console launcher
 against its sibling to prove the installer-fixed stub has not drifted. On
-Windows that comparison cannot be made over raw bytes: the launcher carries its
-script's zip as a resource, so the resource section and the two header fields
-stating its size track the compressed script's length. Two genuine launchers
-therefore differ there whenever their scripts differ in length, and the raw
-comparison was failing on correct installs -- it compared the payload while
-claiming to compare the stub.
+Windows, UV stores each console script as a named PE resource. Different script
+lengths shift later resources and update the resource-directory and section
+sizes, so raw launcher bytes differ even when both fixed stubs are sound.
 
-:func:`_launcher_stub_projection` fixes that by eliding exactly those bytes. The
-elision is only safe because the payload is pinned separately and first: the
-caller opens the launcher as a zip and requires a single ``__main__.py`` equal
-byte-for-byte to a script it constructs itself, before any projection runs. So
-the projected bytes are the ones the script cannot influence, and the script is
-checked exactly.
+:func:`_launcher_stub_projection` parses the UV resource tree, drops only the
+``UV_SCRIPT_DATA`` value, and retains every other resource value and directory
+field. It compares all PE bytes outside the final resource section and refuses
+nonzero or unreferenced section padding. The caller pins both launchers' script
+ZIPs byte-for-byte to their expected entry points before either projection is
+compared.
 
 That makes this a loosened security comparison, which is the kind that has to
 prove it still discriminates. A projection that elided too much would pass every
 input, and the suite would look identical to one that works. So the cases below
 assert both directions: two genuine launchers that raw-compare UNEQUAL must
-project equal, and a byte changed outside the elided range must still break the
-projection.
+project equal, while changed UV interpreter-resource, PE-code, and COFF-header
+bytes must still break the projection.
 
 Windows-only by nature -- the POSIX branch compares a plain-text script and has
 no stub -- and skipped rather than faked elsewhere, because a synthesised
@@ -37,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from ..installed_wheel_binding import _launcher_stub_projection
+from ..installed_wheel_binding import _launcher_stub_projection, installed_python_for_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -53,6 +50,20 @@ def _launcher(name: str) -> Path:
     if resolved is None:
         pytest.fail(f"{name} is not on PATH; this project installs it as a console script")
     return Path(resolved).resolve(strict=True)
+
+
+def _section_raw_offset(image: bytes, expected_name: bytes) -> int:
+    signature = struct.unpack_from("<I", image, 0x3C)[0]
+    section_count = struct.unpack_from("<H", image, signature + 6)[0]
+    optional_size = struct.unpack_from("<H", image, signature + 20)[0]
+    table = signature + 24 + optional_size
+    for index in range(section_count):
+        header = table + index * 40
+        if image[header : header + 8].rstrip(b"\0") == expected_name:
+            offset = struct.unpack_from("<I", image, header + 20)[0]
+            assert isinstance(offset, int)
+            return offset
+    pytest.fail(f"launcher does not contain the {expected_name!r} section")
 
 
 @pytest.fixture(scope="module")
@@ -99,6 +110,37 @@ def test_a_byte_changed_outside_the_elision_still_breaks_the_projection(
     first, _ = launchers
     tampered = bytearray(first)
     tampered[_DOS_STUB_OFFSET] ^= 0xFF
+
+    assert _launcher_stub_projection(bytes(tampered)) != _launcher_stub_projection(first)
+
+
+@pytest.mark.windows_only
+def test_a_non_script_uv_resource_change_still_breaks_the_projection(launchers: tuple[bytes, bytes]) -> None:
+    first, _ = launchers
+    interpreter = str(installed_python_for_cli(_launcher("aeat.exe"))).encode("utf-8")
+    offset = first.find(interpreter)
+    assert offset >= 0, "the UV interpreter-path resource is missing from the installed launcher"
+    tampered = bytearray(first)
+    tampered[offset] ^= 0xFF
+
+    assert _launcher_stub_projection(bytes(tampered)) != _launcher_stub_projection(first)
+
+
+@pytest.mark.windows_only
+def test_pe_code_changes_still_break_the_projection(launchers: tuple[bytes, bytes]) -> None:
+    first, _ = launchers
+    tampered = bytearray(first)
+    tampered[_section_raw_offset(first, b".text")] ^= 0xFF
+
+    assert _launcher_stub_projection(bytes(tampered)) != _launcher_stub_projection(first)
+
+
+@pytest.mark.windows_only
+def test_pe_header_changes_still_break_the_projection(launchers: tuple[bytes, bytes]) -> None:
+    first, _ = launchers
+    signature = struct.unpack_from("<I", first, 0x3C)[0]
+    tampered = bytearray(first)
+    tampered[signature + 4] ^= 0xFF
 
     assert _launcher_stub_projection(bytes(tampered)) != _launcher_stub_projection(first)
 

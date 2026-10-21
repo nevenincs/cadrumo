@@ -10,7 +10,7 @@ from playwright.async_api._context_manager import PlaywrightContextManager
 
 from cadrumo.core.config import Settings
 
-from ...tests.process_support import wait_for_process_exit, wait_for_task_readiness
+from ...tests.process_support import playwright_driver_pid, wait_for_process_exit, wait_for_task_readiness
 from ..factory import create_browser_session
 from ..profile import Profile
 from .real_http_boundary import open_real_browser_session, opened_http_boundary
@@ -35,7 +35,7 @@ async def test_cancelled_runtime_start_reaps_real_driver(monkeypatch: pytest.Mon
     task = asyncio.create_task(create_browser_session(Settings(), Profile(name="cancel-start")))
     try:
         await wait_for_task_readiness(ready.wait(), task, after="real driver startup", timeout_seconds=15)
-        pid = runtimes[0]._impl_obj._connection._transport._proc.pid
+        pid = playwright_driver_pid(runtimes[0])
         task.cancel()
         await asyncio.sleep(0)
         task.cancel()
@@ -72,7 +72,7 @@ async def test_cancelled_boundary_runtime_start_reaps_real_driver(monkeypatch: p
         )
         try:
             await wait_for_task_readiness(ready.wait(), task, after="real boundary driver startup", timeout_seconds=15)
-            pid = runtimes[0]._impl_obj._connection._transport._proc.pid
+            pid = playwright_driver_pid(runtimes[0])
             task.cancel()
             await asyncio.sleep(0)
             task.cancel()

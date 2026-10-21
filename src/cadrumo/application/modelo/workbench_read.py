@@ -17,13 +17,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.modelos.work_unit import WorkUnit
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .casilla_help import ModeloCasillaHelpCardV1, build_casilla_help_card
 from .edit_admission import admit_modelo_edit_baseline
@@ -152,10 +153,10 @@ def read_modelo_workbench_form(
         load=loaded,
         admission=admission,
         calculation_revision_id=head_id,
-        verification_report_id=None if report is None else str(report.verification_report_id),
+        verification_report_id=None if report is None else report.verification_report_id,
         asks_m303_evidence=is_m303 and (head is None or head.filing_instance_evidence is None),
         asks_modelo_390=is_m303 and modelo_390_question_asked(unit.period, operation=operation),
-        registry_revision_id=str(form.registry_revision_id),
+        registry_revision_id=form.registry_revision_id,
         tax_id_format=runtime_tax_id_format(authority=operation),
     )
 
@@ -213,7 +214,11 @@ def modelo_edit_prerequisite_source_boxes(
             if isinstance(provider, PreviousFilingProvider)
             for box in (
                 *provider.source_casilla_ids,
-                *((provider.source_casilla_id,) if provider.source_casilla_id else ()),
+                *(
+                    (provider.source_casilla_id,)
+                    if (provider.source_casilla_id is not None and provider.source_casilla_id)
+                    else ()
+                ),
             )
         )
     )

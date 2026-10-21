@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
-from ..config_payloads import ConfigStatusResult
+from cadrumo_client.commands.payloads import ConfigStatusResult
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -72,7 +72,7 @@ def precondition_action_lines(action: ResolvedPreconditionAction | None) -> tupl
 
 def _presence(values: Mapping[str, str], path: str) -> str:
     """Render one fact path as the presence token the status report prints."""
-    return "present" if values.get(path) else "missing"
+    return "present" if bool(values.get(path)) else "missing"
 
 
 __all__ = ["blocked_readiness_status", "precondition_action_lines"]

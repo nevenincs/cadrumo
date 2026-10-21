@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, NonNegativeInt, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.operations import OperationEffect
@@ -16,12 +18,12 @@ from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filed_history_operation import (
     FiledHistoryBrowserResourcesFactory,
     FiledHistoryCompositionFactory,
     FiledHistoryProviderPreflight,
+    require_capture_output_root,
 )
 from .iva_remote_state import capture_iva_compensation_history
 from .live_operation_execution import (
@@ -124,6 +126,7 @@ class IvaWalletHistoryCaptureExecutor:
         require_exact_profile_worker(
             payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
         )
+        require_capture_output_root(payload.output_root)
         composition, resources, session_receipt = await prepare_provider_capture(
             context,
             payload.profile_id,

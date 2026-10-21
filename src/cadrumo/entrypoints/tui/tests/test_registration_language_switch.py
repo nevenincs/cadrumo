@@ -27,13 +27,12 @@ import pytest
 from textual.widgets import Button, Input, Label, Select, Static
 from textual.widgets._select import SelectOverlay
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     load_test_profile_record,
 )
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....core.bucket_pointer import require_active_bucket_id

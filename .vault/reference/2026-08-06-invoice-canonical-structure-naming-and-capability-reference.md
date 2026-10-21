@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#invoice-canonical-structure'
 date: '2026-08-06'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:ea1c8f2e46b65bc4e44fc25b7d9897a3f4103d2fb579a7777b5a749ec6d25b20'
+body_hash: 'sha256:9782c863dade66e8aebca5bc2b53b1df434b117d9d48ad48e1273a9df477cec6'
 related:
   - "[[2026-08-06-invoice-canonical-structure-adr]]"
   - "[[2026-08-06-invoice-canonical-structure-audit]]"
@@ -190,7 +190,7 @@ negatives here changed on contact with that method.
 Measured at `daa9876ed3`. The generated Sphinx build output is excluded from every count in
 this section; including it inflates several symbols three- to six-fold.
 
-Measured at HEAD `daa9876ed33536f5448f5f3a74f2a05b100052c4`, worktree `Y:\code\aeat-worktrees\main`.
+Measured at HEAD `daa9876ed33536f5448f5f3a74f2a05b100052c4`, worktree `<code-root>/aeat-worktrees\main`.
 Read-only investigation. No commits, no staging, no destructive git.
 
 ---

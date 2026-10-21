@@ -24,8 +24,8 @@ from ....application.invoices.simplificada_advisory import SimplificadaTaxIdAdvi
 from ....core.json_contract import NoticeSeverity
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva.classification import InvoiceKind
-from .._ledger_business_invoice_cli import _simplificada_tax_id_notices
+from ....domain.iva.schema import InvoiceKind
+from ..ledger_business_invoice_commands import _simplificada_tax_id_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -105,7 +105,7 @@ def test_the_builder_consults_the_resolver_rather_than_reimplementing_it() -> No
     """
     import inspect
 
-    from .. import _ledger_business_invoice_cli as module
+    from .. import ledger_business_invoice_commands as module
 
     source = inspect.getsource(module._simplificada_tax_id_notices)
     tree = ast.parse(source.lstrip())
@@ -140,7 +140,7 @@ def test_the_advisory_is_a_warning_and_never_blocks_the_write() -> None:
     """
     import inspect
 
-    from .. import _ledger_business_invoice_cli as module
+    from .. import ledger_business_invoice_commands as module
 
     source = inspect.getsource(module._simplificada_tax_id_notices)
     assert "NoticeSeverity.WARNING" in source, "case 3.o is advisory; it must not refuse the write"

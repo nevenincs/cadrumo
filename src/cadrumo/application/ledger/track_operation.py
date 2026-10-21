@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
@@ -14,8 +16,8 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
 from .actions_manual import get_manual_transaction, ledger_transaction_payload, ledger_transaction_tracking_payload
@@ -118,11 +120,11 @@ def build_ledger_track_definition(
     return build_single_phase_definition(
         definition_id=LEDGER_TRACK_OPERATION_DEFINITION_ID,
         request_type=LedgerTrackRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerTrackProjection,
         executor_type=LedgerTrackExecutor,
         build=lambda: LedgerTrackExecutor(ports, participation),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

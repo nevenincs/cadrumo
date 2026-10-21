@@ -9,7 +9,7 @@ observes and binds one concrete port for an explicit host lifetime.
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import datetime
@@ -20,7 +20,7 @@ from uuid import UUID
 from ...core.errors.hierarchy import InternalInvariantError
 
 if TYPE_CHECKING:
-    from ...core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
+    from ...core.profile_session import KeychainUnavailability, ProfileSessionRefusalReason, ReceiptBindingRefusal
     from .access_contracts import ProfileAccessBinding
 
 
@@ -146,6 +146,11 @@ class ProfileSessionResumeOutcomePort(Protocol):
         """The evaluated receipt, present whether or not it was accepted."""
         ...
 
+    @property
+    def keychain(self) -> KeychainUnavailability | None:
+        """Why the reading process cannot use the keychain, when it cannot."""
+        ...
+
 
 class ProfileLoginThrottleEvaluationPort(Protocol):
     """Failed-login backoff decision exposed to the application."""
@@ -235,6 +240,7 @@ class ProfileLoginSessionPort(Protocol):
         login_id: str,
         sign_in_binding: ProfileAccessBinding,
         sign_in_generation: ProfileSignInGenerationPort,
+        retain_sealing_key: Callable[[bytearray], None] | None = None,
     ) -> ProfilePersistedSessionPort | None:
         """Mint and return the canonical persisted acceleration receipt.
 
@@ -243,15 +249,6 @@ class ProfileLoginSessionPort(Protocol):
         when its session was published. Return ``None``, having written
         nothing, when that generation is no longer the durable current one.
         """
-        ...
-
-    def borrow_acceleration_receipt_key(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        """Read only the keychain proof the receipt locator names; never unwrap or delete."""
         ...
 
     def resume_acceleration_receipt_with_key(
@@ -269,7 +266,9 @@ class ProfileLoginSessionPort(Protocol):
         """Verify a supplied human wrap key against ``login_id`` and the current sign-in generation.
 
         It never reads a key from the OS store. A receipt refused for its own
-        metadata or binding is deleted by this runtime-side reader.
+        metadata or generation is deleted by this runtime-side reader; one
+        refused for the caller's login is deleted only when the supplied key
+        unwraps it.
         """
         ...
 

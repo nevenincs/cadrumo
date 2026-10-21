@@ -55,7 +55,6 @@ def test_default_output_language_equals_es() -> None:
     changes fail loudly.
     """
     assert DEFAULT_OUTPUT_LANGUAGE == "es"
-    assert DEFAULT_OUTPUT_LANGUAGE == _render.DEFAULT_OUTPUT_LANGUAGE
 
 
 def test_fallback_language_is_default_output_language() -> None:

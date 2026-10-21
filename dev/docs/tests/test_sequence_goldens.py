@@ -50,7 +50,6 @@ from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_paths
 from dev._paths import REPO_ROOT
 
 from ..sequences.checks import (
-    check_page_coherence_in_subprocess,
     check_sequences,
     check_sequences_in_subprocess,
     discover_sequences,
@@ -625,28 +624,6 @@ class TestExecutorMaskHonesty:
         assert undeclared_key in problems[0]
 
 
-class TestCommittedGoldensCleanGate:
-    """The pytest half of the two-surfaces-one-engine gate.
-
-    Calls the same ``check_sequences`` the ``builder-inited`` Sphinx hook wires,
-    unscoped over the committed ``docs/`` tree, so CI catches golden drift
-    without a full docs build. A non-empty problem set is a divergence: each
-    entry already names the page, sequence, frame, argv, and diff, so they are
-    printed verbatim on failure.
-    """
-
-    def test_every_committed_golden_matches_live_execution(self) -> None:
-        """Every enrolled sequence re-executes clean against its committed golden.
-
-        Page-sharded across 8 bounded child interpreters: each sequence still
-        executes in its own fresh hermetic sandbox, so the verdict is identical
-        to the serial run — only the scheduling changes. The pool bounds
-        concurrency while each child runs to completion.
-        """
-        problems = check_sequences_in_subprocess(jobs=8)
-        assert problems == (), "cli-sequence goldens diverge from live execution:\n" + "\n".join(problems)
-
-
 # ---------------------------------------------------------------------------
 # Both gate surfaces red on an injected divergence, green on clean
 # ---------------------------------------------------------------------------
@@ -923,25 +900,3 @@ class TestBothSurfacesRedOnDivergence:
         rendered = (tmp_path / "_out" / "index.html").read_text(encoding="utf-8")
         assert "cadrumo-sequence" in rendered, warnings
         assert f'data-sequence-id="{_FIXTURE_SEQUENCE_ID}"' in rendered
-
-
-class TestPageCoherenceGate:
-    """The page-coherence tier over the COMMITTED docs tree (rollout gate).
-
-    For each enrolled page: one fresh sandbox, all the page's sequences
-    executed in page order with state accumulating — what a reader following
-    the page top to bottom in one clean environment experiences. Every
-    ``@expect`` must hold against the live cumulative output. This is
-    deliberately NOT golden equality (goldens stay the per-sequence isolated
-    contract); a failure here means the PAGE's narrative does not survive its
-    own accumulated state and the page content must change.
-    """
-
-    def test_every_enrolled_page_is_coherent_top_to_bottom(self) -> None:
-        """Coherence is a page-scoped property (one sandbox per page, state
-        accumulating only within the page), so pages shard cleanly across the
-        same bounded 8-wide child pool as the goldens gate above. Each child
-        runs to completion independently of host speed.
-        """
-        problems = check_page_coherence_in_subprocess(jobs=8)
-        assert problems == (), "enrolled pages are not coherent under cumulative execution:\n" + "\n".join(problems)

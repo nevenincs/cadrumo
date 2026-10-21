@@ -8,11 +8,12 @@ from uuid import UUID
 
 from pydantic import SecretBytes
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from ...core.time.utc import UtcInstant
 from .access_administration import AccessAdministrationRequest, FreshPasswordAuthorization
 from .access_contracts import ACCESS_LEASE_MAXIMUM
 from .authentication import ProfilePasswordProofOperation
-from .automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from .automation_enrollment import AdministrationFacts
 from .custody_ports import (
     load_profile_custody_password_material,

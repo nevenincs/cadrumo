@@ -17,7 +17,8 @@ from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ...compiler.authority import compiled_bundled_authority
+from ...compiler import fact_providers
+from ...compiler.authority import compile_validated_authority, compiled_bundled_authority
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
 from .. import cli as cli_module
@@ -28,8 +29,6 @@ from ..bootstrap_targets import _bootstrap_target_from_row
 from ..cli import (
     GeneratedTreeInvocation,
     PreparedGeneratedTreeInvocation,
-    TargetCurrentnessFact,
-    TargetCurrentnessState,
     app,
     check_prepared_invocation,
     prepare_generated_tree_invocation,
@@ -52,6 +51,13 @@ from ._generated_tree_test_support import (
     ISOLATED_TREE,
     isolated_authorities,
     write_isolated_generated_authority_tree,
+)
+from ._unpublished_modelo_registry import (
+    DECLARED_RECORD_DESIGN_SOURCE,
+    UNPUBLISHED_MODELO,
+    UNPUBLISHED_REVISION,
+    UnpublishedModeloRegistry,
+    write_unpublished_modelo_registry,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -192,17 +198,111 @@ def test_republish_admits_only_provenance_only_drift() -> None:
         )
 
 
-def test_pipeline_cli_refuses_a_bootstrap_source_absent_from_the_catalogue() -> None:
-    """An isolated absent target reaches the bootstrap guard regardless of completed publications."""
-    filing_year = max(compiled_bundled_authority().supported_filing_years().years)
+@pytest.fixture
+def unpublished_registry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> UnpublishedModeloRegistry:
+    """Point the CLI's registry roots and authority at an isolated, really compiled Modelo 999 tree.
+
+    Only where the CLI resolves its live registry root and its compiled
+    authority is redirected; every guard under test runs unchanged.
+    """
+    monkeypatch.setattr(fact_providers, "FACT_PROVIDER_REGISTRATIONS", ())
+    registry = write_unpublished_modelo_registry(tmp_path / "isolated")
+    original_bundled_path = bundled_path
+
+    def selected_path(*parts: str) -> Path:
+        return registry.registry_root if parts == ("registry", "aeat") else original_bundled_path(*parts)
+
+    def isolated_authority() -> ValidatedRegistryAuthority:
+        return compile_validated_authority(registry.registry_root, registry.source_root)
+
+    monkeypatch.setattr(cli_module, "bundled_path", selected_path)
+    monkeypatch.setattr(cli_module, "compiled_bundled_authority", isolated_authority)
+    return registry
+
+
+def _registry_bytes(registry: UnpublishedModeloRegistry) -> dict[str, bytes]:
+    """Every file beside and beneath the isolated ``aeat`` root, keyed by relative path."""
+    container = registry.registry_root.parent
+    return {
+        path.relative_to(container).as_posix(): path.read_bytes()
+        for path in sorted(container.rglob("*"))
+        if path.is_file()
+    }
+
+
+def _check_refusal(registry: UnpublishedModeloRegistry, modelo: str, source_ref: str) -> tuple[str, str]:
+    """Run ``check`` against the isolated registry and prove it refused without mutating it.
+
+    The pre-compile supersession recovery probes the current and the legacy
+    in-root transaction locks, and ``exclusive_file_lock`` deliberately never
+    deletes a sidecar, so those two empty lock files are the only files a
+    refusal may leave. Nothing else, export tree, journal, stage or backup, may
+    appear, and no existing byte may change.
+    """
+    before = _registry_bytes(registry)
     result = CliRunner().invoke(
         app,
-        ["check", "999", "unpublished-fixture", "not-a-declared-source", str(filing_year), "0A"],
+        ["check", modelo, UNPUBLISHED_REVISION, source_ref, str(registry.filing_year), "0A"],
     )
+    after = _registry_bytes(registry)
 
-    assert result.exit_code == 1
-    assert result.stdout == ""
-    assert "no source 'not-a-declared-source' exists for bootstrap target selection" in result.stderr
+    assert result.exit_code == 1, result.output
+    transaction = f"generated-export-transaction-{modelo}-{UNPUBLISHED_REVISION}"
+    lock_sidecars = {f".aeat-{transaction}.lock", f"aeat/.{transaction}.lock"}
+    assert set(after) - set(before) <= lock_sidecars
+    assert all(after[path] == b"" for path in set(after) - set(before))
+    assert {path: after[path] for path in before} == before
+    assert not (registry.registry_root / "modelos" / modelo / "revisions" / UNPUBLISHED_REVISION / "export").exists()
+    return result.stdout, result.stderr
+
+
+def test_planted_revision_is_an_unpublished_bootstrap_target_without_inheritance(
+    unpublished_registry: UnpublishedModeloRegistry,
+) -> None:
+    """The fixture is the case the bootstrap guard owns: compiled, unpublished and uninherited."""
+    revision = unpublished_registry.authority.modelo(UNPUBLISHED_MODELO).revisions[UNPUBLISHED_REVISION]
+
+    assert revision.family_storage_baseline is None
+    assert not revision.export_layouts
+    assert DECLARED_RECORD_DESIGN_SOURCE in {str(ref) for ref in revision.source_refs}
+    assert DECLARED_RECORD_DESIGN_SOURCE in {str(ref) for ref in unpublished_registry.authority.catalogues.sources}
+    assert "not-a-declared-source" not in {str(ref) for ref in unpublished_registry.authority.catalogues.sources}
+    revision_root = unpublished_registry.registry_root / "modelos" / UNPUBLISHED_MODELO / "revisions"
+    assert (revision_root / UNPUBLISHED_REVISION).is_dir()
+    assert not (revision_root / UNPUBLISHED_REVISION / "export").exists()
+
+
+def test_pipeline_cli_refuses_a_bootstrap_source_absent_from_the_catalogue(
+    unpublished_registry: UnpublishedModeloRegistry,
+) -> None:
+    """An unpublished, uninherited revision refuses an uncatalogued source at the bootstrap guard."""
+    stdout, stderr = _check_refusal(unpublished_registry, UNPUBLISHED_MODELO, "not-a-declared-source")
+
+    assert stdout == ""
+    assert stderr == "refused: no source 'not-a-declared-source' exists for bootstrap target selection\n"
+
+
+def test_pipeline_cli_refuses_a_modelo_absent_from_the_registry_before_bootstrap_selection(
+    unpublished_registry: UnpublishedModeloRegistry,
+) -> None:
+    """A modelo the compiled registry lacks is refused before any source or bootstrap handling."""
+    stdout, stderr = _check_refusal(unpublished_registry, "998", "not-a-declared-source")
+
+    assert stdout == ""
+    assert stderr == "refused: modelo '998' is not present in the calculation registry\n"
+
+
+def test_pipeline_cli_refuses_a_catalogued_source_without_a_reviewed_bootstrap_enrolment(
+    unpublished_registry: UnpublishedModeloRegistry,
+) -> None:
+    """A declared, catalogued source passes the source guard and is refused by the enrolment guard."""
+    stdout, stderr = _check_refusal(unpublished_registry, UNPUBLISHED_MODELO, DECLARED_RECORD_DESIGN_SOURCE)
+
+    assert stdout == ""
+    assert stderr == (
+        "refused: no reviewed generated-export bootstrap target matches "
+        f"{UNPUBLISHED_MODELO}/{UNPUBLISHED_REVISION}/{DECLARED_RECORD_DESIGN_SOURCE}; publication is refused\n"
+    )
 
 
 def test_pipeline_cli_refuses_a_catalogued_source_undeclared_as_this_revisions_record_design() -> None:
@@ -526,11 +626,11 @@ def test_absent_tree_is_validated_then_published_through_the_canonical_authoriti
     assert first.target_export_root.is_dir()
 
 
-def test_final_live_validator_does_not_recover_while_it_checks_the_cutover_authority(
+def test_final_live_validator_compiles_the_live_root_without_restaging_the_target(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The final currency callback's supplied authority takes the read-only prepare path."""
+    """The final callback validates the live registry once and never re-renders the installed target."""
     invocation = GeneratedTreeInvocation(
         ISOLATED_TREE.modelo,
         ISOLATED_TREE.revision,
@@ -539,70 +639,38 @@ def test_final_live_validator_does_not_recover_while_it_checks_the_cutover_autho
         ISOLATED_TREE.period,
     )
     target_root = tmp_path / "live-registry" / "aeat"
-    (target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export").mkdir(
-        parents=True,
-    )
-    authority = compiled_bundled_authority()
-    monkeypatch.setattr(cli_module, "bundled_path", lambda *_parts: target_root)
-    monkeypatch.setattr(cli_module, "compile_validated_authority", lambda *_args, **_kwargs: authority)
+    target_root.mkdir(parents=True)
+    compiles: list[tuple[Path, dict[str, object]]] = []
 
-    def reject_recovery(**_kwargs: object) -> bool:
-        raise AssertionError("final live validation re-entered transaction recovery")
+    def record_compile(registry_root: Path, _source_root: Path, **kwargs: object) -> object:
+        compiles.append((registry_root, kwargs))
+        return object()
 
-    monkeypatch.setattr(cli_module, "recover_interrupted_supersession_bundle", reject_recovery)
-    monkeypatch.setattr(cli_module, "supporting_modelos", lambda _modelo: frozenset())
-    monkeypatch.setattr(
-        cli_module,
-        "revision_render_inputs",
-        lambda *_args, **_kwargs: SimpleNamespace(
-            revision_id=invocation.revision,
-            layout_id="fixture-layout",
-            joined=object(),
-            semantic_map=object(),
-            transport_profile=SimpleNamespace(design_epoch="2025"),
-            render_profile=object(),
-            render_profile_source_evidence=object(),
+    def refuse(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("final live validation repeated the candidate's own render")
+
+    monkeypatch.setattr(cli_module, "compile_validated_authority", record_compile)
+    for repeated in (
+        "target_currentness",
+        "prepare_generated_tree_invocation",
+        "recover_interrupted_supersession_bundle",
+    ):
+        monkeypatch.setattr(cli_module, repeated, refuse)
+    prepared = cast(
+        PreparedGeneratedTreeInvocation,
+        cast(
+            Any,
+            SimpleNamespace(
+                invocation=invocation,
+                target_root=target_root,
+                validation=SimpleNamespace(source_chain_non_export_sha256=None),
+            ),
         ),
     )
-    monkeypatch.setattr(cli_module, "stage_generated_export_candidate", lambda *_args, **_kwargs: target_root)
-    monkeypatch.setattr(cli_module, "stage_published_modelo", lambda *_args, **_kwargs: None)
-    real_prepare = cli_module.prepare_generated_tree_invocation
-    prepared_authorities: list[object] = []
 
-    def inspect_read_only_prepare(
-        selected: GeneratedTreeInvocation,
-        root: Path,
-        *,
-        authority: object | None = None,
-    ) -> PreparedGeneratedTreeInvocation:
-        assert authority is not None
-        prepared_authorities.append(authority)
-        return real_prepare(selected, root, authority=cast(ValidatedRegistryAuthority, authority))
-
-    def currentness_with_real_prepare(
-        modelo: str,
-        revision: str,
-        source_ref: str,
-        filing_year: int,
-        period: str,
-        *,
-        authority: object,
-    ) -> TargetCurrentnessFact:
-        inspect_read_only_prepare(
-            GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period),
-            tmp_path / "currentness",
-            authority=authority,
-        )
-        return TargetCurrentnessFact(modelo, revision, TargetCurrentnessState.CURRENT)
-
-    monkeypatch.setattr(cli_module, "target_currentness", currentness_with_real_prepare)
-
-    prepared = cast(
-        PreparedGeneratedTreeInvocation, cast(Any, SimpleNamespace(invocation=invocation, target_root=target_root))
-    )
     cli_module._validate_final_live_target(prepared)
 
-    assert prepared_authorities == [authority]
+    assert compiles == [(target_root, {"verify_evidence_bytes": True})]
 
 
 def test_modelo_200_calculation_grade_does_not_widen_its_runtime_filing_authority() -> None:

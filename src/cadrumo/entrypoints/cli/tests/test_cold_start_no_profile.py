@@ -176,7 +176,7 @@ def test_overview_period_status_uses_refusal_boundary(_fresh_storage_root: Path)
     assert "profile create" in result.output.replace("\n", " ")
 
 
-def test_bindings_list_missing_conservatively_lists_profile_bindings_without_active_profile(
+def test_bindings_list_missing_requires_an_active_profile(
     _fresh_storage_root: Path,
 ) -> None:
     result = invoke_cached_cli(
@@ -197,11 +197,8 @@ def test_bindings_list_missing_conservatively_lists_profile_bindings_without_act
         ],
     )
 
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == 2, result.output
     payload = json.loads(result.output)
-    bindings = payload["result"]["bindings"]
-    assert bindings, result.output
-    assert any(
-        binding["binding_id"] == "modelo-303-autoconsumo-promotor-base" and binding["source"] == "profile"
-        for binding in bindings
-    ), result.output
+    assert payload["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+    assert payload["error"]["action"]["action"]["action_id"] == "operator.profile.create"
+    assert "result" not in payload

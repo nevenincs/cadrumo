@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ._command_secret_contracts import (
+from cadrumo_client.commands.parameters import ArgumentSpec, ParameterSpec
+from cadrumo_client.commands.secret_contracts import (
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
 )
-from ._modelo_nonwork_command_spec_policies import _METADATA, _MODEL_READ, _MODEL_WRITE
-from .command_parameter_contracts import ArgumentSpec, ParameterSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.secret_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterDefault,
@@ -20,8 +18,10 @@ from .command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
-from .machine_secret_command_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._modelo_nonwork_command_spec_policies import _METADATA, _MODEL_READ, _MODEL_WRITE
 
 _GROUP = "app_modelo_m360"
 _FILING_YEAR = ArgumentSpec(
@@ -50,10 +50,10 @@ def _leaf(
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=parameters,
         policy=policy,
-        handler=LazyBinding.available(DeferredTarget("._modelo_m360_cli", f"m360_{verb}", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_m360_commands", f"m360_{verb}", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._modelo_m360_payloads", result, __package__),
+            target=DeferredTarget(".modelo_m360_results", result, __package__),
             identity=f"modelo.m360.{verb}",
         ),
         machine_secret=machine_secret,
@@ -84,7 +84,7 @@ MODELO_M360_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 MachineSecretVariantSpec(
                     "solicitud",
                     (MachineSecretFieldSpec("solicitud"),),
-                    DeferredTarget("._modelo_m360_cli", "Modelo360SolicitudSecrets", __package__),
+                    DeferredTarget(".modelo_m360_commands", "Modelo360SolicitudSecrets", __package__),
                 ),
             ),
         ),

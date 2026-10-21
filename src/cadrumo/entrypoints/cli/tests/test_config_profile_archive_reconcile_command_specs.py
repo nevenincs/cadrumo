@@ -2,15 +2,17 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
+from cadrumo_client.commands.graph import CommandSpecGraph
+
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_graph import CommandSpecGraph
 from ..config.profile_command_specs import PROFILE_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_prepared_exports_keeps_its_profile_bound_contract_under_config_repair() -> None:
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *PROFILE_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *PROFILE_COMMAND_SPECS), resolver=resolve_deferred_target)
 
     assert ("aeat", "config", "profile", "archive", "reconcile") in tuple(node.path for node in graph.nodes())
     assert not [node.path for node in graph.nodes() if "maintenance" in node.path]

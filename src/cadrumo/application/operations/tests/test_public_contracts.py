@@ -72,7 +72,6 @@ from ..operation_definition import OperationDefinition, OperationExecutorFactory
 from ..owner import OperationExecutorContext
 from ..persistence.replay import OperationReplayStatus
 from ..registry import (
-    OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -80,6 +79,7 @@ from ..registry import (
     OperationSchemaBindingV1,
 )
 from ..schema_identity import OperationSchemaIdentityV1
+from ..subject_reference import OperationSubjectReferenceV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -125,6 +125,7 @@ def _projection_contract_set(
     definition = OperationDefinition(
         definition_id="operations.public.projection",
         request_type=SafeProjection,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=SafeProjection,
         executor_factory=OperationExecutorFactory(
             request_type=SafeProjection,
@@ -147,7 +148,6 @@ def _projection_contract_set(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,

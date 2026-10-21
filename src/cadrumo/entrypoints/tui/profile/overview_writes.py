@@ -11,7 +11,7 @@ from textual.worker import Worker, WorkerState
 from ....core.i18n.render import tr
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ..components.status import PinnedStatusBar
-from .runtime_errors import ProfileManagerCompletedViewUnavailableError
+from .client_errors import ProfileManagerCompletedViewUnavailableError
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -250,7 +250,12 @@ class ProfileOverviewWriteMixin:
                 )
                 self._carry_walk_on()
                 return
-            await self._apply_overview(worker.result)
+            await self.apply_overview(
+                worker.result,
+                refresh_auth=written_path is None
+                or written_path == "identity.tax_id"
+                or written_path.startswith("auth."),
+            )
             self.query_one("#manager-status", PinnedStatusBar).show_success(
                 tr("flows.manager.edit.saved" if changed else "flows.manager.edit.no_change")
             )

@@ -62,7 +62,7 @@ def _locale_traceback_error(lines: list[str], decode_error: str | None) -> dict[
             "message": message[:_LOCALE_ERROR_MESSAGE_LIMIT],
         }
 
-    if decode_error:
+    if decode_error is not None and decode_error:
         message = _normalize_root_cause(decode_error)
         return {
             "category": "payload",

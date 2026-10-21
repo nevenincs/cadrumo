@@ -43,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 def record_design_cache_dir() -> Path:
     """Resolve the runner-local record-design extraction cache directory."""
     override = os.environ.get(RECORD_DESIGN_CACHE_DIR_ENV)
-    if override and override.strip():
+    if (override is not None and override) and override.strip():
         return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
     return dev_cache_dir("record-design")
 

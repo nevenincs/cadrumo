@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cadrumo-frontend-launch'
 date: '2026-07-12'
-modified: '2026-10-03'
-body_hash: 'sha256:83ba472c6546cea25490fdad6b9a6953a9e3eacb519b196947c76ced53e1040f'
+modified: '2026-10-21'
+body_hash: 'sha256:bd52f50f806d14b9c0f48f9f7b771b58cb8a14505160155337a9bfe83734fe45'
 related: []
 ---
 
@@ -20,8 +20,7 @@ page (Figma-derived, responsive, en/es/ca localization, legal page, animated
 agent-connection how-to, and the live delivery at `cadrumo.neve.md`. The
 review ran in fresh context via an independent read-only reviewer over the
 campaign commit range (`4e588a493d`..`2c31ea7cb5`); the coordinator then
-network-verified the externally-dependent findings (PyPI state, marketplace
-repository, docs sitemap).
+network-verified the externally-dependent findings (PyPI state, docs sitemap).
 
 ## Findings
 
@@ -35,10 +34,8 @@ legal disclaimer, and `README.md` all state beta. The campaign claim
 ### honesty-review | high | Published version chain is coherent but behind source
 
 PyPI's latest `aeat-cli` is 0.1.1; source is at 0.2.0 (unreleased). The
-`nevenincs/neve-marketplace` repository exists (HTTP 200) and its served
-plugin pins `aeat-cli[agent]==0.1.1`, which matches the actual PyPI latest,
-so the documented install chain works today. The risk is procedural: nothing
-gates the pin, the proof doc, and the release version to move in lockstep.
+documented install chain works today. The risk is procedural: nothing
+gates the proof doc and the release version to move in lockstep.
 
 ### honesty-review | high | LSSI-CE art. 10 identification is incomplete and mislabels a natural person
 
@@ -126,7 +123,6 @@ add `/frontend/build/` to the frontend ignore block and fix the stale
 validation. Blocked on operator input: LSSI art. 10 NIF and address (and the
 "legal entity" wording), and a decision on path-prefixed locales for
 indexable es/ca content. Procedural: re-verify the no-logging claim against
-the live distribution before each publish, and regenerate the marketplace pin
-plus proof doc in lockstep with every version release. The campaign is not
+the live distribution before each publish, and keep version pins in lockstep with every version release. The campaign is not
 structurally complete until the in-repo items land and the operator-gated
 items are answered or formally deferred.

@@ -54,6 +54,8 @@ def test_assembly_consumes_payload_and_provenance_without_build_scratch(tmp_path
     provenance = product / "build/product-wheels.json"
     provenance.parent.mkdir(parents=True)
     provenance.write_text('{"wheel":"identity"}')
+    agent_provenance = product / "agent-wheel.json"
+    agent_provenance.write_text('{"wheel_sha256":"agent identity"}')
     scratch = product / "build/source/unrelated.txt"
     scratch.parent.mkdir()
     scratch.write_text("scratch one")
@@ -77,6 +79,9 @@ def test_assembly_consumes_payload_and_provenance_without_build_scratch(tmp_path
     assert inventory(inputs) != original
     payload.write_text("answer=1\n")
     provenance.write_text('{"wheel":"modified"}')
+    assert inventory(inputs) != original
+    provenance.write_text('{"wheel":"identity"}')
+    agent_provenance.write_text('{"wheel_sha256":"changed agent identity"}')
     assert inventory(inputs) != original
 
 
@@ -182,3 +187,30 @@ def test_product_inputs_include_wheel_sources_without_installer_or_authoring_too
         "packaging/companion/hatch_build.py",
         "packaging/authority/hatch_build.py",
     }
+
+
+def test_source_consumers_share_one_configure_inventory(tmp_path: Path) -> None:
+    """A file added between consumers enters on the next configure without a conflicting glob."""
+    source = tmp_path / "src"
+    source.mkdir()
+    (source / "first.py").write_text("first = True\n", encoding="utf-8")
+    (tmp_path / "CMakeLists.txt").write_text(
+        "cmake_minimum_required(VERSION 4.4)\nproject(SourceInventory LANGUAGES NONE)\n"
+        f'include("{(REPO_ROOT / "native/cmake/PackageInputs.cmake").as_posix()}")\n'
+        'cadrumo_source_inputs(first "${CMAKE_SOURCE_DIR}")\n'
+        'file(WRITE "${CMAKE_SOURCE_DIR}/src/late.py" "late = True\\n")\n'
+        'cadrumo_source_inputs(second "${CMAKE_SOURCE_DIR}")\n'
+        'if(NOT first STREQUAL second)\nmessage(FATAL_ERROR "Source inventory changed")\nendif()\n'
+        'list(LENGTH second count)\nfile(WRITE "${CMAKE_BINARY_DIR}/count.txt" "${count}")\n',
+        encoding="utf-8",
+    )
+    cmake = shutil.which("cmake")
+    assert cmake is not None
+    build = tmp_path / "build"
+    command = [cmake, "-S", str(tmp_path), "-B", str(build)]
+    result = run_command(command, cwd=tmp_path)
+    assert result.returncode == 0, result.stderr
+    assert (build / "count.txt").read_text() == "1"
+    result = run_command(command, cwd=tmp_path)
+    assert result.returncode == 0, result.stderr
+    assert (build / "count.txt").read_text() == "2"

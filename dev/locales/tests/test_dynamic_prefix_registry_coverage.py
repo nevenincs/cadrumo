@@ -54,7 +54,7 @@ from dev.docs.terminology_handbook.topics import load_topic_catalogue
 
 from .. import _registry_scanner
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
-from .._paths import SRC_DIR
+from .._paths import LOCALE_SOURCE_EXTRA_DIRS, PRODUCT_SOURCE_DIRS, SRC_DIR
 from .._registry_scanner import LocaleRegistryEnumerationError, scan_detail_row_fields
 from ..fstring_registry import get_registered_keys
 from ..locale_nodes import LocaleNode
@@ -64,11 +64,12 @@ from ..wizard_translation_audit import wizard_descriptor_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# The source tree the scanner walks. The tooling sits outside the package it
-# maintains, so the root is resolved from the checkout by the shared derivation
-# rather than counted from this file's own parents.
+# The product source trees the scanner walks. The tooling sits outside the
+# packages it measures, so the roots come from the shared checkout derivation.
 _SRC_ROOT = SRC_DIR
 _LOCALES_ROOT = SRC_DIR / "locales"
+_RUNTIME_COMMANDS_ROOT = SRC_DIR.parent / "cadrumo_runtime" / "commands"
+_CLIENT_COMMANDS_ROOT = SRC_DIR.parent / "cadrumo_client" / "commands"
 
 
 def _catalogue_payload(locale: str) -> dict[str, LocaleNode]:
@@ -131,15 +132,16 @@ def _registry_covers(prefix: str, registered_keys: frozenset[str]) -> bool:
 def test_every_dynamic_prefix_is_registry_covered_or_allowlisted() -> None:
     """No dynamic translation prefix may be bounded-but-unregistered.
 
-    Every ``<prefix>.*`` marker the AST scanner emits across ``src/cadrumo``
+    Every ``<prefix>.*`` marker the AST scanner emits across the product source
+    roots
     must be registry-covered (an FStringKeyRegistration expands keys under it)
     or explicitly allowlisted in ``OPEN_ENDED_NAMESPACES``. A marker in neither
     set is a bounded dynamic key site with no registration — the exact blind
     spot that has silently dropped locale leaves three times.
     """
-    markers = scan_namespace_markers(_SRC_ROOT)
+    markers = set().union(*(scan_namespace_markers(root) for root in PRODUCT_SOURCE_DIRS))
     assert markers, (
-        "scan_namespace_markers(src/cadrumo) returned no markers. The namespace "
+        "scan_namespace_markers(product source roots) returned no markers. The namespace "
         "scanner is broken or misconfigured; fix it rather than passing this gate "
         "vacuously."
     )
@@ -185,7 +187,8 @@ def test_allowlist_entries_are_live_and_reasoned() -> None:
     longer appears in the tree is dead weight and must be removed; an entry with
     an empty reason defeats the purpose of the allowlist.
     """
-    emitted_prefixes = {_marker_prefix(marker) for marker in scan_namespace_markers(_SRC_ROOT)}
+    markers = set().union(*(scan_namespace_markers(root) for root in PRODUCT_SOURCE_DIRS))
+    emitted_prefixes = {_marker_prefix(marker) for marker in markers}
     registered_keys = frozenset(get_registered_keys())
 
     stale = sorted(prefix for prefix in OPEN_ENDED_NAMESPACES if prefix not in emitted_prefixes)
@@ -440,7 +443,7 @@ def test_wizard_descriptor_keys_remain_discoverable_by_the_manager() -> None:
     two authorities disagree, and the catalogue entry looks unused while a live
     surface still renders it.
     """
-    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=_LOCALES_ROOT)
+    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=_LOCALES_ROOT, extra_src_dirs=LOCALE_SOURCE_EXTRA_DIRS)
     codebase_keys = manager.get_codebase_keys()
     missing = sorted(key for key in wizard_descriptor_keys() if key not in codebase_keys)
     assert not missing, (
@@ -534,9 +537,12 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         ("entrypoints/cli/_terminal_errors.py", "_requested_output_language"),
         # Ctx-scoped (entered and unwound inside the command callback's
         # settings scope - safe by construction):
-        ("entrypoints/cli/_root_cli.py", "root_command"),
+        ("entrypoints/cli/root_commands.py", "root_command"),
         ("entrypoints/cli/common.py", "activate_subcommand_output_language"),
-        ("entrypoints/cli/config/custody.py", "_pin_render_language_to_target_bucket"),
+        ("client/commands/custody.py", "_pin_render_language_to_target_bucket"),
+        ("client/commands/custody.py", "_activate_subcommand_output_language"),
+        ("runtime/commands/presentation.py", "activate_subcommand_output_language"),
+        ("runtime/commands/profile_admission.py", "bind_runtime_root_context"),
         # Registered reads materialize translated projections within a with-block
         # using the exact request language. ContextVar settings are restored before
         # the result leaves the worker; no CLI callback owns these read scopes.
@@ -548,7 +554,19 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         ("application/overview/pipeline_operation.py", "_capture_overview_pipeline"),
         ("application/overview/read_operation.py", "_capture"),
         ("application/review/read_operation.py", "_capture"),
-        ("entrypoints/runtime/operation_host.py", "capture"),
+        # The local-reader provisioning operation writes its licence advisory in the
+        # requesting frontend's language inside one with-block around the run.
+        ("application/local_reader_provisioning.py", "provision_local_reader"),
+        # CSV row refusals are rendered synchronously inside the worker handoff;
+        # the invocation language is restored before the batch result returns.
+        ("application/ledger/bulk_classify_operation.py", "classify"),
+        # The terminal interface's installation area returns the override as a context
+        # manager its callers enter only around synchronous rendering, never across a wait,
+        # so the first-profile page can word an area before any profile holds a language.
+        ("entrypoints/tui/installation/texts.py", "worded_in"),
+        # The runtime entrypoint can outlive the command callback while it renders a
+        # captured refusal; it restores the request language only inside that render.
+        ("runtime/commands/main.py", "_emit_error"),
     },
 )
 
@@ -561,9 +579,12 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
 #: this gate exists to catch.
 _CTX_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
     {
-        ("entrypoints/cli/_root_cli.py", "root_command"),
+        ("entrypoints/cli/root_commands.py", "root_command"),
         ("entrypoints/cli/common.py", "activate_subcommand_output_language"),
-        ("entrypoints/cli/config/custody.py", "_pin_render_language_to_target_bucket"),
+        ("client/commands/custody.py", "_pin_render_language_to_target_bucket"),
+        ("client/commands/custody.py", "_activate_subcommand_output_language"),
+        ("runtime/commands/presentation.py", "activate_subcommand_output_language"),
+        ("runtime/commands/profile_admission.py", "bind_runtime_root_context"),
     },
 )
 
@@ -579,13 +600,14 @@ _PROJECTION_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         ("application/overview/pipeline_operation.py", "_capture_overview_pipeline"),
         ("application/overview/read_operation.py", "_capture"),
         ("application/review/read_operation.py", "_capture"),
-        ("entrypoints/runtime/operation_host.py", "capture"),
+        ("application/local_reader_provisioning.py", "provision_local_reader"),
+        ("application/ledger/bulk_classify_operation.py", "classify"),
     }
 )
 
 
 def test_language_override_sites_match_the_sanctioned_inventory() -> None:
-    """Every production ``override_settings(cadrumo_output_language=...)`` site is pinned.
+    """Every production language override in the app, command packages and moved TUI is pinned.
 
     Command overrides follow callback lifetime, while registered projection
     reads materialize translated values inside their synchronous with-blocks.
@@ -607,45 +629,53 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
     found: set[tuple[str, str]] = set()
     ctx_wrapped: set[tuple[str, str]] = set()
     projection_wrapped: set[tuple[str, str]] = set()
-    for module in scan_directory(_SRC_ROOT, pattern="*.py", recursive=True):
-        rel = module.relative_to(_SRC_ROOT).as_posix()
-        if "/tests/" in f"/{rel}" or module.name.startswith("test_"):
-            continue
-        tree = ast.parse(module.read_text(encoding="utf-8"), filename=rel)
-        functions = [func for func in ast.walk(tree) if isinstance(func, ast.FunctionDef | ast.AsyncFunctionDef)]
+    for root in (_CLIENT_COMMANDS_ROOT, _RUNTIME_COMMANDS_ROOT):
+        assert root.is_dir(), f"moved locale-aware source root is missing: {root}"
+    source_roots = (
+        (_SRC_ROOT, ""),
+        (_CLIENT_COMMANDS_ROOT, "client/commands/"),
+        (_RUNTIME_COMMANDS_ROOT, "runtime/commands/"),
+    )
+    for source_root, rel_prefix in source_roots:
+        for module in scan_directory(source_root, pattern="*.py", recursive=True):
+            rel = f"{rel_prefix}{module.relative_to(source_root).as_posix()}"
+            if "/tests/" in f"/{rel}" or module.name.startswith("test_"):
+                continue
+            tree = ast.parse(module.read_text(encoding="utf-8"), filename=rel)
+            functions = [func for func in ast.walk(tree) if isinstance(func, ast.FunctionDef | ast.AsyncFunctionDef)]
 
-        def _innermost_site(
-            node: ast.AST,
-            rel_path: str = rel,
-            funcs: list[ast.FunctionDef | ast.AsyncFunctionDef] = functions,
-        ) -> tuple[str, str]:
-            # Attribute the call to its INNERMOST enclosing function so a
-            # nested closure is not double-counted under its parent.
-            assert isinstance(node, ast.Call)
-            containing = [func for func in funcs if func.lineno <= node.lineno <= (func.end_lineno or func.lineno)]
-            if containing:
-                return (rel_path, max(containing, key=lambda f: f.lineno).name)
-            return (rel_path, "<module>")
+            def _innermost_site(
+                node: ast.AST,
+                rel_path: str = rel,
+                funcs: list[ast.FunctionDef | ast.AsyncFunctionDef] = functions,
+            ) -> tuple[str, str]:
+                # Attribute the call to its INNERMOST enclosing function so a
+                # nested closure is not double-counted under its parent.
+                assert isinstance(node, ast.Call)
+                containing = [func for func in funcs if func.lineno <= node.lineno <= (func.end_lineno or func.lineno)]
+                if containing:
+                    return (rel_path, max(containing, key=lambda f: f.lineno).name)
+                return (rel_path, "<module>")
 
-        for node in ast.walk(tree):
-            if _is_language_override_call(node):
-                found.add(_innermost_site(node))
-            if isinstance(node, ast.With):
-                for item in node.items:
-                    if _is_language_override_call(item.context_expr):
-                        projection_wrapped.add(_innermost_site(item.context_expr))
-            # HOW the ctx-scoped sites enter matters, not only WHERE: record
-            # every override call that is a direct argument of a
-            # ``*.with_resource(...)`` call, so a ctx site downgrading to a
-            # bare ``with override_settings(...)`` loses its wrapped mark.
-            if (
-                isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Attribute)
-                and node.func.attr == "with_resource"
-            ):
-                for argument in node.args:
-                    if _is_language_override_call(argument):
-                        ctx_wrapped.add(_innermost_site(argument))
+            for node in ast.walk(tree):
+                if _is_language_override_call(node):
+                    found.add(_innermost_site(node))
+                if isinstance(node, ast.With):
+                    for item in node.items:
+                        if _is_language_override_call(item.context_expr):
+                            projection_wrapped.add(_innermost_site(item.context_expr))
+                # HOW the ctx-scoped sites enter matters, not only WHERE: record
+                # every override call that is a direct argument of a
+                # ``*.with_resource(...)`` call, so a ctx site downgrading to a
+                # bare ``with override_settings(...)`` loses its wrapped mark.
+                if (
+                    isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Attribute)
+                    and node.func.attr == "with_resource"
+                ):
+                    for argument in node.args:
+                        if _is_language_override_call(argument):
+                            ctx_wrapped.add(_innermost_site(argument))
 
     assert found == set(_SANCTIONED_LANGUAGE_OVERRIDE_SITES), (
         "production cadrumo_output_language override sites drifted from the "
@@ -664,7 +694,8 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
     )
 
 
-def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens() -> None:
+@pytest.mark.parametrize("read_only", (False, True))
+def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens(read_only: bool) -> None:
     """Incident 3: a registry's KEYS are what the runtime selects on, not translations.
 
     A locale-key mapping is keyed by whatever picks the entry -- an enum value,
@@ -682,10 +713,10 @@ def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens() ->
 
     source = chr(10).join(
         (
-            "_ROUTE_LOCALE_KEYS = {",
+            "_ROUTE_LOCALE_KEYS = MappingProxyType({" if read_only else "_ROUTE_LOCALE_KEYS = {",
             '    "workbench.home": "tui.search.destination.home",',
             '    "operator.profile.edit": "tui.search.action.edit_profile",',
-            "}",
+            "})" if read_only else "}",
             "_FLAT_LOCALE_KEYS = (",
             '    "tui.search.refusal.unknown",',
             ")",
@@ -699,6 +730,38 @@ def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens() ->
     assert "tui.search.refusal.unknown" in keys, "a flat registry must still be collected whole"
     assert "workbench.home" not in keys, "a route identity is not a locale key"
     assert "operator.profile.edit" not in keys, "a catalogue action id is not a locale key"
+
+
+def test_a_key_suffix_is_not_an_identity_wrapped_catalogue_key(tmp_path) -> None:
+    """A local prefixing helper must not invent translations for its suffixes."""
+    from .._ast_scanner import scan_source_text, scan_source_tree
+
+    source = "\n".join(
+        (
+            'def _key(suffix): return f"application.provisioning.{suffix}"',
+            "def tr(translation_key, **values): return translation_key",
+            'tr(_key("dependency.local_ai.program"))',
+            'tr(_key("dependency.local_ai.model"), role="role")',
+            'tr(TranslationKey("application.provisioning.dependency.local_ai.program"))',
+            'tr(TranslationKey("application.provisioning.dependency.local_ai.model"))',
+            'option(help_key=_key("cli.config.help"))',
+            'tr("application.direct.first" if condition else "application.direct.second")',
+        )
+    )
+    (tmp_path / "wording.py").write_text(source, encoding="utf-8")
+    text_keys = scan_source_text(source, filename="wording.py")
+    tree_keys = scan_source_tree(tmp_path)
+
+    for keys in (text_keys, tree_keys):
+        assert "dependency.local_ai.program" not in keys
+        assert "dependency.local_ai.model" not in keys
+        assert {
+            "application.provisioning.dependency.local_ai.program",
+            "application.provisioning.dependency.local_ai.model",
+            "cli.config.help",
+            "application.direct.first",
+            "application.direct.second",
+        } <= keys
 
 
 def test_a_row_table_is_confirmed_by_its_key_column_and_not_a_prose_sibling() -> None:

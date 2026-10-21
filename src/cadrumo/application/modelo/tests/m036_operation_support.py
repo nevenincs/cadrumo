@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
@@ -10,6 +10,9 @@ from typing import cast, override
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel
+
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, DisclosurePermission
 
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.secure_object_write import SecureObjectWrite
@@ -19,17 +22,10 @@ from ...operations.access_resolution import ResolvedOperationAccess
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationRegistry
 from ...user_profile.access_contracts import (
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
-    DisclosurePermission,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
@@ -58,7 +54,7 @@ class CommitFence:
         self.deny = False
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         if self.deny:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         self.active = True

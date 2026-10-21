@@ -183,7 +183,7 @@ def test_binary_missing_wheel_is_a_failed_attributable_outcome(tmp_path: Path, m
 
     assert commands[0].exit_status == 1
     assert status is runtime_probe_contracts.PythonRuntimeDependencyStatus.MISSING_WHEEL
-    assert detail and "wheel" in detail.lower()
+    assert (detail is not None and detail) and "wheel" in detail.lower()
     assert status.value != "skipped"
     argv = captured["argv"]
     assert isinstance(argv, tuple)

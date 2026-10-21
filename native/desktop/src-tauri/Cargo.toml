@@ -21,6 +21,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = [] }
 cadrumo-application = { path = "../../application" }
+cadrumo-platform = { path = "../../platform" }
 portable-pty = "0.9"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -31,13 +32,24 @@ tokio = { version = "1", features = ["process", "io-util", "time", "rt", "macros
 # Rust APIs only: the shell reaches them through token-checked app commands
 # and grants the webview no plugin command.
 tauri-plugin-clipboard-manager = "2.4.1"
+# The agent column's file picker, opened by the host for the files it uploads.
+tauri-plugin-dialog = "2"
+# The digest an upload is sent with; already in the graph.
+sha2 = "0.10"
 opener = "0.9"
+# The agent host's loopback gateway client; already in the graph through
+# cadrumo-application.
+ureq = { version = "3", default-features = false }
 
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }
+tokio = { version = "1", features = ["test-util"] }
 
 [target.'cfg(windows)'.dependencies]
+cadrumo-manager = { path = "../../manager" }
 cadrumo-platform = { path = "../../platform", features = ["webview2"] }
+cadrumo-installer = { path = "../../installer" }
+cadrumo-interpreter-host = { path = "../../interpreter_host" }
 
 [lints.rust]
 unsafe_code = "forbid"

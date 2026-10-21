@@ -50,7 +50,7 @@ def _signed_additive_leaves(
     operator = str(expression.op).lower() if expression.op else None
 
     if operator is None:
-        if expression.casilla_id:
+        if expression.casilla_id is not None and expression.casilla_id:
             collected.append((str(expression.casilla_id), sign))
         return collected
 

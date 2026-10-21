@@ -2,14 +2,8 @@
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import (
-    CommandNodeKind,
-    CommandWriteRoute,
-)
-
-from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
     PATH_VALUE,
     TEXT_VALUE,
@@ -20,7 +14,13 @@ from .command_shared_contracts import (
     SchemaState,
     TranslationKey,
 )
-from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import (
+    CommandNodeKind,
+    CommandWriteRoute,
+)
+
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 
 _MODEL_READ = ExecutionPolicySpec(
     capabilities=frozenset({"encrypted-facts"}),
@@ -77,10 +77,10 @@ def _leaf(
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=parameters,
         policy=policy,
-        handler=LazyBinding.available(DeferredTarget("._modelo_audit_cli", handler, __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_audit_commands", handler, __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._modelo_payloads", schema_name, __package__),
+            target=DeferredTarget(".modelo_results", schema_name, __package__),
             identity=identity,
         ),
     )

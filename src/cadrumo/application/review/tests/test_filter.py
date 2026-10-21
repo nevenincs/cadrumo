@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.period import Period
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...transactions.diagnostics import LedgerImportDiagnosticKind
 from ..errors import FilterParseError

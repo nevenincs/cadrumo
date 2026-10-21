@@ -32,6 +32,9 @@ import pytest
 from cadrumo.adapters.outbound.google import api as google_api
 from cadrumo.adapters.outbound.workbook import calc_sheets_xlsx
 from cadrumo.application.ledger import evidence_input
+from cadrumo.entrypoints.cli import common as cli_common
+from cadrumo.entrypoints.tui.installation import area_factory
+from cadrumo_runtime.host import linux_worker_guardian
 from dev.docs.terminology_handbook import curation
 
 from .. import vulture_whitelist
@@ -39,10 +42,13 @@ from .. import vulture_whitelist
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _CITATIONS: dict[str, tuple[ModuleType, str | None, str]] = {
+    "_command_group_get_command": (cli_common, "_CommandGroup", "get_command"),
+    "_installation_area_factory_call": (area_factory, "InstallationAreaFactory", "__call__"),
     "_custom_document_properties_append": (calc_sheets_xlsx, "_CustomDocumentProperties", "append"),
     "_execute": (google_api, "_ExecutableRequest", "execute"),
     "_reduce_ex": (evidence_input, "EvidenceInput", "__reduce_ex__"),
     "_set_language_field": (curation, None, "set_language_field"),
+    "_parent_poll_register": (linux_worker_guardian, "_ParentPoll", "register"),
 }
 
 

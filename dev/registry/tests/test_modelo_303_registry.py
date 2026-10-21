@@ -127,13 +127,31 @@ def test_modelo_303_revision_period_selectors_cover_the_supported_span() -> None
     assert late.valid_from - early.valid_to == timedelta(days=1)
 
     rev_current = modelo.revisions["2026-y-siguientes"]
-    assert rev_current.valid_from == date(2026, 1, 1)
+    rev_early = modelo.revisions["2026-hasta-01-y-1t"]
+    assert rev_early.valid_from == date(2026, 1, 1)
+    assert rev_early.valid_to == date(2026, 3, 31)
+    assert rev_early.period_selector.periods_for_year(2026) == ("01", "1T")
+    assert rev_current.valid_from == date(2026, 2, 1)
     assert rev_current.period_selector.year_from == 2026
     assert rev_current.period_selector.year_to is None
-    assert "1T" in rev_current.period_selector.periods
-    assert "4T" in rev_current.period_selector.periods
-    assert "01" in rev_current.period_selector.periods
-    assert "12" in rev_current.period_selector.periods
+    assert rev_current.period_selector.periods_for_year(2026) == (
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12",
+        "2T",
+        "3T",
+        "4T",
+    )
+    assert rev_current.period_selector.periods_for_year(2027) == rev_current.period_selector.periods
+    assert {"01", "1T", "12", "4T"} <= set(rev_current.period_selector.periods_for_year(2027))
 
 
 def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
@@ -177,7 +195,7 @@ def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
             filing_year=2026,
             period=period,
         )
-        assert snapshot.revision.id == "2026-y-siguientes"
+        assert snapshot.revision.id == ("2026-hasta-01-y-1t" if period == "1T" else "2026-y-siguientes")
 
     # Filing year 2022 resolves to the `2022` revision. This asked for 2021,
     # which the retired pre-window span used to cover and nothing covers now, so
@@ -293,7 +311,6 @@ def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> Non
         "modelo-303-2025-3t": (date(2025, 10, 1), date(2025, 10, 20)),
         "modelo-303-2025-4t": (date(2026, 1, 1), date(2026, 1, 30)),
     }
-    current_windows = {w.id: w for w in modelo.revisions["2026-y-siguientes"].deadline_windows}
     current_expected = {
         "modelo-303-2026-1t": (date(2026, 4, 1), date(2026, 4, 20)),
         "modelo-303-2026-2t": (date(2026, 7, 1), date(2026, 7, 20)),
@@ -305,8 +322,11 @@ def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> Non
         assert prior_windows[window_id].opens_on == opens
         assert prior_windows[window_id].closes_on == closes
     for window_id, (opens, closes) in current_expected.items():
-        assert current_windows[window_id].opens_on == opens
-        assert current_windows[window_id].closes_on == closes
+        period = window_id.rsplit("-", 1)[1].upper()
+        owner = select_revision(modelo, filing_year=2026, period=period)
+        window = next(window for window in owner.deadline_windows if window.id == window_id)
+        assert window.opens_on == opens
+        assert window.closes_on == closes
 
 
 # The exercise whose AEAT calendario del contribuyente grounds the deadline days checked
@@ -457,7 +477,7 @@ def test_modelo_303_open_ended_revision_supported_periods_are_fully_materialised
         window.period.registry_token for window in revision.deadline_windows if window.filing_year == opening_year
     }
 
-    assert authored == set(revision.period_selector.periods)
+    assert authored == set(revision.period_selector.periods_for_year(opening_year))
 
 
 # The exercise whose AEAT domiciliacion calendar grounds the SII monthly deadline
@@ -470,8 +490,11 @@ _SII_CALENDAR_EXERCISE = source_first_exercise(
 def test_modelo_303_sii_monthly_deadlines_are_exactly_grounded() -> None:
     year = _SII_CALENDAR_EXERCISE
     modelo, _ = load_modelo_303()
-    revision = modelo.revisions[f"{year}-y-siguientes"]
-    windows = {w.id: w for w in revision.deadline_windows}
+    windows = {
+        window.id: window
+        for month in range(1, 13)
+        for window in select_revision(modelo, filing_year=year, period=f"{month:02}").deadline_windows
+    }
     expected = {
         f"modelo-303-{year}-01-mensual": (date(year, 2, 1), date(year, 3, 2), date(year, 2, 25)),
         f"modelo-303-{year}-02-mensual": (date(year, 3, 1), date(year, 3, 30), date(year, 3, 25)),

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#pipeline-config-topology'
 date: '2026-07-27'
-modified: '2026-07-27'
-body_hash: 'sha256:7e5d7f1fc9e2ce675e34b5da9e1d5353c80130609d55ebb9683087be4b89daa0'
+modified: '2026-10-21'
+body_hash: 'sha256:81b6961bcf81b164045ecbe70a1f89421b41a237b40d05b94450f4affb7961d7'
 related:
   - '[[2026-07-27-canonical-release-pipeline-adr]]'
   - '[[2026-07-27-publication-lane-consolidation-adr]]'
@@ -44,8 +44,7 @@ and `2026-07-27-publication-lane-consolidation-adr` (publication leg).
 
 - The pipeline's execution-time configuration is already indirection-shaped:
   `publish-release.yml` reads `vars.CADRUMO_PUBLISH_ENABLED`,
-  `vars.HOMEBREW_TAP_REPO` / `secrets.HOMEBREW_TAP_TOKEN`,
-  `vars.CLAUDE_MARKETPLACE_REPO` / `secrets.CLAUDE_MARKETPLACE_TOKEN`, and
+  `vars.HOMEBREW_TAP_REPO` / `secrets.HOMEBREW_TAP_TOKEN`, and
   PyPI Trusted Publishing carries no stored credential at all — the workflow
   files name variables, environments supply values. The topology largely
   ratifies and completes an existing shape rather than inventing one.
@@ -151,8 +150,8 @@ and `2026-07-27-publication-lane-consolidation-adr` (publication leg).
 **The four homes and the assignment rule.** (a) The REPOSITORY carries
 product-scoped, non-secret SHAPE: workflow definitions, the names of the
 variables and environments they read, validation of value shapes, stack name,
-region, canonical domain, release-please configuration, the marketplace
-supersession declaration, evidence schemas. (b) GITHUB ENVIRONMENTS AND
+region, canonical domain, release-please configuration,
+evidence schemas. (b) GITHUB ENVIRONMENTS AND
 REPOSITORY VARIABLES/SECRETS carry execution-time VALUES: everything a runner
 needs at job time that is either secret or account-scoped. (c) RUNNER HOSTS
 carry MACHINE state only: toolchains, caches, the local AWS session of the
@@ -165,12 +164,11 @@ only machines know themselves; only the operator knows the account.
 
 **The inventory, assigned.** `CADRUMO_PUBLISH_ENABLED`: repository variable
 (b), read by both publication lanes until #618; its NAME is repo content, its
-setting is the operator's arming act. `HOMEBREW_TAP_REPO` and
-`CLAUDE_MARKETPLACE_REPO`: repository variables (b) — the values are public
-repo slugs, but they are account-scoped pointers the account standard names
-identically across products, so they stay values, not literals in workflows.
-`HOMEBREW_TAP_TOKEN` and `CLAUDE_MARKETPLACE_TOKEN`: fine-grained personal
-access tokens, each scoped to exactly its one target repository with
+setting is the operator's arming act. `HOMEBREW_TAP_REPO`: repository variable (b) — the value is a public
+repo slug, but it is an account-scoped pointer the account standard names
+identically across products, so it stays a value, not a literal in workflows.
+`HOMEBREW_TAP_TOKEN`: a fine-grained personal
+access token scoped to exactly its one target repository with
 contents-write only, stored as secrets (b) on the environment whose jobs push
 them, rotated on a calendar the operator owns. PyPI Trusted Publishing: no
 credential anywhere; the environment names `release` (and, until #618, the
@@ -201,7 +199,7 @@ measured blind spots. First, a new banned CLASS joins the gate's scope:
 cross-project infrastructure identifiers, detected by shape where shapes
 exist — 32-hex account/zone-id shapes, cloud role-identifier shapes,
 `owner/repo` references naming a repository outside the declared reference
-set (this repository, the shared distribution repository, the marketplace,
+set (this repository, the shared distribution repository,
 pinned upstream actions), absolute paths into another product's tree — and
 by the gate's fragment-assembled fixed-token mechanism for known private
 names that no shape can catch. The gate's existing judgement stands
@@ -254,8 +252,8 @@ is a named residual risk carried on discipline (no-at-rest-secrets,
 The topology mostly ratifies the pipeline's best existing pattern and closes
 the gaps around it. Trusted Publishing already proved the strongest shape —
 identity over stored value — and the R4 docs role extends it to AWS; the
-tap and marketplace tokens cannot use identity federation (GitHub-to-GitHub
-has no equivalent here), so they take the weakest-acceptable form: single-
+tap token cannot use identity federation (GitHub-to-GitHub
+has no equivalent here), so it takes the weakest-acceptable form: single-
 repository fine-grained tokens in environment secrets. The four-homes split
 follows the failure modes actually observed, not a taxonomy for its own
 sake: the repo breach that motivated the boundary was cross-project

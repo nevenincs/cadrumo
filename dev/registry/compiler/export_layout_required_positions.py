@@ -258,7 +258,7 @@ def _omissible_reason(field: RecordDesignField, sheet: RecordDesignSheet | None 
     if (sealed := _aeat_program_sealed_reason(field)) is not None:
         return sealed
     for text in (field.description, field.content):
-        if text and _DECLARED_FILL.match(text.strip()):
+        if (text is not None and text) and _DECLARED_FILL.match(text.strip()):
             return "declared fill"
     if _declared_fill_naturaleza(field):
         return "declared fill by naturaleza"

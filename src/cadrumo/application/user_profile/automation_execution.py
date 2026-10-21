@@ -11,8 +11,10 @@ from uuid import UUID
 
 from pydantic import SecretBytes
 
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentProposal
+
 from ...core.identity.digest import ContentDigest
-from .automation_enrollment import AutomationInventory, EnrollmentProposal, EnrollmentTransition
+from .automation_enrollment import AutomationInventory, EnrollmentTransition
 
 
 class AutomationApprovalExecution(Protocol):

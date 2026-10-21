@@ -2,9 +2,22 @@
 // sources, one source the shell does not name, a record with continuation
 // lines and one long message. All values are synthetic.
 
-import type { LogLevel, LogRecord, LogSourceStates } from "../../ipc/contract";
+import type {
+  LogLevel,
+  LogRecord,
+  LogSourceState,
+  LogSourceStates,
+} from "../../ipc/contract";
 
 export const FIXTURE_LOG_FILE = "<storage>/logs/cadrumo.log";
+
+/** A standalone manager's log, read like the Python one. */
+export const MANAGER_AVAILABLE: LogSourceState = {
+  kind: "available",
+  detail: "<storage>/logs/cadrumo-manager.log",
+  failure: null,
+  rejected: 0,
+};
 
 export const AVAILABLE: LogSourceStates = {
   python: {
@@ -13,17 +26,12 @@ export const AVAILABLE: LogSourceStates = {
     failure: null,
     rejected: 0,
   },
-  manager: {
-    kind: "available",
-    detail: "<storage>/logs/cadrumo-manager.log",
-    failure: null,
-    rejected: 0,
-  },
+  manager: MANAGER_AVAILABLE,
 };
 
 export const MISSING: LogSourceStates = {
   python: { ...AVAILABLE.python, kind: "missing" },
-  manager: AVAILABLE.manager,
+  manager: MANAGER_AVAILABLE,
 };
 
 export const UNREADABLE: LogSourceStates = {
@@ -36,7 +44,7 @@ export const UNREADABLE: LogSourceStates = {
       message: "The log file could not be read.",
     },
   },
-  manager: AVAILABLE.manager,
+  manager: MANAGER_AVAILABLE,
 };
 
 const START_MS = Date.UTC(2026, 2, 2, 9, 14, 5, 120);

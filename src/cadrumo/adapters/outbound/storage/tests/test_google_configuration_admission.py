@@ -9,13 +9,14 @@ from uuid import UUID
 import pytest
 from google.auth.transport.requests import Request
 
-from .....application.user_profile.access_contracts import AccessDenialCode
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.google_auth import GoogleAuthScopeInsufficientError
+
 from .....application.user_profile.access_errors import ProfileAccessRefusedError
 from .....core.errors.error_codes import get_registered_error_code
 from .....tests.google_credentials import unused_google_credentials
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...google.artifact_receipt_store import GoogleArtifactReceiptStore
-from ...google.errors import GoogleAuthScopeInsufficientError
 from ...google.google_configuration_admission import admitted_google_auth_request
 from ...google.oauth_flow import credentials_to_records
 from ...google.records import REQUIRED_SCOPES
@@ -71,7 +72,7 @@ def test_probe_has_fresh_identity_admission_and_balanced_actual_acknowledgements
             assert "files.delete" not in endpoint.calls
         else:
             report = provider.probe()
-            assert report.reachable and report.writable and report.root_folder_present
+            assert report.reachable and report.writable and (report.root_folder_present is True)
             assert [call for call in endpoint.calls if call == "files.delete"] == ["files.delete"]
             assert ("files.create", True) in boundary.completed
             assert ("files.delete", True) in boundary.completed

@@ -11,11 +11,12 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ....core.operations import profile_operation_subject
 from ...operations import profile_guard
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
-from ...user_profile.access_contracts import AccessDenialCode
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..catalogue_lifecycle import CatalogueInvoicePatch
 from ..catalogue_lifecycle_ports import CatalogueLifecyclePorts

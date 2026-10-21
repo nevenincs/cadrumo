@@ -8,8 +8,8 @@ operator -- or a documentation sequence -- reaches that command, where it
 surfaces as an unhandled ``RuntimeError`` rather than an instructive refusal.
 
 This gate resolves every target the spec graph declares, through the same
-:func:`~cadrumo.entrypoints.cli._command_target.resolve_deferred_target` the
-runtime uses, so a dangling target fails here instead of at the operator's
+:attr:`~cadrumo_client.commands.graph.CommandSpecGraph.resolver` the
+owning graph uses, so a dangling target fails here instead of at the operator's
 terminal.
 
 Targets are discovered by walking the spec dataclasses recursively rather than
@@ -20,14 +20,15 @@ then covered the day it lands.
 from __future__ import annotations
 
 import dataclasses
+import sys
 from collections.abc import Iterator
 from typing import Final
 
 import pytest
 
-from ....core.errors.hierarchy import InternalInvariantError
-from .._command_target import resolve_deferred_target
-from ..command_shared_contracts import DeferredTarget
+from cadrumo.tests.audited_process import run_audited_process
+from cadrumo_client.commands.shared_contracts import DeferredTarget
+
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -38,27 +39,27 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _MINIMUM_DISCOVERED_TARGETS: Final[int] = 100
 
 
-def _iter_deferred_targets(value: object, path: str) -> Iterator[tuple[str, DeferredTarget]]:
-    """Yield every ``(path, target)`` reachable from ``value``."""
+def _iter_deferred_targets(value: object) -> Iterator[DeferredTarget]:
+    """Yield every target reachable from ``value``, preserving repeated fields."""
     if isinstance(value, DeferredTarget):
-        yield path, value
+        yield value
         return
     if dataclasses.is_dataclass(value) and not isinstance(value, type):
         for field in dataclasses.fields(value):
-            yield from _iter_deferred_targets(getattr(value, field.name), f"{path}.{field.name}")
+            yield from _iter_deferred_targets(getattr(value, field.name))
         return
     if isinstance(value, (list, tuple, set, frozenset)):
-        for index, item in enumerate(value):
-            yield from _iter_deferred_targets(item, f"{path}[{index}]")
+        for item in value:
+            yield from _iter_deferred_targets(item)
         return
     if isinstance(value, dict):
-        for key, item in value.items():
-            yield from _iter_deferred_targets(item, f"{path}[{key!r}]")
+        for item in value.values():
+            yield from _iter_deferred_targets(item)
 
 
-def _declared_targets() -> tuple[tuple[str, DeferredTarget], ...]:
+def _declared_targets() -> tuple[DeferredTarget, ...]:
     """Return every target the live command-spec graph declares."""
-    return tuple(row for node in COMMAND_GRAPH.nodes() for row in _iter_deferred_targets(node.spec, node.spec.key))
+    return tuple(target for node in COMMAND_GRAPH.nodes() for target in _iter_deferred_targets(node.spec))
 
 
 def test_the_walk_reaches_the_command_spec_graph() -> None:
@@ -73,11 +74,11 @@ def test_the_walk_reaches_the_command_spec_graph() -> None:
 def test_every_declared_command_target_resolves() -> None:
     """No command spec may name a module or symbol the tree does not define."""
     failures: list[str] = []
-    for path, target in _declared_targets():
+    for target in _declared_targets():
         try:
-            resolve_deferred_target(target)
+            COMMAND_GRAPH.resolver(target)
         except (RuntimeError, ImportError) as error:
-            failures.append(f"{path}: {target.identity!r} -- {type(error).__name__}: {error}")
+            failures.append(f"{target.identity!r} -- {type(error).__name__}: {error}")
 
     assert not failures, "command specs declare targets that do not resolve:\n" + "\n".join(sorted(failures))
 
@@ -91,5 +92,19 @@ def test_every_declared_command_target_resolves() -> None:
 )
 def test_the_resolver_rejects_a_dangling_target(module: str, qualname: str) -> None:
     """Anti-tautology: prove the resolver this gate leans on actually refuses."""
-    with pytest.raises((InternalInvariantError, ImportError)):
-        resolve_deferred_target(DeferredTarget(module, qualname))
+    source = """
+import sys
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
+from cadrumo_client.commands.shared_contracts import DeferredTarget
+from cadrumo.core.errors.hierarchy import InternalInvariantError
+try:
+    resolve_deferred_target(DeferredTarget(sys.argv[1], sys.argv[2]))
+except (InternalInvariantError, ImportError):
+    pass
+else:
+    raise AssertionError('the actual resolver accepted a dangling target')
+"""
+    completed = run_audited_process(
+        [sys.executable, "-c", source, module, qualname], check=False, capture_output=True, text=True
+    )
+    assert completed.returncode == 0, completed.stderr

@@ -24,13 +24,13 @@ diagnostics through a surface that is not the diagnostic channel.
 
 from __future__ import annotations
 
-import importlib
 from typing import Final
 
 import pytest
 
+from cadrumo_client.commands.shared_contracts import SchemaState
+
 from ....core.json_contract import SchemaEnvelope
-from ..command_shared_contracts import SchemaState
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -65,13 +65,10 @@ def _schema_targets() -> list[tuple[str, object]]:
     """
     resolved: list[tuple[str, object]] = []
     for spec in COMMAND_GRAPH.specs:
-        schema = getattr(spec, "result_schema", None)
-        if schema is None or schema.state is not SchemaState.TARGET or schema.target is None:
+        schema = spec.result_schema
+        if schema.state is not SchemaState.TARGET or schema.target is None:
             continue
-        module = importlib.import_module(schema.target.module)
-        model: object = module
-        for part in schema.target.qualname.split("."):
-            model = getattr(model, part)
+        model = COMMAND_GRAPH.resolver(schema.target)
         resolved.append((schema.identity or spec.key, model))
     return resolved
 
@@ -119,7 +116,8 @@ def test_every_parameter_annotation_is_a_deferred_target() -> None:
     Derived from the live graph rather than a list of the specs that were
     wrong, so a spec added tomorrow is covered without anyone extending it.
     """
-    from ..command_shared_contracts import DeferredTarget
+    from cadrumo_client.commands.shared_contracts import DeferredTarget
+
     from ..command_specs import COMMAND_GRAPH
 
     specs = COMMAND_GRAPH.by_key()

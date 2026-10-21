@@ -395,7 +395,11 @@ def test_complementaria_kind_refused_for_post_boundary_period(
             actor="operator-A",
             clock=_T4,
         )
-    accepted = str(exc_info.value.context.get("accepted_kinds")) if exc_info.value.context else ""
+    accepted = (
+        str(exc_info.value.context.get("accepted_kinds"))
+        if (exc_info.value.context is not None and exc_info.value.context)
+        else ""
+    )
     assert "rectificativa" in accepted
     assert "sustitutiva" in accepted
     assert "complementaria" not in accepted

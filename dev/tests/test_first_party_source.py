@@ -8,8 +8,10 @@ import pytest
 
 from dev._paths import REPO_ROOT
 from dev.first_party_source import (
+    DEPENDENCY_DECLARATION_ROOTS,
     FIRST_PARTY_ROOTS,
     PRODUCT_PACKAGE,
+    PRODUCT_SOURCE_ROOTS,
     is_bundled_data,
     is_production_source,
     is_test_module_name,
@@ -103,3 +105,12 @@ def test_the_exclusion_globs_reject_exactly_what_the_predicate_rejects() -> None
 def test_every_first_party_root_exists() -> None:
     missing = [root for root in FIRST_PARTY_ROOTS if not (REPO_ROOT / root).is_dir()]
     assert missing == []
+
+
+@pytest.mark.parametrize(
+    "roots",
+    (FIRST_PARTY_ROOTS, PRODUCT_SOURCE_ROOTS, DEPENDENCY_DECLARATION_ROOTS),
+    ids=("all", "product", "dependencies"),
+)
+def test_a_source_scope_never_scans_the_same_root_twice(roots: tuple[str, ...]) -> None:
+    assert len(roots) == len(set(roots))

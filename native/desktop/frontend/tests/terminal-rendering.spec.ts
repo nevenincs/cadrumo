@@ -19,7 +19,7 @@ async function openTerminal(page: Page, fontSize = "medium") {
     localStorage.setItem(
       "cadrumo-shell-layout",
       JSON.stringify({
-        layout: { panelOpen: true, tab: "console" },
+        layout: { tab: "console" },
         prefs: { fontSize },
       }),
     );
@@ -32,10 +32,25 @@ async function openTerminal(page: Page, fontSize = "medium") {
         unregisterCallback: () => {},
         async invoke(command: string, args: Record<string, unknown>) {
           switch (command) {
+            case "manager_status":
+              return { state: "ready", failure: null };
+            case "manager_subscribe":
+              (
+                args.updates as { onmessage: (signal: unknown) => void }
+              ).onmessage({
+                kind: "manager-state",
+                revision: 1,
+                status: { state: "ready", failure: null },
+              });
+              return ++callback;
+            case "manager_unsubscribe":
+              return null;
             case "desktop_environment":
               return {
                 outputLanguage: "en",
+                logLevel: "INFO",
                 docs: {
+                  state: "bundled",
                   origin: "http://docs.cadrumo.test",
                   languages: [
                     {
@@ -101,6 +116,10 @@ async function openTerminal(page: Page, fontSize = "medium") {
   await expect(page.locator(".sign-in")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.locator(".sign-in")).toBeHidden();
+  await page
+    .getByRole("navigation", { name: label("desktop.rail.label") })
+    .getByRole("button", { name: label("desktop.panel.label") })
+    .click();
 }
 
 type Probe = {
@@ -192,7 +211,7 @@ test("cold font loads preserve equal columns across text and TUI borders", async
   await expect.poll(() => waiting.length).toBeGreaterThan(0);
   const consoleButton = page
     .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.console") });
+    .getByRole("button", { name: label("desktop.panel.label") });
   await consoleButton.click();
   await consoleButton.click();
   // Exceed the normal focus-wish timeout while terminal initialization waits.
@@ -290,12 +309,12 @@ test("user input cancels focus owed to a terminal awaiting fonts", async ({
     name: label("desktop.rail.label"),
   });
   const consoleButton = rail.getByRole("button", {
-    name: label("desktop.rail.console"),
+    name: label("desktop.panel.label"),
   });
   await consoleButton.click();
   await consoleButton.click();
   await rail
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   const size = page.getByRole("radiogroup", {
     name: label("desktop.settings.terminal_text"),
@@ -347,7 +366,7 @@ test("failed fonts use a stable fallback and hiding retains the grid", async ({
   await page.keyboard.press("Escape");
   const button = page
     .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.console") });
+    .getByRole("button", { name: label("desktop.panel.label") });
   await button.click();
   await expect(pane).toBeHidden();
   await page.setViewportSize({ width: 1100, height: 850 });
@@ -480,7 +499,7 @@ test("font changes while hidden preserve the PTY size until the pane is shown", 
     name: label("desktop.rail.label"),
   });
   const consoleButton = rail.getByRole("button", {
-    name: label("desktop.rail.console"),
+    name: label("desktop.panel.label"),
   });
   await consoleButton.click();
   await expect(page.locator('[data-terminal="console"]')).toBeHidden();
@@ -490,7 +509,7 @@ test("font changes while hidden preserve the PTY size until the pane is shown", 
     return { cols, rows };
   });
   await rail
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   await page
     .getByRole("radiogroup", { name: label("desktop.settings.terminal_text") })
@@ -529,4 +548,39 @@ test("font changes while hidden preserve the PTY size until the pane is shown", 
     .toBeLessThan(before.cols);
   await drawGrid(page);
   expect(await columnSpread(page)).toBeLessThan(1);
+});
+
+test("a focused terminal with nothing to draw schedules no frames", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const frames = { requested: 0 };
+    const request = window.requestAnimationFrame.bind(window);
+    window.requestAnimationFrame = (callback) => {
+      ++frames.requested;
+      return request(callback);
+    };
+    Object.assign(window, { __frames: frames });
+  });
+  await openTerminal(page);
+  const pane = page.locator('[data-terminal="console"]');
+  await expect(pane.locator("canvas").last()).toBeVisible();
+  await drawGrid(page);
+  await pane.locator(".xterm-screen").click();
+  await expect(pane.locator(".xterm-helper-textarea")).toBeFocused();
+  // Let the click's own repaint finish before counting.
+  await page.waitForTimeout(500);
+  const before = await page.evaluate(
+    () =>
+      (window as unknown as { __frames: { requested: number } }).__frames
+        .requested,
+  );
+  // Well past two blink periods of a blinking cursor.
+  await page.waitForTimeout(2000);
+  const after = await page.evaluate(
+    () =>
+      (window as unknown as { __frames: { requested: number } }).__frames
+        .requested,
+  );
+  expect(after - before).toBe(0);
 });

@@ -16,6 +16,7 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl
 
+from ......application.live.expedientes_ports import ExpedientesDeclaration
 from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
 from ......domain.calculations.registry.errors import RegistryValidationError
@@ -28,7 +29,6 @@ from ..declarations_observations import (
     published_layout_source_payloads,
     registry_observation_from_filed_declaration,
 )
-from ..declarations_schema import Declaracion
 from ..errors import SedeParseError
 from ..schema import FiledDeclaracionArtefact
 from ._declarations_support import (
@@ -46,8 +46,8 @@ _FIXED_WIDTH_CONTEXTS = pytest.mark.parametrize(
 )
 
 
-def _declaration(modelo: str, ejercicio: int, period_code: str, expediente_id: str) -> Declaracion:
-    return Declaracion(
+def _declaration(modelo: str, ejercicio: int, period_code: str, expediente_id: str) -> ExpedientesDeclaration:
+    return ExpedientesDeclaration(
         modelo=modelo,
         ejercicio=ejercicio,
         period=Period.from_year_and_code(ejercicio, period_code),

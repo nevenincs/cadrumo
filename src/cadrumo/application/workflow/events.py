@@ -30,7 +30,7 @@ from pydantic import BaseModel, Field, StringConstraints
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now as utc_now
-from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event import BucketActorLabel, BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ..user_profile.custody_ports import default_profile_bucket_event_history_repository
 
@@ -80,7 +80,7 @@ class WorkflowStateResetEvent(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     fingerprint: WorkflowStateResetFingerprint
-    actor: str = Field(min_length=1, max_length=64)
+    actor: BucketActorLabel
     source: str = Field(min_length=1, max_length=64)
     timestamp: datetime
 

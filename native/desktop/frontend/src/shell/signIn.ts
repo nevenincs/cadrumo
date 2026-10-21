@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
+  HostFailure,
+  ManagerStatus,
   ProfileList,
   SignInRefusal,
   SignInStatus,
@@ -17,20 +19,55 @@ const unknownStatus: SignInStatus = {
   refusal: null,
 };
 
+function sameStatus(left: SignInStatus | null, right: SignInStatus): boolean {
+  return (
+    left !== null &&
+    left.supported === right.supported &&
+    left.state === right.state &&
+    left.active_profile === right.active_profile &&
+    left.runtimeAvailable === right.runtimeAvailable &&
+    left.refusal?.code === right.refusal?.code &&
+    left.refusal?.retryAfterSeconds === right.refusal?.retryAfterSeconds &&
+    left.refusal?.operation === right.refusal?.operation &&
+    left.refusal?.ioKind === right.refusal?.ioKind &&
+    left.refusal?.osCode === right.refusal?.osCode
+  );
+}
+
 function refusalFrom(error: unknown): SignInRefusal {
   const seconds = (error as Partial<SignInRefusal> | null)?.retryAfterSeconds;
+  const failure = error as Partial<HostFailure> | null;
   return {
     code: failureCode(error),
     retryAfterSeconds:
       typeof seconds === "number" && Number.isFinite(seconds)
         ? Math.max(0, seconds)
         : null,
+    ...(failure?.operation ? { operation: failure.operation } : {}),
+    ...(failure?.ioKind ? { ioKind: failure.ioKind } : {}),
+    ...(Number.isInteger(failure?.osCode) ? { osCode: failure?.osCode } : {}),
   };
+}
+
+/** Host failures that mean the sign-in ran out of time, not that it was refused. */
+const SUBMIT_TIMEOUTS = new Set(["timed_out", "cli_wait_timed_out"]);
+
+/**
+ * A failed submission, read as a refusal. A helper that ran out of time (or
+ * never got its turn) is named as a timed-out sign-in, so it is told apart
+ * from a status read that timed out and offered again rather than shown as a
+ * bare code.
+ */
+function submitRefusalFrom(error: unknown): SignInRefusal {
+  const refusal = refusalFrom(error);
+  return SUBMIT_TIMEOUTS.has(refusal.code)
+    ? { ...refusal, code: "SIGN_IN_TIMED_OUT" }
+    : refusal;
 }
 
 /**
  * The one reading of the account that every element shows: the sign-in
- * dialog, the TUI pane and its header, settings, the rail and the actions.
+ * dialog, the TUI pane and its header, the account menu, the rail and the actions.
  * Nothing else derives a state of its own from the raw status.
  */
 export type AccountPhase =
@@ -43,8 +80,6 @@ export type AccountPhase =
   /** This platform signs in inside the TUI; the shell offers nothing. */
   | "unsupported"
   | "signed-in"
-  /** The person chose to carry on in the TUI's own flow. */
-  | "in-tui"
   /** There is no runtime to ask. */
   | "services-down"
   /** The status read failed, or the runtime could not say. */
@@ -66,17 +101,15 @@ export const GATED: ReadonlySet<AccountPhase> = new Set([
 export function phaseOf(
   available: boolean,
   status: SignInStatus | null,
-  handover: boolean,
   profiles: ProfileList | null = null,
   /** The host lists profiles and has not answered yet. */
   listPending = false,
 ): AccountPhase {
   if (!available) return "no-host";
   if (!status) return "checking";
+  if (!status.runtimeAvailable) return "services-down";
   if (!status.supported) return "unsupported";
   if (status.state === "present") return "signed-in";
-  if (handover) return "in-tui";
-  if (!status.runtimeAvailable) return "services-down";
   if (status.state === "unknown") return "unknown";
   // With none selected, the profiles that exist are still there to choose
   // from: only where none is known is there nothing to sign in to. Until
@@ -88,25 +121,19 @@ export function phaseOf(
   return "signed-out";
 }
 
-/** Refusals a password cannot answer: the way on is the TUI's own flow. */
-const HANDED_OVER: ReadonlySet<string> = new Set([
+/** Refusals that outlast the attempt that met them. */
+const STANDING: ReadonlySet<string> = new Set([
   "PROFILE_LOCKED",
   "KEYRING_UNAVAILABLE",
+  "THROTTLED",
 ]);
 
-/** Refusals that outlast the attempt that met them. */
-const STANDING: ReadonlySet<string> = new Set([...HANDED_OVER, "THROTTLED"]);
-
-/** Whether a password can settle the account as it stands. Every element
- * that offers sign-in asks this, so none offers a form that is not there. */
-export function canSignIn(
-  phase: AccountPhase,
-  refusal: SignInRefusal | null,
-): boolean {
-  return (
-    (phase === "signed-out" || phase === "unknown") &&
-    !(refusal && HANDED_OVER.has(refusal.code.toUpperCase()))
-  );
+/** Whether the account can be signed in to as it stands. Signing in is
+ * Cadrumo's and the runtime's, and is always offered here while nobody is
+ * signed in: a refusal says why the last try failed, and the next try is
+ * the person's to make. Every element that offers sign-in asks this. */
+export function canSignIn(phase: AccountPhase): boolean {
+  return phase === "signed-out" || phase === "unknown";
 }
 
 const COUNTDOWN_TICK_MS = 250;
@@ -152,6 +179,18 @@ function useCountdown(refusal: SignInRefusal | null) {
 
 /** Only public presence and refusals live here; no password or runtime session. */
 export function useSignIn(host: Host) {
+  const [manager, setManager] = useState<ManagerStatus | null>(null);
+  const managerRef = useRef<ManagerStatus | null>(null);
+  const awaitingManagerAuth = useRef(false);
+  const managerObserved =
+    host.observeManager !== undefined || host.managerStatus !== undefined;
+  const managerAllows = useCallback(
+    () =>
+      !managerObserved ||
+      managerRef.current?.state === "ready" ||
+      managerRef.current?.state === "unsupported",
+    [managerObserved],
+  );
   const [status, setStatus] = useState<SignInStatus | null>(null);
   const [refusal, setRefusal] = useState<SignInRefusal | null>(null);
   const [busy, setBusy] = useState(false);
@@ -161,7 +200,6 @@ export function useSignIn(host: Host) {
   );
   const startingManager = useRef(false);
   const latestStatus = useRef<SignInStatus | null>(null);
-  const [handover, setHandover] = useState(false);
   // The profiles to choose from, where the host offers them; the one the
   // person chose; and what became of the last attempt to create one.
   const [profiles, setProfiles] = useState<ProfileList | null>(null);
@@ -184,6 +222,8 @@ export function useSignIn(host: Host) {
     null,
   );
   const request = useRef(0);
+  const invalidation = useRef(0);
+  const transport = useRef(host);
   const statusReadFailed = useRef(false);
   const mounted = useRef(true);
   const statusRead = useRef<{
@@ -194,38 +234,67 @@ export function useSignIn(host: Host) {
   const currentRefusal = refusal ?? status?.refusal ?? null;
   const retrySeconds = useCountdown(currentRefusal);
   const invalidate = useCallback(() => {
+    ++invalidation.current;
     ++request.current;
+    // Keep the bounded transport read tracked until settlement. Invalidating
+    // its answer does not release the native queue slot it still owns.
   }, []);
+
+  useEffect(() => {
+    // Only replacing the host replaces the transport and its queue. Reads on
+    // that old host retain their generation fence but cannot block the new one.
+    if (transport.current !== host) {
+      transport.current = host;
+      statusRead.current = null;
+      invalidate();
+    }
+  }, [host, invalidate]);
 
   const refresh = useCallback(
     async (afterMutation = false) => {
+      const epoch = invalidation.current;
       if (
         !mounted.current ||
         !host.available ||
+        !managerAllows() ||
         (submitting.current && !afterMutation)
       )
         return;
       while (statusRead.current) {
         const pending = statusRead.current;
         await pending.promise;
-        if (!mounted.current) return;
+        if (!mounted.current || epoch !== invalidation.current) return;
         if (pending.generation === request.current) return;
       }
       if (
         !mounted.current ||
         !host.available ||
+        !managerAllows() ||
         (submitting.current && !afterMutation)
       )
         return;
       const generation = ++request.current;
       const promise = Promise.resolve().then(async () => {
         try {
+          if (
+            !mounted.current ||
+            generation !== request.current ||
+            !managerAllows()
+          )
+            return;
           // Show the independent canonical CLI status read before the
           // optional profile list. Read profiles only while there is a
           // sign-in to prepare; an unreadable list is not an empty one.
           const next = await boundedRead(host.signInStatus());
-          if (generation !== request.current) return;
+          if (
+            !mounted.current ||
+            generation !== request.current ||
+            !managerAllows()
+          )
+            return;
           statusReadFailed.current = false;
+          awaitingManagerAuth.current = false;
+          if (managerObserved) setObservingStartup(false);
           setStatus(next);
           latestStatus.current = next;
           // A list that names another profile as selected than the status
@@ -261,11 +330,15 @@ export function useSignIn(host: Host) {
         } catch (error) {
           if (generation === request.current) {
             statusReadFailed.current = true;
+            const refusal = refusalFrom(error);
             const failed = {
               ...unknownStatus,
               runtimeAvailable:
-                latestStatus.current?.runtimeAvailable ?? !host.startManager,
-              refusal: refusalFrom(error),
+                refusal.operation === "manager"
+                  ? false
+                  : (latestStatus.current?.runtimeAvailable ??
+                    !host.startManager),
+              refusal,
             };
             latestStatus.current = failed;
             setStatus(failed);
@@ -278,8 +351,200 @@ export function useSignIn(host: Host) {
       statusRead.current = { generation, promise };
       await promise;
     },
-    [host],
+    [host, managerAllows, managerObserved],
   );
+
+  useEffect(() => {
+    if (!managerObserved) return;
+    let active = true;
+    let revision = -1;
+    let close: (() => void) | undefined;
+    managerRef.current = null;
+    awaitingManagerAuth.current = true;
+    invalidate();
+    latestStatus.current = null;
+    setStatus(null);
+    setManager(null);
+    const accept = (next: ManagerStatus) => {
+      if (!active) return;
+      const previous = managerRef.current;
+      managerRef.current = next;
+      setManager(next);
+      if (next.state === "ready" || next.state === "unsupported") {
+        if (previous?.state === next.state) return;
+        invalidate();
+        awaitingManagerAuth.current = true;
+        latestStatus.current = null;
+        setStatus(null);
+        setRefusal(null);
+        setObservingStartup(true);
+        // Read canonical authentication again. Manager readiness grants none.
+        void refresh(true);
+        return;
+      }
+      invalidate();
+      awaitingManagerAuth.current = true;
+      const unavailable: SignInStatus = {
+        ...unknownStatus,
+        runtimeAvailable: false,
+        refusal: next.failure ? refusalFrom(next.failure) : null,
+      };
+      latestStatus.current = unavailable;
+      setStatus(unavailable);
+      setRefusal(null);
+      setChosen(null);
+      listed.current = null;
+      setProfiles(null);
+      setObservingStartup(
+        ["starting", "recovering", "waiting"].includes(next.state),
+      );
+    };
+    if (host.observeManager) {
+      void host
+        .observeManager((signal) => {
+          if (!active || signal.revision <= revision) return;
+          revision = signal.revision;
+          accept(
+            signal.kind === "manager-state"
+              ? signal.status
+              : {
+                  state: "failed",
+                  failure: signal.error,
+                },
+          );
+        })
+        .then((unsubscribe) => {
+          if (active) close = unsubscribe;
+          else unsubscribe();
+        })
+        .catch((error: unknown) =>
+          accept({
+            state: "failed",
+            failure: {
+              ...refusalFrom(error),
+              message: "manager-observation-failed",
+              operation: "manager",
+            } as HostFailure,
+          }),
+        );
+    }
+    if (host.managerStatus) {
+      void boundedRead(host.managerStatus())
+        .then((next) => {
+          if (revision < 0) accept(next);
+        })
+        .catch((error: unknown) => {
+          if (revision < 0)
+            accept({
+              state: "failed",
+              failure: {
+                ...refusalFrom(error),
+                message: "manager-observation-failed",
+                operation: "manager",
+              } as HostFailure,
+            });
+        });
+    }
+    return () => {
+      active = false;
+      close?.();
+      invalidate();
+    };
+  }, [host, invalidate, managerObserved, refresh]);
+
+  useEffect(() => {
+    if (!host.observeSignIn) return;
+    let active = true;
+    let revision = -1;
+    let close: (() => void) | undefined;
+    void host
+      .observeSignIn((signal) => {
+        if (!active || signal.revision <= revision) return;
+        revision = signal.revision;
+        if (!managerAllows()) return;
+        if (awaitingManagerAuth.current) {
+          // A new observation can re-arm a failed fresh read. The queued
+          // observation itself is never used as recovery authentication.
+          void refresh(true);
+          return;
+        }
+        if (submitting.current) return;
+        const next =
+          signal.kind === "sign-in-state"
+            ? signal.status
+            : {
+                ...unknownStatus,
+                runtimeAvailable: false,
+                refusal: refusalFrom(signal.error),
+              };
+        // The observer may deliver the same snapshot as the explicit read
+        // while its profile list is still pending. Keep that read and the
+        // person's selection; a changed snapshot still fences both.
+        if (
+          signal.kind === "sign-in-state" &&
+          !statusReadFailed.current &&
+          sameStatus(latestStatus.current, next)
+        )
+          return;
+        invalidate();
+        statusReadFailed.current = signal.kind === "sign-in-observation-failed";
+        latestStatus.current = next;
+        setStatus(next);
+        setRefusal(null);
+        setChosen(null);
+        if (next.runtimeAvailable) setObservingStartup(false);
+        listed.current = null;
+        setProfiles(null);
+        if (
+          host.profiles &&
+          next.runtimeAvailable &&
+          next.state !== "present"
+        ) {
+          const generation = request.current;
+          const accounts = host.profiles;
+          void (async () => {
+            while (statusRead.current) {
+              await statusRead.current.promise;
+              if (!active || generation !== request.current) return;
+            }
+            if (!active || generation !== request.current || !managerAllows())
+              return;
+            const promise = Promise.resolve().then(async () => {
+              try {
+                const list = await boundedRead(accounts.list());
+                if (
+                  !active ||
+                  generation !== request.current ||
+                  !managerAllows()
+                )
+                  return;
+                listed.current = list;
+                setProfiles(list);
+              } catch {
+                if (active && generation === request.current)
+                  setProfiles({ profiles: [], complete: false });
+              } finally {
+                if (statusRead.current?.generation === generation)
+                  statusRead.current = null;
+              }
+            });
+            statusRead.current = { generation, promise };
+            await promise;
+          })();
+        }
+      })
+      .then((unsubscribe) => {
+        if (active) close = unsubscribe;
+        else unsubscribe();
+      })
+      .catch(() => {
+        /* Existing status reads retain their bounded fallback. */
+      });
+    return () => {
+      active = false;
+      close?.();
+    };
+  }, [host, invalidate, managerAllows, refresh]);
 
   useEffect(() => {
     mounted.current = true;
@@ -316,7 +581,10 @@ export function useSignIn(host: Host) {
         await new Promise<void>((resolve) => window.setTimeout(resolve, 1_000));
       } while (active && !expired);
     };
-    void observeStartup();
+    // Production observations own manager progress; the legacy fixture port
+    // retains its existing bounded startup reads.
+    if (managerObserved) void refresh();
+    else void observeStartup();
     const focus = () => void refresh();
     window.addEventListener("focus", focus);
     return () => {
@@ -326,33 +594,38 @@ export function useSignIn(host: Host) {
       invalidate();
       window.removeEventListener("focus", focus);
     };
-  }, [refresh, invalidate, host]);
+  }, [refresh, invalidate, host, managerObserved]);
 
   const settledPhase = phaseOf(
     host.available,
     status,
-    handover,
     profiles,
     host.profiles !== undefined && profiles === null,
   );
   const phase: AccountPhase =
-    observingStartup &&
-    (settledPhase === "checking" || settledPhase === "services-down")
+    managerObserved && managerAllows() && awaitingManagerAuth.current
       ? "starting"
-      : settledPhase;
-  const startServices = async () => {
+      : (observingStartup || (managerObserved && manager === null)) &&
+          (settledPhase === "checking" || settledPhase === "services-down")
+        ? "starting"
+        : settledPhase;
+  const startServices = async (scope?: "user" | "machine") => {
     if (!host.startManager || startingManager.current || submitting.current)
       return;
     startingManager.current = true;
     setStartingServices(true);
     setRefusal(null);
     try {
-      const outcome = await host.startManager();
+      const outcome =
+        scope && host.installManager
+          ? await host.installManager(scope)
+          : await host.startManager();
       if (!mounted.current) return;
       if (outcome !== "dispatched") {
         setRefusal({ code: `manager_${outcome}`, retryAfterSeconds: null });
         return;
       }
+      if (managerObserved) return;
       const until = performance.now() + 90_000;
       do {
         await refresh();
@@ -388,6 +661,7 @@ export function useSignIn(host: Host) {
     // a password to; nor to a profile the host would not name as written.
     if (
       submitting.current ||
+      !managerAllows() ||
       mustChoose ||
       (target && !target.active && !nameable(target.name))
     ) {
@@ -396,6 +670,7 @@ export function useSignIn(host: Host) {
     }
     submitting.current = true;
     invalidate();
+    const generation = request.current;
     setBusy(true);
     setRefusal(null);
     setCreateRefusal(null);
@@ -411,6 +686,12 @@ export function useSignIn(host: Host) {
         password,
         target && !target.active ? target.name : undefined,
       );
+      if (
+        !mounted.current ||
+        generation !== request.current ||
+        !managerAllows()
+      )
+        return;
       if (result.kind === "refused") setRefusal(result);
       else {
         // The canonical persisted-login acknowledgement already observes
@@ -424,25 +705,29 @@ export function useSignIn(host: Host) {
         setProfiles(null);
       }
     } catch (error) {
-      setRefusal(refusalFrom(error));
+      if (mounted.current && generation === request.current)
+        setRefusal(submitRefusalFrom(error));
     } finally {
       password.fill(0);
-      if (!signedIn) await refresh(true);
+      if (!signedIn && mounted.current && generation === request.current)
+        await refresh(true);
       submitting.current = false;
-      setBusy(false);
+      if (mounted.current) setBusy(false);
     }
   };
 
-  /** One attempt to create a profile. As with a sign-in, the password is
-   * consumed by the one call and nothing is tried again. */
+  /** Create, then authenticate the acknowledged profile with the confirmed
+   * password. Neither operation is retried; the buffer is cleared on settlement. */
   const create = async (name: string, password: Uint8Array) => {
     const accounts = host.profiles;
-    if (!accounts || submitting.current) {
+    if (!accounts || submitting.current || !managerAllows()) {
       password.fill(0);
       return false;
     }
     submitting.current = true;
     invalidate();
+    const generation = request.current;
+    const epoch = invalidation.current;
     setBusy(true);
     setCreating(true);
     setRefusal(null);
@@ -452,24 +737,61 @@ export function useSignIn(host: Host) {
     setRemaining(null);
     setSignOutFailure(null);
     let made: string | null = null;
+    let signedIn = false;
     let unanswered: SignInRefusal | null = null;
     try {
       const result = await accounts.create(name, password);
-      if (result.kind === "created") made = result.name;
-      else setCreateRefusal(result);
+      if (
+        !mounted.current ||
+        generation !== request.current ||
+        !managerAllows()
+      )
+        return false;
+      if (result.kind === "created") {
+        made = result.name;
+        const login = await host.signIn(password, made);
+        if (
+          !mounted.current ||
+          generation !== request.current ||
+          !managerAllows()
+        )
+          return false;
+        if (login.kind === "refused") setRefusal(login);
+        else {
+          signedIn = true;
+          statusReadFailed.current = false;
+          latestStatus.current = login.status;
+          setStatus(login.status);
+          listed.current = null;
+          setProfiles(null);
+        }
+      } else setCreateRefusal(result);
     } catch (error) {
       // No answer: timed out, stopped, unreadable. Not a refusal.
-      unanswered = refusalFrom(error);
+      if (mounted.current && generation === request.current) {
+        if (made !== null) setRefusal(refusalFrom(error));
+        else unanswered = refusalFrom(error);
+      }
     } finally {
       password.fill(0);
       // Whatever was held is older than this creation: read again before
       // anything is shown or named.
-      if (made !== null || unanswered) {
+      if (
+        mounted.current &&
+        generation === request.current &&
+        (made !== null || unanswered)
+      ) {
         listed.current = null;
         setProfiles(null);
       }
-      await refresh(true);
-      if (unanswered) {
+      if (!signedIn && mounted.current && generation === request.current)
+        await refresh(true);
+      if (
+        mounted.current &&
+        epoch === invalidation.current &&
+        managerAllows() &&
+        unanswered
+      ) {
         // The list is the witness: a profile of that name now in it was
         // created, whatever became of the answer.
         const folded = name.toLowerCase();
@@ -479,7 +801,13 @@ export function useSignIn(host: Host) {
         if (found) made = found.name;
         else setCreateUnknown(unanswered);
       }
-      if (made !== null) {
+      if (
+        mounted.current &&
+        epoch === invalidation.current &&
+        managerAllows() &&
+        made !== null &&
+        !signedIn
+      ) {
         setChosen(made);
         setCreated(made);
       }
@@ -491,26 +819,44 @@ export function useSignIn(host: Host) {
   };
 
   const signOut = async () => {
-    if (submitting.current) return;
+    if (submitting.current || !managerAllows()) return;
     submitting.current = true;
     invalidate();
+    const generation = request.current;
     setBusy(true);
     setRefusal(null);
     setSignOutFailure(null);
     try {
       await statusRead.current?.promise;
-      setRemaining(await host.signOut());
-      setHandover(false);
+      if (
+        !mounted.current ||
+        generation !== request.current ||
+        !managerAllows()
+      )
+        return;
+      const remaining = await host.signOut();
+      if (
+        !mounted.current ||
+        generation !== request.current ||
+        !managerAllows()
+      )
+        return;
+      setRemaining(remaining);
     } catch (error) {
-      setSignOutFailure(refusalFrom(error));
+      if (mounted.current && generation === request.current)
+        setSignOutFailure(refusalFrom(error));
     } finally {
-      await refresh(true);
+      if (mounted.current && generation === request.current)
+        await refresh(true);
       submitting.current = false;
       setBusy(false);
     }
   };
 
   return {
+    manager,
+    recoveringServices:
+      manager?.state === "recovering" || manager?.state === "waiting",
     status,
     phase,
     /** The profiles on this computer, or null where the host offers none. */
@@ -542,11 +888,12 @@ export function useSignIn(host: Host) {
     busy,
     startingServices,
     canStartServices: host.startManager !== undefined,
+    canInstallServices: host.installManager !== undefined,
     startServices,
     remaining,
     signOutFailure,
     gated: GATED.has(phase),
-    canSignIn: canSignIn(phase, currentRefusal),
+    canSignIn: canSignIn(phase),
     submit,
     signOut,
     /** The person has seen what was refused: a refusal that came from an
@@ -562,9 +909,14 @@ export function useSignIn(host: Host) {
     },
     /** Read the status again: something else has shown it may be stale. */
     recheck: () => refresh(),
-    openTui: () => setHandover(true),
+    profilesChanged: () => {
+      listed.current = null;
+      setProfiles(null);
+      setChosen(null);
+      return refresh(true);
+    },
+    /** The TUI's session ended: what it did to the account is read again. */
     tuiExited: () => {
-      setHandover(false);
       setRefusal(null);
       void refresh();
     },

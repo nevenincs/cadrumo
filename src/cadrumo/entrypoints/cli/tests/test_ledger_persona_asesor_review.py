@@ -26,16 +26,16 @@ per test, the real Typer app, and the JSON envelope surfaced by
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 import pytest
 from click.testing import Result
 
 from ....tests.cli_envelope import unwrap_schema_envelope as _json
 from ....tests.inventory import FIXTURES_DIR
-from ._isolated_profile_storage_fixtures import recorded_fx_seeded_backend
-from .cli_runner import invoke_cached_cli
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .profile_world_fixtures import recorded_fx_seeded_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -55,9 +55,9 @@ def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
 
 
-def _import_corpus() -> None:
+def _import_corpus(*, invoke_cli: Callable[..., Result]) -> None:
     for name in _FILES:
-        result = _invoke(["app", "ledger", "import", "--file", str(_CORPUS / name), "--provider", "csv"])
+        result = invoke_cli(["app", "ledger", "import", "--file", str(_CORPUS / name), "--provider", "csv"])
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 

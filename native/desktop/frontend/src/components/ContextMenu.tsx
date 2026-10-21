@@ -7,11 +7,26 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { ContextMenuItem } from "../ipc/contract";
+import type {
+  ContextMenuAction,
+  ContextMenuItem,
+  ContextMenuSeparator,
+} from "../ipc/contract";
 
 /** Where a menu opens: a point, or with a height the edge of a row, which the
  * menu then opens under or over and never across. */
 export type MenuAnchor = { x: number; y: number; height?: number };
+
+/** A menu item with what choosing it does. */
+export type MenuEntry =
+  (ContextMenuAction & { run?: () => void }) | ContextMenuSeparator;
+
+/** Opens a menu: at the pointer when `pointer`, else at the anchor. */
+export type OpenMenu = (
+  items: MenuEntry[],
+  at: MenuAnchor,
+  pointer: boolean,
+) => void;
 
 // The shell's own drawing of a context menu, for where the host cannot show a
 // native one. In the desktop application the host draws the same item list

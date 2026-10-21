@@ -23,8 +23,8 @@ from __future__ import annotations
 import contextlib
 import os
 import sys
-from collections.abc import Mapping
-from typing import TypedDict
+from collections.abc import Iterable, Mapping
+from typing import Final, TypedDict
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
@@ -44,6 +44,7 @@ from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.optional_extras import LLM_EXTRA, OPTIONAL_EXTRAS, OptionalExtra, optional_extra_available
 
 __all__ = [
+    "LICENCE_ADVISORIES",
     "LOCAL_MODEL_PROVISIONING_SERVICE",
     "OPTIONAL_EXTRAS",
     "AcceleratorDevice",
@@ -67,13 +68,13 @@ __all__ = [
     "assess_model_load_contention",
     "binding_free_bytes",
     "cadrumo_selected_models",
+    "model_licence_notice",
     "probe_hardware_profile",
     "probe_local_inference_hardware",
     "probe_local_model_provisioning",
     "probe_model_runtime_hardware_floor",
     "probe_optional_extra",
     "probe_optional_extras",
-    "pull_runtime_model",
     "read_accelerator",
     "read_installed_models",
     "read_runtime_residents",
@@ -81,7 +82,6 @@ __all__ = [
     "remove_runtime_model",
     "select_model_for_role",
     "unload_runtime_model",
-    "verify_model_ready",
 ]
 
 from ..core.errors.hierarchy import pydantic_validation_boundary
@@ -104,12 +104,10 @@ from .provisioning_runtime import (
     assess_model_load_contention,
     cadrumo_selected_models,
     matches_selected_model,
-    pull_runtime_model,
     read_installed_models,
     read_runtime_residents,
     remove_runtime_model,
     unload_runtime_model,
-    verify_model_ready,
 )
 
 
@@ -231,14 +229,14 @@ def read_system_memory() -> SystemMemoryReading:
         names = getattr(os, "sysconf_names", {})
         if "SC_PAGE_SIZE" in names and "SC_PHYS_PAGES" in names:
             try:
-                page_size = int(os.sysconf("SC_PAGE_SIZE"))
-                total = page_size * int(os.sysconf("SC_PHYS_PAGES"))
+                page_size = os.sysconf("SC_PAGE_SIZE")
+                total = page_size * os.sysconf("SC_PHYS_PAGES")
             except (OSError, ValueError):
                 return SystemMemoryReading()
             free: int | None = None
             if "SC_AVPHYS_PAGES" in names:
                 try:
-                    free = page_size * int(os.sysconf("SC_AVPHYS_PAGES"))
+                    free = page_size * os.sysconf("SC_AVPHYS_PAGES")
                 except (OSError, ValueError):
                     free = None
             return SystemMemoryReading(total_bytes=total, free_bytes=free)
@@ -473,7 +471,7 @@ def read_accelerator() -> AcceleratorReading:
         )
     try:
         try:
-            count = int(pynvml.nvmlDeviceGetCount())
+            count = pynvml.nvmlDeviceGetCount()
         except (pynvml.NVMLError, OSError, ValueError):
             return AcceleratorReading(
                 kind=AcceleratorKind.UNKNOWN,
@@ -492,10 +490,10 @@ def read_accelerator() -> AcceleratorReading:
             try:
                 handle = pynvml.nvmlDeviceGetHandleByIndex(index)
                 raw_name = pynvml.nvmlDeviceGetName(handle)
-                name = raw_name.decode("utf-8", "replace") if isinstance(raw_name, bytes) else str(raw_name)
+                name = raw_name.decode("utf-8", "replace") if isinstance(raw_name, bytes) else raw_name
                 info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-                total = int(info.total)
-                free = int(info.free)
+                total = info.total
+                free = info.free
             except (pynvml.NVMLError, OSError, ValueError, AttributeError):
                 # A device that answers nothing stays enumerated with unreadable
                 # figures rather than being dropped: its presence is a real
@@ -530,7 +528,7 @@ def probe_hardware_profile(
     internals, so every branch of the profile and of
     :func:`assess_model_load_contention` is exercised against real model
     construction with real readings -- a test must never depend on this host's
-    actual device state, which changes minute to minute while an agent fleet
+    actual device state, which changes minute to minute while an automation fleet
     runs on it.
 
     Args:
@@ -692,6 +690,36 @@ class ModelSelection(ProvisioningOutcome):
             model=candidate.runtime_id,
             licence=candidate.licence.name,
         )
+
+
+#: The selection advisories that are about a model's licence, which a person
+#: must see before that model is downloaded.
+LICENCE_ADVISORIES: Final = frozenset(
+    {ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED, ModelSelectionAdvisory.LICENCE_UNVERIFIED}
+)
+
+
+def model_licence_notice(
+    target: str | None, advisories: Iterable[ModelSelectionAdvisory], *, locale: str | None = None
+) -> str | None:
+    """Return the licence notice for a planned model in ``locale``, or ``None`` when it needs none.
+
+    ``target`` is the model a setup plan names, optionally followed by
+    ``@`` and its pinned digest. Only a catalogued model whose licence bars
+    commercial use has a notice: its publisher's text is the evidence the
+    notice repeats.
+    """
+    if target is None or ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED not in set(advisories):
+        return None
+    candidate = model_candidate(target.split("@", 1)[0])
+    if candidate is None:
+        return None
+    return tr(
+        "provisioning.model.licence.non_commercial_advisory",
+        model=candidate.runtime_id,
+        licence=candidate.licence.name,
+        locale=locale,
+    )
 
 
 class _SelectionContext(TypedDict):

@@ -32,16 +32,10 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 
-from ..classification import (
-    CustomerTaxStatus,
-    InvoiceKind,
-    IvaInvoiceClassificationCriteria,
-    IvaTerritorialScope,
-    TransactionKind,
-)
+from ..classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, TransactionKind
 from ..errors import IvaCatalogueError
 from ..place_of_supply import place_of_supply_rule
-from ..schema import EUMemberState, IvaCategory, IvaRateKind
+from ..schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 from ..supply_nature import SupplyNature
 from .classification_authority_support import classify_with_registry_rules
 

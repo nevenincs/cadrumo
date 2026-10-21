@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-05 11:08+0200\n"
+"POT-Creation-Date: 2026-10-12 00:32+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -169,16 +169,28 @@ msgstr ""
 "javítsd ki az elérési utat, és futtasd újra."
 
 #: ../../how-to/import-bank-statements.md:69
+msgid ""
+"The command line resolves a relative path from the directory you run it "
+"in. The terminal interface and MCP run the same operation "
+"(`ledger.import`) and need the absolute path of the statement file. The "
+"same holds for the destination of `ledger export` (`ledger.export`)."
+msgstr ""
+"A parancssor a relatív elérési utat attól a könyvtártól oldja fel, "
+"amelyben futtatod. A terminálfelület és az MCP ugyanazt a műveletet "
+"(`ledger.import`) futtatja, és a kivonatfájl abszolút elérési útját kéri."
+" Ugyanez érvényes a `ledger export` (`ledger.export`) célhelyére."
+
+#: ../../how-to/import-bank-statements.md:74
 msgid "Save imported rows with diagnostics"
 msgstr "Importált sorok mentése diagnosztikával"
 
-#: ../../how-to/import-bank-statements.md:71
+#: ../../how-to/import-bank-statements.md:76
 msgid "Add `--verify` when you want import diagnostics alongside the save:"
 msgstr ""
 "Add hozzá a `--verify` kapcsolót, ha a mentés mellett importdiagnosztikát"
 " is szeretnél:"
 
-#: ../../how-to/import-bank-statements.md:77
+#: ../../how-to/import-bank-statements.md:82
 msgid ""
 "If the diagnostics should check the rows against a different original "
 "file, pass it with `--verify-source <original>`. Use `--period` with "
@@ -193,11 +205,11 @@ msgstr ""
 " el mindkettőt, és az `aeat` automatikusan az egyes tranzakciók dátumából"
 " rendeli hozzá az időszakot."
 
-#: ../../how-to/import-bank-statements.md:82
+#: ../../how-to/import-bank-statements.md:87
 msgid "Add one transaction manually"
 msgstr "Egy tranzakció kézi hozzáadása"
 
-#: ../../how-to/import-bank-statements.md:84
+#: ../../how-to/import-bank-statements.md:89
 msgid ""
 "Use `ledger add` when a transaction is missing from imported statements. "
 "Required fields are date, amount, direction, and description. Write the "
@@ -211,7 +223,7 @@ msgstr ""
 "pénz jött be vagy ment ki, a parancs pedig elutasítja a negatív összeget."
 " Az `OUTGOING` a kiadásokhoz, az `INCOMING` a bevételekhez való:"
 
-#: ../../how-to/import-bank-statements.md:94
+#: ../../how-to/import-bank-statements.md:99
 msgid ""
 "The third direction, `INTERNAL_TRANSFER`, records money moved between "
 "your own accounts."
@@ -219,11 +231,11 @@ msgstr ""
 "A harmadik irány, az `INTERNAL_TRANSFER`, a saját számláid között "
 "mozgatott pénzt rögzíti."
 
-#: ../../how-to/import-bank-statements.md:97
+#: ../../how-to/import-bank-statements.md:102
 msgid "Record tax details on a manual transaction"
 msgstr "Adórészletek rögzítése kézi tranzakciónál"
 
-#: ../../how-to/import-bank-statements.md:99
+#: ../../how-to/import-bank-statements.md:104
 msgid ""
 "`ledger add` accepts the same tax fields you set during classification, "
 "so you record a complete transaction in one step. `--amount` is the gross"
@@ -236,19 +248,19 @@ msgstr ""
 "eszköz elutasítja a sort, ha az adóalap plusz az IVA centre pontosan nem "
 "egyezik a bruttóval:"
 
-#: ../../how-to/import-bank-statements.md:108
+#: ../../how-to/import-bank-statements.md:113
 msgid "Useful optional fields:"
 msgstr "Hasznos opcionális mezők:"
 
-#: ../../how-to/import-bank-statements.md:110
+#: ../../how-to/import-bank-statements.md:115
 msgid "`--currency` records a non-euro amount; it defaults to `EUR`."
 msgstr "A `--currency` egy nem eurós összeget rögzít; alapértelmezése `EUR`."
 
-#: ../../how-to/import-bank-statements.md:111
+#: ../../how-to/import-bank-statements.md:116
 msgid "`--counterparty` records who you paid or were paid by."
 msgstr "A `--counterparty` rögzíti, kinek fizettél, vagy ki fizetett neked."
 
-#: ../../how-to/import-bank-statements.md:112
+#: ../../how-to/import-bank-statements.md:117
 msgid ""
 "`--category-id` assigns the income or expense category. Run `aeat app "
 "ledger categories` to list the ids."
@@ -257,7 +269,7 @@ msgstr ""
 "azonosítók listázásához futtasd az `aeat app ledger categories` "
 "parancsot."
 
-#: ../../how-to/import-bank-statements.md:114
+#: ../../how-to/import-bank-statements.md:119
 msgid ""
 "`--taxable-base`, `--iva-rate`, and `--iva-amount` record the VAT "
 "breakdown."
@@ -265,7 +277,7 @@ msgstr ""
 "A `--taxable-base`, az `--iva-rate` és az `--iva-amount` rögzíti az IVA "
 "bontását."
 
-#: ../../how-to/import-bank-statements.md:115
+#: ../../how-to/import-bank-statements.md:120
 #, python-brace-format
 msgid ""
 "`--deduction-kind` names the source of a purchase's input VAT deduction, "
@@ -279,11 +291,11 @@ msgstr ""
 "levonásra. Lásd: {ref}`Tranzakciók besorolása <say-where-the-input-iva-"
 "comes-from>`."
 
-#: ../../how-to/import-bank-statements.md:119
+#: ../../how-to/import-bank-statements.md:124
 msgid "`--irpf-category` records the IRPF (personal income tax) category."
 msgstr "Az `--irpf-category` rögzíti az IRPF (személyi jövedelemadó) kategóriáját."
 
-#: ../../how-to/import-bank-statements.md:120
+#: ../../how-to/import-bank-statements.md:125
 msgid ""
 "`--source-jurisdiction` records the country a movement belongs to, as an "
 "ISO two-letter code, which matters for non-resident scopes."
@@ -291,11 +303,11 @@ msgstr ""
 "A `--source-jurisdiction` rögzíti, melyik országhoz tartozik egy mozgás, "
 "ISO kétbetűs kódként, ami a nem illetőségű hatóköröknél számít."
 
-#: ../../how-to/import-bank-statements.md:122
+#: ../../how-to/import-bank-statements.md:127
 msgid "`--notes` adds a short note."
 msgstr "A `--notes` egy rövid jegyzetet ad hozzá."
 
-#: ../../how-to/import-bank-statements.md:124
+#: ../../how-to/import-bank-statements.md:129
 msgid ""
 "For a part-business, part-personal movement, set `--classification MIXED`"
 " and the business share with `--business-pct`, a value from `0` to `1`. "
@@ -308,7 +320,7 @@ msgstr ""
 "mögötti IVA-kategória, EU-tagállam és felhasználási arány jelentéséhez "
 "lásd: [Tranzakciók besorolása](classify-transactions.md)."
 
-#: ../../how-to/import-bank-statements.md:129
+#: ../../how-to/import-bank-statements.md:134
 msgid ""
 "Use the invoice commands when you also need to track whether an invoice "
 "exists separately from the bank transaction. Received invoices are "
@@ -323,7 +335,7 @@ msgstr ""
 "százalékban várja, például `--iva-rate 21`, a `ledger add`-dal "
 "ellentétben, amely tizedes törtet vár:"
 
-#: ../../how-to/import-bank-statements.md:139
+#: ../../how-to/import-bank-statements.md:144
 msgid ""
 "For the full invoice-record workflow, see [Attach invoices and receipts "
 "to transactions](ledger-evidence.md)."
@@ -331,11 +343,11 @@ msgstr ""
 "A teljes számlanyilvántartási munkafolyamathoz lásd [Számlák és "
 "bizonylatok csatolása a tranzakciókhoz](ledger-evidence.md)."
 
-#: ../../how-to/import-bank-statements.md:142
+#: ../../how-to/import-bank-statements.md:147
 msgid "Review rows"
 msgstr "Sorok áttekintése"
 
-#: ../../how-to/import-bank-statements.md:144
+#: ../../how-to/import-bank-statements.md:149
 msgid ""
 "List rows, narrow the list with filters, inspect one row, and read its "
 "event history. The example starts from the imported quarter and walks the"
@@ -345,7 +357,7 @@ msgstr ""
 " olvasd el az eseményelőzményeit. A példa az importált negyedévből indul,"
 " és végigmegy az olvasási parancsokon:"
 
-#: ../../how-to/import-bank-statements.md:152
+#: ../../how-to/import-bank-statements.md:157
 msgid ""
 "For a broader review queue, use `ledger review` to inspect selected rows "
 "and `ledger check` to report anomalies across all your records and "
@@ -356,11 +368,11 @@ msgstr ""
 "időszakaidban előforduló rendellenességek jelentéséhez. Mindkettő csak "
 "helyi:"
 
-#: ../../how-to/import-bank-statements.md:160
+#: ../../how-to/import-bank-statements.md:165
 msgid "Export rows for review"
 msgstr "Sorok exportálása áttekintésre"
 
-#: ../../how-to/import-bank-statements.md:162
+#: ../../how-to/import-bank-statements.md:167
 msgid ""
 "Export your records to a file. The `--year` and `--period` filter keeps "
 "the export aligned with the transaction dates. Exports are review "
@@ -371,7 +383,7 @@ msgstr ""
 "ellenőrzési pillanatképek, nem arra szolgálnak, hogy szerkeszd, majd "
 "újraimportáld őket:"
 
-#: ../../how-to/import-bank-statements.md:170
+#: ../../how-to/import-bank-statements.md:175
 msgid ""
 "Add `--export-format xlsx` to write an XLSX snapshot instead, and use the"
 " annual period code `0A` when a whole year is the review scope."
@@ -380,7 +392,7 @@ msgstr ""
 "pillanatképet szeretnél írni, és használd a `0A` éves időszakkódot, ha az"
 " áttekintés egy egész évre terjed ki."
 
-#: ../../how-to/import-bank-statements.md:173
+#: ../../how-to/import-bank-statements.md:178
 msgid ""
 "To change saved rows, use `ledger update`, `ledger classify`, `ledger "
 "allocate`, `ledger split`, or `ledger merge`."
@@ -389,11 +401,11 @@ msgstr ""
 "classify`, `ledger allocate`, `ledger split` vagy `ledger merge` "
 "parancsot."
 
-#: ../../how-to/import-bank-statements.md:176
+#: ../../how-to/import-bank-statements.md:181
 msgid "Update a row"
 msgstr "Egy sor módosítása"
 
-#: ../../how-to/import-bank-statements.md:178
+#: ../../how-to/import-bank-statements.md:183
 msgid ""
 "Use `ledger update` for editable transaction fields - date, value date, "
 "amount, direction, currency, counterparty, description, taxable base, VAT"
@@ -403,7 +415,7 @@ msgstr ""
 "értéknap, összeg, irány, pénznem, partner, leírás, adóalap, IVA-kulcs, "
 "IVA-összeg, IRPF-kategória, jegyzetek vagy csoportcímke:"
 
-#: ../../how-to/import-bank-statements.md:186
+#: ../../how-to/import-bank-statements.md:191
 msgid ""
 "An update gives the transaction a new id; an id you wrote down earlier "
 "still resolves in `view`, `history`, and `track`. For the full correction"
@@ -418,11 +430,11 @@ msgstr ""
 "visszaállításához - lásd: [Javítsd ki a hibákat a nyilvántartásaidban"
 "](correct-ledger-entries.md)."
 
-#: ../../how-to/import-bank-statements.md:192
+#: ../../how-to/import-bank-statements.md:197
 msgid "Attach a supporting document to a transaction"
 msgstr "Bizonylat csatolása egy tranzakcióhoz"
 
-#: ../../how-to/import-bank-statements.md:194
+#: ../../how-to/import-bank-statements.md:199
 msgid ""
 "Attach a secure supporting document for a purchase to a transaction. The "
 "supporting document's id comes from `aeat app ledger evidence add`, which"
@@ -440,7 +452,7 @@ msgstr ""
 "`evidence add` az IVA-kulcsot százalékban várja (`21`), míg a `ledger "
 "add` tizedes törtet (`0.21`) vár:"
 
-#: ../../how-to/import-bank-statements.md:205
+#: ../../how-to/import-bank-statements.md:210
 msgid ""
 "`attach` is the single door for a purchase's supporting documents. The "
 "`link` command links a transaction to an invoice record only. Its "
@@ -459,11 +471,11 @@ msgstr ""
 "korlátozását lásd: [Számlák és bizonylatok csatolása a tranzakciókhoz"
 "](ledger-evidence.md)."
 
-#: ../../how-to/import-bank-statements.md:213
+#: ../../how-to/import-bank-statements.md:218
 msgid "Fix a wrong row"
 msgstr "Hibás sor javítása"
 
-#: ../../how-to/import-bank-statements.md:215
+#: ../../how-to/import-bank-statements.md:220
 msgid ""
 "Splitting a mixed movement into parts, merging a wrong split back, and "
 "archiving, stashing, removing, or resetting rows are all corrections. "
@@ -478,11 +490,11 @@ msgstr ""
 "tartalmazza, minden parancshoz egy példával és tanáccsal a legkevésbé "
 "romboló javítás kiválasztásához."
 
-#: ../../how-to/import-bank-statements.md:221
+#: ../../how-to/import-bank-statements.md:226
 msgid "Classify rows"
 msgstr "Sorok besorolása"
 
-#: ../../how-to/import-bank-statements.md:223
+#: ../../how-to/import-bank-statements.md:228
 msgid ""
 "Classify rows before calculation. At a minimum, imported business rows "
 "need a business/personal/mixed decision, and expense rows need a "
@@ -492,7 +504,7 @@ msgstr ""
 "soroknál döntened kell arról, hogy üzleti, személyes vagy vegyes "
 "besorolást kapjanak, a kiadássorokhoz pedig kategóriát kell megadnod:"
 
-#: ../../how-to/import-bank-statements.md:230
+#: ../../how-to/import-bank-statements.md:235
 msgid ""
 "[Classify transactions](classify-transactions.md) owns the full workflow "
 "- bulk CSV classification, mixed-use allocation, tax fields, stored "
@@ -503,11 +515,11 @@ msgstr ""
 "felosztás, adómezők, tárolt szabályok és [LLM-mel támogatott javaslatok"
 "](classify-with-llm.md)."
 
-#: ../../how-to/import-bank-statements.md:234
+#: ../../how-to/import-bank-statements.md:239
 msgid "Check readiness for a filing period"
 msgstr "Egy benyújtási időszak készenlétének ellenőrzése"
 
-#: ../../how-to/import-bank-statements.md:236
+#: ../../how-to/import-bank-statements.md:241
 msgid ""
 "Run preflight before calculating a modelo, then check the overall state "
 "of your records. Preflight looks at each record inside the period and "
@@ -522,7 +534,7 @@ msgstr ""
 "besorolást, kategóriát, adóalapot, IVA-összeget vagy -kulcsot, felosztási"
 " hivatkozást, illetve át nem váltható pénznemet:"
 
-#: ../../how-to/import-bank-statements.md:245
+#: ../../how-to/import-bank-statements.md:250
 msgid ""
 "The check changes nothing; it names the rows that are not ready so you "
 "fix the raw material before trusting any total. Continue to calculation "
@@ -535,7 +547,7 @@ msgstr ""
 "profil és a célidőszak is készen áll az általad előkészített nyomtatvány "
 "kiszámítására."
 
-#: ../../how-to/import-bank-statements.md:250
+#: ../../how-to/import-bank-statements.md:255
 msgid ""
 "For calculation review in Google Sheets, see [Review calculations with "
 "Google Sheets](review-with-google-sheets.md). That workflow exports a "
@@ -547,11 +559,11 @@ msgstr ""
 "munkafolyamat egy nyomtatvány számítását exportálja a Táblázatokba; ez "
 "különbözik a nyilvántartásaid CSV/XLSX-exportjától."
 
-#: ../../how-to/import-bank-statements.md:254
+#: ../../how-to/import-bank-statements.md:259
 msgid "If a command stops with an error"
 msgstr "Ha egy parancs hibával leáll"
 
-#: ../../how-to/import-bank-statements.md:256
+#: ../../how-to/import-bank-statements.md:261
 msgid ""
 "If a command reports that no profile is active, the period is invalid, or"
 " your records are not ready, use [Diagnose and repair your local "
@@ -562,11 +574,11 @@ msgstr ""
 "[Diagnosztizáld és javítsd a helyi beállításaidat](troubleshooting.md) "
 "útmutatót."
 
-#: ../../how-to/import-bank-statements.md:259
+#: ../../how-to/import-bank-statements.md:264
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/import-bank-statements.md:261
+#: ../../how-to/import-bank-statements.md:266
 msgid ""
 "[Import, export, and supporting documents](../reference/import-export-"
 "and-evidence.md) - understand what imported rows mean and how they differ"
@@ -576,15 +588,15 @@ msgstr ""
 "evidence.md) - értse meg, mit jelentenek az importált sorok, és miben "
 "különböznek az adóügyi tényektől és a benyújtás igazolásától."
 
-#: ../../how-to/import-bank-statements.md:264
+#: ../../how-to/import-bank-statements.md:269
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Tranzakciók besorolása](classify-transactions.md)"
 
-#: ../../how-to/import-bank-statements.md:265
+#: ../../how-to/import-bank-statements.md:270
 msgid "[Classify transactions with an LLM](classify-with-llm.md)"
 msgstr "[Tranzakciók besorolása LLM-mel](classify-with-llm.md)"
 
-#: ../../how-to/import-bank-statements.md:266
+#: ../../how-to/import-bank-statements.md:271
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md)"
@@ -592,22 +604,22 @@ msgstr ""
 "[Hogyan válnak a nyilvántartásaid adóadatokká](../explanation/from-"
 "records-to-figures.md)"
 
-#: ../../how-to/import-bank-statements.md:267
+#: ../../how-to/import-bank-statements.md:272
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr ""
 "[Számítások áttekintése Google Sheets segítségével](review-with-google-"
 "sheets.md)"
 
-#: ../../how-to/import-bank-statements.md:268
+#: ../../how-to/import-bank-statements.md:273
 msgid "[Quickstart: prepare a modelo filing](quickstart.md)"
 msgstr "[Gyorsindító: nyomtatvány-benyújtás előkészítése](quickstart.md)"
 
-#: ../../how-to/import-bank-statements.md:269
+#: ../../how-to/import-bank-statements.md:274
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[A számítási bemenetek áttekintése és megadása](review-calculation-"
 "values.md)"
 
-#: ../../how-to/import-bank-statements.md:270
+#: ../../how-to/import-bank-statements.md:275
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"

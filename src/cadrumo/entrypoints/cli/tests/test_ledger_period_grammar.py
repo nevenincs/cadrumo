@@ -27,12 +27,11 @@ from pathlib import Path
 import pytest
 import typer
 
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
-from ....core.period import Period, StandardPeriodCode
-from ..period_parsing import _canonical_period, _LedgerPeriodRefusal
-from .cli_runner import invoke_cached_cli
+from cadrumo.core.period import Period, StandardPeriodCode
+from cadrumo.entrypoints.cli.period_parsing import _canonical_period, _LedgerPeriodRefusal
+
+from .cli_fixture_worlds import invoke_joined_cli
+from .profile_world_fixtures import profile_backend_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -212,11 +211,11 @@ def test_empty_period_refuses() -> None:
 # --- End-to-end: real ledger command takes --period AEAT token + --year -------
 
 
-_isolated_backend = active_profile_isolated_backend_fixture(autouse=False)
+_isolated_backend = profile_backend_fixture("active", autouse=False)
 
 
 def _add_business_row_missing_facts() -> None:
-    add = invoke_cached_cli(
+    add = invoke_joined_cli(
         [
             "app",
             "ledger",
@@ -247,7 +246,7 @@ def test_preflight_accepts_aeat_token_with_year(_isolated_backend: None) -> None
 
     _add_business_row_missing_facts()
 
-    result = invoke_cached_cli(["app", "ledger", "preflight", "--period", "1T", "--year", "2026"])
+    result = invoke_joined_cli(["app", "ledger", "preflight", "--period", "1T", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
     # The period echoes back through Period.__str__, never as a combined
@@ -264,9 +263,9 @@ def test_ledger_read_period_display_matches_typed_period_across_text_and_json(_i
 
     _add_business_row_missing_facts()
     period = Period.from_year_and_code(2026, "1T")
-    preflight = invoke_cached_cli(["app", "ledger", "preflight", "--period", "1T", "--year", "2026"])
-    status = invoke_cached_cli(["app", "ledger", "status", "--period", "1T", "--year", "2026"])
-    preflight_json = invoke_cached_cli(
+    preflight = invoke_joined_cli(["app", "ledger", "preflight", "--period", "1T", "--year", "2026"])
+    status = invoke_joined_cli(["app", "ledger", "status", "--period", "1T", "--year", "2026"])
+    preflight_json = invoke_joined_cli(
         ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2026"],
     )
 
@@ -288,7 +287,7 @@ def test_status_accepts_aeat_token_with_year(_isolated_backend: None) -> None:
 
     _add_business_row_missing_facts()
 
-    result = invoke_cached_cli(["app", "ledger", "status", "--period", "1T", "--year", "2026"])
+    result = invoke_joined_cli(["app", "ledger", "status", "--period", "1T", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
     for marker in ("business_expense_total\t242", "business_net_total\t-242", "2026 1T"):
@@ -300,7 +299,7 @@ def test_status_accepts_aeat_token_with_year(_isolated_backend: None) -> None:
 def test_preflight_calendar_shape_refuses(_isolated_backend: None) -> None:
     """``ledger preflight --period 2026Q1 --year 2026`` refuses, naming the AEAT tokens."""
 
-    result = invoke_cached_cli(["app", "ledger", "preflight", "--period", "2026Q1", "--year", "2026"])
+    result = invoke_joined_cli(["app", "ledger", "preflight", "--period", "2026Q1", "--year", "2026"])
     assert result.exit_code != 0, result.output
     assert "1T" in result.output
 
@@ -332,7 +331,7 @@ def test_period_refusal_advertises_accepted_tokens_on_error_envelope(_isolated_b
     error-context scrubber redacts.
     """
 
-    result = invoke_cached_cli(
+    result = invoke_joined_cli(
         ["--format", "json", "app", "ledger", "status", "--period", "2024Q1", "--year", "2024"],
     )
     assert result.exit_code != 0, result.output
@@ -359,7 +358,7 @@ def test_import_accepts_aeat_token_with_year(
     statement = tmp_path / "statement.csv"
     _write_import_statement(statement)
 
-    result = invoke_cached_cli(
+    result = invoke_joined_cli(
         [
             "--language",
             "en",
@@ -395,7 +394,7 @@ def test_import_historic_period_forms_refuse_with_current_canonical_grammar(
     _write_import_statement(statement)
 
     for historic_period in _HISTORIC_IMPORT_PERIODS:
-        result = invoke_cached_cli(
+        result = invoke_joined_cli(
             [
                 "app",
                 "ledger",
@@ -428,7 +427,7 @@ def test_import_period_without_year_refuses_with_year_guidance(
     statement = tmp_path / "statement.csv"
     _write_import_statement(statement)
 
-    result = invoke_cached_cli(
+    result = invoke_joined_cli(
         [
             "app",
             "ledger",
@@ -457,7 +456,7 @@ def test_import_period_year_prefixed_token_refuses_with_current_canonical_gramma
     statement = tmp_path / "statement.csv"
     _write_import_statement(statement)
 
-    result = invoke_cached_cli(
+    result = invoke_joined_cli(
         [
             "app",
             "ledger",
@@ -486,7 +485,7 @@ def test_status_period_without_year_refuses(_isolated_backend: None) -> None:
 
     _add_business_row_missing_facts()
 
-    result = invoke_cached_cli(["app", "ledger", "status", "--period", "1T"])
+    result = invoke_joined_cli(["app", "ledger", "status", "--period", "1T"])
     assert result.exit_code != 0, result.output
     assert "--year" in result.output
 
@@ -498,7 +497,7 @@ def test_preflight_help_documents_aeat_tokens_and_year() -> None:
     on the language-invariant notation tokens and the ``--year`` flag.
     """
 
-    result = invoke_cached_cli(["app", "ledger", "preflight", "--help"])
+    result = invoke_joined_cli(["app", "ledger", "preflight", "--help"])
     assert result.exit_code == 0, result.output
     output = result.output
     assert "1T" in output

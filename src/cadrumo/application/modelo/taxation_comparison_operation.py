@@ -9,6 +9,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
@@ -29,11 +32,8 @@ from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .taxation_comparison import (
     TaxationComparisonError,
@@ -166,11 +166,11 @@ def build_modelo_taxation_comparison_definition(factory: TaxationComparisonPorts
     return build_single_phase_definition(
         definition_id=MODELO_TAXATION_COMPARISON_OPERATION_DEFINITION_ID,
         request_type=ModeloTaxationComparisonRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloTaxationComparisonProjection,
         executor_type=ModeloTaxationComparisonExecutor,
         build=lambda: ModeloTaxationComparisonExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 

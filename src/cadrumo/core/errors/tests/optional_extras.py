@@ -23,7 +23,6 @@ import importlib.util
 _OPTIONAL_EXTRAS: tuple[tuple[str, str], ...] = (
     ("browser", "playwright"),
     ("google", "googleapiclient"),
-    ("anthropic", "anthropic"),
 )
 
 

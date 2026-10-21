@@ -10,7 +10,24 @@ string literals per layer.
 
 from __future__ import annotations
 
+from datetime import datetime
 from enum import StrEnum
+
+from pydantic import BaseModel
+
+from .models import STRICT_FROZEN_CONFIG
+
+
+class ProfileHumanLoginReceipt(BaseModel):
+    """Nonsecret acknowledgement of human proof and optional bounded acceleration."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    authenticated_at: datetime
+    idle_deadline: datetime
+    absolute_deadline: datetime
+    session_persisted: bool
+    resumed: bool
 
 
 class ProfileSessionRefusalReason(StrEnum):
@@ -49,6 +66,31 @@ class ProfileSessionRefusalReason(StrEnum):
 
     TAMPERED = "tampered"
     """AEAD tag verification failed (metadata or ciphertext altered)."""
+
+
+class KeychainUnavailability(StrEnum):
+    """Why this process cannot use the OS keychain that holds sign-in proof.
+
+    A stored sign-in is split between a receipt on disk and a key in the OS
+    keychain, and every process that stores or follows one needs the keychain
+    itself. Each value names a different failed prerequisite with a different
+    remedy, so a refusal that only said "unavailable" left the operator unable
+    to tell a missing backend from a logon the backend will not serve.
+    """
+
+    NO_BACKEND = "no_backend"
+    """No usable keychain backend is installed or configured for this process."""
+
+    LOGON_WITHOUT_CREDENTIALS = "logon_without_credentials"
+    """The Windows credential store refused this process's logon session.
+
+    Windows answers ``ERROR_NO_SUCH_LOGON_SESSION`` (1312) to a logon that
+    holds no credentials of its own, such as a service or batch logon. The
+    same account's desktop sign-in can use the store.
+    """
+
+    REFUSED = "refused"
+    """The keychain backend refused or failed the operation for another reason."""
 
 
 class ReceiptBindingRefusal(StrEnum):
@@ -95,4 +137,10 @@ class ProfileRecordUnavailability(StrEnum):
     """A session is authenticated, but for a different profile identity."""
 
 
-__all__ = ["ProfileRecordUnavailability", "ProfileSessionRefusalReason", "ReceiptBindingRefusal"]
+__all__ = [
+    "KeychainUnavailability",
+    "ProfileHumanLoginReceipt",
+    "ProfileRecordUnavailability",
+    "ProfileSessionRefusalReason",
+    "ReceiptBindingRefusal",
+]

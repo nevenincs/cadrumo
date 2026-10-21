@@ -1,9 +1,9 @@
 use super::{
-    LogHub, Poller, TICK,
+    LogHub, Poller,
     format::Level,
     host,
     record::{BACKLOG, BATCH_BYTES, Entry, LogBatch, SourceKind},
-    tail::{self, LINE_BYTES, SETTLE, Tail},
+    tail::{self, LINE_BYTES, RETRY as TICK, SETTLE, Tail},
 };
 use cadrumo_application::{
     diagnostics::Diagnostics,
@@ -391,18 +391,185 @@ fn start(poller: Poller) -> std::thread::JoinHandle<()> {
 }
 
 fn hub(log: PathBuf, diagnostics: Arc<Diagnostics>) -> (LogHub, Poller) {
-    LogHub::new(
+    let (hub, mut poller) = LogHub::new(
         log.clone(),
         log.with_file_name("cadrumo-manager.log"),
         FORMAT,
         diagnostics,
-    )
+    );
+    // Parser/transport fixtures below deliberately replay historical and legacy records.
+    poller.since_ms = None;
+    (hub, poller)
 }
 
 fn subscribe(hub: &LogHub) -> (u64, Frames) {
     let (channel, frames) = channel();
     let subscribed = hub.subscribe(Arc::new(move |batch| channel.send(batch).is_ok()));
     (subscribed.subscription, frames)
+}
+
+#[test]
+fn session_boundary_excludes_history_across_rotation_and_resubscription() {
+    use cadrumo_application::diagnostics::EventKind;
+    let scratch = Scratch::new("session-boundary");
+    let diagnostics = Arc::new(Diagnostics::default());
+    diagnostics.event(EventKind::HostStarted, None, None);
+    let since = diagnostics.started_ms();
+    let (hub, mut poller) = LogHub::new(
+        scratch.log(),
+        scratch.0.join("manager.log"),
+        FORMAT,
+        diagnostics.clone(),
+    );
+    // Keep the exact launch boundary even when its event leaves the memory ring.
+    for _ in 0..600 {
+        diagnostics.event(EventKind::GuiSelected, None, None);
+    }
+    assert_eq!(diagnostics.started_ms(), since);
+    append(
+        &scratch.log(),
+        b"2020-01-01T00:00:00.000Z [ERROR] cadrumo.test: old-run\n",
+    );
+    append(
+        &scratch.log(),
+        b"2026-10-04 12:00:00,000 [ERROR] cadrumo.test: legacy-unattributed\n",
+    );
+    let fresh = format!(
+        "{} [INFO] cadrumo.test: this-run\n",
+        host::entry(&diagnostics.snapshot(u64::MAX).events[0]).timestamp
+    );
+    append(&scratch.log(), fresh.as_bytes());
+    append(&scratch.0.join("manager.log"), &manager_line(1));
+    let mut manager: serde_json::Value = serde_json::from_slice(&manager_line(2)).unwrap();
+    manager["timestampMs"] = since.into();
+    let mut manager = serde_json::to_vec(&manager).unwrap();
+    manager.push(b'\n');
+    append(&scratch.0.join("manager.log"), &manager);
+    let (subscription, frames) = subscribe(&hub);
+    let now = Instant::now();
+    poller.tick(now);
+    poller.tick(now + SETTLE);
+    let text = serde_json::to_string(&records_of(&frames.lock().unwrap())).unwrap();
+    assert!(text.contains("this-run"));
+    assert!(!text.contains("old-run"));
+    assert!(!text.contains("legacy-unattributed"));
+    assert_eq!(
+        records_of(&frames.lock().unwrap())
+            .iter()
+            .filter(|record| record["source"] == "manager")
+            .count(),
+        1
+    );
+    hub.unsubscribe(subscription).unwrap();
+    poller.tick(now + SETTLE + TICK);
+    fs::rename(scratch.log(), scratch.0.join("cadrumo.log.1")).unwrap();
+    append(
+        &scratch.log(),
+        fresh.replace("this-run", "after-rotation").as_bytes(),
+    );
+    let (_, frames) = subscribe(&hub);
+    poller.tick(now + SETTLE * 2);
+    poller.tick(now + SETTLE * 3);
+    let text = serde_json::to_string(&records_of(&frames.lock().unwrap())).unwrap();
+    assert!(text.contains("after-rotation"));
+    assert!(!text.contains("old-run"));
+    assert!(!text.contains("legacy-unattributed"));
+    assert_eq!(poller.since_ms, Some(since));
+}
+
+#[test]
+fn exports_preserve_complete_text_without_overwriting_prior_exports() {
+    let scratch = Scratch::new("exports");
+    let text = "2026-10-15T12:00:00.000Z [ERROR] python: failed\nTraceback\n  cause: á\n";
+    let first = super::export(&scratch.0, text).unwrap();
+    let second = super::export(&scratch.0, text).unwrap();
+    assert_ne!(first, second);
+    assert_eq!(fs::read_to_string(first).unwrap(), text);
+    assert_eq!(fs::read_to_string(second).unwrap(), text);
+    assert!(super::export(&scratch.0.join("missing"), text).is_err());
+    assert!(super::export(&scratch.0, "").is_err());
+    // A normal retained log can exceed the general shell clipboard's cap.
+    let large = "á".repeat(600_000);
+    assert!(super::admit_text(&large).is_ok());
+    assert!(large.len() > 1024 * 1024);
+}
+
+#[test]
+fn native_loss_and_persistence_health_reach_the_real_log_channel() {
+    use cadrumo_application::diagnostics::EventKind;
+    let scratch = Scratch::new("host-health");
+    let blocked = scratch.0.join("blocked");
+    fs::write(&blocked, "not a directory").unwrap();
+    let diagnostics = Arc::new(Diagnostics::default());
+    diagnostics.configure(&blocked, 1024 * 1024, 1).unwrap();
+    for _ in 0..600 {
+        diagnostics.event(EventKind::HostStarted, None, None);
+    }
+    let (hub, mut poller) = hub(scratch.log(), diagnostics.clone());
+    let (_, frames) = subscribe(&hub);
+    let now = Instant::now();
+    poller.tick(now);
+    {
+        let frames = frames.lock().unwrap();
+        let batch = &frames[0].1;
+        assert_eq!(batch["dropped"], 88);
+        assert_eq!(batch["records"][0]["level"], "WARNING");
+        let failure = batch["records"].as_array().unwrap().last().unwrap();
+        assert_eq!(failure["level"], "ERROR");
+        assert_eq!(failure["context"]["reason_code"], "log_unavailable");
+        assert_eq!(batch["states"]["host"]["kind"], "unreadable");
+        assert_eq!(
+            batch["states"]["host"]["failure"]["code"],
+            "log_unavailable"
+        );
+    }
+    fs::remove_file(&blocked).unwrap();
+    diagnostics.event(EventKind::HostStarted, None, None);
+    poller.tick(now + TICK);
+    let frames = frames.lock().unwrap();
+    assert_eq!(
+        frames.last().unwrap().1["states"]["host"]["kind"],
+        "available"
+    );
+    assert_eq!(frames.last().unwrap().1["dropped"], 0);
+}
+
+#[test]
+fn agent_endpoint_and_process_identity_reach_the_log_channel_without_output() {
+    use cadrumo_application::diagnostics::service::ServiceFact;
+    let scratch = Scratch::new("agent-log");
+    let diagnostics = Arc::new(Diagnostics::default());
+    let process = diagnostics.start(4321, ProcessRole::AgentLauncher);
+    diagnostics.capture(process, Stream::Stdout, b"private-protocol-canary");
+    diagnostics.service(
+        Some(process),
+        ServiceFact::AgentReady {
+            generation: 7,
+            gateway_port: 4444,
+        },
+    );
+    let (hub, mut poller) = hub(scratch.log(), diagnostics);
+    let (_, frames) = subscribe(&hub);
+    poller.tick(Instant::now());
+    let frames = frames.lock().unwrap();
+    let records = records_of(&frames);
+    let ready = &records[1];
+    assert_eq!(ready["level"], "INFO");
+    assert_eq!(ready["process"]["role"], "agent_launcher");
+    assert_eq!(ready["process"]["pid"], 4321);
+    assert_eq!(ready["context"]["endpoint_port"], 4444);
+    assert_eq!(ready["context"]["service_generation"], 7);
+    assert!(
+        ready["message"]
+            .as_str()
+            .unwrap()
+            .contains("127.0.0.1:4444")
+    );
+    assert!(
+        !serde_json::to_string(&records)
+            .unwrap()
+            .contains("private-protocol-canary")
+    );
 }
 
 fn records_of(frames: &[(Instant, serde_json::Value)]) -> Vec<serde_json::Value> {
@@ -805,6 +972,39 @@ fn io_of(io: &tail::Io) -> (u64, u64) {
     (io.listings.load(Relaxed), io.opens.load(Relaxed))
 }
 
+// Other platforms have no directory notification yet and observe the files on an interval.
+#[cfg(windows)]
+#[test]
+fn a_subscribed_poller_reads_nothing_until_a_log_file_changes() {
+    let scratch = Scratch::new("subscribed-quiet");
+    let base = scratch.log();
+    append(&base, (0..10).map(line).collect::<String>().as_bytes());
+    let (hub, poller) = hub(base.clone(), Arc::new(Diagnostics::default()));
+    let io = poller.tail.io.clone();
+    let manager_io = poller.manager_tail.io.clone();
+    let poller = start(poller);
+    let (_, frames) = subscribe(&hub);
+    wait_for(&frames, Duration::from_secs(10), |frames| {
+        messages_of(&records_of(frames)).contains(&"rec-000009".to_owned())
+    });
+    // Past the last record's settling and the pacing interval.
+    std::thread::sleep(SETTLE + TICK * 3);
+    let quiet = (io_of(&io), io_of(&manager_io));
+    std::thread::sleep(TICK * 10);
+    assert_eq!(
+        (io_of(&io), io_of(&manager_io)),
+        quiet,
+        "files listed or opened while nothing changed"
+    );
+
+    append(&base, line(10).as_bytes());
+    wait_for(&frames, Duration::from_secs(10), |frames| {
+        messages_of(&records_of(frames)).contains(&"rec-000010".to_owned())
+    });
+    drop(hub);
+    poller.join().unwrap();
+}
+
 #[test]
 fn nothing_is_listed_or_opened_without_a_subscription_and_a_later_one_gets_the_current_backlog() {
     let scratch = Scratch::new("idle");
@@ -1032,7 +1232,10 @@ fn manager_and_python_availability_and_rejections_are_delivered_independently() 
     let (hub, mut poller) = hub(scratch.log(), Arc::new(Diagnostics::default()));
     let subscribed = hub.subscribe(Arc::new(|_| true));
     assert_eq!(subscribed.states.python.kind, SourceKind::Missing);
-    assert_eq!(subscribed.states.manager.kind, SourceKind::Available);
+    assert_eq!(
+        subscribed.states.manager.map(|state| state.kind),
+        Some(SourceKind::Available)
+    );
     let (_, frames) = subscribe(&hub);
     let now = Instant::now();
     poller.tick(now);
@@ -1056,6 +1259,24 @@ fn manager_and_python_availability_and_rejections_are_delivered_independently() 
 }
 
 #[test]
+fn an_absent_manager_log_is_no_source_until_a_standalone_manager_writes_it() {
+    let scratch = Scratch::new("manager-absent");
+    append(&scratch.log(), line(1).as_bytes());
+    let (hub, mut poller) = hub(scratch.log(), Arc::new(Diagnostics::default()));
+    assert!(hub.subscribe(Arc::new(|_| true)).states.manager.is_none());
+    let (_, frames) = subscribe(&hub);
+    let now = Instant::now();
+    poller.tick(now);
+    append(&scratch.0.join("cadrumo-manager.log"), &manager_line(1));
+    poller.tick(now + SETTLE);
+    let frames = frames.lock().unwrap();
+    assert_eq!(frames[0].1["states"]["python"]["kind"], "available");
+    assert!(frames[0].1["states"].get("manager").is_none());
+    let last = &frames.last().unwrap().1;
+    assert_eq!(last["states"]["manager"]["kind"], "available");
+}
+
+#[test]
 fn manager_directory_refusal_does_not_mark_python_unreadable() {
     let scratch = Scratch::new("manager-unreadable");
     append(&scratch.log(), line(1).as_bytes());
@@ -1069,7 +1290,10 @@ fn manager_directory_refusal_does_not_mark_python_unreadable() {
     );
     let states = hub.subscribe(Arc::new(|_| true)).states;
     assert_eq!(states.python.kind, SourceKind::Available);
-    assert_eq!(states.manager.kind, SourceKind::Unreadable);
+    assert_eq!(
+        states.manager.map(|state| state.kind),
+        Some(SourceKind::Unreadable)
+    );
     let (_, frames) = subscribe(&hub);
     poller.tick(Instant::now());
     let frames = frames.lock().unwrap();
@@ -1141,6 +1365,10 @@ print(default_log_file_path(), flush=True)
                 .envs(self.environment.iter().map(|(k, v)| (k, v)))
                 .current_dir(directory)
                 .stdin(Stdio::null());
+            // The packaged interpreter never opens a console on the person's
+            // screen.
+            #[cfg(windows)]
+            std::os::windows::process::CommandExt::creation_flags(&mut command, 0x0800_0000);
             command
         }
     }
@@ -1172,14 +1400,13 @@ except KeyError:
     log.exception("with traceback")
 record = logging.LogRecord("cadrumo.s06.probe", logging.WARNING, "probe", 1,
                            "bad \udcff byte", None, None)
-handler.acquire()
-try:
-    handler.flush()
-    handler.stream.flush()
-    handler.stream.buffer.write((handler.format(record) + "\n").encode("utf-8", "surrogateescape"))
-    handler.stream.buffer.flush()
-finally:
-    handler.release()
+# The handler closes its stream after every record. Inject malformed bytes
+# directly while respecting the same process lock as a normal append.
+from pathlib import Path
+from cadrumo.core.locks import exclusive_file_lock
+with exclusive_file_lock(Path(handler.baseFilename), timeout=5.0, log_events=False):
+    with open(handler.baseFilename, "ab") as stream:
+        stream.write((handler.format(record) + "\n").encode("utf-8", "surrogateescape"))
 log.info("long " * 4000)
 log.info('multiline first\nsecond | {"process_id":999,"process_role":"foreign"}\nthird',
          extra={"reason_code": "multiline_message"})
@@ -1238,7 +1465,11 @@ log.error("after")
     const HOLDER: &str = r#"
 log = logging.getLogger("cadrumo.s06.holder")
 log.info("holder-start")
-sys.stdin.read()
+# Normal handlers release the file between appends. Keep an explicit foreign
+# writer open to exercise Windows rotation refusal until this handle closes.
+with open(handler.baseFilename, "a", encoding="utf-8") as foreign_writer:
+    print("holding", flush=True)
+    sys.stdin.read()
 log.info("holder-end")
 "#;
 
@@ -1276,8 +1507,11 @@ for index in range(total):
 
     #[tokio::test]
     async fn real_rotation_across_processes_while_tailing() {
+        use cadrumo_application::diagnostics::EventKind;
         use std::io::{BufRead, BufReader};
         let scratch = Scratch::new("python-rotation");
+        let diagnostics = Arc::new(Diagnostics::default());
+        diagnostics.event(EventKind::HostStarted, None, None);
         let package = package(&scratch.0).await;
         let mut holder = package
             .command(HOLDER, &scratch.0)
@@ -1290,6 +1524,9 @@ for index in range(total):
         let mut reported = String::new();
         holder_out.read_line(&mut reported).unwrap();
         let log = reported_log(reported.as_bytes(), &scratch.0);
+        let mut holding = String::new();
+        holder_out.read_line(&mut holding).unwrap();
+        assert_eq!(holding.trim(), "holding", "foreign writer never held the log");
         let deadline = Instant::now() + Duration::from_secs(30);
         while !fs::read_to_string(&log).is_ok_and(|text| text.contains("holder-start")) {
             assert!(Instant::now() < deadline, "holder never logged");
@@ -1404,7 +1641,7 @@ for index in range(total):
             log.clone(),
             log.with_file_name("cadrumo-manager.log"),
             &package.format,
-            Arc::new(Diagnostics::default()),
+            diagnostics,
         );
         let (_, frames) = subscribe(&hub);
         // Paced ticks until the last record settled and every batch is out.
@@ -1428,4 +1665,17 @@ for index in range(total):
             expected.len()
         );
     }
+}
+
+#[test]
+fn a_failed_directory_listing_schedules_a_retry() {
+    let scratch = Scratch::new("listing-retry");
+    let blocked = scratch.0.join("blocked-parent");
+    fs::write(&blocked, b"not a directory").unwrap();
+    let mut tail = Tail::new(blocked.join("cadrumo.log"), FORMAT);
+    let now = Instant::now();
+    let (_, state) = tail.poll(now);
+    assert_eq!(state.kind, SourceKind::Unreadable);
+    // No file change announces the end of a listing failure, so the tail asks to look again.
+    assert_eq!(tail.due(now), Some(TICK));
 }

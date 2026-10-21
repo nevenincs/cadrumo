@@ -3,6 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "radix-ui";
 import { cn } from "@/components/ui/cn";
 import { Spinner } from "@/components/ui/spinner";
+import { badgeVariants } from "@/components/ui/badge";
 
 // Heights are the density tokens; the square sizes are for icon-only buttons.
 // A toggle button says so with `aria-pressed`, which is also what styles it:
@@ -21,6 +22,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        pill: cn(
+          badgeVariants({ variant: "neutral" }),
+          "hover-wash aria-pressed:bg-primary aria-pressed:text-primary-foreground forced-colors:aria-pressed:bg-[Highlight] forced-colors:aria-pressed:text-[HighlightText]",
+        ),
         primary:
           "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 forced-colors:border forced-colors:border-[ButtonBorder]",
         secondary:

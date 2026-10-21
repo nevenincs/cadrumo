@@ -32,8 +32,6 @@ from cadrumo.application.operations.composition import OperationComposedServices
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationSecureReferenceStore
-from cadrumo.application.user_profile.access_contracts import AccessAction, AuthorityState
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentControlState,
     EnrollmentReceipt,
@@ -47,6 +45,8 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests.automation_administration_test_support import ThreadedAutomationAdministration
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AuthorityState
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

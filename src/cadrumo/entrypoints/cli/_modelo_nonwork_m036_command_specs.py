@@ -2,14 +2,8 @@ from __future__ import annotations
 
 from typing import Final
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ._modelo_nonwork_command_spec_policies import (
-    _MODEL_READ,
-    _MODEL_WRITE,
-)
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -19,7 +13,13 @@ from .command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from .command_spec import CommandSpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._modelo_nonwork_command_spec_policies import (
+    _MODEL_READ,
+    _MODEL_WRITE,
+)
 
 M036_DECLARATION_PARAMETERS: Final[tuple[OptionSpec, ...]] = (
     OptionSpec(
@@ -68,10 +68,10 @@ MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=M036_DECLARATION_PARAMETERS,
         policy=_MODEL_WRITE,
-        handler=LazyBinding.available(DeferredTarget("._modelo_m036_cli", "m036_alta", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_m036_commands", "m036_alta", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads_m036", "M036DeclarationRecordResult", __package__),
+            DeferredTarget(".modelo_results_m036", "M036DeclarationRecordResult", __package__),
             identity="modelo.m036.alta",
         ),
     ),
@@ -85,10 +85,10 @@ MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=M036_DECLARATION_PARAMETERS,
         policy=_MODEL_WRITE,
-        handler=LazyBinding.available(DeferredTarget("._modelo_m036_cli", "m036_modificacion", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_m036_commands", "m036_modificacion", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads_m036", "M036DeclarationRecordResult", __package__),
+            DeferredTarget(".modelo_results_m036", "M036DeclarationRecordResult", __package__),
             identity="modelo.m036.modificacion",
         ),
     ),
@@ -102,10 +102,10 @@ MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=M036_DECLARATION_PARAMETERS,
         policy=_MODEL_WRITE,
-        handler=LazyBinding.available(DeferredTarget("._modelo_m036_cli", "m036_baja", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_m036_commands", "m036_baja", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads_m036", "M036DeclarationRecordResult", __package__),
+            DeferredTarget(".modelo_results_m036", "M036DeclarationRecordResult", __package__),
             identity="modelo.m036.baja",
         ),
     ),
@@ -119,10 +119,10 @@ MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_m036_cli", "m036_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_m036_commands", "m036_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads_m036", "M036DeclarationListResult", __package__),
+            DeferredTarget(".modelo_results_m036", "M036DeclarationListResult", __package__),
             identity="modelo.m036.list",
         ),
     ),
@@ -143,10 +143,10 @@ MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_m036_cli", "m036_view", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_m036_commands", "m036_view", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads_m036", "M036DeclarationShowResult", __package__),
+            DeferredTarget(".modelo_results_m036", "M036DeclarationShowResult", __package__),
             identity="modelo.m036.view",
         ),
     ),

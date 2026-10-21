@@ -143,7 +143,7 @@ def _require_reviewed_bootstrap_source(
 
 
 def _require_bootstrap_source_pair(source_ref: str | None, source_sha256: str | None) -> tuple[str, str]:
-    if not source_ref or not source_sha256:
+    if not (source_ref is not None and source_ref) or not (source_sha256 is not None and source_sha256):
         raise ValueError("bootstrap supersession source reference and digest must be paired")
     return source_ref, source_sha256
 

@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import load_toml, render_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
 
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
@@ -103,14 +104,11 @@ def test_generated_tree_validation_selects_candidate_facts_through_the_continuit
     assert published_reviewer is not None
     assert published_reviewer != candidate_reviewer
     revision_toml = export_root.parent / "revision.toml"
-    authored = revision_toml.read_text(encoding="utf-8")
-    published_stamp = f"reviewed_by = '{published_reviewer}'"
-    assert authored.count(published_stamp) == 1, "the staged candidate must declare the published reviewer once"
-    revision_toml.write_text(
-        authored.replace(published_stamp, f"reviewed_by = '{candidate_reviewer}'"),
-        encoding="utf-8",
-        newline="\n",
-    )
+    document = load_toml(revision_toml)
+    candidate_revision = document["revisions"][ISOLATED_TREE.revision]
+    assert candidate_revision["reviewed_by"] == published_reviewer
+    candidate_revision["reviewed_by"] = candidate_reviewer
+    revision_toml.write_text(render_toml(document), encoding="utf-8", newline="\n")
 
     validated = _validate(context, joined, semantic_map, rendered)
 

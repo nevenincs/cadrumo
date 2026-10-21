@@ -248,7 +248,7 @@ def _projection_order_key(
     return (
         record.bucket_id,
         record.filing_year,
-        str(record.modelo),
+        record.modelo,
         record.period,
         record.filed_at,
         record.filing_record_id,

@@ -101,7 +101,7 @@ def build_provenance_stamp(
         msg = f"reader {reader!r} must not contain ':': it would open a second stamp segment"
         raise ValueError(msg)
     stamp = f"{_STAMP_PREFIX}:{provenance_transport_label(provider)}-{reader}:{model}"
-    return f"{stamp}:{qualifier}" if qualifier else stamp
+    return f"{stamp}:{qualifier}" if (qualifier is not None and qualifier) else stamp
 
 
 def provenance_stamp_transport(stamp: str) -> str | None:

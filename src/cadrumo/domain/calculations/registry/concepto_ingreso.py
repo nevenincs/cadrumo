@@ -71,7 +71,7 @@ def _resolve_catalogue(
     )
     if not isinstance(resolved, ResolvedEntitySetFact):
         raise RegistryValidationError("income-concept vocabulary must resolve as an entity-set fact")
-    entities = tuple(sorted(str(entity).strip() for entity in resolved.payload.entities))
+    entities = tuple(sorted(entity.strip() for entity in resolved.payload.entities))
     if not entities or len(entities) != len(set(entities)) or any(not entity for entity in entities):
         raise RegistryValidationError("income-concept vocabulary must contain unique non-empty tokens")
     return ConceptoIngresoCatalogue(

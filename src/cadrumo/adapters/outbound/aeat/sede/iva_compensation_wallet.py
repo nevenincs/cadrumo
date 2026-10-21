@@ -137,7 +137,7 @@ def _validate_wallet_fetch_request(
 ) -> None:
     if session.storage_state_path is None:
         raise SedeNavigationError(
-            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            "AeatSession has no persisted auth session; run `cadrumo-runtime config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     if target_period.filing_year != target_year:
@@ -527,7 +527,7 @@ async def _select_own_name_actuacion_if_present(page: Page, *, settings: Setting
     if link is None:
         return False
     href = await link.get_attribute("href")
-    if not href:
+    if not (href is not None and href):
         return False
     target = urljoin(getattr(page, "url", "") or WALLET_URL, href)
     if not is_aeat_wallet_read_url(target):

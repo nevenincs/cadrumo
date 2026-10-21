@@ -6,7 +6,7 @@ neither can be inferred from the other.
 Without a key the verb must stay ADDITIVE: the same invoice PDF can legitimately
 be attached twice as two distinct pieces of evidence, and a guard that collapsed
 them would destroy a real distinction. With a key it must be GUARDED: the CLI's
-operator is an autonomous agent that retries, so a non-retry-safe creating
+operator is an autonomous automation that retries, so a non-retry-safe creating
 mutation silently double-writes, and a duplicated evidence record inflates every
 downstream aggregation that reads it.
 

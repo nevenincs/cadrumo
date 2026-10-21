@@ -63,7 +63,7 @@ def canonical_remote_hostname(url: str) -> str | None:
         host = parsed.hostname
     except ValueError:
         return None
-    if not host:
+    if not (host is not None and host):
         return None
     return host.lower()
 

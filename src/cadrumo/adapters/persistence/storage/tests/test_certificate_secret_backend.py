@@ -34,6 +34,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Literal
 
 import pytest
 from pydantic import SecretStr, ValidationError
@@ -447,3 +448,167 @@ class TestSecretStoreNaturalKey:
         assert _backend_module._secret_store_key(bucket_id="a", name="personal") != _backend_module._secret_store_key(
             bucket_id="b", name="personal"
         )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("provider", ["clave_permanente", "certificate"])
+async def test_protected_authentication_password_is_persisted_and_reloaded(
+    _isolated_backend: None,
+    provider: Literal["clave_permanente", "certificate"],
+) -> None:
+    """The setup operation writes encrypted credentials reused by a fresh projection."""
+    import json
+    from contextlib import asynccontextmanager
+    from types import SimpleNamespace
+    from typing import cast
+
+    from cadrumo.application.auth.credential_operations import (
+        AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
+        AuthCredentialSaveExecutor,
+        AuthCredentialSaveRequest,
+    )
+    from cadrumo.application.auth.credentials import active_auth_projection_span
+    from cadrumo.application.auth.operation_definitions import AuthOperationPorts
+    from cadrumo.application.operations.models import OperationRequest
+    from cadrumo.application.operations.owner import OperationExecutorContext
+    from cadrumo.core.config import load_settings
+    from cadrumo.core.operations import OperationEffect, profile_operation_subject
+
+    _register_operator_profile()
+    synthetic_value = "synthetic-login-password"
+    encoded = bytearray(json.dumps({"password": synthetic_value}).encode())
+    saved_results = []
+    effects = []
+
+    class Secrets:
+        @asynccontextmanager
+        async def consume(self):
+            try:
+                yield memoryview(encoded)
+            finally:
+                encoded[:] = b"\0" * len(encoded)
+
+    class Cancellation:
+        @asynccontextmanager
+        async def irreversible_section(self):
+            yield
+
+    class Events:
+        async def phase(self, value):
+            pass
+
+        async def effect(self, value):
+            effects.append(value)
+
+    class Operands:
+        async def put(self, value, *, written_at):
+            saved_results.append(value)
+            return "b" * 64
+
+    ports = cast(
+        AuthOperationPorts,
+        cast(
+            object,
+            SimpleNamespace(
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+            ),
+        ),
+    )
+    executor = AuthCredentialSaveExecutor(ports=ports)
+    request = OperationRequest[AuthCredentialSaveRequest](
+        definition_id=AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(_BUCKET_ID),
+        payload=AuthCredentialSaveRequest(provider=provider),
+    )
+    context = cast(
+        OperationExecutorContext,
+        SimpleNamespace(
+            ephemeral_secret=Secrets(),
+            cancellation=Cancellation(),
+            events=Events(),
+            operands=Operands(),
+        ),
+    )
+    assert await executor.execute(request, context) == "b" * 64
+    with active_auth_projection_span(
+        requested_provider=provider,
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        settings=load_settings(),
+    ) as snapshot:
+        if provider == "certificate":
+            assert snapshot.certificate_credentials is not None
+            actual = snapshot.certificate_credentials.password
+        else:
+            actual = snapshot.clave_permanente_password
+        assert actual is not None
+        assert actual.get_secret_value() == synthetic_value
+    assert effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
+    assert synthetic_value not in saved_results[0].model_dump_json()
+    assert not any(encoded)
+
+    from cadrumo.application.auth.operator import reset_operator_auth
+
+    reset = reset_operator_auth(
+        provider=provider,
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
+    assert reset.removed_certificate_secrets == 1
+    with active_auth_projection_span(
+        requested_provider=provider,
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    ) as snapshot:
+        if provider == "certificate":
+            assert snapshot.certificate_credentials is not None
+            actual = snapshot.certificate_credentials.password
+        else:
+            actual = snapshot.clave_permanente_password
+        assert actual is None
+
+
+def test_certificate_path_edit_updates_the_selected_named_source(tmp_path: Path, _isolated_backend: None) -> None:
+    """Setup edits the effective certificate and leaves its password bound to that source."""
+    from cadrumo.application.auth.certificate_source_operations import select_operator_certificate_source
+    from cadrumo.application.auth.credentials import resolve_active_certificate_credentials
+    from cadrumo.application.auth.operator import configure_operator_auth
+
+    _register_operator_profile()
+    previous, replacement = tmp_path / "previous.p12", tmp_path / "replacement.p12"
+    previous.write_bytes(b"synthetic previous certificate")
+    replacement.write_bytes(b"synthetic replacement certificate")
+    with _certificate_indexed_authority_for_test().operation() as operation:
+        register_operator_certificate_source(
+            name="personal",
+            certificate_path=previous,
+            friendly_name="Synthetic personal",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
+        select_operator_certificate_source(
+            name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS, operation=operation
+        )
+        configure_operator_auth(
+            "certificate",
+            certificate_path=replacement,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
+        set_operator_certificate_source_secret(
+            name="personal",
+            secret=SecretStr("synthetic-replacement-password"),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
+    credentials = resolve_active_certificate_credentials(
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
+    assert credentials.source_name == "personal"
+    assert credentials.certificate_path == replacement
+    assert credentials.friendly_name == "Synthetic personal"
+    assert credentials.password is not None
+    assert credentials.password.get_secret_value() == "synthetic-replacement-password"

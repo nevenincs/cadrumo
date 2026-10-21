@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import timedelta
 from enum import StrEnum
 from functools import cached_property
 from typing import Literal, Protocol, Self, runtime_checkable
@@ -68,6 +69,7 @@ from .models import (
 from .refusal_evidence import validate_refusal_code
 from .registry_schema_validation import strict_model_json_schema
 from .schema_identity import OperationPublicSchemaId, OperationSchemaIdentityV1
+from .subject_reference import OperationSubjectReferenceV1
 
 _STRICT_RUNTIME_BINDING_CONFIG = ConfigDict(
     strict=True,
@@ -82,10 +84,11 @@ class OperationPublicDefinitionContractV1(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    manifest_version: Literal[2] = 2
+    manifest_version: Literal[4] = 4
     definition_id: OperationDefinitionId
     action_reference: ActionReference | None
     request_schema: OperationSchemaIdentityV1
+    subject_reference: OperationSubjectReferenceV1
     result_schema: OperationSchemaIdentityV1 | None
     refusal_detail_codes: frozenset[OperationFailureErrorCode]
     review_projection_schema: OperationSchemaIdentityV1 | None
@@ -104,7 +107,6 @@ class OperationPublicDefinitionContractV1(BaseModel):
     permitted_effects: frozenset[OperationEffect]
     close_policy: OperationClosePolicy
     reconciliation_policy: OperationReconciliationPolicy
-    permitted_frontends: frozenset[OperationFrontendProjection]
     ephemeral_secret_required: bool
     transient_financial_operand: OperationTransientFinancialOperandPublicDeclarationV1 | None = None
     definition_contract_digest: ContentDigest
@@ -187,27 +189,19 @@ class OperationReconciliationPolicy(StrEnum):
 
 
 class OperationFrontendProjection(StrEnum):
-    """Product-owned identities of permitted operation projections."""
+    """Authenticated human and delegated frontend identities."""
 
     CLI = "cli"
-    MCP = "mcp"
     TUI = "tui"
+    DESKTOP = "desktop"
+    EXTERNAL_CLIENT = "external-client"
+    INSTALLED_SERVICE = "installed-service"
 
 
-#: Every product frontend, for operations offered on all of them. Membership is
-#: explicit so a new frontend is never granted to existing operations silently.
-ALL_OPERATION_FRONTENDS: frozenset[OperationFrontendProjection] = frozenset(
-    {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-)
-
-
-from . import operation_definition as _operation_definition  # noqa: E402 — enums must exist before model binding
+from . import operation_definition as _operation_definition  # noqa: E402 — the enum must exist before model binding
 
 _operation_definition.OperationDefinition.model_rebuild(
-    _types_namespace={
-        "OperationFrontendProjection": OperationFrontendProjection,
-        "OperationReconciliationPolicy": OperationReconciliationPolicy,
-    }
+    _types_namespace={"OperationReconciliationPolicy": OperationReconciliationPolicy}
 )
 
 
@@ -628,6 +622,18 @@ class OperationRegistry(BaseModel):
                 return definition
         raise KeyError(f"operator action is not mapped to an operation definition: {action.action_id!r}")
 
+    def declares_transient_financial_operands(self) -> bool:
+        """Whether any registered operation takes a transient financial operand."""
+        return any(definition.transient_financial_operand is not None for definition in self.definitions)
+
+    def ephemeral_secret_lifetimes(self) -> tuple[timedelta, ...]:
+        """The lifetime of every declared ephemeral secret."""
+        return tuple(
+            definition.ephemeral_secret.lifetime
+            for definition in self.definitions
+            if definition.ephemeral_secret is not None
+        )
+
     def resolve_credential_free_payload(self, definition_id: str, raw: str | bytes) -> BaseModel:
         """Hydrate a journal-safe payload only for its exact registered definition."""
         definition = self.lookup(definition_id)
@@ -671,7 +677,6 @@ OperationPublicDefinitionContractV1.model_rebuild()
 
 
 __all__ = [
-    "ALL_OPERATION_FRONTENDS",
     "OperationEffectReceipt",
     "OperationFrontendProjection",
     "OperationPublicContractSetV1",

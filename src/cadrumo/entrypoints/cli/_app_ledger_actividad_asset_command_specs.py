@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ._app_ledger_command_spec_policies import _POLICY_1, _POLICY_4, _POLICY_5, _POLICY_6
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -16,7 +13,10 @@ from .command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._app_ledger_command_spec_policies import _POLICY_1, _POLICY_4, _POLICY_5, _POLICY_6
 
 
 def _argument(name: str) -> ArgumentSpec:
@@ -67,7 +67,7 @@ def _leaf(
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=parameters,
         policy=policy,
-        handler=LazyBinding.available(DeferredTarget("._actividad_asset_cli", handler, __package__)),
+        handler=LazyBinding.available(DeferredTarget(".actividad_asset_commands", handler, __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(schema_module, schema_name, __package__ if schema_module.startswith(".") else None),

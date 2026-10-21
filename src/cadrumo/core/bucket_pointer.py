@@ -31,6 +31,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from .errors.hierarchy import CadrumoError
 
+if sys.platform == "win32":
+    from .windows_file_handle import open_unfollowed_windows_descriptor
+
 POINTER_SCHEMA_VERSION: Final[Literal[2]] = 2
 
 
@@ -106,11 +109,33 @@ def pointer_path(root: Path) -> Path:
     return root / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
 
 
+if sys.platform == "win32":
+
+    def _open_windows_pointer_descriptor(target: Path) -> int:
+        """Open the pointer without blocking replacement of its directory entry."""
+        descriptor = open_unfollowed_windows_descriptor(
+            target,
+            _WINDOWS_GENERIC_READ,
+            link_like_message="active-profile pointer must not be link-like",
+        )
+        try:
+            metadata = os.fstat(descriptor)
+            if not stat.S_ISREG(metadata.st_mode):
+                raise OSError("active-profile pointer must be a bounded regular file")
+        except BaseException:
+            os.close(descriptor)
+            raise
+        return descriptor
+
+
 _POINTER_READ_RETRY_SECONDS = 1.0
 _POINTER_READ_POLL_SECONDS = 0.02
 _POINTER_READ_MAX_WAIT_SECONDS = 15.0
 _POINTER_WRITE_RETRY_SECONDS = 1.0
 _POINTER_MAXIMUM_BYTES = 1024
+
+if sys.platform == "win32":
+    _WINDOWS_GENERIC_READ: Final = 0x80000000
 
 
 #: A missing record, or a path whose ancestor is a file so no record can be
@@ -133,6 +158,8 @@ def _open_pointer_descriptor(target: Path) -> int:
 
     if is_link_like(target):
         raise OSError("active-profile pointer must not be link-like")
+    if sys.platform == "win32":
+        return _open_windows_pointer_descriptor(target)
     return os.open(target, os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0))
 
 
@@ -280,12 +307,11 @@ def _await_uncontended(operation: Callable[[], None]) -> None:
 
 def write_pointer(root: Path, pointer: BucketPointer) -> None:
     """Atomically replace the one strict pointer record under its owner lock."""
-    from .atomic_write import atomic_write_hardened_bytes
-    from .fsync import fsync_parent_dir
+    from .atomic_write import hardened_staged_bytes_publication
 
     target = pointer_path(root)
-    _await_uncontended(lambda: atomic_write_hardened_bytes(target, pointer.to_toml().encode("utf-8")))
-    fsync_parent_dir(target)
+    with hardened_staged_bytes_publication(target, pointer.to_toml().encode("utf-8")) as staged:
+        _await_uncontended(staged.publish_with_open_readers)
 
 
 def resolve_active_bucket_id() -> str | None:

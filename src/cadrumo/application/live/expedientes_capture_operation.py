@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
@@ -21,7 +23,6 @@ from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .expedientes import PersistedExpedientesSnapshot, capture_expedientes_bulk, capture_expedientes_with_outcome
 from .expedientes_ports import ExpedientesPortsFactory
@@ -125,7 +126,7 @@ def _project_single(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     require_live_capture_receipt(
         receipt,
         definition_id=EXPEDIENTES_SINGLE_CAPTURE_DEFINITION_ID,
-        bucket_id=str(snapshot.bucket_id),
+        bucket_id=snapshot.bucket_id,
         stored=report.newly_persisted,
         message=_RECEIPT_CONTRADICTION,
     )
@@ -148,7 +149,7 @@ def _project_bulk(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
     require_live_capture_receipt(
         receipt,
         definition_id=EXPEDIENTES_BULK_CAPTURE_DEFINITION_ID,
-        bucket_id=str(report.bucket_id),
+        bucket_id=report.bucket_id,
         stored=report.newly_persisted,
         message=_RECEIPT_CONTRADICTION,
     )
@@ -222,7 +223,7 @@ class ExpedientesSingleCaptureExecutor(_CaptureExecutorBase):
                 effect_guard=fenced_persistence_guard(context, persist_phase=_PHASES[2]),
                 on_session_write=session_receipt,
             )
-        if str(outcome.snapshot.bucket_id) != bucket_id:
+        if outcome.snapshot.bucket_id != bucket_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         return await self._publish(
             ExpedientesSingleCaptureReport(snapshot=outcome.snapshot, newly_persisted=outcome.newly_persisted),
@@ -258,7 +259,7 @@ class ExpedientesBulkCaptureExecutor(_CaptureExecutorBase):
                 effect_guard=fenced_persistence_guard(context, persist_phase=_PHASES[2]),
                 on_session_write=session_receipt,
             )
-        if str(report.bucket_id) != bucket_id:
+        if report.bucket_id != bucket_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         return await self._publish(report, report.newly_persisted, context, session_receipt)
 

@@ -250,7 +250,7 @@ def try_record_legal_hold_snapshot(
     """
     try:
         LegalHoldCaseAuthority().record_open_case_snapshot(
-            profile_id=UUID(str(bucket_id)),
+            profile_id=UUID(bucket_id),
             open_case_ids=tuple(open_case_ids),
             observed_at=observed_at,
         )

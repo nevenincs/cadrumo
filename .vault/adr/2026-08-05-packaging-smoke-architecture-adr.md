@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#packaging-smoke-architecture'
 date: '2026-08-05'
-modified: '2026-10-03'
+modified: '2026-10-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:380a3f086106f2ea8e05e653df8d3c98dfe0640036304a80cd551d70e10173d4'
+body_hash: 'sha256:7a654a9c2550a3340e305a86beeb8e77606be01890ba547428931b01b7b97c4a'
 related:
   - "[[2026-08-05-packaging-smoke-architecture-audit]]"
   - "[[2026-06-28-product-packaging-research]]"
@@ -125,7 +125,7 @@ proposes reducing what is proven.
 **Scope bound, stated so this record is not read as complete over a set nobody
 enumerated.** This decision governs the campaign registry — the ten install-form lanes
 `_LANES` resolves and the profiles that select them. It does NOT govern the
-acquisition-channel surfaces (`smoke_homebrew`, `smoke_mcpb`, `smoke_plugin_install`,
+acquisition-channel surfaces (`smoke_homebrew`, `smoke_mcpb`,
 `smoke_desktop_client`, `smoke_scoop.ps1`), which are not in `_LANES`, are driven by
 separate per-channel workflows, and answer an orthogonal question — how a user obtains the
 artifact, not how it installs. Conflating the two populations is why the surface looks

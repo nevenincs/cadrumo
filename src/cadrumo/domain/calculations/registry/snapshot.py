@@ -362,8 +362,8 @@ def _check_snapshot_authority_grade(
             registry_failure=RegistryFailureClassification(
                 condition=RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT,
                 facts={
-                    "modelo": str(modelo.id),
-                    "revision_id": str(revision.id),
+                    "modelo": modelo.id,
+                    "revision_id": revision.id,
                     "requested_authority_grade": requested_grade.value,
                     "authority_grade_declared": False,
                 },
@@ -380,8 +380,8 @@ def _check_snapshot_authority_grade(
         registry_failure=RegistryFailureClassification(
             condition=RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT,
             facts={
-                "modelo": str(modelo.id),
-                "revision_id": str(revision.id),
+                "modelo": modelo.id,
+                "revision_id": revision.id,
                 "requested_authority_grade": requested_grade.value,
                 "declared_authority_grade": declared_grade.value,
                 "authority_grade_declared": True,
@@ -396,7 +396,7 @@ def _check_snapshot_revision_review_status(
 ) -> None:
     """Require a recorded review of the selected revision before legal checks.
 
-    Admits any member of :data:`REVIEWED_REVISION_REVIEW_STATUSES` — agent or
+    Admits any member of :data:`REVIEWED_REVISION_REVIEW_STATUSES` — automation or
     operator — rather than ``operator_reviewed`` specifically. Demanding that
     one status made a filing-grade snapshot unreachable by construction:
     nothing in this project may stamp ``operator_reviewed``, so no revision
@@ -446,8 +446,8 @@ def check_snapshot_filing_capability(
         registry_failure=RegistryFailureClassification(
             condition=RegistryFailureCondition.SNAPSHOT_EXPORT_LAYOUT_DECLARED,
             facts={
-                "modelo": str(modelo.id),
-                "revision": str(revision.id),
+                "modelo": modelo.id,
+                "revision": revision.id,
                 "export_layout_declared": False,
                 "filing_artifact_supported": False,
             },
@@ -500,14 +500,19 @@ def check_snapshot_filing_review_tier(
     """
     _check_snapshot_revision_review_status(modelo, revision)
     _check_snapshot_legal_review_status(modelo, revision, catalogues, legal_ids, filing_date=filing_date)
-    if revision.review_status is RevisionReviewStatus.AGENT_REVIEWED:
-        return RevisionReviewStatus.AGENT_REVIEWED
+    known = set(RevisionReviewStatus)
+    if revision.review_status not in known:
+        return RevisionReviewStatus.PENDING_REVIEW
+    if any(catalogues.legal[item].review_status not in known for item in legal_ids if item in catalogues.legal):
+        return RevisionReviewStatus.PENDING_REVIEW
+    if revision.review_status is RevisionReviewStatus.AUTOMATION_REVIEWED:
+        return RevisionReviewStatus.AUTOMATION_REVIEWED
     if any(
-        catalogues.legal[legal_id].review_status is RevisionReviewStatus.AGENT_REVIEWED
+        catalogues.legal[legal_id].review_status is RevisionReviewStatus.AUTOMATION_REVIEWED
         for legal_id in legal_ids
         if legal_id in catalogues.legal
     ):
-        return RevisionReviewStatus.AGENT_REVIEWED
+        return RevisionReviewStatus.AUTOMATION_REVIEWED
     return RevisionReviewStatus.OPERATOR_REVIEWED
 
 

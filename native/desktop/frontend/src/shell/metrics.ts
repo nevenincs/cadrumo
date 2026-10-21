@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { TerminalFontSize } from "./layout";
 
-// Reads canonical length tokens (src/tokens.css) as pixel numbers, for the
+// Reads canonical length tokens (src/styles/tokens.css) as pixel numbers, for the
 // few call sites that need a plain number instead of a CSS value: pointer
 // drag math, a popover's own position/size estimate, and xterm's canvas font
 // size. WebView2/WebKit apply the OS DPI scale to CSS pixels on their own, so

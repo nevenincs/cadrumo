@@ -39,8 +39,9 @@ if TYPE_CHECKING:
 
     from ..google.records import OAuthToken
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
-from ....application.user_profile.access_contracts import AccessDenialCode
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....application.user_profile.google_configuration_operation_ports import (
     GoogleConfigurationAcknowledgement,
@@ -111,9 +112,9 @@ def build_google_credentials(*, profile: str) -> Credentials:
     so unit tests for the local backend do not pay the cost.
 
     Raises:
-        :exc:`adapters.outbound.google.errors.GoogleAuthClientMetadataUnavailableError`:
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthClientMetadataUnavailableError`:
             When the installation carries no usable client metadata.
-        :exc:`adapters.outbound.google.errors.GoogleAuthSignInRequiredError`:
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthSignInRequiredError`:
             When the stored token belongs to another client or names none.
         OutboundStorageValidationError: When the profile has no stored token.
     """

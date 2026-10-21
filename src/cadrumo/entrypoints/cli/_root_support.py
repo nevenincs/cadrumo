@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 import typer
 
 if TYPE_CHECKING:
-    from .command_parameter_contracts import OptionSpec
-    from .command_spec import CommandSpec
+    from cadrumo_client.commands.parameters import OptionSpec
+    from cadrumo_client.commands.spec import CommandSpec
 
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.errors.hierarchy import InternalInvariantError
@@ -25,7 +25,7 @@ from .common import (
 
 def _root_profile_secret_options(root: CommandSpec) -> tuple[OptionSpec, ...]:
     """Root profile secret options."""
-    from .command_parameter_contracts import OptionSpec
+    from cadrumo_client.commands.parameters import OptionSpec
 
     channels = tuple(
         parameter
@@ -42,7 +42,7 @@ def _root_profile_secret_options(root: CommandSpec) -> tuple[OptionSpec, ...]:
 
 def _root_named_options(root: CommandSpec, name: str) -> tuple[OptionSpec, ...]:
     """Keep the declared order of root options matching one exact parameter name."""
-    from .command_parameter_contracts import OptionSpec
+    from cadrumo_client.commands.parameters import OptionSpec
 
     return tuple(
         parameter for parameter in root.parameters if isinstance(parameter, OptionSpec) and parameter.name == name
@@ -51,17 +51,19 @@ def _root_named_options(root: CommandSpec, name: str) -> tuple[OptionSpec, ...]:
 
 def emit_version_report_and_exit(*, detail: bool) -> None:
     """Render the ``--version`` surface and exit without loading the registry."""
-    from ...application.diagnostics import build_cli_version_report, render_cli_version_text
-
-    report = build_cli_version_report()
     if detail:
+        from ...application.diagnostics import build_cli_version_report, render_cli_version_text
+
+        report = build_cli_version_report()
         typer.echo(render_cli_version_text(report))
     else:
+        from ...core.package_version import PACKAGE_VERSION
+
         # The short `aeat --version` line is machine-format semver
         # (e.g. "Cadrumo 1.2.3") consumed by CI tooling and package
         # managers. Cadrumo policy treats semver output as machine-format,
         # not operator text, so tr() wrapping is intentionally omitted.
-        typer.echo(f"{_PRODUCT_IDENTITY.display_name} {report.package_version}")
+        typer.echo(f"{_PRODUCT_IDENTITY.display_name} {PACKAGE_VERSION}")
     raise typer.Exit()
 
 
@@ -72,7 +74,7 @@ def emit_root_help_and_exit(ctx: typer.Context) -> None:
     only on a help surface, not on every dispatch.
     """
     from ...application.operator_surface.help import build_help_document, render_help_text
-    from ._root_payloads import RootStatusResult
+    from .root_results import RootStatusResult
 
     document = build_help_document("root")
     typed_help = _strict_round_trip(RootStatusResult, document)
@@ -124,12 +126,13 @@ def normalize_root_active_profile(ctx: typer.Context) -> None:
 
     verb_path = _resolve_invocation_verb_path(ctx)
     if not is_bootstrap_exempt(verb_path):
+        from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
         from ...application.profile_preconditions import (
             FormerProductDetectionScope,
             former_product_state_verdict,
         )
         from ...core.config_state_root import FormerProductStateError
-        from .errors import CliRefusedBoundaryError
 
         try:
             _normalize_active_profile_label_to_uuid(ctx)
@@ -157,7 +160,7 @@ def emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     from ...application.workflow.profile_bucket_scan import list_profile_buckets
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ._root_landing import render_cli_root_landing_lines
-    from ._root_payloads import RootStatusResult
+    from .root_results import RootStatusResult
 
     active = resolve_active_bucket_id()
     landing = build_root_landing_report(
@@ -217,11 +220,12 @@ def activate_profile_override(ctx: typer.Context, profile: str) -> None:
     ``--profile`` value may be either the operator display label or the UUID
     bucket id, then pins the override to the resolved UUID.
     """
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ...application.profile_preconditions import ProfileSelectionFailure, profile_selection_failure_verdict
     from ...application.workflow.errors import ProfileLabelAmbiguousError
     from ...application.workflow.profile_bucket_scan import resolve_profile_bucket
     from ...core.config import override_settings
-    from .errors import CliRefusedBoundaryError
 
     requested = profile.strip()
     if not requested:
@@ -253,8 +257,9 @@ def activate_profile_override(ctx: typer.Context, profile: str) -> None:
 
 def unresolved_profile_override_refusal(ctx: typer.Context, *, profile: str, blank: bool) -> Exception:
     """Build the typed refusal for a blank or unknown root ``--profile`` selection."""
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ...application.profile_preconditions import ProfileSelectionFailure, profile_selection_failure_verdict
-    from .errors import CliRefusedBoundaryError
 
     return attach_cli_policy_verdict(
         CliRefusedBoundaryError(
@@ -290,13 +295,14 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     ambiguous label (more than one live match) raises a clear refusal rather than
     an arbitrary pick.
     """
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ...application.profile_preconditions import ProfileSelectionFailure, profile_selection_failure_verdict
     from ...application.workflow.errors import ProfileLabelAmbiguousError
     from ...application.workflow.profile_bucket_scan import resolve_profile_bucket
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.config import override_settings
     from ...core.errors.hierarchy import CadrumoError
-    from .errors import CliRefusedBoundaryError
 
     active = resolve_active_bucket_id()
     if active is None:
@@ -357,7 +363,7 @@ def is_introspection_only_invocation(ctx: typer.Context) -> bool:
     capture staged by :class:`CadrumoTyperGroup.invoke` (which works for both
     real-process and in-process invocations).
     """
-    from .command_suggestions import INVOCATION_REMAINDER_META_KEY
+    from cadrumo_client.commands.suggestions import INVOCATION_REMAINDER_META_KEY
 
     remainder = list(ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
     if _is_metadata_invocation(remainder):
@@ -401,7 +407,7 @@ def _verb_path_from_context(ctx: typer.Context) -> str | None:
     subcommand plus the unparsed remainder so prefix matching against
     :data:`BOOTSTRAP_EXEMPT_VERB_PATHS` continues to work.
     """
-    from .command_suggestions import INVOCATION_REMAINDER_META_KEY
+    from cadrumo_client.commands.suggestions import INVOCATION_REMAINDER_META_KEY
 
     captured = list(ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
     if captured:

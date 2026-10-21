@@ -6,10 +6,8 @@ import os
 import sys
 from pathlib import Path
 
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from .automation_secret_target import require_automation_secret_target
 from .macos_keychain_contracts import (
     AUTH_FAILED,

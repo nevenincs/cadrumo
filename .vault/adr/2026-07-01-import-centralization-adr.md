@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#import-centralization'
 date: '2026-07-01'
-modified: '2026-09-11'
-body_hash: 'sha256:ff42246a804eab81d4fb49588532183b6d4ae24bfd8e18510647ee47617ca0c7'
+modified: '2026-10-21'
+body_hash: 'sha256:00274c286992ba3a864f734c53b45e6cef603fe6b86b3a220f4fa49c9698f320'
 related:
   - '[[2026-07-01-import-centralization-research]]'
   - '[[2026-07-02-import-centralization-audit]]'
@@ -30,6 +30,16 @@ This amendment replaces facade promotion with direct defining-module ownership. 
 7. Production, tests, fixtures, development tools, annotations, `TYPE_CHECKING` imports, registrations, plugin targets, and local imports obey the same rule immediately.
 8. The import-hygiene gate resolves definitions and rejects package imports used for symbols, re-exports, aliases, forwarding wrappers, private cross-package reaches, multi-sourced symbols, dangling imports, and orphaned bridge modules. It inventories canonical defining modules and symbols rather than package export sets.
 9. Every relocation is atomic: move the definition and its owning tests, update every production/test/tooling consumer and dynamic target, update manifests and receipts, delete the former module and every export surface, and prove clean collection in one explicit-path commit. No temporary alias, shim, fallback, or re-export may bridge the move.
+
+### Accepted ownership correction - 2026-10-15
+
+The user explicitly corrected the 2026-10-14 runtime-host TUI amendment: TUI belongs inside cadrumo as cadrumo.entrypoints.tui; cadrumo_runtime remains a separate owner of generic login, custody, session and runtime authority. This correction supersedes the conflicting TUI placement and launcher claims in that amendment; the earlier amendment is preserved as history.
+
+CLI and TUI are tax-product entrypoints that consume public neutral client contracts and transport. Calling a runtime projection does not transfer frontend ownership or authorize importing runtime authority. A runtime command may invoke the TUI as an opaque process target without hosting its implementation.
+
+Test ownership follows the behavior and architectural seam asserted. A runtime-composed fixture does not itself transfer a tax CLI or TUI test to runtime. Preserve genuine host integration coverage at its declared assembly seam, fixture lifetime and existing protective gates; resolve supporting dependency ownership without moving product responsibilities to satisfy imports.
+
+Storage path provenance, runtime installation/session layout and distribution inclusion are distinct contracts. A package-local storage gate enforces its owner's path construction. Cross-package source completeness and wheel/native bundling checks belong to their explicit repository or distribution tooling owners. Shared public layout declarations may name qualified consumer modules without importing or granting the consumer's authority.
 
 ## Constraints
 
@@ -76,7 +86,7 @@ The closed `cadrumo` lanes are:
 - `cadrumo._data`, `cadrumo.locales`, and generated `cadrumo_data` artifacts: passive resource/data surfaces reached through an inward resource boundary.
 - `cadrumo.tests`: neutral core-only test support. Tests below another package inherit that nearest owner's lane.
 - `cadrumo.llm`: migration-only; it is merged into `cadrumo.adapters.outbound.llm` and has no independent final-state lane.
-- `cadrumo_harness`: a separately shipped outer stub. `cadrumo` never imports it. Until it is retired or explicitly completed, it may consume canonical inward product modules but not `cadrumo.entrypoints` or repository-only roots. Its tests inherit the same restriction.
+- `cadrumo_mcp`: the separately shipped deterministic MCP service. `cadrumo` never imports it. It may consume canonical inward product modules but not `cadrumo.entrypoints` or repository-only roots. It carries no authored persona, skill or rule content and imports nothing from cadrumo-agent. Its tests inherit the same restriction. (Renamed from `cadrumo_harness` and narrowed on 2026-10-21, drift repair toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR; before that it was classified as a separately shipped outer stub pending retirement or completion.)
 
 Any new source root or package without an explicit classification is a gate error.
 
@@ -103,3 +113,7 @@ Duplicate pytest predicates and development scanners are removed only after the 
 ### Migration discipline
 
 No current violation is grandfathered. No count becomes a baseline, no wildcard test carve-out survives, no warning is accepted as an architectural result, and no broad `ignore_imports` entry remains. Migration proceeds from source-boundary leaks through inward-layer inversions, application-to-adapter edges, adapter-sibling coupling, entrypoint crossings, test relocation and support splitting, the LLM merge and harness disposition, then canonical static and dynamic import cleanup. The gate may remain red on an implementation branch while the violations are removed; it becomes the repository verdict only with zero violations and proven teeth.
+
+### Amendment 2026-10-14: runtime-host TUI ownership
+
+The installed Textual frontend now has its production root at `src/cadrumo_runtime/host/frontend/tui/` (`cadrumo_runtime.host.frontend.tui`) and is launched through `cadrumo-runtime tui`. It belongs to the runtime host; `cadrumo` tax modules do not import `cadrumo_runtime`. The earlier sibling-placement language above records the prior decision and is superseded only for current source ownership and dependency direction; the import-authority rules in this ADR otherwise remain unchanged.

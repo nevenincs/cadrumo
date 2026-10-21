@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -14,6 +14,8 @@ from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel
+
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from ....core.hashing import sha256_hex
 from ....core.operations import (
@@ -33,7 +35,6 @@ from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from .. import google_configuration_operation as worker
 from .. import google_configuration_operation_contracts as contracts
-from ..access_contracts import AccessAction, Availability, DisclosureCategory
 from ..access_errors import ProfileAccessRefusedError
 from ..google_configuration_executor import GoogleConfigurationExecutor
 from ..google_configuration_operation_contracts import GoogleConfigurationExecutionResult
@@ -79,7 +80,7 @@ class _Fence:
         self.inside = False
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         assert not self.inside
         self.inside = True
         try:
@@ -186,7 +187,7 @@ def _refusal() -> GoogleConfigurationRefusalProjection:
     )
 
 
-def test_all_public_contracts_compile_and_require_human_dual_whole_profile_access(
+def test_all_public_contracts_compile_and_require_dual_whole_profile_access(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     def unused(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> GoogleConfigurationOperationPorts:
@@ -216,12 +217,17 @@ def test_all_public_contracts_compile_and_require_human_dual_whole_profile_acces
             authority_operation=authority_operation,
         )
         access = resolve_operation_access(registry=registry, request=request, context=access_context)
-        assert access.policy.requires_human and access.policy.requires_all_periods
+        stored_record_read = definition.definition_id in worker.GOOGLE_STORED_RECORD_READ_DEFINITION_IDS
+        assert stored_record_read is isinstance(
+            payload, contracts.GoogleFolderViewRequest | contracts.GoogleStatusRequest
+        )
+        assert access.policy.requires_human is not stored_record_read
+        assert (AccessAction.COMMIT in access.policy.actions) is not stored_record_read
+        assert access.policy.requires_all_periods
         assert {item.category for item in access.policy.disclosures} == {
             DisclosureCategory.PROFILE_VALUES,
             DisclosureCategory.TAX_VALUES,
         }
-        assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
         assert definition.refusal_detail_codes == frozenset({GOOGLE_CONFIGURATION_REFUSAL_CODE})
         # No Google configuration leaf accepts operator-supplied secret input.
         assert definition.ephemeral_secret is None

@@ -16,8 +16,7 @@ from typing import Literal, TypedDict
 import pytest
 from pydantic import ValidationError
 
-from .....core.config_google_client import OAuthClient
-from ..errors import (
+from cadrumo_client.contracts.google_auth import (
     GoogleAuthBrowserOpenError,
     GoogleAuthClientMetadataUnavailableError,
     GoogleAuthClientRevokedError,
@@ -30,6 +29,8 @@ from ..errors import (
     GoogleAuthSignInRequiredError,
     GoogleAuthValidationError,
 )
+
+from .....core.config_google_client import OAuthClient
 from ..records import (
     DRIVE_FILE_SCOPE,
     REQUIRED_SCOPES,
@@ -223,6 +224,14 @@ def test_oauth_metadata_requires_every_required_scope() -> None:
     kwargs = _valid_metadata_kwargs()
     kwargs["granted_scopes"] = (DRIVE_FILE_SCOPE,)
     with pytest.raises(ValidationError, match="missing required scopes"):
+        OAuthMetadata(**kwargs)
+
+
+def test_oauth_metadata_refuses_a_grant_wider_than_the_required_scopes() -> None:
+    """A stored sign-in that reaches more than Cadrumo asks for is not read as a sign-in."""
+    kwargs = _valid_metadata_kwargs()
+    kwargs["granted_scopes"] = (*REQUIRED_SCOPES, "https://www.googleapis.com/auth/spreadsheets")
+    with pytest.raises(ValidationError, match="never requests"):
         OAuthMetadata(**kwargs)
 
 

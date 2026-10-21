@@ -1,6 +1,18 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ...application.ledger.operator_input_contracts import (
     COUNTERPARTY_IDENTIFICATION_STATE_INPUT,
@@ -17,18 +29,6 @@ from ._app_ledger_command_spec_support import (
     _optional_text_option,
     irpf_category_option,
 )
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-    ValueContract,
-)
-from .command_spec import CommandSpec, InvocationSpec
 
 LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -154,10 +154,10 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option("reason", ("--reason",), "cli.ledger.classify.reason_help"),
         ),
         policy=_POLICY_7,
-        handler=LazyBinding.available(DeferredTarget("._ledger", "ledger_classify", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_commands", "ledger_classify", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerClassifyResult", __package__),
+            target=DeferredTarget(".ledger_results", "LedgerClassifyResult", __package__),
             identity="ledger.classify",
         ),
     ),

@@ -61,6 +61,7 @@ coverage.xml
 *.py.cover
 .hypothesis/
 .pytest_cache/
+/.worker-count-hook-*/
 cover/
 
 # Translations
@@ -472,6 +473,8 @@ cache/
 /*scratchpadvault_check*
 
 # >>> vaultspec-managed (do not edit this block) >>>
+.env
+.env.*
 .vault/.obsidian/
 .vault/.trash/
 .vault/data/
@@ -488,6 +491,7 @@ cache/
 /.pre-commit-config.yml
 /.vaultspec/.env
 /.vaultspec/.env.*
+!.env.example
 # <<< vaultspec-managed <<<
 
 # Claude Code machine-local (not team-shared)
@@ -518,8 +522,9 @@ cache/
 /src/cadrumo/_data/registry/aeat/.*.lock.lock
 # Export publication takes a 0-byte lock sidecar per modelo revision beside the
 # `aeat` root and never deletes it on release. It records only that a local
-# generation ran.
-/src/cadrumo/_data/registry/.*-generated-export-transaction-*.lock
+# generation ran. Its crash-recovery journal and the journal's temporary
+# replacement sit beside it only while a transaction is in flight.
+/src/cadrumo/_data/registry/.*-generated-export-transaction-*
 
 # The published registry authority: a content-addressed SQLite generation, its
 # descriptor, the publisher's retained destination lock and any staging
@@ -535,6 +540,8 @@ cache/
 # siblings. Never tracked -- they are live-process state, not content.
 **/.generated-export-transaction-*
 **/.generated-export-backup-*
+**/.generated-export-stage-*
+/src/cadrumo/_data/registry/.*-generated-export-bundle-*
 
 # TUI visual inventory review artefacts (`python -m dev.tui render`): PNG/SVG
 # renders of every TUI surface, written per run for human visual review.
@@ -555,6 +562,7 @@ cache/
 /.artifacts/
 !/CMakeLists.txt
 !/native/interpreter/windows/host.manifest
+!/native/desktop/src-tauri/windows/desktop.manifest
 
 # Private VaultSpec environment (never commit)
 /.vaultspec/.env

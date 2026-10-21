@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-The 206 articles are grouped by their original topic assignments. Each article retains its scope, mechanisms, findings, qualifications, and coverage appendix. Report identifiers preserve correspondence with the original analysis.
+The 204 articles are grouped by their original topic assignments. Each article retains its scope, mechanisms, findings, qualifications, and coverage appendix. Report identifiers preserve correspondence with the original analysis.
 
 ## Operator interfaces, part 1: command graph and principal workflows
 
@@ -36,7 +36,7 @@ The 206 articles are grouped by their original topic assignments. Each article r
 - [Ledger and Modelo CLI operations](172-ledger-and-modelo-cli-operations.md) — `STAGE-2-172`
 - [Modelo discovery, review exchange, profile admission, and workflow reads](173-modelo-discovery-review-exchange-profile-admission-and-workflow-reads.md) — `STAGE-2-173`
 
-## Installed runtime, terminal workbench, and agent harness
+## Installed runtime, terminal workbench, and MCP service
 
 [Read the topic overview](../topics/runtime-tui-and-agent-harness.md).
 
@@ -52,8 +52,6 @@ The 206 articles are grouped by their original topic assignments. Each article r
 - [Runtime TUI access, workbench and secret-entry flows](183-runtime-tui-access-workbench-and-secret-entry-flows.md) — `STAGE-2-183`
 - [Profile registration, recovery and runtime login](184-profile-registration-recovery-and-runtime-login.md) — `STAGE-2-184`
 - [Python typing package marker](185-python-typing-package-marker.md) — `STAGE-2-185`
-- [Agent personas, operator rules and workflow skills](186-agent-personas-operator-rules-and-workflow-skills.md) — `STAGE-2-186`
-- [Filing skills and the MCP operator harness](187-filing-skills-and-the-mcp-operator-harness.md) — `STAGE-2-187`
 
 ## Document and financial imports
 
@@ -70,7 +68,7 @@ The 206 articles are grouped by their original topic assignments. Each article r
 
 - [Local runtime clients and native OS bindings](005-local-runtime-clients-and-native-os-bindings.md) — `STAGE-2-005`
 - [Local runtime transport, worker custody, and lifecycle](006-local-runtime-transport-worker-custody-and-lifecycle.md) — `STAGE-2-006`
-- [Windows login, task control, and worker authority](007-windows-login-task-control-and-worker-authority.md) — `STAGE-2-007`
+- [Windows login, process containment, and worker authority](007-windows-login-process-containment-and-worker-authority.md) — `STAGE-2-007`
 - [AEAT certificate and Cl@ve browser authentication](008-aeat-certificate-and-cl-ve-browser-authentication.md) — `STAGE-2-008`
 - [Cl@ve Permanente, browser support, and Sede read primitives](009-cl-ve-permanente-browser-support-and-sede-read-primitives.md) — `STAGE-2-009`
 - [Censal reads, filed-declaration capture, and GROI checks](010-censal-reads-filed-declaration-capture-and-groi-checks.md) — `STAGE-2-010`

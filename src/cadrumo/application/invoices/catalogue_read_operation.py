@@ -11,6 +11,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -27,7 +29,7 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
@@ -43,8 +45,8 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .catalogue_lifecycle import resolve_catalogue_invoice
 from .catalogue_read_projection import CatalogueInvoiceSnapshot
@@ -106,7 +108,7 @@ def _validate_invoices(
     if len({row.invoice_id for row in invoices}) != len(invoices):
         raise ValueError("duplicate invoice identities")
     for row in invoices:
-        if row.bucket_id is not None and str(row.bucket_id) != str(profile_id):
+        if row.bucket_id is not None and row.bucket_id != str(profile_id):
             raise ValueError("invoice snapshot belongs to another profile")
         if kind is not None and row.kind is not kind:
             raise ValueError("invoice snapshot differs from selected kind")
@@ -234,7 +236,7 @@ class InvoiceCatalogueReadExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         with validating_governed_facts(operation):
             catalogue = ports.invoices.load()
-            if any(row.bucket_id is not None and str(row.bucket_id) != profile for row in catalogue.values()):
+            if any(row.bucket_id is not None and row.bucket_id != profile for row in catalogue.values()):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             if isinstance(payload, InvoiceListRequest):
                 return _capture_invoice_list(payload, catalogue)
@@ -299,6 +301,7 @@ def _definition(
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_type=InvoiceCatalogueReadExecutor,
         build=lambda: InvoiceCatalogueReadExecutor(factory, definition_id),
@@ -319,7 +322,6 @@ def _definition(
             permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=frozenset({INVOICE_VIEW_REFUSAL_CODE}) if private_request else frozenset(),
     )
 

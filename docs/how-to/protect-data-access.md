@@ -54,22 +54,27 @@ stays open: enable it later.
 To enable it on the active profile:
 
 ```text
-aeat config profile recovery enable
+cadrumo-runtime config profile recovery enable
 ```
 
 Cadrumo asks for the current passphrase, shows the code once on the terminal,
 and asks you to type it back before anything is installed. The code looks like
 `XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX`; case, hyphens and spaces do not matter
 when you type it. Write it down and keep it apart from your passphrase and
-apart from the computer holding the data. Cadrumo keeps no copy and cannot show
-it again.
+apart from the computer holding the data. When you enable recovery with this
+command, Cadrumo keeps no copy and cannot show the code again.
+
+The terminal interface does the same from **Installation**, in the **Set up a
+recovery code** task: it shows the code once and asks you to type it back. An
+agent connected through MCP never enables recovery and never sees a recovery code:
+recovery is your act in Cadrumo.
 
 Anyone holding the code can set a new passphrase for the profile, so treat it
 as you would the passphrase itself. To check or remove it:
 
 ```text
-aeat config profile recovery status
-aeat config profile recovery disable
+cadrumo-runtime config profile recovery status
+cadrumo-runtime config profile recovery disable
 ```
 
 Disabling asks for the current passphrase. Enabling refuses while a code is
@@ -85,7 +90,7 @@ the restore command says so. Enable it again after a restore if you want it.
 If you have the recovery code and have forgotten the passphrase:
 
 ```text
-aeat config passphrase reset PROFILE
+cadrumo-runtime config passphrase reset PROFILE
 ```
 
 Enter the recovery code, then the new passphrase twice. Nothing is echoed. The
@@ -94,6 +99,8 @@ re-encrypted and the recovery code keeps working afterwards. Archives exported
 before the reset still open with the passphrase they were sealed under. A wrong code, a
 profile without recovery, a new passphrase that is too short, or two copies
 that do not match all refuse and leave the profile untouched.
+
+An agent connected through MCP never does this: it is your act, and the agent asks you to do it in Cadrumo.
 
 To reset without an interactive prompt, send
 `{"recovery_code": "...", "new_passphrase": "...",
@@ -113,6 +120,8 @@ collide with `--secrets-fd`. The process closes each descriptor after its one
 bounded operation. A missing half, malformed proof, mismatch, oversized
 payload, descriptor collision, or I/O failure enrols nothing.
 
+An agent connected through MCP never does this: it is your act, and the agent asks you to do it in Cadrumo.
+
 ## Change your passphrase
 
 Change the passphrase whenever you suspect it has been seen, or on whatever
@@ -130,7 +139,9 @@ The change re-wraps the existing key rather than replacing it, so:
 
 The command reports both facts back to you. If the current passphrase is wrong,
 the new one is too short, or the two copies do not match, it refuses and leaves
-the existing passphrase working.
+the existing passphrase working. The terminal interface changes it from the
+account controls (**Password**). An agent connected through MCP never changes
+it.
 
 To change the passphrase without an interactive prompt, pass the three values as
 one JSON object through a leaf secret channel:
@@ -175,12 +186,12 @@ Use the same two leaf flags on each scalar-secret command:
 | --- | --- |
 | `aeat config login` | `{"passphrase": "..."}` |
 | `aeat config profile create` | `{"passphrase": "...", "passphrase_confirmation": "..."}` |
-| `aeat config passphrase change` | `{"current_passphrase": "...", "new_passphrase": "...", "new_passphrase_confirmation": "..."}` |
-| `aeat config passphrase reset PROFILE` | `{"recovery_code": "...", "new_passphrase": "...", "new_passphrase_confirmation": "..."}` |
+| `cadrumo-runtime config passphrase change` | `{"current_passphrase": "...", "new_passphrase": "...", "new_passphrase_confirmation": "..."}` |
+| `cadrumo-runtime config passphrase reset PROFILE` | `{"recovery_code": "...", "new_passphrase": "...", "new_passphrase_confirmation": "..."}` |
 | `aeat config profile archive import` | `{"passphrase": "..."}` |
-| `aeat config profile recovery enable` | `{"passphrase": "..."}` |
-| `aeat config profile recovery disable` | `{"passphrase": "..."}` |
-| `aeat config auth certificate secret set` | `{"certificate_passphrase": "..."}` |
+| `cadrumo-runtime config profile recovery enable` | `{"passphrase": "..."}` |
+| `cadrumo-runtime config profile recovery disable` | `{"passphrase": "..."}` |
+| `cadrumo-runtime config auth certificate secret set` | `{"certificate_passphrase": "..."}` |
 
 Each object must contain exactly the fields shown. Profile creation through a
 machine channel never asks about recovery; enable it afterwards with the
@@ -249,8 +260,8 @@ enrolment uses one writable handoff HANDLE and one readable verification
 HANDLE:
 
 ```text
-python -m cadrumo.entrypoints.cli._windows_profile_secret_bootstrap --profile-handle ROOT_HANDLE --secrets-handle LEAF_HANDLE -- config auth certificate secret set --name SOURCE
-python -m cadrumo.entrypoints.cli._windows_profile_secret_bootstrap --recovery-handoff-handle WRITE_HANDLE --recovery-verification-handle READ_HANDLE -- config profile recovery enable --secrets-stdin
+python -I -m cadrumo_runtime.host.windows_secret_bootstrap --profile-handle ROOT_HANDLE --secrets-handle LEAF_HANDLE -- config auth certificate secret set --name SOURCE
+python -I -m cadrumo_runtime.host.windows_secret_bootstrap --recovery-handoff-handle WRITE_HANDLE --recovery-verification-handle READ_HANDLE -- config profile recovery enable --secrets-stdin
 ```
 
 Omit `--profile-handle` or `--secrets-handle` when the invocation needs only
@@ -286,7 +297,7 @@ Profile logout and Google logout serve different purposes. To remove the saved
 Google refresh token and account metadata from the active profile, run:
 
 ```text
-aeat config google logout
+cadrumo-runtime config google logout
 ```
 
 This keeps the Drive folder and exported workbooks. It does not revoke Google's
@@ -335,6 +346,18 @@ If legal retention requirements pause the reset, stop if you must keep the
 affected records. Override the pause only after reviewing and accepting the
 legal retention consequence, and always provide a non-empty reason. If you
 provide a reason without the override, the command refuses to continue.
+
+When Cadrumo's runtime is running, `start` and `resume` go through it, so the
+profiles it is hosting are closed before anything is deleted. When none is
+running, the commands do the work in their own process. If the answer is lost
+after the reset began, the reset is reported as unknown, not as failed; read
+`status` before you try again.
+
+The terminal interface offers the same work in **Installation** (**Reset all
+profiles**, **Reset status** and **Resume a reset**), which you can open from
+the sign-in screen with nobody signed in. It needs the runtime running and asks
+for the same explicit confirmation as the command. Resetting every profile is
+work outside any one profile, so an agent connected through MCP never does it.
 
 See [Set up your taxpayer profile](profile-setup.md) for sealed archive
 backup instructions.

@@ -202,11 +202,11 @@ def _persisted_decimal_bindings(
         # same binding still reads as a decimal, as the runtime accepts it.
         if (
             channels.get(binding_id) is BindingValueChannel.BOOLEAN
-            and persisted_boolean_binding_value(str(raw_value)) is not None
+            and persisted_boolean_binding_value(raw_value) is not None
         ):
             continue
         try:
-            parsed_value: Decimal = Decimal(str(raw_value))
+            parsed_value: Decimal = Decimal(raw_value)
             decimal_bindings[binding_id] = parsed_value
         except InvalidOperation as exc:
             raise StoredCalculationDriftError(

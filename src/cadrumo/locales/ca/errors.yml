@@ -289,6 +289,9 @@ errors:
       bloquejat: cal la reconciliació del wallet d''IVA'
     error_modelo_metadata_run: L’operació sobre les metadades del treball no ha retornat
       cap resultat confirmat. Consulta’n l’identificador abans de tornar-ho a provar.
+    error_modelo_verification_outcome_incomplete: 'La verificació d''aquesta revisió
+      de càlcul no va acabar: se''n va desar l''informe, però la revisió no es va
+      arribar a marcar com a verificada. Torna a executar la verificació per resoldre-ho.'
     error_modelo_verification_report_not_found: No s'ha trobat l'informe de verificació
       sol·licitat.
     error_modelo_work_unit_already_discarded: La unitat de treball ja està descartada.
@@ -374,6 +377,9 @@ errors:
       145 coincideix amb l'id sol·licitat.
     m145_communication_service: Ha fallat una operació del servei local de comunicació
       del Model 145.
+    modelo_calculation_revision_pointer_not_found: No hi ha cap revisió de càlcul
+      disponible per a la declaració %{work_unit_id} (Model %{modelo}) en l’estat
+      sol·licitat.
     modelo_calculation_revision_selector: La selecció de revisió de càlcul ha fallat.
     modelo_calculation_revision_selector_not_found: Cap revisió de càlcul coincideix
       amb el selector indicat.
@@ -455,6 +461,9 @@ errors:
       ''%{group}'': falta el mòdul requerit ''%{module}''. Aquesta instal·lació és
       incompleta.'
     fail_declaracion_parse: No s'ha pogut interpretar el PDF com una declaració.
+    fail_dependency_preflight_stage: No ha acabat la comprovació de xarxa del servidor
+      de baixada d'un component.
+    fail_dependency_transfer: Ha fallat la baixada d'un component.
     fail_filing_import: No s'ha pogut importar la declaració des del PDF del justificant.
     fail_financial_attachments_attachment_persistence: El magatzem de justificants
       no ha pogut llegir o escriure les dades.
@@ -736,6 +745,8 @@ errors:
     canonical_schema_resolution: La projecció de l'esquema d'ordres està incompleta.
     canonical_structured_invoice_read: El lector seleccionat no ha pogut llegir la
       factura estructurada.
+    canonical_tui_run_failed: La interfície de terminal ha finalitzat inesperadament.
+      Revisa els registres de diagnòstic.
     canonical_tui_search_host: La paleta de cerca del TUI requereix l'amfitrió arrel
       de l'espai de treball.
     cli_outbound_payload_boundary: Cadrumo ha construït un registre intern que no
@@ -801,6 +812,8 @@ errors:
       en aquest moment. Espera que acabi i torna-ho a provar.
     locked_cli_operation_still_running: L'operació {operation_id} encara s'està executant.
       Encara no se'n coneix el resultat. Comprova'l abans de tornar-ho a provar.
+    locked_dependency_item: Una altra instal·lació està canviant aquest component
+      ara mateix. Torna-ho a provar quan acabi.
     locked_google_keychain: L'anell de claus del sistema operatiu que desa les credencials
       de Google està bloquejat o no és accessible. Desbloqueja l'anell de claus i
       torna-ho a provar.
@@ -831,6 +844,9 @@ errors:
       a provar.
     auth_profile_identity_mismatch: La identitat del perfil actiu no pot ser titular
       de la sessió d'autenticació sol·licitada.
+    automation_requester_disconnected: El programa que va demanar aquesta clau ja
+      no està connectat, així que la clau no li pot arribar. Demana-li que torni a
+      sol·licitar la clau i aprova la nova sol·licitud.
     bootstrap_already_complete: L'arrencada de l'emmagatzematge segur ja està completa.
       Fes servir aeat config login NAME per activar un perfil existent o aeat config
       profile create NAME per afegir-ne un altre.
@@ -1096,6 +1112,9 @@ errors:
       Torna a executar l'ordre confirmant l'operació.
     refused_corpus_search_input: No s'ha pogut satisfer la sol·licitud de cerca al
       corpus.
+    refused_dependency_proxy_configuration: El paràmetre del servidor intermediari
+      no és una adreça http:// amb un nom d'amfitrió i un port vàlid.
+    refused_dependency_selection: Aquest component no es pot configurar aquí.
     refused_diagnostic_model_invariant: 'Refusat: invariant del model de diagnòstic
       incomplit.'
     refused_einvoice_xml_parse: No s'ha pogut llegir l'XML de la factura electrònica
@@ -1156,7 +1175,7 @@ errors:
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona
       un perfil o fes servir --profile.
     refused_google_sign_in_required: L'accés a Google d'aquest perfil ha caducat o
-      s'ha retirat. Torna a iniciar la sessió amb `aeat config google login`.
+      s'ha retirat. Torna a iniciar la sessió amb `cadrumo-runtime config google login`.
     refused_google_validation: Els paràmetres de Google indicats no han superat la
       validació.
     refused_inventory_actividad_conflict: Ja existeix un inventari per a aquesta activitat

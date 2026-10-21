@@ -70,6 +70,43 @@ def test_live_logging_override_is_bound_but_an_unrelated_method_is_reported() ->
     assert "DiagnosticFormatter.orphan_time" in definitions
 
 
+def test_live_rotating_handler_override_is_bound_but_an_unrelated_method_is_reported() -> None:
+    path = REPO_ROOT / "src/cadrumo/core/log_file_handler.py"
+    tree = ast.parse(path.read_bytes())
+    module = ShippedModule("cadrumo.core.log_file_handler", path, False, tree)
+    contracts = framework_contracts({module.name: module})
+    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
+    assert "AnnouncingRotatingFileHandler.emit" not in definitions
+    handler = next(
+        node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "AnnouncingRotatingFileHandler"
+    )
+    method = next(node for node in handler.body if isinstance(node, ast.FunctionDef) and node.name == "emit")
+    method.name = "orphan_emit"
+    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
+    assert "AnnouncingRotatingFileHandler.orphan_emit" in definitions
+
+
+def test_enum_lookup_hook_is_bound_but_members_and_ordinary_methods_are_reported() -> None:
+    module = _module(
+        "pkg.origins",
+        """
+from enum import StrEnum as Base
+class Origin(Base):
+    PERSON = 'person'
+    @classmethod
+    def _missing_(cls, value): return None
+    def unused(self): pass
+class Plain:
+    @classmethod
+    def _missing_(cls, value): return None
+""",
+    )
+    contracts = framework_contracts({module.name: module})
+    definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
+
+    assert definitions == {"Origin", "Origin.PERSON", "Origin.unused", "Plain", "Plain._missing_"}
+
+
 def test_installed_sqlalchemy_contract_includes_annotated_configuration() -> None:
     module = _module(
         "pkg.columns",

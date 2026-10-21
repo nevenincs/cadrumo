@@ -174,7 +174,11 @@ def _leaf_help_summary(tokens: tuple[CommandToken, ...]) -> str:
     from .cli_tree import resolve_command_path
 
     verb_kinds = {"executable", "group", "leaf"}
-    verb_paths = [token.command_path for token in tokens if token.kind.value in verb_kinds and token.command_path]
+    verb_paths = [
+        token.command_path
+        for token in tokens
+        if token.kind.value in verb_kinds and (token.command_path is not None and token.command_path)
+    ]
     leaf_path = verb_paths[-1] if verb_paths else "aeat"
     try:
         node = resolve_command_path(_cli_tree(), leaf_path)
@@ -190,7 +194,7 @@ def _frame_header(parsed_frame: SequenceFrame, tokens: tuple[CommandToken, ...])
     present; otherwise the leaf verb's help summary carries the instruction.
     """
     authored = parsed_frame.step_description
-    if authored and authored.strip():
+    if (authored is not None and authored) and authored.strip():
         return authored.strip()
     return _leaf_help_summary(tokens)
 
@@ -209,7 +213,7 @@ def _output_view(golden_frame: GoldenFrame) -> dict[str, str]:
 
     if golden_frame.envelope is not None:
         return {"format": "json", "body": format_sequence_json(mask_document(golden_frame.envelope))}
-    if golden_frame.text:
+    if golden_frame.text is not None and golden_frame.text:
         return {"format": "text", "body": _with_live_version(golden_frame.text)}
     return {"format": "empty", "body": ""}
 
@@ -237,7 +241,7 @@ def _stderr_view(golden_frame: GoldenFrame) -> dict[str, str] | None:
     output view; this surfaces only the non-envelope stderr text a frame emitted
     alongside its stdout.
     """
-    if golden_frame.envelope_source != "stderr" and golden_frame.stderr_text:
+    if golden_frame.envelope_source != "stderr" and (golden_frame.stderr_text is not None and golden_frame.stderr_text):
         return {"format": "text", "body": golden_frame.stderr_text}
     return None
 
@@ -302,7 +306,7 @@ def build_sequence_payload(
             golden disagree on count or a frame's kind — the golden is stale and
             must be refreshed.
     """
-    resolved_shells = shells if shells else list(_DEFAULT_SHELLS)
+    resolved_shells = shells if (shells is not None and shells) else list(_DEFAULT_SHELLS)
     golden_frames = golden.frames if golden is not None else ()
     executed = [frame for frame in sequence.frames if frame.kind.value != "static"]
     if len(executed) != len(golden_frames):
@@ -389,7 +393,7 @@ def _render_output_html(view: dict[str, str] | None, *, css_class: str) -> str:
     Small JSON bodies are highlighted at build time with Pygments. Large JSON
     and text bodies render escaped and plain, retaining their complete output.
     """
-    if not view or view["format"] == "empty" or not view["body"]:
+    if not (view is not None and view) or view["format"] == "empty" or not view["body"]:
         return ""
     data_format = html.escape(view["format"])
     if view["format"] == "json" and len(view["body"].encode("utf-8")) <= _JSON_HIGHLIGHT_MAX_BYTES:

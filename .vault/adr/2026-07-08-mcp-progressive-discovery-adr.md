@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#mcp-progressive-discovery'
 date: '2026-07-08'
-modified: '2026-10-03'
-body_hash: 'sha256:43049f3fa2f04ab0892fc3d86dfb9f0227e0062175ab0363cf5839b3ed3e3a7d'
+modified: '2026-10-21'
+body_hash: 'sha256:9398e0ffd2c6bd9ffadcd8977849a5dac354cc00169bded89ee6084f4f3bdf46'
 related:
   - "[[2026-07-08-mcp-progressive-discovery-research]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
@@ -28,7 +28,7 @@ unit-tested but never called from any serving path — finished, tested, dead
 capacity — and no `tools/listChanged` capability exists, so every MCP client
 today sees the exact flat surface R2 set out to prevent. The meta-tool pair,
 designed as the long-tail fallback, is advertised alongside the very tools it
-was meant to stand in for. The generated Claude plugin does not constrain the
+was meant to stand in for. Nothing else constrains the
 surface either; its only lever is the boot-frozen persona env var.
 
 An operator directive of 2026-07-08 asked for this review with a chief focus
@@ -64,13 +64,13 @@ the same pass.
   does not use.
 - **Names overflow client budgets.** Four Claude-prefixed tool names exceed
   64 characters because the flat underscored-command-key builder has no
-  length budget and the plugin (`cadrumo`) and server (`cadrumo`) names duplicate
-  into a 23-char client-side prefix.
+  length budget and the client-side server prefix is spent on every name.
 - **Existing gates carry over untouched.** Persona scope, handoff deny,
   CONFIRM elicitation, the live-write block, and argument-faithfulness run
   identically on the direct and meta paths (verified in the refoundation
-  close); nothing here may weaken them. The `harness.load` floor and the
-  grounding tools are always-on by R3/R4 and stay so.
+  close); nothing here may weaken them. The grounding tools are always-on by R3 and stay
+  so. (Amended 2026-10-21: this line also named the `harness.load` floor as always-on by
+  R4; R4's delivery channels are withdrawn from Cadrumo.)
 
 ## Considered options
 
@@ -84,13 +84,19 @@ the same pass.
   discards annotation-driven client confirmation UI and per-verb schemas on
   the common path — the exact weakness R2 named.
 - **Chosen — an orientation core as the default surface, everything else
-  discovered.** By default tools/list advertises only: the `harness.load`
-  floor, the two grounding tools, the meta discovery pair, and a small
+  discovered.** By default tools/list advertises only: the identity read, the
+  two grounding tools, the meta discovery pair, and a small
   manifest-derived orientation slice (the overview/contract family — the
   verbs the operator rules mandate reading first). The full per-verb
   universe remains addressable through discovery (P2) and dynamic activation
   (P3). A `CADRUMO_MCP_SURFACE` env toggle (`core` default, `full` opt-out)
   preserves the flat surface for users who want it and for A/B measurement.
+  (Amended 2026-10-21, drift repair toward cadrumo-agent `2026-10-15-agent-harness-adr`,
+  authorized by the user in session TUI-REFACTOR. The core previously led with the
+  `harness.load` floor, removed because Cadrumo's MCP surface serves no skill, rule or
+  persona content. The core's size and purpose are otherwise unchanged; deterministic
+  operation-derived guidance may be offered in its place, and no replacement tool carries
+  authored agent text.)
 
 ### P2 — Discovery spine quality
 
@@ -141,10 +147,7 @@ the same pass.
 
 - *Leave names as-is:* rejected — four names already break the ~64-char
   prefixed budget and any new deep verb path silently joins them.
-- **Chosen — de-duplicate the namespace and enforce a budget.** The plugin
-  and server must not both spend "cadrumo" in the client prefix (the plan
-  decides which side renames, weighing that a server rename changes prompt
-  slash-command names). The tool-name builder gains an explicit budget with
+- **Chosen — enforce a name budget.** The tool-name builder gains an explicit budget with
   declared short forms for the over-length verbs, and a conformance gate
   fails on any prefixed name over budget so the class cannot recur.
 
@@ -168,11 +171,12 @@ the same pass.
   one.
 - **Chosen — persona stays boot-frozen; in-session dynamism is toolset
   activation only (P3), which only ever widens or narrows the advertised
-  list WITHIN the active persona's scope filter. The `harness.load` floor
-  keeps returning the full rules corpus** — the operating layer's safety
-  prose must always reach the model whole; payload thrift is not worth a
-  partial rulebook. Both are recorded as deliberate so the next audit does
-  not re-litigate them as oversights.
+  list WITHIN the active persona's scope filter.** Recorded as deliberate so the next
+  audit does not re-litigate it as an oversight. (Amended 2026-10-21: this ruling also
+  held that the `harness.load` floor keeps returning the full rules corpus, because the
+  operating layer's safety prose must reach the model whole. That floor is removed from
+  Cadrumo, and serving the rules corpus whole is now cadrumo-agent's obligation. Persona
+  identity remains boot-frozen where a persona is in play.)
 
 ## Constraints
 
@@ -180,8 +184,8 @@ the same pass.
   ADR AMENDS its R2 implementation posture (flat listing retired as the
   default; toolsets become runtime-real) while preserving R2's intent and
   everything else (R3 grounding always-on, R4 floor-first delivery, R6
-  gates, R9 evidence funnel). The packaging ADR's plugin path carries over;
-  the generated plugin config gains only the surface env toggle.
+  gates, R9 evidence funnel). The surface env toggle is the only
+  client configuration this adds.
 - **Frontier surface.** Client ToolSearch thresholds, list-changed
   handling, and slash-command rendering are July-2026 client behaviours
   that MUST be re-verified against live official docs at implementation
@@ -217,7 +221,7 @@ High-level layering; the paired plan owns steps and sequencing.
   toolset groups; per-session activation state; emit the list-changed
   notification; damped auto-activation heuristics from discovery usage;
   persona scope filters activation output.
-- **Naming.** De-duplicate the plugin/server prefix pair; add the length
+- **Naming.** Add the length
   budget plus short-form table to the tool-name builder; conformance gate.
 - **Prompts.** Add typed arguments to the workflow prompts; implement the
   completions handler over the typed sources; keep prompt content fed from
@@ -262,14 +266,14 @@ becomes a scored metric in the live harness.
 
 **Honest difficulties.** The default surface change is behaviour-visible to
 every existing client configuration — the flat-surface toggle and a
-migration note in the plugin release notes are mandatory, and muscle-memory
+migration note in the release notes are mandatory, and muscle-memory
 tool names vanish from the default list (still callable via `execute` and
 via toolset activation). Auto-activation heuristics can thrash
 (activate/deactivate churn emitting notification storms) and need damping
 plus a hard cap. The command index is a second retrieval surface to keep
 licence-clean and fresh against the manifest (build-time derivation, no
 hand-listing). List-changed behaviour varies by client and must be proven
-live, not assumed. Renaming either the plugin or the server invalidates
+live, not assumed. Renaming the server invalidates
 users' existing allowlist/permission entries once, and the choice interacts
 with prompt slash-command names.
 
@@ -278,3 +282,7 @@ in-console help, documentation generation, and the harness router; toolset
 activation is the natural hook for itinerary-driven surfaces (a skill
 activating its own toolset); the A/B surface toggle gives the eval flywheel
 its first controlled experiment.
+
+## Amendment 2026-10-12: gates withdrawn by parity
+
+Accepted under `2026-10-11-mcp-parity-full-parity-adr` and the 2026-10-12 amendment of `2026-07-02-agent-harness-refoundation-adr`. The handoff deny, the CONFIRM elicitation gate and the call-time refusals tied to persona named in the Considerations and in P6 no longer exist: no frontend is refused what the CLI can do. Persona stays boot-frozen as a presentation choice and narrows what is advertised, never what is admitted. Gate invariance now applies to the checks that remain on every frontend: every discovery path still reaches the same shared admission and produces the same refusals. The live-write block is unchanged.

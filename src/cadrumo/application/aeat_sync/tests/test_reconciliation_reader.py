@@ -7,11 +7,8 @@ from uuid import UUID
 
 import pytest
 
-from ...modelo.reconciliation_records import (
-    ModeloReconciliationDiff,
-    ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
-)
+from ...modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
+from ...modelo.reconciliation_records import ModeloReconciliationDiff, ModeloReconciliationDiffKind
 from ..workspace import (
     AeatSyncDiscrepancyKind,
     AeatSyncOverviewArea,
@@ -87,7 +84,9 @@ def test_repeat_comparison_supersedes_only_same_work_and_evidence() -> None:
 
 @pytest.mark.parametrize("revision", [None, "d" * 64])
 def test_different_or_unknown_calculation_cannot_hide_prior_drift(revision: str | None) -> None:
-    earlier = _record().model_copy(update={"calculation_revision_id": "a" * 64 if revision else None})
+    earlier = _record().model_copy(
+        update={"calculation_revision_id": "a" * 64 if (revision is not None and revision) else None}
+    )
     later = earlier.model_copy(
         update={
             "calculation_revision_id": revision,

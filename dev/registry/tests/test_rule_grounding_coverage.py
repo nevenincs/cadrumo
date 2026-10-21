@@ -128,7 +128,9 @@ def test_every_live_grounded_row_names_a_note_its_own_sheet_really_defines(
             # Scoped to the field's OWN sheet, both in the credit and in the
             # lookup: a note label names a note only together with its sheet.
             assert note_sheet == sheet, f"{item.cell} is credited with {note!r} from another sheet"
-            assert defined.get(sheet, {}).get(label), f"{item.cell} cites {note!r}, which {item.design} never defines"
+            assert bool(defined.get(sheet, {}).get(label)), (
+                f"{item.cell} cites {note!r}, which {item.design} never defines"
+            )
 
 
 def test_a_grounded_field_names_notes_that_really_cover_its_type(

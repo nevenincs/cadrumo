@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ..operations.access_resolution import (
     OBSERVATION_DISCLOSING_ACTIONS,
     OperationAccessContext,
@@ -14,7 +16,6 @@ from ..operations.access_resolution import (
     bind_replayed_period_independent_access,
 )
 from ..operations.models import OperationRequest
-from .access_contracts import AccessAction, Availability, DisclosureCategory
 
 
 def bind_whole_profile_censal_access(

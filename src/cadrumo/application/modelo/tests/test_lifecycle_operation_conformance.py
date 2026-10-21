@@ -57,6 +57,7 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
     "prerequisite_observer": None,
     "signing_keypair_capability_factory": lambda **_: None,
     "calculation_summary_pdf_writer": lambda _request, /, **_: b"",
+    "execution_caller_reader": None,
 }
 
 #: The application authority each enrolment is allowed to supervise, by factory.
@@ -278,6 +279,7 @@ def _pending_superseded_invocation(
     legacy_definition = OperationDefinition(
         definition_id=current.definition_id,
         request_type=request_type,
+        subject_reference=current.subject_reference,
         result_type=_HistoricalCalculatePublicResultV1,
         executor_factory=OperationExecutorFactory(
             request_type=request_type,
@@ -297,7 +299,6 @@ def _pending_superseded_invocation(
             }
         ),
         reconciliation_policy=current.reconciliation_policy,
-        permitted_frontends=current.permitted_frontends,
     )
     legacy_registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=legacy_definition,

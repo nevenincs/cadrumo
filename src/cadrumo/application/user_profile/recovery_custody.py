@@ -3,8 +3,11 @@
 Recovery is a second wrapper over the same data-encryption key, opened by a
 minted recovery code instead of the operator's passphrase. It is off by
 default. An operator who wants it enrols after the profile exists, proves the
-current passphrase to do so, and copies the code down once; the code is never
-persisted, never logged, and never enters a result envelope. The only thing
+current passphrase to do so, and takes delivery of the code once, through the
+enrolment's handover; this service and the profile's custody never persist the
+code, never log it, and never put it in a result envelope. A frontend with no
+terminal to show the code on may hold the delivered copy for the operator
+until they have read it and confirmed they kept it. The only thing
 the code is good for is :func:`reset_profile_passphrase_with_recovery`: it
 proves the enrolled wrapper against the capsule's own sentinel and re-wraps
 the key under a new passphrase, so a forgotten passphrase is replaced rather
@@ -30,6 +33,9 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginThrottledError
+
 from ...core.credentials import assess_profile_password
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.profile import ProfileId
@@ -37,7 +43,6 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import effective_storage_root
 from ...core.time.clock import now as _now
 from .authentication import ProfilePasswordProofOperation
-from .automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from .custody_ports import (
     create_profile_recovery_enrollment_material,
     default_profile_record_crypto_port,
@@ -51,7 +56,6 @@ from .custody_ports import (
     unlock_profile_custody_recovery,
 )
 from .custody_repository import profile_custody_transaction_lock
-from .login_session import ProfileLoginThrottledError
 from .login_session_port import profile_login_session_port
 from .passphrase_rotation import ProfilePassphraseReplacementProof, rewrap_profile_passphrase_under_lock
 from .prospective_password import ProspectiveProfilePasswordRefusal, prospective_profile_password_refusal

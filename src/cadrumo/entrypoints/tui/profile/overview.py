@@ -28,9 +28,10 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
-from textual.widgets import Button, Checkbox, DataTable, Footer, Input, ProgressBar, Static
+from textual.widgets import Button, Checkbox, DataTable, Footer, Input, Static
 from textual.worker import Worker
 
+from ....application.auth.sync_readiness import AuthSyncReadiness
 from ....application.user_profile.acquisition_sources import (
     AcquisitionSourceCredentialPostureV1,
     ProfileAcquisitionSourceKey,
@@ -39,7 +40,7 @@ from ....application.user_profile.acquisition_sources import (
 from ....core.i18n.render import tr
 from ....domain.user_profile.values import ProfileSetupState
 from ..components.account_chrome import AccountChromeScreen
-from ..components.status import PinnedStatusBar
+from ..components.status import PinnedStatusBar, ProgressLine
 from ..components.theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
@@ -51,6 +52,7 @@ from ..components.widgets import (
     ContentScroll,
     DisclosureGroup,
 )
+from .aeat_auth_setup import AeatAuthSetupPort, AeatAuthSetupScreen, readiness_text
 from .overview_contracts import (
     _COMPLETE_SETUP_ACTION,
     _COMPLETE_SETUP_KEY,
@@ -128,7 +130,6 @@ class ProfileManagerScreen(
         content-align: left middle;
     }
     #onboarding-progress { width: 100%; }
-    #onboarding-progress Bar { width: 1fr; }
     #onboarding-stages { height: auto; }
     #onboarding-stages Button { width: 1fr; min-width: 0; }
     #onboarding-stages .setup-current { text-style: bold; background: $primary; color: $background; }
@@ -192,14 +193,19 @@ class ProfileManagerScreen(
         validate: Callable[[str, str], str | None] | None = None,
         launch_source: Callable[[ProfileAcquisitionSourceV1], Awaitable[None]] | None = None,
         credential_postures: Sequence[AcquisitionSourceCredentialPostureV1] | None = None,
+        aeat_auth_setup: AeatAuthSetupPort | None = None,
         open_document_reader: Callable[[], Screen[None]] | None = None,
         list_plantilla_media: Callable[[], Sequence[PlantillaMediaYear]] | None = None,
         set_plantilla_media: Callable[[int, Decimal, PlantillaMediaState], ProfileOverview] | None = None,
         remove_plantilla_media: Callable[[int], ProfileOverview] | None = None,
+        refresh_overview_language: Callable[[], ProfileOverview] | None = None,
     ) -> None:
         """Initialize the overview with injected projection and write doors."""
         super().__init__()
         self.overview = overview
+        self._refresh_overview_language = refresh_overview_language
+        self._aeat_auth_setup = aeat_auth_setup
+        self._auth_readiness: AuthSyncReadiness | None = None
         self._open_document_reader = open_document_reader
         """Builds the document reader page, or ``None`` when this host offers none."""
         self._complete_setup = complete_setup
@@ -336,7 +342,7 @@ class ProfileManagerScreen(
                 with Horizontal(id="onboarding-stages"):
                     for stage in SETUP_STAGES:
                         yield Button("", id=f"setup-stage-{stage.value}", compact=True)
-                yield ProgressBar(id="onboarding-progress", show_eta=False, show_percentage=False)
+                yield ProgressLine(id="onboarding-progress")
                 with Horizontal(id="onboarding-actions"):
                     yield Button("", id="onboarding-previous", compact=True)
                     yield Button("", id=_CONTINUE_BUTTON_ID, classes="-primary", compact=True)
@@ -375,6 +381,10 @@ class ProfileManagerScreen(
 
     async def on_mount(self) -> None:
         """Install the presentation theme and render the supplied overview."""
+        # Closing the app can detach this screen before its queued mount
+        # handler runs. Its removed children no longer need presentation.
+        if not self.is_attached:
+            return
         install_cadrumo_themes(self.app)
         # The shared theme sizes every Input to the full row, which would push
         # the required-only switch beside the search box off the screen.
@@ -387,6 +397,80 @@ class ProfileManagerScreen(
                 button.styles.border = ("none", "transparent")
                 button.styles.height = 1
         await self._redraw()
+        if self._aeat_auth_setup is not None:
+            self.run_worker(self._refresh_auth(), group="profile-auth-readiness", exclusive=True)
+        self._finish_mount()
+
+    @override
+    async def refresh_language(self) -> None:
+        """Refresh copy without dismissing editors or replacing the owning screen."""
+        reader = self._refresh_overview_language
+        if reader is not None:
+            refreshed = await asyncio.to_thread(reader)
+            if not self.is_attached or refreshed.profile_id != self.overview.profile_id:
+                return
+            if refreshed.record_revision >= self.overview.record_revision:
+                self.overview = refreshed
+        await self._redraw()
+
+    async def _refresh_auth(self) -> None:
+        """Read persisted requirements and gate every acquisition action consistently."""
+        if self._aeat_auth_setup is None:
+            return
+        try:
+            self._auth_readiness = await self._aeat_auth_setup.read_readiness()
+        except Exception:
+            self._auth_readiness = None
+        self.show_auth_readiness(self._auth_readiness)
+
+    def show_auth_readiness(self, readiness: AuthSyncReadiness | None) -> None:
+        """Keep the visible requirements and source buttons on the same saved state."""
+        self._auth_readiness = readiness
+        if self.is_attached:
+            for status in self.query("#manager-auth-readiness"):
+                if isinstance(status, Static):
+                    status.update(readiness_text(self._auth_readiness))
+            self._sync_source_actions()
+
+    def _edit_aeat_auth(self) -> None:
+        if self._aeat_auth_setup is None or self._pending_write is not None:
+            return
+        self.app.push_screen(AeatAuthSetupScreen(self._aeat_auth_setup), self._auth_edited)
+
+    def _auth_edited(self, outcome: tuple[ProfileOverview, AuthSyncReadiness] | None) -> None:
+        """Refresh saved authentication without holding the screen's message queue."""
+        self.run_worker(self._reload_auth(outcome), group="profile-auth-readiness", exclusive=True)
+
+    async def _reload_auth(self, outcome: tuple[ProfileOverview, AuthSyncReadiness] | None) -> None:
+        if self._aeat_auth_setup is None:
+            return
+        try:
+            if outcome is None:
+                # An interrupted readback may follow a committed partial save.
+                # Recover both facts and readiness instead of reusing old facts.
+                outcome = await self._aeat_auth_setup.snapshot()
+            overview, self._auth_readiness = outcome
+            if overview.profile_id != self.overview.profile_id:
+                self._auth_readiness = None
+                self.show_auth_readiness(self._auth_readiness)
+                return
+            if overview.record_revision > self.overview.record_revision or (
+                overview.record_revision == self.overview.record_revision
+                and overview.content_digest == self.overview.content_digest
+            ):
+                await self.apply_overview(overview, refresh_auth=False)
+            else:
+                await self._refresh_auth()
+                return
+            self.show_auth_readiness(self._auth_readiness)
+        except Exception:
+            self._auth_readiness = None
+            self.show_auth_readiness(self._auth_readiness)
+
+    def _finish_mount(self) -> None:
+        """Set focus and scrolling only while the asynchronously redrawn screen remains attached."""
+        if not self.is_attached:
+            return
         if self._onboarding:
             self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
         # Whatever took focus while the page was building may have scrolled

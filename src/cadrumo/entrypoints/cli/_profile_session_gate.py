@@ -8,17 +8,20 @@ from typing import TYPE_CHECKING, Any, Never, Protocol
 
 import typer
 
-from ...application.operator_surface.command_ports import ProfileAuthenticationPosture
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.spec import CommandSpec
+from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
+
 from ...core.errors.hierarchy import InternalInvariantError
-from ...core.profile_session import ProfileSessionRefusalReason
-from .command_spec import CommandSpec
+from ...core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
 from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
-    from ...application.user_profile.login_session import ProfileLoginOutcome
+    from cadrumo_client.commands.secure_input import MachineSecretSelection, ProfileSecretSelection
+    from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
+
     from ...application.user_profile.session_admission import ProfileCredentialRequestV1
     from .common import RequestedCliLeaf
-    from .config.secure_input import MachineSecretSelection, ProfileSecretSelection
 
 
 class RootAuthenticator(Protocol):
@@ -39,15 +42,35 @@ class RootAuthenticator(Protocol):
     ) -> ProfileLoginOutcome: ...
 
 
-CliRefusedBoundaryError = import_module(".errors", __package__).CliRefusedBoundaryError
-
 _LOGGED_OUT_REFUSALS = frozenset(
     {ProfileSessionRefusalReason.ABSENT, ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING}
 )
 
+_UNVERIFIABLE_REFUSALS = frozenset({ProfileSessionRefusalReason.MALFORMED, ProfileSessionRefusalReason.TAMPERED})
 
-def session_refusal_translation_key(refusal: ProfileSessionRefusalReason) -> str:
-    """Map every typed resume refusal to its stable operator diagnostic."""
+
+def session_refusal_translation_key(
+    refusal: ProfileSessionRefusalReason, binding: ReceiptBindingRefusal | None = None
+) -> str:
+    """Map every typed resume refusal to its stable operator diagnostic.
+
+    A receipt refused for the sign-in it belongs to says so: a sign-out
+    elsewhere and a sign-in from another login are not the absence of one.
+    """
+    if binding is ReceiptBindingRefusal.LOGIN_MISMATCH:
+        return "cli.config.errors.profile_session_login_mismatch"
+    if binding is ReceiptBindingRefusal.GENERATION_CHANGED:
+        return "cli.config.errors.profile_session_signed_out"
+    if binding is not None:
+        return "cli.config.errors.profile_session_unreadable"
+    if refusal is ProfileSessionRefusalReason.CUSTODY_CHANGED:
+        return "cli.config.errors.profile_session_custody_changed"
+    if refusal is ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH:
+        return "cli.config.errors.profile_session_outdated"
+    if refusal in _UNVERIFIABLE_REFUSALS:
+        return "cli.config.errors.profile_session_unreadable"
+    if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
+        return "errors.auth.auth_storage_keyring_unavailable"
     return (
         "cli.config.errors.profile_session_absent"
         if refusal in _LOGGED_OUT_REFUSALS
@@ -56,7 +79,7 @@ def session_refusal_translation_key(refusal: ProfileSessionRefusalReason) -> str
 
 
 def _common() -> Any:
-    """Resolve the already-initialized facade without a static runtime cycle."""
+    """Resolve the already-initialized facade without a static import cycle."""
     return import_module(".common", __package__)
 
 
@@ -164,9 +187,9 @@ def enforce_explicit_database_route(
     command_path: tuple[str, ...],
     target_bucket_id: str | None,
 ) -> None:
-    """Refuse an operator-pinned database URL before a runtime leaf admits a profile.
+    """Refuse an operator-pinned database URL before a profile-connection leaf admits a profile.
 
-    The runtime admission path owns its own no-active-profile refusal, and that
+    The profile-connection admission path owns its no-active-profile refusal, and that
     one is the better answer for a cold start: it separates an operator who has
     registered nothing from one who is merely logged out. It has no equivalent
     for an explicitly pinned ``cadrumo_database_url``. Creating or selecting a
@@ -176,7 +199,7 @@ def enforce_explicit_database_route(
     the runtime and local routes refuse the same pinned route the same way.
 
     Only that one decision is applied. The write policy's root-fallback branch
-    is deliberately left to the runtime path's richer refusal.
+    is deliberately left to the profile-connection path's richer refusal.
     """
     from ...application.storage_write_policy import StorageWritePolicyCode, inspect_storage_write_policy
 
@@ -234,18 +257,11 @@ def activate_profile_session(
     command_path: tuple[str, ...],
     authenticate_root: RootAuthenticator,
 ) -> None:
-    """Apply write policy and exact-target session proof from parsed authority."""
-    from ._argument_only_refusals import refuse_on_arguments_alone
+    """Apply write policy and exact-target session proof from parsed authority.
 
-    # A refusal the arguments alone settle must precede the profile-bound write
-    # gate below. Otherwise an unsupported modelo is answered with "no active
-    # profile", sending the operator to build an environment for a request that
-    # is refused regardless of it. Dispatch has already opened the invocation's
-    # governed-fact scope, so an argument-only parse reads the generation the
-    # command itself will.
-    refuse_on_arguments_alone(spec, arguments)
-
-    from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
+    The authentication gate has already raised any refusal the arguments alone
+    settle, before this or any profile-connection route.
+    """
     from ...application.storage_write_policy import inspect_storage_write_policy
     from ...core.bucket_pointer import resolve_active_bucket_id
 
@@ -266,6 +282,8 @@ def activate_profile_session(
         return
     if _posture_skips_session(posture):
         return
+    from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
+
     if _activate_existing_profile_session(
         ctx,
         bucket_id=bucket_id,
@@ -385,7 +403,7 @@ def _interactive_authentication(
     """
     if refusal not in {None, ProfileSessionRefusalReason.KEYRING_UNAVAILABLE}:
         return False
-    from .config.secure_input import terminal_can_prompt_for_secrets
+    from cadrumo_client.commands.secure_input import terminal_can_prompt_for_secrets
 
     if not terminal_can_prompt_for_secrets():
         return False

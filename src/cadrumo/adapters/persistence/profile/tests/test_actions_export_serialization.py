@@ -13,12 +13,12 @@ import pytest
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.export.tabular import ExportSerializationFormat
 from cadrumo.application.ledger.actions_export import export_ledger_transactions
-from cadrumo.application.ledger.actions_manual import create_manual_transaction
 from cadrumo.application.ledger.models import LedgerExportCommand, ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,

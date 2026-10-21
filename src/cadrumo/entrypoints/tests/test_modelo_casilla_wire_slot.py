@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
+
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...application.filing.draft_construction import build_draft
 from ...application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
@@ -21,7 +23,6 @@ from ...application.modelo.work_form_service import load_modelo_work_form
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
-from .modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

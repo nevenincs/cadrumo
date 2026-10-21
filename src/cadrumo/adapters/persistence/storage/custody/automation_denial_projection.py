@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from .....application.user_profile.access_contracts import (
-    AuthorityState,
-)
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
+
 from .....application.user_profile.automation_enrollment import (
     EnrollmentGrant,
     EnrollmentRecord,

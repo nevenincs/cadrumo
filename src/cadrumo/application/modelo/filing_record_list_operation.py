@@ -9,6 +9,9 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import profile_operation_subject
 from ...domain.modelos.filing_record import (
@@ -27,11 +30,8 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filing_record_list_contracts import (
     MAX_MODELO_FILING_RECORD_LIST_ROWS,
@@ -135,11 +135,11 @@ def build_modelo_filing_record_list_definition(
     return build_single_phase_definition(
         definition_id=MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID,
         request_type=ModeloFilingRecordListRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloFilingRecordListProjection,
         executor_type=ModeloFilingRecordListExecutor,
         build=lambda: ModeloFilingRecordListExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 

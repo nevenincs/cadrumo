@@ -1,15 +1,13 @@
 """The independently loadable ``config profile list`` leaf.
 
 The leaf reads storage exactly twice: one anchored summary observation and one
-active-pointer read.  Everything after that is an in-memory join, so rendering
-cannot re-enter persistence and the listing cost does not scale with how many
-times a row is displayed.
+active-pointer read.  Everything after that is an in-memory join made by the
+application's listing, so rendering cannot re-enter persistence and the listing
+cost does not scale with how many times a row is displayed.
 """
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import typer
@@ -20,58 +18,17 @@ from ..common import activate_subcommand_output_language as _activate_output_lan
 from ..common import emit_envelope
 
 if TYPE_CHECKING:
-    from ....application.user_profile.profile_summary import ProfileSummary, ProfileSummaryInventory
+    from ....application.user_profile.profile_summary import ProfileListingResult, ProfileSummaryInventory
     from ....core.json_contract import Notice
 
 
-@dataclass(frozen=True, slots=True)
-class JoinedProfileRow:
-    """One summary joined to the single active-pointer observation.
-
-    The join happens once, in memory.  Rendering receives this and never the
-    inventory, so no renderer can be tempted to resolve the active profile --
-    or anything else -- a second time.
-    """
-
-    summary: ProfileSummary
-    active: bool
-
-    @property
-    def label(self) -> str:
-        """The operator-facing label carried by the observed capsule."""
-        return self.summary.label
-
-
-def join_active_profile(
-    inventory: ProfileSummaryInventory,
-    *,
-    active_bucket_id: str | None,
-) -> tuple[JoinedProfileRow, ...]:
-    """Join summaries to the active pointer and order them for display.
-
-    Ordering is by casefolded label so the listing reads alphabetically to an
-    operator, with the profile id as the tie-break so two profiles sharing a
-    casefolded label still order deterministically between runs.
-    """
-    rows = tuple(
-        JoinedProfileRow(summary=summary, active=summary.profile_id == active_bucket_id)
-        for summary in inventory.summaries
-    )
-    return tuple(sorted(rows, key=lambda row: (row.label.casefold(), row.summary.profile_id)))
-
-
-def active_profile_label(rows: Sequence[JoinedProfileRow]) -> str | None:
-    """Return the joined active row's label without re-reading the pointer."""
-    return next((row.label for row in rows if row.active), None)
-
-
-def profile_list_lines(rows: Sequence[JoinedProfileRow], *, active_label: str | None) -> list[str]:
+def profile_list_lines(listing: ProfileListingResult) -> list[str]:
     """Render the joined rows; no row here can reach storage."""
-    lines = [f"active_profile\t{active_label or '<none>'}"]
-    if not rows:
+    lines = [f"active_profile\t{listing.active_profile or '<none>'}"]
+    if not listing.profiles:
         lines.append("profiles\t<none>")
         return lines
-    lines.extend(f"{'*' if row.active else ' '}\t{row.label}" for row in rows)
+    lines.extend(f"{'*' if row.active else ' '}\t{row.name}" for row in listing.profiles)
     return lines
 
 
@@ -98,29 +55,17 @@ def config_list(
 ) -> None:
     """List committed profiles from one summary observation and one pointer read."""
     _activate_output_language(ctx, output_language)
-    from ....application.user_profile.profile_summary import summary_inventory
-    from ....core.bucket_pointer import resolve_active_bucket_id
-    from .profile_list_payloads import ConfigListResult, ProfilePointerPayload
+    from ....application.user_profile.profile_summary import profile_listing
+    from .profile_list_payloads import ConfigListResult
 
-    inventory = summary_inventory()
-    rows = join_active_profile(inventory, active_bucket_id=resolve_active_bucket_id())
-    active_label = active_profile_label(rows)
-    result = ConfigListResult(
-        active_profile=active_label,
-        profiles=[
-            ProfilePointerPayload(
-                name=row.label,
-                bucket_id=row.summary.profile_id,
-                active=row.active,
-            )
-            for row in rows
-        ],
-    )
+    listing = profile_listing()
+    inventory = listing.inventory
+    joined = listing.result()
     notices = () if inventory.recognized else (_incoherent_listing_notice(inventory),)
     emit_envelope(
         ctx,
         command="config.profile.list",
-        result=result,
-        lines=profile_list_lines(rows, active_label=active_label),
+        result=ConfigListResult.model_validate(joined.model_dump(mode="json")),
+        lines=profile_list_lines(joined),
         notices=notices,
     )

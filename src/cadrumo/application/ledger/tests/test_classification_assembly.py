@@ -23,14 +23,12 @@ from cadrumo.domain.calculations.registry.authority import (
 from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import (
     CustomerTaxStatus,
-    InvoiceKind,
-    IvaTerritorialScope,
     TransactionKind,
     domestic_rate_tier_is_required,
     resolve_iva_classification_catalogue,
     resolve_iva_classification_inputs,
 )
-from ....domain.iva.schema import IvaCategory, IvaRateKind
+from ....domain.iva.schema import InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 from ....domain.iva.supply_nature import SupplyNature
 from ..classification_assembly import (
     DeclaredFact,

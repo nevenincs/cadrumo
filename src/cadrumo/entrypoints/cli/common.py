@@ -28,6 +28,10 @@ import typer
 import typer._click.types as typer_click_types
 from pydantic import BaseModel, Field, field_validator
 
+from cadrumo_client.commands.suggestions import INVOCATION_REMAINDER_META_KEY
+from cadrumo_client.contracts.command_program import CommandProgram
+
+from ...application.operator_surface.action_targets import ACTION_TARGETS, recorded_action_target_reconciliation
 from ...core.cli_metadata import is_metadata_invocation
 from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
@@ -36,7 +40,6 @@ from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.output_rendering import OutputFormat, render_command_output
 from ...core.text_bounds import NonEmptyStr
-from .command_suggestions import INVOCATION_REMAINDER_META_KEY
 from .operator_surface_reconciliation import operator_surface_target_reconciliation
 
 
@@ -158,22 +161,14 @@ class _PublishedIrpfCategory(click.ParamType[str]):
     def convert(self, value: object, param: click.Parameter | None, ctx: click.Context | None) -> str:
         """Return the normalized token, naming the accepted ids on a refusal."""
         from ...domain.calculations.registry.authority import bundled_indexed_authority
-        from ...domain.transactions.irpf_categories import (
-            ledger_irpf_category,
-            ledger_irpf_category_catalogue,
-            normalize_irpf_category,
-        )
+        from ...domain.transactions.errors import TransactionValidationError
+        from ...domain.transactions.irpf_categories import require_ledger_irpf_category
 
-        token = normalize_irpf_category(str(value))
         with bundled_indexed_authority().operation() as operation:
-            if token is not None and ledger_irpf_category(token, authority=operation) is not None:
-                return token
-            accepted = tuple(descriptor.id for descriptor in ledger_irpf_category_catalogue(authority=operation))
-        self.fail(
-            tr("cli.ledger.errors.irpf_category_unknown", value=str(value), accepted=", ".join(accepted)),
-            param,
-            ctx,
-        )
+            try:
+                return require_ledger_irpf_category(str(value), authority=operation)
+            except TransactionValidationError as refusal:
+                self.fail(str(refusal), param, ctx)
 
 
 IRPF_CATEGORY_CHOICE: typer_click_types.ParamType = cast(
@@ -201,10 +196,9 @@ EU_MEMBER_STATE_CHOICE: typer_click_types.ParamType = cast(
 # resolving them.
 if TYPE_CHECKING:
     from ...application.modelo.work_lifecycle import ModeloWorkLifecycleContinuation
-    from ...application.operator_actions.catalogue import ActionArgumentBindingSpecification
-    from ...application.operator_actions.models import ActionArgumentBinding, ActionReference, PreconditionVerdict
-    from ...application.operator_surface.command_ports import VerbInputSchema
-    from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
+    from ...application.operator_actions.models import ActionReference, PreconditionVerdict
+    from ...application.operator_surface.verb_input_contracts import VerbInputSchema
+    from ...core.json_contract import ResolvedNoticeAction
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
@@ -473,128 +467,42 @@ def project_cli_policy_refusal(
     )
 
 
-def _validate_cli_precondition_action_bindings(
-    *,
-    action_id: str,
-    specifications: tuple[ActionArgumentBindingSpecification, ...],
-    argument_bindings: tuple[ActionArgumentBinding, ...],
-) -> None:
-    """Require verdict bindings to account for the declared action arguments."""
-    specifications_by_name = _catalogue_argument_specifications_by_name(specifications)
-    observed_arguments = {item.argument_name: item for item in argument_bindings}
-    if set(observed_arguments) != set(specifications_by_name):
-        raise ValueError(f"CLI policy action arguments do not match catalogue declaration: {action_id}")
-    _require_cli_precondition_argument_sources(
-        observed_arguments=observed_arguments,
-        specifications_by_name=specifications_by_name,
-    )
-
-
-def _catalogue_argument_specifications_by_name(
-    specifications: tuple[ActionArgumentBindingSpecification, ...],
-) -> dict[str, list[ActionArgumentBindingSpecification]]:
-    """Group the catalogue's declared input sources by their argument identity."""
-    specifications_by_name: dict[str, list[ActionArgumentBindingSpecification]] = {}
-    for specification in specifications:
-        specifications_by_name.setdefault(specification.argument_name, []).append(specification)
-    return specifications_by_name
-
-
-def _require_cli_precondition_argument_sources(
-    *,
-    observed_arguments: dict[str, ActionArgumentBinding],
-    specifications_by_name: dict[str, list[ActionArgumentBindingSpecification]],
-) -> None:
-    """Refuse a resolved verdict binding whose provenance contradicts the catalogue."""
-    from ...core.operator_action_enums import ActionArgumentStatus
-
-    for name, argument in observed_arguments.items():
-        if argument.status is ActionArgumentStatus.MISSING:
-            continue
-        matching_specifications = tuple(
-            specification
-            for specification in specifications_by_name[name]
-            if argument.source is specification.source
-            and argument.source_key == specification.source_key
-            and argument.source_evidence_id == specification.source_evidence_id
-        )
-        if len(matching_specifications) != 1:
-            raise ValueError(f"CLI policy action argument source contradicts catalogue: {name}")
-
-
-def _resolve_cli_precondition_action_reference(
-    verdict: PreconditionVerdict,
-) -> ResolvedActionReference | None:
-    """Resolve the optional verdict recovery action against the live surface."""
-    action = verdict.action
-    if action is None:
-        return None
-    from ...application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
-    from ...application.operator_surface.action_resolution import resolve_catalogue_action
-    from ...core.json_contract import ResolvedActionReference
-
-    resolution = resolve_catalogue_action(
-        action=action,
-        catalogue=OPERATOR_ACTION_CATALOGUE,
-        reconciliation=operator_surface_target_reconciliation(
-            OPERATOR_ACTION_CATALOGUE.lookup(action.action_id).target_command_key,
-        ),
-    )
-    declaration = resolution.declaration
-    if resolution.target_leaf.input_schema is None:
-        raise ValueError(
-            f"CLI policy action target has no live input schema: {declaration.target_command_key}",
-        )
-    _validate_cli_precondition_action_bindings(
-        action_id=action.action_id,
-        specifications=declaration.argument_specifications,
-        argument_bindings=verdict.argument_bindings,
-    )
-    return ResolvedActionReference(
-        action_id=declaration.action_id,
-        target_command_key=declaration.target_command_key,
-        cli_path=resolution.target_leaf.live_leaf.canonical_cli_path,
-    )
-
-
 def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPreconditionAction:
-    """Schema-resolve one application verdict against the live action catalogue.
+    """Schema-resolve one application verdict against the live command graph.
 
-    This is the sole CLI adapter from application-owned verdict facts into the
-    strict wire DTO.  Both immediate refusal envelopes and persisted workflow
-    history use it, so neither path can reconstruct recovery prose or disagree
-    about missing bindings.
+    This is the sole CLI bridge from application-owned verdict facts into the
+    strict wire DTO. It binds the leaf the command graph declares for the
+    action's target to the application-owned projection, which owns the
+    catalogue join, the binding checks and the record itself.
     """
-    from ...core.json_contract import ActionConditionEvidence, ResolvedActionArgument
+    from ...application.operator_surface.precondition_action import resolve_precondition_action
 
-    projected = ResolvedPreconditionAction(
-        failed_condition_id=verdict.failed_condition_id,
-        evidence=tuple(
-            ActionConditionEvidence(
-                condition_id=item.condition_id,
-                evidence_id=item.evidence_id,
-                provenance=item.provenance,
-                values=item.values,
-            )
-            for item in verdict.evidence
-        ),
-        action=_resolve_cli_precondition_action_reference(verdict),
-        argument_bindings=tuple(
-            ResolvedActionArgument(
-                argument_name=item.argument_name,
-                status=item.status,
-                value=item.value,
-                source=item.source,
-                source_key=item.source_key,
-                source_evidence_id=item.source_evidence_id,
-            )
-            for item in verdict.argument_bindings
-        ),
-        missing_argument_names=verdict.missing_argument_names,
-        conditionality=verdict.conditionality,
-        no_recovery_outcome=verdict.no_recovery_outcome,
-    )
-    return projected
+    def target_reconciliation(command_key: str, /):
+        target = next((row for row in ACTION_TARGETS if row.command_key == command_key), None)
+        if target is None:
+            raise LookupError(f"unknown command schema identity: {command_key}")
+        if target.program is CommandProgram.AEAT:
+            return operator_surface_target_reconciliation(command_key)
+        return recorded_action_target_reconciliation(
+            command_key,
+            canonical_cli_path=(target.program.executable_name, *target.cli_path),
+        )
+
+    resolved = resolve_precondition_action(verdict, target_reconciliation=target_reconciliation)
+    if resolved.action is None:
+        return resolved
+    target = next(row for row in ACTION_TARGETS if row.command_key == resolved.action.target_command_key)
+    if target.program is CommandProgram.AEAT:
+        from .command_specs import COMMAND_GRAPH
+
+        executable = COMMAND_GRAPH.root().token
+    else:
+        executable = target.program.executable_name
+    cli_path = resolved.action.cli_path
+    if cli_path is None:
+        raise LookupError(f"resolved CLI action has no command path: {resolved.action.target_command_key}")
+    action = resolved.action.model_copy(update={"cli_path": (executable, *cli_path)})
+    return resolved.model_copy(update={"action": action})
 
 
 def attach_cli_policy_verdict[ExceptionT: Exception](
@@ -765,7 +673,7 @@ def _powershell_action_token(token: str) -> str:
 
 def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
     """Derive executable text commands from the same resolved action DTOs as JSON."""
-    from ...application.operator_surface.command_ports import cli_argv_for
+    from ...application.operator_surface.verb_input_contracts import cli_argv_for
     from ...core.json_contract import ResolvedNoticeAction
     from ...core.product_identity import PRODUCT_IDENTITY
 
@@ -862,8 +770,9 @@ def emit_envelope(
     if metadata_invocation:
         resolved_notices = supplied_notices
     else:
+        from cadrumo_client.commands.profile_authentication_notice import drain_profile_authentication_notices
+
         from ..payer_fact_migration_notices import drain_payer_fact_migration_notices
-        from ._profile_authentication_notice import drain_profile_authentication_notices
 
         supplied_notices = (
             *supplied_notices,
@@ -1028,9 +937,10 @@ def _no_active_profile_refusal() -> Exception:
     second one. ``list_profile_buckets`` reads only manifest files and
     never unlocks a bucket, so this check is cheap.
     """
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ...application.profile_preconditions import inspect_active_profile_precondition
     from ...application.workflow.profile_bucket_scan import list_profile_buckets
-    from .errors import CliRefusedBoundaryError
 
     registered_profile_count = len(list_profile_buckets())
     verdict = inspect_active_profile_precondition(

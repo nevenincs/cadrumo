@@ -362,9 +362,12 @@ def _require_not_pre_activity_period(
     if refusal is None:
         return
     message, context = refusal
+    # The catalogue sentence is what crosses the runtime to every frontend; the
+    # free text alone would leave them only the generic readiness template.
     raise ModeloProfileReadinessError(
         message,
         context=context,
+        translated_message="application.modelo.errors.profile_readiness_pre_activity",
     )
 
 
@@ -387,6 +390,7 @@ def _require_modelo_applicable_for_local_work(
     raise ModeloProfileReadinessError(
         message,
         context=context,
+        translated_message="application.modelo.errors.profile_readiness_not_applicable",
     )
 
 

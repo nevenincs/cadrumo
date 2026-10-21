@@ -18,18 +18,32 @@ from pydantic import ValidationError
 from ....application.export.tabular import ExportSerializationFormat
 from ....application.ledger.models import LedgerExportResult, LedgerExportRow
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification
-from .._ledger_catalogue_invoice_payloads import (
-    CatalogueInvoiceListResult,
-    CatalogueInvoiceRecordPayload,
-)
 from .._ledger_llm_payloads import (
     LedgerClassifyLlmRejectResult,
     LedgerClassifyLlmSaturateResult,
     LedgerClassifyLlmSuggestResult,
 )
-from .._ledger_payloads import (
+from ..ledger_business_payloads import (
+    EvidenceListResult,
+    EvidenceRecordPayload,
+    InventoryLedgerPayload,
+    InventoryListResult,
+    InventoryMovementPayload,
+    InventoryStockLayerPayload,
+)
+from ..ledger_catalogue_invoice_results import (
+    CatalogueInvoiceListResult,
+    CatalogueInvoiceRecordPayload,
+)
+from ..ledger_ratios_results import (
+    RatiosEligibleResult,
+    RatiosEligibleRowPayload,
+    RatiosValidateFindingPayload,
+    RatiosValidateResult,
+)
+from ..ledger_results import (
     LedgerAddResult,
     LedgerClassifyBulkResult,
     LedgerClassifySingleResult,
@@ -46,22 +60,8 @@ from .._ledger_payloads import (
     TransactionPayload,
     _LedgerMutationResult,
 )
-from .._ledger_ratios_payloads import (
-    RatiosEligibleResult,
-    RatiosEligibleRowPayload,
-    RatiosValidateFindingPayload,
-    RatiosValidateResult,
-)
-from .._ledger_rule_payloads import RuleApplyAppliedPayload, RuleApplyResult
-from .._modelo_payloads import LedgerIssuePayload
-from ..ledger_business_payloads import (
-    EvidenceListResult,
-    EvidenceRecordPayload,
-    InventoryLedgerPayload,
-    InventoryListResult,
-    InventoryMovementPayload,
-    InventoryStockLayerPayload,
-)
+from ..ledger_rule_results import RuleApplyAppliedPayload, RuleApplyResult
+from ..modelo_results import LedgerIssuePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

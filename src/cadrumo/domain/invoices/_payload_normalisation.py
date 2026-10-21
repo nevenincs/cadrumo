@@ -29,9 +29,9 @@ from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.travel_agency_mediation import require_travel_agency_mediation
-from ..iva.classification import InvoiceKind, TransactionKind
+from ..iva.classification import TransactionKind
 from ..iva.oss import OssIossRegime, require_oss_ioss_regime
-from ..iva.schema import EUMemberState, IvaCategory
+from ..iva.schema import EUMemberState, InvoiceKind, IvaCategory
 from .enums import (
     InvoiceClass,
     InvoiceLegalMention,

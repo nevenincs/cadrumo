@@ -5,10 +5,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ...modelo.reconciliation_records import (
     ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationRecord,
     ModeloReconciliationVerdict,
 )

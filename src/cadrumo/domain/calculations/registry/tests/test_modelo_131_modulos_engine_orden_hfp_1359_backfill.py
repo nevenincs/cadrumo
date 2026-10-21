@@ -139,7 +139,7 @@ def _run_hfp_1359_engine(
         "131", filing_year=_ORDEN_HFP_1359_2023_EXERCISE, period="1T", grade=RegistryAuthorityGrade.CALCULATION
     )
     assert snapshot.filing_period is not None
-    text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
+    text_inputs = {"modulos-epigrafe": epigrafe} if (epigrafe is not None and epigrafe) else {}
     result = calculate_registry_snapshot(
         snapshot,
         inputs={

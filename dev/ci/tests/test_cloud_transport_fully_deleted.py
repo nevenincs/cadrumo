@@ -533,10 +533,10 @@ def test_a_reader_reachable_only_under_consent_stamps_the_transport_it_actually_
     from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 
     off_host = {
-        "TextInvoiceFieldExtractor": LLMProvider.OPENAI,
-        "LocalVisionDocumentTranscriber": LLMProvider.ANTHROPIC,
-        "SemanticColumnRoleMapper": LLMProvider.OPENAI,
-        "SupplyNatureProposer": LLMProvider.ANTHROPIC,
+        "TextInvoiceFieldExtractor": LLMProvider.AGENT,
+        "LocalVisionDocumentTranscriber": LLMProvider.AGENT,
+        "SemanticColumnRoleMapper": LLMProvider.AGENT,
+        "SupplyNatureProposer": LLMProvider.AGENT,
     }
     assert set(off_host) == set(_READERS_WITH_A_PROVIDER_AXIS)
 

@@ -16,7 +16,7 @@ from dev.quality.source_import_analysis import (
 from .unreachable_dataclasses import dataclass_member_uses
 from .unreachable_definitions import _collection_uses, _definitions
 from .unreachable_frameworks import framework_contracts
-from .unreachable_graph import _collapse_packages, _importers_of_span, resolved_symbol_uses
+from .unreachable_graph import _collapse_packages, _importers_of_span, reachable_closure, resolved_symbol_uses
 from .unreachable_memo import _walked, parse_module
 from .unreachable_models import (
     _CONFIDENCE_BY_ORDER,
@@ -49,9 +49,20 @@ def _module_findings(
     full_reach: frozenset[str],
     outside: _OutsideUse,
     importers: Mapping[str, frozenset[str]],
+    edges: Mapping[str, frozenset[str]],
 ) -> tuple[ModuleFinding, ...]:
+    """Report audited modules no product command reaches and no ``dev/`` tool uses.
+
+    A module ``dev/`` imports is in use, and so is everything it imports in
+    turn: deleting it breaks a repository gate rather than shrinking what an
+    installed user reaches. The clear rests on the same resolved ``dev`` corpus
+    label that clears a symbol; a ``tests`` label, including ``dev/`` tests,
+    only annotates the finding.
+    """
     findings: list[ModuleFinding] = []
-    audited = frozenset(name for name in modules if name == spec.package or name.startswith(spec.package + "."))
+    dev_roots = [name for name in modules if _DEV_LABEL in outside.labels_for_module(name)]
+    dev_reach = reachable_closure(dev_roots, modules, dict(edges))
+    audited = frozenset(name for name in modules if spec.audits(name)) - dev_reach
     unreachable = audited - full_reach
     for name, spanned in _collapse_packages(unreachable, modules):
         findings.append(_unreachable_module_finding(name, spanned, spec, modules, outside, importers))
@@ -99,7 +110,7 @@ def _symbol_findings(
     consumes the symbol. Folding them into one number under the data name
     would misreport both.
     """
-    entries = spec.entry_points + tuple(entry for companion in spec.companions for entry in companion.entry_points)
+    entries = spec.entry_points
     member_names: set[str] = set()
     literal_tokens: set[str] = set()
     resolved_uses: set[tuple[str, str]] = {(entry.module, entry.attribute) for entry in entries}
@@ -125,9 +136,7 @@ def _symbol_findings(
     findings: list[SymbolFinding] = []
     data_cleared = 0
     dev_cleared = 0
-    audited_reach = sorted(
-        name for name in runtime_reach if name == spec.package or name.startswith(spec.package + ".")
-    )
+    audited_reach = sorted(name for name in runtime_reach if spec.audits(name))
     for name in audited_reach:
         module = modules[name]
         for definition in _definitions(module.tree, contracts.get(name)):
@@ -208,15 +217,16 @@ def _test_findings(
     module_findings: tuple[ModuleFinding, ...],
     symbol_findings: tuple[SymbolFinding, ...],
 ) -> tuple[TestFinding, ...]:
-    """Test modules under the package whose every shipped subject is already a finding."""
+    """Test modules under the audited packages whose every shipped subject is already a finding."""
     dead_roots = tuple(f.module for f in module_findings if f.reach is ModuleReach.UNREACHABLE)
     dead_symbols = {(f.module, f.name): f.confidence for f in symbol_findings}
     findings: list[TestFinding] = []
     support_cache: dict[Path, tuple[frozenset[str], frozenset[tuple[str, str]]]] = {}
-    for path in iter_python_files(spec.src_root / spec.package):
-        finding = _test_finding_for_path(path, spec, known, support_cache, dead_roots, dead_symbols)
-        if finding is not None:
-            findings.append(finding)
+    for root in spec.package_roots:
+        for path in iter_python_files(root):
+            finding = _test_finding_for_path(path, spec, known, support_cache, dead_roots, dead_symbols)
+            if finding is not None:
+                findings.append(finding)
     return tuple(findings)
 
 

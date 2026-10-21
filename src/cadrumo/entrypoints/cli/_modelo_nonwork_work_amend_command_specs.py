@@ -1,10 +1,16 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ._modelo_nonwork_command_spec_policies import _INTERACTIVE_MODEL_WRITE
-from .command_shared_contracts import DeferredTarget, LazyBinding, ResultSchemaSpec, SchemaState, TranslationKey
-from .command_spec import CommandSpec, InvocationSpec
 from .modelo_work_command_specs import _ADDRESS, _LANGUAGE, _a, _o
 
 MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS: tuple[CommandSpec, ...] = (
@@ -23,10 +29,12 @@ MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _o("output_language_opt", "--output-language", _LANGUAGE, help_name="output_language"),
         ),
         policy=_INTERACTIVE_MODEL_WRITE,
-        handler=LazyBinding.available(DeferredTarget("._modelo_amend_wizard_cli", "work_amend_wizard", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".modelo_amend_wizard_commands", "work_amend_wizard", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_amend_wizard_payloads", "WorkAmendWizardResult", __package__),
+            DeferredTarget(".modelo_amend_wizard_results", "WorkAmendWizardResult", __package__),
             identity="modelo.work.amend_wizard",
         ),
     ),

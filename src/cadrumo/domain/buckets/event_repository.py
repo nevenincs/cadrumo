@@ -70,7 +70,7 @@ def append_bucket_event(catalogue: BucketEventHistoryCatalogue, event: BucketEve
         raise BucketEventValidationError(
             translated_message="errors.error.error_storage_bucket",
             context={
-                "event_id": str(event.event_id),
+                "event_id": event.event_id,
                 "recorded_payload_version": existing.payload_version,
                 "offered_payload_version": event.payload_version,
                 "payload_versions_agree": False,

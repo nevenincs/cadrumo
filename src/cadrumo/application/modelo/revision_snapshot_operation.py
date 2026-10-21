@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.access_port import OperationAccessResolver
@@ -14,8 +16,8 @@ from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from .calculate_input import modelo_202_modality_for_record
@@ -113,11 +115,11 @@ def build_modelo_work_revision_snapshot_definition(factory: VerificationReposito
     return build_single_phase_definition(
         definition_id=MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkRevisionSnapshotRequest,
+        subject_reference=OperationSubjectReferenceV1.stored_work_unit("calculation_revision_id"),
         result_type=ModeloWorkRevisionSnapshotProjection,
         executor_type=ModeloWorkRevisionSnapshotExecutor,
         build=lambda: ModeloWorkRevisionSnapshotExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

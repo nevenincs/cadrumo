@@ -62,6 +62,50 @@ def _run_python(code: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+def test_ledger_read_handlers_do_not_load_execution_or_export_dependencies() -> None:
+    """Resolving a ledger read must not construct unrelated application graphs."""
+    completed = _run_python(
+        """
+        import json, sys
+        from cadrumo.entrypoints.cli import ledger_read_commands
+        assert callable(ledger_read_commands.ledger_list)
+        assert callable(ledger_read_commands.ledger_history)
+        forbidden = ('cadrumo.application', 'cadrumo.adapters', 'cadrumo.domain', 'pydantic')
+        print(json.dumps(sorted(name for name in sys.modules
+              if any(name == prefix or name.startswith(prefix + '.') for prefix in forbidden))))
+        """
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout) == [], completed.stdout
+
+
+def test_short_version_uses_package_identity_without_loading_repair_diagnostics() -> None:
+    """Short and detailed versions agree; only the latter needs diagnostic models."""
+    completed = _run_python(
+        """
+        import sys
+        from click.testing import CliRunner
+        from typer.main import get_command
+        from cadrumo.core.package_version import PACKAGE_VERSION
+        from cadrumo.entrypoints.cli.main import cli_app
+
+        runner = CliRunner()
+        command = get_command(cli_app())
+        short = runner.invoke(command, ['--version'])
+        assert short.exit_code == 0, short.output
+        assert short.output.strip() == f'CADRUMO {PACKAGE_VERSION}'
+        assert 'cadrumo.application.diagnostics' not in sys.modules
+        detail = runner.invoke(command, ['--version', '--detail'])
+        assert detail.exit_code == 0, detail.output
+        assert PACKAGE_VERSION in detail.output
+        assert 'cadrumo.application.diagnostics' in sys.modules
+        print('versions-ready')
+        """
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert completed.stdout.strip() == "versions-ready"
+
+
 def test_rendering_the_command_tree_does_not_load_the_registry() -> None:
     """DISCRIMINATING: ``aeat --help`` and ``--version`` must stay registry-free.
 
@@ -73,7 +117,8 @@ def test_rendering_the_command_tree_does_not_load_the_registry() -> None:
         import sys
         import typer.main
         from click.testing import CliRunner
-        from cadrumo.entrypoints.cli.main import app
+        from cadrumo.entrypoints.cli.main import cli_app
+        app = cli_app()
 
         command = typer.main.get_command(app)
         runner = CliRunner()
@@ -155,7 +200,8 @@ def test_a_ledger_help_loads_only_the_app_families_it_walks_through() -> None:
         """
         from click.testing import CliRunner
         import typer.main
-        from cadrumo.entrypoints.cli.main import app
+        from cadrumo.entrypoints.cli.main import cli_app
+        app = cli_app()
 
         result = CliRunner().invoke(typer.main.get_command(app), ["app", "ledger", "list", "--help"])
         assert result.exit_code == 0, result.output
@@ -185,7 +231,8 @@ def test_a_real_app_dispatch_loads_no_config_family() -> None:
         """
         from click.testing import CliRunner
         import typer.main
-        from cadrumo.entrypoints.cli.main import app
+        from cadrumo.entrypoints.cli.main import cli_app
+        app = cli_app()
 
         result = CliRunner().invoke(typer.main.get_command(app), ["app", "live", "portals", "list"])
         assert result.exit_code == 0, result.output

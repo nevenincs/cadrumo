@@ -1,6 +1,9 @@
+import { dateFormats } from "../shared/dateFormats";
+import { isoDay as day, localDay } from "../shared/dates";
+import { CalendarEntryRow } from "./calendar/CalendarEntryRow";
+import { CalendarTodayMarker } from "./calendar/CalendarTodayMarker";
 import {
   Fragment,
-  memo,
   useCallback,
   useEffect,
   useId,
@@ -16,53 +19,24 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import {
   SegmentedControl,
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
-import { Spinner } from "@/components/ui/spinner";
 import {
-  deadlineDistance,
   evaluatedDay,
-  evaluatedLabel,
   evaluatedWord,
-  isoDay as day,
-  localDay,
   type CalendarState,
 } from "../shell/calendar";
-import { entryKey } from "../shell/calendarGrid";
+import { entryKey, STATE_ORDER } from "../shell/calendarEntries";
 import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
-import type {
-  CalendarEntry,
-  CalendarEvent,
-  CalendarUserState,
-} from "../shell/views";
-import { CalendarMonths } from "./CalendarMonths";
-import { EVENT_MARK, STATE_MARK } from "./calendarMarks";
-
-const STATE_TONE: Record<
-  CalendarUserState,
-  "neutral" | "danger" | "success" | "warning"
-> = { due: "neutral", late: "danger", filed: "success", unknown: "warning" };
-
-// What needs the person first comes first.
-const STATE_ORDER: readonly CalendarUserState[] = [
-  "late",
-  "due",
-  "unknown",
-  "filed",
-];
-
-const DAY_MS = 86_400_000;
+import type { CalendarEntry, CalendarEvent } from "../shell/views";
+import { CalendarMonths } from "./calendar/CalendarMonths";
+import { EVENT_MARK, STATE_MARK, STATE_TONE } from "./calendar/calendarMarks";
 
 /** A reader's place in a face: what is at the top of their view, by its
  * month or its obligation, and how far under the head it sits; or that
@@ -87,170 +61,6 @@ export type CalendarMemory = {
 const markKey = (mark: HTMLElement) =>
   mark.dataset.month ?? mark.dataset.entry ?? "today";
 
-// The formats of a language, made once: a row needs four and there are
-// many rows.
-const FORMATS = new Map<string, ReturnType<typeof makeFormats>>();
-const makeFormats = (locale: string) => ({
-  short: new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }),
-  full: new Intl.DateTimeFormat(locale, { dateStyle: "full" }),
-  weekday: new Intl.DateTimeFormat(locale, { weekday: "short" }),
-  relative: new Intl.RelativeTimeFormat(locale, { numeric: "auto" }),
-});
-function formatsFor(locale: string) {
-  let formats = FORMATS.get(locale);
-  if (!formats) FORMATS.set(locale, (formats = makeFormats(locale)));
-  return formats;
-}
-
-// A row is drawn again only when it changes: choosing one obligation does
-// not redraw the others.
-const Entry = memo(function Entry({
-  entry,
-  locale,
-  selected,
-  onSelect,
-  onOpen,
-}: {
-  entry: CalendarEntry;
-  locale: string;
-  /** Chosen, here or in the months beside the list. */
-  selected: boolean;
-  onSelect: (key: string) => void;
-  onOpen?: (entry: CalendarEntry) => void;
-}) {
-  const t = useStrings();
-  const closes = day(entry.adjusted_closes_on);
-  const { short, full, weekday, relative: distance } = formatsFor(locale);
-  // How far the binding date is from the day the product evaluated: the
-  // product's own count where it gives one.
-  const away =
-    entry.days_overdue !== null
-      ? -entry.days_overdue
-      : Math.round(
-          (closes.getTime() - day(entry.evaluated_on).getTime()) / DAY_MS,
-        );
-  // A filed obligation has no distance left to say.
-  const { value, unit } = deadlineDistance(away, entry.days_overdue !== null);
-  const relative =
-    entry.user_state === "filed" ? null : distance.format(value, unit);
-  const name = t("desktop.calendar.modelo", { modelo: entry.modelo });
-  const notes = [
-    t(`desktop.calendar.local.${entry.local_filing_state}`),
-    t(`desktop.calendar.aeat.${entry.aeat_submission_state}`),
-    entry.adjusted_closes_on !== entry.closes_on
-      ? t("desktop.calendar.moved", {
-          date: short.format(day(entry.closes_on)),
-        })
-      : null,
-    entry.payment_cutoff_on
-      ? t("desktop.calendar.payment_cutoff", {
-          date: short.format(day(entry.payment_cutoff_on)),
-        })
-      : null,
-  ].filter((note): note is string => note !== null);
-  return (
-    <li
-      data-entry={entryKey(entry)}
-      aria-current={selected || undefined}
-      // The chosen row carries a bar as well as a surface, as a chosen item
-      // does everywhere in the window.
-      className="grid scroll-mt-[calc(var(--calendar-head)+--spacing(8))] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 border-b border-l-2 border-l-transparent px-4 py-2 hover:bg-accent aria-[current=true]:border-l-ring aria-[current=true]:bg-selected forced-colors:border-l-[Canvas] forced-colors:aria-[current=true]:border-l-[Highlight]"
-    >
-      <time
-        dateTime={entry.adjusted_closes_on}
-        className="grid w-10 justify-items-center"
-      >
-        {/* The eye has the month in the heading above; read aloud, a day
-            and a weekday alone are not a date, so the whole date is said. */}
-        <span className="sr-only">{full.format(closes)}</span>
-        <span
-          aria-hidden="true"
-          className="text-md leading-tight font-semibold tabular-nums"
-        >
-          {closes.getDate()}
-        </span>
-        <span aria-hidden="true" className="text-xs text-muted-foreground">
-          {weekday.format(closes)}
-        </span>
-      </time>
-      <div className="grid min-w-0 gap-0.5">
-        {/* The row's name is what chooses it: the same obligation is then
-            shown among the months. */}
-        <button
-          type="button"
-          aria-pressed={selected}
-          className="flex min-h-control-xs cursor-pointer flex-wrap items-center gap-x-2 justify-self-start rounded-sm text-left hover:underline"
-          onClick={() => onSelect(entryKey(entry))}
-        >
-          <span className="font-medium">{name}</span>
-          <span className="text-muted-foreground">{entry.period}</span>
-        </button>
-        <span className="text-sm text-muted-foreground">
-          {notes.join(" · ")}
-        </span>
-        {/* In a narrow pane the distance moves under the notes: it is what
-            the person came for, and is never the thing left out. */}
-        {relative && (
-          <span className="calendar-distance text-sm text-muted-foreground @md:hidden">
-            {relative}
-          </span>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="grid justify-items-end gap-0.5">
-          <Badge variant={STATE_TONE[entry.user_state]}>
-            {t(`desktop.calendar.state.${entry.user_state}`)}
-          </Badge>
-          {relative && (
-            <span className="calendar-distance text-xs text-muted-foreground @max-md:hidden">
-              {relative}
-            </span>
-          )}
-        </span>
-        {onOpen && (
-          <IconButton
-            label={t("desktop.calendar.open_tui")}
-            accessibleName={`${t("desktop.calendar.open_tui")}: ${name} ${entry.period}`}
-            side="left"
-            onClick={() => onOpen(entry)}
-          >
-            <Icon name="arrow" />
-          </IconButton>
-        )}
-      </div>
-    </li>
-  );
-});
-
-/**
- * Where the past ends: a line across the list at the day the product worked
- * the states out for, so what is behind and what is ahead are told apart at
- * a glance. It is said in the language's own word for today where that day
- * is today here; a calendar worked out for another day says the day alone.
- */
-function TodayMark({
-  on,
-  today,
-  locale,
-}: {
-  on: string;
-  /** The local day. */
-  today: string;
-  locale: string;
-}) {
-  const label = evaluatedLabel(on, today, locale);
-  return (
-    <div
-      role="separator"
-      aria-label={label}
-      className="calendar-today flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-brand"
-    >
-      <span aria-hidden="true">{label}</span>
-      <span aria-hidden="true" className="h-px flex-1 bg-current opacity-40" />
-    </div>
-  );
-}
-
 /**
  * The filing calendar: every obligation in a range of dates, by month, with
  * the product's own reading of where each stands. It keeps apart what the
@@ -269,6 +79,7 @@ export function FilingCalendarView({
   locale,
   today: localToday,
   defaultView = "months",
+  onViewChange,
   memory,
   refreshing = false,
   page,
@@ -289,6 +100,7 @@ export function FilingCalendarView({
   today?: string;
   /** The face a page too narrow for both shows first. */
   defaultView?: "months" | "list";
+  onViewChange?: (view: "months" | "list") => void;
   /** Where the reader's use of the page is kept while it is away. Left
    * out, the page keeps it only for as long as it is shown. */
   memory?: RefObject<CalendarMemory>;
@@ -323,6 +135,7 @@ export function FilingCalendarView({
   const setView = (next: "months" | "list") => {
     remembered.current.view = next;
     setViewNow(next);
+    onViewChange?.(next);
   };
   const [asked, setAsked] = useState<ReadonlySet<string>>(
     () => remembered.current.asked ?? new Set(),
@@ -750,10 +563,7 @@ export function FilingCalendarView({
   });
 
   const months = useMemo(() => {
-    const month = new Intl.DateTimeFormat(locale, {
-      month: "long",
-      year: "numeric",
-    });
+    const month = dateFormats(locale).month;
     const groups = new Map<
       string,
       {
@@ -808,49 +618,39 @@ export function FilingCalendarView({
   let body: ReactNode;
   if (state.kind === "loading") {
     body = (
-      <Empty role="status">
-        <Spinner />
-        <EmptyDescription>{t("desktop.calendar.loading")}</EmptyDescription>
-      </Empty>
+      <EmptyState
+        role="status"
+        busy
+        description={t("desktop.calendar.loading")}
+      />
     );
   } else if (state.kind === "withheld") {
     body = withheld ?? (
-      <Empty>
-        <EmptyMedia>
-          <Icon name="lock" />
-        </EmptyMedia>
-        <div className="grid gap-1">
-          <EmptyTitle>{t("desktop.account.signed_out")}</EmptyTitle>
-          <EmptyDescription>
-            {t("desktop.calendar.signed_out")}
-          </EmptyDescription>
-        </div>
-      </Empty>
+      <EmptyState
+        icon="lock"
+        heading={t("desktop.account.signed_out")}
+        description={t("desktop.calendar.signed_out")}
+      />
     );
   } else if (state.kind === "failed") {
     body = (
-      <Empty>
-        <EmptyMedia>
-          <Icon name="alert" />
-        </EmptyMedia>
-        {/* The sentence is the alert, made anew for each read that fails,
-            so a second failure is heard. The button beside it stays as it
-            is, and keeps the keyboard. */}
-        <EmptyDescription key={attempt} role="alert">
-          {t("desktop.calendar.failed", { code: state.code })}
-        </EmptyDescription>
+      <EmptyState
+        icon="alert"
+        description={
+          <span key={attempt} role="alert">
+            {t("desktop.calendar.failed")}
+          </span>
+        }
+      >
         <Button variant="outline" pending={refreshing} onClick={onRefresh}>
           {t("desktop.calendar.refresh")}
         </Button>
-      </Empty>
+      </EmptyState>
     );
   } else {
     const { warnings, coverage, generated_at } = state.calendar;
     const asOf = generated_at
-      ? new Intl.DateTimeFormat(locale, {
-          dateStyle: "medium",
-          timeStyle: "short",
-        }).format(new Date(generated_at))
+      ? dateFormats(locale).dateTime.format(new Date(generated_at))
       : "—";
     // How the range stands, in the product's own four readings: counted,
     // never combined into a verdict.
@@ -862,10 +662,7 @@ export function FilingCalendarView({
             .length,
         ] as const,
     ).filter(([, count]) => count > 0);
-    const short = new Intl.DateTimeFormat(locale, {
-      day: "numeric",
-      month: "short",
-    });
+    const short = dateFormats(locale).short;
     const nothing = months.length === 0;
     const observedKinds = (["filing", "message"] as const).filter((kind) =>
       state.calendar.events.some((event) => event.event_type === kind),
@@ -884,7 +681,7 @@ export function FilingCalendarView({
             {today &&
               key === turning &&
               month.ahead === month.entries.length && (
-                <TodayMark on={today} today={here} locale={locale} />
+                <CalendarTodayMarker on={today} today={here} locale={locale} />
               )}
             <h2
               id={`${heading}-${key}`}
@@ -906,12 +703,16 @@ export function FilingCalendarView({
             ).map((entries, part) => (
               <Fragment key={part}>
                 {part === 1 && today && (
-                  <TodayMark on={today} today={here} locale={locale} />
+                  <CalendarTodayMarker
+                    on={today}
+                    today={here}
+                    locale={locale}
+                  />
                 )}
                 {entries.length > 0 && (
                   <ul>
                     {entries.map((entry) => (
-                      <Entry
+                      <CalendarEntryRow
                         key={entryKey(entry)}
                         entry={entry}
                         locale={locale}
@@ -935,7 +736,7 @@ export function FilingCalendarView({
                   <li
                     key={event.reference_id}
                     data-event={event.event_type}
-                    className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 border-b px-4 py-1.5 pl-[calc(--spacing(4)+2px)] text-sm text-muted-foreground"
+                    className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 border-b px-4 py-1.5 pl-[calc(--spacing(4)+var(--selection-edge))] text-sm text-muted-foreground"
                   >
                     <span className="grid w-10 justify-items-center">
                       <Icon
@@ -959,7 +760,7 @@ export function FilingCalendarView({
           </section>
         ))}
         {today && turning === null && (
-          <TodayMark on={today} today={here} locale={locale} />
+          <CalendarTodayMarker on={today} today={here} locale={locale} />
         )}
       </div>
     );
@@ -974,9 +775,7 @@ export function FilingCalendarView({
       <div
         className={cn(
           "calendar-layout",
-          wide &&
-            !nothing &&
-            "grid grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)] items-start",
+          wide && !nothing && "grid calendar-split-grid items-start",
         )}
       >
         <div className="min-w-0">
@@ -1074,9 +873,7 @@ export function FilingCalendarView({
                       today === here
                         ? undefined
                         : t("desktop.calendar.to_day", {
-                            date: new Intl.DateTimeFormat(locale, {
-                              dateStyle: "medium",
-                            }).format(day(today)),
+                            date: dateFormats(locale).medium.format(day(today)),
                           })
                     }
                     onClick={toToday}
@@ -1116,12 +913,11 @@ export function FilingCalendarView({
             </Alert>
           )}
           {nothing ? (
-            <Empty role="status">
-              <EmptyMedia>
-                <Icon name="calendar" />
-              </EmptyMedia>
-              <EmptyDescription>{t("desktop.calendar.empty")}</EmptyDescription>
-            </Empty>
+            <EmptyState
+              role="status"
+              icon="calendar"
+              description={t("desktop.calendar.empty")}
+            />
           ) : wide || view === "months" ? (
             <CalendarMonths
               calendar={state.calendar}
@@ -1143,7 +939,7 @@ export function FilingCalendarView({
           <div
             ref={aside}
             onScroll={(event) => scrolled(event.currentTarget, ["list"])}
-            className="calendar-aside sticky top-0 h-(--calendar-height) overflow-y-auto border-l bg-background [--calendar-head:0px]"
+            className="calendar-aside sticky top-0 h-(--calendar-height) overflow-y-auto border-l bg-background [--calendar-head:calc(var(--spacing)*0)]"
           >
             {list}
           </div>

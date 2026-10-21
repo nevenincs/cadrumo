@@ -37,7 +37,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodError
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ..transactions.diagnostics import LedgerImportDiagnosticKind
 from .errors import FilterParseError
@@ -184,7 +184,7 @@ class InvoiceReviewFilterKey(StrEnum):
         STATUS: Lifecycle state of the invoice (``pending`` /
             ``reviewed`` / ``matched``).
         KIND: Issued-vs-received discriminator. Values come from
-            :class:`domain.iva.classification.InvoiceKind`.
+            :class:`domain.iva.schema.InvoiceKind`.
     """
 
     STATUS = "status"
@@ -282,7 +282,7 @@ def _enum_value_or_raise[E: StrEnum](
             clause value is compared against the enum members ignoring
             case, so an operator may type either case on the command
             line. Used for lowercase-valued enums
-            (:class:`domain.iva.classification.InvoiceKind`, ``issued`` /
+            (:class:`domain.iva.schema.InvoiceKind`, ``issued`` /
             ``received``) and for uppercase-valued enums
             (:class:`cadrumo.domain.transactions.enums.BusinessClassification`
             ``BUSINESS``, :class:`~cadrumo.domain.transactions.enums.TransactionDirection`
@@ -492,7 +492,7 @@ class LedgerReviewFilterSpec(BaseModel):
             provided.
         import_id: Raw import-batch id if ``import=`` was provided.
             Identifier-shape validation lives on the
-            :class:`cadrumo.application.transactions` import surface.
+            :mod:`cadrumo.application.transactions` import surface.
     """
 
     model_config = _STRICT_FROZEN
@@ -591,7 +591,7 @@ class InvoiceReviewFilterSpec(BaseModel):
     Attributes:
         clauses: Raw clauses in input order.
         status: Resolved :class:`InvoiceReviewStatus`.
-        kind: Resolved :class:`domain.iva.classification.InvoiceKind`
+        kind: Resolved :class:`domain.iva.schema.InvoiceKind`
             (``issued`` / ``received``).
     """
 

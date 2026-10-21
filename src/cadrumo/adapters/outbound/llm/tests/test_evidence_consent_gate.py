@@ -21,29 +21,20 @@ import inspect
 import textwrap
 from collections.abc import Generator
 from contextlib import contextmanager
-from http import HTTPStatus
 from pathlib import Path
 from queue import Queue
-from typing import override
 
 import pytest
-from pydantic import BaseModel, SecretStr, ValidationError
+from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticSerializationError
 
 from .....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from .....core.config import override_settings
 from .....core.config_support import LLMProvider
 from .....core.field_origin import FieldOrigin
+from .....core.model_catalogue import ModelRole
 from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from .....tests.loopback_llm import (
-    SilentLoopbackHandler,
-    openai_chat_reply,
-    read_text_body,
-    serving_loopback,
-    write_json_response,
-)
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
@@ -57,6 +48,7 @@ from ..consent import (
 from ..errors import LLMConsentError
 from ..evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
 from ..models import LLMRequest
+from .model_run_support import serving_agent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -93,17 +85,13 @@ def _settings(
     names it, so a case that passes no override is testing the posture a
     deployment gets with no configuration at all.
 
-    The OpenAI key is populated in EVERY case, refusals included, and that is
-    the point. An absent credential is an accident that looks like a control:
-    with the key unset the provider refuses first, and a suite would go green
-    on a boundary that had stopped working. Supplying a usable credential
-    against a loopback endpoint removes the accident, so a refusal below can
-    only be the consent gate.
+    Every case binds a service that would answer, refusals included, and that
+    is the point. An unreachable service is an accident that looks like a
+    control: with no service the run refuses first, and a suite would go green
+    on a boundary that had stopped working. A service that answers removes the
+    accident, so a refusal below can only be the consent gate.
     """
     return EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model="gpt-oss",
-        cadrumo_llm_openai_api_key=SecretStr("loopback-key"),
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -121,40 +109,24 @@ def _client(settings: EnvFileFreeSettings) -> LLMClient:
 
 
 @contextmanager
-def _serve_openai() -> Generator[tuple[str, Queue[str]]]:
-    """Serve an OpenAI-shaped chat-completions endpoint on loopback.
+def _serve_agent() -> Generator[Queue[str]]:
+    """Stand in for the agent service behind the model-run port.
 
-    Real HTTP, real adapter, real transport, and nothing leaves the machine.
-    The queue records every request body that reached the endpoint, which is
-    what makes "the document was transmitted" an observation rather than an
+    The queue records every run body that reached the service, which is what
+    makes "the document was transmitted" an observation rather than an
     inference from the absence of an exception.
     """
-    bodies: Queue[str] = Queue()
-
-    class _Endpoint(SilentLoopbackHandler):
-        @override
-        def do_POST(self) -> None:
-            bodies.put(read_text_body(self))
-            write_json_response(
-                self,
-                # A parsable empty extraction object, so a case that runs the full
-                # reader does not fail on the stub's reply shape instead of on the
-                # boundary it is testing.
-                openai_chat_reply("{}", prompt_tokens=11),
-                status=HTTPStatus.OK,
-            )
-
-    with serving_loopback(_Endpoint, path="/v1/chat/completions") as endpoint:
-        yield endpoint, bodies
+    with serving_agent() as port:
+        yield port.bodies
 
 
 def _evidence_request(*, token: EvidenceConsentToken | None = None) -> LLMRequest:
     return LLMRequest(
         prompt="Read this invoice.",
-        provider_override=LLMProvider.OPENAI,
-        model_override="gpt-4.1",
+        provider_override=LLMProvider.AGENT,
         evidence_derived=True,
         consent_token=token,
+        model_role=ModelRole.TEXT_EXTRACTION,
     )
 
 
@@ -168,7 +140,7 @@ def test_an_unconsented_evidence_read_never_reaches_the_provider(tmp_path: Path)
     exception proves the call ended, and only the endpoint's silence proves the
     document did not leave the host on the way there.
     """
-    with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+    with _serve_agent() as bodies:
         client = _client(_settings(tmp_path))
         with pytest.raises(LLMConsentError):
             asyncio.run(client.complete(_evidence_request()))
@@ -185,8 +157,7 @@ def test_the_deployment_opt_in_alone_does_not_permit_the_read(tmp_path: Path) ->
     """
     settings = _settings(tmp_path, cloud_upload_permitted=True)
     with (
-        _serve_openai() as (endpoint, bodies),
-        override_settings(cadrumo_llm_openai_chat_completions_url=endpoint),
+        _serve_agent() as bodies,
         pytest.raises(LLMConsentError),
     ):
         asyncio.run(_client(settings).complete(_evidence_request()))
@@ -203,8 +174,7 @@ def test_gestor_mode_refuses_even_a_minted_token(tmp_path: Path) -> None:
     """
     settings = _settings(tmp_path, cloud_upload_permitted=True, gestor_mode=True)
     with (
-        _serve_openai() as (endpoint, bodies),
-        override_settings(cadrumo_llm_openai_chat_completions_url=endpoint),
+        _serve_agent() as bodies,
         pytest.raises(LLMConsentError),
     ):
         asyncio.run(_client(settings).complete(_evidence_request(token=_CONSENTED)))
@@ -223,9 +193,9 @@ def test_the_unpinned_text_reader_cannot_reach_around_the_gate(
     -- and lands on the gate.
     """
     settings = _settings(tmp_path)
-    with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+    with _serve_agent() as bodies:
         extractor = TextInvoiceFieldExtractor(
-            provider=LLMProvider.OPENAI,
+            provider=LLMProvider.AGENT,
             model="gpt-4.1",
             settings=settings,
             client=_client(settings),
@@ -278,7 +248,7 @@ def test_the_consented_route_reaches_the_provider(tmp_path: Path) -> None:
     least afford to hide behind a green suite.
     """
     settings = _settings(tmp_path, cloud_upload_permitted=True)
-    with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+    with _serve_agent() as bodies:
         response = asyncio.run(_client(settings).complete(_evidence_request(token=_CONSENTED)))
 
     assert response.text == "{}"
@@ -293,8 +263,10 @@ def test_an_unmarked_request_is_not_gated(tmp_path: Path) -> None:
     a consent gate's name.
     """
     settings = _settings(tmp_path)
-    request = LLMRequest(prompt="Map these headers.", provider_override=LLMProvider.OPENAI, model_override="gpt-4.1")
-    with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+    request = LLMRequest(
+        prompt="Map these headers.", provider_override=LLMProvider.AGENT, model_role=ModelRole.COLUMN_ROLE_MAPPING
+    )
+    with _serve_agent() as bodies:
         response = asyncio.run(_client(settings).complete(request))
 
     assert response.text == "{}"
@@ -314,9 +286,9 @@ def test_the_public_corpus_escape_reaches_the_provider_through_the_reader(
     reader that can no longer dispatch at all.
     """
     settings = _settings(tmp_path)
-    with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+    with _serve_agent() as bodies:
         extractor = TextInvoiceFieldExtractor(
-            provider=LLMProvider.OPENAI,
+            provider=LLMProvider.AGENT,
             model="gpt-4.1",
             settings=settings,
             client=_client(settings),
@@ -555,7 +527,7 @@ def test_every_consented_dispatch_is_recorded_exactly_once(tmp_path: Path) -> No
     """
     settings = _settings(tmp_path, cloud_upload_permitted=True)
     addresses = tuple(char * 64 for char in ("1", "2", "3"))
-    with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+    with _serve_agent() as bodies:
         client = _client(settings)
         for index, address in enumerate(addresses):
             token = EvidenceConsentToken(surface="aeat app ledger evidence extract", evidence_content_address=address)
@@ -582,7 +554,7 @@ def test_a_dispatch_served_from_the_cache_is_recorded_too(tmp_path: Path) -> Non
     dispatches happened.
     """
     settings = _settings(tmp_path, cloud_upload_permitted=True)
-    with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+    with _serve_agent() as bodies:
         client = _client(settings)
         first = asyncio.run(client.complete(_evidence_request(token=_CONSENTED)))
         second = asyncio.run(client.complete(_evidence_request(token=_CONSENTED)))
@@ -615,7 +587,7 @@ def test_a_dispatch_whose_record_cannot_be_written_is_refused_not_degraded(tmp_p
     from ....persistence.storage.master_key.tests.session_scope import suspend_active_session
 
     settings = _settings(tmp_path, cloud_upload_permitted=True)
-    with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+    with _serve_agent() as bodies:
         client = _client(settings)
         with suspend_active_session(), pytest.raises(LLMConsentError):
             asyncio.run(client.complete(_evidence_request(token=_CONSENTED)))
@@ -643,7 +615,7 @@ def test_the_consent_ledger_survives_the_retention_sweep(tmp_path: Path) -> None
     real lifecycle rather than asserting that no prune method is called.
     """
     settings = _settings(tmp_path, cloud_upload_permitted=True)
-    with _serve_openai() as (endpoint, _), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+    with _serve_agent() as _:
         asyncio.run(_client(settings).complete(_evidence_request(token=_CONSENTED)))
         recorded = _consent_entries()
         _client(settings)
@@ -672,7 +644,7 @@ def test_the_ledger_read_refuses_an_unreadable_row_rather_than_skipping_it(tmp_p
     from ....persistence.storage.secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
 
     settings = _settings(tmp_path, cloud_upload_permitted=True)
-    with _serve_openai() as (endpoint, _), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+    with _serve_agent() as _:
         asyncio.run(_client(settings).complete(_evidence_request(token=_CONSENTED)))
 
     assert len(EvidenceConsentLedger().load_entries()) == 1, "the readable row must be there to be lost"

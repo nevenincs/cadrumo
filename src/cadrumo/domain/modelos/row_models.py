@@ -122,7 +122,7 @@ def _m349_detail_periods(
     )
     if not m349_revision.period_selector.declared_periods:
         raise ValueError("selected M349 registry revision must declare detail-row scope")
-    return frozenset(str(candidate) for candidate in m349_revision.period_selector.declared_periods)
+    return frozenset(m349_revision.period_selector.declared_periods)
 
 
 def _required_detail_declaration(declarations: Mapping[str, str], key: str) -> str:
@@ -786,7 +786,7 @@ def _m349_ordinary_operation_uses_transition_prefix(
 def _normalise_m349_period(period: str | None) -> str:
     if period is None:
         return ""
-    token = str(period).strip().upper()
+    token = period.strip().upper()
     if len(token) == 1 and token.isdigit():
         return f"0{token}"
     return token

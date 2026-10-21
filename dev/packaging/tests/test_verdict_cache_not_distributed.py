@@ -44,6 +44,10 @@ from typing import Final
 
 import pytest
 
+from cadrumo.adapters.outbound.google.tests.installation_client_support import (
+    synthetic_installation_client,
+    write_installation_client,
+)
 from dev._paths import REPO_ROOT, UTF_8
 from dev.registry.compiler.identity import REGISTRY_IDENTITY_STAMP_FILENAME
 from dev.registry.compiler.verdict_cache import shipped_verdict_location
@@ -87,14 +91,18 @@ _SCAFFOLD: Final[dict[str, str]] = {
     "src/cadrumo/__init__.py": "",
     "src/cadrumo/py.typed": "",
     "src/cadrumo/core/external_constants.toml": "placeholder = 1\n",
-    "src/cadrumo_harness/__init__.py": "",
-    "src/cadrumo_harness/py.typed": "",
-    "src/cadrumo_harness/_data/placeholder.json": "{}\n",
+    "src/cadrumo_mcp/__init__.py": "",
+    "src/cadrumo_mcp/py.typed": "",
 }
 
 #: The build hook both targets declare. The subject carries the repository's own
 #: copy, so its build runs the hook a release build runs.
 _AUTHORITY_BUILD_HOOK: Final = "packaging/authority/hatch_build.py"
+_PUBLISHER_BUILD_SUPPORT: Final = (
+    "dev/__init__.py",
+    "dev/packaging/__init__.py",
+    "dev/packaging/google_oauth.py",
+)
 
 #: A stand-in published authority pair for that hook to admit, outside the
 #: subject's ``.authority``: the hook reads a directory named that way as it
@@ -134,6 +142,19 @@ def _plant(root: Path, extra_pyproject: str = "") -> None:
         path.write_text(body, encoding=UTF_8)
     declarations = (REPO_ROOT / "pyproject.toml").read_text(encoding=UTF_8) + extra_pyproject
     (root / "pyproject.toml").write_text(declarations, encoding=UTF_8)
+    # The real hook validates publisher metadata through its shared build
+    # owner and core records; the subject must carry those real inputs too.
+    shutil.copytree(
+        REPO_ROOT / "src/cadrumo/core",
+        root / "src/cadrumo/core",
+        dirs_exist_ok=True,
+        ignore=shutil.ignore_patterns("tests", "__pycache__"),
+    )
+    for relative in _PUBLISHER_BUILD_SUPPORT:
+        target = root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(REPO_ROOT / relative, target)
+    write_installation_client(root / "src/cadrumo/_data", synthetic_installation_client())
     _plant_authority(root)
     for member in _CACHE_MEMBERS:
         if not (root / member).is_file():

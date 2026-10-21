@@ -105,7 +105,7 @@ def test_no_effect_calls_a_value_imported(language: OutputLanguage) -> None:
     imported_words = {"en": "imported", "es": "importado", "ca": "importat", "hu": "importált"}[language.value]
     for effect in REVIEW_EFFECTS:
         text = lookup_translation(f"tui.modelo.workbench.review.effect.{effect}", locale=language.value)
-        assert text, effect
+        assert text is not None and text, effect
         assert imported_words not in text, effect
 
 

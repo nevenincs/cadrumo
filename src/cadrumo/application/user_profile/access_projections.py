@@ -11,26 +11,35 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDecision, AccessDenialCode, AccessDenied, ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import (
+    DISCLOSURE_PAGE_ENTRIES,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosurePage,
+    DisclosurePageRequest,
+    DisclosurePermission,
+    EffectiveScopeSummary,
+    disclosure_digest,
+    ordered_disclosures,
+    summarize_disclosures,
+)
+from cadrumo_client.contracts.session_policy import evaluate_session_authority
+
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import UtcInstant
 from .access_contracts import (
-    AccessDecision,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
     ProfileAccessState,
-    ProfileAccessStatus,
     SessionKind,
     SessionState,
 )
+from .access_errors import ProfileAccessRefusedError
 from .access_policy import intersect_scopes
-from .session_authority_policy import evaluate_session_authority
 
 
 class PublicAutomationGrant(BaseModel):
@@ -222,12 +231,72 @@ def project_access_status(
         automation_custody=profile.automation_custody,
         published_authority=published_authority,
         provider=provider,
-        effective_scope=_effective_access_scope(
-            allowed=not denied,
-            session=session,
-            ancestors=ancestors,
-            grant=grant,
-            profile=profile,
+        effective_scope=EffectiveScopeSummary.summarize(
+            _effective_access_scope(
+                allowed=not denied,
+                session=session,
+                ancestors=ancestors,
+                grant=grant,
+                profile=profile,
+            )
         ),
         denial=_status_denial(decision),
+    )
+
+
+def project_disclosure_page(
+    *,
+    session: AccessSession | None,
+    ancestors: tuple[AccessSession, ...],
+    grant: AutomationGrant | None,
+    key: ApiKeyRecord | None,
+    profile: ProfileAccessState,
+    context: AccessEvaluationContext,
+    request: DisclosurePageRequest,
+) -> DisclosurePage:
+    """Release one page of the effective disclosures a status reply of the same facts counts.
+
+    The list is the one :func:`project_access_status` summarises, so its
+    digest is the summary's. A continuation whose list has changed since, or
+    an offset past its end, is refused rather than answered from another list.
+    """
+    decision = evaluate_session_authority(
+        session=session,
+        ancestors=ancestors,
+        grant=grant,
+        key=key,
+        profile=profile,
+        context=context,
+    )
+    scope = _effective_access_scope(
+        allowed=not isinstance(decision, AccessDenied),
+        session=session,
+        ancestors=ancestors,
+        grant=grant,
+        profile=profile,
+    )
+    return page_disclosures(scope.disclosures, request)
+
+
+def page_disclosures(disclosures: frozenset[DisclosurePermission], request: DisclosurePageRequest) -> DisclosurePage:
+    """Release one page of any disclosure list, with the count and summary of the whole list.
+
+    Every reply that counts disclosures and lists them on request pages them
+    here, so the order, the digest and the bound are one. A continuation whose
+    list has changed since its digest, or an offset past the end, is refused.
+    """
+    ordered = ordered_disclosures(disclosures)
+    digest = disclosure_digest(ordered)
+    if (request.expected_digest is not None and request.expected_digest != digest) or (
+        request.offset and request.offset >= len(ordered)
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    end = min(request.offset + DISCLOSURE_PAGE_ENTRIES, len(ordered))
+    return DisclosurePage(
+        offset=request.offset,
+        total=len(ordered),
+        disclosure_summary=summarize_disclosures(ordered),
+        disclosure_digest=digest,
+        entries=ordered[request.offset : end],
+        next_offset=end if end < len(ordered) else None,
     )

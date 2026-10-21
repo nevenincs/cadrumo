@@ -1,3 +1,8 @@
-// Embed the canonical manifest unchanged; linker merging can discard compatibility.
+// Embed the rendered manifest unchanged; linker merging can discard compatibility.
+// It is the authored host.manifest plus the package identity claim of this build kind.
 #include <winuser.h>
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "host.manifest"
+#if CADRUMO_DEV_PACKAGE_IDENTITY
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "process-development.manifest"
+#else
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "process-release.manifest"
+#endif

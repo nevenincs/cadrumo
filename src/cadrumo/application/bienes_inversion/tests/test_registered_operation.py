@@ -28,7 +28,6 @@ from cadrumo.application.operations.models import OperationIdentity, OperationRe
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.refusal_evidence import OperationRefusalEvidence
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.config import override_settings
 from cadrumo.core.operations import OperationEffect, profile_operation_subject
@@ -39,6 +38,7 @@ from cadrumo.domain.bienes_inversion.register import (
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

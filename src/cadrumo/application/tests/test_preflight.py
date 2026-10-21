@@ -257,7 +257,7 @@ def test_windows_long_path_row_flags_a_deep_root(tmp_path: Path) -> None:
         rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
     row = _row(rows, "storage:windows-long-path")
 
-    if sys.platform != "win32" or windows_long_paths_enabled():
+    if sys.platform != "win32" or windows_long_paths_enabled() is True:
         assert row.healthy is True
         assert row.facts["path_limit_applicable"] is False
     else:

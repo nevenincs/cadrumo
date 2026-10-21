@@ -38,7 +38,8 @@ from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..modelo.workbench.casilla_list import CasillaList
 from ..modelo.workbench.editor import CasillaEditorPanel
-from ..modelo.workbench.installed import InstalledModeloWorkbench
+from ..modelo.workbench.factory import InstalledModeloWorkbench
+from ..modelo.workbench.review import EditReviewScreen
 from ..modelo.workbench.screen import ModeloWorkbenchScreen
 from ..modelo.workbench.sources import WorkbenchSourcesScreen
 from .modelo_workbench_session import real_workbench
@@ -72,11 +73,11 @@ async def _panel_opened(pilot: Pilot[None]) -> bool:
 
 
 async def _opened(pilot: Pilot[None], screen: ModeloWorkbenchScreen) -> ModeloWorkForm:
-    for _ in range(200):
-        await pilot.pause()
-        if screen.form is not None:
-            return screen.form
-    raise AssertionError("the workbench never finished reading its declaration")
+    await pilot.app.workers.wait_for_complete()
+    await pilot.pause()
+    form = screen.form
+    assert form is not None, "the workbench never finished reading its declaration"
+    return form
 
 
 def _frame_text(app: ScreenHostApp[None]) -> str:
@@ -224,8 +225,12 @@ async def test_a_typed_value_is_kept_nowhere_once_abandoned(
             await pilot.press(*typed, "ctrl+enter")
             await pilot.pause()
             staged = len(screen.staged_changes)
+            assert staged == 1
             await pilot.press("R")
+            # Review checks the staged changes in a worker before opening its dialog.
+            await app.workers.wait_for_complete()
             await pilot.pause()
+            assert isinstance(app.screen, EditReviewScreen)
             await pilot.click("#review-discard")
             await pilot.pause()
             await pilot.pause()
@@ -238,7 +243,6 @@ async def test_a_typed_value_is_kept_nowhere_once_abandoned(
         }
 
     assert after_cancel == []
-    assert staged == 1
     assert after_discard == 0
     digits = typed.replace(",", "").replace(".", "")
     assert not [record for record in caplog.records if digits in record.getMessage().replace(",", "").replace(".", "")]

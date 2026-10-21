@@ -57,7 +57,7 @@ def _validate_probe_outcome(evidence: ProbeEvidence) -> None:
     """Validate probe outcome."""
     if evidence.status == ProbeStatus.PASSED.value and evidence.failure is not None:
         raise CompatibilityProbeError("passing compatibility evidence cannot contain a failure")
-    if evidence.status == ProbeStatus.FAILED.value and not evidence.failure:
+    if evidence.status == ProbeStatus.FAILED.value and not (evidence.failure is not None and evidence.failure):
         raise CompatibilityProbeError("failed compatibility evidence must name its failure")
     if evidence.dependency.get("status") == "skipped":
         raise CompatibilityProbeError("compatibility dependency evidence cannot be skipped")

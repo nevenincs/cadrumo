@@ -53,12 +53,12 @@ from cadrumo.application.operations.persistence.leases import (
     operation_conflict_scope_reference,
 )
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationSchemaBindingV1,
 )
+from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.supervisor_context import SupervisorExecutorContext
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
@@ -197,6 +197,7 @@ def build_restart_registry(
     definition = OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=RestartRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=RestartResult,
         executor_factory=OperationExecutorFactory(
             request_type=RestartRequest,
@@ -219,7 +220,6 @@ def build_restart_registry(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=policy,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,

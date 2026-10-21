@@ -1592,6 +1592,21 @@ modelo:
         modelo-390-iva-resumen-anual:
           field:
             title: Declaració-resum anual de IVA
+        modelo-390-printed-disclosure-arithmetic-2022:
+          field:
+            title: 'Model 390: totals que imprimeix el formulari, exercici 2022'
+        modelo-390-printed-disclosure-arithmetic-2023:
+          field:
+            title: 'Model 390: totals que imprimeix el formulari, exercici 2023'
+        modelo-390-printed-disclosure-arithmetic-2024:
+          field:
+            title: 'Model 390: totals que imprimeix el formulari, exercici 2024'
+        modelo-390-printed-disclosure-arithmetic-2025:
+          field:
+            title: 'Model 390: totals que imprimeix el formulari, exercici 2025'
+        modelo-390-printed-disclosure-arithmetic-2026:
+          field:
+            title: 'Model 390: totals que imprimeix el formulari, exercici 2026'
       field:
         official_name: Modelo 390. Declaració-resum anual de l'Impost sobre el Valor
           Afegit.
@@ -2395,7 +2410,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
               help: Reconciliació anual - resultat declarat en els models 303
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
-              help: 'Consulteu la informació de la casella: IVA meritat en adquisicions
+              help: 'Consulta la informació de la casella: IVA meritat en adquisicions
                 intracomunitàries.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
               help: Informació fiscal sobre informació fiscal de la casella 75 del
@@ -2404,17 +2419,17 @@ modelo:
               help: Informació fiscal sobre informació fiscal de la casella 74 del
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
-              help: 'Consulteu la informació de la casella: IVA meritat en lliuraments
+              help: 'Consulta la informació de la casella: IVA meritat en lliuraments
                 de actius fixos.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
-              help: 'Consulteu la informació de la casella: IVA meritat per inversió
+              help: 'Consulta la informació de la casella: IVA meritat per inversió
                 del subjecte passiu.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
               help: Deduccions - IVA suportat en adquisició de actius fixos.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
               help: Deduccions - Regularització de béns de inversió.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Consulteu la informació de la casella: Resultat règim simplificat.'
+              help: 'Consulta la informació de la casella: Resultat règim simplificat.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Informació fiscal sobre informació fiscal de la casella 82 del
                 Modelo 390.
@@ -3275,7 +3290,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
               help: Reconciliació anual - resultat declarat en els models 303
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
-              help: 'Consulteu la informació de la casella: IVA meritat en adquisicions
+              help: 'Consulta la informació de la casella: IVA meritat en adquisicions
                 intracomunitàries.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
               help: Informació fiscal sobre informació fiscal de la casella 75 del
@@ -3284,17 +3299,17 @@ modelo:
               help: Informació fiscal sobre informació fiscal de la casella 74 del
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
-              help: 'Consulteu la informació de la casella: IVA meritat en lliuraments
+              help: 'Consulta la informació de la casella: IVA meritat en lliuraments
                 de actius fixos.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
-              help: 'Consulteu la informació de la casella: IVA meritat per inversió
+              help: 'Consulta la informació de la casella: IVA meritat per inversió
                 del subjecte passiu.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
               help: Deduccions - IVA suportat en adquisició de actius fixos.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
               help: Deduccions - Regularització de béns de inversió.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Consulteu la informació de la casella: Resultat règim simplificat.'
+              help: 'Consulta la informació de la casella: Resultat règim simplificat.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Informació fiscal sobre informació fiscal de la casella 82 del
                 Modelo 390.
@@ -4175,7 +4190,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
               help: Reconciliació anual - resultat declarat en els models 303
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
-              help: 'Consulteu la informació de la casella: IVA meritat en adquisicions
+              help: 'Consulta la informació de la casella: IVA meritat en adquisicions
                 intracomunitàries.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
               help: Informació fiscal sobre informació fiscal de la casella 75 del
@@ -4184,17 +4199,17 @@ modelo:
               help: Informació fiscal sobre informació fiscal de la casella 74 del
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
-              help: 'Consulteu la informació de la casella: IVA meritat en lliuraments
+              help: 'Consulta la informació de la casella: IVA meritat en lliuraments
                 de actius fixos.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
-              help: 'Consulteu la informació de la casella: IVA meritat per inversió
+              help: 'Consulta la informació de la casella: IVA meritat per inversió
                 del subjecte passiu.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
               help: Deduccions - IVA suportat en adquisició de actius fixos.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
               help: Deduccions - Regularització de béns de inversió.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Consulteu la informació de la casella: Resultat règim simplificat.'
+              help: 'Consulta la informació de la casella: Resultat règim simplificat.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Informació fiscal sobre informació fiscal de la casella 82 del
                 Modelo 390.

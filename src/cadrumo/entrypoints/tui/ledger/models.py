@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -13,6 +14,7 @@ from pydantic import BaseModel, Field, model_validator
 from ....application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ....application.ledger.actions_import import LedgerProviderID
 from ....application.ledger.attachment_review import AttachmentReviewItem
+from ....application.ledger.classify_requests import LedgerClassifyPatch
 from ....application.ledger.invoice_draft_records import LabelReadingFallback
 from ....application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
 from ....application.ledger.models import (
@@ -36,8 +38,7 @@ from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.invoices.business_premises import SituacionInmueble
 from ....domain.invoices.models import Invoice
-from ....domain.iva.classification import InvoiceKind
-from ....domain.iva.schema import IvaCategory
+from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.own_accounts import OwnAccountId
 from ..destination_alias import closed_destination_ids
@@ -162,6 +163,10 @@ class LedgerFlowState(StrEnum):
     CANCELLED = "cancelled"
 
 
+type LedgerClassificationPatchV1 = ManualLedgerTransactionPatch | LedgerClassifyPatch
+type LedgerClassificationPatchBuilderV1 = Callable[[dict[str, object]], LedgerClassificationPatchV1]
+
+
 class LedgerClassificationSubmissionV1(BaseModel):
     """Catalogue-authorized canonical classification patch submission."""
 
@@ -169,13 +174,23 @@ class LedgerClassificationSubmissionV1(BaseModel):
 
     action: ActionReference
     transaction_id: TransactionId
-    patch: ManualLedgerTransactionPatch
+    patch: LedgerClassificationPatchV1
+
+
+class LedgerClassificationResultV1(BaseModel):
+    """Identity-only acknowledgement of a settled runtime classification."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    transaction_id: TransactionId
 
 
 class LedgerClassificationSubmitterV1(Protocol):
     """Injected application door for a classification mutation."""
 
-    async def __call__(self, submission: LedgerClassificationSubmissionV1) -> ManualLedgerTransactionResult:
+    async def __call__(
+        self, submission: LedgerClassificationSubmissionV1
+    ) -> ManualLedgerTransactionResult | LedgerClassificationResultV1:
         """Submit one authorized canonical classification patch."""
         ...
 
@@ -581,6 +596,9 @@ type LedgerReconciliationSourceV1 = (
 
 __all__ = [
     "LEDGER_DESTINATION_BY_AREA",
+    "LedgerClassificationPatchBuilderV1",
+    "LedgerClassificationPatchV1",
+    "LedgerClassificationResultV1",
     "LedgerClassificationSubmissionV1",
     "LedgerClassificationSubmitterV1",
     "LedgerDestinationIdV1",

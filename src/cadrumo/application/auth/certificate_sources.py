@@ -5,7 +5,7 @@ certificates — their own personal certificate plus one apoderado
 certificate per represented entity. Before this module, the certificate
 auth provider carried exactly one ``certificate_path`` on
 :class:`~application.auth.models.AuthState`, configured through
-``aeat config auth configure --provider certificate --file PATH``: adopting
+``cadrumo-runtime config auth configure --provider certificate --file PATH``: adopting
 a different certificate meant re-running that command and losing track of
 the previous path.
 
@@ -81,11 +81,13 @@ def register_certificate_source(
     normalized_name = name.strip()
     if not normalized_name:
         raise ValueError("certificate source name must not be blank")
+    if normalized_name.startswith("auth-provider:"):
+        raise ValueError("certificate source name uses a reserved authentication credential prefix")
     auth = auth_state(state)
     record = CertificateSourceRecord(
         name=normalized_name,
         certificate_path=str(certificate_path),
-        friendly_name=friendly_name.strip() if friendly_name else None,
+        friendly_name=friendly_name.strip() if (friendly_name is not None and friendly_name) else None,
         registered_at=now(),
     )
     sources = dict(auth.certificate_sources)

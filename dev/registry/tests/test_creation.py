@@ -44,8 +44,7 @@ from cadrumo.domain.invoices.decomposition import decompose_invoice
 from cadrumo.domain.invoices.enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349OperadorRow
 
 from ..maintenance_support import load_modelo_path

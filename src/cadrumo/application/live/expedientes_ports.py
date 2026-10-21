@@ -1,9 +1,10 @@
 """Application-owned capabilities and DTOs for live expedientes reads.
 
 The expedientes lifecycle stores an application snapshot and consumes a
-read-only declaration-register capability.  Browser, Sede DTO, and encrypted
-storage implementations are composed outside this module and translated at
-that boundary.
+read-only declaration-register capability.  :class:`ExpedientesDeclaration`
+is the one row model: the Sede register adapter builds it directly from the
+rendered register.  Browser and encrypted storage implementations are composed
+outside this module.
 """
 
 from __future__ import annotations

@@ -283,8 +283,8 @@ flows:
       cancel_button: Mégse
       confirm_button: Felírtam
       offer_consequence: 'Nélküle az elfelejtett jelszó azt jelenti, hogy az adatok
-        nem állíthatók vissza. Később is beállíthatod: aeat config profile recovery
-        enable'
+        nem állíthatók vissza. Később is beállíthatod: cadrumo-runtime config profile
+        recovery enable'
       offer_explanation: A helyreállítási kóddal új jelszót állíthatsz be, ha elfelejtenéd.
         Egyszer jelenik meg; írd fel, és ettől a géptől külön őrizd.
       offer_heading: Beállítasz helyreállítási kódot?

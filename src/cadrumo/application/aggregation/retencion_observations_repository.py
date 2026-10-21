@@ -62,7 +62,7 @@ def retencion_observation_key(
     validate_observation_key_component(modelo, context="modelo")
     period_token = period.registry_token
     validate_observation_key_component(period_token, context="period")
-    validate_observation_key_component(str(scheme.value), context="scheme")
+    validate_observation_key_component(scheme.value, context="scheme")
     hashed_token = hashed_tax_id_token(perceptor_nif, field_name="perceptor_nif")
     if projection_identity is None:
         return f"{modelo}:{filing_year}:{period_token}:{hashed_token}:{scheme.value}"

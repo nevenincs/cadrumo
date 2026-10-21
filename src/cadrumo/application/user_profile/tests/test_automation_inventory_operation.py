@@ -11,17 +11,10 @@ from cadrumo.application.operations.access_resolution import OperationAccessCont
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
-    DisclosureCategory,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
@@ -39,6 +32,10 @@ from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
     AUTOMATION_DECLINE_OPERATION_DEFINITION_ID,
     AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID,
+    AUTOMATION_RENEW_OPERATION_DEFINITION_ID,
+    AUTOMATION_REQUEST_OPERATION_DEFINITION_ID,
+    AUTOMATION_ROTATE_OPERATION_DEFINITION_ID,
+    AUTOMATION_SCOPE_OPERATION_DEFINITION_ID,
     AutomationOperationRequest,
     build_automation_operation_definitions,
     build_automation_operation_registrations,
@@ -46,6 +43,14 @@ from cadrumo.application.user_profile.automation_operations import (
 )
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
 from cadrumo.core.operations import profile_operation_subject
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosureCategory,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -74,9 +79,6 @@ def test_inventory_and_reviewed_decisions_expose_typed_human_cli_and_tui_results
             assert any(
                 item.identity == contract.result_schema and item.model_type is result_types[definition.definition_id]
                 for item in binding
-            )
-            assert contract.permitted_frontends == frozenset(
-                {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
             )
         else:
             assert contract.result_schema is None
@@ -132,6 +134,66 @@ def test_resolver_pins_profile_human_policy_and_disclosure_category(definition_i
             ),
         )
     assert mismatch.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+@pytest.mark.parametrize(
+    "definition_id",
+    (
+        AUTOMATION_REQUEST_OPERATION_DEFINITION_ID,
+        AUTOMATION_ROTATE_OPERATION_DEFINITION_ID,
+        AUTOMATION_RENEW_OPERATION_DEFINITION_ID,
+        AUTOMATION_SCOPE_OPERATION_DEFINITION_ID,
+    ),
+)
+def test_a_proposal_is_admitted_alike_on_every_frontend_for_the_exact_profile_and_releases_no_result(
+    definition_id: str,
+) -> None:
+    registry = _registry()
+    profile_id, destination_id = uuid4(), uuid4()
+    request = OperationRequest(
+        definition_id=definition_id,
+        subject_ref=profile_operation_subject(str(profile_id)),
+        payload=AutomationOperationRequest(profile_id=profile_id, request_id=uuid4()),
+    )
+    contract = registry.lookup_public_contract(definition_id)
+
+    def context(
+        frontend: OperationFrontendProjection, action: AccessAction, *, foreign: bool = False
+    ) -> OperationAccessContext:
+        return OperationAccessContext(
+            profile_id=uuid4() if foreign else profile_id,
+            destination_id=destination_id,
+            action=action,
+            frontend=frontend,
+            contract=contract,
+            published_authority=Availability.AVAILABLE,
+        )
+
+    assert contract.ephemeral_secret_required and contract.result_schema is None
+    for action, categories in (
+        (AccessAction.SUBMIT, set[DisclosureCategory]()),
+        (AccessAction.START, set[DisclosureCategory]()),
+        (AccessAction.COMMIT, set[DisclosureCategory]()),
+        (AccessAction.OBSERVE, {DisclosureCategory.OPERATION_METADATA}),
+    ):
+        resolved = {
+            frontend: resolve_operation_access(registry=registry, request=request, context=context(frontend, action))
+            for frontend in OperationFrontendProjection
+        }
+        for frontend, access in resolved.items():
+            assert access.request.frontend is frontend and access.request.profile_id == profile_id
+            assert access.request.period_independent and not access.policy.requires_human
+            assert access.policy == resolved[OperationFrontendProjection.CLI].policy
+            assert {item.category for item in access.policy.disclosures} == categories
+    for frontend in OperationFrontendProjection:
+        with pytest.raises(ProfileAccessRefusedError) as unreadable:
+            resolve_operation_access(registry=registry, request=request, context=context(frontend, AccessAction.RESULT))
+        assert unreadable.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+        with pytest.raises(ProfileAccessRefusedError) as mismatch:
+            resolve_operation_access(
+                registry=registry, request=request, context=context(frontend, AccessAction.SUBMIT, foreign=True)
+            )
+        assert mismatch.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
 @pytest.mark.parametrize(

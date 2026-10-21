@@ -7,6 +7,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
@@ -14,20 +16,19 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..prorrata_register.ports import ProrrataRegisterRepositoryFactory
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_common import require_registered_own_account
-from .actions_manual import create_manual_transaction
+from .actions_manual import PreparedManualTransaction, commit_manual_transaction, prepare_manual_transaction
 from .ledger_add_command import (
     SourceJurisdictionRequiredError,
     prepare_ledger_add_command,
@@ -59,11 +60,14 @@ class LedgerAddExecutor:
         ports_factory: LedgerActionPortsFactory,
         prorrata_register_repository_factory: ProrrataRegisterRepositoryFactory,
         own_account_repository_factory: OwnAccountRepositoryFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
     ) -> None:
         """Retain exact-bucket ledger, prorrata and own-account repository factories."""
         self._ports_factory = ports_factory
         self._prorrata_register_repository_factory = prorrata_register_repository_factory
         self._own_account_repository_factory = own_account_repository_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -77,6 +81,9 @@ class LedgerAddExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_ADD_PHASE)
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=payload.actor or bucket_id or "operator"
+        )
 
         async def refuse(
             error: Exception,
@@ -102,10 +109,13 @@ class LedgerAddExecutor:
         async def commit() -> str | OperationRefusalEvidence:
             async with context.cancellation.irreversible_section():
                 operation: PinnedAuthorityOperation = context.authority_operation
+                from ...application.exchange_rate_provider import exchange_rate_provider
+                from ...domain.currency.service import CurrencyNormalizationService
+
                 try:
                     ports = await asyncio.to_thread(self._ports_factory, bucket_id=bucket_id, operation=operation)
                     require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
-                    command = await asyncio.to_thread(prepare_ledger_add_command, payload, operation)
+                    command = await asyncio.to_thread(prepare_ledger_add_command, payload, operation, actor=actor)
                     if command.own_account_id is not None:
                         own_accounts = await asyncio.to_thread(
                             self._own_account_repository_factory(bucket_id=bucket_id).load
@@ -118,25 +128,28 @@ class LedgerAddExecutor:
                         self._prorrata_register_repository_factory,
                         operation,
                     )
+                    # The domain row refuses its own invariants while it is built, so building it
+                    # here keeps every input refusal a typed refusal that provably wrote nothing.
+                    prepared = await asyncio.to_thread(
+                        prepare_manual_transaction,
+                        command,
+                        ports=ports,
+                        currency_normalizer=CurrencyNormalizationService(rate_provider=exchange_rate_provider()),
+                        require_revision_guard=True,
+                    )
                 except SourceJurisdictionRequiredError as refusal:
                     return await refuse(refusal, code=refusal.jurisdiction_code)
                 except (TransactionValidationError, ValidationError, ValueError) as error:
                     return await refuse(error)
 
-                # From this point the canonical service may have durably committed
-                # the transaction/event even if a later attachment back-reference
-                # or projection step fails. Preserve that uncertainty.
-                await context.events.effect(OperationEffect.UNKNOWN)
-                from ...application.exchange_rate_provider import exchange_rate_provider
-                from ...domain.currency.service import CurrencyNormalizationService
-
-                result = await asyncio.to_thread(
-                    create_manual_transaction,
-                    command,
-                    ports=ports,
-                    currency_normalizer=CurrencyNormalizationService(rate_provider=exchange_rate_provider()),
-                    require_revision_guard=True,
-                )
+                if isinstance(prepared, PreparedManualTransaction):
+                    # From this point the canonical service may have durably committed
+                    # the transaction/event even if a later attachment back-reference
+                    # or projection step fails. Preserve that uncertainty.
+                    await context.events.effect(OperationEffect.UNKNOWN)
+                    result = await asyncio.to_thread(commit_manual_transaction, prepared, ports=ports)
+                else:
+                    result = prepared
                 projected = build_ledger_add_operation_result(
                     payload.profile_id,
                     result,
@@ -165,18 +178,23 @@ def build_ledger_add_definition(
     ports_factory: LedgerActionPortsFactory,
     prorrata_register_repository_factory: ProrrataRegisterRepositoryFactory,
     own_account_repository_factory: OwnAccountRepositoryFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Build the private worker definition for exact-profile manual creation."""
     return build_single_phase_definition(
         definition_id=LEDGER_ADD_OPERATION_DEFINITION_ID,
         request_type=LedgerAddRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerAddExecutionResult,
         executor_type=LedgerAddExecutor,
         build=lambda: LedgerAddExecutor(
-            ports_factory, prorrata_register_repository_factory, own_account_repository_factory
+            ports_factory,
+            prorrata_register_repository_factory,
+            own_account_repository_factory,
+            execution_caller_reader=execution_caller_reader,
         ),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=frozenset({LEDGER_ADD_VALIDATION_REFUSAL_CODE}),
     )
 

@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -29,14 +31,11 @@ from ..operations.capabilities import (
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationResultProjector,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.projection import PreconditionVerdictSnapshot
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .activity_asset_contracts import (
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
@@ -162,6 +161,7 @@ def _definition(
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_type=executor_type,
         build=lambda: executor_type(ports_factory),
@@ -178,7 +178,6 @@ def _definition(
             permitted_effects=effects,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=ACTIVITY_ASSET_REFUSAL_CODES,
     )
 
@@ -235,6 +234,7 @@ def _project_refusal(refusal: ActivityAssetRefusalResult | None) -> ActivityAsse
             if refusal.precondition_verdict is not None
             else None
         ),
+        accelerated_da18=refusal.accelerated_da18,
     )
 
 

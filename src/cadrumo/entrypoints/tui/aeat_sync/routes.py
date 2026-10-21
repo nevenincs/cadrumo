@@ -12,6 +12,7 @@ from ....application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1, A
 from ....application.operations.registry import OperationPublicContractSetV1
 from ..destination_alias import closed_destination_ids
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
+from ..profile.aeat_auth_setup import AeatAuthSetupPort
 from .controller import AeatSyncWorkspaceController
 from .models import (
     AEAT_SYNC_DESTINATION_BY_ZONE,
@@ -88,6 +89,7 @@ def aeat_sync_screen_factory(
     refresh_snapshot: Callable[[], AeatSyncWorkspaceProjectionV1] | None = None,
     notification_document_handoff: AeatSyncNotificationDocumentHandoffV1 | None = None,
     operation_contracts: OperationPublicContractSetV1 | None = None,
+    aeat_auth_setup: AeatAuthSetupPort | None = None,
 ) -> TuiScreenFactoryV1:
     """Bind only a preloaded safe projection and an optional typed host handoff."""
 
@@ -99,6 +101,7 @@ def aeat_sync_screen_factory(
             refresh_snapshot=refresh_snapshot,
             notification_document_handoff=notification_document_handoff,
             operation_contracts=operation_contracts,
+            aeat_auth_setup=aeat_auth_setup,
         )
         return resolve_aeat_sync_screen(controller, controller.target(AeatSyncWorkspaceZone.OVERVIEW))
 

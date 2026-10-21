@@ -43,12 +43,12 @@ from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.events import OperationNoticeEvent
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationSchemaBindingV1,
 )
+from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.supervisor_context import SupervisorExecutorContext
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
@@ -201,6 +201,7 @@ def _definition(*, executor_type: type[object], build: Callable[[], object]) -> 
     return OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=ExecutorContractRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=None,
         executor_factory=OperationExecutorFactory(
             request_type=ExecutorContractRequest,
@@ -211,7 +212,6 @@ def _definition(*, executor_type: type[object], build: Callable[[], object]) -> 
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
 
 

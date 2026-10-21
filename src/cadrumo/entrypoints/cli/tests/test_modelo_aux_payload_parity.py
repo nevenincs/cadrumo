@@ -20,10 +20,9 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.aggregation import RetencionClave
-
 from ....application.evidence.models import BundleVerificationState
 from ....application.evidence.payloads import EvidenceRecordRefPayload
+from ....core.aggregation import RetencionClave
 from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from ..modelo_aux_payloads import (
     ModeloAuditViewResult,
@@ -190,7 +189,11 @@ class TestWorkUnitHistoryEvent:
         with pytest.raises(ValidationError):
             _event(object_id="")
 
-    @pytest.mark.parametrize("actor", ["", "x" * 65])
+    def test_actor_at_persisted_boundary_is_preserved(self) -> None:
+        actor = "x" * 128
+        assert _event(actor=actor).model_dump(mode="json")["actor"] == actor
+
+    @pytest.mark.parametrize("actor", ["", "x" * 129])
     def test_out_of_bounds_actor_is_refused(self, actor: str) -> None:
         with pytest.raises(ValidationError):
             _event(actor=actor)

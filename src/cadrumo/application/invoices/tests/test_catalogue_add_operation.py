@@ -14,6 +14,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.operations import (
     OperationEffect,
     OperationTerminalCondition,
@@ -22,7 +25,7 @@ from ....core.operations import (
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
 from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -30,7 +33,6 @@ from ...operations.owner import OperationExecutorContext
 from ...operations.public_scalar import PublicDecimal
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import catalogue_add_operation as add_operation
 from ..catalogue_add_contracts import (
@@ -254,9 +256,6 @@ def test_registration_requires_profile_scoped_commit_and_secure_request_storage(
     assert access.policy.actions >= {AccessAction.SUBMIT, AccessAction.COMMIT}
     assert definition.capabilities.request_storage.value == "secure_reference"
     assert definition.capabilities.sensitive_input.value == "secure_reference"
-    assert definition.permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-    )
 
 
 class _Events:

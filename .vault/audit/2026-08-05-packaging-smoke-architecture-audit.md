@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#packaging-smoke-architecture'
 date: '2026-08-05'
-modified: '2026-10-05'
+modified: '2026-10-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:6a69b2b35378ea8450cc989b3f521016325421d98af3a4c127bbe7a92091d9d0'
+body_hash: 'sha256:ab6ccee33e1a0a91af932e4b640f549bf31228d0dabd2584c9daf3cff93ee9df'
 related:
   - "[[2026-07-20-ci-speed-redesign-adr]]"
   - "[[2026-07-15-distribution-installation-readiness-research]]"
@@ -40,8 +40,8 @@ and are recorded under the acquisition-channel finding.
 A structural correction to the framing. The 13 `smoke_*` surfaces are not one
 population. Six modules (`smoke_core`, `smoke_pip_core`, `smoke_sdist_core`,
 `smoke_extras`, `smoke_split_install`, `smoke_browser`, plus `smoke_dev` and
-`smoke_docker`) are INSTALL-FORM lanes driven by the campaign registry. Five
-(`smoke_homebrew`, `smoke_mcpb`, `smoke_plugin_install`, `smoke_desktop_client`,
+`smoke_docker`) are INSTALL-FORM lanes driven by the campaign registry. Four
+(`smoke_homebrew`, `smoke_mcpb`, `smoke_desktop_client`,
 `smoke_scoop.ps1`) are ACQUISITION-CHANNEL lanes that are not in `_LANES` at all and are
 driven by separate per-channel workflows or by an operator-run recipe. They answer
 orthogonal questions and cannot be compared for redundancy against each other. Treating

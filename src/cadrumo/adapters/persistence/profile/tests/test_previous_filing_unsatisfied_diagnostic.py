@@ -73,11 +73,11 @@ _M100_NET_INCOME_CASILLAS: tuple[CasillaId, ...] = tuple(
 )
 
 
-def _m130_snapshot():
+def _m130_snapshot(period: str = _TARGET_PERIOD):
     return published_authority_operation().snapshot(
         Modelo("130").value,
         filing_year=_YEAR,
-        period=_TARGET_PERIOD,
+        period=period,
     )
 
 
@@ -97,8 +97,13 @@ def _declared_previous_filing_binding_ids() -> frozenset[BindingId]:
     return frozenset(binding_ids)
 
 
-def _resolve(secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation):
-    snapshot = _m130_snapshot()
+def _resolve(
+    secure_objects: SecureObjectRepository,
+    *,
+    operation: PinnedAuthorityOperation,
+    period: str = _TARGET_PERIOD,
+):
+    snapshot = _m130_snapshot(period)
     resolver = PreviousFilingSourceResolver(
         operation=operation,
         repository=CalculationObservationRepository(objects=secure_objects),
@@ -111,7 +116,7 @@ def _resolve(secure_objects: SecureObjectRepository, *, operation: PinnedAuthori
             bucket_id=_BUCKET_ID,
             modelo=Modelo("130").value,
             filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, _TARGET_PERIOD),
+            period=Period.from_year_and_code(_YEAR, period),
             revision=snapshot.revision,
         ),
     )
@@ -279,3 +284,27 @@ def test_a_satisfied_carry_declares_the_filed_casilla_it_rests_on(
 
     assert resolution.provenance, "the seeded prior trimestre must produce provenance, or this proves nothing"
     assert all(row.terminal_origin is TerminalOriginClass.FILED_MODELO_CASILLA for row in resolution.provenance)
+
+
+def test_a_carry_with_no_source_window_for_the_target_is_not_named(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """At a first quarter the prior-quarter carry has no earlier quarter to read.
+
+    Box 05 is then zero by design, so naming the carry as unsatisfied would
+    block verifying, exporting and recording every first-quarter Modelo 130 on a
+    filing that cannot exist. A carry that does read an earlier filing at the
+    first quarter, the prior-year Modelo 100 net income, is still named, so the
+    scope-out cannot be mistaken for the resolver going quiet.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        resolution = _resolve(profile.repository, operation=operation, period=_PRIOR_QUARTER)
+
+    named = {
+        diagnostic.binding_id for diagnostic in resolution.diagnostics if diagnostic.source_kind == "previous_filing"
+    }
+    assert _M130_PRIOR_PAGOS_BINDING not in named
+    assert _M130_PRIOR_PAGOS_BINDING not in resolution.unresolved_binding_ids
+    assert "irpf.previous_year_economic_activity_net_income" in named

@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 
-// The shell's own scale names (src/tokens.css), so a later class replaces an
+// The shell's own scale names (src/styles/tokens.css), so a later class replaces an
 // earlier one of the same kind: without them `text-md` reads as a colour and
 // `h-control-md` as an unknown size.
 const merge = extendTailwindMerge({

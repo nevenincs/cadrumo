@@ -93,7 +93,7 @@ def _unit_text(document: Path, *, anchor: str) -> str:
     if document.suffix.casefold() == ".xml":
         outputs = build_xml_outputs(document, repo_root=bundled_path())
         rendered = [
-            f"# {unit.title}\n\n{unit.text}" if unit.title else unit.text
+            f"# {unit.title}\n\n{unit.text}" if (unit.title is not None and unit.title) else unit.text
             for output in outputs
             for unit in output.units
             if unit.anchor is not None and unit.anchor.lstrip("#") == anchor.lstrip("#")

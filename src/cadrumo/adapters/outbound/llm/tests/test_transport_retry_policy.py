@@ -28,6 +28,7 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.config_support import LLMProvider
+from .....core.model_catalogue import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from .....tests.loopback_llm import (
     SilentLoopbackHandler,
@@ -53,6 +54,7 @@ from ..errors import (
 )
 from ..models import LLMRequest
 from ._arena_fixtures import _fresh_arena
+from .model_run_support import serving_agent
 
 __all__ = ["_fresh_arena"]
 
@@ -123,8 +125,7 @@ def _serve_scripted(script: _Script) -> Generator[str]:
 
 def _client(tmp_path: Path, *, policy: LLMRetryPolicy | None = None) -> LLMClient:
     settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model="gpt-oss",
+        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -276,8 +277,14 @@ def test_a_consent_refusal_never_reaches_the_transport_at_all(tmp_path: Path) ->
     "refused before dispatch" from "dispatched, then refused".
     """
     script = _Script(responses=[(HTTPStatus.OK, _OK_BODY)])
-    request = LLMRequest(prompt="read this invoice", evidence_derived=True, provider_override=LLMProvider.OPENAI)
+    request = LLMRequest(
+        prompt="read this invoice",
+        evidence_derived=True,
+        provider_override=LLMProvider.AGENT,
+        model_role=ModelRole.TEXT_EXTRACTION,
+    )
     with (
+        serving_agent() as service,
         _serve_scripted(script) as endpoint,
         override_settings(cadrumo_llm_ollama_chat_url=endpoint),
         pytest.raises(LLMConsentError),
@@ -285,6 +292,7 @@ def test_a_consent_refusal_never_reaches_the_transport_at_all(tmp_path: Path) ->
         asyncio.run(_client(tmp_path).complete(request))
 
     assert script.arrivals == 0
+    assert service.runs == []
 
 
 def _llm_error_classes() -> list[type[LLMError]]:

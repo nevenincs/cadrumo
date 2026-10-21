@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#google-app-identity'
 date: '2026-10-04'
-modified: '2026-10-07'
+modified: '2026-10-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:4dffdfd1d32f7306377cf14db05351a428deca782ce2a7b796917fe5a1fe4bf2'
+body_hash: 'sha256:f7159aa4afc59e4b56c2a12b7558979d566b5769cf3e19a7ee7e9445ac8adeb6'
 related:
   - "[[2026-10-04-google-app-identity-research]]"
   - "[[2026-10-04-google-app-identity-reference]]"
@@ -16,7 +16,6 @@ related:
   - '[[2026-06-10-ledger-evidence-enforcement-adr]]'
   - '[[2026-08-26-cli-root-verb-homes-adr]]'
 ---
-
 # `google-app-identity` adr: `Publisher-owned Google client limited to application-created files` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -163,10 +162,20 @@ Binding commitments:
     removal also changes the generated environment example and the native
     contract projection.
 
-Out of scope: the publisher's Google verification and publishing status, the
-desktop Connect interface, and
+Out of scope: the publisher's Google verification and publishing status, and
 the remote-mirror policy for the OAuth token namespace. The last is an open
-question recorded in `2026-10-04-google-app-identity-reference`.
+question recorded in `2026-10-04-google-app-identity-reference`. The desktop
+Connect interface is governed by
+`2026-10-18-dependency-provisioning-unified-setup-adr` (amended 2026-10-18;
+before that it was listed here as out of scope). Under that record, sign-in
+status also checks that the token is present and bound to the client, not
+only the sign-in metadata, and a full check refreshes the token; commitment 8
+is otherwise unchanged. Noted 2026-10-18 under the owner's runtime-boundary
+ruling recorded in that record: a sign-in started from the desktop or the TUI
+is this product's registered `config.google.login` operation, which admits
+only a person's session; the command line keeps its controlling-terminal
+check, and the runtime carries no Google sign-in code of its own. A refused
+sign-in names its closed setup failure category in the refusal detail.
 
 Affected prior rulings. These amendments were applied to the named accepted
 records when this record was accepted:
@@ -221,6 +230,12 @@ records when this record was accepted:
   depend on who creates the root folder.
 
 ## Implementation
+
+### Accepted clarification 2026-10-15: fixed binary identity
+
+The product owner explicitly required that the Cadrumo OAuth client identify the application as a privileged package fact, be bundled and set automatically during the build, and never be an overridable runtime environment value. The full publisher client metadata remains a build input from ignored development provisioning or CI; no credential contents are committed. The validated value is embedded in the native contract and installed Python metadata. Every packaged image and invocation, including the generic Python image and inherited child profiles, pins the compiled value after ambient inputs. No profile may admit the name through operator, pass-through or launch-slot configuration. Python settings use installation metadata and ignore environment and dotenv attempts to select another client. Missing or malformed package metadata retains its typed refusal.
+
+This clarifies commitment 3's build provisioning channel. Its former reference to a secret-valued core setting never grants a deployed process the right to replace the publisher identity. Publisher identity, scope restrictions and profile token binding remain unchanged. Authorization is the owner's direct 2026-10-15 instruction in the full-suite repair session.
 
 We will run Cadrumo's Google integration on one publisher-owned Desktop
 client, read from installation data, restricted to non-sensitive scopes and
@@ -330,3 +345,7 @@ The product owner explicitly requires My Drive/Cadrumo/Cadrumo {profile discrimi
 ## Amendment 2026-10-06 - credential provisioning outside Git
 
 Authorized by the user's explicit request to remove client credentials from the repository and history, provision main/env/.env and tui/env/.env and GitHub repository secrets, and use core Settings for local and CI builds. Commitment 3 now distinguishes ignored build inputs from distributed installation data. Earlier authorization-basis text records history and no longer authorizes committing credential bytes. The native environment contract continues clearing ambient overrides; installed Settings resolves its embedded default. This ruling does not claim rollout completion.
+
+## Amendment 2026-10-19 - profile-folder scope of the sign-in
+
+Accepted 2026-10-19 on operator directive 2026-10-19 under `2026-10-19-google-app-identity-profile-folder-scope-adr`. The remote-mirror policy of the OAuth token namespace, listed above as out of scope and open, is settled: the token and sign-in metadata namespaces are local-only and never mirror to Drive, and they stay out of every custody carry. Sign-in records are written to, and read from, only the bucket database of the profile they belong to; a sign-in whose profile is not the one the unlocked session serves is refused rather than stored elsewhere. The publisher client stays one installation-wide package fact that every profile and session reads, with no per-profile copy. Commitments 3 and 8 are otherwise unchanged. Before this amendment the record left the mirror policy open and did not state where the sign-in rows live.

@@ -15,7 +15,7 @@ Canarian and Ceutan filers inside a territory their operations are not subject
 to. The refusal is the safe direction, and the cases below assert the refusal
 rather than merely asserting "not Canarias".
 
-**The refusal is actionable.** This CLI's operator is an autonomous agent, so a
+**The refusal is actionable.** This CLI's operator is an autonomous automation, so a
 refusal that says the profile is incomplete produces a retry loop, while one
 naming the missing fact and the verb that supplies it produces a recovery. The
 message content is therefore under gate, not just the exception type.
@@ -38,7 +38,7 @@ from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
-from ....domain.iva.classification import IvaTerritorialScope
+from ....domain.iva.schema import IvaTerritorialScope
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..confirm_establishment import _filer_scope
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -194,7 +194,7 @@ class TestTheRefusalIsActionable:
         """Two different gaps that a single message would make indistinguishable.
 
         "You never declared a postcode" and "what you declared is not a postcode"
-        need different operator actions, and an agent told the fact is missing
+        need different operator actions, and an automation told the fact is missing
         when it is actually malformed will re-supply the same malformed value.
         """
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:

@@ -67,6 +67,26 @@ def test_interpreter_caches_are_not_source_evidence(tmp_path: Path) -> None:
     assert [Path(path).name for path, _size, _mtime in fingerprints] == [specimen.name]
 
 
+def test_python_controls_are_not_evidence_but_documents_beside_them_are(tmp_path: Path) -> None:
+    source_root = tmp_path / "specimen"
+    specimen = _write_specimen_evidence(source_root, payload="authority")
+    controls = specimen.parent / "tests"
+    controls.mkdir()
+    for name in ("__init__.py", "test_provenance.py", "control.pyi", "CONTROL.PYI"):
+        (controls / name).write_text("control code", encoding="utf-8")
+    document = controls / "evidence.html"
+    document.write_text("source evidence", encoding="utf-8")
+
+    before = collect_source_evidence_fingerprints(source_root)
+    assert {Path(path) for path, _size, _mtime in before} == {specimen, document}
+
+    (controls / "test_provenance.py").write_text("changed test behavior", encoding="utf-8")
+    assert collect_source_evidence_fingerprints(source_root) == before
+
+    document.write_text("amended source evidence", encoding="utf-8")
+    assert collect_source_evidence_fingerprints(source_root) != before
+
+
 def test_the_bundled_evidence_root_is_served_from_the_window() -> None:
     """The bundled tree really is bounded, so the bound cannot be made inert.
 

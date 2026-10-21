@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from uuid import UUID, uuid4
@@ -21,7 +21,6 @@ from cadrumo.application.live.tests.unopened_live_ports import (
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import AccessAction, Availability
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.censal_operation import CensalProfileBaseline
 from cadrumo.application.user_profile.censal_preview_operation import (
@@ -45,8 +44,9 @@ from cadrumo.core.operations import (
 )
 from cadrumo.core.paths import effective_storage_root
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 from .test_censal_operation_operand import _operand
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -66,7 +66,7 @@ class _PreviewBrowserResources:
         self.closed = False
 
     @contextmanager
-    def activate(self) -> Iterator[None]:
+    def activate(self) -> Generator[None]:
         assert not self.active
         assert not self.closed
         task = asyncio.current_task()
@@ -142,9 +142,9 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
 
     monkeypatch.setattr(conformance, "build_production_operation_registry", preview_registry_builder)
     profile_decode_context = operation.profile_decode_context()
-    cleanup = conformance._CloseWitness()
+    cleanup = conformance.OperationRuntimeCloseWitness()
 
-    with conformance._runtime(tmp_path / "censal-preview", cleanup=cleanup) as (
+    with conformance.conformance_operation_runtime(tmp_path / "censal-preview", cleanup=cleanup) as (
         driver,
         runtime_registry,
         profile_id,

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-10-03'
-body_hash: 'sha256:c8ed68fdefc40feb88d389c18711c17bd23508502dd401948790150aa325e22a'
+modified: '2026-10-21'
+body_hash: 'sha256:85e5134cb103f5b66bfe03cd7cc83881579142bb3e14bd62119fc830071a1d0b'
 related:
   - "[[2026-07-16-distribution-harness-identity-adr]]"
 ---
@@ -26,7 +26,7 @@ every noncompliant artifact open.
 
 The audit reads the honest output of the read-only distribution identity verifier
 and the publish-workflow guardrail suite as its evidence. The verifier materialises
-the real authored harness, the workspace/plugin/marketplace generators, and the live
+the real authored harness, the workspace generator, and the live
 MCP prompt/resource projections, and reports drift without mutating any byte.
 
 ## Findings
@@ -35,11 +35,11 @@ MCP prompt/resource projections, and reports drift without mutating any byte.
 
 The distribution identity verifier exits `1` with `ok = false`. The authored
 authority holds seven personas, 34 skills, and seven rules; none carries the required
-`cadrumo-` prefix, and the generated Claude workspace, plugin, and marketplace trees
+`cadrumo-` prefix, and the generated Claude workspace tree
 faithfully preserve those generic identifiers. The MCP prompt names and every
 concrete and prompt-embedded harness-resource leaf are likewise unprefixed; only the
 six MCP resource templates already carry the product prefix. Exact-set inventory
-parity between every authored inventory and its workspace, plugin, marketplace,
+parity between every authored inventory and its workspace,
 prompt, and resource projection passes, so the failure is purely the missing product
 prefix rather than any generation drift. This is the intended visible-noncompliance
 result. Disposition: `W02.P06.S67` remains OPEN. Closing it requires the harness
@@ -48,9 +48,8 @@ harness-identity decision explicitly does not authorize.
 
 ### mcp-description-bilingual-parity | high | Client-facing MCP product descriptions are English-only; bilingual parity fails as designed
 
-The verifier inventories five real client-display fields (the generated Claude plugin
-description, the marketplace description, the marketplace-served plugin description,
-and the MCPB `description` and `long_description`). Every field carries unlabelled
+The verifier inventories the real client-display fields (the MCPB `description` and
+`long_description`). Every field carries unlabelled
 English copy with no explicitly labelled English section and no Spanish section, so no
 field reaches English/Spanish claim parity across the six required claims (capability,
 safety, privacy, on-host storage, human confirmation, never-files-live). The
@@ -64,10 +63,9 @@ and an artifact migration the accepted decision explicitly does not authorize.
 ### brand-parity-mcp-tuple | low | Accepted Cadrumo MCP product tuple passes across every real projection
 
 The independent MCP product-identity comparison passes. The human executable is
-`aeat`, the MCP server and plugin identifier are `cadrumo`, the MCP executable is
+`aeat`, the MCP server identifier is `cadrumo`, the MCP executable is
 `cadrumo-mcp`, the tool prefix is `cadrumo_`, and the resource scheme is `cadrumo://`,
-consistent across canonical, project-script, runtime-server, generated plugin,
-generated marketplace, MCPB, tool, and resource projections. The tool comparison
+consistent across canonical, project-script, runtime-server, MCPB, tool, and resource projections. The tool comparison
 accepts only `cadrumo_` or the closed generic progressive-discovery set (`describe`,
 `execute`, `search`, `toolsets`); every observed projection passes. Top-level Cadrumo
 brand identity is therefore compliant; the noncompliance is confined to the harness
@@ -102,7 +100,7 @@ rebuilt to include every evidenced execution record, with `S67`/`S68` left open)
 - Route the actual `cadrumo-` harness-namespace migration and the operator-reviewed
   bilingual MCP product copy through a separately-authorized implementation, as the
   accepted harness-identity decision requires. That work owns the skill/persona/rule
-  renames, prompt and resource URI changes, plugin/marketplace/MCPB metadata, Spanish
+  renames, prompt and resource URI changes, MCPB metadata, Spanish
   translations, tests, and real-client proof.
 - Treat the read-only distribution identity verifier as the standing gate for both
   open rows: it already fails closed on the missing prefix and the English-only

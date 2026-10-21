@@ -12,7 +12,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "logged_out_profile\t<profile-id>\nhuman_receipt_revoked\tTrue\nreceipt_removed\tTrue\nkeychain_removed\tTrue\nautomation_enabled\tNone\n"
+      "text": "logged_out_profile\tdocs-sequence-sandbox\nhuman_receipt_revoked\tTrue\nreceipt_removed\tTrue\nkeychain_removed\tTrue\nautomation_enabled\tNone\nautomation_access_remains\tNone\n"
     },
     {
       "argv": [
@@ -34,6 +34,7 @@
             "action": {
               "action_id": "operator.profile.login",
               "cli_path": [
+                "aeat",
                 "config",
                 "login"
               ],
@@ -46,29 +47,33 @@
                 "source_evidence_id": null,
                 "source_key": "name",
                 "status": "resolved",
-                "value": "<profile-id>"
+                "value": "docs-sequence-sandbox"
               }
             ],
             "conditionality": "immediate",
             "evidence": [
               {
-                "condition_id": "profile.human.input_channel_available",
-                "evidence_id": "profile.human.input_channel",
-                "provenance": "runtime_observation",
+                "condition_id": "profile.session.logged_in",
+                "evidence_id": "profile.session.resume",
+                "provenance": "persisted_state",
                 "values": {
-                  "password_channel_available": false,
-                  "profile_name": "<profile-id>"
+                  "profile_name": "docs-sequence-sandbox",
+                  "session_refusal_reason": "absent",
+                  "session_resumed": false
                 }
               }
             ],
-            "failed_condition_id": "profile.human.input_channel_available",
+            "failed_condition_id": "profile.session.logged_in",
             "missing_argument_names": [],
             "no_recovery_outcome": null
           },
           "category": "REFUSED",
           "code": "REFUSED_CLI_BOUNDARY",
-          "context": null,
-          "message": "No profile passphrase channel is available. Run this command at a terminal, or pass --profile-secrets-stdin or --profile-secrets-fd.",
+          "context": {
+            "reason": "absent",
+            "sign_in_reason": "absent"
+          },
+          "message": "You are not logged in. Run `aeat config login` to unlock your profile.",
           "retryable": false,
           "runbook_id": null,
           "trace_id": null

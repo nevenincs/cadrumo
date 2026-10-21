@@ -466,16 +466,21 @@ discover the vocabulary.
 
 ## Delete a profile permanently
 
-Close the profile's sign-in before deleting it. Logout keeps that profile
-selected, and Cadrumo refuses to delete the selected profile. Log in to another
-existing profile to change the default selection, then confirm the irreversible
-deletion of the original named profile. The example assumes
-`docs-sequence-replacement` already exists; login asks for its passphrase.
-It comes after every operation on the original profile because that profile
-cannot be used again:
+Open **Manage profiles** from the profile menu or sign-in screen. You can create
+a profile or delete one stored under your current OS account. You do not need
+the profile's password to delete it. Profiles in other OS accounts are not listed.
+
+Choose **Delete profile**, type its displayed name exactly, and acknowledge the
+data loss. This permanently removes its local invoices, filings, documents and
+conversations. External accounts and exported copies remain. Cadrumo closes the
+profile's sessions and clears its selection if necessary; you can also delete
+the last profile. Records under retention protection cannot be deleted.
+
+On the command line, first review the named profile without `--yes`; nothing is
+deleted. Add `--yes` only when you intend to remove that profile permanently:
 
 ```{cli-sequence} profile-setup-delete
-:verify: Confirm another profile is selected before deleting only the original named profile.
+:verify: Confirm the review deletes nothing, then only the named profile is deleted.
 ```
 
 ## If setup looks wrong

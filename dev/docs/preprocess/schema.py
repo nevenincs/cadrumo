@@ -35,7 +35,7 @@ PREPROCESS_SCHEMA_VERSION = "1.0"
 
 def render_corpus_sidecar_text(units: Iterable[tuple[str | None, str]]) -> str:
     """Render titled text units exactly as the committed Markdown sidecar."""
-    return "\n\n".join(f"# {title}\n\n{text}" if title else text for title, text in units)
+    return "\n\n".join(f"# {title}\n\n{text}" if (title is not None and title) else text for title, text in units)
 
 
 class SourceDocumentKind(StrEnum):

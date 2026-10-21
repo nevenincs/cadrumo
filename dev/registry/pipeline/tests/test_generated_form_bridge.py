@@ -44,6 +44,27 @@ def test_m190_bridge_refuses_an_unreviewed_repair_before_source_access(tmp_path:
 
 
 @pytest.mark.integration
+def test_unchanged_authored_form_needs_no_bridge_while_a_changed_one_is_regenerated(tmp_path: Path) -> None:
+    """A provenance-only republication keeps an authored form without regenerating it."""
+    live_root = bundled_path("registry", "aeat")
+    form = Path("modelos") / "190" / "revisions" / _REVISION / "form_layouts" / "0001-form-layout.toml"
+    assert b'seed_source = "authored"' in (live_root / form).read_bytes()
+    candidate_root = tmp_path / "candidate"
+    shutil.copytree(live_root, candidate_root)
+
+    assert not generated_form_companion_changed(live_root, candidate_root, "190", _REVISION)
+
+    (candidate_root / form).write_bytes((live_root / form).read_bytes() + b"\n# staged comment\n")
+    assert not generated_form_companion_changed(live_root, candidate_root, "190", _REVISION)
+
+    staged = (live_root / form).read_bytes().replace(b"human review remain pending", b"human review pending")
+    assert staged != (live_root / form).read_bytes()
+    (candidate_root / form).write_bytes(staged)
+    with pytest.raises(RegistryValidationError, match="differs from its fresh canonical generation"):
+        generated_form_companion_changed(live_root, candidate_root, "190", _REVISION)
+
+
+@pytest.mark.integration
 def test_m190_republication_preserves_other_authority_and_closes_the_generated_form(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

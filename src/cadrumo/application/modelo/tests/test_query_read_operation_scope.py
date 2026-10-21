@@ -10,6 +10,14 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    OperationAccessRequest,
+)
+
 from ....core.operations import profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -23,13 +31,6 @@ from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
 from ...operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    OperationAccessRequest,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..query_read_contracts import ModeloBindingsListRequest, ModeloReadinessOperationRequest
 from ..query_read_operation import (
@@ -120,7 +121,7 @@ def _query_context(profile_id: UUID, action: AccessAction, admitted: OperationAc
         profile_id=profile_id,
         destination_id=uuid4(),
         action=action,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         contract=cast(OperationPublicDefinitionContractV1, cast(object, contract)),
         published_authority=Availability.AVAILABLE,
         admitted_request=admitted,
@@ -169,7 +170,7 @@ def test_query_replay_from_a_fresh_session_keeps_the_admitted_scope_whatever_its
 
     assert resolved.request.periods == frozenset({_ANNUAL}) and not resolved.request.period_independent
     assert resolved.request.destination_id == fresh.destination_id
-    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
     assert all(item.destination_id == fresh.destination_id for item in resolved.policy.disclosures)
     for foreign in (
         _query_admission(uuid4()),

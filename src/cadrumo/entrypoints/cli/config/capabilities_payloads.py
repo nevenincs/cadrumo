@@ -4,7 +4,7 @@ Each class is a strict
 :class:`OutputSchema` subclass referenced by
 production-authored CommandSpec as deferred public schema targets so the JSON-contract gate
 enumerates the surface. Field sets match the payload dicts constructed in
-:mod:`_capabilities_cli` and enter
+:mod:`capability_commands` and enter
 :class:`SchemaEnvelope` through
 :func:`emit_envelope`.
 

@@ -1,13 +1,7 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ._app_ledger_command_spec_policies import (
-    _POLICY_4,
-    _POLICY_5,
-)
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -17,7 +11,13 @@ from .command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from .command_spec import CommandSpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._app_ledger_command_spec_policies import (
+    _POLICY_4,
+    _POLICY_5,
+)
 
 LEDGER_BIENES_INVERSION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -202,11 +202,11 @@ LEDGER_BIENES_INVERSION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_4,
         handler=LazyBinding.available(
-            DeferredTarget("._bienes_inversion_cli", "bienes_inversion_declare", __package__)
+            DeferredTarget(".bienes_inversion_commands", "bienes_inversion_declare", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._bienes_inversion_payloads", "BienesInversionDeclareResult", __package__),
+            target=DeferredTarget(".bienes_inversion_results", "BienesInversionDeclareResult", __package__),
             identity="ledger.bienes_inversion.declare",
         ),
     ),
@@ -220,10 +220,12 @@ LEDGER_BIENES_INVERSION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._bienes_inversion_cli", "bienes_inversion_list", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".bienes_inversion_commands", "bienes_inversion_list", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._bienes_inversion_payloads", "BienesInversionListResult", __package__),
+            target=DeferredTarget(".bienes_inversion_results", "BienesInversionListResult", __package__),
             identity="ledger.bienes_inversion.list",
         ),
     ),

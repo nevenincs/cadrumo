@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename'
 date: '2026-07-13'
-modified: '2026-10-03'
-body_hash: 'sha256:adc06f1105a6fb70f21d52c66e55198c876ebda528a5b2db6f1a9c0aa5b6eaf6'
+modified: '2026-10-21'
+body_hash: 'sha256:1578d3cf5a2b70f25fad8e040d373d24077acefef6d9d107e8bf68da4ae9261b'
 related:
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"
 ---
@@ -96,7 +96,7 @@ D-PKG-02 (split-install), D-PKG-03/04 (the two asserting tests).
 `packaging/cadrumo_data_official/README.md:24` instruct the reader to run
 `cadrumo app registry`; the human executable is `aeat`, so this must be
 `aeat app registry` (D-DOC-01). `packaging/mcpb/build.py:5` docstring cites
-`cadrumo app agent --layout plugin`, which must be `aeat app agent` (D-DOC-02).
+`cadrumo app agent`, which must be `aeat app agent` (D-DOC-02).
 These sit in already-checked Steps (`W03.P06.S32`, `W04.P10.S53`) whose primary
 deliverables are otherwise correct; they are prose/docstring corrections tracked as
 follow-ups rather than reopened structural work.

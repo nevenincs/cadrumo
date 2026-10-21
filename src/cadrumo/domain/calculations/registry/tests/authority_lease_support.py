@@ -9,7 +9,7 @@ never took a lease passed or failed by the order it ran in.
 from __future__ import annotations
 
 import contextvars
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 
 import pytest
@@ -19,7 +19,7 @@ from ..governed_fact_scope import validating_governed_facts
 
 
 @contextmanager
-def private_authority_lease() -> Iterator[PinnedAuthorityOperation]:
+def private_authority_lease() -> Generator[PinnedAuthorityOperation]:
     """Hold one published-authority lease without scoping the caller's context."""
     lease_context = contextvars.copy_context()
     with ExitStack() as lease:
@@ -47,7 +47,7 @@ def _parametrizes(request: pytest.FixtureRequest, argname: str) -> bool:
 
 
 @contextmanager
-def scoped_when_requested(request: pytest.FixtureRequest, fixture_name: str) -> Iterator[None]:
+def scoped_when_requested(request: pytest.FixtureRequest, fixture_name: str) -> Generator[None]:
     """Scope governed facts to ``fixture_name``'s lease when the test depends on it."""
     if fixture_name not in request.fixturenames or _parametrizes(request, fixture_name):
         yield

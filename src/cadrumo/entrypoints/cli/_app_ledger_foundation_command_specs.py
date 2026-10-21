@@ -1,6 +1,18 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ...application.ledger.operator_input_contracts import (
     COUNTERPARTY_IDENTIFICATION_STATE_INPUT,
@@ -29,18 +41,6 @@ from ._app_ledger_command_spec_support import (
     _required_text_option,
     irpf_category_option,
 )
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-    ValueContract,
-)
-from .command_spec import CommandSpec, InvocationSpec
 
 LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -199,10 +199,10 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option("account", ("--account",), "cli.ledger.add.account_help"),
         ),
         policy=_POLICY_2,
-        handler=LazyBinding.available(DeferredTarget("._ledger", "ledger_add", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_commands", "ledger_add", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerAddResult", __package__),
+            target=DeferredTarget(".ledger_results", "LedgerAddResult", __package__),
             identity="ledger.add",
         ),
     ),
@@ -225,10 +225,10 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _LEDGER_ACTOR_OPTION,
         ),
         policy=_POLICY_3,
-        handler=LazyBinding.available(DeferredTarget("._ledger", "ledger_allocate", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_commands", "ledger_allocate", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerAllocateResult", __package__),
+            target=DeferredTarget(".ledger_results", "LedgerAllocateResult", __package__),
             identity="ledger.allocate",
         ),
     ),
@@ -250,7 +250,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".ledger_lifecycle_cli", "ledger_archive", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerArchiveResult", __package__),
+            target=DeferredTarget(".ledger_results", "LedgerArchiveResult", __package__),
             identity="ledger.archive",
         ),
     ),
@@ -276,7 +276,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".ledger_lifecycle_cli", "ledger_attach", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerAttachResult", __package__),
+            target=DeferredTarget(".ledger_results", "LedgerAttachResult", __package__),
             identity="ledger.attach",
         ),
     ),
@@ -303,10 +303,12 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
         policy=_POLICY_6,
-        handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_categories", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_read_commands", "ledger_categories", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerCategoriesResult", __package__),
+            target=DeferredTarget(
+                "...application.reference_catalogue_contracts", "LedgerCategoriesResult", __package__
+            ),
             identity="ledger.categories",
         ),
     ),
@@ -324,10 +326,10 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _OPTIONAL_YEAR_OPTION,
         ),
         policy=_POLICY_6,
-        handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_check", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_read_commands", "ledger_check", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerCheckResult", __package__),
+            target=DeferredTarget(".ledger_results", "LedgerCheckResult", __package__),
             identity="ledger.check",
         ),
     ),

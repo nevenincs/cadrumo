@@ -9,6 +9,8 @@ import pytest
 from google.auth.exceptions import RefreshError, TransportError
 from googleapiclient.discovery import build
 
+from cadrumo_client.contracts.google_auth import GoogleAuthPreconditionCondition, GoogleAuthSignInRequiredError
+
 from .....core.time.clock import now
 from ....persistence.storage.secure_object_namespaces import (
     GOOGLE_OAUTH_METADATA_NAMESPACE,
@@ -17,7 +19,6 @@ from ....persistence.storage.secure_object_namespaces import (
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...storage.errors import OutboundStorageNetworkError
 from ..api import RequestRetryPolicy, execute_request
-from ..errors import GoogleAuthPreconditionCondition, GoogleAuthSignInRequiredError
 from ..records import REQUIRED_SCOPES, OAuthMetadata, OAuthToken
 from ..sign_in_state import ended_grant_refusal, load_sign_in_record, load_token_minted_for
 from . import session_records as google_session_records

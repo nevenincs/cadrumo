@@ -48,10 +48,9 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
-from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import IvaKindApplicability, registry_component_catalogue
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from ....domain.iva.schema import IvaCategory
+from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

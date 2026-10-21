@@ -133,7 +133,7 @@ To stop access by copied credentials as well, follow
 
 Clear the Google session for the active profile. Logout is a local command, so
 it runs here. If a session exists, it removes the saved session token and its
-metadata. The profile's Drive folder is kept, so a later `aeat config google
+metadata. The profile's Drive folder is kept, so a later `cadrumo-runtime config google
 login` signs in again and validates its recorded identity:
 
 ```{cli-sequence} sheets-logout
@@ -146,7 +146,7 @@ Earlier versions asked you to create a Google Cloud project, register its
 client file, and point Cadrumo at a Drive folder of your own. This version
 does none of that. After you update:
 
-1. Run `aeat config google login`. A sign-in from an earlier version is not
+1. Run `cadrumo-runtime config google login`. A sign-in from an earlier version is not
    reused; Cadrumo tells you to sign in again.
 2. Keep earlier workbooks for review. Cadrumo does not adopt historical
    unreceipted workbooks or search Drive to repair them. Use `publish` to make a
@@ -157,16 +157,16 @@ These are no longer available:
 | Removed | Use instead |
 |---|---|
 | `config google register` and its client file | Nothing. The application carries its own Google client. |
-| `config google credential-source` and service-account access | `aeat config google login` |
+| `config google credential-source` and service-account access | `cadrumo-runtime config google login` |
 | `config google folder set` and `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID` | Nothing. Cadrumo creates its folder at sign-in. |
-| `config google login --refresh-only` | `aeat config google login` |
+| `config google login --refresh-only` | `cadrumo-runtime config google login` |
 | `app ledger evidence pull` and `pull-all` | Download the document, then `aeat app ledger evidence add`; see [Attach supporting documents](ledger-evidence.md). |
 | `CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S` | Nothing. It had no effect. |
 
-Scripts that read command output should also note these changes. `config
+Scripts that read command output should also note these changes. `cadrumo-runtime config
 google status` no longer reports `client_registered`, `client_id`,
-`last_refresh_at` or `reauth_required`. `config google logout` no longer
-reports `client_preserved`. `config google login` no longer reports `mode` and
+`last_refresh_at` or `reauth_required`. `cadrumo-runtime config google logout` no longer
+reports `client_preserved`. `cadrumo-runtime config google login` no longer reports `mode` and
 now reports `root_folder_id`. The error codes `AUTH_GOOGLE_EXPIRED` and
 `AUTH_GOOGLE_REVOKED` are replaced by `REFUSED_GOOGLE_SIGN_IN_REQUIRED`, and a
 profile whose installation has no Google client refuses with

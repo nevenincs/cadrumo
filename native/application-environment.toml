@@ -1,0 +1,2246 @@
+# The application package's declaration of every packaged image's process environment.
+#
+# The packaging generator validates this file and compiles it into contract.json,
+# contract.rs and contract.h. Each image the package builds defines its own process
+# environment from its compiled launch profile before Python starts: a name this
+# file does not declare for a profile never reaches that profile's process.
+#
+# Name kinds: text, language, boolean, integer, number, directory, file,
+# directory_list, port, executable, descriptor.
+# Name roles: location (a storage root or member an operator may relocate),
+# operator (an operator setting with no custody, location, authority or secret
+# effect), package (a package-owned override), pin (set by the host from its
+# resolution), fixed (a package fact), slot (a launch parameter a parent supplies),
+# pass (a component's own setting its parent passes through unchanged).
+
+schema = 1
+package_fixed = [
+  { name = "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", build_setting = "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON" },
+]
+
+# ---------------------------------------------------------------------------
+# Environment names the package sets, passes or lets operators override.
+# ---------------------------------------------------------------------------
+
+[names]
+CADRUMO_LOCAL_STORAGE_ROOT = { kind = "directory", role = "location" }
+CADRUMO_ATTACHMENTS_DIR = { kind = "directory", role = "location" }
+CADRUMO_BLOB_STORE_DIR = { kind = "directory", role = "location" }
+CADRUMO_CHROMIUM_DATA_ROOT = { kind = "directory", role = "location" }
+CADRUMO_CORPUS_SEARCH_CACHE_DIR = { kind = "directory", role = "location" }
+CADRUMO_DRAFTS_DIR = { kind = "directory", role = "location" }
+CADRUMO_FILED_DECLARATIONS_DIR = { kind = "directory", role = "location" }
+CADRUMO_FILING_HISTORY_DIR = { kind = "directory", role = "location" }
+CADRUMO_FINANCIAL_TXS_DIR = { kind = "directory", role = "location" }
+CADRUMO_GNOME_EXTENSIONS_DIR = { kind = "directory", role = "location" }
+CADRUMO_INVOICES_DIR = { kind = "directory", role = "location" }
+CADRUMO_IVA_COMPENSATION_HISTORY_DIR = { kind = "directory", role = "location" }
+CADRUMO_IVA_READ_EVIDENCE_DIR = { kind = "directory", role = "location" }
+CADRUMO_JUSTIFICANTES_DIR = { kind = "directory", role = "location" }
+CADRUMO_LIVE_STATE_DIR = { kind = "directory", role = "location" }
+CADRUMO_LLM_CACHE_DIR = { kind = "directory", role = "location" }
+CADRUMO_LLM_RUN_RECORD_DIR = { kind = "directory", role = "location" }
+CADRUMO_LLM_USAGE_DIR = { kind = "directory", role = "location" }
+CADRUMO_LOG_DIR = { kind = "directory", role = "location" }
+CADRUMO_OLLAMA_HOME_DIR = { kind = "directory", role = "location" }
+CADRUMO_OLLAMA_MODELS_DIR = { kind = "directory", role = "location" }
+CADRUMO_PLAYWRIGHT_BROWSERS_DIR = { kind = "directory", role = "location" }
+CADRUMO_RUNS_DIR = { kind = "directory", role = "location" }
+CADRUMO_RUNTIME_SOCKET_DIR = { kind = "directory", role = "location" }
+CADRUMO_SECRET_STORE_DIR = { kind = "directory", role = "location" }
+CADRUMO_SUBMISSIONS_DIR = { kind = "directory", role = "location" }
+CADRUMO_TEMP_DIR = { kind = "directory", role = "location" }
+CADRUMO_TOKEN_DIR = { kind = "directory", role = "location" }
+CADRUMO_USAGE_RATIOS_PATH = { kind = "file", role = "location" }
+CADRUMO_WORKFLOW_RUNS_DIR = { kind = "directory", role = "location" }
+
+CADRUMO_LOG_LEVEL = { kind = "text", role = "operator" }
+CADRUMO_LOG_STDERR_LEVEL = { kind = "text", role = "operator" }
+CADRUMO_LOG_FILE_LEVEL = { kind = "text", role = "operator" }
+CADRUMO_LOG_ROOT_LEVEL = { kind = "text", role = "operator" }
+CADRUMO_OUTPUT_LANGUAGE = { kind = "language", role = "operator" }
+NO_COLOR = { kind = "boolean", role = "operator" }
+CADRUMO_FORCE_COLOR = { kind = "boolean", role = "operator" }
+CADRUMO_CERT_WARN_DAYS = { kind = "integer", role = "operator" }
+CADRUMO_CERT_CRITICAL_DAYS = { kind = "integer", role = "operator" }
+
+CADRUMO_CLAVE_MOVIL_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_HEADLESS = { kind = "boolean", role = "operator" }
+CADRUMO_BROWSER_VIEWPORT_WIDTH = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_VIEWPORT_HEIGHT = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_FORM_INTERACTION_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_SELECTOR_PROBE_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_VER_CLICK_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_BUSCAR_SETTLE_MS = { kind = "integer", role = "operator" }
+CADRUMO_BROWSER_CLOSE_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS = { kind = "integer", role = "operator" }
+CADRUMO_LIVE_IVA_CANCELLATION_DRAIN_MS = { kind = "integer", role = "operator" }
+SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT = { kind = "integer", role = "operator" }
+CADRUMO_FX_RATE_LOOKUP_TIMEOUT_S = { kind = "integer", role = "operator" }
+CADRUMO_LLM_DEFAULT_TIMEOUT_S = { kind = "integer", role = "operator" }
+CADRUMO_LLM_VISION_READ_TIMEOUT_S = { kind = "integer", role = "operator" }
+
+CADRUMO_CLI_REVEAL_IDENTIFIERS = { kind = "boolean", role = "package" }
+CADRUMO_EXTERNAL_BIN_DIRS = { kind = "directory_list", role = "package" }
+
+# The operator's proxy for the downloads Cadrumo starts. The runtime passes them to
+# the profile workers that run setup, and a worker hands them only to the download
+# tools that need them. No credential name is declared: a proxy password travels in
+# the address, which is therefore treated as sensitive.
+CADRUMO_PROXY_URL = { kind = "text", role = "pass" }
+CADRUMO_PROXY_USERNAME = { kind = "text", role = "pass" }
+CADRUMO_PROXY_BYPASS = { kind = "text", role = "pass" }
+
+TEMP = { kind = "directory", role = "pin" }
+TMP = { kind = "directory", role = "pin" }
+TMPDIR = { kind = "directory", role = "pin" }
+CADRUMO_AUTHORITY_ROOT = { kind = "directory", role = "fixed" }
+CADRUMO_GOOGLE_OAUTH_CLIENT_JSON = { kind = "text", role = "fixed" }
+CADRUMO_PACKAGE_AGENT_EXECUTABLE = { kind = "executable", role = "fixed" }
+CADRUMO_PACKAGE_RELAY_EXECUTABLE = { kind = "executable", role = "fixed" }
+CADRUMO_PACKAGE_AEAT_EXECUTABLE = { kind = "executable", role = "fixed" }
+CADRUMO_PACKAGE_PYTHON_EXECUTABLE = { kind = "executable", role = "fixed" }
+
+# The launch parameters the runtime fills for the bundled agent's gateway, under the
+# agent's hosting contract. Cadrumo lists none of the agent's other settings: the agent
+# image's profiles admit them by the prefix the agent table declares. Under that prefix
+# the runtime also tells the agent what Cadrumo supplies, as plain variables the agent
+# reads: the programs it may run, the tool server it may mount and that server's
+# arguments, and the names it forwards. Those advertised names are not declared
+# here; the prefix admits them.
+CADRUMO_AGENT_HOSTED_ROOT = { kind = "directory", role = "slot" }
+CADRUMO_AGENT_PORT = { kind = "port", role = "slot" }
+CADRUMO_AGENT_WORKER_PORT = { kind = "port", role = "slot" }
+# The host supplies this executable only for GUI sign-in; the auth profile validates its path.
+CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = { kind = "executable", role = "slot" }
+
+# The folder of the one profile a process is started for. Its launcher derives it from
+# that exact profile, never relays a received value, and no process reads it back to
+# select a profile: selection stays with the active-profile pointer.
+CADRUMO_PROFILE_ROOT = { kind = "directory", role = "slot" }
+
+# The agent's environment prefix. A profile with agent_names = true admits every name
+# under it, except the names listed here, which no profile admits: the agent's
+# settings file and the retired hosted program paths.
+[agent]
+image = "cadrumo-agent"
+prefix = "CADRUMO_AGENT_"
+hosting_contract = 1
+never_admitted = [
+  "CADRUMO_AGENT_ENV_FILE",
+  "CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE",
+  "CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE",
+]
+
+# ---------------------------------------------------------------------------
+# Name groups that profiles admit from their caller's environment.
+# ---------------------------------------------------------------------------
+
+[groups]
+locations = [
+  "CADRUMO_ATTACHMENTS_DIR",
+  "CADRUMO_BLOB_STORE_DIR",
+  "CADRUMO_CHROMIUM_DATA_ROOT",
+  "CADRUMO_CORPUS_SEARCH_CACHE_DIR",
+  "CADRUMO_DRAFTS_DIR",
+  "CADRUMO_FILED_DECLARATIONS_DIR",
+  "CADRUMO_FILING_HISTORY_DIR",
+  "CADRUMO_FINANCIAL_TXS_DIR",
+  "CADRUMO_GNOME_EXTENSIONS_DIR",
+  "CADRUMO_INVOICES_DIR",
+  "CADRUMO_IVA_COMPENSATION_HISTORY_DIR",
+  "CADRUMO_IVA_READ_EVIDENCE_DIR",
+  "CADRUMO_JUSTIFICANTES_DIR",
+  "CADRUMO_LIVE_STATE_DIR",
+  "CADRUMO_LLM_CACHE_DIR",
+  "CADRUMO_LLM_RUN_RECORD_DIR",
+  "CADRUMO_LLM_USAGE_DIR",
+  "CADRUMO_LOG_DIR",
+  "CADRUMO_OLLAMA_HOME_DIR",
+  "CADRUMO_OLLAMA_MODELS_DIR",
+  "CADRUMO_PLAYWRIGHT_BROWSERS_DIR",
+  "CADRUMO_RUNS_DIR",
+  "CADRUMO_RUNTIME_SOCKET_DIR",
+  "CADRUMO_SECRET_STORE_DIR",
+  "CADRUMO_SUBMISSIONS_DIR",
+  "CADRUMO_TEMP_DIR",
+  "CADRUMO_TOKEN_DIR",
+  "CADRUMO_USAGE_RATIOS_PATH",
+  "CADRUMO_WORKFLOW_RUNS_DIR",
+]
+presentation = [
+  "CADRUMO_LOG_LEVEL",
+  "CADRUMO_LOG_STDERR_LEVEL",
+  "CADRUMO_LOG_FILE_LEVEL",
+  "CADRUMO_LOG_ROOT_LEVEL",
+  "CADRUMO_OUTPUT_LANGUAGE",
+  "NO_COLOR",
+  "CADRUMO_FORCE_COLOR",
+  "CADRUMO_CERT_WARN_DAYS",
+  "CADRUMO_CERT_CRITICAL_DAYS",
+]
+remote = [
+  "CADRUMO_CLAVE_MOVIL_TIMEOUT_MS",
+  "CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS",
+  "CADRUMO_BROWSER_HEADLESS",
+  "CADRUMO_BROWSER_VIEWPORT_WIDTH",
+  "CADRUMO_BROWSER_VIEWPORT_HEIGHT",
+  "CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS",
+  "CADRUMO_BROWSER_FORM_INTERACTION_TIMEOUT_MS",
+  "CADRUMO_BROWSER_SELECTOR_PROBE_TIMEOUT_MS",
+  "CADRUMO_BROWSER_VER_CLICK_TIMEOUT_MS",
+  "CADRUMO_BROWSER_BUSCAR_SETTLE_MS",
+  "CADRUMO_BROWSER_CLOSE_TIMEOUT_MS",
+  "CADRUMO_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS",
+  "CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS",
+  "CADRUMO_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS",
+  "CADRUMO_LIVE_IVA_CANCELLATION_DRAIN_MS",
+  "SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT",
+  "CADRUMO_FX_RATE_LOOKUP_TIMEOUT_S",
+  "CADRUMO_LLM_DEFAULT_TIMEOUT_S",
+  "CADRUMO_LLM_VISION_READ_TIMEOUT_S",
+]
+package = ["CADRUMO_CLI_REVEAL_IDENTIFIERS", "CADRUMO_EXTERNAL_BIN_DIRS"]
+
+# ---------------------------------------------------------------------------
+# Operating-system names a profile's base takes from its caller's environment.
+# Windows compares names without case; each platform lists its own spelling.
+# ---------------------------------------------------------------------------
+
+[base.windows]
+system = [
+  "SYSTEMROOT",
+  "SYSTEMDRIVE",
+  "WINDIR",
+  "PATHEXT",
+  "NUMBER_OF_PROCESSORS",
+  "PROCESSOR_ARCHITECTURE",
+  "OS",
+  "USERPROFILE",
+  "HOMEDRIVE",
+  "HOMEPATH",
+  "LOCALAPPDATA",
+  "APPDATA",
+  "PROGRAMDATA",
+  "PROGRAMFILES",
+  "PROGRAMFILES(X86)",
+  "COMMONPROGRAMFILES",
+  "USERNAME",
+  "USERDOMAIN",
+]
+session = [
+  "COMSPEC",
+  "COMPUTERNAME",
+  "PUBLIC",
+  "ALLUSERSPROFILE",
+  "PROGRAMW6432",
+  "COMMONPROGRAMFILES(X86)",
+  "COMMONPROGRAMW6432",
+  "PROCESSOR_IDENTIFIER",
+  "PROCESSOR_LEVEL",
+  "PROCESSOR_REVISION",
+  "LOGONSERVER",
+  "SESSIONNAME",
+  "USERDOMAIN_ROAMINGPROFILE",
+]
+terminal = ["TERM", "COLORTERM", "COLUMNS", "LINES", "WT_SESSION", "WT_PROFILE_ID", "TERM_PROGRAM", "TERM_PROGRAM_VERSION"]
+display = []
+network = ["HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY", "ALL_PROXY", "SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE"]
+
+[base.posix]
+system = ["HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "LC_CTYPE", "TZ"]
+session = [
+  "SHELL",
+  "LC_COLLATE",
+  "LC_MESSAGES",
+  "LC_MONETARY",
+  "LC_NUMERIC",
+  "LC_TIME",
+  "XDG_RUNTIME_DIR",
+  "XDG_DATA_HOME",
+  "XDG_CONFIG_HOME",
+  "XDG_CACHE_HOME",
+  "XDG_STATE_HOME",
+  "DBUS_SESSION_BUS_ADDRESS",
+]
+terminal = ["TERM", "COLORTERM", "COLUMNS", "LINES", "TERM_PROGRAM", "TERM_PROGRAM_VERSION"]
+display = ["DISPLAY", "WAYLAND_DISPLAY", "XAUTHORITY", "XDG_SESSION_TYPE", "XDG_CURRENT_DESKTOP"]
+network = [
+  "HTTP_PROXY",
+  "HTTPS_PROXY",
+  "NO_PROXY",
+  "ALL_PROXY",
+  "http_proxy",
+  "https_proxy",
+  "no_proxy",
+  "all_proxy",
+  "SSL_CERT_FILE",
+  "SSL_CERT_DIR",
+  "REQUESTS_CA_BUNDLE",
+]
+
+# ---------------------------------------------------------------------------
+# Host pins: values the host resolves and sets. A profile with pins = true
+# resolves and pins the storage root by the package rule, pins the temporary
+# variables to the temporary-files member and sets the authority root.
+# ---------------------------------------------------------------------------
+
+[pins]
+temporary = ["TEMP", "TMP", "TMPDIR"]
+temporary_member = { name = "CADRUMO_TEMP_DIR", default = "tmp", create_explicit = true }
+authority = { name = "CADRUMO_AUTHORITY_ROOT", layout_path = "authority" }
+
+# ---------------------------------------------------------------------------
+# Name classes a filtering host clears from an environment it passes on.
+# ---------------------------------------------------------------------------
+
+[host_classes]
+cleared_prefixes = ["PYTHON", "LD_", "DYLD_", "AEAT_", "FINANCIAL_", "SITE_HEALTH_"]
+cleared_names = ["VIRTUAL_ENV", "CONDA_PREFIX", "CONDA_DEFAULT_ENV", "__PYVENV_LAUNCHER__"]
+namespace_prefix = "CADRUMO_"
+
+# ---------------------------------------------------------------------------
+# The native interpreter host's reserved exit statuses. The host exits with
+# launch_profile_refused after writing one refusal line, before Python starts.
+# ---------------------------------------------------------------------------
+
+[native_host]
+owner = "native_host"
+first = 120
+last = 125
+launch_profile_refused = 125
+refusals = ["launch_value_missing", "launch_value_malformed", "invocation_undeclared"]
+
+# ---------------------------------------------------------------------------
+# Locations of package components under the storage root, and the defaults the
+# desktop and manager use without asking Python. The Python log location,
+# format and limits mirror the command line's own; a package-side test keeps
+# them equal.
+# ---------------------------------------------------------------------------
+
+[components]
+console_workspace = "workspace"
+webview = "webview"
+manager_log_file = "logs/cadrumo-manager.log"
+manager_preferences = "manager-preferences.json"
+manager_failed_versions = ".runtime/manager-failed-versions.json"
+logs = "logs"
+log_variable = "CADRUMO_LOG_DIR"
+log_file = "logs/cadrumo.log"
+log_format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s | %(diagnostic_context)s"
+log_max_bytes = 10485760
+log_backups = 5
+language_variable = "CADRUMO_OUTPUT_LANGUAGE"
+language_default = "es"
+# The profile-folder slot. The desktop serves whichever profile is signed in, so it
+# relays no received value to the children it starts; their own launchers derive it.
+profile_variable = "CADRUMO_PROFILE_ROOT"
+
+# ---------------------------------------------------------------------------
+# The storage root: its variable, the per-platform installed default under the
+# build channel's directory, and the conformance vectors every resolver replays.
+# Development rules apply only to a host built inside a source checkout.
+# ---------------------------------------------------------------------------
+
+[root]
+variable = "CADRUMO_LOCAL_STORAGE_ROOT"
+development_variable = "CADRUMO_STORAGE_ROOT"
+checkout_marker = "pyproject.toml"
+development_default = "var/storage"
+precedence = { development = ["CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_STORAGE_ROOT"], installed = ["CADRUMO_LOCAL_STORAGE_ROOT"] }
+relative_override = { development = "anchor_at_checkout", installed = "refuse" }
+posix_directory_mode = 0o700
+refusals = [
+  "relative_override_installed",
+  "installed_base_unavailable",
+  "home_unavailable",
+  "checkout_unavailable",
+  "unsupported_platform",
+  "non_absolute_pin",
+  "invalid_path_input",
+  "filesystem_path_refused",
+]
+path_rules = { unicode_required = true, normalize_absolute = true, refuse_links = true, enforce_existing_permissions = false }
+channel = { product_directory = "cadrumo", stable = "stable", separator = "-" }
+
+# On Windows the native host asks the shell for the per-user local application data
+# folder (FOLDERID_LocalAppData), which LOCALAPPDATA names for the command line; no
+# variable relocates the host's base there.
+[[root.installed_defaults]]
+platform = "windows"
+candidates = [{ variable = "LOCALAPPDATA", subpath = [] }]
+home_variable = "USERPROFILE"
+
+[[root.installed_defaults]]
+platform = "linux"
+candidates = [{ variable = "XDG_DATA_HOME", subpath = [] }, { variable = "HOME", subpath = [".local", "share"] }]
+home_variable = "HOME"
+
+[[root.installed_defaults]]
+platform = "macos"
+candidates = [{ variable = "HOME", subpath = ["Library", "Application Support"] }]
+home_variable = "HOME"
+
+# ---------------------------------------------------------------------------
+# PATH: composed from the package's binary directories, an admitted
+# CADRUMO_EXTERNAL_BIN_DIRS, declared existing installation directories, and
+# the platform's system directories.
+# ---------------------------------------------------------------------------
+
+[path]
+entries = ["executable", "external", "native", "external_defaults", "system"]
+external = "CADRUMO_EXTERNAL_BIN_DIRS"
+windows_system = { variable = "SYSTEMROOT", subpaths = ["System32"] }
+posix_system = ["/usr/bin", "/bin"]
+
+[[path.external_defaults]]
+platform = "windows"
+variable = "USERPROFILE"
+subpaths = [".local", "bin"]
+
+[[path.external_defaults]]
+platform = "windows"
+variable = "USERPROFILE"
+subpaths = ["scoop", "shims"]
+
+[[path.external_defaults]]
+platform = "windows"
+variable = "APPDATA"
+subpaths = ["npm"]
+
+[[path.external_defaults]]
+platform = "posix"
+variable = "HOME"
+subpaths = [".local", "bin"]
+
+[[path.external_defaults]]
+platform = "posix"
+path = "/usr/local/bin"
+
+[[path.external_defaults]]
+platform = "macos"
+path = "/opt/homebrew/bin"
+
+# ---------------------------------------------------------------------------
+# Launch profiles. Each names the image it is compiled into. A profile with an
+# invocation is selected by its exact argument pattern; the image's profile
+# without one serves every other invocation. An image with no such default
+# refuses an undeclared invocation before Python starts.
+#
+# base: "groups" takes the listed base groups, "inherit" passes the caller's
+# whole environment unchanged. path: "package" sets the composed PATH,
+# "inherit" leaves the caller's.
+# ---------------------------------------------------------------------------
+
+# Generic profile workers run on the Python image. Agent program paths belong
+# exclusively to the separate service profile.
+[profiles.python]
+image = "python"
+base = "groups"
+base_groups = ["system", "session", "terminal", "display", "network"]
+pins = true
+operator = ["locations", "presentation", "remote", "package"]
+pass = ["CADRUMO_PROXY_URL", "CADRUMO_PROXY_USERNAME", "CADRUMO_PROXY_BYPASS"]
+slots = [{ name = "CADRUMO_PROFILE_ROOT", required = false }]
+path = "package"
+
+[profiles.kdf-child]
+image = "python"
+base = "inherit"
+pins = false
+path = "inherit"
+
+[profiles.aeat]
+image = "aeat"
+base = "groups"
+base_groups = ["system", "session", "terminal", "display", "network"]
+pins = true
+operator = ["locations", "presentation", "remote", "package"]
+slots = [{ name = "CADRUMO_PROFILE_ROOT", required = false }]
+path = "package"
+
+[profiles.cadrumo-mcp]
+image = "cadrumo-mcp"
+base = "groups"
+base_groups = ["system", "session", "terminal", "display", "network"]
+pins = true
+operator = ["locations", "presentation", "remote", "package"]
+slots = [{ name = "CADRUMO_PROFILE_ROOT", required = false }]
+path = "package"
+
+[profiles.cadrumo-runtime]
+image = "cadrumo-runtime"
+base = "groups"
+base_groups = ["system", "session", "display", "network"]
+pins = true
+# The desktop reads the active profile's identity through this image's sign-in
+# status command; the reveal opt-in un-redacts only opaque profile/bucket ids.
+# It passes the operator's proxy on to the profile workers that run setup.
+pass = [
+  "CADRUMO_CLI_REVEAL_IDENTIFIERS",
+  "CADRUMO_PROXY_URL",
+  "CADRUMO_PROXY_USERNAME",
+  "CADRUMO_PROXY_BYPASS",
+]
+path = "package"
+
+[profiles.cadrumo-agent-service]
+image = "cadrumo-agent-service"
+base = "groups"
+base_groups = ["system", "session", "display", "network"]
+pins = true
+operator = ["locations", "presentation", "package"]
+fixed = [
+  { name = "CADRUMO_PACKAGE_AGENT_EXECUTABLE", image = "cadrumo-agent" },
+  { name = "CADRUMO_PACKAGE_RELAY_EXECUTABLE", image = "cadrumo-mcp" },
+  { name = "CADRUMO_PACKAGE_AEAT_EXECUTABLE", image = "aeat" },
+  { name = "CADRUMO_PACKAGE_PYTHON_EXECUTABLE", image = "python" },
+]
+path = "package"
+
+# The agent image runs its gateway, worker and scoped tool proxy, the store and version
+# invocations that run in the gateway's environment, and its declared provider
+# catalog (see the invocation tables below). It keeps itself as the interpreter, so
+# the worker the gateway starts re-executes this image. The gateway and the worker
+# admit every name under the agent's prefix but the never-admitted ones; the
+# gateway's worker settings reach the worker that way. Each receives its parent's
+# storage root as a launch parameter, validated by kind alone: the gateway from its
+# caller, the worker from the gateway, and the agent forwards that one name to the
+# programs and tool servers it starts. Neither pins the root.
+[profiles.agent-gateway]
+image = "cadrumo-agent"
+base = "groups"
+base_groups = ["system"]
+pass = ["CADRUMO_EXTERNAL_BIN_DIRS"]
+pins = ["temporary", "authority"]
+agent_names = true
+slots = [
+  { name = "CADRUMO_LOCAL_STORAGE_ROOT", required = false },
+  { name = "CADRUMO_PROFILE_ROOT", required = false },
+  { name = "CADRUMO_AGENT_HOSTED_ROOT", required = false },
+  { name = "CADRUMO_AGENT_PORT", required = false },
+  { name = "CADRUMO_AGENT_WORKER_PORT", required = false },
+]
+path = "package"
+
+[profiles.agent-worker]
+image = "cadrumo-agent"
+base = "groups"
+base_groups = ["system"]
+pass = ["CADRUMO_EXTERNAL_BIN_DIRS"]
+pins = ["temporary", "authority"]
+agent_names = true
+slots = [
+  { name = "CADRUMO_LOCAL_STORAGE_ROOT", required = false },
+  { name = "CADRUMO_PROFILE_ROOT", required = false },
+  { name = "CADRUMO_AGENT_HOSTED_ROOT", required = false },
+  { name = "CADRUMO_AGENT_PORT", required = false },
+  { name = "CADRUMO_AGENT_WORKER_PORT", required = false },
+]
+path = "package"
+
+# The agent's declared provider catalog needs no gateway, home, port or credential
+# and creates and reads no state, so it takes the system base and nothing else.
+[profiles.agent-providers]
+image = "cadrumo-agent"
+base = "groups"
+base_groups = ["system"]
+pins = false
+path = "package"
+
+# Foreground operator sign-in keeps provider output on the person's terminal.
+# It receives no agent settings or direct credentials from the gateway.
+[profiles.agent-auth]
+image = "cadrumo-agent"
+base = "groups"
+base_groups = ["system", "session", "terminal", "display", "network"]
+pass = ["CADRUMO_EXTERNAL_BIN_DIRS"]
+pins = ["temporary"]
+slots = [
+  { name = "CADRUMO_AGENT_HOSTED_ROOT", required = true },
+  { name = "CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE", required = false },
+]
+path = "package"
+
+# ---------------------------------------------------------------------------
+# Invocation tables. Arguments follow the image's own path and are read left to
+# right with no backtracking. A literal must match exactly; a typed argument is
+# validated by its kind before Python starts. An option is an optional flag
+# followed by one typed value: it is present whole, flag and value, or absent.
+# Options come after every other argument, in the order declared, each flag at
+# most once; a flag without a valid value, an unknown flag, a reordered flag and
+# a trailing argument all leave the invocation undeclared. A revision is opaque
+# text of 1 to 128 ASCII letters, digits, underscores, dots and hyphens that
+# starts with a letter, a digit or an underscore, so it cannot read as a flag.
+# ---------------------------------------------------------------------------
+
+[[invocations]]
+profile = "agent-gateway"
+platform = "all"
+arguments = [{ literal = "-m" }, { literal = "cadrumo_agent.cli.main" }, { literal = "serve" }]
+
+# The agent's store and version invocations. They take no port, no credential
+# and no option beyond migrate's two revision assertions, start no gateway, and
+# run in the gateway's environment: the runtime composes it once for them and
+# for serve, so they select the gateway's profile rather than a copy of it.
+[[invocations]]
+profile = "agent-gateway"
+platform = "all"
+arguments = [{ literal = "-m" }, { literal = "cadrumo_agent.cli.main" }, { literal = "stores-state" }]
+
+[[invocations]]
+profile = "agent-gateway"
+platform = "all"
+arguments = [{ literal = "-m" }, { literal = "cadrumo_agent.cli.main" }, { literal = "preflight" }]
+
+[[invocations]]
+profile = "agent-gateway"
+platform = "all"
+arguments = [{ literal = "-m" }, { literal = "cadrumo_agent.cli.main" }, { literal = "setup" }]
+
+[[invocations]]
+profile = "agent-gateway"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "migrate" },
+  { option = "--expect-from", slot = "expected_from", kind = "revision" },
+  { option = "--expect-head", slot = "expected_head", kind = "revision" },
+]
+
+[[invocations]]
+profile = "agent-gateway"
+platform = "all"
+arguments = [{ literal = "-m" }, { literal = "cadrumo_agent.cli.main" }, { literal = "version" }, { literal = "--json" }]
+
+[[invocations]]
+profile = "agent-worker"
+platform = "all"
+arguments = [{ literal = "-m" }, { literal = "cadrumo_agent.worker" }]
+
+[[invocations]]
+profile = "agent-worker"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.providers._tool_bridge_stdio" },
+  { slot = "scope", kind = "revision" },
+]
+
+[[invocations]]
+profile = "agent-providers"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "providers" },
+  { literal = "--declared" },
+  { literal = "--json" },
+]
+
+[[invocations]]
+profile = "agent-auth"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "status" },
+  { literal = "--json" },
+]
+
+[[invocations]]
+profile = "agent-auth"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "login" },
+  { literal = "--provider" },
+  { slot = "provider", kind = "identifier" },
+]
+
+[[invocations]]
+profile = "agent-providers"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "providers" },
+  { literal = "--json" },
+]
+
+[[invocations]]
+profile = "agent-providers"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "providers" },
+  { literal = "--interface" },
+  { literal = "gui" },
+  { literal = "--json" },
+]
+
+[[invocations]]
+profile = "agent-auth"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "connect" },
+  { literal = "--provider" },
+  { slot = "provider", kind = "identifier" },
+  { literal = "--method" },
+  { literal = "browser" },
+  { literal = "--timeout" },
+  { literal = "300" },
+]
+
+[[invocations]]
+profile = "agent-auth"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "connect" },
+  { literal = "--provider" },
+  { slot = "provider", kind = "identifier" },
+  { literal = "--method" },
+  { literal = "device" },
+  { literal = "--timeout" },
+  { literal = "300" },
+]
+
+# The Windows supervisor starts the worker without site (-S): that is the exact
+# invocation it sends, so it is the exact invocation declared here.
+[[invocations]]
+profile = "kdf-child"
+platform = "windows"
+arguments = [
+  { literal = "-S" },
+  { literal = "-m" },
+  { literal = "cadrumo.adapters.persistence.storage.custody._kdf_worker" },
+  { literal = "--request-handle" },
+  { slot = "request", kind = "handle" },
+  { literal = "--result-handle" },
+  { slot = "result", kind = "handle" },
+]
+distinct = [["request", "result"]]
+
+[[invocations]]
+profile = "kdf-child"
+platform = "posix"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo.adapters.persistence.storage.custody._kdf_worker" },
+  { literal = "--request-fd" },
+  { slot = "request", kind = "descriptor", minimum = 3 },
+  { literal = "--result-fd" },
+  { slot = "result", kind = "descriptor", minimum = 3 },
+  { literal = "--descriptor-bound" },
+  { slot = "bound", kind = "descriptor", minimum = 1 },
+]
+distinct = [["request", "result"]]
+greater = [["bound", "request"], ["bound", "result"]]
+
+# ---------------------------------------------------------------------------
+# Launch-profile conformance vectors, authored by hand: an image, its arguments
+# and its caller's environment in; the selected profile and the exact defined
+# environment, or a refusal, out. A replay places the image in package
+# C:\launch-vector\package (/launch-vector/package on POSIX) and resolves the
+# storage root to C:\launch-vector\state (/launch-vector/state).
+# ---------------------------------------------------------------------------
+
+[[launch_vectors]]
+name = "windows-python-defines-a-closed-environment"
+platform = "windows"
+image = "python"
+arguments = ["-c", "pass"]
+ambient = { CADRUMO_GOOGLE_OAUTH_CLIENT_JSON = "untrusted-caller-identity", SystemRoot = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_HOSTED_ROOT = "C:\\agent", CADRUMO_SECRET_PASSPHRASE = "must-not-cross", AEAT_BASE_URL = "https://example.invalid", PYTHONPATH = "C:\\elsewhere", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_AUTHORITY_ROOT = "C:\\elsewhere", TEMP = "C:\\elsewhere", PATH = "C:\\elsewhere" }
+profile = "python"
+environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-python-honours-an-admitted-temporary-member"
+platform = "windows"
+image = "python"
+arguments = []
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_TEMP_DIR = "scratch", CADRUMO_CLI_REVEAL_IDENTIFIERS = "1" }
+profile = "python"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_TEMP_DIR = "scratch", CADRUMO_CLI_REVEAL_IDENTIFIERS = "1", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\scratch", TMP = "C:\\launch-vector\\state\\scratch", TMPDIR = "C:\\launch-vector\\state\\scratch", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-runtime-keeps-no-operator-setting-but-the-identifier-reveal"
+platform = "windows"
+image = "cadrumo-runtime"
+arguments = []
+ambient = { SYSTEMROOT = "C:\\Windows", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_TEMP_DIR = "scratch", CADRUMO_CLI_REVEAL_IDENTIFIERS = "1", CADRUMO_AGENT_PORT = "0" }
+profile = "cadrumo-runtime"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_CLI_REVEAL_IDENTIFIERS = "1", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-kdf-child-keeps-its-parent-environment"
+platform = "windows"
+image = "python"
+arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-handle", "540", "--result-handle", "548"]
+ambient = { CADRUMO_GOOGLE_OAUTH_CLIENT_JSON = "untrusted-caller-identity", SYSTEMROOT = "C:\\Windows", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "C:\\parent" }
+profile = "kdf-child"
+environment = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "C:\\parent" }
+
+[[launch_vectors]]
+name = "windows-kdf-near-miss-takes-the-interpreter-profile"
+platform = "windows"
+image = "python"
+arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-handle", "540", "--result-handle", "540"]
+ambient = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "dropped" }
+profile = "python"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-kdf-without-its-site-flag-takes-the-interpreter-profile"
+platform = "windows"
+image = "python"
+arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-handle", "540", "--result-handle", "548"]
+ambient = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "dropped" }
+profile = "python"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-python-defines-a-closed-environment"
+platform = "posix"
+image = "python"
+arguments = ["-c", "pass"]
+ambient = { CADRUMO_GOOGLE_OAUTH_CLIENT_JSON = "untrusted-caller-identity", HOME = "/home/ada", LANG = "C.UTF-8", DISPLAY = ":0", http_proxy = "http://proxy.invalid:3128", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_HOSTED_ROOT = "/agent", CADRUMO_SECRET_PASSPHRASE = "must-not-cross", LD_PRELOAD = "/elsewhere.so", PYTHONHOME = "/elsewhere", ANTHROPIC_API_KEY = "must-not-cross", TMPDIR = "/elsewhere", PATH = "/elsewhere" }
+profile = "python"
+environment = { HOME = "/home/ada", LANG = "C.UTF-8", DISPLAY = ":0", http_proxy = "http://proxy.invalid:3128", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-names-keep-their-case"
+platform = "posix"
+image = "aeat"
+arguments = ["config", "show"]
+ambient = { HOME = "/home/ada", cadrumo_log_level = "DEBUG", CADRUMO_LOG_LEVEL = "INFO" }
+profile = "aeat"
+environment = { HOME = "/home/ada", CADRUMO_LOG_LEVEL = "INFO", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-kdf-child-keeps-its-parent-environment"
+platform = "posix"
+image = "python"
+arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-fd", "3", "--result-fd", "4", "--descriptor-bound", "1024"]
+ambient = { CADRUMO_GOOGLE_OAUTH_CLIENT_JSON = "untrusted-caller-identity", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "/parent" }
+profile = "kdf-child"
+environment = { NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "/parent" }
+
+[[launch_vectors]]
+name = "posix-kdf-standard-descriptor-is-not-the-invocation"
+platform = "posix"
+image = "python"
+arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-fd", "2", "--result-fd", "4", "--descriptor-bound", "1024"]
+ambient = { HOME = "/home/ada", NEUTRAL = "dropped" }
+profile = "python"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "windows-agent-gateway-admits-every-prefixed-name-but-the-never-admitted-ones"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "serve"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER = "true", CADRUMO_AGENT_PROVIDER_PROOF_POLICY = "warn", CADRUMO_AGENT_ENV_FILE = "C:\\agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE = "C:\\aeat.exe", CADRUMO_LOG_LEVEL = "DEBUG", ANTHROPIC_API_KEY = "must-not-cross", TERM = "xterm", CADRUMO_AGENT_UNLISTED_LANE_SETTING = "crosses", cadrumo_agent_folded_setting = "crosses", cadrumo_agent_env_file = "C:\\folded.env" }
+profile = "agent-gateway"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER = "true", CADRUMO_AGENT_PROVIDER_PROOF_POLICY = "warn", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", CADRUMO_AGENT_UNLISTED_LANE_SETTING = "crosses", cadrumo_agent_folded_setting = "crosses" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-worker-admits-the-gateway-settings"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.worker"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "49152", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_GATEWAY_URL = "http://127.0.0.1:49152", CADRUMO_AGENT_WORKER_HOST = "127.0.0.1", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime", CADRUMO_AGENT_WORKER_GENERATION = "1", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", CADRUMO_AGENT_ENV_FILE = "C:\\agent.env" }
+profile = "agent-worker"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "49152", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_GATEWAY_URL = "http://127.0.0.1:49152", CADRUMO_AGENT_WORKER_HOST = "127.0.0.1", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime", CADRUMO_AGENT_WORKER_GENERATION = "1", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-tool-proxy-keeps-its-scoped-transport"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.providers._tool_bridge_stdio", "0123456789abcdef"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_TOOL_BRIDGE_PORT_0123456789abcdef = "49152", CADRUMO_AGENT_TOOL_BRIDGE_AUTHORITY_0123456789abcdef = "synthetic-bridge-authority-for-vector", ANTHROPIC_API_KEY = "synthetic-not-forwarded" }
+profile = "agent-worker"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_TOOL_BRIDGE_PORT_0123456789abcdef = "49152", CADRUMO_AGENT_TOOL_BRIDGE_AUTHORITY_0123456789abcdef = "synthetic-bridge-authority-for-vector", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-agent-tool-proxy-keeps-its-scoped-transport"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.providers._tool_bridge_stdio", "0123456789abcdef"]
+ambient = { HOME = "/home/ada", CADRUMO_AGENT_TOOL_BRIDGE_PORT_0123456789abcdef = "49152", CADRUMO_AGENT_TOOL_BRIDGE_AUTHORITY_0123456789abcdef = "synthetic-bridge-authority-for-vector", OPENAI_API_KEY = "synthetic-not-forwarded" }
+profile = "agent-worker"
+environment = { HOME = "/home/ada", CADRUMO_AGENT_TOOL_BRIDGE_PORT_0123456789abcdef = "49152", CADRUMO_AGENT_TOOL_BRIDGE_AUTHORITY_0123456789abcdef = "synthetic-bridge-authority-for-vector", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "windows-agent-image-refuses-an-undeclared-invocation"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-c", "print(1)"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-gateway-refuses-a-malformed-port"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "serve"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "65536" }
+refusal = { code = "launch_value_malformed", subject = "CADRUMO_AGENT_PORT" }
+
+[[launch_vectors]]
+name = "windows-service-pins-the-agent-and-relay-images"
+platform = "windows"
+image = "cadrumo-agent-service"
+arguments = []
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "C:\\elsewhere.exe" }
+profile = "cadrumo-agent-service"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "C:\\launch-vector\\package\\bin\\cadrumo-agent.exe", CADRUMO_PACKAGE_RELAY_EXECUTABLE = "C:\\launch-vector\\package\\bin\\cadrumo-mcp.exe", CADRUMO_PACKAGE_AEAT_EXECUTABLE = "C:\\launch-vector\\package\\bin\\aeat.exe", CADRUMO_PACKAGE_PYTHON_EXECUTABLE = "C:\\launch-vector\\package\\python.exe" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-agent-gateway-admits-every-prefixed-name-but-the-never-admitted-ones"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "serve"]
+ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER = "true", CADRUMO_AGENT_ENV_FILE = "/agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE = "/python", DISPLAY = ":0", CADRUMO_AGENT_UNLISTED_LANE_SETTING = "crosses", cadrumo_agent_lower_case = "dropped" }
+profile = "agent-gateway"
+environment = { HOME = "/home/ada", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER = "true", CADRUMO_LOCAL_STORAGE_ROOT = "/", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", CADRUMO_AGENT_UNLISTED_LANE_SETTING = "crosses" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-agent-worker-admits-the-gateway-settings"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.worker"]
+ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime" }
+profile = "agent-worker"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "windows-agent-gateway-admits-a-root-from-a-development-runner-without-a-hosted-root"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "serve"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER = "true" }
+profile = "agent-gateway"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER = "true", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-gateway-without-a-root-defines-none"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "serve"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+profile = "agent-gateway"
+environment = { SYSTEMROOT = "C:\\Windows", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-gateway-refuses-a-relative-storage-root"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "serve"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "var\\storage" }
+refusal = { code = "launch_value_malformed", subject = "CADRUMO_LOCAL_STORAGE_ROOT" }
+
+[[launch_vectors]]
+name = "posix-agent-gateway-refuses-a-relative-storage-root"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "serve"]
+ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "var/storage" }
+refusal = { code = "launch_value_malformed", subject = "CADRUMO_LOCAL_STORAGE_ROOT" }
+
+[[launch_vectors]]
+name = "windows-agent-worker-without-a-root-defines-none"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.worker"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_WORKER_PORT = "49153" }
+profile = "agent-worker"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_WORKER_PORT = "49153", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-worker-refuses-a-relative-storage-root"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.worker"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "var\\storage" }
+refusal = { code = "launch_value_malformed", subject = "CADRUMO_LOCAL_STORAGE_ROOT" }
+
+[[launch_vectors]]
+name = "posix-agent-worker-without-a-root-defines-none"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.worker"]
+ambient = { HOME = "/home/ada", CADRUMO_AGENT_WORKER_PORT = "49153" }
+profile = "agent-worker"
+environment = { HOME = "/home/ada", CADRUMO_AGENT_WORKER_PORT = "49153", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-agent-worker-refuses-a-relative-storage-root"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.worker"]
+ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "var/storage" }
+refusal = { code = "launch_value_malformed", subject = "CADRUMO_LOCAL_STORAGE_ROOT" }
+
+# The agent image's store and version invocations select the gateway's profile, so each
+# vector here shows the gateway's environment and slots under its own arguments. An
+# argument pattern the table does not declare is refused as a whole.
+
+[[launch_vectors]]
+name = "windows-agent-stores-state-defines-the-gateway-environment"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "stores-state"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", CADRUMO_AGENT_ENV_FILE = "C:\\agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", TERM = "xterm" }
+profile = "agent-gateway"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-setup-defines-the-gateway-environment"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "setup"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", CADRUMO_AGENT_ENV_FILE = "C:\\agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", TERM = "xterm" }
+profile = "agent-gateway"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-version-defines-the-gateway-environment"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "version", "--json"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", CADRUMO_AGENT_ENV_FILE = "C:\\agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", TERM = "xterm" }
+profile = "agent-gateway"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-migrate-defines-the-gateway-environment"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", CADRUMO_AGENT_ENV_FILE = "C:\\agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", TERM = "xterm" }
+profile = "agent-gateway"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-migrate-with-its-source-revision-defines-the-gateway-environment"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-from", "0001"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", CADRUMO_AGENT_ENV_FILE = "C:\\agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", TERM = "xterm" }
+profile = "agent-gateway"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-migrate-with-its-head-revision-defines-the-gateway-environment"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-head", "0002_next"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", CADRUMO_AGENT_ENV_FILE = "C:\\agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", TERM = "xterm" }
+profile = "agent-gateway"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-migrate-with-both-revisions-defines-the-gateway-environment"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-from", "0001", "--expect-head", "0002_next"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", CADRUMO_AGENT_ENV_FILE = "C:\\agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", TERM = "xterm" }
+profile = "agent-gateway"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-agent-stores-state-defines-the-gateway-environment"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "stores-state"]
+ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", CADRUMO_AGENT_ENV_FILE = "/agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", DISPLAY = ":0" }
+profile = "agent-gateway"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-agent-setup-defines-the-gateway-environment"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "setup"]
+ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", CADRUMO_AGENT_ENV_FILE = "/agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", DISPLAY = ":0" }
+profile = "agent-gateway"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-agent-version-defines-the-gateway-environment"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "version", "--json"]
+ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", CADRUMO_AGENT_ENV_FILE = "/agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", DISPLAY = ":0" }
+profile = "agent-gateway"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-agent-migrate-defines-the-gateway-environment"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate"]
+ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", CADRUMO_AGENT_ENV_FILE = "/agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", DISPLAY = ":0" }
+profile = "agent-gateway"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-agent-migrate-with-its-source-revision-defines-the-gateway-environment"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-from", "0001"]
+ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", CADRUMO_AGENT_ENV_FILE = "/agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", DISPLAY = ":0" }
+profile = "agent-gateway"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-agent-migrate-with-its-head-revision-defines-the-gateway-environment"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-head", "0002_next"]
+ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", CADRUMO_AGENT_ENV_FILE = "/agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", DISPLAY = ":0" }
+profile = "agent-gateway"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-agent-migrate-with-both-revisions-defines-the-gateway-environment"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-from", "0001", "--expect-head", "0002_next"]
+ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", CADRUMO_AGENT_ENV_FILE = "/agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", DISPLAY = ":0" }
+profile = "agent-gateway"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "windows-agent-refuses-stores-state-with-an-extra-argument"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "stores-state", "--json"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-setup-with-an-option-it-does-not-declare"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "setup", "--app-home", "C:\\elsewhere"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-version-without-json"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "version"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-version-with-an-extra-argument"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "version", "--json", "extra"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-a-reordered-command-line"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["cadrumo_agent.cli.main", "-m", "stores-state"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-an-agent-verb-it-does-not-declare"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "status"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-migrate-with-an-unknown-option"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--compact"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-migrate-with-an-option-missing-its-value"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-from"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-migrate-with-a-head-option-missing-its-value"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-from", "0001", "--expect-head"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-migrate-with-an-option-taking-the-next-option"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-from", "--expect-head", "0002_next"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-migrate-with-reordered-options"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-head", "0002_next", "--expect-from", "0001"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-migrate-with-a-repeated-option"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-from", "0001", "--expect-from", "0002_next"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-migrate-with-an-equals-spelled-option"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-from=0001"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-migrate-with-an-extra-argument"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-from", "0001", "--expect-head", "0002_next", "extra"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-migrate-with-a-malformed-revision"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-from", "0001;rm"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-migrate-with-an-empty-revision"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-head", ""]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-migrate-with-a-revision-that-reads-as-an-option"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-from", "-0001"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-agent-refuses-stores-state-with-an-extra-argument"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "stores-state", "--json"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-agent-refuses-a-reordered-command-line"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["cadrumo_agent.cli.main", "-m", "stores-state"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-agent-refuses-an-agent-verb-it-does-not-declare"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "status"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-agent-refuses-migrate-with-an-unknown-option"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--compact"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-agent-refuses-migrate-with-an-option-missing-its-value"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-from"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-agent-refuses-migrate-with-reordered-options"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-head", "0002_next", "--expect-from", "0001"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-agent-refuses-migrate-with-a-malformed-revision"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "migrate", "--expect-from", "0001;rm"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-service-pins-the-agent-and-relay-images"
+platform = "posix"
+image = "cadrumo-agent-service"
+arguments = []
+ambient = { HOME = "/home/ada", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "bin/cadrumo-agent" }
+profile = "cadrumo-agent-service"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "/launch-vector/package/bin/cadrumo-agent", CADRUMO_PACKAGE_RELAY_EXECUTABLE = "/launch-vector/package/bin/cadrumo-mcp", CADRUMO_PACKAGE_AEAT_EXECUTABLE = "/launch-vector/package/bin/aeat", CADRUMO_PACKAGE_PYTHON_EXECUTABLE = "/launch-vector/package/python" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+# The agent's declared provider catalog takes the system base and nothing else: no
+# name under the agent's prefix, no launch parameter and no pin.
+[[launch_vectors]]
+name = "windows-agent-providers-takes-the-system-base-only"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "providers", "--declared", "--json"]
+ambient = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_SAMPLE_SETTING = "dropped", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "C:\\profile\\browser.exe", ANTHROPIC_API_KEY = "must-not-cross", TEMP = "C:\\elsewhere", PATH = "C:\\elsewhere" }
+profile = "agent-providers"
+environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-agent-providers-takes-the-system-base-only"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "providers", "--declared", "--json"]
+ambient = { HOME = "/home/ada", LANG = "C.UTF-8", DISPLAY = ":0", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_SAMPLE_SETTING = "dropped", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "/profile/browser", TMPDIR = "/elsewhere", PATH = "/elsewhere" }
+profile = "agent-providers"
+environment = { HOME = "/home/ada", LANG = "C.UTF-8" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "windows-agent-gui-auth-capabilities-takes-the-system-base-only"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "providers", "--interface", "gui", "--json"]
+ambient = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\elsewhere", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "C:\\profile\\browser.exe", ANTHROPIC_API_KEY = "must-not-cross", PATH = "C:\\elsewhere" }
+profile = "agent-providers"
+environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-agent-gui-auth-capabilities-takes-the-system-base-only"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "providers", "--interface", "gui", "--json"]
+ambient = { HOME = "/home/ada", LANG = "C.UTF-8", DISPLAY = ":0", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "/profile/browser", ANTHROPIC_API_KEY = "must-not-cross", PATH = "/elsewhere" }
+profile = "agent-providers"
+environment = { HOME = "/home/ada", LANG = "C.UTF-8" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "windows-agent-auth-admits-browser-connect-in-its-profile"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "browser", "--timeout", "300"]
+ambient = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "C:\\profile\\browser.exe", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", TEMP = "C:\\elsewhere", PATH = "C:\\elsewhere" }
+profile = "agent-auth"
+environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "C:\\profile\\browser.exe", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-agent-auth-admits-device-connect-in-its-profile"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "device", "--timeout", "300"]
+ambient = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT = "/profile/agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "/profile/browser", CADRUMO_LOCAL_STORAGE_ROOT = "/elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", TMPDIR = "/elsewhere", PATH = "/elsewhere" }
+profile = "agent-auth"
+environment = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT = "/profile/agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "/profile/browser", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "windows-agent-auth-keeps-the-legacy-login-invocation"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "login", "--provider", "codex"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent" }
+profile = "agent-auth"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-refuses-providers-without-its-declared-flags"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "providers"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-providers-declared-without-json"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "providers", "--declared"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-providers-with-reordered-flags"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "providers", "--json", "--declared"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-providers-with-a-gateway-option"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "providers", "--declared", "--json", "--workspace", "C:\\elsewhere"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-agent-refuses-providers-declared-without-json"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "providers", "--declared"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-agent-refuses-providers-with-an-extra-argument"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "providers", "--declared", "--json", "extra"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-a-gui-auth-interface-other-than-gui"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "providers", "--interface", "terminal", "--json"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-agent-refuses-gui-auth-capabilities-without-json"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "providers", "--interface", "gui"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-provider-connect-with-an-unlisted-method"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "terminal", "--timeout", "300"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-agent-refuses-provider-connect-without-the-fixed-timeout"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "browser"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-provider-connect-with-a-different-timeout"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "device", "--timeout", "301"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+# A refused launch parameter is named and its value is not: the refusal carries the
+# slot's name alone, while admitted prefixed names do not change the outcome.
+[[launch_vectors]]
+name = "windows-agent-gateway-refusal-names-the-slot-and-never-its-value"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "serve"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_WORKER_PORT = "S3CRET-NOT-A-PORT", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+refusal = { code = "launch_value_malformed", subject = "CADRUMO_AGENT_WORKER_PORT" }
+
+[[launch_vectors]]
+name = "posix-agent-worker-refusal-names-the-slot-and-never-its-value"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.worker"]
+ambient = { HOME = "/home/ada", CADRUMO_AGENT_PORT = "S3CRET-NOT-A-PORT", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+refusal = { code = "launch_value_malformed", subject = "CADRUMO_AGENT_PORT" }
+
+# The generic interpreter takes the agent image's location from the runtime that
+# starts a worker on it, as a launch parameter checked as an existing program.
+[[launch_vectors]]
+name = "windows-python-clears-an-absolute-agent-location"
+platform = "windows"
+image = "python"
+arguments = ["-I", "-B", "-m", "cadrumo_runtime.host.worker"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "C:\\Windows\\System32\\cmd.exe" }
+profile = "python"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-python-clears-a-relative-agent-location"
+platform = "windows"
+image = "python"
+arguments = []
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "bin\\cadrumo-agent.exe" }
+profile = "python"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-python-clears-an-absolute-agent-location"
+platform = "posix"
+image = "python"
+arguments = ["-I", "-B", "-m", "cadrumo_runtime.host.worker"]
+ambient = { HOME = "/home/ada", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "/bin/sh" }
+profile = "python"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "posix-python-clears-a-relative-agent-location"
+platform = "posix"
+image = "python"
+arguments = []
+ambient = { HOME = "/home/ada", CADRUMO_PACKAGE_AGENT_EXECUTABLE = "bin/cadrumo-agent" }
+profile = "python"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+# ---------------------------------------------------------------------------
+# Storage-root conformance vectors. Expected roots and refusals are authored by
+# hand, independently of any resolver. invalid_environment names carry a value
+# that is not valid Unicode on the platform.
+# ---------------------------------------------------------------------------
+
+[[root.vectors]]
+name = "windows-installed-default"
+platform = "windows"
+mode = "installed"
+environment = { LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+root = "C:\\Users\\ada\\AppData\\Local\\cadrumo"
+
+[[root.vectors]]
+name = "windows-installed-preview"
+platform = "windows"
+mode = "installed"
+environment = { LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+channel = "preview"
+root = "C:\\Users\\ada\\AppData\\Local\\cadrumo-preview"
+
+[[root.vectors]]
+name = "windows-installed-base-missing"
+platform = "windows"
+mode = "installed"
+environment = {}
+refusal = "installed_base_unavailable"
+
+[[root.vectors]]
+name = "windows-installed-base-relative"
+platform = "windows"
+mode = "installed"
+environment = { LOCALAPPDATA = "AppData\\Local" }
+refusal = "installed_base_unavailable"
+
+[[root.vectors]]
+name = "windows-installed-absolute-override"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "D:\\cadrumo-data" }
+root = "D:\\cadrumo-data"
+
+[[root.vectors]]
+name = "windows-installed-override-wins-over-base"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "D:\\cadrumo-data", LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+root = "D:\\cadrumo-data"
+
+[[root.vectors]]
+name = "windows-installed-relative-override"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "data\\storage", LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+refusal = "relative_override_installed"
+
+[[root.vectors]]
+name = "windows-installed-rooted-without-drive"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "\\data", LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+refusal = "relative_override_installed"
+
+[[root.vectors]]
+name = "windows-installed-blank-override"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = " \t", LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+root = "C:\\Users\\ada\\AppData\\Local\\cadrumo"
+
+[[root.vectors]]
+name = "windows-installed-ignores-shared-variable"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_STORAGE_ROOT = "D:\\shared", LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+root = "C:\\Users\\ada\\AppData\\Local\\cadrumo"
+
+[[root.vectors]]
+name = "windows-installed-home-override"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~\\cadrumo-data", LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local", USERPROFILE = "C:\\Users\\ada" }
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+root = "C:\\Users\\ada\\cadrumo-data"
+
+[[root.vectors]]
+name = "windows-development-default"
+platform = "windows"
+mode = "development"
+environment = { LOCALAPPDATA = "C:\\Users\\ada\\AppData\\Local" }
+checkout = "C:\\src\\checkout"
+known_folder = "C:\\Users\\ada\\AppData\\Local"
+channel = "preview"
+root = "C:\\src\\checkout\\var\\storage"
+
+[[root.vectors]]
+name = "windows-development-relative"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "var\\alternate" }
+checkout = "C:\\src\\checkout"
+root = "C:\\src\\checkout\\var\\alternate"
+
+[[root.vectors]]
+name = "windows-development-shared"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_STORAGE_ROOT = "D:\\shared" }
+checkout = "C:\\src\\checkout"
+root = "D:\\shared"
+
+[[root.vectors]]
+name = "windows-development-precedence"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "D:\\local", CADRUMO_STORAGE_ROOT = "D:\\shared" }
+checkout = "C:\\src\\checkout"
+root = "D:\\local"
+
+[[root.vectors]]
+name = "windows-development-blank-falls-through"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = " ", CADRUMO_STORAGE_ROOT = "var\\alternate" }
+checkout = "C:\\src\\checkout"
+root = "C:\\src\\checkout\\var\\alternate"
+
+[[root.vectors]]
+name = "linux-installed-xdg"
+platform = "linux"
+mode = "installed"
+environment = { HOME = "/home/ada", XDG_DATA_HOME = "/data/ada" }
+root = "/data/ada/cadrumo"
+
+[[root.vectors]]
+name = "linux-installed-home"
+platform = "linux"
+mode = "installed"
+environment = { HOME = "/home/ada" }
+root = "/home/ada/.local/share/cadrumo"
+
+[[root.vectors]]
+name = "linux-installed-relative-xdg"
+platform = "linux"
+mode = "installed"
+environment = { HOME = "/home/ada", XDG_DATA_HOME = "data" }
+root = "/home/ada/.local/share/cadrumo"
+
+[[root.vectors]]
+name = "linux-installed-preview"
+platform = "linux"
+mode = "installed"
+environment = { HOME = "/home/ada" }
+channel = "preview"
+root = "/home/ada/.local/share/cadrumo-preview"
+
+[[root.vectors]]
+name = "linux-installed-base-missing"
+platform = "linux"
+mode = "installed"
+environment = {}
+refusal = "installed_base_unavailable"
+
+[[root.vectors]]
+name = "linux-installed-relative-home"
+platform = "linux"
+mode = "installed"
+environment = { HOME = "home/ada" }
+refusal = "installed_base_unavailable"
+
+[[root.vectors]]
+name = "linux-installed-relative-override"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "data", HOME = "/home/ada" }
+refusal = "relative_override_installed"
+
+[[root.vectors]]
+name = "linux-installed-absolute-override"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/srv/cadrumo" }
+root = "/srv/cadrumo"
+
+[[root.vectors]]
+name = "linux-installed-home-override"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~/data", HOME = "/home/ada" }
+root = "/home/ada/data"
+
+[[root.vectors]]
+name = "linux-development-default"
+platform = "linux"
+mode = "development"
+environment = { HOME = "/home/ada" }
+checkout = "/src/checkout"
+root = "/src/checkout/var/storage"
+
+[[root.vectors]]
+name = "macos-installed-default"
+platform = "macos"
+mode = "installed"
+environment = { HOME = "/Users/ada" }
+root = "/Users/ada/Library/Application Support/cadrumo"
+
+[[root.vectors]]
+name = "macos-installed-ignores-xdg"
+platform = "macos"
+mode = "installed"
+environment = { HOME = "/Users/ada", XDG_DATA_HOME = "/x" }
+root = "/Users/ada/Library/Application Support/cadrumo"
+
+[[root.vectors]]
+name = "macos-installed-base-missing"
+platform = "macos"
+mode = "installed"
+environment = { XDG_DATA_HOME = "/x" }
+refusal = "installed_base_unavailable"
+
+[[root.vectors]]
+name = "macos-development-default"
+platform = "macos"
+mode = "development"
+environment = { HOME = "/Users/ada" }
+checkout = "/src/checkout"
+root = "/src/checkout/var/storage"
+
+[[root.vectors]]
+name = "windows-absolute-normalized"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "D:\\unused\\..\\datos con ñ\\." }
+root = "D:\\datos con ñ"
+
+[[root.vectors]]
+name = "windows-relative-normalized"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "unused/../state" }
+checkout = "C:\\src\\checkout"
+root = "C:\\src\\checkout\\state"
+
+[[root.vectors]]
+name = "windows-invalid-selected"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_STORAGE_ROOT = "D:\\datos con ñ" }
+checkout = "C:\\src\\checkout"
+refusal = "invalid_path_input"
+invalid_environment = ["CADRUMO_LOCAL_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "windows-invalid-effective-lower"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = " " }
+checkout = "C:\\src\\checkout"
+refusal = "invalid_path_input"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "windows-valid-higher-ignores-invalid-lower"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "D:\\datos con ñ" }
+checkout = "C:\\src\\checkout"
+root = "D:\\datos con ñ"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "windows-installed-ignores-invalid-development"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "D:\\datos con ñ" }
+root = "D:\\datos con ñ"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "windows-invalid-home"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~/state" }
+refusal = "invalid_path_input"
+invalid_environment = ["USERPROFILE"]
+
+[[root.vectors]]
+name = "windows-relative-home"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~/state", USERPROFILE = "relative" }
+refusal = "home_unavailable"
+
+[[root.vectors]]
+name = "windows-named-user-refused"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~ada/state", USERPROFILE = "C:\\Users\\ada" }
+refusal = "invalid_path_input"
+
+[[root.vectors]]
+name = "windows-home-only"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~", USERPROFILE = "C:\\Users\\ada" }
+root = "C:\\Users\\ada"
+
+[[root.vectors]]
+name = "windows-relative-checkout"
+platform = "windows"
+mode = "development"
+environment = {}
+checkout = "relative"
+refusal = "non_absolute_pin"
+
+[[root.vectors]]
+name = "windows-invalid-checkout"
+platform = "windows"
+mode = "development"
+environment = {}
+checkout = "C:\\src\\checkout"
+refusal = "invalid_path_input"
+invalid_checkout = true
+
+[[root.vectors]]
+name = "linux-absolute-normalized"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/unused/../datos con ñ/." }
+root = "/datos con ñ"
+
+[[root.vectors]]
+name = "linux-relative-normalized"
+platform = "linux"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "unused/../state" }
+checkout = "/src/checkout"
+root = "/src/checkout/state"
+
+[[root.vectors]]
+name = "linux-invalid-selected"
+platform = "linux"
+mode = "development"
+environment = { CADRUMO_STORAGE_ROOT = "/datos con ñ" }
+checkout = "/src/checkout"
+refusal = "invalid_path_input"
+invalid_environment = ["CADRUMO_LOCAL_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "linux-invalid-effective-lower"
+platform = "linux"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = " " }
+checkout = "/src/checkout"
+refusal = "invalid_path_input"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "linux-valid-higher-ignores-invalid-lower"
+platform = "linux"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/datos con ñ" }
+checkout = "/src/checkout"
+root = "/datos con ñ"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "linux-installed-ignores-invalid-development"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/datos con ñ" }
+root = "/datos con ñ"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "linux-invalid-home"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~/state" }
+refusal = "invalid_path_input"
+invalid_environment = ["HOME"]
+
+[[root.vectors]]
+name = "linux-relative-home"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~/state", HOME = "relative" }
+refusal = "home_unavailable"
+
+[[root.vectors]]
+name = "linux-named-user-refused"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~ada/state", HOME = "/home/ada" }
+refusal = "invalid_path_input"
+
+[[root.vectors]]
+name = "linux-home-only"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~", HOME = "/home/ada" }
+root = "/home/ada"
+
+[[root.vectors]]
+name = "linux-relative-checkout"
+platform = "linux"
+mode = "development"
+environment = {}
+checkout = "relative"
+refusal = "non_absolute_pin"
+
+[[root.vectors]]
+name = "linux-invalid-checkout"
+platform = "linux"
+mode = "development"
+environment = {}
+checkout = "/src/checkout"
+refusal = "invalid_path_input"
+invalid_checkout = true
+
+[[root.vectors]]
+name = "macos-absolute-normalized"
+platform = "macos"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/unused/../datos con ñ/." }
+root = "/datos con ñ"
+
+[[root.vectors]]
+name = "macos-relative-normalized"
+platform = "macos"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "unused/../state" }
+checkout = "/src/checkout"
+root = "/src/checkout/state"
+
+[[root.vectors]]
+name = "macos-invalid-selected"
+platform = "macos"
+mode = "development"
+environment = { CADRUMO_STORAGE_ROOT = "/datos con ñ" }
+checkout = "/src/checkout"
+refusal = "invalid_path_input"
+invalid_environment = ["CADRUMO_LOCAL_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "macos-invalid-effective-lower"
+platform = "macos"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = " " }
+checkout = "/src/checkout"
+refusal = "invalid_path_input"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "macos-valid-higher-ignores-invalid-lower"
+platform = "macos"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/datos con ñ" }
+checkout = "/src/checkout"
+root = "/datos con ñ"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "macos-installed-ignores-invalid-development"
+platform = "macos"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/datos con ñ" }
+root = "/datos con ñ"
+invalid_environment = ["CADRUMO_STORAGE_ROOT"]
+
+[[root.vectors]]
+name = "macos-invalid-home"
+platform = "macos"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~/state" }
+refusal = "invalid_path_input"
+invalid_environment = ["HOME"]
+
+[[root.vectors]]
+name = "macos-relative-home"
+platform = "macos"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~/state", HOME = "relative" }
+refusal = "home_unavailable"
+
+[[root.vectors]]
+name = "macos-named-user-refused"
+platform = "macos"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~ada/state", HOME = "/home/ada" }
+refusal = "invalid_path_input"
+
+[[root.vectors]]
+name = "macos-home-only"
+platform = "macos"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~", HOME = "/home/ada" }
+root = "/home/ada"
+
+[[root.vectors]]
+name = "macos-relative-checkout"
+platform = "macos"
+mode = "development"
+environment = {}
+checkout = "relative"
+refusal = "non_absolute_pin"
+
+[[root.vectors]]
+name = "macos-invalid-checkout"
+platform = "macos"
+mode = "development"
+environment = {}
+checkout = "/src/checkout"
+refusal = "invalid_path_input"
+invalid_checkout = true
+
+[[root.vectors]]
+name = "windows-drive-relative"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "C:state" }
+checkout = "C:\\src\\checkout"
+refusal = "non_absolute_pin"
+
+[[root.vectors]]
+name = "windows-rooted-development"
+platform = "windows"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "\\state" }
+checkout = "C:\\src\\checkout"
+refusal = "non_absolute_pin"
+
+[[root.vectors]]
+name = "windows-unc-normalized"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "\\\\server\\share\\unused\\..\\state" }
+root = "\\\\server\\share\\state"
+
+[[root.vectors]]
+name = "windows-invalid-known-folder"
+platform = "windows"
+mode = "installed"
+environment = {}
+refusal = "invalid_path_input"
+invalid_environment = ["LOCALAPPDATA"]
+invalid_known_folder = true
+
+[[root.vectors]]
+name = "linux-invalid-effective-base"
+platform = "linux"
+mode = "installed"
+environment = { HOME = "/home/ada" }
+refusal = "invalid_path_input"
+invalid_environment = ["XDG_DATA_HOME"]
+
+[[root.vectors]]
+name = "linux-valid-base-ignores-invalid-home"
+platform = "linux"
+mode = "installed"
+environment = { XDG_DATA_HOME = "/data" }
+root = "/data/cadrumo"
+invalid_environment = ["HOME"]
+
+[[root.vectors]]
+name = "macos-invalid-base"
+platform = "macos"
+mode = "installed"
+environment = {}
+refusal = "invalid_path_input"
+invalid_environment = ["HOME"]
+
+[[root.vectors]]
+name = "linux-tilde-backslash-literal"
+platform = "linux"
+mode = "development"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~\\state", HOME = "/home/ada" }
+checkout = "/src/checkout"
+root = "/src/checkout/~\\state"
+
+[[root.vectors]]
+name = "linux-backslash-literal"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/data\\state" }
+root = "/data\\state"
+
+[[root.vectors]]
+name = "linux-above-root-parent"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "/../../state" }
+root = "/state"
+
+[[root.vectors]]
+name = "linux-home-repeated-separator"
+platform = "linux"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~//state", HOME = "/home/ada" }
+root = "/home/ada/state"
+
+[[root.vectors]]
+name = "windows-home-repeated-separator"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "~//state", USERPROFILE = "C:\\Users\\ada" }
+root = "C:\\Users\\ada\\state"
+
+[[root.vectors]]
+name = "windows-above-root-parent"
+platform = "windows"
+mode = "installed"
+environment = { CADRUMO_LOCAL_STORAGE_ROOT = "D:\\..\\..\\state" }
+root = "D:\\state"
+
+[[launch_vectors]]
+name = "windows-agent-preflight-defines-the-gateway-environment"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "preflight"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", CADRUMO_AGENT_ENV_FILE = "C:\\agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", TERM = "xterm" }
+profile = "agent-gateway"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "C:\\Windows\\System32\\cmd.exe", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+
+[[launch_vectors]]
+name = "posix-agent-preflight-defines-the-gateway-environment"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "preflight"]
+ambient = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", CADRUMO_AGENT_ENV_FILE = "/agent.env", CADRUMO_AGENT_SAMPLE_SETTING = "crosses", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_LOG_LEVEL = "DEBUG", DISPLAY = ":0" }
+profile = "agent-gateway"
+environment = { HOME = "/home/ada", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_HOSTED_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_WORKER_PORT = "0", CADRUMO_AGENT_TOOL_SERVER_CADRUMO = "/bin/sh", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority", CADRUMO_AGENT_SAMPLE_SETTING = "crosses" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+
+[[launch_vectors]]
+name = "windows-agent-refuses-preflight-with-an-extra-argument"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "preflight", "--json"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+
+[[launch_vectors]]
+name = "posix-agent-refuses-preflight-with-an-extra-argument"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "preflight", "--json"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }

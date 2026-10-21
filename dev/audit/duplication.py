@@ -33,14 +33,15 @@ plus no false green -- not zero clones.
 
 Two limits are deliberate, recorded here so neither is re-derived as a defect:
 
-* **Scope is the product tree.** :data:`_PRODUCT_SOURCE_ROOT` is
-  :data:`dev.first_party_source.PRODUCT_PACKAGE` alone, because the governing audit scopes every instrument to
-  "the intended production scope" and the duplication the campaign cares about
-  is duplicate AUTHORITY in shipped code -- a second writer with weaker guards,
-  not two similar-looking dev scripts. ``dev/`` is therefore unmeasured by the
-  standing recipe and by the health report's D2 dimension. It is not
-  unmeasurABLE: pass a different ``source_root`` to scan it on demand.
-  Widening the default would fold tooling debt into the product number.
+* **Scope is the shipped source.** :data:`_SOURCE_ROOTS` is every package in
+  :data:`dev.first_party_source.SOURCE_PACKAGES`, scanned in one jscpd run so a
+  clone shared ACROSS packages (a runtime check restated in the harness, say)
+  is visible, because the duplication that matters is duplicate AUTHORITY in
+  shipped code -- a second writer with weaker guards, not two similar-looking
+  dev scripts. ``dev/`` is therefore unmeasured by the standing recipe and by
+  the health report's D2 dimension. It is not unmeasurABLE: pass different
+  ``source_roots`` to scan it on demand. Widening the default would fold
+  tooling debt into the shipped number.
 
 * **jscpd matches token sequences.** A concept implemented twice in different
   syntax is invisible to it, and that is exactly the duplication this project's
@@ -77,7 +78,7 @@ from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, OK
-from dev.first_party_source import PRODUCT_PACKAGE, production_exclusion_globs
+from dev.first_party_source import SOURCE_PACKAGES, production_exclusion_globs
 from dev.packaging.command_execution import run_command
 
 _UTF_8: Final[str] = UTF_8
@@ -88,7 +89,7 @@ _CLONE_CAP: Final[int] = 20
 
 _JSCPD_SPEC: Final[str] = "jscpd@4.2.0"
 _JSCPD_TIMEOUT_SECONDS: Final[float] = 300.0
-_PRODUCT_SOURCE_ROOT: Final[Path] = Path(PRODUCT_PACKAGE)
+_SOURCE_ROOTS: Final[tuple[Path, ...]] = tuple(Path(package) for package in SOURCE_PACKAGES)
 _JSCPD_IGNORE: Final[str] = ",".join(production_exclusion_globs())
 
 # The jscpd summary table's "Total:" row, post-ANSI-strip, reads:
@@ -218,11 +219,11 @@ class DuplicationResult:
         )
 
 
-def jscpd_command(npx: str, source_root: Path = _PRODUCT_SOURCE_ROOT) -> list[str]:
+def jscpd_command(npx: str, source_roots: Sequence[Path] = _SOURCE_ROOTS) -> list[str]:
     r"""Build the one jscpd command line.
 
-    ``source_root`` is passed via :meth:`~pathlib.PurePath.as_posix` so it
-    renders ``src/cadrumo`` on every OS. A Windows-native ``src\cadrumo``
+    Each of ``source_roots`` is passed via :meth:`~pathlib.PurePath.as_posix`
+    so it renders ``src/cadrumo`` on every OS. A Windows-native ``src\cadrumo``
     matches no files inside jscpd's glob engine, and jscpd then exits 0 having
     silently scanned nothing -- the false-green this module exists to prevent.
     """
@@ -230,7 +231,7 @@ def jscpd_command(npx: str, source_root: Path = _PRODUCT_SOURCE_ROOT) -> list[st
         npx,
         "--yes",
         _JSCPD_SPEC,
-        source_root.as_posix(),
+        *(source_root.as_posix() for source_root in source_roots),
         "--format",
         "python",
         "--min-lines",
@@ -571,11 +572,14 @@ def actionable_clone_groups(groups: tuple[CloneGroup, ...], repo_root: Path) -> 
 def run_duplication_scan(
     repo_root: Path,
     *,
-    source_root: Path = _PRODUCT_SOURCE_ROOT,
+    source_roots: Sequence[Path] = _SOURCE_ROOTS,
     timeout: float = _JSCPD_TIMEOUT_SECONDS,
     which: Callable[[str], str | None] = shutil.which,
 ) -> DuplicationResult:
-    """Run jscpd over ``source_root`` and classify the outcome.
+    """Run jscpd over ``source_roots`` and classify the outcome.
+
+    jscpd exits non-zero when any root is missing, so a lost package reads as
+    unavailable rather than as a smaller clean scope.
 
     This is the single entry point for every duplication consumer. ``npx`` is
     resolved through ``which`` -- :func:`shutil.which` in production -- because
@@ -593,7 +597,7 @@ def run_duplication_scan(
 
     try:
         completed = run_command(
-            jscpd_command(npx, source_root),
+            jscpd_command(npx, source_roots),
             errors="replace",
             cwd=repo_root,
             timeout_seconds=timeout,

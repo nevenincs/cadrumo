@@ -319,7 +319,7 @@ def _run_probe(
         pilot.app.exit()
 
     publish("production_launcher")
-    from cadrumo.entrypoints.tui.launcher import main
+    from cadrumo_runtime.host.frontend.tui.launcher import main
 
     exit_code = main(headless=True, auto_pilot=drive)
     if exit_code != 0:

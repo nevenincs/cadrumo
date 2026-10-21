@@ -128,14 +128,11 @@ def m280_contextual_sign_byte(
     source_digests: Mapping[str, str] | None,
 ) -> str:
     """Use N for an explicitly supplied zero under M280's key-2 source rule."""
-    if (
-        str(record.id) != "modelo-280-declarado"
-        or str(field.id) != "modelo-280-t2-rendimientos-negativos-imputables-sign"
-    ):
+    if record.id != "modelo-280-declarado" or field.id != "modelo-280-t2-rendimientos-negativos-imputables-sign":
         return rendered
     if field.value_policy is not ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN:
         raise FilingExportValidationError("modelo 280 negative imputation sign differs from reviewed source")
-    by_id = {str(item.id): item for item in record.fields}
+    by_id = {item.id: item for item in record.fields}
     integer, fraction = _require_m280_component_declaration(
         field,
         by_id.get("modelo-280-t2-rendimientos-negativos-imputables-component-177"),
@@ -161,9 +158,9 @@ def require_m280_negative_imputation_context(
     record: ExportRecordDefinition, wire: str, *, source_digests: Mapping[str, str] | None = None
 ) -> None:
     """M280 prints N only for a key-2 extinction and zeros otherwise."""
-    if str(record.id) != "modelo-280-declarado":
+    if record.id != "modelo-280-declarado":
         return
-    by_id = {str(field.id): field for field in record.fields}
+    by_id = {field.id: field for field in record.fields}
     sign = by_id.get("modelo-280-t2-rendimientos-negativos-imputables-sign")
     if sign is None or sign.value_policy is not ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN:
         return

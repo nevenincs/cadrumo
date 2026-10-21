@@ -9,9 +9,10 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_manual import create_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.transactions.enums import TransactionDirection
+
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 
 _BUCKET_ID = "24242424-2424-4424-8424-242424242424"
 

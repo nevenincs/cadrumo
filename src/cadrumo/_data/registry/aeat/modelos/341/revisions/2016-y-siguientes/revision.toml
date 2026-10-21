@@ -35,7 +35,7 @@ reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 family_storage_baseline = "2005-2015"
 # Both record eras retain Annex II's complete 01–10 arithmetic table.
-scoped_families = ["export_layouts", "workbook_parity_refs", "completeness_manifest"]
+scoped_families = ["export_layouts", "workbook_parity_refs", "completeness_manifest", "verification_expectations"]
 
 [[revisions."2016-y-siguientes".lineage_attestations]]
 family = "casillas"

@@ -22,13 +22,17 @@ from ...core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ...domain.user_profile.values import ProfileSetupState
+from ..operations.models import CredentialFreeOperationRequest
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..workflow.profile_health import ProfileHealthStatus
 from .overview import ProfileFieldView
+from .question_view import ProfileViewQuestionItem
 
 PROFILE_VIEW_OPERATION_DEFINITION_ID = "user-profile.view"
 PROFILE_VIEW_PHASES = ("user-profile.view.read", "user-profile.view.project")
-PROFILE_VIEW_MAX_ITEMS = 32
+# Let normal overview pages fill the byte budget instead of issuing extra
+# operation round trips for small schema fields. Keep a separate item-count bound.
+PROFILE_VIEW_MAX_ITEMS = 128
 # The result is nested in a settled-operation response and then a runtime frame.
 # Keep generous space beneath that frame's 64 KiB ceiling for both envelopes.
 PROFILE_VIEW_MAX_RESULT_BYTES = 20_000
@@ -39,19 +43,26 @@ class ProfileViewPageKind(StrEnum):
     """One independent page stream over a single profile revision."""
 
     FACTS = "facts"
+    PREFERENCES = "preferences"
     ISSUES = "issues"
     READINESS_ISSUES = "readiness_issues"
     OVERVIEW = "overview"
     STATUS = "status"
+    QUESTIONS = "questions"
 
 
-class ProfileViewOperationRequest(BaseModel):
+class ProfileViewOperationRequest(CredentialFreeOperationRequest):
     """Read one page, optionally pinned to a previously observed revision."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     profile_id: UUID
-    page_kind: ProfileViewPageKind
+    page_kind: ProfileViewPageKind = Field(
+        description="facts reads saved taxpayer values; questions pairs saved setup answers with canonical prompts, "
+        "help and choices (no defaults). questions covers scalar setup fields, not all profile facts or tax duties. "
+        "status describes basic setup readiness only. preferences reads only the saved output language. "
+        "Read actual facts before asking the user."
+    )
     cursor: NonNegativeInt = 0
     limit: int = Field(default=PROFILE_VIEW_MAX_ITEMS, ge=1, le=PROFILE_VIEW_MAX_ITEMS)
     expected_revision: int | None = Field(default=None, ge=1)
@@ -305,6 +316,7 @@ type ProfileViewItem = Annotated[
     | ProfileViewSectionItem
     | ProfileViewFieldItem
     | ProfileViewMissingItem
+    | ProfileViewQuestionItem
     | ProfileViewNoticeItem,
     Field(discriminator="kind"),
 ]
@@ -326,6 +338,8 @@ def _validate_refused_page(result: ProfileViewOperationResult) -> None:
 def _validate_page_item_kinds(result: ProfileViewOperationResult) -> None:
     allowed = {
         ProfileViewPageKind.FACTS: {"fact"},
+        ProfileViewPageKind.PREFERENCES: {"fact"},
+        ProfileViewPageKind.QUESTIONS: {"question"},
         ProfileViewPageKind.ISSUES: {"issue"},
         ProfileViewPageKind.READINESS_ISSUES: {"issue"},
         ProfileViewPageKind.OVERVIEW: {"section", "field", "missing", "notice"},
@@ -333,6 +347,14 @@ def _validate_page_item_kinds(result: ProfileViewOperationResult) -> None:
     }[result.page_kind]
     if any(item.kind not in allowed for item in result.items):
         raise ValueError("profile view page contains another stream's item")
+    if result.page_kind is ProfileViewPageKind.PREFERENCES:
+        from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+
+        if result.total_items > 1 or any(
+            not isinstance(item, ProfileViewFactItem) or item.path != PROFILE_OUTPUT_LANGUAGE_PATH
+            for item in result.items
+        ):
+            raise ValueError("profile preferences may disclose only the saved output language")
 
 
 def _validate_status_page(result: ProfileViewOperationResult) -> None:

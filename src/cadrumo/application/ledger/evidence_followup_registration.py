@@ -12,15 +12,16 @@ from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPA
 from ..operations.models import OperationTerminalReceipt, require_terminal_receipt_match
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .evidence_followup_contracts import (
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_REVIEW_LIST_OPERATION_DEFINITION_ID,
+    LEDGER_EVIDENCE_REVIEW_SUMMARY_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID,
     LedgerEvidenceAttachmentQueueExecutionResult,
     LedgerEvidenceAttachmentQueueProjection,
@@ -35,6 +36,8 @@ from .evidence_followup_contracts import (
     LedgerEvidenceReviewListExecutionResult,
     LedgerEvidenceReviewListProjection,
     LedgerEvidenceReviewListRequest,
+    LedgerEvidenceReviewSummaryExecutionResult,
+    LedgerEvidenceReviewSummaryProjection,
     LedgerEvidenceReviewViewExecutionResult,
     LedgerEvidenceReviewViewProjection,
     LedgerEvidenceReviewViewRequest,
@@ -44,6 +47,7 @@ from .evidence_followup_operation import (
     LedgerEvidenceAttachmentViewExecutor,
     LedgerEvidenceConsentListExecutor,
     LedgerEvidenceReviewListExecutor,
+    LedgerEvidenceReviewSummaryExecutor,
     LedgerEvidenceReviewViewExecutor,
 )
 from .read_access import resolve_ledger_request_read_access
@@ -60,11 +64,11 @@ def _build_definition(
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_type=executor_type,
         build=build,
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 
@@ -108,6 +112,19 @@ def build_ledger_evidence_followup_definitions(
             executor_type=LedgerEvidenceReviewViewExecutor,
             build=lambda: LedgerEvidenceReviewViewExecutor(ports),
         ),
+    )
+
+
+def build_ledger_evidence_review_summary_definition(
+    ports: LedgerEvidenceFollowupOperationPorts,
+) -> OperationDefinition:
+    """Build the review read that serves the review view without document text."""
+    return _build_definition(
+        definition_id=LEDGER_EVIDENCE_REVIEW_SUMMARY_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceReviewViewRequest,
+        result_type=LedgerEvidenceReviewSummaryExecutionResult,
+        executor_type=LedgerEvidenceReviewSummaryExecutor,
+        build=lambda: LedgerEvidenceReviewSummaryExecutor(ports),
     )
 
 
@@ -184,6 +201,35 @@ def project_review_view_result(result: BaseModel, receipt: OperationTerminalRece
         receipt,
         expected_type=LedgerEvidenceReviewViewExecutionResult,
         definition_id=LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID,
+    )
+
+
+def project_review_summary_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+    """Project the review summary only under its exact terminal receipt."""
+    return _project_result(
+        result,
+        receipt,
+        expected_type=LedgerEvidenceReviewSummaryExecutionResult,
+        definition_id=LEDGER_EVIDENCE_REVIEW_SUMMARY_OPERATION_DEFINITION_ID,
+    )
+
+
+def build_ledger_evidence_review_summary_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the review summary's typed contracts and all-period tax disclosure."""
+    if definition.definition_id != LEDGER_EVIDENCE_REVIEW_SUMMARY_OPERATION_DEFINITION_ID:
+        raise ValueError("review summary registration requires the review summary definition")
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
+        definition=definition,
+        public_result_type=LedgerEvidenceReviewSummaryProjection,
+        result_projector=project_review_summary_result,
+        access_resolver=lambda request, context: resolve_ledger_request_read_access(
+            request,
+            context,
+            definition_id=LEDGER_EVIDENCE_REVIEW_SUMMARY_OPERATION_DEFINITION_ID,
+            request_type=LedgerEvidenceReviewViewRequest,
+        ),
     )
 
 
@@ -269,9 +315,12 @@ def build_ledger_evidence_followup_registrations(
 __all__ = [
     "build_ledger_evidence_followup_definitions",
     "build_ledger_evidence_followup_registrations",
+    "build_ledger_evidence_review_summary_definition",
+    "build_ledger_evidence_review_summary_registration",
     "project_attachment_queue_result",
     "project_attachment_view_result",
     "project_consent_list_result",
     "project_review_list_result",
+    "project_review_summary_result",
     "project_review_view_result",
 ]

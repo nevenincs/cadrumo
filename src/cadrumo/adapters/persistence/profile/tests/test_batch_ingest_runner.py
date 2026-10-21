@@ -50,10 +50,10 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.hardware import AcceleratorKind
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
+from .....domain.iva.schema import InvoiceKind
 from ._invoice_confirmation_test_support import _invoice_draft_extraction_ports, serving_a_loopback_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -247,7 +247,7 @@ def test_the_refused_row_says_what_was_wrong_with_that_document(
     result = _run(runtime_profile, batch_dir)
     poison = next(item for item in result.items if item.source_name == _POISON)
 
-    assert poison.refusal_code
+    assert poison.refusal_code is not None and poison.refusal_code
     assert poison.refusal_verdict is not None, "a refusal must name the condition that failed"
     assert poison.refusal_verdict.failed_condition_id
     facts = {key: value for evidence in poison.refusal_verdict.evidence for key, value in evidence.values.items()}

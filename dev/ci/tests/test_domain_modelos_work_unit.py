@@ -31,6 +31,7 @@ from cadrumo.application.modelo.action_errors import (
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
 )
+from cadrumo.application.modelo.tests.registry_revision import active_registry_revision_id
 from cadrumo.application.modelo.work_lifecycle import (
     create_work_unit,
     discard_work_unit,
@@ -236,18 +237,28 @@ def _create_action_work_unit(
     *,
     modelo: str = "303",
     period: Period = _P_2026_1T,
-    revision_id: str = "2026-y-siguientes",
+    revision_id: RevisionId | None = None,
     name: str | None = None,
     causante_ccaa: Any | None = None,
     clock: datetime = _T0,
 ) -> WorkUnit:
     with bundled_indexed_authority().operation() as operation:
+        selected_revision_id = (
+            revision_id
+            if revision_id is not None
+            else active_registry_revision_id(
+                modelo=modelo,
+                filing_year=period.filing_year,
+                period=period.registry_token,
+                operation=operation,
+            )
+        )
         return create_work_unit(
             bucket_id=_ACTION_BUCKET_ID,
             modelo=modelo,
             filing_year=period.filing_year,
             period=period,
-            revision_id=revision_id,
+            revision_id=selected_revision_id,
             name=name,
             causante_ccaa=causante_ccaa,
             ports=_lifecycle_ports(repo),
@@ -660,12 +671,18 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
         bv_repo = BucketEventHistoryRepository(objects=profile.repository)
         ports = WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo)
         with bundled_indexed_authority().operation() as operation:
+            period = _P_2026_1T
             unit = create_work_unit(
                 bucket_id=profile.bucket_id,
                 modelo="303",
-                filing_year=2026,
-                period=_P_2026_1T,
-                revision_id="2026-y-siguientes",
+                filing_year=period.filing_year,
+                period=period,
+                revision_id=active_registry_revision_id(
+                    modelo="303",
+                    filing_year=period.filing_year,
+                    period=period.registry_token,
+                    operation=operation,
+                ),
                 ports=ports,
                 operation=operation,
                 clock=_T0,

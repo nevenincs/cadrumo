@@ -250,3 +250,52 @@ def test_the_agreement_corpus_contains_both_verdicts() -> None:
 
     assert kdf_verdicts == {True, False}
     assert wrapped_verdicts == {True, False}
+
+
+@pytest.mark.parametrize(
+    ("memory_mib", "iterations", "parallelism"),
+    [(19, 2, 1), (64, 3, 1), (32, 2, 4)],
+)
+def test_the_direct_binding_derives_the_argon2_library_key(memory_mib: int, iterations: int, parallelism: int) -> None:
+    """The child's direct binding call derives byte-for-byte what ``argon2.low_level`` derives."""
+    from argon2.low_level import Type, hash_secret_raw
+
+    from .._kdf_worker import _derive_key
+
+    salt = bytes(range(16))
+    record = kdf_parameters_from_wire(
+        {
+            "algorithm": "argon2id",
+            "version": 19,
+            "memory_mib": memory_mib,
+            "iterations": iterations,
+            "parallelism": parallelism,
+            "salt_b64": base64.b64encode(salt).decode("ascii"),
+            "output_bytes": 32,
+        }
+    )
+    secret = "synthetic-binding-password-ñ".encode()
+
+    expected = hash_secret_raw(
+        secret=secret,
+        salt=salt,
+        time_cost=iterations,
+        memory_cost=memory_mib * 1024,
+        parallelism=parallelism,
+        hash_len=32,
+        type=Type.ID,
+        version=19,
+    )
+    assert _derive_key(secret=secret, kdf=record) == expected
+
+
+def test_a_binding_refusal_becomes_the_failure_value_error() -> None:
+    """A parameter the C library refuses surfaces as the ValueError the child maps to its failure frame."""
+    from .._kdf_records import KdfParameterValues
+    from .._kdf_worker import _derive_key
+
+    unsalted = KdfParameterValues(
+        algorithm="argon2id", version=19, memory_mib=19, iterations=2, parallelism=1, salt_b64="", output_bytes=32
+    )
+    with pytest.raises(ValueError, match="refused by Argon2"):
+        _derive_key(secret=b"synthetic", kdf=unsalted)

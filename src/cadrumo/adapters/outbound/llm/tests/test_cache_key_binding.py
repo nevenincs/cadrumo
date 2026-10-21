@@ -60,8 +60,8 @@ def _response(provider: LLMProvider, model: str, text: str) -> LLMResponse:
     )
 
 
-_RESPONSE_A = _response(LLMProvider.ANTHROPIC, "claude-opus-4-7", "ANSWER-FOR-A")
-_RESPONSE_B = _response(LLMProvider.OPENAI, "gpt-model-b", "TAMPERED-B")
+_RESPONSE_A = _response(LLMProvider.AGENT, "claude-opus-4-7", "ANSWER-FOR-A")
+_RESPONSE_B = _response(LLMProvider.AGENT, "gpt-model-b", "TAMPERED-B")
 
 
 def _repository_engine():

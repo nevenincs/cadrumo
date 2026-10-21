@@ -45,7 +45,7 @@ from pydantic import BaseModel, Field
 
 from ...core.auth_provider import ClaveMovilRoute
 from ...core.classification.policies import SensitivityClass
-from ...core.i18n.render import tr
+from ...core.i18n.render import lookup_translation, output_language, tr
 from ...core.identity.profile import ProfileId
 from ...core.json_contract import Notice
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -54,6 +54,7 @@ from ...domain.user_profile.labels import (
     profile_choice_label,
     profile_field_help,
     profile_field_label,
+    profile_field_label_key,
     profile_section_summary,
     profile_section_title,
 )
@@ -309,6 +310,34 @@ class ProfileFieldView(BaseModel):
         decides whether the same profile may file.
         """
         return profile_value_is_present(self.value)
+
+
+def relocalize_profile_field(view: ProfileFieldView) -> ProfileFieldView:
+    """Reword one held field without reading its record or changing any edit witness.
+
+    Indexed repeatable paths retain their instance identity; the declared
+    field is the section's final path component, as the overview writer uses.
+    Unknown supplied views keep their original label rather than inventing one.
+    """
+    section, separator, remainder = view.path.partition(".")
+    if not separator:
+        return view
+    field_key = remainder.rsplit(".", 1)[-1]
+    label_key = profile_field_label_key(section, field_key)
+    label = lookup_translation(label_key, locale=output_language())
+    if label is None:
+        return view
+    choices = view.choices
+    if view.field_type is ProfileFieldType.BOOLEAN:
+        choices = tuple(
+            ProfileFieldChoice(
+                value=item.value, label=tr("flows.confirm.yes" if item.value == "true" else "flows.confirm.no")
+            )
+            for item in choices
+        )
+    elif view.field_type is ProfileFieldType.ENUM:
+        choices = _enum_field_choices(tuple(item.value for item in choices), path=f"{section}.{field_key}")
+    return view.model_copy(update={"label": label, "help": profile_field_help(section, field_key), "choices": choices})
 
 
 class ProfileSectionView(BaseModel):

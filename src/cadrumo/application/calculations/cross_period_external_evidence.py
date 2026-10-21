@@ -150,7 +150,7 @@ def _justificante_observation_reference_blockers(
     justificante: Justificante,
     observation_source_metadata: Mapping[str, str] | None,
 ) -> list[CrossPeriodCleanStateBlocker]:
-    if not observation_source_metadata:
+    if not (observation_source_metadata is not None and observation_source_metadata):
         return []
     return [
         *_justificante_csv_reference_blockers(justificante, observation_source_metadata),

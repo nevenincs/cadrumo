@@ -13,6 +13,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.config import Settings
 from ....core.hashing import sha256_hex
 from ....core.operations import (
@@ -22,17 +24,19 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.transactions.classification_origin import ClassificationOrigin
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...operations.interactions import OperationInteractionRequest
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ...operations.persistence.journal import serialize_operation_operand
 from ...operations.registry import OperationFrontendProjection, OperationRegistry, operation_public_schema_reference
-from ...user_profile.access_contracts import AccessAction, Availability
+from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import llm_review_execution as review_runtime
 from .. import llm_review_operation as operation
@@ -64,6 +68,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
+_SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 _Mode = Literal["classification", "saturated", "auto_split", "split"]
 _ORIGINS = {
     "classification": LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
@@ -297,7 +302,7 @@ def test_registration_binds_canonical_models_and_separate_response_authority(mod
             profile_id=_PROFILE,
             destination_id=uuid4(),
             action=action,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=registration.contract,
             published_authority=Availability.AVAILABLE,
         )
@@ -580,7 +585,8 @@ async def test_resume_routes_single_classification_split_and_audit_rejection(
 
     monkeypatch.setattr(review_runtime, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(review_runtime, "execute_reviewed_decision", writer)
-    assert await LedgerLlmReviewExecutor(case.factory).resume(case.request, checkpoint, case.context)
+    resumed = await LedgerLlmReviewExecutor(case.factory).resume(case.request, checkpoint, case.context)
+    assert resumed is not None and resumed != ""
     expected = (
         LlmReviewDecision.REJECT
         if response == "reject"
@@ -593,6 +599,64 @@ async def test_resume_routes_single_classification_split_and_audit_rejection(
     assert case.operands.published.result.outcome == (
         "rejected" if response == "reject" else "classified" if children == 1 else "split"
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("frontend", "supplied", "recorded"),
+    [
+        (
+            OperationFrontendProjection.EXTERNAL_CLIENT,
+            "typed by the caller",
+            f"automation:external-client.human.{_SESSION_CLIENT}",
+        ),
+        (OperationFrontendProjection.EXTERNAL_CLIENT, None, f"automation:external-client.human.{_SESSION_CLIENT}"),
+        (OperationFrontendProjection.CLI, "typed by the caller", "typed by the caller"),
+        (OperationFrontendProjection.TUI, None, str(_PROFILE)),
+        (None, "typed by the caller", "typed by the caller"),
+    ],
+    ids=["external_client-typed", "external_client-untyped", "cli-typed", "tui-untyped", "no-session-host"],
+)
+async def test_resume_records_the_session_label_for_automation_and_the_supplied_label_for_a_person(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection | None,
+    supplied: str | None,
+    recorded: str,
+) -> None:
+    case = _Case(authority_operation, "auto_split")
+    case.payload = LedgerLlmReviewRequest.model_validate({**case.payload.model_dump(), "actor": supplied})
+    case.request = case.request.model_copy(update={"payload": case.payload})
+    operand = case.operand("auto_split", children=1)
+    checkpoint = case.checkpoint(operand, "apply")
+    actors: list[object] = []
+
+    def writer(_suggestion: object, **kwargs: object) -> BaseModel:
+        actors.append(kwargs["actor"])
+        return ManualLedgerTransactionResult(
+            ref=BucketTransactionRef(bucket_id=str(_PROFILE), transaction_id=case.baseline.transaction_id),
+            transaction=case.baseline,
+            bucket_event_ids=("e" * 64,),
+        )
+
+    asked: list[OperationIdentity] = []
+
+    def session_host(identity: OperationIdentity) -> OperationExecutionCaller:
+        assert frontend is not None
+        asked.append(identity)
+        return OperationExecutionCaller(frontend=frontend, session_kind=SessionKind.HUMAN, client_id=_SESSION_CLIENT)
+
+    monkeypatch.setattr(review_runtime, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(review_runtime, "execute_reviewed_decision", writer)
+    executor = LedgerLlmReviewExecutor(case.factory, execution_caller_reader=None if frontend is None else session_host)
+
+    resumed = await executor.resume(case.request, checkpoint, case.context)
+    assert resumed is not None and resumed != ""
+
+    assert actors == [recorded]
+    # The session host is asked about this invocation and no other, and not at all where none composed it.
+    assert bool(asked) is (frontend is not None)
+    assert all(identity == case.identity for identity in asked)
 
 
 @pytest.mark.parametrize("outcome", ["classified", "split", "rejected"])
@@ -803,3 +867,194 @@ async def test_terminal_preview_cannot_be_reopened_as_pending_review_or_resumed_
     with pytest.raises(ValueError, match="terminal preview"):
         await LedgerLlmReviewExecutor(case.factory).resume(case.request, case.checkpoint(operand), case.context)
     assert not case.events.effects and case.operands.published is None
+
+
+_THIS_MACHINE = "http://127.0.0.1:11434/api/chat"
+_ANOTHER_MACHINE = "http://reader.example.invalid:11434/api/chat"
+_FIRST_PHASE = "ledger.llm.acquire"
+
+
+def _reader_endpoint(case: _Case, endpoint: str) -> None:
+    """Point the on-host reader's setting at ``endpoint``; the other ports stay as the case built them."""
+    case.ports = LedgerLlmOperationPorts(
+        ledger=case.ledger,
+        llm=case.ports.llm,
+        settings=Settings.model_construct(cadrumo_llm_ollama_chat_url=endpoint),
+    )
+
+
+def _model_calls(monkeypatch: pytest.MonkeyPatch, case: _Case, mode: _Mode) -> list[dict[str, object]]:
+    """Stand in for the one function that hands the person's text to the reader, and record each call."""
+    calls: list[dict[str, object]] = []
+    suggestion = _suggestion(case.baseline, mode)
+
+    def producer(**kwargs: object) -> LedgerLlmSuggestion:
+        calls.append(kwargs)
+        return suggestion
+
+    terminal = (
+        "suggest_evidence_split"
+        if mode in {"auto_split", "split"}
+        else "saturate_llm_classification"
+        if mode == "saturated"
+        else "suggest_llm_classification"
+    )
+    monkeypatch.setattr(review_runtime, terminal, producer)
+    monkeypatch.setattr(review_runtime, "require_active_bucket_id", lambda: str(_PROFILE))
+    return calls
+
+
+def _session_host_for(frontend: OperationFrontendProjection) -> OperationExecutionCallerReader:
+    def read(identity: OperationIdentity) -> OperationExecutionCaller:
+        return OperationExecutionCaller(frontend=frontend, session_kind=SessionKind.HUMAN, client_id=_SESSION_CLIENT)
+
+    return read
+
+
+_EVERY_FRONTEND = pytest.mark.parametrize(
+    "frontend",
+    [
+        OperationFrontendProjection.CLI,
+        OperationFrontendProjection.TUI,
+        OperationFrontendProjection.EXTERNAL_CLIENT,
+        None,
+    ],
+    ids=["cli", "tui", "external_client", "unhosted"],
+)
+
+
+def _worked_on_by_the_person(case: _Case) -> None:
+    """Store the case's row as one the person classified by hand and attached a document to."""
+    case.baseline = case.baseline.model_copy(
+        update={
+            "business_classification": BusinessClassification.PERSONAL,
+            "classified_by": "manual",
+            "classification_origin": ClassificationOrigin.PERSON,
+            "attachment_ids": ("c" * 64,),
+        }
+    )
+    case.repository.catalogue = TransactionCatalogue.from_transactions((case.baseline,))
+
+
+def _executor_on(case: _Case, frontend: OperationFrontendProjection | None) -> LedgerLlmReviewExecutor:
+    return LedgerLlmReviewExecutor(
+        case.factory, execution_caller_reader=None if frontend is None else _session_host_for(frontend)
+    )
+
+
+@pytest.mark.asyncio
+@_EVERY_FRONTEND
+@pytest.mark.parametrize("mode", ["classification", "saturated", "auto_split", "split"])
+@pytest.mark.parametrize("preview", [False, True], ids=["review", "preview"])
+@pytest.mark.parametrize("endpoint", [_THIS_MACHINE, _ANOTHER_MACHINE], ids=["this-machine", "another-host"])
+async def test_a_review_asks_the_configured_reader_once_whichever_frontend_submits_it(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection | None,
+    mode: _Mode,
+    preview: bool,
+    endpoint: str,
+) -> None:
+    """The row the person worked on, the reader's address and the mode decide nothing by frontend."""
+    case = _Case(authority_operation, mode)
+    case.payload = LedgerLlmReviewRequest.model_validate({**case.payload.model_dump(), "preview": preview})
+    case.request = case.request.model_copy(update={"payload": case.payload})
+    _worked_on_by_the_person(case)
+    _reader_endpoint(case, endpoint)
+    calls = _model_calls(monkeypatch, case, mode)
+
+    await _executor_on(case, frontend).execute(case.request, case.context)
+
+    assert len(calls) == 1 and calls[0]["reviewed_transaction"] is case.baseline
+    assert case.repository.loads == 1
+    if preview:
+        assert case.events.phases == [_FIRST_PHASE] and case.events.effects == [OperationEffect.NONE]
+        assert case.interactions.published is None
+    else:
+        assert case.events.phases == [_FIRST_PHASE, "ledger.llm.review"] and case.events.effects == []
+        assert case.interactions.published is not None
+
+
+@pytest.mark.asyncio
+@_EVERY_FRONTEND
+@pytest.mark.parametrize(
+    ("mode", "children", "action", "decision"),
+    [
+        ("classification", 2, "apply", LlmReviewDecision.APPLY),
+        ("saturated", 2, "apply", LlmReviewDecision.APPLY),
+        ("auto_split", 1, "apply", LlmReviewDecision.APPLY),
+        ("auto_split", 2, "apply", LlmReviewDecision.SPLIT),
+        ("split", 2, "apply", LlmReviewDecision.SPLIT),
+        ("classification", 2, "reject", LlmReviewDecision.REJECT),
+    ],
+    ids=["classification", "saturated", "single-line", "auto-split", "split", "rejection"],
+)
+async def test_a_response_commits_the_reviewed_decision_whichever_frontend_submits_it(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection | None,
+    mode: _Mode,
+    children: int,
+    action: Literal["apply", "reject"],
+    decision: LlmReviewDecision,
+) -> None:
+    """The writer is reached with the same decision and the same reviewed row, after no further read."""
+    case = _Case(authority_operation, mode)
+    _worked_on_by_the_person(case)
+    _reader_endpoint(case, _ANOTHER_MACHINE)
+    checkpoint = case.checkpoint(case.operand(mode, children=children), action)
+    loads_before = case.repository.loads
+    written: list[tuple[object, object]] = []
+
+    def writer(_suggestion: object, **kwargs: object) -> BaseModel:
+        written.append((kwargs["decision"], kwargs["expected_current"]))
+        if decision is LlmReviewDecision.REJECT:
+            return LLMSuggestionRejectionResult(
+                bucket_id=str(_PROFILE),
+                transaction_id=case.baseline.transaction_id,
+                bucket_event_id="e" * 64,
+                suggestion_kind="classification",
+                provenance="llm:local-text:test",
+                operator_reason=case.payload.reason,
+            )
+        if decision is LlmReviewDecision.SPLIT:
+            return LLMSplitApplyResult(
+                bucket_id=str(_PROFILE),
+                parent_transaction_id=case.baseline.transaction_id,
+                split_group_id="synthetic-group",
+                child_transaction_ids=("d" * 64, "e" * 64),
+                classified_child_count=2,
+                provenance="llm:local-text:test",
+            )
+        return ManualLedgerTransactionResult(
+            ref=BucketTransactionRef(bucket_id=str(_PROFILE), transaction_id=case.baseline.transaction_id),
+            transaction=case.baseline,
+            bucket_event_ids=("e" * 64,),
+        )
+
+    monkeypatch.setattr(review_runtime, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(review_runtime, "execute_reviewed_decision", writer)
+
+    resumed = await _executor_on(case, frontend).resume(case.request, checkpoint, case.context)
+    assert resumed is not None and resumed != ""
+
+    assert written == [(decision, case.baseline)]
+    assert case.repository.loads == loads_before
+    assert case.events.phases == ["ledger.llm.commit"]
+    assert case.events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
+
+
+@pytest.mark.parametrize(("share", "accepted"), [("0.333", True), ("0.0175", True), ("1.01", False)])
+def test_an_applied_share_keeps_its_fraction_digits_and_stays_within_zero_to_one(share: str, accepted: bool) -> None:
+    values = {
+        "profile_id": _PROFILE,
+        "transaction_id": "a" * 12,
+        "mode": "classification",
+        "origin": _ORIGINS["classification"],
+        "business_pct": share,
+    }
+    if accepted:
+        assert LedgerLlmReviewRequest.model_validate(values).business_pct == share
+    else:
+        with pytest.raises(ValidationError, match=r"within 0\.\.1"):
+            LedgerLlmReviewRequest.model_validate(values)

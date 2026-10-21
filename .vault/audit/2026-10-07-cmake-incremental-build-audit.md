@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#cmake-incremental-build'
 date: '2026-10-07'
-modified: '2026-10-07'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:4db76df04bcb340fb5baf3ce45a59588d3a0f2f5e6ea064ce1ce37904c1309f8'
+body_hash: 'sha256:dd3b01b69ff8053852d1d0e207a70cb1e40962c7fce86f768354116526752410'
 related:
   - "[[2026-10-07-cmake-incremental-build-plan]]"
 ---
@@ -48,18 +48,15 @@ After all source fixes, 42 focused Python tests pass across cache currency, miss
 
 Independent follow-up review confirms the four concrete defects corrected and no additional blocking defect. Verdict remains PENDING for full application ZIP acceptance and the reported repository-wide type-check baseline. S01-S03 are implemented and checkpointed; S04 remains open. Minimal compiler invalidation is not claimed for the documented conservative authority policy.
 
-
 ### explicit-authority-selection | low | User-selected missing-only builds replace automatic compiler currency
 
 Follow-up S05 implements the user's 2026-10-07 selection: ordinary CMake and wheel builds consume existing publications without live-source or compiler fingerprint comparison. Missing descriptors or selected databases trigger publication; `registry_authority_rebuild` and `just registry-publish-authority` explicitly republish. The wheel hook retains content-addressed name, digest, size and path checks, and malformed present descriptors fail rather than being overwritten. `just init` retains its explicit `--if-stale` publication and registry currency checks remain independent. A clean checkout compiles; a CI job restoring authority must explicitly republish when it requires fresh compiler output. This supersedes the conservative build-invalidation limitation recorded above, not the compiler's internal development caches or legal-only authority identity.
 
 Scoped review traced CMake prerequisites through publication, product staging and the wheel hook. A seeded own-root override can bootstrap an absent directory; foreign authority overrides remain explicit inputs. Eighteen focused tests pass for missing/reuse/forced/failure/malformed/hook paths. Actual Windows configure and `registry_authority` build pass and report reuse without publication. Scoped Ruff/format/ty pass. Global style passes; global formatting reports unrelated concurrent `dev/packaging/tests/test_native_installation.py` drift. The explicit full compiler command itself is unchanged and was not rerun against the shared publication during this follow-up. Original full application ZIP acceptance remains pending under S04.
 
-
 ### authority-followup-checks | low | Scoped follow-up verification passes with unrelated repository diagnostics
 
 Final S05 verification: 18 tests pass, real CMake reuse succeeds, all changed Python files pass scoped Ruff/format/ty, and global style passes. Global type check reports one pyrefly bad-argument-type diagnostic in `src/cadrumo/application/operations/registry.py`; global formatting reports concurrent installation-test drift. These files were not changed by S05. Scope review passes for missing-only authority orchestration; the wider plan remains pending S04 full-package evidence.
-
 
 ## Recommendations
 

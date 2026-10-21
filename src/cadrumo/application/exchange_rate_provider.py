@@ -1,7 +1,7 @@
 """Host-composed exchange-rate provider for euro conversion.
 
 Which rate authority converts foreign amounts is decided once by the process
-host -- the ``aeat`` console script, the workbench, the MCP server -- and read
+host -- the ``aeat`` console script, the workbench, the external client server -- and read
 here by every conversion path. Application and adapter code never constructs a
 transport of its own, so a host that must not reach the network (a test run)
 composes a different provider without any branch in the code that converts.

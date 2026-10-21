@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import secrets
+from contextlib import AbstractContextManager, ExitStack
 from pathlib import Path
 
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
@@ -18,11 +19,20 @@ from .multirate_cli_journey import (
 
 
 def _start(
-    executable: Path, authority_root: Path, storage_root: Path, artifact_root: Path, journey_year: IvaJourneyYear
+    executable: Path,
+    authority_root: Path,
+    storage_root: Path,
+    artifact_root: Path,
+    journey_year: IvaJourneyYear,
+    *,
+    resources: ExitStack,
+    runtime_scope: AbstractContextManager[object] | None = None,
 ) -> tuple[InstalledCli, list[SanitizedCommandReceipt], Path]:
     if storage_root.exists() and any(storage_root.iterdir()):
         raise IvaCliJourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
+    if runtime_scope is not None:
+        resources.enter_context(runtime_scope)
     artifact_root.mkdir(parents=True, exist_ok=True)
     artifact = artifact_root / "synthetic-annual-foundation-purchase.pdf"
     artifact.write_bytes(b"%PDF-1.4\n% synthetic annual IVA purchase evidence\n")

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import datetime
@@ -14,6 +14,9 @@ from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, ValidationError
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.config import override_settings
 from ....core.hashing import sha256_hex
@@ -30,11 +33,6 @@ from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...storage.calc_sheets.engine import build_export_plan
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..export_sink import LocalFileExportReceipt, LocalFileExportSink, ModeloExportOutputPathError
 from ..modelo_spreadsheet_executor import ModeloSpreadsheetExecutor
@@ -83,7 +81,7 @@ class _Scope:
         self.refuse = refuse
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         if self.refuse:
             raise ProfileAccessRefusedError(AccessDenialCode.SESSION_INACTIVE)
         assert not self.held
@@ -186,7 +184,6 @@ def test_every_public_spreadsheet_schema_compiles_with_secure_requests() -> None
         assert registration.contract.result_schema is not None
         assert row.result_type is ModeloSpreadsheetExecutionResult
         assert len(registration.schema_bindings) == 2
-        assert row.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
 
 
 def test_foreign_worker_profile_is_refused_before_port_construction(

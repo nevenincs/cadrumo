@@ -141,7 +141,7 @@ def test_authority_rejects_wrong_version_unratified_or_incomplete_rows(
     value: object,
     message: str,
 ) -> None:
-    data = {key: value for key, value in _entry().model_dump(mode="python").items() if isinstance(key, str)}
+    data = _entry().model_dump(mode="python")
     data[field] = value
 
     if field == "schema_version":

@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..adapters.persistence.profile.review_package_signing import build_review_package_signing_keypair_reader
 from ..application.modelo.calculation_report_verification import CalculationSummaryStoreContext
 from ..application.modelo.calculation_report_verification_operation import ModeloCalculationReportVerificationPorts
 from ..application.modelo.calculation_summary_pdf_ports import CalculationSummaryPdfReader
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.user_profile.capsule_record import ProfileRecordStore
 from ..application.user_profile.profile_record_repository import ProfileRecordRepository

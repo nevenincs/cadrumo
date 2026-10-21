@@ -35,8 +35,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: typed envelope with a product-identity requirement, so removing the layout
 #: removes three capabilities at once.
 _ENVELOPE_MODELO = "303"
-_ENVELOPE_PREDECESSOR = "2025"
-_ENVELOPE_REVISION = "2026-y-siguientes"
+_ENVELOPE_PREDECESSOR = "2024-desde-09-y-3t"
+_ENVELOPE_REVISION = "2025"
 
 #: A second clean modelo, whose later revision loses only its deadline windows.
 _DEADLINE_MODELO = "180"

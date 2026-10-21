@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Iterable
+from collections.abc import AsyncGenerator, Iterable
 from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime, timedelta, timezone
 from types import SimpleNamespace
@@ -12,6 +12,9 @@ from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, ValidationError
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....application.ledger.action_ports import LedgerActionPorts
 from ....application.ledger.actions_common import save_transaction_catalogue_and_events
@@ -37,7 +40,6 @@ from ....application.operations.registry import (
     OperationRegistry,
 )
 from ....application.operations.registry_schema_validation import strict_model_json_schema
-from ....application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.secure_object_write import SecureObjectWrite
@@ -223,12 +225,13 @@ def _access_context(
     registration: OperationPublicDefinitionRegistrationV1,
     *,
     profile_id: UUID = _PROFILE,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
     )
@@ -274,13 +277,80 @@ def test_access_refuses_a_different_context_profile() -> None:
         )
 
 
-def test_registrations_are_cli_only_and_wire_graphs_are_closed() -> None:
+@pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
+def test_rule_list_is_admitted_on_every_frontend_without_a_commit_door(frontend: OperationFrontendProjection) -> None:
+    registry, registrations = _registry()
+    registration = registrations[LEDGER_RULE_LIST_OPERATION_DEFINITION_ID]
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(LEDGER_RULE_LIST_OPERATION_DEFINITION_ID),
+        context=_access_context(registration, frontend=frontend),
+    )
+
+    assert resolved.request.frontend is frontend
+    assert resolved.request.profile_id == _PROFILE
+    assert resolved.request.period_independent is True
+    assert AccessAction.COMMIT not in resolved.policy.actions
+
+
+@pytest.mark.parametrize(
+    "definition_id",
+    (LEDGER_RULE_ADD_OPERATION_DEFINITION_ID, LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID),
+)
+@pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
+def test_rule_writes_are_admitted_on_every_frontend_with_a_commit_door(
+    definition_id: str, frontend: OperationFrontendProjection
+) -> None:
+    registry, registrations = _registry()
+    registration = registrations[definition_id]
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(definition_id),
+        context=_access_context(registration, frontend=frontend),
+    )
+
+    assert resolved.request.frontend is frontend
+    assert resolved.request.period_independent is True
+    assert AccessAction.COMMIT in resolved.policy.actions
+
+
+def _apply_access_request(*, reaffirm: bool, dry_run: bool) -> OperationRequest[BaseModel]:
+    return OperationRequest[BaseModel](
+        definition_id=LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=LedgerRuleApplyRequest(profile_id=_PROFILE, reaffirm=reaffirm, dry_run=dry_run),
+    )
+
+
+@pytest.mark.parametrize(
+    ("reaffirm", "dry_run", "commit_required"),
+    ((False, False, True), (True, False, True), (False, True, False), (True, True, False)),
+    ids=("classifies-unprocessed-rows", "reaffirms", "previews", "previews-a-reaffirming-run"),
+)
+def test_a_rule_run_is_granted_the_same_policy_on_every_frontend(
+    reaffirm: bool, dry_run: bool, commit_required: bool
+) -> None:
+    registry, registrations = _registry()
+    request = _apply_access_request(reaffirm=reaffirm, dry_run=dry_run)
+
+    policies = {
+        frontend: resolve_operation_access(
+            registry=registry,
+            request=request,
+            context=_access_context(registrations[LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID], frontend=frontend),
+        ).policy
+        for frontend in OperationFrontendProjection
+    }
+
+    assert len(set(policies.values())) == 1
+    assert all((AccessAction.COMMIT in policy.actions) is commit_required for policy in policies.values())
+
+
+def test_registrations_wire_graphs_are_closed() -> None:
     registry, registrations = _registry()
     assert {definition.definition_id for definition in registry.definitions} >= set(registrations)
-    assert all(
-        registry.lookup(definition_id).permitted_frontends == frozenset({OperationFrontendProjection.CLI})
-        for definition_id in registrations
-    )
     for definition_id in (LEDGER_RULE_ADD_OPERATION_DEFINITION_ID, LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID):
         definition = registry.lookup(definition_id)
         registration = registrations[definition_id]
@@ -388,7 +458,7 @@ class _FenceProbe:
         self.entries = 0
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         assert not self.active
         self.active = True
         self.entries += 1

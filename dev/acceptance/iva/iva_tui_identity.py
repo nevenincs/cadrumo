@@ -47,6 +47,7 @@ def _source_identity(workspace_root: Path) -> SourceIdentity:
         if not source.is_file():
             raise IvaInstalledTuiError("critical installed-TUI source member is absent")
         rows.append((module_name, sha256_hex(source.read_bytes())))
+    rows.sort()
     payload = json.dumps(rows, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
     return SourceIdentity(manifest_sha256=sha256_hex(payload), module_sha256s=tuple(rows))
 

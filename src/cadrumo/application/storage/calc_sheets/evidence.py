@@ -52,7 +52,7 @@ def sheet_evidence_from_ledger_filing(
             raise CalcSheetsEngineError(
                 translated_message="errors.error.error_calc_sheets_engine",
                 context={
-                    "transaction_id": str(row.transaction_id),
+                    "transaction_id": row.transaction_id,
                     "workbook_casilla_attribution_present": False,
                 },
             )

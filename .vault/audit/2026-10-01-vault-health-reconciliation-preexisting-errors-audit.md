@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#vault-health-reconciliation'
 date: '2026-10-01'
-modified: '2026-10-03'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:907f6f204acd0bcb3ea59cb2a115f1edc67189af56418db39f3bdaf41030a2fe'
+body_hash: 'sha256:bc11d969f9d5ab8bad0850f9cae30b136405d3ff062f7995f8abf6b4f10c849d'
 related:
   - "[[2026-08-28-test-reconciliation-sweep-adr]]"
   - "[[2026-09-27-website-repository-boundary-docs-static-delivery-adr]]"

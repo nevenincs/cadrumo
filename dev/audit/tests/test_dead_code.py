@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from dev._paths import REPO_ROOT
+from dev.first_party_source import SOURCE_PACKAGES
 
 from ..dead_code import (
     DeadCodeOutcome,
@@ -59,9 +60,10 @@ def test_command_targets_the_configured_paths() -> None:
         "vulture",
         "--config",
         "pyproject.toml",
-        "src/cadrumo",
+        *SOURCE_PACKAGES,
         "dev/audit/vulture_whitelist.py",
     ]
+    assert {"src/cadrumo", "src/cadrumo_mcp", "src/cadrumo_agent_service"} <= set(command)
 
 
 def test_parse_vulture_output_reads_real_captured_lines() -> None:
@@ -143,15 +145,19 @@ def test_offered_population_counts_the_modules_the_targets_actually_hold(tmp_pat
 
 
 def test_offered_population_counts_only_production_source(tmp_path: Path) -> None:
-    """Test modules, conftest files and bundled data are not part of what vulture analyses."""
-    (tmp_path / "pyproject.toml").write_bytes((REPO_ROOT / "pyproject.toml").read_bytes())
-    package = tmp_path / "src" / "cadrumo" / "domain"
-    (package / "tests").mkdir(parents=True)
-    (package / "_data").mkdir()
-    for module in ("one.py", "test_one.py", "_test_two.py", "conftest.py", "tests/helper.py", "_data/__init__.py"):
-        (package / module).write_text("", encoding="utf-8")
+    """Test modules, conftest files and bundled data are not part of what vulture analyses.
 
-    assert offered_module_population(tmp_path) == 1
+    Every source package is classified alike, not only the tax application.
+    """
+    (tmp_path / "pyproject.toml").write_bytes((REPO_ROOT / "pyproject.toml").read_bytes())
+    for source_package in SOURCE_PACKAGES:
+        package = tmp_path / source_package / "domain"
+        (package / "tests").mkdir(parents=True)
+        (package / "_data").mkdir()
+        for module in ("one.py", "test_one.py", "_test_two.py", "conftest.py", "tests/helper.py", "_data/__init__.py"):
+            (package / module).write_text("", encoding="utf-8")
+
+    assert offered_module_population(tmp_path) == len(SOURCE_PACKAGES)
 
 
 def test_offered_population_does_not_claim_excluded_modules_were_scanned(tmp_path: Path) -> None:

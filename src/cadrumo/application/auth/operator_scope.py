@@ -47,6 +47,8 @@ _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS = (
     "cadrumo_certificate_friendly_name",
     "cadrumo_cert_warn_days",
     "cadrumo_cert_critical_days",
+    "cadrumo_clave_permanente_password",
+    "cadrumo_clave_permanente_dni_nie",
     "cadrumo_clave_movil_dni_nie",
     "cadrumo_clave_movil_dni_fecha",
     "cadrumo_clave_movil_nie_soporte",
@@ -343,7 +345,7 @@ def resolve_auth_operation_scope(
         provider_ids = known_auth_provider_ids()
     elif provider is not None:
         provider_ids = (get_auth_provider(provider).id,)
-    elif current_provider:
+    elif current_provider is not None and current_provider:
         provider_ids = (get_auth_provider(current_provider).id,)
     else:
         raise AuthProviderNotConfiguredError(

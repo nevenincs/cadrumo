@@ -6,12 +6,13 @@ from functools import cache
 
 import typer
 
-from .._command_runtime import _node_app
-from ..command_graph import CommandSpecGraph
+from cadrumo.entrypoints.cli.command_lifecycle import dispatch_cli_behavior
+from cadrumo_client.commands.compiler import build_command_app
+from cadrumo_client.commands.graph import CommandSpecGraph
 
 
 @cache
 def build_command_subtree(graph: CommandSpecGraph, key: str) -> typer.Typer:
     """Compile one declared subtree for focused command behavior assertions."""
     graph.spec(key)
-    return _node_app(graph, key)
+    return build_command_app(graph, root_key=key, dispatcher=dispatch_cli_behavior)

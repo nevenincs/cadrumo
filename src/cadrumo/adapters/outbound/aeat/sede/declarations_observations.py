@@ -23,6 +23,7 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
+from .....application.live.expedientes_ports import ExpedientesDeclaration
 from .....application.modelo.reconciliation_parsing import reconciliation_evidence_parser
 from .....core.casilla_id import CasillaId
 from .....core.casilla_value_kind import CasillaValueKind
@@ -68,7 +69,6 @@ from .....domain.iva_compensation.filed_derivation import (
     M303CompensationAvailableDerivation,
     derive_m303_compensation_available_from_casillas,
 )
-from .declarations_schema import Declaracion
 from .errors import SedeParseError, SedeValidationError
 from .schema import (
     FiledDeclaracionArtefact,
@@ -123,7 +123,7 @@ type FiledDeclaracionArtefactSink = Callable[
 
 
 def _register_row_artefact(
-    declaration: Declaracion,
+    declaration: ExpedientesDeclaration,
     *,
     source_url: AnyHttpUrl,
 ) -> tuple[FiledDeclaracionArtefact, bytes]:
@@ -155,7 +155,7 @@ def _store_artefact(
 
 
 def _registry_snapshot_for_declaration(
-    declaration: Declaracion,
+    declaration: ExpedientesDeclaration,
     *,
     operation: PinnedAuthorityOperation,
 ) -> RegistrySnapshot:
@@ -341,7 +341,7 @@ def observed_header_facts_from_submitted_file(
 def observed_casillas_from_submitted_file(
     *,
     snapshot: RegistrySnapshot,
-    declaration: Declaracion,
+    declaration: ExpedientesDeclaration,
     body: bytes,
     artefact: FiledDeclaracionArtefact,
     operation: PinnedAuthorityOperation,
@@ -391,7 +391,7 @@ def observed_casillas_from_submitted_file(
 def _submitted_file_layout_refusal(
     *,
     snapshot: RegistrySnapshot,
-    declaration: Declaracion,
+    declaration: ExpedientesDeclaration,
     artefact: FiledDeclaracionArtefact,
     reason: str,
 ) -> SedeParseError:
@@ -506,7 +506,7 @@ def _declaration_pdf_extraction_profile_provisional(snapshot: RegistrySnapshot) 
 def _observed_casillas_from_declaration_pdf(
     *,
     snapshot: RegistrySnapshot,
-    declaration: Declaracion,
+    declaration: ExpedientesDeclaration,
     body: bytes,
 ) -> tuple[ObservedCasillaValue, ...]:
     declaration_period = declaration.period.registry_token
@@ -570,7 +570,7 @@ def _verify_submitted_file_context(
     fields_by_id: Mapping[str, ExportFieldDefinition],
     parsed_fields: tuple[ParsedExportFieldValue, ...],
     *,
-    declaration: Declaracion,
+    declaration: ExpedientesDeclaration,
 ) -> None:
     expected = {
         "modelo": declaration.modelo,

@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, StringConstraints, field_validator, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
@@ -34,11 +36,10 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .iva_wallet_mutation import (
     IVA_WALLET_MUTATION_RESULT_MAX_BYTES,
@@ -152,7 +153,7 @@ def _projection_from_decision(
     return ModeloIvaWalletOverrideProjection(
         profile_id=profile_id,
         period=period,
-        taxpayer_nif=str(decision.taxpayer_nif),
+        taxpayer_nif=decision.taxpayer_nif,
         amount=str(decision.selected_amount),
         reason=reason,
         evidence_locator=evidence_locator,
@@ -261,6 +262,7 @@ def build_modelo_iva_wallet_override_definition(factory: ModeloIvaWalletSeedPort
     return OperationDefinition(
         definition_id=MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID,
         request_type=ModeloIvaWalletOverrideRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloIvaWalletOverrideReport,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloIvaWalletOverrideRequest,
@@ -271,7 +273,6 @@ def build_modelo_iva_wallet_override_definition(factory: ModeloIvaWalletSeedPort
         interaction_kinds=frozenset(),
         capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 

@@ -26,7 +26,7 @@ import pytest
 
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ..confirmation_gate import ConfirmationBlockedError, confirmation_blockers, resolved_blockers
 from ..invoice_confirmation import _with_direction_contradiction
 from ..invoice_draft_records import InvoiceDraft

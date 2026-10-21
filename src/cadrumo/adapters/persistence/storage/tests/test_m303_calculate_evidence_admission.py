@@ -39,7 +39,6 @@ from cadrumo.application.modelo.work_calculation_contracts import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.core.errors.hierarchy import CadrumoError
@@ -56,6 +55,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

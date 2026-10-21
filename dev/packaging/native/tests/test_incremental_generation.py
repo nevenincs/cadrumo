@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import io
 import json
 import os
@@ -11,15 +12,18 @@ import shutil
 import sys
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 from PIL import Image
 
 from dev._paths import REPO_ROOT
 
+from ... import runtime_wheel_selection
 from ...command_execution import run_command
 from ...runtime_wheelhouse_contract import LockedWheel
-from .. import cmake_build, provision
+from .. import cmake_build, layout, provision
+from ..build_stamp import BuildStamp
 from ..build_timing import measure_build
 from ..cmake_build import action_toolchain
 from ..generate import generate
@@ -60,8 +64,10 @@ def test_shared_producer_reuses_stable_generation_and_refuses_moving_inputs(
     monkeypatch.setattr(cmake_build, "build_action", producer)
     arguments = argparse.Namespace(action="tools", inputs=inputs)
     if mutation in {"source", "producer"}:
+        # A moved source is an input change; a moved selected tool is a toolchain change.
+        refusal = "Inputs changed during tools" if mutation == "source" else "toolchain changed during tools"
         with (
-            pytest.raises(RuntimeError, match="Inputs changed during tools"),
+            pytest.raises(RuntimeError, match=refusal),
             measure_build(tmp_path, "tools") as timings,
         ):
             cmake_build.execute_action(tmp_path, arguments, timings)
@@ -103,11 +109,11 @@ def test_metadata_change_preserves_unaffected_icon(tmp_path: Path, monkeypatch: 
     png = io.BytesIO()
     Image.new("RGBA", (256, 256), "blue").save(png, format="PNG")
     monkeypatch.setitem(sys.modules, "resvg_py", SimpleNamespace(svg_to_bytes=lambda **kwargs: png.getvalue()))
-    generate_metadata(tmp_path, 1, "2026-10-07", tmp_path, target="windows-x86-64")
+    generate_metadata(tmp_path, BuildStamp("2026100701", 1, "2026-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
     baseline = _freeze_outputs(tmp_path)
-    generate_metadata(tmp_path, 1, "2026-10-07", tmp_path, target="windows-x86-64")
+    generate_metadata(tmp_path, BuildStamp("2026100701", 1, "2026-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
     assert _outputs(tmp_path) == baseline
-    generate_metadata(tmp_path, 2, "2026-10-07", tmp_path, target="windows-x86-64")
+    generate_metadata(tmp_path, BuildStamp("2026100702", 2, "2026-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
     after = _outputs(tmp_path)
     assert after["cadrumo.ico"] == baseline["cadrumo.ico"]
     assert after["interpreter.rc"][0] != baseline["interpreter.rc"][0]
@@ -131,6 +137,30 @@ def test_desktop_changes_do_not_invalidate_native_actions(action: str) -> None:
     assert action_toolchain(changed, action, "windows-x86-64") == baseline
     changed["builder_files"]["CADRUMO_UV"]["sha256"] = "uv-two"
     assert action_toolchain(changed, action, "windows-x86-64") != baseline
+
+
+def test_agent_runtime_tracks_node_and_npm_but_ignores_frontend_and_compiler_changes() -> None:
+    configured: dict[str, Any] = {
+        "desktop_tools": {"node": "node", "npm_cli": "npm-cli.js"},
+        "builder_files": {
+            "CADRUMO_UV": {"path": "uv", "sha256": "uv-one"},
+            "desktop/node": {"path": "node", "sha256": "node-one"},
+            "desktop/npm-cli": {"path": "npm-cli.js", "sha256": "npm-one"},
+            "desktop/npm-package": {"path": "npm-package.json", "sha256": "npm-package-one"},
+            "desktop/npm-lock": {"path": "frontend-lock", "sha256": "frontend-one"},
+            "CMAKE_C_COMPILER": {"path": "cc", "sha256": "cc-one"},
+        },
+    }
+    original = action_toolchain(configured, "agent", "windows-x86-64")
+    changed = copy.deepcopy(configured)
+    changed["builder_files"]["desktop/npm-lock"]["sha256"] = "frontend-two"
+    changed["builder_files"]["CMAKE_C_COMPILER"]["sha256"] = "cc-two"
+    assert action_toolchain(changed, "agent", "windows-x86-64") == original
+    changed["builder_files"]["desktop/node"]["sha256"] = "node-two"
+    assert action_toolchain(changed, "agent", "windows-x86-64") != original
+    changed = copy.deepcopy(configured)
+    changed["builder_files"]["desktop/npm-cli"]["sha256"] = "npm-two"
+    assert action_toolchain(changed, "agent", "windows-x86-64") != original
 
 
 def test_cargo_crate_types_and_consumer_preserve_sibling_artifacts(tmp_path: Path) -> None:
@@ -183,7 +213,7 @@ def test_cargo_crate_types_and_consumer_preserve_sibling_artifacts(tmp_path: Pat
 def test_changed_wheel_closure_reuses_sdk(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """A runtime dependency update neither calls SDK acquisition nor touches SDK bytes."""
     wheel = LockedWheel("fixture", "1", "fixture-1-py3-none-any.whl", "https://example.test/one", "a" * 64, 1)
-    monkeypatch.setattr(cmake_build, "plan_target_wheels", lambda *args: (wheel,))
+    monkeypatch.setattr(runtime_wheel_selection, "plan_target_wheels", lambda *args, **kwargs: (wheel,))
     sdk_identity = action_toolchain({}, "sdk", "windows-x86-64")
     dependency_identity = action_toolchain({}, "provision", "windows-x86-64")
     wheel = LockedWheel("fixture", "2", "fixture-2-py3-none-any.whl", "https://example.test/two", "b" * 64, 1)
@@ -193,16 +223,34 @@ def test_changed_wheel_closure_reuses_sdk(tmp_path: Path, monkeypatch: pytest.Mo
     generated = tmp_path / "generated"
     generated.mkdir()
     (generated / "build-toolchain.json").write_text("{}", encoding="utf-8")
-    paths = {name: tmp_path / name for name in ("runtime", "generated", "python_sdk")}
+    paths = {name: tmp_path / name for name in ("runtime", "generated", "python_sdk", "agent")}
     monkeypatch.setattr(cmake_build, "build_paths", lambda build: paths)
+    # The agent build's recorded resolution: one distribution the agent adds to the closure.
+    paths["agent"].mkdir()
+    agent_requirements = paths["agent"] / "agent-dependencies.txt"
+    agent_requirements.write_bytes(f"agent-only==1.0 --hash=sha256:{'d' * 64}\n".encode())
+    (paths["agent"] / "agent-dependencies.json").write_text(
+        json.dumps(
+            {
+                "target": "windows-x86-64",
+                "python": (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip(),
+                "requirements_sha256": hashlib.sha256(agent_requirements.read_bytes()).hexdigest(),
+                "versions": {"agent-only": "1.0"},
+                "cadrumo_lock_sha256": "e" * 64,
+                "agent_lock_sha256": "f" * 64,
+                "replaced": {},
+            }
+        ),
+        encoding="utf-8",
+    )
     sdk = paths["python_sdk"] / "sdk"
     sdk.mkdir(parents=True)
     (sdk / "python.h").write_text("stable SDK bytes", encoding="utf-8")
     baseline = _freeze_outputs(sdk)
-    monkeypatch.setattr(cmake_build, "load_layout", lambda target: {"sdk": {"root": "sdk"}})
+    monkeypatch.setattr(layout, "load_layout", lambda target: {"sdk": {"root": "sdk"}})
     monkeypatch.setattr(provision, "load_layout", lambda target: {"sdk": {"root": "sdk"}})
     monkeypatch.setattr(provision, "selected_uv", lambda *args, **kwargs: "configured-uv")
-    monkeypatch.setattr(provision, "plan_target_wheels", lambda *args: (wheel,))
+    monkeypatch.setattr(provision, "plan_target_wheels", lambda *args, **kwargs: (wheel,))
 
     def unexpected_sdk(*args: object) -> None:
         raise AssertionError("A dependency closure build must not reacquire the SDK")
@@ -210,16 +258,23 @@ def test_changed_wheel_closure_reuses_sdk(tmp_path: Path, monkeypatch: pytest.Mo
     monkeypatch.setattr(provision, "backend", unexpected_sdk)
 
     def install(command: list[str], **kwargs: object) -> SimpleNamespace:
+        # Each pinned requirement installs into its own --target; the wheel a pin names decides its files.
         dependencies = Path(command[command.index("--target") + 1])
-        dependencies.mkdir()
-        (dependencies / "fixture.py").write_text(wheel.version, encoding="utf-8")
+        requirement = Path(command[command.index("-r") + 1]).read_text(encoding="utf-8")
+        dependencies.mkdir(exist_ok=True)
+        if requirement.startswith("fixture "):
+            (dependencies / "fixture.py").write_text(wheel.version, encoding="utf-8")
+        else:
+            (dependencies / "agent_only.py").write_text("agent", encoding="utf-8")
         return SimpleNamespace(returncode=0, stderr="")
 
     monkeypatch.setattr(provision, "run_command", install)
     for version in ("2", "3"):
+        # A new version is new bytes, so its pin names a new hash.
         wheel = LockedWheel(
-            "fixture", version, f"fixture-{version}-py3-none-any.whl", "https://example.test/w", "c" * 64, 1
+            "fixture", version, f"fixture-{version}-py3-none-any.whl", "https://example.test/w", version * 64, 1
         )
         cmake_build.build_action(tmp_path, argparse.Namespace(action="provision", target="windows-x86-64"))
         assert (paths["runtime"] / "dependencies/fixture.py").read_text(encoding="utf-8") == version
+        assert (paths["runtime"] / "dependencies/agent_only.py").read_text(encoding="utf-8") == "agent"
         assert _outputs(sdk) == baseline

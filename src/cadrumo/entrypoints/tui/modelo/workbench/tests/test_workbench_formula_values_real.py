@@ -30,8 +30,8 @@ from .....tests.modelo_operator_work_storage import SEEDED_AT, seeded_operator_w
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import application_workbench
 from ..editor import CasillaEditorPanel, CasillaEditorScreen
+from ..factory import InstalledModeloWorkbench
 from ..header import blocking_count, deadline_view, fit_identity
-from ..installed import InstalledModeloWorkbench
 from ..issues import WorkbenchIssuesScreen
 from ..screen import ModeloWorkbenchScreen
 

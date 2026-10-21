@@ -125,7 +125,7 @@ def _definition_paragraph(overview: ModeloOverview, language: OutputLanguage) ->
     inside a value the per-language rendering resolved.
     """
     definition = overview.definitions.get(language.value)
-    if not definition:
+    if not (definition is not None and definition):
         return None
     return f'<p class="modelo-overview__definition">{html.escape(definition)}</p>'
 

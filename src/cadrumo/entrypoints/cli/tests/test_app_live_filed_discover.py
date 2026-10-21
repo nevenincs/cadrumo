@@ -31,9 +31,9 @@ from ....application.live.filed_history_discovery import (
 )
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.json_contract import NoticeSeverity, SchemaEnvelope
-from .._app_live import _filed_discover_notices, _filed_discover_result_and_lines
 from .._app_live_command_specs import LIVE_COMMAND_SPECS
-from .._app_live_filed_payloads import FiledDiscoverResult
+from ..app_live_commands import _filed_discover_notices, _filed_discover_result_and_lines
+from ..app_live_filed_results import FiledDiscoverResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -178,5 +178,5 @@ def test_every_notice_message_resolves_to_real_copy() -> None:
 
 def test_every_notice_carries_machine_queryable_context() -> None:
     for notice in _filed_discover_notices(_register_only_report()):
-        assert notice.context
+        assert notice.context is not None and notice.context
         assert all(isinstance(value, str) for value in notice.context.values())

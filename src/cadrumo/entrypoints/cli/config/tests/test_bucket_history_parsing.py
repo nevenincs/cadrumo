@@ -9,8 +9,8 @@ import typer
 from pydantic import ValidationError
 
 from .....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, derive_bucket_event_id
-from ..._config_bucket_history_payloads import BucketHistoryEventPayload
-from .._bucket_history import (
+from ...profile_history_results import BucketHistoryEventPayload
+from ..profile_history_commands import (
     _bucket_history_event_payload,
     _parse_bucket_event_types,
     _parse_bucket_history_instant,

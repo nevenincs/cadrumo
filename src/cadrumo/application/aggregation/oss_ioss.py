@@ -56,15 +56,10 @@ from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
-from ...domain.iva.classification import (
-    InvoiceKind,
-    TransactionKind,
-    require_transaction_kind,
-    resolve_transaction_kind_catalogue,
-)
+from ...domain.iva.classification import TransactionKind, require_transaction_kind, resolve_transaction_kind_catalogue
 from ...domain.iva.lookup import lookup_rate
 from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
-from ...domain.iva.schema import EUMemberState, IvaRateKind
+from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind
 from ..invoices.catalogue_reads_ports import (
     BucketBoundCatalogueReader,
     InvoiceCatalogueReadPersistenceError,
@@ -662,7 +657,7 @@ def _candidate_for_invoice_line(
                 "invoice_id": invoice.invoice_id,
                 "invoice_number": invoice.invoice_number,
                 "line_index": str(line_index),
-                "iva_rate": str(line.iva_rate.value),
+                "iva_rate": line.iva_rate.value,
             },
         )
     # OSS/IOSS is cross-border EU B2C by definition, where invoicing in the
@@ -774,7 +769,9 @@ def project_oss_ioss_invoices_from_repositories(
         candidates=tuple(candidates),
         contributing_invoices=tuple(contributing),
         source_bucket_id=source_bucket_id,
-        catalogue_fingerprint=content_hash_hex(catalogue.model_dump(mode="json")) if source_bucket_id else None,
+        catalogue_fingerprint=content_hash_hex(catalogue.model_dump(mode="json"))
+        if (source_bucket_id is not None and source_bucket_id)
+        else None,
     )
 
 

@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from ....application.user_profile.access_contracts import ProfileAccessBinding
-from ....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ....application.user_profile.login_session_port import (
     ProfileBucketSessionPort,
     ProfileLoginSessionPort,
@@ -17,7 +19,6 @@ from ....application.user_profile.login_session_port import (
     ProfileSignInGenerationPort,
 )
 from .custody.acceleration_receipt import (
-    borrow_profile_session_key,
     delete_profile_session,
     mint_profile_session,
     profile_session_path,
@@ -110,6 +111,7 @@ class _PersistenceProfileLoginSession:
         login_id: str,
         sign_in_binding: ProfileAccessBinding,
         sign_in_generation: ProfileSignInGenerationPort,
+        retain_sealing_key: Callable[[bytearray], None] | None = None,
     ) -> ProfilePersistedSessionPort | None:
         try:
             return mint_profile_session(
@@ -123,6 +125,7 @@ class _PersistenceProfileLoginSession:
                 absolute_minutes=absolute_minutes,
                 login_id=login_id,
                 sign_in=SignInGenerationCustody(root=storage_root, binding=sign_in_binding),
+                retain_sealing_key=retain_sealing_key,
                 generation=SignInGeneration(
                     lineage=sign_in_generation.lineage, generation=sign_in_generation.generation
                 ),
@@ -133,14 +136,6 @@ class _PersistenceProfileLoginSession:
             if error.reason is not AutomationCustodyCode.CONFLICT:
                 raise
             return None
-
-    def borrow_acceleration_receipt_key(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        return borrow_profile_session_key(storage_root=storage_root, profile_id=profile_id)
 
     def resume_acceleration_receipt_with_key(
         self,

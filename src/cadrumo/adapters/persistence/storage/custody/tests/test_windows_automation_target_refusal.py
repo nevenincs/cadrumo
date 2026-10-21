@@ -10,7 +10,7 @@ from pydantic import SecretBytes
 from cadrumo.adapters.persistence.storage.custody import automation_secret_store as windows_secret_store
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import WindowsAutomationSecretStore
 from cadrumo.adapters.persistence.storage.custody.automation_secret_target import AUTOMATION_NAMESPACE_PREFIX
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

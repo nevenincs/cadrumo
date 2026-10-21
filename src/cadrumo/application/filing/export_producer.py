@@ -696,7 +696,7 @@ def m360_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProduce
             FilingProducerKey.M360_NUMERO_REGISTRO_DECLARACION_ANTERIOR: (
                 solicitud.numero_registro_declaracion_anterior
             ),
-            FilingProducerKey.M360_SOLICITANTE_TAX_ID: str(snapshot.taxpayer_tax_id),
+            FilingProducerKey.M360_SOLICITANTE_TAX_ID: snapshot.taxpayer_tax_id,
             FilingProducerKey.M360_SOLICITANTE_FULL_NAME: _m360_solicitante_name(snapshot.taxpayer_identity),
             FilingProducerKey.M360_SOLICITANTE_EMAIL: solicitante.email,
             FilingProducerKey.M360_SOLICITANTE_PHONE: solicitante.phone,
@@ -711,9 +711,7 @@ def m360_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProduce
                 if establecimiento.delegacion_canarias_ceuta_melilla is not None
                 else None
             ),
-            FilingProducerKey.M360_REPRESENTANTE_TAX_ID: (
-                str(representante.tax_id) if representante is not None else None
-            ),
+            FilingProducerKey.M360_REPRESENTANTE_TAX_ID: (representante.tax_id if representante is not None else None),
             FilingProducerKey.M360_REPRESENTANTE_FULL_NAME: (
                 representante.full_name if representante is not None else None
             ),
@@ -1187,11 +1185,11 @@ def _shared_filing_producer_values(
 ) -> dict[FilingProducerKey, object]:
     identity = snapshot.taxpayer_identity
     values: dict[FilingProducerKey, object] = {
-        FilingProducerKey.PRESENTER_TAX_ID: str(snapshot.presenter.tax_id),
+        FilingProducerKey.PRESENTER_TAX_ID: snapshot.presenter.tax_id,
         FilingProducerKey.FILING_RESULT_DISPOSITION: (
             None if snapshot.elections.result_disposition is None else snapshot.elections.result_disposition.value
         ),
-        FilingProducerKey.TAXPAYER_TAX_ID: str(snapshot.taxpayer_tax_id),
+        FilingProducerKey.TAXPAYER_TAX_ID: snapshot.taxpayer_tax_id,
         FilingProducerKey.TAXPAYER_LEGAL_NAME: identity.legal_name,
         FilingProducerKey.TAXPAYER_GIVEN_NAME: identity.given_name,
         FilingProducerKey.TAXPAYER_SURNAMES: identity.surnames,

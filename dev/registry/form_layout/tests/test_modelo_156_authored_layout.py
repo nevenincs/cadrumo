@@ -44,7 +44,9 @@ def test_summary_uses_official_box_and_exact_export_context_without_wire_numbers
     assert layout.review.state.value == "generated"
     assert revision.authority_grade is not None and revision.authority_grade.value == "applicability"
     assert len(layout.placements) == len(revision.casillas) == 46
-    assert {p.casilla_id: p.box_number for p in layout.placements if p.box_number} == {"numero-total-afiliados": "01"}
+    assert {p.casilla_id: p.box_number for p in layout.placements if (p.box_number is not None and p.box_number)} == {
+        "numero-total-afiliados": "01"
+    }
     summary, detail = layout.pages
     assert [s.id for s in summary.sections] == [
         "identificacion",

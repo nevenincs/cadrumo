@@ -5,42 +5,51 @@ the same components that run inside the Tauri window run on a Vite development
 server, against a simulated host, with hot reload. Compiling the desktop host,
 assembling a package or building the documentation is not needed to edit it.
 
+From the repository root, run `just dev`. It generates the shell's inputs in
+the host preset's repository build, `build/<preset>`, and starts the development
+display from that build at `http://localhost:15370/scenarios.html`.
+The fixed listener assignments live in `../development-server.json`: display
+15370, test preview 15371, documentation fixture 15372, and Storybook 6006.
+An occupied port is an error; no server moves to another port.
+
+The packaged app's Logs tab starts at INFO. Set `CADRUMO_LOG_LEVEL` to `DEBUG`,
+`INFO`, `WARNING`, `ERROR`, or `CRITICAL` before launching it to select another
+initial level. The level selector changes the current view; Reset filters restores
+the environment-selected level. Internal stages and successful helper timings are
+DEBUG, operational state changes are INFO, recoverable degradation is WARNING,
+and failed operations are ERROR. Diagnostic files retain DEBUG by default;
+`CADRUMO_LOG_FILE_LEVEL` and `CADRUMO_LOG_ROOT_LEVEL` govern Python capture separately.
+
 ## Prerequisites
 
 - Node.js and npm, with dependencies installed by `npm ci` in this directory.
 - CMake 4.4 or newer.
 - The repository's development Python environment, which the generators run in.
 
-## Bootstrap a build directory
+## The build directory
 
-The development server reads a few generated files from a CMake build
-directory: the build paths, the product identity and the server address. The
-shell reads two more from that directory's `desktop/frontend-generated/`: the
-chrome strings, projected from the locale catalogues, and the palette, projected
-from the documentation theme. Nothing generated is written into the source tree.
-One command writes all of them:
+The frontend has no build directory of its own. Every development, check,
+build and test path reads the repository build under test, `build/<preset>`
+(`build/windows-x64` on Windows), configured once at the repository root with
+`cmake --preset <preset>`. The development server reads the build paths, the
+product identity and the server address from it. The shell reads two more from
+its `desktop/frontend-generated/`: the chrome strings, projected from the locale
+catalogues, and the palette, projected from the documentation theme. Nothing
+generated is written into the source tree.
 
-```sh
-npm run bootstrap
-```
+The `desktop-frontend-generated` target writes those two and regenerates them
+when a locale catalogue or the documentation theme changes. It compiles
+nothing. `desktop-frontend-dev` (what `just dev` builds), `desktop-frontend-build`
+and `desktop-frontend-test` depend on it; `npm run dev` only reads the build and
+never configures or builds it.
 
-It configures the standalone desktop project with the preset for this host
-(`native/desktop/CMakePresets.json`), into the directory that preset names
-under `build/` at the repository root: `build/desktop-windows-x64` on Windows.
-Then it runs the two generators. It compiles nothing and takes a few seconds.
-Options:
+The servers bind the address in `../development-server.json`. Another address
+is a configure option of the repository build, for example
+`cmake --preset windows-x64 -DCADRUMO_DESKTOP_BIND_ADDRESS=127.0.0.1`. Ports
+cannot be overridden.
 
-| Option                  | Default           | Meaning                                                |
-| ----------------------- | ----------------- | ------------------------------------------------------ |
-| `--build-dir <path>`    | the host preset's | Another build directory, configured without the preset |
-| `--host <address>`      | `127.0.0.1`       | The address the servers bind                           |
-| `--dev-port <port>`     | `15370`           | The development server port                            |
-| `--preview-port <port>` | `15371`           | The port that serves the production build to the tests |
-
-Pass options after `--`, for example `npm run bootstrap -- --dev-port 15380`.
-Run it again after a locale catalogue or the documentation theme changes.
-
-Every other command here needs the build directory named in the environment:
+The CMake targets set the build directory for the commands they run. Running
+an npm script directly needs it named in the environment:
 
 ```sh
 # PowerShell
@@ -52,7 +61,7 @@ export CADRUMO_CMAKE_BINARY_DIR='<absolute path to the build directory>'
 ## Develop in a browser
 
 ```sh
-npm run dev
+just dev
 ```
 
 The server offers two pages.
@@ -118,16 +127,24 @@ The terminals show deterministic fixture sessions in the real xterm view: type
 `exit` in the console or `exit()` in the Python tab, or press `q` in the TUI, to
 see an exited session, then Enter to restart it.
 
+The embedded TUI stays behind the shared loading view while it resumes sign-in
+and builds its first screen. Process startup alone does not reveal the terminal.
+The TUI reports presentation readiness through OSC 777; the pane waits for
+buffered output to settle and render before showing it. A login prompt needing
+input, a retry screen, or an exited process remains visible. Terminal output and
+cursor replies continue flowing while covered, and hiding the pane keeps its
+session.
+
 The documentation pane shows a stand-in documentation site. The development
-server starts it beside itself, on the same address and a port the operating
-system assigns. The same host name with another port is a different origin, as
+server starts it beside itself, on the same address and fixed port 15372.
+The same host name with another port is a different origin, as
 the documentation is in the desktop window, and it is reachable from wherever
 the page is opened, another device included. Its pages load the real desktop
 bridge script from `docs/_static/`, so navigation, search, appearance, zoom,
 shortcuts and context menus cross a real `postMessage` boundary.
 
-To open the page from another device, bootstrap with an address that device can
-reach, for example `npm run bootstrap -- --host 0.0.0.0`, and name the host in
+To open the page from another device, use the server's default `0.0.0.0` binding
+and name the host in
 `CADRUMO_DESKTOP_ALLOWED_HOSTS`, a comma-separated list read from the
 environment or from `.env.local`.
 
@@ -151,8 +168,8 @@ refuses any module under `src/dev/` or `dev/` and any story
 npm run storybook
 ```
 
-The catalogue is Storybook on the shell's own theme, at port 6006 of the
-bootstrapped address (`-- --port <port>` chooses another). Its toolbar switches
+The catalogue is Storybook on the shell's own theme, at fixed port 6006 of the
+configured address. An occupied port is an error. Its toolbar switches
 the colour scheme and the chrome language, and every story is drawn on a real
 shell surface inside the application's own providers.
 
@@ -186,8 +203,8 @@ a value, so a change of palette, density or type reaches everything at once.
 | Layer       | Where                       | Rule                                                                                        |
 | ----------- | --------------------------- | ------------------------------------------------------------------------------------------- |
 | Colour      | the generated palette       | Generated from the documentation theme, which is the colour authority; never edited by hand |
-| Roles       | `src/theme.css`             | Maps palette values to roles (`background`, `chrome`, `card`, `selected`, `ring`, …)        |
-| Tokens      | `src/tokens.css`            | Lengths in rem: type scale, radii, density, icon sizes, fixed widths, layers and motion     |
+| Roles       | `src/styles/theme.css`      | Maps palette values to roles (`background`, `chrome`, `card`, `selected`, `ring`, …)        |
+| Tokens      | `src/styles/tokens.css`     | Lengths in rem: type scale, radii, density, icon sizes, fixed widths, layers and motion     |
 | Primitives  | `src/components/ui/`        | shadcn/ui components on Radix, restyled to roles and tokens; they know nothing of Cadrumo   |
 | Components  | `src/components/`           | The shell's own parts, built only from primitives                                           |
 | Composition | `src/App.tsx`, `src/shell/` | State, the action registry and the host port; the only layer that talks to a `Host`         |
@@ -197,6 +214,49 @@ component and nothing of the shell or the host contract, only the Tauri adapter
 imports `@tauri-apps/*`, and nothing in the product imports `src/dev/` or a
 story. A component may read the shell's strings, metrics and types from
 `src/shell/`; it never imports `src/App.tsx`.
+
+Styles have one shared entry, `src/styles/shell.css`, imported by the product
+and development CSS entries. `tokens.css` owns dimensions, query thresholds,
+layers and motion; `theme.css` owns semantic colors and elevations; `fonts.css`
+owns bundled typefaces; `base.css` owns document, focus and reduced-motion rules;
+`utilities.css` owns token-backed content grids and third-party adjustments.
+There are no CSS modules: components compose utilities and shared primitives.
+
+Pills use the solid, borderless variants in `ui/badge.tsx`. Status labels,
+counts, sent-file chips and toasts use `Badge`; interactive filter pills use
+the `Button` pill variant. Calendar windows read the same badge variants,
+with rounded ends only where the window begins or ends. Colour, type and
+spacing come from the shared palette roles and tokens. Keyboard focus and
+selection keep their shared indicators.
+
+Public shell components use PascalCase filenames under `src/components/`.
+Feature internals live in `calendar/`, `account/` and `records/`, with a descriptive
+component per module. Generic primitives keep shadcn's kebab-case filenames
+under `ui/`. Stories stay beside their component. Non-component helpers use
+camelCase `.ts` files, and host subscriptions live in `src/shell/use*.ts`.
+Import the defining module directly; do not add barrel exports or forwarding
+components.
+
+Pane placeholders compose `EmptyState` from `ui/empty.tsx`; product components
+do not reconstruct its icon, heading and description layout. Workspace headers
+compose `PaneHeaderFrame` from `ui/pane-header.tsx`, including its shared
+maximize gesture and exclusion of interactive controls. Keep implementation names
+and transport codes out of ordinary prompts; diagnostic views own technical detail.
+
+`src/shared/` holds dependency-free helpers reused across features, such as
+ISO calendar-date arithmetic and cached locale formats. These modules import
+no components, shell policy, IPC or host adapter. Product-specific shared rules
+stay under their shell owner: `calendarEntries.ts` owns entry identity, windows
+and urgency; `records.ts` owns severity ranking and record serialization. Keep
+focus restoration, scroll positioning and read-refresh policy with the surface
+that owns their behavior.
+
+`npm run check` enforces component filenames, import boundaries and token use,
+and tests these guards with deliberate violations. Literal dimensions, colors,
+layer numbers and durations are rejected in components and stories. Structural
+grids, system colors in forced-color mode and geometry computed from data
+remain valid arguments. Define a new design measure once in `tokens.css` and
+reference it through a variable or a named utility.
 
 Conventions a new component follows:
 
@@ -217,11 +277,11 @@ Conventions a new component follows:
   tooltip. The one exception is a control repeated in every row of a list,
   such as a log record's detail toggle: a named `Button`, since a tooltip for
   each row would cost more than it tells.
-- **Focus** is the single outline declared in `src/theme.css`; a component
+- **Focus** is the single outline declared in `src/styles/base.css`; a component
   may move it inward, never restyle it.
 - **Text** is a chrome string. Add it in English, Spanish, Catalan and
   Hungarian through `python -m dev.locales set-batch`, declare its key in
-  `dev/locales/desktop_chrome.py`, and run the bootstrap again.
+  `dev/locales/desktop_chrome.py`, and build `desktop-frontend-generated` again.
 - **A component's module** exports components and types, nothing else. A
   value beside a component turns every edit of that file into a page reload
   in the development server. Words and helpers that others share live in a
@@ -233,6 +293,35 @@ To add a primitive from the shadcn registry, run its CLI from this directory
 (`components.json` points it at `src/components/ui/`), then restyle what it
 wrote to roles and tokens and remove any dependency it added beyond the ones
 already declared. The class merger is the local `@/components/ui/cn`.
+
+### Editing your profile
+
+Open **Your profile** from the rail or account menu. Search saved details, select
+a section, or filter to missing required information. Individual fields and
+repeatable entries use the same registered operations and validation as the CLI
+and TUI. Sections collapse individually; full screen adds a section sidebar.
+Name, contact and address fields provide browser autofill hints. AEAT
+authentication opens the protected setup editor.
+
+**Sync from AEAT** checks the saved taxpayer identity and authentication method
+before a Censo pull. Missing details link to the tax-ID field or protected AEAT
+setup, then return to synchronization. The current importer covers the fiscal
+address, postcode and cadastral reference; it does not complete all profile
+sections. Review shows saved and incoming values and preserves manual answers.
+Saving or discarding is bound to the exact runtime review. Runtime notifications
+update progress; a 30-second recovery check covers missed notifications.
+
+Browser scenarios `censo-ready`, `censo-nie` and `censo-uncertain` exercise review,
+missing NIE support-number setup and an interrupted request. They do not contact
+AEAT. `user-profile` uses the canonical schema projection with synthetic values;
+regenerate it with `uv run --no-sync python -m dev.desktop_profile_fixture`.
+
+The desktop's `Host.userProfile` port reads a complete revision-pinned overview
+through the held runtime connection. Changes made by another frontend trigger
+a value-free runtime signal and a coalesced refresh. Open drafts retain their
+original revision: conflicting edits cannot overwrite newer data. An uncertain
+save keeps its draft and requires a refresh before retrying. Signing out removes
+the page and rejects late read responses.
 
 ### Profile views
 
@@ -273,18 +362,20 @@ typed in `src/shell/views.ts`.
 The calendar has two faces over the one read, in
 `src/components/FilingCalendar.tsx`:
 
-- **The months** (`src/components/CalendarMonths.tsx`, laid out by
+- **The months** (`src/components/calendar/CalendarMonths.tsx`, laid out by
   `src/shell/calendarGrid.ts`) draw each obligation as a bar across the days
   its window is open, ending on the day that binds, in a row of its own where
-  windows overlap. What was observed is a mark on its day, filled for a
+  windows overlap. A window is named in full, Modelo and period, where it
+  is first drawn in a month; the weeks it goes on across carry its Modelo
+  alone. Its ends are rounded, and hovered it takes the shared wash over its
+  own fill (`hover-wash`). What was observed is a mark on its day, filled for a
   filing made and hollow for a message from the agency. The day the product
   evaluated is marked: filled and said as today where it is today here,
   ringed and said as its date where it is not. The months run from the
   range's first to its last, and on to the month in which the last window
   open in the range closes, a year past the range at most.
-  A window's reading is never told by colour alone: what is late has a
-  dashed edge and what is not known a dotted one, and a window with room
-  carries the reading's mark. Where the system forces its colours the edge,
+  A window uses the shared solid pill fill and carries its state's icon,
+  including in narrow windows. Where the system forces its colours the fill,
   the mark, the day and an outline on what is chosen remain.
   A window whose opening is null is drawn on its closing day alone and says
   the opening was not reported: an opening is never guessed. A week shows
@@ -486,21 +577,71 @@ packaged assertion was changed.
 That run's result files were removed with its build directory, so this table
 is from the notes taken when it was read; a fresh run replaces it.
 
+## Account and runtime signals
+
+The native host exposes public account observations through
+`sign_in_subscribe({ token, updates: Channel<SignInSignal> })`, returning a numeric
+subscription. Dispose it with `sign_in_unsubscribe({ token, subscription })`.
+The shell adapter offers this as `Host.observeSignIn(listener)` and returns a
+cleanup function. The same document token and origin checks as other shell
+commands apply; there is one current listener per host document.
+
+| Signal `kind`                | Payload                                                                               | Design response                                                                                                                                                                                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sign-in-state`              | `revision`, `status: { supported, state, active_profile, runtimeAvailable, refusal }` | Update account and runtime indicators. `present` releases the account gate; `absent` offers sign-in for the selected profile; `unknown` shows uncertainty. A changed `active_profile` invalidates displayed profile data. `runtimeAvailable: false` offers Background Services recovery. |
+| `manager-state`              | `revision`, `status: { state, failure }`                                              | Supervisor availability: `unsupported`, `starting`, `ready`, `recovering`, `waiting`, `stopping`, `stopped`, or `failed`. Recovery immediately gates private views, passwords and TUI access. Returning to `ready` requires a fresh canonical sign-in read before releasing that gate.   |
+| `manager-observation-failed` | `revision`, `error: HostFailure`                                                      | Gate account access and show the public failure code; do not display private diagnostic messages.                                                                                                                                                                                        |
+| `sign-in-observation-failed` | `revision`, `error: HostFailure`                                                      | Show the safe failure code and a retry/recovery prompt; do not display a signed-in state from an older snapshot.                                                                                                                                                                         |
+
+The token-gated `manager_status`, `manager_subscribe({ updates })`, and
+`manager_unsubscribe({ subscription })` commands supply these supervisor signals.
+Subscriptions publish initial state and changes from the existing native watchdog;
+the frontend adds no supervisor poller. Each host subscription rejects old revisions
+and late answers after replacement or readiness loss. Recovery and failure use the
+existing toast and account loading presentation. Fatal startup failures before the
+window opens exit unsuccessfully rather than showing a window without supervision.
+The manager browser scenarios verify presentation only; packaged native lifecycle
+tests establish real authenticated IPC and recovery.
+
+A subscription receives its first snapshot immediately, then changed snapshots
+from the canonical CLI status producer, sampled every two seconds while
+subscribed. Identical snapshots and failures are coalesced. Revision numbers
+increase within a subscription and reset for a replacement listener. Failed
+delivery removes the listener; an old document's cleanup cannot remove its
+replacement. Host shutdown stops and joins the observer and its CLI children.
+
+`active_profile` is a public label. Signals contain no credential, receipt,
+profile UUID or runtime session capability. They inform presentation; a client
+still authenticates independently over verified IPC. The shell consumes them
+without needing focus or an additional status request for each notification.
+The existing `logs_subscribe` channel separately supplies diagnostic batches;
+manager records have `source: "manager"` and scrubbed lifecycle facts in
+`context.lifecycle_event`. Diagnostic messages are not authentication triggers.
+
 ## Layout
 
-| Path                                       | Holds                                                                       |
-| ------------------------------------------ | --------------------------------------------------------------------------- |
-| `index.html`, `src/main.tsx`               | The production entry                                                        |
-| `scenarios.html`, `src/dev/`               | The development entry, the scenario host and its fixtures                   |
-| `dev/docs-fixture/`                        | The stand-in documentation site and the server plugin that serves it        |
-| `dev/product-boundary.ts`                  | The build check that keeps development modules out of the product           |
-| `src/App.tsx`, `src/shell/`                | Composition, the action registry, layout state and the host port            |
-| `src/shell/views.ts`                       | The read-only profile views a host may offer, types only                    |
-| `src/tokens.css`, `src/theme.css`          | The design tokens and the colour roles                                      |
-| `src/components/ui/`                       | The primitives                                                              |
-| `src/components/`                          | The shell's components and their stories                                    |
-| `.storybook/`, `src/dev/catalogue/`        | The catalogue's configuration and its foundations stories                   |
-| `src/ipc/contract.ts`                      | The published host and bridge contract, types only                          |
-| `virtual:desktop-strings`, `…-palette.css` | The generated chrome strings and palette, resolved from the build directory |
-| `scripts/`                                 | The bootstrap, the catalogue launcher, its screenshots, the benchmark       |
-| `tests/`                                   | The browser tests                                                           |
+| Path                                            | Holds                                                                          |
+| ----------------------------------------------- | ------------------------------------------------------------------------------ |
+| `index.html`, `src/main.tsx`                    | The production entry                                                           |
+| `scenarios.html`, `src/dev/`                    | The development entry, the scenario host and its fixtures                      |
+| `dev/docs-fixture/`                             | The stand-in documentation site and the server plugin that serves it           |
+| `dev/product-boundary.ts`                       | The build check that keeps development modules out of the product              |
+| `src/App.tsx`, `src/shell/`                     | Composition, the action registry, layout state and the host port               |
+| `src/shell/views.ts`                            | The read-only profile views a host may offer, types only                       |
+| `src/styles/tokens.css`, `src/styles/theme.css` | The design tokens and the colour roles                                         |
+| `src/components/ui/`                            | The primitives                                                                 |
+| `src/components/`                               | Public shell components, feature internals and colocated stories               |
+| `.storybook/`, `src/dev/catalogue/`             | The catalogue's configuration and its foundations stories                      |
+| `src/ipc/contract.ts`                           | The published host and bridge contract, types only                             |
+| `virtual:desktop-strings`, `…-palette.css`      | The generated chrome strings and palette, resolved from the build directory    |
+| `scripts/`                                      | The development server, the catalogue launcher, its screenshots, the benchmark |
+| `tests/`                                        | The browser tests                                                              |
+
+Presentation preferences share the validated `cadrumo-shell-layout` store. Fresh
+windows show Profile and the agent where available; the workspace opens on
+request. Page selection, pane visibility and maximization, panel tab and size,
+calendar face, profile filters and section expansion, and the chosen minimum
+log level survive reloads. Resetting log filters returns to the host's level.
+Search text, drafts and private page data are not saved as view preferences.
+The pane header owns each page's title and maximize control; page toolbars
+supply only their own actions.

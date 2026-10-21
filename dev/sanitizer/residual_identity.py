@@ -44,7 +44,7 @@ from __future__ import annotations
 
 import io
 import re
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import StrEnum
@@ -263,7 +263,7 @@ def checksum_valid_spans(text: str, kinds: frozenset[ResidualKind]) -> Iterator[
 
 
 @contextmanager
-def identity_authority_scope() -> Iterator[None]:
+def identity_authority_scope() -> Generator[None]:
     """Keep the caller's governed-fact scope, else lease the published authority.
 
     A caller scanning many texts enters this once around the whole sweep, so the

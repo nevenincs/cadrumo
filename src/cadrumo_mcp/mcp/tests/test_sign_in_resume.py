@@ -1,0 +1,613 @@
+"""An adapter with no enrolled key requests scoped attendance under a held person.
+
+The adapter's own part is shown here: when it asks, how often, for which
+profile, and what it does with the answer. The runtime's answer is supplied by
+a connection double, because whether a sign-in is admitted is the runtime's
+decision and is proven against the real runtime where that runtime lives.
+"""
+
+from __future__ import annotations
+
+import sys
+from collections.abc import Callable
+from contextlib import AbstractContextManager
+from datetime import timedelta
+from pathlib import Path
+from types import SimpleNamespace
+from typing import NoReturn, cast
+from uuid import UUID, uuid4
+
+import pytest
+
+from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
+from cadrumo.application.ledger.attachment_mutation_operation import LEDGER_ATTACH_OPERATION_DEFINITION_ID
+from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
+from cadrumo.core import logging as cadrumo_logging
+from cadrumo.core.config import Settings, load_settings, override_settings
+from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability, EffectiveScopeSummary
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.contracts.profile_selection import ActiveProfileReply
+from cadrumo_client.contracts.sign_in import SignInPresence
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
+from .. import main as mcp_main
+from .. import runtime_adapter as mcp_runtime
+from .. import runtime_admission as mcp_admission
+from .. import server as mcp_server
+from ..access_scope import surface_scope
+from ..operation_discovery import operation_summary
+from ..protocol_contract import MCP_TOOL_CATALOGUE, PROFILE_CHANGED_REMEDY, SIGN_IN_REMEDY, sign_in_remedy
+from ..runtime_adapter import RuntimeMcpAdapter
+from ..runtime_admission import McpAdmission, require_exact_admitted_status, selected_profile_id, status_on_surface
+from ..server import build_server
+from ..surfaces import MCP_SURFACES, McpSurface, McpSurfaceName
+from .admitted_lease import public_descriptions
+from .session import connected_server_and_client_session
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def _installation_selection() -> ActiveProfileReply:
+    """Answer the runtime's selection question from this test's installation selection."""
+    selected = load_settings().cadrumo_active_profile
+    return ActiveProfileReply(
+        request_id=uuid4(),
+        runtime_boot_id=uuid4(),
+        connection_id=uuid4(),
+        selected_profile_id=None if selected is None or selected == "" else UUID(selected),
+        signed_in_profile_id=None,
+        presence=SignInPresence.ABSENT,
+    )
+
+
+@pytest.fixture(autouse=True)
+def _runtime_answers_the_selection(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The runtime is a double here, so its selection answer is the one the test selected."""
+    monkeypatch.setattr(mcp_admission, "_runtime_selection", _installation_selection)
+
+
+_FULL = MCP_SURFACES[McpSurfaceName.FULL]
+_READ_ONLY_LOCAL = MCP_SURFACES[McpSurfaceName.READ_ONLY_LOCAL]
+_READ = AUTH_READ_OPERATION_DEFINITION_ID
+_WRITE = LEDGER_ATTACH_OPERATION_DEFINITION_ID
+_FOUND = {"outcome": "found", "operations": [operation_summary(public_descriptions()[_READ])]}
+_MCP = OperationFrontendProjection.EXTERNAL_CLIENT
+_PROFILE_CALL: tuple[str, dict[str, object]] = ("observe", {"observation": {}})
+"""A tool that reads the profile's own operations, so it is answered only under a session."""
+
+
+class _ServingStoppedError(Exception):
+    """Stop the stdio server before it reads this process's standard input."""
+
+
+class _AttendedConnection:
+    """One external connection, answering attendance as its runtime was told to."""
+
+    def __init__(self, runtime: _Runtime, profile_id: UUID, scope: AccessScope | None = None) -> None:
+        self.profile_id = profile_id
+        self.frontend = _MCP
+        self._runtime = runtime
+        self._scope = scope
+        self._session: UUID | None = None
+        self._expires_at = now() + timedelta(minutes=15)
+        self._receivers: list[Callable[[], None]] = []
+        self.described: list[str] = []
+        self.close_count = 0
+        self.asked: str | None = None
+        self.approval_retired = False
+
+    @property
+    def session_id(self) -> UUID:
+        if self._session is None:
+            raise FrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
+        return self._session
+
+    def request_attendance(self) -> ProfileStatus:
+        """Apply the runtime's answer to an exact held-person attendance request."""
+        assert self.close_count == 0
+        self.asked = "attendance"
+        self._runtime.attendance_asks += 1
+        if self.approval_retired:
+            raise FrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
+        if self._runtime.refusal is not None:
+            raise self._runtime.refusal
+        self._session = uuid4()
+        return ProfileStatus(
+            request_id=uuid4(), runtime_boot_id=uuid4(), connection_id=uuid4(), status=self.status().status
+        )
+
+    def subscribe_attendance_answers(self, receive: Callable[[], None]) -> Callable[[], None]:
+        """This double answers every ask at once, so no answer cue is ever needed."""
+        return lambda: None
+
+    def subscribe_session_retirement(self, receive: Callable[[], None]) -> Callable[[], None]:
+        self._receivers.append(receive)
+        if self._session is None:
+            receive()
+        return lambda: None
+
+    def retire(self) -> None:
+        """Deliver the runtime's notice that this connection's session is over."""
+        self._session = None
+        self.approval_retired = True
+        for receive in self._receivers:
+            receive()
+
+    def status(self) -> SimpleNamespace:
+        assert self.close_count == 0
+        operations = {_READ, _WRITE} if self._runtime.holds_a_write else {_READ}
+        actions = frozenset(AccessAction)
+        if self._scope is not None:
+            operations.intersection_update(self._scope.operations)
+            actions &= self._scope.actions
+        return SimpleNamespace(
+            status=ProfileAccessStatus(
+                connected=True,
+                credential_authenticated=True,
+                profile_id=self.profile_id,
+                session_id=self.session_id,
+                session_expires_at=self._expires_at,
+                # An attended session carries no automation grant.
+                grant_state=None,
+                grant_expires_at=None,
+                grant_valid=False,
+                profile_bound=True,
+                storage=Availability.AVAILABLE,
+                automation_custody=Availability.AVAILABLE,
+                published_authority=Availability.AVAILABLE,
+                provider=Availability.NOT_REQUIRED,
+                effective_scope=EffectiveScopeSummary.summarize(
+                    AccessScope(
+                        operations=frozenset(operations),
+                        actions=actions,
+                        disclosures=frozenset(),
+                        periods=None,
+                        allow_period_independent=True,
+                        allow_delegation=True,
+                    )
+                ),
+                denial=None,
+            )
+        )
+
+    def describe(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionDescriptionV1:
+        assert self.close_count == 0 and deadline > 0
+        self.described.append(definition_id)
+        return public_descriptions()[definition_id]
+
+    def subscribe_lifecycle_notices(self, receive: object) -> None:
+        """The runtime sends this double no lifecycle notice."""
+
+    def close(self) -> None:
+        self.close_count += 1
+
+
+class _Runtime:
+    """What the runtime answers every connection the adapter opens, and a record of each."""
+
+    def __init__(self) -> None:
+        self.refusal: Exception | None = None
+        self.holds_a_write = False
+        self.attendance_asks = 0
+        self.opened: list[_AttendedConnection] = []
+        self.options: list[dict[str, object]] = []
+
+    async def open(self, **options: object) -> FrontendClient:
+        self.options.append(options)
+        connection = _AttendedConnection(
+            self, cast(UUID, options["profile_id"]), cast(AccessScope | None, options.get("scope"))
+        )
+        self.opened.append(connection)
+        return cast(FrontendClient, connection)
+
+    @property
+    def attended(self) -> list[_AttendedConnection]:
+        """The connections on which attendance was requested, in opening order."""
+        return [connection for connection in self.opened if connection.asked == "attendance"]
+
+    @property
+    def attempts(self) -> tuple[int, int]:
+        """How many connections were opened to attend, and how many requests were asked on them."""
+        return len(self.attended), self.attendance_asks
+
+
+@pytest.fixture
+def runtime(monkeypatch: pytest.MonkeyPatch) -> _Runtime:
+    answering = _Runtime()
+    monkeypatch.setattr(mcp_runtime, "open_installed_client", answering.open)
+    return answering
+
+
+def _adapter(profile_id: UUID | None = None, surface: McpSurface = _FULL) -> RuntimeMcpAdapter:
+    return RuntimeMcpAdapter(profile_id=profile_id, client=None, surface=surface, requests_attendance=True)
+
+
+def _selection(root: Path, profile_id: UUID | None) -> AbstractContextManager[Settings]:
+    """Select ``profile_id`` for this installation, or nothing, over an empty storage root."""
+    selected = None if profile_id is None else str(profile_id)
+    return override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=selected)
+
+
+def _told(code: str) -> dict[str, object]:
+    """The remedy a reply carries when nothing admits the server: ask the person to sign in, for an admission refusal."""
+    remedy = sign_in_remedy(code)
+    return {} if remedy is None else {"remedy": remedy}
+
+
+def _no_session(profile_id: UUID | None, denial: str, **facts: object) -> dict[str, object]:
+    return {
+        "outcome": "status",
+        "profile_id": None if profile_id is None else str(profile_id),
+        "authenticated": False,
+        "session": "none",
+        "surface": "full",
+        "denial": denial,
+        **facts,
+        **_told(denial),
+    }
+
+
+def _refused(code: str, **facts: object) -> dict[str, object]:
+    """A refusal with no session held, which says what the agent is to do."""
+    return {"outcome": "refused", "code": code, **facts, **_told(code)}
+
+
+def test_the_selected_profile_is_read_from_the_installation_and_a_named_one_only_guards_it(tmp_path: Path) -> None:
+    selected, other = uuid4(), uuid4()
+    with _selection(tmp_path, selected):
+        assert selected_profile_id(expected=None) == selected
+        assert selected_profile_id(expected=selected) == selected
+        with pytest.raises(FrontendRefusedError) as mismatched:
+            selected_profile_id(expected=other)
+    assert mismatched.value.reason == "profile_mismatch"
+    with _selection(tmp_path, None):
+        for expected in (None, other):
+            with pytest.raises(FrontendRefusedError) as unselected:
+                selected_profile_id(expected=expected)
+            assert unselected.value.reason == "authentication_required"
+
+
+@pytest.mark.anyio
+async def test_with_no_profile_and_nobody_signed_in_only_the_tool_list_and_status_answer(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, runtime: _Runtime
+) -> None:
+    monkeypatch.setattr(mcp_runtime, "authority_query", lambda _args: {"outcome": "published", "report": {}})
+    with _selection(tmp_path, None):
+        adapter = _adapter()
+        try:
+            async with connected_server_and_client_session(build_server(adapter)) as client:
+                names = [tool.name for tool in (await client.list_tools()).tools]
+                published = await client.call_tool("authority", {"query": "modelos"})
+                status = await client.call_tool("status", {})
+                private = await client.call_tool(*_PROFILE_CALL)
+                found = await client.call_tool("search", {"query": _READ, "limit": 1})
+                described = await client.call_tool("describe", {"definition_id": _READ})
+        finally:
+            await adapter.close()
+
+    assert names == [name for name, _description, _schema in MCP_TOOL_CATALOGUE]
+    assert status.is_error is False
+    assert status.structured_content == _no_session(None, "authentication_required")
+    assert status.structured_content["remedy"] == SIGN_IN_REMEDY
+    # Nothing else answers without a sign-in: reference data, discovery and the profile's operations alike.
+    for refused in (published, private, found, described):
+        assert refused.is_error is True
+        assert refused.structured_content == _refused("authentication_required")
+    # With no profile selected there is no runtime connection to open, and none was opened.
+    assert runtime.attempts == (0, 0)
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("refusal", "code", "facts"),
+    [
+        (FrontendRefusedError("authentication_required"), "authentication_required", {}),
+        (FrontendRefusedError("session_expired"), "session_expired", {}),
+        (FrontendRefusedError("custody_changed"), "custody_changed", {}),
+        (FrontendRefusedError("needs_user"), "needs_user", {}),
+        (RefusalError(RefusalCode.DRAINING), "runtime_draining", {}),
+        (FrontendRefusedError("grant_inactive"), "grant_inactive", {}),
+        (FrontendRefusedError("session_inactive"), "session_inactive", {}),
+        (FrontendRefusedError("profile_mismatch"), "profile_mismatch", {}),
+    ],
+)
+async def test_a_profile_call_with_nobody_signed_in_returns_the_refusal_after_one_attempt(
+    tmp_path: Path, runtime: _Runtime, refusal: Exception, code: str, facts: dict[str, object]
+) -> None:
+    profile_id = uuid4()
+    runtime.refusal = refusal
+    adapter = _adapter()
+    try:
+        with _selection(tmp_path, profile_id):
+            assert await adapter.call(*_PROFILE_CALL) == _refused(code, **facts)
+            assert runtime.attempts == (1, 1)
+            assert runtime.attendance_asks == 1
+            assert runtime.attended[0].close_count == 1
+            assert adapter.client is None and adapter.admission is None
+            assert await adapter.call("status", {}) == _no_session(profile_id, code, **facts)
+            # The status call needed the profile too, so it asked once more and no more than once.
+            assert runtime.attempts == (2, 2)
+            # Discovery asks the runtime for the session once as well, and is refused without one.
+            assert await adapter.call("describe", {"definition_id": _READ}) == _refused(code, **facts)
+            assert runtime.attempts == (3, 3)
+            assert runtime.attendance_asks == 3
+    finally:
+        await adapter.close()
+    assert [connection.close_count for connection in runtime.opened] == [1] * 3
+    assert runtime.options == [{"profile_id": profile_id, "frontend": _MCP, "scope": surface_scope(_FULL)}] * 3
+
+
+@pytest.mark.anyio
+async def test_a_connection_is_attended_once_and_then_held(tmp_path: Path, runtime: _Runtime) -> None:
+    profile_id = uuid4()
+    adapter = _adapter()
+    try:
+        with _selection(tmp_path, profile_id):
+            assert await adapter.call("search", {}) == _FOUND
+            status = await adapter.call("status", {})
+            assert await adapter.call("search", {}) == _FOUND
+            described = await adapter.call("describe", {"definition_id": _READ})
+        held = runtime.opened[0]
+        assert adapter.client is held and adapter.admission is McpAdmission.ATTENDED
+        assert adapter.profile_id == profile_id
+        assert status == {
+            "outcome": "status",
+            "authenticated": True,
+            "grant_required": False,
+            "session": "attended",
+            "surface": "full",
+            "status": held.status().status.model_dump(mode="json"),
+        }
+        assert described["outcome"] == "described"
+        assert runtime.attempts == (1, 1)
+        assert held.close_count == 0
+    finally:
+        await adapter.close()
+    assert held.close_count == 1
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("surface", list(MCP_SURFACES.values()), ids=lambda surface: surface.name.value)
+async def test_attendance_requests_the_explicit_surface_scope(
+    tmp_path: Path, runtime: _Runtime, surface: McpSurface
+) -> None:
+    profile_id = uuid4()
+    runtime.holds_a_write = True
+    adapter = _adapter(surface=surface)
+    try:
+        with _selection(tmp_path, profile_id):
+            status = await adapter.call("status", {})
+    finally:
+        await adapter.close()
+
+    unnamed: dict[str, object] = {"profile_id": profile_id, "frontend": _MCP}
+    assert runtime.options == [unnamed | {"scope": surface_scope(surface)}]
+    assert status["session"] == "attended" and status["surface"] == surface.name.value
+    scope = status["status"]["effective_scope"]
+    if surface.narrows:
+        # The session holds the write and the commit door; the surface leaves neither.
+        assert scope["operations"] == [_READ]
+        assert "commit" not in scope["actions"] and "submit" in scope["actions"]
+    else:
+        assert sorted(scope["operations"]) == sorted([_READ, _WRITE])
+        assert "commit" in scope["actions"]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("admitted_again", [True, False], ids=["sign-in-still-live", "signed-out"])
+async def test_retired_parent_approval_is_refused_before_a_fresh_connection_requests_attendance(
+    tmp_path: Path, runtime: _Runtime, admitted_again: bool
+) -> None:
+    profile_id = uuid4()
+    adapter = _adapter()
+    try:
+        with _selection(tmp_path, profile_id):
+            assert await adapter.call("search", {}) == _FOUND
+            first = runtime.attended[0]
+            assert first.described == [_READ]
+            first.retire()
+            # Nothing happens until a call needs the profile: the notice starts no attempt of its own.
+            assert runtime.attempts == (1, 1)
+            assert first.close_count == 0
+            if not admitted_again:
+                runtime.refusal = FrontendRefusedError("authentication_required")
+            after = await adapter.call("search", {}) if admitted_again else await adapter.call(*_PROFILE_CALL)
+            assert first.close_count == 1
+            # The retained connection cannot renew a retired parent approval;
+            # one fresh connection then requests a new exact person decision.
+            assert runtime.attempts == (2, 3)
+            second = runtime.attended[1]
+            if admitted_again:
+                assert after == _FOUND
+                assert adapter.client is second and adapter.admission is McpAdmission.ATTENDED
+                # The descriptions remembered for the retired session were not served to the new one.
+                assert second.described == [_READ]
+            else:
+                assert after == _refused("authentication_required")
+                assert adapter.client is None and second.close_count == 1
+                assert await adapter.call("status", {}) == _no_session(profile_id, "authentication_required")
+                assert runtime.attempts == (3, 4)
+                # A held person available later can approve the first call that needs the profile.
+                runtime.refusal = None
+                assert await adapter.call("search", {}) == _FOUND
+                assert runtime.attempts == (4, 5)
+    finally:
+        await adapter.close()
+
+
+@pytest.mark.anyio
+async def test_a_named_profile_is_served_by_the_sign_in_only_while_it_is_the_selected_one(
+    tmp_path: Path, runtime: _Runtime
+) -> None:
+    named, other = uuid4(), uuid4()
+    adapter = _adapter(named)
+    try:
+        with _selection(tmp_path, other):
+            assert await adapter.call(*_PROFILE_CALL) == _refused("profile_mismatch")
+            assert await adapter.call("status", {}) == _no_session(named, "profile_mismatch")
+        with _selection(tmp_path, None):
+            assert await adapter.call(*_PROFILE_CALL) == _refused("authentication_required")
+        # Neither the other profile's sign-in nor the named one's was asked for.
+        assert runtime.attempts == (0, 0)
+        with _selection(tmp_path, named):
+            assert await adapter.call("search", {}) == _FOUND
+        held = runtime.opened[0]
+        assert held.profile_id == named and adapter.client is held
+        with _selection(tmp_path, other):
+            # The person moved to another profile: the session resumed for this one is given up.
+            assert await adapter.call(*_PROFILE_CALL) == _refused("profile_mismatch")
+        assert held.close_count == 1 and adapter.client is None
+        assert runtime.attempts == (1, 1)
+    finally:
+        await adapter.close()
+
+
+@pytest.mark.anyio
+async def test_an_unnamed_connection_is_bound_to_the_first_profile_that_attends_it(
+    tmp_path: Path, runtime: _Runtime
+) -> None:
+    first, second = uuid4(), uuid4()
+    adapter = _adapter()
+    try:
+        with _selection(tmp_path, None):
+            assert await adapter.call("status", {}) == _no_session(None, "authentication_required")
+        with _selection(tmp_path, first):
+            assert await adapter.call("search", {}) == _FOUND
+            assert adapter.profile_id == first
+        with _selection(tmp_path, second):
+            # The person is on another profile now: the agent session never follows, and is refused every call.
+            assert await adapter.call("search", {}) == _refused("profile_mismatch")
+            assert _refused("profile_mismatch")["remedy"] == PROFILE_CHANGED_REMEDY
+            assert await adapter.call("status", {}) == _no_session(first, "profile_mismatch")
+        assert [connection.profile_id for connection in runtime.opened] == [first]
+        assert runtime.opened[0].close_count == 1 and adapter.client is None
+        with _selection(tmp_path, first):
+            # Back on its own profile it requests attendance again, and nothing of the other was opened.
+            assert await adapter.call("search", {}) == _FOUND
+        assert [connection.profile_id for connection in runtime.opened] == [first, first]
+        assert runtime.attendance_asks == 2
+    finally:
+        await adapter.close()
+
+
+@pytest.mark.anyio
+async def test_a_connection_started_for_an_enrolled_key_never_resumes_the_sign_in(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    profile_id = uuid4()
+
+    async def refuse_to_open(**_options: object) -> FrontendClient:
+        raise AssertionError("an enrolled-key connection must not open a connection to resume a sign-in")
+
+    monkeypatch.setattr(mcp_runtime, "open_installed_client", refuse_to_open)
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
+    try:
+        with _selection(tmp_path, profile_id):
+            assert await adapter.call(*_PROFILE_CALL) == _refused("authentication_required")
+            assert await adapter.call("status", {}) == _no_session(profile_id, "authentication_required")
+    finally:
+        await adapter.close()
+
+
+def test_an_enrolled_key_connection_names_its_profile_and_a_sign_in_connection_starts_empty() -> None:
+    with pytest.raises(ValueError, match="names its profile"):
+        RuntimeMcpAdapter(profile_id=None, client=None)
+    profile_id = uuid4()
+    held = cast(FrontendClient, SimpleNamespace(profile_id=profile_id, frontend=_MCP))
+    with pytest.raises(ValueError, match="starts with no lease"):
+        RuntimeMcpAdapter(profile_id=profile_id, client=held, requests_attendance=True)
+
+
+def test_only_a_key_lease_must_show_an_automation_grant() -> None:
+    profile_id = uuid4()
+    connection = _AttendedConnection(_Runtime(), profile_id)
+    connection.request_attendance()
+    client = cast(FrontendClient, connection)
+
+    admitted = require_exact_admitted_status(client, profile_id=profile_id, admission=McpAdmission.ATTENDED)
+
+    assert admitted.session_id == connection.session_id and admitted.grant_state is None
+    with pytest.raises(FrontendRefusedError) as refused:
+        require_exact_admitted_status(client, profile_id=profile_id)
+    assert refused.value.reason == "grant_inactive"
+
+
+def test_a_narrowing_surface_reports_only_the_scope_it_leaves() -> None:
+    answering = _Runtime()
+    answering.holds_a_write = True
+    connection = _AttendedConnection(answering, uuid4())
+    connection.request_attendance()
+    whole = connection.status().status
+
+    assert status_on_surface(whole, _FULL) is whole
+    narrowed = status_on_surface(whole, _READ_ONLY_LOCAL)
+    assert narrowed.effective_scope.operations == frozenset({_READ})
+    assert narrowed.effective_scope.actions == whole.effective_scope.actions - {AccessAction.COMMIT}
+    assert narrowed.model_copy(update={"effective_scope": whole.effective_scope}) == whole
+
+
+def _run_entry_point(monkeypatch: pytest.MonkeyPatch, arguments: list[str]) -> list[dict[str, object]]:
+    """Run the installed entry point on these arguments and return what it asked to be served."""
+    served: list[dict[str, object]] = []
+    monkeypatch.setenv("PYDANTIC_DISABLE_PLUGINS", "__all__")
+    monkeypatch.delenv("CADRUMO_MCP_REQUIRED_VERSION", raising=False)
+    monkeypatch.setattr(sys, "argv", ["cadrumo-mcp", *arguments])
+    monkeypatch.setattr(cadrumo_logging, "configure_logging", lambda: None)
+    monkeypatch.setattr(mcp_server, "serve", lambda **options: served.append(options))
+    mcp_main.main()
+    return served
+
+
+def test_the_entry_point_names_no_profile_when_it_is_given_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert _run_entry_point(monkeypatch, []) == [{"profile_id": None, "credential_reference": None, "surface": _FULL}]
+
+
+def test_the_entry_point_reads_an_empty_credential_reference_as_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    profile_id = uuid4()
+
+    served = _run_entry_point(monkeypatch, ["--profile-id", str(profile_id), "--credential-reference", ""])
+
+    assert served == [{"profile_id": profile_id, "credential_reference": None, "surface": _FULL}]
+
+
+def test_the_entry_point_refuses_a_credential_reference_that_names_no_profile(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    with pytest.raises(SystemExit) as stopped:
+        _run_entry_point(monkeypatch, ["--credential-reference", str(uuid4())])
+
+    assert stopped.value.code == 2
+    assert "names the key of one profile" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    ("named", "keyed"),
+    [(True, False), (False, False), (True, True)],
+    ids=["profile-alone", "no-arguments", "profile-and-key"],
+)
+def test_serving_requests_attendance_exactly_when_no_credential_reference_is_given(
+    monkeypatch: pytest.MonkeyPatch, named: bool, keyed: bool
+) -> None:
+    profile_id = uuid4() if named else None
+    started: list[RuntimeMcpAdapter] = []
+
+    async def no_key(**_options: object) -> FrontendClient:
+        raise AutomationCustodyError(AutomationCustodyCode.MISSING)
+
+    def stop_before_stdio(adapter: RuntimeMcpAdapter) -> NoReturn:
+        started.append(adapter)
+        raise _ServingStoppedError
+
+    monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", no_key)
+    monkeypatch.setattr(mcp_server, "build_server", stop_before_stdio)
+    with pytest.raises(_ServingStoppedError):
+        mcp_server.serve(profile_id=profile_id, credential_reference=uuid4() if keyed else None)
+
+    assert len(started) == 1
+    assert started[0]._requests_attendance is not keyed
+    assert started[0].profile_id == profile_id and started[0].client is None

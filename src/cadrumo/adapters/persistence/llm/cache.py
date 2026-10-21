@@ -20,14 +20,13 @@ from pydantic import ValidationError
 
 from ....core.classification.policies import SensitivityClass
 from ....core.config import load_settings
-from ....core.config_support import LLMProvider
 from ....core.hashing import canonical_json_bytes, content_hash_hex, sha256_hex
 from ....core.logging import get_logger
 from ....core.redaction.rules import carries_redaction_placeholder, default_rules_for_class, redact_structured
 from ....core.time.clock import now
 from ....core.type_guards import is_object_dict
 from ...outbound.llm.errors import LLMCacheError
-from ...outbound.llm.models import CachedEntry, CacheKey, CacheStats, LLMRequest, LLMResponse
+from ...outbound.llm.models import CachedEntry, CacheKey, CacheStats, LLMRequest, LLMResponse, RecordedLLMProvider
 from ...outbound.llm.retention import select_retention_removal_keys
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
@@ -62,7 +61,7 @@ class LLMCache:
         """
         self.root_dir = root_dir or load_settings().cadrumo_llm_cache_dir
 
-    def build_key(self, request: LLMRequest, provider: LLMProvider, model: str) -> CacheKey:
+    def build_key(self, request: LLMRequest, provider: RecordedLLMProvider, model: str) -> CacheKey:
         """Derive a :class:`~llm.CacheKey` from the request.
 
         Args:
@@ -92,7 +91,7 @@ class LLMCache:
         args_hash = content_hash_hex(args_payload)
         return CacheKey(provider=provider, model=model, prompt_hash=prompt_hash, args_hash=args_hash)
 
-    def read(self, request: LLMRequest, provider: LLMProvider, model: str) -> LLMResponse | None:
+    def read(self, request: LLMRequest, provider: RecordedLLMProvider, model: str) -> LLMResponse | None:
         """Read a cached response, if present.
 
         Args:

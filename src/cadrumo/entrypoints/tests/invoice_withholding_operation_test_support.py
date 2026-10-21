@@ -32,13 +32,14 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import validating_
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.entrypoints.adapter_composition import (
     build_percepcion_observation_ports,
     build_retencion_observation_ports,
     build_withholding_observation_service,
 )
+
+from ...domain.iva.schema import InvoiceKind
 
 _YEAR = 2025
 _PERIOD = Period.from_year_and_code(_YEAR, "2T")

@@ -10,6 +10,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....application.ledger.action_ports import LedgerActionPorts
 from ....application.ledger.ledger_add_command import resolve_ledger_add_prorrata_advisory_facts
 from ....application.ledger.ledger_add_contracts import (
@@ -29,7 +31,6 @@ from ....application.prorrata_register.ports import (
     ProrrataRegisterServiceRepositoryProtocol,
 )
 from ....application.review.filter import LedgerReviewStatus
-from ....application.user_profile.access_contracts import AccessAction, Availability
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation

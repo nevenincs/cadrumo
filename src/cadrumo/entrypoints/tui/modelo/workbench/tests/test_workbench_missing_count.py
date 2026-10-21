@@ -14,7 +14,11 @@ import pytest
 from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_models import ModeloWorkForm
 from ......application.modelo.work_form_service import modelo_form_snapshot
-from ......application.modelo.work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
+from ......application.modelo.work_review import (
+    ModeloWorkProgress,
+    ModeloWorkReview,
+    build_modelo_work_review_casillas,
+)
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.modelo_work_progress_state import ModeloWorkProgressState

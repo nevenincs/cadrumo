@@ -25,7 +25,7 @@ def test_compiled_intracommunity_summary_and_correction_share_invoice_projection
     inputs = {
         str(cell.casilla_id): cell.value
         for cell in plan.value_cells
-        if cell.address.tab is TabName.ENTRADAS and cell.casilla_id
+        if cell.address.tab is TabName.ENTRADAS and (cell.casilla_id is not None and cell.casilla_id)
     }
     for suffix, amount in expected.items():
         assert summary[f"iva-349-declarante-{suffix}"] == amount

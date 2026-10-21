@@ -16,10 +16,8 @@ from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
 
-from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
-
+from .....adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from .....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from .....application.aeat_sync.workspace import (
     AeatSyncAeatObservationState,
     AeatSyncCensusCategory,
@@ -60,7 +58,11 @@ from .....application.live.notifications_read_operation import (
 )
 from .....application.operations.models import OperationDefinitionId
 from .....application.operations.registry import OperationPublicContractSetV1
-from .....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
+from .....application.operator_actions.catalogue import (
+    OPERATOR_ACTION_CATALOGUE,
+    ActionCatalogue,
+    ActionCatalogueEntry,
+)
 from .....application.operator_actions.models import ActionReference
 from .....application.user_profile.censal_operation import (
     build_censal_operation_definition,
@@ -76,6 +78,7 @@ from .....tests.aeat_literal_fixtures import (
     CENSO_SOURCE_URL_FIXTURE,
     OBLIGACIONES_SOURCE_URL_FIXTURE,
 )
+from ....adapter_composition import build_censal_fetch_port
 from ...components.host import ScreenHostApp
 from ...destination_alias import closed_destination_ids
 from ...navigation import TuiScreenContextV1
@@ -102,6 +105,87 @@ from ..screens import (
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("readiness_unavailable", (False, True))
+async def test_stored_notifications_remain_readable_without_aeat_credentials(
+    readiness_unavailable: bool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from ...profile.tests.test_aeat_auth_setup import AeatAuthSetupDoor
+
+    requests: list[AeatSyncOperationRequestV1] = []
+
+    async def handoff(request: AeatSyncOperationRequestV1, /) -> OperationControllerPort:
+        requests.append(request)
+        return _started_operation_controller()
+
+    door = AeatAuthSetupDoor()
+    door.fail_read = readiness_unavailable
+    controller = _controller(
+        operation_handoff=handoff,
+        overview_area=AeatSyncOverviewArea.NOTIFICATIONS,
+        action_id="operator.live.notifications.list",
+        operation_id=NOTIFICATIONS_LIST_DEFINITION_ID,
+    )
+    controller.aeat_auth_setup = door
+    screen = AeatSyncOverviewScreen(controller)
+    monkeypatch.setattr(screen, "_show_operation_modal", lambda _controller: None)
+    async with ScreenHostApp(screen).run_test(size=(120, 65)) as pilot:
+        await pilot.pause()
+        button = screen.query_one(".aeat-sync-operation", Button)
+        assert not button.disabled
+        screen._set_operation_buttons_disabled(True)
+        assert button.disabled
+        screen._set_operation_buttons_disabled(False)
+        assert not button.disabled
+        button.scroll_visible(immediate=True)
+        await pilot.pause()
+        assert await pilot.click(button)
+        await pilot.pause()
+        assert [request.operation for request in requests] == [NOTIFICATIONS_LIST_DEFINITION_ID]
+        assert button.disabled
+
+
+@pytest.mark.asyncio
+async def test_sync_screen_exposes_same_auth_editor_and_reloads_saved_readiness() -> None:
+    from ...profile.aeat_auth_setup import AeatAuthSetupScreen
+    from ...profile.tests.test_aeat_auth_setup import AeatAuthSetupDoor
+
+    requests: list[AeatSyncOperationRequestV1] = []
+
+    async def handoff(request: AeatSyncOperationRequestV1, /) -> OperationControllerPort:
+        requests.append(request)
+        raise AssertionError("editing authentication never starts a remote read")
+
+    door = AeatAuthSetupDoor()
+    controller = _controller(operation_handoff=handoff)
+    controller.aeat_auth_setup = door
+    screen = AeatSyncOverviewScreen(controller)
+    async with ScreenHostApp(screen).run_test(size=(120, 65)) as pilot:
+        await pilot.pause()
+        buttons = tuple(screen.query(".aeat-sync-operation"))
+        assert buttons and all(button.disabled for button in buttons)
+        assert tr("tui.aeat_auth.blocked") in str(screen.query_one("#aeat-sync-auth-readiness", Static).render())
+        assert await pilot.click("#aeat-sync-auth-edit")
+        await pilot.pause()
+        assert isinstance(screen.app.screen, AeatAuthSetupScreen)
+        editor = screen.app.screen
+        from textual.widgets import Input, Select
+
+        editor.query_one("#aeat-auth-method", Select).value = "clave_movil"
+        editor.query_one("#aeat-auth-field-0", Input).value = "12345678Z"
+        await editor._save()
+        editor.action_close()
+        await pilot.pause()
+        assert controller.auth_readiness is not None and controller.auth_readiness.ready
+        assert all(not button.disabled for button in screen.query(".aeat-sync-operation"))
+        assert not requests
+        door.fail_read = True
+        await screen._refresh_auth()
+        assert all(button.disabled for button in screen.query(".aeat-sync-operation"))
+
 
 _T1 = datetime(2026, 1, 3, 10, tzinfo=UTC)
 _T2 = datetime(2026, 1, 4, 11, tzinfo=UTC)
@@ -1600,7 +1684,7 @@ async def test_distinct_comparisons_at_same_address_have_unique_rows_and_histori
         reconciliation_projection as persisted_projection,
     )
     from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
-    from .....application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
+    from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 
     first = _record().model_copy(
         update={

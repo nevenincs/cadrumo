@@ -1460,7 +1460,9 @@ def test_pdf_prose_in_content_is_not_read_as_a_stated_wire_fact() -> None:
     """
     eligible = _eligibility_for("aeat-dr-347-2025", "2025", "operaciones-terceros.toml")
 
-    with_content = [field for field in eligible if field.content and field.content.strip()]
+    with_content = [
+        field for field in eligible if (field.content is not None and field.content) and field.content.strip()
+    ]
     assert with_content, "no eligible field carrying content to assert on"
     assert all(field.ordinal is not None for field in with_content), (
         "every content-bearing eligible anchor should be one AEAT printed with an ordinal"

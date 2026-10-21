@@ -18,7 +18,10 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.declarations.controller import DeclarationsWorkspaceController
 from cadrumo.entrypoints.tui.declarations.external_details import ExternalFilingDetailsScreen
-from cadrumo.entrypoints.tui.declarations.models import DeclarationsWorkspaceWiringV1, ModeloWorkCreateResultV1
+from cadrumo.entrypoints.tui.declarations.models import (
+    DeclarationsWorkspaceWiringV1,
+    ModeloWorkCreateResultV1,
+)
 from cadrumo.entrypoints.tui.declarations.overview import DeclarationsOverviewScreen
 from cadrumo.entrypoints.tui.declarations.picker import NewDeclarationPicker
 from cadrumo.entrypoints.tui.declarations.tests.portfolio_fixtures import portfolio_projection

@@ -38,13 +38,13 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
-from ..classification import IvaTerritorialScope
 from ..establishment import (
     StatedCountryCodeStatus,
     country_code_for_stated_country_code,
     stated_country_code_status,
     territorial_scope_for_country,
 )
+from ..schema import IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

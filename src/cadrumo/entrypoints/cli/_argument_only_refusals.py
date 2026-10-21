@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from .command_spec import CommandSpec
+    from cadrumo_client.commands.spec import CommandSpec
 
 #: Schema identity of the verb whose modelo argument is decidable on its own.
 _WORK_CREATE_IDENTITY = "modelo.work.create"
@@ -56,8 +56,9 @@ def refuse_on_arguments_alone(spec: CommandSpec, arguments: Mapping[str, object]
     Raises:
         CliRefusedBoundaryError: When the arguments alone settle the refusal.
     """
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ...application.modelo.work_create_policy import modelo_work_create_refusal_locale_key
-    from .errors import CliRefusedBoundaryError
 
     if (spec.result_schema.identity or spec.key) != _WORK_CREATE_IDENTITY:
         return

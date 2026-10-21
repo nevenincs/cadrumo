@@ -20,7 +20,7 @@ from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.text_bounds import NonEmptyStr
 from ...domain.invoices.enums import PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceLine
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ..operations.public_scalar import PublicDecimal
 
 

@@ -27,6 +27,8 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.transactions.models import TransactionCatalogue
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....domain.foreign_assets.valuation import M720ValuationEvent
 from ...aggregation.counterpart import CounterpartObservation
@@ -52,7 +54,6 @@ from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..aggregate_contracts import (
     MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
@@ -300,9 +301,6 @@ def test_definition_and_access_are_profile_and_period_scoped() -> None:
 
     assert definition.capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
     assert definition.capabilities.sensitive_input is OperationSensitiveInputPolicy.SECURE_REFERENCE
-    assert definition.permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-    )
     context = OperationAccessContext(
         profile_id=_PROFILE,
         destination_id=uuid4(),

@@ -16,7 +16,6 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
-import tempfile
 import zipfile
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -34,6 +33,7 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 from dev.packaging.command_execution import CommandResult
 
 from ...conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .. import workbook_parity_libreoffice as _libreoffice
 from .._parity_tapes import ParityScenario
 from ..workbook_parity_binary_conversion import (
     convert_binary_xls_with_libreoffice,
@@ -667,7 +667,7 @@ def test_libreoffice_refuses_a_profile_root_too_deep_to_initialise(
     shutil.copy(r"C:\Windows\System32\where.exe", fake_soffice)
     deep_temp_root = tmp_path / ("t" * 150)
     deep_temp_root.mkdir()
-    monkeypatch.setattr(tempfile, "tempdir", str(deep_temp_root))
+    monkeypatch.setattr(_libreoffice, "prepare_temporary_directory", lambda: deep_temp_root)
 
     with pytest.raises(RegistryValidationError, match="user profile root") as excinfo:
         run_workbook_with_libreoffice(

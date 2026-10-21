@@ -282,7 +282,7 @@ def _append_fact_identity_findings(
     fact: GovernedFact,
 ) -> None:
     previous = fact_owners.get(fact.fact_id)
-    if previous:
+    if previous is not None and previous:
         findings.append(
             FactQualityFinding(FactQualityKind.DUPLICATE_FACT_ID, provider_id, fact.fact_id, detail=previous)
         )

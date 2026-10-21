@@ -22,3 +22,79 @@ replaced_by = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reducc
 to_revision = "2024"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2023", "aeat-dr-390-2024"]
+
+# From 2024 the annual simplified-regime result boxes on page 5 (offsets 1033-1186)
+# are written from the M303 4T handoff casillas iva.anual.regimen-simplificado.*,
+# so the 2022 manual-input bindings at the same positions have no reader here.
+
+[[revisions."2024".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-no-agric-ganad-y-forest"
+to_revision = "2024"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-agric-ganad-y-forest"
+to_revision = "2024"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-en-adquisiciones-intracomunitarias"
+to_revision = "2024"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-iva-devengado-por-inversion-del-sujeto-pasivo"
+to_revision = "2024"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-iva-devengado-en-entregas-de-activos-fijos"
+to_revision = "2024"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-deducciones-iva-soportado-en-adquisicion-de-activos-fijos"
+to_revision = "2024"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-deducciones-regularizacion-de-bienes-de-inversion"
+to_revision = "2024"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-deducciones-suma-de-deducciones"
+to_revision = "2024"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-resultado-regimen-simplificado"
+to_revision = "2024"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]

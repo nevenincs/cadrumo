@@ -180,7 +180,7 @@ def _append_route(
     inputs: SignalInputs,
     results: ConsumerSignals,
 ) -> None:
-    route_registration = registration.get("route") if registration else None
+    route_registration = registration.get("route") if (registration is not None and registration) else None
     resolver_id = route_registration.get("resolver_id") if isinstance(route_registration, Mapping) else None
     binding_id = str(binding["binding_id"])
     results.routes.append(
@@ -202,15 +202,19 @@ def _append_route(
                 "kind": binding.get("provider_kind"),
                 "payload": binding.get("provider"),
                 "registered": registration is not None,
-                "disposition": registration.get("disposition") if registration else None,
-                "provider_model": registration.get("provider_model") if registration else None,
+                "disposition": registration.get("disposition") if (registration is not None and registration) else None,
+                "provider_model": registration.get("provider_model")
+                if (registration is not None and registration)
+                else None,
                 "value_contract": binding.get("value"),
             },
             "resolution_mechanism": {
                 "registration": route_registration,
                 "executable": inputs.runtime_resolvers.get(str(resolver_id)) if resolver_id else None,
             },
-            "terminal_origin_contract": registration.get("permitted_terminal_origins", ()) if registration else (),
+            "terminal_origin_contract": registration.get("permitted_terminal_origins", ())
+            if (registration is not None and registration)
+            else (),
             "closure": {"status": status, "failures": list(failures), "authority": "static_binding_contract"},
         }
     )
@@ -244,7 +248,9 @@ def _append_unconsumed(
     registration: dict[str, object] | None,
     results: ConsumerSignals,
 ) -> None:
-    disposition = str(registration.get("disposition")) if registration else "unregistered"
+    disposition = (
+        str(registration.get("disposition")) if (registration is not None and registration) else "unregistered"
+    )
     row, finding_row = unconsumed_binding_report(
         binding,
         typed_consumers=typed,

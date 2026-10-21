@@ -29,6 +29,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_INPUT_CASILLA")
 _TARGET_CASILLA: CasillaId = validated_casilla_id("02", surface="_TARGET_CASILLA")
 
+# Independent shared coordinate for the public scoped/unscoped parity checks.
+# The raw M303 metadata declares 2026-02 only in `2026-y-siguientes`:
+# `2026-hasta-01-y-1t` is limited to 01/1T, while the later revision starts
+# on 2026-02-01 and includes 02 in its 2026 period override.
+_M303_SHARED_FILING_COORDINATE: tuple[int, str, str] = (2026, "02", "2026-y-siguientes")
+
 
 def _service() -> RegistryQueryService:
     return RegistryQueryService(compiled_bundled_authority())
@@ -370,10 +376,11 @@ def test_scoped_and_unscoped_routes_preserve_both_forms_over_one_projection() ->
     filing scope the unscoped form does not have.
     """
     service = _service()
-    unscoped = service.describe_modelo("303", period="1T")
-    filing_year = _filing_year_covered_by("303", unscoped.revision)
-    scoped = service.describe_modelo_for_scope("303", filing_year=filing_year, period="1T")
+    filing_year, period, expected_revision = _M303_SHARED_FILING_COORDINATE
+    unscoped = service.describe_modelo("303", period=period)
+    scoped = service.describe_modelo_for_scope("303", filing_year=filing_year, period=period)
 
+    assert unscoped.revision == expected_revision
     assert scoped.revision == unscoped.revision
     assert (scoped.code, scoped.tax_domain, scoped.revision_ids) == (
         unscoped.code,
@@ -391,7 +398,7 @@ def test_scoped_and_unscoped_routes_preserve_both_forms_over_one_projection() ->
     assert (unscoped.filing_year, unscoped.filing_period) == (None, None)
     assert scoped.filing_year == filing_year
     assert scoped.filing_period is not None
-    assert scoped.period == unscoped.period == "1T"
+    assert scoped.period == unscoped.period == period
 
 
 def test_casillas_formulas_and_bindings_rows_agree_across_both_resolution_forms() -> None:
@@ -402,21 +409,24 @@ def test_casillas_formulas_and_bindings_rows_agree_across_both_resolution_forms(
     builder had re-derived content from the resolver instead of the context.
     """
     service = _service()
-    filing_year = _filing_year_covered_by("303", service.describe_modelo("303", period="1T").revision)
+    filing_year, period, expected_revision = _M303_SHARED_FILING_COORDINATE
 
-    unscoped_casillas = service.casillas("303", period="1T")
-    scoped_casillas = service.casillas_for_scope("303", filing_year=filing_year, period="1T")
+    unscoped_casillas = service.casillas("303", period=period)
+    scoped_casillas = service.casillas_for_scope("303", filing_year=filing_year, period=period)
     assert unscoped_casillas.rows
+    assert unscoped_casillas.revision == expected_revision
     assert scoped_casillas.rows == unscoped_casillas.rows
 
-    unscoped_formulas = service.formulas("303", period="1T")
-    scoped_formulas = service.formulas_for_scope("303", filing_year=filing_year, period="1T")
+    unscoped_formulas = service.formulas("303", period=period)
+    scoped_formulas = service.formulas_for_scope("303", filing_year=filing_year, period=period)
     assert unscoped_formulas.rows
+    assert unscoped_formulas.revision == expected_revision
     assert scoped_formulas.rows == unscoped_formulas.rows
 
-    unscoped_bindings = service.bindings("303", period="1T")
-    scoped_bindings = service.bindings_for_scope("303", filing_year=filing_year, period="1T")
+    unscoped_bindings = service.bindings("303", period=period)
+    scoped_bindings = service.bindings_for_scope("303", filing_year=filing_year, period=period)
     assert unscoped_bindings.rows
+    assert unscoped_bindings.revision == expected_revision
     assert scoped_bindings.rows == unscoped_bindings.rows
 
     # The filter arguments still reach the shared builder rather than being
@@ -424,7 +434,7 @@ def test_casillas_formulas_and_bindings_rows_agree_across_both_resolution_forms(
     computed = service.casillas_for_scope(
         "303",
         filing_year=filing_year,
-        period="1T",
+        period=period,
         input_kind=InputKind.COMPUTED,
     )
     assert computed.rows

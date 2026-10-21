@@ -370,10 +370,12 @@ def _revision_span_findings(
 
     if _declared_span_is_single_year(revision):
         failure, single_signal_pass = _single_year_findings(modelo, revision_id, revision, ordered)
-        return ([failure] if failure else []), ([single_signal_pass] if single_signal_pass else [])
+        return ([failure] if (failure is not None and failure) else []), (
+            [single_signal_pass] if (single_signal_pass is not None and single_signal_pass) else []
+        )
 
     failure = _multi_year_failure(modelo, revision_id, revision)
-    return ([failure] if failure else []), []
+    return ([failure] if (failure is not None and failure) else []), []
 
 
 def test_every_modelo_revision_span_is_corpus_proven() -> None:

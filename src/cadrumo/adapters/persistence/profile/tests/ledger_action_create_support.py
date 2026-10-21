@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC as _UTC
@@ -29,7 +29,6 @@ from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios 
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore as _AttachmentStore
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository as _SecureObjectRepository
 from cadrumo.application.ledger.action_ports import LedgerActionPorts as _LedgerActionPorts
-from cadrumo.application.ledger.actions_manual import create_manual_transaction as _create_manual_transaction
 from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidence as _PurchaseInvoiceEvidence
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand as _ManualLedgerTransactionCommand
 from cadrumo.application.ledger.models import ManualLedgerTransactionResult as _ManualLedgerTransactionResult
@@ -65,6 +64,9 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction as _Transaction
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile as _UsageRatioProfile
 
+from .....application.ledger.tests.manual_transaction_support import (
+    create_manual_transaction as _create_manual_transaction,
+)
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
 )
@@ -90,7 +92,7 @@ def ledger_ports_for_test(
     work_unit_repository: _WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: _CalculationRevisionCatalogueRepositoryProtocol | None = None,
     purchase_invoice_evidence_records: tuple[_PurchaseInvoiceEvidence, ...] | None = None,
-) -> Iterator[_LedgerActionPorts]:
+) -> Generator[_LedgerActionPorts]:
     """Yield test ledger ports while the authority operation lease is live.
 
     ``bucket_id`` and ``objects`` are deliberately required so every default

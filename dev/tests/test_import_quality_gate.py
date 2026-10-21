@@ -64,11 +64,14 @@ def test_conftest_modules_are_test_scoped(module: str) -> None:
 
 
 def _write_package(root: Path, dotted: str, source: str = "") -> None:
-    path = root / "src" / Path(*dotted.split("."))
-    path.mkdir(parents=True, exist_ok=True)
-    init = path / "__init__.py"
-    if source or not init.exists():
-        init.write_text(source, encoding=UTF_8, newline="\n")
+    parts = dotted.split(".")
+    for index in range(1, len(parts) + 1):
+        path = root / "src" / Path(*parts[:index])
+        path.mkdir(parents=True, exist_ok=True)
+        init = path / "__init__.py"
+        contents = source if index == len(parts) else ""
+        if contents or not init.exists():
+            init.write_text(contents, encoding=UTF_8, newline="\n")
 
 
 def _write_module(root: Path, dotted: str, source: str) -> None:
@@ -290,6 +293,25 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
     ("name", "module", "source", "targets"),
     (
         (
+            "tax-cli-to-runtime-direct",
+            "cadrumo.entrypoints.cli.bad",
+            "from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
+            ("cadrumo_runtime.host.frontend.cli.bootstrap",),
+        ),
+        (
+            "tax-cli-to-runtime-function-local",
+            "cadrumo.entrypoints.cli.bad",
+            "def load():\n    from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n    return VALUE\n",
+            ("cadrumo_runtime.host.frontend.cli.bootstrap",),
+        ),
+        (
+            "tax-cli-to-runtime-type-checking",
+            "cadrumo.entrypoints.cli.bad",
+            "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n"
+            "    from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
+            ("cadrumo_runtime.host.frontend.cli.bootstrap",),
+        ),
+        (
             "source-to-dev-production",
             "cadrumo.core.bad",
             "import dev.exit_codes\n",
@@ -339,7 +361,7 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
         ),
         (
             "harness-to-product-entrypoint",
-            "cadrumo_harness.mcp.bad",
+            "cadrumo_mcp.mcp.bad",
             "import cadrumo.entrypoints.module\n",
             ("cadrumo.entrypoints.module",),
         ),
@@ -364,8 +386,8 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
         (
             "adapter-to-harness",
             "cadrumo.adapters.inbound.bad",
-            "import cadrumo_harness.mcp.module\n",
-            ("cadrumo_harness.mcp.module",),
+            "import cadrumo_mcp.mcp.module\n",
+            ("cadrumo_mcp.mcp.module",),
         ),
         (
             "non-entrypoint-to-entrypoint",
@@ -376,13 +398,13 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
         (
             "cli-to-tui",
             "cadrumo.entrypoints.cli.bad",
-            "from ..tui.feature import VALUE\n",
+            "from cadrumo.entrypoints.tui.feature import VALUE\n",
             ("cadrumo.entrypoints.tui.feature",),
         ),
         (
             "tui-to-cli",
             "cadrumo.entrypoints.tui.bad",
-            "from ..cli.feature import VALUE\n",
+            "from cadrumo.entrypoints.cli.feature import VALUE\n",
             ("cadrumo.entrypoints.cli.feature",),
         ),
         (
@@ -418,6 +440,23 @@ def test_graph_defect_fails_through_real_gate(
         _write_module(root, target, "VALUE = 1\n")
     _write_module(root, module, source)
     _assert_graph_detection(root, module)
+
+
+def test_tax_runtime_transitive_import_fails_through_real_gate(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(root, "cadrumo_runtime.host.frontend.cli.bootstrap", "VALUE = 1\n")
+    _write_module(
+        root,
+        "cadrumo_client.commands.bridge",
+        "from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
+    )
+    _write_module(root, "cadrumo.entrypoints.cli.bad", "from cadrumo_client.commands.bridge import VALUE\n")
+    returncode, output = _run_real_gate(root)
+    payload = _health_payload(output)
+    _assert_blocking_detection(returncode, output, payload)
+    graph_output = _component_block(output, "GRAPH_AUTHORITY")
+    assert "cadrumo.entrypoints.cli.bad -> cadrumo_client.commands.bridge" in graph_output, output
+    assert "cadrumo_client.commands.bridge -> cadrumo_runtime.host.frontend.cli.bootstrap" in graph_output, output
 
 
 def test_undeclared_source_root_fails_authority_preflight(tmp_path: Path) -> None:
@@ -771,7 +810,7 @@ def test_harness_package_keeps_absolute_product_imports(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     _write_module(
         root,
-        "cadrumo_harness.mcp.consumer",
+        "cadrumo_mcp.mcp.consumer",
         "from cadrumo.core.module import VALUE\n",
     )
     _write_module(root, "cadrumo.core.module", "VALUE = 1\n")
@@ -1033,6 +1072,23 @@ def test_clean_fixture_has_a_nonzero_governed_scan_and_passes_the_component(tmp_
     assert isinstance(attempted, int) and attempted > 0, output
     assert loadability["status"] == "loaded", output
     assert loadability["loaded"] == attempted and loadability["failed"] == 0, output
+
+
+def test_the_subordinate_checker_does_not_import_the_audited_support_modules(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(root, "cadrumo.core.storage_environment", "raise RuntimeError('audited support must not execute')\n")
+    _compile_load_targets(root)
+    read = read_authority(root)
+    assert read.authority is not None and not read.findings
+    monkeypatch.setenv("PYTHONPATH", str(root / "src"))
+
+    component, checker = run_subordinate(read.authority)
+
+    assert component.returncode == 0, component.output
+    assert checker.files_scanned > 0
+    assert not checker.findings
 
 
 def test_the_isolated_worker_imports_the_audited_tree_rather_than_the_tool_tree(tmp_path: Path) -> None:

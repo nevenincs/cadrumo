@@ -530,7 +530,7 @@ def _missing_required_flags(
     missing: list[str] = []
     for question in _required_flag_questions(flow):
         if question.id not in canonical or not canonical[question.id]:
-            if question.default:
+            if question.default is not None and question.default:
                 canonical[question.id] = question.default
             else:
                 missing.append(question.id)
@@ -1448,7 +1448,7 @@ def _format_wizard_validation_error(flow: WizardFlow, item: ErrorDetails) -> tup
     still returned for the ``param_hint``.
     """
     field_flags = _wizard_field_flags(flow)
-    error_type = str(item.get("type", ""))
+    error_type = item.get("type", "")
     cross_field = _WIZARD_ERROR_TYPE_KEYS.get(error_type)
     if cross_field is not None:
         key, primary_field, condition_field = cross_field
@@ -1474,7 +1474,7 @@ def _wizard_validation_bad(flow: WizardFlow, error: ValidationError) -> typer.Ba
         "; ".join(mapped_details) if mapped_details else tr("application.wizard.errors.command_input_invalid_fallback")
     )
     message = tr("application.wizard.errors.command_input_invalid", details=details)
-    first_flag = next((flag for _detail, flag in rendered if flag), None)
+    first_flag = next((flag for _detail, flag in rendered if (flag is not None and flag)), None)
     if first_flag is not None:
         return typer.BadParameter(message, param_hint=f"'{first_flag}'")
     return typer.BadParameter(message)
@@ -1641,7 +1641,7 @@ def _selected_profile_label() -> str | None:
         pointer = observe_active_profile_pointer()
         if pointer.bucket_id is None:
             return None
-        selected = read_profile_bucket_by_id(str(pointer.bucket_id))
+        selected = read_profile_bucket_by_id(pointer.bucket_id)
     except Exception:
         get_logger(__name__).debug("active-profile label resolution failed for the wizard spine", exc_info=True)
         return None

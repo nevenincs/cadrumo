@@ -225,7 +225,7 @@ def build_m200_filing_projection_plan(
     )
     catalogue = _registry_m200_projection_catalogue(
         effective_date,
-        period=str(registry_snapshot.period),
+        period=registry_snapshot.period,
     )
     contexts: list[FilingRecordRenderContext] = []
     values: list[FilingProjectionValue] = []

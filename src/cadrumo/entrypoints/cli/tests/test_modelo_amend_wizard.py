@@ -37,53 +37,49 @@ from uuid import UUID
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
+from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
+from cadrumo.adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-
-from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
-from ....adapters.persistence.profile.justificante import JustificanteRepository
-from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
-from ....adapters.persistence.storage.tests.secure_sql import (
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
-from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ....application.flows.definition import FlowPage
-from ....application.flows.errors import FlowAnswerError
-from ....application.flows.scripted import run_scripted_flow
-from ....application.modelo.action_errors import amendment_evidence_missing_precondition
-from ....application.modelo.amendment_context_operation import ModeloWorkAmendmentContextProjection
-from ....application.modelo.calculation_actions import get_calculation_revision
-from ....application.modelo.calculation_projection import ModeloCalculationSnapshot
-from ....application.modelo.calculation_repository import calculation_revision_catalogue_repository
-from ....application.modelo.external_import_actions import import_external_filing_evidence
-from ....application.modelo.filing_projection import ModeloFilingRecordSnapshot
-from ....application.modelo.filing_repository import modelo_record_catalogue_repository
-from ....application.modelo.metadata_projection import ModeloWorkMetadataSnapshot
-from ....application.modelo.registry_discovery import registry_casillas_for_registry_scope
-from ....application.modelo.work_lifecycle import get_work_unit
-from ....application.modelo.work_unit_repository import work_unit_catalogue_repository
-from ....core.bucket_pointer import resolve_active_bucket_id
-from ....core.casilla_id import validated_casilla_id
-from ....core.flows import FlowMode
-from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
-from ....core.period import Period
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....domain.calculations.registry.amendment_regime_policy import permitted_amendment_kind_values_for_period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ....domain.justificante.schema import Justificante
-from ....domain.modelos.calculation_revision import CalculationRevision
-from ....domain.modelos.calculation_revision_amendment import (
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.flows.definition import FlowPage
+from cadrumo.application.flows.errors import FlowAnswerError
+from cadrumo.application.flows.scripted import run_scripted_flow
+from cadrumo.application.modelo.action_errors import amendment_evidence_missing_precondition
+from cadrumo.application.modelo.amendment_context_operation import ModeloWorkAmendmentContextProjection
+from cadrumo.application.modelo.calculation_actions import get_calculation_revision
+from cadrumo.application.modelo.calculation_projection import ModeloCalculationSnapshot
+from cadrumo.application.modelo.calculation_repository import calculation_revision_catalogue_repository
+from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
+from cadrumo.application.modelo.filing_projection import ModeloFilingRecordSnapshot
+from cadrumo.application.modelo.filing_repository import modelo_record_catalogue_repository
+from cadrumo.application.modelo.metadata_projection import ModeloWorkMetadataSnapshot
+from cadrumo.application.modelo.registry_discovery import registry_casillas_for_registry_scope
+from cadrumo.application.modelo.work_lifecycle import get_work_unit
+from cadrumo.application.modelo.work_unit_repository import work_unit_catalogue_repository
+from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.core.flows import FlowMode
+from cadrumo.core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
+from cadrumo.core.period import Period
+from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.domain.calculations.registry.amendment_regime_policy import permitted_amendment_kind_values_for_period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.domain.justificante.schema import Justificante
+from cadrumo.domain.modelos.calculation_revision import CalculationRevision
+from cadrumo.domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentKind,
     m303_rectificativa_motive_is_applicable,
 )
-from ....domain.modelos.filing_record import ExternalEvidenceKind
-from ....domain.modelos.work_unit import WorkUnit
-from ....tests.aeat_literal_fixtures import justificante_cotejo_url
-from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ...adapter_composition import build_calculation_action_ports, build_filing_action_ports
-from ...tests.filing_record_read_support import persisted_filing_record
-from .._modelo_amend_wizard_cli import (
+from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
+from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_filing_action_ports
+from cadrumo.entrypoints.cli.modelo_amend_wizard_commands import (
     _ACTIVE_RUNS,
     _KIND_PAGE_ID,
     _MOTIVE_PAGE_ID,
@@ -95,12 +91,15 @@ from .._modelo_amend_wizard_cli import (
     _value_page_id,
     _values_kind_reason_definition,
 )
-from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit, load_work_unit_by_id
-from .modelo_cli import create_modelo_work_unit_via_cli
-from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
-from .portable_human_cli_runtime import PortableHumanCliRuntime
+from cadrumo.entrypoints.tests.filing_record_read_support import persisted_filing_record
+from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+from .cli_fixture_worlds import HumanProbeSession, ProfileSeeder, invoke_joined_cli
+from .modelo_cli import create_modelo_work_unit_via_cli
+from .modelo_work_scenarios import create_m130_work_unit, create_m303_work_unit, load_work_unit_by_id
+
+__all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -215,8 +214,8 @@ _AMEND_PARITY_SPINE = (
 )
 
 
-def _invoke(args: list[str], *, runtime_profile: PortableHumanCliRuntime | None = None):
-    return invoke_seeded_profile_cli(args) if runtime_profile is None else runtime_profile.invoke(args)
+def _invoke(args: list[str], *, runtime_profile: HumanProbeSession | None = None):
+    return invoke_joined_cli(args) if runtime_profile is None else runtime_profile.invoke(args)
 
 
 def _payload_string(output: str, key: str) -> str:
@@ -244,19 +243,19 @@ def _operator_profile_facts() -> dict[str, str]:
     }
 
 
-def _create_profile(seed_profile: ProfileSeeder) -> PortableHumanCliRuntime:
+def _create_profile(seed_profile: ProfileSeeder) -> HumanProbeSession:
     """Register genuine password custody and retain the joined human runtime."""
     return seed_profile(label="operator", facts=_operator_profile_facts())
 
 
 @pytest.fixture
-def _operator_profile(seed_profile: ProfileSeeder) -> PortableHumanCliRuntime:
+def _operator_profile(seed_profile: ProfileSeeder) -> HumanProbeSession:
     return _create_profile(seed_profile)
 
 
 def _profile_amend_catalogue_state(
     *,
-    runtime_profile: PortableHumanCliRuntime,
+    runtime_profile: HumanProbeSession,
     bucket_id: str,
 ) -> tuple[object, object, object]:
     """Read the retained encrypted setup oracle independently of frontend admission."""
@@ -318,7 +317,7 @@ def _import_external_m303_baseline(
     *,
     csv: str = "JUST20253031TAMENDWIZARD",
     period: str = "1T",
-    runtime_profile: PortableHumanCliRuntime | None = None,
+    runtime_profile: HumanProbeSession | None = None,
 ) -> str:
     """Import an AEAT-attested M303 baseline filing and return its filing_record_id.
 
@@ -459,7 +458,7 @@ def _amend_via_shared_path(
     from_filing_record_id: str,
     overrides: dict[str, str],
     kind: str,
-    runtime_profile: PortableHumanCliRuntime,
+    runtime_profile: HumanProbeSession,
     motive: str | None = None,
     reason: str,
 ):
@@ -538,7 +537,7 @@ def _permitted_kind_choice_values(
 
 
 def test_amend_wizard_scripted_sequence_files_m130_complementaria(
-    _operator_profile: PortableHumanCliRuntime,
+    _operator_profile: HumanProbeSession,
 ) -> None:
     """The wizard's scripted definitions, fed to the shared amend path, file the correction.
 
@@ -548,7 +547,7 @@ def test_amend_wizard_scripted_sequence_files_m130_complementaria(
     ``work amend`` composition the wizard uses -- supersede the imported
     AEAT-attested baseline with the corrected casilla value.
     """
-    work_unit_id = _create_m130_work_unit()
+    work_unit_id = create_m130_work_unit()
     baseline_filing_id = _import_external_baseline(work_unit_id)
 
     overrides, kind, motive, reason = _scripted_amend(
@@ -593,7 +592,7 @@ def test_amend_wizard_scripted_sequence_files_m130_complementaria(
 
 
 def test_amend_wizard_scripted_sequence_files_m303_rectificativa(
-    _operator_profile: PortableHumanCliRuntime,
+    _operator_profile: HumanProbeSession,
 ) -> None:
     """An Autoliquidación Rectificativa on M303 files through the wizard's scripted drive.
 
@@ -605,7 +604,7 @@ def test_amend_wizard_scripted_sequence_files_m303_rectificativa(
     selection + values/kind/reason answers file it through the shared amend
     path.
     """
-    work_unit_id = _create_m303_work_unit()
+    work_unit_id = create_m303_work_unit()
     baseline_filing_id = _import_external_m303_baseline(work_unit_id)
 
     overrides, kind, motive, reason = _scripted_amend(
@@ -647,7 +646,7 @@ def test_amend_wizard_scripted_sequence_files_m303_rectificativa(
 
 
 def test_work_amend_m303_rectificativa_missing_motive_refuses_before_persistence(
-    _operator_profile: PortableHumanCliRuntime,
+    _operator_profile: HumanProbeSession,
 ) -> None:
     """The public command cannot infer the motive from kind, casilla, result, or reason."""
     work_unit_id = create_modelo_work_unit_via_cli(
@@ -721,7 +720,7 @@ def test_work_amend_refuses_free_text_m303_rectificativa_motive_at_the_public_pa
 
 
 def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
-    _operator_profile: PortableHumanCliRuntime,
+    _operator_profile: HumanProbeSession,
 ) -> None:
     """Wizard-derived amend inputs and a hand-built ``work amend`` agree exactly.
 
@@ -733,7 +732,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
     (``aeat-architecture-boundaries``), not a second,
     independently-derived amendment surface.
     """
-    wizard_unit_id = _create_m303_work_unit()
+    wizard_unit_id = create_m303_work_unit()
     wizard_baseline_filing_id = _import_external_m303_baseline(
         wizard_unit_id,
         csv="JUST20253031TRECTWIZARD",
@@ -837,13 +836,13 @@ def test_amend_wizard_kind_select_offers_only_period_permitted_kinds(seed_profil
     """
     _create_profile(seed_profile)
 
-    m303_unit_id = _create_m303_work_unit()
+    m303_unit_id = create_m303_work_unit()
     _import_external_m303_baseline(m303_unit_id)
     m303_kinds = _permitted_kind_choice_values(m303_unit_id, change_numbers=["07"])
     assert "rectificativa" in m303_kinds
     assert "complementaria" not in m303_kinds
 
-    m130_unit_id = _create_m130_work_unit(period="2T")
+    m130_unit_id = create_m130_work_unit(period="2T")
     _import_external_baseline(m130_unit_id, csv="JUST20251302TKINDS", period="2T")
     m130_kinds = _permitted_kind_choice_values(m130_unit_id, change_numbers=["01"])
     assert "complementaria" in m130_kinds
@@ -858,7 +857,7 @@ def test_amend_wizard_scripting_a_non_permitted_kind_is_refused(seed_profile: Pr
     with the substrate's typed answer-rejected error rather than filing it.
     """
     _create_profile(seed_profile)
-    work_unit_id = _create_m303_work_unit()
+    work_unit_id = create_m303_work_unit()
     _import_external_m303_baseline(work_unit_id)
 
     with pytest.raises(FlowAnswerError):
@@ -879,7 +878,7 @@ def test_amend_wizard_blank_selection_yields_no_corrections(seed_profile: Profil
     before any value is asked. Proven at the substrate level the wizard reads.
     """
     _create_profile(seed_profile)
-    work_unit_id = _create_m130_work_unit()
+    work_unit_id = create_m130_work_unit()
     _import_external_baseline(work_unit_id)
 
     run_id = "test-amend-blank"
@@ -921,7 +920,7 @@ def test_amend_wizard_blank_selection_yields_no_corrections(seed_profile: Profil
 
 
 def test_amend_wizard_non_interactive_host_refuses_with_the_typed_console_error(
-    _operator_profile: PortableHumanCliRuntime,
+    _operator_profile: HumanProbeSession,
 ) -> None:
     """A non-TTY caller with an amendable baseline gets the substrate's typed refusal.
 
@@ -930,7 +929,7 @@ def test_amend_wizard_non_interactive_host_refuses_with_the_typed_console_error(
     unsupported-console error rather than block. Asserted structurally on the
     envelope error code, never on localized prose.
     """
-    work_unit_id = _create_m130_work_unit()
+    work_unit_id = create_m130_work_unit()
     _import_external_baseline(work_unit_id)
 
     result = _invoke(
@@ -951,7 +950,7 @@ def test_amend_wizard_refuses_without_evidence_baseline(seed_profile: ProfileSee
     plain instructive parameter error, never the console refusal.
     """
     _create_profile(seed_profile)
-    work_unit_id = _create_m130_work_unit()
+    work_unit_id = create_m130_work_unit()
 
     result = _invoke(["--format", "json", "app", "modelo", "work", "amend-wizard", work_unit_id])
 

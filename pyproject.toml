@@ -34,16 +34,19 @@ dependencies = [
   "mcp>=2,<3",
   # Rust-backed TOML parser behind the canonical `cadrumo.core.toml` boundary,
   # the only place TOML is parsed; several times faster than the stdlib parser.
-  "rtoml>=0.13.0,<1",
+  "rtoml>=0.14.0,<1",
   # Capability-gated integrations live in [project.optional-dependencies].
-  # `anthropic` (Anthropic-API LLM provider), the `google-*` stack
-  # (Drive/Sheets export), and `playwright*` (live AEAT browser) are lazily
-  # imported and map to the `anthropic`, `google`, and `browser` extras below.
+  # The `google-*` stack (Drive/Sheets export) and `playwright*` (live AEAT
+  # browser) are lazily imported and map to the `google` and `browser` extras.
   # Argon2id KDF for the file-fallback master-key provider's
   # passphrase-to-KEK derivation. OWASP-current top-tier
   # password-hashing primitive; ships pre-built wheels for
   # Linux/macOS/Windows.
   "argon2-cffi>=23.1.0,<26",
+  # The supervised profile KDF child calls the Argon2 C binding directly:
+  # it is launched for every wrap and unwrap, and the `argon2` package's
+  # import closure costs several times the binding's on that path.
+  "argon2-cffi-bindings>=25.1.0,<27",
   # HTML parsing for status readers. The `lxml` extra is load-bearing, not a
   # preference: every AEAT page read goes through one constructor
   # (`adapters/outbound/aeat/_html.py`) that names "lxml" as the parser
@@ -79,11 +82,11 @@ dependencies = [
   "pdfplumber>=0.11.9,<1",
   # Fast text extraction from official AEAT manual PDFs for registry
   # source-citation validation.
-  "pypdfium2>=5.7.1,<6",
+  "pypdfium2>=5.14.0,<6",
   # PDF sanitiser; content-stream rewriter for PII redaction.
-  # Upstream 10.14 wheels require macOS 15; retain the declared macOS 14 floor.
-  "pikepdf==10.13.0.post1; sys_platform == 'darwin'",
-  "pikepdf>=10.0.0,<11; sys_platform != 'darwin'",
+  # Ceiling: upstream 10.14 wheels require macOS 15; retain the declared macOS 14 floor.
+  "pikepdf>=10.13.0.post1,<10.14; sys_platform == 'darwin'",
+  "pikepdf>=10.17.0,<11; sys_platform != 'darwin'",
   # Imaging primitive behind pypdfium2's `to_pil()` page rasterisation. Same
   # class as the `lxml` entry above and declared for the same reason: Pillow
   # DOES reach a default install today, but only as a transitive of pdfplumber
@@ -97,13 +100,13 @@ dependencies = [
   # the base closure regardless.
   "pillow>=12,<13",
   # Data validation & models
-  "pydantic>=2.12.5,<3",
+  "pydantic>=2.14.1,<3",
   "pydantic-settings>=2.9.1,<3",
   # `pydantic` does not re-export `PydanticSerializationError`, so ten production
   # modules reach it at its own distribution. A direct import needs a direct
   # declaration; left unbounded above so `pydantic`'s exact pin stays the
   # resolver's authority.
-  "pydantic-core>=2.46",
+  "pydantic-core>=2.50",
   # Interactive prompt backend for the wizard descriptor runtime.
   "questionary>=2.1.1,<3",
   # Direct prompt_toolkit imports support wizard console validation and tests.
@@ -122,9 +125,9 @@ dependencies = [
   # has ONE shape on every install and carries no unstemmed degraded branch.
   "snowballstemmer>=2.2,<4",
   # Persistence
-  "sqlalchemy>=2.0.36,<3",
+  "sqlalchemy>=2.1.4,<3",
   # CLI
-  "typer>=0.20.0,<1",
+  "typer>=0.27.3,<1",
   # IANA timezone data for Europe/Madrid, including Windows and minimal
   # Linux containers whose operating system carries no zoneinfo database.
   "tzdata>=2026.2",
@@ -137,9 +140,10 @@ dependencies = [
 ]
 
 [project.scripts]
-aeat = "cadrumo.entrypoints.cli.bootstrap:main"
-cadrumo-mcp = "cadrumo_harness.mcp.main:main"
-cadrumo-runtime = "cadrumo.entrypoints.runtime.bootstrap:main"
+aeat = "cadrumo_runtime.host.frontend.cli.bootstrap:main"
+cadrumo-mcp = "cadrumo_mcp.mcp.main:main"
+cadrumo-runtime = "cadrumo_runtime.host.bootstrap:main"
+cadrumo-agent-service = "cadrumo_agent_service.main:main"
 
 [project.urls]
 Homepage = "https://github.com/nevenincs/cadrumo"
@@ -161,22 +165,18 @@ workbook-windows = [
 # flow: loopback IP + PKCE via
 # google-auth-oauthlib's InstalledAppFlow; the storage provider drives Drive v3
 # / Sheets v4 through the discovery client. google-auth-httplib2 is intentionally
-# NOT pinned — transport is satisfied by `requests` (transitive via google-auth).
+# NOT pinned — transport and typed network failures use `requests` directly.
 google = [
-  "google-auth>=2.50.0,<3",
+  "google-auth>=2.62.0,<3",
   "google-auth-oauthlib>=1.3.1,<2",
   "google-api-python-client>=2.195.0,<3",
+  "requests>=2.34.2,<3",
 ]
 # Live AEAT browser automation (the `cadrumo app live ...` sede sessions).
 browser = [
   "playwright>=1.58.0,<2",
   # Runtime browser evasion used by AEAT live browser sessions.
   "playwright-stealth>=2.0.3,<3",
-]
-# Direct Anthropic-API LLM classification provider (distinct from the
-# subprocess CLI providers, which need no Python SDK).
-anthropic = [
-  "anthropic>=0.74.1,<1",
 ]
 # OFX/QFX bank-statement import. ofxtools is the maintained, strict OFX-spec
 # parser (ships py.typed), but it is GPL-3.0-only; gating it behind this extra
@@ -224,9 +224,8 @@ llm = [
 pdf = [
   "reportlab>=5.0.1,<6",
 ]
-# Deliberately absent: an `agent` extra. The operator agent harness, its
-# reviewed operating data, accessors, and MCP runtime are a separate
-# `cadrumo_harness` package shipped alongside it in this distribution.
+# Deliberately absent: an `agent` extra. The deterministic MCP service is a
+# separate `cadrumo_mcp` package shipped alongside it in this distribution.
 #
 # Deliberately absent: a `search` extra. The on-host grounding search stack
 # needs none — the lexical index (stdlib sqlite3 FTS5 plus the core
@@ -242,30 +241,30 @@ pdf = [
 all = [
   "cadrumo[google]",
   "cadrumo[browser]",
-  "cadrumo[anthropic]",
   "cadrumo[ofx]",
   "cadrumo[llm]",
   "cadrumo[pdf]",
 ]
 
 [build-system]
-# The build hook compiles a missing source-tree authority before packaging it.
-# Keep this closure aligned with the canonical compiler's direct import and
-# official-source extraction requirements; normal runtime dependencies remain
-# declared separately under project.dependencies.
+# Ordinary distributions consume an explicitly published source-tree authority
+# and instruct operators to run `just registry-publish-authority` if it is
+# missing. Editable `uv sync` may publish one for first-checkout setup. Keep this
+# closure aligned with the canonical compiler's requirements; runtime dependencies
+# remain declared separately under project.dependencies.
 requires = [
   "hatchling>=1.32.3,<2",
   "beautifulsoup4[lxml]>=4.12,<5",
   "defusedxml>=0.7.1,<1",
   "openpyxl>=3.1.5,<4",
   "pdfplumber>=0.11.9,<1",
-  "pydantic>=2.12.5,<3",
+  "pydantic>=2.14.1,<3",
   "pydantic-settings>=2.9.1,<3",
-  "pypdfium2>=5.7.1,<6",
+  "pypdfium2>=5.14.0,<6",
   "python-dotenv>=1.2.2,<2",
   "python-i18n>=0.3.9,<1",
   "PyYAML>=6.0.3,<7",
-  "rtoml>=0.13.0,<1",
+  "rtoml>=0.14.0,<1",
   "tzdata>=2026.2",
   "xlrd>=2.0.1,<3",
 ]
@@ -279,10 +278,13 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.sdist]
 only-include = [
   "src/cadrumo",
-  "src/cadrumo_harness",
+  "src/cadrumo_client",
+  "src/cadrumo_runtime",
+  "src/cadrumo_mcp",
+  "src/cadrumo_agent_service",
   # The build hook that admits the published authority. It must travel in the
-  # sdist: a wheel built from the sdist runs the same hook, and without the
-  # hook module that rebuild would produce an authority-less wheel.
+  # sdist: a wheel built from the sdist runs the same hook and refuses to build
+  # if the embedded authority is missing.
   "packaging/authority/hatch_build.py",
   "pyproject.toml",
   "README.md",
@@ -309,18 +311,36 @@ exclude = [
   "src/cadrumo/_data/registry/authority/authority-candidate-*/**",
   "src/cadrumo/tests",
   "src/cadrumo/tests/**",
-  "src/cadrumo_harness/tests",
-  "src/cadrumo_harness/tests/**",
-  "src/cadrumo_harness/**/tests",
-  "src/cadrumo_harness/**/tests/**",
+  "src/cadrumo_mcp/tests",
+  "src/cadrumo_agent_service/tests",
+  "src/cadrumo_mcp/tests/**",
+  "src/cadrumo_agent_service/tests/**",
+  "src/cadrumo_mcp/**/tests",
+  "src/cadrumo_agent_service/**/tests",
+  "src/cadrumo_mcp/**/tests/**",
+  "src/cadrumo_agent_service/**/tests/**",
+  "src/cadrumo_client/tests",
+  "src/cadrumo_client/tests/**",
+  "src/cadrumo_client/**/tests",
+  "src/cadrumo_client/**/tests/**",
+  "src/cadrumo_runtime/tests",
+  "src/cadrumo_runtime/tests/**",
+  "src/cadrumo_runtime/**/tests",
+  "src/cadrumo_runtime/**/tests/**",
   "src/cadrumo/**/tests",
   "src/cadrumo/**/tests/**",
   # Pytest configuration is development-only, including package-root
   # conftests that sit outside the excluded test directories.
   "src/cadrumo/conftest.py",
   "src/cadrumo/**/conftest.py",
-  "src/cadrumo_harness/conftest.py",
-  "src/cadrumo_harness/**/conftest.py",
+  "src/cadrumo_mcp/conftest.py",
+  "src/cadrumo_agent_service/conftest.py",
+  "src/cadrumo_mcp/**/conftest.py",
+  "src/cadrumo_agent_service/**/conftest.py",
+  "src/cadrumo_client/conftest.py",
+  "src/cadrumo_client/**/conftest.py",
+  "src/cadrumo_runtime/conftest.py",
+  "src/cadrumo_runtime/**/conftest.py",
   # Registry TOML, source manifests, and cached compiler receipts are
   # development authoring inputs.  A released product consumes exactly one
   # published authority artifact, so no authored registry tree may reach an
@@ -349,7 +369,13 @@ exclude = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/cadrumo", "src/cadrumo_harness"]
+packages = [
+  "src/cadrumo",
+  "src/cadrumo_client",
+  "src/cadrumo_runtime",
+  "src/cadrumo_mcp",
+  "src/cadrumo_agent_service",
+]
 # Test modules and fixtures serve no installed consumer: the suites run from
 # the repo tree, and nothing in the wheel imports `cadrumo.tests` at module load.
 # This payload is shed from the distribution to bound its size.
@@ -358,16 +384,34 @@ exclude = [
   "src/cadrumo/tests/**",
   "src/cadrumo/**/tests",
   "src/cadrumo/**/tests/**",
-  "src/cadrumo_harness/tests",
-  "src/cadrumo_harness/tests/**",
-  "src/cadrumo_harness/**/tests",
-  "src/cadrumo_harness/**/tests/**",
+  "src/cadrumo_mcp/tests",
+  "src/cadrumo_agent_service/tests",
+  "src/cadrumo_mcp/tests/**",
+  "src/cadrumo_agent_service/tests/**",
+  "src/cadrumo_mcp/**/tests",
+  "src/cadrumo_agent_service/**/tests",
+  "src/cadrumo_mcp/**/tests/**",
+  "src/cadrumo_agent_service/**/tests/**",
+  "src/cadrumo_client/tests",
+  "src/cadrumo_client/tests/**",
+  "src/cadrumo_client/**/tests",
+  "src/cadrumo_client/**/tests/**",
+  "src/cadrumo_runtime/tests",
+  "src/cadrumo_runtime/tests/**",
+  "src/cadrumo_runtime/**/tests",
+  "src/cadrumo_runtime/**/tests/**",
   # Pytest configuration is development-only, including package-root
   # conftests that sit outside the excluded test directories.
   "src/cadrumo/conftest.py",
   "src/cadrumo/**/conftest.py",
-  "src/cadrumo_harness/conftest.py",
-  "src/cadrumo_harness/**/conftest.py",
+  "src/cadrumo_mcp/conftest.py",
+  "src/cadrumo_agent_service/conftest.py",
+  "src/cadrumo_mcp/**/conftest.py",
+  "src/cadrumo_agent_service/**/conftest.py",
+  "src/cadrumo_client/conftest.py",
+  "src/cadrumo_client/**/conftest.py",
+  "src/cadrumo_runtime/conftest.py",
+  "src/cadrumo_runtime/**/conftest.py",
   # The immutable published authority is the only registry payload a product
   # process may consume.  Its evidence projection is digest-verified inside the
   # same frame, so it needs no parallel corpus-quality or registry-source
@@ -419,8 +463,12 @@ include = [
   "src/cadrumo/py.typed",
   "src/cadrumo/core/external_constants.toml",
   "src/cadrumo/_data/local_runtime/**",
-  "src/cadrumo_harness/py.typed",
-  "src/cadrumo_harness/_data/**",
+  "src/cadrumo_client/py.typed",
+  "src/cadrumo_runtime/py.typed",
+  "src/cadrumo_runtime/_data/**",
+  "src/cadrumo_mcp/py.typed",
+  "src/cadrumo_agent_service/py.typed",
+  "src/cadrumo_agent_service/locales/**",
 ]
 
 # The published authority — the `authority.current.json` descriptor and the one
@@ -434,9 +482,11 @@ include = [
 # admission path, and a static force-include table cannot serve both layouts at
 # once — in an sdist the pair already sits at the published path, and a table
 # naming `.authority/` fails the sdist-to-wheel rebuild outright. Hence a hook
-# on both targets. It selects exactly the descriptor and the database it names,
-# never the directory, which always also holds the retained publication lock
-# sidecar and may hold a superseded database whose retirement was deferred.
+# on both targets. Ordinary distribution builds consume an existing publication;
+# when it is missing, run `just registry-publish-authority` explicitly. Only an
+# editable `uv sync` may publish the checkout's initial authority. The hook
+# selects exactly the descriptor and database it names, never the directory,
+# which also holds a lock sidecar and may retain superseded databases.
 [tool.hatch.build.targets.wheel.hooks.custom]
 path = "packaging/authority/hatch_build.py"
 
@@ -500,12 +550,12 @@ dev = [
   # [project.optional-dependencies]) are pulled into the dev/test/CI
   # environment here so the full test suite — which imports every adapter —
   # installs unchanged. Production `pip install cadrumo` stays lean without them.
-  "google-auth>=2.50.0,<3",
+  "google-auth>=2.62.0,<3",
   "google-auth-oauthlib>=1.3.1,<2",
   "google-api-python-client>=2.195.0,<3",
   "playwright>=1.58.0",
   "playwright-stealth>=2.0.3,<3",
-  "anthropic>=0.74.1,<1",
+  "anthropic>=1.13.0,<2",
   "ofxtools>=1.1,<2",
   # The `llm` extra's exclusive requirement, and therefore the module the
   # extra's probe resolves against. Without it here the probe reads ABSENT in
@@ -513,17 +563,19 @@ dev = [
   # and the inference test suite refuses instead of running. A pure-Python
   # `py3-none-any` wheel: importable with no NVIDIA driver and no accelerator.
   "nvidia-ml-py>=13,<14",
-  "prek>=0.5.3",
+  "prek>=0.5.5",
   "pytest>=9.0.3",
   "pytest-asyncio>=1.0.0",
   # Coverage measurement + fail-under gate for unit tests.
   "pytest-cov>=6.0.0",
   # Live browser harness.
-  "pytest-playwright>=0.6.0",
+  "pytest-playwright>=0.10.0",
   # Parallel unit suite via opt-in `uv run pytest -n auto -m unit`.
   "pytest-xdist>=3.6.0",
-  # Reproducible light-theme CLI GIFs for the repository README.
-  "pillow==12.3.0",
+  # Reproducible light-theme CLI GIFs for the repository README. Ceiling: the
+  # runtime declaration's major line above; regenerate the GIFs after a Pillow
+  # update, since rendered bytes can change between releases.
+  "pillow>=12.3,<13",
   # Generates synthetic fixture PDFs in tests, and is the `pdf` extra's
   # exclusive requirement: without it here the extra's probe reads ABSENT in
   # the dev environment and the calculation-summary suite refuses instead of
@@ -534,10 +586,10 @@ dev = [
   # `ty`; the stubs are dev-only because production never imports lxml, it
   # names the backend as a string.
   "types-lxml>=2025.3.30",
-  "ruff>=0.16.7",
+  "ruff>=0.17.0",
   # Repository-wide YAML syntax/style linting; TOML parsing goes through the rtoml-backed `cadrumo.core.toml` boundary.
   "yamllint>=1.38,<2",
-  "ty>=0.0.81",
+  "ty>=0.0.86",
   # Vault tooling — contributor-only; not imported by src/cadrumo/ and never
   # shipped in a published product wheel.
   # 0.1.55 is the first version that understands the `body_hash` frontmatter
@@ -545,7 +597,7 @@ dev = [
   # mixed-version corpus silently loses the stamp on exactly the documents
   # being edited (nevenincs/vaultspec-core#299). Operator directive: the
   # tooling tracks latest.
-  "vaultspec-core>=0.1.55",
+  "vaultspec-core>=0.3.7",
   "vaultspec-rag[mcp]>=0.3.8",
   # Sphinx documentation pipeline — `just docs-build` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/cadrumo/.
@@ -584,15 +636,15 @@ dev = [
   "babel>=2.16",
   # Documentation conformance enforcement: docstring presence/style,
   # signature-vs-docstring accuracy, and RST formatting.
-  "pydoclint>=0.9.1",
+  "pydoclint>=0.11.1",
   "interrogate>=1.7.0",
   "doc8>=2.0.0",
   "types-defusedxml>=0.7.0.20260504",
   "types-openpyxl>=3.1.5.20260408",
-  "types-reportlab>=4.4.10.20260408",
+  "types-reportlab>=5.0.0.20261008",
   "types-pyyaml>=6.0.12.20260510",
   "types-xlrd>=2.0.0.20260408",
-  "types-pywin32>=311.0.0.20260508",
+  "types-pywin32>=312.0.0.20261006",
   "google-api-python-client-stubs>=1.36",
   "pyrefly>=1.3.1",
   # Semgrep is invoked through `uvx --from semgrep==1.168.0 semgrep` instead of the
@@ -604,7 +656,9 @@ dev = [
   "sphinxcontrib-mermaid>=1.0",
   "pytest-timeout>=2.3.1",
   "basedpyright>=1.40.1",
-  "spylls==0.1.7",
+  # Pure-Python Hunspell behind the locale spelling checks. Ceiling: a 0.x minor
+  # release may change the dictionary API those checks call.
+  "spylls>=0.1.7,<0.2",
 ]
 
 [tool.ruff]
@@ -705,8 +759,14 @@ convention = "google"
 "src/cadrumo/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
 "src/cadrumo/tests/**/*.py" = ["S101", "T20", "D"]
 "src/cadrumo/**/conftest.py" = ["S101", "D"]
-"src/cadrumo_harness/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
-"src/cadrumo_harness/**/conftest.py" = ["S101", "D"]
+"src/cadrumo_mcp/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
+"src/cadrumo_mcp/**/conftest.py" = ["S101", "D"]
+"src/cadrumo_agent_service/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
+"src/cadrumo_agent_service/**/conftest.py" = ["S101", "D"]
+"src/cadrumo_client/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
+"src/cadrumo_client/**/conftest.py" = ["S101", "D"]
+"src/cadrumo_runtime/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
+"src/cadrumo_runtime/**/conftest.py" = ["S101", "D"]
 "conftest.py" = ["S101", "D"]
 # dev/docs/ holds contributor-only documentation tools and tests.
 "dev/docs/**/*.py" = ["T20", "D", "E402"]
@@ -748,14 +808,15 @@ convention = "google"
 # repository-owned paths is not an injection surface.
 # Developer quality/docs/audit runners invoke fixed tool argv or explicit
 # wrapper argv; Ruff's subprocess heuristic cannot infer those local contracts.
+# This package smoke executes only the checksum-verified package's Node and ACP
+# entry with literal --version arguments and a credential-free OS environment.
+"native/tests/agent_smoke.py" = ["S603"]
 # `just bootstrap` runs every bootstrap step through a fixed argv declared as
 # data in `dev/init/plan.py` and resolved through `shutil.which`. Nothing
 # reaches it from a user, an environment variable, or a file: the argv is
 # literal in the plan, and the resolution exists only so Windows `.cmd`
 # shims spawn without a shell. There is no injection surface to check for.
 "dev/init/process.py" = ["S603"]
-"dev/init/venv.py" = ["S603"]
-"dev/init/hooks.py" = ["S603"]
 "dev/init/probe.py" = ["S603"]
 "dev/audit/complexity.py" = ["S603"]
 "dev/audit/report.py" = ["S603"]
@@ -815,9 +876,6 @@ convention = "google"
 # The campaign driver fans the fixed lane-registry argv (sys.executable -m
 # dev.packaging.*) out over a worker pool; no untrusted input reaches it.
 "dev/packaging/campaign.py" = ["S603"]
-# The shard-plugin gate collect-probes via `sys.executable -m pytest` with a
-# fixed argv over in-test-authored sample modules.
-"dev/quality/tests/test_shard.py" = ["S603"]
 # The conformance-gate anti-vacuity proof drives `sys.executable -m
 # dev.registry.conformance` with a fixed argv plus a tmp_path-authored seeded
 # baseline; no untrusted input reaches subprocess.
@@ -1095,7 +1153,7 @@ ignore_missing_imports = true
 # The project's SECOND type checker, alongside ty. Two independent
 # implementations are deliberate: ty is the canonical checker across all of
 # `src` but is still pre-1.0, so a mature second opinion over the strict
-# domain + application subset catches what a young checker misses. pyrefly is
+# strict domain/application and relocated contract subset catches what a young checker misses. pyrefly is
 # a native binary, so unlike the pyright it replaces it drags in no JavaScript
 # runtime — the packaging lanes need nothing installed to run it.
 #
@@ -1113,7 +1171,16 @@ python_version = "3.13"
 # declared input, never the host it happens to run on.
 python_platform = "linux"
 search_path = ["src", ".", "stubs"]
-project_includes = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core", "src/cadrumo/adapters/outbound/llm"]
+project_includes = [
+    "src/cadrumo/domain",
+    "src/cadrumo/application",
+    "src/cadrumo/core",
+    "src/cadrumo/adapters/outbound/llm",
+    "src/cadrumo_client/contracts",
+    "src/cadrumo_client/contracts/command_ports.py",
+    "src/cadrumo_runtime/application",
+    "src/cadrumo_runtime/contracts",
+]
 # Tests are excluded from this checker, not overlooked. pyright reported zero
 # diagnostics across the test tree, so excluding it loses no signal that was
 # previously enforced, while pyrefly's stricter inference finds ~24 fixture
@@ -1130,7 +1197,16 @@ project_excludes = ["**/.[!/.]*", "**/tests/**"]
 # is the only honest one available: burn a tree down, THEN admit it permanently.
 # aeat-quality-gates bans baselines and ratchets, so a tree is never admitted
 # with errors outstanding and never carries a per-tree exemption.
-include = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core", "src/cadrumo/adapters/outbound/llm"]
+include = [
+    "src/cadrumo/domain",
+    "src/cadrumo/application",
+    "src/cadrumo/core",
+    "src/cadrumo/adapters/outbound/llm",
+    "src/cadrumo_client/contracts",
+    "src/cadrumo_client/contracts/command_ports.py",
+    "src/cadrumo_runtime/application",
+    "src/cadrumo_runtime/contracts",
+]
 exclude = ["**/tests"]
 extraPaths = ["src", "stubs"]
 pythonVersion = "3.13"
@@ -1164,7 +1240,10 @@ reportUnnecessaryIsInstance = "none"
 [tool.pytest.ini_options]
 testpaths = [
   "src/cadrumo",
-  "src/cadrumo_harness",
+  "src/cadrumo_client",
+  "src/cadrumo_runtime",
+  "src/cadrumo_mcp",
+  "src/cadrumo_agent_service",
 ]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
@@ -1218,6 +1297,7 @@ markers = [
   "serial: isolation-sensitive tests that must run without xdist workers (-n0); they mutate or read process-global state (e.g. the active master-key-provider singleton) and flake under -n auto worker interleaving. Run via the serial pass of `just test-integration`.",
   "perf: performance acceptance gates (CPU-time asserts, wall-clock advisory); excluded from every per-push lane and enrolled explicitly in the `test-ci-perf` recipe, which only a dispatch-triggered release run reaches, so a quiet machine makes the advisory wall numbers meaningful too. Named by selection rather than by workflow file: the workflow set has churned once already, and the previous wording here outlived the lane it named.",
   "external_tool: tests requiring heavy external tooling or data the dependency set does not install (LibreOffice, for binary .xls conversion and formula recalculation; the npm-installed Hunspell dictionaries, for locale orthography; a real PowerShell, which a POSIX host has only if `pwsh` was installed; a stock OpenSSL, for the calculation summary signature recipe). Carried ALONGSIDE an execution marker, since the marker-integrity contract requires exactly one of {unit, integration, aeat_live}; the default lane selects `unit and not external_tool`, so this marker -- not the path --ignore beside it -- is what holds these tests out. Enrolled explicitly by `just test-workbook-parity`, `just test-locale-spelling`, `just test-powershell-literal` and `just test-calculation-summary-pdf`.",
+  "native_package: positive assertion-scope marker for tests whose subject is an application executable staged by the CMake native package build. It is not a capability holdout. CMake's opt-in `test-native-live` CTest lane selects these tests; ordinary source and CTest lanes exclude them.",
   "os_keychain: tests whose assertion subject is the OS credential store itself (that a profile login custodies a session key there, and that a later process resumes the record by unwrapping its DEK under that key). Carried ALONGSIDE an execution marker, like `external_tool`. The capability is a property of the LOGON SESSION, not of the dependency set: a headless CI runner and an agent's SSH network logon reach a real backend that then refuses every credential call, so no keychain-custodied session key can exist there at all. Every lane excludes this marker; `just test-os-keychain` enrols it, and it is meaningful only in an interactive desktop session. Cases provable WITHOUT custody stay in the default lanes. A case belongs under this marker when it cannot reach its subject without a minted acceleration receipt, because `resume_profile_session` leaves the login PROCESS-SCOPED when the keychain is unavailable and mints no receipt at all. Apply the marker at the narrowest scope whose assertion actually requires custody.",
   "windows_only: tests whose assertion subject exists only on Windows -- today the two console-launcher stubs (`aeat.exe`, `cadrumo-mcp.exe`) that a Windows install materialises and no POSIX install has at all. Carried ALONGSIDE an execution marker, like `os_keychain`. The precondition is a property of the OPERATING SYSTEM, not of the dependency set: on Linux or macOS there is no stub to project, so the subject of the assertion does not exist and no amount of installed tooling conjures it. Every lane excludes this marker; `just test-windows` enrols it, and it is meaningful only on a Windows checkout. Cases provable WITHOUT a launcher stub stay in the default lanes.",
   "resident_service: tests that query the resident vaultspec-rag search service over HTTP and assert on what it returns (golden-query retrieval, the live terminology sweep). Carried ALONGSIDE an execution marker, like `external_tool` and `os_keychain`. The precondition is a property of a RUNNING LOCAL SERVICE and the health of its index, not of the dependency set. The service is a separate development product rather than a Cadrumo runtime dependency. Every ordinary lane excludes this marker; `just test-resident-service` refreshes the index and enrols the tests serially, while the root conftest supplies their isolated pytest singleton scope. A degraded index remains a test failure rather than a reason to skip.",
@@ -1226,7 +1306,7 @@ markers = [
 
 # ── Coverage (pytest-cov) ────────────────────────────────────────────────────
 [tool.coverage.run]
-source = ["src/cadrumo"]
+source = ["src/cadrumo", "src/cadrumo_client", "src/cadrumo_runtime"]
 branch = true
 omit = [
   "*/test_*.py",
@@ -1302,18 +1382,21 @@ exclude = 'tests|test_'
 # the dashboard tracks code that is plausibly dead in production paths.
 [tool.vulture]
 min_confidence = 80
-paths = ["src/cadrumo"]
+paths = ["src/cadrumo", "src/cadrumo_client", "src/cadrumo_runtime", "src/cadrumo_mcp", "src/cadrumo_agent_service"]
+# The test surface and bundled data of every package under src/, as
+# dev.first_party_source classifies them. fnmatch's `*` crosses separators, so
+# one pattern per shape covers every package and nesting depth.
 exclude = [
-  "*/tests/*",
-  "*\\tests\\*",
-  "*/_data/*",
-  "*\\_data\\*",
-  "*/test_*.py",
-  "*\\test_*.py",
-  "*/_test_*.py",
-  "*\\_test_*.py",
-  "*/conftest.py",
-  "*\\conftest.py",
+  "*/src/*/tests/*",
+  "*\\src\\*\\tests\\*",
+  "*/src/*/_data/*",
+  "*\\src\\*\\_data\\*",
+  "*/src/*/test_*.py",
+  "*\\src\\*\\test_*.py",
+  "*/src/*/_test_*.py",
+  "*\\src\\*\\_test_*.py",
+  "*/src/*/conftest.py",
+  "*\\src\\*\\conftest.py",
 ]
 ignore_decorators = [
   "@app.command",
@@ -1369,6 +1452,7 @@ ignore_names = [
   "win32con",
   "win32event",
   "win32file",
+  "win32gui",
   "win32job",
   "win32pipe",
   "win32process",

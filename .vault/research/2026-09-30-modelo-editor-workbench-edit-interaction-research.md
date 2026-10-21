@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:b15109d0de58b538ccadf9e00df73c00926a5d0ae60fcee30163ba20142689ae'
+body_hash: 'sha256:ff80e229300e1c0920b679201e6a87c935033f73ddecf87cdbda807ce9651fe2'
 related:
   - "[[2026-09-30-modelo-editor-workbench-reference]]"
 ---
@@ -16,7 +16,7 @@ How does a person edit casilla values end to end, and how does that map onto the
 
 ## Findings
 
-Investigator: lens C. Date: 2026-09-30. Worktree: `Y:\code\cadrumo-worktrees\tui` (read-only).
+Investigator: lens C. Date: 2026-09-30. Worktree: `<repo-root>` (read-only).
 Scratch evidence: `(session scratch, not retained)`
 (scripts `census.py`, `surface.py`, `rowtmpl.py`, `repro_edit.py`, `proto_parser.py`, `proto_edit_ui.py`; outputs `census.out`,
 `repro_130.out`, `proto_parser.out`; screenshots `shots/*.svg`).

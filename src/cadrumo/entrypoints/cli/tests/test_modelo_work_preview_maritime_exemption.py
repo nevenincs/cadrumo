@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 import typer
 
-from .._modelo_maritime_cli import _parse_maritime_amounts
+from ..modelo_maritime_commands import _parse_maritime_amounts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

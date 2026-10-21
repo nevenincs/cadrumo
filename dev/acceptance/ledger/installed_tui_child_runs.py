@@ -28,7 +28,7 @@ from .installed_tui_controls import (
 
 def _run_launcher(*, passphrase: str, drive_after_home: Any) -> None:
     """Run one ordinary installed launch and require a truthful normal exit."""
-    from cadrumo.entrypoints.tui.launcher import main
+    from cadrumo_runtime.host.frontend.tui.launcher import main
 
     exit_code = main(
         headless=True,

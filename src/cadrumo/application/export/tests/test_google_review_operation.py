@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from types import SimpleNamespace
@@ -12,6 +12,8 @@ from uuid import uuid4
 
 import pytest
 from pydantic import BaseModel
+
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from ....core.hashing import sha256_hex
 from ....core.operations import (
@@ -34,7 +36,6 @@ from ...operations.owner import OperationExecutorContext
 from ...operations.persistence.journal import serialize_operation_operand
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile import capabilities
-from ...user_profile.access_contracts import AccessAction, Availability, DisclosureCategory
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..google_operation import GoogleSheetsExportCapabilityDisabledError
 from ..google_review_operation import (
@@ -74,7 +75,7 @@ class _Fence:
         self.inside = False
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         assert not self.inside
         self.inside = True
         try:
@@ -190,11 +191,6 @@ def test_registration_requires_human_and_exact_profile(
         published_authority=Availability.AVAILABLE,
         authority_operation=authority_operation,
     )
-    if frontend is OperationFrontendProjection.MCP:
-        # The native contract door enforces frontend admission before invoking
-        # this policy resolver; automation must remain excluded there.
-        assert frontend not in registration.contract.permitted_frontends
-        return
     access = resolve_operation_access(registry=registry, request=request, context=context)
     assert access.policy.requires_human and access.policy.requires_all_periods
     assert {item.category for item in access.policy.disclosures} == {
@@ -202,9 +198,6 @@ def test_registration_requires_human_and_exact_profile(
         DisclosureCategory.TAX_VALUES,
     }
     assert AccessAction.COMMIT in access.policy.actions
-    assert definition.permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
-    )
 
 
 def test_optional_filing_selection_preserves_older_request_wire() -> None:

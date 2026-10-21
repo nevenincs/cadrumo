@@ -98,8 +98,8 @@ from ....domain.calculations.registry.tests.scenarios import (
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
-from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import category_cuota_is_zero_by_law
+from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

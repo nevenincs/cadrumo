@@ -34,8 +34,8 @@ import pytest
 from pydantic import BaseModel
 
 from ....invoices.enums import IvaRate
-from ....iva.classification import InvoiceKind
 from ....iva.invoice_classification import invoice_line_to_iva_observation
+from ....iva.schema import InvoiceKind
 from ..binding_selector_utils import selector_as_dict
 from ..ledger_iva_bindings import (
     IvaLedgerObservation,

@@ -1,6 +1,19 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    PATH_VALUE,
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._modelo_nonwork_command_spec_policies import (
@@ -15,19 +28,6 @@ from ._modelo_nonwork_common_command_parameters import (
     _required_text_option,
     _required_whole_number_option,
 )
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
-    PATH_VALUE,
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-    ValueContract,
-)
-from .command_spec import CommandSpec, InvocationSpec
 
 MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -78,10 +78,10 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_records_cli", "filing_record_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_records_commands", "filing_record_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "ModeloRecordListResult", __package__),
+            DeferredTarget(".modelo_results", "ModeloRecordListResult", __package__),
             identity="modelo.filing_record.list",
         ),
     ),
@@ -95,10 +95,10 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(_required_text_argument("filing_record_id", "cli.app.modelo.filing_record.filing_record_id_help"),),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_records_cli", "filing_record_show", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_records_commands", "filing_record_show", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "ModeloRecordShowResult", __package__),
+            DeferredTarget(".modelo_results", "ModeloRecordShowResult", __package__),
             identity="modelo.filing_record.view",
         ),
     ),
@@ -169,10 +169,10 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_WRITE,
-        handler=LazyBinding.available(DeferredTarget("._modelo_records_cli", "filing_record_import", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_records_commands", "filing_record_import", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "FilingRecordImportResult", __package__),
+            DeferredTarget(".modelo_results", "FilingRecordImportResult", __package__),
             identity="modelo.filing_record.import",
         ),
     ),
@@ -209,11 +209,11 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_MODEL_WRITE,
         handler=LazyBinding.available(
-            DeferredTarget("._modelo_records_cli", "filing_record_observe_local", __package__)
+            DeferredTarget(".modelo_records_commands", "filing_record_observe_local", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "FilingRecordLocalObservationResult", __package__),
+            DeferredTarget(".modelo_results", "FilingRecordLocalObservationResult", __package__),
             identity="modelo.filing_record.observe_local",
         ),
     ),

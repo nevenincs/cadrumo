@@ -1601,6 +1601,21 @@ modelo:
         modelo-390-iva-resumen-anual:
           field:
             title: Declaración-resumen anual de IVA
+        modelo-390-printed-disclosure-arithmetic-2022:
+          field:
+            title: 'Modelo 390: totales que imprime el formulario, ejercicio 2022'
+        modelo-390-printed-disclosure-arithmetic-2023:
+          field:
+            title: 'Modelo 390: totales que imprime el formulario, ejercicio 2023'
+        modelo-390-printed-disclosure-arithmetic-2024:
+          field:
+            title: 'Modelo 390: totales que imprime el formulario, ejercicio 2024'
+        modelo-390-printed-disclosure-arithmetic-2025:
+          field:
+            title: 'Modelo 390: totales que imprime el formulario, ejercicio 2025'
+        modelo-390-printed-disclosure-arithmetic-2026:
+          field:
+            title: 'Modelo 390: totales que imprime el formulario, ejercicio 2026'
       field:
         official_name: Modelo 390. Declaración-resumen anual del Impuesto sobre el
           Valor Añadido.

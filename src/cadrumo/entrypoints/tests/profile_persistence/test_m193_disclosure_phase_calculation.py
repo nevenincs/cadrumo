@@ -26,7 +26,7 @@ positions in every supported edition):
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
@@ -142,7 +142,7 @@ class _Bucket:
 
 
 @contextmanager
-def _m193_bucket(tmp_path: Path, *, filing_year: int, operation: PinnedAuthorityOperation) -> Iterator[_Bucket]:
+def _m193_bucket(tmp_path: Path, *, filing_year: int, operation: PinnedAuthorityOperation) -> Generator[_Bucket]:
     """Open an isolated bucket with a quarterly filer's profile and one Modelo 193 work unit."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects: SecureObjectRepository = profile.repository

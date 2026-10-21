@@ -115,9 +115,10 @@ def test_bulk_classify_270_rows_persists_catalogue_once(
         record
         for record in caplog.records
         if record.name == "cadrumo.adapters.persistence.profile.transactions"
-        and record.getMessage().startswith("saved transaction catalogue")
+        and record.getMessage().startswith(("saved transaction catalogue", "saved guarded transaction catalogue"))
     ]
     assert len(atomic_save_events) == 1
+    assert atomic_save_events[0].getMessage().startswith("saved guarded transaction catalogue")
     assert f"entries={_ROW_COUNT}" in atomic_save_events[0].getMessage()
 
     # Smoke ceiling: a single save keeps a 270-row batch well under the prior

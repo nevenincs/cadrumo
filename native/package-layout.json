@@ -5,7 +5,11 @@
     "marker": "data/installation.json",
     "versions": "versions",
     "maximum_versions": 128,
-    "publication": "data/installation-state"
+    "publication": "data/installation-state",
+    "bootstrap": {
+      "directory": "services",
+      "manifest": "kit.json"
+    }
   },
   "paths": {
     "stdlib": "python.zip",
@@ -19,6 +23,7 @@
     "build_metadata": "data/build.json",
     "native_manifest": "data/native-modules.json",
     "package_manifest": "data/package-manifest.json",
+    "service_descriptors": "data/service-descriptors.json",
     "python_license": "docs/licenses/CPython.txt"
   },
   "stdlib_exclude": [
@@ -31,13 +36,17 @@
     "turtledemo",
     "ensurepip"
   ],
-  "overrides": [
-    "CADRUMO_EXTERNAL_BIN_DIRS"
-  ],
   "entrypoints": {
-    "aeat": "CADRUMO command line",
-    "cadrumo-mcp": "CADRUMO MCP server",
-    "cadrumo-runtime": "CADRUMO local runtime"
+    "aeat": "Cadrumo command line",
+    "cadrumo-mcp": "Cadrumo MCP server",
+    "cadrumo-runtime": "Cadrumo local runtime",
+    "cadrumo-agent-service": "Cadrumo agent service"
+  },
+  "bundled_images": {
+    "cadrumo-agent": {
+      "distribution": "cadrumo-agent",
+      "description": "Cadrumo agent"
+    }
   },
   "user_docs": {
     "directory": "user",

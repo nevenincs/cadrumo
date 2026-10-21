@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#tui-wizard-substrate'
 date: '2026-07-23'
-modified: '2026-08-13'
-body_hash: 'sha256:bf7413a586e14bfe5fe09d0397e42922f33ab5e7042d04f7fcff13fdcaca6ae9'
+modified: '2026-10-14'
+body_hash: 'sha256:345bfc93590eda5f06d58732f33cb7c75f698552dc576b2da2799c7e6149098c'
 related:
   - '[[2026-07-23-tui-wizard-substrate-research]]'
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -410,3 +410,7 @@ bridging, the superseded one-shot walk (`no-legacy-compatibility`).
   `profile-setup-flow` authors its `FlowDefinition` against the contract
   above; a plan document sequences engine → contracts → line-mode frontend
   → full-screen frontend → checkpoint store → CLI migration.
+
+### Amendment 2026-10-14: runtime-host rendering
+
+The flow substrate and line-mode projection remain frontend-neutral. The installed Textual projection now has its production root at `src/cadrumo_runtime/host/frontend/tui/` (`cadrumo_runtime.host.frontend.tui`) and is launched through `cadrumo-runtime tui`. The earlier `cadrumo.entrypoints.tui` placement and module-launch wording above record the prior decision and are superseded only for source ownership, dependency direction, and launch; the substrate contract is unchanged.

@@ -89,7 +89,7 @@ def test_previously_unlabelled_dependencies_compile_real_revision(authority, mod
 def test_authored_dependency_families_have_real_translations(language, modelo, binding):
     key = binding_locale_key(modelo, binding, "label")
     label = lookup_translation(key, locale=language)
-    assert label and label.strip() and label not in (key, binding)
+    assert (label is not None and label) and label.strip() and label not in (key, binding)
 
 
 def test_labels_preserve_specific_eligibility_and_forestry_meaning():
@@ -102,6 +102,8 @@ def test_labels_preserve_specific_eligibility_and_forestry_meaning():
     withholding_total = lookup_translation(
         binding_locale_key("193", "modelo-193-perceptor-rows-retenciones-total", "label"), locale="es"
     )
-    assert eligibility and "dos primeros períodos con beneficios" in eligibility
-    assert forestry and "forestales" in forestry
-    assert withholding_total and "retenciones e ingresos a cuenta" in withholding_total
+    assert (eligibility is not None and eligibility) and "dos primeros períodos con beneficios" in eligibility
+    assert (forestry is not None and forestry) and "forestales" in forestry
+    assert (
+        withholding_total is not None and withholding_total
+    ) and "retenciones e ingresos a cuenta" in withholding_total

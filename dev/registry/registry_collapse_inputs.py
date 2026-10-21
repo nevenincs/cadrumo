@@ -87,7 +87,7 @@ def _imported_local_paths(repo_root: Path, path: Path, module_cache: dict[str, P
             modules.update(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom):
             prefix = package[: len(package) - node.level + 1] if node.level else ()
-            base = ".".join((*prefix, *(node.module.split(".") if node.module else ())))
+            base = ".".join((*prefix, *(node.module.split(".") if (node.module is not None and node.module) else ())))
             if base:
                 modules.add(base)
                 modules.update(f"{base}.{alias.name}" for alias in node.names if alias.name != "*")

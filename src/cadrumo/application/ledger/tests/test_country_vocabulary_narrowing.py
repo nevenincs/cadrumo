@@ -64,10 +64,10 @@ from cadrumo.domain.calculations.registry.authority import (
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....core.draft_discrepancy import DraftDiscrepancyKind
-from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
+from ....domain.iva.classification import CustomerTaxStatus
 from ....domain.iva.establishment import StatedCountryCodeStatus
 from ....domain.iva.regime_legend import resolve_regime_legends
-from ....domain.iva.schema import IvaCategory
+from ....domain.iva.schema import InvoiceKind, IvaCategory, IvaTerritorialScope
 from ....domain.iva.supply_nature import SupplyNature
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from ..classification_assembly import (

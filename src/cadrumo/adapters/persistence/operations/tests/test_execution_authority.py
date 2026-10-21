@@ -20,7 +20,6 @@ from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.projection_services import OperationResponseAuthorityBroker
 from cadrumo.application.operations.registry import OperationReconciliationPolicy
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.logging import get_logger
 from cadrumo.core.operations import (
@@ -30,9 +29,11 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from .supervision_support import run_to_settlement
-from .test_supervisor import (
+from .supervisor_test_support import (
     _NOW,
     ResumableReviewExecutor,
     _capabilities,
@@ -101,7 +102,8 @@ def test_commit_timing_keeps_nested_durable_effect_and_failure_boundaries(
             finally:
                 await supervisor.shutdown()
 
-        with caplog.at_level(logging.INFO, logger=logger.name):
+        # Commit-phase timings are debug-level diagnostics.
+        with caplog.at_level(logging.DEBUG, logger=logger.name):
             asyncio.run(exercise())
         records = [
             record for record in caplog.records if record.name == logger.name and record.msg == "operation_commit_phase"

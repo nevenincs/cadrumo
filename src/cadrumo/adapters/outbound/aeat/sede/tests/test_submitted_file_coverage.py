@@ -30,7 +30,9 @@ def test_optional_slot_coverage(optional_token: bytes, drop_optional: bool, drop
         resolved = resolve_export_layout(snapshot)
         optional = resolved.fields_by_casilla["169"][0].model_copy(update={"offset": 1})
         amount = next(
-            field for field in resolved.fields_by_id.values() if field.casilla_id and field.data_type == "decimal"
+            field
+            for field in resolved.fields_by_id.values()
+            if (field.casilla_id is not None and field.casilla_id) and field.data_type == "decimal"
         ).model_copy(update={"offset": 6})
         layout = ExportLayoutDefinition(
             id="optional-coverage-proof",
@@ -64,7 +66,7 @@ def test_optional_slot_coverage(optional_token: bytes, drop_optional: bool, drop
                 confidence=1.0,
             )
             for field in parsed.fields
-            if field.casilla_id
+            if (field.casilla_id is not None and field.casilla_id)
             and field.value is not None
             and not (drop_optional and field.casilla_id == "169")
             and not (drop_zero and field.casilla_id == amount.casilla_id)

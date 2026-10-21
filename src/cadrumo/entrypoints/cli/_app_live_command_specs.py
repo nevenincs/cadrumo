@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadrumo_client.commands.spec import CommandSpec
+
 from ._app_live_borrador_command_specs import LIVE_BORRADOR_COMMAND_SPECS
 from ._app_live_expedientes_command_specs import LIVE_EXPEDIENTES_COMMAND_SPECS
 from ._app_live_foundation_command_specs import LIVE_FOUNDATION_COMMAND_SPECS
@@ -10,7 +12,6 @@ from ._app_live_justificante_command_specs import LIVE_JUSTIFICANTE_COMMAND_SPEC
 from ._app_live_notifications_command_specs import LIVE_NOTIFICATIONS_COMMAND_SPECS
 from ._app_live_portals_command_specs import LIVE_PORTALS_COMMAND_SPECS
 from ._app_live_verify_command_specs import LIVE_VERIFY_COMMAND_SPECS
-from .command_spec import CommandSpec
 
 LIVE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *LIVE_FOUNDATION_COMMAND_SPECS,

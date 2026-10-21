@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable, Iterator
+from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -52,7 +52,6 @@ from cadrumo.application.operations.persistence.journal import OperationPersiste
 from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from cadrumo.core.operations import (
@@ -65,6 +64,8 @@ from cadrumo.core.period import Period
 from cadrumo.core.register_scoping_signal import RegisterScopingSignal
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.deadlines.models import TaxpayerProfile
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -163,7 +164,7 @@ class _SyntheticFiledDataPort:
         authority_operation: PinnedAuthorityOperation | None = None,
         effect_guard: FiledEffectGuard | None = None,
         on_session_write: SessionWriteReporter | None = None,
-    ) -> AsyncIterator[FiledDataRegisterPort]:
+    ) -> AsyncGenerator[FiledDataRegisterPort]:
         assert self._resource_is_active()
         assert operation == "live-expedientes-read"
         assert effect_guard is not None and on_session_write is not None
@@ -201,7 +202,7 @@ class _ResourceScope:
         self.closed = False
 
     @contextmanager
-    def activate(self) -> Iterator[None]:
+    def activate(self) -> Generator[None]:
         self.activation_entries += 1
         self.activation_depth += 1
         try:
@@ -220,7 +221,7 @@ async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -
     return await supervisor.settled(operation_id)
 
 
-def _assert_exact_mcp_access[RequestPayloadT: BaseModel](
+def _assert_exact_external_client_access[RequestPayloadT: BaseModel](
     *,
     registry: OperationRegistry,
     request: OperationRequest[RequestPayloadT],
@@ -232,7 +233,7 @@ def _assert_exact_mcp_access[RequestPayloadT: BaseModel](
         profile_id=profile_id,
         destination_id=uuid4(),
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
         authority_operation=authority,
@@ -266,7 +267,7 @@ def _assert_exact_mcp_access[RequestPayloadT: BaseModel](
     assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
-def test_supervisor_records_filed_list_and_discover_for_exact_mcp_profile(tmp_path: Path) -> None:
+def test_supervisor_records_filed_list_and_discover_for_exact_external_client_profile(tmp_path: Path) -> None:
     """Record register listing and option discovery without contacting AEAT."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
@@ -338,14 +339,14 @@ def test_supervisor_records_filed_list_and_discover_for_exact_mcp_profile(tmp_pa
             subject_ref=profile_operation_subject(profile.bucket_id),
             payload=FiledDiscoverRequest(profile_id=profile_id),
         )
-        _assert_exact_mcp_access(
+        _assert_exact_external_client_access(
             registry=registry,
             request=list_request,
             registration=list_registration,
             profile_id=profile_id,
             authority=authority,
         )
-        _assert_exact_mcp_access(
+        _assert_exact_external_client_access(
             registry=registry,
             request=discover_request,
             registration=discover_registration,
@@ -354,7 +355,6 @@ def test_supervisor_records_filed_list_and_discover_for_exact_mcp_profile(tmp_pa
         )
 
         for definition in (list_definition, discover_definition):
-            assert OperationFrontendProjection.MCP in definition.permitted_frontends
             assert definition.capabilities.owned_resources == frozenset({OperationOwnedResource.PROCESS})
 
         durable_root = tmp_path / "operations"

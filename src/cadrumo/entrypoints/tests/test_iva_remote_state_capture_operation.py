@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import AsyncIterator, Callable, Iterator
+from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -56,7 +56,6 @@ from cadrumo.application.operations.persistence.journal import OperationPersiste
 from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings, load_settings
@@ -69,6 +68,8 @@ from cadrumo.core.operations import (
 )
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -176,7 +177,7 @@ class _SyntheticIvaRemoteStatePort:
         return "https://fixture.invalid/iva-wallet"
 
     @contextmanager
-    def active_storage_span(self) -> Iterator[None]:
+    def active_storage_span(self) -> Generator[None]:
         self.storage_span_entries += 1
         self.storage_span_depth += 1
         try:
@@ -275,7 +276,7 @@ class _SyntheticIvaRemoteStatePort:
 
     async def _guard_local_effect(self, effect_guard: FiledEffectGuard, surface: str) -> None:
         @asynccontextmanager
-        async def tracked_guard() -> AsyncIterator[None]:
+        async def tracked_guard() -> AsyncGenerator[None]:
             async with effect_guard():
                 self.guard_depth += 1
                 self.surface_guards.append(surface)
@@ -304,7 +305,7 @@ class _ResourceScope:
         self.closed = False
 
     @contextmanager
-    def activate(self) -> Iterator[None]:
+    def activate(self) -> Generator[None]:
         self.activation_entries += 1
         self.activation_depth += 1
         try:
@@ -323,7 +324,7 @@ async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -
     return await supervisor.settled(operation_id)
 
 
-def test_supervisor_captures_iva_remote_state_for_exact_mcp_profile(tmp_path: Path) -> None:
+def test_supervisor_captures_iva_remote_state_for_exact_external_client_profile(tmp_path: Path) -> None:
     """Record both IVA evidence surfaces through pinned, guarded synthetic ports."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
@@ -383,7 +384,7 @@ def test_supervisor_captures_iva_remote_state_for_exact_mcp_profile(tmp_path: Pa
             profile_id=profile_id,
             destination_id=uuid4(),
             action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             contract=registration.contract,
             published_authority=Availability.AVAILABLE,
             authority_operation=authority,
@@ -412,8 +413,6 @@ def test_supervisor_captures_iva_remote_state_for_exact_mcp_profile(tmp_path: Pa
                 context=access_context,
             )
         assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
-
-        assert OperationFrontendProjection.MCP in definition.permitted_frontends
         assert definition.capabilities.owned_resources == frozenset({OperationOwnedResource.PROCESS})
 
         durable_root = tmp_path / "operations"

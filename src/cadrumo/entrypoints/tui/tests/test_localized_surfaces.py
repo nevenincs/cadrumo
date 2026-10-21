@@ -26,7 +26,7 @@ from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....tests.terminal_sizes import TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
-from ..modelo.workbench.installed import InstalledModeloWorkbench
+from ..modelo.workbench.factory import InstalledModeloWorkbench
 from ..modelo.workbench.screen import ModeloWorkbenchScreen
 from .modelo_workbench_session import real_workbench
 

@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ._app_ledger_command_spec_policies import _POLICY_5
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -14,7 +11,10 @@ from .command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from .command_spec import CommandSpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._app_ledger_command_spec_policies import _POLICY_5
 
 LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -27,7 +27,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_consent_cli", "consent_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_consent_commands", "consent_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "EvidenceConsentListResult", __package__),
@@ -111,7 +111,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_review_cli", "review_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_review_commands", "review_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "EvidenceReviewListResult", __package__),
@@ -139,7 +139,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_review_cli", "review_view", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_review_commands", "review_view", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "EvidenceReviewViewResult", __package__),

@@ -9,6 +9,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....application.ledger.evidence import MediaKind, PurchaseInvoiceEvidence
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceNotFoundError
 from ....application.ledger.evidence_ports import LedgerEvidencePorts
@@ -38,12 +41,6 @@ from ....application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
-)
-from ....application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
 )
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code

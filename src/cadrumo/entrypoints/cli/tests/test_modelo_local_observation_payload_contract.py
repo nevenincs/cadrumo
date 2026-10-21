@@ -15,7 +15,7 @@ from pydantic import ValidationError
 
 from ....application.calculations.observations_repository import ObservationSourceKind
 from ....core.period import Period
-from .._modelo_payloads import FilingRecordLocalObservationResult
+from ..modelo_results import FilingRecordLocalObservationResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -4,7 +4,15 @@
 // summaries are tool text for developers, not product chrome, so they are not
 // in the locale catalogues.
 
-import type { HostErrorCode, SignInStatus } from "../ipc/contract";
+import type { SetupShape } from "./setupFixture";
+import type {
+  HostErrorCode,
+  HostFailure,
+  ManagerSignal,
+  ManagerStatus,
+  SignInSignal,
+  SignInStatus,
+} from "../ipc/contract";
 
 /** What a submitted password meets. */
 export type SubmitOutcome =
@@ -16,6 +24,7 @@ export type SubmitOutcome =
   | { kind: "fail"; code: HostErrorCode };
 
 export type Scenario = {
+  censo?: "ready" | "nie" | "uncertain";
   id: string;
   title: string;
   summary: string;
@@ -27,10 +36,18 @@ export type Scenario = {
     /** Status reads never answer. */
     statusPending?: boolean;
     /** Status reads reject with this host failure. */
-    statusFailure?: HostErrorCode;
+    statusFailure?: HostErrorCode | HostFailure;
     submit: SubmitOutcome;
     /** Sign-out answers, or rejects with this host failure. */
     signOutFailure?: HostErrorCode;
+    /** What the product reports as left standing once sign-out answers: the
+     * person's saved automation setting, and whether a key issued for an
+     * external agent can still admit. Where it is left out, the setting is on
+     * and no issued key can admit. */
+    signOutAccess?: {
+      automationEnabled: boolean | null;
+      automationAccessRemains: boolean | null;
+    };
     /** The active profile's name; null when the host knows none. */
     profile?: string | null;
     /** What creating a profile meets. Accepted where it is left out. */
@@ -55,7 +72,22 @@ export type Scenario = {
   /** The log subscription: fixture records, an available but empty source, a
    * missing or unreadable source, or a subscription that never answers. */
   logs: "records" | "empty" | "missing" | "unreadable" | "pending";
-  managerLog?: "missing" | "unreadable" | "rejected";
+  /** The manager source; "absent" is a desktop that hosts supervision itself. */
+  managerLog?: "absent" | "unreadable" | "rejected";
+  /** Synthetic observation timelines; these never run in a packaged host. */
+  supervision?: {
+    initial: ManagerStatus;
+    submitDelayMs?: number;
+    events: {
+      afterMs: number;
+      manager?: ManagerSignal;
+      signIn?: SignInSignal;
+      presence?: SignInStatus["state"];
+      statusDelayMs?: number;
+      statusFailure?: HostErrorCode;
+      deliverAfterUnsubscribe?: boolean;
+    }[];
+  };
   /** Terminal sessions: fixture output, a session that starts and prints
    * nothing, one that starts and then fails, one that fails to start, or one
    * that never starts. */
@@ -66,14 +98,10 @@ export type Scenario = {
   services: "memory" | "refused";
   /** Explicit manager-start scenarios only; older hosts offer no command. */
   manager?: {
+    installResult?: "dispatched" | "pending" | { code: HostErrorCode };
     /** Simulate the native host's automatic dispatch before React mounts. */
     autoDispatched?: boolean;
-    result:
-      | "dispatched"
-      | "pending"
-      | "unmanaged"
-      | "unsupported"
-      | { code: HostErrorCode };
+    result: "dispatched" | "pending" | "unsupported" | { code: HostErrorCode };
     /** Fixed dispatch-answer delay, independent of profile/sign-in latency. */
     delayMs?: number;
     /** Status reads after dispatch before the runtime becomes available. */
@@ -88,6 +116,9 @@ export type Scenario = {
    * are refused, or a host that offers no views at all, as the desktop host
    * does today. */
   views: "fixture" | "empty" | "refused" | "none";
+  /** The component setup of the made-up computer; left out, the host
+   * offers no setup. The `setup` parameter chooses another shape. */
+  setup?: SetupShape;
 };
 
 const signedOut: Scenario["signIn"]["status"] = {
@@ -119,6 +150,274 @@ const base = {
 export const SCENARIOS: readonly Scenario[] = [
   {
     ...base,
+    id: "censo-ready",
+    title: "Censo: Review imported data",
+    summary:
+      "Open Your profile, then Sync from AEAT. This is a simulation; no AEAT request is sent.",
+    censo: "ready",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "censo-nie",
+    title: "Censo: Missing NIE support number",
+    summary:
+      "Open Your profile, then Sync from AEAT. This is a simulation; no AEAT request is sent.",
+    censo: "nie",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "censo-uncertain",
+    title: "Censo: Interrupted retrieval",
+    summary:
+      "Open Your profile, then Sync from AEAT. This is a simulation; no AEAT request is sent.",
+    censo: "uncertain",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+
+  {
+    ...base,
+    id: "user-profile",
+    title: "User profile: edit and filter",
+    summary:
+      "Open Your profile in the rail: search saved details, select sections, fill the missing tax ID, and add, edit or remove partners. All changes are in-memory demo data.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-setup",
+    title: "AEAT setup handoff",
+    summary: "A conversation opens the protected editor for its exact profile.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "5aa00000-0000-4000-8000-0000000000aa",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "account-duplicate-observation",
+    title: "Duplicate account observation",
+    summary:
+      "Matching observations preserve a pending profile list; changed refusals still refresh it.",
+    signIn: {
+      status: signedOut,
+      profile: null,
+      submit: { kind: "accept" },
+    },
+    profiles: "none",
+    supervision: {
+      initial: { state: "ready", failure: null },
+      events: [
+        ...[100, 1500].map((afterMs, index) => ({
+          afterMs,
+          signIn: {
+            kind: "sign-in-state" as const,
+            revision: index + 1,
+            status: { ...signedOut, active_profile: null },
+          },
+        })),
+        {
+          afterMs: 2500,
+          signIn: {
+            kind: "sign-in-state",
+            revision: 3,
+            status: {
+              ...signedOut,
+              active_profile: null,
+              refusal: { code: "THROTTLED", retryAfterSeconds: 10 },
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    ...base,
+    id: "manager-observed-recovery",
+    title: "Observed supervisor recovery",
+    summary:
+      "A signed-in view is withheld on supervision loss; ready still waits for fresh authentication.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    supervision: {
+      initial: { state: "ready", failure: null },
+      events: [
+        {
+          afterMs: 1000,
+          manager: {
+            kind: "manager-state",
+            revision: 2,
+            status: { state: "recovering", failure: null },
+          },
+        },
+        {
+          afterMs: 2000,
+          manager: {
+            kind: "manager-state",
+            revision: 1,
+            status: { state: "ready", failure: null },
+          },
+        },
+        {
+          afterMs: 3000,
+          presence: "absent",
+          statusDelayMs: 2000,
+          manager: {
+            kind: "manager-state",
+            revision: 3,
+            status: { state: "ready", failure: null },
+          },
+        },
+      ],
+    },
+  },
+  {
+    ...base,
+    id: "manager-observation-failed",
+    title: "Supervisor observation failed",
+    summary:
+      "A public observation failure withholds stale signed-in views and displays only safe failure metadata.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    supervision: {
+      initial: { state: "ready", failure: null },
+      events: [
+        {
+          afterMs: 1000,
+          manager: {
+            kind: "manager-observation-failed",
+            revision: 1,
+            error: {
+              code: "read_failed",
+              operation: "manager",
+              message: "private supervisor path and exception payload",
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    ...base,
+    id: "manager-auth-read-retry",
+    title: "Fresh authentication read retries",
+    summary:
+      "A transient fresh read fails after manager recovery; a later account observation re-arms the canonical read.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    supervision: {
+      initial: { state: "ready", failure: null },
+      events: [
+        {
+          afterMs: 1000,
+          manager: {
+            kind: "manager-state",
+            revision: 1,
+            status: { state: "recovering", failure: null },
+          },
+        },
+        {
+          afterMs: 2000,
+          presence: "absent",
+          statusFailure: "read_failed",
+          manager: {
+            kind: "manager-state",
+            revision: 2,
+            status: { state: "ready", failure: null },
+          },
+        },
+        {
+          afterMs: 3000,
+          signIn: {
+            kind: "sign-in-state",
+            revision: 1,
+            status: {
+              ...signedOut,
+              state: "present",
+              active_profile: "Old queued profile",
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    ...base,
+    id: "manager-late-submission",
+    title: "Late sign-in acknowledgement",
+    summary:
+      "A sign-in answer arrives after supervision loss; it cannot restore the old authentication presentation.",
+    signIn: { status: signedOut, submit: { kind: "accept" } },
+    supervision: {
+      initial: { state: "ready", failure: null },
+      submitDelayMs: 4000,
+      events: [
+        {
+          afterMs: 1000,
+          manager: {
+            kind: "manager-state",
+            revision: 1,
+            status: { state: "recovering", failure: null },
+          },
+        },
+      ],
+    },
+  },
+  {
+    ...base,
+    id: "manager-late-host",
+    title: "Old host observation",
+    summary:
+      "A retired scenario host delivers a late manager event; the new host must ignore it.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    supervision: {
+      initial: { state: "ready", failure: null },
+      events: [
+        {
+          afterMs: 3000,
+          deliverAfterUnsubscribe: true,
+          manager: {
+            kind: "manager-observation-failed",
+            revision: 1,
+            error: {
+              code: "spawn_failed",
+              operation: "manager",
+              message: "old host",
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    ...base,
     id: "signed-out",
     title: "Signed out",
     summary:
@@ -142,6 +441,18 @@ export const SCENARIOS: readonly Scenario[] = [
     signIn: {
       status: { ...signedOut, state: "present" },
       submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "signed-in-keys-issued",
+    title: "Signed in, keys issued",
+    summary:
+      "A live sign-in is present and a key issued for an external agent can still admit; signing out reports that, since keys do not follow the sign-in.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+      signOutAccess: { automationEnabled: true, automationAccessRemains: true },
     },
   },
   {
@@ -173,7 +484,7 @@ export const SCENARIOS: readonly Scenario[] = [
     id: "profile-locked",
     title: "Profile locked",
     summary:
-      "Status carries PROFILE_LOCKED: the view hands over to the TUI's own resume.",
+      "Status carries PROFILE_LOCKED: the refusal shows beside the sign-in form, which stays offered and signs in as ever.",
     signIn: {
       status: {
         ...signedOut,
@@ -191,7 +502,7 @@ export const SCENARIOS: readonly Scenario[] = [
     id: "no-profile",
     title: "No active profile, no profile commands",
     summary:
-      "A host that cannot list or create profiles, as the desktop host is today, and names none: the way on is the TUI.",
+      "A host that cannot list or create profiles, as the desktop host is today, and names none: the dialog and the menu say there is no profile, and offer no sign-in.",
     signIn: { status: signedOut, submit: { kind: "accept" }, profile: null },
     profiles: "absent",
   },
@@ -346,6 +657,26 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     ...base,
+    id: "manager-installation-failed",
+    title: "Manager installation failed",
+    summary:
+      "Automatic startup reports its installation failure and safe OS classification.",
+    signIn: {
+      ...servicesDown,
+      statusFailure: {
+        code: "package_unavailable",
+        operation: "manager",
+        ioKind: "NotFound",
+        osCode: 2,
+        message: "private installation path and exception payload",
+      },
+    },
+    profiles: "one",
+    terminals: "silent",
+    manager: { result: "dispatched", autoDispatched: true },
+  },
+  {
+    ...base,
     id: "runtime-starting",
     title: "Runtime starting in background",
     summary:
@@ -386,7 +717,12 @@ export const SCENARIOS: readonly Scenario[] = [
     signIn: servicesDown,
     profiles: "one",
     terminals: "silent",
-    manager: { result: "dispatched", delayMs: 4_000, readyAfterReads: 3 },
+    manager: {
+      result: "dispatched",
+      delayMs: 4_000,
+      readyAfterReads: 3,
+      installResult: "dispatched",
+    },
   },
   {
     ...base,
@@ -413,13 +749,13 @@ export const SCENARIOS: readonly Scenario[] = [
   {
     ...base,
     id: "manager-unmanaged",
-    title: "Manager unavailable in an unmanaged package",
+    title: "Manager unavailable in an invalid package",
     summary:
-      "The manager-start request reports an unmanaged package; services remain down.",
+      "The manager-start request refuses an invalid package; services remain down.",
     signIn: servicesDown,
     profiles: "one",
     terminals: "silent",
-    manager: { result: "unmanaged" },
+    manager: { result: { code: "manager_unavailable" } },
   },
   {
     ...base,
@@ -556,11 +892,11 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     ...base,
-    id: "manager-log-missing",
-    title: "Manager log missing",
+    id: "manager-log-absent",
+    title: "No standalone manager log",
     summary:
-      "Python records remain available while the manager log is missing.",
-    managerLog: "missing",
+      "The desktop hosts supervision, so no manager source is reported and none is flagged.",
+    managerLog: "absent",
     signIn: {
       status: { ...signedOut, state: "present" },
       submit: { kind: "accept" },
@@ -619,7 +955,7 @@ export const SCENARIOS: readonly Scenario[] = [
     id: "tui-unavailable",
     title: "TUI cannot start",
     summary:
-      "Signed out, and every session fails to start: carrying on in the TUI comes back to the gate.",
+      "Signed out, and every session fails to start: sign-in is still offered, and once one is accepted the pane says the session could not start.",
     signIn: { status: signedOut, submit: { kind: "accept" } },
     terminals: "failed",
   },
@@ -634,6 +970,42 @@ export const SCENARIOS: readonly Scenario[] = [
       submit: { kind: "accept" },
     },
     views: "refused",
+  },
+  {
+    ...base,
+    id: "setup-first-run",
+    title: "Components not set up",
+    summary:
+      "Signed in on a computer where nothing is set up yet: the setup dialog opens once with one summary and one action, the browser and the local AI run one after the other with one overall progress bar, and Settings shows one line that leads back into setup.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    setup: "fresh",
+  },
+  {
+    ...base,
+    id: "setup-partial",
+    title: "One component needs attention",
+    summary:
+      "Signed in; the browser is ready but the local AI's download arrived damaged and can be tried again. The Google account is signed in, on its own line in Settings.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    setup: "partial",
+  },
+  {
+    ...base,
+    id: "google-account",
+    title: "Google account not signed in",
+    summary:
+      "Signed in with everything set up, so Settings shows no setup line; the profile's Google account is not signed in, and Settings and Cmd+K offer to sign in to Google.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    setup: "google_signed_out",
   },
   {
     ...base,

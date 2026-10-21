@@ -35,7 +35,7 @@ def _has_translation_default(node: ast.AST) -> bool:
 def test_lifecycle_cli_surfaces_delegate_action_selection_to_application_continuations() -> None:
     """List, status, and history cannot recreate a lifecycle action or fallback prose."""
     lifecycle_tree = ast.parse((_CLI_ROOT / "_modelo_work_lifecycle_cli.py").read_text(encoding="utf-8"))
-    modelo_tree = ast.parse((_CLI_ROOT / "_modelo.py").read_text(encoding="utf-8"))
+    modelo_tree = ast.parse((_CLI_ROOT / "modelo_commands.py").read_text(encoding="utf-8"))
 
     for function in (_function(lifecycle_tree, "work_list"), _function(lifecycle_tree, "work_status")):
         calls = _called_names(function)

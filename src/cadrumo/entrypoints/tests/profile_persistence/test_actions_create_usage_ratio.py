@@ -14,7 +14,6 @@ import pytest
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.ledger.actions_manual import create_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -30,6 +29,7 @@ from ....adapters.persistence.profile.tests.ledger_action_persistence_support im
 from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
     repositories as _repositories,
 )
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

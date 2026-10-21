@@ -168,7 +168,7 @@ def classify_post_filing_event_kind(
         for needles, kind in _CONCEPTO_PATTERNS:
             if any(needle in folded_concepto for needle in needles):
                 return kind
-    if tipo:
+    if tipo is not None and tipo:
         mapped = _TIPO_FALLBACK.get(_fold(tipo))
         if mapped is not None:
             return mapped

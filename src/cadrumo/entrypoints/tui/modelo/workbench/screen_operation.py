@@ -153,7 +153,7 @@ class WorkbenchOperationMixin:
             return
 
         def closed(confirmed: bool | None) -> None:
-            if confirmed:
+            if confirmed is not None and confirmed:
                 if not self._filing_withheld() and not self._file_out_of_date():
                     self._run_operation(submit)
             else:
@@ -161,10 +161,10 @@ class WorkbenchOperationMixin:
 
         self.app.push_screen(
             ConfirmScreen(
-                title=tr("application.modelo.lifecycle.file_confirm_title"),
-                message=tr("application.modelo.lifecycle.file_confirm_message"),
-                confirm_label=tr("application.modelo.lifecycle.file_confirm_accept"),
-                cancel_label=tr("application.modelo.lifecycle.file_confirm_cancel"),
+                title=lambda: tr("application.modelo.lifecycle.file_confirm_title"),
+                message=lambda: tr("application.modelo.lifecycle.file_confirm_message"),
+                confirm_label=lambda: tr("application.modelo.lifecycle.file_confirm_accept"),
+                cancel_label=lambda: tr("application.modelo.lifecycle.file_confirm_cancel"),
             ),
             closed,
         )

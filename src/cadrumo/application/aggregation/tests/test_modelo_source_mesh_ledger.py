@@ -24,11 +24,11 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ....domain.iva.classification import InvoiceKind as CatalogueInvoiceKind
-from ....domain.iva.classification import InvoiceKind as IvaInvoiceKind
 from ....domain.iva.classification import TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
+from ....domain.iva.schema import InvoiceKind as CatalogueInvoiceKind
+from ....domain.iva.schema import InvoiceKind as IvaInvoiceKind
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.renta.actividad_asset.claims import AmortizationClaim
 from ....domain.renta.actividad_asset.election import (

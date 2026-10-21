@@ -28,6 +28,7 @@ from ...domain.modelos.calculation_revision import (
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
+from .action_errors import ModeloPreconditionErrorMixin
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 
 if TYPE_CHECKING:
@@ -52,7 +53,7 @@ class ModeloCalculationRevisionSelectorNotFoundError(ModeloCalculationRevisionSe
     """Raised when a requested calculation revision cannot be selected."""
 
 
-class ModeloCalculationRevisionSelectorStateError(ModeloCalculationRevisionSelectorError):
+class ModeloCalculationRevisionSelectorStateError(ModeloPreconditionErrorMixin, ModeloCalculationRevisionSelectorError):
     """Raised when a command-specific selector finds a revision in the wrong state."""
 
 
@@ -271,8 +272,19 @@ def select_current_verified_revision(
         calculation_catalogue=calculation_catalogue,
     )
     if selection.revision.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
+        from .preconditions import build_modelo_work_file_unverified_revision_failure
+
         raise ModeloCalculationRevisionSelectorStateError(
             translated_message="errors.refused.modelo_calculation_revision_selector_state",
+            context={
+                "calculation_revision_id": selection.revision.calculation_revision_id,
+                "state": selection.revision.state.value,
+            },
+            precondition_failure=build_modelo_work_file_unverified_revision_failure(
+                calculation_revision_id=selection.revision.calculation_revision_id,
+                state=selection.revision.state.value,
+                work_unit=work_unit,
+            ),
         )
     return selection
 
@@ -441,8 +453,13 @@ def _revision_by_pointer(
     )
     if revision is None:
         raise ModeloCalculationRevisionSelectorNotFoundError(
-            translated_message="errors.error.modelo_calculation_revision_selector_not_found",
-            context={"selection": "pointer", "pointer_name": pointer_name},
+            translated_message="errors.error.modelo_calculation_revision_pointer_not_found",
+            context={
+                "selection": "pointer",
+                "pointer_name": pointer_name,
+                "work_unit_id": work_unit.work_unit_id,
+                "modelo": str(work_unit.modelo),
+            },
         )
     return revision
 

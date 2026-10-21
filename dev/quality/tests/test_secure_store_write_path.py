@@ -11,7 +11,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo_client.transport.service_client import InstalledServiceClient
+
 from ..secure_store_write_path import (
+    OPAQUE_RECORD_VERBS,
     SecureStoreWritePathError,
     collect_store_usage,
     evaluate,
@@ -55,7 +58,7 @@ def test_reports_a_store_that_is_read_and_never_written(tmp_path: Path) -> None:
             "reader.py": "def show():\n    return ExampleRepository().load()\n",
         },
     )
-    problems = evaluate(source, _declaration(tmp_path, ""))
+    problems = evaluate((source,), _declaration(tmp_path, ""))
     assert len(problems) == 1
     assert "ExampleRepository" in problems[0]
     assert "reader.py" in problems[0]
@@ -125,7 +128,7 @@ def test_stays_silent_when_some_production_path_writes(tmp_path: Path, writer: s
             "writer.py": writer,
         },
     )
-    assert evaluate(source, _declaration(tmp_path, "")) == ()
+    assert evaluate((source,), _declaration(tmp_path, "")) == ()
 
 
 @pytest.mark.parametrize(
@@ -141,7 +144,7 @@ def test_mutation_is_recognised_by_token_not_by_prefix(tmp_path: Path, method: s
             "writer.py": f"def go():\n    ExampleRepository().{method}(1)\n",
         },
     )
-    assert evaluate(source, _declaration(tmp_path, "")) == ()
+    assert evaluate((source,), _declaration(tmp_path, "")) == ()
 
 
 def test_a_sibling_adapter_write_is_not_credited_to_another_store(tmp_path: Path) -> None:
@@ -160,14 +163,14 @@ def test_a_sibling_adapter_write_is_not_credited_to_another_store(tmp_path: Path
         "        self._repository.save(1)\n"
     )
     source = _tree(tmp_path, {"store.py": _REPOSITORY, "other.py": other, "adapters.py": adapters})
-    problems = evaluate(source, _declaration(tmp_path, ""))
+    problems = evaluate((source,), _declaration(tmp_path, ""))
     assert len(problems) == 1
     assert "ExampleRepository" in problems[0]
 
 
 def test_a_store_only_its_own_module_reads_is_not_reported(tmp_path: Path) -> None:
     source = _tree(tmp_path, {"store.py": _REPOSITORY + "\n\ndef peek():\n    return ExampleRepository().load()\n"})
-    assert evaluate(source, _declaration(tmp_path, "")) == ()
+    assert evaluate((source,), _declaration(tmp_path, "")) == ()
 
 
 def test_a_declaration_the_tree_now_writes_fails_as_spent(tmp_path: Path) -> None:
@@ -183,7 +186,7 @@ def test_a_declaration_the_tree_now_writes_fails_as_spent(tmp_path: Path) -> Non
         tmp_path,
         '[[read_only]]\nname = "ExampleRepository"\nkind = "awaiting_writer"\nrationale = "stale"\n',
     )
-    problems = evaluate(source, declaration)
+    problems = evaluate((source,), declaration)
     assert len(problems) == 1
     assert problems[0].startswith("- ExampleRepository")
 
@@ -200,7 +203,7 @@ def test_a_declared_store_passes(tmp_path: Path) -> None:
         tmp_path,
         '[[read_only]]\nname = "ExampleRepository"\nkind = "awaiting_writer"\nrationale = "known gap"\n',
     )
-    assert evaluate(source, declaration) == ()
+    assert evaluate((source,), declaration) == ()
 
 
 @pytest.mark.parametrize(
@@ -215,7 +218,115 @@ def test_an_unusable_declaration_is_refused(tmp_path: Path, entry: str) -> None:
     source = _tree(tmp_path, {"store.py": _REPOSITORY})
     declaration = _declaration(tmp_path, f"[[read_only]]\n{entry}\n")
     with pytest.raises(SecureStoreWritePathError):
-        evaluate(source, declaration)
+        evaluate((source,), declaration)
+
+
+_SERVICE_STORE = '''
+class SecureExampleStore:
+    """A service store over the runtime's opaque custody."""
+
+    def read(self, key):
+        return self._client.record_read("example", key)
+
+    def write(self, record):
+        return self._client.record_write("example", record.key, payload=bytearray())
+'''
+
+_SERVICE_PORT = """
+class ExampleStore(Protocol):
+    def read(self, key): ...
+
+    def write(self, record): ...
+"""
+
+
+def _package(root: Path, package: str, modules: dict[str, str]) -> Path:
+    """Write one synthetic package beside the others under ``root / src``."""
+    source = root / "src" / package
+    for name, body in modules.items():
+        path = source / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(body, encoding="utf-8")
+    return source
+
+
+def test_a_service_store_read_through_its_port_and_never_written_is_reported(tmp_path: Path) -> None:
+    """The opaque-custody family is a store too, reached through its structural port."""
+    service = _package(
+        tmp_path,
+        "service",
+        {
+            "store.py": _SERVICE_STORE,
+            "ports.py": _SERVICE_PORT,
+            "reader.py": "def show(store: ExampleStore):\n    return store.read('k')\n",
+        },
+    )
+    problems = evaluate((service,), _declaration(tmp_path, ""))
+    assert len(problems) == 1
+    assert "SecureExampleStore" in problems[0]
+    assert "service/reader.py" in problems[0]
+
+
+def test_a_service_store_written_through_its_port_passes(tmp_path: Path) -> None:
+    service = _package(
+        tmp_path,
+        "service",
+        {
+            "store.py": _SERVICE_STORE,
+            "ports.py": _SERVICE_PORT,
+            "reader.py": "def show(store: ExampleStore):\n    return store.read('k')\n",
+            "writer.py": "def go(store: ExampleStore):\n    store.write(1)\n",
+        },
+    )
+    assert evaluate((service,), _declaration(tmp_path, "")) == ()
+
+
+def test_a_port_the_store_does_not_satisfy_is_not_credited(tmp_path: Path) -> None:
+    """A name suffix alone does not make a protocol the store's port."""
+    service = _package(
+        tmp_path,
+        "service",
+        {
+            "store.py": _SERVICE_STORE,
+            "ports.py": "class ExampleStore(Protocol):\n    def purge(self): ...\n",
+            "reader.py": "def show():\n    return SecureExampleStore().read('k')\n",
+            "writer.py": "def go(store: ExampleStore):\n    store.write(1)\n",
+        },
+    )
+    problems = evaluate((service,), _declaration(tmp_path, ""))
+    assert len(problems) == 1
+    assert "SecureExampleStore" in problems[0]
+
+
+def test_a_write_from_another_package_fills_the_store(tmp_path: Path) -> None:
+    """Readers and writers need not share the store's package."""
+    product = _package(
+        tmp_path,
+        "cadrumo",
+        {"store.py": _REPOSITORY, "reader.py": "def show():\n    return ExampleRepository().load()\n"},
+    )
+    runtime = _package(tmp_path, "runtime", {"writer.py": "def go():\n    ExampleRepository().save(1)\n"})
+
+    assert len(evaluate((product,), _declaration(tmp_path, ""))) == 1
+    assert evaluate((product, runtime), _declaration(tmp_path, "")) == ()
+
+
+def test_a_store_name_two_packages_define_is_refused(tmp_path: Path) -> None:
+    product = _package(tmp_path, "cadrumo", {"store.py": _REPOSITORY})
+    runtime = _package(tmp_path, "runtime", {"store.py": _REPOSITORY})
+    with pytest.raises(SecureStoreWritePathError, match="ExampleRepository is defined in both"):
+        evaluate((product, runtime), _declaration(tmp_path, ""))
+
+
+def test_an_absent_source_root_is_refused(tmp_path: Path) -> None:
+    product = _package(tmp_path, "cadrumo", {"store.py": _REPOSITORY})
+    with pytest.raises(SecureStoreWritePathError, match="source root is unavailable"):
+        evaluate((product, tmp_path / "src" / "missing"), _declaration(tmp_path, ""))
+
+
+def test_the_opaque_record_verbs_are_the_service_client_s_own() -> None:
+    """The service-store marker follows the client that defines it."""
+    assert all(callable(getattr(InstalledServiceClient, verb, None)) for verb in OPAQUE_RECORD_VERBS)
 
 
 def test_the_shipped_tree_reports_its_stores() -> None:
@@ -224,6 +335,7 @@ def test_the_shipped_tree_reports_its_stores() -> None:
     assert len(usage) >= 20
     assert any(store.written_by for store in usage)
     assert any(store.read_by for store in usage)
+    assert any(store.owner.startswith("cadrumo_agent_service/") for store in usage)
 
 
 def test_the_shipped_tree_agrees_with_its_declaration() -> None:

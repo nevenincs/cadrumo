@@ -9,14 +9,6 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
 from ...application.modelo.data_inventory import data_inventory_checklist
-from ...application.modelo.mcp_query_contracts import (
-    ModeloBindingsResolveTypedProjection,
-    ModeloReadinessSafeLedgerIssue,
-    ModeloReadinessSafeMissingRequirement,
-    ModeloReadinessSafeRecovery,
-    ModeloReadinessSummaryProjection,
-    ModeloTypedBindingValue,
-)
 from ...application.modelo.query_read_contracts import (
     ModeloBindingOverride,
     ModeloBindingRowV1,
@@ -30,6 +22,14 @@ from ...application.modelo.query_read_contracts import (
     ModeloRequiresRequest,
 )
 from ...application.modelo.registry_discovery import registry_bindings_for_scope, registry_modelo_codes
+from ...application.modelo.typed_query_contracts import (
+    ModeloBindingsResolveTypedProjection,
+    ModeloReadinessSafeLedgerIssue,
+    ModeloReadinessSafeMissingRequirement,
+    ModeloReadinessSafeRecovery,
+    ModeloReadinessSummaryProjection,
+    ModeloTypedBindingValue,
+)
 from ...application.operations.public_period import PublicPeriod
 from ...application.state_projection import ModeloReadinessRequest, build_modelo_readiness_reports
 from ...core.external_constants import OutputLanguage

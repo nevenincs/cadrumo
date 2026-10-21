@@ -12,7 +12,7 @@ services over the published authority.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
@@ -125,7 +125,7 @@ def _seed_ready_profile(objects: SecureObjectRepository) -> None:
 
 
 @contextmanager
-def _m193_bucket(tmp_path: Path, *, filing_year: int, operation: PinnedAuthorityOperation) -> Iterator[_Bucket]:
+def _m193_bucket(tmp_path: Path, *, filing_year: int, operation: PinnedAuthorityOperation) -> Generator[_Bucket]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M193 settled row") as profile:
         objects: SecureObjectRepository = profile.repository
         _seed_ready_profile(objects)

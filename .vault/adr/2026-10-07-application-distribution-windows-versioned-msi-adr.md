@@ -3,16 +3,15 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-07'
-modified: '2026-10-08'
+modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:010c139b00c5d2b3ef7a3083ce50412d6975f07f9e3583d7f77c3400dc289232'
+body_hash: 'sha256:dca1bde3ee6960d357974ebb49578f5279865ea79140cf799a2b8b254ac5a56c'
 related:
   - "[[2026-10-04-application-distribution-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - "[[2026-10-05-runtime-manager-architecture-audit]]"
   - "[[2026-10-04-application-distribution-audit]]"
 ---
-
 # `application-distribution` adr: `Windows immutable version products and stable registration` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -44,6 +43,10 @@ Authorized 2026-10-07: after reviewing the concrete Windows ownership proposal a
 9. Uninstall removes the scoped shared registrations and stable entry, then permits running managers to detect removal and drain gracefully. In-use version products remain for safe deferred native removal; user state is preserved. Directly deleting program directories is not a substitute for native package ownership.
 10. Signing, matching WiX tools/extensions, any applicable tool terms, real release-payload proof and disposable-host acceptance remain separate gates. An artifact with no such evidence is not manager-shippable.
 
+### 2026-10-10 authorized Windows optional-installation amendment
+
+The user's explicit continuation accepts the revised topology in 2026-10-04-runtime-manager-architecture-adr: optional machine installation owns an automatic SCM lifecycle broker, user installation owns unprivileged login startup, and a running GUI hosts the shared manager core when no installed manager owns its session. This supersedes earlier no-service, mandatory-installation and separate-manager-only statements within Windows product startup. The boot broker launches only verified machine-installed manager workers using genuine per-user logon tokens and owns no taxpayer runtime or credentials as SYSTEM. Native authentication, profile/session binding, runtime supervisor framing, operation custody and connect-only CLI/TUI/MCP remain unchanged. Registered service existence is distinct from running state and authenticated runtime readiness. Actual boot/login/service acceptance must be reported independently from authored metadata and command-only package fallback evidence.
+
 ## Implementation
 
 We will author two MSI roles through the existing CMake distribution graph and its Python identity/layout owners. A custom WiX template removes cross-release RemoveExistingProducts behavior from version products. The registration product handles only its shared resources and scoped registration. The operator explicitly selected MSI delivery on 2026-10-07. Deliver the two roles as native MSI artifacts with an ordered installation and maintenance workflow; an EXE bootstrapper is not the requested format. Product sequencing and rollback still require the installer-owned publication protocol described above; this delivery choice does not establish its implementation or acceptance. Generated product locators and native maintenance status belong to the installation contract, not duplicated manager or desktop declarations.
@@ -58,7 +61,6 @@ Under the operator's instruction to implement and build the unsigned installers,
 
 Primary evidence: Microsoft documents that successful [MsiEndTransaction(COMMIT)](https://learn.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msiendtransaction) deletes rollback scripts, that [commit custom actions](https://learn.microsoft.com/en-us/windows/win32/msi/commit-custom-actions) can fail and trigger rollback, and that [_MSIExecute](https://learn.microsoft.com/en-us/windows/win32/msi/-msiexecute-mutex) covers the execute sequence. Implementation must verify the owner protocol and native custody before lifting the existing gate.
 
-
 ### 2026-10-08 owner compatibility refinement
 
 Under the existing authorization to complete native maintenance, old cached registration actions must admit a newer maintenance runner without pinning every future release to the first runner's bytes. Use a bounded protected owner record inside the immutable contract's publication directory. The native runner holds maintenance exclusion and namespace custody, publishes an atomic record for the current synchronous native operation, and invalidates it when that operation ends. The record binds a fresh transaction-incarnation nonce, endpoint, exact prefix and native scope/account, product role and operation, and held runner PID, creation time, image path and digest. A callback independently admits existing namespace/content ACLs and ancestry without creating or repairing anything, retains file custody, and verifies the actual native pipe peer against the record before requesting the exact active claim. Machine records admit only trusted administrative/system mutation, including protection against implicit owner WRITE_DAC; user records bind the native user SID. Public MSI properties and record paths remain locators only. Initial new-artifact admission still checks its authored runner digest. Cached product metadata still proves the exact native product/family/role and cannot alone authorize an unknown runner.
@@ -67,6 +69,29 @@ A transaction nonce or opaque native handle is correlation, never independent pr
 
 This refines the same transaction-owner decision; it does not establish acceptance. Required negative evidence includes wrong SID/scope/prefix/product/operation, mutable ancestor or owner ACL, stale PID/creation/image/endpoint, altered record, owner death and unauthenticated standalone installation. A genuine changed-runner two-release upgrade must exercise old cached custom actions. Microsoft documents [single transaction ownership and owner-loss rollback](https://learn.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msibegintransactionw), the [owner-only settlement boundary](https://learn.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msiendtransaction), and the need to preserve the effective context and protected data in [custom action security](https://learn.microsoft.com/en-us/windows/win32/msi/custom-action-security). The record's correlation design is our implementation choice, not a native API guarantee.
 
+### Exact same-version no-op admission, 2026-10-08
+
+The user's continuing authorization to complete unsigned installation code includes an exact already-installed no-op. This does not relax anchored repair exclusion or native installation gates. A no-op may succeed only under maintenance exclusion after verifying the exact native owners and cached product identity, Ready publication and anchors, complete immutable version bytes, and the actual shared registration resources. Cached MSI properties or component key-path status alone do not prove installed registration integrity.
+
+The existing MSI authoring owner projects a bounded, typed registration-resource description into its immutable registration MSI: shared file hashes including the native marker bytes, scoped registry values and component identity, and desktop shortcut semantics. Installer verification consumes that same bound description and reads actual native resources without invoking repair, launching a shortcut, changing publication, or opening a native installation transaction. Missing, legacy, damaged or ambiguous evidence refuses no-op admission; normal ordered maintenance retains its own existing admission rules. A distinct successful result must identify that an already-published installation was verified, not claim that native installation or repair ran. No-op verification may coexist with readers of unchanged version files while retaining maintenance exclusion and file/version custody through its observation.
+
+### 2026-10-09 authorized companion installation kit
+
+The operator's desktop installation-command request extends delivery with a portable companion kit outside the immutable application inventory, binding both scoped MSI pairs and the exact maintenance runner to the active package manifest and identity. The desktop invokes the existing transaction runner through shared native admission under 2026-10-09-desktop-service-installation-adr. Native MSI roles, transaction commitment/publication, removal and disposable-host acceptance remain binding.
+
+### 2026-10-09 scoped desktop installation admission
+
+The operator requests a usable internal desktop installer for both scopes. Products authored with the established authenticated native owner and adapter may replace the unconditional literal-false LaunchCondition with mandatory native owner/scope callbacks, so the owning transaction runner can install them. Products without that owner remain unconditionally blocked; unauthenticated standalone requests fail before file ownership changes. This supersedes the source-only unconditional block for owned products, not signing, transactional publication or disposable-host release acceptance obligations.
+
+### 2026-10-11 component granularity clarification
+
+The operator's authorized complete-package and installed-health repair stays within unique path-derived version ownership. Immutable per-user version products may group non-executable payload files within one physical destination directory. Group identity binds scope, channel, target, release location, selected keypath and deterministic member inventory. Changed membership or keypath receives a distinct component GUID; published per-file identities are never reinterpreted. Executable images, native libraries, compiled help and declared launch targets retain individual components. Per-user components retain HKCU registry keypaths. Machine payload granularity, shared registration ownership and complete manifest-based file verification remain unchanged. Producer and actual read-only native database preflight reserve authored component entries plus one entry for each registry-keypath component within a 65,535 costing budget. This is a conservative guard grounded in the retained native costing failure, not a claim that the exact Windows synthetic-component algorithm is documented. A fresh distinct release and genuine installed acceptance must prove complete file delivery, upgrade and rollback; authored counts or native MSI return success alone are insufficient.
+
+### 2026-10-12 fresh candidate rollback compensation clarification
+
+The user's continuing installation-hardening authorization permits one private compensating native removal only after candidate-verification rejection, successful native rollback and before any registration attempt, for the exact version reservation created by this attempt with no previous product (`previous=None`). The retained genuine user rollback trace recorded in `2026-10-09-runtime-process-lifecycle-audit` demonstrates that native rollback success can leave registered product ownership despite absent candidate files; neither API success nor file absence may clear Pending.
+
+Retain maintenance and version exclusion and prove absence of live consumers. Bind the exact cached/source MSI version role, product/family, scope, SID and prefix under existing admission and custody, then use a fresh authenticated native MSI transaction with only the exact Remove Version claim. Compensation changes no files, registry entries or ACLs directly, obtains no additional elevation and introduces no retry loop. Only successful native commit followed by exact MSI-product absence and candidate-directory absence permits the unchanged reservation rollback owner to remove the reservation. Unknown evidence, failed settlement or incomplete absence retains Pending and prior anchors. Existing versions, previous Pending reservations, shared registration products and ordinary remove-version requests are ineligible. Real compensation and both-scope installed acceptance remain pending; this clarification establishes no successful repair or completed acceptance.
 
 ## Rationale
 
@@ -75,3 +100,13 @@ Separating immutable version ownership from shared registration lets Windows Ins
 ## Consequences
 
 The Windows installer becomes a composed delivery rather than one combined product. Disk use increases while anchor or in-use versions are retained. Transaction publication and safe maintenance require shared catalogue integration and new native acceptance evidence. The existing accepted ADRs need no wording change or supersession. Linux/RPM/DEB and macOS ownership remain separate platform-specific ownership and acceptance gates; this Windows proposal establishes none of their acceptance. Approval authorizes this ownership design, not public distribution, tool-term acceptance, deployment or profile migration.
+
+## 2026-10-16 single-compilation ownership amendment
+
+The user's explicit requirement that the build compile only one MSI is accepted in 2026-10-16-native-build-incremental-adr. That successor supersedes only this record's physical separation into version/registration products and separate user/machine packages (constraints 2-5 and the corresponding implementation, transaction, companion-kit and consequences wording). One scope-aware MSI per release represents VersionFiles and SharedRegistration through independently authenticated, feature-qualified native ownership. The earlier discussion rejected combined products with undifferentiated lifetime; it does not authorize weakening the new role-qualified observation requirement.
+
+All scope isolation, immutable version inventory, independent registration lifetime and anchors, candidate-before-registration verification, committed transaction publication, protected callbacks, deferred in-use removal, rollback and native acceptance requirements remain binding. A product-presence check cannot substitute for observing the exact owned feature. Legacy product ownership is not silently converted. The desktop kit binds one MSI and the native runner instead of four compiled artifacts. This amendment records authorization, not completed implementation or disposable-host acceptance.
+
+## 2026-10-16 package identity registration amendment
+
+Accepted with 2026-10-16-application-distribution-windows-package-identity-adr on the operator's ruling that the application must be registered. Constraint 3's shared-registration resources additionally include the channel's Windows package identity registration, with the external location at the canonical prefix. Version products never register or remove it. A failed registration is reported as incomplete registration work and does not roll back a committed installation. No other obligation in this record changes.

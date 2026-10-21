@@ -96,21 +96,21 @@ class WorkbenchNextStepMixin:
             return
 
         def closed(proceed: bool | None) -> None:
-            if proceed:
+            if proceed is not None and proceed:
                 self._calculate_now(actions)
             else:
                 self._notice(tr("tui.modelo.workbench.calculate.kept"))
 
         self.app.push_screen(
             ConfirmScreen(
-                title=tr("tui.modelo.workbench.calculate.at_risk_title"),
-                message=recalculation_risk_text(
+                title=lambda: tr("tui.modelo.workbench.calculate.at_risk_title"),
+                message=lambda: recalculation_risk_text(
                     self._unattributed_boxes(form),
                     console=self.app.console,
                     width=max(self._width() - _DIALOG_FRAME, 1),
                 ),
-                confirm_label=tr("tui.modelo.workbench.calculate.at_risk_proceed"),
-                cancel_label=tr("tui.modelo.workbench.calculate.at_risk_cancel"),
+                confirm_label=lambda: tr("tui.modelo.workbench.calculate.at_risk_proceed"),
+                cancel_label=lambda: tr("tui.modelo.workbench.calculate.at_risk_cancel"),
             ),
             closed,
         )

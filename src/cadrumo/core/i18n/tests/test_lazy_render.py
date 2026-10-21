@@ -27,6 +27,8 @@ def test_route_key_to_shard_taxonomy() -> None:
     assert route_key_to_shard("docs.reference.usage") == Path("docs.yml")
     assert route_key_to_shard("profile.active.name") == Path("profile.yml")
     assert route_key_to_shard("adapters.aeat.endpoint") == Path("adapters.yml")
+    assert route_key_to_shard("desktop.startup.failure") == Path("desktop_startup.yml")
+    assert route_key_to_shard("desktop.session.failed") == Path("common.yml")
     assert route_key_to_shard("unrecognized.root.key") == Path("common.yml")
 
 
@@ -37,6 +39,9 @@ def test_lazy_catalogue_targeted_loading() -> None:
         es_dir = tmp / "es"
         (es_dir / "cli").parent.mkdir(parents=True)
         (es_dir / "cli.yml").write_text("cli:\n  root:\n    app_help: 'Spanish Help'\n", encoding="utf-8")
+        (es_dir / "desktop_startup.yml").write_text(
+            "desktop:\n  startup:\n    failure: 'No se ha podido iniciar.'\n", encoding="utf-8"
+        )
 
         schema_dir = es_dir / "modelo" / "schema"
         schema_dir.mkdir(parents=True)
@@ -59,6 +64,8 @@ def test_lazy_catalogue_targeted_loading() -> None:
         val = catalogue["cli.root.app_help"]
         assert val == "Spanish Help"
         assert set(catalogue._key_cache) == {"cli.root.app_help"}
+        assert catalogue["desktop.startup.failure"] == "No se ha podido iniciar."
+        assert Path("common.yml") not in catalogue._loaded_shards
 
         # Accessing M303 reads 303.yml, leaving 100.yml unread
         val_303 = catalogue["modelo.schema.303.casilla.01.label"]

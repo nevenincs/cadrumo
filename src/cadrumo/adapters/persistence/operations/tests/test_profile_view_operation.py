@@ -19,12 +19,6 @@ from cadrumo.application.operations.access_resolution import OperationAccessCont
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
@@ -34,6 +28,7 @@ from cadrumo.application.user_profile.operations import (
 )
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
+from cadrumo.application.user_profile.question_view import ProfileViewQuestionItem, profile_question_items
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.application.user_profile.validation import MODELO_WORK_PROFILE_BASELINE_MISSING_CODE
@@ -50,10 +45,13 @@ from cadrumo.application.user_profile.view_operation import (
     project_profile_view_result,
 )
 from cadrumo.application.user_profile.view_reader import read_profile_view_page
+from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus, assess_profile_record_health
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from .supervision_support import run_to_settlement
 
@@ -85,7 +83,39 @@ def _registry() -> OperationRegistry:
     )
 
 
-def test_registered_view_reads_real_encrypted_profile_and_pins_continuations(tmp_path: Path) -> None:
+@pytest.mark.parametrize("language", [None, "en", "es", "ca", "hu"])
+def test_preferences_disclose_only_saved_language_and_keep_the_revision_pin(
+    tmp_path: Path, language: str | None
+) -> None:
+    from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+
+    facts = (UserProfileFact(path="identity.tax_id", value="00000000T"),)
+    if language is not None:
+        facts += (UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=language),)
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        profile_id = _register_profile(facts=facts)
+        with bundled_indexed_authority().operation() as authority:
+            request = ProfileViewOperationRequest(profile_id=profile_id, page_kind=ProfileViewPageKind.PREFERENCES)
+            page = read_profile_view_page(request, authority_operation=authority)
+            expected = (
+                () if language is None else (ProfileViewFactItem(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=language),)
+            )
+            assert page.items == expected
+            assert page.next_cursor is None
+            assert page.total_items == len(expected)
+            stale = read_profile_view_page(
+                request.model_copy(
+                    update={"expected_revision": page.record_revision, "expected_content_digest": "0" * 64}
+                ),
+                authority_operation=authority,
+            )
+            assert stale.refusal_code is ProfileViewRefusalCode.STALE_REVISION
+
+
+@pytest.mark.parametrize("page_kind", [ProfileViewPageKind.FACTS, ProfileViewPageKind.QUESTIONS])
+def test_registered_view_reads_real_encrypted_profile_and_pins_continuations(
+    tmp_path: Path, page_kind: ProfileViewPageKind
+) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
         with bundled_indexed_authority().operation() as authority:
@@ -111,7 +141,7 @@ def test_registered_view_reads_real_encrypted_profile_and_pins_continuations(tmp
                 request = OperationRequest(
                     definition_id=PROFILE_VIEW_OPERATION_DEFINITION_ID,
                     subject_ref=f"profile:{profile_id}",
-                    payload=ProfileViewOperationRequest(profile_id=profile_id, page_kind=ProfileViewPageKind.FACTS),
+                    payload=ProfileViewOperationRequest(profile_id=profile_id, page_kind=page_kind, limit=3),
                 )
                 created = asyncio.run(supervisor.submit(request, operation_id="a" * 64))
                 terminal = asyncio.run(run_to_settlement(supervisor, created))
@@ -131,7 +161,7 @@ def test_registered_view_reads_real_encrypted_profile_and_pins_continuations(tmp
                     page = read_profile_view_page(
                         ProfileViewOperationRequest(
                             profile_id=profile_id,
-                            page_kind=ProfileViewPageKind.FACTS,
+                            page_kind=page_kind,
                             cursor=page.next_cursor,
                             expected_revision=record.record_revision,
                             expected_content_digest=record.content_digest,
@@ -140,9 +170,13 @@ def test_registered_view_reads_real_encrypted_profile_and_pins_continuations(tmp
                     )
                     assert page.outcome == "page"
                     observed.extend(page.items)
-                assert [(item.path, item.value) for item in observed if isinstance(item, ProfileViewFactItem)] == [
-                    (path, value) for path, value in sorted(record_to_path_values(record).items())
-                ]
+                values = record_to_path_values(record)
+                expected = (
+                    tuple(ProfileViewFactItem(path=path, value=value) for path, value in sorted(values.items()))
+                    if page_kind is ProfileViewPageKind.FACTS
+                    else profile_question_items(build_setup_flow(authority), values)
+                )
+                assert tuple(observed) == expected
                 stale = read_profile_view_page(
                     ProfileViewOperationRequest(
                         profile_id=profile_id,
@@ -361,6 +395,29 @@ def test_readiness_issues_adds_canonical_baseline_without_changing_schema_issues
             ) == len(readiness.items)
             assert readiness.record_revision == schema.record_revision == record.record_revision
             assert readiness.content_digest == schema.content_digest == record.content_digest
+            # Finished setup does not supply optional tax facts or inherit wizard defaults.
+            questions: dict[str, ProfileViewQuestionItem] = {}
+            cursor = 0
+            while True:
+                page = read_profile_view_page(
+                    ProfileViewOperationRequest(
+                        profile_id=profile_id,
+                        page_kind=ProfileViewPageKind.QUESTIONS,
+                        cursor=cursor,
+                        expected_revision=record.record_revision,
+                        expected_content_digest=record.content_digest,
+                    ),
+                    authority_operation=authority,
+                )
+                assert page.outcome == "page" and page.setup_state is ProfileSetupState.COMPLETE
+                questions.update(
+                    (item.question_id, item) for item in page.items if isinstance(item, ProfileViewQuestionItem)
+                )
+                if page.next_cursor is None:
+                    break
+                cursor = page.next_cursor
+            assert questions["art109-activity-income-withholding-ge-70pct"].saved_value is None
+            assert "70" in questions["art109-activity-income-withholding-ge-70pct"].prompt
 
 
 def test_readiness_issues_pages_and_pins_like_other_view_streams(tmp_path: Path) -> None:

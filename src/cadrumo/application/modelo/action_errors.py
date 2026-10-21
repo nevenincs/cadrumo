@@ -130,6 +130,15 @@ class VerificationReportNotFoundError(ModeloError):
     """Raised when a verification report lookup fails."""
 
 
+class VerificationOutcomeIncompleteError(ModeloError):
+    """Raised when a revision's granting report was saved but the revision was never marked verified.
+
+    Verification persists its report before it locks the revision, so a run that
+    stops between the two leaves a draft beside a grant. Its outcome is not known
+    to have completed; running verification again settles it.
+    """
+
+
 class AmendmentEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when the modelo-amend path lacks imported official evidence."""
 
@@ -290,9 +299,7 @@ class ModeloWorkflowGateError(ModeloError):
         # the verified revision can still be exported; every other abort
         # renders the run's own summary.
         translated_message = (
-            None
-            if result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
-            else str(result.summary_locale_key)
+            None if result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION else result.summary_locale_key
         )
         super().__init__(
             translated_message=translated_message,
@@ -583,6 +590,7 @@ __all__ = [
     "ModeloRequiredBindingsMissingError",
     "ModeloWorkflowGateError",
     "StoredCalculationDriftError",
+    "VerificationOutcomeIncompleteError",
     "VerificationReportNotFoundError",
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitMutationRefusedError",

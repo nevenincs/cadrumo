@@ -11,11 +11,11 @@ from textwrap import dedent
 import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
+from cadrumo.tests.subprocess_cli import as_text_completed_process
 
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
 from ....tests.inventory import REPO_ROOT
-from .subprocess_cli import as_text_completed_process
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

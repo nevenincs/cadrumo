@@ -6,6 +6,7 @@ import hashlib
 import os
 import subprocess
 import sys
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -14,7 +15,7 @@ from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev._paths import REPO_ROOT
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    pass
 
 #: The virtualenv this repository provisions and installs into.
 VENV = REPO_ROOT / ".venv"
@@ -57,7 +58,7 @@ def _try_lock(handle: int) -> bool:
 
 
 @contextmanager
-def _exclusive(venv: Path) -> Iterator[None]:
+def _exclusive(venv: Path) -> Generator[None]:
     """Hold an exclusive, venv-scoped lock, or refuse.
 
     The lock is an operating-system advisory lock on a venv-scoped file in the
@@ -149,7 +150,7 @@ def owning_processes(venv: Path = VENV) -> list[str]:
 
 
 @contextmanager
-def guard(venv: Path = VENV) -> Iterator[None]:
+def guard(venv: Path = VENV) -> Generator[None]:
     """Hold the install lock and refuse to mutate a venv that is in use.
 
     Args:

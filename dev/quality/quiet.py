@@ -80,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
 
 def _write_replay(stream: TextIO, text: str | None) -> None:
     """Replay captured tool output without tripping a narrow console encoding."""
-    if not text:
+    if not (text is not None and text):
         return
     encoding = stream.encoding or ""
     if encoding.lower().replace("-", "") != "utf8":

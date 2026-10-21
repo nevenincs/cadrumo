@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#license-posture'
 date: '2026-07-12'
-modified: '2026-07-17'
-body_hash: 'sha256:6f860dfd2a3fb11cda7ce0a1b555e1fcd3361ecb515fa8ecde02c401630e68a6'
+modified: '2026-10-21'
+body_hash: 'sha256:a54933d61caa059b452c67f3133fe83ff537098648ead9b70576440d7ccdc9bc'
 related: []
 ---
 
@@ -94,8 +94,6 @@ not installed on this machine are permissive by their upstream metadata:
 - PyPI data companions: covered by the reuse analysis above.
 - MCP bundle (`packaging/mcpb`): a launcher manifest invoking `uvx`; vendors
   no third-party code, so no combined-work distribution occurs.
-- Claude plugin marketplace (`nevenincs/neve-marketplace`): metadata pointing
-  at the published package; same posture.
 - Website + docs on AWS S3/CloudFront: static first-party assets; governed by
   the AWS customer agreement (AWS as processor of transient connection data;
   no access logging enabled — see the frontend-legal-compliance research).
@@ -114,10 +112,9 @@ It is NOT recommended:
   NO trademark rights, so "Cadrumo", "neve.md", and the project marks remain
   private even while the code is open source.
 - Copyleft would burden exactly the adopters the product targets (gestores,
-  integrators, MCP-client vendors) and complicate the Claude-plugin channel,
-  with no enforcement upside for a solo pre-beta project.
+  integrators, MCP-client vendors) with no enforcement upside for a solo pre-beta project.
 - A licence switch would desynchronise published PyPI metadata, the website
-  JSON-LD, the marketplace listing, and the shipped legal pages for no
+  JSON-LD, and the shipped legal pages for no
   material gain.
 
 Conclusion: **Apache-2.0 is the strictest licence it makes sense to apply and

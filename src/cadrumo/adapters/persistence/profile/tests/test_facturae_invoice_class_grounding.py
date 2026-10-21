@@ -14,8 +14,8 @@ from cadrumo.core.config import Settings
 from cadrumo.core.confirmation_gate import FindingResolutionAction
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.domain.invoices.enums import InvoiceClass
-from cadrumo.domain.iva.classification import InvoiceKind
 
+from .....domain.iva.schema import InvoiceKind
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,

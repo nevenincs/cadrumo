@@ -30,8 +30,10 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Sequence
-from pathlib import Path
-from typing import Final, NoReturn
+from typing import TYPE_CHECKING, Final, NoReturn
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # Local UTF-8 constant rather than importing ``UTF_8_ENCODING`` from
 # ``external_constants``: that module imports ``core.errors``, which pulls in

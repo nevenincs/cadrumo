@@ -70,13 +70,13 @@ from cadrumo.application.operations.persistence.replay import (
     OperationReplayStatus,
 )
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
+from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
     OperationCancellation,
@@ -156,6 +156,7 @@ def _registry() -> OperationRegistry:
     definition = OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=ObservationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=None,
         executor_factory=OperationExecutorFactory(
             request_type=ObservationRequest,
@@ -166,7 +167,6 @@ def _registry() -> OperationRegistry:
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,
@@ -185,6 +185,7 @@ def _review_registry(
     definition = OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=ObservationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=None,
         executor_factory=OperationExecutorFactory(
             request_type=ObservationRequest,
@@ -195,7 +196,6 @@ def _review_registry(
         interaction_kinds=frozenset({interaction_kind}),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
     request_schema = OperationSchemaBindingV1.bind(
         schema_id="operations.observation.request",
@@ -312,6 +312,7 @@ def _write_history(
             completed=1,
             total=3,
             unit_code="observation.items",
+            subject_code="observation.subject.two",
         ),
     )
     phase_codes = (
@@ -405,8 +406,10 @@ def test_observation_projects_one_anchor_and_reconnects_without_mutation(tmp_pat
     assert first.projection.progress.completed == 1
     assert first.projection.progress.total == 3
     assert first.projection.progress.phase_code == "observation.phase.two"
+    assert first.projection.progress.subject_code == "observation.subject.two"
     assert tuple(event.sequence for event in first.event_page.events) == (1, 2)
     assert isinstance(first.event_page.events[-1], OperationPublicProgressEventV1)
+    assert first.event_page.events[-1].subject_code is None
 
     reconnect = asyncio.run(
         service.observe(
@@ -420,6 +423,9 @@ def test_observation_projects_one_anchor_and_reconnects_without_mutation(tmp_pat
     assert isinstance(reconnect, OperationObservationSuccessV1)
     assert reconnect.projection == first.projection
     assert tuple(event.sequence for event in reconnect.event_page.events) == (3, 4)
+    subject_event = reconnect.event_page.events[-1]
+    assert isinstance(subject_event, OperationPublicProgressEventV1)
+    assert subject_event.subject_code == "observation.subject.two"
     caught_up = asyncio.run(
         service.observe(OperationObservationRequestV1(operation_id=_OPERATION_ID, after_cursor=4, page_limit=2))
     )

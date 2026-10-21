@@ -47,7 +47,7 @@ See Also:
         This module produces a member of it and opens no second route.
     :func:`~application.ledger.identity_roles.canonical_identity_token`
         The identifier authority the counterparty key is derived from.
-    :class:`~domain.iva.classification.IvaTerritorialScope`
+    :class:`~domain.iva.schema.IvaTerritorialScope`
         The territory a confirmed fact carries.
 """
 
@@ -64,8 +64,8 @@ from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
-from ...domain.iva.classification import IvaTerritorialScope, require_iva_territorial_scope
-from ...domain.iva.schema import EUMemberState
+from ...domain.iva.classification import require_iva_territorial_scope
+from ...domain.iva.schema import EUMemberState, IvaTerritorialScope
 from .classification_assembly import DeclaredFact
 from .counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from .preconditions import LedgerPreconditionCondition, LedgerPreconditionErrorMixin, ledger_no_recovery_verdict

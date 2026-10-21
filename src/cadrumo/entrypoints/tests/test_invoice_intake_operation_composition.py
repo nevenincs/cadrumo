@@ -18,7 +18,7 @@ from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...domain.buckets.event import BucketEventHistoryCatalogue, BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ..invoice_intake_operation_composition import build_invoice_intake_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

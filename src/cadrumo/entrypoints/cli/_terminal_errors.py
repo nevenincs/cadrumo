@@ -18,7 +18,7 @@ dispatch:
   Rich rendering is preserved. The Click exit code (2 for usage errors)
   is preserved in both modes.
 - **Unexpected exceptions**: wrapped in
-  :class:`CliUnexpectedBoundaryError`
+  :class:`~cadrumo_client.commands.errors.CliUnexpectedBoundaryError`
   (INTERNAL, exit 6) and rendered through the same JSON/text funnel —
   never a raw traceback.
 - **Abort** keeps the interactive text rendering: it is an operator
@@ -43,9 +43,10 @@ import click
 if TYPE_CHECKING:
     from typer._click.exceptions import ClickException
 
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ...core.errors.error_codes import ErrorCode
     from ...core.errors.hierarchy import CadrumoError
-    from .errors import CliRefusedBoundaryError
 
 from ...core.click_context import argv_requests_json, context_chain_requests_json
 from ...core.errors.error_codes import get_error_exit_code, get_registered_error_code, render_error_json
@@ -294,7 +295,7 @@ def _unknown_command_failure(_exc: BaseException, detail: str, locale: str) -> t
 
 def _drop_empty(facts: dict[str, str | None]) -> dict[str, str]:
     """Return ``facts`` with empty values removed."""
-    return {key: value for key, value in facts.items() if value}
+    return {key: value for key, value in facts.items() if (value is not None and value)}
 
 
 def _render_click_exception_text(exc: BaseException) -> None:
@@ -302,7 +303,7 @@ def _render_click_exception_text(exc: BaseException) -> None:
 
     Reads ``typer.core.HAS_RICH`` live rather than assuming Rich is available:
     the CLI package globally disables Rich rendering at import
-    (:func:`cadrumo.entrypoints.cli._stdio.disable_rich_cli_rendering`), and
+    (:func:`cadrumo_client.commands.stdio.disable_rich_cli_rendering`), and
     this funnel must honour that the same way Typer's own standalone ``main``
     does, instead of unconditionally preferring Rich.
     """
@@ -367,7 +368,7 @@ def _resolved_command_identifier(exc: BaseException) -> str | None:
 def _emit_click_exception(exc: BaseException) -> NoReturn:
     """Emit a Click/usage failure honouring the JSON error contract."""
     exit_code = int(getattr(exc, "exit_code", _ABORTED_EXIT_CODE))
-    from ._profile_authentication_notice import drain_profile_authentication_notices
+    from cadrumo_client.commands.profile_authentication_notice import drain_profile_authentication_notices
 
     authentication_notices = drain_profile_authentication_notices()
     if _json_requested_for(exc):
@@ -407,7 +408,7 @@ def _build_parse_time_refusal(exc: BaseException) -> CliRefusedBoundaryError:
     carries a purpose-built localised message, so re-keying it would discard the
     more specific text.
     """
-    from .errors import CliRefusedBoundaryError
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
     format_message = getattr(exc, "format_message", None)
     detail = str(format_message()) if callable(format_message) else str(exc)
@@ -444,7 +445,7 @@ def _emit_crash(exc: Exception) -> NoReturn:
     """Emit a failure that escaped dispatch, preferring its own registered code.
 
     Most failures reaching here are genuine crashes and are wrapped in
-    :class:`CliUnexpectedBoundaryError` (INTERNAL, exit 6). A typed
+    :class:`~cadrumo_client.commands.errors.CliUnexpectedBoundaryError` (INTERNAL, exit 6). A typed
     :class:`~core.errors.hierarchy.CadrumoError` is different: it is an *expected*,
     already-classified refusal that simply had no callback boundary to catch it,
     because it was raised during command resolution rather than inside a command
@@ -453,34 +454,17 @@ def _emit_crash(exc: Exception) -> NoReturn:
     remedy, and would report an operator-actionable condition as a program
     defect. Forward it verbatim instead, with its own exit code.
     """
-    from ...core.logging import OPERATOR_DOCUMENT_LOG_EXTRA, get_logger
+    from cadrumo_client.commands.errors import log_cli_boundary_failure
+
     from .errors import (
-        CliUnexpectedBoundaryError,
         project_cli_boundary_error,
         write_stderr,
     )
 
     boundary = project_cli_boundary_error(exc, _emit_crash)
-    if isinstance(boundary, CliUnexpectedBoundaryError):
-        # The INTERNAL envelope this path renders tells the operator to consult
-        # the diagnostic logs, so the traceback has to actually be in them;
-        # without this the isolated-run log carried two DEBUG lines and nothing
-        # else, and triage had to patch the emitter in-process to see the crash.
-        # Logged only for the untyped case, mirroring the command boundary in
-        # `errors.py`: a typed CadrumoError is an expected, already-classified
-        # refusal, and writing its traceback would make `aeat config repair
-        # logs` echo an operator-actionable condition back as a live crash.
-        #
-        # The extra keeps the record off the stderr handler. This function is
-        # about to write the JSON error document to that same stream, and the
-        # record carries the raw exception and its frames — echoing it would
-        # prepend an unredacted traceback to the translated document and break
-        # any parser reading stderr for the document alone.
-        get_logger(__name__).error(
-            "cli terminal boundary: unexpected exception",
-            exc_info=exc,
-            extra={OPERATOR_DOCUMENT_LOG_EXTRA: True},
-        )
+    # Types, frames and registered reasons only; the record stays off stderr
+    # while the JSON error document is written there.
+    log_cli_boundary_failure("cli_terminal", boundary)
     with _requested_output_language():
         payload, code = _render_crash_payload(exc, boundary)
     write_stderr(payload)

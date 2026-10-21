@@ -45,6 +45,9 @@ const INITIAL_BYTES: u64 = 16 * 1024 * 1024;
 const _: () = assert!(6 * (LINE_BYTES + DETAIL_BYTES) + LINE_BYTES < BATCH_BYTES);
 /// A record whose file has not grown for this long is complete.
 pub const SETTLE: Duration = Duration::from_millis(250);
+/// How soon a tail polls again while it defers a new file, has bytes past
+/// its read cap, or its last read failed.
+pub const RETRY: Duration = Duration::from_millis(100);
 /// Identified files kept beyond those present, so a file missed during a
 /// racing rotation is still recognised when it reappears.
 const RETAINED: usize = 64;
@@ -77,10 +80,22 @@ impl Draft {
                 pid,
             });
         Entry {
-            source: "python",
+            source: if process
+                .as_ref()
+                .is_some_and(|process| process.role.starts_with("agent_"))
+            {
+                "cadrumo-agent"
+            } else {
+                "python"
+            },
             timestamp: self.timestamp,
             timestamp_ms,
-            level: self.level,
+            level: super::severity::python_level(
+                self.level,
+                self.logger.as_deref(),
+                &self.message,
+                &self.context,
+            ),
             logger: self.logger,
             message: self.message,
             detail: self.detail_lines.then_some(self.detail),
@@ -243,6 +258,8 @@ pub struct Tail {
     /// The file last seen under the log file's own name.
     current: Option<u64>,
     deferred: u32,
+    /// The last poll left bytes past its read cap.
+    backlog: bool,
     next_id: u64,
     rejected: u64,
     #[cfg(test)]
@@ -284,6 +301,7 @@ impl Tail {
             reported: None,
             current: None,
             deferred: 0,
+            backlog: false,
             next_id: 0,
             rejected: 0,
             #[cfg(test)]
@@ -311,7 +329,25 @@ impl Tail {
         self.reported = None;
         self.current = None;
         self.deferred = 0;
+        self.backlog = false;
         self.rejected = 0;
+    }
+
+    /// How long until this tail has work that no file change announces: a
+    /// deferred new file, bytes past the read cap or a failed read to retry,
+    /// or a Python record that completes once its file stops growing.
+    pub fn due(&self, now: Instant) -> Option<Duration> {
+        if self.deferred > 0 || self.backlog || self.failing > 0 {
+            return Some(RETRY);
+        }
+        if !matches!(self.parser, Ok(LineParser::Python(_))) {
+            return None;
+        }
+        self.tracked
+            .iter()
+            .filter(|tracked| tracked.draft.is_some() || !tracked.partial.is_empty())
+            .map(|tracked| (tracked.progressed + SETTLE).saturating_duration_since(now))
+            .min()
     }
 
     fn state(&self, kind: SourceKind, failure: Option<ApplicationError>) -> LogSourceState {
@@ -332,6 +368,7 @@ impl Tail {
             }
         };
         self.polls += 1;
+        self.backlog = false;
         let polls = self.polls;
         // A rotation between two opens can show one file under two names or
         // hide one, and reading a successor before its predecessor reorders
@@ -347,6 +384,9 @@ impl Tail {
                 Ok((consistent, files)) if consistent || attempts == OBSERVATIONS => break files,
                 Ok(_) => {}
                 Err(error) => {
+                    // A listing that fails for permissions changes nothing a
+                    // directory notification reports, so the retry is due.
+                    self.failing = self.failing.saturating_add(1);
                     let failure = unreadable().caused_by(error);
                     return (out, self.state(SourceKind::Unreadable, Some(failure)));
                 }
@@ -434,6 +474,7 @@ impl Tail {
                     Vec::new()
                 }
             };
+            self.backlog |= tracked.offset + (bytes.len() as u64) < file.length;
             if !bytes.is_empty() {
                 // Writers complete a record in one write, so a record pending
                 // in another file precedes these bytes.
@@ -665,6 +706,33 @@ fn read(mut file: File, offset: u64, length: u64, cap: u64) -> io::Result<Vec<u8
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn agent_records_keep_their_source_process_and_severity() {
+        for role in [
+            "agent_launcher",
+            "agent_gateway",
+            "agent_worker",
+            "agent_cli",
+        ] {
+            let entry = Draft {
+                timestamp: "2026-10-14T12:30:15.123Z".to_owned(),
+                level: Some(super::super::format::Level::Error),
+                logger: Some("cadrumo_agent.worker".to_owned()),
+                message: "worker failed".to_owned(),
+                detail: String::new(),
+                detail_lines: false,
+                context: BTreeMap::from([
+                    ("process_id".to_owned(), serde_json::json!(4321)),
+                    ("process_role".to_owned(), serde_json::json!(role)),
+                ]),
+            }
+            .entry();
+            assert_eq!(entry.source, "cadrumo-agent");
+            assert_eq!(entry.process.unwrap().role, role);
+            assert_eq!(entry.level, Some(super::super::format::Level::Error));
+        }
+    }
 
     #[test]
     fn observations_differ_when_a_rotation_moved_files_between_them() {

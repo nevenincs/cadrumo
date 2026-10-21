@@ -140,7 +140,7 @@ def _summary_state(
         state = DeclarationSummaryState.RECORDED
     elif head.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
         state = DeclarationSummaryState.SUPERSEDED
-    elif blockers:
+    elif blockers is not None and blockers:
         state = DeclarationSummaryState.BLOCKED
     elif checked:
         state = DeclarationSummaryState.CHECKED
@@ -158,7 +158,7 @@ def _require_selected_calculation_coordinate(
     """Validate current authority before comparing the exact declaration coordinate."""
     require_calculation_revision_coordinates_current(head, operation=operation)
     coordinate = head.registry_snapshot_ref
-    if (str(coordinate.modelo), coordinate.modelo_year, str(coordinate.period), coordinate.revision_id) != (
+    if (coordinate.modelo, coordinate.modelo_year, coordinate.period, coordinate.revision_id) != (
         str(declaration.modelo),
         declaration.filing_year,
         declaration.period.registry_token,

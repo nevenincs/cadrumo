@@ -35,6 +35,26 @@ class TargetEvaluationContext:
             for child in ast.iter_child_nodes(parent):
                 self._parents[id(child)] = parent
         self._collect_assignments(tree)
+        self._comprehension_values: dict[int, tuple[ast.comprehension, ...]] = {}
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
+                expressions = (node.key, node.value) if isinstance(node, ast.DictComp) else (node.elt,)
+                for expression in expressions:
+                    self._index_comprehension_values(expression, tuple(node.generators))
+                for index, generator in enumerate(node.generators):
+                    self._index_comprehension_values(generator.iter, tuple(node.generators[:index]))
+                    for condition in generator.ifs:
+                        self._index_comprehension_values(condition, tuple(node.generators[: index + 1]))
+
+    def _index_comprehension_values(self, expression: ast.AST, generators: tuple[ast.comprehension, ...]) -> None:
+        scope = self.nearest_function(expression)
+        for child in ast.walk(expression):
+            if (
+                isinstance(child, ast.Name)
+                and isinstance(child.ctx, ast.Load)
+                and self.nearest_function(child) is scope
+            ):
+                self._comprehension_values[id(child)] = generators
 
     def _collect_assignments(self, tree: ast.Module) -> None:
         for node in ast.walk(tree):
@@ -125,6 +145,9 @@ class TargetEvaluationContext:
             value = node.value
             return frozenset({value}) if isinstance(value, str) else None
         if isinstance(node, ast.Name):
+            for generator in reversed(self._comprehension_values.get(id(node), ())):
+                if isinstance(generator.target, ast.Name) and generator.target.id == node.id:
+                    return self.evaluate_values(generator.iter, lineno, resolving, scope)
             return evaluate_name(self, node, lineno, resolving, scope)
         if isinstance(node, ast.JoinedStr):
             return evaluate_joined_string(self, node, lineno, resolving, scope)
@@ -209,7 +232,7 @@ class TargetEvaluationContext:
             return tuple(values)
         if isinstance(node, ast.Name):
             assignments = self.latest_values(node.id, lineno, scope)
-            if not assignments:
+            if not (assignments is not None and assignments):
                 return None
             result: list[str] = []
             for assignment in assignments:

@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.tests.english_locale_fixture import english_locale_fixture
 
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ....application.ledger.grounded_reading import verified_provenance
@@ -36,7 +37,6 @@ from .._evidence_field_notices import (
     field_degradation_notices,
     label_reading_fallback_notices,
 )
-from ._english_locale_fixture import english_locale_fixture
 
 __all__ = ["english_locale_fixture"]
 
@@ -482,9 +482,9 @@ def test_both_evidence_surfaces_emit_the_degradation_notices() -> None:
     thing that would go missing if someone deleted the call, leaving every test
     above passing over a builder nothing invokes.
     """
-    from .. import _ledger_evidence_cli
+    from .. import ledger_evidence_commands
 
-    source = Path(_ledger_evidence_cli.__file__).read_text(encoding="utf-8")
+    source = Path(ledger_evidence_commands.__file__).read_text(encoding="utf-8")
     extract_calls = source.count("notices.extend(field_degradation_notices(_domain_provenance(projection.draft)))")
     confirm_calls = source.count("notices.extend(field_degradation_notices(_domain_provenance(result.draft)))")
 

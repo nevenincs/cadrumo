@@ -2,29 +2,36 @@
 
 from __future__ import annotations
 
-from ...core.operations import OperationInteractionKind
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from ..operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
-from .access_contracts import (
-    AccessAction,
+from cadrumo_client.contracts.access_refusals import (
     AccessDecision,
     AccessDenialCode,
     AccessDenied,
-    AccessEvaluationContext,
+    OperationResponseScopeAllowed,
+)
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
     AccessScope,
-    AccessSession,
-    ApiKeyRecord,
-    AutomationGrant,
     Availability,
     DisclosureCategory,
     OperationAccessPolicy,
     OperationAccessRequest,
-    OperationResponseScopeAllowed,
+)
+from cadrumo_client.contracts.session_policy import evaluate_session_authority
+
+from ...core.operations import OperationInteractionKind
+from ..operations.access_facts import operation_access_facts
+from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from ..operations.person_acts import is_persons_frontend, operation_is_persons_act
+from ..operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
+from .access_contracts import (
+    AccessEvaluationContext,
+    AccessSession,
+    ApiKeyRecord,
+    AutomationGrant,
     ProfileAccessState,
     SessionKind,
 )
 from .access_policy import intersect_scopes
-from .session_authority_policy import evaluate_session_authority
 
 
 def operation_scope_refusal(
@@ -52,9 +59,30 @@ def _operation_action_refusal(
         request.definition_id not in scope.operations
         or request.action not in scope.actions
         or request.action not in policy.actions
+        or _submission_needs_unheld_commit(request, policy, scope)
     ):
         return AccessDenied(code=AccessDenialCode.OPERATION_DENIED)
     return None
+
+
+def _submission_needs_unheld_commit(
+    request: OperationAccessRequest,
+    policy: OperationAccessPolicy,
+    scope: AccessScope,
+) -> bool:
+    """Tell whether a submission could reach a COMMIT door this ceiling does not hold.
+
+    The policy is the owning operation's resolution of this exact request, so it
+    grants COMMIT only where the request can open an irreversible section. A
+    ceiling without COMMIT would be refused there, after the submission had been
+    stored, journaled and leased and its executor had run up to that section.
+    COMMIT is still evaluated in its own right when the section opens.
+    """
+    return (
+        request.action is AccessAction.SUBMIT
+        and AccessAction.COMMIT in policy.actions
+        and AccessAction.COMMIT not in scope.actions
+    )
 
 
 def _operation_period_refusal(
@@ -123,6 +151,9 @@ def _evaluate_operation_scope(
     if isinstance(contract, AccessDenied):
         return contract
     scope = _effective_operation_scope(session, ancestors, grant, profile)
+    refusal = _scope_effect_refusal(request, policy, scope)
+    if refusal is not None:
+        return refusal
     refusal = operation_scope_refusal(request=request, policy=policy, scope=scope)
     if refusal is not None:
         return refusal
@@ -174,9 +205,52 @@ def _registered_contract_or_refusal(
         return AccessDenied(code=AccessDenialCode.OPERATION_UNAVAILABLE)
     if policy.requires_human and session.kind is not SessionKind.HUMAN:
         return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
-    if request.frontend not in contract.permitted_frontends:
-        return AccessDenied(code=AccessDenialCode.FRONTEND_DENIED)
+    persons = _persons_act_refusal(request, contract)
+    if persons is not None:
+        return persons
     return contract
+
+
+def _persons_act_refusal(
+    request: OperationAccessRequest, contract: OperationPublicDefinitionContractV1
+) -> AccessDenied | None:
+    """Refuse automation access to a person's own act: one needing a secret or administering keys."""
+    if not operation_is_persons_act(
+        contract.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required
+    ):
+        return None
+    if is_persons_frontend(request.frontend):
+        return None
+    return AccessDenied(code=AccessDenialCode.PERSON_ACT_REQUIRED)
+
+
+def _scope_effect_refusal(
+    request: OperationAccessRequest,
+    policy: OperationAccessPolicy,
+    scope: AccessScope,
+) -> AccessDenied | None:
+    """Apply the intersected access scope's mutation and network ceilings."""
+    try:
+        facts = operation_access_facts(request.definition_id)
+    except KeyError:
+        return AccessDenied(code=AccessDenialCode.OPERATION_DENIED)
+    if (not scope.allow_network and facts.reaches_network) or (
+        not scope.allow_changes_records and (facts.changes_records or _reaches_commit(request, policy))
+    ):
+        return AccessDenied(code=AccessDenialCode.OPERATION_DENIED)
+    return None
+
+
+def _reaches_commit(request: OperationAccessRequest, policy: OperationAccessPolicy) -> bool:
+    """Tell whether an access opens, or could come to open, an irreversible section.
+
+    The policy is the owning operation's resolution of this exact request, so
+    it holds COMMIT only where the request can commit. A read-only surface
+    refuses that submission before anything is stored, and the section itself.
+    """
+    return request.action is AccessAction.COMMIT or (
+        request.action is AccessAction.SUBMIT and AccessAction.COMMIT in policy.actions
+    )
 
 
 def _registered_disclosure_refusal(

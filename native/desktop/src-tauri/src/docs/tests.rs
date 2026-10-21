@@ -888,6 +888,7 @@ fn links_inside_the_tree_cannot_redirect_a_stored_read_outside_it() {
 
 #[cfg(windows)]
 fn link_directory(target: &Path, link: &Path) {
+    use std::os::windows::process::CommandExt;
     // A junction needs no privilege, unlike a Windows symbolic link.
     fs::create_dir_all(link.parent().unwrap()).unwrap();
     let status = std::process::Command::new("cmd")
@@ -897,6 +898,8 @@ fn link_directory(target: &Path, link: &Path) {
         .arg(link)
         .arg(target)
         .stdout(std::process::Stdio::null())
+        // mklink runs without opening a console on the person's screen.
+        .creation_flags(0x0800_0000)
         .status()
         .unwrap();
     assert!(status.success());
@@ -1254,6 +1257,7 @@ fn published_entries_are_docs_origin_urls_that_map_back_to_their_members() {
         assert_eq!(
             published,
             serde_json::json!({
+                "state": "bundled",
                 "origin": origin,
                 "languages": [
                     {"code": "en", "entry": format!("{origin}/index.html")},
@@ -1277,4 +1281,34 @@ fn published_entries_are_docs_origin_urls_that_map_back_to_their_members() {
             );
         }
     }
+}
+
+#[test]
+fn a_package_without_documentation_is_published_as_not_bundled() {
+    assert_eq!(
+        serde_json::to_value(super::Published::NotBundled).unwrap(),
+        serde_json::json!({"state": "notBundled"})
+    );
+    assert_eq!(
+        serde_json::to_value(super::Published::Unavailable).unwrap(),
+        serde_json::json!({"state": "unavailable"})
+    );
+}
+
+#[test]
+fn documentation_is_optional_for_every_package_statement() {
+    use crate::environment::{DocsLocation, PackagedDocs};
+    let mut launch = crate::terminal::tests::unit_launch();
+    launch.docs = PackagedDocs::NotBundled;
+    assert!(super::available(&launch, None).unwrap().is_none());
+    launch.docs = PackagedDocs::Undeclared;
+    assert!(super::available(&launch, None).unwrap().is_none());
+    // A bundled statement whose tree is missing is refused here, and the
+    // plugin turns that refusal into an unavailable state, not a failed launch.
+    let missing = launch.package_root.join("cadrumo-unit-absent-docs");
+    launch.docs = PackagedDocs::Bundled(DocsLocation {
+        manifest: missing.join("manifest.json"),
+        root: missing,
+    });
+    assert!(super::available(&launch, None).is_err());
 }

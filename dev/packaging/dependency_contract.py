@@ -62,7 +62,6 @@ _CORE_PRESENT_TRANSITIVE_NAMES = {
 
 
 _EXTRAS_PRESENT_NAMES = {
-    "anthropic",
     "google-api-python-client",
     "playwright",
 }
@@ -339,7 +338,7 @@ def assert_wheel_metadata_matches_pyproject(repo_root: Path, wheel: Path) -> Non
     missing_core = sorted(surfaces.project_names - core_requires)
     if missing_core:
         raise SystemExit(f"wheel metadata is missing project dependencies: {missing_core!r}")
-    leaked_optional_core = sorted(surfaces.external_optional_names & core_requires)
+    leaked_optional_core = sorted((surfaces.external_optional_names - surfaces.project_names) & core_requires)
     if leaked_optional_core:
         raise SystemExit(f"optional dependencies leaked into core wheel metadata: {leaked_optional_core!r}")
     missing_optional = sorted(surfaces.external_optional_names - optional_requires)
@@ -363,7 +362,7 @@ def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
     resolve such a row to the referenced project's own ``[project].name`` so the
     surface checks see the real package name.
 
-    A WORKSPACE MEMBER exports differently again -- ``-e ./src/cadrumo_harness``,
+    A WORKSPACE MEMBER exports differently again -- ``-e ./src/cadrumo_mcp``,
     an editable row -- so the ``-e`` marker is stripped before the path is
     resolved. Without that the row fell through to requirement parsing, the
     member's name never entered the surface, and the dev export was reported as

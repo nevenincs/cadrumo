@@ -2,30 +2,44 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import replace
 from typing import cast
 from uuid import uuid4
 
 import pytest
+from click.testing import Result
 from pydantic import ValidationError
 
-from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
-
-from .._command_secret_contracts import MachineSecretChannelKind, MachineSecretFieldSpec, ProfileSecretChannelKind
-from .._profile_authentication_contract import (
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.graph import CommandSpecGraph
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.profile_authentication import (
     ProfileAuthenticationMethod,
     ProfileAuthenticationSecrets,
     ProfileSecretSourceOptions,
+)
+from cadrumo_client.commands.secret_contracts import (
+    MachineSecretChannelKind,
+    MachineSecretFieldSpec,
+    ProfileSecretChannelKind,
+)
+from cadrumo_client.commands.secure_input import (
+    MACHINE_SECRET_MAX_BYTES,
+    ProfileSecretChannel,
+    select_profile_secret_channel,
+)
+from cadrumo_client.commands.shared_contracts import DeferredTarget
+from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
+
+from ..command_schema import command_registration_metadata, command_registration_projection
+from ..command_specs import COMMAND_GRAPH
+from ..profile_authentication_policy import (
     profile_authentication_posture,
     resolve_profile_secret_model,
     root_profile_secret_model,
 )
-from ..command_parameter_contracts import OptionSpec
-from ..command_schema import command_registration_metadata, command_registration_projection
-from ..command_specs import COMMAND_GRAPH
-from ..config.secure_input import MACHINE_SECRET_MAX_BYTES, ProfileSecretChannel, select_profile_secret_channel
-from ..errors import CliRefusedBoundaryError
-from .cli_runner import cadrumo_click_command, invoke_cached_cli
+from .cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -75,17 +89,9 @@ def test_leaf_machine_secret_inventory_remains_leaf_only_and_scope_disjoint() ->
     adopters = tuple(node for node in COMMAND_GRAPH.nodes() if node.spec.machine_secret is not None)
     assert {node.spec.result_schema.identity for node in adopters} == {
         "config.login",
-        "config.passphrase.change",
-        "config.passphrase.reset",
+        "config.logout",
         "config.profile.create",
-        "config.profile.recovery.enable",
-        "config.profile.recovery.disable",
         "config.profile.archive.import",
-        "config.profile.resume",
-        "config.profile.automation.approve",
-        "config.profile.automation.create",
-        "config.profile.automation.change",
-        "config.auth.certificate.secret.set",
         "ledger.account.add",
         "ledger.account.update",
         "modelo.m360.declare",
@@ -124,11 +130,33 @@ def test_profile_payload_is_strict_frozen_secretstr_and_value_free_in_repr() -> 
 def test_graph_profile_payload_model_is_exact_runtime_authority() -> None:
     root = COMMAND_GRAPH.by_key()["root"]
     assert root.profile_secret is not None
-    assert resolve_profile_secret_model(root.profile_secret) is ProfileAuthenticationSecrets
+    assert (
+        resolve_profile_secret_model(root.profile_secret, resolver=COMMAND_GRAPH.resolver)
+        is ProfileAuthenticationSecrets
+    )
     assert root_profile_secret_model() is ProfileAuthenticationSecrets
     planted = replace(root.profile_secret, fields=(MachineSecretFieldSpec("planted_passphrase"),))
     with pytest.raises(ValueError, match="exactly match"):
-        resolve_profile_secret_model(planted)
+        resolve_profile_secret_model(planted, resolver=COMMAND_GRAPH.resolver)
+
+
+def test_root_profile_model_uses_the_supplied_graph_owner() -> None:
+    root = COMMAND_GRAPH.root()
+    assert root.profile_secret is not None
+    target = DeferredTarget("declared.graph.owner", "ProfileAuthenticationSecrets")
+    requested: list[DeferredTarget] = []
+
+    def resolve_owned_target(value: DeferredTarget) -> object:
+        requested.append(value)
+        assert value == target
+        return ProfileAuthenticationSecrets
+
+    graph = CommandSpecGraph(
+        (replace(root, profile_secret=replace(root.profile_secret, model=target)),), resolver=resolve_owned_target
+    )
+
+    assert root_profile_secret_model(graph=graph) is ProfileAuthenticationSecrets
+    assert requested == [target]
 
 
 def test_profile_selection_is_distinct_and_conflict_refuses_without_reading() -> None:
@@ -147,15 +175,18 @@ def test_profile_authentication_posture_is_graph_and_exemption_derived() -> None
     postures = {
         node.spec.result_schema.identity: profile_authentication_posture(node) for node in COMMAND_GRAPH.nodes()
     }
-    assert postures["config.passphrase.change"] is ProfileAuthenticationPosture.SELF_AUTHENTICATING
+    assert "config.passphrase.change" not in postures
     assert postures["config.login"] is ProfileAuthenticationPosture.NOT_APPLICABLE
     assert postures["config.profile.create"] is ProfileAuthenticationPosture.NOT_APPLICABLE
     assert postures["config.profile.archive.import"] is ProfileAuthenticationPosture.NOT_APPLICABLE
     assert postures["ledger.list"] is ProfileAuthenticationPosture.RESUME_FALLBACK
     # Leaves declaring nothing a profile holds never open a session; one
     # declaration more and the same family is gated again.
-    for profile_free in ("config.provision.status", "config.provision.verify", "config.provision.pull"):
+    for profile_free in ("modelo.list", "ledger.categories", "config.storage.list"):
         assert postures[profile_free] is ProfileAuthenticationPosture.NOT_APPLICABLE, profile_free
+    # Component setup runs as the runtime's registered operations on the signed-in profile.
+    for setup in ("config.provision.status", "config.provision.verify", "config.provision.pull"):
+        assert postures[setup] is ProfileAuthenticationPosture.RESUME_FALLBACK, setup
     assert postures["config.check"] is ProfileAuthenticationPosture.RESUME_FALLBACK
     metadata = {row.command: row.profile_authentication for row in command_registration_metadata()}
     assert metadata == {identity: posture.value for identity, posture in postures.items() if identity is not None}
@@ -173,6 +204,7 @@ def test_profile_authentication_metadata_is_public_bounded_and_value_free() -> N
     assert contract.descriptors_must_differ_across_scopes is True
     assert contract.duplicate_keys_forbidden is True
     assert contract.extra_fields_forbidden is True
+    assert contract.windows_handle_bootstrap == "cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap"
     assert "passphrase" not in repr(contract).replace("profile_passphrase", "")
 
 
@@ -199,8 +231,10 @@ def test_root_source_options_are_parse_only_authority() -> None:
         ("--profile-secrets-fd", "not-an-integer", "app"),
     ),
 )
-def test_introspection_bare_unknown_and_parse_surfaces_do_not_read_profile_source(arguments: tuple[str, ...]) -> None:
-    result = invoke_cached_cli(list(arguments), input="this-is-deliberately-not-json")
+def test_introspection_bare_unknown_and_parse_surfaces_do_not_read_profile_source(
+    arguments: tuple[str, ...], run_cadrumo_cli: Callable[..., Result]
+) -> None:
+    result = run_cadrumo_cli(list(arguments), input="this-is-deliberately-not-json")
     assert "profile_secrets_stdin_invalid_json" not in result.output
     assert "profile_secrets_stdin_missing_fields" not in result.output
 

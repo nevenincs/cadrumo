@@ -673,6 +673,23 @@ modelo:
         modelo-303-iva-autoliquidacion:
           field:
             title: Modelo 303 IVA autoliquidació
+        modelo-303-printed-disclosure-arithmetic-2022:
+          field:
+            title: 'Model 303: volum anual d’operacions, exercici 2022'
+        modelo-303-printed-disclosure-arithmetic-2023:
+          field:
+            title: 'Model 303: volum anual d’operacions, exercici 2023'
+        modelo-303-printed-disclosure-arithmetic-2024-desde-09-y-3t:
+          field:
+            title: 'Model 303: volum anual d’operacions, des del setembre i el tercer
+              trimestre de 2024'
+        modelo-303-printed-disclosure-arithmetic-2024-hasta-08-y-2t:
+          field:
+            title: 'Model 303: volum anual d’operacions, fins a l’agost i el segon
+              trimestre de 2024'
+        modelo-303-printed-disclosure-arithmetic-2025:
+          field:
+            title: 'Model 303: volum anual d’operacions, exercici 2025'
         modelo-303-printed-disclosure-arithmetic-2026-hasta-01-y-1t:
           field:
             title: 'Model 303: volum anual d’operacions, gener i primer trimestre

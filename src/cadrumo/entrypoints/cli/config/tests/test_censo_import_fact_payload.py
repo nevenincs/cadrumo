@@ -6,9 +6,9 @@ import pytest
 from pydantic import ValidationError
 
 from .....domain.censo.tests.certificado_builder import build_certificado
-from .. import _censo_payloads
-from .._censo_payloads import CensoFactPayload, CensoFileIngestResult, CensoPullResult
-from .._censo_transport import _file_import_preview_lines
+from .. import censo_results
+from ..censo_commands import _file_import_preview_lines
+from ..censo_results import CensoFactPayload, CensoFileIngestResult, CensoPullResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -40,8 +40,8 @@ def test_censo_fact_payload_refuses_malformed_row(kwargs: dict[str, str]) -> Non
 
 
 def test_censo_transport_and_pull_share_one_canonical_fact_wire_projection() -> None:
-    assert not hasattr(_censo_payloads, "CensoPullFactPayload")
-    assert not hasattr(_censo_payloads, "CensoFileFactPayload")
+    assert not hasattr(censo_results, "CensoPullFactPayload")
+    assert not hasattr(censo_results, "CensoFileFactPayload")
 
     row = CensoFactPayload(path="contact.postcode", value="28001", source="censo_artefact_g313")
     file_result = CensoFileIngestResult(applied=False, certificate=build_certificado(), facts=(row,))

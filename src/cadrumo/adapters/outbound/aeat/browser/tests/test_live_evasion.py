@@ -16,6 +16,7 @@ from playwright.async_api import async_playwright
 
 from ......core.config import load_settings
 from ......tests.live_gate import requires_live_enabled
+from ...tests.process_support import playwright_driver_pid
 from ..profile import Profile
 from ..session import BrowserSession
 
@@ -177,7 +178,7 @@ async def test_live_browser_session_reaps_driver_descendants_across_cycles() -> 
     profile = Profile(name="live_test_reap")
 
     async with async_playwright() as p:
-        driver_pid = p._impl_obj._connection._transport._proc.pid
+        driver_pid = playwright_driver_pid(p)
         assert await _wait_for_descendants(driver_pid, expect_non_empty=False, timeout_seconds=2.0) == ()
 
         for idx in range(3):

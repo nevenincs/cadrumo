@@ -14,6 +14,7 @@ from . import edition_delta_planning_mode as _edition_delta_planning_mode
 from . import edition_delta_planning_state as _edition_delta_planning_state
 from . import edition_delta_row_delta_common as _edition_delta_row_delta_common
 from . import edition_delta_row_delta_existing as _edition_delta_row_delta_existing
+from . import edition_delta_row_delta_reconstruction as _edition_delta_row_delta_reconstruction
 from . import edition_delta_source as _edition_delta_source
 from . import edition_delta_types as _edition_delta_types
 from .compiler.casilla_identity import LINEAGE_CLAIM_FIELDS
@@ -96,6 +97,126 @@ def _matching_authored_overrides(
     )
 
 
+def _planned_stored_rows(
+    source: _edition_delta_source._EditionSource,
+    lifts: Mapping[str, _edition_delta_source._Lift],
+    stated_ids: tuple[str, ...],
+) -> list[_edition_delta_source._Row]:
+    stated = frozenset(stated_ids)
+    layout = _edition_delta_source._stated_layout(source, stated)
+    return [lifts[_edition_delta_source._row_id(block.row)].row for _, blocks in layout for block in blocks]
+
+
+def _replay_authored_output(
+    *,
+    run: _edition_delta_planning_state.PlanningRun,
+    revision_id: str,
+    predecessor: str,
+    source: _edition_delta_source._EditionSource,
+    lift: _edition_delta_source._EditionLift,
+    stated_ids: tuple[str, ...],
+    generated_overrides: tuple[_edition_delta_source._Row, ...],
+    override_replacements: tuple[_edition_delta_source._Row, ...],
+    attestations: tuple[LineageAttestation, ...],
+) -> list[_edition_delta_source._Placed]:
+    inherited = run.materialised[predecessor]
+    replayed = _edition_delta_row_delta_reconstruction._simulate_storage_output(
+        revision_id=revision_id,
+        predecessor=predecessor,
+        inherited=inherited,
+        source=source,
+        stated_rows=_planned_stored_rows(source, lift.lifts, stated_ids),
+        overrides=(
+            *_edition_delta_row_delta_common.operations_with_replacements(
+                source.manifest, "casilla_overrides", override_replacements
+            ),
+            *generated_overrides,
+        ),
+        removals=_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_removals"),
+        positions=_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_positions"),
+    )
+    targets = {_edition_delta_source._row_id(row): row for row in lift.rows}
+    attested_lineages = _attested_lineages(source, attestations)
+    actual: dict[str, _edition_delta_source._Row] = {}
+    for placed in replayed:
+        row_id = _edition_delta_source._row_id(placed.row)
+        target = targets.get(row_id)
+        if target is None:
+            raise _edition_delta_errors.MigrationRefusedError(
+                f"edition {revision_id!r}: planned storage retained unexpected casilla {row_id!r}"
+            )
+        effective = _edition_delta_row_delta_reconstruction._effective_simulated_row(
+            placed,
+            target,
+            attested_lineages,
+            revision_id,
+            lift.defaults,
+            source.declarations,
+        )
+        if effective is None or effective != target:
+            differing = sorted(
+                key
+                for key in set(target) | set(effective or {})
+                if effective is None or target.get(key) != effective.get(key)
+            )
+            raise _edition_delta_errors.MigrationRefusedError(
+                f"edition {revision_id!r}: planned raw storage for casilla {row_id!r} does not preserve its "
+                f"effective target; differing fields: {differing!r}; sidecar projection for lineage "
+                f"{_edition_delta_source._lineage(target)!r} is "
+                f"{'present' if _edition_delta_source._lineage(target) in attested_lineages else 'absent'}"
+            )
+        actual[row_id] = effective
+    missing = sorted(set(targets) - set(actual))
+    if missing:
+        raise _edition_delta_errors.MigrationRefusedError(
+            f"edition {revision_id!r}: planned storage omitted effective casillas {missing!r}"
+        )
+    return replayed
+
+
+def _attested_lineages(
+    source: _edition_delta_source._EditionSource,
+    generated: tuple[LineageAttestation, ...],
+) -> set[str]:
+    raw = source.manifest.get("lineage_attestations", ())
+    existing: set[str] = set()
+    if isinstance(raw, list | tuple):
+        for item in raw:
+            if not isinstance(item, Mapping) or item.get("family") != "casillas":
+                continue
+            identity = item.get("continuidad_id")
+            if isinstance(identity, str):
+                existing.add(identity)
+    existing.update(str(item.identity) for item in generated)
+    return existing
+
+
+def _replay_authored_source(
+    run: _edition_delta_planning_state.PlanningRun,
+    revision_id: str,
+    predecessor: str,
+    source: _edition_delta_source._EditionSource,
+    override_replacements: tuple[_edition_delta_source._Row, ...],
+) -> list[_edition_delta_source._Placed]:
+    """Read the current authored operations as the raw storage baseline."""
+    stated = source.stated_rows()
+    stated_ids = frozenset(_edition_delta_source._row_id(row) for row in stated)
+    layout = _edition_delta_source._stated_layout(source, stated_ids)
+    stored_rows = [block.row for _, blocks in layout for block in blocks]
+    return _edition_delta_row_delta_reconstruction._simulate_storage_output(
+        revision_id=revision_id,
+        predecessor=predecessor,
+        inherited=run.materialised[predecessor],
+        source=source,
+        stated_rows=stored_rows,
+        overrides=_edition_delta_row_delta_common.operations_with_replacements(
+            source.manifest, "casilla_overrides", override_replacements
+        ),
+        removals=_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_removals"),
+        positions=_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_positions"),
+    )
+
+
 def _build_authored_plan(
     source: _edition_delta_source._EditionSource,
     revision_id: str,
@@ -159,6 +280,32 @@ def plan_authored_edition(
     }
     selector_ids = _authored_selector_ids(run.materialised[predecessor], dropped_authored, dropped_lineages)
     authored_overrides = _matching_authored_overrides(generated_overrides, selector_ids)
+    normalized_replacements = _edition_delta_row_delta_existing.normalize_authored_override_removals(
+        revision_id=revision_id,
+        predecessor=predecessor,
+        inherited=run.materialised[predecessor],
+        full_rows=lift.rows,
+        source=source,
+        defaults=lift.defaults,
+    )
+    current_output = _replay_authored_source(run, revision_id, predecessor, source, normalized_replacements)
+    preserving_overrides, preserving_replacements = _edition_delta_row_delta_existing.preserve_inherited_rows(
+        revision_id=revision_id,
+        predecessor=predecessor,
+        inherited=run.materialised[predecessor],
+        full_rows=lift.rows,
+        source=source,
+        defaults=lift.defaults,
+        current_output=current_output,
+    )
+    replacement_by_selector: dict[tuple[str, str], _edition_delta_source._Row] = {}
+    for replacement in (*normalized_replacements, *preserving_replacements):
+        selector = replacement.get("selector")
+        if isinstance(selector, Mapping):
+            key = (str(selector.get("revision")), str(selector.get("id")))
+            replacement_by_selector[key] = replacement
+    override_replacements = tuple(replacement_by_selector.values())
+    planned_overrides = (*authored_overrides, *preserving_overrides)
     plan = _build_authored_plan(
         source,
         revision_id,
@@ -168,11 +315,24 @@ def plan_authored_edition(
         drops,
         kept,
         not_exact,
-        authored_overrides,
+        planned_overrides,
         attestations,
     )
-    run.materialised[revision_id] = [
-        _edition_delta_source._Placed(lift.lifts[_edition_delta_source._row_id(row)].row, revision_id)
-        for row in lift.rows
-    ]
-    return _edition_delta_source._EditionWork(plan=plan, source=source, lifts=lift.lifts, root_declaration=None)
+    run.materialised[revision_id] = _replay_authored_output(
+        run=run,
+        revision_id=revision_id,
+        predecessor=predecessor,
+        source=source,
+        lift=lift,
+        stated_ids=plan.stated_ids,
+        generated_overrides=planned_overrides,
+        override_replacements=override_replacements,
+        attestations=plan.lineage_attestations,
+    )
+    return _edition_delta_source._EditionWork(
+        plan=plan,
+        source=source,
+        lifts=lift.lifts,
+        root_declaration=None,
+        casilla_override_replacements=override_replacements,
+    )

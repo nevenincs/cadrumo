@@ -223,7 +223,7 @@ def collect_local_key_candidate(node: ast.AST, candidates: dict[str, set[str]]) 
     if not isinstance(target, ast.Name) or value is None:
         return
     literals = local_key_candidate_literals(value)
-    if literals:
+    if literals is not None and literals:
         candidates.setdefault(target.id, set()).update(literals)
 
 

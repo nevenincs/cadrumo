@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -178,7 +178,7 @@ def _seed_confirmed_baseline(objects: SecureObjectRepository, *, operation: Pinn
 
 
 @contextmanager
-def _baseline(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> Iterator[_Baseline]:
+def _baseline(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> Generator[_Baseline]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="amendment clock") as profile:
         objects: SecureObjectRepository = profile.repository
         seed_test_profile_record(

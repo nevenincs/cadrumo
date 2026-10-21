@@ -32,8 +32,8 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.application.ledger.invoice_confirmation import InvoiceConfirmationResult
 from cadrumo.core.config import Settings
 from cadrumo.domain.invoices.errors import InvoiceValidationError
-from cadrumo.domain.iva.classification import InvoiceKind
 
+from .....domain.iva.schema import InvoiceKind
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,

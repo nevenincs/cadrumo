@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-frontend-launch'
 date: '2026-08-05'
-modified: '2026-10-03'
+modified: '2026-10-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:7494c882b564b308b65100fd9b3e1d416560c0a95c04f72a49c90f61fd1a88d2'
+body_hash: 'sha256:90cf2b59e9745d76ac4deaf4b92c5e81148f699eb883a49411031682c62219f4'
 related:
   - "[[2026-07-12-cadrumo-frontend-launch-audit]]"
 ---
@@ -45,7 +45,7 @@ The working copy at `frontend/copy/cadrumo-landing-copy.md` opens with the hero
 "A LOCAL TAX ENGINE FOR PEOPLE AND AGENTS", then "Calculate with rules. Work
 with an agent. The engine calculates. The LLM helps you operate and understand."
 It continues through a "How it works" section naming the CLI engine, the MCP
-surface, and scoped agents; a "Claude plugin" section; a "Benefits" section
+surface, and scoped agents; a "Benefits" section
 ("Repeat each calculation", "Stay in control", "Understand the process"); and a
 disclaimer stating the product is independent, does not represent a public
 authority, does not file declarations, and does not provide advice. The document

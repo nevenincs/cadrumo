@@ -6,11 +6,12 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..operations.models import OperationTerminalReceipt, require_terminal_receipt_match
 from ..operations.public_period import PublicPeriod
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from .filing_record_view_operation import ModeloFilingObservationLayersProjection
 from .local_observation_actions import (
     ModeloLocalObservationClearResult,
@@ -63,7 +64,7 @@ def project_recorded_observation(
         observation_key=result.observation_key,
         source_kind=result.source_kind,
         casilla_values=tuple(
-            ModeloLocalObservationCasillaValue(casilla_id=str(casilla_id), value=str(value))
+            ModeloLocalObservationCasillaValue(casilla_id=casilla_id, value=str(value))
             for casilla_id, value in sorted(result.casilla_values.items())
         ),
         captured_at=result.captured_at,

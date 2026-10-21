@@ -107,22 +107,25 @@ pub(super) fn current_product(
         .as_ref()
         .ok_or_else(|| Error::Integrity("cached repair product has no owner protocol".into()))?;
     let family = usize::from(role == crate::owner::Role::Registration);
-    if definition.family != admission.permitted_families[family]
+    if definition.family != admission.family(family)
         || definition.version != plan.version
         || definition.ownership
             != (windows::PackageOwnership {
-                schema: 1,
+                schema: if plan.schema == 2 { 2 } else { 1 },
                 application_id: plan.contract.installation_identity.application_id.clone(),
                 channel: plan.contract.installation_identity.channel.clone(),
                 platform: plan.contract.layout.platform.clone(),
                 version: plan.version.clone(),
-                role: role.as_str().into(),
+                role: if plan.schema == 2 {
+                    "application"
+                } else {
+                    role.as_str()
+                }
+                .into(),
                 manifest_sha256: plan.manifest_sha256.clone(),
             })
-        || metadata.schema != 2
-        || metadata.scope != plan.scope
+        || !metadata.admits_role(plan.scope, role)
         || metadata.product_code != definition.code
-        || metadata.role != role
         || metadata.identity.application_id != definition.ownership.application_id
         || metadata.identity.channel != definition.ownership.channel
         || metadata.identity.platform != definition.ownership.platform

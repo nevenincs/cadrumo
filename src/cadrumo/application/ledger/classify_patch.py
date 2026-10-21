@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from decimal import Decimal
+from enum import StrEnum
 from typing import cast
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -15,17 +19,27 @@ from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_
 from ...domain.categories.spending_category_catalogue import require_spending_category
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.irpf_categories import require_ledger_irpf_category
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .actions_common import display_decimal
 from .classify_requests import (
+    LedgerClassifyPatch,
     LedgerClassifyRequest,
+    require_primary_classification,
 )
 from .m210_classification import resolve_m210_income_classification
 from .models import (
+    BulkClassifyRow,
     ManualLedgerTransactionPatch,
+)
+
+# The CSV columns that carry a value single classification also takes; the rest of the
+# columns are the row's identity, its classification and the usage ratio.
+_BULK_WIRE_COLUMNS = frozenset(
+    {"business_pct", "category_id", "taxable_base", "iva_rate", "iva_amount", "iva_category", "irpf_category", "notes"}
 )
 
 
@@ -53,12 +67,12 @@ def decode_classification_decimal_option(value: str | None, field_name: str) -> 
 
 def _resolve_manual_field_value(
     field_name: str,
-    payload: LedgerClassifyRequest,
+    wire_patch: LedgerClassifyPatch,
     *,
     current: Transaction,
     operation: PinnedAuthorityOperation,
 ) -> object:
-    value = getattr(payload.patch, field_name)
+    value = getattr(wire_patch, field_name)
     if value is None:
         return None
     if field_name == "business_classification":
@@ -71,6 +85,8 @@ def _resolve_manual_field_value(
     if field_name == "category_id":
         normalized = value.strip()
         return require_spending_category(normalized, authority=operation).value if normalized else None
+    if field_name == "irpf_category":
+        return require_ledger_irpf_category(value, authority=operation) if value.strip() else None
     if field_name == "iva_category":
         return require_iva_category(value, effective_date=current.raw.booked_date, authority=operation)
     if field_name == "deduction_fact_kind":
@@ -124,6 +140,61 @@ def _validate_patch_selection(
     return patch
 
 
+def resolve_classification_patch_values(
+    wire_patch: LedgerClassifyPatch,
+    patch_fields: Iterable[str],
+    *,
+    current: Transaction,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, object]:
+    """Resolve each selected wire value against the pinned catalogues and the stored row.
+
+    Single and CSV classification both resolve through here, so a category the
+    published taxonomy does not declare, or a spending, IVA or member-state
+    token the registry does not know, is refused identically on both.
+    """
+    return {
+        field_name: _resolve_manual_field_value(field_name, wire_patch, current=current, operation=operation)
+        for field_name in patch_fields
+        if field_name != "m210_income_classification"
+    }
+
+
+def _bulk_wire_value(value: object) -> str:
+    if isinstance(value, Decimal):
+        return display_decimal(value)
+    if isinstance(value, StrEnum):
+        return value.value
+    return str(value)
+
+
+def build_bulk_row_classification_patch(
+    row: BulkClassifyRow,
+    provided_columns: frozenset[str],
+    *,
+    current: Transaction,
+    operation: PinnedAuthorityOperation,
+) -> ManualLedgerTransactionPatch:
+    """Build one CSV row's patch under the rules of a single classification.
+
+    The row's cells become the same bounded wire patch a single classification
+    submits, so the two-decimal limit on amounts, the zero to one range and the
+    mixed-only share, and the taxonomy and catalogue membership checks, are the
+    ones single classification applies. ``usage_ratio_id`` is a CSV column single
+    classification does not carry and passes through as typed.
+    """
+    wire_values: dict[str, str] = {"business_classification": row.classification.value}
+    for column in provided_columns & _BULK_WIRE_COLUMNS:
+        wire_values[column] = _bulk_wire_value(getattr(row, column))
+    wire_patch = LedgerClassifyPatch.model_validate(wire_values)
+    patch_fields = tuple(sorted(wire_values))
+    require_primary_classification(wire_patch, patch_fields)
+    patch_values = resolve_classification_patch_values(wire_patch, patch_fields, current=current, operation=operation)
+    if "usage_ratio_id" in provided_columns:
+        patch_values["usage_ratio_id"] = row.usage_ratio_id
+    return ManualLedgerTransactionPatch.model_validate(patch_values)
+
+
 def build_manual_classification_patch(
     payload: LedgerClassifyRequest,
     *,
@@ -139,16 +210,9 @@ def build_manual_classification_patch(
     """
     if not isinstance(current, Transaction):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    patch_values: dict[str, object] = {}
-    for field_name in payload.patch_fields:
-        if field_name == "m210_income_classification":
-            continue
-        patch_values[field_name] = _resolve_manual_field_value(
-            field_name,
-            payload,
-            current=current,
-            operation=operation,
-        )
+    patch_values = resolve_classification_patch_values(
+        payload.patch, payload.patch_fields, current=current, operation=operation
+    )
     classification = _resolve_m210_classification(
         payload,
         bucket_id=bucket_id,

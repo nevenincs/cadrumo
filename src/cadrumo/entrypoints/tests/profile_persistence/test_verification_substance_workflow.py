@@ -9,6 +9,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -36,10 +41,6 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationReport
 from ...adapter_composition import build_calculation_action_ports
-from .verification_repository_support import (
-    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
 from .verification_substance_support import (
     _ABSENT_REGISTRY_CASILLA,
     _CASILLA_01,

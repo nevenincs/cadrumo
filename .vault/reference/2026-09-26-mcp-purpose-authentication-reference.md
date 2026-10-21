@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-05'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:88385470279343355598cbb5c78a87935a0e94e88c7a7e1a1b7f34cd1aed990e'
+body_hash: 'sha256:1d5b058a89b26ff29e4ff2b70592f1400fa74aedbbe6e3e768b15ac5f88c6671'
 related: []
 ---
 # mcp-purpose-authentication reference: current authentication and process boundaries
@@ -615,7 +615,7 @@ The seven overview CLI leaves require their own exact requests and canonical bui
 
 ### Shared runtime clients and MCP replacement — 2026-09-28
 
-Installed runtime, credential and manager composition resides in adapters, shared by CLI, TUI and the harness. Authenticated discovery supplies strict request schemas verified against registered fingerprints. The replacement stdio adapter binds one exact profile, handles enrollment and protected credential references, and projects registered operations, results, review responses and pinned published-authority queries. Response actors derive from the admitted session; original runtime-held response capability remains mandatory. Durable submission receipts survive unresolved start replies. Plugin configuration uses profile/reference UUIDs; displaced wrappers, identity flags and lifetime helpers are removed.
+Installed runtime, credential and manager composition resides in adapters, shared by CLI, TUI and the harness. Authenticated discovery supplies strict request schemas verified against registered fingerprints. The replacement stdio adapter binds one exact profile, handles enrollment and protected credential references, and projects registered operations, results, review responses and pinned published-authority queries. Response actors derive from the admitted session; original runtime-held response capability remains mandatory. Durable submission receipts survive unresolved start replies. Launch configuration uses profile/reference UUIDs; displaced wrappers, identity flags and lifetime helpers are removed.
 
 `entrypoints/runtime_management.py` supplies passive status, explicit start, login-start configuration and stop consent retaining its verified connection through confirmation. CLI and TUI use these same controls. Windows managed stop refuses until restart suppression is supported. Manager configuration confers no profile or unattended authority. Verification and remaining acceptance are tracked in the execution ledger and plan.
 

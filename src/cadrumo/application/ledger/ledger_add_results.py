@@ -6,11 +6,12 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.errors.error_codes import resolve_error_message
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.models import OperationTerminalReceipt
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_manual import ledger_transaction_result_payload
 from .ledger_add_contracts import (
@@ -30,7 +31,7 @@ def build_ledger_add_validation_messages(error: Exception) -> LedgerAddValidatio
     """Retain bounded validation locations and messages without error context."""
     if isinstance(error, ValidationError):
         messages: tuple[str, ...] = tuple(
-            str(item.get("msg", "invalid value")).removeprefix("Value error, ").strip()
+            item.get("msg", "invalid value").removeprefix("Value error, ").strip()
             for item in error.errors(include_input=False, include_context=False, include_url=False)[
                 :MAX_LEDGER_ADD_VALIDATION_MESSAGES
             ]

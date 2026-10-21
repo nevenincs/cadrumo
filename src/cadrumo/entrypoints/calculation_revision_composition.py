@@ -5,8 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..application.modelo.profile_export_binding import resolve_export_identity
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.calculations.registry.tax_id_format import SubjectTaxId

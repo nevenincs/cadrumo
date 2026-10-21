@@ -21,7 +21,7 @@ See Also:
     :func:`~application.modelo.registry_discovery.registry_support_matrix`
         Application query used by the operator CLI without re-reading the
         authority directly.
-    :mod:`~entrypoints.cli._modelo_support_matrix_payloads`
+    :mod:`~application.reference_catalogue_contracts`
         JSON payload schemas for the ``modelo.support_matrix`` command.
 """
 

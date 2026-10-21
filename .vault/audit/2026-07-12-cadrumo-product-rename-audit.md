@@ -7,8 +7,8 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-adr]]"
 promoted_to:
   - 'rule:cadrumo-product-authority-names'
-modified: '2026-10-03'
-body_hash: 'sha256:2ff06d5fc43d9dcc8818c430c071f45673e0e21b7917bb4f42673138a5ca86b6'
+modified: '2026-10-21'
+body_hash: 'sha256:337b2870cdc1739a0a673e2e853c7b960c0f3b190906741286e059137b84e9a7'
 ---
 # `cadrumo-product-rename` audit: `Cadrumo rename rolling formal review`
 
@@ -917,7 +917,7 @@ product executables; AEAT remains authority terminology.
 ## W04.P08 S46 shared-index provenance
 
 Commit `6f2f22ab06` correctly contains the S46 hard cut to `cadrumo_` MCP tool
-names and `mcp__plugin_cadrumo_cadrumo__` client prefixes, but it also consumed
+names, but it also consumed
 67 peer-staged paths already present in the shared index. The mixed commit has
 79 paths total and couples broad CLI copy/test changes, MCP prompt/tool edits,
 one cross-domain execution record, and a packaging-test deletion with S46. It

@@ -7,9 +7,10 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
+from dev._paths import REPO_ROOT
 
 DOCS_BUILD_ROOT_ENV = "CADRUMO_DOCS_BUILD_ROOT"
-DEFAULT_DOCS_BUILD_ROOT = "development/build/docs"
+DEFAULT_DOCS_BUILD_ROOT = Path("build") / "docs"
 DOCS_SITE_PREFIX_ENV = "CADRUMO_DOCS_SITE_PREFIX"
 #: The address the site is served from, above the language directories.
 DOCS_BASE_URL_ENV = "CADRUMO_DOCS_BASE_URL"
@@ -20,10 +21,12 @@ def docs_build_root(
     *,
     environ: Mapping[str, str] | None = None,
 ) -> Path:
-    """Resolve the compiled docs root under Cadrumo storage by default."""
+    """Resolve compiled docs beneath the checkout by default, or the explicit override."""
     environment = os.environ if environ is None else environ
+    configured = environment.get(DOCS_BUILD_ROOT_ENV, "").strip()
+    if not configured:
+        return (REPO_ROOT if repo_root is None else repo_root).resolve() / DEFAULT_DOCS_BUILD_ROOT
     storage_root = configured_storage_root(environ=environment, repository_root=repo_root)
-    configured = environment.get(DOCS_BUILD_ROOT_ENV, "").strip() or DEFAULT_DOCS_BUILD_ROOT
     return resolve_storage_path(configured, root=storage_root)
 
 

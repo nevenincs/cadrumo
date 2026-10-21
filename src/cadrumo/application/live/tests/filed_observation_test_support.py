@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Callable, Generator, Iterator, Mapping
+from collections.abc import AsyncGenerator, Callable, Generator, Iterator, Mapping
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -468,7 +468,7 @@ class UnavailableFiledDataCapturePort:
     """Application-only filed-data port that never opens a real Sede session."""
 
     @asynccontextmanager
-    async def open_register(self, *, operation: str, **_kwargs: object) -> AsyncIterator[FiledDataRegisterPort]:
+    async def open_register(self, *, operation: str, **_kwargs: object) -> AsyncGenerator[FiledDataRegisterPort]:
         """Yield the per-pair refusal register used by composition tests."""
         del operation
         yield _UnavailableFiledDataRegister()

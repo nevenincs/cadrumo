@@ -9,6 +9,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ..core.async_cleanup import await_cancellation_complete
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.capabilities import ServiceCapability
@@ -31,14 +34,11 @@ from .operations.operation_definition import OperationDefinition, build_single_p
 from .operations.owner import OperationExecutorContext
 from .operations.profile_guard import require_access_request_profile_payload
 from .operations.public_scalar import PublicNamedScalar, project_facts, restore_facts
-from .operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from .operations.registry import OperationPublicDefinitionRegistrationV1
+from .operations.subject_reference import OperationSubjectReferenceV1
 from .operator_actions.projection import PreconditionVerdictSnapshot
 from .preflight import HealthSeverity, PreflightCheck
 from .provisioning import DependencyStatus
-from .runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
-from .user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from .user_profile.access_errors import ProfileAccessRefusedError
 from .user_profile.capabilities import CapabilityDecision, CapabilitySource
 from .workstation_check import WorkstationCheckReport
@@ -279,15 +279,15 @@ def _request(request: OperationRequest[BaseModel], *, profile_id: UUID) -> Works
 
 
 def build_workstation_check_definition(factory: WorkstationCheckPortsFactory) -> OperationDefinition:
-    """Enroll the existing private CLI health report without additional frontends."""
+    """Enroll the exact-profile workstation health report."""
     return build_single_phase_definition(
         definition_id=WORKSTATION_CHECK_OPERATION_DEFINITION_ID,
         request_type=WorkstationCheckRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=WorkstationCheckExecutionResult,
         executor_type=WorkstationCheckExecutor,
         build=lambda: WorkstationCheckExecutor(factory),
         capabilities=RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 
@@ -296,11 +296,7 @@ def resolve_workstation_check_access(
 ) -> ResolvedOperationAccess:
     """Scope only period-independent profile facts and authorized profile configuration output."""
     _request(request, profile_id=context.profile_id)
-    if (
-        context.authority_operation is None
-        or context.contract.definition_id != request.definition_id
-        or context.frontend is not OperationFrontendProjection.CLI
-    ):
+    if context.authority_operation is None or context.contract.definition_id != request.definition_id:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     admitted = context.admitted_request
     if admitted is not None:

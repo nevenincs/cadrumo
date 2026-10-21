@@ -8,10 +8,9 @@ from contextlib import contextmanager
 
 from pydantic import SecretBytes
 
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    NativeSecretBackend,
-)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
+
+from .....application.user_profile.automation_custody_port import NativeSecretBackend
 from .macos_keychain_contracts import DUPLICATE, MAX_SECRET_BYTES, NOT_FOUND, KeychainApi, KeychainItemIdentity
 from .macos_keychain_policy import keychain_refusal, require_keychain_status, require_keychain_target
 from .macos_login_keychain import LoginKeychain

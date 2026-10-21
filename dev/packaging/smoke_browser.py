@@ -56,6 +56,7 @@ def _browser_env(work_dir: Path) -> dict[str, str]:
         "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
         "CADRUMO_OUTPUT_LANGUAGE": "en",
         "PLAYWRIGHT_BROWSERS_PATH": str(browser_cache),
+        "CADRUMO_PLAYWRIGHT_BROWSERS_DIR": str(browser_cache),
     }
 
 
@@ -83,7 +84,7 @@ import asyncio
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 
-from cadrumo.adapters.outbound.aeat.browser import default_browser_session_factory
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.core.config import load_settings
 
 

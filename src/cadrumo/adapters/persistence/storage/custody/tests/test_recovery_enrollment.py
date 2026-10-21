@@ -504,8 +504,8 @@ def test_prepared_reset_cannot_replay_or_retire_sessions_before_valid_proof(
     from datetime import timedelta
 
     from cadrumo.application.user_profile import recovery_custody
-    from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
     from cadrumo.core.time.clock import now
+    from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
     _, decode = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):

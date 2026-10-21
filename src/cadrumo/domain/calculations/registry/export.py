@@ -395,7 +395,7 @@ def row_binding_casilla_ids_by_field(
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
-    bindings = {str(binding.id): binding for binding in revision.bindings}
+    bindings = {binding.id: binding for binding in revision.bindings}
     casilla_ids: dict[ExportFieldId, CasillaId] = {}
     for record in layout.records:
         if not record.row_field_casilla_ids:
@@ -425,7 +425,7 @@ def _row_binding_casilla_for_field(
 ) -> CasillaId | None:
     if field.kind != CasillaFieldKind.BINDING or field.binding is None:
         return None
-    binding = bindings.get(str(field.binding))
+    binding = bindings.get(field.binding)
     if binding is None:
         return None
     selector = binding_export_selector(binding, revision=revision)

@@ -34,7 +34,7 @@ _DEFAULT_CACHE_BYTES: Final[int] = 8 * 1024**3
 
 def _wheel_http_request(url: str) -> tuple[HTTPConnection, str]:
     parsed = urlsplit(url)
-    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+    if parsed.scheme not in {"http", "https"} or not (parsed.hostname is not None and parsed.hostname):
         raise SystemExit(f"runtime lock wheel URL is not an HTTP(S) resource: {url!r}")
     try:
         port = parsed.port

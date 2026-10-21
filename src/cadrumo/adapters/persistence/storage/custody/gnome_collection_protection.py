@@ -20,7 +20,7 @@ from contextlib import contextmanager, suppress
 from pathlib import Path
 from typing import Any, Protocol, cast
 
-from .....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 _MAX_FRAME = 65536
 _MAX_SLOTS = 8

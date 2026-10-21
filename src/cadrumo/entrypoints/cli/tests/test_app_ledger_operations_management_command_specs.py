@@ -7,6 +7,11 @@ from typing import Final
 
 import pytest
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
+from cadrumo_client.commands.parameters import ArgumentSpec, ParameterSpec
+from cadrumo_client.commands.shared_contracts import TranslationKey
+from cadrumo_client.commands.spec import CommandSpec
+
 from .._app_ledger_command_spec_support import (
     _EVIDENCE_ACTOR_OPTION,
     _EVIDENCE_TRANSACTION_ID_ARGUMENT,
@@ -21,10 +26,6 @@ from .._app_ledger_command_spec_support import (
 from .._app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
 from .._app_ledger_management_command_specs import LEDGER_MANAGEMENT_COMMAND_SPECS
 from .._app_ledger_operations_command_specs import LEDGER_OPERATIONS_COMMAND_SPECS
-from .._command_target import resolve_deferred_target
-from ..command_parameter_contracts import ArgumentSpec, ParameterSpec
-from ..command_shared_contracts import TranslationKey
-from ..command_spec import CommandSpec
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -46,6 +47,13 @@ _DEFAULT_CONSTRAINT: Final[tuple[object, ...]] = (
 _MINIMUM_ONE_CONSTRAINT: Final[tuple[object, ...]] = (1, *_DEFAULT_CONSTRAINT[1:])
 _MINIMUM_ZERO_CONSTRAINT: Final[tuple[object, ...]] = (0, *_DEFAULT_CONSTRAINT[1:])
 _EXISTING_PATH_CONSTRAINT: Final[tuple[object, ...]] = (*_DEFAULT_CONSTRAINT[:4], True, *_DEFAULT_CONSTRAINT[5:])
+_EXISTING_FILE_CONSTRAINT: Final[tuple[object, ...]] = (
+    *_DEFAULT_CONSTRAINT[:4],
+    True,
+    True,
+    False,
+    *_DEFAULT_CONSTRAINT[7:],
+)
 _NO_TRANSPORT: Final[tuple[str, ...]] = ("none", "not_applicable", "not_applicable")
 _LOCAL_IN_FILE_PRIMARY_TRANSPORT: Final[tuple[str, ...]] = ("local_in", "file", "primary")
 _LOCAL_IN_FILE_AUXILIARY_TRANSPORT: Final[tuple[str, ...]] = ("local_in", "file", "auxiliary")
@@ -233,9 +241,7 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "cli.ledger.detach.help",
         "profile-bound",
         "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_detach",
-        _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerDetachResult", "ledger.detach"
-        ),
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerDetachResult", "ledger.detach"),
         (
             _expected_argument("transaction_id", "cli.ledger.detach.id_help"),
             _expected_option(
@@ -268,7 +274,7 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "profile-bound",
         "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_exclude",
         _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerExcludeResult", "ledger.exclude"
+            _TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerExcludeResult", "ledger.exclude"
         ),
         (
             _expected_argument("transaction_id", "cli.app.ledger.evidence.pull_id_help"),
@@ -292,10 +298,8 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "leaf",
         "cli.ledger.export.help",
         "profile-bound",
-        "cadrumo.entrypoints.cli._ledger_read_cli:ledger_export",
-        _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerExportPayload", "ledger.export"
-        ),
+        "cadrumo.entrypoints.cli.ledger_export_commands:ledger_export",
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerExportPayload", "ledger.export"),
         (
             _expected_option(
                 "output",
@@ -333,9 +337,9 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "leaf",
         "cli.ledger.history.help",
         "none",
-        "cadrumo.entrypoints.cli._ledger_read_cli:ledger_history",
+        "cadrumo.entrypoints.cli.ledger_read_commands:ledger_history",
         _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerHistoryResult", "ledger.history"
+            _TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerHistoryResult", "ledger.history"
         ),
         (
             _expected_argument("transaction_id", "cli.ledger.history.id_help"),
@@ -357,10 +361,8 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "leaf",
         "cli.ledger.import.help",
         "profile-bound",
-        "cadrumo.entrypoints.cli._ledger_import_cli:ledger_import",
-        _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerImportPayload", "ledger.import"
-        ),
+        "cadrumo.entrypoints.cli.ledger_import_commands:ledger_import",
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerImportPayload", "ledger.import"),
         (
             _expected_option(
                 "file",
@@ -401,6 +403,7 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
                 "--verify-source",
                 "cli.ledger.import.verify_source_help",
                 annotation="pathlib:Path",
+                constraint=_EXISTING_FILE_CONSTRAINT,
                 transport=_LOCAL_IN_FILE_AUXILIARY_TRANSPORT,
             ),
             _expected_option(
@@ -446,8 +449,8 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "leaf",
         "cli.ledger.link.help",
         "profile-bound",
-        "cadrumo.entrypoints.cli._ledger:ledger_link",
-        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerLinkResult", "ledger.link"),
+        "cadrumo.entrypoints.cli.ledger_commands:ledger_link",
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerLinkResult", "ledger.link"),
         (
             _expected_argument("transaction_id", "cli.ledger.link.id_help"),
             _expected_option(
@@ -463,8 +466,8 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "leaf",
         "cli.ledger.list.help",
         "none",
-        "cadrumo.entrypoints.cli._ledger_read_cli:ledger_list",
-        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerListResult", "ledger.list"),
+        "cadrumo.entrypoints.cli.ledger_read_commands:ledger_list",
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerListResult", "ledger.list"),
         (
             _expected_option(
                 "filters", "--filter", "cli.ledger.list.filter_help", default=_EMPTY_TUPLE_DEFAULT, multiple=True
@@ -528,10 +531,10 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "leaf",
         "cli.ledger.llm_diagnostics.help",
         "none",
-        "cadrumo.entrypoints.cli._ledger_read_cli:ledger_llm_diagnostics",
+        "cadrumo.entrypoints.cli.ledger_read_commands:ledger_llm_diagnostics",
         _expected_result_schema(
             _TARGET,
-            "cadrumo.entrypoints.cli._ledger_rule_payloads:LedgerLlmDiagnosticsResult",
+            "cadrumo.entrypoints.cli.ledger_rule_results:LedgerLlmDiagnosticsResult",
             "ledger.llm_diagnostics",
         ),
         (
@@ -554,7 +557,7 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "cli.ledger.merge.help",
         "profile-bound",
         "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_merge",
-        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerMergeResult", "ledger.merge"),
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerMergeResult", "ledger.merge"),
         (
             _expected_option(
                 "child_id", "--child-id", "cli.ledger.merge.child_id_help", default=_EMPTY_TUPLE_DEFAULT, multiple=True
@@ -579,10 +582,10 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "group",
         "cli.ledger.participation.help",
         "none",
-        "cadrumo.entrypoints.cli._participation_cli:participation_lookup",
+        "cadrumo.entrypoints.cli.participation_commands:participation_lookup",
         _expected_result_schema(
             _TARGET,
-            "cadrumo.entrypoints.cli._ledger_payloads:LedgerTransactionParticipationPayload",
+            "cadrumo.entrypoints.cli.ledger_results:LedgerTransactionParticipationPayload",
             "ledger.participation",
         ),
         (_expected_argument("transaction_id", "cli.ledger.participation.transaction_id_help", default=_NONE_DEFAULT),),
@@ -595,9 +598,9 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "leaf",
         "cli.ledger.preflight.help",
         "none",
-        "cadrumo.entrypoints.cli._ledger_read_cli:ledger_preflight",
+        "cadrumo.entrypoints.cli.ledger_read_commands:ledger_preflight",
         _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerPreflightResult", "ledger.preflight"
+            _TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerPreflightResult", "ledger.preflight"
         ),
         (
             _expected_option("period", "--period", "cli.ledger.export.period_help", default=_REQUIRED_DEFAULT),
@@ -648,9 +651,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "cli.ledger.remove.help",
         "profile-bound",
         "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_remove",
-        _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerRemoveResult", "ledger.remove"
-        ),
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerRemoveResult", "ledger.remove"),
         (
             _expected_argument("transaction_id", "cli.ledger.remove.id_help"),
             _expected_option("reason", "--reason", "cli.ledger.remove.reason_help", default=_EMPTY_DEFAULT),
@@ -683,7 +684,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "cli.ledger.reset.help",
         "profile-bound",
         "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_reset",
-        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerResetResult", "ledger.reset"),
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerResetResult", "ledger.reset"),
         (
             _expected_option("reason", "--reason", "cli.ledger.reset.reason_help", default=_EMPTY_DEFAULT),
             _expected_option(
@@ -716,7 +717,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "profile-bound",
         "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_restore",
         _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerRestoreResult", "ledger.restore"
+            _TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerRestoreResult", "ledger.restore"
         ),
         (
             _expected_argument("transaction_id", "cli.ledger.restore.id_help"),
@@ -740,10 +741,8 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "leaf",
         "cli.ledger.review.help",
         "none",
-        "cadrumo.entrypoints.cli._ledger_review_cli:ledger_review",
-        _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerReviewResult", "ledger.review"
-        ),
+        "cadrumo.entrypoints.cli.ledger_review_commands:ledger_review",
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerReviewResult", "ledger.review"),
         (
             _expected_argument("record_id", "cli.ledger.view.transaction_id_help", default=_NONE_DEFAULT),
             _expected_option(
@@ -779,7 +778,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "cli.ledger.split.help",
         "profile-bound",
         "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_split",
-        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerSplitResult", "ledger.split"),
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerSplitResult", "ledger.split"),
         (
             _expected_argument("transaction_id", "cli.ledger.split.id_help"),
             _expected_option(
@@ -845,7 +844,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "cli.ledger.stash.help",
         "profile-bound",
         "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_stash",
-        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerStashResult", "ledger.stash"),
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerStashResult", "ledger.stash"),
         (
             _expected_argument("transaction_id", "cli.ledger.stash.id_help"),
             _expected_option("reason", "--reason", "cli.ledger.archive.reason_help", default=_EMPTY_DEFAULT),
@@ -868,10 +867,8 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "leaf",
         "cli.ledger.status.help",
         "none",
-        "cadrumo.entrypoints.cli._ledger_read_cli:ledger_status",
-        _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerStatusResult", "ledger.status"
-        ),
+        "cadrumo.entrypoints.cli.ledger_read_commands:ledger_status",
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerStatusResult", "ledger.status"),
         (
             _expected_option("period", "--period", "cli.ledger.export.period_help"),
             _expected_option("year", "--year", "cli.ledger.check.year_help", annotation="builtins:int"),
@@ -884,8 +881,8 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "leaf",
         "cli.ledger.track.help",
         "none",
-        "cadrumo.entrypoints.cli._ledger_read_cli:ledger_track",
-        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerTrackResult", "ledger.track"),
+        "cadrumo.entrypoints.cli.ledger_read_commands:ledger_track",
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerTrackResult", "ledger.track"),
         (_expected_argument("transaction_id", "cli.ledger.track.transaction_id_help"),),
     ),
     _expected_command(
@@ -895,10 +892,8 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "leaf",
         "cli.ledger.update.help",
         "profile-bound",
-        "cadrumo.entrypoints.cli._ledger:ledger_update",
-        _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerUpdateResult", "ledger.update"
-        ),
+        "cadrumo.entrypoints.cli.ledger_commands:ledger_update",
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerUpdateResult", "ledger.update"),
         (
             _expected_argument("transaction_id", "cli.ledger.update.id_help"),
             _expected_option("booked_date", "--date", "cli.ledger.update.date_help"),
@@ -935,8 +930,8 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "leaf",
         "cli.ledger.view.help",
         "none",
-        "cadrumo.entrypoints.cli._ledger_read_cli:ledger_view",
-        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerViewResult", "ledger.view"),
+        "cadrumo.entrypoints.cli.ledger_read_commands:ledger_view",
+        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerViewResult", "ledger.view"),
         (_expected_argument("transaction_id", "cli.ledger.view.transaction_id_help"),),
     ),
 )

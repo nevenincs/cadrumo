@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -13,6 +13,9 @@ from typing import Any, cast
 from uuid import UUID, uuid4
 
 import pytest
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -55,7 +58,6 @@ from ...application.operations.persistence.journal import OperationPersistedSnap
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.operations import (
     OperationEffect,
@@ -98,7 +100,7 @@ class _ExecutionAuthority:
         self.events.append(f"require:{action.value}")
 
     @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncIterator[None]:
+    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
         assert identity is not None
         self.guard_calls += 1
         guard_number = self.guard_calls
@@ -426,7 +428,7 @@ def test_registered_capture_supervises_guarded_writes_and_projects_only_safe_rec
                 profile_id=profile_id,
                 destination_id=uuid4(),
                 action=AccessAction.SUBMIT,
-                frontend=OperationFrontendProjection.MCP,
+                frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
                 contract=registration.contract,
                 published_authority=Availability.AVAILABLE,
                 authority_operation=authority,

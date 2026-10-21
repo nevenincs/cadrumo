@@ -592,7 +592,7 @@ def _is_conceptual_invoice_screen_rung(
         target_ids = casillas_by_binding(revision).get(binding.id, ())
         if not target_ids:
             return False
-        if any("transitorio" in str(target_id).casefold() for target_id in target_ids):
+        if any("transitorio" in target_id.casefold() for target_id in target_ids):
             return False
     return True
 
@@ -722,7 +722,7 @@ def _invoice_ledger_screen_candidates(
                 f"revision {revision.id!r} modelo {modelo!r} has an unknown "
                 f"invoice IVA screen selector shape {shape!r} on binding {binding.id!r}",
             )
-        if not str(binding.id).startswith(expected_prefix):
+        if not binding.id.startswith(expected_prefix):
             raise RegistryValidationError(
                 f"revision {revision.id!r} modelo {modelo!r} has cross-model invoice IVA screen binding {binding.id!r}",
             )
@@ -992,13 +992,23 @@ def _iva_reachability_probe(selector: LedgerIvaProvider) -> None:
         # members without introducing an implicit default.
         cash_accounting_treatment=selector.cash_accounting_treatments[0],
         observation_role=selector.observation_roles[0],
-        exemption_article=(selector.exemption_articles[0] if selector.exemption_articles else None),
+        exemption_article=(
+            selector.exemption_articles[0]
+            if (selector.exemption_articles is not None and selector.exemption_articles)
+            else None
+        ),
         # Offer the first rate the selector names, so a rate-specific binding is
         # asked whether ANY line can reach it rather than whether a rate-less one
         # can. A None here would fail every rate-specific binding at build time
         # and read as "unreachable" when the binding is simply particular.
-        applied_rate=(selector.applied_rates[0] if selector.applied_rates else None),
-        deduction_fact_kind=(selector.deduction_fact_kinds[0] if selector.deduction_fact_kinds else None),
+        applied_rate=(
+            selector.applied_rates[0] if (selector.applied_rates is not None and selector.applied_rates) else None
+        ),
+        deduction_fact_kind=(
+            selector.deduction_fact_kinds[0]
+            if (selector.deduction_fact_kinds is not None and selector.deduction_fact_kinds)
+            else None
+        ),
     )
     if not matcher(probe):
         raise RegistryValidationError(
@@ -1258,9 +1268,15 @@ def _iva_reachability_probe_for_category(
         flow_direction=selector.flow_direction,
         cash_accounting_treatment=selector.cash_accounting_treatments[0],
         observation_role=selector.observation_roles[0],
-        exemption_article=selector.exemption_articles[0] if selector.exemption_articles else None,
-        applied_rate=selector.applied_rates[0] if selector.applied_rates else None,
-        deduction_fact_kind=selector.deduction_fact_kinds[0] if selector.deduction_fact_kinds else None,
+        exemption_article=selector.exemption_articles[0]
+        if (selector.exemption_articles is not None and selector.exemption_articles)
+        else None,
+        applied_rate=selector.applied_rates[0]
+        if (selector.applied_rates is not None and selector.applied_rates)
+        else None,
+        deduction_fact_kind=selector.deduction_fact_kinds[0]
+        if (selector.deduction_fact_kinds is not None and selector.deduction_fact_kinds)
+        else None,
     )
 
 

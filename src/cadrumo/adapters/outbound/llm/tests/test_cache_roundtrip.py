@@ -39,7 +39,7 @@ def _populated_request() -> LLMRequest:
         temperature=0.2,
         language="en",
         cache_key="translation-batch-2026Q1",
-        provider_override=LLMProvider.ANTHROPIC,
+        provider_override=LLMProvider.AGENT,
         model_override="claude-opus-4-7",
     )
 
@@ -47,7 +47,7 @@ def _populated_request() -> LLMRequest:
 def _populated_response(
     created_at: datetime,
     *,
-    provider: LLMProvider = LLMProvider.ANTHROPIC,
+    provider: LLMProvider = LLMProvider.AGENT,
     model: str = "claude-opus-4-7",
     text: str = "Casilla 03 records the cumulative net revenue for the reporting period.",
     request_id: str = "a" * 64,
@@ -92,7 +92,7 @@ def test_llm_cache_entry_survives_encrypted_storage_roundtrip(
     assert loaded.request_id == response.request_id
     assert loaded.created_at == response.created_at
     # Witness the persisted ``CachedEntry`` skeleton too.
-    assert stored.provider == LLMProvider.ANTHROPIC
+    assert stored.provider == LLMProvider.AGENT
     assert stored.model == "claude-opus-4-7"
     assert stored.prompt_hash and len(stored.prompt_hash) == 64
     assert stored.args_hash and len(stored.args_hash) == 64

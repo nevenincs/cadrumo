@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import warnings
 from collections.abc import Iterator
 from dataclasses import dataclass
 
@@ -63,16 +64,21 @@ def resolved_member_uses(
             if (
                 not isinstance(node.slice, ast.Slice)
                 and isinstance(node.value, ast.Name)
-                and containers
-                and (item_type := containers.get(node.value.id))
+                and (containers is not None and containers)
+                and ((item_type := containers.get(node.value.id)) is not None and item_type)
             ):
                 return item_type
             return expression(node.value, bindings, containers)
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
-            try:
-                parsed = ast.parse(node.value, mode="eval").body
-            except SyntaxError:
-                return ""
+            # Any string constant is probed here, regex patterns included; an
+            # invalid escape such as ``\d`` is prose, not a type expression,
+            # and must not print a SyntaxWarning into the gate's output.
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", SyntaxWarning)
+                try:
+                    parsed = ast.parse(node.value, mode="eval").body
+                except (SyntaxError, SyntaxWarning):
+                    return ""
             return expression(parsed, bindings, containers)
         return ""
 
@@ -120,12 +126,12 @@ def resolved_member_uses(
             child_bindings = bindings
             if isinstance(node, ast.ImportFrom):
                 base = resolve_relative_import(module.name, module.is_package, node.level, node.module)
-                if base:
+                if base is not None and base:
                     bindings.update((alias.asname or alias.name, f"{base}.{alias.name}") for alias in node.names)
             elif isinstance(node, ast.Import):
                 for alias in node.names:
                     bindings[alias.asname or alias.name.split(".")[0]] = (
-                        alias.name if alias.asname else alias.name.split(".")[0]
+                        alias.name if (alias.asname is not None and alias.asname) else alias.name.split(".")[0]
                     )
             elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 local = dict(bindings)
@@ -189,7 +195,7 @@ def resolved_member_uses(
                     if isinstance(item.context_expr, ast.Call) and isinstance(item.optional_vars, ast.Name):
                         bindings.pop(item.optional_vars.id, None)
                         owner = receivers.contexts.get(expression(item.context_expr.func, bindings, containers))
-                        if owner:
+                        if owner is not None and owner:
                             bindings[item.optional_vars.id] = owner
 
             def visit_expression(part: ast.AST, scoped: dict[str, str]) -> None:

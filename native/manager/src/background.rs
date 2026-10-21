@@ -1,4 +1,4 @@
-//! Lifetime of one admitted manager, independent of the Windows message pump.
+//! Lifetime of one admitted manager, independent of the native event loop.
 
 use crate::{
     diagnostics,
@@ -21,12 +21,17 @@ use cadrumo_application::{
 };
 use std::{
     io,
-    sync::{Arc, mpsc::TryRecvError},
-    time::Duration,
+    sync::Arc,
+    time::{Duration, Instant},
 };
 
-// A continuously replenished diagnostics queue must yield to Windows messages.
+// A continuously replenished diagnostics queue must yield to native events.
 const EVENTS_PER_POLL: usize = 64;
+// Pacing: another owner's release and a changed ownership verdict publish no
+// notification, so a waiting manager reassesses at this interval.
+const OWNERSHIP_PACE: Duration = Duration::from_secs(1);
+// Pacing: a full supervisor input queue publishes no notification when it drains.
+const CONTROL_RETRY: Duration = Duration::from_millis(100);
 
 pub struct Background {
     installed: InstalledRuntime,
@@ -37,15 +42,25 @@ pub struct Background {
     blocked: bool,
     quitting: bool,
     suspended: bool,
+    session_end: SessionEnd,
+    settlement_error_reported: bool,
     diagnostics: Arc<Diagnostics>,
     waiting: Option<LifecycleFact>,
-    installation_watch: Option<crate::installation_watch::InstallationWatch>,
+    installation_watch: Option<Box<dyn crate::lifecycle::RemovalObservation>>,
     observation: Observation,
     cutover_pending: bool,
     update_failed: bool,
     reserved: Option<crate::session::claim::StartClaim>,
-    designated: Option<crate::cutover_child::InitialPermit>,
-    reporter: Option<crate::cutover_child::Reporter>,
+    designated: Option<crate::successor::InitialPermit>,
+    reporter: Option<crate::successor::Reporter>,
+    /// Signaled by supervisor observations and successor reports.
+    #[cfg(windows)]
+    wake: Arc<crate::wake::windows::Event>,
+    backlog: bool,
+    next_start: Option<Instant>,
+    control_retry: Option<Instant>,
+    /// A refused uninstall stop is retried at the control pace.
+    stop_retry: Option<Instant>,
 }
 
 impl Background {
@@ -55,14 +70,14 @@ impl Background {
         activity: fn() -> Box<dyn SessionActivity>,
         diagnostics: Arc<Diagnostics>,
         initial: StartKind,
-    ) -> Self {
+    ) -> io::Result<Self> {
         let ownership = Ownership::new(
             installed.target.storage_root().to_path_buf(),
             session,
             activity(),
             Box::new(BootRecordLocator::new(installed.target.storage_root())),
         );
-        Self {
+        Ok(Self {
             installed,
             ownership,
             activity,
@@ -71,6 +86,8 @@ impl Background {
             blocked: false,
             quitting: false,
             suspended: false,
+            session_end: SessionEnd::default(),
+            settlement_error_reported: false,
             diagnostics,
             waiting: None,
             installation_watch: None,
@@ -80,16 +97,73 @@ impl Background {
             reserved: None,
             designated: None,
             reporter: None,
-        }
+            #[cfg(windows)]
+            wake: crate::wake::windows::Event::new()?,
+            backlog: false,
+            next_start: None,
+            control_retry: None,
+            stop_retry: None,
+        })
     }
 
     pub fn designated(
         &mut self,
-        permit: crate::cutover_child::InitialPermit,
-        reporter: crate::cutover_child::Reporter,
+        permit: crate::successor::InitialPermit,
+        reporter: crate::successor::Reporter,
     ) {
+        #[cfg(windows)]
+        reporter.notify_with(self.wake.notifier());
         self.designated = Some(permit);
         self.reporter = Some(reporter);
+    }
+
+    /// Install the wake before the first drain: earlier observations are queued.
+    fn supervise(&mut self, running: Running) {
+        #[cfg(windows)]
+        running.handle.notify_with(self.wake.notifier());
+        self.backlog = true;
+        self.running = Some(running);
+    }
+
+    /// What the host waits on before the next poll is due: the wake, the
+    /// supervising worker's return, and the deadlines of paced observations.
+    #[cfg(windows)]
+    pub fn readiness<'a>(&'a self, into: &mut crate::wake::windows::Readiness<'a>) {
+        use std::os::windows::io::AsHandle;
+        into.handle(self.wake.as_handle());
+        // While a refused stop waits for its retry, a supervisor that already
+        // returned would keep its handle signalled and spin the wait.
+        if self.stop_retry.is_none()
+            && let Some(settlement) = self.running.as_ref().and_then(Running::settlement)
+        {
+            into.handle(settlement);
+        }
+        if !self.quitting
+            && let Some(watch) = &self.installation_watch
+        {
+            watch.readiness(into);
+        }
+        if let Some(deadline) = self.next_deadline() {
+            into.at(deadline);
+        }
+    }
+
+    /// The nearest moment a poll is due without any notification.
+    pub fn next_deadline(&self) -> Option<Instant> {
+        let mut deadlines = Vec::with_capacity(4);
+        if self.running.is_some() && self.backlog {
+            deadlines.push(Instant::now());
+        }
+        deadlines.extend(self.control_retry);
+        deadlines.extend(self.stop_retry);
+        if self.running.is_none() && !self.start_withheld() {
+            deadlines.push(self.next_start.unwrap_or_else(Instant::now));
+        }
+        deadlines.into_iter().min()
+    }
+
+    fn start_withheld(&self) -> bool {
+        self.suspended || self.blocked || self.quitting || self.cutover_pending
     }
     pub fn storage_root(&self) -> &std::path::Path {
         self.installed.target.storage_root()
@@ -162,14 +236,13 @@ impl Background {
         self.update_failed = true;
         self.blocked = false;
         self.reserved = Some(claim);
+        self.next_start = None;
     }
     pub fn watch_installation(
         &mut self,
-        selected: &cadrumo_application::installation::Selection,
-    ) -> io::Result<()> {
-        self.installation_watch =
-            Some(crate::installation_watch::InstallationWatch::new(selected)?);
-        Ok(())
+        observation: Box<dyn crate::lifecycle::RemovalObservation>,
+    ) {
+        self.installation_watch = Some(observation);
     }
     /// Confirmed native registration removal stops only this manager's
     /// owned runtime, without recording a user Quit preference or deleting files.
@@ -177,16 +250,20 @@ impl Background {
         if let Some(running) = &self.running
             && !running.handle.request(Request::Stop)
         {
+            self.stop_retry = Some(Instant::now() + CONTROL_RETRY);
             return Err(io::ErrorKind::WouldBlock.into());
         }
+        self.stop_retry = None;
         self.quitting = true;
         self.suspended = true;
         Ok(())
     }
     pub fn poll(&mut self) -> io::Result<()> {
+        // Re-armed only if this poll's uninstall is refused again.
+        self.stop_retry = None;
         if let Some(result) = self.reporter.as_ref().and_then(|reporter| reporter.poll()) {
             self.reporter = None;
-            if matches!(result, crate::cutover_child::ReportResult::Rejected) {
+            if matches!(result, crate::successor::ReportResult::Rejected) {
                 self.uninstall()?;
             }
         }
@@ -198,17 +275,17 @@ impl Background {
         {
             self.uninstall()?;
         }
+        self.restore_adopted_control()?;
         if let Some(running) = &mut self.running {
-            drain_events(
+            self.backlog = drain_events(
                 running,
                 &self.diagnostics,
                 EVENTS_PER_POLL,
                 Some(&mut self.observation),
             );
             self.observation.report(self.reporter.as_ref())?;
-            match running.ended.try_recv() {
-                Ok(result) => {
-                    let joined = running.join();
+            match running.settled() {
+                Ok(Some(outcome)) => {
                     drain_events(
                         running,
                         &self.diagnostics,
@@ -216,8 +293,6 @@ impl Background {
                         Some(&mut self.observation),
                     );
                     self.running = None;
-                    report_failure(&self.diagnostics, joined)?;
-                    let outcome = report_failure(&self.diagnostics, result)?;
                     diagnostics::supervision_outcome(&self.diagnostics, outcome);
                     match outcome {
                         Outcome::Failed { .. } | Outcome::Foreign(_) | Outcome::StoodDown(_) => {
@@ -227,20 +302,44 @@ impl Background {
                         _ => {}
                     }
                 }
-                Err(TryRecvError::Disconnected) => {
-                    self.diagnostics.host_failure(
-                        HostStage::Supervision,
-                        ApplicationError::new(ErrorCode::ManagerUnavailable, Operation::Manager),
-                    );
-                    return Err(io::Error::other("manager_supervisor_lost"));
+                Err(error) => {
+                    if running.worker_finished() {
+                        // Join before discarding a terminal worker error. A
+                        // separate cleanup-only supervisor re-admits the exact
+                        // boot/image/process identity; it never starts a runtime.
+                        let _ = running.join();
+                        self.running = None;
+                        self.quitting = true;
+                        self.suspended = true;
+                        if self.observation.pid.is_some() && !self.settlement_error_reported {
+                            let cleanup = startup::stop_adopting(
+                                self.installed.target.clone(),
+                                SupervisorConfig::default(),
+                                Collaborators {
+                                    session: (self.activity)(),
+                                    probe: Box::new(self.installed.clone()),
+                                    versions: Box::new(self.installed.clone()),
+                                    stop_signal: Box::new(PlatformStopSignal::default()),
+                                },
+                            )?;
+                            self.supervise(cleanup);
+                        }
+                    }
+                    if !self.settlement_error_reported {
+                        self.settlement_error_reported = true;
+                        return report_failure(&self.diagnostics, Err(error));
+                    }
+                    return Err(error);
                 }
-                Err(TryRecvError::Empty) => return Ok(()),
+                Ok(None) => return Ok(()),
             }
         }
-        if self.suspended || self.blocked || self.quitting || self.cutover_pending {
+        if self.start_withheld() {
             return Ok(());
         }
         let initial = self.initial.take();
+        // Any outcome but a running supervisor is reassessed at the pace.
+        self.next_start = Some(Instant::now() + OWNERSHIP_PACE);
         let collaborators = Collaborators {
             session: (self.activity)(),
             probe: Box::new(self.installed.clone()),
@@ -280,7 +379,9 @@ impl Background {
                     None,
                 );
                 self.waiting = None;
-                self.running = Some(running);
+                self.settlement_error_reported = false;
+                self.next_start = None;
+                self.supervise(running);
             }
             Start::Waiting(role) => {
                 let fact = diagnostics::waiting(&role);
@@ -314,6 +415,7 @@ impl Background {
         crate::failed_versions::FailedVersions::retry(self.installed.target.storage_root())?;
         self.blocked = false;
         self.update_failed = false;
+        self.next_start = None;
         self.poll()
     }
 
@@ -330,12 +432,42 @@ impl Background {
         }
         self.blocked = false;
         self.initial = Some(StartKind::Manual);
+        self.next_start = None;
+        Ok(())
+    }
+
+    /// An adopted survivor has no heartbeat channel. Drain its verified process
+    /// before launching a fresh incarnation with the canonical control channel.
+    fn restore_adopted_control(&mut self) -> io::Result<()> {
+        self.control_retry = None;
+        if !self.quitting
+            && !self.suspended
+            && self.observation.adopted
+            && !self.observation.recovery_requested
+        {
+            if let Err(error) = self.restart() {
+                if error.kind() == io::ErrorKind::WouldBlock {
+                    self.control_retry = Some(Instant::now() + CONTROL_RETRY);
+                    return Ok(());
+                }
+                return Err(error);
+            }
+            self.observation.recovery_requested = true;
+        }
         Ok(())
     }
 
     /// Suppress automatic starts before asking only our owned supervisor to stop.
     pub fn quit(&mut self) -> io::Result<()> {
         self.ownership.record_quit()?;
+        self.close_host()
+    }
+
+    /// Window close drains its owned runtime without persisting a user Quit choice.
+    pub fn close_host(&mut self) -> io::Result<()> {
+        if self.quitting {
+            return Ok(());
+        }
         if let Some(running) = &self.running
             && !running.handle.request(Request::Stop)
         {
@@ -363,46 +495,55 @@ impl Background {
         if self.waiting.is_some() {
             return "waiting";
         }
-        for event in self.diagnostics.snapshot(u64::MAX).events.iter().rev() {
-            match event.lifecycle {
-                Some(LifecycleFact::Ready { .. }) => return "running",
-                Some(
-                    LifecycleFact::SupervisorStarted { .. }
-                    | LifecycleFact::Launched { .. }
-                    | LifecycleFact::RestartScheduled { .. },
-                ) => return "starting",
-                Some(LifecycleFact::StopRequested { .. }) => return "stopping",
-                Some(
-                    LifecycleFact::HangDetected { .. }
-                    | LifecycleFact::Exited { .. }
-                    | LifecycleFact::ChannelClosed { .. }
-                    | LifecycleFact::Failed { .. },
-                ) => return "unavailable",
-                _ => {}
-            }
+        if self.running.is_some() {
+            return if self.observation.adopted {
+                "adopted"
+            } else if self.observation.ready && self.observation.confirmed {
+                "running"
+            } else {
+                "starting"
+            };
         }
         "waiting"
     }
 
+    fn suppress_session_end(&mut self) -> bool {
+        self.session_end.begin(&mut self.suspended, || {
+            if let Some(running) = &self.running {
+                running.handle.request(Request::SessionEnd);
+            }
+        })
+    }
+
+    pub fn begin_session_end(&mut self) {
+        if self.suppress_session_end() {
+            session_end_requested(&self.diagnostics);
+        }
+    }
+
+    /// Supervisor/thread custody only, not Effects::Settled. The native host must
+    /// also settle its cutover owner; SessionEnd effects remain Unknown.
+    pub fn session_end_settled(&self) -> bool {
+        self.session_end.requested && self.running.is_none()
+    }
+
     pub fn session_end(&mut self) {
-        self.suspended = true;
+        if !self.suppress_session_end() {
+            return;
+        }
         if let Some(running) = &mut self.running {
-            if settle_session(running, &self.diagnostics, Duration::from_millis(3500)) {
+            if wait_session(running, &self.diagnostics, Duration::from_millis(3500)) {
                 self.running = None;
             }
         } else {
-            self.diagnostics.lifecycle(
-                EventKind::StageStarted,
-                HostStage::Shutdown,
-                LifecycleFact::SessionEndRequested {},
-                None,
-            );
+            session_end_requested(&self.diagnostics);
         }
     }
 
     pub fn cancel_session_end(&mut self) {
         // A still-settling supervisor must exit before a fresh one may start.
-        self.suspended = self.quitting;
+        self.session_end.cancel(&mut self.suspended, self.quitting);
+        self.next_start = None;
         self.diagnostics.lifecycle(
             EventKind::StageCompleted,
             HostStage::Shutdown,
@@ -413,12 +554,34 @@ impl Background {
 }
 
 #[derive(Default)]
+struct SessionEnd {
+    requested: bool,
+}
+impl SessionEnd {
+    fn begin(&mut self, suspended: &mut bool, request: impl FnOnce()) -> bool {
+        *suspended = true;
+        if self.requested {
+            return false;
+        }
+        self.requested = true;
+        request();
+        true
+    }
+    fn cancel(&mut self, suspended: &mut bool, quitting: bool) {
+        self.requested = false;
+        *suspended = quitting;
+    }
+}
+
+#[derive(Default)]
 struct Observation {
     pid: Option<u32>,
     ready: bool,
     confirmed: bool,
     reported_launch: bool,
     reported_ready: bool,
+    adopted: bool,
+    recovery_requested: bool,
 }
 impl Observation {
     fn observe(&mut self, event: &Event) {
@@ -431,10 +594,20 @@ impl Observation {
             }
             Event::Ready { pid, .. } if self.pid == Some(*pid) => self.ready = true,
             Event::BootRecordConfirmed { pid } if self.pid == Some(*pid) => self.confirmed = true,
+            Event::Adopted { pid, .. } => {
+                *self = Self {
+                    pid: Some(*pid),
+                    adopted: true,
+                    ..Self::default()
+                };
+            }
+            Event::ChannelClosed { .. } | Event::HangDetected { .. } | Event::Exited { .. } => {
+                self.ready = false;
+            }
             _ => {}
         }
     }
-    fn report(&mut self, reporter: Option<&crate::cutover_child::Reporter>) -> io::Result<()> {
+    fn report(&mut self, reporter: Option<&crate::successor::Reporter>) -> io::Result<()> {
         if let Some(reporter) = reporter
             && let Some(pid) = self.pid
         {
@@ -455,34 +628,48 @@ impl Observation {
 /// False retains the running supervisor so cleanup ownership survives the bound.
 pub fn settle_session(running: &mut Running, diagnostics: &Diagnostics, bound: Duration) -> bool {
     running.handle.request(Request::SessionEnd);
-    let ended = running.ended.recv_timeout(bound);
+    wait_session(running, diagnostics, bound)
+}
+
+fn session_end_requested(diagnostics: &Diagnostics) {
     diagnostics.lifecycle(
         EventKind::StageStarted,
         HostStage::Shutdown,
         LifecycleFact::SessionEndRequested {},
         None,
     );
-    if let Ok(result) = ended {
-        let joined = running.join();
-        drain_events(running, diagnostics, EVENT_QUEUE, None);
-        let _ = report_failure(diagnostics, joined);
-        if let Ok(outcome) = report_failure(diagnostics, result) {
+}
+
+fn wait_session(running: &mut Running, diagnostics: &Diagnostics, bound: Duration) -> bool {
+    let result = running.wait_settled(bound);
+    session_end_requested(diagnostics);
+    match result {
+        Ok(Some(outcome)) => {
+            drain_events(running, diagnostics, EVENT_QUEUE, None);
             diagnostics::supervision_outcome(diagnostics, outcome);
+            true
         }
-        true
-    } else {
-        drain_events(running, diagnostics, EVENTS_PER_POLL, None);
-        false
+        Err(error) => {
+            let _ = report_failure::<()>(diagnostics, Err(error));
+            false
+        }
+        Ok(None) => {
+            drain_events(running, diagnostics, EVENTS_PER_POLL, None);
+            false
+        }
     }
 }
 
+/// True when the limit was reached, so further observations may be queued.
 fn drain_events(
     running: &Running,
     diagnostics: &Diagnostics,
     limit: usize,
     mut observation: Option<&mut Observation>,
-) {
+) -> bool {
+    let mut drained = 0;
     for event in running.events.try_iter().take(limit) {
+        drained += 1;
         if let Some(observation) = &mut observation {
             observation.observe(&event);
         }
@@ -500,6 +687,7 @@ fn drain_events(
             )),
         );
     }
+    drained == limit
 }
 
 #[cfg(test)]
@@ -527,6 +715,56 @@ mod tests {
     use super::*;
     use cadrumo_application::diagnostics::DiagnosticSource;
     use std::sync::mpsc;
+
+    #[test]
+    fn readiness_requires_current_launch_and_boot_record_and_is_retired_on_channel_loss() {
+        let mut observed = Observation::default();
+        observed.observe(&Event::Launched {
+            pid: 7,
+            version: "1".into(),
+        });
+        observed.observe(&Event::Ready {
+            pid: 8,
+            boot_id: "stale".into(),
+        });
+        assert!(!observed.ready);
+        observed.observe(&Event::Ready {
+            pid: 7,
+            boot_id: "current".into(),
+        });
+        assert!(observed.ready && !observed.confirmed);
+        observed.observe(&Event::BootRecordConfirmed { pid: 7 });
+        assert!(observed.ready && observed.confirmed);
+        observed.observe(&Event::ChannelClosed { pid: 7 });
+        assert!(!observed.ready);
+        observed.observe(&Event::Adopted {
+            pid: 7,
+            version: "1".into(),
+        });
+        assert!(observed.adopted && !observed.ready && !observed.confirmed);
+        observed.observe(&Event::Launched {
+            pid: 9,
+            version: "1".into(),
+        });
+        assert!(!observed.adopted && !observed.ready && !observed.confirmed);
+    }
+
+    #[test]
+    fn session_end_is_idempotent_and_cancellation_preserves_user_quit() {
+        let mut state = SessionEnd::default();
+        let mut suspended = false;
+        let (send, receive) = mpsc::channel();
+        assert!(state.begin(&mut suspended, || send.send(()).unwrap()));
+        assert!(suspended && state.requested);
+        assert!(!state.begin(&mut suspended, || send.send(()).unwrap()));
+        assert_eq!(receive.try_iter().count(), 1);
+        state.cancel(&mut suspended, false);
+        assert!(!suspended && !state.requested);
+        assert!(state.begin(&mut suspended, || send.send(()).unwrap()));
+        assert_eq!(receive.try_iter().count(), 1);
+        state.cancel(&mut suspended, true);
+        assert!(suspended && !state.requested);
+    }
 
     #[test]
     fn polling_leaves_backlog_for_later_messages_and_final_drain_finishes_it() {

@@ -307,7 +307,7 @@ def _money(value: Decimal, language: OutputLanguage) -> str:
 
 def _boxed(parts: list[str], box: str | None) -> tuple[str, str]:
     short = _WORD_GAP.join(parts)
-    return (f"{short}{_WORD_GAP}[{box}]" if box else short), short
+    return (f"{short}{_WORD_GAP}[{box}]" if (box is not None and box) else short), short
 
 
 def _other_boxes_help(
@@ -321,7 +321,9 @@ def _other_boxes_help(
     if not others:
         return None
     named = ", ".join(
-        f"[{field.box}] {value_text(CasillaListEntry(field), language)}" if field.box else field.label.text
+        f"[{field.box}] {value_text(CasillaListEntry(field), language)}"
+        if (field.box is not None and field.box)
+        else field.label.text
         for field in others
     )
     return tr("tui.modelo.workbench.header.result.other_boxes", boxes=named)
@@ -357,7 +359,7 @@ def _directional_result_presentation(
 ) -> _ResultPresentation:
     if direction is ModeloFormResultDirection.TO_DEDUCT_LATER:
         full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction], amount=_money(abs(value), language))], box)
-        if box:
+        if box is not None and box:
             help_lines.append(
                 tr("tui.modelo.workbench.header.result.sign_help", box=box, value=_money(value, language))
             )
@@ -456,7 +458,7 @@ def _selected_result_presentation(
         value < 0
         and presentation.settled is not None
         and selected.direction is not ModeloFormResultDirection.UNKNOWN
-        and selected.box
+        and (selected.box is not None and selected.box)
     ):
         help_lines.append(
             tr("tui.modelo.workbench.header.result.sign_help", box=selected.box, value=_money(value, language))
@@ -570,7 +572,7 @@ class ResultLine:
     def marks_text(self) -> str:
         """The stale mark, the file and the chips as one string, as the second line of a stacked result shows them."""
         parts = (self.stale, self.file, *(chip.text for chip in self.chips))
-        return _PART_GAP.join(part for part in parts if part)
+        return _PART_GAP.join(part for part in parts if (part is not None and part))
 
     def chips_content(self) -> Content:
         """The chips kept, as drawn side by side: a blocker's in the error colour."""
@@ -672,7 +674,7 @@ class StatusLine:
     def content(self, width: int) -> Content:
         """The line as drawn within ``width`` cells: each chip in its level's colour."""
         line = self.fitted(width)
-        lead = _PART_GAP.join(part for part in (line.result, line.stale, line.file) if part)
+        lead = _PART_GAP.join(part for part in (line.result, line.stale, line.file) if (part is not None and part))
         if not line.chips:
             return Content(ellipsize(lead, width))
         return Content(_PART_GAP).join([Content(lead), line.chips_content()] if lead else [line.chips_content()])

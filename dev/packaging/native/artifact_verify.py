@@ -11,12 +11,15 @@ from dev._paths import REPO_ROOT
 
 from ..command_execution import run_command
 from .archive import extract_bundle
+from .build_directory import require_enrolled_build
+from .build_log import BuildLog, display_path
 from .build_paths import build_paths
 from .build_timing import BuildTimings, measure_build
 from .cmake_build import reset
 from .cpp_abi_inputs import verify_linux_cpp_abi_inputs
 from .hashing import digest
-from .layout import backend, load_layout
+from .layout import backend, desktop_image, load_layout
+from .package_launch_smoke import verify_installation_kit
 from .release import verify_release
 from .verify import verify
 
@@ -50,12 +53,17 @@ def _check(build: Path, configuration: str, application_probe: list[str] | None,
     external.mkdir()
     target = artifacts["target"]
     contract = load_layout(target)
+    if contract["backend"] == "windows" and (package / "app").is_dir():
+        package /= "app"
     environment = dict(os.environ)
     environment.update(CADRUMO_LOCAL_STORAGE_ROOT=str(destination / "state"), CADRUMO_EXTERNAL_BIN_DIRS=str(external))
     manifest_path = package / contract["files"]["package_manifest"]
     if digest(manifest_path) != artifacts["manifest_sha256"]:
         raise AssertionError("ZIP manifest differs from the packaged artifact locator")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    desktop = desktop_image(contract)
+    if contract["backend"] == "windows" and desktop is not None and desktop.package_path in manifest["files"]:
+        verify_installation_kit(package)
     if manifest["build"]["target"] != target:
         raise AssertionError("ZIP target differs from the packaged artifact locator")
     expectation = dict(artifacts["release"], manifest_sha256=artifacts["manifest_sha256"])
@@ -95,12 +103,14 @@ def _check(build: Path, configuration: str, application_probe: list[str] | None,
                 if result.returncode:
                     raise AssertionError(result.stdout + result.stderr)
             if arguments == ["--version"]:
-                for key in ("version", "build_number", "build_date"):
-                    if str(manifest["build"][key]) not in result.stdout:
+                # The banner reports the interpreter hosts' own build, not the package's.
+                hosts = next(item for item in manifest["components"] if item["role"] == "interpreter")
+                for key in ("version", "display_version", "build_sequence", "build_id", "build_date"):
+                    if str(hosts[key]) not in result.stdout:
                         raise AssertionError(f"Missing interpreter banner metadata: {key}")
     with timings.phase("platform-acceptance"):
         verify(package, target=target, product=True, build_root=destination, already_relocated=True)
-    if application_probe:
+    if application_probe is not None and application_probe:
         probe_environment = dict(os.environ)
         probe_environment["CADRUMO_TEST_PACKAGE_ROOT"] = str(package.resolve())
         probe_environment["CADRUMO_TEST_RELEASE_EXPECTATION"] = str(expectation_path.resolve())
@@ -108,7 +118,7 @@ def _check(build: Path, configuration: str, application_probe: list[str] | None,
             result = run_command(application_probe, cwd=REPO_ROOT, environment=probe_environment, timeout_seconds=900)
             if result.returncode:
                 raise AssertionError("Rust package compatibility failed:\n" + result.stdout + result.stderr)
-        print(result.stdout)
+        BuildLog("artifact-verification").verbose(result.stdout.strip())
     if digest(archive_path) != archive_hash:
         raise AssertionError("ZIP changed during verification")
     if digest(manifest_path) != artifacts["manifest_sha256"]:
@@ -125,7 +135,9 @@ def _check(build: Path, configuration: str, application_probe: list[str] | None,
                 "build": manifest["build"],
                 "interpreters": [p.name for p in executables],
                 "package_root": str(package.resolve()),
-                "application_probe": "passed" if application_probe else "not_requested",
+                "application_probe": "passed"
+                if (application_probe is not None and application_probe)
+                else "not_requested",
                 "linux_cpp_abi": linux_cpp_abi,
                 "passed": True,
             },
@@ -133,12 +145,12 @@ def _check(build: Path, configuration: str, application_probe: list[str] | None,
         ),
         encoding="utf-8",
     )
-    print(f"Verified ZIP: {artifacts['archive']}")
+    BuildLog("artifact-verification").status(f"verified {display_path(artifacts['archive'])}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--config", choices=("Debug", "Release"), required=True)
     parser.add_argument("--application-probe-command", type=Path, help="CMake-generated JSON argv for the Rust probe")
     args = parser.parse_args()

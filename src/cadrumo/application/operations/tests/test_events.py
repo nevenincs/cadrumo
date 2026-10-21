@@ -61,7 +61,28 @@ def test_discriminated_event_union_round_trips_exact_variant() -> None:
     )
 
     assert isinstance(event, OperationProgressEvent)
+    assert event.subject_code is None
     assert adapter.validate_json(adapter.dump_json(event)) == event
+
+
+def test_progress_subject_round_trips_and_keeps_the_code_grammar() -> None:
+    adapter = TypeAdapter(OperationEvent)
+    event = adapter.validate_python(
+        {
+            **_base(),
+            "kind": "progress",
+            "completed": 2,
+            "total": 5,
+            "unit_code": "bytes",
+            "subject_code": "dependencies.browser",
+        }
+    )
+
+    assert isinstance(event, OperationProgressEvent)
+    assert event.subject_code == "dependencies.browser"
+    assert adapter.validate_json(adapter.dump_json(event)) == event
+    with pytest.raises(ValidationError):
+        OperationProgressEvent(**_base(), completed=1, total=5, subject_code="Browser download")
 
 
 def test_progress_refuses_impossible_counts() -> None:

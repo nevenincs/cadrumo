@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
@@ -24,8 +26,8 @@ from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .iva_remote_state import list_iva_compensation_history
 from .iva_remote_state_ports import IvaRemoteStatePort
@@ -229,11 +231,11 @@ def build_iva_wallet_history_definition(
     return build_single_phase_definition(
         definition_id=IVA_WALLET_HISTORY_OPERATION_DEFINITION_ID,
         request_type=IvaWalletHistoryRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=IvaWalletHistoryProjection,
         executor_type=IvaWalletHistoryExecutor,
         build=lambda: IvaWalletHistoryExecutor(ports_factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

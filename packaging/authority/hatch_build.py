@@ -62,11 +62,11 @@ from hatchling.plugin.manager import PluginManager
 _AUTHORITY_ROOT_ENV = "CADRUMO_AUTHORITY_ROOT"
 
 #: ``skip`` stops an EDITABLE build from resolving the authority at all. An
-#: editable install never packages it, so the resolution there exists only to
+#: editable install never packages it, so resolution there exists only to
 #: publish one for a checkout's first ``uv sync``; a job that never reads the
-#: authority (lint) otherwise compiles the whole registry for nothing. Every
-#: real distribution build ignores it and always resolves and embeds the pair,
-#: and a runtime with no published authority refuses rather than guessing.
+#: authority (lint) otherwise compiles the whole registry for nothing. Real
+#: distribution builds only consume and embed an existing publication; if it
+#: is missing, they direct the operator to the explicit publisher command.
 _EDITABLE_AUTHORITY_ENV = "CADRUMO_EDITABLE_AUTHORITY"
 
 #: The gitignored authoring location, relative to the repository root.
@@ -79,6 +79,12 @@ _WHEEL_DESTINATION = "cadrumo/_data/registry/authority"
 _SDIST_DESTINATION = "src/cadrumo/_data/registry/authority"
 
 _DESCRIPTOR_NAME = "authority.current.json"
+
+#: Staged publisher-client material is readable by its owner only. Windows
+#: honours just the read-only bit; there the per-user ACL of the configured
+#: temporary-files root is what keeps other accounts out.
+_OWNER_ONLY_DIRECTORY = 0o700
+_OWNER_ONLY_FILE = 0o600
 
 #: A published database is named for the SHA-256 of its own bytes. Admitting
 #: only this shape keeps a hand-placed or partially written file out of the
@@ -142,40 +148,56 @@ else:
     _CustomBuildHookBase = _runtime_build_hook_base()
 
 
-def _authority_root(build_root: Path) -> Path:
-    """Return the published pair directory, compiling a fresh source tree if needed.
+def _authority_root(build_root: Path, *, allow_publication: bool = False) -> Path:
+    """Return the published pair directory, optionally bootstrapping an editable checkout.
 
     A source-tree build reads the gitignored ``.authority/`` beside the project,
     or the directory ``CADRUMO_AUTHORITY_ROOT`` names. A build from an extracted
     sdist finds the pair already embedded at the published path and must read it
-    from there, because the sdist carries no ``.authority/``. When a real source
-    tree has no publication yet, the canonical compiler publishes one to its
-    repo-root ``.authority/`` before packaging continues.
+    from there, because the sdist carries no ``.authority/``. Ordinary
+    distributions require an existing pair and instruct the operator to run
+    ``just registry-publish-authority`` when it is absent. Editable setup may
+    publish the pair into the checkout's authoring directory.
 
     Existing publications are selected build inputs. Source and compiler edits
-    require explicit republication; ordinary builds compile only when the
-    descriptor or its selected database is missing. Pair integrity is still
-    verified before packaging.
+    require explicit republication. Pair integrity is verified before packaging.
     """
     source_tree = build_root / _SOURCE_TREE_DIRECTORY
     override = os.environ.get(_AUTHORITY_ROOT_ENV)
-    if override:
+    if override is not None and override:
         candidate = Path(override)
         # A foreign authority root is an explicit selection; never publish into it.
         if candidate.resolve() != source_tree.resolve():
             if not candidate.is_dir():
-                raise FileNotFoundError(f"configured ${_AUTHORITY_ROOT_ENV} directory is unavailable: {candidate}")
-            return candidate
+                raise FileNotFoundError(
+                    f"configured ${_AUTHORITY_ROOT_ENV} directory is unavailable: {candidate}; "
+                    "run `just registry-publish-authority` before building a distribution"
+                )
+            selected_root = candidate
+        else:
+            selected_root = source_tree
     elif not source_tree.is_dir():
         embedded = build_root / _SDIST_DESTINATION
         if embedded.is_dir():
             return embedded
-        return _publish_source_tree_authority(build_root, source_tree)
+        if allow_publication:
+            return _publish_source_tree_authority(build_root, source_tree)
+        raise FileNotFoundError(
+            f"published authority is unavailable at {source_tree}; "
+            "run `just registry-publish-authority` before building a distribution"
+        )
+    else:
+        selected_root = source_tree
     try:
-        _selected_pair(source_tree)
-    except FileNotFoundError:
-        return _publish_source_tree_authority(build_root, source_tree)
-    return source_tree
+        _selected_pair(selected_root)
+    except FileNotFoundError as error:
+        if allow_publication:
+            return _publish_source_tree_authority(build_root, source_tree)
+        raise FileNotFoundError(
+            f"published authority is unavailable or incomplete at {selected_root}; "
+            "run `just registry-publish-authority` before building a distribution"
+        ) from error
+    return selected_root
 
 
 def _publish_source_tree_authority(build_root: Path, destination: Path) -> Path:
@@ -242,10 +264,10 @@ class CustomBuildHook(_CustomBuildHookBase):
     def initialize(self, version: str, build_data: dict[str, Any]) -> None:
         """Inject the selected descriptor and database into the force-include map.
 
-        Resolution runs for every target, including an editable one, because it
-        is what publishes a missing authority and a checkout's
-        first ``uv sync`` depends on that -- unless ``CADRUMO_EDITABLE_AUTHORITY``
-        is ``skip``, which only an editable build honours.
+        Editable installs may publish a missing source-tree authority for a
+        checkout's first ``uv sync`` -- unless ``CADRUMO_EDITABLE_AUTHORITY``
+        is ``skip``, which only an editable build honours. Distribution builds
+        are read-only consumers and require the explicit publisher step first.
 
         The PAYLOAD is admitted only to a real distribution. An editable
         install injects the source directory onto the path, so ``cadrumo``
@@ -258,8 +280,16 @@ class CustomBuildHook(_CustomBuildHookBase):
         if version == "editable" and os.environ.get(_EDITABLE_AUTHORITY_ENV) == "skip":
             return
         build_root = Path(self.root)
-        root = _authority_root(build_root)
-        descriptor, database = _selected_pair(root)
+        root = _authority_root(build_root, allow_publication=version == "editable")
+        try:
+            descriptor, database = _selected_pair(root)
+        except FileNotFoundError as error:
+            if version != "editable":
+                raise FileNotFoundError(
+                    f"published authority is unavailable or incomplete at {root}; "
+                    "run `just registry-publish-authority` before building a distribution"
+                ) from error
+            raise
         if version == "editable":
             return
         destination = _SDIST_DESTINATION if self.target_name == "sdist" else _WHEEL_DESTINATION
@@ -268,18 +298,7 @@ class CustomBuildHook(_CustomBuildHookBase):
             raise TypeError("hatch build_data force_include must map string paths to string destinations")
         for path in (descriptor, database):
             force_include[str(path)] = f"{destination}/{path.name}"
-        original_path = sys.path.copy()
-        try:
-            sys.path[:0] = (str(build_root), str(build_root / "src"))
-            from dev.packaging.google_oauth import build_client_json, stage_build_client
-
-            client = build_client_json(build_root)
-            staging_root = build_root / "build"
-            staging_root.mkdir(parents=True, exist_ok=True)
-            self._oauth_stage = tempfile.TemporaryDirectory(prefix="cadrumo-oauth-build-", dir=staging_root)
-            staged = stage_build_client(Path(self._oauth_stage.name), client)
-        finally:
-            sys.path[:] = original_path
+        staged = self._stage_oauth_client(build_root)
         prefix = "src/" if self.target_name == "sdist" else ""
         resource_destination = f"{prefix}cadrumo/_data/google/oauth_client.json"
         # Internal staging reserves its source path in Hatch, whereas an sdist
@@ -290,14 +309,61 @@ class CustomBuildHook(_CustomBuildHookBase):
             self.build_config.get_distribution_path(str(Path(resource_destination)))
         )
         force_include[str(staged)] = resource_destination
-        if self.target_name == "sdist":
-            # Only these build modules cross the existing dev/** exclusion;
-            # the wheel contains neither development tooling nor dotenv files.
-            for name in ("dev/__init__.py", "dev/packaging/__init__.py", "dev/packaging/google_oauth.py"):
-                force_include[str(build_root / name)] = name
+
+    def _stage_oauth_client(self, build_root: Path) -> Path:
+        """Write the validated publisher client into a private, transient directory.
+
+        The client is private build input, so it is staged beneath the
+        configured temporary-files root rather than beside the sources, in a
+        uniquely named owner-only directory. :meth:`finalize` removes it once
+        the archive holds its copy; a failure before then removes it here, and
+        the directory object's own finalizer bounds its lifetime otherwise.
+        """
+        original_path = sys.path.copy()
+        stage: tempfile.TemporaryDirectory[str] | None = None
+        try:
+            sys.path[:0] = (str(build_root), str(build_root / "src"))
+            from cadrumo.core.config_google import CLIENT_METADATA_MAX_BYTES
+            from cadrumo.core.config_google_client import decode_desktop_client
+            from cadrumo.core.storage_environment import prepare_temporary_directory
+
+            embedded = build_root / "src/cadrumo/_data/google/oauth_client.json"
+            if (build_root / "dev/packaging/google_oauth.py").is_file() or not embedded.is_file():
+                from dev.packaging.google_oauth import build_client_json
+
+                encoded = build_client_json(build_root).get_secret_value()
+            else:
+                # A source distribution rebuild inherits its admitted publisher
+                # resource without shipping or importing developer tooling.
+                with embedded.open("rb") as stream:
+                    raw = stream.read(CLIENT_METADATA_MAX_BYTES + 1)
+                try:
+                    encoded = raw.decode("utf-8")
+                except UnicodeError:
+                    raise ValueError("Invalid packaged Google Desktop OAuth configuration") from None
+                if decode_desktop_client(encoded) is None:
+                    raise ValueError("Invalid packaged Google Desktop OAuth configuration")
+            stage = tempfile.TemporaryDirectory(prefix="cadrumo-oauth-build-", dir=prepare_temporary_directory())
+            stage_root = Path(stage.name)
+            staged = stage_root / "src/cadrumo/_data/google/oauth_client.json"
+            staged.parent.mkdir(parents=True, exist_ok=True)
+            staged.write_text(encoded, encoding="utf-8", newline="")
+            for directory in staged.relative_to(stage_root).parents:
+                (stage_root / directory).chmod(_OWNER_ONLY_DIRECTORY)
+            staged.chmod(_OWNER_ONLY_FILE)
+        except BaseException:
+            if stage is not None:
+                stage.cleanup()
+            raise
+        finally:
+            sys.path[:] = original_path
+        self._oauth_stage = stage
+        return staged
 
     @override
     def finalize(self, version: str, build_data: dict[str, Any], artifact_path: str) -> None:
         """Remove transient client staging once the archive owns its copy."""
-        if stage := getattr(self, "_oauth_stage", None):
+        stage = getattr(self, "_oauth_stage", None)
+        self._oauth_stage = None
+        if stage is not None:
             stage.cleanup()

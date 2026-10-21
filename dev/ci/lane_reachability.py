@@ -11,6 +11,7 @@ from dev._paths import UTF_8
 
 from .lane_configuration import configured_marker_expression, configured_testpaths
 from .lane_contracts import DirectoryCoverageReport, Lane, ReachabilityReport, UnreachableTest
+from .lane_ctest_commands import declared_ctest_lanes
 from .lane_marker_inventory import expression_selects, marker_sets_in, tracked_test_directories, tracked_test_files
 from .lane_recipe_commands import _justfile_lanes, _pytest_invocations, resolved_justfile_text
 from .lane_workflow_graph import (
@@ -67,6 +68,7 @@ def declared_lanes(root: Path) -> tuple[Lane, ...]:
     text = resolved_justfile_text(root)
     if text:
         lanes.extend(_justfile_lanes(text, default_paths=testpaths))
+    lanes.extend(declared_ctest_lanes(root))
 
     workflow_dir = root / _WORKFLOW_DIR
     if workflow_dir.is_dir():

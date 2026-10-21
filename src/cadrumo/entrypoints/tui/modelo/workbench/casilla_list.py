@@ -265,7 +265,7 @@ class CasillaList(
     def binding_for(self, key: str) -> Binding | None:
         """The binding this list declares for ``key``, if any."""
         bindings = self._bindings.key_to_bindings.get(key)
-        return bindings[0] if bindings else None
+        return bindings[0] if (bindings is not None and bindings) else None
 
     def focus_address(self, key: _models.AddressKey) -> bool:
         """Put the cursor on one address, or bring the table of records showing it into view.

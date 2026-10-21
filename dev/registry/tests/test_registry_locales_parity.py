@@ -77,4 +77,4 @@ def test_modelo_130_all_casillas_have_shared_localized_labels_and_help() -> None
     for casilla in revision.casillas:
         for locale in ("en", "ca", "hu"):
             assert casilla.get_label(locale) != casilla.label, (casilla.id, locale)
-            assert casilla.get_help(locale), (casilla.id, locale)
+            assert bool(casilla.get_help(locale)), (casilla.id, locale)

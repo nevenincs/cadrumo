@@ -1,7 +1,7 @@
 """LLM provider endpoint and runtime tuning settings layered on top of timeout config.
 
-Defines :class:`CadrumoRuntimeSettings`, which adds the OpenAI/Gemini/Ollama endpoint
-URLs and model-runtime tuning fields (context window, per-request timeouts) consumed by
+Defines :class:`CadrumoRuntimeSettings`, which adds the local Ollama endpoint
+URL and model-runtime tuning fields (context window, per-request timeouts) consumed by
 the LLM-backed invoice-read pipeline.
 """
 
@@ -10,20 +10,12 @@ from __future__ import annotations
 from pydantic import Field
 
 from .config_timeouts import CadrumoTimeoutSettings
-from .model_catalogue import ModelRole, ModelRuntime, default_model_runtime_id
+from .model_catalogue import ModelRole, default_model_runtime_id
 
 
 class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
     """LLM provider endpoints and runtime tuning fields layered on top of timeouts."""
 
-    cadrumo_llm_openai_chat_completions_url: str = Field(
-        default="https://api.openai.com/v1/chat/completions",
-        description="OpenAI Chat Completions endpoint; override for OpenAI-compatible proxies",
-    )
-    cadrumo_llm_gemini_generate_content_template: str = Field(
-        default="https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-        description="Google Gemini generateContent endpoint template (``{model}`` is substituted)",
-    )
     cadrumo_llm_ollama_chat_url: str = Field(
         default="http://127.0.0.1:11434/api/chat",
         description="Local Ollama /api/chat endpoint; override for non-localhost Ollama deployments",
@@ -88,37 +80,6 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
             "(Apache-2.0, ~1.4 GB), so it introduces no new hardware floor and no second "
             "model to pull. This model never emits a regulated number; it selects from "
             "the closed column-role vocabulary"
-        ),
-    )
-    cadrumo_llm_cloud_vision_model: str = Field(
-        default=default_model_runtime_id(ModelRole.VISION_TRANSCRIPTION, ModelRuntime.CLOUD_ANTHROPIC),
-        description=(
-            "Hosted model used to read scanned/image evidence when a request is "
-            "routed off-host. The cloud counterpart of "
-            "cadrumo_llm_ollama_vision_model, and it exists for the same reason the "
-            "local roles do: without a role-named cloud setting every off-host read "
-            "falls through to the single global cadrumo_llm_model, so each new cloud "
-            "consumer silently re-inherits whatever tier that happens to name. "
-            "Defaults to the lowest-bound capable current Claude model"
-        ),
-    )
-    cadrumo_llm_cloud_text_model: str = Field(
-        default=default_model_runtime_id(ModelRole.TEXT_EXTRACTION, ModelRuntime.CLOUD_ANTHROPIC),
-        description=(
-            "Hosted model used to classify an already-extracted text layer off-host. "
-            "The cloud counterpart of cadrumo_llm_ollama_text_model. This model reads "
-            "only extracted text and selects from the registry allow-list; it never "
-            "emits a regulated number"
-        ),
-    )
-    cadrumo_llm_cloud_mapping_model: str = Field(
-        default=default_model_runtime_id(ModelRole.COLUMN_ROLE_MAPPING, ModelRuntime.CLOUD_ANTHROPIC),
-        description=(
-            "Hosted model used to name what each column of a delimited table holds. "
-            "The cloud counterpart of cadrumo_llm_ollama_mapping_model, kept separate "
-            "for the same reason: column-role mapping is the easiest job in the "
-            "product and must be sizeable DOWN independently rather than inheriting a "
-            "harder role's model"
         ),
     )
     cadrumo_llm_model_runtime_memory_floor_bytes: int = Field(
@@ -278,9 +239,4 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
     cadrumo_log_root_level: str = Field(
         default="DEBUG",
         description="Root logger level installed by ``cadrumo.core.logging``",
-    )
-    cadrumo_manuals_http_timeout_s: float = Field(
-        default=60.0,
-        gt=0,
-        description="HTTP timeout (seconds) for AEAT manual PDF downloads",
     )

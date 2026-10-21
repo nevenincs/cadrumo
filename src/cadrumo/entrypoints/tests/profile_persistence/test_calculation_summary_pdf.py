@@ -233,7 +233,7 @@ def _resigned(
 ) -> bytes:
     """Rewrite the embedded report and render it again as a complete, consistently signed summary."""
     report = _embedded_report(payload)
-    if header:
+    if header is not None and header:
         report = report.model_copy(update={"header": report.header.model_copy(update=header)})
     if change_rows is not None:
         report = change_rows(report)

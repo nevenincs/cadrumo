@@ -22,7 +22,7 @@ def installed_wheel_aeat() -> Path:
         executable,
         distribution="cadrumo",
         entry_point="aeat",
-        expected_value="cadrumo.entrypoints.cli.bootstrap:main",
+        expected_value="cadrumo_runtime.host.frontend.cli.bootstrap:main",
     )
     payload_sha256 = installed_wheel_payload_sha256(executable)
     if len(payload_sha256) != 64:

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#profile-bundle-tui'
 date: '2026-07-24'
-modified: '2026-08-15'
-body_hash: 'sha256:4682ea8bb2d19dcb060c3689e354475f1e3487849e052cc891319103bf4de787'
+modified: '2026-10-14'
+body_hash: 'sha256:dc7e4c30edb45c81424ebd83f088d921bfed5551e13cd3349cfeae4412170169'
 related:
   - '[[2026-07-23-profile-setup-flow-adr]]'
   - '[[2026-07-24-profile-bundle-tui-canonical-bundle-path-reference]]'
@@ -56,3 +56,7 @@ The knockout criterion is single-authority composition: every alternative that a
 - `--to` (export) and PATH (import) are now optional at parse time; the missing-value refusal moved from a click parse error to a typed, localized refusal with a suggestion — a strictly more instructive gate, but a changed error shape for callers that matched click's text.
 - The interactive render path depends on the locale batch landing (seven CopyRef-only keys plus two refusal keys); until then only the refusal keys gate CI parity.
 - The flow deliberately cannot save-and-exit; an abandoned run discards answers loudly via the substrate's typed abandonment error.
+
+### Amendment 2026-10-14: runtime-host TUI ownership
+
+The installed Textual profile and operation projections now live under `src/cadrumo_runtime/host/frontend/tui/` (`cadrumo_runtime.host.frontend.tui`) and launch through `cadrumo-runtime tui`. They remain presentations over the canonical application bundle authorities. The earlier `cadrumo.entrypoints.tui.launcher` placement is retained as decision history and is superseded only for current source ownership, dependency direction, and launch; the bundle, checkpoint, and secret-handling contracts remain unchanged. `cadrumo` tax modules do not import `cadrumo_runtime`.

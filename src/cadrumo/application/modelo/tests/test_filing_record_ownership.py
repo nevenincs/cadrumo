@@ -9,6 +9,8 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ....core.period import Period
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -19,7 +21,6 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
-from ...user_profile.access_contracts import AccessDenialCode
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..filing_record_ownership import load_profile_filing_record
 from ..verification_repository_ports import VerificationRepositoryBundle

@@ -29,6 +29,7 @@ from dev.docs.sequences.verdict_cache import check_reusing_verdict, published_ve
 
 __all__ = [
     "DEFAULT_JOBS",
+    "check_committed_goldens",
     "committed_goldens_key",
     "main",
     "run_sequence_goldens_gate",
@@ -52,6 +53,21 @@ def _check_committed_goldens(jobs: int) -> tuple[str, ...]:
     return check_sequences_in_subprocess(jobs=jobs)
 
 
+def check_committed_goldens(
+    *,
+    jobs: int = DEFAULT_JOBS,
+    input_key: Callable[[], str] = committed_goldens_key,
+    check: Callable[[int], tuple[str, ...]] = _check_committed_goldens,
+) -> tuple[str, ...]:
+    """Check the committed corpus through its one content-keyed verdict authority."""
+    problems, reused = check_reusing_verdict(input_key, lambda: check(jobs))
+    if reused is not None:
+        print(f"cli-sequence goldens: clean ({reused})")
+    elif not problems:
+        print("cli-sequence goldens: clean (recorded verdict)")
+    return problems
+
+
 def run_sequence_goldens_gate(
     changed_files: Iterable[str] | None,
     *,
@@ -64,14 +80,10 @@ def run_sequence_goldens_gate(
         print("cli-sequence goldens: not selected; no changed path can alter documented output")
         return 0
     try:
-        key = input_key()
-        problems, reused = check_reusing_verdict(key, lambda: check(jobs))
+        problems = check_committed_goldens(jobs=jobs, input_key=input_key, check=check)
     except SequenceEngineError as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
         return 1
-    if reused is not None:
-        print(f"cli-sequence goldens: clean ({reused})")
-        return 0
     if problems:
         for problem in problems:
             print(f"FAIL: {problem}", file=sys.stderr)
@@ -81,7 +93,6 @@ def run_sequence_goldens_gate(
             file=sys.stderr,
         )
         return 1
-    print(f"cli-sequence goldens: clean (recorded verdict {key[:12]})")
     return 0
 
 

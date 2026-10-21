@@ -5,16 +5,16 @@ tags:
 date: '2026-08-23'
 related:
   - "[[2026-08-23-external-client-boundary-research]]"
-modified: '2026-10-05'
+modified: '2026-10-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:db65afc4b8defdf59855cacf95cc980129d3a4b51921491ae201649b43127872'
+body_hash: 'sha256:1b188216d64d86d3a859a1f9451dc366c5df92b18bd4cd306b232d3f5b2fe83d'
 ---
 # `external-client-boundary` adr: `base product is client-blind` | (**status:** `rejected`)
 
 ## Rejection
 
 Operator correction: separating the harness from the CLI and base package does not
-authorize deleting the separately owned harness, Claude plugin, build, deployment, or
+authorize deleting the separately owned harness, build, deployment, or
 release surfaces. The harness is a promised product surface with its own distribution
 boundary. This proposal therefore does not govern implementation and supersedes none
 of the accepted harness or packaging decisions.

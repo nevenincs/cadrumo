@@ -214,7 +214,8 @@ def test_real_blocked_reader_cleanup_settles_child_before_descriptor_close(
     )
 
     def launch(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
-        return launch_process([command[0], "-c", source, *command[3:]], launch_kwargs)
+        entry = command.index("-m")
+        return launch_process([*command[:entry], "-c", source, *command[entry + 2 :]], launch_kwargs)
 
     monkeypatch.setattr(process_boundary, "_launch_worker_process", launch)
     worker = _SupervisedKdfWorker(
@@ -353,7 +354,8 @@ def test_real_blocked_reader_cleanup_settles_child_before_descriptor_close(
             "child_settled": child_settled,
             "teardown_error_types": teardown_errors,
         }
-        evidence = Path(os.environ["CADRUMO_TEST_RUN_ROOT"]) / "artifacts" / "s26-blocked-cleanup.json"
+        # Kept in the test's own pytest-managed directory for inspection after a failure.
+        evidence = tmp_path / "blocked-cleanup.json"
         evidence.write_text(json.dumps(facts, indent=2), encoding="utf-8")
-        assert child_settled and cleanup_settled and rescue_settled and readers_settled
-        assert not teardown_errors
+        assert child_settled and cleanup_settled and rescue_settled and readers_settled, facts
+        assert not teardown_errors, facts

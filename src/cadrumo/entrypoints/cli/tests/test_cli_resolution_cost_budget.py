@@ -9,7 +9,7 @@ This budgets the total.
 
 **Why module count and not latency.** Calibrated latency budgets were the
 original ask. That is not measurable here: a quiet-control CLI resolution takes
-about 1.75 seconds on this repository's backing share, and peer agents commonly
+about 1.75 seconds on this repository's backing share, and peer delegated clients commonly
 run two hundred concurrent processes on the same machine, so wall-clock
 readings track contention rather than code. A timing gate would fail when a
 colleague runs a suite and pass when the machine is idle, which is worse than
@@ -68,13 +68,14 @@ _CLASS_EXCESS_BUDGET: dict[str, int] = {
 _HEAVY_NODE = "app/ledger/import"
 _BATCH_COUNT = 3
 
+# The child runs as a script, so it names this test package rather than importing relatively.
 _PROBE = textwrap.dedent(
-    """
+    f"""
     import json
     import sys
     from pathlib import Path
 
-    from cadrumo.entrypoints.cli.tests.cli_performance import measure_resolution_costs
+    from {__package__}.cli_performance import measure_resolution_costs
 
     request = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
     records = measure_resolution_costs(request["paths"], record_names_for=request["record_names_for"])

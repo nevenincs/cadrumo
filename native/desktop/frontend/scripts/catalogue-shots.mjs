@@ -7,10 +7,14 @@ import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { buildPath } from "../../scripts/build-paths.mjs";
+import { server } from "../../scripts/configuration.mjs";
 
 const { values } = parseArgs({
   options: {
-    base: { type: "string", default: "http://127.0.0.1:6006" },
+    base: {
+      type: "string",
+      default: `http://127.0.0.1:${server().cataloguePort}`,
+    },
     out: { type: "string" },
     schemes: { type: "string", default: "light,dark" },
     locales: { type: "string", default: "en" },

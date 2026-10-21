@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -14,6 +14,9 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...bucket_event_repository import BucketEventHistoryRepositoryFactory
@@ -21,12 +24,6 @@ from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import review_package_recipient_operations as operation
 from ..review_package_recipient_registry import (
@@ -67,7 +64,7 @@ class _Recorder:
         self.inside_commit = False
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         assert not self.inside_commit
         self.inside_commit = True
         try:
@@ -402,6 +399,34 @@ def test_definitions_and_access_resolvers_are_exact_profile_and_profile_values()
     with pytest.raises(ProfileAccessRefusedError) as refused:
         operation.resolve_review_package_recipient_add_access(broad_request, wrong_profile)
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def test_recipient_list_is_admitted_on_the_external_client_frontend_without_a_commit_door() -> None:
+    def registry_factory(*, bucket_id: str) -> RecipientFingerprintRegistryPorts:
+        raise AssertionError(bucket_id)
+
+    list_definition = operation.build_review_package_recipient_list_definition(registry_factory)
+    list_registration = operation.build_review_package_recipient_list_registration(list_definition)
+    request = OperationRequest[BaseModel](
+        definition_id=list_definition.definition_id,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=operation.ReviewPackageRecipientListRequest(profile_id=_PROFILE),
+    )
+
+    resolved = operation.resolve_review_package_recipient_list_access(
+        request,
+        OperationAccessContext(
+            profile_id=_PROFILE,
+            destination_id=uuid4(),
+            action=AccessAction.SUBMIT,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
+            contract=list_registration.contract,
+            published_authority=Availability.AVAILABLE,
+        ),
+    )
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
+    assert resolved.request.profile_id == _PROFILE
+    assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 def test_result_projector_requires_successful_exact_effect_receipt() -> None:

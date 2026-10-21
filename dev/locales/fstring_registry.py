@@ -181,6 +181,8 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     will propagate the error with full context rather than a silent empty set.
     """
     from cadrumo.application.calculations.m303_carry_ingress import M303_CARRY_ERROR_NAMESPACE
+    from cadrumo.application.dependency_contracts import DependencySetupStep
+    from cadrumo.application.dependency_setup_operation import DependencySetupOutcome
     from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
     from cadrumo.application.operations.frontend_requests import (
         OperationCancellationRefusalCode,
@@ -196,6 +198,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
     from cadrumo.core.errors.error_codes import ERROR_CONTEXT_LABEL_KEYS, ErrorCategory
     from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+    from cadrumo.core.model_catalogue import ModelRole
     from cadrumo.core.operations import OperationTerminalCondition
     from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
@@ -205,7 +208,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
     from cadrumo.entrypoints.tui.ledger.classification import CLASSIFICATION_FIELD_NAMES
     from dev.docs.terminology_handbook.topics import load_topic_catalogue
-    from dev.locales._registry_scanner import scan_detail_row_fields
+    from dev.locales._registry_scanner import scan_detail_row_fields, scan_profile_schema_keys
 
     with bundled_indexed_authority().operation() as operation:
         wizard_flow = build_setup_flow(operation)
@@ -215,6 +218,13 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         descendant_relations = tuple(token.value for token in descendant_relacion_tokens(authority=operation))
     topic_slugs = tuple(topic.slug for topic in load_topic_catalogue().topics)
     row_fields = scan_detail_row_fields()
+    profile_field_label_keys = tuple(
+        sorted(
+            key
+            for key in scan_profile_schema_keys()
+            if key.startswith("profile.schema.field.") and key.endswith(".label")
+        )
+    )
 
     return (
         *_wizard_choice_label_registrations(
@@ -245,6 +255,11 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             home_reason_codes=HOME_ACTION_REASON_CODES,
             wizard_reason_codes=WIZARD_VALIDATION_REASON_CODES,
             ledger_classification_fields=CLASSIFICATION_FIELD_NAMES,
+        ),
+        FStringKeyRegistration(
+            description="profile.schema.field.*.label (user-profile schema field labels)",
+            key_factory=lambda key: key,
+            values=profile_field_label_keys,
         ),
         *_surface_registrations(profile_setup_state=ProfileSetupState),
         *_storage_registrations(
@@ -278,6 +293,28 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
                     + [code.value for code in OperationDetachRefusalCode]
                 )
             ),
+        ),
+        FStringKeyRegistration(
+            # The setup surfaces name a local model by its catalogue role
+            # (entrypoints/cli/config/provision_cli.py, entrypoints/tui/setup/screen.py).
+            description="provisioning.role.* (ModelRole)",
+            key_factory=lambda v: f"provisioning.role.{v}",
+            values=_enum_values(ModelRole),
+        ),
+        FStringKeyRegistration(
+            description="cli.config.provision.step.* (DependencySetupStep)",
+            key_factory=lambda v: f"cli.config.provision.step.{v}",
+            values=_enum_values(DependencySetupStep),
+        ),
+        FStringKeyRegistration(
+            description="cli.config.provision.outcome.* (DependencySetupOutcome)",
+            key_factory=lambda v: f"cli.config.provision.outcome.{v}",
+            values=_enum_values(DependencySetupOutcome),
+        ),
+        FStringKeyRegistration(
+            description="tui.setup.outcome.* (DependencySetupOutcome)",
+            key_factory=lambda v: f"tui.setup.outcome.{v}",
+            values=_enum_values(DependencySetupOutcome),
         ),
         FStringKeyRegistration(
             # Bounded enumeration: LedgerReviewStatus is a closed catalogue of
@@ -475,13 +512,16 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         ModeloFormTextDisclosure,
     )
     from cadrumo.entrypoints.tui.modelo.workbench.editor import EDITOR_HINT_KINDS
-    from cadrumo.entrypoints.tui.modelo.workbench.installed import WORDED_FINDING_CODES
+    from cadrumo.entrypoints.tui.modelo.workbench.factory import WORDED_FINDING_CODES
     from cadrumo.entrypoints.tui.modelo.workbench.page_items import WorkbenchFilter
     from cadrumo.entrypoints.tui.modelo.workbench.progress import NextAction, WorkbenchStep
     from cadrumo.entrypoints.tui.modelo.workbench.result import ResultGroup
     from cadrumo.entrypoints.tui.modelo.workbench.review import REVIEW_EFFECTS
     from cadrumo.entrypoints.tui.modelo.workbench.session import StageRefusal
-    from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import NOT_WRITABLE_REASONS, SOURCE_WORDED_ORIGINS
+    from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import (
+        NOT_WRITABLE_REASONS,
+        SOURCE_WORDED_ORIGINS,
+    )
     from cadrumo.entrypoints.tui.modelo.workbench.wording import PERIOD_WORD_NAMES
 
     root = "tui.modelo.workbench"
@@ -941,6 +981,11 @@ def _dynamic_family_registrations(
             description="tui.home.reason.* (HOME_ACTION_REASON_CODES)",
             key_factory=lambda v: f"tui.home.reason.{v}",
             values=tuple(home_reason_codes),
+        ),
+        FStringKeyRegistration(
+            description="tui.home.empty.* (the home screen's three retained list zones)",
+            key_factory=lambda v: f"tui.home.empty.{v}",
+            values=("actions", "declarations", "agenda"),
         ),
         FStringKeyRegistration(
             description="wizard.errors.* (WIZARD_VALIDATION_REASON_CODES)",

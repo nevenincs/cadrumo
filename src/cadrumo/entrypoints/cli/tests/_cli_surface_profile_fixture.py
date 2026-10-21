@@ -1,19 +1,15 @@
-"""Canonical active-profile fixture for CLI surface suites."""
-
-from __future__ import annotations
+"""Tax surface fixture declaration through a runtime-owned setup port."""
 
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ._cli_surface_support import create_cli_surface_profile, isolated_cli_surface_backend
-
-__all__ = ["_isolated_backend"]
+from .cli_fixture_worlds import CliWorldProvider
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_cli_surface_backend(tmp_path):
-        create_cli_surface_profile()
+def _isolated_backend(tmp_path: Path, cli_world_provider: CliWorldProvider) -> Iterator[None]:
+    with cli_world_provider.backend("surface", tmp_path):
+        cli_world_provider.create_surface_profile()
         yield

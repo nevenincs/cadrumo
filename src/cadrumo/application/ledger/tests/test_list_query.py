@@ -10,7 +10,7 @@ frontend rely on it rather than reimplementing it.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -98,7 +98,7 @@ def _query(**overrides: Unpack[_QueryOverrides]) -> LedgerTransactionListQuery:
 
 
 @contextmanager
-def _stored(*transactions: Transaction) -> Iterator[TransactionCatalogueRepositoryProtocol]:
+def _stored(*transactions: Transaction) -> Generator[TransactionCatalogueRepositoryProtocol]:
     """Build a deterministic transaction catalogue through the read protocol."""
     yield _InMemoryTransactionRepository(
         bucket_id=_BUCKET,

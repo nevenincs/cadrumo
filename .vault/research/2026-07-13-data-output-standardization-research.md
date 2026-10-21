@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#data-output-standardization'
 date: '2026-07-13'
-modified: '2026-10-05'
-body_hash: 'sha256:275e358bbad6a95cb66555f1aa23360c0c16dd5b309898098ec993607144f4f1'
+modified: '2026-10-21'
+body_hash: 'sha256:13262609e7d043f02f3e67879f17904aad4dfb05dbdde470b639d793c0a52e40'
 related: []
 ---
 
@@ -188,13 +188,8 @@ its own namespaced fixtures tree with sidecar provenance — no drift.
 
 ### Axis 4 — Dev scripts, packaging, and generated-artifact producers
 
-**F4.1 — Packaging generators are clean.** `materialise_plugin()` /
-`materialise_marketplace()`  write
-under operator-chosen output dirs with `cadrumo-` naming, and the checked-in
-marketplace scaffold is generator-locked by test.
-the former source file (`cadrumo-plugin-smoke-`) and
-`dev/docs/serve.py:514` (`cadrumo-docs-serve-`) use correct prefixes and
-clean up by default.
+**F4.1 — Temporary-directory prefixes are clean.** `dev/docs/serve.py:514` (`cadrumo-docs-serve-`) uses a correct prefix and
+cleans up by default.
 
 **F4.2 — Docs generators route to gitignored or deliberately-tracked
 surfaces.** `docs/api/*.rst` (tracked by design per the apidocs-CLI rule),

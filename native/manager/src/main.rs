@@ -1,50 +1,63 @@
 //! Entrypoint of the per-user runtime manager image.
 //!
-//! Native admission precedes package probing, ownership and runtime supervision.
+//! Package verification and ownership precede runtime supervision.
 #![windows_subsystem = "windows"]
 
+use cadrumo_application::diagnostics::{DiagnosticSource, Diagnostics, panic};
 #[cfg(windows)]
-use cadrumo_application::diagnostics::{
-    DiagnosticSource, Diagnostics, EventKind, HostOutcome, HostStage,
+use cadrumo_application::diagnostics::{EventKind, HostOutcome, HostStage};
+use cadrumo_manager::{
+    identity,
+    invocation::{Intent, Invocation},
 };
-use cadrumo_manager::identity;
-#[cfg(windows)]
-use std::sync::Arc;
 use std::{
     env,
     io::{self, Write},
     process::ExitCode,
+    sync::Arc,
 };
 
 const USAGE_ERROR: u8 = 2;
 const STARTUP_FAILED: u8 = 69;
-#[cfg(windows)]
-const ADMISSION_REFUSED: u8 = 77;
+
+// The manager component's build identity belongs to this image alone: the library the desktop
+// links never reads it, so a manager change never rebuilds the desktop.
+/// Build id of the manager component, `YYYYMMDD` and an iteration; it changes only when the
+/// manager's inputs do.
+const BUILD_ID: &str = env!(
+    "CADRUMO_MANAGER_BUILD_ID",
+    "CADRUMO_MANAGER_BUILD_ID must come from the manager component's build identity"
+);
+/// Per-build-directory sequence of that identity, the fourth Windows file-version field.
+const BUILD_SEQUENCE: &str = env!(
+    "CADRUMO_MANAGER_BUILD_SEQUENCE",
+    "CADRUMO_MANAGER_BUILD_SEQUENCE must come from the manager component's build identity"
+);
+/// `debug` or `release`, from the Cargo profile that compiled this image.
+const BUILD_TYPE: &str = env!("CADRUMO_BUILD_TYPE");
+/// `{VERSION}+{BUILD_ID}`, with a `.debug` suffix for a debug build.
+const DISPLAY_VERSION: &str = env!("CADRUMO_DISPLAY_VERSION");
+const _: () = assert!(
+    !BUILD_ID.is_empty() && !BUILD_SEQUENCE.is_empty(),
+    "the manager component's build identity is empty"
+);
 
 fn start(
+    diagnostics: Arc<Diagnostics>,
     breakaway_attempted: bool,
-    sign_in: bool,
+    intent: Intent,
     designation: Option<cadrumo_manager::cutover::Designation>,
 ) -> ExitCode {
-    #[cfg(windows)]
-    let diagnostics = Arc::new(Diagnostics::new(DiagnosticSource::Manager));
     #[cfg(windows)]
     diagnostics.host_event(EventKind::HostStarted, HostStage::Admission);
     #[cfg(windows)]
     diagnostics.host_event(EventKind::StageStarted, HostStage::Admission);
     #[cfg(windows)]
-    if let Err(refusal) = cadrumo_manager::admission::require_current() {
-        cadrumo_manager::diagnostics::admission_refused(&diagnostics, refusal);
-        diagnostics.host_stopped(i32::from(ADMISSION_REFUSED));
-        let _ = writeln!(io::stderr(), "{}", refusal.code());
-        return ExitCode::from(ADMISSION_REFUSED);
-    }
-    #[cfg(windows)]
     diagnostics.host_outcome(HostStage::Admission, HostOutcome::Ready);
     #[cfg(windows)]
     match run_windows(
         breakaway_attempted,
-        sign_in,
+        intent,
         designation,
         diagnostics.clone(),
     ) {
@@ -52,7 +65,12 @@ fn start(
             diagnostics.host_stopped(0);
             ExitCode::SUCCESS
         }
-        Err(_) => {
+        Err(error) => {
+            use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+            diagnostics.failure(
+                ApplicationError::new(ErrorCode::ManagerUnavailable, Operation::Manager)
+                    .caused_by(error),
+            );
             diagnostics.host_stopped(i32::from(STARTUP_FAILED));
             let _ = writeln!(io::stderr(), "manager_startup_failed");
             cadrumo_manager::windows_lifecycle::show_startup_failure();
@@ -61,7 +79,7 @@ fn start(
     }
     #[cfg(not(windows))]
     {
-        let _ = (breakaway_attempted, sign_in, designation);
+        let _ = (diagnostics, breakaway_attempted, intent, designation);
         let _ = writeln!(io::stderr(), "manager_platform_unavailable");
         ExitCode::from(STARTUP_FAILED)
     }
@@ -70,7 +88,7 @@ fn start(
 #[cfg(windows)]
 fn run_windows(
     breakaway_attempted: bool,
-    sign_in: bool,
+    intent: Intent,
     designation: Option<cadrumo_manager::cutover::Designation>,
     diagnostics: Arc<Diagnostics>,
 ) -> io::Result<()> {
@@ -88,13 +106,13 @@ fn run_windows(
         HostStage::JobEscape,
         ErrorCode::ManagerUnavailable,
         Operation::Manager,
-        || windows_lifecycle::escape_job(breakaway_attempted || designation.is_some(), sign_in),
+        || windows_lifecycle::escape_job(breakaway_attempted || designation.is_some(), intent),
     )? {
         diagnostics.host_outcome(HostStage::JobEscape, HostOutcome::Dispatched);
         return Ok(());
     }
     let (installation, successor) = if let Some(designation) = designation {
-        let admitted = cadrumo_manager::cutover_child::admit(designation)?;
+        let admitted = cadrumo_manager::successor::windows::admit(designation)?;
         (
             admitted.installation,
             Some((admitted.permit, admitted.reporter)),
@@ -105,7 +123,7 @@ fn run_windows(
             HostStage::Package,
             ErrorCode::PackageUnavailable,
             Operation::Manager,
-            || cadrumo_manager::installation::dispatch_newest(&env::current_exe()?, sign_in),
+            || cadrumo_manager::installation::dispatch_newest(&env::current_exe()?, intent),
         )? {
             DispatchOutcome::Dispatched => {
                 diagnostics.host_outcome(HostStage::Package, HostOutcome::Dispatched);
@@ -127,20 +145,29 @@ fn run_windows(
         if successor.is_some() {
             return Err(io::ErrorKind::WouldBlock.into());
         }
-        if !sign_in {
-            cadrumo_manager::ipc::windows::request(
-                &env::current_exe()?,
-                &cadrumo_manager::ipc::Request::Reveal { schema: 1 },
-            )?;
+        if let Some(request) = intent.existing_request() {
+            let response = cadrumo_manager::ipc::windows::request(&env::current_exe()?, &request)?;
+            if intent == Intent::Retry
+                && response.outcome != cadrumo_manager::ipc::Outcome::ReEvaluated
+            {
+                return Err(io::ErrorKind::WouldBlock.into());
+            }
         }
         return Ok(());
     };
     diagnostics.host_event(EventKind::StageStarted, HostStage::Storage);
     diagnostics.host_event(EventKind::StageCompleted, HostStage::Storage);
     configure(installation.locations(), &diagnostics);
+    if intent == Intent::Retry {
+        // Only an admitted session owner may clear failures for a fresh launch.
+        // Existing owners receive Retry over their authenticated IPC instead.
+        cadrumo_manager::failed_versions::FailedVersions::retry(
+            installation.locations().storage_root(),
+        )?;
+    }
     let preferences =
         cadrumo_manager::preferences::Preferences::read(installation.locations().storage_root())?;
-    if sign_in && !preferences.start_at_sign_in {
+    if matches!(intent, Intent::SignIn | Intent::Recovery) && !preferences.start_at_sign_in {
         return Ok(());
     }
     let tray =
@@ -165,16 +192,20 @@ fn run_windows(
         session,
         windows_lifecycle::activity,
         diagnostics.clone(),
-        if sign_in {
+        if intent == Intent::SignIn {
             cadrumo_manager::session::ownership::StartKind::SignIn
+        } else if intent == Intent::Recovery {
+            cadrumo_manager::session::ownership::StartKind::Recovery
         } else {
             cadrumo_manager::session::ownership::StartKind::Manual
         },
-    );
+    )?;
     if let Some((permit, reporter)) = successor {
         background.designated(permit, reporter);
     }
-    background.watch_installation(&selected)?;
+    background.watch_installation(Box::new(
+        cadrumo_manager::installation_watch::InstallationWatch::new(&selected)?,
+    ));
     stage(
         &diagnostics,
         HostStage::Window,
@@ -185,29 +216,53 @@ fn run_windows(
 }
 
 fn main() -> ExitCode {
+    // First, so a panic on any thread is recorded once the log is configured,
+    // and the default hook never prints a payload.
+    let diagnostics = Arc::new(Diagnostics::new(DiagnosticSource::Manager));
+    panic::install(diagnostics.clone());
     let arguments: Vec<_> = env::args_os().skip(1).collect();
-    match arguments.as_slice() {
-        [] => start(false, false, None),
-        [flag] if flag == "--sign-in" => start(false, true, None),
-        [flag] if flag == "--breakaway-attempt" => start(true, false, None),
-        [first, second] if first == "--breakaway-attempt" && second == "--sign-in" => {
-            start(true, true, None)
-        }
-        [flag, value] if flag == "--cutover" => {
-            match value
-                .to_str()
-                .and_then(|value| cadrumo_manager::cutover::Designation::parse(value).ok())
-            {
-                Some(designation) => start(false, false, Some(designation)),
-                None => ExitCode::from(USAGE_ERROR),
+    match Invocation::parse(&arguments) {
+        #[cfg(windows)]
+        Ok(Invocation::Service) => match cadrumo_manager::service_windows::run() {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(_) => {
+                let _ = writeln!(io::stderr(), "manager_service_failed");
+                ExitCode::from(STARTUP_FAILED)
             }
+        },
+        #[cfg(windows)]
+        Ok(Invocation::ServiceWorker { sign_in }) => {
+            if cadrumo_manager::service_windows::admit_worker().is_err() {
+                let _ = writeln!(io::stderr(), "manager_service_worker_refused");
+                return ExitCode::from(STARTUP_FAILED);
+            }
+            start(
+                diagnostics,
+                true,
+                if sign_in {
+                    Intent::SignIn
+                } else {
+                    Intent::Recovery
+                },
+                None,
+            )
         }
-        [flag] if flag == "--version" => {
+        #[cfg(not(windows))]
+        Ok(Invocation::Service | Invocation::ServiceWorker { .. }) => {
+            let _ = writeln!(io::stderr(), "manager_platform_unavailable");
+            ExitCode::from(STARTUP_FAILED)
+        }
+        Ok(Invocation::Start { intent, breakaway }) => start(diagnostics, breakaway, intent, None),
+        Ok(Invocation::Cutover(designation)) => {
+            start(diagnostics, false, Intent::Manual, Some(designation))
+        }
+        Ok(Invocation::SupportsRetry) => ExitCode::SUCCESS,
+        Ok(Invocation::Version) => {
             match writeln!(
                 io::stdout(),
                 "{} {}",
                 identity::MANAGER_NAME,
-                identity::VERSION
+                DISPLAY_VERSION
             ) {
                 Ok(()) => ExitCode::SUCCESS,
                 Err(_) => ExitCode::FAILURE,
@@ -215,8 +270,43 @@ fn main() -> ExitCode {
         }
         _ => {
             // A GUI-subsystem image may have no stderr; the exit code carries the refusal.
-            let _ = writeln!(io::stderr(), "usage: cadrumo-manager [--version]");
+            let _ = writeln!(io::stderr(), "usage: cadrumo-manager [--version | --retry]");
             ExitCode::from(USAGE_ERROR)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn display_version_names_the_build_and_its_type() {
+        let release = format!("{}+{BUILD_ID}", identity::VERSION);
+        let expected = if BUILD_TYPE == "debug" {
+            format!("{release}.debug")
+        } else {
+            release
+        };
+        assert_eq!(DISPLAY_VERSION, expected);
+        assert_eq!(
+            BUILD_TYPE,
+            if cfg!(debug_assertions) {
+                "debug"
+            } else {
+                "release"
+            }
+        );
+    }
+
+    #[test]
+    fn build_id_is_a_utc_day_and_an_iteration() {
+        assert!(BUILD_ID.len() >= 10, "{BUILD_ID}");
+        assert!(
+            BUILD_ID.bytes().all(|byte| byte.is_ascii_digit()),
+            "{BUILD_ID}"
+        );
+        let sequence: u16 = BUILD_SEQUENCE.parse().expect("a 16-bit build sequence");
+        assert!(sequence > 0);
     }
 }

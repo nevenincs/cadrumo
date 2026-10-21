@@ -216,7 +216,7 @@ def load_auth_diagnostic(
     summary = _summary_from_payload(payload)
     html = payload.html
     excerpt = None
-    if html and html.strip():
+    if (html is not None and html) and html.strip():
         excerpt = f"[redacted html captured: {len(html)} chars]"
     return AuthDiagnosticDetail.model_validate(
         {

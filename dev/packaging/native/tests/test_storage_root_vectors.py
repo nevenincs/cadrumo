@@ -29,6 +29,8 @@ from cadrumo.tests.audited_process import ensure_text_completed_process, run_aud
 
 from ..storage_vectors import StorageRootVector, invalid_native_path_value, storage_root_vectors
 
+_VECTORS = storage_root_vectors(project_root())
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
@@ -37,8 +39,8 @@ def _replay(vector: StorageRootVector) -> tuple[str | None, StorageRootRefusal |
     environment.update({name: invalid_native_path_value(vector.platform) for name in vector.invalid_environment})
     try:
         root = resolve_storage_root(
-            platform=vector.platform,
-            mode=vector.mode,
+            platform=StoragePlatform(vector.platform),
+            mode=StorageMode(vector.mode),
             environ=environment,
             checkout=invalid_native_path_value(vector.platform) if vector.invalid_checkout else vector.checkout,
             channel=vector.channel,
@@ -48,34 +50,35 @@ def _replay(vector: StorageRootVector) -> tuple[str | None, StorageRootRefusal |
     return str(root), None
 
 
-@pytest.mark.parametrize("vector", storage_root_vectors(), ids=lambda vector: vector.name)
+@pytest.mark.parametrize("vector", _VECTORS, ids=lambda vector: vector.name)
 def test_python_resolver_reproduces_every_vector(vector: StorageRootVector) -> None:
-    assert _replay(vector) == (vector.expected_root, vector.refusal)
+    refusal = None if vector.refusal is None else StorageRootRefusal(vector.refusal)
+    assert _replay(vector) == (vector.expected_root, refusal)
 
 
 def test_vectors_are_well_formed_and_cover_every_platform_and_mode() -> None:
-    vectors = storage_root_vectors()
+    vectors = _VECTORS
     assert len({vector.name for vector in vectors}) == len(vectors)
     assert all((vector.expected_root is None) != (vector.refusal is None) for vector in vectors)
     assert {(vector.platform, vector.mode) for vector in vectors} == {
-        (platform, mode) for platform in StoragePlatform for mode in StorageMode
+        (platform.value, mode.value) for platform in StoragePlatform for mode in StorageMode
     }
     assert {vector.refusal for vector in vectors} >= {
-        StorageRootRefusal.INSTALLED_BASE_UNAVAILABLE,
-        StorageRootRefusal.RELATIVE_OVERRIDE_INSTALLED,
+        StorageRootRefusal.INSTALLED_BASE_UNAVAILABLE.value,
+        StorageRootRefusal.RELATIVE_OVERRIDE_INSTALLED.value,
     }
     for vector in vectors:
         environment = dict(vector.environment)
-        if vector.platform is StoragePlatform.WINDOWS and vector.known_folder is not None:
+        if vector.platform == StoragePlatform.WINDOWS.value and vector.known_folder is not None:
             assert environment["LOCALAPPDATA"] == vector.known_folder
-        if vector.platform is not StoragePlatform.WINDOWS:
+        if vector.platform != StoragePlatform.WINDOWS.value:
             assert vector.known_folder is None
-        if vector.mode is StorageMode.DEVELOPMENT:
+        if vector.mode == StorageMode.DEVELOPMENT.value:
             assert vector.checkout is not None
 
 
 def test_vectors_project_onto_json() -> None:
-    projected = [vector.as_contract() for vector in storage_root_vectors()]
+    projected = [vector.as_contract() for vector in _VECTORS]
     assert json.loads(json.dumps(projected)) == projected
     assert projected[0] == {
         "name": "windows-installed-default",

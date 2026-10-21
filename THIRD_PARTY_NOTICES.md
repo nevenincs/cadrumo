@@ -110,3 +110,40 @@ builds of the following typefaces, each distributed under the
 
 The README demo recording uses **Cascadia Mono** (SIL OFL 1.1); its licence
 text ships alongside the font under `docs/_static/readme/fonts/`.
+
+## Desktop shell: provider marks
+
+The desktop shell's agent column and its settings draw each model provider
+with that provider's own mark, so a person can tell which provider an entry
+belongs to. The path data ships, unchanged, in
+`native/desktop/frontend/src/components/agent/providerIcons.ts`. It is taken
+from the single-colour SVG set of **@lobehub/icons-static-svg** 1.95.1
+(https://github.com/lobehub/lobe-icons), distributed under the **MIT licence**:
+
+> MIT License
+>
+> Copyright (c) 2023 LobeHub
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy
+> of this software and associated documentation files (the "Software"), to deal
+> in the Software without restriction, including without limitation the rights
+> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+> copies of the Software, and to permit persons to whom the Software is
+> furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all
+> copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+> SOFTWARE.
+
+The licence covers the artwork files as that project publishes them. The marks
+themselves remain the trademarks of the providers they depict. Cadrumo draws
+each one only to identify the provider an entry names, and claims no
+affiliation with, or endorsement by, any of them. No package is installed for
+this: only the path data is kept.

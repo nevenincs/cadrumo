@@ -1,13 +1,7 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ._modelo_nonwork_command_spec_policies import (
-    _MODEL_READ,
-    _MODEL_WRITE,
-)
-from .command_parameter_contracts import OptionSpec
-from .command_shared_contracts import (
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -17,7 +11,13 @@ from .command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from .command_spec import CommandSpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._modelo_nonwork_command_spec_policies import (
+    _MODEL_READ,
+    _MODEL_WRITE,
+)
 
 MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -42,10 +42,12 @@ MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_iva_wallet_cli", "iva_wallet_balance_cmd", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".modelo_iva_wallet_commands", "iva_wallet_balance_cmd", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_iva_wallet_payloads", "IvaWalletBalanceResult", __package__),
+            DeferredTarget(".modelo_iva_wallet_results", "IvaWalletBalanceResult", __package__),
             identity="modelo.iva_wallet.balance",
         ),
     ),
@@ -104,10 +106,12 @@ MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_WRITE,
-        handler=LazyBinding.available(DeferredTarget("._modelo_iva_wallet_cli", "iva_wallet_seed_cmd", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".modelo_iva_wallet_commands", "iva_wallet_seed_cmd", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_iva_wallet_payloads", "IvaWalletSeedResult", __package__),
+            DeferredTarget(".modelo_iva_wallet_results", "IvaWalletSeedResult", __package__),
             identity="modelo.iva_wallet.seed",
         ),
     ),
@@ -177,10 +181,12 @@ MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_WRITE,
-        handler=LazyBinding.available(DeferredTarget("._modelo_iva_wallet_cli", "iva_wallet_correct_cmd", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".modelo_iva_wallet_commands", "iva_wallet_correct_cmd", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads_m036", "IvaWalletCorrectResult", __package__),
+            DeferredTarget(".modelo_results_m036", "IvaWalletCorrectResult", __package__),
             identity="modelo.iva_wallet.correct",
         ),
     ),
@@ -262,11 +268,11 @@ MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_MODEL_WRITE,
         handler=LazyBinding.available(
-            DeferredTarget("._modelo_iva_wallet_cli", "iva_wallet_override_cmd", __package__)
+            DeferredTarget(".modelo_iva_wallet_commands", "iva_wallet_override_cmd", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_iva_wallet_payloads", "IvaWalletOverrideResult", __package__),
+            DeferredTarget(".modelo_iva_wallet_results", "IvaWalletOverrideResult", __package__),
             identity="modelo.iva_wallet.override",
         ),
     ),

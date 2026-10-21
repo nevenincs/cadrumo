@@ -7,12 +7,12 @@ import json
 import platform
 import re
 import sys
+import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
 from typing import Any
 
-from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
 # Entrypoint names reach C string literals, CMake target names and Python source.
@@ -63,12 +63,42 @@ def load_layout(name: str | None = None, *, root: Path = REPO_ROOT) -> dict[str,
     for key in ("paths", "files"):
         shared[key].update(selected.pop(key))
     shared.update(selected)
-    scripts = parse_toml((root / "pyproject.toml").read_text(encoding="utf-8"))["project"]["scripts"]
+    scripts = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))["project"]["scripts"]
     for entrypoint in shared["entrypoints"]:
         if not _ENTRYPOINT_NAME.fullmatch(entrypoint) or entrypoint not in scripts:
             raise ValueError(f"Native entrypoint is not a declared console script: {entrypoint}")
+    bundled_images(shared)
     application_images(shared)
     return shared
+
+
+def bundled_images(layout: dict[str, Any]) -> dict[str, dict[str, str]]:
+    """Validate the interpreter-host images the package declares for a bundled distribution.
+
+    Such an image is not one of Cadrumo's console scripts: it runs only the invocations its
+    launch profiles declare, with itself as the interpreter. It lives in the native directory.
+    """
+    declared = layout.get("bundled_images", {})
+    if not isinstance(declared, dict):
+        raise ValueError("bundled_images must be a mapping")
+    images: dict[str, dict[str, str]] = {}
+    for name, entry in declared.items():
+        if not _ENTRYPOINT_NAME.fullmatch(name) or name in layout["entrypoints"]:
+            raise ValueError(f"Bundled image is not a distinct lowercase hyphenated name: {name!r}")
+        if not isinstance(entry, dict) or set(entry) != {"distribution", "description"}:
+            raise ValueError(f"Bundled image {name} must declare its distribution and description")
+        if not all(isinstance(value, str) and value for value in entry.values()):
+            raise ValueError(f"Bundled image {name} values must be non-empty strings")
+        if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", entry["distribution"]):
+            raise ValueError(f"Bundled image {name} must name a canonical distribution")
+        images[str(name)] = {"distribution": str(entry["distribution"]), "description": str(entry["description"])}
+    return images
+
+
+def bundled_image_files(layout: dict[str, Any]) -> dict[str, str]:
+    """Map each bundled-distribution image to its package-relative executable in the native directory."""
+    native = layout["paths"]["native"]
+    return {name: f"{native}/{name}{layout['entrypoint_suffix']}" for name in bundled_images(layout)}
 
 
 def distribution_target(layout: dict[str, Any]) -> str:
@@ -124,7 +154,7 @@ def application_images(layout: dict[str, Any]) -> tuple[ApplicationImage, ...]:
     occupied = {
         str(path).split("/")[0].casefold(): str(path) for path in (*layout["paths"].values(), *layout["files"].values())
     }
-    entrypoints = set(layout["entrypoints"])
+    entrypoints = set(layout["entrypoints"]) | set(layout.get("bundled_images", {}))
     images: list[ApplicationImage] = []
     for entry in declared:
         image = _image(entry, layout["entrypoint_suffix"])
@@ -143,11 +173,6 @@ def application_images(layout: dict[str, Any]) -> tuple[ApplicationImage, ...]:
     if sum(image.desktop for image in images) > 1:
         raise ValueError("At most one application image is the desktop application")
     return tuple(images)
-
-
-def staged_application_images(layout: dict[str, Any], *, user_docs: bool) -> tuple[ApplicationImage, ...]:
-    """Return the images a package stages; the desktop image serves the bundled docs, so it needs them."""
-    return tuple(image for image in application_images(layout) if user_docs or not image.desktop)
 
 
 def desktop_image(layout: dict[str, Any]) -> ApplicationImage | None:

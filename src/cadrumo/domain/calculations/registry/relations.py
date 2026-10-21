@@ -179,7 +179,7 @@ class _FoldRequirementBucket:
 #: and :attr:`RegistryFoldRequirement.dependency_treatment` -- the grouping key
 #: below carries the exact values those fields are ultimately built from
 #: (:attr:`RelationPrefillProvider.dependency_role`,
-#: :attr:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition.treatment`),
+#: :attr:`~cadrumo.domain.calculations.registry.schema_revision_members.DependencyClassificationDefinition.treatment`),
 #: so it is typed to match rather than widened to a bare ``str``.
 type _FoldRequirementKey = tuple[
     str,
@@ -223,7 +223,7 @@ def _fold_op(binding: BindingDefinition) -> RelationAggregationOp:
         raise RegistryValidationError(
             f"relation_prefill binding {binding.id!r} declares aggregation op {declared.value!r}, "
             "which does not fold matched source filings",
-            context={"binding_id": str(binding.id), "op": declared.value},
+            context={"binding_id": binding.id, "op": declared.value},
         )
     return fold
 
@@ -313,7 +313,7 @@ def _single_source_casilla(binding: BindingDefinition, provider: RelationPrefill
     if len(declared) != 1:
         raise RegistryValidationError(
             f"relation_prefill binding {binding.id!r} must read exactly one source casilla",
-            context={"binding_id": str(binding.id), "source_casilla_ids": ",".join(declared)},
+            context={"binding_id": binding.id, "source_casilla_ids": ",".join(declared)},
         )
     return declared[0]
 

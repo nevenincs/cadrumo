@@ -174,7 +174,7 @@ def test_verify_legal_catalogue_rejects_known_bad_roles(
         article=article,
         notes=role_text,
     )
-    text = " ".join(part for part in (reference.section, reference.notes) if part)
+    text = " ".join(part for part in (reference.section, reference.notes) if (part is not None and part))
 
     assert find_known_bad(source, article, text, effective_date=reference.effective_from) is not None
     with pytest.raises(RegistryValidationError, match="known-bad citation"):

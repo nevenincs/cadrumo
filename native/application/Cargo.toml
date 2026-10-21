@@ -24,6 +24,13 @@ tokio = { version = "1", features = ["process", "io-util", "time", "rt", "macros
 [dev-dependencies]
 tempfile = "3"
 
+# Its own main: the scenarios need real child processes and a main thread
+# without the test harness's hook.
+[[test]]
+name = "panic_hook"
+path = "tests/panic_hook.rs"
+harness = false
+
 [lints.rust]
 unsafe_code = "forbid"
 

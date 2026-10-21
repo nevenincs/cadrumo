@@ -9,20 +9,22 @@ from typing import cast
 
 import pytest
 
-from cadrumo.application.operator_surface.command_ports import (
+import cadrumo_client.commands.suggestions as _suggestions
+from cadrumo_client.commands.compiler import refuse_declared_live_write
+from cadrumo_client.commands.spec import ExecutionPolicySpec
+from cadrumo_client.contracts.command_ports import (
+    Capability,
+    CommandCapabilityClass,
     CommandWriteRoute,
     CommandWriteRouteValue,
+    SideEffect,
 )
 
-from ....application.operator_surface.command_ports import CommandCapabilityClass
 from ....core.access_gate.errors import LiveSubmitForbiddenError
 from ....core.errors.error_codes import get_registered_error_code
 from .._command_policy import (
     CommandExecutionPolicy,
 )
-from .._command_runtime import refuse_declared_live_write
-from ..command_shared_contracts import Capability, SideEffect
-from ..command_spec import ExecutionPolicySpec
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -30,13 +32,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def test_callback_policy_attachment_authority_is_physically_absent() -> None:
     cli_root = Path(__file__).parents[1]
     policy_source = (cli_root / "_command_policy.py").read_text(encoding="utf-8")
-    # `command_suggestions.py`, not `_command_suggestions.py`: the private-to-public
-    # promotion renamed it and this reference was not followed, so the gate raised
-    # FileNotFoundError instead of checking that no callback attaches a policy.
-    suggestions_source = (cli_root / "command_suggestions.py").read_text(encoding="utf-8")
+    assert _suggestions.__file__ is not None
+    suggestions_path = Path(_suggestions.__file__)
+    suggestions_source = suggestions_path.read_text(encoding="utf-8")
     forbidden = {"command_execution_policy", "execution_policy_for"}
     violations: list[str] = []
-    for path in sorted(cli_root.rglob("*.py")):
+    paths = {*cli_root.rglob("*.py"), *suggestions_path.parent.rglob("*.py")}
+    for path in sorted(paths):
         if "tests" in path.parts:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -116,7 +118,7 @@ def test_a_declared_live_write_is_refused_at_dispatch() -> None:
     """A coherent ``live_write`` declaration is describable, never runnable.
 
     The declaration stays valid -- browser implies network, so the policy is
-    self-consistent and MCP can classify and block it -- but the dispatch seam
+    self-consistent and external client can classify and block it -- but the dispatch seam
     turns it into the access gate's permanent, registered refusal.
     """
     declared = ExecutionPolicySpec(

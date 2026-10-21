@@ -168,3 +168,30 @@ class TestMaterialisePreservesContent:
 
             assert second.created == ()
             assert marker.read_bytes() == b"survivor"
+
+
+class TestReportsAnswerForTheirCallers:
+    def test_each_area_finds_its_own_row(self, tmp_path) -> None:
+        with override_settings(cadrumo_local_storage_root=tmp_path):
+            report = collect_storage_area_inventory()
+
+        for area in StorageArea:
+            assert report.row_for(area).area is area
+
+    def test_an_area_the_report_lacks_has_no_row(self, tmp_path) -> None:
+        with override_settings(cadrumo_local_storage_root=tmp_path):
+            report = collect_storage_area_inventory()
+        without_logs = report.model_copy(
+            update={"rows": tuple(row for row in report.rows if row.area is not StorageArea.LOGS)}
+        )
+
+        with pytest.raises(KeyError):
+            without_logs.row_for(StorageArea.LOGS)
+
+    def test_every_internal_diagnosis_collapses_to_one_topology_neutral_kind(self) -> None:
+        assert {kind: kind.public_kind.value for kind in StorageTreeIssueKind} == {
+            StorageTreeIssueKind.MISSING_DIRECTORY: "missing_path",
+            StorageTreeIssueKind.FILE_WHERE_DIRECTORY_EXPECTED: "path_type_mismatch",
+            StorageTreeIssueKind.DIRECTORY_WHERE_FILE_EXPECTED: "path_type_mismatch",
+            StorageTreeIssueKind.ROOT_PERMISSIONS_DRIFTED: "permissions_drifted",
+        }

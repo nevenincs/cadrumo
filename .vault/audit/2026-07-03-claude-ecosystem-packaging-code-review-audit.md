@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
-modified: '2026-10-03'
-body_hash: 'sha256:eaa7eb5ee6f6bb820aa6c6549ad533066226e98f0857c9d80c96bc533bc375b5'
+modified: '2026-10-21'
+body_hash: 'sha256:00de2fc94807c1f4d8f53b3c2d09ed3c9667fab479b1027f45f211cbade23a8b'
 related: []
 ---
 
@@ -16,7 +16,7 @@ Independent code review of the `claude-ecosystem-packaging` campaign, covering r
 thirty campaign commits from `56413eafd1` through `e40e67bbb4` plus `c7da92d2f1`, reviewed
 at HEAD `67b6754760`. The review spans seven dimensions: the corpus-companion split-package
 integrity gate, storage-root relocation safety, the wheel split build configuration, the
-plugin and marketplace generator, the MCP CONFIRM annotation, the publish recipes plus
+MCP CONFIRM annotation, the publish recipes plus
 `RELEASING.md`, and cross-cutting rule conformance including exec-record honesty.
 
 ## Findings
@@ -54,12 +54,6 @@ A single exclusion pattern is shared consistently across all four sites that nee
 wheel exclude glob, the companion classifier, the size-budget slice, and the build hook.
 The version-parity and exhaustive-partition budget gates are non-tautological, and the
 `_export_names` path-source resolution cannot mask a missing external dependency.
-
-### plugin-marketplace-generator | low | Plugin and marketplace generator confirmed clean
-
-A single authored source is held for the generated plugin and marketplace trees; the
-emitted trees carry no secrets or tax data. The `uvx` pin is correct, never-mode holds and
-is tested, and the coordinator denylist is correct.
 
 ### mcp-confirm-annotation | low | MCP CONFIRM annotation confirmed clean
 

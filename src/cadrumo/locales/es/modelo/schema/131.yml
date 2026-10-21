@@ -118,7 +118,7 @@ modelo:
           help: Si para calcular el pago fraccionado quieres aplicar un porcentaje
             superior al que fija la normativa, indica aquí el porcentaje que deseas
             aplicar.
-          label: 'Sin datos base: porcentaje superior que desea aplicar'
+          label: 'Sin datos base: porcentaje superior que quieres aplicar'
         x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncqbmd5imsp315lh62sr5:
           help: Deducción por destinar cantidades al pago de préstamos para adquirir
             o rehabilitar la vivienda habitual. Si la actividad empezó en el ejercicio,

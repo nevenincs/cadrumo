@@ -37,8 +37,8 @@ adapters:
           within the configured timeout.
         metadata_invalid: Cl@ve Móvil session metadata is invalid or could not be
           parsed.
-        no_persisted_session: No persisted Cl@ve Movil session found; run `aeat config
-          auth status` first.
+        no_persisted_session: No persisted Cl@ve Movil session found; run `cadrumo-runtime
+          config auth status` first.
         session_expired: Cl@ve Movil session has passed its idle deadline.
         storage_state_hash_mismatch: Cl@ve Movil storage-state hash mismatch; session
           data may be corrupt.
@@ -66,7 +66,8 @@ adapters:
           open the OAuth consent URL.
         client_config_refused: The Google OAuth client configuration was refused.
         consent_declined: The Google consent was declined, so nothing was signed in
-          or saved. Run `aeat config google login` again and approve the request.
+          or saved. Run `cadrumo-runtime config google login` again and approve the
+          request.
         endpoint_unreachable: The Google OAuth endpoint is unreachable.
         id_token_missing: Google did not return an id_token; the OAuth consent did
           not include the openid+email scopes.
@@ -80,7 +81,8 @@ adapters:
         profile_state_unresolved: Google OAuth cannot resolve the selected Cadrumo
           profile state.
         refresh_token_missing: Google completed the sign-in without issuing a lasting
-          credential, so nothing was saved. Run `aeat config google login` again.
+          credential, so nothing was saved. Run `cadrumo-runtime config google login`
+          again.
         scope_missing: The Google consent screen returned without granting every required
           scope.
     profile_binding:
@@ -133,11 +135,11 @@ adapters:
       _factory:
         errors:
           drive_root_missing: No Google Drive folder has been created for the active
-            profile. Run `aeat config google login` first.
+            profile. Run `cadrumo-runtime config google login` first.
           google_auth_import_failed: The google-auth dependency is not importable;
             run `uv sync` and retry.
           google_token_missing: No Google OAuth token is persisted for the active
-            profile. Run `aeat config google login` first.
+            profile. Run `cadrumo-runtime config google login` first.
           kind_empty: CADRUMO_STORAGE_PROVIDER_KIND is empty.
           kind_unhandled: Storage provider kind {kind} is not handled by the factory.
           kind_unknown: Storage provider kind {value} is not recognized; expected
@@ -263,15 +265,15 @@ adapters:
         network connectivity and retry.
       modelo_unavailable: The AEAT declarations register does not offer the requested
         modelo.
-      no_auth_session: AEAT auth session is missing or not persisted; run `aeat config
-        auth status` first.
+      no_auth_session: AEAT auth session is missing or not persisted; run `cadrumo-runtime
+        config auth status` first.
       notification_content_requires_operator: 'Cannot open the content of an unread
         notification: that same step is the comparecencia, which makes it legally
         served and starts its deadlines, and it requires your signature. Open it yourself
         in the Sede.'
       notifications_bad_landing: The AEAT notifications page did not load correctly;
-        your session may have expired or AEAT is under maintenance. Run 'aeat config
-        auth status' and retry. Do not treat this as an empty inbox.
+        your session may have expired or AEAT is under maintenance. Run 'cadrumo-runtime
+        config auth status' and retry. Do not treat this as an empty inbox.
       parse_failed: Failed to parse the AEAT declarations response; the page structure
         may have changed.
       playwright_alert_modal_failed: Continuing the AEAT alert modal failed.
@@ -281,7 +283,7 @@ adapters:
       playwright_combobox_select_failed: Selecting a combobox option on the Sede page
         failed.
       session_expired_nav_failed: The AEAT declarations register did not load; your
-        session has likely expired. Run 'aeat config auth test' and retry.
+        session has likely expired. Run 'cadrumo-runtime config auth test' and retry.
       submitted_file_layout_parse_failed: The submitted file could not be read through
         the modelo's official record layout, so no box value was recovered from it.
         The layout and the submitted file disagree about which records the file carries.

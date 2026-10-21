@@ -142,8 +142,12 @@ def _collect_tax_ids(
             collected.rejected_tax_ids.setdefault(role, printed)
             continue
         collected.add_value(role, grounded, printed)
-        evidence = line[match.start() : match.start("token")].strip(" :#.") if qualified else context.party_heading
-        if evidence:
+        evidence = (
+            line[match.start() : match.start("token")].strip(" :#.")
+            if (qualified is not None and qualified)
+            else context.party_heading
+        )
+        if evidence is not None and evidence:
             collected.role_evidence[role] = evidence
     return tax_start
 

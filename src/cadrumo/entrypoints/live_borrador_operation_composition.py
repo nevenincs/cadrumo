@@ -5,6 +5,8 @@ from __future__ import annotations
 from decimal import Decimal
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..adapters.inbound.borrador.parser import parse_borrador
 from ..adapters.inbound.borrador.schema import BorradorParseMode
 from ..application.live.borrador_100_operation_ports import (
@@ -12,7 +14,6 @@ from ..application.live.borrador_100_operation_ports import (
     Borrador100OperationPorts,
     Borrador100PrintedValue,
 )
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation

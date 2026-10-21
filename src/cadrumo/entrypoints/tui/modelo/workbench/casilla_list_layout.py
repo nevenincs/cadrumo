@@ -109,7 +109,7 @@ class CasillaListLayoutMixin:
         if index in self._stacked:
             return None
         description = _values.description_text(entry.field)
-        return description.split(". ")[0] if description else None
+        return description.split(". ")[0] if (description is not None and description) else None
 
     def _rated_label(self: CasillaList, place: GridRowPlace) -> str:
         """A row's heading with the rate its row is taxed at, when it has one."""
@@ -138,7 +138,7 @@ class CasillaListLayoutMixin:
         if not isinstance(item, _models.CasillaListEntry):
             return 1
         columns = self._columns(width)
-        return len(self._label_lines(item, columns)) + (1 if self._note(index, item, columns) else 0)
+        return len(self._label_lines(item, columns)) + (1 if bool(self._note(index, item, columns)) else 0)
 
     def _grid_rows(self: CasillaList) -> dict[GridShape, list[int]]:
         """The index of every grid row heading, grouped by the grid it belongs to, in list order."""
@@ -207,7 +207,11 @@ class CasillaListLayoutMixin:
     @staticmethod
     def _grid_column_literals(grid: GridShape, places: list[GridRowPlace | None]) -> tuple[tuple[str, ...], ...]:
         return tuple(
-            tuple(literal for place in places if place is not None and (literal := place.slots[column].literal))
+            tuple(
+                literal
+                for place in places
+                if place is not None and ((literal := place.slots[column].literal) is not None and literal)
+            )
             for column in range(len(grid.headings))
         )
 

@@ -1,11 +1,17 @@
-"""Import-light production authority for local-inference lifecycle commands."""
+"""Import-light production authority for the ``config provision`` commands.
+
+Every leaf submits a registered operation through the runtime: the setup
+status, setup and verification operations, or the local reader's actions
+that download nothing. Each therefore runs in the signed-in profile's
+session, so the policies below declare installation storage beside the
+network rather than the profile-free pair that would skip the session.
+"""
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
-from ..command_parameter_contracts import OptionSpec
-from ..command_shared_contracts import (
+from cadrumo_client.commands.execution_policies import STATE_FREE
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterDefault,
@@ -14,8 +20,26 @@ from ..command_shared_contracts import (
     TranslationKey,
     ValueContract,
 )
-from ..command_spec import CommandSpec, InvocationSpec
-from ._spec_policies import NETWORK_DESTRUCTIVE, NETWORK_READ, NETWORK_REMOTE_EFFECT, NETWORK_WRITE, STATE_FREE
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import Capability, CommandNodeKind, CommandWriteRoute
+
+_STORAGE_AND_NETWORK: frozenset[Capability] = frozenset({"local-storage", "network"})
+# Reads installation storage and the network and changes nothing.
+_SETUP_READ = ExecutionPolicySpec(_STORAGE_AND_NETWORK, frozenset({"none"}), "external-io", CommandWriteRoute.NONE)
+# Exercises an item at the network (a refresh, a load) and records nothing locally.
+_SETUP_EXERCISE = ExecutionPolicySpec(
+    _STORAGE_AND_NETWORK, frozenset({"network"}), "external-io", CommandWriteRoute.NONE
+)
+_SETUP_WRITE = ExecutionPolicySpec(
+    _STORAGE_AND_NETWORK, frozenset({"network", "local-state"}), "external-io", CommandWriteRoute.NONE
+)
+_SETUP_DESTRUCTIVE = ExecutionPolicySpec(
+    _STORAGE_AND_NETWORK,
+    frozenset({"network", "local-state"}),
+    "external-io",
+    CommandWriteRoute.NONE,
+    destructive=True,
+)
 
 _MODEL = OptionSpec(
     name="model",
@@ -24,6 +48,13 @@ _MODEL = OptionSpec(
     default=ParameterDefault.value(None),
     help_key=TranslationKey("cli.config.provision.pull.model_help"),
 )
+_YES = OptionSpec(
+    name="yes",
+    declarations=("--yes",),
+    value=ValueContract(DeferredTarget("builtins", "bool")),
+    default=ParameterDefault.value(False),
+    help_key=TranslationKey("cli.config.provision.yes_help"),
+)
 _ROLE = OptionSpec(
     name="role",
     declarations=("--role",),
@@ -31,14 +62,12 @@ _ROLE = OptionSpec(
     default=ParameterDefault.value(None),
     help_key=TranslationKey("cli.config.provision.role_help"),
 )
-
-
-_CONFIRM = OptionSpec(
-    name="confirm",
-    declarations=("--confirm",),
-    value=ValueContract(DeferredTarget("builtins", "bool")),
-    default=ParameterDefault.value(False),
-    help_key=TranslationKey("cli.config.provision.install.confirm_help"),
+_ITEM = OptionSpec(
+    name="item",
+    declarations=("--item",),
+    value=ValueContract(DeferredTarget("builtins", "str")),
+    default=ParameterDefault.value(None),
+    help_key=TranslationKey("cli.config.provision.verify.item_help"),
 )
 _REMOVE_MODEL = OptionSpec(
     name="model",
@@ -84,7 +113,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(),
-        policy=NETWORK_READ,
+        policy=_SETUP_READ,
         handler=_handler("provision_report"),
         result_schema=_schema("ProvisionReportResult", "config.provision.report"),
     ),
@@ -96,8 +125,8 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         help_key=TranslationKey("cli.config.provision.pull.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(_MODEL, _ROLE),
-        policy=NETWORK_WRITE,
+        parameters=(_MODEL, _YES),
+        policy=_SETUP_WRITE,
         handler=_handler("provision_pull"),
         result_schema=_schema("ProvisionPullResult", "config.provision.pull"),
     ),
@@ -109,17 +138,8 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         help_key=TranslationKey("cli.config.provision.verify.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            OptionSpec(
-                name="model",
-                declarations=("--model",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.config.provision.verify.model_help"),
-            ),
-            _ROLE,
-        ),
-        policy=NETWORK_WRITE,
+        parameters=(_ITEM,),
+        policy=_SETUP_EXERCISE,
         handler=_handler("provision_verify"),
         result_schema=_schema("ProvisionVerifyResult", "config.provision.verify"),
     ),
@@ -132,7 +152,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(),
-        policy=NETWORK_READ,
+        policy=_SETUP_READ,
         handler=_handler("provision_status"),
         result_schema=_schema("ProvisionStatusResult", "config.provision.status"),
     ),
@@ -145,22 +165,9 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(),
-        policy=NETWORK_REMOTE_EFFECT,
+        policy=_SETUP_EXERCISE,
         handler=_handler("provision_probe"),
         result_schema=_schema("ProvisionProbeResult", "config.provision.probe"),
-    ),
-    CommandSpec(
-        "config_provision_install",
-        "config_provision",
-        "install",
-        kind=CommandNodeKind.LEAF,
-        help_key=TranslationKey("cli.config.provision.install.help"),
-        short_help_key=None,
-        invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(_CONFIRM,),
-        policy=NETWORK_WRITE,
-        handler=_handler("provision_install"),
-        result_schema=_schema("ProvisionInstallResult", "config.provision.install"),
     ),
     CommandSpec(
         "config_provision_browser",
@@ -170,8 +177,8 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         help_key=TranslationKey("cli.config.provision.browser.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(),
-        policy=NETWORK_WRITE,
+        parameters=(_YES,),
+        policy=_SETUP_WRITE,
         handler=_handler("provision_browser"),
         result_schema=_schema("ProvisionBrowserResult", "config.provision.browser"),
     ),
@@ -184,7 +191,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(),
-        policy=NETWORK_WRITE,
+        policy=_SETUP_WRITE,
         handler=_handler("provision_start"),
         result_schema=_schema("ProvisionStartResult", "config.provision.start"),
     ),
@@ -197,7 +204,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(_REMOVE_MODEL, _ROLE),
-        policy=NETWORK_DESTRUCTIVE,
+        policy=_SETUP_DESTRUCTIVE,
         handler=_handler("provision_remove"),
         result_schema=_schema("ProvisionRemoveResult", "config.provision.remove"),
     ),
@@ -219,7 +226,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
             ),
             _ROLE,
         ),
-        policy=NETWORK_WRITE,
+        policy=_SETUP_WRITE,
         handler=_handler("provision_load"),
         result_schema=_schema("ProvisionLoadResult", "config.provision.load"),
     ),
@@ -231,16 +238,8 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         help_key=TranslationKey("cli.config.provision.setup.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            OptionSpec(
-                name="confirm",
-                declarations=("--confirm",),
-                value=ValueContract(DeferredTarget("builtins", "bool")),
-                default=ParameterDefault.value(False),
-                help_key=TranslationKey("cli.config.provision.setup.confirm_help"),
-            ),
-        ),
-        policy=NETWORK_WRITE,
+        parameters=(_YES,),
+        policy=_SETUP_WRITE,
         handler=_handler("provision_setup"),
         result_schema=_schema("ProvisionSetupResult", "config.provision.setup"),
     ),

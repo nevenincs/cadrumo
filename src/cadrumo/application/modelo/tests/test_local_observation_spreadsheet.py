@@ -108,7 +108,7 @@ def test_parse_xlsx_refuses_stale_formula_cache_before_value_materialisation(tmp
         parse_casilla_value_spreadsheet(path)
 
     # The refusal renders from the catalogue; its detail rides the context.
-    assert exc_info.value.context
+    assert exc_info.value.context is not None and exc_info.value.context
     assert exc_info.value.context == {"path": str(path), "row": "2", "column": "2"}
 
 
@@ -121,7 +121,7 @@ def test_parse_csv_rejects_duplicate_casilla_rows_before_last_writer_wins(tmp_pa
         parse_casilla_value_spreadsheet(path)
 
     # The refusal renders from the catalogue; its detail rides the context.
-    assert exc_info.value.context
+    assert exc_info.value.context is not None and exc_info.value.context
     context = exc_info.value.context
     assert context is not None
     assert context["path"] == str(path)
@@ -145,7 +145,7 @@ def test_parse_xlsx_rejects_duplicate_casilla_rows_even_when_values_match(tmp_pa
         parse_casilla_value_spreadsheet(path)
 
     # The refusal renders from the catalogue; its detail rides the context.
-    assert exc_info.value.context
+    assert exc_info.value.context is not None and exc_info.value.context
     context = exc_info.value.context
     assert context is not None
     assert context["path"] == str(path)

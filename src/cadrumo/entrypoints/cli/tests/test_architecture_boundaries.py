@@ -30,9 +30,8 @@ from ....tests.inventory import REPO_ROOT, ast_for_path, leaf_name, package_pyth
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CLI_ROOT = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
-_MODELO_MODULE_PREFIX = "_modelo"
-_MODELO_LEGACY_ROOT = "_modelo.py"
-_MODELO_PAYLOADS = "_modelo_payloads.py"
+_MODELO_COMMAND_ROOT = "modelo_commands.py"
+_MODELO_PAYLOADS = "modelo_results.py"
 _MODELO_CLI_SUPPORT = "_modelo_cli_support.py"
 
 _LEGACY_ROOT_REGISTRY_AUTHORITY_READ_BUDGET = 0
@@ -60,25 +59,22 @@ _CENTRALIZED_ADDRESSING_FORBIDDEN_NAMES = {
 
 def _modelo_cli_modules() -> tuple[Path, ...]:
     modules = tuple(
-        path
-        for path in package_python_files()
-        if path.parent == _CLI_ROOT and path.name.startswith(_MODELO_MODULE_PREFIX)
+        path for path in package_python_files() if path.parent == _CLI_ROOT and "modelo" in path.stem.split("_")
     )
     # Floor at the corpus source. Every structural guard below iterates this set
     # and asserts an offender list is empty; that green is meaningless if the set
-    # is empty. A rename of the ``_modelo`` module prefix or a relocation of
-    # ``_CLI_ROOT`` would empty the corpus and pass identically to a clean surface,
-    # so the modelo-CLI decomposition would be unguarded and silent.
+    # is empty. A relocation of ``_CLI_ROOT`` would empty the corpus and pass
+    # identically to a clean surface, leaving the decomposition unguarded.
     assert len(modules) > 10, (
         f"discovered only {len(modules)} modelo CLI modules under {_CLI_ROOT}; the scan "
-        "corpus collapsed (a prefix rename or package relocation), so an empty offender "
+        "corpus collapsed (a family rename or package relocation), so an empty offender "
         "list below would mean 'nothing was checked' rather than 'nothing is wrong'"
     )
     return modules
 
 
 def _production_modelo_cli_modules() -> tuple[Path, ...]:
-    return tuple(path for path in _modelo_cli_modules() if path.name not in {_MODELO_LEGACY_ROOT, _MODELO_PAYLOADS})
+    return tuple(path for path in _modelo_cli_modules() if path.name not in {_MODELO_COMMAND_ROOT, _MODELO_PAYLOADS})
 
 
 def _tree_for_path(path: Path) -> ast.AST:
@@ -143,7 +139,7 @@ def test_extracted_modelo_cli_modules_do_not_import_legacy_modelo_root() -> None
 
 def test_legacy_modelo_root_does_not_add_registry_authority_reads() -> None:
     """Registry authority reads must move out of the CLI root, not multiply."""
-    path = _CLI_ROOT / _MODELO_LEGACY_ROOT
+    path = _CLI_ROOT / _MODELO_COMMAND_ROOT
     text = path.read_text(encoding="utf-8")
     authority_reads = text.count("bundled_authority()")
     service_calls = _registry_query_service_call_count(path)
@@ -192,6 +188,10 @@ def test_modelo_cli_uses_centralized_operator_addressing_services() -> None:
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 for alias in node.names:
+                    if path.name == "_modelo_behavior_support.py" and alias.name == "ModeloWorkAddress":
+                        # The shared adapter annotates the centralized service's
+                        # return type; constructing it locally is still forbidden below.
+                        continue
                     if alias.name in _CENTRALIZED_ADDRESSING_FORBIDDEN_NAMES:
                         offenders.append(
                             f"{path.relative_to(REPO_ROOT).as_posix()}:{node.lineno}: import {alias.name}",

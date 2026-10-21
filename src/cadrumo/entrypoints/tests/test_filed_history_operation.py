@@ -24,6 +24,8 @@ from cadrumo.core.config import load_settings
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.deadlines.models import IVARegime
 from cadrumo.entrypoints.live_state_composition import compose_notifications_ports
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability, DisclosureCategory
 
 from ...adapters.outbound.aeat.sede.schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
 from ...adapters.outbound.aeat.sede.tests.declarations_register_test_support import (
@@ -96,13 +98,6 @@ from ...application.operations.registry import (
     OperationRegistry,
 )
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    Availability,
-    DisclosureCategory,
-)
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.operation_access_policy import operation_scope_refusal
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources

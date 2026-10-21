@@ -26,8 +26,8 @@ from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.iva_category_resolution import IvaCategoryOutcome
 from ....core.json_contract import NoticeSeverity
 from ....domain.invoices.enums import PaymentStatus
-from ....domain.iva.classification import InvoiceKind
-from .._ledger_evidence_cli import (
+from ....domain.iva.schema import InvoiceKind
+from ..ledger_evidence_commands import (
     _confirm_resolution_lines,
     _evidence_confirm_notices,
     _evidence_confirm_payload,

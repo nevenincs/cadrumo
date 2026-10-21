@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  copyFileSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -8,15 +9,16 @@ import {
 } from "node:fs";
 import { isAbsolute, resolve, sep } from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
 import { buildPath } from "../scripts/build-paths.mjs";
+import { developmentServer } from "../scripts/development-server.mjs";
 import {
+  buildStamp,
   docsOrigin,
   frontendDirectory,
   identity,
   profile,
-  server,
   tauriConfig,
-  executable,
 } from "../scripts/configuration.mjs";
 
 test("CMake build configurations select Cargo optimization and debug information", () => {
@@ -34,40 +36,76 @@ test("CMake build configurations select Cargo optimization and debug information
   assert.throws(() => profile("misspelled"), /supported CMake configuration/);
 });
 
-test("generated identity, server settings and artifact paths have no product fallback", () => {
+test("generated identity, server settings and artifact paths have no product fallback", async () => {
   const original = process.env.CADRUMO_CMAKE_BINARY_DIR;
   const originalConfig = process.env.CADRUMO_BUILD_CONFIG;
   const testing = buildPath("desktop_testing");
   mkdirSync(testing, { recursive: true });
-  const root = mkdtempSync(resolve(testing, "configuration-"));
+  const repository = mkdtempSync(resolve(testing, "configuration-"));
+  const root = resolve(repository, "build/configuration-test");
   try {
-    mkdirSync(resolve(root, "generated"));
+    mkdirSync(resolve(root, "generated"), { recursive: true });
+    const scripts = resolve(repository, "native/desktop/scripts");
+    mkdirSync(scripts, { recursive: true });
+    // Relocate the unchanged readers into a configured fixture repository;
+    // production admission still requires its own visible preset and cache.
+    for (const name of [
+      "configuration.mjs",
+      "build-paths.mjs",
+      "development-server.mjs",
+    ])
+      copyFileSync(
+        new URL(`../scripts/${name}`, import.meta.url),
+        resolve(scripts, name),
+      );
+    copyFileSync(
+      new URL("../development-server.json", import.meta.url),
+      resolve(repository, "native/desktop/development-server.json"),
+    );
+    writeFileSync(
+      resolve(repository, "CMakePresets.json"),
+      JSON.stringify({ configurePresets: [{ name: "configuration-test" }] }),
+    );
+    writeFileSync(
+      resolve(root, "CMakeCache.txt"),
+      [
+        `CMAKE_HOME_DIRECTORY:INTERNAL=${repository}`,
+        `CMAKE_CACHEFILE_DIR:INTERNAL=${root}`,
+        "",
+      ].join("\n"),
+    );
     process.env.CADRUMO_CMAKE_BINARY_DIR = root;
     process.env.CADRUMO_BUILD_CONFIG = "Release";
     writeFileSync(
       resolve(root, "build-paths.json"),
       JSON.stringify({
+        source: repository,
         paths: { generated: "generated", desktop_cargo: "compiler" },
       }),
     );
-    assert.throws(identity, /ENOENT/);
+    const configured = await import(
+      pathToFileURL(resolve(scripts, "configuration.mjs")).href
+    );
+    assert.throws(configured.identity, /ENOENT/);
     const product = {
       name: "Configured application",
       application_id: "org.example.configured",
       version: "3.2.1",
+      manager_id: "org.example.configured.manager",
+      manager_name: "Configured manager",
     };
     writeFileSync(
       resolve(root, "generated/identity.json"),
       JSON.stringify(product),
     );
-    assert.deepEqual(identity(), product);
+    assert.deepEqual(configured.identity(), product);
     const template = JSON.parse(
       readFileSync(
         new URL("../src-tauri/tauri.conf.json.in", import.meta.url),
         "utf8",
       ),
     );
-    const config = tauriConfig(template, identity(), {
+    const config = tauriConfig(template, configured.identity(), {
       configDirectory: resolve(root, "host/desktop/src-tauri"),
       frontend: resolve(root, "assets"),
       icons: resolve(root, "icons"),
@@ -77,35 +115,41 @@ test("generated identity, server settings and artifact paths have no product fal
     assert.equal(config.version, product.version);
     assert.equal(config.app.windows[0].title, product.name);
     assert.equal(config.app.windows[0].create, false);
-    const ports = { host: "0.0.0.0", devPort: 25420, previewPort: 25421 };
+    const ports = developmentServer();
     writeFileSync(
       resolve(root, "generated/desktop-server.json"),
       JSON.stringify(ports),
     );
-    assert.deepEqual(server(), ports);
+    assert.deepEqual(configured.server(), ports);
     writeFileSync(
       resolve(root, "generated/desktop-server.json"),
       JSON.stringify({ ...ports, previewPort: 0 }),
     );
-    assert.throws(server, /Invalid frontend/);
+    assert.throws(configured.server, /Invalid frontend/);
+    writeFileSync(
+      resolve(root, "generated/desktop-server.json"),
+      JSON.stringify({ ...ports, devPort: ports.devPort + 10 }),
+    );
+    assert.throws(configured.server, /Stale frontend devPort; run just dev/);
     const artifact = resolve(root, "compiler/release/from-cargo-metadata.exe");
     writeFileSync(
       resolve(root, "generated/desktop-Release.json"),
       JSON.stringify({ executable: artifact }),
     );
-    assert.equal(executable(), artifact);
+    assert.equal(configured.executable(), artifact);
     writeFileSync(
       resolve(root, "generated/desktop-Release.json"),
       JSON.stringify({ executable: resolve(root, "elsewhere.exe") }),
     );
-    assert.throws(executable, /selected Cargo profile/);
+    assert.throws(configured.executable, /selected Cargo profile/);
     writeFileSync(resolve(root, "generated/identity.json"), "{}");
-    assert.throws(identity, /missing name/);
+    assert.throws(configured.identity, /missing name/);
   } finally {
-    process.env.CADRUMO_CMAKE_BINARY_DIR = original;
+    if (original === undefined) delete process.env.CADRUMO_CMAKE_BINARY_DIR;
+    else process.env.CADRUMO_CMAKE_BINARY_DIR = original;
     if (originalConfig === undefined) delete process.env.CADRUMO_BUILD_CONFIG;
     else process.env.CADRUMO_BUILD_CONFIG = originalConfig;
-    rmSync(root, { recursive: true });
+    rmSync(repository, { recursive: true });
   }
 });
 
@@ -237,4 +281,46 @@ test("the frontend directory is emitted relative to the Tauri configuration", ()
     () => frontendDirectory(configDirectory, unreachable),
     /relative to the Tauri configuration/,
   );
+});
+
+test("the build stamp gives the desktop its own identity and display version", () => {
+  const original = process.env.CADRUMO_BUILD_CONFIG;
+  // The desktop identity belongs to one CMake configuration; Debug is the one every build makes.
+  process.env.CADRUMO_BUILD_CONFIG = original ?? "Debug";
+  try {
+    const desktop = JSON.parse(
+      readFileSync(
+        resolve(
+          buildPath("generated"),
+          "component-identity",
+          process.env.CADRUMO_BUILD_CONFIG,
+          "desktop.json",
+        ),
+        "utf8",
+      ),
+    );
+    const { version } = identity();
+    for (const debug of [true, false]) {
+      const selected = buildStamp(debug);
+      assert.equal(
+        selected.displayVersion,
+        `${version}+${desktop.build_id}${debug ? ".debug" : ""}`,
+      );
+      assert.deepEqual(selected.environment, {
+        CADRUMO_IMAGE_COMPONENT: "desktop",
+        CADRUMO_DESKTOP_BUILD_ID: desktop.build_id,
+        CADRUMO_DESKTOP_BUILD_SEQUENCE: String(desktop.build_sequence),
+        CADRUMO_DESKTOP_BUILD_DATE: desktop.build_date,
+      });
+    }
+    assert.equal(
+      buildStamp(false, { version: "1.2.3" }).displayVersion,
+      `1.2.3+${desktop.build_id}`,
+    );
+    delete process.env.CADRUMO_BUILD_CONFIG;
+    assert.throws(() => buildStamp(false), /CADRUMO_BUILD_CONFIG/);
+  } finally {
+    if (original === undefined) delete process.env.CADRUMO_BUILD_CONFIG;
+    else process.env.CADRUMO_BUILD_CONFIG = original;
+  }
 });

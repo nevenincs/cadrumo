@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 from types import SimpleNamespace
@@ -17,7 +17,10 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.currency.service import CurrencyNormalizationService
 from ....domain.transactions.models import TransactionCatalogue
 from ....domain.transactions.own_accounts import OwnAccountRegister
-from ...operations.models import OperationRequest
+from ...operations.execution_actor import OperationExecutionCaller
+from ...operations.models import OperationIdentity, OperationRequest
+from ...operations.registry import OperationFrontendProjection
+from ...user_profile.access_contracts import SessionKind
 from ..actions_import import LedgerProviderID
 from ..import_operation import (
     LEDGER_IMPORT_OPERATION_DEFINITION_ID,
@@ -39,6 +42,21 @@ from .unused_repository_ports import ProfileOnlyCatalogueRepository, UnusedBucke
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
+# The ports are doubles keyed on file name; the request still names each file as the runtime requires.
+_SOURCES = Path(__file__).resolve().parent / "statements"
+
+
+@pytest.mark.parametrize(
+    ("statement", "verify_source"),
+    [(Path("one.csv"), None), (_SOURCES / "one.csv", Path("ledger.csv"))],
+)
+def test_import_request_refuses_a_path_the_runtime_would_place_itself(
+    statement: Path, verify_source: Path | None
+) -> None:
+    with pytest.raises(ValueError, match="ledger import paths must be absolute"):
+        LedgerImportRequest(
+            profile_id=_PROFILE, files=(statement,), provider=LedgerProviderID.CSV, verify_source=verify_source
+        )
 
 
 class _Events:
@@ -59,7 +77,7 @@ class _Cancellation:
         self.entries = 0
 
     @asynccontextmanager
-    async def irreversible_section(self) -> AsyncIterator[None]:
+    async def irreversible_section(self) -> AsyncGenerator[None]:
         self.entries += 1
         self.active = True
         try:
@@ -133,7 +151,7 @@ def test_import_request_rejects_more_than_the_registered_file_limit() -> None:
     with pytest.raises(ValidationError):
         LedgerImportRequest(
             profile_id=_PROFILE,
-            files=tuple(Path(f"{index}.csv") for index in range(MAX_LEDGER_IMPORT_FILES + 1)),
+            files=tuple(_SOURCES / f"{index}.csv" for index in range(MAX_LEDGER_IMPORT_FILES + 1)),
             provider=LedgerProviderID.CSV,
         )
 
@@ -193,7 +211,7 @@ def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=LedgerImportRequest(
             profile_id=_PROFILE,
-            files=tuple(Path(name) for name in counts),
+            files=tuple(_SOURCES / name for name in counts),
             provider=LedgerProviderID.CSV,
         ),
     )
@@ -261,7 +279,7 @@ def test_a_file_whose_parsed_bytes_differ_from_the_preview_digest_is_refused_bef
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=LedgerImportRequest(
             profile_id=_PROFILE,
-            files=(Path("kept.csv"), Path("changed.csv")),
+            files=(_SOURCES / "kept.csv", _SOURCES / "changed.csv"),
             provider=LedgerProviderID.CSV,
             # The preview saw "changed.csv" with other bytes than it holds now.
             expected_source_sha256=("b" * 64, "d" * 64),
@@ -284,7 +302,79 @@ def test_import_request_requires_one_expected_digest_per_file() -> None:
     with pytest.raises(ValidationError):
         LedgerImportRequest(
             profile_id=_PROFILE,
-            files=(Path("one.csv"), Path("two.csv")),
+            files=(_SOURCES / "one.csv", _SOURCES / "two.csv"),
             provider=LedgerProviderID.CSV,
             expected_source_sha256=("a" * 64,),
         )
+
+
+_SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
+
+
+@pytest.mark.parametrize(
+    ("frontend", "recorded"),
+    [
+        (OperationFrontendProjection.EXTERNAL_CLIENT, f"automation:external-client.attended.{_SESSION_CLIENT}"),
+        (OperationFrontendProjection.CLI, str(_PROFILE)),
+        (OperationFrontendProjection.TUI, str(_PROFILE)),
+        (None, str(_PROFILE)),
+    ],
+    ids=["external_client", "cli", "tui", "no-session-host"],
+)
+def test_each_source_is_staged_under_the_session_label_for_automation_and_the_profile_otherwise(
+    monkeypatch: pytest.MonkeyPatch,
+    operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection | None,
+    recorded: str,
+) -> None:
+    """The import request carries no label, so the staged command names the session or the profile."""
+    from .. import import_operation as operation_module
+
+    actors: list[str] = []
+    repository = ProfileOnlyCatalogueRepository[TransactionCatalogue](str(_PROFILE))
+
+    def prepare(command, *, ports, own_accounts):
+        del ports, own_accounts
+        actors.append(command.actor)
+        return SimpleNamespace(command=command, source=SimpleNamespace(parsed_rows=_parsed_rows(1, "a" * 64)))
+
+    def persist(staged, *, transaction_repository, bucket_event_repository, currency_normalizer):
+        del staged, transaction_repository, bucket_event_repository, currency_normalizer
+        return _source_result(bucket_id=str(_PROFILE), rows=1)
+
+    def session_host(identity: OperationIdentity) -> OperationExecutionCaller:
+        assert frontend is not None and identity.definition_id == LEDGER_IMPORT_OPERATION_DEFINITION_ID
+        return OperationExecutionCaller(frontend=frontend, session_kind=SessionKind.ATTENDED, client_id=_SESSION_CLIENT)
+
+    class _Operands:
+        async def put(self, result: LedgerImportExecutionResult, *, written_at):
+            del result, written_at
+            return "secure-result-reference"
+
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(operation_module, "prepare_ledger_source_import", prepare)
+    monkeypatch.setattr(operation_module, "persist_prepared_ledger_source_import", persist)
+    context = SimpleNamespace(
+        identity=SimpleNamespace(
+            definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(str(_PROFILE)),
+        ),
+        authority_operation=operation,
+        events=_Events(),
+        operands=_Operands(),
+        cancellation=_Cancellation(),
+    )
+    request = OperationRequest(
+        definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=LedgerImportRequest(
+            profile_id=_PROFILE, files=(_SOURCES / "first.csv", _SOURCES / "second.csv"), provider=LedgerProviderID.CSV
+        ),
+    )
+    executor = LedgerImportExecutor(
+        _PortsFactory(operation, repository), execution_caller_reader=None if frontend is None else session_host
+    )
+
+    assert asyncio.run(executor.execute(request, context)) == "secure-result-reference"
+
+    assert actors == [recorded, recorded]

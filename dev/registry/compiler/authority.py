@@ -315,6 +315,11 @@ def compile_validated_authority(
             captured_profile_schema=receipt.captured_profile_schema,
             verdicts=None,
         )
+        # A complete clean validation is the strongest evidence for its receipt,
+        # so a later ordinary compile of the identical inputs reuses it instead
+        # of validating the whole registry again.
+        if receipt.verdicts is not None:
+            record_validated(receipt.verdicts.registry_key, subject="registry")
     else:
         authority = cached_compilation(
             pair,

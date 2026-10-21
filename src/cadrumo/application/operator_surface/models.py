@@ -29,7 +29,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identifier_grammar import NamespacedId
-from ...core.logging import LogExtra
+from ...core.log_extra import LogExtra
 from ...core.operator_action_enums import NoRecoveryOutcome
 from ..operator_actions.models import ActionReference
 

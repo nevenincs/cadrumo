@@ -77,6 +77,7 @@ import pytest
 from dev._paths import REPO_ROOT
 from dev.ci.lane_configuration import configured_testpaths
 from dev.ci.lane_contracts import Lane
+from dev.ci.lane_ctest_commands import CTEST_EXTERNAL_TOOL_RECIPE, CTEST_MODULE_DIR, CTEST_RECIPE
 from dev.ci.lane_marker_inventory import (
     discover_test_directories,
     discover_test_files,
@@ -147,6 +148,7 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-channel-artifacts",
         "test-windows",
         "test-native-host-facilities",
+        "test-agent-protocol",
         "test-os-keychain",
         "test-resident-service",
         "test-registry-live",
@@ -155,6 +157,9 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-ingest-corpus",
         "test-powershell-literal",
         "test-calculation-summary-pdf",
+        # CTest's package-stage process assertions have their own opt-in lane;
+        # ordinary native verification is a distinct population with no pytest tests.
+        "test-native-live",
     },
 )
 _FOCUSED_SELECTORS: frozenset[str] = frozenset({"test-cli", "test-tui", "test-smoke"})
@@ -202,6 +207,25 @@ def test_canonical_population_ownership_is_exhaustive_and_unique() -> None:
         recipe: sum(recipe in owners for _node_id, _markers, owners in rows) for recipe in _CANONICAL_POPULATION_RECIPES
     }
     assert all(counts.values()), f"a canonical population selected nothing: {counts}"
+
+
+def test_native_package_assertions_have_exactly_one_live_owner() -> None:
+    """Stage-process assertions each belong to the opt-in CTest lane."""
+    rows = _canonical_population_rows()
+    native_rows = {node_id: owners for node_id, markers, owners in rows if "native_package" in markers}
+
+    assert set(native_rows) == {
+        "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_runtime_and_service_share_the_admitted_boot",
+        "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_service_exposes_the_provider_catalog",
+        "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_administration_reuses_the_live_service",
+        "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_cli_reads_the_same_profile_after_shared_setup",
+        "dev/runtime_lifecycle/tests/test_clients.py::test_packaged_client_authentication_and_profile_scope",
+        "dev/runtime_lifecycle/tests/test_lifecycle.py::test_login_logout_profile_switch_and_stale_receipt",
+        "dev/runtime_lifecycle/tests/test_lifecycle.py::test_exact_runtime_crash_manager_recovery_and_operation_state",
+        "dev/runtime_lifecycle/tests/test_lifecycle.py::test_wrong_password_never_admits_private_work",
+        "dev/runtime_lifecycle/tests/test_lifecycle.py::test_manager_death_preserves_custody_and_successor_restores_verified_supervision",
+    }
+    assert set(native_rows.values()) == {("test-native-live",)}
 
 
 def test_resident_service_population_and_retired_backstop_are_explicit() -> None:
@@ -335,6 +359,7 @@ def test_the_ci_invoked_model_is_strictly_stronger_than_the_declared_one() -> No
         "test-unit",
         "test-ci-contracts-gate",
         "test-ci-perf",
+        "test-native-bundle",
         "test-integration-parallel",
         "test-integration-serial",
         "test-pytest-harness",
@@ -344,6 +369,7 @@ def test_the_ci_invoked_model_is_strictly_stronger_than_the_declared_one() -> No
         "docs-check",
     }
     assert expected_invoked <= invoked_recipes
+    assert "test-native-live" not in invoked_recipes
     assert not ({"test-os-keychain", "test-workbook-parity", "test-registry-live"} & invoked_recipes)
 
 
@@ -499,6 +525,79 @@ def test_no_test_file_sits_outside_every_lane_path() -> None:
         "these test files sit outside every lane's path scope, so no marker "
         "expression could ever reach them:\n  " + "\n  ".join(report.unnamed)
     )
+
+
+_CTEST_MODULE: str = """add_test(NAME bundle.lifecycle COMMAND "${CADRUMO_DEV_PYTHON}" -B -m pytest
+    -n 0 -m integration "${PROJECT_SOURCE_DIR}/dev/lifecycle/tests"
+    --package "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
+set_tests_properties(bundle.lifecycle PROPERTIES LABELS external_tool)
+add_test(NAME bundle.source-lifecycle COMMAND "${CADRUMO_DEV_PYTHON}" -B -m pytest
+    -n 0 -m integration "${PROJECT_SOURCE_DIR}/dev/lifecycle/tests"
+    --package "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
+add_test(NAME bundle.entrypoint COMMAND "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/bin/aeat" --help)
+"""
+
+
+def test_ctest_pytest_lanes_follow_the_external_tool_label(tmp_path: Path) -> None:
+    """A CTest label moves its pytest lane to the opt-in live recipe."""
+    _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
+    module = tmp_path / CTEST_MODULE_DIR / "Packaging.cmake"
+    module.parent.mkdir(parents=True)
+    module.write_text(_CTEST_MODULE, encoding="utf-8")
+
+    lanes = [lane for lane in declared_lanes(tmp_path) if lane.recipe in {CTEST_RECIPE, CTEST_EXTERNAL_TOOL_RECIPE}]
+
+    assert {lane.recipe: (lane.paths, lane.marker_expression) for lane in lanes} == {
+        CTEST_RECIPE: (("dev/lifecycle/tests",), "integration"),
+        CTEST_EXTERNAL_TOOL_RECIPE: (("dev/lifecycle/tests",), "integration"),
+    }
+
+
+def test_external_tool_ctest_lane_is_declared_but_not_ci_reached(tmp_path: Path) -> None:
+    """The CI native recipe deliberately runs ordinary CTest, not the live lane."""
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text(
+        "test-native-ci:\n    just test-native-bundle\n\n"
+        "test-native-bundle:\n    cmake --build build --target verify\n\n"
+        "test-native-live:\n    cmake --build build --target verify-native-live\n",
+        encoding="utf-8",
+    )
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "probe.yml").write_text(
+        "name: Probe\non: push\njobs:\n  native:\n    steps:\n      - run: just test-native-ci\n",
+        encoding="utf-8",
+    )
+    module = tmp_path / CTEST_MODULE_DIR / "Packaging.cmake"
+    module.parent.mkdir(parents=True)
+    module.write_text(_CTEST_MODULE, encoding="utf-8")
+
+    lanes = declared_lanes(tmp_path)
+    invoked = ci_invoked_lanes(tmp_path)
+
+    assert any(lane.recipe == CTEST_EXTERNAL_TOOL_RECIPE for lane in lanes)
+    assert not any(lane.recipe == CTEST_EXTERNAL_TOOL_RECIPE for lane in invoked)
+    assert any(lane.recipe == CTEST_RECIPE for lane in invoked)
+
+
+def test_a_test_only_ctest_runs_is_reachable_and_unreachable_without_it(tmp_path: Path) -> None:
+    """The CTest lane reaches its suite, and removing it orphans the same suite."""
+    _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
+    _write_test(
+        tmp_path / "dev" / "lifecycle" / "tests" / "test_package.py",
+        _UNIT_MODULE.format(name="package").replace("unit", "integration"),
+    )
+    files = discover_test_files(tmp_path)
+
+    orphaned = analyse_reachability(tmp_path, files=files)
+    module = tmp_path / CTEST_MODULE_DIR / "Packaging.cmake"
+    module.parent.mkdir(parents=True)
+    module.write_text(_CTEST_MODULE, encoding="utf-8")
+    reached = analyse_reachability(tmp_path, files=files)
+
+    assert orphaned.unnamed == ("dev/lifecycle/tests/test_package.py",)
+    assert reached.unnamed == ()
+    assert reached.unreachable == ()
 
 
 def test_the_path_check_catches_what_the_per_test_check_cannot(tmp_path: Path) -> None:

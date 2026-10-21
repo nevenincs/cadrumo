@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.models import CredentialFreeOperationRequest
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 
 MODELO_VERIFICATION_REPORT_LIST_OPERATION_DEFINITION_ID = "modelo.verification_report.list"
 

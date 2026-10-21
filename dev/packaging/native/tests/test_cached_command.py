@@ -13,9 +13,51 @@ import pytest
 from dev._paths import REPO_ROOT
 
 from ...command_execution import run_command
+from ...google_oauth import GOOGLE_OAUTH_ENV
 from ..cached_command import run_cached
+from .cmake_build_fixture import build_manifest_cmake, enrolled_cmake_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_native_contract_cache_tracks_the_publisher_identity_without_recording_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    output = tmp_path / "count"
+    marker = tmp_path / "receipt.json"
+    spec = tmp_path / "spec.json"
+    spec.write_text(
+        json.dumps({"name": "native_contract", "inputs": [], "outputs": [str(output)], "marker": str(marker)}),
+        encoding="utf-8",
+    )
+    command = [
+        sys.executable,
+        "-c",
+        "import pathlib,sys; p=pathlib.Path(sys.argv[1]); "
+        "p.write_text(str(int(p.read_text())+1) if p.exists() else '1')",
+        str(output),
+    ]
+    for identity, count in (("publisher-first", "1"), ("publisher-second", "2")):
+        payload = json.dumps(
+            {
+                "installed": {
+                    "client_id": identity,
+                    "client_secret": "synthetic-public-client-secret",
+                    "project_id": "synthetic",
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                    "redirect_uris": ["http://localhost"],
+                }
+            }
+        )
+        monkeypatch.setenv(GOOGLE_OAUTH_ENV, payload)
+        assert run_cached(tmp_path, spec, command)
+        assert output.read_text() == count
+        assert not run_cached(tmp_path, spec, command)
+        receipt = marker.read_text()
+        assert identity not in receipt
+        assert "synthetic-public-client-secret" not in receipt
 
 
 def test_content_currency_and_output_recovery(tmp_path: Path) -> None:
@@ -128,17 +170,16 @@ def test_release_graph_materializes_bundle_and_archive_once(tmp_path: Path) -> N
         assert (build / f"{name}.calls").read_text() == "1"
 
 
-def test_cmake_targets_reuse_siblings_and_cpack_uses_install(tmp_path: Path) -> None:
+def test_cmake_targets_reuse_siblings_and_cpack_uses_install(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     cmake = shutil.which("cmake")
     assert cmake is not None
-    source = tmp_path / "source"
-    source.mkdir()
-    build = tmp_path / "build"
+    source, build = enrolled_cmake_root(tmp_path, monkeypatch)
     for name in ("a", "b"):
         (source / name).write_text(name, encoding="utf-8")
     (source / "CMakeLists.txt").write_text(
         f'''cmake_minimum_required(VERSION 4.4)
 project(Currency LANGUAGES NONE)
+{build_manifest_cmake()}
 set(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")
 include("{REPO_ROOT.as_posix()}/native/cmake/Cleanup.cmake")
 include("{REPO_ROOT.as_posix()}/native/cmake/CachedCommand.cmake")

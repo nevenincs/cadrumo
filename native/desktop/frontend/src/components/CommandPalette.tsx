@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { LanguageSelect, type LanguageControl } from "./LanguageSelect";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -92,8 +93,10 @@ export function CommandPalette({
   openDoc,
   close,
   fallbackFocus,
+  language,
 }: {
   actions: readonly Action[];
+  language?: LanguageControl;
   searchDocs: DocsSearch;
   openDoc: (url: string) => void;
   close: () => void;
@@ -108,6 +111,7 @@ export function CommandPalette({
   // where it came from, exactly as its chord would have run there; where the
   // action then moves focus, it stays.
   const chosen = useRef<(() => void) | null>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [docs, setDocs] = useState<{
     state: "idle" | "searching" | "done" | "unavailable";
@@ -188,6 +192,10 @@ export function CommandPalette({
         placement="top"
         className="palette flex w-palette flex-col gap-0 overflow-hidden rounded-2xl p-0"
         aria-describedby={undefined}
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          searchInput.current?.focus();
+        }}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           // The palette takes a moment to leave. Focus already put somewhere
@@ -211,6 +219,11 @@ export function CommandPalette({
         <DialogTitle className="sr-only">
           {t("desktop.palette.label")}
         </DialogTitle>
+        {language && (
+          <div className="border-b px-4 py-3">
+            <LanguageSelect {...language} />
+          </div>
+        )}
         <Command
           shouldFilter={false}
           loop
@@ -218,6 +231,7 @@ export function CommandPalette({
           className="max-h-palette-max"
         >
           <CommandInput
+            ref={searchInput}
             value={query}
             onValueChange={setQuery}
             placeholder={t("desktop.palette.placeholder")}

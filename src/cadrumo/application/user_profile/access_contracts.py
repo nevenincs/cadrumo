@@ -10,23 +10,21 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.identity.digest import ContentDigest
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessScope,
+    AuthorityState,
+    Availability,
+)
+
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.period import Period
-from ...core.profile_session import ProfileSessionRefusalReason
 from ...core.time.utc import UtcInstant
-from ..operations.models import OperationDefinitionId
-from ..operations.registry import OperationFrontendProjection
-from ..operations.schema_identity import OperationPublicSchemaId
-from .sign_in_refusals import SignInRefusal
 
 ACCESS_LEASE_MAXIMUM = timedelta(minutes=5)
-GRANT_DEFAULT_VALIDITY = timedelta(days=365)
 KEY_ROTATION_MAXIMUM_OVERLAP = timedelta(seconds=60)
 
 
@@ -40,66 +38,6 @@ class ProfileAccessBinding(BaseModel):
     os_owner_id: Annotated[str, Field(min_length=1, max_length=256)]
     custody_generation: Annotated[int, Field(ge=1)]
     dek_epoch: UUID
-
-
-class AccessAction(StrEnum):
-    """Independently scoped doors on the existing operation services."""
-
-    SUBMIT = "submit"
-    START = "start"
-    RESUME = "resume"
-    OBSERVE = "observe"
-    RESULT = "result"
-    REVIEW = "review"
-    RESPOND = "respond"
-    CANCEL = "cancel"
-    DETACH = "detach"
-    COMMIT = "commit"
-
-
-class DisclosureCategory(StrEnum):
-    """Permitted output categories; credentials and source evidence are absent."""
-
-    OPERATION_METADATA = "operation_metadata"
-    PROFILE_VALUES = "profile_values"
-    TAX_VALUES = "tax_values"
-
-
-class DisclosurePermission(BaseModel):
-    """Consent for one registered projection/category and one enrolled destination."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    destination_id: UUID
-    projection_id: OperationPublicSchemaId
-    category: DisclosureCategory
-
-
-class AccessScope(BaseModel):
-    """Explicit allow sets; no operation wildcard or implicit all-profile scope.
-
-    ``periods=None`` explicitly permits all periods. An empty set permits none.
-    Period-independent work has its own permission, so omitting a tax coordinate
-    cannot turn a period-restricted grant into unrestricted access.
-    """
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    operations: frozenset[OperationDefinitionId]
-    actions: frozenset[AccessAction]
-    disclosures: frozenset[DisclosurePermission]
-    periods: frozenset[Period] | None
-    allow_period_independent: bool
-    allow_delegation: bool
-
-
-class AuthorityState(StrEnum):
-    """Current lifecycle state, separate from time-derived expiry."""
-
-    PENDING = "pending"
-    ACTIVE = "active"
-    SUSPENDED = "suspended"
-    REVOKED = "revoked"
 
 
 class AutomationGrant(BaseModel):
@@ -191,7 +129,8 @@ def _validate_session_kind_lineage(session: AccessSession) -> None:
     if session.kind is SessionKind.HUMAN:
         if session.parent_session_id is not None or session.grant_id is not None or session.key_id is not None:
             raise ValueError("human authority cannot descend from automation")
-    elif session.grant_id is None:
+    elif session.grant_id is None and session.kind is not SessionKind.ATTENDED:
+        # An attended child of a person's own session is bounded by that session, not by a grant.
         raise ValueError("delegated sessions require an explicit grant")
 
 
@@ -251,16 +190,6 @@ class AccessSession(BaseModel):
         return self
 
 
-class Availability(StrEnum):
-    """Independent readiness axis; authentication cannot promote it."""
-
-    AVAILABLE = "available"
-    UNAVAILABLE = "unavailable"
-    NEEDS_USER = "needs_user"
-    UNSUPPORTED = "unsupported"
-    NOT_REQUIRED = "not_required"
-
-
 class ProfileAccessState(BaseModel):
     """Fresh authoritative profile policy, supplied by the lifecycle owner."""
 
@@ -287,12 +216,13 @@ class OsLockState(StrEnum):
     """Native screen-lock observation of one login.
 
     ``LOCKED`` is positive evidence that the login was locked. ``UNKNOWN``
-    covers observer errors, incomplete transitions and platforms without a
-    lock observer; it is neither lock evidence nor proof of attendance.
+    covers observer errors and incomplete transitions. ``NOT_APPLICABLE``
+    identifies a verified native non-desktop logon with no screen-lock surface.
     """
 
     LOCKED = "locked"
     UNLOCKED = "unlocked"
+    NOT_APPLICABLE = "not_applicable"
     UNKNOWN = "unknown"
 
 
@@ -315,16 +245,16 @@ class OsLoginContext(BaseModel):
 
     @property
     def unlocked(self) -> bool:
-        """Only a positive unlocked observation admits attended work; unknown refuses like locked."""
-        return self.lock_state is OsLockState.UNLOCKED
+        """Admit an unlocked desktop or a verified native logon without a lock surface."""
+        return self.lock_state in (OsLockState.UNLOCKED, OsLockState.NOT_APPLICABLE)
 
 
 class AccessEvaluationContext(BaseModel):
-    """Trusted connection and clock observations, not fields accepted from agents.
+    """Trusted connection and clock observations, not fields accepted from delegated clients.
 
     ``clock_rollback_detected`` remains latched by the lifecycle owner until fresh
     admission. ``private_work_available`` is the suspend/shutdown admission fence.
-    Login observations never derive from agent-supplied claims or manager state.
+    Login observations never derive from automation-supplied claims or manager state.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -343,149 +273,3 @@ class AccessEvaluationContext(BaseModel):
         if len({item.login_id for item in self.login_contexts}) != len(self.login_contexts):
             raise ValueError("OS login observations must have unique identities")
         return self
-
-
-class OperationAccessRequest(BaseModel):
-    """Exact target and domain-resolved coordinates of an operation access.
-
-    The owning operation derives the complete period set from its validated
-    operands. Frontends cannot assert that period-bearing work is independent.
-    Output categories are supplied by current operation policy, not this request.
-    """
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    definition_id: OperationDefinitionId
-    action: AccessAction
-    frontend: OperationFrontendProjection
-    periods: frozenset[Period]
-    period_independent: bool
-    destination_id: UUID
-
-    @model_validator(mode="after")
-    def _validate_period_scope(self) -> OperationAccessRequest:
-        if self.period_independent == bool(self.periods):
-            raise ValueError("provide exact periods or explicitly period-independent work")
-        return self
-
-
-class OperationAccessPolicy(BaseModel):
-    """Current owner-supplied restrictions for an existing registered definition.
-
-    This is an input to evaluation, not an alternative registry. Readiness and
-    provider checks come from their owning application boundaries on each call.
-    """
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    definition_id: OperationDefinitionId
-    definition_contract_digest: ContentDigest
-    actions: frozenset[AccessAction]
-    disclosures: frozenset[DisclosurePermission]
-    periods: frozenset[Period] | None
-    allow_period_independent: bool
-    backend: Availability
-    published_authority: Availability
-    provider: Availability
-    transaction_authority_required: bool
-    requires_human: bool = False
-    requires_all_periods: bool = False
-    """Profile-wide tax discovery additionally requires an unrestricted period ceiling."""
-
-
-class AccessDenialCode(StrEnum):
-    """Safe refusal facts, with no client input or exception text."""
-
-    AUTHENTICATION_REQUIRED = "authentication_required"
-    PROFILE_MISMATCH = "profile_mismatch"
-    CUSTODY_CHANGED = "custody_changed"
-    PROFILE_LOCKED = "profile_locked"
-    AUTOMATION_SUSPENDED = "automation_suspended"
-    SESSION_INACTIVE = "session_inactive"
-    SESSION_EXPIRED = "session_expired"
-    CONNECTION_MISMATCH = "connection_mismatch"
-    CLIENT_MISMATCH = "client_mismatch"
-    RUNTIME_CHANGED = "runtime_changed"
-    CLOCK_INVALID = "clock_invalid"
-    PARENT_INVALID = "parent_invalid"
-    PRIVILEGE_EXPANSION = "privilege_expansion"
-    GRANT_INACTIVE = "grant_inactive"
-    GRANT_EXPIRED = "grant_expired"
-    KEY_INACTIVE = "key_inactive"
-    KEY_EXPIRED = "key_expired"
-    OS_SESSION_UNAVAILABLE = "os_session_unavailable"
-    OS_LOCKED = "os_locked"
-    STORAGE_UNAVAILABLE = "storage_unavailable"
-    CUSTODY_UNAVAILABLE = "custody_unavailable"
-    OPERATION_UNAVAILABLE = "operation_unavailable"
-    FRONTEND_DENIED = "frontend_denied"
-    OPERATION_DENIED = "operation_denied"
-    DISCLOSURE_DENIED = "disclosure_denied"
-    PERIOD_DENIED = "period_denied"
-    BACKEND_UNAVAILABLE = "backend_unavailable"
-    AUTHORITY_UNAVAILABLE = "authority_unavailable"
-    PROVIDER_REQUIRED = "provider_required"
-    RESPONSE_AUTHORITY_REQUIRED = "response_authority_required"
-    TRANSACTION_AUTHORITY_REQUIRED = "transaction_authority_required"
-    HUMAN_AUTHORITY_REQUIRED = "human_authority_required"
-    FRESH_PASSWORD_REQUIRED = "fresh_password_required"  # noqa: S105 -- public refusal code.
-    ADMINISTRATION_DENIED = "administration_denied"
-
-
-class AccessDenied(BaseModel):
-    """A typed refusal; existing operator actions supply frontend recovery routes."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    outcome: Literal["denied"] = "denied"
-    code: AccessDenialCode
-    sign_in: SignInRefusal | None = None
-
-
-class AccessAllowed(BaseModel):
-    """Point-in-time policy result, not a credential or an execution capability."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    outcome: Literal["allowed"] = "allowed"
-    profile_id: UUID
-    session_id: UUID
-    expires_at: UtcInstant
-
-
-type AccessDecision = Annotated[AccessAllowed | AccessDenied, Field(discriminator="outcome")]
-
-
-class OperationResponseScopeAllowed(BaseModel):
-    """Current profile permission only; the response owner still must prove its bearer."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    outcome: Literal["response_scope_allowed"] = "response_scope_allowed"
-    profile_id: UUID
-    session_id: UUID
-    expires_at: UtcInstant
-
-
-class ProfileAccessStatus(BaseModel):
-    """Non-secret independent status axes; never a cached logged-in authority."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    connected: bool
-    credential_authenticated: bool
-    profile_id: UUID | None
-    session_id: UUID | None
-    session_expires_at: UtcInstant | None
-    grant_state: AuthorityState | None
-    grant_expires_at: UtcInstant | None
-    grant_valid: bool
-    profile_bound: bool
-    storage: Availability
-    automation_custody: Availability
-    published_authority: Availability
-    provider: Availability
-    effective_scope: AccessScope
-    denial: AccessDenialCode | None
-    human_resume_refusal: ProfileSessionRefusalReason | None = None

@@ -219,7 +219,7 @@ def _seed_diagnostics_usage() -> None:
         _usage_record(
             "before-window",
             datetime(2026, 3, 30, 9, 0, tzinfo=UTC),
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
             input_tokens=9000,
             output_tokens=900,
             cost=Decimal("9.00"),
@@ -227,23 +227,23 @@ def _seed_diagnostics_usage() -> None:
         _usage_record(
             "after-window",
             datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
             input_tokens=8000,
             output_tokens=800,
             cost=Decimal("8.00"),
         ),
         _usage_record(
-            "anthropic-priced-first",
+            "agent-priced-first",
             datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
             input_tokens=1000,
             output_tokens=200,
             cost=Decimal("1.50"),
         ),
         _usage_record(
-            "anthropic-priced-cached",
+            "agent-priced-cached",
             datetime(2026, 4, 5, 9, 0, tzinfo=UTC),
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
             input_tokens=500,
             output_tokens=100,
             cost=Decimal("0.25"),
@@ -315,12 +315,12 @@ def _prepare_llm_diagnostics(context: ConformanceFamilyContext) -> ConformancePr
 
         # Providers are folded in provider order; only calls dated inside the window count.
         # llm_diagnostics.py `_aggregate_usage`.
-        assert [row.provider for row in report.usage_providers] == ["ANTHROPIC", "LOCAL"]
-        anthropic, local = report.usage_providers
-        assert (anthropic.calls, anthropic.cache_hits, anthropic.unpriced_calls) == (2, 1, 0)
-        assert (anthropic.input_tokens, anthropic.output_tokens, anthropic.total_tokens) == (1500, 300, 1800)
-        assert anthropic.cost_estimate_usd is not None
-        assert Decimal(anthropic.cost_estimate_usd.decimal) == Decimal("1.75")
+        assert [row.provider for row in report.usage_providers] == ["AGENT", "LOCAL"]
+        agent, local = report.usage_providers
+        assert (agent.calls, agent.cache_hits, agent.unpriced_calls) == (2, 1, 0)
+        assert (agent.input_tokens, agent.output_tokens, agent.total_tokens) == (1500, 300, 1800)
+        assert agent.cost_estimate_usd is not None
+        assert Decimal(agent.cost_estimate_usd.decimal) == Decimal("1.75")
         assert (local.calls, local.cache_hits, local.unpriced_calls) == (1, 0, 1)
         assert (local.input_tokens, local.output_tokens, local.total_tokens) == (300, 50, 350)
         # One unpriced call withholds the provider's cost instead of totalling the priced subset.

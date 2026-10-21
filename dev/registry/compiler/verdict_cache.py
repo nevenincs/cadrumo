@@ -47,13 +47,13 @@ from dev.cache_root import dev_cache_dir
 from .compiled_cache import loader_code_fingerprint
 from .identity import RegistryIdentity
 from .loader_cache import is_bundled_registry_root
+from .validation_verdict_cache import VERDICT_CACHE_DIR_ENV
 
 SourceEvidenceFingerprintTuples = tuple[tuple[str, int, int], ...]
 """``(path, size, mtime_ns)`` tuples for source-evidence files (no content digest)."""
 
 VERDICT_OUTCOME_GREEN = "green"
 
-_CACHE_DIR_ENV = "CADRUMO_REGISTRY_VERDICT_CACHE_DIR"
 _VERDICT_FILENAME_PREFIX = "cadrumo_validation_verdict_"
 _BUNDLED_VERDICT_FILENAME = "aeat-validation-verdict.json"
 _ROOT_HASH_LEN = 16
@@ -152,8 +152,8 @@ def default_verdict_cache_dir() -> Path:
     Returns:
         The directory holding writable verdict files.
     """
-    override = os.environ.get(_CACHE_DIR_ENV)
-    if override and override.strip():
+    override = os.environ.get(VERDICT_CACHE_DIR_ENV)
+    if (override is not None and override) and override.strip():
         return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
     return dev_cache_dir("registry-verdict")
 

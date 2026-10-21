@@ -5,32 +5,33 @@ from __future__ import annotations
 import json
 import os
 import sys
+from collections.abc import Callable
 
 import pytest
+from click.testing import Result
 
-from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
-
-from ....core.config import override_settings
-from ....core.errors.hierarchy import InternalInvariantError
-from ....core.external_constants import OutputLanguage
-from ....core.i18n.render import tr
-from ....core.profile_session import ProfileSessionRefusalReason
-from .._profile_authentication_gate import _preflight_sources, _uses_runtime_profile_client
-from .._profile_authentication_notice import (
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.profile_authentication_notice import (
     drain_profile_authentication_notices,
     stage_profile_session_not_persisted_notice,
 )
-from .._profile_session_gate import session_refusal_translation_key
-from .._windows_profile_secret_bootstrap import descriptor_from_inherited_handle
-from ..command_specs import COMMAND_GRAPH
-from ..config.secure_input import (
+from cadrumo_client.commands.secure_input import (
     MachineSecretChannel,
     MachineSecretSelection,
     ProfileSecretChannel,
     ProfileSecretSelection,
 )
-from ..errors import CliRefusedBoundaryError, render_error_payload
-from .cli_runner import invoke_cached_cli
+from cadrumo_client.commands.windows_secret_channels import descriptor_from_inherited_handle
+from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
+
+from ....core.config import override_settings
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import lookup_translation, tr
+from ....core.profile_session import ProfileSessionRefusalReason
+from .._profile_authentication_gate import _preflight_sources, _uses_profile_connection
+from .._profile_session_gate import session_refusal_translation_key
+from ..command_specs import COMMAND_GRAPH
+from ..errors import render_error_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -41,8 +42,8 @@ def _leaf(identity: str):
 
 def test_censo_file_preview_keeps_local_profile_admission_and_apply_uses_runtime() -> None:
     spec = COMMAND_GRAPH.node("config_profile_censo_import").spec
-    assert not _uses_runtime_profile_client(spec, {"apply": False})
-    assert _uses_runtime_profile_client(spec, {"apply": True})
+    assert not _uses_profile_connection(spec, {"apply": False})
+    assert _uses_profile_connection(spec, {"apply": True})
 
 
 @pytest.mark.parametrize(
@@ -91,11 +92,10 @@ def test_cross_scope_same_descriptor_refuses_but_distinct_descriptors_pass() -> 
     )
 
 
-def test_graph_postures_keep_rotation_self_authenticating() -> None:
-    rotation = _leaf("config.passphrase.change")
+def test_tax_graph_excludes_runtime_rotation_and_keeps_profile_view_admitted() -> None:
+    assert "config.passphrase.change" not in COMMAND_GRAPH.by_schema_identity()
     show = _leaf("config.profile.view")
 
-    assert rotation.profile_authentication is ProfileAuthenticationPosture.SELF_AUTHENTICATING
     assert show.profile_authentication is not ProfileAuthenticationPosture.SELF_AUTHENTICATING
 
 
@@ -104,8 +104,14 @@ def test_every_resume_refusal_reason_has_an_operator_diagnostic() -> None:
         key = session_refusal_translation_key(reason)
         assert key in {
             "cli.config.errors.profile_session_absent",
+            "cli.config.errors.profile_session_custody_changed",
             "cli.config.errors.profile_session_expired",
-        }
+            "cli.config.errors.profile_session_outdated",
+            "cli.config.errors.profile_session_unreadable",
+            "errors.auth.auth_storage_keyring_unavailable",
+        }, reason
+        for language in OutputLanguage:
+            assert bool(lookup_translation(key, locale=language.value)), (reason, language)
 
 
 @pytest.mark.parametrize("language", tuple(OutputLanguage))
@@ -154,17 +160,17 @@ def test_non_persistence_notice_uses_the_notice_transport_in_text_refusals() -> 
 
 
 @pytest.mark.parametrize("as_json", (True, False))
-def test_click_terminal_refusal_drains_the_notice_once(as_json: bool) -> None:
+def test_click_terminal_refusal_drains_the_notice_once(as_json: bool, run_cadrumo_cli: Callable[..., Result]) -> None:
     drain_profile_authentication_notices()
     stage_profile_session_not_persisted_notice()
     arguments = ["config", "profile", "view", "--not-a-real-option"]
     if as_json:
         arguments[:0] = ["--format", "json"]
-    refused = invoke_cached_cli(arguments)
+    refused = run_cadrumo_cli(arguments)
     assert refused.exit_code == 2
     assert refused.output.count("config.login.session_not_persisted") == 1
 
-    next_refusal = invoke_cached_cli(arguments)
+    next_refusal = run_cadrumo_cli(arguments)
     assert next_refusal.exit_code == 2
     assert "config.login.session_not_persisted" not in next_refusal.output
 
@@ -209,5 +215,5 @@ def test_windows_handle_bootstrap_does_not_claim_numeric_fd_inheritance_on_posix
         assert descriptor >= 0
         os.close(descriptor)
     else:
-        with pytest.raises(InternalInvariantError, match="only available on Windows"):
+        with pytest.raises(RuntimeError, match="only available on Windows"):
             descriptor_from_inherited_handle(7)

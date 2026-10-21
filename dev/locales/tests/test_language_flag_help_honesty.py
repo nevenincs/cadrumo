@@ -251,7 +251,7 @@ def test_help_section_headers_localise_to_hungarian(tmp_path: Path) -> None:
     the residual framework-owned ``Options`` heading to the resolved locale.
     """
     result = _run_console(
-        ["--language", "hu", "config", "auth", "status", "--help"],
+        ["--language", "hu", "config", "profile", "view", "--help"],
         _console_env(tmp_path, language=None),
     )
     combined = f"{result.stdout}\n{result.stderr}"
@@ -270,9 +270,9 @@ def test_help_section_header_locale_does_not_leak_across_processes(tmp_path: Pat
     console processes prove the rebind reflects only its own invocation's locale.
     """
     env = _console_env(tmp_path, language=None)
-    hu = _run_console(["--language", "hu", "config", "auth", "status", "--help"], env)
+    hu = _run_console(["--language", "hu", "config", "profile", "view", "--help"], env)
     assert _OPTIONS_PANEL_HU in hu.stdout, f"{hu.stdout}\n{hu.stderr}"
-    en = _run_console(["--language", "en", "config", "auth", "status", "--help"], env)
+    en = _run_console(["--language", "en", "config", "profile", "view", "--help"], env)
     en_combined = f"{en.stdout}\n{en.stderr}"
     assert _OPTIONS_PANEL_EN in en.stdout, en_combined
     assert _OPTIONS_PANEL_HU not in en.stdout, en_combined

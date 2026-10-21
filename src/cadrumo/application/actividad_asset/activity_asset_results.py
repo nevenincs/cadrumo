@@ -14,10 +14,12 @@ from ...core.period import Period
 from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
 from ..operator_actions.models import PreconditionVerdict
 from .activity_asset_contracts import (
+    ActivityAssetAcceleratedDa18Facts,
     ActivityAssetAuthorityProvenance,
     ActivityAssetId,
     ActivityAssetRefusalCode,
     ActivityAssetTaxYear,
+    require_da18_facts_match,
 )
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .operation_dtos import ActivityAssetFilingHandoffSnapshot, ActivityAssetRevisionSnapshot
@@ -34,6 +36,13 @@ class ActivityAssetRefusalResult(BaseModel):
 
     code: ActivityAssetRefusalCode
     precondition_verdict: PreconditionVerdict | None = None
+    accelerated_da18: ActivityAssetAcceleratedDa18Facts | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _da18_facts_match_code(self) -> Self:
+        require_da18_facts_match(self.code, self.accelerated_da18)
+        return self
 
 
 class ActivityAssetOperationResult(BaseModel):

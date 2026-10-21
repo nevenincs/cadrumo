@@ -13,6 +13,7 @@ from textual.widgets import Button, DataTable, Static
 from ....application.modelo.declaration_targets import DeclarationTarget
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import output_language, tr
+from ..components.language import localized, refresh_localized_widgets, repaint_tables
 from ..components.theme import tokenised
 from ..modelo.workbench.wording import modelo_title, period_words
 
@@ -60,9 +61,18 @@ class NewDeclarationPicker(ModalScreen[DeclarationTarget | None]):
             yield DataTable(id="declaration-picker-table", cursor_type="row", zebra_stripes=True)
             yield Static(id="declaration-picker-selection", markup=False)
             with Horizontal(id="declaration-picker-buttons"):
-                yield Button(tr("tui.declarations.list.new.show_all"), id="declaration-picker-all")
-                yield Button(tr("tui.declarations.list.new.create"), id="declaration-picker-create", disabled=True)
-                yield Button(tr("tui.modelo.workbench.editor.cancel"), id="declaration-picker-cancel")
+                yield localized(
+                    Button(tr("tui.declarations.list.new.show_all"), id="declaration-picker-all"),
+                    "tui.declarations.list.new.show_all",
+                )
+                yield localized(
+                    Button(tr("tui.declarations.list.new.create"), id="declaration-picker-create", disabled=True),
+                    "tui.declarations.list.new.create",
+                )
+                yield localized(
+                    Button(tr("tui.modelo.workbench.editor.cancel"), id="declaration-picker-cancel"),
+                    "tui.modelo.workbench.editor.cancel",
+                )
 
     def on_mount(self) -> None:
         """Populate the first step, or an explicit start confirmation."""
@@ -162,3 +172,8 @@ class NewDeclarationPicker(ModalScreen[DeclarationTarget | None]):
             self.query_one("#declaration-picker-create", Button).disabled = True
             self.query_one("#declaration-picker-selection", Static).update("")
             self._populate()
+
+    async def refresh_language(self) -> None:
+        """Reword the open dialog without changing its inputs or decision."""
+        refresh_localized_widgets(self)
+        repaint_tables(self, self._populate)

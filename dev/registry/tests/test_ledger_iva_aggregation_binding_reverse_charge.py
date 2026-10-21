@@ -17,15 +17,13 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 )
 from cadrumo.domain.iva.classification import (
     CustomerTaxStatus,
-    InvoiceKind,
     IvaInvoiceClassificationCriteria,
-    IvaTerritorialScope,
     TransactionKind,
     classify_iva,
 )
 from cadrumo.domain.iva.components import category_cuota_is_zero_by_law, registry_category_projection
 from cadrumo.domain.iva.flow import IvaFlowDirection, derive_flow_for_classification
-from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
+from cadrumo.domain.iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 
 from .ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA,

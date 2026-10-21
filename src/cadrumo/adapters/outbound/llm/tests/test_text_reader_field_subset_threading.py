@@ -72,7 +72,7 @@ def _prompt_the_reader_builds(*, fields: list[str] | None, operation: PinnedAuth
     client = _CapturingClient(caller="tests.text_reader_field_subset", prompt_id="invoice-extraction")
     reader = TextInvoiceFieldExtractor(
         model="test-text-model",
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         client=client,
         operation=operation,
         fields=fields,
@@ -160,7 +160,7 @@ def test_the_provenance_stamp_describes_the_prompt_that_was_sent(*, operation: P
     client = _CapturingClient(caller="tests.text_reader_field_subset", prompt_id="invoice-extraction")
     reader = TextInvoiceFieldExtractor(
         model="test-text-model",
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         client=client,
         operation=operation,
         fields=selection,

@@ -1,0 +1,251 @@
+---
+tags:
+  - '#exec'
+  - '#provider-sign-in'
+date: '2026-10-17'
+modified: '2026-10-18'
+body_schema: 'body-v2'
+body_hash: 'sha256:2371d9f9475befa0c389ac8490645b06aab696a7cfe76d3a3ef29cfbce132b31'
+related:
+  - "[[2026-10-17-provider-sign-in-plan]]"
+---
+
+# `provider-sign-in` ledger
+
+## Changes
+
+- `S02` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S02` `M` `native/desktop/frontend/src/components/settings/ProviderSettings.tsx`
+- `S02` `A` `native/desktop/frontend/src/components/settings/ProviderSignInDialog.tsx`
+- `S02` `M` `native/desktop/frontend/src/shell/providerSettings.ts`
+- `S02` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S02` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S02` `M` `native/desktop/frontend/src/dev/providerSettingsFixture.ts`
+- `S02` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S02` `M` `native/desktop/frontend/tests/scenarios/providers.spec.ts`
+- `S02` `M` `native/desktop/src-tauri/src/shell/provider_settings/mod.rs`
+- `S02` `M` `native/desktop/src-tauri/src/shell/provider_settings/wire.rs`
+- `S02` `M` `src/cadrumo_agent_service/locales/en.yml`
+- `S02` `M` `src/cadrumo_agent_service/locales/es.yml`
+- `S02` `M` `src/cadrumo_agent_service/locales/ca.yml`
+- `S02` `M` `src/cadrumo_agent_service/locales/hu.yml`
+- `S02` `verify:` `cmake desktop-host-unit-test 345 tests` -> `pass`
+- `S02` `verify:` `cmake desktop-host-unit-clippy` -> `pass`
+- `S02` `verify:` `cmake desktop-frontend-check` -> `pass`
+- `S02` `verify:` `playwright providers.spec.ts workers1 11 scenarios` -> `pass`
+- `S02` `by:` `principal-and-luna-max-workers`
+- `S01` `M` `src/cadrumo_agent_service/service.py`
+- `S01` `M` `src/cadrumo_agent_service/admin.py`
+- `S01` `M` `src/cadrumo_agent_service/adapters/agent_provider_catalog.py`
+- `S01` `A` `src/cadrumo_agent_service/host/auth_attempt.py`
+- `S01` `A` `src/cadrumo_agent_service/host/auth_protocol.py`
+- `S01` `A` `src/cadrumo_agent_service/host/tests/test_auth_attempt.py`
+- `S01` `A` `src/cadrumo_agent_service/host/tests/test_auth_protocol.py`
+- `S01` `M` `src/cadrumo_agent_service/host/tests/test_admin_authority.py`
+- `S01` `M` `src/cadrumo_agent_service/host/tests/test_provider_sign_in_preparation.py`
+- `S01` `M` `src/cadrumo_agent_service/host/tests/test_hosted_certification_status.py`
+- `S01` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_provider_catalog.py`
+- `S01` `M` `native/application-environment.toml`
+- `S01` `verify:` `focused Python service auth/catalog/preparation/authority 79 tests` -> `pass`
+- `S01` `verify:` `latest auth protocol and revoked attempt 22 tests` -> `pass`
+- `S01` `verify:` `scoped ruff and ty` -> `pass`
+- `S01` `by:` `principal`
+- `S03` `M` `native/CONTRACT.md`
+- `S03` `M` `native/cmake/Packaging.cmake`
+- `S03` `A` `native/tests/provider_auth_smoke.py`
+- `S03` `M` `dev/packaging/native/tests/test_agent_image.py`
+- `S03` `verify:` `package invocation declaration 60 tests` -> `pass`
+- `S03` `verify:` `just check-registry-gate` -> `pass`
+- `S03` `verify:` `just test-gate scoped manifest 174 passed one unrelated fixture failure` -> `fail`
+- `S03` `verify:` `just check-code seven unrelated global gates failed` -> `fail`
+- `S03` `by:` `principal`
+- `S02` `M` `native/desktop/src-tauri/src/agent/admin.rs`
+- `S02` `verify:` `cmake desktop-host-unit-test filter agent::admin 3 tests including 7second connect response` -> `pass`
+- `S02` `verify:` `cmake desktop-host-unit-clippy after connect grace change` -> `pass`
+- `S02` `by:` `principal-and-luna-max-native`
+- `S01` `verify:` `Windows process cleanup fault-port contracts 16 tests` -> `pass`
+- `S01` `verify:` `sibling cadrumo-agent provider_auth tests 6 tests` -> `pass`
+- `S03` `verify:` `cmake app-payload final stable build` -> `pass`
+- `S03` `verify:` `ctest bundle.agent and bundle.provider-auth 2 tests` -> `pass`
+- `S03` `verify:` `installed service and agent catalog source text matches after newline normalization` -> `pass`
+- `S01` `verify:` `final shipped AuthAttempt real Codex browser cancel device authority loss and unobserved watchdog` -> `pass`
+- `S03` `verify:` `final real-provider package lifecycle probe three routes` -> `pass`
+- `S03` `verify:` `scoped git diff whitespace check` -> `pass`
+- `S03` `verify:` `packaged desktop --gui starts visible Cadrumo window and runtime in interactive session` -> `pass`
+- `S04` `verify:` `real GUI demo login before rebuild returns runtime_peer_untrusted` -> `fail`
+- `S04` `verify:` `source native Windows login tests -n0 -m empty 2 tests` -> `pass`
+- `S04` `M` `native/desktop/CMakeLists.txt`
+- `S04` `verify:` `native Windows manifest tests14` -> `pass`
+- `S04` `M` `dev/packaging/native/service_descriptors.py`
+- `S04` `A` `dev/packaging/tests/test_native_service_descriptors.py`
+- `S04` `verify:` `pytest packaging descriptor matrix plus real native service verifier` -> `pass`
+- `S04` `verify:` `ruff focused check and format` -> `pass`
+- `S04` `M` `src/cadrumo_agent_service/service.py`
+- `S04` `M` `src/cadrumo_agent_service/providers/domain/catalog.py`
+- `S04` `M` `src/cadrumo_agent_service/adapters/agent_provider_catalog.py`
+- `S04` `M` `src/cadrumo_agent_service/providers/domain/tests/test_catalog.py`
+- `S04` `M` `src/cadrumo_agent_service/providers/application/tests/synthetic_catalog.py`
+- `S04` `M` `src/cadrumo_agent_service/host/tests/test_provider_sign_in_preparation.py`
+- `S04` `verify:` `app-payload descriptor rebuild and inventory binding` -> `pass`
+- `S04` `verify:` `live GUI local profile restored and session holder admitted` -> `pass`
+- `S04` `verify:` `provider domain adapter and preparation regressions 90 tests` -> `pass`
+- `S04` `verify:` `focused ruff format and ty` -> `pass`
+- `S04` `M` `native/tests/agent_smoke.py`
+- `S04` `M` `.vault/adr/2026-10-13-provider-settings-adr.md`
+- `S04` `verify:` `agent service unit suite 329 tests` -> `pass`
+- `S04` `M` `dev/locales/desktop_chrome.py`
+- `S04` `M` `native/desktop/frontend/src/shell/agentCatalog.ts`
+- `S04` `M` `native/desktop/frontend/src/shell/agentSession.ts`
+- `S04` `M` `native/desktop/frontend/tests/agentCatalog.spec.ts`
+- `S04` `M` `src/cadrumo_agent_service/locales/en.yml`
+- `S04` `M` `src/cadrumo_agent_service/locales/es.yml`
+- `S04` `M` `src/cadrumo_agent_service/locales/ca.yml`
+- `S04` `M` `src/cadrumo_agent_service/locales/hu.yml`
+- `S04` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py 20 cases` -> `pass`
+- `S04` `verify:` `Playwright product agentCatalog.spec.ts 11 cases` -> `pass`
+- `S04` `verify:` `npm run check` -> `pass`
+- `S04` `verify:` `bundle.agent and bundle.provider-auth packaged tests` -> `pass`
+- `S04` `verify:` `external debug-root relocation file count and byte total` -> `pass`
+- `S04` `verify:` `ruff check and format desktop_chrome.py` -> `pass`
+- `S04` `verify:` `ty check desktop_chrome.py` -> `pass`
+- `S04` `verify:` `cmake --build --preset debug --target app-payload final rebuild` -> `pass`
+- `S04` `verify:` `ctest Debug bundle.agent and bundle.provider-auth final package` -> `pass`
+- `S04` `verify:` `normal packaged GUI demo login provider panel and translated controls` -> `pass`
+- `S04` `verify:` `real GUI prompt reached Codex turn started outside Git` -> `pass`
+- `S05` `M` `src/cadrumo_agent_service/host/auth_protocol.py`
+- `S05` `M` `src/cadrumo_agent_service/host/launch_environment.py`
+- `S05` `M` `src/cadrumo_agent_service/host/auth_attempt.py`
+- `S05` `M` `src/cadrumo_agent_service/service.py`
+- `S05` `M` `src/cadrumo_agent_service/adapters/agent_provider_catalog.py`
+- `S05` `A` `native/desktop/src-tauri/src/auth_browser.rs`
+- `S05` `M` `native/desktop/src-tauri/src/shell/provider_settings/wire.rs`
+- `S05` `M` `native/application-environment.toml`
+- `S05` `M` `native/platform/src/launch.rs`
+- `S05` `M` `native/tests/provider_auth_smoke.py`
+- `S05` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service -m not-integration (338 passed)` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service/host/tests/test_auth_protocol.py -q (26 passed)` -> `pass`
+- `S05` `by:` `principal`
+- `S05` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service -m 'not integration' -q (338 passed exit 0; corrects prior abbreviated command)` -> `pass`
+- `S05` `M` `native/desktop/src-tauri/src/main.rs`
+- `S05` `M` `native/desktop/src-tauri/src/role.rs`
+- `S05` `M` `dev/packaging/native/application_environment.py`
+- `S05` `M` `native/platform/src/conformance_tests.rs`
+- `S05` `M` `native/CONTRACT.md`
+- `S05` `M` `native/desktop/frontend/src/components/settings/ProviderSignInDialog.tsx`
+- `S05` `verify:` `uv run --no-sync cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test desktop-host-unit-clippy (351 tests; exit 0)` -> `pass`
+- `S05` `verify:` `uv run --no-sync ctest --test-dir build/windows-x64 -C Debug -R ^platform.resolver$ --output-on-failure (67 tests; exit 0)` -> `pass`
+- `S05` `M` `dev/packaging/native/tests/test_launch_profile_vectors.py`
+- `S05` `verify:` `uv run --no-sync cmake --build build/windows-x64 --target desktop-frontend-check (final race fix exit 0)` -> `pass`
+- `S05` `verify:` `provider deferred-response Playwright regressions (2 passed exit 0)` -> `pass`
+- `S05` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/settings/ProviderSettings.tsx`
+- `S05` `M` `native/desktop/frontend/src/dev/providerSettingsFixture.ts`
+- `S05` `M` `native/desktop/frontend/src/shell/providerSettings.ts`
+- `S05` `M` `native/desktop/frontend/tests/scenarios/providers.spec.ts`
+- `S05` `M` `src/cadrumo_agent_service/locales/ca.yml`
+- `S05` `M` `src/cadrumo_agent_service/locales/en.yml`
+- `S05` `M` `src/cadrumo_agent_service/locales/es.yml`
+- `S05` `M` `src/cadrumo_agent_service/locales/hu.yml`
+- `S05` `M` `dev/locales/desktop_chrome.py`
+- `S05` `verify:` `uv run --no-sync ctest --test-dir build/windows-x64 -C Debug -R ^platform.resolver$ --output-on-failure (final typed relay slot exit 0)` -> `pass`
+- `S05` `verify:` `uv run --no-sync cmake --build build/windows-x64 --config Debug --target native_contract app-payload (final package exit 0)` -> `pass`
+- `S05` `verify:` `uv run --no-sync ctest --test-dir build/windows-x64 -C Debug -R bundle.agent (final package exit 0)` -> `pass`
+- `S05` `verify:` `uv run --no-sync ctest --test-dir build/windows-x64 -C Debug -R ^bundle.provider-auth$ --output-on-failure (corrected isolated test root exit 0)` -> `pass`
+- `S05` `verify:` `stage/Debug/app/python.exe native/tests/provider_auth_smoke.py stage/Debug/app --installed (all six real initiation and cleanup routes exit 0; no external bin override)` -> `pass`
+- `S06` `M` `src/cadrumo_agent_service/service.py`
+- `S06` `M` `src/cadrumo_agent_service/main.py`
+- `S06` `M` `src/cadrumo_agent_service/host/auth_attempt.py`
+- `S06` `M` `src/cadrumo_agent_service/host/tests/test_auth_attempt.py`
+- `S06` `A` `src/cadrumo_agent_service/host/tests/test_auth_resume.py`
+- `S06` `M` `src/cadrumo_agent_service/providers/application/resolution.py`
+- `S06` `A` `src/cadrumo_agent_service/providers/application/tests/test_sign_in_readiness.py`
+- `S06` `M` `native/desktop/src-tauri/src/agent/supervisor.rs`
+- `S06` `M` `native/desktop/frontend/src/components/settings/ProviderSignInDialog.tsx`
+- `S06` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service -m 'not integration' -q (346 passed)` -> `pass`
+- `S06` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service/host/tests/test_auth_resume.py -q (4 passed after fixture correction)` -> `pass`
+- `S06` `verify:` `desktop-frontend-check and success completion scenario (1 passed)` -> `pass`
+- `S06` `by:` `principal`
+- `S06` `verify:` `uv run --no-sync cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test desktop-host-unit-clippy (353 passed exit 0)` -> `pass`
+- `S06` `verify:` `uv run --no-sync cmake --build build/windows-x64 --config Debug --target app-payload (exit 1 Windows directory lock during publication)` -> `fail`
+- `S07` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/agent/ProviderMark.tsx`
+- `S07` `by:` `principal`
+- `S07` `M` `dev/locales/desktop_chrome.py`
+- `S07` `M` `src/cadrumo_agent_service/locales/en.yml`
+- `S07` `M` `src/cadrumo_agent_service/locales/es.yml`
+- `S07` `M` `src/cadrumo_agent_service/locales/ca.yml`
+- `S07` `M` `src/cadrumo_agent_service/locales/hu.yml`
+- `S07` `verify:` `uv run --no-sync pytest dev/locales/tests/test_desktop_chrome.py -q (20 passed exit 0)` -> `pass`
+- `S07` `verify:` `uv run --no-sync cmake --build build/windows-x64 --config Debug --target desktop-frontend-chrome (exit 0)` -> `pass`
+- `S07` `M` `native/desktop/frontend/src/components/settings/ProviderSettings.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/settings/ProviderSignInDialog.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/agent/ProviderSelect.tsx`
+- `S07` `M` `native/desktop/frontend/src/dev/providerSettingsFixture.ts`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/providers.spec.ts`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/provider-picker.spec.ts`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/agent.spec.ts`
+- `S07` `A` `dev/packaging/native/provider_icon_assets.py`
+- `S07` `A` `dev/packaging/native/tests/test_provider_icon_assets.py`
+- `S07` `M` `native/desktop/CMakeLists.txt`
+- `S07` `M` `native/desktop/frontend/vite.config.ts`
+- `S07` `M` `native/desktop/frontend/src/content.d.ts`
+- `S07` `M` `native/desktop/frontend/scripts/dev.mjs`
+- `S07` `verify:` `desktop-frontend-check (TypeScript ESLint formatting)` -> `pass`
+- `S07` `verify:` `Playwright providers provider-picker agent scenario scope 56 tests` -> `pass`
+- `S07` `verify:` `provider_icon_assets focused pytest 8 tests` -> `pass`
+- `S07` `verify:` `provider_icon_assets ruff check and format plus ty` -> `pass`
+- `S07` `verify:` `desktop-frontend-icons target against admitted wheel` -> `pass`
+- `S07` `verify:` `uv run --no-sync cmake --build build/windows-x64 --config Debug --target desktop-frontend-build exit0` -> `pass`
+- `S07` `verify:` `uv run --no-sync cmake --build build/windows-x64 --config Debug --target desktop-host-build exit0` -> `pass`
+- `S07` `verify:` `desktop-frontend-check after two-row header exit0` -> `pass`
+- `S07` `verify:` `Playwright Spanish and Hungarian narrow header geometry 2 cases exit0` -> `pass`
+- `S07` `verify:` `Screenshot inspection settings expanded/collapsed picker search es/hu narrow` -> `pass`
+- `S07` `verify:` `uv run --no-sync cmake --build build/windows-x64 --config Debug --target app-payload exit0` -> `pass`
+- `S07` `verify:` `uv run --no-sync ctest --test-dir build/windows-x64 -C Debug -R bundle.agent-or-provider-auth --output-on-failure 2 passed exit0` -> `pass`
+- `S07` `verify:` `Final independent source review including accessible picker and es/hu two-row layout` -> `pass`
+- `S06` `verify:` `S06 changes included in final S07 app-payload build exit0` -> `pass`
+- `S06` `verify:` `Final assembled bundle.agent and bundle.provider-auth 2 passed exit0` -> `pass`
+- `S08` `M` `native/desktop/frontend/src/shell/agentWords.ts`
+- `S08` `M` `native/desktop/frontend/src/shell/agentViews.ts`
+- `S08` `M` `native/desktop/frontend/src/components/agent/Transcript.tsx`
+- `S08` `M` `native/desktop/frontend/src/components/agent/types.ts`
+- `S08` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S08` `M` `native/desktop/frontend/tests/scenarios/agent.spec.ts`
+- `S08` `M` `dev/locales/desktop_chrome.py`
+- `S08` `verify:` `desktop-frontend-check exit0` -> `pass`
+- `S08` `verify:` `Playwright focused agent failure scenarios 4 passed exit0` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest dev/locales/tests/test_desktop_chrome.py -q 20 passed exit0` -> `pass`
+- `S08` `verify:` `ruff check and format dev/locales/desktop_chrome.py exit0` -> `pass`
+- `S08` `M` `native/desktop/frontend/src/dev/agentFixtureHost.ts`
+- `S08` `verify:` `app-payload Debug build and bundle.agent plus bundle.provider-auth tests` -> `pass`
+- `S08` `verify:` `Live Claude haiku authentication refusal terminates failed inactive and provider settings sign-in dialog visible` -> `pass`
+
+## Notes
+
+- `S03` Overall verification pending clean repository-wide gates. See build/windows-x64/provider-auth-check-code.log and provider-auth-test-gate.log. No auth path was named in those failures; do not modify unrelated working-tree work to conceal them. Final stable package build and lifecycle probes pending.
+- `S01` Sibling agent main checkout adds auth providers --interface gui --json, its test, and operations.rst discovery documentation; the terminal catalog stays compatible. Agent scoped ruff passes. These sibling changes remain uncommitted.
+- `S03` Final stable payload is build/windows-x64/stage/Debug/app. Raw hashes differ only because packaging normalizes CRLF to LF; normalized full source text matches for service, admin, `auth_attempt,` `auth_protocol,` `agent_provider_catalog,` and sibling `provider_auth.` Real provider lifecycle probe running.
+- `S01` Final packaged interpreter/imports and admitted helper initiated real Codex browser/device authentication without opening a terminal. All three routes reached `browser_action` then cancelled, cleared transient URL/code and confirmed process cleanup. No OAuth completion or real model request was attempted.
+- `S03` All in-scope package verification is complete. S03 and overall audit stay pending because repository-wide test-gate and check-code remain failed in unrelated areas. Human-completed OAuth, credential persistence after completion and a real model turn remain unverified. Changes remain uncommitted.
+- `S03` Live GUI verification started in isolated build/windows-x64/testing/Debug/provider-sign-in-live storage with admitted external Codex binary directory. UI Automation observes the real Crear un perfil screen; runtime is running. Awaiting user-created test profile and subsequent human provider OAuth completion. No provider credentials inspected, no OAuth success claimed.
+- `S03` Committed 2026-10-17 at the operator's instruction 'commit them' while the session that wrote it was gone; S03 and S04 stay open and the live GUI check from stage/Debug is still running.
+- `S04` User requested live verification and reported profile login failure, authorizing repair of this prerequisite. Runtime refused `login_owner_inactive_or_mismatch` before password validation. Luna readers and principal isolated stale packaged cadrumo.exe manifest lacking Windows10 supportedOS while source template and existing regression test already contain correction. Keep accepted runtime-manager native trust requirements unchanged. Reconfigured CMake and rebuilding package, preserving demo test profile. No password or provider token retained in evidence.
+- `S04` Rebuild exposed missing ordering: desktop-host-build ran while generated desktop manifest was still stale; `native_metadata` producer had not run. Added Windows-only `native_metadata` prerequisites for Cargo/Tauri host build prepare test clippy and packaged-host targets. desktop-run only launches an existing image and is unchanged. Old-graph full payload build will finish before reconfigure and app-native rebuild; validate final executable resource and actual GUI authentication.
+- `S04` Packaged demo login succeeds after `native_metadata` dependency correction and app-native rebuild. Staged desktop manifest has Windows 10 supportedOS. Subsequent `desktop_holder_unverified` occurs before parent checks: Windows SignIn launches cadrumo.exe --role runtime session hold but descriptor named bin/cadrumo-runtime.exe. Align Windows holder descriptor to desktop image/digest without changing admission checks. Preserve standalone image elsewhere and without desktop. Six focused tests pass. Luna read-only review passes. Full app-payload assembly pending.
+- `S04` Actual app PID73392 now passes session admission. Provider settings `read_failed` traced to catalog v3 producer vs v2 consumer; `credentials_unavailable` was caused by refused catalog, not established absence of account credentials. Update strict consumer version and presentation metadata shape to v3. Preserve typed provider status refusal before adding success-only metadata. Actual packaged catalog parses into 12 lanes incl `codex_cli.` Rebuild and final GUI provider configuration pending.
+- `S04` Bundled catalog producer/consumer compatibility is now checked by bundle.agent, including GUI auth provider membership. Source tests pass 329 unit cases; 27 integration cases were intentionally deselected. Scoped Luna review passes current v3 producer behavior. Existing optional opaque presentation metadata defaults remain unchanged; auth fields and unknown schema versions stay strict. Reconcile stale ADR supplier version reference to v3 without changing credential custody authority.
+- `S04` Actual GUI `agent_ready` exposed Intl.ListFormat crash on new subagent capability names. Added known labels and unknown-proof filtering with generation scoping. Added missing desktop chrome allowlist entries; all four generated translations validated. Diagnostic page-only bypass let operator see providers and attempt a turn; bypass is not shipped proof. Operator turn failed isolated runtime Git ancestry due to principal explicit disposable storage override inside checkout. Stop diagnostic app and relocate isolated debug data outside checkout without weakening guard or changing normal user storage. Final package rebuild ongoing.
+- `S04` Documented manual storage relocation completed while all diagnostic package processes were stopped. Complete root including encrypted profile material and agent identity moved to %USERPROFILE%/AppData/Local/cadrumo-provider-sign-in-dev. 5858 files and 171284433 bytes preserved; zero source files remain and old source root retired to empty-directory archive. First Windows cross-volume Move-Item stopped on hidden/read-only entries; completed by validated per-file Force moves with no overwrites. A cleanup command was policy rejected; safe alternative retained empty directories rather than recursively deleting them. Local untracked build launcher pins external root and refuses Git ancestry. Normal canonical data root remains unchanged.
+- `S04` Relocation exposed displaced .runtime/installation.json `storage_identity,` returned as unknown sign-in observation and `runtime_root_mismatch` on password logout. With all package processes stopped, preserved old nonsecret installation record outside .runtime; production admission generated fresh root-bound installation. Password-verified config logout then actual GUI password login succeeded. Fresh installation invalidates previous automation/session bindings; existing profile/keystore/provider files retained. Normal app PID34956 reached `agent_ready` and showed translated Iniciar sesion plus API-key controls without diagnostic bypass. Actual GUI minimal Codex/gpt-5.5 prompt created a private home under external data root and reached Codex turn started. `Window_close_requested` occurred before model completion; no completed model turn or OAuth completion claimed. App remains closed. Local build/windows-x64/launch-provider-sign-in-dev.ps1 pins external debug root for repeat launches. Broader repository failures from S03 remain recorded.
+- `S05` Final native checks and packaged rebuild/probes pending. Human OAuth completion and completed real model turn unverified. Review fixes ongoing. No commit or push authorized.
+- `S05` Independent review supplier nonce/query/prerequisite findings and frontend stale-retry finding corrected and re-reviewed; no remaining source findings. App-payload rebuild in progress. Its declared quiesce step stopped three lifecycle-test-owned staged images after graceful timeout; concurrent lifecycle test results from that run must not be treated as applicable evidence.
+- `S05` Principal caught missing browser executable forwarding in native agent-auth. Added optional typed executable slot and conformance vectors; 140 generator/vector Python tests pass. Independent reviewer checked full relay route; comment corrected. Rebuild with final contract and packaged probes pending.
+- `S05` Offline smoke initially failed `installed_base_unavailable` because isolating USERPROFILE removed Windows local-data discovery; pinned only the offline fixture storage root and reran successfully. Installed probes all passed unchanged: Codex browser cancel/unobserved and device revoke; Claude browser cancel/revoke/unobserved. Normal GUI reopened PID66916 with no storage or provider-bin override. OAuth completion and real model turn remain S03 gates.
+- `S06` User completed real Codex OAuth; live helper event succeeded `cleanup_confirmed` true at 2026-10-17T22:01:37Z and actual GUI displayed success. Starting auth had deliberately stopped gateway; native misreported `agent_service_failed` and no resume existed. Source review passes wake-based one-shot resume, neutral retirement handling and success Done UI; native checks and rebuilt live resume/model-turn proof pending. No credential bytes accessed or copied.
+- `S06` Independent integrated source review found no remaining issues. New app-payload build is running; no live recovered-gateway or model-turn claim yet.
+- `S06` Concurrent external Claude runtime-lifecycle pytest session spawned packaged processes during assembly. Existing package was retained; waiting for the other session to release the shared package before retry. No live recovery claim.
+- `S07` User authorized searchable expandable provider UI and supplied icons with simpler four-language messages. Existing provider-settings and desktop-design-system decisions reused. Principal owns integration, provider loading errors and icon renderer; frontend worker owns presentation/locales; native worker owns generated artwork from pinned agent wheel. Semantic discovery unavailable; scoped source reads used.
+- `S07` Initial locale gate caught default CLI owner collisions and displaced export keys. Corrected through service-scoped LocaleManager; no tax locale diff remains. Updated four languages and removed obsolete desktop exports; final generation and all 20 tests pass.
+- `S07` Host-build dependency native-process-quiesce reported stopping three package identities while an external lifecycle test was active; package replacement remains held until external test releases package.
+- `S06` Normal app reopened at local profile sign-in; attended agent recovery and completed real model turn still pending.
+- `S08` Live run r8a1fd5f920c73eb93041ef50 failed Authentication required without the previous perpetual relay loop. Actual model success remains unproven. User is exercising provider sign-in.

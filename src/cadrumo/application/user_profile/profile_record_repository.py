@@ -123,7 +123,7 @@ def publish_invocation_profile_record(record: UserProfileRecord) -> None:
 def take_invocation_profile_record(profile_id: str | UUID) -> UserProfileRecord | None:
     """Consume the invocation record when it belongs to ``profile_id``."""
     record = _INVOCATION_PROFILE_RECORD.get()
-    if not isinstance(record, UserProfileRecord) or str(record.profile_id) != str(profile_id):
+    if not isinstance(record, UserProfileRecord) or record.profile_id != str(profile_id):
         return None
     _INVOCATION_PROFILE_RECORD.set(_EMPTY_INVOCATION_PROFILE_RECORD)
     return record
@@ -418,7 +418,7 @@ class ProfileRecordRepository:
         occurred_at = (now or _utc_now()).astimezone(UTC)
         replacement = create_user_profile_record(
             context=self.session.create_context(),
-            profile_id=str(current.profile_id),
+            profile_id=current.profile_id,
             facts=current.facts,
             setup_state=ProfileSetupState.COMPLETE,
             record_revision=current.record_revision + 1,
@@ -485,7 +485,7 @@ class ProfileRecordRepository:
         occurred_at = (now or _utc_now()).astimezone(UTC)
         replacement = create_user_profile_record(
             context=self.session.create_context(),
-            profile_id=str(current.profile_id),
+            profile_id=current.profile_id,
             facts=facts,
             setup_state=current.setup_state,
             record_revision=current.record_revision + 1,

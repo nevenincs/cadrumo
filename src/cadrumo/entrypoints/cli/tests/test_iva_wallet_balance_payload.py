@@ -23,7 +23,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.iva_compensation.balance import IvaWalletBalanceReport
-from .._modelo_iva_wallet_payloads import IvaWalletBalanceResult
+from ..modelo_iva_wallet_results import IvaWalletBalanceResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -458,6 +458,18 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="config.provision.browser",
         ),
         ActionCatalogueEntry(
+            action_id="operator.provision.local_ai",
+            target_command_key="config.provision.pull",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.provision.setup",
+            target_command_key="config.provision.setup",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.provision.status",
+            target_command_key="config.provision.status",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.storage.init",
             target_command_key="config.storage.init",
         ),

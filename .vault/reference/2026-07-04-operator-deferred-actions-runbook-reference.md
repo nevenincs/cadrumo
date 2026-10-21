@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#operator-deferred-actions-runbook'
 date: '2026-07-04'
-modified: '2026-10-05'
-body_hash: 'sha256:f4cc709835815c44a025a74879c0de2a6974e75c90da0182f678527616c09cc6'
+modified: '2026-10-21'
+body_hash: 'sha256:5d3eaa9be57d1b9caf4cff4a2dba0ebfca575b7a52d783e7a6f36307ddb7cb84'
 related: []
 ---
 
@@ -44,8 +44,7 @@ repository's tracker.
 - `RELEASING.md` documents the full seven-step per-release checklist: version
   + changelog (local), gates (local), push (human decision, step 3), publish
   `aeat-cli` to PyPI (step 4, outward), publish the two data companions (step 5,
-  outward), regenerate + push the Claude plugin/marketplace (step 6, outward),
-  announce (step 7).
+  outward), announce (step 7).
 - Release-readiness gates confirmed green at HEAD:
   - `src/cadrumo/tests/test_release_config.py` — 5/5 passed (config well-formed,
     manifest well-formed, changelog non-empty, the three version surfaces
@@ -73,11 +72,11 @@ repository's tracker.
 
 **No further autonomous prep is possible.** Every remaining step needs either
 a human decision (push) or outward network calls with credentials this
-environment does not hold (PyPI token, plugin marketplace push).
+environment does not hold (PyPI token).
 
 **Operator action:** from a clean `main` checkout, in order:
 
-Regenerate and push the plugin/marketplace tree; update `docs/updates.md`    if the release changes filing behaviour.
+Update `docs/updates.md` if the release changes filing behaviour.
 
 **Acceptance signal:** the new version tag exists on the pushed `main`,
 `pypi.org` renders the new `aeat-cli` version page, and

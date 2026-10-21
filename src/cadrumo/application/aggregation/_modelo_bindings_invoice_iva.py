@@ -22,7 +22,6 @@ from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObserva
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.invoices.enums import iva_rate_percentage
 from ...domain.invoices.models import Invoice, InvoiceLine
-from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.components import registry_category_projection
 from ...domain.iva.flow import (
     derive_flow_for_classification,
@@ -31,7 +30,7 @@ from ...domain.iva.flow import (
 )
 from ...domain.iva.invoice_classification import classify_invoice_line_for_iva, invoice_line_to_iva_observation
 from ...domain.iva.recargo_equivalencia import recargo_rate_record_for_applied_rate
-from ...domain.iva.schema import IvaCategory, IvaLedgerObservationRole
+from ...domain.iva.schema import InvoiceKind, IvaCategory, IvaLedgerObservationRole
 from ...domain.transactions.models import OutOfWindowTransactionSummary
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from .errors import AggregationValidationError
@@ -433,8 +432,12 @@ def category_counterparty_mismatch_diagnostics(
         source_ref=lambda invoice: f"invoice:{invoice.invoice_id}",
         message=lambda invoice: (
             f"invoice {invoice.invoice_number!r} declares "
-            f"{invoice.iva_category.value if invoice.iva_category else 'no category'} but its "
-            f"counterparty country {invoice.counterparty_country!r} cannot bear it, so its base "
+            + (
+                invoice.iva_category.value
+                if invoice.iva_category is not None and invoice.iva_category
+                else "no category"
+            )
+            + f" but its counterparty country {invoice.counterparty_country!r} cannot bear it, so its base "
             "is NOT declared on this modelo"
         ),
         remedy=lambda _invoice: (
@@ -466,8 +469,12 @@ def reverse_charge_underivable_diagnostics(
         source_ref=lambda invoice: f"invoice:{invoice.invoice_id}",
         message=lambda invoice: (
             f"invoice {invoice.invoice_number!r} declares "
-            f"{invoice.iva_category.value if invoice.iva_category else 'no category'}, so the "
-            "recipient owes the self-assessed cuota, but no line states a rated tier to compute "
+            + (
+                invoice.iva_category.value
+                if invoice.iva_category is not None and invoice.iva_category
+                else "no category"
+            )
+            + ", so the recipient owes the self-assessed cuota, but no line states a rated tier to compute "
             "it from -- the cuota is NOT declared on this modelo"
         ),
         remedy=lambda _invoice: (
@@ -566,7 +573,7 @@ def _recargo_rate_divergence(
         return None
     # The provision the advisory names is the pairing fact's own grounding,
     # so the message cites whatever the registry cites for that window.
-    legal_refs = tuple(str(ref) for ref in record.legal_refs)
+    legal_refs = record.legal_refs
     provisions = tuple(
         f"art. {article}"
         for article in (operation.legal_reference(ref).article for ref in legal_refs)
@@ -1025,7 +1032,7 @@ def _recargo_spans_several_tiers(invoice: Invoice) -> bool:
     attribute, named on its own so the screen can report it instead of only
     leaving it out.
     """
-    if not invoice.recargo_amount:
+    if not (invoice.recargo_amount is not None and invoice.recargo_amount):
         return False
     return len({line.iva_rate for line in invoice.lines if line.iva_amount > Decimal("0")}) > 1
 
@@ -1045,7 +1052,7 @@ def _sole_recargo_bearing_line_index(invoice: Invoice) -> int | None:
     declared confidently, where an unscreened one is only an unscreened one.
     That gap is a limit of the invoice-level field, not of this screen.
     """
-    if not invoice.recargo_amount:
+    if not (invoice.recargo_amount is not None and invoice.recargo_amount):
         return None
     cuota_lines = [index for index, line in enumerate(invoice.lines) if line.iva_amount > Decimal("0")]
     if not cuota_lines:

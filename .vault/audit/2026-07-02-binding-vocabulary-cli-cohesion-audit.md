@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-07-02'
-modified: '2026-10-03'
-body_hash: 'sha256:8d32cfb7ae37c71c97292bcf5161d3194dad900c3b4383f2cacdf5f107993838'
+modified: '2026-10-21'
+body_hash: 'sha256:959fab402b646ec86a06783cb22113dcf3a09c9ef7670dfe84db603ab937209f'
 related: []
 ---
 
@@ -116,8 +116,7 @@ Verification refreshed for the reconciled G1/G2 surface:
 - `vaultspec-core vault check features --feature binding-vocabulary-cli-cohesion` is clean after rebuilding the feature index.
 
 `test_documented_command_conformance.py` is not clean, but the failure is unrelated to
-this feature: the retired document cites `aeat app agent --layout
-plugin`, where `plugin` is parsed as a nonexistent subcommand, plus an ellipsis command
+this feature: the retired document cites a nonexistent `aeat app agent` layout subcommand, plus an ellipsis command
 path. No failure names `modelo bindings resolve`, `config google sync calc pull`, or
 `config google sync calc compute`.
 

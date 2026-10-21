@@ -63,7 +63,7 @@ def _by_subject() -> dict[tuple[str, str], dict[tuple[int, int], list[str]]]:
 
 
 def test_a_half_year_revision_reports_no_boundary_inside_its_own_year() -> None:
-    reported = {subject for subject in _MID_YEAR_HALVES if _by_subject().get(subject)}
+    reported = {subject for subject in _MID_YEAR_HALVES if bool(_by_subject().get(subject))}
 
     assert not reported, sorted(reported)
 

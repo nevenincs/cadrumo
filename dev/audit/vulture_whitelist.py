@@ -18,12 +18,25 @@ consumed in the body:
 * ``prop`` — the parameter of ``append`` on the ``_CustomDocumentProperties``
   Protocol stub (:mod:`cadrumo.adapters.outbound.workbook.calc_sheets_xlsx`).
   The stub body is ``...``; the parameter is part of the structural type.
+* ``cmd_name`` — the parameter of ``get_command`` on the ``_CommandGroup``
+  Protocol stub (:mod:`cadrumo.entrypoints.cli.common`), which mirrors Click's
+  ``Group.get_command(ctx, cmd_name)``. The stub body is a docstring.
+* ``report_change`` — the positional-only parameter of ``__call__`` on the
+  ``InstallationAreaFactory`` Protocol
+  (:mod:`cadrumo.entrypoints.tui.installation.area_factory`). The stub body is
+  ``...``; the runtime's installed-session implementation calls it.
+* ``eventmask`` — the positional-only parameter of ``register`` on the
+  ``_ParentPoll`` Protocol stub
+  (:mod:`cadrumo_runtime.host.linux_worker_guardian`), which mirrors
+  ``select.poll().register(fd, eventmask)``; the guardian passes the real
+  ``select.poll()`` object. The stub body is ``...``.
+
 Vulture marks a name "used" when it appears in a whitelist file. Referencing
-each name once here clears the false positive while leaving every other
-occurrence of an unused name still subject to detection — this file lists
-only these specific, individually-justified names, so it cannot mask genuinely
-dead code elsewhere. When any of these parameters is removed at its source,
-delete its line here so the audit re-detects a stale whitelist entry.
+each name once here clears all findings with that name across the scan,
+including unrelated definitions. These entries therefore cannot establish
+that other occurrences are used. When any parameter is removed at its source,
+delete its line here; resolved-import and argument checks provide independent
+evidence for the names this lexical scan cannot distinguish.
 """
 
 from __future__ import annotations
@@ -47,3 +60,18 @@ def _set_language_field(source_citation: object) -> object:
 def _custom_document_properties_append(prop: object) -> object:
     """Mirror ``_CustomDocumentProperties.append`` structural signature."""
     return prop
+
+
+def _command_group_get_command(cmd_name: object) -> object:
+    """Mirror ``_CommandGroup.get_command`` structural signature."""
+    return cmd_name
+
+
+def _installation_area_factory_call(report_change: object) -> object:
+    """Mirror ``InstallationAreaFactory.__call__`` structural signature."""
+    return report_change
+
+
+def _parent_poll_register(eventmask: object) -> object:
+    """Mirror ``_ParentPoll.register`` structural signature."""
+    return eventmask

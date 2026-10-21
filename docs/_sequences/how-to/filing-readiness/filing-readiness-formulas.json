@@ -20,6 +20,7 @@
         "notices": [],
         "result": {
           "code": "303",
+          "filing_period": null,
           "filing_year": null,
           "formula_count": 40,
           "operation": "modelo.formulas",

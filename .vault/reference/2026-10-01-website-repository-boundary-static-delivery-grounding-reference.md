@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#website-repository-boundary'
 date: '2026-10-01'
-modified: '2026-10-01'
+modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:98dbf0bf6658aad637d5119be640f9184f4d6dcf213c787c4de1dcd71eb72da6'
+body_hash: 'sha256:986eaae60734ce7927cfdc4c98db9138cd615e5f99371fb505ff1cb09e36fc00'
 related:
   - "[[2026-09-27-website-repository-boundary-docs-static-delivery-adr]]"
 ---
@@ -33,7 +33,7 @@ Those observations explain both removing request-time execution and separating
 versioned search objects from the static page manifest. The inventory's largest
 object was 23,966,312 bytes, below the then-documented 25 MiB object limit.
 
-Source: `Y:/code/portfolio2026-worktrees/main/.vault/audit/2026-09-26-workers-audit-audit.md:22`
+Source: `<portfolio-repo>/.vault/audit/2026-09-26-workers-audit-audit.md:22`
 and `:36`. Its recorded body fingerprint is
 `sha256:121f0efd263d5f77e2c0b53ac1dad46b8487b2376d0357056a88a7400d371579`.
 The original API, inventory and HTTP captures are identified there under
@@ -57,7 +57,7 @@ from proof of edge caching, and preserved the independently owned CloudFront
 landing page. The decision's scoped transport, route, cache and alert corrections
 follow those findings without authorizing unrelated origin or billing changes.
 
-Source: `Y:/code/portfolio2026-worktrees/main/.vault/audit/2026-09-27-workers-audit-cadrumo-audit.md`,
+Source: `<portfolio-repo>/.vault/audit/2026-09-27-workers-audit-cadrumo-audit.md`,
 findings `deployment-ordering`, `rollback-verification`, `failure-alerting`,
 `routing`, `conditional-handling` and `html-validators`. Its recorded body
 fingerprint is

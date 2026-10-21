@@ -23,8 +23,8 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.transactions.models import TransactionCatalogue
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.inventory import FIXTURES_DIR
-from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend
-from .cli_runner import invoke_cached_cli
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
+from .profile_world_fixtures import recorded_fx_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["recorded_fx_isolated_backend"]

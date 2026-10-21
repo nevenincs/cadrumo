@@ -29,9 +29,9 @@ def verification_probe_url(
     selector_url_for: Callable[[str], str],
 ) -> str:
     """Choose the probe URL without changing provider-specific selector construction."""
-    if explicit_target_url:
+    if explicit_target_url is not None and explicit_target_url:
         return selector_url_for(target_path)
-    if resolved_target_url and target_path in resolved_target_url:
+    if (resolved_target_url is not None and resolved_target_url) and target_path in resolved_target_url:
         return resolved_target_url
     return resolved_target_url or selector_url_for(target_path)
 

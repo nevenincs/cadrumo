@@ -4,14 +4,15 @@ tags:
   - '#index'
   - '#application-sign-in'
 date: '2026-10-04'
-modified: '2026-10-05'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:9b8faf4415e67f1760a702a19e80d3e5a9e521eb283bf30dab03d94ecad28b3b'
+body_hash: 'sha256:a5619dca0dc861354dfe7475813cc1b1e3cca05b4bf9a2ea6a9e72868c9110d5'
 related:
   - '[[2026-10-04-application-sign-in-adr]]'
   - '[[2026-10-04-application-sign-in-ledger]]'
   - '[[2026-10-04-application-sign-in-plan]]'
   - '[[2026-10-04-application-sign-in-reference]]'
+  - '[[2026-10-12-application-sign-in-audit]]'
 ---
 
 # `application-sign-in` feature index
@@ -23,6 +24,10 @@ Auto-generated index of all documents tagged with `#application-sign-in`.
 ### adr
 
 - `2026-10-04-application-sign-in-adr` - `application-sign-in` adr: `Application sign-in` | (**status:** `accepted`)
+
+### audit
+
+- `2026-10-12-application-sign-in-audit` - `application-sign-in` audit: `Integrated sign-in review`
 
 ### exec
 

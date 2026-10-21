@@ -17,11 +17,9 @@ from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from pydantic import SecretBytes
 
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    NativeSecretBackend,
-)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
+from .....application.user_profile.automation_custody_port import NativeSecretBackend
 from .....core.async_cleanup import AsyncResourceCleanupError
 from .automation_secret_target import require_automation_secret_target
 from .gnome_collection_protection import require_protected_gnome_collection

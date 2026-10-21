@@ -216,7 +216,7 @@ def iter_pdf_embedded_files(pdf_bytes: bytes) -> tuple[tuple[str, bytes], ...]:
                 # this loop relies on rather than letting it decay to Unknown.
                 stream = cast("_AttachmentFileReader | None", getattr(attachment, "get_file", None))
                 data = stream().read_bytes() if stream is not None else None
-                if data:
+                if data is not None and data:
                     found.append((str(name), bytes(data)))
             return tuple(found)
     except Exception:

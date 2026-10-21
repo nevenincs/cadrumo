@@ -35,10 +35,10 @@ from ...application.user_profile.profile_record_repository import ProfileRecordR
 from ...application.user_profile.projections import record_to_effective_facts
 from ...core.paths import effective_storage_root
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from . import test_registered_executor_conformance as conformance
+from . import registered_executor_case_support as conformance
 from .censal_review_test_support import review_censal_with_services
+from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
 from .test_censal_operation_operand import _operand
-from .test_registered_executor_conformance import _CloseWitness, _runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -61,8 +61,8 @@ def test_applied_censal_review_lands_adopted_values_with_censo_provenance(
 ) -> None:
     """Adopted values reach the durable record carrying the censo source tag."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    cleanup = _CloseWitness()
-    with _runtime(tmp_path / "censal-apply", cleanup=cleanup) as (driver, _registry, profile_id):
+    cleanup = OperationRuntimeCloseWitness()
+    with conformance_operation_runtime(tmp_path / "censal-apply", cleanup=cleanup) as (driver, _registry, profile_id):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         )
@@ -123,8 +123,8 @@ def test_rejected_censal_review_leaves_the_record_and_its_provenance_untouched(
 ) -> None:
     """A rejected review neither writes values nor stamps censo provenance."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    cleanup = _CloseWitness()
-    with _runtime(tmp_path / "censal-reject", cleanup=cleanup) as (driver, _registry, profile_id):
+    cleanup = OperationRuntimeCloseWitness()
+    with conformance_operation_runtime(tmp_path / "censal-reject", cleanup=cleanup) as (driver, _registry, profile_id):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         )
@@ -156,10 +156,14 @@ def test_each_censal_acquisition_publishes_exactly_one_answerable_review(
 ) -> None:
     """Two runs each review once; neither reuses the other's interaction."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    first_cleanup = _CloseWitness()
-    second_cleanup = _CloseWitness()
+    first_cleanup = OperationRuntimeCloseWitness()
+    second_cleanup = OperationRuntimeCloseWitness()
 
-    with _runtime(tmp_path / "censal-first", cleanup=first_cleanup) as (driver, _registry, profile_id):
+    with conformance_operation_runtime(tmp_path / "censal-first", cleanup=first_cleanup) as (
+        driver,
+        _registry,
+        profile_id,
+    ):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         )
@@ -174,7 +178,11 @@ def test_each_censal_acquisition_publishes_exactly_one_answerable_review(
         )
         after_first = repository.load(profile_id)
 
-    with _runtime(tmp_path / "censal-second", cleanup=second_cleanup) as (driver, _registry, profile_id):
+    with conformance_operation_runtime(tmp_path / "censal-second", cleanup=second_cleanup) as (
+        driver,
+        _registry,
+        profile_id,
+    ):
         decide_second, second_seen = _decide(apply=False)
         second = asyncio.run(
             review_censal_with_services(
@@ -209,7 +217,11 @@ def test_complete_capture_is_readable_after_review_even_when_adoption_is_decline
 
     observation = _operand().observation
     monkeypatch.setattr(conformance, "_observation", lambda: observation)
-    with _runtime(tmp_path / "censal-readback", cleanup=_CloseWitness()) as (driver, _registry, profile_id):
+    with conformance_operation_runtime(tmp_path / "censal-readback", cleanup=OperationRuntimeCloseWitness()) as (
+        driver,
+        _registry,
+        profile_id,
+    ):
 
         def read():
             return asyncio.run(

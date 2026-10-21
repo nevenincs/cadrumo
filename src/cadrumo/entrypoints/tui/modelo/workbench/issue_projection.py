@@ -110,7 +110,7 @@ def _box_words(form: ModeloWorkForm, records: Mapping[str, _RecordValue]) -> dic
     for field in form.fields():
         if not isinstance(field.address, ModeloFormCasillaAddressV1):
             continue
-        if field.box:
+        if field.box is not None and field.box:
             words[str(field.address.casilla_id)] = field.box
         elif field.label.disclosure is not ModeloFormTextDisclosure.TECHNICAL:
             words.setdefault(str(field.address.casilla_id), field.label.text)
@@ -118,7 +118,7 @@ def _box_words(form: ModeloWorkForm, records: Mapping[str, _RecordValue]) -> dic
 
 
 def _field_name(field: ModeloFormField) -> str:
-    parts: list[str] = [f"[{field.box}]"] if field.box else []
+    parts: list[str] = [f"[{field.box}]"] if (field.box is not None and field.box) else []
     if field.label.disclosure is not ModeloFormTextDisclosure.TECHNICAL:
         parts.append(field.label.text)
     return " ".join(parts)

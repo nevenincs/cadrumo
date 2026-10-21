@@ -36,10 +36,8 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 
 from ....core.classifier_input_source import ClassifierInputSource
-from ....domain.iva.classification import (
-    IvaTerritorialScope,
-    resolve_iva_classification_catalogue,
-)
+from ....domain.iva.classification import resolve_iva_classification_catalogue
+from ....domain.iva.schema import IvaTerritorialScope
 from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
@@ -455,8 +453,7 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         from datetime import date
 
-        from ....domain.iva.classification import InvoiceKind
-        from ....domain.iva.schema import IvaCategory
+        from ....domain.iva.schema import InvoiceKind, IvaCategory
         from ....domain.iva.supply_nature import SupplyNature
 
         filer_side = DeclaredFact[IvaTerritorialScope](

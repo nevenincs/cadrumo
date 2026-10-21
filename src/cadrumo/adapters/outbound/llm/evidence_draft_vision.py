@@ -61,12 +61,12 @@ from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputE
 from ....core.config import Settings, load_settings
 from ....core.config_support import LLMProvider
 from ....core.field_origin import FieldOrigin
+from ....core.model_catalogue import ModelRole
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ....core.provenance_stamp import provenance_transport_label
 from .client import LLMClient
 from .consent import EvidenceConsentToken
-from .errors import LLMConfigError
 from .models import LLMRequest, MultimodalImageInput, PromptDefinition, PromptRegistry
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
@@ -192,22 +192,13 @@ class LocalVisionDocumentTranscriber:
         self._consent_token = consent_token
         self._public_corpus = public_corpus
         self._prompt = vision_transcription_prompt_registry().get(VISION_TRANSCRIPTION_PROMPT_ID)
-        if provider is LLMProvider.LOCAL:
-            self._model = model if model is not None else resolved_settings.cadrumo_llm_ollama_vision_model
-        elif model is None:
-            # The only default that exists is the local Ollama vision model, and
-            # forwarding that identifier to another vendor asks for a model it
-            # does not serve. Refuse rather than send a name that cannot resolve.
-            raise LLMConfigError(
-                context={"provider": provider.value, "off_host_model_named": False},
-                precondition_verdict=llm_no_recovery_verdict(
-                    LLMPreconditionCondition.OFF_HOST_MODEL_NAMED,
-                    facts={"provider": provider.value, "off_host_model_named": False},
-                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                ),
-            )
-        else:
-            self._model = model
+        # Off-host, the agent service picks the lane and model for the role, so
+        # this reader names none.
+        self._model: str | None = (
+            (model if model is not None else resolved_settings.cadrumo_llm_ollama_vision_model)
+            if provider is LLMProvider.LOCAL
+            else None
+        )
         # A local vision model on consumer hardware can take minutes; give the
         # vision read its own (longer) timeout, mirroring LocalVisionLLMClassifier.
         vision_settings = resolved_settings.model_copy(
@@ -250,7 +241,7 @@ class LocalVisionDocumentTranscriber:
         """
         return TranscriberIdentity(
             origin=FieldOrigin.VISION,
-            name=self._model,
+            name=self._model or "configured",
             transport=provenance_transport_label(self._provider),
             revision=f"prompt-v{self._prompt.version}",
         )
@@ -301,6 +292,7 @@ class LocalVisionDocumentTranscriber:
             images=evidence_images,
             evidence_derived=not self._public_corpus,
             consent_token=self._consent_token,
+            model_role=ModelRole.VISION_TRANSCRIPTION,
         )
         response = asyncio.run(self._client.complete(request))
         text = response.text.strip()
@@ -316,7 +308,11 @@ class LocalVisionDocumentTranscriber:
             text=text,
             page_count=len(evidence_images),
             source_content_sha256=source_content_sha256,
-            transcriber=self.transcriber_identity,
+            transcriber=(
+                self.transcriber_identity
+                if self._model is not None
+                else self.transcriber_identity.model_copy(update={"name": response.model})
+            ),
         )
 
 

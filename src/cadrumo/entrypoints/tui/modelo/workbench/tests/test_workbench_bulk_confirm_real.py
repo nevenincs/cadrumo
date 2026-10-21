@@ -42,7 +42,7 @@ from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWor
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import RecordedSubmissions, application_workbench
 from ..bulk_confirm import BulkConfirmScreen
-from ..installed import InstalledModeloWorkbench
+from ..factory import InstalledModeloWorkbench
 from ..ports import WorkbenchChangeKind
 from ..screen import ModeloWorkbenchScreen
 from ..session import WorkbenchEditSession

@@ -7,6 +7,8 @@ from dataclasses import replace
 from datetime import date
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from ..application.invoices.catalogue_creation_ports import CatalogueCreationPorts, CatalogueInvoiceRateProviderPort
 from ..application.invoices.catalogue_intake_operation_ports import (
@@ -14,7 +16,6 @@ from ..application.invoices.catalogue_intake_operation_ports import (
     InvoiceIntakePorts,
     InvoiceIntakeProviderAdmission,
 )
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.errors.hierarchy import CadrumoError

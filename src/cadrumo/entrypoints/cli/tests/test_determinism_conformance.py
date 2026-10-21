@@ -38,10 +38,11 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ....application.ledger.actions_manual import create_manual_transaction, ledger_transaction_payload
+from ....application.ledger.actions_manual import ledger_transaction_payload
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.review_projection import ledger_transaction_review_status
+from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ....core.directory_scan import scan_directory
 from ....core.json_contract import Notice, NoticeSeverity, emit_json_success
 from ....core.observability.tests.envelope_capture import capture_envelopes
@@ -51,9 +52,9 @@ from ....domain.transactions.enums import TransactionDirection
 from ....tests.env_scope import scoped_cwd
 from ....tests.golden_comparison import canonicalise, differing_field_names, differing_paths, mask_document
 from ...adapter_composition import build_ledger_evidence_ports
-from .._ledger_payloads import LedgerAddResult
 from ..command_schema import command_schema_types
 from ..ledger_business_payloads import EvidenceAddResult
+from ..ledger_results import LedgerAddResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

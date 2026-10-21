@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-07'
+modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:18834ca830b088c348840c3b33a87378b7a3bdd7f1589a94f4b3a5f686f80c3d'
+body_hash: 'sha256:b0ee4fd6258a7214a7277ae8d3a4c8f20eee138bc6ba8ad37fa795d5d31809d3'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -16,6 +16,7 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
   - '[[2026-10-04-application-sign-in-adr]]'
+  - '[[2026-10-15-language-sync-reference]]'
 ---
 
 # `desktop-shell` adr: `Desktop shell` | (**status:** `accepted`)
@@ -81,7 +82,7 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - `source` on a log record is an open enumeration. A later runtime-manager source must not break the shell.
 - Terminal output is never dropped. Backpressure pauses the PTY reader instead.
 - The shell holds no runtime connection and no runtime authority. It never opens the runtime endpoint, and it shows no runtime availability, authentication request, timeout or control, with these exceptions from `2026-10-04-application-sign-in-adr`:
-  - the sign-in view's signed-in state, as `aeat config sign-in-status` reports it
+  - the sign-in view's signed-in state, as `cadrumo-runtime config sign-in-status` reports it
   - that view's typed refusals
   - the manager-start path offered when the runtime is unavailable
   - by that record's amendment of 2026-10-06, the profiles of the sign-in view: their labels and which is selected, as `aeat config profile list` reports them, the profile a sign-in names, and the creation of a profile through the canonical CLI
@@ -99,11 +100,43 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - Shell settings are frontend preferences only. They never write product Settings or reach the backend.
 - This record replaces these items in `2026-10-03-application-packaging-adr`: the separate Tauri `index.html` landing page, `docs/index.html` exposed through asset integration, and the runtime-control UI listed for desktop integration, which moves to the runtime manager. That record's author reconciles the wording.
 
-
 Amendment approved 2026-10-07 under the user's environment-readiness instruction: the earlier requirement for console and Python REPL to start in the generic user home is replaced by a dedicated console workspace declared in the canonical storage taxonomy beneath the resolved CADRUMO root. This workspace is for operator-authored scripts and scratch files, not encrypted profile custody. All desktop terminal kinds use this workspace and the same pinned storage/environment and bundled command search path. Standalone command invocations retain the caller's cwd for relative arguments. Authentication still uses native peer verification and the existing profile receipt flow; profile identifiers or credentials are not conveyed through new environment variables. Runtime start/supervision remains with the manager. This amendment also supersedes the home-cwd sentence in the terminal implementation specification below; all other shell authority constraints stand.
 
+### 2026-10-09 authorized scoped installation command
+
+The operator authorizes token-checked manager installation for user/machine scope and missing-installation recovery under 2026-10-09-desktop-service-installation-adr. This extends the shell's manager-start surface to verified native installation followed by shell dispatch of the published manager. Machine scope elevates the installer only. Runtime transport, profile and supervision authority remain excluded.
+
+### 2026-10-10 authorized startup ownership and optional-installation amendment
+
+Accepted under the user's explicit instruction that installation is optional, admin installation supplies a machine-start platform manager, user installation supplies login startup, and every running Cadrumo GUI must establish runtime supervision. This supersedes the earlier exclusions of desktop-owned supervision and Windows SCM hosting for this scope. A boot-time Windows service is a lifecycle broker only: it launches and watches per-user managers using genuine user logon tokens; it never owns profile credentials or runs a taxpayer runtime as SYSTEM. User-only installation retains unprivileged login startup. Cadrumo embeds the existing manager supervision core as a fallback when no installed session manager owns supervision, with the same native ownership lock, runtime start claim, process identity verification, heartbeat/recovery and authenticated client readiness. Existing installed managers retain ownership; a running GUI watches their liveness and takes over after ownership is released. Installation registration, dispatch acknowledgement, a PID or a supervisor ready line alone never establishes application readiness. CLI, TUI and MCP remain connect-only. Build and command acceptance exercise the shipped Cadrumo startup path and fail when supervision or real native IPC readiness fails. No development-host boot/login registration is required to test GUI fallback. Real installed boot/login acceptance remains separately reported until exercised on a disposable host. Detailed prior evidence: 2026-10-09-runtime-process-lifecycle-audit.
+
+### 2026-10-12 desktop without bundled documentation
+
+Operator direction 2026-10-12: the documentation is not a critical component; the Tauri application must be fully functional with or without it, and must understand that the documentation is not bundled and behave accordingly. This amends the window "built around the bundled user documentation" so that the documentation is optional.
+
+- The package manifest's `user_docs` statement governs the documentation state; file presence alone never decides. `bundled: false` is reported as `notBundled`. A bundled tree, media-type table or documentation policy that cannot be admitted, or a manifest with no statement, is recorded as a diagnostic failure and reported as `unavailable`. None of these refuses the launch.
+- Whenever no documentation is served, the host registers the documentation scheme so that it refuses every request under the closed policy, and `desktop_environment` reports the state instead of an origin and languages. Admission of a served tree keeps its existing checks. The WebView2 interface requirement and every shell authority constraint above still apply.
+- The shell keeps every other function unchanged: the TUI, console and Python terminals, logs, calendar, sign-in, manager start, settings and palette actions. The documentation pane states that this copy was built without the documentation, or that it could not be opened, instead of loading a frame; documentation search and the documentation language list are empty. The adversarial isolation proof applies whenever documentation is bundled.
+
+### 2026-10-12 sign-in view on every loss of sign-in
+
+The owner ruled first-hand on 2026-10-12 that Cadrumo is a GUI application with only one active, signed-in profile, and that the shell shows the sign-in screen when the profile sign-in times out, goes inactive, or no profile exists (`2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`). This amends when the sign-in view of `2026-10-04-application-sign-in-adr` is shown. Before, it was shown only before the TUI pane starts while the active profile has no live sign-in.
+
+- The shell withholds the TUI and shows the sign-in view whenever the sign-in expires by its idle or absolute deadline, is signed out, is locked, or is lost to lock-down, and whenever no profile exists.
+- It learns of each from the runtime's pushed session events where they reach it, and otherwise from the `sign-in-status` read it already polls. It never infers a sign-in from its own state.
+- A locked profile shows the sign-in view. Whether resuming a locked profile happens in the view or is handed to the TUI's flow stays as `2026-10-04-application-sign-in-adr` rules.
+- The view offers another profile only while signed out, because only one profile is signed in at a time.
+- The shell still holds no session, receipt, credential or runtime connection. It never signs in on an agent's behalf.
 
 ## Implementation
+
+### Amendment 2026-10-15: canonical language synchronization
+
+Accepted under the user's explicit request for shared language switching in Settings, Cmd+K, documentation and TUI. The blanket frontend-only shell-settings constraint is amended for language only: the shell may read, write and observe the canonical authenticated profile preference through narrow token-checked host commands and the verified person transport. It receives no new custody or credential authority. Profile mutations retain registered-operation validation and record preconditions; a notification is an invalidation cue, never authority or a persisted substitute. Signed-out choices remain transient and cannot write a profile or its hint. Explicit per-invocation CLI overrides remain supported.
+
+The existing documentation bridge gains a bounded supported-language request and completion instruction under the same exact origin/source checks. One subscribed frontend controller updates chrome, projections and documentation; profile-scoped runtime notices refresh mounted TUI presentation without discarding staged work. Background observation must not extend person activity. This scoped exception supersedes only earlier statements excluding backend language preferences. Evidence: `2026-10-15-language-sync-reference`.
+
+The installed interactive TUI follows the canonical profile language ahead of inherited environment or Settings language defaults. Those defaults remain its fallback when the profile has no preference. This precedence is scoped to the interactive host lifetime, resets when it exits and does not change ordinary CLI per-invocation overrides. The separate TUI module grammar accepts no language launch flag; no supported explicit TUI flag is removed. This closes the observed case where the desktop adopted a profile change while an inherited setting kept the TUI in its prior language.
 
 We will build the desktop window as a React shell at the app origin. A left icon rail sits beside a main area that splits the packaged user documentation, in a cross-origin iframe, with the Cadrumo TUI. A single toggleable bottom panel holds three tabs: Console, Python and Logs. Approved additions (2026-10-04):
 
@@ -118,7 +151,7 @@ We will build the desktop window as a React shell at the app origin. A left icon
   - Search, which opens the palette
   - Docs home
   - TUI, which toggles the TUI pane
-  - Console, Python and Logs. Each opens the bottom panel on its tab, and clicking the active one collapses the panel. Logs carries an error-count badge.
+  - One bottom-panel toggle, carrying the log error-count badge. It opens the remembered Console, Python or Logs tab and collapses the panel when open; tab selection remains inside the panel and in the existing shortcuts and palette actions.
   - Settings at the bottom
 
   Every rail item shows a tooltip with its label and shortcut.
@@ -237,12 +270,12 @@ shell to documentation:
 **Persistence.**
 
 - Window size, position and maximized state go through a host window-state module. It stores them as `window-state.json` in the declared webview location, restores them on window ready within the visible monitors, and saves them atomically on close, with no JavaScript command. The window-state plugin was set aside because it creates an undeclared `%APPDATA%` directory, which `2026-10-04-canonical-environment-adr` forbids.
-- Settings, the split ratio, whether the TUI is shown, panel open, panel share, active tab and documentation zoom go in shell localStorage.
+- Settings and presentation choices go in shell localStorage: pane visibility, active page, maximized pane, split ratios, panel visibility and tab, documentation zoom, calendar face, profile section/filter/disclosures and the chosen minimum log level. A fresh layout shows Profile and the agent where available; the TUI is closed until requested. Existing explicit saved pane choices are retained. See the 2026-10-21 amendment.
 - Every read is guarded, so the layout falls back to defaults.
 
 ### Embedded terminal appearance amendment (2026-10-07)
 
-Authorized by the user's request that desktop theme switching restyle the TUI and shells. Source inspection found the TUI pane pinned to DARK_TERMINAL and Textual themes emitting fixed RGB colors (`native/desktop/frontend/src/App.tsx`, `src/cadrumo/entrypoints/tui/components/theme.py`). Changing xterm's background cannot recolor those cells.
+Authorized by the user's request that desktop theme switching restyle the TUI and shells. Source inspection found the TUI pane pinned to DARK_TERMINAL and Textual themes emitting fixed RGB colors (`native/desktop/frontend/src/App.tsx`, `src/cadrumo_runtime/host/frontend/tui/components/theme.py`). Changing xterm's background cannot recolor those cells.
 
 The dedicated desktop TUI uses native ANSI color roles backed by desktop-owned light/dark Cadrumo palettes. Its launch identifies the terminal through TERM_PROGRAM=cadrumo; this is terminal capability metadata, alongside TERM and COLORTERM, not a product Settings variable. Standalone TUI appearances are unchanged. Desktop preference changes recolor existing terminal cells without input, restart, polling, or runtime IPC. The TUI pane follows desktop appearance; the console and Python panes retain their explicit always-dark override. The TUI's own appearance action emits only OSC 777;cadrumo;appearance;toggle, which the dedicated TUI pane may interpret as a frontend preference toggle; console/Python panes cannot invoke it. The payload carries no application state, and goes through ordinary PTY output, never diagnostics. No arbitrary commands or values are admitted by this presentation request.
 
@@ -266,7 +299,7 @@ The user's layout puts the two most useful surfaces, the documentation and the T
 - The documentation is the window's primary surface, with offline search in four languages, reachable from one palette.
 - The documentation and the TUI can be read and used at the same time.
 - Terminals no longer poll.
-- Logs from every Python process on the storage root that logs through `configure_logging` show in one place. That includes the runtime (`src/cadrumo/entrypoints/runtime/main.py:53`).
+- Logs from every Python process on the storage root that logs through `configure_logging` show in one place. That includes the runtime (`src/cadrumo_runtime/host/main.py:53`).
 
 **Accepted costs.**
 - An installed package grows by about 450 MB and 63,000 files across four languages, measured at packaging.
@@ -285,3 +318,41 @@ The user's layout puts the two most useful surfaces, the documentation and the T
 - a close prompt keyed to a fact the TUI reports, that it has an open interaction, rather than to runtime state
 
 Acceptance (user, 2026-10-04) doesn't mean that any part of this is implemented.
+
+### Bottom-panel rail simplification amendment (2026-10-09)
+
+Its startup-collapse and non-persistence clauses are superseded by the 2026-10-21 amendment; the paragraph below preserves the prior ruling.
+
+Authorized by the user's request for one sidebar toggle instead of Console, Python and Logs buttons, retained notification counts, and a collapsed panel at application startup. The three rail buttons become one panel toggle using the existing panel-toggle action and shortcut. The existing log error count moves to this button, while the message notification count stays on Messages. Console, Python and Logs remain tabs in the panel, with their existing keyboard and palette actions. The active tab and panel size are remembered; open/closed state is local to the running window and is no longer restored or saved. Opening and collapsing preserve mounted terminal sessions within the same window. This refines frontend layout only and adds no host or runtime authority. Implementation: `native/desktop/frontend/src/App.tsx`, `src/shell/layout.ts`; browser assertions cover legacy saved-open startup, one toggle, both counts, tab retention and terminal reuse.
+
+Amended 2026-10-16 under `2026-10-16-idle-churn-adr`: the shell no longer polls `sign-in-status`. It learns sign-in changes from one long-lived `cadrumo-runtime session watch` child, which re-reads only on a runtime cue, a pointer change or a status deadline. The sign-in view, language and agent hosts share that one observation. The shell process itself still holds no runtime connection, session, receipt or credential.
+
+### Amendment 2026-10-18: component setup
+
+Amended 2026-10-19 by the setup-experience amendment below; the paragraph that follows is the prior wording.
+
+Accepted under the owner's advance authorization of 2026-10-18 recorded in `2026-10-18-dependency-provisioning-unified-setup-adr` (D10). The exceptions to "The shell holds no runtime connection and no runtime authority" gain one: while a profile is signed in, the host may read setup status and may start setup, answer its plan review, cancel it, and start Google sign-in, each through a closed, token-checked action of the held person bridge. The bridge pushes a cue when an observed setup operation changes, and the host re-reads it before pushing a typed snapshot to the shell. The frontend names items and choices only, never a command, path or host. Setup acts keep their registered-operation validation, and Google sign-in stays the runtime's authentication act. Noted 2026-10-18 under the owner's runtime-boundary ruling recorded in `2026-10-18-dependency-provisioning-unified-setup-adr`: the bridge carries these acts through its generic registered-operation relay and a generic authentication act, names no setup item, wording or definition, and the host keeps the window's own setup state; the host's commands stay closed. Noted again 2026-10-18 under the same ruling: the generic authentication act is removed, and Google sign-in is the product's registered `config.google.login` operation, which the host submits over the same relay and whose consent review it answers on the person's click. The shell still holds no session, receipt, credential, token or DEK, and stores no setup state beyond the per-launch dismissal of the first-run dialog. For setup only, this also amends "Shell settings are frontend preferences only. They never write product Settings or reach the backend": Settings gains a Components section whose buttons reach the backend through these actions, and the palette gains the setup actions of that record. Before this amendment, setup had no desktop surface and the exceptions named sign-in, profiles, manager start, named read-only views and language only.
+
+### Amendment 2026-10-19: setup experience and the Google account
+
+Basis: operator review 2026-10-19, recorded with its full commitments in `2026-10-18-dependency-provisioning-unified-setup-adr` (operator-review amendment). For this record:
+
+- Setup covers software only: the browser and the local AI, which the window shows as one item. Google sign-in is not setup. The host's setup commands keep their shape; Google sign-in is carried by `desktop_google_sign_in` and sign-out by `desktop_google_sign_out`, both closed, token-checked commands over the same held person bridge's generic relay, submitting the product's `config.google.login` and `config.google.logout`. The host also reads the profile's stored sign-in through `config.google.status` and pushes it in the same snapshot, beside the setup rows and never among them. `desktop_setup_google_sign_in` is removed.
+- Settings no longer embeds a Components section. While setup is unfinished or running it shows one top-level line that opens the setup flow, and nothing once setup is complete. Settings gains its own "Google account" row with the profile's signed-in state and one Sign in or Sign out button. Both are the only setup and account elements Settings carries; the exception to "Shell settings are frontend preferences only" covers exactly these two.
+- The palette's setup group offers Set up components, Check components, Set up the browser, Set up the local AI, Retry setup and Cancel setup. The account group gains "Authenticate with Google". No setup action names Google.
+- The setup dialog leads with one summary and one primary action, keeps per-component detail in a closed "Details" disclosure, and shows one overall progress bar while setup runs. Every row states its state once, by the product's sentence.
+- Unchanged: the shell holds no session, receipt, credential, token or DEK, and stores no setup or account state beyond the per-launch dismissal of the first-run dialog. Where Google tokens are stored is not the shell's concern and is unchanged.
+
+### Amendment 2026-10-21: saved views and single pane headings
+
+Authorized by the user's design-polish request to remove repeated page titles, keep the TUI out of the default view, persist page view choices, and remember the selected log-level mode. The shell layout store is the single presentation preference owner. It restores the selected page, pane visibility and maximization, panel visibility/tab/size, calendar face and profile section/filter/disclosure choices, alongside existing appearance, arrangement and zoom preferences. The selected minimum log level overrides the host default until reset; resetting filters restores the host default. Fresh layouts open Profile and the agent where supported with the TUI closed. Existing saved TUI visibility remains an explicit saved arrangement.
+
+This replaces the 2026-10-09 always-collapsed panel startup clause only; the single panel toggle, notifications and mounted-session retention still apply. The canonical pane header owns the visible page title and maximize control; page content supplies its own actions without repeating them. Profile navigation offers one section selector at each size. Search text, drafts, taxpayer values, log records, authentication and transient dialogs are not presentation settings and are not persisted here. Stored preferences are validated and tolerate unavailable storage. No runtime or host authority changes. Evidence: `native/desktop/frontend/src/shell/layout.ts`, `src/App.tsx`, `src/components/profile/UserProfilePage.tsx`, and `src/components/FilingCalendar.tsx`.
+
+### Amendment 2026-10-21: cover embedded TUI startup until presentation is ready
+
+Authorized by the user's request to hide the TUI startup sequence behind a loading view until ready. The existing terminal presentation seam also admits OSC 777;cadrumo;presentation;loading and OSC 777;cadrumo;presentation;ready, only in the dedicated TUI pane. These carry no profile, credential or authentication state and cannot admit a session. Process-start alone does not reveal the TUI. The canonical shared loading view covers receipt resumption, Textual app handoffs and initial workbench composition; the producer announces a rendered actionable screen. Automatic successful resumption does not announce its transient login form. A prompt needing input or a recoverable startup refusal is actionable and must be revealed. Terminal exit or failure must also remove the cover.
+
+The frontend keeps parsing and acknowledging output while covered, including ConPTY cursor replies, and keeps terminal dimensions available. On Windows, OSC can precede buffered screen text: the frontend waits for a short output-quiescence interval and an xterm repaint before revealing readiness, restarting that wait for each output batch. This is a presentation settling guard, not a transport ordering guarantee or an authentication signal. No maximum startup timeout guesses readiness. Reconsider the settling guard if native traces show a repaint delayed beyond the guard; do not bypass runtime admission or add a second terminal launch.
+
+Evidence: `src/cadrumo_runtime/host/frontend/tui/runtime_admission.py`, `src/cadrumo_runtime/host/frontend/tui/secret/runtime_login_form.py`, `src/cadrumo/entrypoints/tui/app.py`, `src/cadrumo/entrypoints/tui/components/quiet_app.py`, `native/desktop/frontend/src/components/TerminalPane.tsx`, and the real-PTY presentation test in `native/desktop/src-tauri/src/terminal/tests.rs`. The native Windows test observed an OSC marker emitted after screen text arriving before that text.

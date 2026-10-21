@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-10-03'
+modified: '2026-10-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:84b17f4f3d86af04b3599f78c04757834dc8edf832acf35db935a44d6f71b468'
+body_hash: 'sha256:cd7a814214bbdcd7058e4a65b32e5863a68f9daa14123b1fbc84e794663dc03a'
 related: []
 ---
 
@@ -63,7 +63,7 @@ the files remain uncommitted.
 inspecting the index does not reach them and **no index-based inventory will ever show them.** They
 remain the only unrecoverable content in the whole change: every other part was a modification or
 deletion of a tracked file and is recoverable per-file from git. A backup exists outside the
-repository at `C:/Users/<operator>/aeat-freeze-backup/untracked-registry-records`. **Nobody has claimed
+repository at `<user-home>/aeat-freeze-backup/untracked-registry-records`. **Nobody has claimed
 them, and now that the landing is done and attention has moved on, they are the item most likely to
 be lost.**
 

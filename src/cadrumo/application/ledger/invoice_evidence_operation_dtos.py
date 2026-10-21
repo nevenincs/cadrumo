@@ -24,7 +24,8 @@ from ...core.field_origin import FieldOrigin
 from ...core.hex import Hex64Str
 from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...domain.iva.classification import InvoiceKind, IvaInvoiceClassificationCriteria
+from ...domain.iva.classification import IvaInvoiceClassificationCriteria
+from ...domain.iva.schema import InvoiceKind
 from ...domain.iva.supply_nature import SupplyNature
 from ..invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from ..ledger.classification_assembly import (

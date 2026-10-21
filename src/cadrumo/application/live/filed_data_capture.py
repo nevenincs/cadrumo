@@ -39,6 +39,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.contracts import RefusalError
+
 from ...core.async_cleanup import has_async_cleanup_failure
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import InternalInvariantError
@@ -53,7 +56,6 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
 )
 from ..modelo.filing_chain_reconciliation import FilingReconciliationResult
-from ..runtime.contracts import RuntimeRefusalError
 from ..storage.sync_runs.persist import record_sync_run
 from ..storage.sync_runs.records import (
     SyncRunRecordRepositoryProtocol,
@@ -62,7 +64,6 @@ from ..storage.sync_runs.records import (
     sync_run_record_key,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from ..user_profile.automation_custody_port import AutomationCustodyError
 from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from .filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from .filed_data import (
@@ -177,7 +178,7 @@ def _registered_modelo_revisions(
             return _registered_modelo_revisions(modelo, operation=indexed_operation)
     try:
         directory = operation.modelo_directory(modelo)
-        revisions = tuple(operation.revision(modelo, str(metadata.id)) for metadata in directory.revisions)
+        revisions = tuple(operation.revision(modelo, metadata.id) for metadata in directory.revisions)
     except (RegistrySnapshotError, ValueError):
         return None
     return revisions or None
@@ -309,7 +310,7 @@ async def _walk_or_failure_row(
             year=year,
             timeout_ms=timeout_ms,
         )
-    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+    except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
         raise
     except Exception as exc:
         if has_async_cleanup_failure(exc):
@@ -365,6 +366,7 @@ class _CaptureReportFields(TypedDict):
     captured_count: int
     reached_count: int
     observation_paths: tuple[str, ...]
+    observation_ids: tuple[str, ...]
     artefact_refs: tuple[str, ...]
     justificante_metadata_count: int
     justificante_csvs: tuple[str, ...]
@@ -391,6 +393,7 @@ class FiledCaptureAccumulator:
 
     operation: PinnedAuthorityOperation | None = None
     observation_paths: list[str] = field(default_factory=list)
+    observation_ids: list[str] = field(default_factory=list)
     artefact_refs: list[str] = field(default_factory=list)
     justificante_csvs: list[str] = field(default_factory=list)
     filing_record_ids: list[str] = field(default_factory=list)
@@ -471,6 +474,7 @@ class FiledCaptureAccumulator:
             return
         manifest_path = ports.observation_persistence.persist_observation(observation)
         self.observation_paths.append(capture_report_path(manifest_path, output_root=output_root))
+        self.observation_ids.append(manifest_path.name)
         self.artefact_refs.extend(
             storage_ref
             for artefact in observation.artefacts
@@ -501,6 +505,7 @@ class FiledCaptureAccumulator:
             "captured_count": len(self.observation_paths),
             "reached_count": self.reached_count,
             "observation_paths": tuple(self.observation_paths),
+            "observation_ids": tuple(self.observation_ids),
             "artefact_refs": tuple(self.artefact_refs),
             "justificante_metadata_count": len(tuple(dict.fromkeys(self.justificante_csvs))),
             "justificante_csvs": tuple(dict.fromkeys(self.justificante_csvs)),
@@ -840,7 +845,7 @@ async def _capture_filed_declaration(
                 declaration,
                 artefact_sink=None if dry_run else ports.observation_persistence.persist_artefact,
             )
-    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+    except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
         raise
     except Exception as exc:
         await _record_filed_declaration_capture_failure(

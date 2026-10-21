@@ -30,17 +30,17 @@ regression fence for the landed FX-conversion surface.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
 from ....tests.inventory import FIXTURES_DIR
-from ._isolated_profile_storage_fixtures import recorded_fx_seeded_backend
-from ._ledger_corpus_support import _match, _oracle_rules
-from .cli_runner import invoke_cached_cli
+from ...tests.ledger_corpus_support import load_active_catalogue, load_corpus_oracle_rules, match_corpus_rule
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .profile_world_fixtures import recorded_fx_seeded_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -56,8 +56,8 @@ def _invoke(args: Sequence[str]) -> Result:
 # host's exchange-rate provider; the test host binds the recorded ECB answers.
 
 
-def _import_revolut() -> None:
-    result = _invoke(["app", "ledger", "import", "--file", str(_REVOLUT), "--provider", "csv"])
+def _import_revolut(*, invoke_cli: Callable[..., Result]) -> None:
+    result = invoke_cli(["app", "ledger", "import", "--file", str(_REVOLUT), "--provider", "csv"])
     assert result.exit_code == 0, result.output
 
 
@@ -133,7 +133,7 @@ def test_classify_uk_us_receipts_as_export_business_income() -> None:
     The operator classifies them through the real CLI and the persisted
     classification reflects it.
     """
-    rules = _oracle_rules()
+    rules = load_corpus_oracle_rules()
     rows = _list_rows()
     targets = _uk_rows(rows)[:1] + _us_rows(rows)[:1]
     assert len(targets) == 2
@@ -143,7 +143,7 @@ def test_classify_uk_us_receipts_as_export_business_income() -> None:
         tx_id = row.get("transaction_id")
         assert isinstance(desc, str)
         assert isinstance(tx_id, str)
-        rule = _match(desc, rules)
+        rule = match_corpus_rule(desc, rules)
         assert rule is not None, desc
         assert rule.get("classification") == "BUSINESS"
         assert rule.get("iva_category") == "export_third_country_zero_rated"
@@ -212,12 +212,7 @@ def test_import_computes_eur_equivalent_for_foreign_rows() -> None:
     by re-loading the persisted catalogue through the real repository and
     inspecting the domain field directly.
     """
-    from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ....domain.calculations.registry.authority import bundled_indexed_authority
-
-    repo = TransactionCatalogueRepository(bucket_id="00000000-0000-4000-8000-000000000000")
-    with bundled_indexed_authority().operation():
-        catalogue = repo.load()
+    catalogue = load_active_catalogue()
     foreign = [tx for tx in catalogue.values() if tx.raw.currency in {"GBP", "USD"}]
     eur = [tx for tx in catalogue.values() if tx.raw.currency == "EUR"]
     assert foreign, "persisted catalogue must contain GBP/USD rows"

@@ -291,7 +291,7 @@ def _require_current_profile(
             bucket_id=work_unit.bucket_id,
             profile_decode_context=operation.profile_decode_context(),
         )
-    if profile is None or str(profile.record.profile_id) != str(work_unit.bucket_id):
+    if profile is None or profile.record.profile_id != work_unit.bucket_id:
         raise ModeloProfileReadinessError("ordinary M303 evidence requires an authenticated current profile")
     return profile
 

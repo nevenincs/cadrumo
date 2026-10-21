@@ -85,21 +85,7 @@ def test_live_iva_timeout_hierarchy_refusal_is_key_only() -> None:
 
 
 def test_url_template_placeholder_refusals_are_key_only() -> None:
-    """Both URL-template placeholder refusals render as the key with typed facts."""
-    with (
-        pytest.raises(ValidationError) as excinfo,
-        override_settings(aeat_status_detail_url_template="https://example.invalid/no-placeholder"),
-    ):
-        pytest.fail("the with-block must not execute when the template omits its placeholder")
-    _assert_key_only(
-        _settings_refusal(excinfo),
-        {
-            "setting": "aeat_status_detail_url_template",
-            "required_placeholder": "{expediente_id}",
-            "placeholder_present": False,
-        },
-    )
-
+    """The URL-template placeholder refusal renders as the key with typed facts."""
     with (
         pytest.raises(ValidationError) as excinfo,
         override_settings(aeat_clave_sede_access_url_template="https://example.invalid/no-target"),

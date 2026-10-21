@@ -263,16 +263,6 @@ BOOTSTRAP_EXEMPTIONS: tuple[BootstrapExemption, ...] = (
         cites_verbs=("app live portals list",),
     ),
     BootstrapExemption(
-        verb_path="config auth providers",
-        criterion=ExemptionCriterion.BUNDLED_CATALOGUE,
-        note="Lists the bundled authentication-provider catalogue. Resolves no bucket.",
-    ),
-    BootstrapExemption(
-        verb_path="config auth apoderado scopes list",
-        criterion=ExemptionCriterion.BUNDLED_CATALOGUE,
-        note="Lists the bundled apoderado-scope vocabulary. Resolves no bucket.",
-    ),
-    BootstrapExemption(
         verb_path="app modelo list",
         criterion=ExemptionCriterion.BUNDLED_CATALOGUE,
         note=(

@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, NonNegativeInt
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
@@ -19,11 +21,10 @@ from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .read_access import resolve_ledger_commit_access
 
@@ -102,11 +103,11 @@ def build_ledger_participation_rebuild_definition(ports: ParticipationIndexRebui
     return build_single_phase_definition(
         definition_id=LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID,
         request_type=LedgerParticipationRebuildRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerParticipationRebuildProjection,
         executor_type=LedgerParticipationRebuildExecutor,
         build=lambda: LedgerParticipationRebuildExecutor(ports),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

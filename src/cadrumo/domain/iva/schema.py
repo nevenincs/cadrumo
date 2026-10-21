@@ -33,12 +33,40 @@ from ...core.citation_grounding import CitationGrounding
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
-from ...core.registry_token import RegistryToken
+from ...core.registry_token import RegistryToken, StrictRegistryToken
 from ...core.validity_window import ValidityWindow
 from .errors import IvaValidationError
 
 if TYPE_CHECKING:
     from ..calculations.registry.governed_fact_scope import GovernedFactSource
+
+
+class IvaTerritorialScope(StrictRegistryToken):
+    """Registry-projected territorial scope token for an invoice party."""
+
+    __slots__ = ()
+
+    _refusal_error = IvaValidationError
+
+
+class InvoiceKind(StrEnum):
+    """Whether the autónomo issued or received the invoice.
+
+    Single canonical enum spanning both the substrate classifier
+    (``IvaInvoiceClassificationCriteria.direction``) and ledger / invoice
+    records (``Invoice.kind``). Replaces the prior split between
+    ``InvoiceDirection`` (substrate) and :class:`InvoiceKind` (invoices)
+    that carried identical semantics with mismatched lowercase / uppercase
+    string values. Values are lowercase to align with TOML registry selectors
+    (``invoice_direction = "issued"``).
+
+    Attributes:
+        ISSUED: The autónomo is the issuer (sale).
+        RECEIVED: The autónomo is the recipient (purchase).
+    """
+
+    ISSUED = "issued"
+    RECEIVED = "received"
 
 
 class _ModuloOrdenAnualLike(Protocol):

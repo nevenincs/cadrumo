@@ -310,12 +310,12 @@ def definition_contract_policy_value(contract: OperationPublicDefinitionContract
         "permitted_effects": tuple(sorted(item.value for item in contract.permitted_effects)),
         "close_policy": contract.close_policy.value,
         "reconciliation_policy": contract.reconciliation_policy.value,
-        "permitted_frontends": tuple(sorted(item.value for item in contract.permitted_frontends)),
         "ephemeral_secret_required": contract.ephemeral_secret_required,
         "transient_financial_operand": None
         if contract.transient_financial_operand is None
         else contract.transient_financial_operand.model_dump(mode="json"),
         "refusal_detail_codes": tuple(sorted(contract.refusal_detail_codes)),
+        "subject_reference": contract.subject_reference.model_dump(mode="json"),
     }
 
 
@@ -346,6 +346,7 @@ def build_public_contract(
         definition_id=definition.definition_id,
         action_reference=definition.action_reference,
         request_schema=request_schema,
+        subject_reference=definition.subject_reference,
         result_schema=result_schema,
         review_projection_schema=review_projection_schema,
         interaction_response_schema=interaction_response_schema,
@@ -363,7 +364,6 @@ def build_public_contract(
         permitted_effects=capabilities.permitted_effects,
         close_policy=capabilities.close_policy,
         reconciliation_policy=definition.reconciliation_policy,
-        permitted_frontends=definition.permitted_frontends,
         ephemeral_secret_required=definition.ephemeral_secret is not None,
         transient_financial_operand=public_financial_operand,
         refusal_detail_codes=definition.refusal_detail_codes,
@@ -373,6 +373,7 @@ def build_public_contract(
         definition_id=provisional.definition_id,
         action_reference=provisional.action_reference,
         request_schema=provisional.request_schema,
+        subject_reference=provisional.subject_reference,
         result_schema=provisional.result_schema,
         review_projection_schema=provisional.review_projection_schema,
         interaction_response_schema=provisional.interaction_response_schema,
@@ -390,7 +391,6 @@ def build_public_contract(
         permitted_effects=provisional.permitted_effects,
         close_policy=provisional.close_policy,
         reconciliation_policy=provisional.reconciliation_policy,
-        permitted_frontends=provisional.permitted_frontends,
         ephemeral_secret_required=provisional.ephemeral_secret_required,
         transient_financial_operand=provisional.transient_financial_operand,
         refusal_detail_codes=provisional.refusal_detail_codes,

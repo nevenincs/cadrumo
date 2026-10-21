@@ -368,7 +368,10 @@ def _header_field_value(
             return " "
         raise FilingExportValidationError("Modelo 369 complementaria requires a typed amendment boolean")
     if _is_blank(value) and (field.required or _required_for_this_taxpayer(field, headers)):
-        raise FilingExportValidationError(f"export producer {field.producer_key!r} is required")
+        raise FilingExportValidationError(
+            f"export producer {field.producer_key!r} is required",
+            context={"missing_producer_key": field.producer_key.value},
+        )
     if isinstance(value, bool) and field.data_type == "text":
         return _text_presence_marker(field, value)
     return value.strip() if isinstance(value, str) else value

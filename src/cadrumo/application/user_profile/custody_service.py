@@ -84,7 +84,7 @@ class ProfileCustodyDisplacedSessionRetirementError(ProfileCustodyTransactionCon
 
     Its registry entry is declared retryable, which is a considered value rather
     than an oversight to correct: the underlying removal fails when something
-    else holds the receipt open -- another reader, a backup agent, a scanner --
+    else holds the receipt open -- another reader, a backup automation, a scanner --
     which clears on its own, so a second attempt is the right advice to give.
     """
 

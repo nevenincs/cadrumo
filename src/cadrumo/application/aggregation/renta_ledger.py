@@ -56,7 +56,7 @@ from ...domain.contribuyente.seguro_enfermedad_insured import (
 )
 from ...domain.contribuyente.tax_residence import parse_tax_region
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import (
     RentaDeductibilityContext,
@@ -434,7 +434,7 @@ def _profile_exempt_iva_ratio(
     raw_regime = fact_value(record, "iva.regime")
     if raw_regime is None:
         return None
-    regime = require_iva_regime(str(raw_regime).strip().upper())
+    regime = require_iva_regime(raw_regime.strip().upper())
     if regime == iva_regime_exento_token():
         return exempt_ratio
     return None

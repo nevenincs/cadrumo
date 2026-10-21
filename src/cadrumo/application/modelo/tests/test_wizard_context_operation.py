@@ -11,6 +11,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
+
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect
@@ -21,7 +24,6 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessRequest
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..metadata_projection import ModeloWorkMetadataSnapshot
 from ..wizard_context_operation import (

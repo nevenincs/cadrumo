@@ -46,8 +46,8 @@ import textwrap
 import pytest
 from pydantic import TypeAdapter
 
-from ....application.operator_surface.command_ports import CommandCapabilityClass
-from ..command_shared_contracts import Capability
+from cadrumo_client.contracts.command_ports import Capability, CommandCapabilityClass
+
 from ..command_specs import COMMAND_GRAPH
 from .cli_performance import IMPORT_FAMILY_PREFIXES
 
@@ -99,7 +99,9 @@ _PROBE = textwrap.dedent(
     paths = json.loads(sys.argv[1])
     prefixes = json.loads(sys.argv[2])
 
-    from cadrumo.entrypoints.cli.tests.cli_performance import _resolve_cli_path
+    # The probe runs with python -c rather than as a package module.
+    __package__ = "cadrumo.entrypoints.cli.tests"
+    from .cli_performance import _resolve_cli_path
 
     for path in paths:
         _resolve_cli_path(tuple(path))

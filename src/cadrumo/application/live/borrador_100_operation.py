@@ -1,6 +1,6 @@
-"""Exact-profile borrador capture and separately authorized human/agent reads.
+"""Exact-profile borrador capture and separately authorized human/automation reads.
 
-The canonical snapshot service owns resolution and lifecycle transitions. Agent
+The canonical snapshot service owns resolution and lifecycle transitions. automation
 queries project binding values and coordinates, excluding source provenance and
 document prose. Each concrete lifecycle save obtains fresh commit authority;
 the existing multi-save lifecycle is not an atomic transaction.
@@ -12,6 +12,8 @@ import asyncio
 from uuid import UUID
 
 from pydantic import BaseModel
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.operations import (
@@ -33,7 +35,7 @@ from ..operations.access_resolution import (
     OperationAccessProfile,
     ResolvedOperationAccess,
     bind_operation_access_profile,
-    require_declared_frontend_and_action,
+    require_declared_action,
     require_period_independent_replay_or_authority,
 )
 from ..operations.capabilities import (
@@ -50,11 +52,9 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.public_scalar import PublicDecimal, project_facts
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
 )
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository, Borrador100SnapshotService
 from .borrador_100_contracts import (
@@ -77,8 +77,6 @@ from .borrador_100_operation_ports import Borrador100OperationPorts, Borrador100
 BORRADOR_100_READ_OPERATION_DEFINITION_ID = "live.borrador.100.read"
 BORRADOR_100_QUERY_OPERATION_DEFINITION_ID = "live.borrador.100.query"
 BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID = "live.borrador.100.import"
-_HUMAN_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
-_IMPORT_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
 
 
 def _compose[T: BaseModel](
@@ -289,27 +287,13 @@ class Borrador100ImportExecutor:
         return await await_cancellation_complete(settle(), task_name="borrador-100-import-settlement")
 
 
-def _borrador_access_policy(
-    definition_id: str,
-) -> tuple[bool, frozenset[OperationFrontendProjection], OperationAccessProfile]:
+def _borrador_access_policy(definition_id: str) -> tuple[bool, OperationAccessProfile]:
     if definition_id == BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID:
-        return (
-            True,
-            _IMPORT_FRONTENDS,
-            HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
-        )
+        return True, HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
     if definition_id == BORRADOR_100_QUERY_OPERATION_DEFINITION_ID:
-        return (
-            False,
-            ALL_OPERATION_FRONTENDS,
-            RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
-        )
+        return False, RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
     if definition_id == BORRADOR_100_READ_OPERATION_DEFINITION_ID:
-        return (
-            False,
-            _HUMAN_FRONTENDS,
-            HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS,
-        )
+        return False, HUMAN_RESUMABLE_READ_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUES_ACCESS
     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 
@@ -340,10 +324,10 @@ def resolve_borrador_100_access(
 ) -> ResolvedOperationAccess:
     """Keep purposes, destinations and complete all-period disclosures distinct."""
     expected = request.definition_id
-    importing, frontends, access_profile = _borrador_access_policy(expected)
+    importing, access_profile = _borrador_access_policy(expected)
     payload = _require_borrador_payload(request, importing=importing)
     _require_borrador_subject(request, context, payload)
-    require_declared_frontend_and_action(context, frontends=frontends, actions=access_profile.actions)
+    require_declared_action(context, actions=access_profile.actions)
     require_period_independent_replay_or_authority(context, profile_id=payload.profile_id, definition_id=expected)
     return bind_operation_access_profile(
         context, access_profile, profile_id=payload.profile_id, definition_id=expected, periods=frozenset()
@@ -404,35 +388,30 @@ def _capabilities(*, importing: bool) -> OperationCapabilities:
 def build_borrador_100_operation_definitions(
     factory: Borrador100OperationPortsFactory,
 ) -> tuple[OperationDefinition, ...]:
-    """Declare full human reads, safe agent queries and human local PDF import."""
+    """Declare full human reads, safe automation queries and human local PDF import."""
     reads = tuple(
         build_single_phase_definition(
             definition_id=definition_id,
             request_type=Borrador100ReadRequest,
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=result_type,
             executor_type=Borrador100ReadExecutor,
             build=lambda query=query: Borrador100ReadExecutor(factory, query=query),
             capabilities=_capabilities(importing=False),
-            permitted_frontends=frontends,
         )
-        for definition_id, result_type, query, frontends in (
-            (BORRADOR_100_READ_OPERATION_DEFINITION_ID, Borrador100ReadExecutionResult, False, _HUMAN_FRONTENDS),
-            (
-                BORRADOR_100_QUERY_OPERATION_DEFINITION_ID,
-                Borrador100QueryExecutionResult,
-                True,
-                ALL_OPERATION_FRONTENDS,
-            ),
+        for definition_id, result_type, query in (
+            (BORRADOR_100_READ_OPERATION_DEFINITION_ID, Borrador100ReadExecutionResult, False),
+            (BORRADOR_100_QUERY_OPERATION_DEFINITION_ID, Borrador100QueryExecutionResult, True),
         )
     )
     importing = build_single_phase_definition(
         definition_id=BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID,
         request_type=Borrador100ImportRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=Borrador100ImportExecutionResult,
         executor_type=Borrador100ImportExecutor,
         build=lambda: Borrador100ImportExecutor(factory),
         capabilities=_capabilities(importing=True),
-        permitted_frontends=_IMPORT_FRONTENDS,
     )
     return (*reads, importing)
 

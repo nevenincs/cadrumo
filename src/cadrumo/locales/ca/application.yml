@@ -10,17 +10,17 @@ application:
     certificate:
       health:
         file_missing: El fitxer de certificat configurat (%{path}) no existeix. Recupera
-          el fitxer o executa 'aeat config auth configure --provider certificate --file
-          Camí' amb un camí vàlid.
-        path_unset: No s'ha seleccionat cap fitxer de certificat. Executa 'aeat config
-          auth configure --provider certificate --file Camí' per indicar-lo.
+          el fitxer o executa 'cadrumo-runtime config auth configure --provider certificate
+          --file Camí' amb un camí vàlid.
+        path_unset: No s'ha seleccionat cap fitxer de certificat. Executa 'cadrumo-runtime
+          config auth configure --provider certificate --file Camí' per indicar-lo.
         unavailable: L'estat del certificat no està disponible; consulta els registres
           de depuració per als detalls de diagnòstic.
       load:
         password_unset: No hi ha cap contrasenya de certificat configurada. Configura
           la contrasenya del certificat abans de continuar.
-        path_unset: No hi ha cap fitxer de certificat configurat. Executa 'aeat config
-          auth configure --provider certificate --file Camí' per indicar-lo.
+        path_unset: No hi ha cap fitxer de certificat configurat. Executa 'cadrumo-runtime
+          config auth configure --provider certificate --file Camí' per indicar-lo.
     clave_movil:
       health:
         identity_unset: No s'ha configurat cap DNI/NIE per a Cl@ve Mòbil. Configura'n
@@ -47,18 +47,18 @@ application:
           fiscal del perfil amb el DNI/NIE utilitzat per a Cl@ve.
       errors:
         certificate_file_required: El proveïdor de certificat requereix un fitxer
-          de certificat. Executa `aeat config auth configure --provider certificate
-          --file RUTA` amb la ruta al teu paquet PKCS#12 (.p12/.pfx).
+          de certificat. Executa `cadrumo-runtime config auth configure --provider
+          certificate --file RUTA` amb la ruta al teu paquet PKCS#12 (.p12/.pfx).
         certificate_file_unresolved: La ruta del certificat '%{certificate_path}'
-          no resol a un fitxer existent. Executa `aeat config auth configure --provider
-          certificate --file RUTA` amb una ruta al teu paquet PKCS#12 (.p12/.pfx).
+          no resol a un fitxer existent. Executa `cadrumo-runtime config auth configure
+          --provider certificate --file RUTA` amb una ruta al teu paquet PKCS#12 (.p12/.pfx).
         certificate_secret_mutation_in_progress: Encara s'està recuperant un canvi
           del secret de certificat per a aquest perfil. Torna a provar la mateixa
           ordre de secret abans de canviar la configuració d'autenticació.
         certificate_source_not_found: L'origen de certificat '%{name}' no està registrat.
-          Executa `aeat config auth certificate list` per veure els orígens registrats,
-          o `aeat config auth certificate register --name %{name} --file RUTA` per
-          registrar-lo.
+          Executa `cadrumo-runtime config auth certificate list` per veure els orígens
+          registrats, o `cadrumo-runtime config auth certificate register --name %{name}
+          --file RUTA` per registrar-lo.
         cleanup_in_progress: Encara s'està recuperant un tancament o reinici d'autenticació
           per a aquest perfil. Reprèn aquesta operació abans de canviar la configuració
           d'autenticació.
@@ -86,8 +86,8 @@ application:
           de certificat configurat (%{path}) no existeix. Recupera el fitxer o torna
           a configurar el camí abans de continuar.'
         refused_certificate_path_unset: 'No es pot iniciar la sessió: encara no s''ha
-          seleccionat cap fitxer de certificat. Executa ''aeat config auth configure
-          --provider certificate --file Camí'' abans de continuar.'
+          seleccionat cap fitxer de certificat. Executa ''cadrumo-runtime config auth
+          configure --provider certificate --file Camí'' abans de continuar.'
         refused_clave_movil_identity_unset: 'No es pot iniciar la sessió amb Cl@ve
           Mòbil: encara no s''ha configurat cap DNI/NIE. Configura''n un abans de
           continuar.'
@@ -116,10 +116,10 @@ application:
         no_provider: No hi ha cap proveïdor d'autenticació configurat; res a comprovar
           localment.
         no_session: No hi ha cap testimoni de sessió AEAT persistit al disc; executa
-          `aeat config auth login` per obtenir-ne un.
+          `cadrumo-runtime config auth login` per obtenir-ne un.
         session_expired: Hi ha un testimoni de sessió AEAT persistit al disc però
-          ha superat el seu límit d'inactivitat; executa `aeat config auth login --fresh`
-          per renovar-lo.
+          ha superat el seu límit d'inactivitat; executa `cadrumo-runtime config auth
+          login --fresh` per renovar-lo.
         session_live: Hi ha un testimoni de sessió AEAT persistit al disc i dins del
           seu límit d'inactivitat.
     provider_impact:
@@ -140,20 +140,22 @@ application:
           sol·licitud d'aprovació a l'app Cl@ve, que necessita el contrast imprès
           al teu document. Registra %{nie_field} al perfil actiu si és un NIE, o %{dni_field}
           si és un DNI. Per escanejar un codi QR en un navegador visible, executa
-          `aeat config auth configure --provider clave_movil --clave-movil-route qr`.
+          `cadrumo-runtime config auth configure --provider clave_movil --clave-movil-route
+          qr`.
         clave_identity_malformed: La identitat de Cl@ve no és un NIF, NIE o CIF vàlid,
           per la qual cosa no es pot confirmar que pertanyi a aquest perfil.
         clave_identity_missing: L'autenticació en directe amb Cl@ve exigeix un DNI/NIE.
           Registra'l al perfil actiu com a %{identity_field}, o configura'l per al
-          proveïdor amb `aeat config auth configure`, abans d'utilitzar cap sessió
-          amb l'AEAT.
+          proveïdor amb `cadrumo-runtime config auth configure`, abans d'utilitzar
+          cap sessió amb l'AEAT.
         clave_identity_profile_mismatch: La identitat de Cl@ve Móvil no coincideix
           amb la identitat fiscal del perfil actiu; canvia al perfil que coincideixi
           o actualitza el perfil abans de l'autenticació AEAT en directe.
         corrupt_session: La sessió d'autenticació desada està malmesa i no es pot
-          llegir. Executa `aeat config auth logout` i després `aeat config auth test`.
-        no_session: No hi ha sessió AEAT activa; executa `aeat config auth test` abans
-          de llegir dades AEAT.
+          llegir. Executa `cadrumo-runtime config auth logout` i després `cadrumo-runtime
+          config auth test`.
+        no_session: No hi ha sessió AEAT activa; executa `cadrumo-runtime config auth
+          test` abans de llegir dades AEAT.
         profile_identity_cleared: L'autenticació en directe amb l'AEAT necessita l'ID
           fiscal del perfil actiu, i aquest perfil no en té. Restaura %{requirements}
           al perfil i torna a autenticar-te.
@@ -165,6 +167,11 @@ application:
         session_identity_profile_mismatch: La identitat de la sessió AEAT no coincideix
           amb la identitat fiscal del perfil actiu; esborra les sessions d'autenticació
           i autentica el perfil que coincideixi abans de les lectures AEAT en directe.
+    sync:
+      errors:
+        requirements_missing: 'La sincronització AEAT requereix: {required_fields}.
+          Obre els ajustos d’autenticació al costat de la sincronització per completar
+          o editar aquestes dades. {reasons}'
   calculations:
     bienes_inversion_regularizacion:
       register_advisory: '%{count} bé(ns) d''inversió en període de regularització
@@ -976,15 +983,15 @@ application:
           i aplica la prorrata especial si és obligatòria.
       prorrata_volume_check_unavailable:
         what: La comparació anual amb el llibre és incompleta.
-        what_to_do: Classifiqueu les operacions de sortida i reviseu les exclusions
-          de prorrata.
+        what_to_do: Classifica les operacions de sortida i revisa les exclusions de
+          prorrata.
       prorrata_volume_declaration_missing:
         what: El llibre conté operacions de sortida per comparar amb els volums anuals
           de prorrata.
-        what_to_do: Declareu els volums anuals; el llibre no els substitueix.
+        what_to_do: Declara els volums anuals; el llibre no els substitueix.
       prorrata_volume_divergence:
         what: Els volums anuals de prorrata declarats difereixen del llibre classificat.
-        what_to_do: Reviseu els volums i les exclusions. Les xifres declarades continuen
+        what_to_do: Revisa els volums i les exclusions. Les xifres declarades continuen
           sent l’autoritat.
       rate_boxes_underaccount_total:
         what: Una part del total d'IVA de la casella {box} no és a cap casella per
@@ -1456,6 +1463,13 @@ application:
         com a ajornat abans de calcular.'
       profile_readiness_missing: 'El perfil és incomplet per al model %{modelo} %{filing_year}
         %{period}; completa abans aquestes dades de perfil: %{profile_requirements}.'
+      profile_readiness_not_applicable: 'El model %{modelo} no és aplicable al perfil
+        actiu (%{applicability_verdict}); referències legals: %{legal_refs}.'
+      profile_readiness_pre_activity: El model %{modelo} %{filing_year} %{period}
+        és anterior a la data d'inici d'activitat del perfil, %{activity_start_date};
+        el període de declaració acaba el %{period_end_date}, de manera que cap unitat
+        de treball, càlcul ni verificació del model %{modelo} no pot avançar en aquest
+        període anterior a l'activitat.
       profile_readiness_profile_missing: No existeix cap perfil actiu persistit per
         a aquest treball de model; crea o repara el perfil abans de continuar.
       profile_readiness_setup_incomplete: La configuració del perfil encara no s'ha
@@ -1910,6 +1924,65 @@ application:
     explain:
       errors:
         modelo_blank: L'identificador de model no pot estar en blanc.
+  provisioning:
+    action:
+      check_again: Torna a comprovar
+      resume: Reprèn
+      set_up: Configura
+      try_again: Torna-ho a provar
+      update: Actualitza
+    blocked:
+      hardware: Aquest ordinador no té prou memòria per a això.
+      needs_person: Espera que ho aprovis o que ho instal·lis tu.
+      not_in_this_build: Aquesta versió de Cadrumo no ho inclou.
+      offline: No tens connexió. Connecta't a internet per configurar-ho.
+    dependency:
+      browser:
+        name: Navegador per al web de l'Agència Tributària
+      local_ai:
+        model: Model %{role}
+        name: IA local
+        program: El programa que executa els models
+    failure:
+      blocked_by_network: La teva xarxa ha bloquejat la baixada.
+      cancelled: Has cancel·lat la configuració.
+      damaged_download: La baixada estava malmesa i no s'ha pogut fer servir.
+      disk_full: No hi ha prou espai lliure al disc.
+      host_unreachable: No s'ha pogut contactar amb el servidor de baixada.
+      interrupted: La configuració es va interrompre abans d'acabar.
+      memory_busy: Ara mateix hi ha massa memòria en ús. Tanca altres programes i
+        torna-ho a provar.
+      needs_sign_in: Has d'iniciar la sessió a Google.
+      no_permission: Cadrumo no ha tingut permís per escriure els fitxers.
+      not_enough_memory: Aquest ordinador no té prou memòria per a això.
+      not_in_this_build: Aquesta versió de Cadrumo no ho inclou.
+      offline: No tens connexió.
+      program_missing: El programa d'IA local no està instal·lat.
+      program_not_running: El programa d'IA local no està en marxa.
+      secure_connection_failed: No s'ha pogut establir una connexió segura. Potser
+        un filtre de xarxa ho impedeix.
+      unexpected: Alguna cosa ha anat malament.
+    note:
+      downloaded_not_loaded: Baixat, encara sense carregar.
+      own_network_settings: Fa servir la seva pròpia configuració de xarxa.
+    retry: Problema de connexió. Es tornarà a provar d'aquí a %{seconds} segons (intent
+      %{attempt}).
+    space_needed: La configuració necessita %{required} lliures i n'hi ha %{free}
+      disponibles.
+    stale:
+      different_model_version: Funciona, però és una versió diferent de la que es
+        va provar amb Cadrumo.
+      older_revision: Funciona, però cal una versió més recent.
+      program_too_old: Funciona, però aquesta versió és massa antiga per a Cadrumo.
+    state:
+      absent: Encara no està configurat.
+      blocked: Ara mateix no es pot configurar.
+      failed: La configuració no ha acabat.
+      provisioning: S'està configurant ara.
+      ready: A punt.
+      stale: Funciona, però necessita una actualització.
+      unknown: Cadrumo no ho ha pogut comprovar ara.
+      verifying: S'està comprovant que funciona.
   reconciliation_export:
     actor: Responsable
     advisory: Avís
@@ -1964,8 +2037,8 @@ application:
             amb fórmules, ''Procedència'' audita cada casella calculada i ''Tarifas''
             reflecteix els paràmetres vigents consultats per les fórmules.'
           period: '%{modelo_title} - període %{period} / %{filing_year}.'
-          pull_command: Per incorporar les teves edicions a l'emmagatzematge local,
-            executa 'aeat app modelo spreadsheet pull' des de la CLI.
+          pull_command: Les modificacions del full de càlcul no s'importen al perfil
+            de Cadrumo; revisa els canvis i introdueix-los a Cadrumo.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
           casilla: Casella

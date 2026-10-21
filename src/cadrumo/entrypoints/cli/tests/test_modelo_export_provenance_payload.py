@@ -10,7 +10,8 @@ import pytest
 from cadrumo.application.modelo.export import ModeloExportResult, ModeloIvaWalletDecisionProvenance
 from cadrumo.application.modelo.export_projection import ModeloFicheroBoePublicReceipt
 from cadrumo.core.period import Period
-from cadrumo.entrypoints.cli._modelo_payloads import ModeloExportPayload
+
+from ..modelo_results import ModeloExportPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -35,7 +35,7 @@ def test_deferred_bind_flushes_on_get_registered_error_code() -> None:
     class into _DEFERRED_BIND, clearing its .code attribute, then verifying
     that get_registered_error_code rebinds it correctly.  This is the path
     that prevents the ValueError crash seen by Inés / Diego when parallel
-    agent __pycache__ writes produced a stale pyc for registry/_core.py.
+    automation __pycache__ writes produced a stale pyc for registry/_core.py.
     """
 
     # UnmatchedPlaceholderError is registered in registry/_core.py.

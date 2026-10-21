@@ -7,6 +7,8 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect
@@ -65,14 +67,11 @@ from ..operations.public_period import PublicPeriod
 from ..operations.public_scalar import PublicDecimal
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .aggregate_contracts import (
     AGGREGATE_COMMIT_PHASE,
@@ -321,11 +320,11 @@ class ModeloAggregateExecutor:
         first_revision = transaction_repository.load_revision()
         if first_revision is None:
             raise LedgerPaymentWithholdingEvidenceError("transaction_catalogue_revision_unavailable")
-        catalogue = transaction_repository.load_by_ids((str(ledger_payment.transaction_id),))
+        catalogue = transaction_repository.load_by_ids((ledger_payment.transaction_id,))
         second_revision = transaction_repository.load_revision()
         if second_revision is None or second_revision != first_revision:
             raise LedgerPaymentWithholdingEvidenceError("transaction_catalogue_revision_changed")
-        transaction = resolve_ledger_payment_transaction(catalogue, str(ledger_payment.transaction_id))
+        transaction = resolve_ledger_payment_transaction(catalogue, ledger_payment.transaction_id)
         with validating_governed_facts(operation):
             capture = build_ledger_payment_withholding_capture(
                 transaction,
@@ -536,6 +535,7 @@ def build_modelo_aggregate_operation_definition(
     return OperationDefinition(
         definition_id=MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
         request_type=ModeloAggregateOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloAggregateReport,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloAggregateOperationRequest,
@@ -546,7 +546,6 @@ def build_modelo_aggregate_operation_definition(
         interaction_kinds=frozenset(),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=MODELO_AGGREGATE_REFUSAL_CODES,
     )
 

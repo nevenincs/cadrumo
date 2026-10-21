@@ -8,6 +8,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.bucket import BucketId
@@ -28,16 +31,13 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
-from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from .reconciliation_records import (
     ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationHistoryEntry,
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
@@ -205,11 +205,11 @@ def build_modelo_reconciliation_list_definition() -> OperationDefinition:
     return build_single_phase_definition(
         definition_id=MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID,
         request_type=ModeloReconciliationListRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloReconciliationListProjection,
         executor_type=ModeloReconciliationListExecutor,
         build=ModeloReconciliationListExecutor,
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

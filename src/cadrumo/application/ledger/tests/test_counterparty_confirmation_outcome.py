@@ -17,8 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.iva.classification import IvaTerritorialScope
-from ....domain.iva.schema import EUMemberState
+from ....domain.iva.schema import EUMemberState, IvaTerritorialScope
 from ..counterparty_establishment import (
     ConfirmedCounterpartyFactsInputError,
     confirm_counterparty_establishment,

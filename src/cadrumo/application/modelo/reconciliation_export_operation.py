@@ -10,17 +10,14 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
-from ...core.async_cleanup import await_cancellation_complete
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.external_constants import OutputLanguage
 from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
     OperationEffect,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -29,14 +26,6 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..ledger.read_access import resolve_ledger_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
 from ..operations.models import (
     CredentialFreeOperationRequest,
     OperationIdentity,
@@ -46,11 +35,12 @@ from ..operations.models import (
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_payload, require_operation_profile
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..storage.calc_sheets.workbook_export import SheetWorkbookMaterializer
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .export_sink import LocalFileExportSink
+from .export_sink import LocalFileExportReceipt, LocalFileExportSink
+from .local_file_export_publication import LOCAL_FILE_EXPORT_CAPABILITIES, publish_local_file_export
 from .reconciliation_export import build_modelo_reconciliation_export_plan
 from .reconciliation_export_labels import ReconciliationWorkbookLabels
 from .reconciliation_list_operation import ModeloReconciliationListEntryProjection, ModeloReconciliationListProjection
@@ -172,32 +162,33 @@ class ReconciliationExportXlsxExecutor:
         )
         data = await asyncio.to_thread(ports.materialize, plan)
 
-        async def publish() -> str:
-            async with context.cancellation.irreversible_section():
-                require_operation_profile(request, context, payload.profile_id)
-                sink.require_writable()
-                await context.events.effect(OperationEffect.UNKNOWN)
-                receipt = await asyncio.to_thread(sink.write, data)
-                await context.events.effect(OperationEffect.UPDATED)
-                result = ReconciliationExportXlsxResult(
-                    publication_id=plan.metadata.publication_id,
-                    operation_identity=context.identity,
-                    profile_id=payload.profile_id,
-                    event_id=payload.event_id,
-                    work_unit_id=payload.work_unit_id,
-                    all_history=payload.all_history,
-                    reconciliation_count=len(projection.reconciliations),
-                    difference_count=sum(row.diff_count for row in projection.reconciliations),
-                    advisory_count=sum(row.advisory_count for row in projection.reconciliations),
-                    output_path=str(receipt.path),
-                    byte_size=receipt.byte_size,
-                    file_sha256=receipt.sha256,
-                    snapshot_digest=plan.metadata.snapshot_digest,
-                    title=plan.metadata.title,
-                )
-                return await context.operands.put(result, written_at=now())
+        def published_result(receipt: LocalFileExportReceipt) -> ReconciliationExportXlsxResult:
+            return ReconciliationExportXlsxResult(
+                publication_id=plan.metadata.publication_id,
+                operation_identity=context.identity,
+                profile_id=payload.profile_id,
+                event_id=payload.event_id,
+                work_unit_id=payload.work_unit_id,
+                all_history=payload.all_history,
+                reconciliation_count=len(projection.reconciliations),
+                difference_count=sum(row.diff_count for row in projection.reconciliations),
+                advisory_count=sum(row.advisory_count for row in projection.reconciliations),
+                output_path=str(receipt.path),
+                byte_size=receipt.byte_size,
+                file_sha256=receipt.sha256,
+                snapshot_digest=plan.metadata.snapshot_digest,
+                title=plan.metadata.title,
+            )
 
-        return await await_cancellation_complete(publish(), task_name="reconciliation-xlsx-publication")
+        return await publish_local_file_export(
+            request,
+            context,
+            profile_id=payload.profile_id,
+            sink=sink,
+            data=data,
+            result=published_result,
+            task_name="reconciliation-xlsx-publication",
+        )
 
 
 def build_reconciliation_export_xlsx_definition(factory: ReconciliationExportXlsxPortsFactory) -> OperationDefinition:
@@ -205,23 +196,11 @@ def build_reconciliation_export_xlsx_definition(factory: ReconciliationExportXls
     return build_single_phase_definition(
         definition_id=RECONCILIATION_EXPORT_XLSX_OPERATION_DEFINITION_ID,
         request_type=ReconciliationExportXlsxRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ReconciliationExportXlsxResult,
         executor_type=ReconciliationExportXlsxExecutor,
         build=lambda: ReconciliationExportXlsxExecutor(factory),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.NONE,
-            baseline=OperationBaselinePolicy.REQUEST_BOUND,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.UPDATED}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        capabilities=LOCAL_FILE_EXPORT_CAPABILITIES,
     )
 
 

@@ -17,10 +17,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.tests.subprocess_cli import run_cadrumo_subprocess
 
 from ....core.config import load_settings, override_settings
 from ....core.external_constants import SANDBOX_LABEL_PREFIX
-from .subprocess_cli import run_cadrumo_subprocess
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

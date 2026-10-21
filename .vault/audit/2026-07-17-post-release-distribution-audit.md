@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#post-release-distribution'
 date: '2026-07-17'
-modified: '2026-10-03'
-body_hash: 'sha256:a0a2ca2ccaf84b47f8d1c8ebcb32a79aa5c2fac1d5acfdbc40963d00b103f01d'
+modified: '2026-10-21'
+body_hash: 'sha256:8adf77d42809febf7f656d260a0709c061100f64a912518d973821b50d355711'
 related: []
 ---
 
@@ -27,7 +27,7 @@ currently held until the worktree is declared settled; only the operator can lif
 B is real public-registry and multi-operating-system access - Windows Sandbox, multi-OS
 acquisition-gate runners, real Claude Code, Claude Desktop, and Cowork client installs, and
 credentialled reacquisition from PyPI, the GitHub release, the public Scoop bucket, the
-public Homebrew tap, the Claude marketplace, and the MCPB clients - none of which this
+public Homebrew tap, and the MCPB clients - none of which this
 worktree can provide.
 
 ## Findings
@@ -47,7 +47,7 @@ post-release-distribution `P01.S01` through `P01.S04`.
 Originating `W03.P08.S34`, `S35`, and `S36` (installed tax oracle on the claimed Linux,
 Windows, and macOS Python rows) are blocked by Gate B: multi-OS CI runners. `W03.P08.S37`
 (Homebrew installation and both oracles on the claimed Linux row) is blocked by Gate B.
-`W03.P08.S38`, `S39`, and `S40` (cohort plugin or MCPB install and tax-work tool call in
+`W03.P08.S38`, `S39`, and `S40` (cohort MCPB install and tax-work tool call in
 Claude Code, Claude Desktop, and Cowork) and `W03.P08.S69` (capture each real Claude
 client harness inventory and MCP product descriptions) are blocked by Gate B: real
 Claude-client installs. These are now post-release-distribution `P02.S05` through
@@ -58,7 +58,7 @@ Claude-client installs. These are now post-release-distribution `P02.S05` throug
 Originating `W04.P09.S41` (promote stored cohort bytes through protected manual OIDC
 publication) is blocked by Gate A: the held operator publish approval. `W04.P10.S45`
 through `S50` and `S70` (reacquire from PyPI, the GitHub release, the public Scoop bucket,
-the public Homebrew tap, the Claude marketplace, the MCPB clients, and re-verify the public
+the public Homebrew tap, the MCPB clients, and re-verify the public
 Claude artifacts) are blocked by Gate B: they require the promoted cohort to exist on those
 public registries first. These are now post-release-distribution `P03.S13` through
 `P03.S20`.

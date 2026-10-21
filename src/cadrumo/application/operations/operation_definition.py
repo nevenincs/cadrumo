@@ -22,6 +22,7 @@ from .owner import OperationExecutor, OperationResumableExecutor
 from .refusal_evidence import validate_refusal_code
 from .registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
 from .secret_submission import OperationEphemeralSecretDeclaration
+from .subject_reference import OperationSubjectReferenceV1, require_declared_subject_path
 
 
 def _is_operation_executor(executor: object) -> TypeIs[OperationExecutor[BaseModel]]:
@@ -60,13 +61,13 @@ class OperationDefinition(BaseModel):
 
     definition_id: OperationDefinitionId
     request_type: type[BaseModel]
+    subject_reference: OperationSubjectReferenceV1
     result_type: type[BaseModel] | None
     executor_factory: OperationExecutorFactory
     phase_codes: tuple[OperationEventCode, ...] = Field(min_length=1)
     interaction_kinds: frozenset[OperationInteractionKind]
     capabilities: OperationCapabilities
     reconciliation_policy: OperationReconciliationPolicy
-    permitted_frontends: frozenset[OperationFrontendProjection] = Field(min_length=1)
     action_reference: ActionReference | None = None
     ephemeral_secret: OperationEphemeralSecretDeclaration | None = None
     transient_financial_operand: OperationTransientFinancialOperandDeclarationV1 | None = None
@@ -90,6 +91,7 @@ class OperationDefinition(BaseModel):
     def _validate_factory_request_type(self) -> OperationDefinition:
         self._validate_refusal_evidence_declaration()
         self._validate_factory_request_binding()
+        require_declared_subject_path(self.request_type, self.subject_reference)
         self._validate_request_storage()
         self._validate_ephemeral_secret()
         self._validate_typed_financial_operand()
@@ -162,10 +164,10 @@ class OperationDefinition(BaseModel):
             raise ValueError("typed financial custody requires amount-free recorded requests and bounded refusals")
 
 
-# The two enums live in the registry's central contract module. Resolving them
-# here happens after the model class exists; registry imports this module after
-# defining the enums and completes any deferred Pydantic fields before use.
-from .registry import OperationFrontendProjection, OperationReconciliationPolicy  # noqa: E402
+# The enum lives in the registry's central contract module. Resolving it here
+# happens after the model class exists; registry imports this module after
+# defining the enum and completes any deferred Pydantic fields before use.
+from .registry import OperationReconciliationPolicy  # noqa: E402
 
 OperationDefinition.model_rebuild(_types_namespace=globals())
 
@@ -174,11 +176,11 @@ def build_single_phase_definition(
     *,
     definition_id: str,
     request_type: type[BaseModel],
+    subject_reference: OperationSubjectReferenceV1,
     result_type: type[BaseModel] | None,
     executor_type: type[object],
     build: Callable[[], object],
     capabilities: OperationCapabilities,
-    permitted_frontends: frozenset[OperationFrontendProjection],
     action_reference: ActionReference | None = None,
     ephemeral_secret: OperationEphemeralSecretDeclaration | None = None,
     refusal_detail_codes: frozenset[OperationFailureErrorCode] = frozenset(),
@@ -189,6 +191,7 @@ def build_single_phase_definition(
     return OperationDefinition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=subject_reference,
         result_type=result_type,
         executor_factory=OperationExecutorFactory(
             request_type=request_type,
@@ -199,7 +202,6 @@ def build_single_phase_definition(
         interaction_kinds=frozenset(),
         capabilities=capabilities,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=permitted_frontends,
         action_reference=action_reference,
         ephemeral_secret=ephemeral_secret,
         transient_financial_operand=transient_financial_operand,

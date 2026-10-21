@@ -12,8 +12,9 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.invoices.bulk_import import import_invoices_from_rows, read_bulk_invoice_import_source
 from cadrumo.core.field_role import FieldRole
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.tests.inventory import FIXTURES_DIR
+
+from .....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -87,5 +88,7 @@ def test_the_retencion_amount_reaches_the_catalogue_invoice(tmp_path: Path) -> N
     assert first.base_total == Decimal("4272.00")
     assert first.retention_amount == Decimal("640.80")
 
-    withheld = [inv for inv in catalogue.invoices.values() if inv.retention_amount]
+    withheld = [
+        inv for inv in catalogue.invoices.values() if (inv.retention_amount is not None and inv.retention_amount)
+    ]
     assert withheld, "no invoice carried a retención; the column was dropped"

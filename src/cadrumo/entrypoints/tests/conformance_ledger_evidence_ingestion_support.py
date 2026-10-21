@@ -16,7 +16,7 @@ from ...application.ledger.evidence_ingestion_contracts import (
 from ...application.ledger.extraction_draft_store import read_extraction_draft
 from ...core.config import load_settings
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ..adapter_composition import build_ledger_evidence_ports
 from .conformance_family_contract import (
     ConformanceFamily,

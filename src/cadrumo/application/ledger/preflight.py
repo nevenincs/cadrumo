@@ -12,7 +12,7 @@ See Also:
     :func:`~cadrumo.application.state_projection.build_operator_state_projection`
         Modelo readiness consumer that embeds blocking ledger issues in the
         operator state projection.
-    :mod:`cadrumo.entrypoints.cli._ledger_read_cli`
+    :mod:`cadrumo.entrypoints.cli.ledger_read_commands`
         CLI read surface that reports these preflight issues without mutating
         ledger state.
     :mod:`cadrumo.application.aggregation`
@@ -730,10 +730,10 @@ def _transaction_is_trabajo_income(
 #: The preflight counterpart of every aggregation reason that reaches preflight.
 #:
 #: Preflight consumes exactly three aggregation screens --
-#: :func:`~cadrumo.application.aggregation.iva_ledger_missing_fact_reasons`,
-#: :func:`~cadrumo.application.aggregation.validate_iva_ledger_counterparty_category`
+#: :func:`~cadrumo.application.aggregation.iva_ledger.iva_ledger_missing_fact_reasons`,
+#: :func:`~cadrumo.application.aggregation.iva_ledger.validate_iva_ledger_counterparty_category`
 #: and
-#: :func:`~cadrumo.application.aggregation.validate_iva_ledger_deduction_classification`
+#: :func:`~cadrumo.application.aggregation.iva_ledger.validate_iva_ledger_deduction_classification`
 #: -- so this mapping's domain is their union, not the whole enum. The lookup is
 #: a bare subscript and therefore total by construction: an arriving reason that
 #: is absent here raises rather than resolving to a wrong operator message.

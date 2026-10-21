@@ -156,10 +156,8 @@ def declaration_result_casillas(modelo: str, revision: SettlementRevisionV1) -> 
         AmbiguousDeclarationResultError: The revision falls back to the
             registry's role and two casillas claim it.
     """
-    defined = {str(casilla.id) for casilla in revision.casillas}
-    declared = tuple(
-        casilla_id for casilla_id in result_disposition_casilla_ids(modelo) or () if str(casilla_id) in defined
-    )
+    defined = {casilla.id for casilla in revision.casillas}
+    declared = tuple(casilla_id for casilla_id in result_disposition_casilla_ids(modelo) or () if casilla_id in defined)
     if declared:
         return DeclarationResultCasillas(casilla_ids=declared, by_declared_type=True)
     role = declaration_result_casilla_id(revision)

@@ -32,7 +32,7 @@ def test_entry_returns_an_openable_workbook_and_facts_that_identify_it() -> None
     book = load_workbook(BytesIO(export.payload))
 
     assert book.sheetnames == list(export.tab_names)
-    assert book.sheetnames == [tab.value for tab in TabName]
+    assert book.sheetnames == [tab.value for tab in TabName if tab is not TabName.FORM]
     assert export.modelo == "130"
     assert export.period == "1T"
     assert export.filing_year == 2025

@@ -55,9 +55,8 @@ from ...domain.invoices.enums import (
 )
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.errors import IvaRateNotFoundError
-from ...domain.iva.schema import IvaCategory
+from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ..aggregation.counterpart import counterpart_operation_catalogue_entries
 from .catalogue_creation_ports import (
     CatalogueCreationPorts,

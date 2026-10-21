@@ -225,7 +225,7 @@ async def _rows(*fields: ModeloFormField) -> list[str]:
 def test_a_held_zero_and_an_empty_box_have_their_own_words_in_every_language(language: OutputLanguage) -> None:
     held = lookup_translation(_HELD_ZERO_KEY, locale=language.value)
     empty = lookup_translation(_EMPTY_KEY, locale=language.value)
-    assert held and empty and held != empty
+    assert (held is not None and held) and (empty is not None and empty) and held != empty
     assert "0" in held and "0" not in empty
     with override_settings(cadrumo_output_language=language.value):
         assert origin_words(_held_zero()) == held

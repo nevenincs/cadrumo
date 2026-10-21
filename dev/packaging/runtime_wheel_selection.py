@@ -165,11 +165,13 @@ def _wheel_filename(url: str) -> str:
     return filename
 
 
-def active_requirements(repo_root: Path, target: TargetPlatform, python_version: str) -> dict[str, Requirement]:
-    """Select the locked base closure with an explicit target marker environment."""
+def active_requirements(
+    repo_root: Path, target: TargetPlatform, python_version: str, *, extras: Sequence[str] = ()
+) -> dict[str, Requirement]:
+    """Select the locked base closure, widened by ``extras``, with an explicit target marker environment."""
     environment = marker_environment(target, python_version)
     active: dict[str, Requirement] = {}
-    for line in export_runtime_constraints(repo_root=repo_root):
+    for line in export_runtime_constraints(repo_root=repo_root, extras=extras):
         requirement = Requirement(line)
         if requirement.marker is not None and any(
             name in str(requirement.marker) for name in ("platform_release", "platform_version")
@@ -250,9 +252,10 @@ def _target_wheel_rows(
     by_name: dict[str, list[dict[str, Any]]],
     selected: dict[str, LockedWheel],
     missing: list[dict[str, str]],
+    extras: Sequence[str],
 ) -> dict[str, str]:
     target_rows: dict[str, str] = {}
-    for name, requirement in sorted(active_requirements(root, target, python_minor).items()):
+    for name, requirement in sorted(active_requirements(root, target, python_minor, extras=extras).items()):
         package = _registry_package(name, requirement, by_name)
         wheels = _ranked_lock_wheels(package, target, python_minor)
         if not wheels:
@@ -275,7 +278,10 @@ def _target_wheel_rows(
 
 
 def _plan_runtime_wheelhouse(
-    repo_root: Path, python_version: str, targets: Sequence[TargetPlatform] = SUPPORTED_TARGETS
+    repo_root: Path,
+    python_version: str,
+    targets: Sequence[TargetPlatform] = SUPPORTED_TARGETS,
+    extras: Sequence[str] = (),
 ) -> RuntimeWheelhousePlan:
     """Resolve one runtime's exact lock wheels across every supported platform."""
     root = repo_root.resolve(strict=True)
@@ -289,7 +295,7 @@ def _plan_runtime_wheelhouse(
     platforms: dict[str, dict[str, str]] = {}
     missing: list[dict[str, str]] = []
     for target in targets:
-        platforms[target.name] = _target_wheel_rows(root, target, python_version, by_name, selected, missing)
+        platforms[target.name] = _target_wheel_rows(root, target, python_version, by_name, selected, missing, extras)
     return RuntimeWheelhousePlan(
         python_version=python_minor,
         platforms=platforms,
@@ -303,9 +309,11 @@ def _missing_wheel_message(plan: RuntimeWheelhousePlan) -> str:
     return f"runtime lock has no complete {plan.python_version} wheelhouse: {missing}"
 
 
-def plan_target_wheels(repo_root: Path, target: str, python_version: str) -> tuple[LockedWheel, ...]:
-    """Select one target's hash-pinned wheels using the existing floor/ABI rules."""
-    plan = _plan_runtime_wheelhouse(repo_root, python_version, (target_platform(target),))
+def plan_target_wheels(
+    repo_root: Path, target: str, python_version: str, *, extras: Sequence[str] = ()
+) -> tuple[LockedWheel, ...]:
+    """Select one target's hash-pinned wheels, widened by ``extras``, using the existing floor/ABI rules."""
+    plan = _plan_runtime_wheelhouse(repo_root, python_version, (target_platform(target),), extras)
     if plan.missing:
         raise SystemExit(_missing_wheel_message(plan))
     return plan.wheels

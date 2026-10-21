@@ -2,7 +2,7 @@
 //!
 //! The manager adopts a running runtime only when the live process matches its boot record
 //! by pid and creation time, its image is the runtime of a complete installed version that
-//! the record names, its token is not fully elevated, it runs in the manager's own session,
+//! the record names, it runs in the manager's own session,
 //! and the record reports native admission. Anything else is foreign: it is reported and
 //! never stopped.
 
@@ -44,7 +44,7 @@ pub enum ForeignReason {
     Uninspectable,
     /// The process runs in another session.
     OtherSession,
-    /// The process token is fully elevated, or its elevation could not be read.
+    /// Historical elevation refusal, retained for diagnostic compatibility.
     Elevated,
     /// The runtime admits development peers.
     DevelopmentAdmission,
@@ -68,9 +68,6 @@ pub fn assess(
     }
     if own_session.is_none() || process.session != own_session {
         return Err(ForeignReason::OtherSession);
-    }
-    if process.fully_elevated != Some(false) {
-        return Err(ForeignReason::Elevated);
     }
     if record.admission != Admission::Native {
         return Err(ForeignReason::DevelopmentAdmission);
@@ -171,12 +168,24 @@ mod tests {
 
     #[test]
     fn a_matching_installed_native_runtime_in_this_session_is_adopted() {
-        assert_eq!(verdict(record(), process(), false), Ok(()));
+        for fully_elevated in [Some(false), Some(true), None] {
+            assert_eq!(
+                verdict(
+                    record(),
+                    ProcessIdentity {
+                        fully_elevated,
+                        ..process()
+                    },
+                    false
+                ),
+                Ok(())
+            );
+        }
     }
 
     #[test]
     fn each_failed_condition_makes_the_runtime_foreign() {
-        let cases: [(BootRecord, ProcessIdentity, bool, ForeignReason); 9] = [
+        let cases: [(BootRecord, ProcessIdentity, bool, ForeignReason); 7] = [
             (
                 BootRecord {
                     process_created: 8,
@@ -203,24 +212,6 @@ mod tests {
                 },
                 false,
                 ForeignReason::OtherSession,
-            ),
-            (
-                record(),
-                ProcessIdentity {
-                    fully_elevated: Some(true),
-                    ..process()
-                },
-                false,
-                ForeignReason::Elevated,
-            ),
-            (
-                record(),
-                ProcessIdentity {
-                    fully_elevated: None,
-                    ..process()
-                },
-                false,
-                ForeignReason::Elevated,
             ),
             (
                 BootRecord {

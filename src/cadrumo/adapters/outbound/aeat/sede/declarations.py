@@ -29,6 +29,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Final
 
+from .....application.live.expedientes_ports import ExpedientesDeclaration
 from .....core.config import Settings
 from .....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from .....core.i18n.render import tr
@@ -74,7 +75,6 @@ from .declarations_observations import (
     _read_guard_policy_from_snapshot,
     _registry_snapshot_for_declaration,
 )
-from .declarations_schema import Declaracion
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .schema import (
     FiledDeclaracionArtefact,
@@ -199,7 +199,7 @@ def _register_rows_from_snapshot(
     *,
     modelo: str,
     ejercicio: int,
-) -> tuple[Declaracion, ...]:
+) -> tuple[ExpedientesDeclaration, ...]:
     """Parse one register snapshot into rows, refusing a page the grid says is partial.
 
     The register is read from a single ``Buscar`` result snapshot, and the walker
@@ -406,8 +406,8 @@ class DeclaracionesRegisterSession:
         self._context = context
         self._operation = operation
 
-    async def walk(self, *, modelo: str, ejercicio: int) -> tuple[Declaracion, ...]:
-        """Return :class:`Declaracion` rows for one ``(modelo, ejercicio)`` query.
+    async def walk(self, *, modelo: str, ejercicio: int) -> tuple[ExpedientesDeclaration, ...]:
+        """Return :class:`ExpedientesDeclaration` rows for one ``(modelo, ejercicio)`` query.
 
         Raises:
             SedeParseError: When the grid declares more records than it rendered,
@@ -429,7 +429,7 @@ class DeclaracionesRegisterSession:
         )
         return results
 
-    async def capture_justificante(self, declaration: Declaracion) -> tuple[FiledDeclaracionArtefact, bytes]:
+    async def capture_justificante(self, declaration: ExpedientesDeclaration) -> tuple[FiledDeclaracionArtefact, bytes]:
         """Read the selected register row's receipt without requiring calculation extraction."""
         snapshot = _registry_snapshot_for_declaration(declaration, operation=self._operation)
         read_policy = _read_guard_policy_from_snapshot(snapshot)
@@ -446,7 +446,11 @@ class DeclaracionesRegisterSession:
             ejercicio=declaration.ejercicio,
         )
         selected = next((item for item in current if item.expediente_id == declaration.expediente_id), None)
-        if selected is None or selected.period != declaration.period or not selected.justificante_link_text:
+        if (
+            selected is None
+            or selected.period != declaration.period
+            or not (selected.justificante_link_text is not None and selected.justificante_link_text)
+        ):
             raise SedeNavigationError("AEAT declarations register no longer exposes the selected period's receipt")
         return await capture_row_pdf_artefact(
             context=self._context,
@@ -459,7 +463,7 @@ class DeclaracionesRegisterSession:
 
     async def capture_observation(
         self,
-        declaration: Declaracion,
+        declaration: ExpedientesDeclaration,
         *,
         registry_snapshot: RegistrySnapshot | None = None,
         artefact_sink: FiledDeclaracionArtefactSink | None = None,
@@ -467,7 +471,7 @@ class DeclaracionesRegisterSession:
         """Capture a normalized :class:`FiledDeclaracionObservation` using the active page.
 
         Args:
-            declaration: The :class:`Declaracion` row to observe.
+            declaration: The :class:`ExpedientesDeclaration` row to observe.
             registry_snapshot: Optional pre-built :class:`RegistrySnapshot`. When
                 omitted, the snapshot is resolved from the declaration coordinates.
             artefact_sink: Optional callable storing each captured artefact.
@@ -566,7 +570,7 @@ async def _open_register_page(
     storage_state_path = session.storage_state_path
     if storage_state_path is None:
         raise SedeNavigationError(
-            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            "AeatSession has no persisted auth session; run `cadrumo-runtime config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     from .....core.bucket_pointer import require_active_bucket_id
@@ -602,7 +606,7 @@ async def walk_declarations_register(
     ejercicio: int,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
-) -> tuple[Declaracion, ...]:
+) -> tuple[ExpedientesDeclaration, ...]:
     """Drive the *Consultar declaraciones presentadas* form for one query.
 
     Args:
@@ -619,7 +623,7 @@ async def walk_declarations_register(
             and torn down per call.
 
     Returns:
-        Tuple of :class:`Declaracion` records, one per filing row.
+        Tuple of :class:`ExpedientesDeclaration` records, one per filing row.
         Empty when AEAT returns "No se han encontrado resultados".
 
     Raises:
@@ -784,7 +788,7 @@ async def _open_register_form(
         )
         raise SedeNavigationError(
             f"declaraciones register did not load (final URL: {final_url!r}); "
-            "session likely expired — run `aeat config auth test` and retry",
+            "session likely expired — run `cadrumo-runtime config auth test` and retry",
             translated_message=tr("adapters.sede.errors.session_expired_nav_failed"),
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context=await _declarations_page_shape_context_from_page(
@@ -955,7 +959,6 @@ def _row_locator_for_expediente(page: Page, *, expediente_id: str) -> Locator:
 
 
 __all__ = [
-    "Declaracion",
     "DeclaracionesRegisterSession",
     "_parse_presented_at",
     "open_declarations_register",

@@ -70,7 +70,7 @@
           "namespaces": [
             {
               "namespace": "cadrumo.application.operations.secure_references",
-              "readable": 5,
+              "readable": 2,
               "unreadable": 0
             },
             {
@@ -84,7 +84,7 @@
               "unreadable": 0
             }
           ],
-          "readable_total": 7,
+          "readable_total": 4,
           "unreadable_total": 0
         },
         "schema_version": "2",

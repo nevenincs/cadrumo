@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-08-15'
-body_hash: 'sha256:9933216766f8786e986004f47d5430b4bf33ef655ba25b95254a70efc4bd3a96'
+modified: '2026-10-14'
+body_hash: 'sha256:a515fe0e8d549efa4cdbf9f041732e5a6fac0d4e52a439173bd3ab488372e545'
 related:
   - "[[2026-06-10-llm-evidence-classification-research]]"
   - "[[2026-06-04-llm-ledger-classification-adr]]"
 ---
-
 # `llm-evidence-classification` adr: `Evidence-aware LLM ledger classification (Stage-3): on-host/local-first reading; cloud only behind a consent gate; splitting in scope` | (**status:** `accepted`)
 
 > **DECISION 2026-06-10 (operator ruling, binding).** The first draft treated taking
@@ -405,3 +404,45 @@ axis is multi-valued.
 The reversal is left as a dated follow-up because the prior section was true when written
 and reading it as an error would misdescribe the corpus. Both notes together are the
 history; either alone is wrong about HEAD.
+
+## Amendment (2026-10-13): session and remembered consent scopes for agent reads
+
+**Basis.** On 2026-10-13 the owner ruled first-hand, relayed by the coordinator: "once per
+session but concent should have two forms: allow once (so ever action is concented) and
+allow this session allow once and remembed choice for future asks. that is the norm in
+wevery agent ap". `2026-10-13-agent-attachments-adr` applies that ruling.
+
+**What changes.** Ruling 2, and the Constraints wording that the acknowledgement "must be
+re-affirmed each invocation (not a sticky setting)", no longer require a fresh
+acknowledgement for every off-host read. The person now chooses one of three scopes when
+approving an off-host read:
+
+- **Once.** Covers this read only. This is the scope the record had before this amendment.
+- **For the agent session.** Covers matching reads until the agent session ends: sign-out,
+  lock, expiry or the agent stopping.
+- **Remembered.** A persisted grant that covers future matching reads until the person
+  revokes it.
+
+**What stays the same.**
+
+- **Who grants.** Every grant is the person's act, taken through verified desktop/service person IPC and held
+  in encrypted service-owned custody; generic runtime stores enforce admitted opaque policy. An agent never grants, asserts or revokes one.
+- **Binding.** Every grant is bound to the action kind, the provider and the model, and to
+  the document for a document read.
+- **Ledger.** Every release is recorded by the service's encrypted disclosure ledger before content leaves the
+  machine, whatever the grant's scope.
+- **Revocation.** It takes effect from the next read.
+- **Bars and exclusions.** The gestor bar, the deployment opt-in and per-profile
+  eligibility still apply to every grant and every release. The CLI-agent file-path route
+  stays excluded. On-host reading stays the default.
+
+**Wording now superseded.** The record's earlier words "never sticky" and "re-affirmed
+each invocation" read, after 2026-10-13, as "never granted without the person's explicit
+choice of scope".
+
+**Implementation ownership, amended 2026-10-14.** Agent reference/provider/model/session/remembered grant fields belong to the separate agent service, not tax `EvidenceConsentToken` or tax consent records. Generic document custody/projection and legal holds remain runtime-owned; `cadrumo_harness` adapts MCP. The attachment capability is an obligation until actual encrypted agent retention, grants and projections exist; current provider/admin migration does not implement it.
+
+**Unchanged.** The ledger extraction operation keeps its per-invocation acknowledgement.
+This amendment offers the wider scopes only on the agent's approval card.
+
+Boundary amendment 2026-10-14 under the user's explicit service separation authorization: the agent-only scope above is service-owned; legitimate tax extraction acknowledgement, provider/model transport provenance and deterministic evidence authority remain unchanged.

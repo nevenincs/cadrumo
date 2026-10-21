@@ -21,11 +21,11 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from ....application.reference_catalogue_contracts import ModeloDescribeResult
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ....core.period import Period
 from ....domain.calculations.registry.query_reports import ModeloDescribeReport
-from ..modelo_aux_payloads import ModeloDescribeResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 

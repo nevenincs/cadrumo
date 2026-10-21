@@ -98,9 +98,12 @@ _ROLE_CUSTOMER: Final = "customer"
 
 def _require_mapping_targets(self: FieldMapping) -> None:
     """Require mapping targets."""
-    if self.kind is MappingKind.DIRECT and not self.draft_field:
+    if self.kind is MappingKind.DIRECT and not (self.draft_field is not None and self.draft_field):
         raise ValueError("a direct mapping must name draft_field")
-    if self.kind is MappingKind.ROLE_DEPENDENT and not (self.supplier_field and self.customer_field):
+    if self.kind is MappingKind.ROLE_DEPENDENT and not (
+        (self.supplier_field is not None and self.supplier_field)
+        and (self.customer_field is not None and self.customer_field)
+    ):
         raise ValueError("a role-dependent mapping must name both supplier_field and customer_field")
     if self.kind is MappingKind.COMPOSITE and not self.leaves:
         raise ValueError("a composite mapping must name its leaves")
@@ -108,13 +111,15 @@ def _require_mapping_targets(self: FieldMapping) -> None:
 
 def _require_mapping_context(self: FieldMapping) -> None:
     """Require mapping context."""
-    if self.kind is MappingKind.SUPERSEDED and not (self.draft_field and self.superseded_by):
+    if self.kind is MappingKind.SUPERSEDED and not (
+        (self.draft_field is not None and self.draft_field) and (self.superseded_by is not None and self.superseded_by)
+    ):
         raise ValueError("a superseded mapping must name both draft_field and superseded_by")
     if self.kind in _NON_SCORED_KINDS and not self.rationale.strip():
         raise ValueError("an unscored field must state why it is not scored")
-    if self.kind not in _DRAFT_FIELD_KINDS and self.draft_field:
+    if self.kind not in _DRAFT_FIELD_KINDS and (self.draft_field is not None and self.draft_field):
         raise ValueError(f"draft_field is not read for a {self.kind.value} mapping")
-    if self.kind is not MappingKind.SUPERSEDED and self.superseded_by:
+    if self.kind is not MappingKind.SUPERSEDED and (self.superseded_by is not None and self.superseded_by):
         raise ValueError(f"superseded_by is not read for a {self.kind.value} mapping")
 
 
@@ -226,10 +231,10 @@ class FieldMapping(BaseModel):
 
     def target_fields(self) -> tuple[str, ...]:
         """Every draft field this entry names, for validation against the model."""
-        if self.kind is MappingKind.DIRECT and self.draft_field:
+        if self.kind is MappingKind.DIRECT and (self.draft_field is not None and self.draft_field):
             return (self.draft_field,)
         if self.kind is MappingKind.ROLE_DEPENDENT:
-            return tuple(name for name in (self.supplier_field, self.customer_field) if name)
+            return tuple(name for name in (self.supplier_field, self.customer_field) if (name is not None and name))
         if self.kind is MappingKind.COMPOSITE:
             return tuple(self.leaves.values())
         return ()
@@ -403,7 +408,7 @@ def validate_mapping_targets(*, draft_fields: frozenset[str], key: CorpusKey) ->
 _SUPERSEDING_FIELDS: Final = frozenset(
     mapping.superseded_by
     for mapping in KEY_FIELD_MAPPINGS.values()
-    if mapping.kind is MappingKind.SUPERSEDED and mapping.superseded_by
+    if mapping.kind is MappingKind.SUPERSEDED and (mapping.superseded_by is not None and mapping.superseded_by)
 )
 
 
@@ -420,7 +425,7 @@ def _claims_draft_slot(key_field: str, document: IngestCorpusDocument) -> bool:
     the computed one" rather than "this document has no total".
     """
     mapping = KEY_FIELD_MAPPINGS[key_field]
-    if mapping.kind is MappingKind.SUPERSEDED and mapping.superseded_by:
+    if mapping.kind is MappingKind.SUPERSEDED and (mapping.superseded_by is not None and mapping.superseded_by):
         return document.ground_truth.get(mapping.superseded_by) is None
     if key_field in _SUPERSEDING_FIELDS:
         return document.ground_truth.get(key_field) is not None

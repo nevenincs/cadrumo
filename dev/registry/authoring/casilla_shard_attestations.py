@@ -39,7 +39,7 @@ def harvest_attestations(out_dir: Path, revision_id: str) -> dict[str, tuple[str
         casilla_id: str | None = None
         for line in _source_lines(path.read_bytes()):
             if line.strip() == marker:
-                if casilla_id:
+                if casilla_id is not None and casilla_id:
                     harvested[casilla_id] = (path.name, current)
                 current = []
                 casilla_id = None
@@ -49,7 +49,7 @@ def harvest_attestations(out_dir: Path, revision_id: str) -> dict[str, tuple[str
                 continue
             if _KEY_LINE.match(line):
                 current.append(line)
-        if casilla_id:
+        if casilla_id is not None and casilla_id:
             harvested[casilla_id] = (path.name, current)
     return harvested
 

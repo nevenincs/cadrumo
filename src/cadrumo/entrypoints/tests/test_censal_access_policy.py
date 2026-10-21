@@ -16,14 +16,6 @@ from cadrumo.application.operations.access_resolution import OperationAccessCont
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
@@ -36,6 +28,14 @@ from cadrumo.application.user_profile.censal_operation import (
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -68,24 +68,31 @@ def _request(profile_id: UUID) -> OperationRequest[BaseModel]:
     )
 
 
-def _context(registry: OperationRegistry, profile_id: UUID, action: AccessAction) -> OperationAccessContext:
+def _context(
+    registry: OperationRegistry,
+    profile_id: UUID,
+    action: AccessAction,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
+) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=action,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=frontend,
         contract=registry.lookup_public_contract(CENSAL_OPERATION_DEFINITION_ID),
         published_authority=Availability.AVAILABLE,
     )
 
 
-def test_registered_censal_review_resolves_exact_profile_and_policy_axes() -> None:
+@pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
+def test_registered_censal_review_resolves_exact_profile_and_policy_axes(frontend: OperationFrontendProjection) -> None:
     registry = _registry()
     profile_id = uuid4()
     request = _request(profile_id)
     for action in AccessAction:
-        context = _context(registry, profile_id, action)
+        context = _context(registry, profile_id, action, frontend)
         resolved = resolve_operation_access(registry=registry, request=request, context=context)
+        assert resolved.request.frontend is frontend
         assert resolved.request.profile_id == profile_id
         assert resolved.request.period_independent and not resolved.request.periods
         assert resolved.policy.allow_period_independent and resolved.policy.periods == frozenset()

@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect
@@ -50,7 +52,6 @@ from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_MAX_RESULT_BYTES,
@@ -306,7 +307,7 @@ class ModeloInvoiceWithholdingCaptureExecutor:
         )
         catalogue, revision_id = ports.invoice_catalogue_repository.load_revisioned()
         try:
-            invoice = resolve_catalogue_invoice(catalogue, str(evidence.invoice_id))
+            invoice = resolve_catalogue_invoice(catalogue, evidence.invoice_id)
         except InvoiceLookupRefusedError:
             raise
         try:

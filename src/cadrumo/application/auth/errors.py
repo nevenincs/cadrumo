@@ -25,7 +25,7 @@ class AuthDiagnosticPayloadError(CoreValidationError):
     """Raised when an encrypted auth diagnostic payload fails structural validation.
 
     Replaces the bare :exc:`ValueError` raises in
-    :func:`~entrypoints.cli._ledger_counterparty_cli._payload` (non-object JSON body)
+    :func:`~application.auth.diagnostics.diagnostic_payload` (non-object JSON body)
     and :func:`application.auth.diagnostics._summary_from_payload`
     (missing ``captured_at`` field).  Inherits from
     :class:`core.errors.hierarchy.CoreValidationError`; callers catch the canonical

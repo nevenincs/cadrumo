@@ -10,7 +10,7 @@ import pytest
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import InvoiceLine
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ...exchange_rate_provider import exchange_rate_provider
 from ..catalogue_creation import build_catalogue_invoice
 

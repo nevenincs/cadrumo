@@ -19,9 +19,10 @@ from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.model_validation import validate_business_pct_coupling, validate_non_negative_decimal
+from ..components.language import localized
 from ..components.widgets import ContentDataTable
 from .controller import LedgerWorkspaceController
-from .models import LedgerFlowState
+from .models import LedgerClassificationPatchV1, LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
 _CHOICES = (
@@ -45,6 +46,9 @@ CLASSIFICATION_FIELD_NAMES: Final[tuple[str, ...]] = (
 )
 
 
+_FRACTION_FIELDS: Final[frozenset[str]] = frozenset({"business_pct", "iva_rate"})
+
+
 def _input_id(field_name: str) -> str:
     return f"ledger-classification-{field_name.replace('_', '-')}"
 
@@ -54,7 +58,8 @@ def _optional_decimal(field_name: str, raw: str) -> Decimal | None:
     value = raw.strip()
     if not value:
         return None
-    parsed = try_parse_canonical_decimal(value, max_fraction_digits=2)
+    # Only euro amounts are held to cents; a share or a rate keeps the fraction digits it has (0.052).
+    parsed = try_parse_canonical_decimal(value, max_fraction_digits=None if field_name in _FRACTION_FIELDS else 2)
     if parsed is None:
         raise TransactionValidationError(f"{field_name} must be a decimal")
     if field_name != "business_pct":
@@ -78,43 +83,65 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
         """Retain an injected command-capable workspace controller."""
         super().__init__(controller, id="ledger-classification-screen")
         self.selected_classification: BusinessClassification | None = None
-        self._pending_patch: ManualLedgerTransactionPatch | None = None
+        self._pending_patch: LedgerClassificationPatchV1 | None = None
 
     FLOW_NAME = "classification"
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.ledger.classification.title"), classes="cadrumo-banner")
+        yield localized(
+            Static(tr("tui.ledger.classification.title"), classes="cadrumo-banner"), "tui.ledger.classification.title"
+        )
         with ledger_workspace_page() as navigation:
             yield navigation
             position, total, short_id = self.controller.classification_target_coordinate()
-            yield Static(
-                tr(
-                    "tui.ledger.classification.target",
-                    position=position,
-                    total=total,
-                    short_id=short_id,
+            yield localized(
+                Static(
+                    tr(
+                        "tui.ledger.classification.target",
+                        position=position,
+                        total=total,
+                        short_id=short_id,
+                    ),
+                    id="ledger-classification-target",
+                    markup=False,
                 ),
-                id="ledger-classification-target",
-                markup=False,
+                "tui.ledger.classification.target",
+                position=position,
+                total=total,
+                short_id=short_id,
             )
-            yield Static(tr("tui.ledger.classification.prompt"), markup=False)
-            yield Static(
-                tr("tui.ledger.classification.boundary"),
-                id="ledger-classification-boundary",
-                markup=False,
+            yield localized(
+                Static(tr("tui.ledger.classification.prompt"), markup=False), "tui.ledger.classification.prompt"
+            )
+            yield localized(
+                Static(
+                    tr("tui.ledger.classification.boundary"),
+                    id="ledger-classification-boundary",
+                    markup=False,
+                ),
+                "tui.ledger.classification.boundary",
             )
             for field_name in CLASSIFICATION_FIELD_NAMES:
-                yield Static(tr(f"tui.ledger.classification.field.{field_name}"), markup=False)
+                yield localized(
+                    Static(tr(f"tui.ledger.classification.field.{field_name}"), markup=False),
+                    f"tui.ledger.classification.field.{field_name}",
+                )
                 yield Input(id=_input_id(field_name))
             yield ContentDataTable[str](id="ledger-classifications", cursor_type="row", zebra_stripes=True)
             yield Static("", id="ledger-flow-status", markup=False)
-            yield Button(
-                tr("tui.ledger.classification.confirm"),
-                id="ledger-classification-confirm",
-                disabled=True,
+            yield localized(
+                Button(
+                    tr("tui.ledger.classification.confirm"),
+                    id="ledger-classification-confirm",
+                    disabled=True,
+                ),
+                "tui.ledger.classification.confirm",
             )
-            yield Button(tr("tui.ledger.classification.cancel"), id="ledger-classification-cancel")
+            yield localized(
+                Button(tr("tui.ledger.classification.cancel"), id="ledger-classification-cancel"),
+                "tui.ledger.classification.cancel",
+            )
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
     def on_mount(self) -> None:
@@ -197,8 +224,8 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
         value = self._field_value(field_name).strip()
         return value or None
 
-    def _build_patch(self) -> ManualLedgerTransactionPatch:
-        """Build the shared typed patch, leaving every blank input unset."""
+    def _build_patch(self) -> LedgerClassificationPatchV1:
+        """Build the injected command's patch, leaving every blank input unset."""
         selected = self.selected_classification
         if selected is None:  # pragma: no cover - guarded by the button handler
             raise InternalInvariantError("classification selection is required before reading the form")
@@ -206,10 +233,11 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
         values: dict[str, object] = {"business_classification": selected}
         values.update(self._decimal_patch_values(selected))
         values.update(self._optional_patch_values())
-        patch = ManualLedgerTransactionPatch.model_validate(values)
-        # The shared patch resolves deduction membership; the screen never
-        # imports calculation registry internals or manufactures tax arithmetic.
-        self._validate_canonical_patch(patch)
+        patch = self.controller.build_classification_patch(values)
+        # Direct application doors receive projected domain tokens. Installed
+        # command doors keep bounded text until the worker's pinned validation.
+        if isinstance(patch, ManualLedgerTransactionPatch):
+            self._validate_canonical_patch(patch)
         return patch
 
     def _decimal_patch_values(self, selected: BusinessClassification) -> dict[str, Decimal]:

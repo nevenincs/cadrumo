@@ -50,12 +50,18 @@ class OperationPhaseEvent(_OperationEventBase):
 
 
 class OperationProgressEvent(_OperationEventBase):
-    """Record bounded progress for one operation revision."""
+    """Record bounded progress for one operation revision.
+
+    ``subject_code`` names the part of the operation the figure belongs to when
+    one operation advances several independent subjects in turn, such as one
+    setup item after another. ``None`` means the figure covers the operation.
+    """
 
     kind: Literal[OperationEventKind.PROGRESS] = OperationEventKind.PROGRESS
     completed: NonNegativeInt
     total: Annotated[int, Field(gt=0)]
     unit_code: OperationEventCode | None = None
+    subject_code: OperationEventCode | None = None
 
     @model_validator(mode="after")
     def _validate_progress(self) -> OperationProgressEvent:

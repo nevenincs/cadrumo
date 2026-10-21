@@ -58,9 +58,9 @@ from cadrumo.domain.invoices.enums import (
     resolve_iva_rate_token,
 )
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from cadrumo.domain.iva.classification import InvoiceKind, TransactionKind, require_transaction_kind
+from cadrumo.domain.iva.classification import TransactionKind, require_transaction_kind
 from cadrumo.domain.iva.oss import OssIossRegime, require_oss_ioss_regime
-from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
+from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 

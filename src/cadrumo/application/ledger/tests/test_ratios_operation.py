@@ -7,6 +7,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ....application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ....application.operations.registry import (
@@ -14,7 +16,6 @@ from ....application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from ....application.user_profile.access_contracts import AccessAction, Availability
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
@@ -147,6 +148,68 @@ def test_every_ratio_operation_is_period_independent_and_mutations_require_commi
         ),
     )
     assert request.payload.profile_id == _PROFILE
+
+
+@pytest.mark.parametrize(
+    "definition_id",
+    [
+        contracts.LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID,
+        contracts.LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID,
+        contracts.LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID,
+    ],
+)
+def test_every_ratio_read_is_admitted_on_the_external_client_frontend_without_a_commit_door(definition_id: str) -> None:
+    registry, registrations = _registry()
+    registration = registrations[definition_id]
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(definition_id),
+        context=OperationAccessContext(
+            profile_id=_PROFILE,
+            destination_id=uuid4(),
+            action=AccessAction.SUBMIT,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
+            contract=registration.contract,
+            published_authority=Availability.AVAILABLE,
+        ),
+    )
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
+    assert resolved.request.profile_id == _PROFILE
+    assert resolved.request.period_independent is True
+    assert AccessAction.COMMIT not in resolved.policy.actions
+
+
+@pytest.mark.parametrize(
+    "definition_id",
+    [
+        contracts.LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,
+        contracts.LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID,
+    ],
+)
+@pytest.mark.parametrize("frontend", [OperationFrontendProjection.EXTERNAL_CLIENT, OperationFrontendProjection.CLI])
+def test_ratio_writes_are_admitted_on_the_external_client_and_cli_frontends_with_a_commit_door(
+    definition_id: str, frontend: OperationFrontendProjection
+) -> None:
+    registry, registrations = _registry()
+    registration = registrations[definition_id]
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(definition_id),
+        context=OperationAccessContext(
+            profile_id=_PROFILE,
+            destination_id=uuid4(),
+            action=AccessAction.SUBMIT,
+            frontend=frontend,
+            contract=registration.contract,
+            published_authority=Availability.AVAILABLE,
+        ),
+    )
+
+    assert resolved.request.frontend is frontend
+    assert resolved.request.period_independent is True
+    assert AccessAction.COMMIT in resolved.policy.actions
 
 
 def test_read_access_refuses_a_foreign_profile_subject() -> None:

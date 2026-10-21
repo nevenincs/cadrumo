@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#secure-storage-performance-hardening'
 date: '2026-08-23'
-modified: '2026-10-03'
+modified: '2026-10-21'
 body_schema: 'body-v1'
-body_hash: 'sha256:d72d39fe31a7ea1ea760e0bee0fe716f2f9fc977e40a8f84c0305ed550ae6a43'
+body_hash: 'sha256:e3bb6d95838d9831a0bb69fc5e0c01dc12f105c247b20f73406cc694bf750e7e'
 related:
   - "[[2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr]]"
 ---
@@ -21,7 +21,7 @@ The review covered the clean Git-archive build root; wheel, sdist, retained
 source archive, Python cohort, and release-cohort provenance; installed-runtime
 origin confinement; exhaustive command identity, localized metadata, policy,
 schema, deferred-target, and selected-path import-budget attestations; and the
-Scoop, Homebrew, MCPB, Claude plugin, marketplace, readiness, promotion, and
+Scoop, Homebrew, MCPB, readiness, promotion, and
 publish consumers. It also checked that production carries neither development
 imports nor cohort/runtime-cache authority and that downstream lanes cannot
 rebuild or regenerate command authority.
@@ -97,8 +97,8 @@ carries no cohort commit, cohort-manifest digest, sealed-wheel digest,
 installed-package payload digest, or MCP executable digest tied to the cohort.
 `build_installed_oracle_evidence` validates the tax evidence and then attaches
 the supplied MCP capture without comparing its executable or invoked CLI hashes
-to the validated tax capture. `build_client_evidence`, used by MCPB, Claude
-plugin, marketplace, and real-client lanes, performs no installed-package
+to the validated tax capture. `build_client_evidence`, used by MCPB
+and real-client lanes, performs no installed-package
 payload binding at all.
 
 An independent exploit planted a temporary foreign MCP executable and arbitrary
@@ -122,7 +122,7 @@ locale-parity subgate pending.
 
 For `cross-cohort-evidence-binding`, require evidence to bind the executed
 installed bytes to the exact release-cohort artifacts by digest, and route
-Scoop, Homebrew, Claude plugin, marketplace, and MCPB execution directly from
+Scoop, Homebrew, and MCPB execution directly from
 the sealed cohort. Add a fail-loud equal-version/different-wheel negative and
 prevent readiness from accepting a row whose executable or source manifest
 cannot be traced to that cohort.
@@ -137,7 +137,7 @@ installed-payload provenance for the MCP server capture, compare every
 `invoked_cli_sha256` value to the already validated CLI capture in mixed rows,
 and apply the same sealed-wheel binding before any client-row evidence can be
 minted. Add direct-call and CLI-level swapped-capture negatives for Python,
-Scoop, Homebrew, MCPB, Claude plugin, marketplace, and real-client paths.
+Scoop, Homebrew, MCPB, and real-client paths.
 
 ## Converged final disposition
 

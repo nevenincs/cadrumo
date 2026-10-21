@@ -10,7 +10,7 @@ says so, in what order they are consulted, and which outcomes are acceptable:
    BYTES, so it is the only one an on-host reader can extract from.
 2. An imported received-invoice id in the rich
    :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue` -- bucket-matched and
-   :attr:`~cadrumo.domain.iva.classification.InvoiceKind.RECEIVED`. This space carries the fiscal
+   :attr:`~cadrumo.domain.iva.schema.InvoiceKind.RECEIVED`. This space carries the fiscal
    TOTALS a calculation can fold in, but no bytes.
 
 The PIE space is consulted first, so an id minted by ``evidence add`` is accepted
@@ -40,7 +40,7 @@ from pydantic import BaseModel, model_validator
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from .evidence import PurchaseInvoiceEvidence
 from .evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict

@@ -30,4 +30,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_m100_renta.label",
     purpose="entries.portal_m100_renta.purpose",
 )
-"""Frozen :class:`cadrumo.domain.portals.PortalMetadata` for the Modelo 100 IRPF Renta page."""
+"""Frozen :class:`cadrumo.domain.portals.metadata.PortalMetadata` for the Modelo 100 IRPF Renta page."""

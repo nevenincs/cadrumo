@@ -7,6 +7,7 @@ Shard taxonomy:
 - ``modelo.schema.<id>.*`` -> ``modelo/schema/<id>.yml``
 - other ``modelo.*`` -> ``modelo/general.yml``
 - ``<domain>.*`` where domain in :data:`SHARD_TOP_DOMAINS` -> ``<domain>.yml``
+- ``desktop.startup.*`` -> ``desktop_startup.yml``
 - everything else -> ``common.yml``
 """
 
@@ -38,6 +39,8 @@ def route_key_to_shard(dotted_key: str) -> Path:
     """
     parts = dotted_key.split(".")
     root = parts[0]
+    if parts[:2] == ["desktop", "startup"]:
+        return Path("desktop_startup.yml")
     if root == _MODELO_ROOT:
         if len(parts) > 2 and parts[1] == _SCHEMA_SEGMENT:
             modelo_id = parts[2]

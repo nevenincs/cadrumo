@@ -406,7 +406,7 @@ class TargetResolver:
 
     def _resolve_casilla(self, hit: ChunkHit, modelo: str) -> ResolvedTarget | DroppedHit:
         records = self._casillas_by_modelo.get(modelo)
-        if not records:
+        if not (records is not None and records):
             return DroppedHit(
                 hit=hit,
                 reason=DropReason.NO_TARGET_ENTITY,
@@ -444,7 +444,7 @@ class TargetResolver:
                 detail=f"normatives source outside the corpus root: {path}",
             )
         legal_ids = self._legal_by_corpus_path.get(corpus_rel)
-        if not legal_ids:
+        if not (legal_ids is not None and legal_ids):
             return DroppedHit(
                 hit=hit,
                 reason=DropReason.NO_TARGET_ENTITY,

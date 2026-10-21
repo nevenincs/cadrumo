@@ -34,7 +34,8 @@ from typing import TypedDict
 import pytest
 from pydantic import TypeAdapter
 
-from ..command_spec import CommandSpec
+from cadrumo_client.commands.spec import CommandSpec
+
 from ..command_specs import COMMAND_GRAPH
 from .cli_performance import is_non_authoritative_artifact
 
@@ -89,7 +90,8 @@ _PROBE = textwrap.dedent(
     import typer.main
     from click.testing import CliRunner
 
-    from cadrumo.entrypoints.cli.main import app
+    from cadrumo.entrypoints.cli.main import cli_app
+    app = cli_app()
 
     command = typer.main.get_command(app)
     observed = {import_root: scan(import_root)}

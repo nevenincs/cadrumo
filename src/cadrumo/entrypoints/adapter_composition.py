@@ -4,11 +4,11 @@ A frontend process must bind the persistence and outbound adapters the
 application layer resolves through explicitly composed ports before it serves
 any work. That inventory is a property of the product, not of the frontend, so
 it is declared once here and entered by the CLI root and the TUI devtools
-fixture. The separately shipped MCP harness owns its independent composition
-root and does not import this entrypoint module.
+fixture. The separately shipped external client distribution owns its independent
+composition root and does not import this entrypoint module.
 
 An entrypoint that forgets this scope fails on every custody-touching verb,
-which is exactly the symptom that made the original MCP gap visible.
+which is exactly the symptom that made the original external client gap visible.
 
 Core types:
 :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`,
@@ -26,7 +26,6 @@ if TYPE_CHECKING:
     from decimal import Decimal
 
     from ..adapters.outbound.aeat.sede.declarations import DeclaracionesRegisterSession
-    from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
     from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
@@ -1348,34 +1347,8 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
             objects=secure_object_repository_for_bucket(normalized),
         )
 
-    def translate_declaration(row: Declaracion) -> ExpedientesDeclaration:
-        """Translate the Sede row DTO before it enters application state."""
-        try:
-            return ExpedientesDeclaration(
-                modelo=row.modelo,
-                ejercicio=row.ejercicio,
-                period=row.period,
-                expediente_id=row.expediente_id,
-                estado=row.estado,
-                tipo_solicitud=row.tipo_solicitud,
-                observaciones=row.observaciones,
-                presented_at=row.presented_at,
-                justificante_link_text=row.justificante_link_text,
-                archive_link_text=row.archive_link_text,
-                declaration_copy_link_text=row.declaration_copy_link_text,
-                justificante_cell_index=row.justificante_cell_index,
-                archive_cell_index=row.archive_cell_index,
-                declaration_copy_cell_index=row.declaration_copy_cell_index,
-                mode=row.mode,
-            )
-        except Exception as exc:
-            raise LiveApplicationError(
-                translated_message="errors.error.error_application_live",
-                context={"surface": "expedientes", "stage": "declaration_translation"},
-            ) from exc
-
     class SedeExpedientesRegister(ExpedientesRegisterProtocol):
-        """Translate rows returned by the concrete Sede register session."""
+        """Expose the concrete Sede register session, which yields application rows."""
 
         def __init__(self, register: DeclaracionesRegisterSession) -> None:
             self._register = register
@@ -1383,8 +1356,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
         @override
         async def walk(self, *, modelo: str, ejercicio: int) -> tuple[ExpedientesDeclaration, ...]:
             try:
-                rows = await self._register.walk(modelo=modelo, ejercicio=ejercicio)
-                return tuple(translate_declaration(row) for row in rows)
+                return await self._register.walk(modelo=modelo, ejercicio=ejercicio)
             except (LiveApplicationError, ProfileAccessRefusedError):
                 raise
             except Exception as exc:
@@ -1682,6 +1654,20 @@ def profile_free_adapter_composition() -> Generator[None]:
     ):
         register_language_resolver()
         yield
+
+
+@contextmanager
+def connection_read_adapter_composition() -> Generator[ProfileAdapterComposition]:
+    """Bind profile metadata while connection-backed operations own ledger persistence."""
+    from ..adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
+    from ..core.redaction.tax_identity_admission import bind_tax_identity_admission
+    from ..domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
+
+    with (
+        bind_tax_identity_admission(RegistryTaxIdentityAdmission()),
+        composed_profile_persistence_ports() as profile_custody,
+    ):
+        yield ProfileAdapterComposition(profile_custody=profile_custody)
 
 
 @contextmanager

@@ -38,12 +38,12 @@ from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.events import OperationTerminalEvent
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationSchemaBindingV1,
 )
+from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
@@ -59,7 +59,7 @@ from cadrumo.core.operations import (
 )
 
 from .supervision_support import run_to_settlement
-from .test_supervisor import _close_host_over_live_executor
+from .supervisor_test_support import _close_host_over_live_executor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -271,6 +271,7 @@ def _supervisor(
     definition = OperationDefinition(
         definition_id="operation.supervisor.lifecycle",
         request_type=LifecycleRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LifecycleResult,
         executor_factory=OperationExecutorFactory(
             request_type=LifecycleRequest,
@@ -281,7 +282,6 @@ def _supervisor(
         interaction_kinds=frozenset(),
         capabilities=capabilities,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,

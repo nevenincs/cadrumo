@@ -4,7 +4,20 @@ use std::process::Command;
 const MANAGER: &str = env!("CARGO_BIN_EXE_cadrumo-manager");
 
 #[test]
-fn version_reports_the_projected_manager_name_and_version() {
+fn retry_support_metadata_is_silent_and_does_not_require_admission() {
+    let output = Command::new(MANAGER)
+        .arg("--supports-retry")
+        .output()
+        .expect("probe manager metadata");
+    assert_eq!(output.status.code(), Some(0), "{output:?}");
+    assert!(
+        output.stdout.is_empty() && output.stderr.is_empty(),
+        "{output:?}"
+    );
+}
+
+#[test]
+fn version_reports_the_projected_manager_name_and_display_version() {
     let output = Command::new(MANAGER)
         .arg("--version")
         .output()
@@ -13,42 +26,38 @@ fn version_reports_the_projected_manager_name_and_version() {
     assert!(output.stderr.is_empty(), "{output:?}");
     assert_eq!(
         String::from_utf8(output.stdout).expect("UTF-8 version line"),
-        format!("{} {}\n", identity::MANAGER_NAME, identity::VERSION)
+        format!(
+            "{} {}\n",
+            identity::MANAGER_NAME,
+            env!("CADRUMO_DISPLAY_VERSION")
+        )
     );
 }
 
 #[test]
-fn bare_start_refuses_noninteractive_or_unsupported_hosts() {
-    #[cfg(windows)]
-    {
-        let Err(refusal) = cadrumo_manager::admission::require_current() else {
-            // Ordinary tests never start a manager against the interactive
-            // user's real storage. Admitted package acceptance is opt-in.
-            return;
-        };
-        let output = Command::new(MANAGER).output().expect("run the manager");
-        assert_eq!(output.status.code(), Some(77), "{output:?}");
-        assert!(output.stdout.is_empty(), "{output:?}");
-        assert_eq!(
-            String::from_utf8(output.stderr).unwrap(),
-            format!("{}\n", refusal.code())
-        );
-    }
-    #[cfg(not(windows))]
-    {
-        let output = Command::new(MANAGER).output().expect("run the manager");
-        assert_eq!(output.status.code(), Some(69), "{output:?}");
-        assert!(output.stdout.is_empty(), "{output:?}");
-        assert_eq!(
-            String::from_utf8(output.stderr).unwrap(),
-            "manager_platform_unavailable\n"
-        );
-    }
+#[cfg(not(windows))]
+fn bare_start_refuses_unsupported_platforms() {
+    let output = Command::new(MANAGER).output().expect("run the manager");
+    assert_eq!(output.status.code(), Some(69), "{output:?}");
+    assert!(output.stdout.is_empty(), "{output:?}");
+    assert_eq!(
+        String::from_utf8(output.stderr).unwrap(),
+        "manager_platform_unavailable\n"
+    );
 }
 
 #[test]
 fn unknown_arguments_are_refused() {
-    for arguments in [&["--help"][..], &["--version", "--version"], &["start"]] {
+    for arguments in [
+        &["--help"][..],
+        &["--version", "--version"],
+        &["start"],
+        &["--retry", "--sign-in"],
+        &["--retry", "--retry"],
+        &["--supports-retry", "--retry"],
+        &["--supports-retry", "--supports-retry"],
+        &["--breakaway-attempt", "--supports-retry"],
+    ] {
         let output = Command::new(MANAGER)
             .args(arguments)
             .output()

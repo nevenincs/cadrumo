@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-without-service-manager'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-10-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:d638b8b8b5dc023b0dcb4e68f021f304215f8f9ac2fcef9b2b3543c7861a1dd7'
+body_hash: 'sha256:580ee8fc6ee1617ee4bad62575a694b5ba895c696b58b20014089b353a13ad59'
 related:
   - "[[2026-10-03-runtime-without-service-manager-adr]]"
   - "[[2026-09-26-mcp-purpose-authentication-adr]]"

@@ -9,10 +9,11 @@ import {
 import { delimiter, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { buildPath } from "./build-paths.mjs";
+import { buildPath, readBuildPaths } from "./build-paths.mjs";
 import { snapshotHostSources } from "./backend-snapshot.mjs";
 import { contentBuild, writeStable } from "./content-build.mjs";
 import {
+  buildStamp,
   identity as readIdentity,
   profile,
   artifactFile,
@@ -24,6 +25,7 @@ const desktop = fileURLToPath(new URL("../", import.meta.url));
 const binaryDir = process.env.CADRUMO_CMAKE_BINARY_DIR;
 if (!binaryDir || !isAbsolute(binaryDir))
   throw new Error("Select an absolute CMake build directory.");
+readBuildPaths(binaryDir, resolve(desktop, "../.."));
 const identity = readIdentity();
 const selectedProfile = profile();
 const action = process.argv[2] ?? "build";
@@ -31,8 +33,11 @@ const backendOnly = ["test-unit", "test-package", "clippy-backend"].includes(
   action,
 );
 const filter = process.argv[3];
-if (backendOnly && (process.argv.length > 4 || filter?.startsWith("-")))
-  throw new Error("Backend tests accept one optional Rust test-name filter.");
+if (
+  (backendOnly || action === "test") &&
+  (process.argv.length > 4 || filter?.startsWith("-"))
+)
+  throw new Error("Host tests accept one optional Rust test-name filter.");
 if (action === "run") {
   const result = spawnSync(executable(), process.argv.slice(3), {
     stdio: "inherit",
@@ -48,15 +53,26 @@ if (!contract || !isAbsolute(contract))
   throw new Error(
     "Set CADRUMO_NATIVE_CONTRACT to the generated native contract.json.",
   );
+const stamp = buildStamp(selectedProfile.debug, identity);
 const environment = {
   ...process.env,
   ...selectedProfile.environment,
-  CARGO_TARGET_DIR:
-    backendOnly && process.env.CARGO_TARGET_DIR
-      ? process.env.CARGO_TARGET_DIR
-      : buildPath("desktop_cargo"),
+  CARGO_TARGET_DIR: backendOnly
+    ? resolve(buildPath("desktop_testing"), "backend-cargo")
+    : buildPath("desktop_cargo"),
   CADRUMO_NATIVE_CONTRACT: contract,
   CADRUMO_CONTRACT_RS: resolve(contract, "../contract.rs"),
+  // The linked manager crate embeds the process manifest of this build kind on Windows.
+  CADRUMO_PROCESS_MANIFEST: resolve(
+    contract,
+    `../process-${selectedProfile.debug ? "development" : "release"}.manifest`,
+  ),
+  CADRUMO_ID_NAME: identity.name,
+  CADRUMO_ID_APPLICATION_ID: identity.application_id,
+  CADRUMO_ID_VERSION: identity.version,
+  CADRUMO_ID_MANAGER_ID: identity.manager_id,
+  CADRUMO_ID_MANAGER_NAME: identity.manager_name,
+  ...stamp.environment,
 };
 if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
   const pathKey =
@@ -70,7 +86,9 @@ if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
 // Preserve Cargo's input timestamps while synchronizing additions and removals.
 const snapshot = snapshotHostSources(
   resolve(desktop, ".."),
-  buildPath("desktop_host"),
+  backendOnly
+    ? resolve(buildPath("desktop_testing"), "backend-host")
+    : buildPath("desktop_host"),
   { incremental: true },
 );
 function run(args) {
@@ -105,7 +123,7 @@ const config = tauriConfig(
   JSON.parse(
     readFileSync(resolve(desktop, "src-tauri/tauri.conf.json.in"), "utf8"),
   ),
-  identity,
+  { ...identity, version: stamp.displayVersion },
   { configDirectory, frontend, icons },
 );
 const configFile = resolve(configDirectory, "tauri.conf.json");
@@ -116,7 +134,7 @@ contentBuild(
     inputs: [
       process.execPath,
       fileURLToPath(import.meta.url),
-      resolve(desktop, "../../docs/_static/cadrumo-favicon.svg"),
+      resolve(desktop, "../../docs/_static/cadrumo-icon.svg"),
       ...readdirSync(resolve(desktop, "frontend/node_modules/@tauri-apps"))
         .filter((name) => name === "cli" || name.startsWith("cli-"))
         .map((name) =>
@@ -135,7 +153,7 @@ contentBuild(
   () =>
     run([
       "icon",
-      resolve(desktop, "../../docs/_static/cadrumo-favicon.svg"),
+      resolve(desktop, "../../docs/_static/cadrumo-icon.svg"),
       "--output",
       icons,
     ]),
@@ -199,10 +217,16 @@ if (action === "build") {
         ...(selectedProfile.debug ? [] : ["--release"]),
         "--locked",
         ...(live ? ["--features", "live-package-tests"] : []),
-        ...(backendOnly && filter ? [filter] : []),
+        ...(filter ? [filter] : []),
         "--",
         "--nocapture",
         "--test-threads=1",
+        ...(environment.CADRUMO_PACKAGE_USER_DOCS === "0"
+          ? [
+              "--skip",
+              "docs::tests::staged_documentation_serves_pages_search_and_worker_with_the_policy",
+            ]
+          : []),
       ]
     : [
         "clippy",

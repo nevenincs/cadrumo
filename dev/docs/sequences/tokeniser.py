@@ -107,8 +107,8 @@ def command_path_key(path: Sequence[str]) -> str:
 @cache
 def _command_tree() -> Mapping[tuple[str, ...], _NodeInfo]:
     """Project the command graph once to a token-classification index."""
-    from cadrumo.entrypoints.cli.command_parameter_contracts import OptionSpec
     from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+    from cadrumo_client.commands.parameters import OptionSpec
 
     children: defaultdict[tuple[str, ...], set[str]] = defaultdict(set)
     nodes = COMMAND_GRAPH.nodes()

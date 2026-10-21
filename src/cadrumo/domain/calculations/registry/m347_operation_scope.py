@@ -23,7 +23,7 @@ from types import MappingProxyType
 from typing import Final
 
 from ...deadlines.models import IrpfEstimationRegime, IVARegime
-from ...iva.classification import InvoiceKind
+from ...iva.schema import InvoiceKind
 from .errors import RegistryValidationError
 from .facts.resolution import required_mapping_entry, unique_mapping_tokens
 from .facts.string_mapping import MappingValueWhitespace, StringMappingFact, StringMappingPolicy

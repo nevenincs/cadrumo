@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 from typing import Any, Protocol, cast
 from uuid import UUID
 
 from pydantic import BaseModel
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
@@ -36,19 +39,17 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.read_capture import capture_read_result
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationResultProjector,
 )
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .ratios_contracts import (
     LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE,
@@ -79,6 +80,9 @@ from .ratios_contracts import (
 )
 from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
 from .usage_ratio_repository import load_usage_ratio_profile, usage_ratio_profile_with_censo_guard
+
+_PERSON_ACTOR = "operator"
+"""The label the ratio audit events carry for a person's session."""
 
 
 class _ProfileScopedRequest(Protocol):
@@ -174,6 +178,10 @@ class LedgerRatiosListExecutor:
 class LedgerRatiosSetExecutor:
     """Apply one ratio override using the existing serialized application service."""
 
+    def __init__(self, *, execution_caller_reader: OperationExecutionCallerReader | None = None) -> None:
+        """Keep the reader that names the actor of an automation's execution."""
+        self._execution_caller_reader = execution_caller_reader
+
     async def execute(
         self, request: OperationRequest[LedgerRatiosSetRequest], context: OperationExecutorContext
     ) -> str:
@@ -186,6 +194,7 @@ class LedgerRatiosSetExecutor:
         )
         await context.events.phase(LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID)
         operation = context.authority_operation
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=_PERSON_ACTOR)
 
         def prepare() -> tuple[SpendingCategory, Decimal, Decimal | None]:
             from ...application.user_profile.censo_sync import bound_raw_afectacion_ratio
@@ -225,6 +234,7 @@ class LedgerRatiosSetExecutor:
                         year=payload.year,
                         profile_id=bucket_id,
                         raw_afectacion_ratio=raw_afectacion,
+                        actor=actor,
                         operation=operation,
                     )
                     return LedgerRatiosSetResult(
@@ -246,6 +256,10 @@ class LedgerRatiosSetExecutor:
 class LedgerRatiosUnsetExecutor:
     """Clear one exact-profile override and preserve the service's missing-value refusal."""
 
+    def __init__(self, *, execution_caller_reader: OperationExecutionCallerReader | None = None) -> None:
+        """Keep the reader that names the actor of an automation's execution."""
+        self._execution_caller_reader = execution_caller_reader
+
     async def execute(
         self, request: OperationRequest[LedgerRatiosUnsetRequest], context: OperationExecutorContext
     ) -> str | OperationRefusalEvidence:
@@ -258,6 +272,7 @@ class LedgerRatiosUnsetExecutor:
         )
         await context.events.phase(LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID)
         operation = context.authority_operation
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=_PERSON_ACTOR)
 
         def prepare() -> tuple[SpendingCategory, str | None]:
             category = require_spending_category(payload.category, authority=operation)
@@ -288,7 +303,9 @@ class LedgerRatiosUnsetExecutor:
                 def mutate() -> LedgerRatiosUnsetResult:
                     from .ratios import clear_usage_ratio_override
 
-                    outcome = clear_usage_ratio_override(bucket_id=bucket_id, category=category, operation=operation)
+                    outcome = clear_usage_ratio_override(
+                        bucket_id=bucket_id, category=category, actor=actor, operation=operation
+                    )
                     return LedgerRatiosUnsetResult(
                         profile_id=payload.profile_id,
                         requested_category=payload.category,
@@ -391,6 +408,7 @@ def _definition(
     result_type: type[BaseModel],
     executor_type: type,
     *,
+    build: Callable[[], object] | None = None,
     sensitive_input: bool,
     mutation: bool,
     refusal_detail_codes: frozenset[str] = frozenset(),
@@ -407,9 +425,10 @@ def _definition(
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_type=executor_type,
-        build=executor_type,
+        build=executor_type if build is None else build,
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -427,7 +446,6 @@ def _definition(
             permitted_effects=effects,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=refusal_detail_codes,
     )
 
@@ -609,13 +627,16 @@ def build_ledger_ratios_list_registration(definition: OperationDefinition) -> Op
     )
 
 
-def build_ledger_ratios_set_definition() -> OperationDefinition:
+def build_ledger_ratios_set_definition(
+    *, execution_caller_reader: OperationExecutionCallerReader | None = None
+) -> OperationDefinition:
     """Declare a secure-input, profile-wide usage-ratio mutation."""
     return _definition(
         LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,
         LedgerRatiosSetRequest,
         LedgerRatiosSetResult,
         LedgerRatiosSetExecutor,
+        build=lambda: LedgerRatiosSetExecutor(execution_caller_reader=execution_caller_reader),
         sensitive_input=True,
         mutation=True,
     )
@@ -631,13 +652,16 @@ def build_ledger_ratios_set_registration(definition: OperationDefinition) -> Ope
     )
 
 
-def build_ledger_ratios_unset_definition() -> OperationDefinition:
+def build_ledger_ratios_unset_definition(
+    *, execution_caller_reader: OperationExecutionCallerReader | None = None
+) -> OperationDefinition:
     """Declare a secure-input, profile-wide usage-ratio clearance."""
     return _definition(
         LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID,
         LedgerRatiosUnsetRequest,
         LedgerRatiosUnsetResult,
         LedgerRatiosUnsetExecutor,
+        build=lambda: LedgerRatiosUnsetExecutor(execution_caller_reader=execution_caller_reader),
         sensitive_input=True,
         mutation=True,
         refusal_detail_codes=frozenset({LEDGER_RATIOS_NO_OVERRIDE_REFUSAL_CODE}),

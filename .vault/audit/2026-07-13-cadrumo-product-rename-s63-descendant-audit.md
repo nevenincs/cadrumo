@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s63-descendant'
 date: '2026-07-13'
-modified: '2026-10-03'
-body_hash: 'sha256:4825e96b69f068040bd63f3bd9537fc559753c485a75b45b74b06c275156146f'
+modified: '2026-10-21'
+body_hash: 'sha256:701b700ae76f3ec35a46223536753a130a24fd7b0d9e99f12960363b342049cf'
 related:
   - "[[2026-07-13-cadrumo-product-rename-s63-english-catalogue-audit]]"
   - "[[2026-07-13-cadrumo-product-rename-s62-descendant-audit]]"
@@ -15,7 +15,7 @@ related:
 ## Scope
 
 - Independently review commit `8644548342636acdaa07333c76a70e0e6cc2f609` against the binding identity ADR, the restored S62 boundary, the original S63 PASS, the active plan, and the corrective execution record.
-- Verify exact scope and production locale-CLI provenance; exact English semantic changes, schema, types, placeholders, residue, valid lowercase and authority references; sibling-catalogue byte identity; ancestry and hashes; real gates and live English help; plan honesty; and exclusion of concurrent marketplace README, docs, and S58 work.
+- Verify exact scope and production locale-CLI provenance; exact English semantic changes, schema, types, placeholders, residue, valid lowercase and authority references; sibling-catalogue byte identity; ancestry and hashes; real gates and live English help; plan honesty; and exclusion of concurrent docs and S58 work.
 - Make no catalogue, plan, or evidence fix and commit only this audit.
 
 ## Findings
@@ -30,11 +30,11 @@ The record's English byte evidence is reproducible: the parent LF blob is 397,28
 
 The production locale `audit` and `scaffold --check` commands report all four catalogues healthy. The locale audit, S92 formatter grammar, placeholder parity, catalogue parity, and translation-honesty slice passes 54 real tests. Isolated live `aeat --language en --help` reports five `CADRUMO`, two `AEAT`, and 27 lowercase `aeat` occurrences, with zero exact `Cadrumo` and zero command-leading lowercase `cadrumo`.
 
-The exact commit passes `git diff --check`. Focused record checks find no remaining scaffold annotation or placeholder. Plan validation exits successfully with only known `PLAN022`; its diff closes only S63 while S64-S67 and every other open descendant remain unchanged. The staged marketplace README, concurrent docs work, and dirty S58 record are absent from the commit.
+The exact commit passes `git diff --check`. Focused record checks find no remaining scaffold annotation or placeholder. Plan validation exits successfully with only known `PLAN022`; its diff closes only S63 while S64-S67 and every other open descendant remain unchanged. Concurrent docs work and the dirty S58 record are absent from the commit.
 
 ## Recommendations
 
 - Accept S63 as the reviewed English catalogue restoration and allow S64 to proceed.
 - Keep S64-S66 responsible for their language-specific production-CLI migrations and S67 responsible for final cross-catalogue scaffold and parity proof.
 - Preserve `AEAT`, `CADRUMO_`, and valid lowercase machine identifiers during the remaining contextual migrations.
-- Keep the staged marketplace README, docs changes, and dirty S58 work outside locale commits.
+- Keep docs changes and dirty S58 work outside locale commits.

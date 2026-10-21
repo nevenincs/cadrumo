@@ -24,7 +24,8 @@ from ..operations.models import (
 )
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.profile_guard import ProfileAccessPayload, require_access_request_profile_payload
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationReconciliationPolicy
+from ..operations.registry import OperationReconciliationPolicy
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.models import ActionReference
 
 
@@ -43,14 +44,17 @@ def build_live_operation_definition[ExecutorT](
     return OperationDefinition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_factory=OperationExecutorFactory(request_type=request_type, executor_type=executor_type, build=build),
         phase_codes=phase_codes,
         interaction_kinds=frozenset(),
         action_reference=action_reference,
         capabilities=capabilities,
+        # Preserve scrubbed readiness/provider reasons in encrypted result custody;
+        # a generic authentication refusal cannot identify the appropriate remedy.
+        public_error_detail=True,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

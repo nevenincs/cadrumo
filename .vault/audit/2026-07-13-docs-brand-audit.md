@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#docs-brand'
 date: '2026-07-13'
-modified: '2026-07-13'
-body_hash: 'sha256:3fd2ab414cbc5df2793b6f948bbad7020fea301c939acfddef94293e7c0640c2'
+modified: '2026-10-21'
+body_hash: 'sha256:dc2660e5a963759863a842f7f9bdc3ba66bf9dd2ae143871d20bed8db5a09526'
 related: []
 ---
 
@@ -96,9 +96,7 @@ product-conflated use of `aeat`: every bare `aeat` occurrence is a fenced or
 inline-code CLI invocation, every prose AEAT names the authority ("official
 AEAT tools", "not affiliated with AEAT"), and `cadrumo.adapters.outbound.aeat`
 names the authority-boundary adapter package correctly. The two kickoff-brief
-documents and the verification marketplace proofs cite the literal plugin id
-`aeat@...` as factual transcripts; those surfaces belong to the rename and
-packaging campaigns respectively.
+documents cite literal identifiers as factual transcripts; those surfaces belong to the rename campaign.
 
 ### cadrumo-as-executable-prose | medium | nine prose references named the executable `cadrumo`
 

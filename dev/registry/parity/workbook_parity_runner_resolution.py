@@ -23,7 +23,7 @@ def _resolve_libreoffice_runner(executable: str | None) -> Path:
     """Locate a LibreOffice executable, raising explicitly when none is available."""
     if executable is None:
         found = shutil.which("soffice") or shutil.which("libreoffice")
-        if not found:
+        if not (found is not None and found):
             raise RegistryValidationError(
                 "LibreOffice or soffice executable is not available on PATH. "
                 "Install LibreOffice and expose its executable on PATH.",

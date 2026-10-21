@@ -44,7 +44,6 @@ All assigned files and line ranges were read:
 - sede/declarations_capture.py (`src/cadrumo/adapters/outbound/aeat/sede/declarations_capture.py`) — lines 1–426.
 - sede/declarations_observations.py (`src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py`) — lines 1–880.
 - sede/declarations_remote.py (`src/cadrumo/adapters/outbound/aeat/sede/declarations_remote.py`) — lines 1–85.
-- sede/declarations_schema.py (`src/cadrumo/adapters/outbound/aeat/sede/declarations_schema.py`) — lines 1–45.
 - sede/errors.py (`src/cadrumo/adapters/outbound/aeat/sede/errors.py`) — lines 1–122.
 - sede/filed_data_capture_port.py (`src/cadrumo/adapters/outbound/aeat/sede/filed_data_capture_port.py`) — lines 1–396.
 - sede/filed_observation_persistence.py (`src/cadrumo/adapters/outbound/aeat/sede/filed_observation_persistence.py`) — lines 1–501.

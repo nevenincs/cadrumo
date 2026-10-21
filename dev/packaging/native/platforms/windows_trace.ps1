@@ -1,40 +1,57 @@
 param(
     [Parameter(Mandatory=$true)][string]$Package,
+    [Parameter(Mandatory=$true)][string]$BuildRoot,
     [string]$Output = ''
 )
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path "$PSScriptRoot/../../../..").Path
 $pathPython = "$repo/.venv/Scripts/python.exe"
-if (-not (Test-Path -LiteralPath $pathPython)) { throw 'The project virtualenv Python is required to resolve native trace storage' }
+if (-not (Test-Path -LiteralPath $pathPython)) { throw 'The project virtualenv Python is required to validate CMake build outputs' }
 Push-Location $repo
 try {
-    $storageJson = & $pathPython -B -c "from cadrumo.core.storage_environment import configured_storage_root, storage_directory, tool_storage_environment; import json; root=configured_storage_root(); print(json.dumps({'root': str(root), 'build': str(storage_directory('CADRUMO_NATIVE_BUILD_ROOT', 'development/build/native', root=root)), 'temporary': str(storage_directory('CADRUMO_TEMP_DIR', 'tmp', root=root)), 'cache': tool_storage_environment()['XDG_CACHE_HOME']}))"
-    if ($LASTEXITCODE) { throw 'Native trace storage resolution failed' }
+    $buildJson = & $pathPython -B -c "from pathlib import Path; import json,sys; from dev.packaging.native.build_directory import require_enrolled_build; from dev.packaging.native.build_paths import build_paths; root=require_enrolled_build(Path(sys.argv[1])); paths=build_paths(root); print(json.dumps({'build': str(root), 'testing': str(paths['testing'])}))" $BuildRoot
+    if ($LASTEXITCODE) { throw 'Native trace build ownership validation failed' }
 } finally {
     Pop-Location
 }
-$storage = $storageJson | ConvertFrom-Json
-$buildRoot = [IO.Path]::GetFullPath([string]$storage.build)
-$buildPrefix = $buildRoot.TrimEnd([char[]]@([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)) + [IO.Path]::DirectorySeparatorChar
-$explicitAbsoluteOutput = -not [string]::IsNullOrWhiteSpace($Output) -and [IO.Path]::IsPathRooted($Output)
+$build = $buildJson | ConvertFrom-Json
+$buildRoot = [IO.Path]::GetFullPath([string]$build.build)
+$testingRoot = [IO.Path]::GetFullPath([string]$build.testing)
+$testingPrefix = $testingRoot.TrimEnd([char[]]@([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)) + [IO.Path]::DirectorySeparatorChar
+New-Item -ItemType Directory -Force -Path $testingRoot | Out-Null
 if ([string]::IsNullOrWhiteSpace($Output)) {
-    $traceRoot = Join-Path $buildRoot ("traces/trace-" + [Guid]::NewGuid().ToString('N'))
+    $traceRoot = Join-Path $testingRoot ("traces/trace-" + [Guid]::NewGuid().ToString('N'))
 } elseif ([IO.Path]::IsPathRooted($Output)) {
     $traceRoot = [IO.Path]::GetFullPath($Output)
 } else {
-    $traceRoot = [IO.Path]::GetFullPath((Join-Path $buildRoot $Output))
+    $traceRoot = [IO.Path]::GetFullPath((Join-Path $testingRoot $Output))
 }
 $traceRoot = [IO.Path]::GetFullPath($traceRoot)
-if (-not $explicitAbsoluteOutput -and (
-    $traceRoot.Equals($buildRoot, [StringComparison]::OrdinalIgnoreCase) -or
-    -not $traceRoot.StartsWith($buildPrefix, [StringComparison]::OrdinalIgnoreCase)
-)) {
-    throw 'Trace output must remain beneath CADRUMO_NATIVE_BUILD_ROOT'
+if ($traceRoot.Equals($testingRoot, [StringComparison]::OrdinalIgnoreCase) -or
+    -not $traceRoot.StartsWith($testingPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+    throw 'Trace output must remain beneath the CMake testing output directory'
+}
+$relativeTrace = [IO.Path]::GetRelativePath($testingRoot, $traceRoot)
+$cursor = $testingRoot
+foreach ($part in ($relativeTrace -split '[\\/]')) {
+    if ([string]::IsNullOrWhiteSpace($part) -or $part -eq '.') { continue }
+    if ($part -eq '..') { throw 'Trace output must remain beneath the CMake testing output directory' }
+    $cursor = Join-Path $cursor $part
+    if (Test-Path -LiteralPath $cursor) {
+        $item = Get-Item -LiteralPath $cursor -Force
+        if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+            throw 'Trace output must not use linked directories'
+        }
+    }
 }
 $packagePath = (Resolve-Path -LiteralPath $Package).Path
 if (Test-Path -LiteralPath $traceRoot) { throw 'Use a fresh local trace directory' }
 New-Item -ItemType Directory -Force -Path $traceRoot | Out-Null
-$storageNames = @('CADRUMO_STORAGE_ROOT', 'CADRUMO_LOCAL_STORAGE_ROOT', 'CADRUMO_TEMP_DIR', 'CADRUMO_TOOL_CACHE_DIR', 'TEMP', 'TMP', 'TMPDIR')
+$storageRoot = Join-Path $traceRoot 'storage'
+$temporaryRoot = Join-Path $storageRoot 'tmp'
+$cacheRoot = Join-Path $storageRoot 'cache'
+New-Item -ItemType Directory -Force -Path $temporaryRoot, $cacheRoot | Out-Null
+$storageNames = @('CADRUMO_STORAGE_ROOT', 'CADRUMO_LOCAL_STORAGE_ROOT', 'CADRUMO_TEMP_DIR', 'CADRUMO_TOOL_CACHE_DIR', 'XDG_CACHE_HOME', 'TEMP', 'TMP', 'TMPDIR')
 $originalStorageEnvironment = @{}
 foreach ($name in $storageNames) {
     $originalStorageEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
@@ -43,12 +60,13 @@ $etl = Join-Path $traceRoot 'capture.etl'
 $instance = 'CadrumoNative-' + [Guid]::NewGuid().ToString('N')
 $profile = Join-Path $PSScriptRoot 'windows-filesystem.wprp'
 try {
-    $env:CADRUMO_STORAGE_ROOT = [string]$storage.root
-    $env:CADRUMO_LOCAL_STORAGE_ROOT = [string]$storage.root
-    $env:CADRUMO_TEMP_DIR = [string]$storage.temporary
-    $env:CADRUMO_TOOL_CACHE_DIR = [string]$storage.cache
+    $env:CADRUMO_STORAGE_ROOT = $storageRoot
+    $env:CADRUMO_LOCAL_STORAGE_ROOT = $storageRoot
+    $env:CADRUMO_TEMP_DIR = $temporaryRoot
+    $env:CADRUMO_TOOL_CACHE_DIR = $cacheRoot
+    $env:XDG_CACHE_HOME = $cacheRoot
     foreach ($name in @('TEMP', 'TMP', 'TMPDIR')) {
-        [Environment]::SetEnvironmentVariable($name, [string]$storage.temporary, 'Process')
+        [Environment]::SetEnvironmentVariable($name, $temporaryRoot, 'Process')
     }
     wpr -start "${profile}!CadrumoFiles" -filemode -recordtempto $traceRoot -instancename $instance
     if ($LASTEXITCODE) { throw 'WPR start failed; an elevated development shell is required' }
@@ -85,7 +103,7 @@ Get-WinEvent -Path $etl -Oldest -FilterXPath $selector | ForEach-Object {
     Remove-Item -LiteralPath $etl
     Push-Location $repo
     try {
-        & $pathPython -B -m dev.packaging.native.trace_analysis $traceRoot
+        & $pathPython -B -m dev.packaging.native.platforms.windows_trace_analysis --build $buildRoot $traceRoot
     } finally {
         Pop-Location
     }

@@ -1,0 +1,54 @@
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import type { SetupRow } from "../../ipc/contract";
+import { useStrings } from "../../shell/strings";
+
+/** What a feature that could not run needs: the item by name, its state said
+ * once by the host's sentence, and the way into setting it up. */
+export function SetupPrompt({
+  row,
+  takeFocus = true,
+  onClose,
+  onSetUp,
+}: {
+  row: SetupRow | null;
+  /** False leaves the keyboard where the person is typing: the prompt opens
+   * without taking it. */
+  takeFocus?: boolean;
+  onClose: () => void;
+  onSetUp: (row: SetupRow) => void;
+}) {
+  const t = useStrings();
+  return (
+    <Dialog open={row !== null} onOpenChange={(open) => !open && onClose()}>
+      {row && (
+        <DialogContent
+          className="setup-prompt"
+          onOpenAutoFocus={(event) => {
+            if (!takeFocus) event.preventDefault();
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>{row.name}</DialogTitle>
+            <DialogDescription>{row.sentence}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={onClose}>
+              {t("desktop.setup.not_now")}
+            </Button>
+            <Button size="sm" onClick={() => onSetUp(row)}>
+              {row.action_label ?? t("desktop.setup.open")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      )}
+    </Dialog>
+  );
+}

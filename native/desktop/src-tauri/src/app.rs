@@ -1,5 +1,5 @@
 use crate::{
-    docs,
+    agent, docs,
     environment::Launch,
     logs,
     manager::{self, ManagerStart},
@@ -7,7 +7,7 @@ use crate::{
     terminal::{self, TerminalState},
 };
 use cadrumo_application::{
-    diagnostics::{Diagnostics, EventKind},
+    diagnostics::{Diagnostics, EventKind, HostStage},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
 };
 use std::{collections::BTreeSet, sync::Arc};
@@ -91,7 +91,18 @@ fn dispatch<R: Runtime>(
         };
         let presented = presented_token(invoke.message.payload(), invoke.message.headers());
         match token.verify(presented, Operation::Webview) {
-            Ok(()) => (module.handler)(invoke),
+            Ok(()) => {
+                // Synchronous commands run inside WebView2's request callback,
+                // which cannot unwind: an escaping panic would abort the host.
+                let resolver = invoke.resolver.clone();
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| (module.handler)(invoke)))
+                    .unwrap_or_else(|_| {
+                        diagnostics.contained_panic(Some(HostStage::Window), Operation::Webview);
+                        resolver
+                            .reject(ApplicationError::new(ErrorCode::Panic, Operation::Webview));
+                        true
+                    })
+            }
             Err(error) => {
                 diagnostics.failure(error.clone());
                 invoke.resolver.reject(error);
@@ -101,7 +112,11 @@ fn dispatch<R: Runtime>(
     })
 }
 
-pub fn run(launch: Launch) -> Result<i32> {
+pub fn run(
+    root: std::path::PathBuf,
+    parent: crate::environment::Parent,
+    diagnostics: Arc<Diagnostics>,
+) -> Result<i32> {
     if cfg!(target_os = "macos") {
         return Err(ApplicationError::new(
             ErrorCode::UnsupportedPlatform,
@@ -113,9 +128,7 @@ pub fn run(launch: Launch) -> Result<i32> {
     shell::webview_environment::refuse_overrides()?;
     #[cfg(windows)]
     cadrumo_platform::desktop::detach_console();
-    let diagnostics = launch.diagnostics.clone();
     diagnostics.event(EventKind::GuiSelected, None, None);
-    let data_directory = launch.webview.clone();
     let context = tauri::generate_context!();
     let window =
         context.config().app.windows.first().ok_or_else(|| {
@@ -130,83 +143,98 @@ pub fn run(launch: Launch) -> Result<i32> {
             docs::commands(),
             logs::commands(),
             shell::commands(),
+            shell::window_controls::commands(),
+            shell::about::commands(),
             shell::sign_in::commands(),
+            shell::provider_settings::commands(),
+            shell::agent_access::commands(),
+            shell::language::commands(),
+            shell::setup::commands(),
+            shell::user_profile::commands(),
+            shell::user_profile::censo::commands(),
             manager::commands(),
+            agent::commands(),
+            crate::startup::commands(),
         ],
         token,
         diagnostics.clone(),
     )?;
-    let builder = tauri::Builder::default()
-        .plugin(terminal::plugin(&launch))
-        .plugin(docs::plugin(&launch)?)
-        .plugin(logs::plugin(&launch))
-        .plugin(shell::plugin(&launch))
-        .plugin(shell::clipboard_plugin());
-    let manager_start = Arc::new(ManagerStart::new(&launch));
-    let startup_manager = manager_start.clone();
-    let state = Arc::new(TerminalState::new(launch));
-    let setup_diagnostics = diagnostics.clone();
-    let navigation_diagnostics = diagnostics.clone();
-    let app = builder
-        .manage(state.clone())
-        .manage(manager_start)
+    let startup = Arc::new(crate::startup::Startup::new(
+        root,
+        parent,
+        diagnostics.clone(),
+        script.clone(),
+        origins.clone(),
+    ));
+    let app = tauri::Builder::default()
+        .plugin(crate::startup::plugin(diagnostics.clone()))
+        .manage(startup.clone())
         .invoke_handler(handler)
         .channel_interceptor(shell::channel::interceptor(diagnostics.clone()))
         .setup(move |app| {
-            tauri::async_runtime::spawn(async move {
-                // Failures are retained in diagnostics; the window remains usable.
-                let _ = startup_manager.start(false).await;
-            });
-            let outcome = (|| {
-                let config = app.config().app.windows.first().ok_or_else(|| {
-                    ApplicationError::new(ErrorCode::InvalidArguments, Operation::Webview)
-                })?;
-                tauri::WebviewWindowBuilder::from_config(app.handle(), config)
-                    .and_then(|builder| {
-                        // WebView2 raises this for the top frame only, so the
-                        // documentation frame navigates freely.
-                        builder
-                            .data_directory(data_directory)
-                            .initialization_script(script)
-                            .on_navigation(move |url| {
-                                let allowed = shell::navigation::allowed(&origins, url);
-                                if !allowed {
-                                    navigation_diagnostics.failure(ApplicationError::new(
-                                        ErrorCode::InvalidArguments,
-                                        Operation::Webview,
-                                    ));
-                                }
-                                allowed
-                            })
-                            .build()
-                    })
-                    .map_err(|error| {
-                        ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview)
-                            .caused_by(error)
-                    })
-            })();
-            if let Err(error) = outcome {
-                setup_diagnostics.failure(error);
-                app.handle().exit(1);
-            }
+            shell::single_instance::verify(app.config())?;
+            let config = app.config().app.windows[0].clone();
+            let mut loading = config;
+            loading.label = "startup".into();
+            loading.url = tauri::WebviewUrl::App("startup.html".into());
+            loading.decorations = true;
+            loading.width = 480.0;
+            loading.height = 300.0;
+            loading.min_width = Some(380.0);
+            loading.min_height = Some(240.0);
+            let loading = tauri::WebviewWindowBuilder::from_config(app.handle(), &loading)?
+                .center()
+                .incognito(true)
+                .initialization_script(script)
+                .on_navigation(move |url| shell::navigation::allowed(&origins, url))
+                .build()?;
+            #[cfg(windows)]
+            sharpen_icon(loading.as_ref().window(), None)?;
             Ok(())
         })
         .on_window_event(|window, event| {
-            let state = window.state::<Arc<TerminalState>>();
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                let manager = window.state::<Arc<ManagerStart>>();
-                tauri::async_runtime::block_on(manager.close());
-                let sign_in = window.state::<Arc<shell::sign_in::SignIn>>();
-                if let Err(error) = sign_in.children.stop() {
+            #[cfg(windows)]
+            if let tauri::WindowEvent::ScaleFactorChanged { scale_factor, .. } = event
+                && let Err(error) = sharpen_icon(window.clone(), Some(*scale_factor))
+                && let Some(state) = window.try_state::<Arc<TerminalState>>()
+            {
+                state.launch.diagnostics.failure(webview_failure(error));
+            }
+            if window.label() == "startup" {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                     api.prevent_close();
-                    state.launch.diagnostics.failure(error);
+                    let startup = window
+                        .state::<Arc<crate::startup::Startup>>()
+                        .inner()
+                        .clone();
+                    startup.cancel();
+                    let host = window.app_handle().clone();
+                    let diagnostics = startup.diagnostics();
+                    if let Err(error) = window.hide() {
+                        diagnostics.failure(webview_failure(error));
+                    }
+                    spawn_detached(host.clone(), diagnostics, HostStage::Shutdown, async move {
+                        startup.settle().await;
+                        host.exit(0);
+                    });
                 }
-                if let Err(error) = state.stop() {
+                return;
+            }
+            let Some(state) = window.try_state::<Arc<TerminalState>>() else {
+                return;
+            };
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                state
+                    .launch
+                    .diagnostics
+                    .host_event(EventKind::WindowCloseRequested, HostStage::Shutdown);
+                if let Err(error) = close_clients_and_supervision(window.app_handle()) {
                     api.prevent_close();
                     state.launch.diagnostics.failure(error);
+                    window.app_handle().exit(1);
                 }
             } else if matches!(event, tauri::WindowEvent::Destroyed)
-                && let Err(error) = state.stop()
+                && let Err(error) = state.shutdown()
             {
                 state.launch.diagnostics.failure(error);
             }
@@ -215,19 +243,293 @@ pub fn run(launch: Launch) -> Result<i32> {
         .map_err(|e| {
             ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
         })?;
-    let sign_in = app.state::<Arc<shell::sign_in::SignIn>>().inner().clone();
-    let manager = app.state::<Arc<ManagerStart>>().inner().clone();
-    let code = app.run_return(|_, _| {});
-    tauri::async_runtime::block_on(manager.close());
-    let sign_in_cleanup = sign_in.children.stop();
-    let terminal_cleanup = state.stop();
-    sign_in_cleanup?;
-    terminal_cleanup?;
+    let handle = app.handle().clone();
+    let code = app.run_return(move |_, event| {
+        if matches!(event, tauri::RunEvent::ExitRequested { .. }) {
+            diagnostics.host_event(EventKind::HostExitRequested, HostStage::Shutdown);
+        }
+    });
+    startup.cancel();
+    tauri::async_runtime::block_on(startup.settle());
+    close_clients_and_supervision(&handle)?;
+    if startup.failed() {
+        return Ok(1);
+    }
     Ok(code)
+}
+
+/// End runtime clients before asking their owned supervisor to drain. Attempt
+/// every cleanup even after a failure, including on run-loop exit without a
+/// window close event. Each owner keeps failed cleanup available for retry.
+fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Result<()> {
+    if let Some(profile) = handle.try_state::<Arc<shell::user_profile::ProfileHost>>() {
+        profile.close();
+    }
+    let language_cleanup = handle
+        .try_state::<Arc<shell::language::LanguageHost>>()
+        .map_or(Ok(()), |language| {
+            tauri::async_runtime::block_on(language.close())
+        });
+    let setup_cleanup = handle
+        .try_state::<Arc<shell::setup::SetupHost>>()
+        .map_or(Ok(()), |setup| {
+            tauri::async_runtime::block_on(setup.close())
+        });
+    let agent_cleanup = handle
+        .try_state::<Arc<agent::AgentHost>>()
+        .map_or(Ok(()), |agent| {
+            tauri::async_runtime::block_on(agent.close())
+        });
+    let sign_in_cleanup = handle
+        .try_state::<Arc<shell::sign_in::SignIn>>()
+        .map_or(Ok(()), |sign_in| {
+            tauri::async_runtime::block_on(sign_in.stop())
+        });
+    let terminal_cleanup = handle
+        .try_state::<Arc<TerminalState>>()
+        .map_or(Ok(()), |terminal| terminal.shutdown());
+    let manager_cleanup = handle
+        .try_state::<Arc<ManagerStart>>()
+        .map_or(Ok(()), |manager| {
+            tauri::async_runtime::block_on(manager.close_checked())
+        });
+    language_cleanup
+        .and(setup_cleanup)
+        .and(agent_cleanup)
+        .and(sign_in_cleanup)
+        .and(terminal_cleanup)
+        .and(manager_cleanup)
+}
+
+pub(crate) async fn assemble<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    launch: Launch,
+    startup: &crate::startup::Startup,
+) -> Result<()> {
+    let diagnostics = launch.diagnostics.clone();
+    let data_directory = launch.webview.clone();
+    if let Some(lease) = launch._publication.as_ref() {
+        std::mem::forget(lease.clone());
+    }
+    for plugin in [
+        terminal::plugin(&launch),
+        docs::plugin(&launch),
+        logs::plugin(&launch),
+        shell::plugin(&launch),
+        agent::plugin(&launch),
+        shell::clipboard_plugin(),
+        agent::dialog_plugin(),
+    ] {
+        startup.check_cancelled()?;
+        app.plugin(plugin).map_err(|e| {
+            ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
+        })?;
+    }
+    let manager = Arc::new(ManagerStart::new(&launch));
+    app.manage(manager.clone());
+    app.manage(Arc::new(TerminalState::new(launch)));
+    let sign_in = app.state::<Arc<shell::sign_in::SignIn>>().inner().clone();
+    app.manage(Arc::new(shell::setup::SetupHost::new(sign_in.clone())));
+    app.manage(Arc::new(shell::user_profile::ProfileHost::new(
+        sign_in.clone(),
+    )));
+    startup.stage(crate::startup::Phase::Runtime);
+    #[cfg(windows)]
+    tokio::select! {
+        result = manager.ensure_ready(&sign_in) => result?,
+        _ = startup.wait_cancelled() => { startup.check_cancelled()?; }
+    }
+    #[cfg(not(windows))]
+    manager.start(false).await?;
+    startup.check_cancelled()?;
+    startup.stage(crate::startup::Phase::Workspace);
+    let config = &app.config().app.windows[0];
+    let origins = startup.origins.clone();
+    tauri::WebviewWindowBuilder::from_config(&app, config)
+        .and_then(|builder| {
+            let builder = match shell::webview_environment::workspace_browser_arguments() {
+                Some(arguments) => builder.additional_browser_args(&arguments),
+                None => builder,
+            };
+            builder
+                .visible(false)
+                .data_directory(data_directory)
+                .initialization_script(startup.script.clone())
+                .on_navigation(move |url| shell::navigation::allowed(&origins, url))
+                .on_page_load(|window, payload| {
+                    if matches!(payload.event(), tauri::webview::PageLoadEvent::Finished) {
+                        if let Err(error) = window.show() {
+                            window
+                                .state::<Arc<TerminalState>>()
+                                .launch
+                                .diagnostics
+                                .failure(
+                                    ApplicationError::new(
+                                        ErrorCode::WebviewFailed,
+                                        Operation::Webview,
+                                    )
+                                    .caused_by(error),
+                                );
+                            return;
+                        }
+                        if let Some(loading) = window.app_handle().get_webview_window("startup")
+                            && let Err(error) = loading.destroy()
+                        {
+                            window
+                                .state::<Arc<TerminalState>>()
+                                .launch
+                                .diagnostics
+                                .failure(webview_failure(error));
+                        }
+                    }
+                })
+                .build()
+        })
+        .and_then(|window| {
+            #[cfg(windows)]
+            sharpen_icon(window.as_ref().window(), None)?;
+            Ok(window)
+        })
+        .map_err(|e| {
+            ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
+        })?;
+    #[cfg(windows)]
+    {
+        let host = app.clone();
+        spawn_detached(
+            app.clone(),
+            diagnostics.clone(),
+            HostStage::Manager,
+            async move {
+                let mut lost_since = None;
+                let mut changes = manager.supervision_changes();
+                while !manager.is_closed() {
+                    changes.borrow_and_update();
+                    if let Err(error) = supervision_continues(
+                        manager.supervision_status(),
+                        &mut lost_since,
+                        std::time::Instant::now(),
+                    ) {
+                        manager.report_failure(error.clone());
+                        diagnostics.failure(error);
+                        host.exit(1);
+                        break;
+                    }
+                    // Only a status change or the loss bound can change the verdict.
+                    let bound = lost_since.map(|since| {
+                        tokio::time::Instant::from_std(since + SUPERVISION_LOSS_BOUND)
+                    });
+                    tokio::select! {
+                        changed = changes.changed() => {
+                            if changed.is_err() {
+                                break;
+                            }
+                        }
+                        () = async {
+                            match bound {
+                                Some(bound) => tokio::time::sleep_until(bound).await,
+                                None => std::future::pending().await,
+                            }
+                        } => {}
+                    }
+                }
+            },
+        );
+    }
+    Ok(())
+}
+
+/// Give `window` its small icon at the small icon size of `scale` (its current scale when
+/// `None`). Tauri sets the large-size entry of the application icon as the small icon, which
+/// Windows then shrinks crudely in the title bar and in Task Manager.
+#[cfg(windows)]
+fn sharpen_icon<R: Runtime>(window: tauri::Window<R>, scale: Option<f64>) -> tauri::Result<()> {
+    let scale = match scale {
+        Some(scale) => scale,
+        None => window.scale_factor()?,
+    };
+    let size = (16.0 * scale).round().clamp(16.0, 256.0) as u32;
+    window.set_icon(tauri::image::Image::from_icon_resource(
+        tauri::utils::platform::WINDOWS_APP_ICON_RESOURCE_ID,
+        size,
+        size,
+    )?)
+}
+
+fn webview_failure(error: tauri::Error) -> ApplicationError {
+    ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(error)
+}
+
+/// Nothing awaits a detached task; a panic in it is recorded and ends the host,
+/// which would otherwise keep running without the task's work.
+fn spawn_detached<R: Runtime>(
+    host: tauri::AppHandle<R>,
+    diagnostics: Arc<Diagnostics>,
+    stage: HostStage,
+    task: impl std::future::Future<Output = ()> + Send + 'static,
+) {
+    let task = tauri::async_runtime::spawn(task);
+    tauri::async_runtime::spawn(async move {
+        if task.await.is_err() {
+            diagnostics.contained_panic(Some(stage), Operation::Webview);
+            host.exit(1);
+        }
+    });
+}
+
+/// How long the GUI tolerates lost supervision while the manager repairs it.
+const SUPERVISION_LOSS_BOUND: std::time::Duration = std::time::Duration::from_secs(90);
+
+pub(crate) fn supervision_continues(
+    status: Result<bool>,
+    lost_since: &mut Option<std::time::Instant>,
+    now: std::time::Instant,
+) -> Result<()> {
+    if status? {
+        *lost_since = None;
+    } else if now.duration_since(*lost_since.get_or_insert(now)) >= SUPERVISION_LOSS_BOUND {
+        return Err(ApplicationError::new(
+            ErrorCode::ManagerUnavailable,
+            Operation::Manager,
+        ));
+    }
+    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn healthy_gui_allows_bounded_repair_but_fails_prolonged_or_terminal_supervision_loss() {
+        use super::*;
+        use std::time::{Duration, Instant};
+        let now = Instant::now();
+        let mut lost = None;
+        supervision_continues(Ok(true), &mut lost, now).unwrap();
+        supervision_continues(Ok(false), &mut lost, now).unwrap();
+        supervision_continues(Ok(false), &mut lost, now + Duration::from_secs(89)).unwrap();
+        assert_eq!(
+            supervision_continues(Ok(false), &mut lost, now + Duration::from_secs(90))
+                .unwrap_err()
+                .code,
+            ErrorCode::ManagerUnavailable
+        );
+        supervision_continues(Ok(true), &mut lost, now + Duration::from_secs(91)).unwrap();
+        assert!(lost.is_none());
+        supervision_continues(Ok(false), &mut lost, now + Duration::from_secs(92)).unwrap();
+        assert_eq!(
+            supervision_continues(
+                Err(ApplicationError::new(
+                    ErrorCode::ManagerUnavailable,
+                    Operation::Manager
+                )),
+                &mut lost,
+                now + Duration::from_secs(93)
+            )
+            .unwrap_err()
+            .code,
+            ErrorCode::ManagerUnavailable
+        );
+    }
     use super::*;
     use tauri::{
         WebviewWindowBuilder,
@@ -247,8 +549,18 @@ mod tests {
             docs::commands(),
             logs::commands(),
             shell::commands(),
+            shell::window_controls::commands(),
+            shell::about::commands(),
             shell::sign_in::commands(),
+            shell::provider_settings::commands(),
+            shell::agent_access::commands(),
+            shell::language::commands(),
+            shell::setup::commands(),
+            shell::user_profile::commands(),
+            shell::user_profile::censo::commands(),
             manager::commands(),
+            agent::commands(),
+            crate::startup::commands(),
         ];
         let names: Vec<&str> = modules
             .iter()
@@ -367,5 +679,57 @@ mod tests {
             .verify(presented_token(&body, &headers), Operation::Webview)
             .unwrap_err();
         assert_eq!(error.code, ErrorCode::InvalidArguments);
+    }
+
+    #[tauri::command]
+    fn panicking_command() -> Result<()> {
+        let private = std::hint::black_box("synthetic-private-value");
+        panic!("a synchronous command fails with {private}")
+    }
+
+    #[test]
+    fn a_panicking_synchronous_command_is_rejected_and_recorded_instead_of_aborting() {
+        let token = ShellToken::mint().unwrap();
+        let exact = token.value().to_owned();
+        let diagnostics = Arc::new(Diagnostics::default());
+        let modules = vec![crate::app::commands![panicking_command]];
+        let app = mock_builder()
+            .invoke_handler(dispatch(modules, token, diagnostics.clone()).unwrap())
+            .build(mock_context(noop_assets()))
+            .unwrap();
+        let window = WebviewWindowBuilder::new(&app, "main", Default::default())
+            .build()
+            .unwrap();
+        let reply = get_ipc_response(
+            &window,
+            InvokeRequest {
+                cmd: "panicking_command".into(),
+                callback: CallbackFn(0),
+                error: CallbackFn(1),
+                url: if cfg!(windows) {
+                    "http://tauri.localhost"
+                } else {
+                    "tauri://localhost"
+                }
+                .parse()
+                .unwrap(),
+                body: InvokeBody::Json(serde_json::json!({"token": exact})),
+                headers: HeaderMap::new(),
+                invoke_key: INVOKE_KEY.to_owned(),
+            },
+        )
+        .unwrap_err();
+        assert_eq!(reply["code"], "panic");
+        assert_eq!(reply["operation"], "webview");
+        assert!(!reply.to_string().contains("synthetic-private-value"));
+        let recorded = diagnostics.snapshot(u64::MAX).events;
+        assert!(recorded.iter().any(|event| {
+            matches!(event.kind, EventKind::Failure)
+                && event.stage == Some(HostStage::Window)
+                && event
+                    .failure
+                    .as_ref()
+                    .is_some_and(|failure| failure.code == ErrorCode::Panic)
+        }));
     }
 }

@@ -10,6 +10,8 @@ from typing import Protocol
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import Settings
@@ -20,12 +22,12 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
 from ...domain.transactions.models import Transaction
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.interactions import OperationResponseIntentValue
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ..operations.persistence.journal import serialize_operation_operand
 from ..operations.registry import OperationSchemaBindingV1, operation_public_schema_reference
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts
 from .id_resolution import resolve_transaction_id
@@ -189,6 +191,7 @@ async def _commit_reviewed_decision(
     ports: LedgerLlmOperationPorts,
     response_action: OperationResponseIntentValue,
     decision: LlmReviewDecision,
+    actor: str,
 ) -> str:
     await context.events.phase("ledger.llm.commit")
 
@@ -207,7 +210,7 @@ async def _commit_reviewed_decision(
                         if operand.request.business_pct is not None
                         else None,
                         reason=operand.request.reason,
-                        actor=operand.request.actor or str(operand.request.profile_id),
+                        actor=actor,
                         ports=ports.ledger,
                         settings=ports.settings,
                         expected_current=baseline,
@@ -250,9 +253,15 @@ async def _commit_reviewed_decision(
 class LedgerLlmReviewExecutor:
     """Acquire once and resume existing writers from the persisted reviewed operand."""
 
-    def __init__(self, factory: LedgerLlmOperationPortsFactory) -> None:
+    def __init__(
+        self,
+        factory: LedgerLlmOperationPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Retain the trusted profile-worker composition."""
         self._factory = factory
+        self._execution_caller_reader = execution_caller_reader
 
     def _ports(
         self, request: OperationRequest[LedgerLlmReviewRequest], context: OperationExecutorContext
@@ -360,6 +369,11 @@ class LedgerLlmReviewExecutor:
         baseline, suggestion = operand.decode(context.authority_operation)
         ports = self._ports(request, context)
         decision = _review_decision(response_action, suggestion)
+        actor = execution_actor_label(
+            self._execution_caller_reader,
+            context,
+            supplied=operand.request.actor or str(operand.request.profile_id),
+        )
         return await _commit_reviewed_decision(
             context=context,
             digest=digest,
@@ -369,4 +383,5 @@ class LedgerLlmReviewExecutor:
             ports=ports,
             response_action=response_action,
             decision=decision,
+            actor=actor,
         )

@@ -50,7 +50,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.core.toml import parse_toml
-from cadrumo.domain.iva.classification import IvaTerritorialScope
+from cadrumo.domain.iva.schema import IvaTerritorialScope
 
 from ..text import resolve_anchored_extracted_unit
 

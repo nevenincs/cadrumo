@@ -11,6 +11,9 @@ from uuid import uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.config import override_settings
 from ....core.hashing import sha256_hex
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -25,14 +28,6 @@ from ...operations.operation_definition import OperationDefinition
 from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
-    Availability,
-    DisclosureCategory,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_ports import LedgerActionPorts
 from ..export_operation import (
@@ -92,7 +87,7 @@ def subject(authority_operation: PinnedAuthorityOperation) -> Iterator[Subject]:
         yield Subject(authority_operation)
 
 
-def test_both_strict_public_contracts_compile_and_share_no_artifact_agent_purpose(subject: Subject) -> None:
+def test_both_strict_public_contracts_compile_and_share_no_artifact_automation_purpose(subject: Subject) -> None:
     definitions = tuple(
         sorted((_definition(subject, "link"), _definition(subject, "export")), key=lambda item: item.definition_id)
     )
@@ -104,8 +99,6 @@ def test_both_strict_public_contracts_compile_and_share_no_artifact_agent_purpos
     )
     registry = OperationRegistry(definitions=definitions, public_registrations=registrations)
     assert registry.lookup_public_registration("ledger.export").contract.result_schema is not None
-    assert OperationFrontendProjection.MCP not in definitions[0].permitted_frontends
-    assert OperationFrontendProjection.MCP in definitions[1].permitted_frontends
     assert all(row.capabilities.request_storage.value == "secure_reference" for row in definitions)
 
 
@@ -274,6 +267,16 @@ def test_guarded_invoice_owner_recheck_refuses_changed_snapshot_before_atomic_wr
     assert subject.repository.attempts == 0 and not subject.events.load().events
 
 
+@pytest.mark.parametrize("output_path", ["ledger.csv", "exports/ledger.csv", "/mnt/c/Users/x/ledger.csv"])
+def test_export_request_refuses_a_path_the_runtime_would_place_itself(output_path: str) -> None:
+    # A rooted path with no drive is absolute on POSIX, where the runtime writes it as given.
+    if Path(output_path).is_absolute():
+        assert LedgerExportRequest(profile_id=PROFILE_ID, output_path=output_path).output_path == output_path
+        return
+    with pytest.raises(ValueError, match="ledger export output path must be absolute"):
+        LedgerExportRequest(profile_id=PROFILE_ID, output_path=output_path)
+
+
 @pytest.mark.parametrize("kind", ["export", "link"])
 def test_foreign_worker_subject_refuses_before_private_ports(subject: Subject, tmp_path: Path, kind: str) -> None:
     definition = _definition(subject, kind)
@@ -299,7 +302,7 @@ def test_foreign_worker_subject_refuses_before_private_ports(subject: Subject, t
 
 
 @pytest.mark.parametrize("kind", ["export", "link"])
-def test_exact_scope_human_artifact_and_dual_category_consent(subject: Subject, tmp_path: Path, kind: str) -> None:
+def test_exact_scope_and_dual_category_consent_on_every_frontend(subject: Subject, tmp_path: Path, kind: str) -> None:
     definition = _definition(subject, kind)
     registration = (
         build_ledger_export_registration(definition) if kind == "export" else build_ledger_link_registration(definition)
@@ -334,31 +337,32 @@ def test_exact_scope_human_artifact_and_dual_category_consent(subject: Subject, 
     )
     resolved = resolve_operation_access(registry=registry, request=request, context=context)
     assert resolved.policy.requires_all_periods is (kind == "link")
-    assert resolved.policy.requires_human is (kind == "export")
+    assert resolved.policy.requires_human is False
     assert {row.category for row in resolved.policy.disclosures} == {
         DisclosureCategory.PROFILE_VALUES,
         DisclosureCategory.TAX_VALUES,
     }
-    assert isinstance(
-        policy_decision(resolved, registry, disclosures=resolved.policy.disclosures, human=kind == "export"),
-        AccessAllowed,
-    )
-    for missing in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES):
-        denied = policy_decision(
-            resolved,
-            registry,
-            disclosures=frozenset(row for row in resolved.policy.disclosures if row.category is not missing),
-            human=kind == "export",
+    # A session under the person's sign-in and one under an enrolled key are answered alike.
+    for human in (True, False):
+        assert isinstance(
+            policy_decision(resolved, registry, disclosures=resolved.policy.disclosures, human=human),
+            AccessAllowed,
         )
-        assert isinstance(denied, AccessDenied) and denied.code is AccessDenialCode.DISCLOSURE_DENIED
+        for missing in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES):
+            denied = policy_decision(
+                resolved,
+                registry,
+                disclosures=frozenset(row for row in resolved.policy.disclosures if row.category is not missing),
+                human=human,
+            )
+            assert isinstance(denied, AccessDenied) and denied.code is AccessDenialCode.DISCLOSURE_DENIED
     observed = resolve_operation_access(
         registry=registry, request=request, context=replace(context, action=AccessAction.OBSERVE)
     )
     assert {row.category for row in observed.policy.disclosures} == {DisclosureCategory.OPERATION_METADATA}
-    if kind == "export":
-        with pytest.raises(ProfileAccessRefusedError):
-            resolve_operation_access(
-                registry=registry, request=request, context=replace(context, frontend=OperationFrontendProjection.MCP)
-            )
-        denied = policy_decision(resolved, registry, disclosures=resolved.policy.disclosures)
-        assert isinstance(denied, AccessDenied) and denied.code is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
+    for frontend in OperationFrontendProjection:
+        elsewhere = resolve_operation_access(
+            registry=registry, request=request, context=replace(context, frontend=frontend)
+        )
+        assert elsewhere.request.frontend is frontend
+        assert elsewhere.policy == resolved.policy

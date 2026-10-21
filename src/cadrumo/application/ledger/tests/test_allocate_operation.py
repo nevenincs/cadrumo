@@ -12,6 +12,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.models import InvoiceCatalogue
@@ -30,7 +32,6 @@ from ...operations.registry import (
     OperationRegistry,
 )
 from ...review.filter import LedgerReviewStatus
-from ...user_profile.access_contracts import AccessAction, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import allocate_operation as operation
 from ..action_ports import LedgerActionPorts
@@ -137,7 +138,6 @@ def test_registered_allocate_request_is_secure_and_requires_commit() -> None:
     definition = registry.lookup(operation.LEDGER_ALLOCATE_OPERATION_DEFINITION_ID)
     assert definition.capabilities.request_storage.value == "secure_reference"
     assert definition.capabilities.sensitive_input.value == "secure_reference"
-    assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
     assert AccessAction.COMMIT in resolved.policy.actions
     assert operation.LedgerAllocateRequest.model_validate_json(request.payload.model_dump_json()) == request.payload
 
@@ -293,3 +293,10 @@ async def test_executor_loads_and_resolves_the_current_catalogue_inside_commit(
     assert mutation["catalogue"] is current_catalogue
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
     assert operands.value == projection
+
+
+@pytest.mark.parametrize("share", ["0.333", "0.0175", "0.5"])
+def test_an_allocation_share_keeps_the_fraction_digits_it_has(share: str) -> None:
+    request = operation.LedgerAllocateRequest(profile_id=_PROFILE, transaction_id="a" * 12, business_pct=share)
+
+    assert request.business_pct == share

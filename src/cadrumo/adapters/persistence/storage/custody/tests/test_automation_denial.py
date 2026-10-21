@@ -22,8 +22,6 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from cadrumo.application.user_profile.access_contracts import AuthorityState
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenial, AutomationDenialKind
 from cadrumo.application.user_profile.capsule_archive import (
     export_profile_capsule_archive,
@@ -37,6 +35,8 @@ from cadrumo.application.user_profile.recovery_custody import (
     enroll_profile_recovery,
     reset_profile_passphrase_with_recovery,
 )
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 pytestmark = [
     pytest.mark.integration,

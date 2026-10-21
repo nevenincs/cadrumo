@@ -6,7 +6,7 @@ from contextlib import nullcontext
 from typing import ClassVar
 
 import pytest
-from pydantic import BaseModel, ValidationError, field_validator, model_validator
+from pydantic import BaseModel, ValidationError, create_model, field_validator, model_validator
 
 from ....core.models import STRICT_FROZEN_CONFIG
 from .. import registry, schema_identity
@@ -122,8 +122,11 @@ def test_supplied_identity_validation_runs_before_current_model_admission(monkey
                 Child.model_config["strict"] = False
             return self
 
-    class ValidatingBinding(OperationSchemaBindingV1):
-        identity: MutatingIdentity
+    # Built dynamically: checkers cannot see the base model's frozen config, so a
+    # class-body narrowing of ``identity`` reads as an unsound override of a mutable field.
+    validating_binding = create_model(
+        "ValidatingBinding", __base__=OperationSchemaBindingV1, identity=(MutatingIdentity, ...)
+    )
 
     identity = MutatingIdentity.from_model(schema_id="test.parent", schema_version=1, model_type=Parent)
     MutatingIdentity.mutate = True
@@ -136,7 +139,7 @@ def test_supplied_identity_validation_runs_before_current_model_admission(monkey
     monkeypatch.setattr(registry, "strict_model_json_schema", compile_model)
 
     with pytest.raises(ValidationError, match="strict=True"):
-        ValidatingBinding(identity=identity, model_type=Parent)
+        validating_binding(identity=identity, model_type=Parent)
     assert compiled_strict_states == [False]
 
 

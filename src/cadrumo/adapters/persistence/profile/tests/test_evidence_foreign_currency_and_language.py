@@ -36,10 +36,10 @@ from cadrumo.application.invoices.catalogue_creation_ports import CatalogueCreat
 from cadrumo.core.aggregation import IntracomOperationType
 from cadrumo.core.config import Settings
 from cadrumo.core.external_constants import DEFAULT_CURRENCY
-from cadrumo.domain.iva.classification import InvoiceKind
 
 from .....domain.currency.models import EurRateLookup
 from .....domain.currency.tests.fx_lookup import eur_rate_lookup
+from .....domain.iva.schema import InvoiceKind
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,

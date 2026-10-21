@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, field_validator, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
@@ -30,11 +32,10 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from ..user_profile.access_contracts import AccessDenialCode
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .iva_wallet_mutation import (
     IVA_WALLET_MUTATION_RESULT_MAX_BYTES,
@@ -232,6 +233,7 @@ def build_modelo_iva_wallet_seed_definition(factory: ModeloIvaWalletSeedPortsFac
     return OperationDefinition(
         definition_id=MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
         request_type=ModeloIvaWalletSeedRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloIvaWalletSeedReport,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloIvaWalletSeedRequest,
@@ -242,7 +244,6 @@ def build_modelo_iva_wallet_seed_definition(factory: ModeloIvaWalletSeedPortsFac
         interaction_kinds=frozenset(),
         capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 

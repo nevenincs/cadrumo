@@ -9,12 +9,13 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_manual import create_manual_transaction, update_manual_transaction
+from cadrumo.application.ledger.actions_manual import update_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionResult
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import TransactionCatalogue
 
+from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_create_support import (
     POST_UPDATE_EVENT_PAYLOADS,
     PRESERVED_CREATE_AUDIT_FIELDS,

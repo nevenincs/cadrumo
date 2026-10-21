@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.schema_references import LegalReferenc
 from .legal_reference_models import LegalProvisionRecord, LegalReferenceError
 
 _LEGAL_TABLE_FIELDS: Final[frozenset[str]] = frozenset(
-    field_name for field_name in LegalReference.model_fields if isinstance(field_name, str) and field_name != "id"
+    field_name for field_name in LegalReference.model_fields if field_name != "id"
 )
 """Every field a ``[legal."..."]`` table body may declare.
 

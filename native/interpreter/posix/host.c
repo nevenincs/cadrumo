@@ -12,9 +12,7 @@
 #ifndef CADRUMO_DEVELOPMENT
 #define CADRUMO_DEVELOPMENT 0
 #endif
-#ifndef CADRUMO_ENTRYPOINT
-#include "invocation.h"
-#endif
+#include "launch_profile.h"
 
 typedef int (*bridge_main)(int, char **, const char **, int);
 extern char **environ;
@@ -71,9 +69,9 @@ int main(int argc, char **argv) {
         fprintf(stderr, "CADRUMO: installed package is unavailable for launch\n");
         goto done;
     }
-#ifndef CADRUMO_ENTRYPOINT
+#if !defined(CADRUMO_ENTRYPOINT) && !defined(CADRUMO_BUNDLED_IMAGE)
     if (argc == 2 && (!strcmp(argv[1], "--version") || !strcmp(argv[1], "-V"))) {
-        printf("CADRUMO %s build %s (%s), Python %s [%s]\n", CADRUMO_VERSION,
+        printf("CADRUMO %s build %s (%s), Python %s [%s]\n", CADRUMO_DISPLAY_VERSION,
             CADRUMO_BUILD_NUMBER, CADRUMO_BUILD_DATE, CADRUMO_PYTHON_VERSION,
             CADRUMO_DEVELOPMENT ? "development" : "production");
         result = 0;
@@ -86,8 +84,14 @@ int main(int argc, char **argv) {
     if (!bridge) goto done;
     bridge_main run = (bridge_main)dlsym(bridge, "cadrumo_python_main");
     if (!run) goto failure;
+    /* The launch profile defines the environment before Python starts. */
+    int defined = define_launch(ctx, CADRUMO_LAUNCH_IMAGE, argc, argv, &error);
+    if (defined < 0) goto failure;
+    if (defined > 0) {
+        result = defined;
+        goto done;
+    }
 #ifdef CADRUMO_ENTRYPOINT
-    if (cadrumo_platform_prepare(ctx, &error)) goto failure;
     char *interpreter = join(paths[0], CADRUMO_EXECUTABLE);
     char **forwarded = calloc((size_t)argc + 3, sizeof(char *));
     if (!interpreter || !forwarded) {
@@ -99,13 +103,19 @@ int main(int argc, char **argv) {
     paths[2] = interpreter;
     forwarded[0] = interpreter;
     forwarded[1] = "-c";
+#ifdef CADRUMO_FIXED_MODULE
+    forwarded[2] = "import " CADRUMO_FIXED_MODULE " as fixed; raise SystemExit(fixed.main())";
+#else
     forwarded[2] = "import _cadrumo_bootstrap; _cadrumo_bootstrap.run_entrypoint('" CADRUMO_ENTRYPOINT "')";
+#endif
     for (int i = 1; i < argc; ++i) forwarded[i + 2] = argv[i];
     result = run(argc + 2, forwarded, (const char **)paths, CADRUMO_DEVELOPMENT);
     free(forwarded);
+#elif defined(CADRUMO_BUNDLED_IMAGE)
+    /* The image stays sys.executable, so a child it starts with sys.executable re-enters
+     * this image and its launch profiles; sys.frozen is never set. */
+    result = run(argc, argv, (const char **)paths, CADRUMO_DEVELOPMENT);
 #else
-    /* The KDF worker attests its parent's neutral environment before reading requests. */
-    if (!supervised_kdf_invocation(argc, argv) && cadrumo_platform_prepare(ctx, &error)) goto failure;
     if (argc == 2 && !strcmp(argv[1], "--check-package")) {
         char *check[] = {argv[0], "-c", "import _cadrumo_bootstrap; _cadrumo_bootstrap.verify(full=True); print('CADRUMO package verified')", NULL};
         result = run(3, check, (const char **)paths, CADRUMO_DEVELOPMENT);

@@ -9,6 +9,8 @@ from pathlib import Path
 
 from dev._paths import REPO_ROOT
 
+from .build_directory import require_enrolled_build
+from .build_log import BuildLog, display_path
 from .build_paths import build_paths
 
 
@@ -38,14 +40,21 @@ def _bounded_path(build: Path, value: str) -> Path:
     return target
 
 
-def _remove(build: Path, values: list[str]) -> None:
+def _remove(build: Path, values: list[str], log: BuildLog) -> None:
     # Validate the complete request before making any filesystem changes.
     targets = [_bounded_path(build, value) for value in values]
+    removed = 0
     for target in targets:
         if target.is_dir():
             shutil.rmtree(target)
         elif target.exists():
             target.unlink()
+        else:
+            log.debug(f"already absent: {display_path(target)}")
+            continue
+        removed += 1
+        log.verbose(f"removed {display_path(target)}")
+    log.status(f"removed {removed} of {len(targets)} owned paths under {display_path(build)}")
 
 
 def clean_target(build: Path, target: str, config: str) -> None:
@@ -68,7 +77,7 @@ def clean_target(build: Path, target: str, config: str) -> None:
             collect(dependency)
 
     collect(target)
-    _remove(build, paths)
+    _remove(build, paths, BuildLog(f"clean-{target}"))
 
 
 def clean(build: Path, group: str) -> None:
@@ -86,12 +95,16 @@ def clean(build: Path, group: str) -> None:
             ownership = json.loads(manifest.read_text(encoding="utf-8"))
             _build_directory(build, Path(ownership["source"]))
             targets.extend(Path(path) for target in ownership["targets"].values() for path in target["paths"])
-    _remove(build, [str(target) for target in targets])
+    _remove(build, [str(target) for target in targets], BuildLog(f"clean-{group}"))
+    # Presets point TEMP/TMP/TMPDIR here; later builds and CTest need it present
+    # or tools fail and Python silently falls back to the OS temporary directory.
+    if "temporary" in paths and paths["temporary"] in targets:
+        paths["temporary"].mkdir()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("build", type=Path)
+    parser.add_argument("build", type=require_enrolled_build)
     parser.add_argument("group", help="CMake-defined cleanup group or all")
     parser.add_argument("--target", action="store_true", help="Clean an individual enrolled target")
     parser.add_argument("--config", default="", help="CMake build configuration")

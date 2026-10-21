@@ -19,8 +19,10 @@ are different code with identical spelling.
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
+import shlex
 from pathlib import Path
 from typing import Final
 
@@ -198,9 +200,21 @@ def test_the_gate_refuses_a_local_reference_that_escapes_the_repository(tmp_path
     assert _unpinned(workflow) == [f"escaping.yml: ../outside/action {_UNRESOLVED}"]
 
 
+class _PublishArguments(argparse.Namespace):
+    distributions: list[str]
+
+
 def _upload_arguments(run: str) -> list[str]:
     """The file arguments an `uv publish` command line hands to the index."""
-    return [token for token in run.split() if token.startswith("dist")]
+    tokens = shlex.split(run)
+    assert tokens[:2] == ["uv", "publish"], "expected the executed uv publish command"
+    parser = argparse.ArgumentParser(add_help=False, exit_on_error=False)
+    parser.add_argument("--trusted-publishing")
+    parser.add_argument("--check-url")
+    parser.add_argument("distributions", nargs="+")
+    arguments = _PublishArguments()
+    parser.parse_args(tokens[2:], namespace=arguments)
+    return arguments.distributions
 
 
 def _publish_command(path: Path) -> str:
@@ -241,6 +255,16 @@ def test_the_gate_refuses_a_bare_directory_glob() -> None:
     arguments = _upload_arguments("uv publish --trusted-publishing always dist/*")
 
     assert arguments == ["dist/*"]
+    assert not all(argument.endswith((".whl", ".tar.gz")) for argument in arguments)
+
+
+@pytest.mark.parametrize("directory", ("dist", "build/release-dist", "a directory with spaces"))
+def test_upload_file_discovery_does_not_depend_on_the_staging_directory(directory: str) -> None:
+    arguments = _upload_arguments(
+        f"uv publish --trusted-publishing always --check-url https://pypi.org/simple/ "
+        f"'{directory}/*.whl' '{directory}/checksums.sha256'"
+    )
+    assert arguments == [f"{directory}/*.whl", f"{directory}/checksums.sha256"]
     assert not all(argument.endswith((".whl", ".tar.gz")) for argument in arguments)
 
 

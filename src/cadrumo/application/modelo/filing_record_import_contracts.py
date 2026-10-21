@@ -95,7 +95,11 @@ def _validate_filing_import_casilla_value(key: CasillaId, lexical: str) -> None:
 
 
 class ModeloFilingRecordImportRequest(BaseModel):
-    """Immutable filing import intent, retained only through secure custody."""
+    """Immutable filing import intent, retained only through secure custody.
+
+    ``actor`` is recorded as sent for a person's session. An automation's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -223,7 +227,7 @@ def _filing_import_receipt_outside_scope(
         record.bucket_id != str(profile_id)
         or reconciliation.bucket_id != str(profile_id)
         or reconciliation.filing_record_id != record.filing_record_id
-        or reconciliation.modelo != str(record.modelo)
+        or reconciliation.modelo != record.modelo
         or reconciliation.filing_year != record.filing_year
         or reconciliation.period != record.period
         or reconciliation.member_nif != record.member_nif

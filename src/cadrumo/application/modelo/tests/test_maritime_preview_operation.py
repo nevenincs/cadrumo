@@ -12,6 +12,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -22,7 +25,6 @@ from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, DisclosureCategory
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..maritime_preview import ModeloMaritimeExemptionPreview, preview_maritime_exemption_for_active_profile
 from ..maritime_preview_operation import (
@@ -98,7 +100,6 @@ def test_maritime_schema_compiles_and_only_admits_its_period_independent_profile
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     assert definition.capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
     assert definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
-    assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
     assert len(registry.lookup_public_registration(definition.definition_id).schema_bindings) == 2
     request = _request(ModeloMaritimePreviewRequest(profile_id=_PROFILE))
     context = OperationAccessContext(
@@ -119,6 +120,32 @@ def test_maritime_schema_compiles_and_only_admits_its_period_independent_profile
     with pytest.raises(ProfileAccessRefusedError) as refused:
         resolve_operation_access(registry=registry, request=foreign, context=context)
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def test_maritime_preview_is_admitted_on_the_external_client_frontend_without_a_commit_door(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    definition = build_modelo_maritime_preview_definition(_unavailable)
+    registration = build_modelo_maritime_preview_registration(definition)
+    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(ModeloMaritimePreviewRequest(profile_id=_PROFILE)),
+        context=OperationAccessContext(
+            profile_id=_PROFILE,
+            destination_id=uuid4(),
+            action=AccessAction.SUBMIT,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
+            contract=registration.contract,
+            published_authority=Availability.AVAILABLE,
+            authority_operation=authority_operation,
+        ),
+    )
+    assert resolved.request.frontend is OperationFrontendProjection.EXTERNAL_CLIENT
+    assert resolved.request.profile_id == _PROFILE
+    assert resolved.request.period_independent is True
+    assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 @pytest.mark.parametrize("value", ["1e3", "+36500", "36.500", "36.500,00", "36500,00", "3 6500", "NaN", "Infinity"])

@@ -24,7 +24,6 @@ from cadrumo.domain.contribuyente.seguro_enfermedad_insured import (
 )
 from cadrumo.domain.filing.software_identity import development_mock_software_identity
 from cadrumo.domain.invoices.enums import invoice_legal_mention_declarations, resolve_iva_rate_token
-from cadrumo.domain.iva.classification import InvoiceKind, TransactionKind
 from cadrumo.domain.iva.oss import OssIossRegime
 from cadrumo.domain.modelos.perceptor_clave_scope import resolve_perceptor_clave_scope
 from cadrumo.domain.modelos.row_models import resolve_detail_row_owning_modelos
@@ -39,6 +38,8 @@ from cadrumo.domain.transactions.volumen_ingresos import (
     counts_toward_volumen_de_ingresos,
 )
 
+from ....iva.classification import TransactionKind
+from ....iva.schema import InvoiceKind
 from ..activity_kind_catalogue import resolve_irpf_activity_kind_catalogue
 from ..amendment_regime_policy import resolve_amendment_regime_policy
 from ..applicability_modelo202 import modelo_202_modality_from_inputs, resolve_modelo_202_art_40_3_incn_threshold

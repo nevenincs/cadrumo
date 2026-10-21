@@ -2,7 +2,7 @@
 
 No model runs here. The transport is asserted structurally and through an
 injected client, because running local inference crashed a development host and
-terminated four concurrent agent sessions; nothing here requires a
+terminated four concurrent automation sessions; nothing here requires a
 live model.
 """
 

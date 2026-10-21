@@ -16,6 +16,8 @@ from dev.packaging.native.hashing import digest
 from dev.packaging.native.identity import identity
 from dev.packaging.native.installation import inventory, member, prepare, uninstall, validate_payload, verify_inventory
 from dev.packaging.native.layout import load_layout
+from dev.packaging.native.linux_desktop_runtime import MANIFEST
+from dev.packaging.native.linux_desktop_runtime import stage as stage_desktop_runtime
 from dev.packaging.runtime_wheelhouse_contract import SUPPORTED_TARGETS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -85,6 +87,11 @@ def payload_fixture(tmp_path: Path, target: str, *, manager: bool = False) -> tu
         manifest["layout"]["application_images"].append(dict(manager_image))
         (root / "cadrumo-manager").write_bytes(b"synthetic manager fixture")
         manifest["files"]["cadrumo-manager"] = digest(root / "cadrumo-manager")
+    if target.startswith("linux-"):
+        linux_layout = load_layout(target)
+        manifest["layout"].update({key: linux_layout[key] for key in ("platform", "linux_desktop_runtime")})
+        stage_desktop_runtime(root, manifest["layout"])
+        manifest["files"][MANIFEST] = digest(root / MANIFEST)
     (root / "data/package-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     return root, identity_file
 
@@ -138,18 +145,8 @@ def test_windows_manager_stage_has_stable_entry_and_unmodified_version_inventory
         "abi": 1,
         "launch_policy": "portable",
     }
-    namespaces = {"w": "http://wixtoolset.org/schemas/v4/wxs"}
-    wix = ElementTree.parse(tmp_path / "build/installation/metadata/Desktop.wxs")
-    entry = wix.find(".//w:RegistryValue[@Name='EntryPoint']", namespaces)
-    assert entry is not None
-    assert entry.attrib["Root"] == "HKLM"
-    assert entry.attrib["Value"] == "[INSTALL_ROOT]cadrumo-manager"
-    shortcut = wix.find(".//w:Shortcut", namespaces)
-    if desktop:
-        assert shortcut is not None
-        assert shortcut.attrib["Target"] == f"[INSTALL_ROOT]versions\\{version}\\cadrumo"
-    else:
-        assert shortcut is None
+    assert not (tmp_path / "build/installation/metadata/Desktop.wxs").exists()
+    assert not (tmp_path / "build/installation/metadata/DesktopPatch.xml").exists()
     assert prepare(payload, identity_file, tmp_path / "build", desktop_entry) == root
     # A receipt for one version cannot remove entry points shared by another version.
     other = root / "versions/0.0.1/data"

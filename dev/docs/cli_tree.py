@@ -1,4 +1,4 @@
-"""``cli-tree.json`` help-projection generator for the ``aeat`` command tree.
+"""``cli-tree.json`` help-projection generator for the ``aeat`` and ``cadrumo-runtime`` command trees.
 
 This is the build-time projection consumed by the ``cli-sequence`` frontend
 widget: a gitignored
@@ -10,7 +10,7 @@ projection is regenerated on every build and never committed — the same
 Pagefind commit-boundary discipline that governs the RST reference
 (``dev/docs/cli_reference.py``) extended to a JSON discovery asset.
 
-The generator projects the same immutable command graph as the reference. It visits every
+The generator projects both canonical command graphs. It visits every
 authored node — groups and leaves alike — so a group token and a leaf token
 both resolve to help, and emits one typed :class:`CliCommandNode` per node.
 
@@ -50,24 +50,23 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import BaseModel as _BaseModel
 from pydantic import Field, RootModel, StringConstraints
 
-from cadrumo.application.operator_surface.command_ports import (
-    MachineSecretPayloadMetadata,
-    ProfileAuthenticationContractMetadata,
-)
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.storage_environment import prepare_temporary_directory
-from cadrumo.entrypoints.cli.command_parameter_contracts import ArgumentSpec
-from cadrumo.entrypoints.cli.command_shared_contracts import DefaultKind
+from cadrumo_client.commands.parameters import ArgumentSpec
+from cadrumo_client.commands.shared_contracts import DefaultKind
+from cadrumo_client.contracts.command_ports import (
+    MachineSecretPayloadMetadata,
+    ProfileAuthenticationContractMetadata,
+)
 
 from .cli_reference import _reference_subprocess_environment
 
 if TYPE_CHECKING:
     import click
 
-    from cadrumo.application.operator_surface.command_ports import CommandRegistrationMetadata
-    from cadrumo.entrypoints.cli.command_schema import CommandRegistrationProjection
-    from cadrumo.entrypoints.cli.command_spec import CommandSpecNode
+    from cadrumo_client.commands.spec import CommandSpecNode
+    from cadrumo_client.contracts.command_ports import CommandRegistrationMetadata
 
 __all__ = [
     "CLI_TREE_STATIC_RELPATH",
@@ -122,8 +121,9 @@ class CliCommandNode(_BaseModel):
     """A single node (group or leaf) in the projected command tree.
 
     ``path`` is the full command path including the leading executable token
-    (``("aeat", "app", "modelo", "calculate")``). ``kind`` distinguishes a
-    group (a command that dispatches subcommands) from a leaf (an invokable
+    (``("aeat", "app", "modelo", "calculate")`` or
+    ``("cadrumo-runtime", "config", "auth", "login")``). ``kind`` distinguishes
+    a group (a command that dispatches subcommands) from a leaf (an invokable
     verb). ``usage`` is a deterministic single-line usage synopsis. Secret
     metadata describes only public shape and transport constraints; it never
     includes invocation values, examples, or persisted credential facts.
@@ -148,8 +148,9 @@ class CliTree(RootModel[dict[str, CliCommandNode]]):
     """The full projection: a mapping from command-path key to its node.
 
     The key is the command path joined by single spaces, including the leading
-    executable token (``"aeat app modelo calculate"``). This is exactly the key
-    a tokenised verb token carries, so the widget and the P07 tokeniser resolve
+    executable token (``"aeat app modelo calculate"`` or
+    ``"cadrumo-runtime config auth login"``). This is exactly the key a tokenised
+    verb token carries, so the widget and the P07 tokeniser resolve
     hover help by the same string.
     """
 
@@ -248,16 +249,27 @@ def _build_cli_tree_loaded() -> CliTree:
     from cadrumo.core.i18n.render import clear_output_language_cache
     from cadrumo.entrypoints.cli.command_schema import command_registration_projection
     from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+    from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 
     clear_output_language_cache()
 
-    registration = command_registration_projection()
-    metadata_by_path: dict[tuple[str, ...], CommandRegistrationMetadata] = {
-        ("aeat", *(row.cli_path or ())): row for row in registration.commands if row.cli_path is not None
-    }
+    graphs = (COMMAND_GRAPH, RUNTIME_COMMAND_GRAPH)
+    registrations = tuple(command_registration_projection(graph=graph) for graph in graphs)
+    metadata_by_path: dict[tuple[str, ...], CommandRegistrationMetadata] = {}
+    for graph, registration in zip(graphs, registrations, strict=True):
+        root_token = graph.root().token
+        metadata_by_path.update(
+            {(root_token, *(row.cli_path or ())): row for row in registration.commands if row.cli_path is not None},
+        )
+
     projection: dict[str, CliCommandNode] = {}
-    for node in COMMAND_GRAPH.nodes():
-        projection[_path_key(node.path)] = _project_cli_node(node, metadata_by_path, registration)
+    for graph, registration in zip(graphs, registrations, strict=True):
+        for node in graph.nodes():
+            projection[_path_key(node.path)] = _project_cli_node(
+                node,
+                metadata_by_path.get(node.path),
+                registration.profile_authentication_contract,
+            )
     return CliTree(projection)
 
 
@@ -370,10 +382,12 @@ def _normalise_lookup_key(path: str | Sequence[str]) -> str:
 def resolve_command_path(tree: CliTree, path: str | Sequence[str]) -> CliCommandNode:
     """Resolve a documented command ``path`` to its projection node.
 
-    ``path`` is either a space-joined string (``"aeat app modelo calculate"``)
-    or a token sequence (``("aeat", "app", "modelo", "calculate")``). A leading
-    ``aeat`` executable token is accepted with or without; both spellings
-    resolve to the same node.
+    ``path`` is either a space-joined string (``"aeat app modelo calculate"`` or
+    ``"cadrumo-runtime config auth login"``) or a token sequence
+    (``("aeat", "app", "modelo", "calculate")`` or
+    ``("cadrumo-runtime", "config", "auth", "login")``). A leading
+    ``aeat`` executable token may be omitted; paths under ``cadrumo-runtime``
+    retain their executable token because they belong to a separate graph.
 
     Raises:
         CliTreePathNotFoundError: When no node matches, carrying the nearest
@@ -425,8 +439,8 @@ def _project_cli_params(node: CommandSpecNode) -> tuple[CliParam, ...]:
 
 def _project_cli_node(
     node: CommandSpecNode,
-    metadata_by_path: dict[tuple[str, ...], CommandRegistrationMetadata],
-    registration: CommandRegistrationProjection,
+    metadata: CommandRegistrationMetadata | None,
+    profile_authentication_contract: ProfileAuthenticationContractMetadata,
 ) -> CliCommandNode:
     from cadrumo.core.i18n.render import tr
 
@@ -436,7 +450,6 @@ def _project_cli_node(
         usage += " [OPTIONS]"
     if node.spec.kind != "leaf":
         usage += " COMMAND [ARGS]..."
-    metadata = metadata_by_path.get(node.path)
     return CliCommandNode(
         path=node.path,
         kind="leaf" if node.spec.kind == "leaf" else "group",
@@ -445,7 +458,5 @@ def _project_cli_node(
         params=params,
         machine_secret_payloads=() if metadata is None else metadata.machine_secret_payloads,
         profile_authentication=("not-applicable" if metadata is None else metadata.profile_authentication),
-        profile_authentication_contract=(
-            registration.profile_authentication_contract if node.spec.kind == "root" else None
-        ),
+        profile_authentication_contract=(profile_authentication_contract if node.spec.kind == "root" else None),
     )

@@ -10,14 +10,14 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
-from cadrumo.application.modelo.declaration_summary import DeclarationSummary, DeclarationSummaryState
-from cadrumo.application.modelo.declarations_calendar import (
+from .....application.modelo.declaration_summary import DeclarationSummary, DeclarationSummaryState
+from .....application.modelo.declarations_calendar import (
     DeclarationsCalendarEntryRefV1,
     DeclarationsCalendarProjectionV1,
     DeclarationsCalendarSource,
     DeclarationsCalendarSourceStateV1,
 )
-from cadrumo.application.modelo.declarations_workspace_contracts import (
+from .....application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceDeclarationRefV1,
     DeclarationsWorkspaceProjectionV1,
@@ -25,21 +25,21 @@ from cadrumo.application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneStateV1,
 )
-from cadrumo.application.modelo.work_form_models import ModeloFormResult, ModeloFormResultDirection
-from cadrumo.application.overview.calendar_models import (
+from .....application.modelo.work_form_models import ModeloFormResult, ModeloFormResultDirection
+from .....application.overview.calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendarEntrySource,
     OverviewCalendarRange,
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
-from cadrumo.application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
-from cadrumo.application.overview.home import HomeAvailability
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
-from cadrumo.domain.deadlines.models import ObligationStatus
-from cadrumo.domain.modelos.work_unit import WorkUnitState
+from .....application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
+from .....application.overview.home import HomeAvailability
+from .....core.casilla_id import validated_casilla_id
+from .....core.period import Period
+from .....domain.deadlines.festivos import DeadlineHolidayCoverage
+from .....domain.deadlines.models import ObligationStatus
+from .....domain.modelos.work_unit import WorkUnitState
 
 _NOW = datetime(2025, 4, 30, 12, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2025, "1T")

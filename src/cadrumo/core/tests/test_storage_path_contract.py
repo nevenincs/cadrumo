@@ -9,12 +9,13 @@ import pytest
 
 from ..errors.hierarchy import CoreValidationError
 from ..storage_environment import (
-    PROCESS_ENVIRONMENT,
     STORAGE_ROOT,
+    TEMPORARY_VARIABLES,
     ChildEnvironmentProfile,
     StorageMode,
     StorageModeEvidence,
     StorageRootRefusal,
+    authority_root_setting_names,
     child_environment,
     normalize_storage_path,
     resolve_storage_path,
@@ -33,11 +34,11 @@ def test_host_resolution_normalizes_missing_components_without_creating_them(tmp
 
 @pytest.mark.parametrize("profile", list(ChildEnvironmentProfile))
 @pytest.mark.parametrize("value", ["relative", "", "\udcff"])
-def test_inherited_paths_refuse_before_root_creation(
+def test_relayed_authority_root_refuses_before_root_creation(
     tmp_path: Path, profile: ChildEnvironmentProfile, value: str
 ) -> None:
     root = tmp_path / "root"
-    name = PROCESS_ENVIRONMENT.host_inherited[0]
+    (name,) = authority_root_setting_names()
     with pytest.raises(CoreValidationError) as error:
         child_environment(profile, root, received={name: value})
     expected = StorageRootRefusal.INVALID_PATH_INPUT if value == "\udcff" else StorageRootRefusal.NON_ABSOLUTE_PIN
@@ -47,11 +48,11 @@ def test_inherited_paths_refuse_before_root_creation(
 
 
 @pytest.mark.parametrize("profile", list(ChildEnvironmentProfile))
-def test_valid_inherited_path_spelling_and_opaque_values_survive(
+def test_valid_authority_root_spelling_and_opaque_values_survive(
     tmp_path: Path, profile: ChildEnvironmentProfile
 ) -> None:
     inherited = str(tmp_path / "missing" / ".." / "authority")
-    name = PROCESS_ENVIRONMENT.host_inherited[0]
+    (name,) = authority_root_setting_names()
     environment = child_environment(profile, tmp_path / "root", received={name: inherited, "ORDINARY_VALUE": "\udcff"})
     assert environment[name] == inherited
     assert environment["ORDINARY_VALUE"] == "\udcff"
@@ -69,7 +70,7 @@ def test_temporary_home_uses_received_mapping_and_invalid_home_has_no_effects(
         tmp_path / "root",
         received={home_name: str(supplied), "CADRUMO_TEMP_DIR": "~/unused/../scratch"},
     )
-    assert environment[PROCESS_ENVIRONMENT.temporary_variables[0]] == str(supplied / "scratch")
+    assert environment[TEMPORARY_VARIABLES[0]] == str(supplied / "scratch")
     assert (supplied / "scratch").is_dir() and not (supplied / "unused").exists()
     assert not (tmp_path / "ambient-home").exists()
     root = tmp_path / "refused-root"

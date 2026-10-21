@@ -23,7 +23,8 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant
 from ...domain.modelos.codes import ModeloCode
-from ..modelo.reconciliation_records import ModeloReconciliationDiff, ModeloReconciliationEvidenceKind
+from ..modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
+from ..modelo.reconciliation_records import ModeloReconciliationDiff
 from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationPublicContractSetV1
 from ..operator_actions.catalogue import ActionCatalogue

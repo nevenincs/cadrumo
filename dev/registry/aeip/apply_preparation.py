@@ -214,7 +214,7 @@ def _refuse_unplanned_category_lineage(
         category_chain = None if current.continuidad_id is None else str(current.continuidad_id)
         if (
             str(current.semantic_role or "") == _constants.CATEGORY_SEMANTIC_ROLE
-            and category_chain
+            and (category_chain is not None and category_chain)
             and category_chain.startswith(_constants.CHAIN_PREFIX)
         ):
             _add_refusal(

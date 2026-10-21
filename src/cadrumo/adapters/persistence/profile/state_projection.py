@@ -10,13 +10,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ....application.diagnostics_ports import DiagnosticsPorts
 from ....application.state_projection_ports import (
     StateProjectionProfileRead,
     StateProjectionReadError,
     StateProjectionWorkspaceRead,
 )
-from ....application.user_profile.access_contracts import AccessDenialCode
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....application.user_profile.profile_record_repository import ProfileRecordRepository
 from ....application.workflow.profile_bucket_scan import read_profile_bucket_by_id

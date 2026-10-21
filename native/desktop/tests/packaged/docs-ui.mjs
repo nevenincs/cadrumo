@@ -117,7 +117,8 @@ export async function docsUiChecks({
       );
       const descendant = new URL("search.html?q=modelo", localized.entry).href;
       await visit(descendant);
-      await rail.nth(1).click();
+      // Docs Home is the documentation's own chord; the rail toggles the pane.
+      await page.keyboard.press("Alt+Home");
       await waitFor(() => session.docsFrame()?.url() === localized.entry, {
         timeout: 30000,
         what: "the localized documentation home",

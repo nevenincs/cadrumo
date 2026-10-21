@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#account-distribution-standard'
 date: '2026-07-25'
-modified: '2026-10-03'
-body_hash: 'sha256:61d2935cffe275b94d0ca7af38c4567565edfa1dc445670105b52bebcd37ffa0'
+modified: '2026-10-21'
+body_hash: 'sha256:01bf8256df45f51a641f6fda1b230de2b20da30a88d1fee7e3a27d063487c230'
 related:
   - '[[2026-07-25-distribution-repo-topology-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
@@ -189,9 +189,7 @@ Two acquisition workflows produce inputs `publish-release.yml` requires, and
 both fail unconditionally: `packaging-homebrew.yml` at 9 dispatches and 9
 failures, `packaging-scoop.yml` at 8 and 8.
 
-The repository variables are set: `HOMEBREW_TAP_REPO=nevenincs/homebrew-tap` and
-`CLAUDE_MARKETPLACE_REPO=nevenincs/neve-marketplace`. The marketplace repository
-exists and is public. **`nevenincs/homebrew-tap` returns 404** — the tap the
+The repository variables are set: `HOMEBREW_TAP_REPO=nevenincs/homebrew-tap`. **`nevenincs/homebrew-tap` returns 404** — the tap the
 publish authority would push to has not been created, so the Homebrew leg would
 refuse at Gate 3 even with every gate opened.
 
@@ -248,9 +246,7 @@ does not make.
 ### What was not investigated
 
 Download or install counts for the two live packages were not gathered, so
-relative channel value is unmeasured. The `neve-marketplace` tree was not read,
-so the plugin-name mismatch recorded in the product-scope topology record is
-taken as given rather than re-verified. No workflow was executed and nothing was
+relative channel value is unmeasured. No workflow was executed and nothing was
 published, so every claim about a pipeline's behaviour is read from its
 definition plus its recorded run history, not from an observed run.
 
@@ -262,14 +258,14 @@ conclusion here depends on a semantic-search miss.
 
 ## Sources
 
-- `Y:\code\aeat-worktrees\main\pyproject.toml:3`
-- `Y:\code\aeat-worktrees\main\src\cadrumo\__init__.py:27`
-- `Y:\code\aeat-worktrees\main\dev\packaging\evidence.py:219`
-- `Y:\code\aeat-worktrees\main\dev\packaging\distribution_evidence_emit.py:145`
-- `Y:\code\aeat-worktrees\main\dev\release\readiness.py:383`
-- `Y:\code\aeat-worktrees\main\dev\docs\tests\test_distribution_claims.py:193`
-- `Y:\code\aeat-worktrees\main\.github\workflows\publish-release.yml`
-- `Y:\code\aeat-worktrees\main\.github\workflows\pypi-upload.yml`
+- `<code-root>/aeat-worktrees\main\pyproject.toml:3`
+- `<code-root>/aeat-worktrees\main\src\cadrumo\__init__.py:27`
+- `<code-root>/aeat-worktrees\main\dev\packaging\evidence.py:219`
+- `<code-root>/aeat-worktrees\main\dev\packaging\distribution_evidence_emit.py:145`
+- `<code-root>/aeat-worktrees\main\dev\release\readiness.py:383`
+- `<code-root>/aeat-worktrees\main\dev\docs\tests\test_distribution_claims.py:193`
+- `<code-root>/aeat-worktrees\main\.github\workflows\publish-release.yml`
+- `<code-root>/aeat-worktrees\main\.github\workflows\pypi-upload.yml`
 - `nevenincs/vaultspec-core:.github/workflows/publish.yml`
 - `nevenincs/vaultspec-core:.github/workflows/binaries.yml`
 - `nevenincs/vaultspec-core:bucket/vaultspec-core.json`

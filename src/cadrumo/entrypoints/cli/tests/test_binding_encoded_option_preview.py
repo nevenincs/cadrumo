@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._modelo_bindings_payloads import BindingEncodedOptionPayload
 from .._modelo_rendering import binding_encoded_option_lines
+from ..modelo_bindings_results import BindingEncodedOptionPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

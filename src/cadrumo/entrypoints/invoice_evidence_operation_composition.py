@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..adapters.outbound.llm.consent import (
     OffHostEvidenceReadOutcome,
     classify_off_host_evidence_read,
@@ -16,7 +18,6 @@ from ..adapters.persistence.profile.counterparty_establishment import build_coun
 from ..adapters.persistence.profile.invoice_confirmation import build_invoice_confirmation_ports
 from ..application.ledger.invoice_draft_extraction_ports import EvidenceConsentProof
 from ..application.ledger.invoice_evidence_operation import InvoiceEvidenceOperationPorts
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.user_profile.capabilities import cloud_evidence_upload_eligible_for_active_profile
 from ..core.bucket_pointer import require_active_bucket_id

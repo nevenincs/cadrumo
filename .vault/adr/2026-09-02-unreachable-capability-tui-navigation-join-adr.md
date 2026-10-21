@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#unreachable-capability'
 date: '2026-09-02'
-modified: '2026-09-09'
+modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:ec0dbf3dbda218913be1a713bee81a6fe021b0ee2039f89e53884b9afca39d3a'
+body_hash: 'sha256:ee17cdf4ca8278542610ab5019eeb62f4acf21f2e8e575b3c9913028d80acc11'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
   - '[[2026-09-02-unreachable-capability-fincas-unblock-research]]'
@@ -89,3 +89,9 @@ it starts the independent TUI root as an opaque child process and returns its pr
 does not address a destination or command path and does not make the CLI a TUI routing authority.
 The retired `aeat-tui` spelling remains retired. TUI root navigation remains wholly inside the
 full-screen entrypoint.
+
+## Amendment 2026-10-15: authenticated incomplete-profile startup
+
+Accepted under the owner's instruction to improve startup immediately after the explanation that incomplete profiles should load the minimum authenticated profile state and show setup before the full workbench. Evidence: `2026-10-15-startup-performance-desktop-tui-sequence-audit`.
+
+The Home-first composition above has one startup exception: an authenticated profile whose canonical profile overview states INCOMPLETE opens the existing Profile setup destination before capturing Home, Ledger, Declarations, AEAT Sync or search. The same TUI root and exact runtime session retain account controls, retirement subscriptions and non-touching expiry checks. Unloaded destinations remain explicitly never captured or unavailable; no empty or synthetic Home generation is invented. Returning to Home uses the unchanged full-generation refresh contract and atomically publishes its matching navigation and search. Complete profiles retain Home-first behavior. Setup completion remains an explicit guarded operator act; this changes presentation scheduling, not profile state, operation authority or generation/currentness guarantees. An identity mismatch or failed profile/session read refuses startup rather than assuming an incomplete profile.

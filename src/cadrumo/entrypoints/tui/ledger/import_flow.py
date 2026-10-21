@@ -15,6 +15,7 @@ from ....application.ledger.own_account_operation import LedgerOwnAccountRequest
 from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
+from ..components.language import localized
 from ..components.theme import tokenised
 from ..components.widgets import ContentScroll
 from .controller import LedgerRouteRequested, LedgerWorkspaceController
@@ -114,42 +115,64 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.ledger.import.title"), classes="cadrumo-banner")
+        yield localized(Static(tr("tui.ledger.import.title"), classes="cadrumo-banner"), "tui.ledger.import.title")
         with ledger_workspace_page() as navigation:
             yield navigation
-            yield Static(tr("tui.ledger.import.prompt"), markup=False)
-            yield Static(tr("tui.ledger.import.kind_label"), markup=False)
+            yield localized(Static(tr("tui.ledger.import.prompt"), markup=False), "tui.ledger.import.prompt")
+            yield localized(Static(tr("tui.ledger.import.kind_label"), markup=False), "tui.ledger.import.kind_label")
             yield Select[str](
                 tuple((tr(_SOURCE_KIND_LOCALE_KEYS[kind]), kind.value) for kind in LedgerImportSourceKind),
                 value=LedgerImportSourceKind.BANK_STATEMENT.value,
                 allow_blank=False,
                 id="ledger-import-kind",
             )
-            yield Static(tr("tui.ledger.import.provider_label"), id="ledger-import-provider-label", markup=False)
+            yield localized(
+                Static(tr("tui.ledger.import.provider_label"), id="ledger-import-provider-label", markup=False),
+                "tui.ledger.import.provider_label",
+            )
             yield Select[str](
                 tuple((tr(_PROVIDER_LOCALE_KEYS[provider]), provider.value) for provider in IMPORT_PROVIDERS),
                 value=LedgerProviderID.AUTO.value,
                 allow_blank=False,
                 id="ledger-import-provider",
             )
-            yield Static(tr("tui.ledger.import.account_label"), id="ledger-import-account-label", markup=False)
+            yield localized(
+                Static(tr("tui.ledger.import.account_label"), id="ledger-import-account-label", markup=False),
+                "tui.ledger.import.account_label",
+            )
             yield Select[str](
                 ((tr("tui.ledger.import.account_unbound"), _UNBOUND_ACCOUNT),),
                 value=_UNBOUND_ACCOUNT,
                 allow_blank=False,
                 id="ledger-import-account",
             )
-            yield Static(tr("tui.ledger.import.country_label"), id="ledger-import-country-label", markup=False)
+            yield localized(
+                Static(tr("tui.ledger.import.country_label"), id="ledger-import-country-label", markup=False),
+                "tui.ledger.import.country_label",
+            )
             yield Input(value="ES", max_length=2, id="ledger-import-country")
-            yield Static(tr("tui.ledger.import.path_label"), markup=False)
-            yield Input(placeholder=tr("tui.ledger.import.path_placeholder"), id="ledger-import-path")
-            yield Button(tr("tui.ledger.import.browse"), id="ledger-import-browse")
-            yield Button(tr("tui.ledger.import.preview"), id="ledger-import-preview-button", variant="primary")
+            yield localized(Static(tr("tui.ledger.import.path_label"), markup=False), "tui.ledger.import.path_label")
+            yield localized(
+                Input(placeholder=tr("tui.ledger.import.path_placeholder"), id="ledger-import-path"),
+                "tui.ledger.import.path_placeholder",
+            )
+            yield localized(
+                Button(tr("tui.ledger.import.browse"), id="ledger-import-browse"), "tui.ledger.import.browse"
+            )
+            yield localized(
+                Button(tr("tui.ledger.import.preview"), id="ledger-import-preview-button", variant="primary"),
+                "tui.ledger.import.preview",
+            )
             yield Static("", id="ledger-import-preview", markup=False)
             yield Static("", id="ledger-flow-status", markup=False)
-            yield Button(tr("tui.ledger.import.confirm"), id="ledger-import-confirm", disabled=True)
-            yield Button(tr("tui.ledger.import.cancel"), id="ledger-import-cancel")
-            yield Button(tr("tui.ledger.import.again"), id="ledger-import-again")
+            yield localized(
+                Button(tr("tui.ledger.import.confirm"), id="ledger-import-confirm", disabled=True),
+                "tui.ledger.import.confirm",
+            )
+            yield localized(
+                Button(tr("tui.ledger.import.cancel"), id="ledger-import-cancel"), "tui.ledger.import.cancel"
+            )
+            yield localized(Button(tr("tui.ledger.import.again"), id="ledger-import-again"), "tui.ledger.import.again")
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
     def on_mount(self) -> None:

@@ -21,6 +21,7 @@ from pydantic import ValidationError
 
 from ....application.ledger.persistence_ports import LedgerPersistenceConflictError
 from ....core.errors.hierarchy import CadrumoError
+from ....core.profile_session import KeychainUnavailability
 
 
 class SecureStorageError(CadrumoError):
@@ -143,8 +144,21 @@ class KeyringUnavailableError(SecretStoreError):
 
     Either no backend is registered (e.g. headless Linux without
     libsecret), the backend rejected the operation, or the configured
-    backend is the no-op ``null`` keyring.
+    backend is the no-op ``null`` keyring. ``unavailability`` names which,
+    so a caller can tell the operator the failed prerequisite.
     """
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        unavailability: KeychainUnavailability = KeychainUnavailability.REFUSED,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+    ) -> None:
+        """Construct the error with the typed reason the keychain could not be used."""
+        super().__init__(message, context=context, translated_message=translated_message)
+        self.unavailability = unavailability
 
 
 class ClassificationError(PersistenceError):

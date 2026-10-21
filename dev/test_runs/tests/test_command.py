@@ -351,7 +351,7 @@ def test_locale_signal_normalizes_import_traceback_generically(
     assert "cells" not in finished
 
 
-def test_command_run_confines_child_temp_and_routes_tool_caches(
+def test_command_run_confines_child_temp_and_preserves_tool_cache_environment(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     ambient_cache = tmp_path / "ambient-cache"
@@ -359,7 +359,7 @@ def test_command_run_confines_child_temp_and_routes_tool_caches(
     probe = (
         "import json, os, pathlib, tempfile; "
         "pathlib.Path(os.environ['CADRUMO_DEV_ARTIFACTS_DIR']).joinpath('paths.json').write_text("
-        "json.dumps({'temp': tempfile.gettempdir(), 'cache': os.environ.get('XDG_CACHE_HOME')}))"
+        "json.dumps({'temp': tempfile.gettempdir(), 'xdg_cache_home': os.environ.get('XDG_CACHE_HOME')}))"
     )
     status = run((sys.executable, "-c", probe), repository=tmp_path, family="audit-runs", label="path-probe")
 
@@ -368,7 +368,7 @@ def test_command_run_confines_child_temp_and_routes_tool_caches(
     paths = json.loads((run_dir / "artifacts" / "paths.json").read_text(encoding="utf-8"))
     scratch = Path(json.loads((run_dir / "run.json").read_text(encoding="utf-8"))["scratch"])
     assert Path(paths["temp"]).resolve() == scratch.resolve()
-    assert paths["cache"] != str(ambient_cache)
+    assert paths["xdg_cache_home"] == str(ambient_cache)
 
 
 def test_import_boundaries_signal_deduces_contract_and_diagnostic_hotspots(

@@ -25,7 +25,7 @@ from ....application.ledger.structured_invoice_ports import (
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.operations import OperationEffect
-from .._ledger_evidence_cli import (
+from ..ledger_evidence_commands import (
     _evidence_extract_lines,
     _evidence_extract_payload,
     _require_exact_evidence_reference,

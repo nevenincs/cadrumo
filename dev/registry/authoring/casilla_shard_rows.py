@@ -24,7 +24,7 @@ def _render_row(
     data_type: str,
     legal_refs: str,
 ) -> str:
-    segmento_line = f'segmento = "{segmento}"\n' if segmento else ""
+    segmento_line = f'segmento = "{segmento}"\n' if (segmento is not None and segmento) else ""
     return (
         f"{group_comment(members, caption)}\n"
         f'[[revisions."{revision_id}".casillas]]\n'

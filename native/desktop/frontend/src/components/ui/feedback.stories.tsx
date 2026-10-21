@@ -3,7 +3,7 @@ import { Specimen } from "@/dev/catalogue/Frame";
 import { Alert, AlertDescription, AlertTitle } from "./alert";
 import { Badge } from "./badge";
 import { Button } from "./button";
-import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from "./empty";
+import { EmptyState } from "./empty";
 import { Icon } from "./icon";
 import { Kbd } from "./kbd";
 import { Progress } from "./progress";
@@ -61,6 +61,7 @@ export const Status: Story = {
         <Badge variant="success">Signed in</Badge>
         <Badge variant="warning">3 warnings</Badge>
         <Badge variant="danger">2 errors</Badge>
+        <Badge variant="inverse">Copied</Badge>
       </Specimen>
       <Specimen title="Key hints">
         <Kbd>Esc</Kbd>
@@ -93,36 +94,19 @@ export const EmptyStates: Story = {
   parameters: { fill: true },
   render: () => (
     <div className="grid min-h-dvh grid-cols-1 divide-x @container sm:grid-cols-3">
-      <Empty>
-        <EmptyMedia>
-          <Icon name="logs" />
-        </EmptyMedia>
-        <div className="grid gap-1">
-          <EmptyTitle>No log records yet</EmptyTitle>
-          <EmptyDescription>
-            Records appear here as Cadrumo writes them.
-          </EmptyDescription>
-        </div>
-      </Empty>
-      <Empty role="status">
-        <Spinner />
-        <EmptyDescription>Checking your sign-in…</EmptyDescription>
-      </Empty>
-      <Empty>
-        <EmptyMedia>
-          <Icon name="lock" />
-        </EmptyMedia>
-        <div className="grid gap-1">
-          <EmptyTitle>Not signed in</EmptyTitle>
-          <EmptyDescription>
-            Sign in to open your workspace in the TUI.
-          </EmptyDescription>
-        </div>
-        <div className="flex gap-2">
-          <Button>Sign in</Button>
-          <Button variant="ghost">Open the TUI</Button>
-        </div>
-      </Empty>
+      <EmptyState
+        icon="logs"
+        heading="No log records yet"
+        description="Records appear here as Cadrumo writes them."
+      />
+      <EmptyState role="status" busy description="Checking your sign-in…" />
+      <EmptyState
+        icon="lock"
+        heading="Not signed in"
+        description="Sign in to open your workspace."
+      >
+        <Button>Sign in</Button>
+      </EmptyState>
     </div>
   ),
 };

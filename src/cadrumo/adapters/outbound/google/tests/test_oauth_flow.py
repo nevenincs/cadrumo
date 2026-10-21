@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import http.client
+import socket
+import ssl
 import subprocess
 import sys
 import textwrap
@@ -14,29 +16,34 @@ from typing import TYPE_CHECKING, cast
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
+import requests
+from google.auth.exceptions import TransportError
 from google.oauth2.credentials import Credentials
 from pydantic import ValidationError
+
+from cadrumo_client.contracts.google_auth import (
+    GoogleAuthBrowserOpenError,
+    GoogleAuthNetworkError,
+    GoogleAuthNonInteractiveError,
+    GoogleAuthPreconditionCondition,
+    GoogleAuthProfileUnboundError,
+    GoogleAuthScopeInsufficientError,
+    GoogleAuthSignInRequiredError,
+    GoogleAuthValidationError,
+    require_interactive_terminal,
+)
 
 from .....application.user_profile.capsule_record import ProfileRecordIntegrityError
 from .....core.config import override_settings
 from .....core.config_google_client import OAuthClient
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile, reset_secure_object_store
 from .. import oauth_callback, oauth_flow
-from ..errors import (
-    GoogleAuthBrowserOpenError,
-    GoogleAuthNetworkError,
-    GoogleAuthNonInteractiveError,
-    GoogleAuthPreconditionCondition,
-    GoogleAuthProfileUnboundError,
-    GoogleAuthSignInRequiredError,
-    GoogleAuthValidationError,
-)
 from ..oauth_flow import (
     _oauth_loopback_client_config,
     _oauth_loopback_records,
     _raise_local_server_error,
     credentials_to_records,
-    require_interactive_terminal,
+    require_exact_scope_grant,
     require_resolvable_profile_record,
     run_login_flow,
 )
@@ -117,7 +124,7 @@ def test_credentials_to_records_refuses_whitespace_only_refresh_token() -> None:
 
 
 def test_local_server_error_classifier_routes_browser_failures() -> None:
-    upstream = RuntimeError("webbrowser launcher failed")
+    upstream = webbrowser.Error("the launcher failed")
 
     with pytest.raises(GoogleAuthBrowserOpenError) as raised:
         _raise_local_server_error(upstream)
@@ -127,15 +134,43 @@ def test_local_server_error_classifier_routes_browser_failures() -> None:
     assert raised.value.translated_message == "adapters.google.oauth_flow.errors.browser_launcher_refused"
 
 
-def test_local_server_error_classifier_routes_network_failures() -> None:
-    upstream = RuntimeError("transport connection refused")
-
+@pytest.mark.parametrize(
+    "upstream",
+    (
+        ConnectionRefusedError("refused"),
+        socket.gaierror(socket.EAI_NONAME, "name not known"),
+        ssl.SSLError("handshake failed"),
+        requests.ConnectionError("pool exhausted"),
+        TransportError("transport failed"),
+    ),
+    ids=("refused", "dns", "tls", "requests", "google-auth-transport"),
+)
+def test_local_server_error_classifier_routes_network_failures(upstream: Exception) -> None:
     with pytest.raises(GoogleAuthNetworkError) as raised:
         _raise_local_server_error(upstream)
 
     assert raised.value.__cause__ is None
     assert raised.value.__suppress_context__
     assert raised.value.translated_message == "adapters.google.oauth_flow.errors.endpoint_unreachable"
+
+
+@pytest.mark.parametrize(
+    "upstream",
+    (
+        RuntimeError("webbrowser transport connect network"),
+        TimeoutError("OAuth callback expired"),
+    ),
+    ids=("words-in-a-message-decide-nothing", "consent-wait-expired"),
+)
+def test_local_server_error_classifier_never_reads_the_message(upstream: Exception) -> None:
+    """Only the exception type decides; the consent receiver's own deadline is not a network failure."""
+    with pytest.raises(GoogleAuthNetworkError) as raised:
+        _raise_local_server_error(upstream)
+
+    assert raised.value.context == {"error_type": type(upstream).__name__}
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "google.auth.oauth_flow.completed"
 
 
 def test_local_server_error_classifier_wraps_unclassified_failures() -> None:
@@ -180,8 +215,8 @@ _LOGIN_PROBE = textwrap.dedent(
     """
     import sys
 
-    from cadrumo.adapters.outbound.google.oauth_flow import require_interactive_terminal
-    from cadrumo.adapters.outbound.google.errors import GoogleAuthNonInteractiveError
+    from cadrumo_client.contracts.google_auth import require_interactive_terminal
+    from cadrumo_client.contracts.google_auth import GoogleAuthNonInteractiveError
 
     if sys.stdin.isatty():
         print("UNEXPECTED_TTY")
@@ -240,6 +275,30 @@ def test_interactive_terminal_guard_refuses_a_non_tty_stdin() -> None:
     assert raised.value.translated_message == "adapters.google.oauth_flow.errors.non_interactive"
     assert raised.value.context == {"reason": "stdin_not_a_tty"}
     assert not hasattr(raised.value, "suggestion")
+
+
+@pytest.mark.parametrize(
+    "granted",
+    (
+        (*REQUIRED_SCOPES, "https://www.googleapis.com/auth/spreadsheets"),
+        REQUIRED_SCOPES[1:],
+    ),
+    ids=("one-scope-more", "one-scope-less"),
+)
+def test_both_sign_in_boundaries_apply_the_one_exact_scope_rule(granted: tuple[str, ...]) -> None:
+    """The record mapping and the loopback grant check refuse the same grants."""
+    with pytest.raises(GoogleAuthScopeInsufficientError):
+        credentials_to_records(
+            refresh_token="1//refresh-token",
+            client_id="desktop-client.apps.googleusercontent.com",
+            token_uri="https://oauth2.googleapis.com/token",
+            account_email="operator@example.com",
+            granted_scopes=granted,
+            issued_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        )
+    with pytest.raises(GoogleAuthScopeInsufficientError):
+        require_exact_scope_grant(granted, account_email=None)
+    require_exact_scope_grant(tuple(reversed(REQUIRED_SCOPES)), account_email=None)
 
 
 def test_login_flow_refuses_unavailable_profile_record_session_before_oauth_network(tmp_path: Path) -> None:

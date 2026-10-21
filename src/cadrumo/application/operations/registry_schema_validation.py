@@ -118,7 +118,7 @@ class _UnambiguousDefinitionsSchemaGenerator(GenerateJsonSchema):
         owners: dict[DefsRef, DefsRef | None] = {}
         for original in self.definitions:
             alternatives = choices.get(original)
-            if not alternatives:
+            if not (alternatives is not None and alternatives):
                 return super()._build_definitions_remapping()
             for alternative in alternatives:
                 if alternative in owners and owners[alternative] != original:

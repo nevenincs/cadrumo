@@ -12,6 +12,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
@@ -29,7 +31,6 @@ from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext, retain_failed_operation_resources
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filed_data import FiledDataListingRow
 from .filed_data_capture import list_filed_data, list_filed_data_bulk
@@ -386,7 +387,7 @@ def _project_list(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseM
                 modelo=row.modelo,
                 year=row.year,
                 period=row.period.registry_token,
-                expediente_id=str(row.expediente_id),
+                expediente_id=row.expediente_id,
                 status=row.status,
                 presented_at=row.presented_at,
                 has_submitted_file=row.has_submitted_file,
@@ -400,7 +401,7 @@ def _project_list(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseM
                 modelo=row.modelo,
                 year=row.year,
                 period=row.period.registry_token if row.period is not None else None,
-                expediente_id=str(row.expediente_id) if row.expediente_id is not None else None,
+                expediente_id=row.expediente_id if row.expediente_id is not None else None,
                 error_type=row.error_type,
                 message=row.message,
             )

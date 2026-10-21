@@ -76,7 +76,7 @@ def resolve_relative_import(
             return None
         base_parts = base_parts[: len(base_parts) - strip]
 
-    if node_module:
+    if node_module is not None and node_module:
         return ".".join(base_parts + node_module.split("."))
     return ".".join(base_parts) if base_parts else None
 

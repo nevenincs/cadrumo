@@ -8,11 +8,11 @@ from typing import cast
 
 import pytest
 
+from ......application.live.expedientes_ports import ExpedientesDeclaration
 from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..._playwright import BrowserContext, Page
 from .. import declarations as module
-from ..declarations_schema import Declaracion
 from ..errors import SedeNavigationError
 from .declarations_register_test_support import offline_aeat_session
 
@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 @pytest.mark.asyncio
 @pytest.mark.parametrize("change", ["none", "missing", "quarter", "receipt"])
 async def test_receipt_capture_rechecks_exact_register_row(monkeypatch: pytest.MonkeyPatch, change: str) -> None:
-    selected = Declaracion(
+    selected = ExpedientesDeclaration(
         modelo="303",
         ejercicio=2024,
         period=Period.from_year_and_code(2024, "1T"),

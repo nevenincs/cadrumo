@@ -79,7 +79,9 @@ def _validate_query_date_window(request: OverviewReadRequest) -> None:
 
 
 def _validate_query_scope(request: OverviewReadRequest) -> None:
-    if request.kind in {OverviewReadKind.EXPLAIN, OverviewReadKind.PREPARE} and not request.modelo:
+    if request.kind in {OverviewReadKind.EXPLAIN, OverviewReadKind.PREPARE} and not (
+        request.modelo is not None and request.modelo
+    ):
         raise ValueError("overview query requires a modelo")
     if request.kind is OverviewReadKind.PREPARE and request.period is None:
         raise ValueError("preparation query requires an exact period")

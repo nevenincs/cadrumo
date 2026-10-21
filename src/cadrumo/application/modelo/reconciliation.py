@@ -69,10 +69,12 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from ...domain.justificante.errors import JustificanteParseError
+from ...domain.modelos.filing_text import ModeloActorLabel
 from .action_errors import CalculationRevisionNotFoundError, WorkUnitNotFoundError
 from .calculation_repository import calculation_revision_catalogue_repository
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
+from .reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from .reconciliation_parsing import (
     ReconciliationDeclaracionObservation,
     reconciliation_evidence_parser,
@@ -81,7 +83,6 @@ from .reconciliation_records import (
     ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
     ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationRecord,
     ModeloReconciliationVerdict,
     modelo_reconciliation_persistence,
@@ -211,7 +212,7 @@ class ModeloReconciliationCommand(BaseModel):
     calculation_revision_id: CalculationRevisionId | None = None
     source_kind: ModeloReconciliationEvidenceKind
     source_path: Path
-    actor: str = Field(default="operator", min_length=1, max_length=64)
+    actor: ModeloActorLabel = "operator"
 
 
 class ModeloReconciliationBytesCommand(BaseModel):
@@ -236,7 +237,7 @@ class ModeloReconciliationBytesCommand(BaseModel):
     # operator-supplied filesystem path on the sibling command has no bound of
     # its own and is instead shortened at construction.
     source_ref: str = Field(min_length=1, max_length=_MAX_PAYLOAD_VALUE_LENGTH)
-    actor: str = Field(default="operator", min_length=1, max_length=64)
+    actor: ModeloActorLabel = "operator"
 
 
 class ModeloReconciliationReport(BaseModel):
@@ -1026,10 +1027,10 @@ def _total_targets_for_work_unit(
             targets.setdefault(
                 str(kind),
                 _TotalTarget(
-                    casilla_id=str(casilla_id),
+                    casilla_id=casilla_id,
                     tolerance=Decimal(expectation.tolerance),
-                    legal_refs=tuple(str(ref) for ref in expectation.legal_refs),
-                    source_refs=tuple(str(ref) for ref in expectation.source_refs),
+                    legal_refs=tuple(expectation.legal_refs),
+                    source_refs=tuple(expectation.source_refs),
                 ),
             )
     return targets
@@ -1235,12 +1236,12 @@ def _casilla_divergence_diff(
         raise ReconciliationDeclaracionSourceUnsupportedError(
             translated_message="errors.refused.reconciliation_declaration_source_unsupported",
             context={
-                "casilla_id": str(divergence.casilla_id),
+                "casilla_id": divergence.casilla_id,
                 "declared_by_revision": False,
             },
         )
-    legal_refs = tuple(str(ref) for ref in casilla.legal_refs)
-    source_refs = tuple(str(ref) for ref in casilla.source_refs)
+    legal_refs = tuple(casilla.legal_refs)
+    source_refs = tuple(casilla.source_refs)
     return ModeloReconciliationDiff(
         field_name=divergence.casilla_id,
         work_unit_value=_format_decimal(divergence.computed_value) if divergence.computed_value is not None else "",
@@ -1279,7 +1280,7 @@ def _resolve_reconciliation_revision(
     if calculation_revision_id is None:
         return _filed_revision_for_work_unit(work_unit, operation=operation)
     catalogue = calculation_revision_catalogue_repository(
-        bucket_id=str(work_unit.bucket_id),
+        bucket_id=work_unit.bucket_id,
         operation=operation,
     ).load(operation=operation)
     revision = catalogue.get(calculation_revision_id)
@@ -1315,10 +1316,10 @@ def _filed_revision_for_work_unit(
     persisted revision so a total reconcile and a casilla reconcile can never
     silently disagree about which revision represents "what was filed."
     """
-    catalogue = calculation_revision_catalogue_repository(bucket_id=str(work_unit.bucket_id), operation=operation).load(
+    catalogue = calculation_revision_catalogue_repository(bucket_id=work_unit.bucket_id, operation=operation).load(
         operation=operation
     )
-    revision = _select_filed_revision(catalogue.for_work_unit(str(work_unit.work_unit_id)))
+    revision = _select_filed_revision(catalogue.for_work_unit(work_unit.work_unit_id))
     if revision is not None:
         require_calculation_revision_coordinates_current(revision, operation=operation)
     return revision

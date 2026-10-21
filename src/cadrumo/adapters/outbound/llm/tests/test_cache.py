@@ -33,7 +33,7 @@ _CREATED_AT = datetime(2026, 5, 28, 12, 20, 0, tzinfo=UTC)
 def _response() -> LLMResponse:
     return LLMResponse(
         text="cached response",
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         model="claude-sonnet-4-6",
         input_tokens=10,
         output_tokens=2,
@@ -49,24 +49,24 @@ def test_cache_key_distinguishes_request_axes(tmp_path: Path) -> None:
 
     cache = LLMCache(root_dir=tmp_path)
     base = LLMRequest(prompt="Hello", temperature=0.0, language="es")
-    base_key = cache.build_key(base, LLMProvider.ANTHROPIC, "claude-sonnet-4-6")
+    base_key = cache.build_key(base, LLMProvider.AGENT, "claude-sonnet-4-6")
 
     different_prompt = cache.build_key(
         LLMRequest(prompt="World", temperature=0.0, language="es"),
-        LLMProvider.ANTHROPIC,
+        LLMProvider.AGENT,
         "claude-sonnet-4-6",
     )
     different_temperature = cache.build_key(
         LLMRequest(prompt="Hello", temperature=0.7, language="es"),
-        LLMProvider.ANTHROPIC,
+        LLMProvider.AGENT,
         "claude-sonnet-4-6",
     )
     different_language = cache.build_key(
         LLMRequest(prompt="Hello", temperature=0.0, language="en"),
-        LLMProvider.ANTHROPIC,
+        LLMProvider.AGENT,
         "claude-sonnet-4-6",
     )
-    different_model = cache.build_key(base, LLMProvider.ANTHROPIC, "claude-haiku-4-5")
+    different_model = cache.build_key(base, LLMProvider.AGENT, "claude-haiku-4-5")
 
     keys = [base_key, different_prompt, different_temperature, different_language, different_model]
     # Verify all keys are distinct by comparing each pair
@@ -127,9 +127,9 @@ def test_cache_hit_miss_and_stats(tmp_path: Path) -> None:
 
     cache = LLMCache(root_dir=tmp_path)
     request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
-    assert cache.read(request, LLMProvider.ANTHROPIC, "claude-sonnet-4-6") is None
+    assert cache.read(request, LLMProvider.AGENT, "claude-sonnet-4-6") is None
     cache.write(request, _response())
-    cached = cache.read(request, LLMProvider.ANTHROPIC, "claude-sonnet-4-6")
+    cached = cache.read(request, LLMProvider.AGENT, "claude-sonnet-4-6")
     assert cached is not None
     assert cached.cache_hit is True
     assert cached.cost_estimate_usd == Decimal("0")
@@ -158,7 +158,7 @@ def test_a_response_redaction_would_alter_is_never_replayed(tmp_path: Path) -> N
 
     cache.write(request, identity_bearing)
 
-    assert cache.read(request, LLMProvider.ANTHROPIC, "claude-sonnet-4-6") is None
+    assert cache.read(request, LLMProvider.AGENT, "claude-sonnet-4-6") is None
     assert cache.stats().entries == 0
 
 
@@ -201,7 +201,7 @@ def test_cache_reads_and_writes_reject_unsafe_model_identifiers(tmp_path: Path) 
     for model in unsafe_models:
         try:
             with pytest.raises(LLMCacheError):
-                cache.read(request, LLMProvider.ANTHROPIC, model)
+                cache.read(request, LLMProvider.AGENT, model)
             with pytest.raises(LLMCacheError):
                 cache.write(request, _response().model_copy(update={"model": model}))
         except AssertionError as exc:
@@ -209,7 +209,7 @@ def test_cache_reads_and_writes_reject_unsafe_model_identifiers(tmp_path: Path) 
 
 
 @pytest.mark.parametrize(
-    ("provider", "model"), [(LLMProvider.ANTHROPIC, "anthropic/claude-3-7-sonnet"), (LLMProvider.LOCAL, "qwen2.5vl:3b")]
+    ("provider", "model"), [(LLMProvider.AGENT, "anthropic/claude-3-7-sonnet"), (LLMProvider.LOCAL, "qwen2.5vl:3b")]
 )
 def test_cache_preserves_namespaced_and_tagged_model_identity(
     tmp_path: Path, provider: LLMProvider, model: str

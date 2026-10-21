@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..application.overview.applicability_evidence import (
     FilingYearApplicabilityEvidence,
     bind_filing_year_applicability_evidence,
@@ -42,7 +44,6 @@ from ..application.overview.read_projection import (
     OverviewStatusSnapshot,
 )
 from ..application.overview.read_request import OverviewReadKind, OverviewReadRequest
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.user_profile.profile_record_repository import ProfileRecordRepository
 from ..application.user_profile.projections import fact_value, projection_for_taxpayer, record_to_values
@@ -289,7 +290,7 @@ class _OverviewReadPorts:
             raise ValueError("calendar query requires a date window")
         rng = OverviewCalendarRange(from_date=request.from_date, to_date=request.to_date)
         calendar: OverviewCalendar | None = None
-        if request.all_profiles and record.setup_state is not ProfileSetupState.COMPLETE:
+        if (request.all_profiles is True) and record.setup_state is not ProfileSetupState.COMPLETE:
             active = None
             legal_ref = None
             notices = ()
@@ -337,7 +338,7 @@ class _OverviewReadPorts:
                     *pending_payer_fact_notices(record, operation=operation),
                 )
             )
-        if not request.all_profiles:
+        if request.all_profiles is not True:
             if active is None or calendar is None:
                 raise ValueError("bound calendar was not captured")
             return OverviewCalendarRead(

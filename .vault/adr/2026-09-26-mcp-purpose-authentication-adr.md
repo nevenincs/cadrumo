@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-04'
+modified: '2026-10-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:a4c0bab9bda3baa2953035bd77c2165d32a12fcd7524b4b8348de854fcadbcc7'
+body_hash: 'sha256:30afd895acad0ee2d04d9456dc69e7cc082a80d66261363dacd85fec89360e81'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -59,13 +59,17 @@ Do not supersede these multi-decision records wholesale. The focused amendments 
 
 The runtime cannot certify currently unvalidated durable-backend, calculation or filing edges. Ordinary automation does not gain live filing authority. No system-wide daemon, remote network service, pre-OS-login execution or bundled LLM scheduler is in scope.
 
+### 2026-10-10 authorized Windows optional-installation amendment
+
+The user's explicit continuation accepts the revised topology in 2026-10-04-runtime-manager-architecture-adr: optional machine installation owns an automatic SCM lifecycle broker, user installation owns unprivileged login startup, and a running GUI hosts the shared manager core when no installed manager owns its session. This supersedes earlier no-service, mandatory-installation and separate-manager-only statements within Windows product startup. The boot broker launches only verified machine-installed manager workers using genuine per-user logon tokens and owns no taxpayer runtime or credentials as SYSTEM. Native authentication, profile/session binding, runtime supervisor framing, operation custody and connect-only CLI/TUI/MCP remain unchanged. Registered service existence is distinct from running state and authenticated runtime readiness. Actual boot/login/service acceptance must be reported independently from authored metadata and command-only package fallback evidence.
+
 ## Implementation
 
 ### Purpose and ownership
 
 The MCP lets an agent discover supported operations, query the published authority, inspect authorized persisted work, perform authorized application operations, and obtain results with their provenance. Agents provide reasoning and orchestration. Cadrumo owns deterministic behavior, admission, persistence, domain policy and evidence.
 
-A local runtime is the authority for profile-session admission, grant invalidation, isolated execution and process ownership. It composes the existing application operation services for submission, observation, responses, cancellation, detach and reconciliation. CLI, TUI and MCP use that shared boundary; JSON command envelopes remain frontend projections rather than the internal dispatcher.
+The host in `src/cadrumo_runtime` is the authority for profile-session admission, grant invalidation, isolated execution and process ownership. `src/cadrumo` remains the tax application and AEAT command surface; neither it nor `src/cadrumo_client` imports the runtime host. Frontends use the shared client API in `src/cadrumo_client`, and the host composes the tax application. The `cadrumo-runtime` console binary remains the runtime entrypoint. This ownership refinement is authorized by the operator on 2026-10-14; it preserves the existing admission, custody and effect contracts. It composes the existing application operation services for submission, observation, responses, cancellation, detach and reconciliation. CLI, TUI and MCP use that shared boundary; JSON command envelopes remain frontend projections rather than the internal dispatcher.
 
 ```mermaid
 flowchart LR
@@ -86,7 +90,7 @@ No MCP tool exposes arbitrary shell execution, SQL, raw secure references, DEKs 
 
 ### Runtime ownership and connection
 
-One runtime instance owns each OS user and canonical Cadrumo storage root. OS login-session provenance is distinct from application-session identity; multiple login contexts may belong to the same runtime owner. Multiple profiles may be served, with independent bindings and no implicit cross-profile authority. Separate OS users run separate instances and credential stores.
+One runtime instance owns each OS user and canonical Cadrumo storage root. OS login-session provenance is distinct from application-session identity; multiple login contexts may belong to the same runtime owner. Multiple profiles may be served, with independent bindings and no implicit cross-profile authority, but at most one of them has a live human sign-in at a time. Any other profile is served only to an API key the person issued for it. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that several profiles could be signed in at once.) Separate OS users run separate instances and credential stores.
 
 An MCP host starts a small local stdio adapter. The adapter and CLI/TUI connect to the same owner-controlled runtime through the verified local endpoint. Runtime launch policy belongs to the per-user runtime manager in `2026-10-04-runtime-manager-architecture-adr`. The runtime starts without profiles unlocked. The API-key ADR governs subsequent credential proof and storage access.
 
@@ -158,7 +162,7 @@ Use a small stable orientation/status and authorization-request surface, publish
 
 Every tool path, execute-style call, private resource and operation-result read passes the same admission and disclosure checks. MCP never reconstructs application verdicts from localized CLI text. It reports the existing typed envelope semantics with stable codes and operation references.
 
-Local read permission and consent to send a projection to an agent host are separate. Enrollment names the destination and allowed categories. Source evidence bytes, passwords, keys and raw secure payloads do not enter MCP. Only registered authorized output projections may cross that boundary. Human screen visibility does not authorize off-host transfer.
+Local read permission and consent to send a projection to an agent host are separate. Enrollment names the destination and allowed categories. Source evidence bytes and raw secure payloads do not enter MCP results, as they enter no frontend's ordinary output. Passwords, keys and other secrets do not enter MCP at all, as text or by reference, and an operation that requires one is not served there. An enrolled key reaches the MCP server only through the person's launch configuration, by reference. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`. Earlier that day, under `2026-10-11-mcp-parity-full-parity-adr`, a password or key could enter MCP as a typed secret argument carried to the runtime's protected frame, or named by reference; before that passwords and keys did not enter MCP at all.) Only registered authorized output projections may cross that boundary, and a projection a session may read on the CLI it may read on MCP. Human screen visibility does not authorize off-host transfer.
 
 Delete the displaced identity-flag admission, password-file bootstrap, retained-password forwarding, CLI-wrapper execution path and unsafe timeout/process assumptions as the replacement is integrated. Remove their command/configuration options, tests and generated documentation through owning generators. Do not retain a compatibility mode. Actual code census determines deletions; names such as inprocess are not evidence of behavior.
 
@@ -170,7 +174,7 @@ Use the existing real operation, storage and authority boundaries. Prove idempot
 
 ### Authenticated local workbench projections
 
-The shared-runtime decision replaces the in-process topology assumption in 2026-09-04-tui-architecture-authenticated-tui-visibility-adr. An exact-profile, password-authenticated human CLI/TUI session may receive a registered owner-workbench projection through the verified local transport. Custody remains in the profile worker. The frontend receives display and navigation data without a DEK, direct repository access or execution authority derived from those values. Enrollment or API-key authentication does not confer this full-owner projection; MCP and other off-host destinations cannot request it.
+The shared-runtime decision replaces the in-process topology assumption in 2026-09-04-tui-architecture-authenticated-tui-visibility-adr. An exact-profile, password-authenticated human CLI/TUI session may receive a registered owner-workbench projection through the verified local transport. Custody remains in the profile worker. The frontend receives display and navigation data without a DEK, direct repository access or execution authority derived from those values. Enrollment or API-key authentication does not confer this full-owner projection. A human-kind session on MCP receives it as the CLI does. (Amended 2026-10-12 under `2026-10-11-mcp-parity-full-parity-adr`; before that MCP and other off-host destinations could not request it.)
 
 The projection has an explicit current strict schema and is retained only through canonical encrypted result custody. Its contract may carry the reviewed domain identities needed for profile binding, work-unit/revision/filing/lifecycle joins and truthful amendment display, plus catalogue-declared recovery actions. These are data and addresses, never admission or response capabilities. Existing exclusions in other canonical serializers remain unchanged. Every included excluded field must be individually declared and tested; new excluded fields fail projection conformance until separately reviewed. Credentials, raw secure references, source evidence bytes and response bearers remain absent.
 
@@ -189,3 +193,9 @@ Scope amendment accepted 2026-10-03 under the operator's explicit instruction to
 Scope amendment accepted 2026-10-04 under the operator's approval of `2026-10-04-runtime-manager-architecture-adr` and `2026-10-04-runtime-manager-architecture-supervisor-contract-adr`. Launch, restart and upgrade policy resolve to the per-user runtime manager. The runtime hosts only the private supervisor contract. The adapter still must not stop a shared runtime, and no management surface returns to the transport, CLI or TUI.
 
 It is not a security sandbox for arbitrary code already running as the same OS account. It does not validate domain edges by exposing them. Accepted 2026-09-26 on the operator's instruction to continue the presented plan after the documentation handoff. The plan separately records authorization for runtime implementation; acceptance does not claim implementation or platform readiness.
+
+## Amendment 2026-10-18: runtime authority boundary
+
+Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
+
+The wording "Profile-session and admitted-work inspection remain application capabilities." above is kept as accepted history. It now reads together with this ruling: Profile-session authority is the runtime's, implemented in `src/cadrumo_runtime`. Admitted-work inspection remains an application capability of the tax package, hosted by the runtime.

@@ -35,6 +35,7 @@ from dev._paths import REPO_ROOT
 
 from ..apidocs.manager import (
     API_SOURCE_PACKAGE,
+    API_SOURCE_ROOTS,
     EXCLUDED_FILENAME_PREFIXES,
     EXCLUDED_FILENAMES,
     EXCLUDED_PACKAGE_SEGMENTS,
@@ -58,8 +59,9 @@ def _walked_modules(src_package: Path) -> set[_Module]:
     """Return ``(dotted name, is_package)`` for every admitted module, by plain walk.
 
     Directories are pruned before descent -- a declared segment anywhere, or a
-    declared subtree at its package-relative position -- and files are admitted
-    unless their name is declared or carries a declared test prefix.
+    declared subtree in the primary application's package-relative position --
+    and files are admitted unless their name is declared or carries a declared
+    test prefix.
     """
     admitted: set[_Module] = set()
     for directory, subdirectories, filenames in os.walk(src_package):
@@ -67,7 +69,8 @@ def _walked_modules(src_package: Path) -> set[_Module]:
         subdirectories[:] = [
             name
             for name in subdirectories
-            if name not in EXCLUDED_PACKAGE_SEGMENTS and (*relative, name) not in EXCLUDED_SUBTREES
+            if name not in EXCLUDED_PACKAGE_SEGMENTS
+            and (src_package.name != API_SOURCE_PACKAGE or (*relative, name) not in EXCLUDED_SUBTREES)
         ]
         dotted_directory = ".".join((src_package.name, *relative))
         for filename in filenames:
@@ -84,7 +87,9 @@ def _walked_modules(src_package: Path) -> set[_Module]:
 
 def _population_findings(manager: ApiStubManager) -> list[str]:
     """Describe every way the generator's population differs from the plain walk."""
-    walked = _walked_modules(manager.src_cadrumo)
+    walked: set[_Module] = set()
+    for source_root in manager.source_roots:
+        walked.update(_walked_modules(source_root))
     generated = set(manager.discover_modules())
     findings = [f"dropped by the generator: {name}" for name, _ in sorted(walked - generated)]
     findings += [
@@ -97,16 +102,26 @@ def _unadmitted_overview_links(overview: str, modules: Iterable[_Module]) -> lis
     """Return module pages the overview links that the population does not generate."""
     names = {name for name, _ in modules}
     targets = {match.strip() for match in _DOC_ROLE.findall(overview)}
-    return sorted(target for target in targets if target.startswith(API_SOURCE_PACKAGE) and target not in names)
+    package_names = tuple(Path(root).name for root in API_SOURCE_ROOTS)
+    return sorted(
+        target
+        for target in targets
+        if any(target == package or target.startswith(f"{package}.") for package in package_names)
+        and target not in names
+    )
 
 
 def test_the_generator_admits_exactly_the_walked_population() -> None:
-    """The live generator and the plain walk agree on every module."""
-    manager = ApiStubManager(src_cadrumo=_SRC_PACKAGE, docs_api=REPO_ROOT / "docs" / "api")
-    walked = _walked_modules(_SRC_PACKAGE)
+    """The live five-package generator and the plain walks agree on every module."""
+    manager = ApiStubManager.for_repository(REPO_ROOT, docs_api=REPO_ROOT / "docs" / "api")
+    configured_roots = tuple(root.relative_to(REPO_ROOT).as_posix() for root in manager.source_roots)
+    assert configured_roots == API_SOURCE_ROOTS
+    walked: set[_Module] = set()
+    for source_root in manager.source_roots:
+        walked.update(_walked_modules(source_root))
     # A walk that found nothing agrees with a generator that found nothing.
-    assert any(is_package for _, is_package in walked), f"the walk of {_SRC_PACKAGE} admitted no package"
-    assert any(not is_package for _, is_package in walked), f"the walk of {_SRC_PACKAGE} admitted no module"
+    assert any(is_package for _, is_package in walked), "the walks of the first-party roots admitted no package"
+    assert any(not is_package for _, is_package in walked), "the walks of the first-party roots admitted no module"
 
     findings = _population_findings(manager)
 
@@ -114,8 +129,8 @@ def test_the_generator_admits_exactly_the_walked_population() -> None:
 
 
 def test_every_module_page_the_overview_links_is_generated() -> None:
-    """The authored layer map and the generated population agree on which layers are documented."""
-    manager = ApiStubManager(src_cadrumo=_SRC_PACKAGE, docs_api=REPO_ROOT / "docs" / "api")
+    """The authored layer map and generated population agree on documented pages."""
+    manager = ApiStubManager.for_repository(REPO_ROOT, docs_api=REPO_ROOT / "docs" / "api")
     overview = _API_OVERVIEW.read_text(encoding="utf-8")
     assert _DOC_ROLE.search(overview), f"{_API_OVERVIEW} links no module page; this check read nothing"
 
@@ -313,3 +328,8 @@ def test_a_dropped_layer_is_named_by_the_overview_check(tmp_path: Path) -> None:
 
     assert _unadmitted_overview_links(overview, _FIXTURE_ADMITTED) == []
     assert _unadmitted_overview_links(overview, widened) == [f"{API_SOURCE_PACKAGE}.core"]
+
+    sibling_link = "The client target is {doc}`cadrumo_client.missing_owner`.\n"
+    assert _unadmitted_overview_links(sibling_link, _FIXTURE_ADMITTED) == ["cadrumo_client.missing_owner"]
+    unrelated_prefix = "This is not a package target: {doc}`cadrumo_clientish.missing_owner`.\n"
+    assert _unadmitted_overview_links(unrelated_prefix, _FIXTURE_ADMITTED) == []

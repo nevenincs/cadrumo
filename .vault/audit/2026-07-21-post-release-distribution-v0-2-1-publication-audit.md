@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#post-release-distribution'
 date: '2026-07-21'
-modified: '2026-10-03'
-body_hash: 'sha256:b69f2489dc94fae6d1568fbafc3b2df8ca7cd2766492bd63457995fb8781c033'
+modified: '2026-10-21'
+body_hash: 'sha256:e783af05571d3355db64d6b3c54fc0f85864a7ad93b22b04cfc6bbe0755022a1'
 related: []
 ---
 
@@ -46,7 +46,7 @@ runs have produced one into this tree.
 
 ### publish-flag-unset | high | the publication opt-in variable is absent
 
-The repository defines the scoop-bucket, homebrew-tap and marketplace repository
+The repository defines the scoop-bucket and homebrew-tap repository
 variables and their tokens, and the `pypi`, `pypi-data-manuals`,
 `pypi-data-official` and `release` environments all exist. The one missing
 prerequisite is the publish opt-in variable, which Gate 1 requires; without it

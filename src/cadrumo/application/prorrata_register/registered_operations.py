@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..ledger.read_access import resolve_ledger_read_access
 from ..modelo.calculation_action_ports import CalculationActionPortsFactory
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
@@ -11,13 +13,10 @@ from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CA
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationResultProjector,
 )
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from . import operation_requests as _requests
 from . import result_contracts as _result_contracts
@@ -85,6 +84,7 @@ def _definition(
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=_result_contracts.ProrrataOperationExecutionResult,
         executor_type=_ProrrataOperationExecutor,
         build=lambda: _ProrrataOperationExecutor(
@@ -93,7 +93,6 @@ def _definition(
             calculation_action_ports_factory=calculation_action_ports_factory,
         ),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=shape.refusal_codes,
     )
 

@@ -39,5 +39,5 @@ def test_host_resolver_replays_original_and_normalized_link_fixtures(tmp_path: P
         with pytest.raises(CoreValidationError) as error:
             storage_root_for(environment, StorageModeEvidence(StorageMode.INSTALLED, None))
         assert error.value.context is not None
-        assert error.value.context["storage_root_refusal"] == vector.refusal.value
+        assert error.value.context["storage_root_refusal"] == vector.refusal
     assert not (tmp_path / "selected").exists() and not (tmp_path / "missing").exists()

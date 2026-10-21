@@ -16,7 +16,7 @@ individual node loaded anything, so one process settles hundreds of nodes. The
 exceptions are then probed one at a time, because there the claim is about each
 node specifically.
 
-Six nodes do not defer yet. Each is named with what it loads and why, and
+Five nodes do not defer yet. Each is named with what it loads and why, and
 a stale case deletes an entry the moment the node stops loading -- so the list
 cannot outlive the problem and start excusing a regression.
 """
@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 #: Nodes whose resolution still loads capability families, with the cause.
 #:
-#: The causes are shared, not six separate defects: a CommandSpec parameter
+#: The causes are shared, not five separate defects: a CommandSpec parameter
 #: ANNOTATION is a deferred target, so building a node's Typer signature imports
 #: whatever module owns each annotated type -- and several of those are package
 #: roots that import heavy siblings eagerly.
@@ -41,7 +41,6 @@ _RESOLUTION_LOADERS: dict[str, str] = {
     "app/modelo/work/verify": "annotation pulls registry and persistence it may use only at execution",
     "app/modelo/work/amend": "annotation pulls the registry it may use only at execution",
     "app/modelo/casillas": "annotation pulls the registry package root",
-    "app/modelo/reconcile/import": "annotation pulls the registry package root",
     "app/review/queue": "annotation resolves through application.review -> domain.calculations",
 }
 

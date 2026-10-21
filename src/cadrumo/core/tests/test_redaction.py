@@ -144,6 +144,55 @@ def test_cli_output_structured_redacts_keyed_values_and_string_leaves() -> None:
     assert payload["nested"][_OTHER_OBJECT_KEY] == "second object keyed"
 
 
+def test_cli_output_keeps_only_canonical_control_reference_uuids_public() -> None:
+    public_ids = {
+        "request_id": "f2be243a-20a6-4129-b757-365835996af7",
+        "grant_id": "f442b03d-613d-4704-af63-77013e55148a",
+        "key_id": "15238f9b-1a56-49cf-8ddf-dca5e1a83732",
+        "credential_reference": "12dc2035-61f4-44fd-8d12-76f8af51dcb3",
+        "session_id": "7ef3c8c7-2378-46cc-9360-bce0bdc2f3b5",
+        "target_session_id": "a2a685f1-3868-4e4a-a00d-a42679c71788",
+        "parent_session_id": "b2a685f1-3868-4e4a-a00d-a42679c71788",
+    }
+
+    rendered = redact_structured_for_cli_output(
+        {
+            **public_ids,
+            "profile_id": _PROFILE_ID,
+            "bucket_id": _PROFILE_ID,
+            "target_id": _PROFILE_ID,
+        },
+    )
+
+    assert {key: rendered[key] for key in public_ids} == public_ids
+    assert rendered["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert rendered["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
+    assert rendered["target_id"] == CLI_PROFILE_ID_PLACEHOLDER
+    references = {
+        "session_ids": [public_ids["session_id"], _NIF],
+        "reactivated_grants": [public_ids["grant_id"], _OBJECT_KEY],
+    }
+    assert redact_structured_for_cli_output(references) == {
+        "session_ids": [public_ids["session_id"], "sha256:1c9f9632"],
+        "reactivated_grants": [public_ids["grant_id"], CLI_OBJECT_KEY_PLACEHOLDER],
+    }
+
+    sensitive_non_ids = {
+        "request_id": _NIF,
+        "grant_id": f"Bearer {_JWT}",
+        "key_id": _OBJECT_KEY,
+        "credential_reference": _URL,
+        "session_id": f"{_PROFILE_ID}/suffix",
+    }
+    redacted = redact_structured_for_cli_output(sensitive_non_ids)
+
+    assert redacted["request_id"] == "sha256:1c9f9632"
+    assert "token:sha256:" in redacted["grant_id"]
+    assert redacted["key_id"] == CLI_OBJECT_KEY_PLACEHOLDER
+    assert redacted["credential_reference"] == "https://example.test"
+    assert redacted["session_id"] != sensitive_non_ids["session_id"]
+
+
 def test_cli_output_text_bucket_id_tabular_heuristic_cases() -> None:
     """Headers pass through, but genuine ``key<TAB>value`` rows still redact."""
 

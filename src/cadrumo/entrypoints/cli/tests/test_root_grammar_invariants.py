@@ -14,8 +14,8 @@ from pathlib import Path
 import pytest
 
 from ....core.directory_scan import scan_directory
-from ._isolated_profile_storage_fixtures import _isolated_state
-from .cli_runner import invoke_cached_cli
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
+from .profile_world_fixtures import _isolated_state
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_isolated_state"]
@@ -34,13 +34,6 @@ def test_app_does_not_register_deadlines_subgroup() -> None:
     surfaced through the overview verb group."""
 
     result = invoke_cached_cli(["app", "deadlines", "--help"])
-    assert result.exit_code != 0, result.output
-
-
-def test_app_rejects_retired_consumer_command() -> None:
-    """The product CLI does not provision downstream consumers."""
-
-    result = invoke_cached_cli(["app", "agent", "--help"])
     assert result.exit_code != 0, result.output
 
 

@@ -55,15 +55,11 @@ from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.iva_category_resolution import IvaCategoryOutcome
-from cadrumo.domain.iva.classification import (
-    CustomerTaxStatus,
-    InvoiceKind,
-    IvaInvoiceClassificationCriteria,
-    IvaTerritorialScope,
-    TransactionKind,
-)
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from cadrumo.domain.iva.supply_nature import SupplyNature
+
+from ....domain.iva.classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, TransactionKind
+from ....domain.iva.schema import InvoiceKind, IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

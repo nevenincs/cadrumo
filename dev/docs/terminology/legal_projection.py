@@ -84,7 +84,7 @@ def project_legal_search_records(repo_root: Path | None = None) -> tuple[LegalSe
 
 def _description(record: LegalProvisionRecord) -> str:
     """Return authored legal text, falling back only to the authored id."""
-    if record.notes:
+    if record.notes is not None and record.notes:
         return record.notes
     if record.required_text:
         return "; ".join(record.required_text)
@@ -104,7 +104,7 @@ def _search_aliases(record: LegalProvisionRecord) -> tuple[str, ...]:
     seen: set[str] = {record.legal_id}
     aliases: list[str] = []
     for value in candidates:
-        if value and value not in seen:
+        if (value is not None and value) and value not in seen:
             seen.add(value)
             aliases.append(value)
     return tuple(aliases)

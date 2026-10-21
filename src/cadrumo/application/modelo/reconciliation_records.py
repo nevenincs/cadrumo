@@ -40,21 +40,10 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.filing_text import ModeloActorLabel
+from .reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-
-
-class ModeloReconciliationEvidenceKind(StrEnum):
-    """Closed external-evidence labels accepted by reconciliation commands.
-
-    ``DECLARATION`` performs casilla-level reconciliation for modelos in
-    :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS`; other modelos raise
-    :class:`ReconciliationDeclaracionSourceUnsupportedError`.
-    """
-
-    JUSTIFICANTE = "justificante"
-    DECLARATION = "declaration"
 
 
 class ModeloReconciliationVerdict(StrEnum):

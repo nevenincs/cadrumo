@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -30,10 +32,8 @@ from ..operations.profile_guard import (
     require_operation_profile,
 )
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .history import WorkUnitHistory, assemble_work_unit_history
 from .history_ports import ModeloHistoryPorts, ModeloHistoryPortsFactory
@@ -165,11 +165,11 @@ def build_modelo_work_history_definition(factory: ModeloHistoryPortsFactory) -> 
     return build_single_phase_definition(
         definition_id=MODELO_WORK_HISTORY_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkHistoryRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field("work_unit_id"),
         result_type=ModeloWorkHistoryProjection,
         executor_type=ModeloWorkHistoryExecutor,
         build=lambda: ModeloWorkHistoryExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

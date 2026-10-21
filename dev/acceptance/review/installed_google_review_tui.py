@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
@@ -25,13 +25,11 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Link, Static
 
 import cadrumo
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.profile_access import status_admits_session
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import sha256_file
 from cadrumo.core.i18n.render import output_language
+from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.review_publication_labels import GoogleReviewLabels
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.declarations.grouped import GroupedDeclarationsScreen
@@ -39,7 +37,10 @@ from cadrumo.entrypoints.tui.google_saved_review import GoogleSavedReviewModal, 
 from cadrumo.entrypoints.tui.home import HomeScreen
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1
-from cadrumo.entrypoints.tui.runtime_workbench import RuntimeWorkbenchRoot
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.profile_access import status_admits_session
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_runtime.host.frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
 
 
 class GoogleReviewTuiAcceptanceError(RuntimeError):
@@ -181,7 +182,7 @@ async def _until[T](
 ) -> None:
     while not predicate():
         refused = None if refusal is None else refusal()
-        if refused:
+        if refused is not None and refused:
             _capture_public_failure(pilot.app, output_dir, stage=stage, reason=refused)
             raise GoogleReviewTuiAcceptanceError(f"TUI acceptance refused at {stage}; inspect failure.json")
         if monotonic() >= deadline:
@@ -191,7 +192,7 @@ async def _until[T](
 
 
 @asynccontextmanager
-async def _reject_failed_prepublication(app: CadrumoTuiApp, output_dir: Path) -> AsyncIterator[None]:
+async def _reject_failed_prepublication(app: CadrumoTuiApp, output_dir: Path) -> AsyncGenerator[None]:
     """Reject only this still-live session's untouched review after an acceptance failure."""
     try:
         yield
@@ -215,7 +216,7 @@ async def _reject_failed_prepublication(app: CadrumoTuiApp, output_dir: Path) ->
 
 
 async def run_google_saved_review_tui(
-    client: RuntimeFrontendClient,
+    client: FrontendClient,
     *,
     work_unit_id: str,
     calculation_revision_id: str,
@@ -231,7 +232,7 @@ async def run_google_saved_review_tui(
     supply its existing synthetic profile and a native-authenticated TUI lease.
     No replacement runtime, sign-in, recovery, consent or publication is retried.
     """
-    if not isinstance(client, RuntimeFrontendClient) or client.frontend is not OperationFrontendProjection.TUI:
+    if not isinstance(client, FrontendClient) or client.frontend is not OperationFrontendProjection.TUI:
         raise GoogleReviewTuiAcceptanceError("acceptance requires a real native TUI client")
     if seconds <= 0 or not work_unit_id or not re.fullmatch(r"[0-9a-f]{64}", calculation_revision_id):
         raise GoogleReviewTuiAcceptanceError("acceptance selection or deadline is invalid")
@@ -248,11 +249,15 @@ async def run_google_saved_review_tui(
     output_dir.mkdir(parents=True, exist_ok=False)
     deadline = monotonic() + seconds
 
-    async def no_recovery() -> RuntimeFrontendClient:
-        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+    async def no_recovery() -> FrontendClient:
+        raise RefusalError(RefusalCode.UNAVAILABLE)
 
     root = RuntimeWorkbenchRoot(
-        client, profile_label=profile_label, output_language=language, open_recovery_client=no_recovery
+        client,
+        profile_label=profile_label,
+        output_language=language,
+        open_recovery_client=no_recovery,
+        operation_registry=build_production_operation_registry,
     )
     app = CadrumoTuiApp(load_root=root.load)
     screenshots: list[tuple[str, str]] = []

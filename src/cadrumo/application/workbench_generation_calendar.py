@@ -252,7 +252,7 @@ def read_workbench_calendar_inputs(
         applicability_evidence=bind_filing_year_applicability_evidence(
             record=record,
             schema=operation.profile_schema(),
-            bucket_id=str(record.profile_id),
+            bucket_id=record.profile_id,
             invoice_source_ports=invoice_source_ports,
             operation=operation,
             today=as_of,

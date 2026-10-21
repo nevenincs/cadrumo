@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from .....application.modelo.work_form_models import ModeloFormAddressV1, ModeloFormField, ModeloFormScalar
@@ -44,6 +44,15 @@ class ModeloWorkbenchReaderV1(Protocol):
 
     def edit_refusal(self) -> str | None:
         """Why the declaration last read cannot be edited, in the filer's words; ``None`` when it can."""
+        ...
+
+
+@runtime_checkable
+class ModeloWorkbenchLanguageReaderV1(Protocol):
+    """Optional presentation read which never replaces the held edit admission."""
+
+    def relocalize(self, language: OutputLanguage) -> ModeloWorkFormLoadV1 | None:
+        """Return reworded projection only while its exact held coordinates still match."""
         ...
 
 

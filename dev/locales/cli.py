@@ -10,7 +10,7 @@ import typer
 
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
-from ._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, PENDING_CASILLA_INSTALL_DIR, SRC_DIR
+from ._paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, PENDING_CASILLA_INSTALL_DIR, SRC_DIR
 from ._registry_scanner import scan_modelo_schema_keys
 from ._signal import locale_signal
 from ._status import CatalogueStatusRecord, catalogue_status
@@ -34,7 +34,7 @@ app = typer.Typer(name="locales", help="Audit and scaffold locale catalogues", n
 
 
 def _default_manager() -> LocaleManager:
-    return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
+    return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=LOCALE_SOURCE_EXTRA_DIRS)
 
 
 @app.command("audit")

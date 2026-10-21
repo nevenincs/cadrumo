@@ -17,7 +17,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqsj1f9nmsbbjdthmiobc:
           label: 'Kapcsolt féllel kötött ügylet 1: családnév és utónév, vagy cégnév'
         x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqt39e1niqtj9dphnar31cdkmurg:
-          help: '1. sor: adja meg a kapcsolattípusok hivatalos táblázatának kulcsát
+          help: '1. sor: add meg a kapcsolattípusok hivatalos táblázatának kulcsát
             (A-tól H-ig), például D-t ugyanazon csoporthoz tartozó két társaság esetén.'
           label: 'Kapcsolt féllel kötött ügylet 1: a kapcsolat típusa'
         x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qpjads:
@@ -31,7 +31,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qsj1f9nmsbbjdthmiobc:
           label: 'Kapcsolt féllel kötött ügylet 2: családnév és utónév, vagy cégnév'
         x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qt39e1niqtj9dphnar31cdkmurg:
-          help: '2. sor: adja meg a kapcsolattípusok hivatalos táblázatának kulcsát
+          help: '2. sor: add meg a kapcsolattípusok hivatalos táblázatának kulcsát
             (A-tól H-ig), például D-t ugyanazon csoporthoz tartozó két társaság esetén.'
           label: 'Kapcsolt féllel kötött ügylet 2: a kapcsolat típusa'
         x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqpjads:
@@ -45,7 +45,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqsj1f9nmsbbjdthmiobc:
           label: 'Kapcsolt féllel kötött ügylet 3: családnév és utónév, vagy cégnév'
         x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqt39e1niqtj9dphnar31cdkmurg:
-          help: '3. sor: adja meg a kapcsolattípusok hivatalos táblázatának kulcsát
+          help: '3. sor: add meg a kapcsolattípusok hivatalos táblázatának kulcsát
             (A-tól H-ig), például D-t ugyanazon csoporthoz tartozó két társaság esetén.'
           label: 'Kapcsolt féllel kötött ügylet 3: a kapcsolat típusa'
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bb3dhgncp9de1gmiso:
@@ -175,7 +175,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
           label: 'Adóparadicsomi értékpapír 1: a részesedés százaléka'
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9dehkn0ro:
-          help: '1. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+          help: '1. sor: add meg a hivatalos táblázat kulcsát: A az e területeken
             illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
             létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
             másodlagos piacokon jegyzett kamatozó értékpapírok.'
@@ -190,7 +190,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5lo6usj3cln78obackmn0obiehkm6qbgc5hmirre:
           label: 'Adóparadicsomi értékpapír 10: a részesedés százaléka'
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5lq6is3f:
-          help: '10. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+          help: '10. sor: add meg a hivatalos táblázat kulcsát: A az e területeken
             illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
             létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
             másodlagos piacokon jegyzett kamatozó értékpapírok.'
@@ -205,7 +205,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5lo6usj3cln78obackmn0obiehkm6qbgc5hmirre:
           label: 'Adóparadicsomi értékpapír 11: a részesedés százaléka'
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5lq6is3f:
-          help: '11. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+          help: '11. sor: add meg a hivatalos táblázat kulcsát: A az e területeken
             illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
             létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
             másodlagos piacokon jegyzett kamatozó értékpapírok.'
@@ -220,7 +220,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5lo6usj3cln78obackmn0obiehkm6qbgc5hmirre:
           label: 'Adóparadicsomi értékpapír 12: a részesedés százaléka'
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5lq6is3f:
-          help: '12. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+          help: '12. sor: add meg a hivatalos táblázat kulcsát: A az e területeken
             illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
             létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
             másodlagos piacokon jegyzett kamatozó értékpapírok.'
@@ -234,7 +234,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
           label: 'Adóparadicsomi értékpapír 2: a részesedés százaléka'
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchdehkn0ro:
-          help: '2. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+          help: '2. sor: add meg a hivatalos táblázat kulcsát: A az e területeken
             illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
             létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
             másodlagos piacokon jegyzett kamatozó értékpapírok.'
@@ -248,7 +248,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
           label: 'Adóparadicsomi értékpapír 3: a részesedés százaléka'
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpdehkn0ro:
-          help: '3. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+          help: '3. sor: add meg a hivatalos táblázat kulcsát: A az e területeken
             illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
             létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
             másodlagos piacokon jegyzett kamatozó értékpapírok.'
@@ -262,7 +262,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
           label: 'Adóparadicsomi értékpapír 4: a részesedés százaléka'
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1dehkn0ro:
-          help: '4. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+          help: '4. sor: add meg a hivatalos táblázat kulcsát: A az e területeken
             illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
             létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
             másodlagos piacokon jegyzett kamatozó értékpapírok.'
@@ -276,7 +276,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
           label: 'Adóparadicsomi értékpapír 5: a részesedés százaléka'
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9dehkn0ro:
-          help: '5. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+          help: '5. sor: add meg a hivatalos táblázat kulcsát: A az e területeken
             illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
             létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
             másodlagos piacokon jegyzett kamatozó értékpapírok.'
@@ -290,7 +290,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
           label: 'Adóparadicsomi értékpapír 6: a részesedés százaléka'
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhdehkn0ro:
-          help: '6. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+          help: '6. sor: add meg a hivatalos táblázat kulcsát: A az e területeken
             illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
             létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
             másodlagos piacokon jegyzett kamatozó értékpapírok.'
@@ -304,7 +304,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
           label: 'Adóparadicsomi értékpapír 7: a részesedés százaléka'
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpdehkn0ro:
-          help: '7. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+          help: '7. sor: add meg a hivatalos táblázat kulcsát: A az e területeken
             illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
             létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
             másodlagos piacokon jegyzett kamatozó értékpapírok.'
@@ -318,7 +318,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
           label: 'Adóparadicsomi értékpapír 8: a részesedés százaléka'
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1dehkn0ro:
-          help: '8. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+          help: '8. sor: add meg a hivatalos táblázat kulcsát: A az e területeken
             illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
             létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
             másodlagos piacokon jegyzett kamatozó értékpapírok.'
@@ -332,7 +332,7 @@ modelo:
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
           label: 'Adóparadicsomi értékpapír 9: a részesedés százaléka'
         x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9dehkn0ro:
-          help: '9. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+          help: '9. sor: add meg a hivatalos táblázat kulcsát: A az e területeken
             illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
             létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
             másodlagos piacokon jegyzett kamatozó értékpapírok.'

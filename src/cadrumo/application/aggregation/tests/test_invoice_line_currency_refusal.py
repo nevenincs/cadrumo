@@ -40,9 +40,9 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva.classification import InvoiceKind, TransactionKind
+from ....domain.iva.classification import TransactionKind
 from ....domain.iva.oss import OssIossRegime
-from ....domain.iva.schema import IvaRateKind
+from ....domain.iva.schema import InvoiceKind, IvaRateKind
 from .._modelo_bindings_invoice_iva import _screened_invoice_line_observations
 from ..errors import AggregationValidationError
 from ..oss_ioss import _candidate_for_invoice_line

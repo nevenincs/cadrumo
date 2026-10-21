@@ -8,6 +8,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..application.calculations.relation_prefill import resolve_relations_from_local_store
 from ..application.modelo.modelo_spreadsheet_operation_contracts import (
     ModeloSpreadsheetOperationPorts,
@@ -22,7 +24,6 @@ from ..application.storage.calc_sheets.records import (
     RelationValues,
     SheetExportPlan,
 )
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation

@@ -61,7 +61,20 @@ def test_application_probe_receives_extracted_root_and_controls_acceptance(
             "abi": 1,
         },
         "python": "3.13.11",
+        "files": {},
         "distributions": {"fixture-product": "1.0"},
+        # The interpreter banner reports the hosts' own component build, not the package's.
+        "components": [
+            {
+                "role": "interpreter",
+                "path": "python.exe",
+                "version": "1.0",
+                "build_id": "2026100401",
+                "build_sequence": 42,
+                "build_date": "2026-10-04",
+                "display_version": "1.0+2026100401",
+            }
+        ],
     }
     (tmp_path / "build-paths.json").write_text(
         json.dumps({"paths": {"verification": "verification"}}), encoding="utf-8"
@@ -87,11 +100,6 @@ def test_application_probe_receives_extracted_root_and_controls_acceptance(
         },
     }
     (tmp_path / "artifacts-Release.json").write_text(json.dumps(locator), encoding="utf-8")
-    monkeypatch.setattr(
-        artifact_verify,
-        "load_layout",
-        lambda target: {"backend": "windows", "files": {"package_manifest": "data/package-manifest.json"}},
-    )
     monkeypatch.setattr(artifact_verify, "backend", lambda _: SimpleNamespace(external_probe=lambda _: ["fixture"]))
     accepted_roots: list[Path] = []
 
@@ -110,7 +118,8 @@ def test_application_probe_receives_extracted_root_and_controls_acceptance(
         if argv[0] == sys.executable:
             return run_command(argv, cwd=cwd, environment=environment, timeout_seconds=timeout_seconds)
         now = datetime.now(UTC)
-        return CommandResult(tuple(argv), str(tmp_path), now, now, 0, 0, json.dumps(manifest["build"]), "")
+        banner = json.dumps({"build": manifest["build"], "interpreter": manifest["components"]})
+        return CommandResult(tuple(argv), str(tmp_path), now, now, 0, 0, banner, "")
 
     monkeypatch.setattr(artifact_verify, "run_command", dispatch)
     observed = tmp_path / "observed-root.txt"

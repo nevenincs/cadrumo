@@ -3,13 +3,14 @@ tags:
   - '#adr'
   - '#application-packaging'
 date: '2026-10-03'
-modified: '2026-10-04'
+modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:d44d35421b0afee375c8efdd41267d4936ac2edd2a1e4adb3c2a9264b28c4c4b'
+body_hash: 'sha256:b374e34966f340e5d4f428b6a6cf313bc3f5a0118132bff198cfb006f63c88f3'
 related:
   - "[[2026-10-03-application-packaging-research]]"
   - "[[2026-10-03-application-packaging-adr]]"
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
+  - '[[2026-10-13-canonical-environment-application-internals-adr]]'
 ---
 # `application-packaging` adr: `authorized interpreter foundation` | (**status:** `accepted`)
 
@@ -31,17 +32,21 @@ The existing research and proposed packaging ADR remain the design context. Sett
 
 Acceptance is based on the user's explicit 2026-10-03 foundation brief and subsequent instruction to keep work to application layout and Python provisioning. It does not accept the unresolved choices in `2026-10-03-application-packaging-adr`. Tauri remains settled but unimplemented here. Linux has a mapping only; macOS implementation is deferred. No installer, provisioning service, runtime manager or storage migration is authorized. Existing local storage is ignored for this work as the user directed; core development defaults remain unchanged.
 
-The native application consumes the existing Python product and its three exact-version distributions. Existing encryption, authentication, bucket/keystore separation and application authority remain unchanged. Native bootstrap supplies the packaged Settings environment before Python starts; it does not reimplement business configuration.
+The native application consumes the existing Python product and its three exact-version distributions. Existing encryption, authentication, bucket/keystore separation and application authority remain unchanged. Native bootstrap defines each packaged image's process environment from its launch profile in `native/application-environment.toml` before Python starts; it does not reimplement business configuration. (Amended 2026-10-13 under `2026-10-13-canonical-environment-application-internals-adr`; before that this read: "Native bootstrap supplies the packaged Settings environment before Python starts")
 
 ## Implementation
 
-Authored sources are `native/interpreter/`, `native/platform/`, `native/package-layout.json`, `native/toolchain.json` and `dev/packaging/native/`. Generated bindings, SDK acquisition, builds and assembly stay under `.artifacts/native/`. The generator projects Settings names, identity and storage declarations; package-specific paths have one JSON owner. `native/CONTRACT.md` records the platform matrix.
+Authored sources are `native/interpreter/`, `native/platform/`, `native/package-layout.json`, `native/toolchain.json` and `dev/packaging/native/`. Generated bindings, SDK acquisition, builds and assembly stay under `.artifacts/native/`. The generator projects the package environment declaration and identity; package-specific paths have one JSON owner. (Amended 2026-10-13 under `2026-10-13-canonical-environment-application-internals-adr`; before that this read: "The generator projects Settings names, identity and storage declarations") `native/CONTRACT.md` records the platform matrix.
 
 Use the existing 3.13.11 release pin with the official CPython NuGet SDK, SHA256-pinned in the toolchain input. Compile the C host and bridge with matching headers and import library. This first build consumes upstream CPython binaries; it does not rebuild CPython from source. No CPython patch is required. The full 3.13 initialization API configures isolated import paths, disabled site/user-site and bytecode writes, explicit executable identity, UTF-8 streams and normal invocation parsing. The static host establishes restricted DLL lookup before loading the bundled Python DLL and initialization bridge.
 
 The assembler maps qualified extension names to relocated native files under `bin/python`, rejects conflicting DLL basenames and unreviewed `.pth` files, and projects pywin32's required path entries without executing its `.pth` bootstrap. Two checked package adaptations address PDFium's explicit DLL location and pywin32's registry-derived extension/cache locations. pywin32 public COM aliases resolve to bundled extensions and its generated cache belongs under the declared user cache; before/after hashes are recorded. Authority is relocated once to `data/authority` and selected through the existing Settings field.
 
 The packaged mutable root is Windows Known Folder LocalAppData plus `cadrumo`, with secure storage under `data` and temporary files under `tmp`. Inherited Settings/Python path overrides are cleared. The initial non-secret override allowlist is empty. This is controlled environment configuration, not an arbitrary-code security sandbox. Full process write tracing remains an acceptance obligation; Python audit events alone are insufficient.
+
+### 2026-10-09 user-authorized standalone interpreter correction
+
+The user requires the interpreter build itself to produce a runnable Python distribution including python.zip, site initialization and site-packages, in the same package structure used by subsequent application assembly. Python construction does not depend on documentation or application packaging. This supersedes the disabled-site requirement above: CPython initializes site by default and explicit -S retains its standard meaning. Environment-derived Python paths and user-site packages remain excluded. The python and python_d CMake targets assemble stage/<Config>/app through the shared application assembler. The standalone variant contains no application wheels, application images or user documentation; the later application target assembles that same layout with its additional inputs.
 
 ## Rationale
 
@@ -82,8 +87,7 @@ mapping obligations remain open; no placeholder implementation implies support.
 The user subsequently directed this work to consume the existing core storage
 owner and preserve repository-local development defaults and explicit overrides.
 This supersedes the earlier Known Folder and empty-override policy paragraphs.
-Native generation projects `Settings.storage_env_var_names()` and storage taxonomy
-values. The interpreter consumes the installed per-user default declared by the core
+Native generation projects `native/application-environment.toml`; it does not derive the environment contract from the CLI. (Amended 2026-10-13 under `2026-10-13-canonical-environment-application-internals-adr`; before that this read: "Native generation projects `Settings.storage_env_var_names()` and storage taxonomy values.") The interpreter consumes the installed per-user default declared by the core
 storage owner in `2026-10-04-canonical-environment-adr` and migrates no storage. Package-specific external binary directories are explicitly
 allowlisted; they affect executable PATH without widening DLL search.
 
@@ -98,3 +102,7 @@ The later accepted application-distribution ADR authorizes native installer defi
 ## 2026-10-04 runtime manager extension
 
 The accepted `2026-10-04-runtime-manager-architecture-adr` authorizes the per-user runtime manager (`cadrumo-manager`) on top of this foundation's platform crate. It extends this foundation's runtime-manager exclusion only. Roots and child environments still come from `native/platform`, and the interpreter, storage and loader contracts are unchanged.
+
+## 2026-10-16 externally managed builder amendment
+
+The user's explicit no-environment/no-local-cache instruction, recorded in 2026-10-16-native-build-incremental-adr, supersedes build-local environment provisioning. CMake selects and validates an existing developer interpreter with the release runtime's major/minor and at least its pinned patch; the packaged runtime and SDK retain their exact pin. It never synchronizes dependencies or creates a virtual environment. Machine uv configuration remains authoritative. Build-owned dependency outputs move from `_deps` to `inputs` within the same enrolled binary directory; final application paths stay unchanged. Build actions do not write to repository `var`. This is a development-build exception only and changes no installed runtime storage policy.

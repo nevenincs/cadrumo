@@ -13,6 +13,8 @@ formatting. Shape-based NIF, URL, and bearer-token matching is delegated
 to :func:`~cadrumo.core.redaction.rules.redact_for_log`; this module keeps only
 logging-specific key-paired placeholders such as cookies, passphrases, and
 certificate serial suffixes.
+Callers must omit private values before logging: the scrubber cannot infer
+that an ordinary decimal or validation input is taxpayer data.
 
 Encoded document payloads are contained at two seams, because the diagnostic
 log is plaintext on disk and a scanned invoice that reaches it has left secure
@@ -32,17 +34,14 @@ log records and plaintext diagnostic log files rooted by settings.
 from __future__ import annotations
 
 import logging
-import logging.config
-import logging.handlers
 import re
 import sys
 from collections import deque
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Generator, Iterable, Iterator, Mapping
+from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, overload, override
-
-from pydantic import ConfigDict, RootModel
 
 if TYPE_CHECKING:
     from .observability.context import RunContextInfo
@@ -90,51 +89,8 @@ SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
 )
 """Log-message KEY-NAME redaction vocabulary: :data:`ALWAYS_REDACT_KEY_TERMS`
 (the tree-wide shared base) plus this module's own generic logging-domain
-additions. See :data:`cadrumo.core.redaction.ALWAYS_REDACT_KEY_TERMS` for why
+additions. See :data:`cadrumo.core.redaction.rules.ALWAYS_REDACT_KEY_TERMS` for why
 the base is never redeclared independently."""
-
-
-LogExtraValue = str | int | float | bool | None
-"""Closed union of stdlib-loggable scalar types accepted by :class:`LogExtra`."""
-
-
-#: dictConfig resolves a handler by dotted path, so the name must be a string.
-#: Derived from the class rather than hand-spelled: the literal and the import
-#: below could otherwise drift apart, and a typo would only surface at the first
-#: file-logging run.
-_ROTATING_FILE_HANDLER_PATH = (
-    f"{logging.handlers.RotatingFileHandler.__module__}.{logging.handlers.RotatingFileHandler.__qualname__}"
-)
-
-
-class LogExtra(RootModel[dict[str, LogExtraValue]]):
-    """Typed logging ``extra`` payload restricted to flat loggable scalars.
-
-    Upgrades the historical ``Mapping[str, object]`` return annotation on
-    service-layer ``as_extra()`` log-field helpers (e.g.
-    :class:`~cadrumo.application.aggregation.service.PerModeloAggregationLogFields`,
-    :class:`~cadrumo.application.operator_surface.models.OperatorSurfaceContract`'s
-    ``log_fields``): every current emitter only ever writes flat, non-secret
-    scalars into :meth:`logging.Logger.debug`'s ``extra=`` mapping, so
-    accepting bare ``object`` values understated the real contract. A future
-    field that accidentally carried a nested mapping, a Decimal, or another
-    non-serialisable value now fails loudly at construction with a
-    :class:`pydantic.ValidationError` naming the offending field, instead of
-    surfacing later as a JSONL-sink serialisation surprise.
-
-    Use :meth:`for_logging` to materialise the plain ``dict`` the stdlib
-    ``logging`` module's ``extra=`` parameter expects; the model itself is not
-    iterable the way :meth:`logging.Logger.makeRecord` requires.
-    """
-
-    # NOT the canonical STRICT_FROZEN_CONFIG: this is a RootModel, and pydantic
-    # refuses `extra` on one outright, while the canonical carries
-    # extra="forbid". A constraint-shape divergence, not a weaker config.
-    model_config = ConfigDict(frozen=True)
-
-    def for_logging(self) -> dict[str, LogExtraValue]:
-        """Return the payload as the plain ``dict`` ``logging`` extras expect."""
-        return dict(self.root)
 
 
 def _is_cli_metadata_invocation() -> bool:
@@ -559,9 +515,10 @@ def _scrub_record_args(record: logging.LogRecord, message: object) -> None:
 
 def _scrub_record_exception(record: logging.LogRecord) -> None:
     """Scrub formatted exception text while retaining the exception tuple."""
-    if record.exc_info is not None:
+    # ``exc_info=False`` reaches the record unchanged; only an exception tuple names one to format.
+    if isinstance(record.exc_info, tuple):
         record.exc_text = _scrub_text(_EXCEPTION_FORMATTER.formatException(record.exc_info))
-    elif record.exc_text:
+    elif record.exc_text is not None and record.exc_text:
         record.exc_text = _scrub_text(record.exc_text)
 
 
@@ -648,6 +605,8 @@ def _install_run_context_record_factory() -> None:
         ctx = run_var.get(None)
         record.run_id = ctx.run_id if ctx is not None else ""
         record.step_id = step_var.get(None) or ""
+        if _OPERATOR_DOCUMENT_OUTPUT.get():
+            record.__dict__["_cadrumo_operator_document_output"] = True
         stamp_diagnostic_record(record)
         return record
 
@@ -671,9 +630,16 @@ class DropRunEventFilter(logging.Filter):
         return getattr(record, "run_event", None) is None
 
 
-#: Import root of every first-party logger. ``get_logger(__name__)`` is seeded
-#: from the module path, so a Cadrumo record's ``name`` always starts here.
-_FIRST_PARTY_LOGGER_ROOT = "cadrumo"
+#: First-party namespaces for Cadrumo and its hosted automation diagnostics. SDK
+#: request-body DEBUG remains excluded even when it originates inside the automation.
+_FIRST_PARTY_LOGGER_ROOTS = {"cadrumo"}
+
+
+def register_first_party_logger(namespace: str) -> None:
+    """Enroll this process's owning application namespace for scrubbed diagnostics."""
+    if not namespace.isidentifier():
+        raise ValueError("a logger namespace must be one application identifier")
+    _FIRST_PARTY_LOGGER_ROOTS.add(namespace)
 
 
 class _ThirdPartyDebugFilter(logging.Filter):
@@ -706,17 +672,43 @@ class _ThirdPartyDebugFilter(logging.Filter):
 
         Returns:
             ``True`` for any record at INFO or above, and for DEBUG records
-            emitted by a first-party ``cadrumo`` logger.
+            emitted by a first-party registered application logger.
         """
         if record.levelno >= logging.INFO:
             return True
-        return record.name == _FIRST_PARTY_LOGGER_ROOT or record.name.startswith(f"{_FIRST_PARTY_LOGGER_ROOT}.")
+        return any(record.name == root or record.name.startswith(f"{root}.") for root in _FIRST_PARTY_LOGGER_ROOTS)
 
 
 #: Extra key marking a record whose content the emitter has ALREADY written to
 #: the operator's stream as a structured document. Pass it through ``extra`` on
 #: any log call that accompanies such a write.
 OPERATOR_DOCUMENT_LOG_EXTRA = "operator_document"
+_OPERATOR_DOCUMENT_OUTPUT: ContextVar[bool] = ContextVar("cadrumo_operator_document_output", default=False)
+
+
+@contextmanager
+def operator_document_output() -> Generator[None]:
+    """Keep invocation diagnostics in their file while stderr carries a JSON document.
+
+    Records capture the scope when created, so deferred delivery and copied
+    async/thread contexts keep the same routing. Other invocations and text
+    output retain their stderr diagnostics; no process or handler level changes.
+    """
+    _install_run_context_record_factory()
+    token = _OPERATOR_DOCUMENT_OUTPUT.set(True)
+    try:
+        yield
+    finally:
+        _OPERATOR_DOCUMENT_OUTPUT.reset(token)
+
+
+def _operator_document_record(record: logging.LogRecord) -> bool:
+    """Recognize document routing captured at emission, even after its scope ends."""
+    return (
+        getattr(record, OPERATOR_DOCUMENT_LOG_EXTRA, None) is not None
+        or getattr(record, "_cadrumo_operator_document_output", False) is True
+    )
+
 
 #: Line format of every ``cadrumo.log`` record. Readers that parse the file,
 #: such as the desktop log view, receive this value rather than a copy.
@@ -724,10 +716,10 @@ LOG_FILE_FORMAT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s | %(diagnos
 
 
 class DropOperatorDocumentEchoFilter(logging.Filter):
-    """Suppress records already rendered as an operator document, on stderr only.
+    """Keep document-scoped diagnostics and rendered failures off stderr only.
 
     stderr is the machine-readable error channel: the CLI's terminal boundary
-    writes the JSON error document there, and an agent or script parses that
+    writes the JSON error document there, and an automation or script parses that
     stream. A diagnostic log record about the same failure is therefore a
     *duplicate* on stderr, and a harmful one — the record carries the raw
     exception and its traceback, so echoing it prepends internal frames and the
@@ -742,7 +734,7 @@ class DropOperatorDocumentEchoFilter(logging.Filter):
 
     @override
     def filter(self, record: logging.LogRecord) -> bool:
-        return getattr(record, OPERATOR_DOCUMENT_LOG_EXTRA, None) is None
+        return not _operator_document_record(record)
 
 
 def default_log_file_path() -> Path:
@@ -804,6 +796,18 @@ def _install_secret_scrubbing_filters() -> None:
             handler.addFilter(SecretScrubbingFilter())
 
 
+def _rotating_file_handler_path() -> str:
+    """Name the rotating file handler by the dotted path dictConfig resolves.
+
+    Derived from the class rather than hand-spelled, so a typo cannot hide
+    until the first file-logging run; imported here because only a host that
+    configures file logging needs the handler module.
+    """
+    from .log_file_handler import AnnouncingRotatingFileHandler
+
+    return f"{AnnouncingRotatingFileHandler.__module__}.{AnnouncingRotatingFileHandler.__qualname__}"
+
+
 def configure_logging() -> None:
     """Configure the project-wide diagnostic logging defaults.
 
@@ -855,7 +859,7 @@ def configure_logging() -> None:
         configured_handlers["file"] = {
             "level": settings.cadrumo_log_file_level,
             "formatter": "standard",
-            "class": _ROTATING_FILE_HANDLER_PATH,
+            "class": _rotating_file_handler_path(),
             "filename": str(log_file),
             "maxBytes": settings.cadrumo_log_file_max_bytes,
             "backupCount": settings.cadrumo_log_file_backup_count,
@@ -863,7 +867,9 @@ def configure_logging() -> None:
             "filters": ["drop_run_event", "third_party_debug"],
         }
         root_handlers.append("file")
-    logging.config.dictConfig(
+    from logging.config import dictConfig
+
+    dictConfig(
         {
             "version": 1,
             "disable_existing_loggers": False,
@@ -968,6 +974,11 @@ def resume_logging_configuration() -> None:
     _configuration_deferred = False
 
 
+def logging_configuration_deferred() -> bool:
+    """Return whether a host is still keeping this process's logging state-free."""
+    return _configuration_deferred
+
+
 _PENDING_RECORD_LIMIT = 200
 _pending_records: deque[logging.LogRecord] = deque(maxlen=_PENDING_RECORD_LIMIT)
 _root_level_before_buffering: int | None = None
@@ -1044,6 +1055,9 @@ def _forward_first_record(
 
 
 def _handle_as_last_resort(record: logging.LogRecord) -> None:
+    if _operator_document_record(record):
+        _pending_records.append(record)
+        return
     last_resort = logging.lastResort
     if last_resort is not None and record.levelno >= last_resort.level:
         last_resort.handle(record)

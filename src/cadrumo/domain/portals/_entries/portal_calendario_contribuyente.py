@@ -23,4 +23,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_calendario_contribuyente.label",
     purpose="entries.portal_calendario_contribuyente.purpose",
 )
-"""Frozen :class:`cadrumo.domain.portals.PortalMetadata` for the taxpayer calendar reference page."""
+"""Frozen :class:`cadrumo.domain.portals.metadata.PortalMetadata` for the taxpayer calendar reference page."""

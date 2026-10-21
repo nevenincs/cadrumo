@@ -72,25 +72,33 @@ _MINIMUM_JUDGED_REFERENCES = 2000
 
 @cache
 def _first_party_roots() -> frozenset[str]:
-    """Top-level ``cadrumo`` subpackages, read from the tree.
+    """Cadrumo subpackages and sibling source packages, read from the tree.
 
     Roles in this codebase omit the distribution root -- ``:class:`~llm.
     LLMClient``` rather than a package-qualified target -- so a target is
     first-party when its head segment is a real subpackage. Derived rather
-    than listed, so a new subpackage is judged the day it appears.
+    than listed, so a new subpackage is judged the day it appears. Qualified
+    sibling-package targets assert first-party ownership too.
     """
     return frozenset(
         entry.name for entry in scan_directory(SRC_CADRUMO) if entry.is_dir() and (entry / "__init__.py").exists()
+    ) | frozenset(
+        entry.name
+        for entry in scan_directory(SRC_CADRUMO.parent)
+        if entry.is_dir() and (entry / "__init__.py").is_file()
     )
 
 
 def module_file(dotted: str) -> Path | None:
     """Return the source file for a dotted first-party module, or None."""
     parts = dotted.split(".")
-    module = SRC_CADRUMO.joinpath(*parts).with_suffix(".py")
+    root = SRC_CADRUMO
+    if (SRC_CADRUMO.parent / parts[0] / "__init__.py").is_file():
+        root = SRC_CADRUMO.parent
+    module = root.joinpath(*parts).with_suffix(".py")
     if module.exists():
         return module
-    package = SRC_CADRUMO.joinpath(*parts, "__init__.py")
+    package = root.joinpath(*parts, "__init__.py")
     return package if package.exists() else None
 
 
@@ -263,3 +271,25 @@ def test_the_detector_resolves_a_method_through_its_owning_class() -> None:
     reason = cross_reference_defect("meth", "core.modelo.NoSuchClass.method")
     assert reason is not None
     assert "NoSuchClass" in reason
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        "cadrumo.core.modelo.Modelo",
+        "cadrumo_client.commands.errors.CliRefusedBoundaryError",
+        "cadrumo_runtime.commands._apoderado.apoderado_scopes_list",
+    ],
+)
+def test_qualified_first_party_targets_are_judged(target: str) -> None:
+    """Qualified sibling definitions enter the scan and resolve at their owner."""
+    assert list(_dotted_first_party_targets(f":obj:`{target}`")) == [(1, "obj", target)]
+    assert cross_reference_defect("obj", target) is None
+    fabricated = target.rpartition(".")[0] + ".NoSuchDefinition"
+    assert cross_reference_defect("obj", fabricated) is not None
+
+
+def test_sibling_imports_and_missing_modules_are_rejected() -> None:
+    """Imported aliases and nonexistent sibling modules cannot claim ownership."""
+    assert cross_reference_defect("class", "cadrumo_client.commands.google_errors.CliRefusedBoundaryError") is not None
+    assert cross_reference_defect("mod", "cadrumo_runtime.commands.no_such_module") is not None

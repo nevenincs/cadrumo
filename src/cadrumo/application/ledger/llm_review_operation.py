@@ -4,6 +4,14 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+)
+
 from ...core.hashing import sha256_hex
 from ...core.operations import (
     OperationCancellation,
@@ -23,24 +31,18 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.execution_actor import OperationExecutionCallerReader
 from ..operations.interactions import OperationInteractionRequest
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.persistence.journal import serialize_operation_operand
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-)
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .llm_review_contracts import (
     LEDGER_LLM_REVIEW_DEFINITION_IDS,
@@ -133,7 +135,10 @@ def _result_projector(result: BaseModel, receipt: OperationTerminalReceipt) -> B
 
 
 def build_ledger_llm_review_definition(
-    definition_id: str, factory: LedgerLlmOperationPortsFactory
+    definition_id: str,
+    factory: LedgerLlmOperationPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Declare the existing suggestion/review/writer workflow with secure continuation."""
     if definition_id not in LEDGER_LLM_REVIEW_DEFINITION_IDS:
@@ -141,11 +146,12 @@ def build_ledger_llm_review_definition(
     return OperationDefinition(
         definition_id=definition_id,
         request_type=LedgerLlmReviewRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerLlmExecutionResult,
         executor_factory=OperationExecutorFactory(
             request_type=LedgerLlmReviewRequest,
             executor_type=LedgerLlmReviewExecutor,
-            build=lambda: LedgerLlmReviewExecutor(factory),
+            build=lambda: LedgerLlmReviewExecutor(factory, execution_caller_reader=execution_caller_reader),
         ),
         phase_codes=("ledger.llm.acquire", "ledger.llm.review", "ledger.llm.commit"),
         interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
@@ -163,7 +169,6 @@ def build_ledger_llm_review_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

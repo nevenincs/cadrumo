@@ -6,11 +6,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from uuid import UUID
 
-from ..adapters.outbound.google import errors as google_errors
+from cadrumo_client.commands.google_refusal_reconstruction import GOOGLE_CONFIGURATION_ERROR_TYPES
+from cadrumo_client.contracts import google_auth as google_errors
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.google_auth import GoogleAuthError
+
 from ..adapters.outbound.google.api import drive_v3_service
 from ..adapters.outbound.google.artifact_receipt_store import GoogleArtifactReceiptStore
-from ..adapters.outbound.google.errors import GoogleAuthError
-from ..adapters.outbound.google.google_configuration_refusal import GOOGLE_CONFIGURATION_ERROR_TYPES
 from ..adapters.outbound.google.installation_client import load_installation_client
 from ..adapters.outbound.google.oauth_flow import require_resolvable_profile_record, run_login_flow
 from ..adapters.outbound.google.records import DriveConfig
@@ -21,14 +23,14 @@ from ..adapters.outbound.google.session_store import (
     load_drive_config,
     save_session,
 )
-from ..adapters.outbound.google.sign_in_state import load_sign_in_record
+from ..adapters.outbound.google.sign_in_failures import google_failure_category
+from ..adapters.outbound.google.sign_in_state import load_usable_sign_in
 from ..adapters.outbound.storage import errors as storage_errors
 from ..adapters.outbound.storage.errors import OutboundStorageError
 from ..adapters.outbound.storage.factory import build_google_credentials, get_storage_provider, google_credentials_for
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..application.operator_actions.models import PreconditionVerdict
 from ..application.operator_actions.projection import PreconditionVerdictSnapshot
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.user_profile.capabilities import resolve_capability
 from ..application.user_profile.capsule_record import ProfileRecordStore
@@ -100,6 +102,7 @@ def _closed_refusal(
                 "message_key": key,
                 "facts": facts,
                 "verdict": PreconditionVerdictSnapshot.from_verdict(verdict) if verdict is not None else None,
+                "failure_category": google_failure_category(error),
             },
             strict=True,
         )
@@ -305,8 +308,9 @@ def _dispatch_google_logout(
 
 
 def _dispatch_google_status(request: GoogleStatusRequest, profile: str, profile_id: UUID) -> GoogleStatusProjection:
-    """Run the existing GoogleStatus branch in its original effect order."""
-    metadata = load_sign_in_record(profile)
+    """Report a sign-in only when its record and a token minted by this installation's client are both stored."""
+    usable = load_usable_sign_in(profile, load_installation_client())
+    metadata = usable[0] if usable is not None else None
     return GoogleStatusProjection(
         profile_id=profile_id,
         session_present=metadata is not None,

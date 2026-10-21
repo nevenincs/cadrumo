@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import (
     OperationCancellation,
@@ -33,15 +35,14 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_classification import (
@@ -111,9 +112,10 @@ async def _prepare_rule_add(
     payload: LedgerRuleAddRequest,
     *,
     bucket_id: str,
+    actor: str,
     operation: PinnedAuthorityOperation,
     context: OperationExecutorContext,
-) -> tuple[LedgerClassificationRule, str | None, str] | OperationRefusalEvidence:
+) -> tuple[LedgerClassificationRule, str | None] | OperationRefusalEvidence:
     if not payload.description_pattern.strip():
         projection = _add_validation_projection(
             payload.profile_id,
@@ -135,7 +137,6 @@ async def _prepare_rule_add(
         )
         return await _publish_add_refusal(context, projection)
 
-    actor = payload.actor or bucket_id or "operator"
     try:
         candidate = LedgerClassificationRule.create(
             description_pattern=payload.description_pattern,
@@ -148,7 +149,7 @@ async def _prepare_rule_add(
     except (ClassificationRuleError, ValidationError, ValueError) as error:
         projection = _add_validation_projection(payload.profile_id, code="invalid_pattern", error=error)
         return await _publish_add_refusal(context, projection)
-    return candidate, category_id, actor
+    return candidate, category_id
 
 
 async def _persist_rule_add(
@@ -205,9 +206,15 @@ def _require_candidate_match(candidate: LedgerClassificationRule, saved: LedgerC
 class LedgerRuleAddExecutor:
     """Create one encrypted profile rule through the canonical action service."""
 
-    def __init__(self, repository_factory: LedgerClassificationRuleRepositoryFactory) -> None:
+    def __init__(
+        self,
+        repository_factory: LedgerClassificationRuleRepositoryFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Bind the canonical encrypted rule repository factory."""
         self._repository_factory = repository_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -220,10 +227,15 @@ class LedgerRuleAddExecutor:
         _require_operation_identity(request, context, LEDGER_RULE_ADD_OPERATION_DEFINITION_ID, payload.profile_id)
         await context.events.phase(LEDGER_RULE_ADD_OPERATION_DEFINITION_ID)
         operation: PinnedAuthorityOperation = context.authority_operation
-        prepared = await _prepare_rule_add(payload, bucket_id=bucket_id, operation=operation, context=context)
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=payload.actor or bucket_id or "operator"
+        )
+        prepared = await _prepare_rule_add(
+            payload, bucket_id=bucket_id, actor=actor, operation=operation, context=context
+        )
         if isinstance(prepared, OperationRefusalEvidence):
             return prepared
-        candidate, category_id, actor = prepared
+        candidate, category_id = prepared
 
         saved = await _persist_rule_add(
             payload,
@@ -281,10 +293,13 @@ class LedgerRuleApplyExecutor:
         self,
         ports_factory: LedgerActionPortsFactory,
         repository_factory: LedgerClassificationRuleRepositoryFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
     ) -> None:
         """Bind exact-profile canonical action ports and encrypted rule storage."""
         self._ports_factory = ports_factory
         self._repository_factory = repository_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -317,7 +332,9 @@ class LedgerRuleApplyExecutor:
 
         # Validate every promised live row/count before any transaction write.
         build_rule_apply_plan_projection(payload.profile_id, plan, bucket_event_count=0)
-        actor = payload.actor or bucket_id or "operator"
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=payload.actor or bucket_id or "operator"
+        )
         prepared_result = await _apply_rule_matches(
             plan,
             payload,
@@ -498,10 +515,11 @@ def _definition[RequestT: BaseModel, ResultT: BaseModel, ExecutorT](
     effects: frozenset[OperationEffect],
     refusal_detail_codes: frozenset[str] = frozenset({LEDGER_RULE_VALIDATION_REFUSAL_CODE}),
 ) -> OperationDefinition:
-    """Declare one CLI-only, exact-profile recorded rule operation."""
+    """Declare one exact-profile recorded rule operation."""
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_type=executor_type,
         build=build,
@@ -518,13 +536,14 @@ def _definition[RequestT: BaseModel, ResultT: BaseModel, ExecutorT](
             permitted_effects=effects,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=refusal_detail_codes,
     )
 
 
 def build_ledger_rule_add_definition(
     repository_factory: LedgerClassificationRuleRepositoryFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Declare one secure rule add under an exact-profile all-period commit grant."""
     return _definition(
@@ -532,7 +551,7 @@ def build_ledger_rule_add_definition(
         request_type=LedgerRuleAddRequest,
         result_type=LedgerRuleAddExecutionResult,
         executor_type=LedgerRuleAddExecutor,
-        build=lambda: LedgerRuleAddExecutor(repository_factory),
+        build=lambda: LedgerRuleAddExecutor(repository_factory, execution_caller_reader=execution_caller_reader),
         effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
     )
 
@@ -555,6 +574,8 @@ def build_ledger_rule_list_definition(
 def build_ledger_rule_apply_definition(
     ports_factory: LedgerActionPortsFactory,
     repository_factory: LedgerClassificationRuleRepositoryFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Declare canonical preview and per-transaction rule application."""
     return _definition(
@@ -562,7 +583,9 @@ def build_ledger_rule_apply_definition(
         request_type=LedgerRuleApplyRequest,
         result_type=LedgerRuleApplyExecutionResult,
         executor_type=LedgerRuleApplyExecutor,
-        build=lambda: LedgerRuleApplyExecutor(ports_factory, repository_factory),
+        build=lambda: LedgerRuleApplyExecutor(
+            ports_factory, repository_factory, execution_caller_reader=execution_caller_reader
+        ),
         effects=frozenset(
             {OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.PARTIAL, OperationEffect.UNKNOWN}
         ),

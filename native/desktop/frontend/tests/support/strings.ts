@@ -11,11 +11,15 @@ const catalogue = JSON.parse(
   ),
 ) as Record<string, Record<string, string>>;
 
+/** The language the window under test speaks: English on the scenario host,
+ * and on the live desktop the profile's own, which its lane names. */
+const windowLanguage = process.env.CADRUMO_DEV_DESKTOP_LIVE_LANGUAGE || "en";
+
 /** The chrome string for `key` in `locale`, with `{name}` values filled in. */
 export function label(
   key: string,
   values: Record<string, string | number> = {},
-  locale = "en",
+  locale = windowLanguage,
 ): string {
   const template = catalogue[locale]?.[key] ?? catalogue.en?.[key] ?? key;
   return template.replace(/\{(\w+)\}/g, (whole, name: string) =>

@@ -76,7 +76,7 @@ def article_version_units(
         unit.model_copy(
             update={
                 "title": unit.title or label,
-                "section": f"{unit.title} | {label}" if unit.title else label,
+                "section": f"{unit.title} | {label}" if (unit.title is not None and unit.title) else label,
                 "anchor": unit.anchor or _source_stated_ordinal_anchor(unit),
             }
         )

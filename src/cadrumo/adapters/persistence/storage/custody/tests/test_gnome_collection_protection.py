@@ -15,7 +15,7 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody import gnome_collection_protection as protection
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 pytestmark = [
     pytest.mark.unit,

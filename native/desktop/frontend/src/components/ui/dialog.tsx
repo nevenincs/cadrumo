@@ -81,9 +81,9 @@ function DialogContent({
             dismiss.current?.click();
         }}
         className={cn(
-          "fixed left-1/2 z-(--layer-modal) grid w-dialog max-w-[calc(100%-2rem)] grid-cols-1 -translate-x-1/2 gap-4 rounded-xl border bg-card p-5 text-card-foreground shadow-overlay outline-none",
+          "fixed left-1/2 z-(--layer-modal) grid w-dialog max-w-[calc(100%-var(--overlay-gutter))] grid-cols-1 -translate-x-1/2 gap-4 rounded-xl border bg-card p-5 text-card-foreground shadow-overlay outline-none",
           placement === "center"
-            ? "top-1/2 max-h-[calc(100%-2rem)] -translate-y-1/2 overflow-y-auto"
+            ? "top-1/2 max-h-[calc(100%-var(--overlay-gutter))] -translate-y-1/2 overflow-y-auto"
             : "top-(--overlay-top) max-h-[calc(100dvh-2*var(--overlay-top))]",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           className,

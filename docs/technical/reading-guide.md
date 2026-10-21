@@ -9,7 +9,7 @@ This collection serves readers investigating Cadrumo's internals. Application in
 - **Architecture:** the main body of the technical landing page explains the system's organization and boundaries.
 - **Cross-cutting assessments:** four additional pages cover capabilities, knowledge and provenance, security, and implementation quality.
 - **Topics:** 18 full overview reports explain subsystems. Each has one corresponding synthesis brief, retained in an expandable summary. Short landing-page descriptions help readers choose a topic.
-- **Detailed articles:** 206 source-analysis reports provide the underlying mechanisms, observations, and coverage. Each topic draws on multiple articles. Article pages link back to their assigned topic; inline references retain additional cross-topic connections.
+- **Detailed articles:** 204 source-analysis reports provide the underlying mechanisms, observations, and coverage. Each topic draws on multiple articles. Article pages link back to their assigned topic; inline references retain additional cross-topic connections.
 
 The original analysis called the overview and assessment collection **Stage 1** and the detailed collection **Stage 2**. The 18 synthesis briefs summarize the Stage 1 topic reports one-to-one. They do not summarize individual Stage 2 articles.
 

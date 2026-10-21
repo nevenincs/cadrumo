@@ -111,7 +111,7 @@ class ModeloDirectoryMetadata(RegistryModel):
         :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`.
         """
         return cls(
-            id=str(modelo.id),
+            id=modelo.id,
             title_localization_key=modelo.title_localization_key,
             official_name_localization_key=modelo.official_name_localization_key,
             tax_domain=str(modelo.tax_domain),
@@ -190,7 +190,7 @@ class ModeloRevisionDirectory(RegistryModel):
         try:
             return ModeloDefinition.model_validate(
                 {**self.modelo.model_dump(), "revisions": {revision.id: revision}},
-                context={MODELO_REVISION_IDS_CONTEXT: frozenset(str(metadata.id) for metadata in self.revisions)},
+                context={MODELO_REVISION_IDS_CONTEXT: frozenset(metadata.id for metadata in self.revisions)},
             )
         except ValidationError as exc:
             raise RegistryValidationError(
@@ -210,18 +210,18 @@ class ModeloRevisionDirectory(RegistryModel):
         :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`.
         """
         return cls(
-            modelo_id=str(modelo.id),
+            modelo_id=modelo.id,
             modelo=ModeloDirectoryMetadata.from_modelo(modelo),
             revisions=tuple(
                 RevisionSelectionMetadata.from_revision(revision)
-                for revision in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
+                for revision in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, item.id))
             ),
             endpoint_source_enrollments=tuple(
                 RevisionEndpointSourceEnrollment(
                     revision_id=revision.id,
                     source_refs=revision_endpoint_source_ids(modelo, revision),
                 )
-                for revision in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
+                for revision in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, item.id))
             ),
             pending_ejercicio_ordenes=modelo.pending_ejercicio_ordenes,
             supported_filing_years=support,
@@ -283,7 +283,7 @@ def _require_supported_filing_year(
         horizon=support.horizon,
         hard_ceiling=support.hard_ceiling,
         covering_revision_ids=tuple(
-            str(revision.id)
+            revision.id
             for revision in revisions
             if revision.period_selector.includes_year(filing_year)
             and (
@@ -323,7 +323,7 @@ def _refuse_before_declared_inception(
         filing_year=filing_year,
         period="year" if period is None else period,
         revision_id=revision_id,
-        available_revision_ids=tuple(str(revision.id) for revision in revisions),
+        available_revision_ids=tuple(revision.id for revision in revisions),
     )
 
 
@@ -563,7 +563,7 @@ def _absence_refusal(
     Absent a declaration the plain absence refusal stands, so a modelo that has
     simply not been authored cannot borrow the excuse.
     """
-    available = tuple(str(revision.id) for revision in revisions)
+    available = tuple(revision.id for revision in revisions)
     pending = next((entry for entry in pending_ordenes if entry.filing_year == filing_year), None)
     if pending is not None:
         return EjercicioOrdenNotYetPublishedError(
@@ -572,7 +572,7 @@ def _absence_refusal(
             period=period,
             revision_id=revision_id,
             available_revision_ids=available,
-            rests_on=str(pending.rests_on),
+            rests_on=pending.rests_on,
             expected_publication_year=pending.expected_publication_year,
         )
     return NoRevisionForPeriodError(
@@ -651,14 +651,14 @@ def select_revision_for_year(
     """
     revisions = tuple(modelo.revisions.values())
     _require_supported_filing_year(
-        str(modelo.id),
+        modelo.id,
         revisions,
         filing_year=filing_year,
         period=None,
         support=support,
     )
     _refuse_before_declared_inception(
-        str(modelo.id),
+        modelo.id,
         revisions,
         modelo.inception,
         filing_year=filing_year,
@@ -673,7 +673,7 @@ def select_revision_for_year(
         support=support,
     )
     return _select_single_year_revision(
-        str(modelo.id),
+        modelo.id,
         revisions,
         modelo.pending_ejercicio_ordenes,
         _effective_candidates(
@@ -761,14 +761,14 @@ def select_revision(
     """
     revisions = tuple(modelo.revisions.values())
     _require_supported_filing_year(
-        str(modelo.id),
+        modelo.id,
         revisions,
         filing_year=filing_year,
         period=period,
         support=support,
     )
     _refuse_before_declared_inception(
-        str(modelo.id),
+        modelo.id,
         revisions,
         modelo.inception,
         filing_year=filing_year,
@@ -789,7 +789,7 @@ def select_revision(
         period=period,
     )
     return _select_single_revision(
-        str(modelo.id),
+        modelo.id,
         tuple(modelo.revisions.values()),
         modelo.pending_ejercicio_ordenes,
         candidates,

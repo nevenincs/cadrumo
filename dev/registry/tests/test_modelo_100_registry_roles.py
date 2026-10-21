@@ -622,7 +622,7 @@ def test_modelo_100_prevision_social_0383_splits_income_threshold_polarity() -> 
         assert label_fragment in casilla.label
         if filing_year == 2025:
             assert casilla.semantic_role_cardinality == "intentional_singleton"
-            assert casilla.semantic_role_cardinality_reason
+            assert casilla.semantic_role_cardinality_reason is not None and casilla.semantic_role_cardinality_reason
             assert "flips casilla 0383" in casilla.semantic_role_cardinality_reason
         else:
             assert casilla.semantic_role_cardinality == "shared"
@@ -794,7 +794,7 @@ def test_modelo_100_coti_fund_loss_role_matches_loss_label() -> None:
     assert tuple(coti_loss.section) == ("toma_datos_ampliada", "gp_fondos_coti", "fondo")
     assert coti_loss.semantic_role == "irpf_perdida_fondos_coti_importe"
     assert coti_loss.semantic_role_cardinality == "intentional_singleton"
-    assert coti_loss.semantic_role_cardinality_reason
+    assert coti_loss.semantic_role_cardinality_reason is not None and coti_loss.semantic_role_cardinality_reason
     assert "quoted-fund coti capital-loss slot" in coti_loss.semantic_role_cardinality_reason
     assert {"ley-35-2006:art-33", "ley-35-2006:art-34"}.issubset(coti_loss.legal_refs)
     assert {
@@ -971,7 +971,7 @@ def test_modelo_100_family_numerosa_ascendant_count_is_integer_count() -> None:
             f"aeat-dr-100-{filing_year}-xsd",
         }
 
-        assert casilla.label == "Indique el número de ascendientes que forman parte de la misma familia numerosa"
+        assert casilla.label == "Indica el número de ascendientes que forman parte de la misma familia numerosa"
         assert tuple(casilla.section) == ("resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res")
         assert casilla.data_type == "integer"
         assert casilla.semantic_role == "irpf_familia_numerosa_num_ascendientes"
@@ -1150,7 +1150,7 @@ def test_modelo_100_maternity_extension_child_counts_are_integer() -> None:
         assert casilla.data_type == "integer"
         assert casilla.semantic_role == expected_role
         assert casilla.semantic_role_cardinality == "intentional_singleton"
-        assert casilla.semantic_role_cardinality_reason
+        assert casilla.semantic_role_cardinality_reason is not None and casilla.semantic_role_cardinality_reason
         assert "ley-35-2006:art-81" in casilla.legal_refs
         assert {
             f"aeat-dr-100-{_MATERNITY_EXTENSION_EDITION}-dictionary",

@@ -16,6 +16,7 @@ import {
   type CalendarShape,
 } from "./scenarioHost";
 import { findScenario, type Scenario } from "./scenarios";
+import { SETUP_SHAPES } from "./setupFixture";
 
 import "virtual:desktop-palette.css";
 
@@ -64,6 +65,28 @@ function readParams() {
       shape !== null && shape in CALENDAR_SHAPES
         ? (shape as CalendarShape)
         : null)(params.get("calendar")),
+    // The agent's reply with a piece of its stream missing, for how the
+    // column recovers it.
+    agentStream: params.get("stream") === "gap" ? ("gap" as const) : undefined,
+    // What every agent reply stops to ask: questions, a tool's approval or
+    // a Cadrumo review.
+    agentAsks: (["questions", "approval", "review"] as const).find(
+      (asks) => asks === params.get("asks"),
+    ),
+    // What the conversations have stored for `@` to name.
+    agentDocuments: (["stored", "none", "unavailable", "failed"] as const).find(
+      (documents) => documents === params.get("documents"),
+    ),
+    // How the agent serves its skills to `/`.
+    agentSkills: (["bundled", "many", "failed", "unavailable"] as const).find(
+      (skills) => skills === params.get("skills"),
+    ),
+    // How the service answers the agent's catalog.
+    agentCatalog: (["served", "busy"] as const).find(
+      (catalog) => catalog === params.get("catalog"),
+    ),
+    // The shape of the component setup.
+    setup: SETUP_SHAPES.find((shape) => shape === params.get("setup")),
   };
 }
 
@@ -111,6 +134,12 @@ function Scenarios() {
       logRecords: initial.logRecords,
       logFeedMs: initial.logFeedMs,
       calendar: initial.calendar,
+      agentStream: initial.agentStream,
+      agentAsks: initial.agentAsks,
+      agentDocuments: initial.agentDocuments,
+      agentSkills: initial.agentSkills,
+      agentCatalog: initial.agentCatalog,
+      setup: initial.setup,
       language: run.language,
       latencyMs: initial.latencyMs,
       onCall: (call) => {
@@ -150,7 +179,11 @@ const root = document.getElementById("root");
 if (!root) throw new Error("Application root is missing.");
 // Strict mode runs every effect twice in development, which is how a missing
 // cleanup shows itself here instead of in the desktop window.
-ReactDOM.createRoot(root).render(
+const shell = ReactDOM.createRoot(root);
+// Reevaluating this entry must remove the previous shell's effects and portals
+// before a new root mounts, including when Fast Refresh requests a full reload.
+import.meta.hot?.dispose(() => shell.unmount());
+shell.render(
   <StrictMode>
     <Scenarios />
   </StrictMode>,

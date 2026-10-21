@@ -537,7 +537,7 @@ def _run_modulos_engine(
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
     snapshot = published_snapshot("131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
     assert snapshot.filing_period is not None
-    text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
+    text_inputs = {"modulos-epigrafe": epigrafe} if (epigrafe is not None and epigrafe) else {}
     result = calculate_registry_snapshot(
         snapshot,
         inputs={

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s55-release-guidance'
 date: '2026-07-13'
-modified: '2026-10-03'
-body_hash: 'sha256:43ef3cddcd0e98cdc0336104d4549bb061f77e9cf72fc7f9afb60925f543a654'
+modified: '2026-10-21'
+body_hash: 'sha256:d37859d031ac9b7baa0f67e44df96550b8adeeadcb7c61dcab3e36a54599b9d0'
 related:
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"
 ---
@@ -55,5 +55,5 @@ parse successfully without executing their printed push, tag, yank, publish,
 lock, or rollback instructions. Ruff lint, Ruff format, Ty, and scoped
 whitespace validation pass. The commit contains exactly its record, plan,
 readiness implementation, two test modules, and justfile; it excludes docs,
-release runbooks, CI, marketplace, and external state changes. The plan closes
+release runbooks, CI, and external state changes. The plan closes
 S55, and current HEAD retains the reviewed paths.

@@ -47,12 +47,12 @@ from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.events import OperationTerminalEvent
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationSchemaBindingV1,
 )
+from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
@@ -213,6 +213,7 @@ def _definition(executor: HeldExecutor) -> OperationDefinition:
     return OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=DeadlineRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=DeadlineResult,
         executor_factory=OperationExecutorFactory(
             request_type=DeadlineRequest,
@@ -223,7 +224,6 @@ def _definition(executor: HeldExecutor) -> OperationDefinition:
         interaction_kinds=frozenset(),
         capabilities=_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
 
 

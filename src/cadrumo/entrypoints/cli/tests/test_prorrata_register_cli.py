@@ -12,34 +12,33 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
-from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.prorrata_register.projection_contracts import ProrrataEntryProjection
-from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.modelo import Modelo
-from ....core.prorrata_register import (
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.prorrata_register.projection_contracts import ProrrataEntryProjection
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.modelo import Modelo
+from cadrumo.core.prorrata_register import (
     ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
-from ....domain.prorrata_register.register import (
+from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
+from cadrumo.domain.prorrata_register.register import (
     ProrrataEspecialTransitionEvidence,
     ProrrataRegister,
     ProrrataRegisterEntry,
     SectorDefinition,
 )
-from ....tests.cli_envelope import unwrap_cli_result
-from .._prorrata_register_cli import _entry_payload
-from .._prorrata_register_payloads import (
+from cadrumo.entrypoints.cli.prorrata_register_commands import _entry_payload
+from cadrumo.entrypoints.cli.prorrata_register_results import (
     ProrrataDeclareSectorResult,
     ProrrataElectGeneralResult,
     ProrrataEntryPayload,
@@ -50,8 +49,9 @@ from .._prorrata_register_payloads import (
     ProrrataSettleSectorResult,
     SectorDefinitionPayload,
 )
-from .cli_runner import invoke_cached_cli
-from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo.tests.cli_envelope import unwrap_cli_result
+
+from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke_joined_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -86,18 +86,18 @@ _PROFILE_FACTS = {
 
 
 @pytest.fixture
-def native_prorrata_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
+def native_prorrata_profile(tmp_path: Path) -> Iterator[RegisteredCliProfile]:
     """Register one encrypted profile and supervise its native runtime worker."""
-    with native_cli_profile_scope(tmp_path) as profile:
+    with cli_world_provider().native_profile(tmp_path) as profile:
         profile.register(label="native-prorrata-register", facts=_PROFILE_FACTS)
         yield profile
 
 
-def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
+def _invoke(profile: RegisteredCliProfile, *command: str) -> Result:
     if profile.label is None:
         raise AssertionError("native prorrata profile must be registered before invocation")
     close_active_bucket_session()
-    result = invoke_cached_cli(
+    result = invoke_joined_cli(
         (
             "--language",
             "en",
@@ -175,7 +175,7 @@ def _store_prior_settlement_observation() -> None:
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_native_whole_seed_projects_stamped_source_and_refuses_without_source(
-    native_prorrata_profile: NativeCliProfileFixture,
+    native_prorrata_profile: RegisteredCliProfile,
 ) -> None:
     _store_prior_settlement_observation()
     prior_revision_id = _law_determined_prior_revision_id()
@@ -254,7 +254,7 @@ def test_native_whole_seed_projects_stamped_source_and_refuses_without_source(
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_native_sector_election_settlement_seed_and_list_preserve_full_register(
-    native_prorrata_profile: NativeCliProfileFixture,
+    native_prorrata_profile: RegisteredCliProfile,
     operation: PinnedAuthorityOperation,
 ) -> None:
     declared_result = _invoke(

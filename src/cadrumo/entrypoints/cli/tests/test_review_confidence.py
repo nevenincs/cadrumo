@@ -8,7 +8,7 @@ import pytest
 import typer
 
 from ....core.config import override_settings
-from .._review import _resolve_confidence_threshold
+from ..review_commands import _resolve_confidence_threshold
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

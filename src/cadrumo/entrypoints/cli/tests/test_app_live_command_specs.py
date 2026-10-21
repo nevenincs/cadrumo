@@ -9,7 +9,21 @@ from pathlib import Path
 import pytest
 from typer.main import get_command
 
-from cadrumo.application.operator_surface.command_ports import CommandWriteRoute
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
+from cadrumo_client.commands.graph import CommandSpecGraph
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    BindingState,
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandWriteRoute
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .._app_live_borrador_command_specs import LIVE_BORRADOR_COMMAND_SPECS
@@ -46,19 +60,6 @@ from .._app_live_notifications_command_specs import (
 from .._app_live_portals_command_specs import LIVE_PORTALS_COMMAND_SPECS
 from .._app_live_verify_command_specs import _VERIFY_EXPECTED_OPTION, LIVE_VERIFY_COMMAND_SPECS
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_graph import CommandSpecGraph
-from ..command_parameter_contracts import OptionSpec
-from ..command_shared_contracts import (
-    BindingState,
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    ValueContract,
-)
-from ..command_spec import ExecutionPolicySpec, InvocationSpec
 from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -319,7 +320,7 @@ def test_live_shared_support_contracts_are_independently_pinned() -> None:
 
 
 def test_live_specs_are_the_exact_complete_current_surface() -> None:
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS), resolver=resolve_deferred_target)
     live_keys = {spec.key for spec in LIVE_COMMAND_SPECS}
     actual = {" ".join(node.path[1:]) for node in graph.nodes() if node.spec.key in live_keys}
     assert len(LIVE_COMMAND_SPECS) == 45
@@ -493,7 +494,7 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         is not notifications["app_live_notifications_document_view"].result_schema
     )
 
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS), resolver=resolve_deferred_target)
     for path, spec in (
         (("aeat", "app", "live"), foundation["app_live"]),
         (("aeat", "app", "live", "borrador", "100", "latest"), borrador["app_live_borrador_100_latest"]),
@@ -542,7 +543,7 @@ def test_live_specs_own_policy_schema_and_localised_parameter_contracts() -> Non
 
 
 def test_every_live_subtree_compiles_from_specs_without_legacy_structure() -> None:
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS), resolver=resolve_deferred_target)
     for spec in LIVE_COMMAND_SPECS:
         app = build_command_subtree(graph, spec.key)
         assert get_command(app) is not None
@@ -551,9 +552,9 @@ def test_every_live_subtree_compiles_from_specs_without_legacy_structure() -> No
 def test_live_behavior_and_payload_modules_contain_no_structural_authority() -> None:
     cli_root = Path(__file__).parents[1]
     assert not (cli_root / "_app_live_payloads.py").exists()
-    paths = [cli_root / "_app_live.py", cli_root / "_app_live_payloads_support.py"]
-    paths.extend(sorted(cli_root.glob("_app_live_*_payloads.py")))
-    paths.extend(sorted(cli_root.glob("_app_live_*_cli.py")))
+    paths = [cli_root / "app_live_commands.py", cli_root / "_app_live_payloads_support.py"]
+    paths.extend(sorted(cli_root.glob("app_live_*_results.py")))
+    paths.extend(sorted(cli_root.glob("app_live_*_commands.py")))
     forbidden_names = {"command_execution_policy", "declare_metadata_group", "register_schema"}
     for path in paths:
         source = path.read_text(encoding="utf-8")

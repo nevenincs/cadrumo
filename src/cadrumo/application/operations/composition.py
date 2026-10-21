@@ -20,6 +20,7 @@ from .persistence.financial_operand_custody import (
     OperationTypedFinancialOperandCustodyRepository,
 )
 from .persistence.journal import (
+    OperationEphemeralRouting,
     OperationEventStream,
     OperationInventoryLimit,
     OperationJournal,
@@ -158,14 +159,33 @@ class OperationComposedServices:
     _shutdown: Callable[[], Awaitable[OperationDrainResult]]
     _drain: Callable[[timedelta], Awaitable[OperationDrainResult]]
     _inventory: Callable[[OperationId | None, OperationInventoryLimit], Awaitable[OperationRecoveryInventoryPage]]
+    _ephemeral: OperationEphemeralRouting | None
+
+    def release_ephemeral_result(self, operation_id: OperationId) -> None:
+        """Release the delivered public snapshot and any ephemeral operation behind it."""
+        self.result.forget_snapshot(operation_id)
+        if self._ephemeral is not None:
+            self._ephemeral.release_ephemeral(operation_id)
+
+    def forget_settled_ephemeral(self) -> None:
+        """Forget pending projections and settled ephemeral operations once no session remains."""
+        self.result.forget_snapshot()
+        if self._ephemeral is not None:
+            self._ephemeral.forget_settled_ephemeral()
 
     async def shutdown(self) -> OperationDrainResult:
         """Close within the default bound and report remaining ownership."""
-        return await self._shutdown()
+        try:
+            return await self._shutdown()
+        finally:
+            self.result.forget_snapshot()
 
     async def drain(self, timeout: timedelta) -> OperationDrainResult:
         """Fence admissions and return unresolved ownership within one deadline."""
-        return await self._drain(timeout)
+        try:
+            return await self._drain(timeout)
+        finally:
+            self.result.forget_snapshot()
 
     async def recovery_inventory(
         self, *, after: OperationId | None, limit: OperationInventoryLimit
@@ -226,6 +246,7 @@ def compose_operation_services(
     cleanup_timeout: timedelta,
     typed_financial_operand_custody: OperationTypedFinancialOperandCustodyRepository | None = None,
     execution_authority: OperationExecutionAuthority | None = None,
+    ephemeral: OperationEphemeralRouting | None = None,
 ) -> OperationComposedServices:
     """Bind one immutable registry to real runtime adapters and safe services.
 
@@ -253,6 +274,7 @@ def compose_operation_services(
         response_authority_issuer=authority_broker,
         typed_financial_operand_custody=typed_financial_operand_custody,
         execution_authority=execution_authority,
+        ephemeral=ephemeral,
     )
     observation = OperationObservationService(reader=reader, registry=registry)
 
@@ -302,6 +324,7 @@ def compose_operation_services(
         _shutdown=shutdown,
         _drain=drain,
         _inventory=inventory,
+        _ephemeral=ephemeral,
     )
 
 

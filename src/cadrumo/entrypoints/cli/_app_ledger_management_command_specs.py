@@ -1,6 +1,18 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ._app_ledger_command_spec_policies import (
     _POLICY_1,
@@ -18,18 +30,6 @@ from ._app_ledger_command_spec_support import (
     _OPTIONAL_YEAR_OPTION,
     _optional_text_option,
 )
-from .command_parameter_contracts import ArgumentSpec, OptionSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterConstraint,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-    ValueContract,
-)
-from .command_spec import CommandSpec, InvocationSpec
 
 LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -111,10 +111,10 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_3,
-        handler=LazyBinding.available(DeferredTarget("._ledger", "ledger_link", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_commands", "ledger_link", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerLinkResult", __package__),
+            target=DeferredTarget(".ledger_results", "LedgerLinkResult", __package__),
             identity="ledger.link",
         ),
     ),
@@ -260,10 +260,10 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option("account", ("--account",), "cli.ledger.list.account_help"),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_read_commands", "ledger_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerListResult", __package__),
+            target=DeferredTarget(".ledger_results", "LedgerListResult", __package__),
             identity="ledger.list",
         ),
     ),
@@ -326,10 +326,10 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_llm_diagnostics", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_read_commands", "ledger_llm_diagnostics", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_rule_payloads", "LedgerLlmDiagnosticsResult", __package__),
+            target=DeferredTarget(".ledger_rule_results", "LedgerLlmDiagnosticsResult", __package__),
             identity="ledger.llm_diagnostics",
         ),
     ),
@@ -396,7 +396,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".ledger_lifecycle_cli", "ledger_merge", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerMergeResult", __package__),
+            target=DeferredTarget(".ledger_results", "LedgerMergeResult", __package__),
             identity="ledger.merge",
         ),
     ),
@@ -426,10 +426,10 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._participation_cli", "participation_lookup", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".participation_commands", "participation_lookup", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerTransactionParticipationPayload", __package__),
+            target=DeferredTarget(".ledger_results", "LedgerTransactionParticipationPayload", __package__),
             identity="ledger.participation",
         ),
     ),
@@ -476,10 +476,10 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_6,
-        handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_preflight", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_read_commands", "ledger_preflight", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerPreflightResult", __package__),
+            target=DeferredTarget(".ledger_results", "LedgerPreflightResult", __package__),
             identity="ledger.preflight",
         ),
     ),

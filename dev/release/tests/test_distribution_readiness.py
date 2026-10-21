@@ -47,13 +47,12 @@ def _run(*arguments: str, cwd: Path) -> CommandResult:
 def _source_tree(root: Path) -> str:
     """Plant a plain source tree and return the content digest readiness checks against.
 
-    ``var/`` is excluded the same way the real repository excludes it, so
-    writing evidence and cohort artifacts beneath the tree afterward -- both
-    happen under ``root / "var"`` in these fixtures -- never moves the digest
-    a later readiness check recomputes.
+    ``build/`` and ``var/`` are excluded the same way the real repository
+    excludes them, so writing the cohort under ``build/`` and evidence under
+    ``var/`` afterward never moves the digest a later readiness check recomputes.
     """
     root.mkdir()
-    (root / ".gitignore").write_text("var/\n", encoding="utf-8")
+    (root / ".gitignore").write_text("build/\nvar/\n", encoding="utf-8")
     (root / "source.txt").write_text("release source\n", encoding="utf-8")
     return content_digest(root, repository_files(root))
 
@@ -124,7 +123,7 @@ def _record(
 def _ready_tree(tmp_path: Path):
     repo = tmp_path / "repo"
     digest = _source_tree(repo)
-    cohort = _cohort(repo / "var" / "release-cohort", source_digest=digest)
+    cohort = _cohort(repo / "build" / "release-cohort", source_digest=digest)
     evidence = repo / "var" / "distribution-install-readiness"
     evidence.mkdir(parents=True)
     return repo, cohort, evidence
@@ -160,7 +159,7 @@ def test_evidence_from_another_cohort_blocks(tmp_path: Path) -> None:
     """A valid record for different bytes is mismatched rather than reusable."""
     repo, first, evidence = _ready_tree(tmp_path)
     second = _cohort(
-        repo / "var" / "other-release-cohort",
+        repo / "build" / "other-release-cohort",
         source_digest=first.manifest.source.source_digest,
         payload_suffix="two",
     )

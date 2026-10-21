@@ -718,6 +718,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.VerificationOutcomeIncompleteError",
+        ErrorCode(
+            code="ERROR_MODELO_VERIFICATION_OUTCOME_INCOMPLETE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_verification_outcome_incomplete",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.action_errors.VerificationReportNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_VERIFICATION_REPORT_NOT_FOUND",

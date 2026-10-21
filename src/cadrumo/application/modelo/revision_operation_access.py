@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.filing_record import ModeloRecord
@@ -20,9 +22,6 @@ from ..operations.access_resolution import (
     bind_replayed_or_fresh_single_period_access,
 )
 from ..operations.models import OperationRequest
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .operation_definitions import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,

@@ -525,7 +525,7 @@ def _refuse_undeclared_source_narrowing(binding: BindingDefinition, coordinate: 
     raise RegistryValidationError(
         f"binding {binding.id!r} provider {binding.source.value!r} declares a {coordinate} "
         f"that the typed source accessor does not narrow",
-        context={"binding_id": str(binding.id), "kind": binding.source.value},
+        context={"binding_id": binding.id, "kind": binding.source.value},
     )
 
 

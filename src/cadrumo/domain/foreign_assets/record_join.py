@@ -173,7 +173,7 @@ def join_modelo_720_records(
                 asset_ref=asset_ref, reason=M720RecordJoinRefusalReason.REGISTER_MISMATCH, detail=disagreement
             )
         declared = declarations.get(asset_ref)
-        if not declared:
+        if not (declared is not None and declared):
             raise ForeignAssetRecordJoinRefusedError(
                 asset_ref=asset_ref, reason=M720RecordJoinRefusalReason.UNDECLARED_ASSET
             )

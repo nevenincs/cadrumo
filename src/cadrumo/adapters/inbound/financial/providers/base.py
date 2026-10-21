@@ -60,7 +60,6 @@ from .....core.decimal.coercion import coerce_decimal
 from .....core.decimal.grammar import DecimalSeparatorValue
 from .....core.errors.hierarchy import CadrumoError, CoreValidationError
 from .....core.hashing import sha256_hex as _sha256_hex
-from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.parsing.codes import normalise_iso_4217_currency
 from .....core.tabular import coerce_cell_text
@@ -68,8 +67,6 @@ from .....core.text_fold import fold_diacritics
 from .....core.time.clock import now
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-
-LOGGER = get_logger(__name__)
 
 # Defensive ceiling on financial-source ingest size. Real bank statements
 # (PDF, XLSX, CSV) for a full fiscal year are well under 10 MiB; this 64 MiB
@@ -456,13 +453,8 @@ def parse_date_value(value: object, *, day_first: bool = True, label: str = "dat
     if raw.isdigit() and len(raw) >= 8:
         try:
             return datetime.strptime(raw[:8], "%Y%m%d").date()
-        except ValueError as fmt_exc:
-            LOGGER.debug(
-                "financial provider: compact date format %r did not match %r (%s); trying next",
-                "%Y%m%d",
-                raw,
-                fmt_exc,
-            )
+        except ValueError:
+            pass
     formats: Sequence[str]
     if day_first:
         formats = (
@@ -489,19 +481,13 @@ def parse_date_value(value: object, *, day_first: bool = True, label: str = "dat
     for candidate in formats:
         try:
             return datetime.strptime(raw, candidate).date()
-        except ValueError as fmt_exc:
-            LOGGER.debug(
-                "financial provider: date format %r did not match %r (%s); trying next",
-                candidate,
-                raw,
-                fmt_exc,
-            )
+        except ValueError:
             continue
     expected_format = _expected_date_format_hint(day_first=day_first)
     raise FinancialValidationError(
-        f"unsupported date format: {original_raw!r}; expected {expected_format}",
+        f"unsupported date format; expected {expected_format}",
         translated_message="errors.financial.unsupported_date_format",
-        context={"label": label, "raw": original_raw, "expected_format": expected_format},
+        context={"label": "date", "raw": "<redacted>", "expected_format": expected_format},
     )
 
 
@@ -556,22 +542,22 @@ def parse_amount_value(
         # and every modelo aggregation built on it. A spreadsheet re-export of
         # a large amount is a real source of this shape, so it must refuse
         # rather than be normalised into a plausible wrong number.
-        raise FinancialValidationError(f"scientific-notation amount value: {raw!r}")
+        raise FinancialValidationError("scientific-notation amount value")
     sanitized, negative = _sanitise_amount_text(raw)
     if not sanitized:
-        raise FinancialValidationError(f"unsupported amount value: {raw!r}")
+        raise FinancialValidationError("unsupported amount value")
     decimal_sep = _resolve_decimal_separator(sanitized, override=decimal_separator)
     normalized = _normalise_amount_digits(sanitized, decimal_sep=decimal_sep)
     try:
         amount = Decimal(normalized)
-    except InvalidOperation as exc:
-        raise FinancialValidationError(f"unsupported amount value: {raw!r}") from exc
+    except InvalidOperation:
+        raise FinancialValidationError("unsupported amount value") from None
     if not amount.is_finite():
         # Defence-in-depth: _sanitise_amount_text already strips letters,
         # so NaN / Infinity literals cannot reach Decimal() through normal
         # flow. This guard catches any future sanitiser regression that
         # would otherwise admit non-finite values into the ledger.
-        raise FinancialValidationError(f"non-finite amount value: {raw!r}")
+        raise FinancialValidationError("non-finite amount value")
     return -amount if negative else amount
 
 
@@ -591,7 +577,7 @@ def _already_numeric_amount(value: object) -> Decimal | None:
         return None
     coerced = coerce_decimal(value)
     if coerced is None:
-        raise FinancialValidationError(f"unsupported float value: {value!r}")
+        raise FinancialValidationError("unsupported float value")
     return coerced
 
 
@@ -634,7 +620,7 @@ def _resolve_decimal_separator(
     """
     if override is not None:
         if override not in {",", "."}:
-            raise FinancialValidationError(f"unsupported decimal separator: {override!r}")
+            raise FinancialValidationError("unsupported decimal separator")
         return override
     if "," in sanitized and "." in sanitized:
         return "," if sanitized.rfind(",") > sanitized.rfind(".") else "."
@@ -682,13 +668,7 @@ def _reject_malformed_thousands_groups(sanitized: str, *, thousands_sep: str) ->
     for segment in segments[1:]:
         digits = segment.split(",")[0] if thousands_sep == "." else segment.split(".")[0]
         if len(digits) != _THOUSANDS_GROUP_WIDTH or not digits.isdigit():
-            raise FinancialValidationError(
-                f"amount value {sanitized!r} groups digits as {digits!r} after the "
-                f"{thousands_sep!r} thousands separator, which is not a three-digit "
-                f"group: the separator is being read as grouping when the file may "
-                f"mean it as the decimal mark, and dropping it would silently change "
-                f"the magnitude",
-            )
+            raise FinancialValidationError("amount value has a malformed three-digit group")
 
 
 def synthesize_transaction_id(
@@ -814,7 +794,7 @@ def default_currency() -> str:
     configured = load_settings().financial_base_currency
     try:
         return normalise_iso_4217_currency(configured)
-    except CoreValidationError as exc:
+    except CoreValidationError:
         raise FinancialValidationError(
-            f"financial_base_currency setting must be a three-letter ISO 4217 code; got {configured!r}",
-        ) from exc
+            "financial_base_currency setting must be a three-letter ISO 4217 code",
+        ) from None

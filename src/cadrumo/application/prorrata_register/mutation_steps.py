@@ -8,6 +8,8 @@ from typing import cast
 
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ...domain.calculations.registry.prorrata_register_catalogue import (
@@ -30,7 +32,6 @@ from ...domain.prorrata_register.register import (
 )
 from ..modelo.calculation_action_ports import CalculationActionPortsFactory
 from ..operations.owner import OperationExecutorContext
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from . import operation_requests as _requests
 from .election import ProrrataElectionError

@@ -133,6 +133,7 @@ def tree_inheritance(tree: GeneratedExportTree) -> GeneratedExportInheritanceCon
         bundled_path("registry", "aeat"),
         modelo=tree.modelo,
         revision=tree.revision,
+        retain_source_chain=True,
     )
 
 

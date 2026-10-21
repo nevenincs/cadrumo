@@ -110,8 +110,8 @@ class IrpfSpecialRegime(StrictRegistryToken):
 class ObligationStatus(StrEnum):
     """Status of a single :class:`ModeloDeadline` against a reference date.
 
-    :attr:`UPCOMING` and :attr:`DUE_SOON` are differentiated by the
-    ``CADRUMO_DEADLINE_DUE_SOON_DAYS`` setting (default 14 days).
+    :attr:`UPCOMING` and :attr:`DUE_SOON` are differentiated by the engine's
+    ``due_soon_days`` window (default 14 days).
     :attr:`FILED` and :attr:`NOT_APPLICABLE` are reserved for downstream
     consumers — the engine never produces them.
 

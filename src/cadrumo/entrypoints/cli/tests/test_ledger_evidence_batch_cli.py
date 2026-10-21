@@ -24,8 +24,8 @@ from ....application.operator_actions.models import ConditionEvidence, Precondit
 from ....application.provisioning_contracts import ProvisioningPreconditionCondition
 from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction, ResolvedPreconditionAction
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ....domain.iva.classification import InvoiceKind
-from .._ledger_evidence_batch_cli import _batch_payload, _batch_text_lines, _run_notices
+from ....domain.iva.schema import InvoiceKind
+from ..ledger_evidence_batch_commands import _batch_payload, _batch_text_lines, _run_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

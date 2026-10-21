@@ -461,5 +461,5 @@ async def test_the_declarations_status_line_leads_the_map_and_the_title_is_stron
     assert shown == status
     assert without[0] == "sources-title"
     assert "sources-status" not in without
-    assert title.bold
+    assert title.bold is True
     assert title.color != intro.color

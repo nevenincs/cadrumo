@@ -11,6 +11,8 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ....application.ledger import attachment_mutation_operation as operation_module
 from ....application.ledger.action_ports import LedgerActionPorts
 from ....application.ledger.attachment_mutation_operation import (
@@ -29,7 +31,6 @@ from ....application.operations.models import OperationRequest
 from ....application.operations.owner import OperationExecutorContext
 from ....application.operations.refusal_evidence import OperationRefusalEvidence
 from ....application.review.filter import LedgerReviewStatus
-from ....application.user_profile.access_contracts import AccessDenialCode
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.attachments.errors import AttachmentNotFoundError

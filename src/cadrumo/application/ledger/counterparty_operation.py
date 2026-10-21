@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.country_code import CountryCodeAlpha2
 from ...core.hex import Hex64Str
@@ -17,15 +19,14 @@ from ...domain.calculations.registry.eu_member_state_catalogue import require_eu
 from ...domain.iva.classification import require_iva_territorial_scope
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.fenced_result import publish_fenced_result
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .counterparty_establishment import (
     ConfirmedCounterpartyFacts,
@@ -80,7 +81,12 @@ def _require_non_confirmation_action_fields(
 
 
 class LedgerCounterpartyRequest(BaseModel):
-    """One exact-profile action with private counterparty input."""
+    """One exact-profile action with private counterparty input.
+
+    ``asserted_by`` is recorded as sent for a person's session. An automation's
+    session is recorded under its own session label, whatever the request
+    carries; a confirmation must still supply it.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -355,9 +361,15 @@ async def _publish_counterparty_action(
 class LedgerCounterpartyExecutor:
     """Invoke canonical services inside the profile worker's access fence."""
 
-    def __init__(self, repository_factory: CounterpartyEstablishmentRepositoryFactory) -> None:
+    def __init__(
+        self,
+        repository_factory: CounterpartyEstablishmentRepositoryFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Keep the profile-bound repository factory in the worker."""
         self._repository_factory = repository_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self, request: OperationRequest[LedgerCounterpartyRequest], context: OperationExecutorContext
@@ -369,6 +381,11 @@ class LedgerCounterpartyExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID)
+        if payload.action == "confirm":
+            asserted_by = execution_actor_label(
+                self._execution_caller_reader, context, supplied=payload.asserted_by or ""
+            )
+            payload = payload.model_copy(update={"asserted_by": asserted_by})
         return await await_cancellation_complete(
             _publish_counterparty_action(
                 context,
@@ -382,16 +399,18 @@ class LedgerCounterpartyExecutor:
 
 def build_ledger_counterparty_definition(
     repository_factory: CounterpartyEstablishmentRepositoryFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Declare private input, a recorded result and honest mutation effects."""
     return build_single_phase_definition(
         definition_id=LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID,
         request_type=LedgerCounterpartyRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerCounterpartyResult,
         executor_type=LedgerCounterpartyExecutor,
-        build=lambda: LedgerCounterpartyExecutor(repository_factory),
+        build=lambda: LedgerCounterpartyExecutor(repository_factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

@@ -41,8 +41,8 @@ from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.regime_legend import resolve_regime_legends
+from ....domain.iva.schema import InvoiceKind
 from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND
 from ..document_direction import (
     DIRECTION_BY_FILER_ROLE,

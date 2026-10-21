@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 
 import pytest
@@ -11,8 +12,10 @@ from ....core.i18n.render import lookup_translation
 from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ....domain.calculations.registry.modelo_localization import binding_locale_key, resolve_modelo_localization
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 from ....domain.modelos.codes import ModeloCode
 from ..work_form import build_modelo_work_form
 from ..work_form_models import (
@@ -37,6 +40,7 @@ def _form(
     language: OutputLanguage,
     *,
     adjust: Callable[[RegistrySnapshot], RegistrySnapshot] | None = None,
+    adjust_layout: Callable[[FormLayoutDefinition], FormLayoutDefinition] | None = None,
 ) -> ModeloWorkForm:
     period = Period.from_year_and_code(year, code)
     revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
@@ -58,10 +62,14 @@ def _form(
     )
     if adjust is not None:
         snapshot = adjust(snapshot)
+    layout = operation.form_layout(modelo, snapshot.revision.id)
+    if adjust_layout is not None:
+        assert layout is not None
+        layout = adjust_layout(layout)
     return build_modelo_work_form(
         review=review,
         snapshot=snapshot,
-        layout=operation.form_layout(modelo, snapshot.revision.id),
+        layout=layout,
         revision=None,
         permitted_surface=None,
         entered_casilla_ids=None,
@@ -129,18 +137,67 @@ def test_a_binding_inputs_printed_code_is_in_the_box_slot(
     assert "activity" in field.label.text.lower()
 
 
-def test_unproven_envelope_inputs_remain_visible_and_honestly_unnamed(
+def test_an_unproven_manual_input_remains_visible_and_honestly_unnamed(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    fields = _binding_fields(_form(operation, "369", 2025, "1T", OutputLanguage.EN))
+    binding_id = "synthetic-unproven-envelope-input"
+    template_id = ""
+
+    def add_unproven_input(snapshot: RegistrySnapshot) -> RegistrySnapshot:
+        nonlocal template_id
+        template = next(
+            binding
+            for binding in snapshot.revision.bindings
+            if isinstance(binding.provider, ManualInputProvider) and binding.provider.record is not None
+        )
+        assert isinstance(template.provider, ManualInputProvider)
+        template_id = str(template.id)
+        unproven = template.model_copy(
+            update={
+                "id": binding_id,
+                "provider": template.provider.model_copy(update={"record": "synthetic-unproven-record"}),
+            }
+        )
+        return snapshot.model_copy(
+            update={
+                "revision": snapshot.revision.model_copy(update={"bindings": (*snapshot.revision.bindings, unproven)})
+            }
+        )
+
+    def place_unproven_input(layout: FormLayoutDefinition) -> FormLayoutDefinition:
+        encoded = layout.model_dump_json()
+        needle = json.dumps(template_id)
+        assert template_id and needle in encoded
+        return FormLayoutDefinition.model_validate_json(encoded.replace(needle, json.dumps(binding_id)))
+
+    fields = _binding_fields(
+        _form(
+            operation,
+            "390",
+            2025,
+            "0A",
+            OutputLanguage.EN,
+            adjust=add_unproven_input,
+            adjust_layout=place_unproven_input,
+        )
+    )
     field = next(
         field
         for field in fields
-        if isinstance(field.address, ModeloFormBindingAddressV1)
-        and str(field.address.binding_id) == "modelo-369-union-fichero.tipo-y-cierre"
+        if isinstance(field.address, ModeloFormBindingAddressV1) and str(field.address.binding_id) == binding_id
     )
     assert field.label.disclosure is ModeloFormTextDisclosure.UNNAMED
     assert field.box is None
+
+
+def test_the_generated_envelope_closing_tag_is_not_a_manual_question(operation: PinnedAuthorityOperation) -> None:
+    fields = _binding_fields(_form(operation, "369", 2025, "1T", OutputLanguage.EN))
+    assert fields
+    assert all(
+        not isinstance(field.address, ModeloFormBindingAddressV1)
+        or str(field.address.binding_id) != "modelo-369-union-fichero.tipo-y-cierre"
+        for field in fields
+    )
 
 
 def _direct_estimation_field(form: ModeloWorkForm) -> ModeloFormField:

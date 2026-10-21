@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
+from collections.abc import Collection
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -12,6 +12,7 @@ from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
+from ...core.unit_proportion import is_unit_proportion
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from .actions_common import display_decimal
 
@@ -65,6 +66,11 @@ LedgerClassifyLongText = Annotated[str, Field(max_length=4096)]
 
 LedgerClassifyTransactionPrefix = Annotated[str, Field(min_length=1, max_length=96)]
 
+# Hand-typed euro amounts carry at most cent precision, so a thousands-grouped amount is
+# refused instead of being read as a fraction. A share or a rate is a fraction of one whose
+# scale the governed rates set (0.052, 0.0175), so it has no such cap and is bounded by range.
+_MAX_AMOUNT_FRACTION_DIGITS = 2
+
 
 class LedgerClassifyPatch(BaseModel):
     """Bounded JSON-stable values for the manual classification patch."""
@@ -103,11 +109,26 @@ class LedgerClassifyPatch(BaseModel):
     def _canonical_decimal_text(cls, value: str | None, info: ValidationInfo) -> str | None:
         if value is None:
             return None
-        parsed = try_parse_canonical_decimal(value, signed=False)
+        is_fraction = info.field_name in {"business_pct", "iva_rate"}
+        parsed = try_parse_canonical_decimal(
+            value, signed=False, max_fraction_digits=None if is_fraction else _MAX_AMOUNT_FRACTION_DIGITS
+        )
         if parsed is None or display_decimal(parsed) != value:
             raise ValueError(f"ledger classify {info.field_name} must use canonical decimal text")
-        if info.field_name == "business_pct" and not Decimal("0") <= parsed <= Decimal("1"):
-            raise ValueError("ledger classify business_pct must be within 0..1")
+        if is_fraction and not is_unit_proportion(parsed):
+            raise ValueError(
+                f"ledger classify {info.field_name} must be within 0..1; a percentage is a fraction, so 21% is 0.21"
+            )
+        return value
+
+    @field_validator("notes")
+    @classmethod
+    def _notes_record_a_reason(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError(
+                "ledger classify notes must record why the transaction is classified; "
+                "omit them to leave the notes unchanged"
+            )
         return value
 
     @field_validator("counterparty_country")
@@ -138,10 +159,13 @@ class LedgerClassifyM210Options(BaseModel):
     def _canonical_m210_decimal(cls, value: str | None, info: ValidationInfo) -> str | None:
         if value is None:
             return None
-        parsed = try_parse_canonical_decimal(value, signed=False)
+        is_rate = info.field_name == "applicable_rate"
+        parsed = try_parse_canonical_decimal(
+            value, signed=False, max_fraction_digits=None if is_rate else _MAX_AMOUNT_FRACTION_DIGITS
+        )
         if parsed is None or display_decimal(parsed) != value:
             raise ValueError(f"M210 {info.field_name} must use canonical decimal text")
-        if info.field_name == "applicable_rate" and parsed > Decimal("1"):
+        if is_rate and not is_unit_proportion(parsed):
             raise ValueError("M210 applicable_rate must be within 0..1")
         return value
 
@@ -181,20 +205,26 @@ class LedgerClassifyRequest(BaseModel):
 
     @model_validator(mode="after")
     def _selected_values_match_mask(self) -> LedgerClassifyRequest:
-        _require_primary_classification(self)
+        require_primary_classification(self.patch, self.patch_fields)
         _require_selected_patch_values(self)
         _require_m210_selection(self)
         _require_m210_declaration_answers(self)
         return self
 
 
-def _require_primary_classification(request: LedgerClassifyRequest) -> None:
-    selected = set(request.patch_fields)
-    classification_value = request.patch.business_classification
+def require_primary_classification(patch: LedgerClassifyPatch, patch_fields: Collection[str]) -> None:
+    """Require one assignable classification, with a share exactly when it is mixed.
+
+    Single and CSV classification apply this to each classification they write,
+    so a share on a row that is not mixed, or a mixed row without one, is
+    refused the same way on both.
+    """
+    selected = set(patch_fields)
+    classification_value = patch.business_classification
     if "business_classification" not in selected or classification_value is None:
         raise ValueError("ledger classify must select one business classification")
     classification = BusinessClassification(classification_value)
-    business_pct_selected = "business_pct" in selected and request.patch.business_pct is not None
+    business_pct_selected = "business_pct" in selected and patch.business_pct is not None
     if (classification is BusinessClassification.MIXED) != business_pct_selected:
         raise ValueError("mixed classification requires exactly one business percentage")
 

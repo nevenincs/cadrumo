@@ -84,7 +84,8 @@ def test_old_308_preview_uses_complete_name_and_old_bank_account(year: int, revi
         and isinstance(c.value, str)
         and c.value.startswith("Modelo 308 ·")
     ]
-    assert titles == [f"Modelo 308 · {year}", f"Modelo 308 · {year}"]
+    assert {TabName.FORM, TabName.GUIDE} <= set(plan.tabs)
+    assert titles == [f"Modelo 308 · {year}"], titles
     assert any(c.casilla_id == "papel-nombre-completo" and c.value == "Ana Ejemplo" for c in plan.value_cells)
     form_ids = {c.casilla_id for c in plan.formula_cells if c.address.tab is TabName.FORM}
     assert {"papel-nombre-completo", "decl.devolucion-ccc", "decl.req-iva-devolver-17"} <= form_ids

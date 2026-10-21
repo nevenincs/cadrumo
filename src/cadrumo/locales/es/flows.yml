@@ -286,8 +286,8 @@ flows:
       cancel_button: Cancelar
       confirm_button: Ya lo he anotado
       offer_consequence: 'Sin él, una contraseña olvidada significa que los datos
-        no pueden recuperarse. También puedes configurarlo más tarde con: aeat config
-        profile recovery enable'
+        no pueden recuperarse. También puedes configurarlo más tarde con: cadrumo-runtime
+        config profile recovery enable'
       offer_explanation: Un código de recuperación te permite establecer una nueva
         contraseña si la olvidas. Se muestra una sola vez; anótalo y guárdalo lejos
         de este equipo.

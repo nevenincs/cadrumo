@@ -130,7 +130,7 @@ def build_m296_filing_projection_plan(
     )
     collection_by_kind = _registry_m296_projection_catalogue(
         effective_date,
-        period=str(registry_snapshot.period),
+        period=registry_snapshot.period,
     )
     contexts: list[FilingRecordRenderContext] = []
     values: list[FilingProjectionValue] = []

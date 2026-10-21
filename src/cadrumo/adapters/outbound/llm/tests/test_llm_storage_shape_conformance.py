@@ -42,7 +42,7 @@ _CREATED_AT = datetime(2026, 5, 28, 12, 20, 0, tzinfo=UTC)
 def _response() -> LLMResponse:
     return LLMResponse(
         text="ok",
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         model="claude-sonnet-4-6",
         input_tokens=15,
         output_tokens=6,

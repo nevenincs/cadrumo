@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-10-12 00:32+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -363,12 +363,20 @@ msgstr ""
 #: ../../how-to/censo-update.md:152
 msgid ""
 "The command previews the census facts the certificate carries without "
-"writing anything. Add `--apply` to record them onto the active profile."
+"writing anything. Add `--apply` to record them onto the active profile. "
+"The same preview and record is the registered operation `user-profile"
+".censo-certificate-import`, which the full-screen app lists under "
+"**Operations** and an agent runs with `execute`; give it the "
+"certificate's absolute path."
 msgstr ""
-"A parancs írás nélkül előnézetben megmutatja az igazolás censo-adatait. "
-"Add hozzá a `--apply` kapcsolót, hogy az aktív profilba rögzítsd őket."
+"A parancs előnézetben megmutatja a tanúsítvány által tartalmazott censo-"
+"adatokat, és semmit sem ír. Az `--apply` hozzáadásával rögzítheted őket "
+"az aktív profilra. Ugyanez az előnézet és rögzítés a `user-profile.censo-"
+"certificate-import` regisztrált művelet, amelyet a teljes képernyős "
+"alkalmazás a **Műveletek** alatt sorol fel, az ügynök pedig az `execute` "
+"eszközzel futtat; add meg neki a tanúsítvány abszolút elérési útját."
 
-#: ../../how-to/censo-update.md:155
+#: ../../how-to/censo-update.md:159
 msgid ""
 "Facts recorded this way carry a marker saying they are not official AEAT "
 "data: they came from a document you supplied, not from an AEAT-confirmed "
@@ -386,7 +394,7 @@ msgstr ""
 " a beállításkor általad megadott választól, a profil feljegyzést őriz az "
 "eltérésről, és az `aeat config profile view` a rendezésig figyelmeztet."
 
-#: ../../how-to/censo-update.md:163
+#: ../../how-to/censo-update.md:167
 msgid ""
 "Reading the certificate's contents is not yet active: the command "
 "currently refuses every document while layout coverage for AEAT-issued "
@@ -403,11 +411,11 @@ msgstr ""
 "ez az oldal változtatás nélkül érvényes lesz, amikor az olvasás "
 "aktiválódik."
 
-#: ../../how-to/censo-update.md:170
+#: ../../how-to/censo-update.md:174
 msgid "Record a Modelo 036 filing done outside Cadrumo"
 msgstr "A Cadrumón kívül benyújtott Modelo 036 rögzítése"
 
-#: ../../how-to/censo-update.md:172
+#: ../../how-to/censo-update.md:176
 msgid ""
 "If you file a Modelo 036 alta, modificacion, or baja in AEAT's sede, "
 "record that fact locally so later filings can rely on it. [Record a "
@@ -424,27 +432,27 @@ msgstr ""
 "rögzítettél egy benyújtást, frissítsd azokat a profilmezőket, amelyeket a"
 " benyújtás megváltoztatott."
 
-#: ../../how-to/censo-update.md:178
+#: ../../how-to/censo-update.md:182
 msgid "Check the profile afterwards"
 msgstr "Utána ellenőrizd a profilt"
 
-#: ../../how-to/censo-update.md:180
+#: ../../how-to/censo-update.md:184
 msgid "Check the active profile after editing census facts:"
 msgstr "Ellenőrizd az aktív profilt a censo-adatok szerkesztése után:"
 
-#: ../../how-to/censo-update.md:186
+#: ../../how-to/censo-update.md:190
 msgid "If the profile still reports missing facts, edit those fields directly:"
 msgstr ""
 "Ha a profil továbbra is hiányzó adatokat jelez, szerkeszd közvetlenül "
 "azokat a mezőket:"
 
-#: ../../how-to/censo-update.md:191
+#: ../../how-to/censo-update.md:195
 msgid "For modelo-specific readiness, use modelo readiness:"
 msgstr ""
 "A nyomtatványspecifikus készenléthez használd a nyomtatvány készenléti "
 "ellenőrzését:"
 
-#: ../../how-to/censo-update.md:197
+#: ../../how-to/censo-update.md:201
 msgid ""
 "The command exits with status 2 while the modelo is not ready. "
 "`profile_ready` covers profile facts only, so read `missing_bindings` for"
@@ -454,17 +462,17 @@ msgstr ""
 " A `profile_ready` csak a profiladatokat fedi le, ezért nézd meg a még "
 "hiányzó forrásbemeneteket a `missing_bindings` mezőben."
 
-#: ../../how-to/censo-update.md:201
+#: ../../how-to/censo-update.md:205
 msgid "Keep the facts current"
 msgstr "Tartsd naprakészen az adatokat"
 
-#: ../../how-to/censo-update.md:203
+#: ../../how-to/censo-update.md:207
 msgid "Your AEAT census can change: a new activity, a regime change, a baja."
 msgstr ""
 "Az AEAT-nál vezetett censód változhat: új tevékenység, rendszerváltás, "
 "baja."
 
-#: ../../how-to/censo-update.md:205
+#: ../../how-to/censo-update.md:209
 msgid ""
 "Pull again to catch changes in your address. The pull reports anything "
 "AEAT now holds that your profile does not."
@@ -472,7 +480,7 @@ msgstr ""
 "Kérd le újra az adatokat, hogy észrevedd a címed változását. A lekérés "
 "jelzi mindazt, amit az AEAT már tárol, de a profilod nem."
 
-#: ../../how-to/censo-update.md:208
+#: ../../how-to/censo-update.md:212
 msgid ""
 "The pull cannot see a regime change, so re-check those fields against "
 "your latest Modelo 036 copy whenever you file a censo change, and before "
@@ -482,23 +490,23 @@ msgstr ""
 "benyújtásakor, és mielőtt új benyújtási évet tervezel, vesd össze újra "
 "ezeket a mezőket a legutóbbi Modelo 036 másolatával."
 
-#: ../../how-to/censo-update.md:212
+#: ../../how-to/censo-update.md:216
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/censo-update.md:214
+#: ../../how-to/censo-update.md:218
 msgid "[Set up your taxpayer profile](profile-setup.md)"
 msgstr "[Állítsd be az adózói profilod](profile-setup.md)"
 
-#: ../../how-to/censo-update.md:215
+#: ../../how-to/censo-update.md:219
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Tervezd meg a benyújtási naptárad](filing-calendar.md)"
 
-#: ../../how-to/censo-update.md:216
+#: ../../how-to/censo-update.md:220
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
-#: ../../how-to/censo-update.md:217
+#: ../../how-to/censo-update.md:221
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[A számítási bemenetek áttekintése és megadása](review-calculation-"

@@ -34,10 +34,10 @@ def reconciliation_rows(
         # Older records can omit the source. Their evidence cannot be proven
         # identical, so retain each comparison rather than collapsing them.
         key = (
-            str(record.work_unit_id),
+            record.work_unit_id,
             record.source_kind.value,
             record.source_ref or record.bucket_event_id,
-            str(record.calculation_revision_id or record.bucket_event_id),
+            record.calculation_revision_id or record.bucket_event_id,
         )
         previous = latest.get(key)
         if previous is None or (record.reconciled_at, record.bucket_event_id) > (

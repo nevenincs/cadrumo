@@ -19,7 +19,7 @@ from datetime import date
 import pytest
 import typer
 
-from ._english_locale_fixture import english_locale_fixture
+from cadrumo.tests.english_locale_fixture import english_locale_fixture
 
 __all__ = ["english_locale_fixture"]
 

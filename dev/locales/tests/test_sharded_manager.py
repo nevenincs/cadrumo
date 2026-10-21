@@ -85,7 +85,27 @@ def test_sharded_set_and_remove_locale_value() -> None:
         assert removed_target == es_dir / "cli.yml"
 
         loaded_after = manager.load_locale(es_dir)
-        assert "cli" not in loaded_after or not loaded_after["cli"]
+        assert "cli" not in loaded_after or not bool(loaded_after["cli"])
+
+
+def test_startup_wording_keeps_its_existing_shard(tmp_path: Path) -> None:
+    """The canonical writer updates the startup owner without adding a common copy."""
+    locales_dir = tmp_path / "locales"
+    locale_dir = locales_dir / "es"
+    locale_dir.mkdir(parents=True)
+    startup = locale_dir / "desktop_startup.yml"
+    startup.write_text("desktop:\n  startup:\n    failure: 'Anterior'\n", encoding="utf-8")
+    common = locale_dir / "common.yml"
+    common.write_text("desktop:\n  session:\n    failed: 'Sin sesión'\n", encoding="utf-8")
+    manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    manager.set_locale_values("es", {"desktop.startup.failure": "No se ha podido iniciar."})
+
+    loaded = manager.load_locale(locale_dir)
+    assert _leaf(loaded, "desktop", "startup", "failure") == "No se ha podido iniciar."
+    assert common.read_text(encoding="utf-8") == "desktop:\n  session:\n    failed: 'Sin sesión'\n"
+    assert manager.remove_locale_value("es", "desktop.startup.failure") == startup
+    assert manager.load_locale(locale_dir) == {"desktop": {"session": {"failed": "Sin sesión"}}}
 
 
 def test_sharded_scaffold_partitions_keys() -> None:

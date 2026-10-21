@@ -199,7 +199,9 @@ def _ledger(
         opening_stock=value,
         period_movements=movements,
         closing_authority_record=_authority(
-            value, physical=Decimal(physical) if physical else None, select_physical=select_physical
+            value,
+            physical=Decimal(physical) if (physical is not None and physical) else None,
+            select_physical=select_physical,
         ),
     )
 

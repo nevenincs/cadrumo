@@ -125,7 +125,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "a40b082dc3746a6247bdfa43a3efaaa9b5e34df98a084d50210e583ab6e67fdd"
+          "value": "83ac6491cc41922a1d750ec2268bfca9ff1aee49950f232f8dcee08f4def9439"
         }
       ],
       "envelope": {
@@ -196,7 +196,7 @@
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "a40b082dc3746a6247bdfa43a3efaaa9b5e34df98a084d50210e583ab6e67fdd",
+          "calculation_revision_id": "83ac6491cc41922a1d750ec2268bfca9ff1aee49950f232f8dcee08f4def9439",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -4129,7 +4129,7 @@
             {"casilla_id":"0586","label":"Increased net regional tax liability","role":"key_figure","value":"1616.62"}
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision a40b082dc3746a6247bdfa43a3efaaa9b5e34df98a084d50210e583ab6e67fdd (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 83ac6491cc41922a1d750ec2268bfca9ff1aee49950f232f8dcee08f4def9439 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "relation_prefill",
@@ -4179,7 +4179,7 @@
         "modelo",
         "work",
         "verify",
-        "a40b082dc3746a6247bdfa43a3efaaa9b5e34df98a084d50210e583ab6e67fdd"
+        "83ac6491cc41922a1d750ec2268bfca9ff1aee49950f232f8dcee08f4def9439"
       ],
       "captures": [],
       "envelope": {
@@ -4244,7 +4244,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "a40b082dc3746a6247bdfa43a3efaaa9b5e34df98a084d50210e583ab6e67fdd",
+          "calculation_revision_id": "83ac6491cc41922a1d750ec2268bfca9ff1aee49950f232f8dcee08f4def9439",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4314,7 +4314,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "2e7ddf01803d8361507002519b609d08380f2d2359928900ef9e72314ca3d8a8",
+          "verification_report_id": "ebb528d87c5e99227cd21ec170724ef79dc684242b45d7f874b6d409e7aa82dc",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

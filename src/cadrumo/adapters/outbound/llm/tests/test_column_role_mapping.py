@@ -382,8 +382,6 @@ def _mapper(tmp_path: Path, endpoint: str) -> Generator[SemanticColumnRoleMapper
     case does not depend on whether this host's accelerator can be read.
     """
     settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model="gpt-oss",
         cadrumo_llm_ollama_chat_url=endpoint,
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
@@ -401,12 +399,10 @@ def _mapper(tmp_path: Path, endpoint: str) -> Generator[SemanticColumnRoleMapper
 
 
 def test_the_role_decides_the_model_not_the_general_default(tmp_path: Path) -> None:
-    """The mapping call goes to the role's model, never to ``cadrumo_llm_model``.
+    """The mapping call goes to the role's model, never to another configured model.
 
-    The general default is a frontier hosted model. Answering a
-    short-string selection task on it is the standing directive's exact
-    prohibition, and the settings below pin a distinct general model so that
-    inheriting it would be visible here rather than merely unlikely.
+    Answering a short-string selection task on anything but the role's model is
+    the standing directive's exact prohibition.
     """
     expected = select_model_for_role(ModelRole.COLUMN_ROLE_MAPPING).runtime_id
 
@@ -416,7 +412,6 @@ def test_the_role_decides_the_model_not_the_general_default(tmp_path: Path) -> N
     body = events.get_nowait()["body"]
     assert isinstance(body, dict)
     assert body["model"] == expected
-    assert body["model"] != "gpt-oss", "the mapping call inherited the general model setting"
 
 
 def test_an_explicitly_pinned_model_outranks_the_role(tmp_path: Path) -> None:
@@ -426,8 +421,6 @@ def test_an_explicitly_pinned_model_outranks_the_role(tmp_path: Path) -> None:
     has to be reachable without editing this module.
     """
     settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",

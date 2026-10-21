@@ -42,11 +42,12 @@ pub enum Kind {
     Console,
     Python,
     Tui,
+    AeatSetup,
 }
 
 impl Kind {
     #[cfg(test)]
-    const ALL: [Self; 3] = [Self::Console, Self::Python, Self::Tui];
+    const ALL: [Self; 4] = [Self::Console, Self::Python, Self::Tui, Self::AeatSetup];
 
     fn slot(self) -> usize {
         self as usize
@@ -54,6 +55,21 @@ impl Kind {
 }
 
 impl Program {
+    fn for_aeat_setup(launch: &Launch, profile: &str) -> Result<Self> {
+        if !crate::shell::agent_access::wire::is_uuid(profile)
+            || profile != profile.to_ascii_lowercase()
+            || profile == "00000000-0000-0000-0000-000000000000"
+        {
+            return Err(failure(ErrorCode::InvalidArguments));
+        }
+        let mut program = Self::for_kind(launch, Kind::Tui)?;
+        program.arguments.extend([
+            OsString::from("--aeat-auth-profile"),
+            OsString::from(profile),
+        ]);
+        Ok(program)
+    }
+
     /// All terminal kinds share the pinned environment, bundled command path
     /// and taxonomy-owned operator workspace.
     fn for_kind(launch: &Launch, kind: Kind) -> Result<Self> {
@@ -62,6 +78,7 @@ impl Program {
             console::with_package_first(launch.child.environment().clone(), &interpreter)?;
         console::validate_workspace(&launch.console_workspace, &launch.working_directory)?;
         Ok(match kind {
+            Kind::AeatSetup => return Err(failure(ErrorCode::InvalidArguments)),
             Kind::Console => {
                 let (executable, arguments) = console::shell(&environment)?;
                 Self {
@@ -81,7 +98,7 @@ impl Program {
             },
             Kind::Tui => Self {
                 executable: interpreter,
-                arguments: ["-m", "cadrumo.entrypoints.tui"]
+                arguments: ["-I", "-m", "cadrumo_runtime.host.frontend.tui"]
                     .into_iter()
                     .map(OsString::from)
                     .collect(),
@@ -98,6 +115,8 @@ pub trait Settle {
     fn live(&self) -> bool;
     fn request_stop(&mut self);
     fn await_stop(&mut self, deadline: Instant) -> Result<()>;
+    /// Settles without waiting when every worker has already ended.
+    fn settle_ended(&mut self) -> bool;
 }
 
 impl Settle for Session {
@@ -110,6 +129,9 @@ impl Settle for Session {
     fn await_stop(&mut self, deadline: Instant) -> Result<()> {
         Session::await_stop(self, deadline)
     }
+    fn settle_ended(&mut self) -> bool {
+        Session::settle_ended(self)
+    }
 }
 
 struct Entry<S> {
@@ -117,38 +139,54 @@ struct Entry<S> {
     session: S,
 }
 
-/// At most one session per kind. A session that failed to settle stays owned
-/// in its slot until a later settlement succeeds.
+/// At most one addressable session per kind. A stopped session that misses
+/// its settlement bound stays owned as lingering, without holding its kind
+/// against a new session, until a later settlement succeeds.
 pub struct Registry<S> {
     next: u64,
-    slots: [Option<Entry<S>>; 3],
+    closed: bool,
+    slots: [Option<Entry<S>>; 4],
+    lingering: Vec<S>,
 }
 
 impl<S> Default for Registry<S> {
     fn default() -> Self {
         Self {
             next: 0,
-            slots: [None, None, None],
+            closed: false,
+            slots: [None, None, None, None],
+            lingering: Vec::new(),
         }
     }
 }
 
 impl<S: Settle> Registry<S> {
     /// Starts `kind`, replacing a session that exited or was stopped. A live
-    /// session of the same kind is refused.
+    /// session of the same kind is refused. A replaced session that cannot
+    /// settle in time lingers, so its kind can start again.
     pub fn open(&mut self, kind: Kind, start: impl FnOnce() -> Result<S>) -> Result<u64> {
+        if self.closed {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
+        self.lingering.retain_mut(|session| !session.settle_ended());
         let slot = &mut self.slots[kind.slot()];
-        if let Some(entry) = slot {
-            if entry.session.live() {
-                return Err(failure(ErrorCode::SessionUnavailable));
-            }
+        if slot.as_ref().is_some_and(|entry| entry.session.live()) {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
+        if let Some(mut entry) = slot.take() {
             entry.session.request_stop();
-            entry.session.await_stop(Instant::now() + SETTLE_TIMEOUT)?;
-            *slot = None;
+            // The session records its own settlement failure.
+            if entry
+                .session
+                .await_stop(Instant::now() + SETTLE_TIMEOUT)
+                .is_err()
+            {
+                self.lingering.push(entry.session);
+            }
         }
         let session = start()?;
         self.next += 1;
-        *slot = Some(Entry {
+        self.slots[kind.slot()] = Some(Entry {
             id: self.next,
             session,
         });
@@ -165,39 +203,53 @@ impl<S: Settle> Registry<S> {
             .ok_or_else(|| failure(ErrorCode::SessionUnavailable))
     }
 
-    /// Settles session `id` and forgets it; it stays owned if settlement fails.
+    /// Settles session `id` and forgets its id; it lingers if settlement fails.
     pub fn close(&mut self, id: u64) -> Result<()> {
         let slot = self
             .slots
             .iter_mut()
             .find(|slot| slot.as_ref().is_some_and(|entry| entry.id == id))
             .ok_or_else(|| failure(ErrorCode::SessionUnavailable))?;
-        if let Some(entry) = slot {
-            entry.session.request_stop();
-            entry.session.await_stop(Instant::now() + SETTLE_TIMEOUT)?;
+        let Some(mut entry) = slot.take() else {
+            return Ok(());
+        };
+        entry.session.request_stop();
+        let settled = entry.session.await_stop(Instant::now() + SETTLE_TIMEOUT);
+        if settled.is_err() {
+            self.lingering.push(entry.session);
         }
-        *slot = None;
-        Ok(())
+        settled
     }
 
-    /// Settles every kind under one shared deadline. Every kind is attempted
-    /// even when another fails; failed sessions stay owned and their failures
-    /// are returned in kind order.
+    /// Settles every kind and every lingering session under one shared
+    /// deadline. Each is attempted even when another fails; failed sessions
+    /// linger and their failures are returned, kinds first in kind order.
     pub fn close_all(&mut self) -> Vec<ApplicationError> {
-        for entry in self.slots.iter_mut().flatten() {
-            entry.session.request_stop();
+        let mut sessions: Vec<S> = self
+            .slots
+            .iter_mut()
+            .filter_map(|slot| slot.take().map(|entry| entry.session))
+            .collect();
+        sessions.append(&mut self.lingering);
+        // A retry kills again, as the first request did.
+        for session in &mut sessions {
+            session.request_stop();
         }
         let deadline = Instant::now() + SETTLE_TIMEOUT;
         let mut failures = Vec::new();
-        for slot in &mut self.slots {
-            if let Some(entry) = slot {
-                match entry.session.await_stop(deadline) {
-                    Ok(()) => *slot = None,
-                    Err(error) => failures.push(error),
-                }
+        for mut session in sessions {
+            if let Err(error) = session.await_stop(deadline) {
+                failures.push(error);
+                self.lingering.push(session);
             }
         }
         failures
+    }
+
+    /// Permanently refuse new children under the same lock used for opening.
+    pub fn shutdown(&mut self) -> Vec<ApplicationError> {
+        self.closed = true;
+        self.close_all()
     }
 
     #[cfg(test)]
@@ -206,6 +258,11 @@ impl<S: Settle> Registry<S> {
             .into_iter()
             .filter(|kind| self.slots[kind.slot()].is_some())
             .collect()
+    }
+
+    #[cfg(test)]
+    fn lingering(&self) -> usize {
+        self.lingering.len()
     }
 }
 
@@ -297,6 +354,25 @@ impl TerminalState {
         })
     }
 
+    /// A separate owned PTY preserves the person's existing workbench.
+    pub fn open_aeat_setup(
+        &self,
+        profile: &str,
+        cols: u16,
+        rows: u16,
+        sink: Sink,
+        document: u64,
+    ) -> Result<u64> {
+        let program = Program::for_aeat_setup(&self.launch, profile)?;
+        open_for(
+            &self.registry,
+            &self.documents,
+            document,
+            Kind::AeatSetup,
+            || Session::start(program, cols, rows, sink, self.launch.diagnostics.clone()),
+        )
+    }
+
     pub fn with_session<T>(
         &self,
         id: u64,
@@ -312,10 +388,19 @@ impl TerminalState {
         self.registry()?.close(id)
     }
 
-    /// Settles every session; used on window close, page load and host exit.
+    /// Settles every session for a page reload, allowing the new page to open.
     /// Returns the first failure; later ones go to diagnostics directly.
     pub fn stop(&self) -> Result<()> {
-        let mut failures = self.registry()?.close_all().into_iter();
+        self.report_cleanup(self.registry()?.close_all())
+    }
+
+    /// Host shutdown permanently closes admission; page reload only settles.
+    pub fn shutdown(&self) -> Result<()> {
+        self.report_cleanup(self.registry()?.shutdown())
+    }
+
+    fn report_cleanup(&self, errors: Vec<ApplicationError>) -> Result<()> {
+        let mut failures = errors.into_iter();
         let first = failures.next();
         for error in failures {
             self.launch.diagnostics.failure(error);
@@ -338,4 +423,4 @@ impl TerminalState {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

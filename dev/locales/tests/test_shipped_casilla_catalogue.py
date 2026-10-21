@@ -117,7 +117,11 @@ def test_no_rendering_stands_for_two_composed_segments() -> None:
 
 def test_every_source_truncation_is_still_stored() -> None:
     """An exemption for a cut official text must name Spanish the catalogue still stores."""
-    stored = {text for text in ModeloCasillaCatalogue.published(LOCALES_DIR).values["es"].values() if text}
+    stored = {
+        text
+        for text in ModeloCasillaCatalogue.published(LOCALES_DIR).values["es"].values()
+        if (text is not None and text)
+    }
     assert stored >= SOURCE_TRUNCATED_SPANISH, sorted(SOURCE_TRUNCATED_SPANISH - stored)
 
 

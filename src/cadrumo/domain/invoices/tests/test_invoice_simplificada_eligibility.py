@@ -41,8 +41,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.invoice_legal_classification import require_invoice_class
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 
-from ...iva.classification import InvoiceKind
-from ...iva.schema import IvaCategory
+from ...iva.schema import InvoiceKind, IvaCategory
 from ..enums import PaymentStatus
 from ..models import Invoice, InvoiceLine
 

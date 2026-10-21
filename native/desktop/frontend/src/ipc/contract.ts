@@ -6,6 +6,32 @@
 // Field names and casing follow the host's serde output exactly.
 
 import type { Channel } from "@tauri-apps/api/core";
+import type {
+  AgentAnswerResult,
+  AgentApproval,
+  AgentProviderCatalog,
+  AgentQuestionnaire,
+  AgentQuestionnaireAnswer,
+  AgentSendRequest,
+  AgentUploadEvent,
+  AgentUploadPick,
+  AgentSendResult,
+  AgentServiceStatus,
+  AgentStreamEvent,
+} from "../shell/agentSession";
+import type { AgentAccessAnswer } from "../shell/agentAccess";
+import type {
+  AgentSnapshot,
+  AgentConversationRecord,
+  AgentDocumentPage,
+  AgentDocumentsQuery,
+  AgentTurnRecord,
+} from "../shell/agentViews";
+import type {
+  ProviderSettingsAnswer,
+  ProviderSettingsRecord,
+  ProviderSignInSnapshot,
+} from "../shell/providerSettings";
 
 // ---------------------------------------------------------------------------
 // Launch token
@@ -82,6 +108,13 @@ export type HostErrorCode =
   | "webview_monitor_unavailable"
   | "unsupported_platform"
   | "instance_lock_foreign"
+  | "manager_unavailable"
+  | "manager_dispatch_failed"
+  | "installation_unavailable"
+  | "installation_refused"
+  | "installation_cancelled"
+  | "installation_failed"
+  | "installation_unsettled"
   | "panic";
 
 /** `Operation` in `native/application/src/error/application.rs`. */
@@ -93,7 +126,9 @@ export type HostOperation =
   | "terminal"
   | "logging"
   | "webview"
-  | "shutdown";
+  | "shutdown"
+  | "manager"
+  | "installation";
 
 /**
  * The serialized `ApplicationError`: the value a refused command rejects
@@ -120,6 +155,51 @@ export type ProcessRole =
   | "manager_dispatch";
 
 // ---------------------------------------------------------------------------
+// about_info
+// ---------------------------------------------------------------------------
+
+/** One name with its version, ordered by name. */
+export type AboutNamed = { name: string; version: string };
+
+/** A native binary of the installed package. Every field the package does
+ * not state is null. */
+export type AboutComponent = {
+  name: string | null;
+  role: string | null;
+  path: string | null;
+  version: string | null;
+  build_id: string | null;
+  build_type: string | null;
+};
+
+/** What this installation is: the installed package manifest's statement,
+ * plus the desktop binary's own compile-time identity. A null is a value the
+ * package or the build did not state; the shell says it is unavailable. */
+export type AboutInfo = {
+  product: string | null;
+  display_version: string | null;
+  version: string | null;
+  build_id: string | null;
+  build_type: string | null;
+  build_date: string | null;
+  channel: string | null;
+  target: string | null;
+  /** The bundled CPython runtime's version. */
+  python: string | null;
+  desktop: {
+    version: string | null;
+    build_id: string | null;
+    build_type: "debug" | "release";
+  };
+  components: AboutComponent[];
+  /** Null when the package does not bundle the agent. */
+  agent: { version: string | null; dependencies: AboutNamed[] } | null;
+  /** Bundled tools by name, for example `node`. */
+  tools: Record<string, string>;
+  distributions: AboutNamed[];
+};
+
+// ---------------------------------------------------------------------------
 // desktop_environment
 // ---------------------------------------------------------------------------
 
@@ -134,15 +214,33 @@ export type DocsLanguage = {
   entry: string;
 };
 
+export type DesktopLanguage = {
+  language: string;
+  persisted: boolean;
+  profile: string | null;
+  /** Monotonic host revision shared by reads, writes and observations. */
+  revision: number;
+};
+
 export type DesktopEnvironment = {
   /** The output language Settings resolved for this profile. */
   outputLanguage: string;
-  docs: {
-    /** The documentation origin, computed by the host for this platform. */
-    origin: string;
-    languages: DocsLanguage[];
-  };
+  /** Initial minimum severity selected by the host; defaults to INFO. */
+  logLevel: LogLevel;
+  /** The package's statement of whether it carries the documentation. */
+  docs: DesktopDocs;
 };
+
+export type DesktopDocs =
+  | {
+      state: "bundled";
+      /** The documentation origin, computed by the host for this platform. */
+      origin: string;
+      languages: DocsLanguage[];
+    }
+  | { state: "notBundled" }
+  /** Bundled, but this launch could not open it; everything else still works. */
+  | { state: "unavailable" };
 
 // ---------------------------------------------------------------------------
 // Logs (logs_subscribe, logs_unsubscribe)
@@ -193,10 +291,14 @@ export type LogSourceState = {
   rejected: number;
 };
 
-/** Independent file availability; host events are read from memory. */
+/**
+ * Independent file availability; host events are read from memory. A
+ * `manager` state appears once a standalone manager writes its log: a desktop
+ * that hosts supervision itself reports it among the host events.
+ */
 export type LogSourceStates = {
+  [source: string]: LogSourceState;
   python: LogSourceState;
-  manager: LogSourceState;
 };
 
 /**
@@ -284,6 +386,9 @@ export type ContextMenuResult = { chosen: string | null };
  * user's home; `tui` is the Cadrumo TUI, started in the storage root.
  */
 export type TerminalKind = "console" | "python" | "tui";
+/** A protected editor has its own session and an exact profile target. */
+export type TerminalTarget =
+  TerminalKind | { aeat_setup: { profile_id: string } };
 
 /** A session id from `terminal_open`; a replaced or closed id is refused. */
 export type TerminalSessionId = number;
@@ -365,7 +470,7 @@ export type TerminalFrame =
   | TerminalFailedFrame;
 
 export type TerminalOpenArguments = TerminalSize & {
-  kind: TerminalKind;
+  kind: TerminalTarget;
   /** Receives the session's frames, each as an `ArrayBuffer`. */
   frames: Channel<ArrayBuffer>;
 };
@@ -427,8 +532,12 @@ export type DiagnosticsEventKind =
   | "child_exited"
   | "child_terminated"
   | "helper_timing"
+  | "helper_result"
   | "failure"
-  | "host_stopped";
+  | "host_stopped"
+  | "window_close_requested"
+  | "host_exit_requested"
+  | "panic";
 
 /** `ProcessPhase` in `native/application/src/process/status.rs`. */
 export type ProcessPhase = "running" | "exited" | "terminated" | "failed";
@@ -453,7 +562,7 @@ export type ProcessStatus = {
 export type DiagnosticsEvent = {
   /** Monotonic identity within this diagnostics instance. */
   sequence: number;
-  source: "desktop" | "manager";
+  source: "desktop" | "manager" | "installer";
   timestampMs: number;
   hostPid: number;
   kind: DiagnosticsEventKind;
@@ -472,13 +581,61 @@ export type DiagnosticsEvent = {
   hostExitCode?: number;
   webviewFailure?: WebviewFailure;
   helperTiming?: HelperTiming;
+  helperResult?: HelperResult;
+  panic?: PanicFact;
+};
+
+/** `PanicFact` in `native/application/src/diagnostics/panic.rs`: never the message. */
+export type PanicFact = {
+  /** Crate-relative source path, without the build account's directories. */
+  file: string | null;
+  line: number | null;
+  column: number | null;
+  thread: string;
+  threadId: number;
+  category:
+    | "option_none"
+    | "result_err"
+    | "index_out_of_bounds"
+    | "slice_range"
+    | "arithmetic_overflow"
+    | "division_by_zero"
+    | "borrow_conflict"
+    | "lock_poisoned"
+    | "no_async_runtime"
+    | "nested_async_runtime"
+    | "unreachable"
+    | "unimplemented"
+    | "assertion"
+    | "allocation_failure"
+    | "cannot_unwind"
+    | "explicit"
+    | "unclassified";
+};
+
+export type HelperResult = {
+  command: string;
+  executable: "cli" | "runtime" | "agent_service";
+  envelopeDecode:
+    "success" | "refused" | "native_refused" | "malformed" | "unavailable";
+  stdoutBytes: number;
+  stderrBytes: number;
+  code: string | null;
+  reason: string | null;
+  exceptionType: string | null;
+  raisedAt: string | null;
+  nativeSubject: string | null;
 };
 
 /** One native helper attempt; CLI envelope decoding happens after this summary. */
 export type HelperTiming = {
   helperKind: "read" | "mutation";
   outcome:
-    "admission_refused" | "spawn_failed" | "execution_failed" | "completed";
+    | "admission_refused"
+    | "spawn_failed"
+    | "execution_failed"
+    | "nonzero_exit"
+    | "completed";
   admissionWaitMs: number;
   spawnMs: number | null;
   executionMs: number | null;
@@ -568,7 +725,14 @@ export type DiagnosticsSnapshot = {
  * `HostFailure`. Commands that return nothing resolve with `null`.
  * `terminal_write` takes a raw body instead: see `TerminalWriteBody`.
  */
-export type SignInRefusal = { code: string; retryAfterSeconds: number | null };
+export type SignInRefusal = {
+  code: string;
+  retryAfterSeconds: number | null;
+  /** Safe native failure context, without exception messages or paths. */
+  operation?: HostOperation;
+  ioKind?: string;
+  osCode?: number;
+};
 
 /** Presence only: reading this never resumes or extends a sign-in. */
 export type SignInStatus = {
@@ -579,6 +743,37 @@ export type SignInStatus = {
   refusal: SignInRefusal | null;
 };
 
+/** Public presence and runtime/profile changes; never session authority. */
+export type SignInSignal =
+  | { kind: "sign-in-state"; revision: number; status: SignInStatus }
+  | {
+      kind: "sign-in-observation-failed";
+      revision: number;
+      error: HostFailure;
+    };
+
+/** Supervisor readiness is public availability, never profile authentication. */
+export type ManagerStatus = {
+  state:
+    | "unsupported"
+    | "starting"
+    | "ready"
+    | "recovering"
+    | "waiting"
+    | "stopping"
+    | "stopped"
+    | "failed";
+  failure: HostFailure | null;
+};
+
+export type ManagerSignal =
+  | { kind: "manager-state"; revision: number; status: ManagerStatus }
+  | {
+      kind: "manager-observation-failed";
+      revision: number;
+      error: HostFailure;
+    };
+
 /** sign_in_submit uses a raw UTF-8 password body and x-cadrumo-token header. */
 export type SignInResult =
   | { kind: "signed-in"; status: SignInStatus }
@@ -586,7 +781,13 @@ export type SignInResult =
 
 export type SignOutResult = {
   remainingAccess: {
+    /** The person's saved automation setting. A sign-out keeps it; it is not
+     * access. */
     automationEnabled: boolean | null;
+    /** Whether a key issued for an external agent can still admit. Keys do
+     * not follow the sign-in, so this is true while one can. Null when the
+     * product could not say. */
+    automationAccessRemains: boolean | null;
     automationRevoked: false;
   };
 };
@@ -607,6 +808,12 @@ export type ProfileList = {
   complete: boolean;
 };
 
+export type ProfileDeleteReview = {
+  name: string;
+  profileId: string;
+  digest: string;
+};
+
 /**
  * sign_in_submit and profile_create name a profile in the
  * `x-cadrumo-profile` header: its label as UTF-8, percent-encoded, since a
@@ -617,18 +824,472 @@ export type ProfileList = {
 export type ProfileCreateResult =
   { kind: "created"; name: string } | ({ kind: "refused" } & SignInRefusal);
 
+// ---------------------------------------------------------------------------
+// Component setup (desktop_setup_*)
+// ---------------------------------------------------------------------------
+//
+// The software Cadrumo needs on this computer -- the browser and the local AI
+// (its program and every model it runs, as one item) -- read and set up
+// through the held person session. The profile's Google account travels in
+// the same snapshot because it rides the same session, but it is not setup:
+// it is the profile's own sign-in, read and changed on its own. The host
+// pushes a fresh `DesktopSetup` on the observe channel whenever an observed
+// setup, check or Google act changes; nothing polls. Every closed value below
+// is for choosing what to show; the words to show are the `name`, `sentence`,
+// `note` and `action_label` fields, already in the profile's language. Never
+// render a closed value itself.
+
+/** `browser` or `local_ai`. */
+export type SetupItemId = string;
+
+export type SetupItemKind = "browser" | "local_ai";
+
+export type SetupState =
+  | "absent"
+  | "provisioning"
+  | "verifying"
+  | "ready"
+  | "stale"
+  | "failed"
+  | "blocked"
+  | "unknown";
+
+export type SetupBlockedReason =
+  "offline" | "needs_person" | "hardware" | "not_in_this_build";
+
+export type SetupStaleReason =
+  "older_revision" | "different_model_version" | "program_too_old";
+
+export type SetupFailureCategory =
+  | "offline"
+  | "host_unreachable"
+  | "secure_connection_failed"
+  | "blocked_by_network"
+  | "disk_full"
+  | "no_permission"
+  | "damaged_download"
+  | "not_enough_memory"
+  | "memory_busy"
+  | "program_missing"
+  | "program_not_running"
+  | "interrupted"
+  | "needs_sign_in"
+  | "not_in_this_build"
+  | "cancelled"
+  | "unexpected";
+
+/** The one button a row offers; its words are the row's `action_label`. */
+export type SetupRecovery =
+  "set_up" | "update" | "try_again" | "resume" | "check_again";
+
+export type SetupCheckMode = "quick" | "full";
+
+/** Why the local AI's plan entry is worth telling the person about. */
+export type SetupAdvisory =
+  | "licence_commercial_use_barred"
+  | "licence_unverified"
+  | "override_not_in_catalogue"
+  | "override_below_context_floor"
+  | "fit_exceeds_measured_headroom"
+  | "fit_unverified";
+
+export type SetupStep =
+  "plan" | "preflight" | "download" | "install" | "verify" | "cleanup";
+
+/** One item's derived state and its plain wording. */
+export type SetupRow = {
+  item: SetupItemId;
+  kind: SetupItemKind;
+  /** Which check produced the row. */
+  mode: SetupCheckMode;
+  state: SetupState;
+  stale_reason: SetupStaleReason | null;
+  blocked_reason: SetupBlockedReason | null;
+  failure: SetupFailureCategory | null;
+  recovery: SetupRecovery | null;
+  /** The operator action that offers `recovery`, such as
+   * `operator.provision.browser`; null exactly when `recovery` is. An
+   * identifier for routing, never shown. */
+  recovery_action_id: string | null;
+  version: string | null;
+  size_bytes: number | null;
+  /** The item's plain name, such as "Local AI". */
+  name: string;
+  /** One sentence stating the state and its reason. */
+  sentence: string;
+  /** For example "downloaded, not loaded yet"; null when there is none. */
+  note: string | null;
+  /** The button's words for `recovery`; null exactly when it is null. */
+  action_label: string | null;
+};
+
+/** A status read or a full check this window started. A settled check has
+ * already replaced `rows`; a failed one leaves the earlier rows. */
+export type SetupCheck = {
+  operation_id: string;
+  kind: "status_quick" | "status_full" | "verify";
+  stage: "running" | "done" | "failed";
+};
+
+/** One part of the local AI's plan: its program, or the model one role
+ * reads with. A part sharing an earlier part's download has size 0. */
+export type SetupPlanPart = {
+  part: string;
+  name: string;
+  /** Null when the size is not known before the download starts. */
+  download_bytes: number | null;
+};
+
+/** One entry of the plan a person approves: what, how large, from where and
+ * where it is stored. Shown, never sent back. */
+export type SetupPlanEntry = {
+  item: SetupItemId;
+  name: string;
+  /** Null when the size is not known before the download starts. */
+  download_bytes: number | null;
+  source_hosts: string[];
+  /** The folder it goes into; null when only an outside program installs. */
+  destination: string | null;
+  installs_outside_program: boolean;
+  /** Another entry of this plan that downloads the same files. */
+  shares_download_with: SetupItemId | null;
+  /** A model's licence notice, such as a non-commercial use limit, in the
+   * profile's language; null when there is none. Approving the plan
+   * approves it too. */
+  licence_notice: string | null;
+  /** Empty except on the local AI's entry; approving the plan approves
+   * them too. `licence_notice` is present exactly when one is
+   * "licence_commercial_use_barred". */
+  advisories: SetupAdvisory[];
+  /** The local AI's parts in the order setup carries them out; empty for
+   * any other item. */
+  parts: SetupPlanPart[];
+};
+
+/** The plan awaiting approval. `plan_digest` is what an answer binds. */
+export type SetupReview = {
+  plan_digest: string;
+  expires_at: string | null;
+  entries: SetupPlanEntry[];
+  known_download_bytes: number;
+  has_unknown_size: boolean;
+  installs_outside_program: boolean;
+  required_bytes: number;
+  /** Null when the free space could not be read. */
+  free_bytes: number | null;
+  space_sufficient: boolean;
+};
+
+export type SetupRetry = {
+  attempt: number;
+  delay_s: number;
+  /** "Trying again in N seconds (attempt M)", in the profile's language. */
+  sentence: string;
+};
+
+export type SetupItemResult = {
+  changed: boolean;
+  failure: SetupFailureCategory | null;
+  /** The failure's sentence; null when the item ended usable. */
+  sentence: string | null;
+  transferred_bytes: number;
+};
+
+/** One planned item while setup runs: its current step, byte progress and
+ * last retry notice, then its result once setup settles. */
+export type SetupItemProgress = {
+  item: SetupItemId;
+  name: string;
+  step: SetupStep | null;
+  /** Both null while the size is unknown: show an indeterminate bar. */
+  completed: number | null;
+  total: number | null;
+  retry: SetupRetry | null;
+  result: SetupItemResult | null;
+};
+
+export type SetupOutcome =
+  | "completed"
+  | "nothing_to_do"
+  | "rejected"
+  | "plan_changed"
+  | "not_enough_space"
+  | "interrupted"
+  | "cancelled"
+  /** The setup ended without a result of its own; see `failure_sentence`. */
+  | "failed";
+
+/** The setup this window started or joined. */
+export type SetupRun = {
+  operation_id: string;
+  stage: "planning" | "review" | "running" | "settled";
+  /** Present exactly while `stage` is "review". */
+  review: SetupReview | null;
+  items: SetupItemProgress[];
+  /** Whether Cancel can be offered now. */
+  cancellable: boolean;
+  cancel_requested: boolean;
+  /** Present exactly once `stage` is "settled". */
+  outcome: SetupOutcome | null;
+  /** Present when `outcome` is "failed". */
+  failure_sentence: string | null;
+};
+
+/** The profile's stored Google sign-in, as the product reads it. */
+export type GoogleAccountState =
+  "signed_in" | "signed_out" | "not_in_this_build" | "unknown";
+
+/** The sign-in or sign-out this window started. */
+export type GoogleActStage = "idle" | "signing_in" | "signing_out" | "failed";
+
+/** The signed-in profile's Google account: not a setup item. */
+export type GoogleAccount = {
+  /** Null until the stored sign-in has been read. */
+  state: GoogleAccountState | null;
+  /** The account's address; present only when signed in. */
+  email: string | null;
+  /** The profile's saved folder, present only with a stored Drive grant. */
+  drive_folder_id: string | null;
+  stage: GoogleActStage;
+  failure: SetupFailureCategory | null;
+  /** The failure's sentence; present exactly when `stage` is "failed". */
+  sentence: string | null;
+};
+
+export type SetupSnapshot = {
+  /** Empty until the first status read settles. */
+  rows: SetupRow[];
+  /** Null until the first status read settles, as are the next two. */
+  rows_mode: SetupCheckMode | null;
+  /** Every item ready or usable: Cadrumo is set up. */
+  complete: boolean | null;
+  /** Setup cannot complete on this computer's hardware. */
+  hardware_limited: boolean | null;
+  check: SetupCheck | null;
+  setup: SetupRun | null;
+  google: GoogleAccount;
+  /** The redacted report "Copy details" puts on the clipboard. */
+  details: string;
+};
+
+/** What the observe channel carries and every setup command answers.
+ * `revision` grows with every change; `snapshot` is present exactly when
+ * `state` is "ready", which needs a signed-in profile and its runtime. */
+export type DesktopSetup = {
+  revision: number;
+  state: "signed_out" | "unavailable" | "ready";
+  snapshot: SetupSnapshot | null;
+};
+
+/** Why a setup command was refused; a host failure rejects as `HostFailure`. */
+export type SetupRefusalCode =
+  /** No profile is signed in. */
+  | "not_signed_in"
+  /** Another setup, started elsewhere, is running. */
+  | "busy"
+  /** The plan changed since it was shown; show the new one. */
+  | "plan_changed"
+  /** No plan of that setup is awaiting an answer, or it is not this window's. */
+  | "not_pending"
+  /** The setup cannot be cancelled now. */
+  | "not_cancellable"
+  /** The runtime could not carry the request. */
+  | "unavailable";
+
+export type SetupRefusal = { code: SetupRefusalCode };
+
+export type StartupPhase = "environment" | "runtime" | "workspace";
+export type StartupProgress = {
+  phase: StartupPhase;
+  locale: string | null;
+  failure: HostFailure | null;
+};
+
 export interface HostCommands {
+  user_profile_read: {
+    args: { language: string };
+    result: import("../shell/userProfile").UserProfile;
+  };
+  profile_censo_readiness: {
+    args: { profile: string };
+    result: import("../shell/profileCenso").CensoReadiness;
+  };
+  profile_censo_observe: { args: { updates: Channel<null> }; result: number };
+  profile_censo_unobserve: { args: { subscription: number }; result: null };
+  profile_censo_start: {
+    args: { profile: string };
+    result: import("../shell/profileCenso").CensoSnapshot;
+  };
+  profile_censo_status: {
+    args: { profile: string; operation: string };
+    result: import("../shell/profileCenso").CensoSnapshot;
+  };
+  profile_censo_answer: {
+    args: {
+      profile: string;
+      operation: string;
+      reviewDigest: string | null;
+      decision: import("../shell/profileCenso").CensoDecision;
+    };
+    result: import("../shell/profileCenso").CensoSnapshot;
+  };
+  user_profile_change: {
+    args: { change: import("../shell/userProfile").ProfileChange };
+    result: null;
+  };
+  user_profile_observe: { args: { updates: Channel<null> }; result: number };
+  user_profile_unobserve: { args: { subscription: number }; result: null };
+  startup_begin: { args: Authorized; result: void };
+  startup_status: { args: Authorized; result: StartupProgress };
+
+  runtime_attendance_inventory: {
+    args: Authorized;
+    result: {
+      kind: "attendance_inventory";
+      candidates: import("../shell/host").AttendanceCandidate[];
+    };
+  };
+  runtime_attendance_decide: {
+    args: Authorized & { attendanceId: string; approve: boolean };
+    result: {
+      kind: "attendance_decided";
+      attendance_id: string;
+      approved: boolean;
+    };
+  };
+  runtime_attendance_subscribe: {
+    args: Authorized<{ updates: Channel<null> }>;
+    result: number;
+  };
+  runtime_attendance_unsubscribe: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
+  shell_window_action: {
+    args: Authorized<{ action: WindowAction }>;
+    result: null;
+  };
+  shell_window_subscribe: {
+    args: Authorized<{ updates: Channel<WindowPresentation> }>;
+    result: number;
+  };
+  shell_window_unsubscribe: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
+  manager_install: {
+    args: Authorized<{ scope: "user" | "machine" }>;
+    result: "dispatched" | "unsupported";
+  };
   manager_start: {
     args: Authorized;
-    result: "dispatched" | "unmanaged" | "unsupported";
+    result: "dispatched" | "unsupported";
+  };
+  manager_status: { args: Authorized; result: ManagerStatus };
+  manager_subscribe: {
+    args: Authorized<{ updates: Channel<ManagerSignal> }>;
+    result: number;
+  };
+  manager_unsubscribe: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
   };
   sign_in_status: { args: Authorized; result: SignInStatus };
+  sign_in_activity: { args: Authorized; result: void };
+  sign_in_subscribe: {
+    args: Authorized<{ updates: Channel<SignInSignal> }>;
+    result: number;
+  };
+  sign_in_unsubscribe: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
   sign_out: { args: Authorized; result: SignOutResult };
   /** Needs no password, session or runtime, and changes nothing. */
   profile_list: { args: Authorized; result: ProfileList };
+  profile_delete_review: {
+    args: Authorized & { name: string };
+    result: ProfileDeleteReview;
+  };
+  profile_delete: {
+    args: Authorized & {
+      review: ProfileDeleteReview;
+      confirmation: string;
+      acknowledged: boolean;
+    };
+    result: null;
+  };
+  desktop_language_read: { args: Authorized; result: DesktopLanguage };
+  desktop_language_set: {
+    args: Authorized<{ language: string }>;
+    result: DesktopLanguage;
+  };
+  desktop_language_observe: {
+    args: Authorized<{ updates: Channel<DesktopLanguage> }>;
+    result: number;
+  };
+  desktop_language_unobserve: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
   desktop_environment: {
     args: Authorized;
     result: DesktopEnvironment;
+  };
+  about_info: { args: Authorized; result: AboutInfo };
+  /** Each setup command refuses with `SetupRefusal` or a `HostFailure`. */
+  desktop_setup_read: { args: Authorized; result: DesktopSetup };
+  /** Starts a status read; "quick" reads local facts only, "full" also
+   * reaches the network and exercises each item. */
+  desktop_setup_check: {
+    args: Authorized<{ mode: SetupCheckMode }>;
+    result: DesktopSetup;
+  };
+  /** Starts a full check of `items`, or of every item when null. */
+  desktop_setup_verify: {
+    args: Authorized<{ items: SetupItemId[] | null }>;
+    result: DesktopSetup;
+  };
+  /** Plans setup of `items`, or of every item not ready when null; the plan
+   * then awaits an answer in `setup.review`. `model` picks one catalogue
+   * model for every role of the local AI. A setup already running is joined.
+   * `resume` is the person's Resume click after an interruption: when the
+   * new plan is exactly the one approved before, it is approved again
+   * without a second review; any other plan awaits an answer as usual. */
+  desktop_setup_start: {
+    args: Authorized<{
+      items: SetupItemId[] | null;
+      model: string | null;
+      resume: boolean;
+    }>;
+    result: DesktopSetup;
+  };
+  /** Answers the plan whose digest the review showed; a changed plan
+   * refuses with `plan_changed`. */
+  desktop_setup_answer: {
+    args: Authorized<{
+      operationId: string;
+      planDigest: string;
+      decision: "apply" | "reject";
+    }>;
+    result: DesktopSetup;
+  };
+  desktop_setup_cancel: {
+    args: Authorized<{ operationId: string }>;
+    result: DesktopSetup;
+  };
+  /** Opens Google's own sign-in page for the signed-in profile; `google`
+   * follows the attempt. */
+  desktop_google_sign_in: { args: Authorized; result: DesktopSetup };
+  /** Removes the profile's stored Google sign-in. */
+  desktop_google_sign_out: { args: Authorized; result: DesktopSetup };
+  desktop_setup_observe: {
+    args: Authorized<{ updates: Channel<DesktopSetup> }>;
+    result: number;
+  };
+  desktop_setup_unobserve: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
   };
   /**
    * Starts a session of `kind`, replacing one that already exited. Refuses
@@ -667,6 +1328,18 @@ export interface HostCommands {
   logs_subscribe: {
     args: Authorized<{ records: Channel<LogBatch> }>;
     result: LogSubscription;
+  };
+  logs_export: {
+    args: Authorized<{ text: string }>;
+    result: string;
+  };
+  logs_copy: {
+    args: Authorized<{ text: string }>;
+    result: null;
+  };
+  logs_reveal: {
+    args: Authorized;
+    result: null;
   };
   /** Refuses an unknown subscription with `invalid_arguments`. */
   logs_unsubscribe: {
@@ -711,7 +1384,174 @@ export interface HostCommands {
     args: Authorized<ContextMenuRequest>;
     result: ContextMenuResult;
   };
+  /**
+   * The agent host. Every agent command refuses with `{ code }`: the
+   * service's own refusal while it is not ready, `agent_reply_unknown` for
+   * a reply this host is not watching, and `agent_conversation_unavailable`
+   * for any conversation, which is not yet named by its run chain.
+   */
+  agent_status: { args: Authorized; result: AgentServiceStatus };
+  agent_retry: { args: Authorized; result: null };
+  agent_status_subscribe: {
+    args: Authorized<{ updates: Channel<AgentServiceStatus> }>;
+    result: number;
+  };
+  agent_status_unsubscribe: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
+  /** cadrumo-agent's catalog, unchanged and unfiltered. */
+  agent_provider_catalog: { args: Authorized; result: AgentProviderCatalog };
+  /** cadrumo-agent's skills, as `GET /v1/skills` lists them, unchanged. */
+  agent_skills: { args: Authorized; result: unknown };
+  /** One skill with its SKILL.md, as `GET /v1/skills/{name}` serves it. A
+   * name outside the skill grammar is refused as `agent_invalid_request`
+   * before the agent is asked, and an unknown one as
+   * `agent_gateway_skill_not_found`. */
+  agent_skill: { args: Authorized<{ name: string }>; result: unknown };
+  /** The agent's checks of one skill, from `POST /v1/skills/{name}/verify`. */
+  agent_skill_verify: { args: Authorized<{ name: string }>; result: unknown };
+  agent_conversation_start: {
+    args: Authorized;
+    result: AgentConversationRecord;
+  };
+  /** One trimmed line of 1 to 200 characters, else `agent_invalid_request`. */
+  agent_conversation_rename: {
+    args: Authorized<{ conversationId: string; title: string }>;
+    result: null;
+  };
+  /** Deletes the conversation, every run of it and the documents stored
+   * for it; `agent_conversation_delete_incomplete` when some remain, which a
+   * repeated request finishes. */
+  agent_conversation_delete: {
+    args: Authorized<{ conversationId: string }>;
+    result: null;
+  };
+  /** Archives every settled run together, keeping the conversation readable. */
+  agent_conversation_archive: {
+    args: Authorized<{ conversationId: string }>;
+    result: null;
+  };
+  /** Opens the host's file picker and stores what is picked in the
+   * conversation's storage, following each upload on `updates`. */
+  agent_attach: {
+    args: Authorized<{
+      conversationId: string;
+      filterLabel: string;
+      updates: Channel<AgentUploadEvent>;
+    }>;
+    result: AgentUploadPick[];
+  };
+  agent_send: {
+    args: Authorized<{ request: AgentSendRequest }>;
+    result: AgentSendResult;
+  };
+  agent_cancel: { args: Authorized<{ replyId: string }>; result: null };
+  agent_pending: {
+    args: Authorized<{ conversationId: string }>;
+    result: {
+      questionnaires: AgentQuestionnaire[];
+      approvals: AgentApproval[];
+    };
+  };
+  agent_questions_answer: {
+    args: Authorized<{
+      questionnaire: Pick<AgentQuestionnaire, "reply_id" | "request_id">;
+      answer: AgentQuestionnaireAnswer;
+    }>;
+    result: AgentAnswerResult;
+  };
+  /** Answers a tool approval; Cadrumo reviews are not served. */
+  agent_approval_decide: {
+    args: Authorized<{
+      approval: Pick<AgentApproval, "reply_id" | "request_id">;
+      optionId: string;
+    }>;
+    result: null;
+  };
+  agent_observe: {
+    args: Authorized<{
+      conversationId: string;
+      events: Channel<AgentStreamEvent>;
+    }>;
+    result: number;
+  };
+  agent_unobserve: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
+  agent_conversations: {
+    args: Authorized;
+    result: AgentConversationRecord[];
+  };
+  agent_snapshot: {
+    args: Authorized<{ conversationId: string }>;
+    result: AgentSnapshot;
+  };
+  agent_history: {
+    args: Authorized<{ conversationId: string }>;
+    result: AgentTurnRecord[];
+  };
+  /** One page of the documents stored for a conversation, by name. */
+  agent_documents: {
+    args: Authorized<{ query: AgentDocumentsQuery }>;
+    result: AgentDocumentPage;
+  };
+  // provider_settings_set takes the key as a raw body, with the provider,
+  // revision and base URL in headers, as sign_in_submit takes a password.
+  provider_settings_status: {
+    args: Authorized;
+    result: ProviderSettingsAnswer;
+  };
+  provider_settings_remove: {
+    args: Authorized<{ provider: string; revision: string }>;
+    result: ProviderSettingsRecord;
+  };
+  provider_settings_turn_on: {
+    args: Authorized<{ provider: string; revision: string }>;
+    result: ProviderSettingsRecord;
+  };
+  provider_settings_reset: {
+    args: Authorized<{ provider: string; revision: string }>;
+    result: ProviderSettingsRecord;
+  };
+  // An attended provider sign-in is transient. Its URL and device code are
+  // returned only while the person is completing this attempt.
+  provider_sign_in_start: {
+    args: Authorized<{
+      provider: string;
+      revision: string;
+      method: "browser" | "device";
+    }>;
+    result: ProviderSignInSnapshot;
+  };
+  provider_sign_in_status: {
+    args: Authorized<{ attemptId: string }>;
+    result: ProviderSignInSnapshot;
+  };
+  provider_sign_in_cancel: {
+    args: Authorized<{ attemptId: string }>;
+    result: ProviderSignInSnapshot;
+  };
+  // The keys issued to agents outside Cadrumo. None carries a password or a
+  // key; issuing is refused with `issue_unavailable` for now.
+  agent_access_list: {
+    args: Authorized;
+    result: AgentAccessAnswer;
+  };
+  agent_access_issue: {
+    args: Authorized<{ taxValues: boolean }>;
+    result: { credential_reference: string };
+  };
+  agent_access_revoke: {
+    args: Authorized<{ grantId: string }>;
+    result: { cleanup_pending: boolean };
+  };
 }
+
+/** Native presentation only; no profile or runtime authority. */
+export type WindowPresentation = { maximized: boolean; fullscreen: boolean };
+export type WindowAction = "minimize" | "toggle_maximize" | "close" | "drag";
 
 export type HostCommand = keyof HostCommands;
 export type HostArguments<C extends HostCommand> = HostCommands[C]["args"];
@@ -840,6 +1680,7 @@ export type DocsSearchResults = BridgeEnvelope<"search-results"> & {
 };
 
 export type DocsToShell =
+  | (BridgeEnvelope<"language-change"> & { language: string })
   | DocsReady
   | DocsLocation
   | DocsThemeReport

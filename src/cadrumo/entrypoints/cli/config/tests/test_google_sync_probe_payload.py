@@ -5,8 +5,9 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from cadrumo_client.commands.google_payloads import GoogleSyncProbeResult
+
 from .....adapters.outbound.storage.records import ProviderKind
-from .._google_payloads import GoogleSyncProbeResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

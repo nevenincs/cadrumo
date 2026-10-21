@@ -140,7 +140,7 @@ _CATALOGUE: tuple[ModelProfile, ...] = (
         tier=ModelTier.MEDIUM,
         capability=ModelCapability.THINKING,
     ),
-    # Codex — default is the agent's current top model; it does not accept
+    # Codex — default is the automation's current top model; it does not accept
     # -m for most deployments. alias "codex-default" maps to empty model_id.
     ModelProfile(
         provider="codex",

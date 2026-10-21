@@ -6,6 +6,8 @@ from collections.abc import Callable
 from pathlib import Path
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..adapters.outbound.storage.factory import get_storage_provider, resolve_required_drive_root_folder_id
 from ..adapters.outbound.storage.mirror_push import (
     AdmittedMirrorStorageProvider,
@@ -15,7 +17,6 @@ from ..adapters.outbound.storage.mirror_push import (
 from ..adapters.outbound.storage.protocol import StorageProvider
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.user_profile.archive_operation_ports import (
     ArchiveLocalWriter,
@@ -27,6 +28,7 @@ from ..application.user_profile.bundle_export import ProfileBundleExportReconcil
 from ..application.user_profile.capabilities import resolve_capability
 from ..application.user_profile.capsule_archive import ProfileCapsuleArchiveReceipt, export_profile_capsule_archive
 from ..application.user_profile.capsule_record import ProfileRecordStore
+from ..application.user_profile.google_configuration_operation_contracts import GoogleConfigurationExportDisabledError
 from ..application.user_profile.profile_record_repository import require_profile_record_session
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.capabilities import ServiceCapability
@@ -62,7 +64,11 @@ def build_profile_archive_operation_ports(
         session = require_profile_record_session(profile_id, profile_decode_context=operation.profile_decode_context())
         record = ProfileRecordStore(session=session).load().record
         if not resolve_capability(ServiceCapability.GOOGLE_EXPORT, profile_record=record, settings=settings).enabled:
-            raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
+            # The same refusal the write-enabled Google probe gives, so every
+            # frontend names the disabled capability rather than an access denial.
+            raise GoogleConfigurationExportDisabledError(
+                translated_message="cli.config.google.export_capability_disabled"
+            )
         root_folder_id = resolve_required_drive_root_folder_id(profile=str(profile_id))
 
         def commit[ResultT](save: Callable[[], ResultT], *, changed: Callable[[ResultT], bool]) -> ResultT:

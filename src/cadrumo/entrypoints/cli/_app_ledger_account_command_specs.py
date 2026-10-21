@@ -2,7 +2,24 @@
 
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+from cadrumo_client.commands.parameters import OptionSpec, ParameterSpec
+from cadrumo_client.commands.secret_contracts import (
+    MachineSecretFieldSpec,
+    MachineSecretSpec,
+    MachineSecretVariantSpec,
+)
+from cadrumo_client.commands.secret_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ._app_ledger_command_spec_policies import _POLICY_1, _POLICY_4, _POLICY_5
 from ._app_ledger_command_spec_support import (
@@ -13,23 +30,6 @@ from ._app_ledger_command_spec_support import (
     _required_text_argument,
     _required_text_option,
 )
-from ._command_secret_contracts import (
-    MachineSecretFieldSpec,
-    MachineSecretSpec,
-    MachineSecretVariantSpec,
-)
-from .command_parameter_contracts import OptionSpec, ParameterSpec
-from .command_shared_contracts import (
-    DeferredTarget,
-    LazyBinding,
-    ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-    ValueContract,
-)
-from .command_spec import CommandSpec, ExecutionPolicySpec
-from .machine_secret_command_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
 
 _GROUP = "app_ledger_account"
 _ACCOUNT_ID = _required_text_argument("own_account_id", "cli.app.ledger.account.account_id_help")
@@ -52,7 +52,7 @@ def _secrets(model: str) -> MachineSecretSpec:
             MachineSecretVariantSpec(
                 "account",
                 tuple(MachineSecretFieldSpec(field) for field in _SECRET_FIELDS),
-                DeferredTarget("._ledger_account_cli", model, __package__),
+                DeferredTarget(".ledger_account_commands", model, __package__),
             ),
         ),
     )
@@ -76,10 +76,10 @@ def _leaf(
         invocation=_LEAF_INVOCATION,
         parameters=parameters,
         policy=policy,
-        handler=LazyBinding.available(DeferredTarget("._ledger_account_cli", f"account_{verb}", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_account_commands", f"account_{verb}", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_account_payloads", result, __package__),
+            target=DeferredTarget(".ledger_account_results", result, __package__),
             identity=f"ledger.account.{verb}",
         ),
         machine_secret=machine_secret,

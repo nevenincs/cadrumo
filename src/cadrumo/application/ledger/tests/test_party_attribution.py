@@ -31,8 +31,8 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ....domain.iva.classification import IvaTerritorialScope
 from ....domain.iva.regime_legend import resolve_regime_legends
+from ....domain.iva.schema import IvaTerritorialScope
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..grounded_reading import ground_draft_against_transcription
 from ..invoice_draft_records import FieldProvenance, InvoiceDraft

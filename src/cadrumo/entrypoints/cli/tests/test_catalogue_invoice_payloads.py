@@ -12,8 +12,9 @@ from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_
 from ....application.invoices.catalogue_creation import CatalogueInvoiceCreateResult, build_catalogue_invoice
 from ....application.invoices.catalogue_lifecycle import CatalogueInvoiceRemoveResult, CatalogueInvoiceUpdateResult
 from ....domain.invoices.models import Invoice
-from ....domain.iva.classification import InvoiceKind
-from .._ledger_catalogue_invoice_payloads import (
+from ....domain.iva.schema import InvoiceKind
+from ..command_schema import command_schema_types
+from ..ledger_catalogue_invoice_results import (
     BulkInvoiceImportRowFailurePayload,
     CatalogueInvoiceCreatePayload,
     CatalogueInvoiceImportResult,
@@ -21,7 +22,6 @@ from .._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceRemovePayload,
     CatalogueInvoiceUpdatePayload,
 )
-from ..command_schema import command_schema_types
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

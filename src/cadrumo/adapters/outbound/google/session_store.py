@@ -25,7 +25,9 @@ storage registry:
 The public helpers use the profile identifier resolved by
 :func:`adapters.outbound.google.active_profile.resolve_active_profile` as the storage
 object key, matching the ``{profile}`` grammar on all three namespace
-definitions.
+definitions. The same identifier selects the bucket whose database holds the
+rows, so a profile's sign-in is only ever written to, and read from, that
+profile's own folder under its own key.
 """
 
 from __future__ import annotations
@@ -34,7 +36,7 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.secure_object_write import SecureObjectWrite
 from ....core.time.clock import now
 from ...persistence.storage.crypto.encrypted_columns import secure_object_key_digest
-from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...persistence.storage.secure_object_namespaces import (
     GOOGLE_DRIVE_CONFIG_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
@@ -62,7 +64,7 @@ def save_session(profile: str, token: OAuthToken, metadata: OAuthMetadata, confi
     failed transaction together, including when replacing an earlier sign-in.
     """
     written_at = now()
-    _repository().save_many(
+    _repository(profile).save_many(
         tuple(
             SecureObjectWrite(
                 namespace=definition.namespace,
@@ -88,7 +90,7 @@ def load_token(profile: str) -> OAuthToken | None:
         The stored :class:`adapters.outbound.google.records.OAuthToken`, or
         ``None`` when the profile has no active Google login session.
     """
-    record = _repository().load(
+    record = _repository(profile).load(
         _NAMESPACE_TOKEN,
         profile,
         expected_class=_TOKEN_SENSITIVITY,
@@ -106,7 +108,7 @@ def load_metadata(profile: str) -> OAuthMetadata | None:
         The stored :class:`adapters.outbound.google.records.OAuthMetadata`, or
         ``None`` when no metadata record exists for the profile.
     """
-    record = _repository().load(
+    record = _repository(profile).load(
         _NAMESPACE_METADATA,
         profile,
         expected_class=_METADATA_SENSITIVITY,
@@ -124,7 +126,7 @@ def load_drive_config(profile: str) -> DriveConfig | None:
         The stored :class:`adapters.outbound.google.records.DriveConfig`, or
         ``None`` when no Drive root folder has been created for the profile.
     """
-    record = _repository().load(
+    record = _repository(profile).load(
         _NAMESPACE_DRIVE_CONFIG,
         profile,
         expected_class=_DRIVE_CONFIG_SENSITIVITY,
@@ -141,7 +143,7 @@ def delete_session(profile: str) -> tuple[bool, bool]:
     Removes only the
     :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_OAUTH_TOKEN_NAMESPACE` and
     :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_OAUTH_METADATA_NAMESPACE`
-    records, matching ``aeat config google logout``. The
+    records, matching ``cadrumo-runtime config google logout``. The
     :class:`adapters.outbound.google.records.DriveConfig` remains available so a
     later login reuses the same Drive root folder.
 
@@ -170,7 +172,7 @@ def delete_session(profile: str) -> tuple[bool, bool]:
         reports no per-row outcome, and inferring presence from a delete's
         return value is what forced the two-commit shape to begin with.
     """
-    repo = _repository()
+    repo = _repository(profile)
     digest = secure_object_key_digest(profile)
     token_removed = repo.exists_by_raw_key(_NAMESPACE_TOKEN, digest)
     metadata_removed = repo.exists_by_raw_key(_NAMESPACE_METADATA, digest)
@@ -193,5 +195,11 @@ __all__ = [
 ]
 
 
-def _repository() -> SecureObjectRepository:
-    return secure_object_repository_for_active_bucket()
+def _repository(profile: str) -> SecureObjectRepository:
+    """Open ``profile``'s own bucket database, never the database of whichever profile is selected now.
+
+    A sign-in's consent can outlive a profile switch. Routing by the record's own
+    profile means its rows can only land in that profile's folder: the storage
+    runtime refuses when the unlocked session serves any other profile.
+    """
+    return secure_object_repository_for_bucket(profile)

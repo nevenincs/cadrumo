@@ -1,0 +1,40 @@
+"""Canonical correlation for Google folder requests shared by runtime Google auth."""
+
+from __future__ import annotations
+
+from pydantic import BaseModel
+
+from cadrumo.application.user_profile.google_configuration_operation_contracts import (
+    GoogleConfigurationOutcome,
+    GoogleFolderOrganizeRequest,
+    GoogleFolderViewProjection,
+    GoogleFolderViewRequest,
+)
+
+from .google_configuration_refusals import google_invalid_frame
+from .registered_operation_contracts import RegisteredOperationCompletion
+
+
+def correlate_folder_view(
+    result: GoogleFolderViewProjection, completed: RegisteredOperationCompletion[GoogleConfigurationOutcome]
+) -> None:
+    """Correlate the folder-view result to its submitted contract."""
+    if result.configured is not (result.root_folder_id is not None):
+        google_invalid_frame(operation_id=completed.operation_id, completed=completed)
+
+
+def correlate_folder_request(
+    request: BaseModel, result: BaseModel, completed: RegisteredOperationCompletion[GoogleConfigurationOutcome]
+) -> bool:
+    """Correlate a matching folder request without changing branch order."""
+    if isinstance(request, GoogleFolderViewRequest | GoogleFolderOrganizeRequest) and isinstance(
+        result, GoogleFolderViewProjection
+    ):
+        correlate_folder_view(result, completed)
+        if isinstance(request, GoogleFolderOrganizeRequest) and not result.configured:
+            google_invalid_frame(operation_id=completed.operation_id, completed=completed)
+        return True
+    return False
+
+
+__all__ = ["correlate_folder_request", "correlate_folder_view"]

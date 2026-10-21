@@ -38,6 +38,7 @@ from ......tests.aeat_literal_fixtures import (
 )
 from ......tests.inventory import FIXTURES_DIR
 from ...browser.tests.real_http_boundary import LocalHttpBoundary, open_real_browser_session, real_browser_factory
+from .. import censal_datos as censal_datos_module
 from ..censal_datos import (
     _FORBIDDEN_LANDING_MARKERS,
     _assert_read_http,
@@ -353,9 +354,8 @@ _SELECTOR_URL = _AEAT.clave_movil.selector_access_url_template.format(
     target=quote(_AEAT.sede_paths.censal_datos, safe=""),
 )
 # SYNTHETIC: the access selector as an authenticated session sees it. The
-# Cl@ve Movil authorize control is in the DOM but not actionable, which is
-# what the live capture recorded: the selector rendered and the reader's
-# click ran out its timeout with no further navigation.
+# Cl@ve Movil authorize control is in the DOM but not actionable; the censal
+# reader must refuse this landing without driving the selector.
 _AUTHENTICATED_SELECTOR_HTML = CLAVE_AUTHORIZATION_SELECTOR_HTML_FIXTURE
 _OTHER_HTML = "<html><head><title>Agencia Tributaria</title></head><body><p>Servicio</p></body></html>"
 
@@ -373,11 +373,13 @@ class _SedeDocuments(LocalHttpBoundary):
         super().__init__()
         self._respond = respond
         self.documents: list[str] = []
+        self.document_reply_timestamps: list[tuple[str, float]] = []
 
     def _reply_for(self, url: str) -> _Reply:
         reply = self._respond(url)
         self.documents.append(url)
         self.response_html = reply.html
+        self.document_reply_timestamps.append((url, time.monotonic()))
         return reply
 
     @override
@@ -461,22 +463,54 @@ class TestDirectAuthenticatedEntry:
         assert not any(urlsplit(url).path == urlsplit(write_url).path for url in boundary.documents)
 
     @pytest.mark.asyncio
-    async def test_bounce_to_the_access_selector_is_a_prompt_session_refusal(self) -> None:
-        """A selector landing is a typed session refusal, well inside the old click timeout."""
+    async def test_bounce_to_the_access_selector_is_a_prompt_session_refusal(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Refuse the selector promptly after its response, independent of browser startup and teardown."""
         boundary = _SedeDocuments(_bouncing_to(_SELECTOR_URL, _AUTHENTICATED_SELECTOR_HTML))
-        started = time.monotonic()
+        selector_refusal_timestamps: list[float] = []
+        refuse_non_consulta_landing = censal_datos_module._refuse_non_consulta_landing
+
+        def record_selector_refusal(landing_url: str) -> None:
+            try:
+                refuse_non_consulta_landing(landing_url)
+            except SedeNavigationError as error:
+                if (
+                    urlsplit(landing_url).path == urlsplit(_SELECTOR_URL).path
+                    and error.failure_mode == SedeFailureMode.AUTH_GATE_DETECTED.value
+                    and (error.context or {}).get("refusal") == "session_not_accepted"
+                ):
+                    selector_refusal_timestamps.append(time.monotonic())
+                raise
+
+        monkeypatch.setattr(
+            censal_datos_module,
+            "_refuse_non_consulta_landing",
+            record_selector_refusal,
+        )
         try:
             with pytest.raises(SedeNavigationError) as excinfo:
                 await _read(boundary, "censal-selector-bounce")
         finally:
             boundary.close()
-        elapsed_ms = (time.monotonic() - started) * 1000
+
+        selector_responses = [
+            (response_url, timestamp)
+            for response_url, timestamp in boundary.document_reply_timestamps
+            if urlsplit(response_url).path == urlsplit(_SELECTOR_URL).path
+        ]
+        assert selector_responses, "the local boundary did not record the selector document response"
+        selector_response_url, selector_response_at = selector_responses[0]
+        assert len(selector_refusal_timestamps) == 1, "the selector refusal spy must capture one typed refusal"
+        elapsed_ms = (selector_refusal_timestamps[0] - selector_response_at) * 1000
 
         error = excinfo.value
         assert error.failure_mode == SedeFailureMode.AUTH_GATE_DETECTED.value
         assert (error.context or {})["refusal"] == "session_not_accepted"
         assert _TAXPAYER not in str(error)
+        assert elapsed_ms >= 0
         assert elapsed_ms < Settings().cadrumo_browser_navigation_timeout_ms / 3
+        assert selector_response_url == boundary.documents[-1]
         assert urlsplit(boundary.documents[-1]).path == urlsplit(_SELECTOR_URL).path
 
     @pytest.mark.asyncio

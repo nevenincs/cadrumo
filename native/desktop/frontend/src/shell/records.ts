@@ -4,7 +4,7 @@ import type { LogContext, LogLevel, LogRecord } from "../ipc/contract";
 // of the component's module so that an edit to the view is a hot update and
 // not a reload.
 
-export const LEVELS: readonly LogLevel[] = [
+const LEVELS: readonly LogLevel[] = [
   "DEBUG",
   "INFO",
   "WARNING",
@@ -12,16 +12,21 @@ export const LEVELS: readonly LogLevel[] = [
   "CRITICAL",
 ];
 
+/** Missing levels have the same filtering rank as INFO. */
+export const levelRank = (level: LogLevel | null): number =>
+  LEVELS.indexOf(level ?? "INFO");
+
 export type RecordFilters = {
   text: string;
   minLevel: number;
   hiddenSources: string[];
   logger: string | null;
+  origin?: string;
 };
 
 export const DEFAULT_FILTERS: RecordFilters = {
   text: "",
-  minLevel: 1,
+  minLevel: levelRank("INFO"),
   hiddenSources: [],
   logger: null,
 };
@@ -35,6 +40,26 @@ export function recordLine(record: LogRecord): string {
     ? ` | ${JSON.stringify(context)}`
     : "";
   return `${record.timestamp} [${record.level ?? "-"}] ${record.logger ?? record.source}: ${record.message}${suffix}`;
+}
+
+export function recordOrigin(record: LogRecord): string {
+  return record.process
+    ? `${record.source} / ${record.process.role}:${record.process.pid}`
+    : record.source;
+}
+
+export function matchesOrigin(record: LogRecord, origin?: string): boolean {
+  return !origin || record.source === origin || recordOrigin(record) === origin;
+}
+
+export function recordsText(records: readonly LogRecord[]): string {
+  return records
+    .map((record) =>
+      record.detail
+        ? `${recordLine(record)}\n${record.detail}`
+        : recordLine(record),
+    )
+    .join("\n");
 }
 
 export function recordContext(record: LogRecord): LogContext {

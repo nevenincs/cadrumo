@@ -10,9 +10,9 @@ related:
   - '[[2026-09-26-mcp-purpose-authentication-adr]]'
 supersedes:
   - '2026-07-24-profile-login-session-adr'
-modified: '2026-10-03'
+modified: '2026-10-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:0e5818c6c62e8eb86634a5faa53bdf76a138092f92d745ecb7bb7397d997aa6f'
+body_hash: 'sha256:31af0f2b27a7fda9a0413322e4e5a0f9cc0d54259cbb508ddf18bc1eb73bf7a6'
 ---
 
 # `profile-session-lifecycle` adr: `authenticated profile session lifecycle` | (**status:** `accepted`)
@@ -54,3 +54,9 @@ Accepted under the operator's instruction to continue the presented mcp-purpose-
 Active profile means the selected target of one human frontend context, never ambient authorization for every agent. Candidate handover preserves that context on failure and does not redirect another session. Current-session lock/logout, key/grant revocation and profile-wide suspension are distinct application transitions. Entrypoints render the resulting status and remaining access, without inferring authentication from process presence.
 
 Human acceleration, API grant validity, access leases, operation ownership and durable work retain their separate authorities. This amendment extends lifecycle scope; it does not move key manipulation or policy into CLI, TUI or MCP.
+
+## Amendment 2026-10-18: runtime authority boundary
+
+Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
+
+The wording "One application service owns active-session observation, explicit close, inactivity events, process shutdown cleanup, and operator-safe status projection." above is kept as accepted history. It now reads together with this ruling: That owner is the runtime's lifecycle service in `src/cadrumo_runtime`, not a service of the tax package. CLI, TUI and MCP reach it only through the client contract: they present a secret or a proof on the verified connection and render the typed admission or refusal. No entrypoint or tax module observes, closes or publishes a session itself.

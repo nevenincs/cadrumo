@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/components/ui/cn";
+import { Badge } from "@/components/ui/badge";
 
 /**
  * A brief confirmation at the bottom of the window. The region is always
@@ -19,9 +20,12 @@ function Toast({ className, children, ...props }: React.ComponentProps<"div">) {
       {...props}
     >
       {children && (
-        <span className="max-w-full animate-in truncate rounded-full bg-foreground px-3.5 py-1.5 text-base text-background shadow-overlay fade-in-0 slide-in-from-bottom-2">
-          {children}
-        </span>
+        <Badge
+          variant="inverse"
+          className="animate-in px-3.5 py-1.5 text-base shadow-overlay fade-in-0 slide-in-from-bottom-2"
+        >
+          <span className="truncate">{children}</span>
+        </Badge>
       )}
     </div>
   );

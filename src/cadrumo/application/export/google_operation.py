@@ -39,11 +39,11 @@ from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..storage.calc_sheets.engine import build_export_plan
 from ..storage.calc_sheets.records import OperatorInputs, RelationValues, SheetExportPlan, SheetReviewMetadata
 from ..storage.calc_sheets.review_workbook import ReviewLabelResolver, build_review_workbook
@@ -543,6 +543,7 @@ def build_google_sheets_export_operation_definition(
     return OperationDefinition(
         definition_id=GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
         request_type=GoogleSheetsExportOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=GoogleSheetsExportOperationResult,
         executor_factory=OperationExecutorFactory(
             request_type=GoogleSheetsExportOperationRequest,
@@ -553,7 +554,6 @@ def build_google_sheets_export_operation_definition(
         interaction_kinds=frozenset[OperationInteractionKind](),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -13,43 +13,43 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
-from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ....adapters.persistence.storage.tests.secure_sql import (
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.profile.usage_ratios import save_usage_ratios
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
-from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
-from ....application.aggregation.retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress
-from ....application.aggregation.withholding_recognition import (
+from cadrumo.application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
+from cadrumo.application.aggregation.retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress
+from cadrumo.application.aggregation.withholding_recognition import (
     WithholdingIncomeKind,
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
 )
-from ....application.user_profile.login_session import authenticate_profile_for_invocation
-from ....core.external_constants import OutputLanguage
-from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from ....core.period import Period
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from ....domain.categories.spending_category import SpendingCategory
-from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from ....domain.iva.schema import EUMemberState, IvaCategory
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.usage_ratios.model import UsageRatioProfile
-from ....tests.cli_envelope import unwrap_envelope_notices
-from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ._m303_ordinary_cli_support import joint_return_options
-from .cli_runner import invoke_cached_cli
-from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.core.period import Period
+from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from cadrumo.domain.iva.schema import EUMemberState, IvaCategory
+from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
+from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
+from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.domain.usage_ratios.model import UsageRatioProfile
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+
+from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke_joined_cli
+from .ordinary_m303_scenarios import joint_return_options
 
 __all__ = ["_isolated_cli_backend"]
 
@@ -102,21 +102,21 @@ _M100_FACTS: dict[str, str] = {
 
 
 @contextmanager
-def _operator_profile(tmp_path: Path, extra_facts: dict[str, str] | None = None) -> Iterator[NativeCliProfileFixture]:
+def _operator_profile(tmp_path: Path, extra_facts: dict[str, str] | None = None) -> Generator[RegisteredCliProfile]:
     """Register the operator profile and serve it through its native worker.
 
     ``extra_facts`` carries per-modelo attestations that readiness demands of
     that modelo alone, so the shared profile stays minimal.
     """
-    with native_cli_profile_scope(tmp_path) as profile:
+    with cli_world_provider().native_profile(tmp_path) as profile:
         profile.register(label=_PROFILE_LABEL, facts={**_OPERATOR_FACTS, **(extra_facts or {})})
         yield profile
 
 
-def _cli(profile: NativeCliProfileFixture, *args: str) -> Result:
+def _cli(profile: RegisteredCliProfile, *args: str) -> Result:
     """Run one CLI command authenticated as the operator, as a fresh process would."""
     close_active_bucket_session()
-    result = invoke_cached_cli(
+    result = invoke_joined_cli(
         ["--profile", _PROFILE_LABEL, "--profile-secrets-stdin", *args],
         input=json.dumps({"profile_passphrase": profile.passphrase}),
     )
@@ -125,7 +125,7 @@ def _cli(profile: NativeCliProfileFixture, *args: str) -> Result:
 
 
 @contextmanager
-def _opened_profile(profile: NativeCliProfileFixture, operation: PinnedAuthorityOperation) -> Iterator[str]:
+def _opened_profile(profile: RegisteredCliProfile, operation: PinnedAuthorityOperation) -> Generator[str]:
     """Open the registered profile's encrypted bucket for direct seeding or assertions."""
     close_active_bucket_session()
     login = authenticate_profile_for_invocation(
@@ -139,7 +139,7 @@ def _opened_profile(profile: NativeCliProfileFixture, operation: PinnedAuthority
         close_active_bucket_session()
 
 
-def _create_work_unit(profile: NativeCliProfileFixture, *, modelo: str, year: int, period: str) -> dict[str, str]:
+def _create_work_unit(profile: RegisteredCliProfile, *, modelo: str, year: int, period: str) -> dict[str, str]:
     """Create a work unit and let the registry authority pick the revision.
 
     No ``--revision`` is injected. AEAT binds each ``(modelo, filing_year,
@@ -172,23 +172,23 @@ def _create_work_unit(profile: NativeCliProfileFixture, *, modelo: str, year: in
     return {"work_unit_id": work_unit_id}
 
 
-def _create_303_work_unit(profile: NativeCliProfileFixture) -> dict[str, str]:
+def _create_303_work_unit(profile: RegisteredCliProfile) -> dict[str, str]:
     return _create_work_unit(profile, modelo="303", year=2025, period="1T")
 
 
-def _create_115_work_unit(profile: NativeCliProfileFixture, *, year: int = 2026, period: str = "1T") -> dict[str, str]:
+def _create_115_work_unit(profile: RegisteredCliProfile, *, year: int = 2026, period: str = "1T") -> dict[str, str]:
     return _create_work_unit(profile, modelo="115", year=year, period=period)
 
 
-def _create_111_work_unit(profile: NativeCliProfileFixture) -> dict[str, str]:
+def _create_111_work_unit(profile: RegisteredCliProfile) -> dict[str, str]:
     return _create_work_unit(profile, modelo="111", year=2025, period="2T")
 
 
-def _create_180_work_unit(profile: NativeCliProfileFixture) -> dict[str, str]:
+def _create_180_work_unit(profile: RegisteredCliProfile) -> dict[str, str]:
     return _create_work_unit(profile, modelo="180", year=2026, period="0A")
 
 
-def _capture_m115_invoice_withholding(profile: NativeCliProfileFixture) -> None:
+def _capture_m115_invoice_withholding(profile: RegisteredCliProfile) -> None:
     """Capture one received urban-rent invoice's retención as Modelo 115 2025 1T evidence.
 
     ``ledger invoice add`` mints a received rent invoice (2700.00 base, 19%
@@ -414,7 +414,7 @@ def _m100_activity_expense_transaction(
 
 
 def _seed_prior_m100_zero_carry() -> None:
-    from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+    from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
     CalculationObservationRepository().save(
         CalculationObservationRepository().prepare_observation_envelope(
@@ -468,6 +468,54 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation(tmp_
     assert Decimal(casilla_values["02"]) == Decimal("2700.00")
     assert Decimal(casilla_values["03"]) == Decimal("513.00")
     assert Decimal(casilla_values["05"]) == Decimal("513.00")
+
+
+def test_reusing_a_verified_calculation_keeps_the_newer_draft_current(tmp_path: Path) -> None:
+    """A real historical duplicate is readable without replacing the current draft."""
+    with _operator_profile(tmp_path) as profile:
+        work_unit = _create_115_work_unit(profile, year=2025)
+        _capture_m115_invoice_withholding(profile)
+        calculate = (
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+        )
+        original = _cli(profile, *calculate, "--casilla", "04=0")
+        assert original.exit_code == 0, original.output
+        original_id = str(_payload(original.output)["calculation_revision_id"])
+        verified = _cli(profile, "--format", "json", "app", "modelo", "work", "verify", original_id)
+        assert verified.exit_code == 0, verified.output
+        assert _payload(verified.output)["granted_verificado_completo"] is True
+
+        changed = _cli(profile, *calculate, "--casilla", "04=1")
+        assert changed.exit_code == 0, changed.output
+        changed_id = str(_payload(changed.output)["calculation_revision_id"])
+        assert changed_id != original_id
+
+        repeated = _cli(profile, *calculate, "--casilla", "04=0")
+        assert repeated.exit_code == 0, repeated.output
+        result = _payload(repeated.output)
+        assert result["calculation_revision_id"] == original_id
+        assert result["state"] == "verificado_completo"
+        notice = next(
+            item
+            for item in unwrap_envelope_notices(repeated.output)
+            if item["code"] == "modelo.work.calculate.reused_sealed_revision"
+        )
+        assert notice["context"] == {
+            "calculation_revision_id": original_id,
+            "current_calculation_revision_id": changed_id,
+            "revision_published": "false",
+        }
+        assert "No new draft was created" in notice["message"]
+        assert result["saved_confirmation"] == notice["message"]
+        status = _cli(profile, "--format", "json", "app", "modelo", "work", "status", str(work_unit["work_unit_id"]))
+        assert status.exit_code == 0, status.output
+        assert _payload(status.output)["current_calculation_revision_id"] == changed_id
 
 
 def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
@@ -605,7 +653,7 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
     message = envelope["error"]["message"]
     assert "--received-invoice-retencion" in message
     assert "--ledger-payment-withholding" in message
-    assert "all-blank Modelo 111" in message
+    assert "Do not file a blank Modelo 111" in message
     assert "--modelo-111-no-retenciones-periods 2025:2T" in message
 
     assert attested.exit_code == 0, attested.output
@@ -816,8 +864,8 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
             passphrase_callback=lambda: native_profile.passphrase,
             profile_decode_context=operation.profile_decode_context(),
         ).bucket_id
-        from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-        from ....domain.iva_compensation.reconciliation import (
+        from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
+        from cadrumo.domain.iva_compensation.reconciliation import (
             IvaCompensationAuthoritySource,
             IvaCompensationReconciliationDecision,
         )
@@ -944,10 +992,11 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
         import typer
         import typer.main
 
-        from ....application.modelo.calculate_input import ModeloWorkCalculationServiceResult
-        from ....application.modelo.operation_definitions import calculation_public_result
-        from .._modelo_work_wizard_cli import _emit_wizard_result
-        from ._modelo_work_ux_support import load_work_unit_by_id
+        from cadrumo.application.modelo.calculate_input import ModeloWorkCalculationServiceResult
+        from cadrumo.application.modelo.operation_definitions import calculation_public_result
+        from cadrumo.entrypoints.cli._modelo_work_wizard_cli import _emit_wizard_result
+
+        from .modelo_work_scenarios import load_work_unit_by_id
 
         wizard_app = typer.Typer()
 
@@ -988,8 +1037,8 @@ def _seed_zero_iva_wallet_decision() -> None:
     with ``selected_amount=0`` satisfies the guard while leaving the source-mesh
     advisory assertions meaningful.
     """
-    from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-    from ....domain.iva_compensation.reconciliation import (
+    from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
+    from cadrumo.domain.iva_compensation.reconciliation import (
         IvaCompensationAuthoritySource,
         IvaCompensationReconciliationDecision,
     )
