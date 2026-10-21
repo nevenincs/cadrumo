@@ -13,6 +13,7 @@ declare global {
       uncertain(): void;
       deferRead(): void;
       releaseRead(): void;
+      rejectRead(): void;
       reads(): number;
       writes(): number;
       burst(): void;
@@ -54,6 +55,7 @@ export function userProfileFixture(
   let refuse: "refused" | "unknown" | null = null;
   let deferred = false;
   let release: (() => void) | undefined;
+  let reject: (() => void) | undefined;
   const changed = () => {
     data.record_revision++;
     data.content_digest = String(data.record_revision).padStart(64, "0");
@@ -81,6 +83,9 @@ export function userProfileFixture(
     },
     releaseRead() {
       release?.();
+    },
+    rejectRead() {
+      reject?.();
     },
     reads: () => reads,
     writes: () => writes,
@@ -122,8 +127,9 @@ export function userProfileFixture(
       });
       if (deferred) {
         deferred = false;
-        await new Promise<void>((resolve) => {
+        await new Promise<void>((resolve, refused) => {
           release = resolve;
+          reject = () => refused({ code: "unavailable" });
         });
       }
       await new Promise((resolve) => setTimeout(resolve, 40));

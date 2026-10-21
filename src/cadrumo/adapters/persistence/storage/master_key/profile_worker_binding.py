@@ -56,13 +56,18 @@ class ProfileWorkerBindingOwner:
             binding = self._binding
             if binding is None or session is None:
                 return
-            if (
-                session.bucket_id != str(binding.identity.binding.profile_id)
-                or session.storage_root is None
-                or session.storage_root.resolve() != binding.storage_root
-            ):
+            if session.bucket_id != str(binding.identity.binding.profile_id) or session.storage_root is None:
                 raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
             try:
+                # Normal sessions already carry the pinned canonical path.
+                # Resolving it again for every encrypted column repeats native
+                # path traversal. The fresh stat below still detects replacement
+                # of the directory or any ancestor redirecting it elsewhere.
+                if (
+                    session.storage_root != binding.storage_root
+                    and session.storage_root.resolve() != binding.storage_root
+                ):
+                    raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
                 current = binding.storage_root.stat()
             except OSError:
                 raise AutomationCustodyError(AutomationCustodyCode.CONFLICT) from None

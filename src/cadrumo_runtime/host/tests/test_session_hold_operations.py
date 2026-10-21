@@ -8,6 +8,7 @@ only a definition id, a subject and a request object.
 from __future__ import annotations
 
 import json
+import logging
 from datetime import UTC, datetime, timedelta
 from typing import cast
 from uuid import UUID, uuid4
@@ -82,7 +83,9 @@ from cadrumo.application.user_profile.google_configuration_operation_refusal imp
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo_client.contracts import deadline_budget
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
@@ -612,3 +615,56 @@ def test_a_refusal_its_definition_details_is_read_like_a_result_and_any_other_re
     with pytest.raises(RelayRefusedError) as undocumented:
         relay.handle("operation_result", {"operation_id": other})
     assert undocumented.value.code == "no_result"
+
+
+def test_relay_uses_one_runtime_budget_across_slow_submit_and_start(monkeypatch: pytest.MonkeyPatch) -> None:
+    runtime = _Runtime()
+    original = runtime.operation
+    now = [1000.0]
+    deadlines: list[float] = []
+    monkeypatch.setattr(deadline_budget.time, "monotonic", lambda: now[0])
+
+    def slow(request: OperationRequest, *, deadline: float) -> OperationReply:
+        deadlines.append(deadline)
+        now[0] += 9.0
+        deadline_budget.remaining_budget(deadline)
+        return original(request, deadline=deadline)
+
+    monkeypatch.setattr(runtime, "operation", slow)
+    operation = _submit(_relay(runtime), DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"mode": "full"})
+    assert operation in runtime.operations
+    assert deadlines == [1120.0, 1120.0]
+
+
+def test_relay_does_not_restart_budget_after_slow_submit(monkeypatch: pytest.MonkeyPatch) -> None:
+    runtime = _Runtime()
+    original = runtime.operation
+    now = [1000.0]
+    monkeypatch.setattr(deadline_budget.time, "monotonic", lambda: now[0])
+
+    def exhausted(request: OperationRequest, *, deadline: float) -> OperationReply:
+        assert isinstance(request, OperationSubmit), "must not dispatch start after the action expires"
+        result = original(request, deadline=deadline)
+        now[0] += 121.0
+        return result
+
+    monkeypatch.setattr(runtime, "operation", exhausted)
+    with pytest.raises(RelayRefusedError, match="unavailable"):
+        _submit(_relay(runtime), DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"mode": "full"})
+
+
+def test_relay_logs_transport_cause_without_request_data(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    runtime = _Runtime()
+
+    def refused(request: OperationRequest, *, deadline: float) -> OperationReply:
+        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED, check="private-profile-value")
+
+    monkeypatch.setattr(runtime, "operation", refused)
+    with caplog.at_level(logging.WARNING), pytest.raises(RelayRefusedError, match="unavailable"):
+        _submit(_relay(runtime), DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"private": "private-profile-value"})
+    record = next(record for record in caplog.records if record.message == "session_hold_operation_refused")
+    assert record.__dict__["reason"] == "runtime_deadline_exceeded"
+    assert record.__dict__["action"] == "operation_submit"
+    assert "private-profile-value" not in str(record.__dict__)

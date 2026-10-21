@@ -639,3 +639,27 @@ test("Censo progress notifications coalesce without starting another pull", asyn
     }),
   ).toBeEnabled();
 });
+
+test("a failed pending profile read leaves loading and allows a retry", async ({
+  page,
+}) => {
+  await open(page);
+  const profile = page.locator(".user-profile-page");
+  const refresh = profile.getByRole("button", {
+    name: label("desktop.profile.refresh"),
+    exact: true,
+  });
+  await page.evaluate(() => window.__scenarioProfile!.deferRead());
+  await refresh.click();
+  await expect(profile).toContainText(label("desktop.profile.loading"));
+  await page.evaluate(() => window.__scenarioProfile!.rejectRead());
+  await expect(profile.getByRole("alert")).toContainText(
+    label("desktop.profile.unavailable"),
+  );
+  await expect(profile).not.toContainText(label("desktop.profile.loading"));
+  await expect(refresh).toBeEnabled();
+  await refresh.click();
+  await expect(profile).toContainText("Soler Vidal");
+  await expect(profile.getByRole("alert")).toHaveCount(0);
+  await expect(profile).not.toContainText(label("desktop.profile.loading"));
+});

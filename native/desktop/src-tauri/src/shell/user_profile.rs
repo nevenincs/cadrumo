@@ -17,6 +17,10 @@ use std::{
 use tauri::{State, ipc::Channel};
 use wire::{Overview, Pages};
 
+// Bound the complete read, including admission, queueing and every page.
+// A per-operation timeout alone leaves admission and queue waits unbounded.
+const PROFILE_READ_LIMIT: Duration = Duration::from_secs(140);
+
 #[derive(Debug, Serialize)]
 pub struct Failure {
     code: &'static str,
@@ -86,7 +90,9 @@ impl ProfileHost {
         let label = status.active_profile.ok_or_else(protocol)?;
         let owner = self.sign_in.clone();
         let person = super::blocking(move || owner.person(&owner.profile_id(&label)?)).await?;
-        if expected.is_some_and(|id| lock(&person).identity["profile_id"] != id) {
+        if let Some(expected) = expected
+            && Self::identity(&person).await?["profile_id"] != expected
+        {
             return Err(Failure::new("not_signed_in"));
         }
         let mut held = lock(&self.held);
@@ -95,6 +101,12 @@ impl ProfileHost {
         }
         *held = Some(person.clone());
         Ok(person)
+    }
+    async fn identity(person: &HeldPerson) -> Result<Value> {
+        let person = person.clone();
+        // The same mutex is held by blocking IPC exchanges. Never wait on it
+        // on a Tokio executor thread: that can also starve the read's timer.
+        Ok(super::blocking(move || Ok(lock(&person).identity.clone())).await?)
     }
     async fn call(person: &HeldPerson, request: Value) -> Result<Value> {
         let person = person.clone();
@@ -108,7 +120,7 @@ impl ProfileHost {
         mutation: bool,
     ) -> Result<Value> {
         let mut events = self.sign_in.person_events();
-        let profile = lock(person).identity["profile_id"]
+        let profile = Self::identity(person).await?["profile_id"]
             .as_str()
             .ok_or_else(protocol)?
             .to_owned();
@@ -166,12 +178,20 @@ impl ProfileHost {
         })
     }
     async fn read(&self, language: String) -> Result<Overview> {
+        self.read_with_budget(language, PROFILE_READ_LIMIT).await
+    }
+    async fn read_with_budget(&self, language: String, budget: Duration) -> Result<Overview> {
+        tokio::time::timeout(budget, self.read_overview(language))
+            .await
+            .unwrap_or_else(|_| Err(protocol()))
+    }
+    async fn read_overview(&self, language: String) -> Result<Overview> {
         if !super::language::supported(&language) {
             return Err(protocol());
         }
         let _serial = self.operation.lock().await;
         let person = self.person(None).await?;
-        let profile = lock(&person).identity["profile_id"]
+        let profile = Self::identity(&person).await?["profile_id"]
             .as_str()
             .ok_or_else(protocol)?
             .to_owned();
@@ -192,8 +212,8 @@ impl ProfileHost {
         // Runtime disclosure already checks the exact session. Also reject a
         // result whose window switched accounts while pages were collected.
         let current = self.person(Some(&profile)).await?;
-        let identity = lock(&person).identity.clone();
-        if lock(&current).identity != identity {
+        let identity = Self::identity(&person).await?;
+        if Self::identity(&current).await? != identity {
             return Err(Failure::new("not_signed_in"));
         }
         let overview = pages.finish()?;
@@ -370,6 +390,21 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn a_queued_profile_read_expires_without_waiting_for_the_previous_operation() {
+        let host = ProfileHost::new(Arc::new(SignIn::new(
+            &crate::terminal::tests::unit_launch(),
+        )));
+        let serial = host.operation.lock().await;
+        let result = host
+            .read_with_budget("en".into(), Duration::from_millis(1))
+            .await;
+        assert!(matches!(result, Err(Failure { code: "unavailable", .. })));
+        drop(serial);
+        assert!(host.operation.try_lock().is_ok());
+        host.close();
+    }
 
     #[test]
     fn profile_observation_from_the_webview_thread_owns_and_replaces_its_task() {

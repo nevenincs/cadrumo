@@ -18,6 +18,7 @@ operation the parent submits and answers like any other.
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Final, Literal
@@ -40,6 +41,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationReviewProjectionRequestV1,
 )
+from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex
 from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition
 from cadrumo_client.commands.registered_operation_responses import (
@@ -47,7 +49,11 @@ from cadrumo_client.commands.registered_operation_responses import (
     submit_registered_review_response,
 )
 from cadrumo_client.contracts.contracts import RefusalError
-from cadrumo_client.contracts.deadline_budget import deadline_after
+from cadrumo_client.contracts.deadline_budget import (
+    MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
+    deadline_after,
+    remaining_budget,
+)
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationControl,
@@ -74,8 +80,9 @@ RELAY_ACTION_KEYS: Final[Mapping[str, frozenset[str]]] = {
 }
 """The relay actions of the held person bridge and the fields each takes beside ``request_id`` and ``action``."""
 
-# One runtime exchange; the bridge's parent waits at most 12 s for the whole reply.
-_EXCHANGE_SECONDS: Final = 8.0
+# One budget for the entire relay action, including all of its exchanges.
+# The desktop holder allows 140 s for this runtime budget plus bridge overhead.
+_LOGGER = logging.getLogger(__name__)
 _EVENT_PAGE: Final = 64
 _MAX_WATCHED: Final = 16
 _MAX_PAYLOAD_TEXT: Final = 12_288
@@ -124,17 +131,18 @@ class OperationRelay:
 
     def handle(self, action: str, request: Mapping[str, object]) -> dict[str, object]:
         """Run one relay action and return its reply fields; refusals raise :class:`RelayRefusedError`."""
+        deadline = deadline_after(MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS)
         try:
             if action == "operation_submit":
-                return self._submit(request)
+                return self._submit(request, deadline=deadline)
             operation_id = _text(request["operation_id"])
             if action == "operation_observe":
-                observation = self._observe(operation_id, _count(request["after_cursor"]))
+                observation = self._observe(operation_id, _count(request["after_cursor"]), deadline=deadline)
                 return {"kind": "operation_observed", "observation": _document(observation)}
             if action == "operation_result":
-                return self._result(operation_id)
+                return self._result(operation_id, deadline=deadline)
             if action == "operation_review":
-                pending, document = self._review(operation_id)
+                pending, document = self._review(operation_id, deadline=deadline)
                 return {
                     "kind": "operation_review",
                     "operation_id": operation_id,
@@ -145,19 +153,30 @@ class OperationRelay:
                     "document": document,
                 }
             if action == "operation_respond":
-                return self._respond(operation_id, request)
+                return self._respond(operation_id, request, deadline=deadline)
             if action == "operation_cancel":
-                return self._cancel(operation_id, _count(request["expected_revision"]))
+                return self._cancel(operation_id, _count(request["expected_revision"]), deadline=deadline)
             raise ValueError("unknown relay action")
         except FrontendRefusedError as error:
             raise RelayRefusedError(error.reason, holder_operation_id=error.holder_operation_id) from None
-        except (RefusalError, ValidationError):
+        except (RefusalError, ValidationError) as error:
+            diagnostic_event(
+                _LOGGER,
+                "session_hold_operation_refused",
+                level=logging.WARNING,
+                fields={
+                    "action": action if action in RELAY_ACTION_KEYS else "invalid",
+                    "reason": error.reason.value if isinstance(error, RefusalError) else "invalid_projection",
+                    "error_type": type(error).__name__,
+                },
+            )
             raise RelayRefusedError("unavailable") from None
 
     # ── Exchanges ───────────────────────────────────────────────────────────
 
-    def _exchange(self, request: OperationRequest) -> OperationReply:
-        return self._client.operation(request, deadline=deadline_after(_EXCHANGE_SECONDS))
+    def _exchange(self, request: OperationRequest, *, deadline: float) -> OperationReply:
+        remaining_budget(deadline)
+        return self._client.operation(request, deadline=deadline)
 
     def _watch(self, projection: OperationPublicProjectionV1) -> None:
         if projection.lifecycle is OperationLifecycle.TERMINAL:
@@ -165,7 +184,7 @@ class OperationRelay:
         elif projection.operation_id in self._watched or len(self._watched) < _MAX_WATCHED:
             self._watched.add(projection.operation_id)
 
-    def _submit(self, request: Mapping[str, object]) -> dict[str, object]:
+    def _submit(self, request: Mapping[str, object], *, deadline: float) -> dict[str, object]:
         payload = request["payload"]
         if not isinstance(payload, dict):
             raise TypeError("expected a request object")
@@ -179,7 +198,7 @@ class OperationRelay:
             definition_id=_text(request["definition_id"]),
             subject_ref=_text(request["subject_ref"]),
             payload_json=payload_json,
-            deadline=deadline_after(_EXCHANGE_SECONDS),
+            deadline=deadline,
         )
         operation_id = submitted.receipt.operation_id
         started = self._exchange(
@@ -189,7 +208,8 @@ class OperationRelay:
                 profile_id=pinned.profile_id,
                 session_id=pinned.session_id,
                 operation_id=operation_id,
-            )
+            ),
+            deadline=deadline,
         )
         if not isinstance(started, OperationAcknowledged) or started.operation_id != operation_id:
             raise RelayRefusedError("unavailable")
@@ -197,7 +217,7 @@ class OperationRelay:
             self._watched.add(operation_id)
         return {"kind": "operation_submitted", "operation_id": operation_id}
 
-    def _observe(self, operation_id: str, after_cursor: int) -> OperationObservationSuccessV1:
+    def _observe(self, operation_id: str, after_cursor: int, *, deadline: float) -> OperationObservationSuccessV1:
         reply = self._exchange(
             OperationObserve(
                 request_id=uuid4(),
@@ -206,7 +226,8 @@ class OperationRelay:
                 observation=OperationObservationRequestV1(
                     operation_id=operation_id, after_cursor=after_cursor, page_limit=_EVENT_PAGE
                 ),
-            )
+            ),
+            deadline=deadline,
         )
         if not isinstance(reply, OperationObserved):
             raise RelayRefusedError("unavailable")
@@ -218,8 +239,8 @@ class OperationRelay:
         self._watch(observation.projection)
         return observation
 
-    def _result(self, operation_id: str) -> dict[str, object]:
-        projection = self._observe(operation_id, 0).projection
+    def _result(self, operation_id: str, *, deadline: float) -> dict[str, object]:
+        projection = self._observe(operation_id, 0, deadline=deadline).projection
         contract = projection.definition_contract
         schema = contract.result_schema
         # A refusal its definition declares carries a detail document, read the same way as a result.
@@ -236,7 +257,8 @@ class OperationRelay:
                 definition_contract_digest=contract.definition_contract_digest,
                 result_schema=schema,
             ),
-            timeout=_EXCHANGE_SECONDS,
+            timeout=remaining_budget(deadline),
+            deadline=deadline,
         )
         if document.get("result_schema") != schema.model_dump(mode="json") or document.get(
             "definition_contract_digest"
@@ -249,21 +271,24 @@ class OperationRelay:
             "document": json.loads(canonical_json_bytes(document)),
         }
 
-    def _pending(self, operation_id: str) -> OperationReviewAvailableInteractionV1:
-        pending = self._observe(operation_id, 0).projection.pending_interaction
+    def _pending(self, operation_id: str, *, deadline: float) -> OperationReviewAvailableInteractionV1:
+        pending = self._observe(operation_id, 0, deadline=deadline).projection.pending_interaction
         if not isinstance(pending, OperationReviewAvailableInteractionV1):
             raise RelayRefusedError("not_pending")
         return pending
 
-    def _review(self, operation_id: str) -> tuple[OperationReviewAvailableInteractionV1, dict[str, JsonValue]]:
-        pending = self._pending(operation_id)
+    def _review(
+        self, operation_id: str, *, deadline: float
+    ) -> tuple[OperationReviewAvailableInteractionV1, dict[str, JsonValue]]:
+        pending = self._pending(operation_id, deadline=deadline)
         reply = self._exchange(
             OperationReview(
                 request_id=uuid4(),
                 profile_id=self._client.profile_id,
                 session_id=self._client.session_id,
                 review=OperationReviewProjectionRequestV1(reference=pending.review_reference),
-            )
+            ),
+            deadline=deadline,
         )
         if (
             not isinstance(reply, OperationProjected)
@@ -282,7 +307,7 @@ class OperationRelay:
             raise RelayRefusedError("unavailable")
         return pending, {str(key): value for key, value in document.items()}
 
-    def _respond(self, operation_id: str, request: Mapping[str, object]) -> dict[str, object]:
+    def _respond(self, operation_id: str, request: Mapping[str, object], *, deadline: float) -> dict[str, object]:
         decision = request["decision"]
         if decision not in {"apply", "reject"}:
             raise ValueError("invalid decision")
@@ -291,13 +316,17 @@ class OperationRelay:
         revision = _count(request["revision"])
         digest = _text(request["review_digest"])
         # Read the review again: an answer approves exactly the document the person saw.
-        pending, document = self._review(operation_id)
+        pending, document = self._review(operation_id, deadline=deadline)
         if (pending.interaction_id, pending.revision) != (interaction_id, revision):
             raise RelayRefusedError("not_pending")
         if content_hash_hex(document) != digest:
             raise RelayRefusedError("review_changed")
         profile_id, session_id = self._client.profile_id, self._client.session_id
-        actor_ref = require_registered_response_control(pending, profile_id, session_id, answer, self._exchange)
+
+        def exchange(request: OperationRequest) -> OperationReply:
+            return self._exchange(request, deadline=deadline)
+
+        actor_ref = require_registered_response_control(pending, profile_id, session_id, answer, exchange)
         responded_at = datetime.now(UTC)
         mutation = (
             OperationResponseApplyRequestV1(
@@ -316,10 +345,10 @@ class OperationRelay:
                 responded_at=responded_at,
             )
         )
-        submit_registered_review_response(pending, profile_id, session_id, answer, mutation, self._exchange)
+        submit_registered_review_response(pending, profile_id, session_id, answer, mutation, exchange)
         return {"kind": "operation_responded", "operation_id": operation_id, "decision": answer}
 
-    def _cancel(self, operation_id: str, expected_revision: int) -> dict[str, object]:
+    def _cancel(self, operation_id: str, expected_revision: int, *, deadline: float) -> dict[str, object]:
         reply = self._exchange(
             OperationManage(
                 request_id=uuid4(),
@@ -328,7 +357,8 @@ class OperationRelay:
                 management=OperationCancellationRequestV1(
                     operation_id=operation_id, expected_revision=expected_revision
                 ),
-            )
+            ),
+            deadline=deadline,
         )
         if not isinstance(reply, OperationManaged) or reply.operation_id != operation_id:
             raise RelayRefusedError("unavailable")

@@ -1,13 +1,14 @@
 """The diagnostic log file handler, which tells a following reader about each append.
 
-The handler keeps its file open between records. Windows reports no directory
-change for appends through a handle that stays open, so after each record the
-handler also sets a session-local event named for the user and the log
+Writers serialize rotation and append through one OS file lock and close the
+log before releasing it. Retaining a handle between records prevents another
+Windows process from rotating the file and loses its next record. After each
+append the handler sets a session-local event named for the user and the log
 directory. The desktop's log view waits on that event instead of reading the
 files on a timer. The event belongs to this user alone: it is created
 owner-only, and a name another account holds, or an object of another type,
 is refused, which leaves the reader observing the files on its interval.
-Elsewhere the handler is the standard rotating handler.
+The same locking and rotation rules apply on every platform.
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ import sys
 from collections.abc import Callable
 from functools import cache
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from typing import override
 
 _FNV_OFFSET = 0xCBF29CE484222325
@@ -209,9 +211,34 @@ def announce_append(directory: str) -> None:
 
 
 class AnnouncingRotatingFileHandler(RotatingFileHandler):
-    """A rotating file handler that announces each record it appends."""
+    """Coordinate process writers before rotation and announce completed appends."""
+
+    def __init__(
+        self,
+        filename: str | os.PathLike[str],
+        mode: str = "a",
+        maxBytes: int = 0,  # noqa: N803 -- logging.dictConfig uses the standard handler constructor.
+        backupCount: int = 0,  # noqa: N803 -- logging.dictConfig uses the standard handler constructor.
+        encoding: str | None = None,
+        delay: bool = False,
+        errors: str | None = None,
+    ) -> None:
+        """Keep the standard handler configuration without retaining a file handle."""
+        # Always open under the process lock, including the first record.
+        super().__init__(filename, mode, maxBytes, backupCount, encoding, delay=True, errors=errors)
 
     @override
     def emit(self, record: logging.LogRecord) -> None:
-        super().emit(record)
-        announce_append(os.path.dirname(self.baseFilename))
+        from .locks import exclusive_file_lock
+
+        try:
+            with exclusive_file_lock(Path(self.baseFilename), timeout=5.0, retry_backoff=0.005, log_events=False):
+                try:
+                    super().emit(record)
+                finally:
+                    if self.stream is not None:
+                        self.stream.close()
+                        self.stream = None
+            announce_append(os.path.dirname(self.baseFilename))
+        except Exception:
+            self.handleError(record)
