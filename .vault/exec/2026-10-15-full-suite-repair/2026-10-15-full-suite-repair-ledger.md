@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:4714607d255cf2a6a1d80e051159412581853834c0ed03f9dadce68af2fef782'
+body_hash: 'sha256:4ab555069bc39d57ec691fc99b008f148b8dfb2664b3eced46ae713564056f66'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
@@ -1490,6 +1490,8 @@ related:
 - `S04` `verify:` `current-tui-parity` -> `pass`
 - `S04` `verify:` `guarded-and-retired3` -> `pass`
 - `S04` `verify:` `current-import-worker7` -> `pass`
+- `S04` `verify:` `explicit-main-dotenv-and-whole-loader` -> `pass`
+- `S04` `verify:` `complete-windows-lane` -> `fail`
 
 ## Notes
 
@@ -1544,3 +1546,4 @@ related:
 - `S04` Committed cd9d060e86 standalone probe package context (3 passes) and eb1fcd843a lexical source scanner plus technical type census (4+3 passes), preserving strict positive controls and removing obsolete exemptions. User-requested corpus configuration persisted only its root in ignored env/.env after exact pinned key and canonical loader validation; full corpus lane queued. Migration107 historical outcomes classify47retired and60moved pending, zero pass credit. Recovered empty stale Git lock only after age/process/exclusive-open checks, retained original lock beside index; other staging untouched. Main and final verification remain open.
 - `S04` Original main run completed57973:57381pass241skip177fail174error; all351 outcomes mapped and original red receipt retained. Eight scratch cleanup messages remain unresolved; DACL fixture lifetime repair awaits native proof. Corpus configured in ignored local env and canonical71pass; fresh dotenv1pass. Docs budget095f1f8401 passes18 controls. Migration109 historical outcomes48retired61moved pending, no pass credit. Captured host, Windows, docs, browser, capabilities, current migration, native and static work remain; S03/S04 open.
 - `S04` Capturedfive4pass1fail retained; final current TUI module1pass after reviewed fixture-only admission/privacy correction ab32a19878. Retired custody warm admission1fdb2aa9ad and external guarded warmup26fb72a1b5 fresh3pass. Current4858module canonical metadata unchanged,7worker casespass. ExternalPO3ee542eb96 preserved; only2Catalan forms corrected7741844772 via canonical writer. Windows1085selected active; browser/docs/migration/capability/native/static remain pending. S03/S04 open.
+- `S04` 54ce4f231d: main dotenv bridge loads163 persisted keys; live opt-ins disabled and seven AEAT credential fields unconfigured, no secret values copied or printed. Whole env-loader20PASS0.47s. Windows run20261021T150712.294250Z-pytest-61236-043fb394 exits1065PASS9FAIL2SKIP9setupERROR/1085selected6792.44s; failures assigned,34scratch entries retained, quiet shutdown proof and remaining gates pending. S03/S04 remain open.
