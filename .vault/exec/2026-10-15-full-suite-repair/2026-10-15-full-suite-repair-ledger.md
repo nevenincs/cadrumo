@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:c9cf336867eaf5bc396a05d51d62de214f24c42578bdbc992423c1062cfc8220'
+body_hash: 'sha256:8cb57ec0c394a98856d23c8f4ad9cdacc87a27faba469853507b36c340320d22'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
@@ -1476,6 +1476,10 @@ related:
 - `S04` `verify:` `corpus-cache48-and-enrollment121` -> `pass`
 - `S04` `verify:` `wording29-and-current-audits2` -> `pass`
 - `S04` `verify:` `command-diagnostics25-ledger12-release14-env11` -> `pass`
+- `S04` `verify:` `tui-error-and-locale-contracts` -> `pass`
+- `S04` `verify:` `probe-benchmark-lifetimes22` -> `pass`
+- `S04` `verify:` `ordinary-interface-focused21` -> `pass`
+- `S04` `verify:` `documentation-privacy8` -> `pass`
 
 ## Notes
 
@@ -1525,3 +1529,4 @@ related:
 - `S04` Locale repair eb06cb0954 preserves external catalogue edits; fixture repairs7aa0d3233e,24003cd8c3,c2f88fb3c6 and controlled-temp cbb6255728 verified. Obsolete bundle64882 deliberately cancelled11:40UTC to reduce measured disk contention; not a passing receipt. Keychain54 before Windows1083, portable full suite active; final bundle/static/docs checks remain. S03/S04 open.
 - `S04` Documentation prerequisite ordering committed d387f405e4;57 workflow cases and both old-order negative controls pass. Keychain41pass4fail9skip; LLM focused passes unchanged, Hungarian repeated verification remains failed. All four selectors retained for combined quiet rerun with owner logs; protected Windows checks underway. Main full gate still active; source changed externally during collection. No all-green claim; S03/S04 remain open.
 - `S04` Reviewed commits a069eeb438,f299e4ba08,95d07aede0,617ec39e69,2de6d5e614,e71d4914e9,3882b31533. External e4188cc067 absorbed initial corpus move and temp/Windows fixtures before outstanding functional qualification. Main57973 still active near70percent,184historicalfailureIDs retained. Quiet order main then capturedhost5 then Windows then heavydocs/capabilities; full corpus and separate installedTUI timeout remain open. No all-green claim; S03/S04 open.
+- `S04` Reviewed c4ee155e95,c8a89354fe,27e3de27e9,9e6903afff,2bba54bcc1. UX13file commit uses isolated8cataloguepatch preserving external account/CLI edits. Browser11 and final external-key catalogue check pending; no approval requested. Main57973 at83percent,195historicalfailureIDs retained. Quiet5 thenWindows thenheavydocs/capabilities and finalbundle/static remain. S03/S04 open; no all-green claim.
