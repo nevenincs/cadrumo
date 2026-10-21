@@ -13,9 +13,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.storage_environment import prepare_temporary_directory
-from dev.agent_eval.live.package_copy import verify_package
 
 from ...agent_service_session import AgentServiceSession, agent_service_session
+from ...package_copy import verify_package
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

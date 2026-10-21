@@ -1040,8 +1040,8 @@ test-test-policy:
 [doc('Run repository and developer-tool contract tests outside the registry, packaging, CI, documentation-build, and capability populations.')]
 [group('test')]
 test-repository-contracts:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/desktop_agent_live/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/operation_contract_manifest/tests dev/quality/tests dev/readme/tests dev/runtime_lifecycle/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests {{harness_exclusions}} --ignore=dev/docs/tests --ignore=dev/docs/apidocs/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
-    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests dev/runtime_lifecycle/tests/test_installed_linux_refusal_stdio.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus" dev/acceptance dev/mcp_eval/tests dev/audit/tests dev/corpus/tests dev/desktop_agent_live/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/operation_contract_manifest/tests dev/quality/tests dev/readme/tests dev/runtime_lifecycle/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests {{harness_exclusions}} --ignore=dev/docs/tests --ignore=dev/docs/apidocs/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
+    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus" dev/acceptance dev/mcp_eval/tests dev/runtime_lifecycle/tests/test_installed_linux_refusal_stdio.py
 
 [doc('Run the packaging and container tooling contracts, parallel then serial; the serial pass includes the installed-artifact oracles.')]
 [group('test')]
@@ -1249,7 +1249,7 @@ test-integration-serial:
 [doc('Run Windows-only packaging, registry publication, authentication and native I/O tests.')]
 [group('test')]
 test-windows:
-    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/agent_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/core/tests/test_log_file_handler.py src/cadrumo/adapters/outbound/model_runtime/tests src/cadrumo_harness/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_client/transport/tests/test_channel_readiness_wait.py src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
+    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/mcp_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/core/tests/test_log_file_handler.py src/cadrumo/adapters/outbound/model_runtime/tests src/cadrumo_harness/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_client/transport/tests/test_channel_readiness_wait.py src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
 
 [doc('Run native macOS and Linux peer, worker containment, and custody tests on their owning host.')]
 [group('test')]
@@ -1269,30 +1269,12 @@ test-native-host-facilities:
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('test')]
 test-os-keychain:
-    uv run --no-sync pytest -v -n0 -m "os_keychain and not native_package" src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/entrypoints/cli/config/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests dev/agent_eval/tests src/cadrumo_runtime/host/tests/frontend/cli dev/runtime_lifecycle/tests
+    uv run --no-sync pytest -v -n0 -m "os_keychain and not native_package" src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/entrypoints/cli/config/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests dev/mcp_eval/tests src/cadrumo_runtime/host/tests/frontend/cli dev/runtime_lifecycle/tests
 
 [doc('Test current-source password login and logout against the real runtime (signed-in Windows desktop).')]
 [group('test')]
 test-runtime-auth:
     uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_runtime_sign_in_native.py
-
-# The live agent lane runs against a verified, unmodified copy of the bundle
-# `build-native Release bundle` stages. It is opt-in and reached only from these
-# two recipes: no default lane, workflow or gate calls them. Exit status names
-# the outcome: 0 passed, 1 agent failure, 2 product finding, 3 unavailable
-# (missing model credential, credential store, current package, or a
-# provisional scenario), 4 harness error. Receipts go to .logs/agent-eval.
-# FLAGS pass through, e.g. --measure-stale-package to measure a package that
-# differs from the checkout, which the receipt then records.
-[doc('Run a live-agent scenario with the scripted MCP client and no model, against a verified copy of the built bundle (signed-in Windows desktop).')]
-[group('test')]
-eval-agent-floor SCENARIO="modelo_130_dr130" RUNS="1" *FLAGS:
-    uv run --no-sync python -m dev.agent_eval.live floor {{quote(SCENARIO)}} {{RUNS}} {{FLAGS}}
-
-[doc('Run a live agent scenario against the built package (spends model credit; pass the agent command with --agent-arg).')]
-[group('test')]
-eval-agent-live SCENARIO="modelo_130_dr130" RUNS="3" *FLAGS:
-    uv run --no-sync python -m dev.agent_eval.live live {{quote(SCENARIO)}} {{RUNS}} {{FLAGS}}
 
 # The desktop agent lane runs the shared agent specs against the packaged desktop's
 # own window, attached over its loopback WebView2 DevTools port, on your own

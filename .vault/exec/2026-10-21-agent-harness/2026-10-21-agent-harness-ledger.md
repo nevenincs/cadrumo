@@ -5,7 +5,7 @@ tags:
 date: '2026-10-21'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:ed9b8c0eae9828c4a4ba64e299615a82c8b34373fc041d32a94920f103aff485'
+body_hash: 'sha256:4561850639bcfc2faaf7f4cb96c402b010012c5b77579be1e71d87918168a174'
 related:
   - "[[2026-10-21-agent-harness-plan]]"
 ---
@@ -81,9 +81,52 @@ related:
 - `S03` `verify:` `pytest -n0 dev/packaging/tests/test_verdict_cache_not_distributed.py` -> `pass`
 - `S03` `verify:` `ty check src/cadrumo_harness dev/agent_eval` -> `pass`
 - `S03` `by:` `implementation-engineer-high`
+- `S04` `R` `dev/agent_eval` -> `dev/mcp_eval`
+- `S04` `D` `dev/agent_eval/live`
+- `S04` `D` `dev/agent_eval/_flywheel.py`
+- `S04` `D` `dev/agent_eval/_live_scoring.py`
+- `S04` `D` `dev/agent_eval/_report.py`
+- `S04` `D` `dev/agent_eval/_replay.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_access.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_agent_command.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_capture.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_evidence.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_isolated_host.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_lane.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_oracle.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_outcome.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_recorder.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_scenarios.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_scripted_driver.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_scoring_properties.py`
+- `S04` `D` `dev/agent_eval/tests/test_report_and_flywheel.py`
+- `S04` `D` `dev/agent_eval/tests/test_lifecycle_order_authority.py`
+- `S04` `D` `dev/agent_eval/tests/_scripted_registration_channels.py`
+- `S04` `M` `dev/mcp_eval/__init__.py`
+- `S04` `M` `dev/mcp_eval/_models.py`
+- `S04` `M` `dev/mcp_eval/_runner.py`
+- `S04` `R` `dev/agent_eval/live/package_copy.py` -> `dev/runtime_lifecycle/package_copy.py`
+- `S04` `R` `dev/agent_eval/tests/test_live_package_copy.py` -> `dev/runtime_lifecycle/tests/test_package_copy.py`
+- `S04` `M` `dev/runtime_lifecycle/tests/agent_service/conftest.py`
+- `S04` `M` `dev/runtime_lifecycle/README.md`
+- `S04` `M` `dev/identity/_tree_scan.py`
+- `S04` `M` `dev/tests/test_dev_cli_justfile_wiring.py`
+- `S04` `M` `dev/tests/test_dev_tree_holds_no_run_output.py`
+- `S04` `M` `justfile`
+- `S04` `M` `.importlinter`
+- `S04` `M` `.vaultspec/skills/cadrumo-start/references/agent-integration.md`
+- `S04` `M` `.claude/skills/cadrumo-start/references/agent-integration.md`
+- `S04` `M` `.agents/skills/cadrumo-start/references/agent-integration.md`
+- `S04` `M` `dev/quality/metadata/import_load_targets.json`
+- `S04` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S04` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S04` `verify:` `pytest dev/mcp_eval dev/tests dev/identity/tests dev/runtime_lifecycle/tests/test_package_copy.py` -> `fail`
+- `S04` `verify:` `ty check dev/mcp_eval dev/runtime_lifecycle dev/identity dev/tests` -> `pass`
+- `S04` `by:` `implementation-engineer-high`
 
 ## Notes
 
 - `S01` No skill or rule semantic changes found after the cadrumo-agent fork date (2026-10-16T09:18:40+02:00); last rules/skills commit before e4188cc067 was ca427b0666 (2026-10-15), which predates the fork. The only post-fork Cadrumo commit touching `src/cadrumo_harness/_data/agent` is 72cd94bc66, editing reference/command-operations.md only; that generated operation catalogue is explicitly out of scope per the plan (cadrumo-agent derives operation knowledge from MCP discovery) and no cadrumo-agent skill references it. No port was applicable; no cadrumo-agent file was edited.
 - `S01` Concurrent cadrumo-agent dirty files (rules/cadrumo-operator-operating-rules.md, skills/cadrumo-alta-contribuyente/SKILL.md, skills/cadrumo-calendario-fiscal/SKILL.md) were left untouched per instruction; no port was owed to them since no qualifying post-fork Cadrumo-side change existed.
 - `S03` Seven integration tests in `dev/agent_eval` `(test_under_declaration_golden.py,` `test_response_provenance_golden.py)` fail with 'CLI scenario requires the injected `invoke_cli` fixture'. No file on that failure path changed in this plan; the seam dates from the 2026-10-19 CLI-rename repair and belongs to the concurrent full-suite repair work.
+- `S04` The one failure in that run, `dev/tests/test_no_home_directory_cache_paths.py,` reports `dev/smoke/acquisition_lane.py:262,` a file no Step of this plan touches; it arrived with commit bbd9f1f340 from concurrent type-gate work.

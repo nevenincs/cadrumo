@@ -155,12 +155,6 @@ EXCLUDED_PATH_FRAGMENTS: dict[str, str] = {
     "/_data/registry/aeat/facts/0147-aeat-eedd-development-mock-software-identity.toml": (
         "published AEAT development-software identity required by official EEDD mock filing, not a taxpayer identity"
     ),
-    "/dev/agent_eval/live/scenarios/modelo_130_dr130.toml": (
-        "live evaluation fixture uses the canonical synthetic taxpayer identity, not a private operator profile"
-    ),
-    "/dev/agent_eval/live/scenarios/modelo_303_quarter.toml": (
-        "live evaluation fixture uses the canonical synthetic taxpayer identity, not a private operator profile"
-    ),
     "/tests/": (
         "the project uses structurally valid synthetic identities in fixtures as established "
         "practice; the convention is undeclared, which is what keeps this corpus ungateable"
