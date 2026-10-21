@@ -1246,10 +1246,10 @@ test-integration-serial:
 # expression is what scopes the directory, so a future `os_keychain` case added
 # beside them is selected the moment it lands rather than silently reading as
 # coverage.
-[doc('Run Windows-only packaging, registry publication, and authentication frontend tests.')]
+[doc('Run Windows-only packaging, registry publication, authentication and native I/O tests.')]
 [group('test')]
 test-windows:
-    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/agent_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/adapters/outbound/model_runtime/tests src/cadrumo_harness/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
+    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/agent_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/core/tests/test_log_file_handler.py src/cadrumo/adapters/outbound/model_runtime/tests src/cadrumo_harness/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_client/transport/tests/test_channel_readiness_wait.py src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
 
 [doc('Run native macOS and Linux peer, worker containment, and custody tests on their owning host.')]
 [group('test')]
