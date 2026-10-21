@@ -68,12 +68,14 @@ PROFILE_CUSTODY_KDF_SAMPLE_COUNT: Final = 5
 PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS: Final = 2.0
 PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS: Final = 15.0
 #: Wall-clock bound on one wrap or unwrap. Includes waiting for the installation's single
-#: KDF permit, launching and attesting a fresh child, then the derivation. The
-#: derivation's own cost is bounded by the child's operating-system CPU-time and
-#: memory ceilings; this bound only guarantees a stalled child is abandoned. The
-#: child starts the base interpreter without ``site`` and imports only its
-#: allow-listed leaves, so its start-up is a fraction of this even on a
-#: saturated host; a slow start is fixed there, never by widening this bound.
+#: KDF permit, attesting a fresh child, then the derivation; the operating system's
+#: uncancellable process-creation call is not charged, because no child exists to
+#: stall while it blocks. The derivation's own cost is bounded by the child's
+#: operating-system CPU-time and memory ceilings; this bound only guarantees a
+#: stalled child is abandoned. The child starts the base interpreter without
+#: ``site`` and imports only its allow-listed leaves, so its start-up is a fraction
+#: of this even on a saturated host; a slow start is fixed there, never by widening
+#: this bound.
 PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS: Final = 15.0
 PROFILE_CUSTODY_KDF_TARGET_MIN_SECONDS: Final = 0.250
 PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS: Final = 0.500

@@ -128,8 +128,14 @@ class _SupervisedKdfWorker:
         self._result_refused = False
         self._diagnostic_emitted = False
         try:
+            launch_started = time.monotonic()
             with self._phase("start"):
                 self._start()
+            # Process creation is one uncancellable OS call that can block for
+            # tens of seconds on a saturated host, before any child exists to
+            # stall. The deadline abandons a stalled child, so it starts once
+            # the child does instead of refusing one that has not run yet.
+            self._deadline += time.monotonic() - launch_started
             with self._phase("ready_wait"):
                 try:
                     ready = self._read_response_frame()
