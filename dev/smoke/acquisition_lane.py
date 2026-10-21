@@ -259,10 +259,21 @@ def real_acquisition_destinations(repository: Path = _REPOSITORY_ROOT) -> tuple[
     These are watched whole; the busy remainder of ``var/storage`` (logs,
     temporary files of other sessions) is outside what an acquisition writes.
     """
-    local = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
-    storage_roots = [repository / "var" / "storage", repository / "var" / "storage" / "development", local / "cadrumo"]
+    from cadrumo.core.config_state_root import live_state_root_inputs
+    from cadrumo.core.storage_environment import host_installed_default_root
+
+    inputs = live_state_root_inputs()
+    installed = host_installed_default_root(inputs.environ, sys_platform=inputs.platform)
+    storage_roots = [repository / "var" / "storage", repository / "var" / "storage" / "development", installed]
     destinations = [root / part for root in storage_roots for part in ("components", "models")]
-    destinations.append(local / "ms-playwright")
+    # Playwright owns its legacy browser cache separately from Cadrumo's root.
+    if inputs.platform == "win32":
+        browser_cache = installed.parent / "ms-playwright"
+    elif inputs.platform == "darwin":
+        browser_cache = inputs.home / "Library" / "Caches" / "ms-playwright"
+    else:
+        browser_cache = Path(inputs.environ.get("XDG_CACHE_HOME") or inputs.home / ".cache") / "ms-playwright"
+    destinations.append(browser_cache)
     return tuple(destinations)
 
 

@@ -36,6 +36,7 @@ from ..acquisition_lane import (
     isolated_environment,
     lane_parent,
     proxy_credential_forms,
+    real_acquisition_destinations,
     remove_scratch,
     run_child,
     run_lane,
@@ -44,6 +45,55 @@ from ..acquisition_lane import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.mark.parametrize(
+    ("platform", "override_cache", "installed_parts", "browser_parts"),
+    [
+        ("win32", False, ("local", "cadrumo"), ("local", "ms-playwright")),
+        ("linux", False, ("home", ".local", "share", "cadrumo"), ("home", ".cache", "ms-playwright")),
+        ("linux", True, ("home", ".local", "share", "cadrumo"), ("cache", "ms-playwright")),
+        (
+            "darwin",
+            False,
+            ("home", "Library", "Application Support", "cadrumo"),
+            ("home", "Library", "Caches", "ms-playwright"),
+        ),
+    ],
+)
+def test_real_destination_watch_uses_canonical_installed_storage_and_external_browser_cache(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    platform: str,
+    override_cache: bool,
+    installed_parts: tuple[str, ...],
+    browser_parts: tuple[str, ...],
+) -> None:
+    from cadrumo.core import config_state_root
+
+    environment = {
+        "LOCALAPPDATA": str(tmp_path / "local"),
+        "HOME": str(tmp_path / "home"),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "unrelated-override"),
+    }
+    if override_cache:
+        environment["XDG_CACHE_HOME"] = str(tmp_path / "cache")
+    inputs = config_state_root.StateRootInputs(platform=platform, environ=environment, home=tmp_path / "home")
+    monkeypatch.setattr(config_state_root, "live_state_root_inputs", lambda: inputs)
+
+    destinations = real_acquisition_destinations(tmp_path / "repository")
+
+    installed = tmp_path.joinpath(*installed_parts)
+    assert destinations == (
+        tmp_path / "repository" / "var" / "storage" / "components",
+        tmp_path / "repository" / "var" / "storage" / "models",
+        tmp_path / "repository" / "var" / "storage" / "development" / "components",
+        tmp_path / "repository" / "var" / "storage" / "development" / "models",
+        installed / "components",
+        installed / "models",
+        tmp_path.joinpath(*browser_parts),
+    )
+    assert all(not path.exists() for path in destinations), "enumerating watched destinations must create nothing"
 
 
 def _plan_floor(download_bytes: int) -> int:
