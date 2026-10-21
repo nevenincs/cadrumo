@@ -10,6 +10,7 @@ import threading
 import time
 from collections.abc import Mapping
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -147,6 +148,46 @@ def test_an_agent_refusal_is_typed_and_leaves_no_process(tmp_path: Path) -> None
     assert refused.value.reason is AgentHostRefusal.AGENT_REFUSED
     assert refused.value.agent_code == "provider_unsupported"
     assert controller.state is AgentHostState.DETACHED
+
+
+@pytest.mark.parametrize("invalid_frame", [False, True], ids=["resolution-refused", "invalid-frame"])
+def test_imports_can_run_during_resolution_but_failed_credentials_retire_the_waiting_process(
+    tmp_path: Path, invalid_frame: bool
+) -> None:
+    observed_pids: list[int] = []
+
+    class WaitingCredentials(_CredentialSource):
+        @override
+        def resolve_for_agent(self) -> ResolvedAgentCredentials:
+            # A real child must reach its input gate while resolution is still
+            # in progress. No frame or ready publication can precede it.
+            marker = tmp_path / "awaiting-frame"
+            deadline = time.monotonic() + 30
+            while not marker.exists():
+                assert time.monotonic() < deadline, "gateway did not start beside credential resolution"
+                time.sleep(0.05)
+            pid = int(marker.read_text(encoding="utf-8"))
+            observed_pids.append(pid)
+            assert _alive(pid)
+            assert not (tmp_path / "received.json").exists()
+            assert controller.published() is None
+            if not invalid_frame:
+                raise AgentHostError(AgentHostRefusal.SIGNED_OUT)
+            resolved = super().resolve_for_agent()
+            self.handed_out[0].secret.append(0)
+            return resolved
+
+    source = WaitingCredentials()
+    controller = _controller(tmp_path, "await_credentials", source)
+    with pytest.raises(AgentHostError) as refused:
+        controller.start()
+    expected = AgentHostRefusal.CREDENTIALS_INVALID if invalid_frame else AgentHostRefusal.SIGNED_OUT
+    assert refused.value.reason is expected
+    assert controller.state is AgentHostState.DETACHED
+    assert controller.published() is None
+    assert observed_pids and all(not _alive(pid, within=5) for pid in observed_pids)
+    assert not (tmp_path / "received.json").exists()
+    assert all(credential.secret == bytearray() for credential in source.handed_out)
 
 
 def test_an_agent_that_never_answers_is_ended_at_the_ready_bound(tmp_path: Path) -> None:

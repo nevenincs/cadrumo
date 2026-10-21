@@ -7,6 +7,7 @@ answers; ``deaf`` answers ready, then never reads its standard input again, so
 it ignores the stop signal. Every one of these records what it received (provider ids and a digest
 of the frame, never the frame), its environment and its arguments, and in
 ``ready`` mode starts a grandchild that only the job can end.
+``await_credentials`` records arrival at the input gate and exits on an empty frame.
 
 The ``native_*`` modes act as the native interpreter host does when it refuses
 a launch: they read nothing, write to standard error and exit before any ready
@@ -56,7 +57,13 @@ def main() -> None:
     mode, record = sys.argv[1], Path(sys.argv[2])
     if mode.startswith("native_"):
         _exit_as_the_native_host(mode)
+    if mode == "await_credentials":
+        pending = record / "awaiting-frame.tmp"
+        pending.write_text(str(os.getpid()), encoding="utf-8")
+        pending.replace(record / "awaiting-frame")
     frame = sys.stdin.buffer.readline()
+    if mode == "await_credentials" and not frame:
+        return
     document = json.loads(frame) if frame.strip() else {}
     providers = sorted(document.get("credentials", {}))
     grandchild = None

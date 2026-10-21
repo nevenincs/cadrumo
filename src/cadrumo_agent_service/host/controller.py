@@ -1,8 +1,8 @@
 """Own one cadrumo-agent process tree for the signed-in profile's current generation.
 
-The controller resolves the profile's provider credentials, starts the agent
-inside a contained process tree, writes the credentials once as a standard-input
-frame, and waits for a single ready line. It publishes the agent only while the
+The controller starts the agent inside a contained process tree, resolves the
+profile's provider credentials while the agent imports, writes them once as a
+standard-input frame, and waits for a single ready line. It publishes the agent only while the
 sign-in and provider-settings generations it started under are still current.
 Closing the agent's standard input is the stop signal. The tree is terminated
 whole once its agent has exited, once the whole tree has done no work at all
@@ -318,6 +318,24 @@ class AgentHostController:
 
     def _start(self) -> AgentReady:
         started = time.monotonic()
+        # The hosted gateway imports before waiting for its credential frame.
+        # Start that work beside credential resolution. It cannot read stores,
+        # bind a listener or serve until the frame arrives; a resolution failure
+        # retires this owned tree through start()'s existing failure path.
+        try:
+            process = self._launcher.launch(
+                executable=self._launch.executable,
+                arguments=self._launch.arguments,
+                directory=self._launch.directory,
+                environment=self._launch.environment,
+            )
+        except AgentHostError:
+            raise
+        except Exception as error:
+            raise AgentHostError(AgentHostRefusal.LAUNCH_FAILED) from error
+        with self._lock:
+            self._process = process
+        spawned = time.monotonic()
         resolved = self._credentials.resolve_for_agent()
         credentials_ready = time.monotonic()
         try:
@@ -334,20 +352,7 @@ class AgentHostController:
             if resolved.host_token is not None:
                 wipe(resolved.host_token)
         try:
-            try:
-                process = self._launcher.launch(
-                    executable=self._launch.executable,
-                    arguments=self._launch.arguments,
-                    directory=self._launch.directory,
-                    environment=self._launch.environment,
-                )
-            except AgentHostError:
-                raise
-            except Exception as error:
-                raise AgentHostError(AgentHostRefusal.LAUNCH_FAILED) from error
-            with self._lock:
-                self._process = process
-            spawned = time.monotonic()
+            frame_built = time.monotonic()
             try:
                 process.write_input(frame)
                 framed = time.monotonic()
@@ -365,11 +370,12 @@ class AgentHostController:
             raise _ended_before_ready(process, AgentHostRefusal.NOT_READY, observe=observe) from error
         ready = _ready_from_line(line, resolved.generations)
         _LOGGER.info(
-            "agent gateway timing access_setup_seconds=%.3f frame_build_and_spawn_seconds=%.3f "
+            "agent gateway timing process_spawn_seconds=%.3f access_setup_seconds=%.3f frame_build_seconds=%.3f "
             "frame_write_seconds=%.3f ready_wait_seconds=%.3f total_seconds=%.3f",
-            credentials_ready - started,
-            spawned - credentials_ready,
-            framed - spawned,
+            spawned - started,
+            credentials_ready - spawned,
+            frame_built - credentials_ready,
+            framed - frame_built,
             time.monotonic() - framed,
             time.monotonic() - started,
         )
