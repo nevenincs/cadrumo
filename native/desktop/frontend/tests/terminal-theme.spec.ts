@@ -49,7 +49,7 @@ async function openHost(page: Page) {
     localStorage.setItem(
       "cadrumo-shell-layout",
       JSON.stringify({
-        layout: { tab: "console" },
+        layout: { tab: "console", page: "docs", tuiShown: true },
         prefs: { appearance: "dark", terminals: "match" },
       }),
     );
@@ -141,10 +141,15 @@ async function openHost(page: Page) {
     }),
   );
   await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.locator('[data-terminal="tui"] .xterm')).toBeAttached();
+  await write(
+    page,
+    "tui",
+    sample + "\x1b]777;cadrumo;presentation;ready\x1b\\",
+  );
   await expect(page.locator('[data-terminal="tui"] .xterm')).toBeVisible();
   await openPanelTab(page, "console");
   await expect(page.locator('[data-terminal="console"] .xterm')).toBeVisible();
-  await write(page, "tui", sample);
   await write(
     page,
     "console",

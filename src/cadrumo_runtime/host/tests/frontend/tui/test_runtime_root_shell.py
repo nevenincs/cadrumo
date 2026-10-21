@@ -274,8 +274,41 @@ async def test_root_read_failure_is_a_safe_refusal_without_rendering_exception(
         await pilot.pause()
         assert app._home_refresh_refusal_code == "workbench.home.refresh_unavailable"
         assert app._account_factories is None
+        assert app._terminal_presented, "the retry screen must be visible even when startup fails"
     captured = capsys.readouterr()
     assert private_value not in captured.out + captured.err
+
+
+@pytest.mark.asyncio
+async def test_terminal_is_not_presented_until_the_initial_destination_has_rendered(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    started = asyncio.Event()
+    presented = asyncio.Event()
+    release = Event()
+    loop = asyncio.get_running_loop()
+
+    def load_root() -> RootBindingV1:
+        loop.call_soon_threadsafe(started.set)
+        if not release.wait(10):
+            raise TimeoutError("test root read was not released")
+        return _root()
+
+    app = CadrumoTuiApp(load_root=load_root)
+    monkeypatch.setattr(app, "_terminal_presentation", lambda phase: presented.set() if phase == "ready" else None)
+    async with app.run_test() as pilot:
+        try:
+            await asyncio.wait_for(started.wait(), 5)
+            await pilot.pause()
+            assert not app._terminal_presented
+        finally:
+            release.set()
+        await asyncio.wait_for(presented.wait(), 10)
+        assert app._terminal_presented
+        assert isinstance(app.screen, HomeScreen)
+        assert app._startup_ready
+        app.exit()
+        assert not app._terminal_presented
 
 
 @pytest.mark.asyncio

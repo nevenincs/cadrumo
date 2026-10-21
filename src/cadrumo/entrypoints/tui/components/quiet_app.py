@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import os
 import sys
-from typing import override
+from typing import TYPE_CHECKING, ClassVar, Literal, override
 
+from textual import events, on
 from textual.app import App, AutopilotCallbackType
 from textual.driver import Driver
 from textual.events import DescendantFocus
@@ -14,6 +15,9 @@ from textual.widgets import Input, TextArea
 from ....core.config import Settings
 from ....core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ....core.logging import get_logger
+
+if TYPE_CHECKING:
+    from rich.console import RenderableType
 
 
 class TuiRunFailedError(RuntimeError):
@@ -34,6 +38,9 @@ class QuietApp[ReturnType](App[ReturnType]):
     console input loop waits for input instead of waking every 100 ms.
     """
 
+    DEFER_TERMINAL_READY: ClassVar[bool] = False
+    """Roots that load asynchronously announce their first actionable screen themselves."""
+
     def __init__(self) -> None:
         """Choose native ANSI handling before Textual installs its color filters."""
         # Textual chooses the NO_COLOR filter during construction. Its RGB
@@ -44,6 +51,38 @@ class QuietApp[ReturnType](App[ReturnType]):
         if "NO_COLOR" in os.environ and not Settings().no_color:
             del os.environ["NO_COLOR"]
         super().__init__(ansi_color=True if os.environ.get("TERM_PROGRAM") == "cadrumo" else None)
+        self._terminal_presented = False
+
+    @on(events.Mount)
+    def _present_mounted_terminal(self) -> None:
+        """Reveal ordinary screens only after their first refresh."""
+        if not self.DEFER_TERMINAL_READY:
+            self.call_after_refresh(self.present_terminal)
+
+    def _terminal_presentation(self, phase: Literal["loading", "ready"]) -> None:
+        # Use the driver's ordered output queue, after the screen's VT frame.
+        # This is presentation only; it carries no sign-in or profile state.
+        if os.environ.get("TERM_PROGRAM") == "cadrumo" and not self.is_headless and self._driver is not None:
+            self._driver.write(f"\x1b]777;cadrumo;presentation;{phase}\x1b\\")
+
+    def present_terminal(self) -> None:
+        """Announce a rendered screen, including an actionable refusal."""
+        if self.is_running and not self._exit and not self._terminal_presented:
+            self._terminal_presented = True
+            self._terminal_presentation("ready")
+
+    @override
+    def exit(
+        self,
+        result: ReturnType | None = None,
+        return_code: int = 0,
+        message: RenderableType | None = None,
+    ) -> None:
+        """Cover terminal teardown and the handoff to the next Textual app."""
+        if self._terminal_presented:
+            self._terminal_presented = False
+            self._terminal_presentation("loading")
+        super().exit(result, return_code, message)
 
     @override
     async def run_async(

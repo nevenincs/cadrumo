@@ -674,6 +674,42 @@ fn only_the_dedicated_tui_receives_the_desktop_palette_identity() {
 }
 
 #[test]
+fn tui_readiness_and_screen_reach_the_view_through_the_real_pty() {
+    let mut program = chatty_program();
+    program.role = ProcessRole::Tui;
+    if cfg!(windows) {
+        let root = std::env::var_os("SystemRoot").expect("SystemRoot");
+        program.executable =
+            PathBuf::from(root).join("System32/WindowsPowerShell/v1.0/powershell.exe");
+        program.arguments = [
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            "[Console]::Write('ready-screen' + [char]27 + ']777;cadrumo;presentation;ready' + [char]27 + '\\')",
+        ].into_iter().map(OsString::from).collect();
+    } else {
+        program.arguments = [
+            "-c",
+            "printf 'ready-screen\\033]777;cadrumo;presentation;ready\\033\\\\'",
+        ]
+        .into_iter()
+        .map(OsString::from)
+        .collect();
+    }
+    let text = printed(program);
+    assert!(
+        text.contains("ready-screen"),
+        "screen was not delivered: {text:?}"
+    );
+    // Windows can forward OSC before its buffered text repaint. The view
+    // must settle and render the following output before uncovering it.
+    assert!(
+        text.contains("\x1b]777;cadrumo;presentation;ready"),
+        "readiness was not delivered: {text:?}"
+    );
+}
+
+#[test]
 fn an_inherited_colour_switch_never_reaches_a_terminal_child() {
     for role in [ProcessRole::Tui, ProcessRole::Console, ProcessRole::Repl] {
         let mut program = chatty_program();

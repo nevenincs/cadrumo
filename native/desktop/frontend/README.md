@@ -127,6 +127,14 @@ The terminals show deterministic fixture sessions in the real xterm view: type
 `exit` in the console or `exit()` in the Python tab, or press `q` in the TUI, to
 see an exited session, then Enter to restart it.
 
+The embedded TUI stays behind the shared loading view while it resumes sign-in
+and builds its first screen. Process startup alone does not reveal the terminal.
+The TUI reports presentation readiness through OSC 777; the pane waits for
+buffered output to settle and render before showing it. A login prompt needing
+input, a retry screen, or an exited process remains visible. Terminal output and
+cursor replies continue flowing while covered, and hiding the pane keeps its
+session.
+
 The documentation pane shows a stand-in documentation site. The development
 server starts it beside itself, on the same address and fixed port 15372.
 The same host name with another port is a different origin, as

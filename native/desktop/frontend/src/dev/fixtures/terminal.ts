@@ -135,6 +135,7 @@ function fullScreen(io: Io, initial: Size): Program {
     start() {
       io.write(`${ESC}[?1049h${ESC}[?25l`);
       draw();
+      io.write(`${ESC}]777;cadrumo;presentation;ready${ESC}\\`);
     },
     input(text) {
       if (text !== "q" && text !== "Q") return;

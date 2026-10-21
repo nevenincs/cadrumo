@@ -753,11 +753,14 @@ export function App({ host }: { host: Host }) {
     // Laid out means shown: a hidden pane's content has no offset parent.
     if (!target || target.offsetParent === null) return;
     if (wish.view === "logs") target.focus();
-    else if (terminals.current[wish.view])
+    else if (
+      terminals.current[wish.view] &&
+      target.getAttribute("aria-busy") !== "true"
+    )
       terminals.current[wish.view]?.focus();
     else {
-      // First opening can wait for bundled fonts. Later user input still
-      // cancels this wish; elapsed loading time alone must not lose it.
+      // Fonts and the first usable TUI frame can both delay focus. Later
+      // user input cancels this wish; loading time alone must not lose it.
       wish.waitingForTerminal = true;
       return;
     }

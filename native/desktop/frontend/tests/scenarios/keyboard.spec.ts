@@ -452,7 +452,7 @@ test("F6 keeps a terminal focus request while its fonts load", async ({
     waiting.push(() => route.continue());
   });
   await seedLayout(target, {
-    layout: { agentShown: false, docsShown: false },
+    layout: { agentShown: false, docsShown: false, tuiShown: true },
   });
   await target.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off", {
     waitUntil: "domcontentloaded",

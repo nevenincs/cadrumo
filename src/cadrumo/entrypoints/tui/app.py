@@ -133,6 +133,7 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
 
     _active_destination_catalogue: TuiDestinationCatalogueV1 | None
     _workbench_search_service: WorkbenchSearchDoorV1 | None
+    DEFER_TERMINAL_READY = True
 
     CSS = tokenised(
         BASE_CSS
@@ -255,6 +256,7 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         if self._startup_ready or self._recomposition_pending or self.screen is not screen:
             return
         self._startup_ready = True
+        self.present_terminal()
         log_startup_phase(
             get_logger(__name__), "tui_initial_screen_ready", "leave", time.monotonic() - self._startup_started
         )
@@ -848,6 +850,7 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         if len(self.screen_stack) == 1:
             retry.focus()
         self.notify(message, severity="warning")
+        self.call_after_refresh(self.present_terminal)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Retry a failed bootstrap or Home read through its original read door."""

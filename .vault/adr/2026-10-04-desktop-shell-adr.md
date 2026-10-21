@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:729e693aa613cf19772bdb4fb3f8212cbbaed5641fa595d747d617c587814972'
+body_hash: 'sha256:b0ee4fd6258a7214a7277ae8d3a4c8f20eee138bc6ba8ad37fa795d5d31809d3'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -18,6 +18,7 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
   - '[[2026-10-15-language-sync-reference]]'
 ---
+
 # `desktop-shell` adr: `Desktop shell` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -347,3 +348,11 @@ Basis: operator review 2026-10-19, recorded with its full commitments in `2026-1
 Authorized by the user's design-polish request to remove repeated page titles, keep the TUI out of the default view, persist page view choices, and remember the selected log-level mode. The shell layout store is the single presentation preference owner. It restores the selected page, pane visibility and maximization, panel visibility/tab/size, calendar face and profile section/filter/disclosure choices, alongside existing appearance, arrangement and zoom preferences. The selected minimum log level overrides the host default until reset; resetting filters restores the host default. Fresh layouts open Profile and the agent where supported with the TUI closed. Existing saved TUI visibility remains an explicit saved arrangement.
 
 This replaces the 2026-10-09 always-collapsed panel startup clause only; the single panel toggle, notifications and mounted-session retention still apply. The canonical pane header owns the visible page title and maximize control; page content supplies its own actions without repeating them. Profile navigation offers one section selector at each size. Search text, drafts, taxpayer values, log records, authentication and transient dialogs are not presentation settings and are not persisted here. Stored preferences are validated and tolerate unavailable storage. No runtime or host authority changes. Evidence: `native/desktop/frontend/src/shell/layout.ts`, `src/App.tsx`, `src/components/profile/UserProfilePage.tsx`, and `src/components/FilingCalendar.tsx`.
+
+### Amendment 2026-10-21: cover embedded TUI startup until presentation is ready
+
+Authorized by the user's request to hide the TUI startup sequence behind a loading view until ready. The existing terminal presentation seam also admits OSC 777;cadrumo;presentation;loading and OSC 777;cadrumo;presentation;ready, only in the dedicated TUI pane. These carry no profile, credential or authentication state and cannot admit a session. Process-start alone does not reveal the TUI. The canonical shared loading view covers receipt resumption, Textual app handoffs and initial workbench composition; the producer announces a rendered actionable screen. Automatic successful resumption does not announce its transient login form. A prompt needing input or a recoverable startup refusal is actionable and must be revealed. Terminal exit or failure must also remove the cover.
+
+The frontend keeps parsing and acknowledging output while covered, including ConPTY cursor replies, and keeps terminal dimensions available. On Windows, OSC can precede buffered screen text: the frontend waits for a short output-quiescence interval and an xterm repaint before revealing readiness, restarting that wait for each output batch. This is a presentation settling guard, not a transport ordering guarantee or an authentication signal. No maximum startup timeout guesses readiness. Reconsider the settling guard if native traces show a repaint delayed beyond the guard; do not bypass runtime admission or add a second terminal launch.
+
+Evidence: `src/cadrumo_runtime/host/frontend/tui/runtime_admission.py`, `src/cadrumo_runtime/host/frontend/tui/secret/runtime_login_form.py`, `src/cadrumo/entrypoints/tui/app.py`, `src/cadrumo/entrypoints/tui/components/quiet_app.py`, `native/desktop/frontend/src/components/TerminalPane.tsx`, and the real-PTY presentation test in `native/desktop/src-tauri/src/terminal/tests.rs`. The native Windows test observed an OSC marker emitted after screen text arriving before that text.
