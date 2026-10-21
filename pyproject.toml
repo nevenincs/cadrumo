@@ -98,7 +98,7 @@ dependencies = [
   # failure instead. The `llm` extra declares it too; that declaration is
   # correct but not load-bearing, because the two PDF packages keep Pillow in
   # the base closure regardless.
-  "pillow>=12,<13",
+  "pillow>=12,<14",
   # Data validation & models
   "pydantic>=2.14.1,<3",
   "pydantic-settings>=2.9.1,<3",
@@ -203,7 +203,7 @@ ofx = [
 # deliberate: the base entry closes the undeclared-direct-reliance defect,
 # this one declares what the inference path needs on its own terms.
 llm = [
-  "pillow>=12,<13",
+  "pillow>=12,<14",
   # NVML bindings, read-only. The local-inference contention check needs FREE
   # VRAM, not total: a 16 GB card shared with a resident service and a desktop
   # is not 16 GB of headroom, and a load admitted against the total is the
@@ -575,7 +575,7 @@ dev = [
   # Reproducible light-theme CLI GIFs for the repository README. Ceiling: the
   # runtime declaration's major line above; regenerate the GIFs after a Pillow
   # update, since rendered bytes can change between releases.
-  "pillow>=12.3,<13",
+  "pillow>=12.3,<14",
   # Generates synthetic fixture PDFs in tests, and is the `pdf` extra's
   # exclusive requirement: without it here the extra's probe reads ABSENT in
   # the dev environment and the calculation-summary suite refuses instead of
