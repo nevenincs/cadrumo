@@ -62,32 +62,19 @@ if TYPE_CHECKING:
 #: command string.
 _PROFILE_EDIT_ACTION_ID = "operator.profile.edit"
 
-_PROFILE_FIELD_WARNING_META: MappingProxyType[str, tuple[str, str]] = MappingProxyType(
+_PROFILE_FIELD_WARNING_LOCALE_KEYS: MappingProxyType[str, str] = MappingProxyType(
     {
-        "has_employees": ("cli.overview.warning.has_employees_unset", _PROFILE_EDIT_ACTION_ID),
-        "pays_professionals_with_retencion": (
-            "cli.overview.warning.retencion_profesionales_unset",
-            _PROFILE_EDIT_ACTION_ID,
-        ),
+        "has_employees": "cli.overview.warning.has_employees_unset",
+        "pays_professionals_with_retencion": "cli.overview.warning.retencion_profesionales_unset",
         "art109_activity_income_withholding_ge_70pct": (
-            "cli.overview.warning.art109_activity_income_withholding_ge_70pct_unset",
-            _PROFILE_EDIT_ACTION_ID,
+            "cli.overview.warning.art109_activity_income_withholding_ge_70pct_unset"
         ),
-        "pays_rent_with_retencion": (
-            "cli.overview.warning.retencion_arrendamientos_unset",
-            _PROFILE_EDIT_ACTION_ID,
-        ),
-        "pays_capital_income_with_retencion": (
-            "cli.overview.warning.retencion_capital_unset",
-            _PROFILE_EDIT_ACTION_ID,
-        ),
-        "does_intracomunitario": ("cli.overview.warning.intracomunitario_unset", _PROFILE_EDIT_ACTION_ID),
-        "third_party_transactions_above_347_threshold": (
-            "cli.overview.warning.terceros_threshold_unset",
-            _PROFILE_EDIT_ACTION_ID,
-        ),
-        "irpf.estimation_regime": ("cli.overview.warning.estimacion_objetiva_unset", _PROFILE_EDIT_ACTION_ID),
-        "iva.regime": ("cli.overview.warning.iva_regime_unset", _PROFILE_EDIT_ACTION_ID),
+        "pays_rent_with_retencion": "cli.overview.warning.retencion_arrendamientos_unset",
+        "pays_capital_income_with_retencion": "cli.overview.warning.retencion_capital_unset",
+        "does_intracomunitario": "cli.overview.warning.intracomunitario_unset",
+        "third_party_transactions_above_347_threshold": "cli.overview.warning.terceros_threshold_unset",
+        "irpf.estimation_regime": "cli.overview.warning.estimacion_objetiva_unset",
+        "iva.regime": "cli.overview.warning.iva_regime_unset",
     },
 )
 
@@ -127,11 +114,11 @@ def _record_gating_field(
     key_to_modelos: dict[str, set[str]],
     key_to_meta: dict[str, tuple[str, str]],
 ) -> None:
-    meta = _PROFILE_FIELD_WARNING_META.get(profile_key)
-    if meta is None:
+    message_key = _PROFILE_FIELD_WARNING_LOCALE_KEYS.get(profile_key)
+    if message_key is None:
         return
     key_to_modelos.setdefault(profile_key, set()).add(modelo)
-    key_to_meta[profile_key] = meta
+    key_to_meta[profile_key] = (message_key, _PROFILE_EDIT_ACTION_ID)
 
 
 def _collect_deadline_window_profile_keys(
@@ -141,7 +128,7 @@ def _collect_deadline_window_profile_keys(
     for modelo, windows in windows_by_modelo:
         for window in windows:
             for condition in window.applicability_conditions:
-                if condition.field in _PROFILE_FIELD_WARNING_META:
+                if condition.field in _PROFILE_FIELD_WARNING_LOCALE_KEYS:
                     keys_by_modelo.setdefault(modelo, set()).add(condition.field)
     return MappingProxyType({modelo: tuple(sorted(keys)) for modelo, keys in sorted(keys_by_modelo.items())})
 

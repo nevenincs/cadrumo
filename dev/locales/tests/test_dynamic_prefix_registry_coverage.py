@@ -537,7 +537,7 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         ("entrypoints/cli/_terminal_errors.py", "_requested_output_language"),
         # Ctx-scoped (entered and unwound inside the command callback's
         # settings scope - safe by construction):
-        ("entrypoints/cli/_root_cli.py", "root_command"),
+        ("entrypoints/cli/root_commands.py", "root_command"),
         ("entrypoints/cli/common.py", "activate_subcommand_output_language"),
         ("client/commands/custody.py", "_pin_render_language_to_target_bucket"),
         ("client/commands/custody.py", "_activate_subcommand_output_language"),
@@ -557,6 +557,9 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         # The local-reader provisioning operation writes its licence advisory in the
         # requesting frontend's language inside one with-block around the run.
         ("application/local_reader_provisioning.py", "provision_local_reader"),
+        # CSV row refusals are rendered synchronously inside the worker handoff;
+        # the invocation language is restored before the batch result returns.
+        ("application/ledger/bulk_classify_operation.py", "classify"),
         # The terminal interface's installation area returns the override as a context
         # manager its callers enter only around synchronous rendering, never across a wait,
         # so the first-profile page can word an area before any profile holds a language.
@@ -576,7 +579,7 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
 #: this gate exists to catch.
 _CTX_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
     {
-        ("entrypoints/cli/_root_cli.py", "root_command"),
+        ("entrypoints/cli/root_commands.py", "root_command"),
         ("entrypoints/cli/common.py", "activate_subcommand_output_language"),
         ("client/commands/custody.py", "_pin_render_language_to_target_bucket"),
         ("client/commands/custody.py", "_activate_subcommand_output_language"),
@@ -598,6 +601,7 @@ _PROJECTION_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         ("application/overview/read_operation.py", "_capture"),
         ("application/review/read_operation.py", "_capture"),
         ("application/local_reader_provisioning.py", "provision_local_reader"),
+        ("application/ledger/bulk_classify_operation.py", "classify"),
     }
 )
 
@@ -690,7 +694,8 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
     )
 
 
-def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens() -> None:
+@pytest.mark.parametrize("read_only", (False, True))
+def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens(read_only: bool) -> None:
     """Incident 3: a registry's KEYS are what the runtime selects on, not translations.
 
     A locale-key mapping is keyed by whatever picks the entry -- an enum value,
@@ -708,10 +713,10 @@ def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens() ->
 
     source = chr(10).join(
         (
-            "_ROUTE_LOCALE_KEYS = {",
+            "_ROUTE_LOCALE_KEYS = MappingProxyType({" if read_only else "_ROUTE_LOCALE_KEYS = {",
             '    "workbench.home": "tui.search.destination.home",',
             '    "operator.profile.edit": "tui.search.action.edit_profile",',
-            "}",
+            "})" if read_only else "}",
             "_FLAT_LOCALE_KEYS = (",
             '    "tui.search.refusal.unknown",',
             ")",
@@ -725,6 +730,38 @@ def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens() ->
     assert "tui.search.refusal.unknown" in keys, "a flat registry must still be collected whole"
     assert "workbench.home" not in keys, "a route identity is not a locale key"
     assert "operator.profile.edit" not in keys, "a catalogue action id is not a locale key"
+
+
+def test_a_key_suffix_is_not_an_identity_wrapped_catalogue_key(tmp_path) -> None:
+    """A local prefixing helper must not invent translations for its suffixes."""
+    from .._ast_scanner import scan_source_text, scan_source_tree
+
+    source = "\n".join(
+        (
+            'def _key(suffix): return f"application.provisioning.{suffix}"',
+            "def tr(translation_key, **values): return translation_key",
+            'tr(_key("dependency.local_ai.program"))',
+            'tr(_key("dependency.local_ai.model"), role="role")',
+            'tr(TranslationKey("application.provisioning.dependency.local_ai.program"))',
+            'tr(TranslationKey("application.provisioning.dependency.local_ai.model"))',
+            'option(help_key=_key("cli.config.help"))',
+            'tr("application.direct.first" if condition else "application.direct.second")',
+        )
+    )
+    (tmp_path / "wording.py").write_text(source, encoding="utf-8")
+    text_keys = scan_source_text(source, filename="wording.py")
+    tree_keys = scan_source_tree(tmp_path)
+
+    for keys in (text_keys, tree_keys):
+        assert "dependency.local_ai.program" not in keys
+        assert "dependency.local_ai.model" not in keys
+        assert {
+            "application.provisioning.dependency.local_ai.program",
+            "application.provisioning.dependency.local_ai.model",
+            "cli.config.help",
+            "application.direct.first",
+            "application.direct.second",
+        } <= keys
 
 
 def test_a_row_table_is_confirmed_by_its_key_column_and_not_a_prose_sibling() -> None:

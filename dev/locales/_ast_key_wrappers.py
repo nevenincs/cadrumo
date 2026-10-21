@@ -5,7 +5,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-from ._ast_key_calls import _call_site_key_argument_exprs, _translation_call_names
+from ._ast_key_calls import _call_site_key_argument_exprs, _collect_conditional_dotted_literal, _translation_call_names
 from ._ast_key_policy import _TRANSLATION_KEY_KWARGS
 from ._ast_key_syntax import _collect_dotted_literals, _walk_nodes
 
@@ -209,7 +209,7 @@ def _extract_positional_translation_key_arguments(
             continue
         for index in positions.get(name, frozenset()):
             if index < len(node.args):
-                _collect_dotted_literals(node.args[index], findings)
+                _collect_conditional_dotted_literal(node.args[index], findings)
     return findings
 
 

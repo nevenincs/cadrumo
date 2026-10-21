@@ -1060,9 +1060,9 @@ def test_codebase_to_locale_parity(locales_state, manager):
         extra = {key for key in keys - codebase_keys if not _covered_by_namespace(key)}
 
         if missing:
-            errors.append(f"{name} is missing {len(missing)} codebase keys.")
+            errors.append(f"{name} is missing {len(missing)} codebase keys: {sorted(missing)}")
         if extra:
-            errors.append(f"{name} contains {len(extra)} extra keys not in the codebase.")
+            errors.append(f"{name} contains {len(extra)} extra keys not in the codebase: {sorted(extra)}")
 
     if errors:
         pytest.fail("\n".join(errors))

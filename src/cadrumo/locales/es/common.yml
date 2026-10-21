@@ -854,7 +854,6 @@ desktop:
     add: Añadir registro
     all_fields: Todos los datos
     all_sections: Todas las secciones
-    auth: Configurar acceso a la AEAT
     cancel: Cancelar
     censo:
       absent: La AEAT no ha proporcionado este dato. Sin cambios.
@@ -890,19 +889,14 @@ desktop:
     complete: Finalizar la configuración del perfil
     conflict: Tu perfil ha cambiado en otra pantalla. Cierra este editor, revisa los
       datos actualizados y vuelve a abrir el campo. Tu borrador no se ha guardado.
-    description: Revisa tus datos guardados y completa lo que falta. Los cambios se
-      guardan en este perfil.
     edit: Editar
     edit_field: Editar {field}
-    edit_help: Solo se guardarán los datos que cambies. Deja los demás como están.
     empty: Ningún dato coincide con estos filtros. Prueba otra búsqueda o sección.
     expand_all: Expandir todo
     field_help: Sobre este campo
-    filled: Datos obligatorios completos
     filter: Mostrar campos
     loading: Cargando tu perfil…
     maximize: Pantalla completa
-    missing: Faltan {count} datos obligatorios
     missing_count: Faltan {count}
     missing_filter: Datos sin completar
     not_set: Sin completar
@@ -914,8 +908,6 @@ desktop:
       sus campos.
     required: Obligatorio
     required_filter: Obligatorios pendientes
-    restore: Vista dividida
-    results: Se muestran {count} campos
     save: Guardar cambios
     saved_filter: Datos guardados
     saved_notice: Guardado
@@ -953,7 +945,6 @@ desktop:
     dark: Oscuro
     docs_and_tui: Documentación y espacio de trabajo
     first_pane: Primer panel
-    follow_cadrumo: Igual que Cadrumo
     follow_docs: Como la documentación
     language: Idioma
     layout_reset: Disposición restablecida
@@ -1015,7 +1006,7 @@ desktop:
     plan_size_at_least: Se descargarán al menos {size}.
     planning: Calculando qué hay que descargar…
     progress_bytes: '{done} de {total}'
-    progress_item: '{index} de {count}: {name} — {step}'
+    progress_item: '{index} de {count}: {name} - {step}'
     progress_label: Progreso de {name}
     rail_busy: Configurando los componentes
     rail_incomplete: La configuración no ha terminado

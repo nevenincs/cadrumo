@@ -835,7 +835,6 @@ desktop:
     add: Bejegyzés hozzáadása
     all_fields: Minden adat
     all_sections: Minden szakasz
-    auth: AEAT-hozzáférés beállítása
     cancel: Mégse
     censo:
       absent: Az AEAT nem adott meg értéket. Nincs változás.
@@ -871,19 +870,14 @@ desktop:
     complete: Profil beállításának befejezése
     conflict: A profilod máshol megváltozott. Zárd be a szerkesztőt, nézd át a friss
       adatokat, majd nyisd meg újra a mezőt. A piszkozatodat nem mentettük.
-    description: Nézd át a mentett adataidat, és pótold a hiányzókat. A módosítások
-      ebbe a profilba kerülnek.
     edit: Szerkesztés
     edit_field: '{field} szerkesztése'
-    edit_help: Csak a módosított adatokat mentjük. A többit hagyd változatlanul.
     empty: Nincs a szűrőknek megfelelő adat. Próbálj más keresést vagy szakaszt.
     expand_all: Összes kibontása
     field_help: A mezőről
-    filled: A kötelező adatok kitöltve
     filter: Mezők megjelenítése
     loading: Profil betöltése…
     maximize: Teljes képernyő
-    missing: '{count} kötelező adat hiányzik'
     missing_count: '{count} hiányzik'
     missing_filter: Hiányzó adatok
     not_set: Nincs kitöltve
@@ -894,8 +888,6 @@ desktop:
     remove_help: Törlöd ezt a bejegyzést a profilodból? Minden mezője törlődik.
     required: Kötelező
     required_filter: Hiányzó kötelező adatok
-    restore: Osztott nézet
-    results: '{count} mező látható'
     save: Módosítások mentése
     saved_filter: Mentett adatok
     saved_notice: Mentve
@@ -932,7 +924,6 @@ desktop:
     dark: Sötét
     docs_and_tui: Dokumentáció és munkaterület
     first_pane: Első panel
-    follow_cadrumo: Ugyanaz, mint a Cadrumo
     follow_docs: A dokumentáció szerint
     language: Nyelv
     layout_reset: Elrendezés visszaállítva
@@ -993,7 +984,7 @@ desktop:
     plan_size_at_least: Legalább {size} letöltése.
     planning: Annak kiszámítása, mit kell letölteni…
     progress_bytes: '{done} / {total}'
-    progress_item: '{index}/{count}: {name} — {step}'
+    progress_item: '{index}/{count}: {name} - {step}'
     progress_label: 'Haladás: {name}'
     rail_busy: Az összetevők beállítása folyamatban
     rail_incomplete: A beállítás nem fejeződött be

@@ -819,7 +819,6 @@ desktop:
     add: Add entry
     all_fields: All details
     all_sections: All sections
-    auth: Set up AEAT access
     cancel: Cancel
     censo:
       absent: AEAT did not supply this value. No change.
@@ -855,20 +854,14 @@ desktop:
     complete: Finish profile setup
     conflict: Your profile changed elsewhere. Close this editor, review the updated
       details, and open the field again. Your draft has not been saved.
-    description: Review your saved details and fill in what is missing. Changes are
-      saved to this profile.
     edit: Edit
     edit_field: Edit {field}
-    edit_help: Only the details you change will be saved. Leave unchanged details
-      as they are.
     empty: No details match these filters. Try another search or section.
     expand_all: Expand all
     field_help: About this field
-    filled: Required details filled in
     filter: Show fields
     loading: Loading your profile…
     maximize: Full screen
-    missing: '{count} required details to complete'
     missing_count: '{count} missing'
     missing_filter: Missing details
     not_set: Not filled in
@@ -879,8 +872,6 @@ desktop:
     remove_help: Remove this entry from your profile? This includes all its fields.
     required: Required
     required_filter: Required and missing
-    restore: Split view
-    results: '{count} fields shown'
     save: Save changes
     saved_filter: Saved details
     saved_notice: Saved
@@ -917,7 +908,6 @@ desktop:
     dark: Dark
     docs_and_tui: Documentation and workspace
     first_pane: First pane
-    follow_cadrumo: Same as Cadrumo
     follow_docs: Follow docs
     language: Language
     layout_reset: Layout reset
@@ -976,7 +966,7 @@ desktop:
     plan_size_at_least: At least {size} to download.
     planning: Working out what to download…
     progress_bytes: '{done} of {total}'
-    progress_item: '{index} of {count}: {name} — {step}'
+    progress_item: '{index} of {count}: {name} - {step}'
     progress_label: Progress of {name}
     rail_busy: Setting up components
     rail_incomplete: Setup isn't finished

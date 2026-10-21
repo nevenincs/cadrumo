@@ -847,7 +847,6 @@ desktop:
     add: Afegeix un registre
     all_fields: Totes les dades
     all_sections: Totes les seccions
-    auth: Configura l’accés a l’AEAT
     cancel: Cancel·la
     censo:
       absent: L’AEAT no ha proporcionat aquesta dada. Sense canvis.
@@ -884,19 +883,14 @@ desktop:
     complete: Finalitza la configuració del perfil
     conflict: El teu perfil ha canviat en una altra pantalla. Tanca aquest editor,
       revisa les dades actualitzades i torna a obrir el camp. No s’ha desat l’esborrany.
-    description: Revisa les dades desades i completa el que falta. Els canvis es desen
-      en aquest perfil.
     edit: Edita
     edit_field: Edita {field}
-    edit_help: Només es desaran les dades que canviïs. Deixa les altres com estan.
     empty: Cap dada coincideix amb aquests filtres. Prova una altra cerca o secció.
     expand_all: Desplega-ho tot
     field_help: Sobre aquest camp
-    filled: Dades obligatòries completes
     filter: Mostra els camps
     loading: S’està carregant el teu perfil…
     maximize: Pantalla completa
-    missing: Falten {count} dades obligatòries
     missing_count: En falten {count}
     missing_filter: Dades pendents
     not_set: Sense completar
@@ -908,8 +902,6 @@ desktop:
       els camps.
     required: Obligatori
     required_filter: Obligatoris pendents
-    restore: Vista dividida
-    results: Es mostren {count} camps
     save: Desa els canvis
     saved_filter: Dades desades
     saved_notice: Desat
@@ -948,7 +940,6 @@ desktop:
     dark: Fosc
     docs_and_tui: Documentació i espai de treball
     first_pane: Primer panell
-    follow_cadrumo: Igual que Cadrumo
     follow_docs: Com la documentació
     language: Idioma
     layout_reset: Disposició restablerta
@@ -1011,7 +1002,7 @@ desktop:
     plan_size_at_least: Es baixaran com a mínim {size}.
     planning: S'està calculant què cal baixar…
     progress_bytes: '{done} de {total}'
-    progress_item: '{index} de {count}: {name} — {step}'
+    progress_item: '{index} de {count}: {name} - {step}'
     progress_label: Progrés de {name}
     rail_busy: S'estan configurant els components
     rail_incomplete: La configuració no ha acabat
