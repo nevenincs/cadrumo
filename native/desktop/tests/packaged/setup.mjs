@@ -41,7 +41,7 @@ export const FREE_SPACE_FLOOR_BYTES = 30 * 1024 ** 3;
 /** The largest the throwaway root may grow to before the watchdog stops the run. */
 export const SCRATCH_BUDGET_BYTES = 2 * 1024 ** 3;
 
-/** What a setup that downloads nothing may still move: the preflight's handshakes and plan sizing. */
+/** What a setup that downloads nothing may still move: the reachability preflight's handshakes. */
 export const NO_TRANSFER_ALLOWANCE_BYTES = 1024 ** 2;
 
 /** Bytes the first attempt moves before the harness forces its interruption. */
@@ -338,7 +338,7 @@ export function browserResumeVerdict({ interrupted, resumed }) {
 
 /**
  * A second setup of an item that is set up changes nothing: it settles as
- * nothing to do without showing a plan, moves no more than plan sizing does,
+ * nothing to do without showing a plan, moves no more than the preflight does,
  * and leaves the installed files as they were.
  */
 export function secondSetupVerdict({
