@@ -24,7 +24,11 @@ import { buildPath } from "../scripts/build-paths.mjs";
 import { docsOrigin as docsOriginOf } from "../scripts/configuration.mjs";
 import { docsProbe, pagefindSearch, pasteInto } from "./packaged/browser.mjs";
 import { hostRefusals, refusalProbe, tokenCheck } from "./packaged/probes.mjs";
-import { packagedHost, packagedHostPaths } from "./packaged/host.mjs";
+import {
+  installedHost,
+  packagedHost,
+  packagedHostPaths,
+} from "./packaged/host.mjs";
 import { SignInFixture } from "./packaged/sign-in.mjs";
 import { docsUiChecks } from "./packaged/docs-ui.mjs";
 import {
@@ -1855,6 +1859,11 @@ const SETUP_ACCEPTANCE = {
 
 test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
   const config = settings();
+  // The desktop supervises its runtime only as the installed image of the
+  // package it is pointed at, so the run starts the host, its runtime and its
+  // CLI from the stager's mirror of the staged package, never the stage itself.
+  const testHost = installedHost();
+  config.packageRoot = testHost.package;
   const { layout } = config;
   const results = new Results(config.results);
   const startedAt = new Date().toISOString();
@@ -1911,7 +1920,6 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
   };
 
   try {
-    const testHost = packagedHost();
     const desktop = await input.session();
     summary.host = testHost.executable;
     summary.package = config.packageRoot;
@@ -2063,7 +2071,32 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
     if (launched.verdict !== PASS) return;
     // The host installs its sign-in state while startup assembles the workspace,
     // so nothing is asked of it before the workspace has loaded, as in the main suite.
-    await session.waitDocs(60000);
+    const workspace = await check(
+      "setup-workspace-ready",
+      "startup hands the window over to the workspace",
+      async () => {
+        try {
+          await session.waitDocs(120000);
+          return {
+            verdict: PASS,
+            detail: "the workspace's documentation frame loaded",
+          };
+        } catch (error) {
+          const progress = await session
+            .call("startup_status")
+            .catch((failure) => ({ ok: false, error: String(failure) }));
+          evidence("setup-startup-status.json", progress);
+          await results
+            .screenshot(session.page, "setup-00-startup")
+            .catch(() => undefined);
+          return {
+            verdict: FAIL,
+            detail: `${error.message}; startup reports ${JSON.stringify(progress).slice(0, 400)}`,
+          };
+        }
+      },
+    );
+    if (workspace.verdict !== PASS) return;
     const authenticated = await check(
       "canonical-sign-in",
       "real password form signs in to the throwaway profile",
