@@ -251,6 +251,7 @@ def test_production_composition_imports_only_public_operation_defining_modules()
         "application.operations.contract_manifest",
         "application.operations.execution_actor",
         "application.operations.operation_definition",
+        "application.operations.persistence.journal",
         "application.operations.registry",
         "application.operations.registry_schema_validation",
     }

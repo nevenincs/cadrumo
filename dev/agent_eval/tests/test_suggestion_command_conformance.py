@@ -132,6 +132,9 @@ def _resolve_citation(tokens: tuple[str, ...]) -> tuple[str | None, bool]:
     if tokens == ("cadrumo-runtime", "session", "hold"):
         _verify_runtime_holder_command()
         return None, False
+    if tokens == ("cadrumo-runtime", "session", "watch"):
+        _verify_runtime_watcher_command()
+        return None, False
     program, tokens = command_program_path(tokens)
     command: Command = program_root_command(program)
     context = Context(command, info_name=program.value)
@@ -158,6 +161,19 @@ def _verify_runtime_holder_command() -> None:
     )
     assert result.returncode == 0, result.stderr
     assert "cadrumo-runtime session hold" in result.stdout
+
+
+@cache
+def _verify_runtime_watcher_command() -> None:
+    """Check the source-owned watch door through its real argparse bootstrap."""
+    result = subprocess.run(
+        [sys.executable, "-m", "cadrumo_runtime.host", "session", "watch", "--help"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "cadrumo-runtime session watch" in result.stdout
 
 
 # An ``--option`` / ``-o`` token in operator-instruction text. ``--help`` is always valid
@@ -460,6 +476,7 @@ def test_the_advertised_command_gate_flags_an_unregistered_verb() -> None:
     assert not _advertised_command_failures("aeat --format json config repair", origin="synthetic")
     assert not _advertised_command_failures("aeat --version --detail", origin="synthetic")
     assert not _advertised_command_failures("cadrumo-runtime session hold", origin="synthetic")
+    assert not _advertised_command_failures("cadrumo-runtime session watch", origin="synthetic")
     assert _advertised_command_failures("cadrumo-runtime session invented", origin="synthetic")
 
     # A root-only form citing an option the root callback does not declare is
