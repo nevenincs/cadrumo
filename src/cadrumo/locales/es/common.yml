@@ -2517,9 +2517,17 @@ tui:
         label: Inspeccionar una copia de seguridad de perfil
         summary: Muestra lo que un archivo de copia de seguridad dice de sí mismo,
           sin descifrarlo.
+      profile_create:
+        label: Crear un perfil
+        summary: Crea y selecciona un perfil con su primera contraseña. El perfil
+          permanece sin sesión hasta que inicies sesión.
       profile_list:
         label: Listar los perfiles
         summary: Lista los perfiles de este equipo sin desbloquear ninguno.
+      recovery_disable:
+        label: Eliminar un código de recuperación
+        summary: Elimina el código de recuperación de un perfil cuando demuestras
+          su contraseña actual.
       recovery_enroll:
         label: Configurar un código de recuperación
         summary: Crea un código de recuperación para un perfil cuando demuestras su

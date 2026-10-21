@@ -2488,9 +2488,17 @@ tui:
       archive_inspect:
         label: Profilmentés megvizsgálása
         summary: Megmutatja, mit árul el magáról egy mentésfájl, visszafejtés nélkül.
+      profile_create:
+        label: Profil létrehozása
+        summary: Létrehoz és kiválaszt egy profilt az első jelszavával. A profilba
+          külön kell bejelentkezned.
       profile_list:
         label: Profilok felsorolása
         summary: Felsorolja a gépen lévő profilokat anélkül, hogy bármelyiket feloldaná.
+      recovery_disable:
+        label: Helyreállítási kód eltávolítása
+        summary: Eltávolítja egy profil helyreállítási kódját, miután igazoltad az
+          aktuális jelszavát.
       recovery_enroll:
         label: Helyreállítási kód beállítása
         summary: Helyreállítási kódot hoz létre egy profilhoz, miután igazoltad a

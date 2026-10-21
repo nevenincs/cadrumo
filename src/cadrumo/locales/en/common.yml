@@ -2440,9 +2440,16 @@ tui:
       archive_inspect:
         label: Inspect a profile backup
         summary: Shows what a backup file says about itself, without decrypting it.
+      profile_create:
+        label: Create a profile
+        summary: Creates and selects a profile with its first password. The profile
+          stays signed out until you sign in.
       profile_list:
         label: List the profiles
         summary: Lists the profiles on this computer without unlocking any of them.
+      recovery_disable:
+        label: Remove a recovery code
+        summary: Removes a profile's recovery code after you prove its current password.
       recovery_enroll:
         label: Set up a recovery code
         summary: Creates a recovery code for a profile once you prove its password.

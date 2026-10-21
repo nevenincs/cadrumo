@@ -379,7 +379,7 @@ _ANEXO_B_ACCOUNT_ROWS = {
     "2215": ("Fecha de apertura", _ANEXO_B_ACCOUNT_OPENING_DATE_ROLE),
     "2216": ("Identificación de la cuenta", _ANEXO_B_ACCOUNT_IDENTIFIER_ROLE),
     "2217": (
-        'Marque una "X" si se trata de cuenta abierta en el extranjero',
+        'Marca una "X" si se trata de cuenta abierta en el extranjero',
         _ANEXO_B_ACCOUNT_FOREIGN_FLAG_ROLE,
     ),
     "2218": ("Incremento del saldo en el ejercicio", _ANEXO_B_ACCOUNT_BALANCE_INCREASE_ROLE),
@@ -387,7 +387,7 @@ _ANEXO_B_ACCOUNT_ROWS = {
     "2220": ("Fecha de apertura", _ANEXO_B_ACCOUNT_OPENING_DATE_ROLE),
     "2221": ("Identificación de la cuenta", _ANEXO_B_ACCOUNT_IDENTIFIER_ROLE),
     "2222": (
-        'Marque una "X" si se trata de cuenta abierta en el extranjero',
+        'Marca una "X" si se trata de cuenta abierta en el extranjero',
         _ANEXO_B_ACCOUNT_FOREIGN_FLAG_ROLE,
     ),
     "2223": ("Incremento del saldo en el ejercicio", _ANEXO_B_ACCOUNT_BALANCE_INCREASE_ROLE),
