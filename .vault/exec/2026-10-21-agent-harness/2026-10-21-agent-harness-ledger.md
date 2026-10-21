@@ -5,7 +5,7 @@ tags:
 date: '2026-10-21'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:096b50e47c048bc837de0806374569cad38705a10538a6f971ce6940d15f9148'
+body_hash: 'sha256:48bd6d5e21690f02e5ecf403401c04b261cb1c73ac4a19c47ae5b3d97956405a'
 related:
   - "[[2026-10-21-agent-harness-plan]]"
 ---
@@ -167,6 +167,12 @@ related:
 - `S05` `verify:` `pytest -m integration src/cadrumo_mcp` -> `pass`
 - `S05` `verify:` `pytest dev/quality/tests dev/packaging/tests dev/audit/tests dev/ci/tests dev/docs/apidocs/tests dev/operation_contract_manifest/tests dev/locales/tests` -> `fail`
 - `S05` `by:` `implementation-engineer-high`
+- `S06` `A` `dev/quality/tests/test_no_authored_agent_content.py`
+- `S06` `M` `src/cadrumo_mcp/mcp/tests/test_installed_stdio.py`
+- `S06` `verify:` `pytest dev/quality/tests/test_no_authored_agent_content.py` -> `pass`
+- `S06` `verify:` `pytest -m integration src/cadrumo_mcp/mcp/tests/test_installed_stdio.py` -> `pass`
+- `S06` `verify:` `pytest dev/quality/tests dev/tests` -> `pass`
+- `S06` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -175,3 +181,4 @@ related:
 - `S03` Seven integration tests in `dev/agent_eval` `(test_under_declaration_golden.py,` `test_response_provenance_golden.py)` fail with 'CLI scenario requires the injected `invoke_cli` fixture'. No file on that failure path changed in this plan; the seam dates from the 2026-10-19 CLI-rename repair and belongs to the concurrent full-suite repair work.
 - `S04` The one failure in that run, `dev/tests/test_no_home_directory_cache_paths.py,` reports `dev/smoke/acquisition_lane.py:262,` a file no Step of this plan touches; it arrived with commit bbd9f1f340 from concurrent type-gate work.
 - `S05` The type gate's single diagnostic and the one failing operation-contract test name files outside this plan: `src/cadrumo/application/overview/tests/test_calendar_profile_context.py` (its import was removed by concurrent commit eb06cb0954) and `src/cadrumo_runtime/host/session_watch.py` (commit 91c2bc5231). `docs/technical/**` keeps the old package name on purpose: those pages are dated snapshot analyses of code that no longer exists, so renaming the path in them would misstate what was analysed. The docs catalogue generator could not run whole (it would prune 705 committed catalogues), so the three architecture catalogues were refreshed with its per-page mode, which marks the changed paragraph fuzzy and leaves the translation to a later batch.
+- `S06` The new gate immediately reported a real leftover: the installed-stdio test still named cadrumo://rule/cadrumo-operator-grounding to prove a resource read reaches no handler. The assertion is about the absent resources capability, so the URI became cadrumo://any/document.

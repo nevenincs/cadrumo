@@ -106,7 +106,7 @@ async def test_installed_stdio_serves_a_client_that_never_sends_the_handshake(tm
             refused = [await client.call_tool(name, arguments) for name, arguments in _UNADMITTED]
             # The server serves no document of its own, so a resource read reaches no handler at all.
             with pytest.raises(MCPError) as unread:
-                await client.read_resource("cadrumo://rule/cadrumo-operator-grounding")
+                await client.read_resource("cadrumo://any/document")
 
     assert unread.value.code == METHOD_NOT_FOUND
     names = {tool.name for tool in tools}
