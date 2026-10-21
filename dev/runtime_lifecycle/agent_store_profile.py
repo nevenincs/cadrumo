@@ -24,6 +24,7 @@ from typing import Any
 import psutil
 
 from cadrumo_agent_service.adapters.agent_process import WindowsAgentInvocationRunner
+from cadrumo_agent_service.host.launch_environment import HOSTED_ROOT_VARIABLE
 from cadrumo_runtime.application.development_root import mark_development_root
 
 from .caller_owned_root import consumer_environment, require
@@ -76,7 +77,7 @@ def _measure(
     package: Path, root: Path, artifact: Path, verb: str, spy: str, spy_program: Path | None
 ) -> dict[str, Any]:
     environment = consumer_environment(root, root / "secrets")
-    environment["CADRUMO_AGENT_HOSTED_ROOT"] = str(root / "agent")
+    environment[HOSTED_ROOT_VARIABLE] = str(root / "agent")
     program = package / "bin" / "cadrumo-agent.exe"
     arguments = ["-m", "cadrumo_agent.cli.main", verb]
     trace: Path | None = None

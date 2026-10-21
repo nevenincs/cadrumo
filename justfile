@@ -689,6 +689,11 @@ verify-agent-live *ARGS:
 test-agent-service PACKAGE PROVIDER="claude":
     uv run --no-sync pytest -v -s -n0 -m integration dev/runtime_lifecycle/tests/agent_service --lifecycle-package {{quote(PACKAGE)}} --agent-provider-cli {{quote(PROVIDER)}}
 
+[doc('Verify the external agent protocol declarations; requires CADRUMO_DEV_AGENT_CHECKOUT with its installed environment.')]
+[group('test')]
+test-agent-protocol:
+    uv run --no-sync pytest -v -n0 -m external_tool dev/quality/tests/test_agent_prefix_spelling.py
+
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
 # Two questions about the same artifacts. actionlint asks whether the YAML is

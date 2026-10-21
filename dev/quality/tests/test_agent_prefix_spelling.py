@@ -32,6 +32,10 @@ agent's declared environment, or the proof that the runtime never emits a retire
 into ``_ALLOWED_FILES`` with a one-line reason. An entry whose file no longer spells the prefix
 fails the gate, so the list shrinks when the spellings do.
 
+The browser handoff also consumes the external agent's own wire protocol. Its exact
+consumer is enrolled below and an opt-in owner-conformance test compares both names
+with the agent's declaration; these transient inputs are not package launch slots.
+
 The prefix is assembled from fragments, so this module carries no spelling of its own and the
 scan covers it without a self-exclusion.
 """
@@ -39,6 +43,10 @@ scan covers it without a self-exclusion.
 from __future__ import annotations
 
 import codecs
+import json
+import os
+import re
+import sys
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -46,6 +54,8 @@ from typing import Final
 
 import pytest
 
+from cadrumo.tests.audited_process import run_audited_process
+from cadrumo_agent_service.host.launch_environment import system_environment
 from dev._paths import REPO_ROOT
 from dev.source_tree import repository_files
 
@@ -100,6 +110,9 @@ _ALLOWED_FILES: Final[Mapping[str, str]] = {
     ),
     "native/platform/src/launch.rs": (
         "package-side platform test: plants an agent name in the ambient environment for the python image to clear"
+    ),
+    "native/desktop/src-tauri/src/auth_browser.rs": (
+        "foreign agent browser-relay protocol: consumes its owner's transient port and nonce, not Cadrumo configuration"
     ),
 }
 
@@ -239,6 +252,38 @@ def test_every_allowance_and_exclusion_states_a_one_line_reason() -> None:
     assert all(reason.strip() and "\n" not in reason for reason in reasons)
     assert not set(_ALLOWED_FILES) & set(_UNSCANNED_FILES)
     assert all(not path.startswith(tuple(_UNSCANNED_TREES)) for path in _ALLOWED_FILES)
+
+
+@pytest.mark.external_tool
+def test_browser_handoff_names_match_the_external_agent_protocol() -> None:
+    """The enrolled foreign-protocol consumer follows the selected agent's own names.
+
+    This reads declaration constants in the agent's interpreter, without
+    constructing Settings, starting a login attempt or opening a browser.
+    """
+    checkout = Path(os.environ["CADRUMO_DEV_AGENT_CHECKOUT"])
+    interpreter = checkout / ".venv" / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+    assert checkout.is_absolute() and interpreter.is_file(), "name a synced external agent checkout"
+    source = """
+import json
+from cadrumo_agent.cli._auth_browser import AUTH_BROWSER_PORT_ENV, AUTH_BROWSER_NONCE_ENV
+print(json.dumps({"PORT": AUTH_BROWSER_PORT_ENV, "NONCE": AUTH_BROWSER_NONCE_ENV}))
+"""
+    result = run_audited_process(
+        [str(interpreter), "-c", source],
+        cwd=checkout,
+        env=system_environment(os.environ),
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    declared = json.loads(result.stdout)
+    consumer = (REPO_ROOT / "native/desktop/src-tauri/src/auth_browser.rs").read_text(encoding="utf-8")
+    consumed = dict(re.findall(r'const (PORT|NONCE): &str = "([^"]+)";', consumer))
+    assert set(consumed) == {"PORT", "NONCE"}
+    assert consumed == declared
 
 
 # -- A planted defect in each language the repository's sources are written in ---------------------------------

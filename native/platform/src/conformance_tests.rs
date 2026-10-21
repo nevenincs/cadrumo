@@ -589,6 +589,19 @@ fn existing_installation_path_defaults(
 
 #[test]
 fn launch_profiles_reproduce_every_generated_launch_vector() {
+    let auth_profile = LAUNCH_PROFILES
+        .iter()
+        .find(|profile| profile.name == "agent-auth")
+        .expect("the contract declares the agent authentication profile");
+    let auth_slot = |kind: &str, required: bool| {
+        let mut slots = auth_profile.slots.iter().filter(|slot| slot.kind == kind);
+        let slot = slots.next().expect("the authentication slot is declared");
+        assert!(slots.next().is_none(), "the typed slot is unambiguous");
+        assert_eq!(slot.required, required);
+        slot.name
+    };
+    let auth_root_name = auth_slot("directory", true);
+    let auth_executable_name = auth_slot("executable", false);
     let (package, root) = if cfg!(windows) {
         (r"C:\launch-vector\package", r"C:\launch-vector\state")
     } else {
@@ -628,9 +641,7 @@ fn launch_profiles_reproduce_every_generated_launch_vector() {
             .map(|(name, value)| (OsString::from(name), OsString::from(value)))
             .collect();
         if let Some(scratch) = &auth_hosted_root {
-            let Some((_, value)) = ambient
-                .iter_mut()
-                .find(|(name, _)| name == "CADRUMO_AGENT_HOSTED_ROOT")
+            let Some((_, value)) = ambient.iter_mut().find(|(name, _)| name == auth_root_name)
             else {
                 panic!("{} declares its hosted-root slot", vector.name);
             };
@@ -639,7 +650,7 @@ fn launch_profiles_reproduce_every_generated_launch_vector() {
         if let Some((_, executable)) = &auth_browser_executable {
             let Some((_, value)) = ambient
                 .iter_mut()
-                .find(|(name, _)| name == "CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE")
+                .find(|(name, _)| name == auth_executable_name)
             else {
                 panic!(
                     "{} declares its optional browser executable slot",
@@ -705,9 +716,8 @@ fn launch_profiles_reproduce_every_generated_launch_vector() {
                     .map(|(name, value)| ((*name).to_owned(), normal(OsStr::new(value))))
                     .collect();
                 if let Some(scratch) = &auth_hosted_root {
-                    let Some((_, value)) = expected
-                        .iter_mut()
-                        .find(|(name, _)| name == "CADRUMO_AGENT_HOSTED_ROOT")
+                    let Some((_, value)) =
+                        expected.iter_mut().find(|(name, _)| name == auth_root_name)
                     else {
                         panic!("{} defines its hosted-root slot", vector.name);
                     };
@@ -716,7 +726,7 @@ fn launch_profiles_reproduce_every_generated_launch_vector() {
                 if let Some((_, executable)) = &auth_browser_executable {
                     let Some((_, value)) = expected
                         .iter_mut()
-                        .find(|(name, _)| name == "CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE")
+                        .find(|(name, _)| name == auth_executable_name)
                     else {
                         panic!(
                             "{} defines its optional browser executable slot",

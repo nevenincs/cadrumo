@@ -15,7 +15,7 @@ import json
 import os
 import secrets
 import socket
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from http.client import HTTPConnection
 from pathlib import Path
@@ -23,7 +23,9 @@ from typing import Final
 from urllib.parse import urlencode
 
 import pytest
+from pydantic import TypeAdapter
 
+from cadrumo.tests.audited_process import run_audited_process
 from cadrumo_client.contracts.model_runs import (
     ModelRunAttachment,
     ModelRunBody,
@@ -48,8 +50,14 @@ pytestmark = [
 CHECKOUT_VARIABLE: Final = "CADRUMO_DEV_AGENT_CHECKOUT"
 _READY_BOUND_SECONDS: Final = 120.0
 _EXIT_OBSERVATION_SECONDS: Final = 0.25
+_ENVIRONMENT_NAMES_PROBE: Final = """
+import json, sys
+from cadrumo_agent.control.config import Settings
+from cadrumo_agent.control.settings_base import env_name
+print(json.dumps({field: env_name(Settings, field) for field in json.loads(sys.argv[1])}))
+"""
+_ENVIRONMENT_NAMES: Final = TypeAdapter(dict[str, str])
 _TOOL_LESS_LANE: Final = ModelRunLane(provider_id="claude", transport="cli", model="haiku")
-_TOOLED_ONLY_LANE: Final = ModelRunLane(provider_id="kimi", transport="cli", model="kimi-for-coding")
 _PNG: Final = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
 )
@@ -70,6 +78,31 @@ class _Gateway:
     endpoint: BackgroundRunEndpoint
     bearer: str
     host_token: str
+
+    def lane_for_refusal(self, *, background: bool, pdf: bool | None = None) -> ModelRunLane:
+        """Choose a selectable lane whose own catalog declares the refusal precondition."""
+        status, catalog = self.exchange(
+            "GET", "/v1/provider-catalog?" + urlencode({"workspace_root": str(self.endpoint.workspace_root)})
+        )
+        assert status == 200 and isinstance(catalog, dict), (status, catalog)
+        records = catalog["providers"]
+        assert isinstance(records, list)
+        for record in records:
+            support = record["background_requests"]
+            if record["health"]["selectable"] is not True or record["executable"] is not True:
+                continue
+            if (support["text"] != "unsupported") is not background:
+                continue
+            if pdf is not None and (support["pdf"] != "unsupported") is not pdf:
+                continue
+            if pdf is False and support["image"] == "unsupported":
+                continue
+            models = record["catalog"]["models"]
+            assert models, "the selected refusal fixture must name a declared model"
+            return ModelRunLane(
+                provider_id=record["provider_id"], transport=record["transport"], model=models[0]["model"]
+            )
+        pytest.fail(f"the agent catalog provides no selectable refusal fixture for background={background}, pdf={pdf}")
 
     def runs(self, *, host_token: str | None = None, run_id: str | None = None) -> HostedBackgroundRuns:
         """The adapter under test, bound to this gateway."""
@@ -151,6 +184,24 @@ def _await_ready(process: AgentProcess, port: int) -> None:
     pytest.fail("the agent gateway never answered its health route", pytrace=False)
 
 
+def _agent_setting_environment(checkout: Path, values: Mapping[str, str]) -> dict[str, str]:
+    """Take each name from the external agent's own field schema, including its aliases."""
+    result = run_audited_process(
+        [str(checkout / ".venv" / "Scripts" / "python.exe"), "-c", _ENVIRONMENT_NAMES_PROBE, json.dumps(tuple(values))],
+        cwd=checkout,
+        env=system_environment(os.environ),
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    names = _ENVIRONMENT_NAMES.validate_json(result.stdout, strict=True)
+    assert names.keys() == values.keys(), "the agent must declare every requested settings field"
+    assert len(set(names.values())) == len(names), "the fixture must not overwrite another agent setting"
+    return {names[field]: value for field, value in values.items()}
+
+
 @pytest.fixture(scope="module")
 def gateway(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_Gateway]:
     checkout = _agent_checkout()
@@ -165,20 +216,27 @@ def gateway(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_Gateway]:
         "HOME": str(profile),
         "APPDATA": str(profile / "AppData" / "Roaming"),
         "LOCALAPPDATA": str(profile / "AppData" / "Local"),
-        "CADRUMO_AGENT_ENVIRONMENT": "production",
-        "CADRUMO_AGENT_PORT": str(port),
-        "CADRUMO_AGENT_WORKER_PORT": str(_free_port()),
-        "CADRUMO_AGENT_AUTO_SPAWN_WORKER": "true",
-        "CADRUMO_AGENT_HOME": str(root / "home"),
-        "CADRUMO_AGENT_WORKSPACE_ROOT": str(root / "workspace"),
-        "CADRUMO_AGENT_DATABASE_BACKEND": "sqlite",
-        "CADRUMO_AGENT_DATABASE_URL": f"sqlite+aiosqlite:///{(root / 'agent.db').as_posix()}",
-        "CADRUMO_AGENT_CHECKPOINT_BACKEND": "sqlite",
-        "CADRUMO_AGENT_CHECKPOINT_DATABASE_URL": f"sqlite+aiosqlite:///{(root / 'checkpoint.db').as_posix()}",
-        "CADRUMO_AGENT_GATEWAY_TOKEN": bearer,
-        "CADRUMO_AGENT_INTERNAL_TOKEN": secrets.token_urlsafe(32),
-        "CADRUMO_AGENT_HOST_TOKEN": host_token,
     }
+    environment.update(
+        _agent_setting_environment(
+            checkout,
+            {
+                "environment": "production",
+                "port": str(port),
+                "worker_port": str(_free_port()),
+                "auto_spawn_worker": "true",
+                "agent_home": str(root / "home"),
+                "workspace_root": str(root / "workspace"),
+                "database_backend": "sqlite",
+                "database_url": f"sqlite+aiosqlite:///{(root / 'agent.db').as_posix()}",
+                "checkpoint_backend": "sqlite",
+                "checkpoint_database_url": f"sqlite+aiosqlite:///{(root / 'checkpoint.db').as_posix()}",
+                "gateway_service_token": bearer,
+                "internal_token": secrets.token_urlsafe(32),
+                "host_token": host_token,
+            },
+        )
+    )
     process = WindowsAgentProcessLauncher().launch(
         executable=checkout / ".venv" / "Scripts" / "cadrumo-agent.exe",
         arguments=("serve",),
@@ -239,23 +297,23 @@ def test_without_the_host_s_own_token_the_agent_refuses_and_the_run_is_unavailab
 
 def test_a_lane_that_cannot_run_without_tools_is_refused_as_unavailable(gateway: _Gateway) -> None:
     run_id = secrets.token_hex(16)
-    status, answer = gateway.background(run_id, _TOOLED_ONLY_LANE)
-    assert (status, _refusal_code(answer)) == (422, "background_lane_unsupported")
+    lane = gateway.lane_for_refusal(background=False)
+    status, answer = gateway.background(run_id, lane)
+    assert (status, _refusal_code(answer)) == (422, "background_lane_unsupported"), (status, answer)
 
-    assert gateway.runs().run(lane=_TOOLED_ONLY_LANE, body=_body(), deadline_seconds=30) == ModelRunRefusal(
+    assert gateway.runs().run(lane=lane, body=_body(), deadline_seconds=30) == ModelRunRefusal(
         code=ModelRunRefusalCode.LANE_UNAVAILABLE
     )
 
 
 def test_a_pdf_on_a_lane_that_takes_none_is_refused_and_its_upload_removed(gateway: _Gateway) -> None:
     run_id = secrets.token_hex(16)
+    lane = gateway.lane_for_refusal(background=True, pdf=False)
 
-    refused = gateway.runs(run_id=run_id).run(
-        lane=_TOOL_LESS_LANE, body=_body(("application/pdf", _PDF)), deadline_seconds=30
-    )
+    refused = gateway.runs(run_id=run_id).run(lane=lane, body=_body(("application/pdf", _PDF)), deadline_seconds=30)
 
-    assert refused == ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED)
-    assert gateway.runs().accepted_media(_TOOL_LESS_LANE) == (ModelRunMediaKind.IMAGE,)
+    assert refused == ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED), refused
+    assert gateway.runs().accepted_media(lane) == (ModelRunMediaKind.IMAGE,)
     status, listed = gateway.exchange("GET", f"/v1/conversations/{run_id}/attachments")
     assert status == 404 or (isinstance(listed, dict) and not listed.get("attachments"))
 
