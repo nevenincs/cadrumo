@@ -59,10 +59,8 @@ def workbench(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathF
 
 async def _open(pilot: Pilot[None], screen: ModeloWorkbenchScreen, keys: tuple[str, ...]) -> None:
     """Wait for the form to be read, then reach the surface the way the filer does."""
-    for _ in range(200):
-        await pilot.pause()
-        if screen.form is not None:
-            break
+    await pilot.app.workers.wait_for_complete()
+    await pilot.pause()
     assert screen.form is not None, "the workbench never finished reading its declaration"
     if keys:
         await pilot.press(*keys)

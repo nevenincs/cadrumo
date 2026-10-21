@@ -73,11 +73,11 @@ async def _panel_opened(pilot: Pilot[None]) -> bool:
 
 
 async def _opened(pilot: Pilot[None], screen: ModeloWorkbenchScreen) -> ModeloWorkForm:
-    for _ in range(200):
-        await pilot.pause()
-        if screen.form is not None:
-            return screen.form
-    raise AssertionError("the workbench never finished reading its declaration")
+    await pilot.app.workers.wait_for_complete()
+    await pilot.pause()
+    form = screen.form
+    assert form is not None, "the workbench never finished reading its declaration"
+    return form
 
 
 def _frame_text(app: ScreenHostApp[None]) -> str:
