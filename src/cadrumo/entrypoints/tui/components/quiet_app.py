@@ -14,19 +14,20 @@ from textual.widgets import Input, TextArea
 
 from ....core.config import Settings
 from ....core.diagnostic_log import diagnostic_error_fields, diagnostic_event
+from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
 
 if TYPE_CHECKING:
     from rich.console import RenderableType
 
 
-class TuiRunFailedError(RuntimeError):
+class TuiRunFailedError(CadrumoError):
     """A Textual run ended unsuccessfully without retaining an exception."""
 
     def __init__(self, exit_code: int) -> None:
         """Retain the unsuccessful status independently of the app's return value."""
         self.exit_code = exit_code
-        super().__init__(f"TUI exited unsuccessfully (code {exit_code})")
+        super().__init__(context={"exit_code": exit_code})
 
 
 class QuietApp[ReturnType](App[ReturnType]):

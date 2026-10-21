@@ -14,6 +14,7 @@ from textual.strip import Strip
 from textual.widgets import Input
 from textual.worker import WorkerFailed
 
+from .....core.errors.error_codes import ErrorCategory, build_error_envelope, get_registered_error_code
 from ..host import ScreenHostApp
 from ..quiet_app import QuietApp, TuiRunFailedError
 from ..status import ProgressLine
@@ -187,6 +188,13 @@ async def test_explicit_failure_exit_cannot_be_mistaken_for_dismissal() -> None:
     with pytest.raises(TuiRunFailedError) as caught:
         await RefusedApp().run_async(headless=True)
     assert caught.value.exit_code == 7
+    code = get_registered_error_code(caught.value)
+    assert code.code == "INTERNAL_TUI_RUN_FAILED"
+    assert code.category is ErrorCategory.INTERNAL
+    envelope = build_error_envelope(caught.value)
+    assert caught.value.context == {"exit_code": 7}
+    assert envelope.context is not None and envelope.context["exit_code"] == "7"
+    assert envelope.trace_id is not None and len(envelope.trace_id) == 32
 
 
 def test_crashed_tui_child_process_exits_with_failure() -> None:

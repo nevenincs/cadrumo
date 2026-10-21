@@ -181,6 +181,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.entrypoints.tui.components.quiet_app.TuiRunFailedError",
+        ErrorCode(
+            code="INTERNAL_TUI_RUN_FAILED",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.canonical_tui_run_failed",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.entrypoints.tui.components.theme.UnknownDesignTokenError",
         ErrorCode(
             code="REFUSED_TUI_UNKNOWN_DESIGN_TOKEN",

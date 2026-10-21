@@ -735,6 +735,8 @@ errors:
     canonical_schema_resolution: La proyección del esquema de comandos está incompleta.
     canonical_structured_invoice_read: El lector seleccionado no pudo leer la factura
       estructurada.
+    canonical_tui_run_failed: La interfaz de terminal terminó inesperadamente. Revisa
+      los registros de diagnóstico.
     canonical_tui_search_host: La paleta de búsqueda del TUI requiere un anfitrión
       raíz del espacio de trabajo.
     cli_outbound_payload_boundary: Cadrumo ha construido un registro interno que no

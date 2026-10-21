@@ -676,6 +676,8 @@ errors:
     canonical_schema_resolution: The command schema projection is incomplete.
     canonical_structured_invoice_read: The structured invoice could not be read by
       the selected reader.
+    canonical_tui_run_failed: The terminal interface ended unexpectedly. Check the
+      diagnostic logs.
     canonical_tui_search_host: The TUI search palette requires a workbench root host.
     cli_outbound_payload_boundary: Cadrumo built an internal record that failed its
       own validation. Your command was correct; this is a defect in Cadrumo. Report

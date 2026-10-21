@@ -688,6 +688,8 @@ errors:
     canonical_schema_resolution: A parancsséma vetítése hiányos.
     canonical_structured_invoice_read: A kiválasztott olvasó nem tudta beolvasni a
       strukturált számlát.
+    canonical_tui_run_failed: A terminálfelület váratlanul leállt. Nézd meg a diagnosztikai
+      naplókat.
     canonical_tui_search_host: A TUI keresési palettájához a munkaterület gyökér-gazdagépe
       szükséges.
     cli_outbound_payload_boundary: A Cadrumo olyan belső rekordot épített, amely nem
