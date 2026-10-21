@@ -37,9 +37,16 @@ export function usePersonActivity(host: Host, signedIn: boolean): void {
       "input",
     ] as const;
     names.forEach((name) =>
-      window.addEventListener(name, observe, { capture: true, passive: true }),
+      // A controlled field must handle its input before an activity report
+      // can make the host rerender it with the previous value.
+      window.addEventListener(name, observe, {
+        capture: name !== "input",
+        passive: true,
+      }),
     );
     return () =>
-      names.forEach((name) => window.removeEventListener(name, observe, true));
+      names.forEach((name) =>
+        window.removeEventListener(name, observe, name !== "input"),
+      );
   }, [host, signedIn]);
 }
