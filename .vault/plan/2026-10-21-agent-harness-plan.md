@@ -8,7 +8,7 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 modified: '2026-10-21'
 body_schema: body-v2
-body_hash: 'sha256:9f1a5514953c36686ea1b6e1b97ca7a053213c6afdda415744a2141c214102ea'
+body_hash: 'sha256:bf7618e68f2c67b511467dbab141301b6c7931ad1546a4f41e4100734f9f0181'
 ---
 
 <!-- LINK RULES:
@@ -125,7 +125,7 @@ Open items carried from the amended ADRs, settled in implementation as follows. 
 
 ## Steps
 
-- [ ] `S01` - Port Cadrumo-only skill and rule changes made after the fork into cadrumo-agent and report files held by concurrent cadrumo-agent edits; `Y:/code/cadrumo-agent-worktrees/main/src/cadrumo_agent/harness/_data/agent`.
+- [x] `S01` - Port Cadrumo-only skill and rule changes made after the fork into cadrumo-agent and report files held by concurrent cadrumo-agent edits; `Y:/code/cadrumo-agent-worktrees/main/src/cadrumo_agent/harness/_data/agent`.
 - [ ] `S02` - Remove skill and rule serving from the MCP surface: operating layer, harness_load, cadrumo skill and rule resources, workspace flag and skill-loading tool descriptions; `src/cadrumo_harness/mcp`.
 - [ ] `S03` - Delete harness content and accessors with their tests, the command-operation reference generator and the wheel data include; `src/cadrumo_harness/_data, src/cadrumo_harness/resources.py, src/cadrumo_harness/workspace.py, dev/harness_data, pyproject.toml`.
 - [ ] `S04` - Reduce agent evaluation to deterministic MCP conformance in dev/mcp_eval, removing the live persona lane, scoring, flywheel, persona scenarios and eval-agent recipes; `dev/agent_eval, justfile`.
