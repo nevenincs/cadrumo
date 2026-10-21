@@ -83,11 +83,12 @@ def test_every_field_a_classification_update_or_bulk_request_can_set_is_placed(
 
 
 def test_what_classification_sets_beyond_a_note_is_a_decision_field() -> None:
-    """The M210 answers reach the row as one further field, which the classify request selects by name."""
+    """Single and bulk classify may carry a note; the remaining patch fields decide tax."""
     classified = (set(LedgerClassifyPatch.model_fields) | {"m210_income_classification"}) - {"notes"}
+    bulk_classified = set(BulkClassifyRow.model_fields) - set(_REQUEST_ONLY_NAMES) - {"notes"}
 
     assert classified <= CLASSIFICATION_DECISION_FIELDS
-    assert set(BulkClassifyRow.model_fields) - set(_REQUEST_ONLY_NAMES) <= CLASSIFICATION_DECISION_FIELDS
+    assert bulk_classified <= CLASSIFICATION_DECISION_FIELDS
 
 
 def test_the_link_to_purchase_invoice_evidence_is_a_decision_field_the_fingerprint_leaves_out() -> None:
