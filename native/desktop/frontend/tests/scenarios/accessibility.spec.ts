@@ -160,12 +160,40 @@ const SURFACES: {
       await expect(target.locator(".sign-in")).toBeVisible();
       await target.keyboard.press("Escape");
       await expect(target.locator(".sign-in")).toHaveCount(0);
+      const search = target.getByRole("button", {
+        name: label("desktop.rail.search"),
+        exact: true,
+      });
+      await search.focus();
+      await expect(target.getByRole("tooltip")).toBeVisible();
+      await expect(search).toHaveAccessibleDescription(/.+/);
+      // The landmark owns the description, while the popup still paints
+      // outside the narrow, scrolling rail.
+      await expect
+        .poll(() =>
+          target.getByRole("tooltip").evaluate((tooltip) => {
+            const bounds = tooltip.getBoundingClientRect();
+            return tooltip.contains(
+              document.elementFromPoint(
+                bounds.x + bounds.width / 2,
+                bounds.y + bounds.height / 2,
+              ),
+            );
+          }),
+        )
+        .toBe(true);
     },
   },
   {
     name: "the shell",
     scenario: "signed-in",
     reach: async (target) => {
+      await target
+        .getByRole("button", {
+          name: label("desktop.rail.tui"),
+          exact: true,
+        })
+        .click();
       await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
     },
   },

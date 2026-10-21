@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 
 // The profile a person signs in to: shown, chosen and created in the
@@ -426,6 +427,7 @@ test("a refused creation is said once, clears both passwords and is not tried ag
 test("a new profile is offered beside sign-in, refuses a name already in use, and gives the way back", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-out");
   await dialog(target)
     .getByRole("button", { name: label("desktop.account.new_profile") })
@@ -487,6 +489,7 @@ test("a profile created beside others is automatically signed in by name", async
 test("first run: the pane, header and the palette all lead to the form in the window", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "first-run");
   await target.keyboard.press("Escape");
   await expect(dialog(target)).toHaveCount(0);

@@ -246,6 +246,7 @@ test("settings opened from the palette inside a terminal stays open", async ({
 test("no chord reaches the shell from under the sign-in dialog", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-out");
   const dialog = target.locator(".sign-in");
   await expect(target.locator("#profile-password")).toBeFocused();
@@ -544,6 +545,7 @@ test("one Escape closes settings while a tooltip is showing elsewhere", async ({
 test("the shell's chords reach their actions from the chrome", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target);
   await rail(target).getByRole("button").first().focus();
   await target.keyboard.press("Control+Shift+KeyT");
@@ -581,6 +583,7 @@ test("a focused terminal keeps its own keys and yields only the global chords", 
 test("the sign-in dialog keeps Tab inside it and Escape hands focus on", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-out");
   const dialog = target.locator(".sign-in");
   await expect(target.locator("#profile-password")).toBeFocused();
@@ -782,6 +785,7 @@ test("chords work while the sign-in state is still being read", async ({
 test("a chord sent from the documentation does not act under the sign-in dialog", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target, "signed-out");
   await expect(target.locator("#profile-password")).toBeFocused();
   const page = target.frameLocator(".docs-frame").locator("body");
@@ -871,6 +875,7 @@ test("bringing in earlier records leaves the view on the record it was on", asyn
 test("a chord pressed in the documentation focuses the view it shows", async ({
   page: target,
 }) => {
+  await seedLayout(target);
   await open(target);
   const page = target.frameLocator(".docs-frame").locator("body");
   await expect(page).toContainText("Stand-in documentation");

@@ -281,12 +281,15 @@ test("supervisor loss gates signed-in views without focus and ready waits for fr
   await expect(privateBadge).toBeVisible();
   await page.clock.runFor(1_100);
   await expect(privateBadge).toHaveCount(0);
-  await expect(page.locator('[data-slot="account-loading"]')).toContainText(
+  const profileLoading = page.locator(
+    '.pane-docs [data-slot="account-loading"]',
+  );
+  await expect(profileLoading).toContainText(
     label("desktop.signin.recovering_services"),
   );
   await expect(password(page)).toHaveCount(0);
   await page.clock.runFor(1_000);
-  await expect(page.locator('[data-slot="account-loading"]')).toBeVisible();
+  await expect(profileLoading).toBeVisible();
   await page.clock.runFor(1_000);
   await expect(password(page)).toHaveCount(0);
   expect(await calls(page, "managerAuthResolved")).toBe(0);
@@ -341,7 +344,9 @@ test("a delayed accepted submission cannot revive authentication after superviso
   await page.clock.runFor(5_000);
   expect(await calls(page, "signIn")).toBe(1);
   await expect(password(page)).toHaveCount(0);
-  await expect(page.locator('[data-slot="account-loading"]')).toBeVisible();
+  await expect(
+    page.locator('.pane-docs [data-slot="account-loading"]'),
+  ).toBeVisible();
 });
 
 test("replacing a host unsubscribes and rejects its late supervisor signal", async ({
