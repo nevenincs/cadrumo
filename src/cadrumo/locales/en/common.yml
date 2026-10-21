@@ -577,12 +577,12 @@ desktop:
       password_long: Use a shorter password.
       password_short: Use at least {min} characters.
       policy: At least {min} characters.
-      refused: The profile was not created ({code}).
+      refused: The profile could not be created. Review its details and try again.
       submit: Create profile
       submitting: Creating…
       title: Create a profile
-      unknown: It is not known whether the profile was created ({code}). Look for
-        it among the profiles before trying again.
+      unknown: The profile may have been created. Check the profile list before trying
+        again.
     first_run_lead: Create a profile to start.
     new_profile: New profile
     no_profile: No active profile
@@ -591,7 +591,7 @@ desktop:
       application can still grant access to this profile.
     services_down: Background services aren't running
     sign_out: Sign out
-    sign_out_failed: Signing out didn't work ({code}).
+    sign_out_failed: Signing out didn't work. Try again.
     sign_out_hint: Signs you out of every Cadrumo window.
     signed_in: Signed in
     signed_out: Not signed in
@@ -674,7 +674,7 @@ desktop:
     event:
       filing: Filing
       message: Message
-    failed: The calendar couldn't be read ({code}).
+    failed: The calendar couldn't be loaded. Try refreshing it.
     loading: Loading the calendar…
     local:
       external_baseline_imported: Imported from an earlier filing
@@ -685,7 +685,7 @@ desktop:
     more: '{count} more'
     moved: Moved from {date}
     observed: Filing history and messages
-    open_tui: Open in the TUI
+    open_tui: Open in workspace
     payment_cutoff: Direct debit until {date}
     refresh: Refresh
     show_all: Show all
@@ -713,13 +713,12 @@ desktop:
     frame_title: Cadrumo documentation
     hide: Hide the docs
     loading: Loading the documentation…
-    not_bundled: This copy of Cadrumo was built without the documentation. Everything
-      else works as usual.
+    not_bundled: Documentation is not available in this installation.
     show: Show the docs
-    unavailable: The documentation couldn't be opened. Everything else works as usual.
+    unavailable: The documentation couldn't be opened. Try again later.
   google:
     checking: Checking the Google sign-in…
-    not_in_this_build: This version of Cadrumo can't sign in to Google.
+    not_in_this_build: Google sign-in isn't available right now.
     open_drive: Open profile folder in Google Drive
     palette_sign_in: Authenticate with Google
     sign_in: Sign in
@@ -786,7 +785,7 @@ desktop:
     paste: Paste
     select_all: Select all
   messages:
-    failed: Couldn't be read ({code})
+    failed: Notifications couldn't be loaded. Try again later.
     never: Not synced with AEAT yet
     none_unread: None unread at the last sync
     unread: '{count} unread'
@@ -808,9 +807,9 @@ desktop:
     maximize_docs: Maximize the docs
     maximize_focused: Maximize the focused area
     maximize_panel: Maximize the bottom panel
-    maximize_tui: Maximize the TUI
+    maximize_tui: Maximize workspace
     restore: Restore the layout
-    tui: TUI
+    tui: Workspace
   panel:
     hide: Hide the bottom panel
     label: Bottom panel
@@ -827,17 +826,17 @@ desktop:
     python: Python shell
     search: Search
     settings: Settings
-    tui: TUI
+    tui: Workspace
   session:
     enter_restarts: Enter restarts
     exit_line: '[Process exited with code {code}. Press Enter to start again.]'
     exited: exited {code}
-    failed: 'The session couldn''t start: {reason}'
+    failed: The session couldn't start.
   settings:
     always_dark: Always dark
     appearance: Appearance
     dark: Dark
-    docs_and_tui: Docs and TUI
+    docs_and_tui: Documentation and workspace
     first_pane: First pane
     follow_cadrumo: Same as Cadrumo
     follow_docs: Follow docs
@@ -970,8 +969,8 @@ desktop:
         keychain isn't available.
       login_mismatch: Your sign-in is from an earlier session on this computer. Sign
         in again.
-      manager: Background services could not start ({code}). Open Logs for details.
-      other: Signing in didn't work ({code}).
+      manager: Cadrumo couldn't start. Open Logs for details.
+      other: Signing in didn't work. Try again.
       profile_locked: This profile is locked. Sign in with its password to unlock
         it.
       receipt_absent: You're not signed in.
@@ -980,19 +979,19 @@ desktop:
       throttled: Too many attempts. You can try again in {seconds} s.
     services_recovered: Background services are ready. Checking sign-in…
     show_password: Show password
-    signed_out_lead: Sign in to open your workspace in the TUI.
+    signed_out_lead: Sign in to open your workspace.
     start_services: Start background services
     starting_services: Starting background services…
     submit: Sign in
     submitting: Signing in…
     title: Sign in to Cadrumo
-    unnameable: A profile whose name holds * ? [ % or $ is opened in the TUI.
-    unsupported: Sign in from the TUI on this system.
+    unnameable: Open the workspace to sign in to this profile.
+    unsupported: Sign in from the workspace on this system.
   split:
-    resize: Resize docs and TUI
-    side_by_side: Put docs and TUI side by side
-    stack: Stack docs and TUI
-    swap: Swap docs and TUI
+    resize: Resize documentation and workspace
+    side_by_side: Put documentation and workspace side by side
+    stack: Stack documentation and workspace
+    swap: Swap documentation and workspace
   titlebar:
     close: Close window
     failed: The window action could not be completed.
@@ -1008,9 +1007,9 @@ desktop:
     paste_failed: Could not paste that.
     paste_too_large: That is too much text to paste at once.
   tui:
-    hide: Hide the TUI
-    label: Cadrumo TUI
-    show: Show the TUI
+    hide: Hide workspace
+    label: Cadrumo workspace
+    show: Show workspace
 entries:
   portal_calendario_contribuyente:
     label: Taxpayer Calendar

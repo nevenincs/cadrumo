@@ -1,6 +1,6 @@
 import { useId, useState } from "react";
 import { cn } from "@/components/ui/cn";
-import { Empty, EmptyTitle } from "@/components/ui/empty";
+import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -248,9 +248,7 @@ export function DocumentsPanel({
         />
       </div>
       {documents.length === 0 ? (
-        <Empty>
-          <EmptyTitle>{t("desktop.agent.documents_empty")}</EmptyTitle>
-        </Empty>
+        <EmptyState heading={t("desktop.agent.documents_empty")} />
       ) : (
         <>
           <p className="flex shrink-0 flex-wrap gap-x-2 px-3 py-2 text-xs text-muted-foreground">

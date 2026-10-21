@@ -8,9 +8,8 @@ import {
   type Ref,
 } from "react";
 import { Button } from "@/components/ui/button";
-import { Empty, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { EmptyState } from "@/components/ui/empty";
 import { Icon, type IconName } from "@/components/ui/icon";
-import { Spinner } from "@/components/ui/spinner";
 import { failureCode } from "../errors";
 import { useAgentAccess, type AgentAccess } from "../shell/agentAccess";
 import {
@@ -1223,22 +1222,16 @@ function ReadState({
   icon: IconName;
 }) {
   const t = useStrings();
-  if (read.kind === "loading")
-    return (
-      <Empty role="status">
-        <Spinner />
-      </Empty>
-    );
+  if (read.kind === "loading") return <EmptyState role="status" busy />;
   return (
-    <Empty role={read.kind === "failed" ? "alert" : "status"}>
-      <EmptyMedia>
-        <Icon name={read.kind === "failed" ? "alert" : icon} />
-      </EmptyMedia>
-      <EmptyTitle>
-        {read.kind === "failed"
+    <EmptyState
+      role={read.kind === "failed" ? "alert" : "status"}
+      icon={read.kind === "failed" ? "alert" : icon}
+      heading={
+        read.kind === "failed"
           ? t("desktop.agent.read_failed")
-          : t("desktop.agent.unavailable")}
-      </EmptyTitle>
-    </Empty>
+          : t("desktop.agent.unavailable")
+      }
+    />
   );
 }

@@ -12,15 +12,9 @@ import {
 } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/cn";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { EmptyState } from "@/components/ui/empty";
 import { IconButton } from "@/components/ui/icon-button";
 import { ResizeHandle } from "@/components/ui/resize-handle";
-import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toast } from "@/components/ui/toast";
 import { CommandPalette, type DocsSearch } from "./components/CommandPalette";
@@ -494,9 +488,7 @@ export function App({ host }: { host: Host }) {
     if (state === "recovering" || state === "waiting")
       say(t("desktop.signin.recovering_services"));
     else if (state === "failed" || state === "stopped")
-      say(
-        `${t("desktop.account.services_down")}: ${failureCode(account.manager?.failure)}`,
-      );
+      say(t("desktop.signin.refused.manager"));
     else if (
       state === "ready" &&
       (previous === "recovering" || previous === "waiting")
@@ -1430,7 +1422,7 @@ export function App({ host }: { host: Host }) {
         run: () => {
           if (messages.kind === "failed")
             say(
-              `${t("desktop.rail.messages")}: ${t("desktop.messages.failed", { code: messages.code })}`,
+              `${t("desktop.rail.messages")}: ${t("desktop.messages.failed")}`,
             );
           else if (
             messages.kind === "ready" &&
@@ -2096,7 +2088,7 @@ export function App({ host }: { host: Host }) {
                   : { hint: t("desktop.messages.none_unread") }
               : messages.kind === "failed"
                 ? {
-                    hint: t("desktop.messages.failed", { code: messages.code }),
+                    hint: t("desktop.messages.failed"),
                     pin: "failed",
                   }
                 : // Not read: while the account withholds it, for the
@@ -2283,39 +2275,33 @@ export function App({ host }: { host: Host }) {
           />
         ) : environment.state === "ready" &&
           environment.value.docs.state !== "bundled" ? (
-          // The documentation is optional: without it the window says so
-          // and every other part works as usual.
-          <Empty role="status">
-            <EmptyMedia>
-              <Icon name="tui" />
-            </EmptyMedia>
-            <EmptyDescription>
-              {t(
-                environment.value.docs.state === "notBundled"
-                  ? "desktop.docs.not_bundled"
-                  : "desktop.docs.unavailable",
-              )}
-            </EmptyDescription>
-          </Empty>
+          <EmptyState
+            role="status"
+            icon="book"
+            description={t(
+              environment.value.docs.state === "notBundled"
+                ? "desktop.docs.not_bundled"
+                : "desktop.docs.unavailable",
+            )}
+          />
         ) : environment.state === "unavailable" ? (
-          <Empty role="status">
-            <EmptyMedia>
-              <Icon name="unplug" />
-            </EmptyMedia>
-            <EmptyDescription>{t("desktop.host.unavailable")}</EmptyDescription>
-          </Empty>
+          <EmptyState
+            role="status"
+            icon="unplug"
+            description={t("desktop.host.unavailable")}
+          />
         ) : environment.state === "failed" ? (
-          <Empty role="alert">
-            <EmptyMedia>
-              <Icon name="alert" />
-            </EmptyMedia>
-            <EmptyDescription>{t("desktop.host.failed")}</EmptyDescription>
-          </Empty>
+          <EmptyState
+            role="alert"
+            icon="alert"
+            description={t("desktop.host.failed")}
+          />
         ) : (
-          <Empty role="status">
-            <Spinner />
-            <EmptyDescription>{t("desktop.docs.loading")}</EmptyDescription>
-          </Empty>
+          <EmptyState
+            role="status"
+            busy
+            description={t("desktop.docs.loading")}
+          />
         )}
       </div>
     </div>
@@ -2414,12 +2400,12 @@ export function App({ host }: { host: Host }) {
   // each column back.
   const canvasShown = !firstPaneShown && !tuiVisible;
   const canvas = (
-    <Empty className="canvas bg-background">
-      <EmptyMedia>
-        <Icon name="canvas" />
-      </EmptyMedia>
-      <EmptyTitle>{t("desktop.canvas.title")}</EmptyTitle>
-      <EmptyDescription>{t("desktop.canvas.lead")}</EmptyDescription>
+    <EmptyState
+      className="canvas bg-background"
+      icon="canvas"
+      heading={t("desktop.canvas.title")}
+      description={t("desktop.canvas.lead")}
+    >
       <div className="flex flex-wrap justify-center gap-2">
         {(
           [
@@ -2442,7 +2428,7 @@ export function App({ host }: { host: Host }) {
             ),
         )}
       </div>
-    </Empty>
+    </EmptyState>
   );
   const panelMax = maximizeControl("panel", "desktop.pane.maximize_panel");
 

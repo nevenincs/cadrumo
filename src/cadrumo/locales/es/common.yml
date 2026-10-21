@@ -606,12 +606,12 @@ desktop:
       password_long: Usa una contraseña más corta.
       password_short: Usa al menos {min} caracteres.
       policy: Al menos {min} caracteres.
-      refused: No se ha creado el perfil ({code}).
+      refused: No se ha podido crear el perfil. Revisa sus datos e inténtalo de nuevo.
       submit: Crear perfil
       submitting: Creando…
       title: Crear un perfil
-      unknown: No se sabe si el perfil se ha creado ({code}). Búscalo entre los perfiles
-        antes de volver a intentarlo.
+      unknown: Puede que el perfil se haya creado. Revisa la lista de perfiles antes
+        de volver a intentarlo.
     first_run_lead: Crea un perfil para empezar.
     new_profile: Nuevo perfil
     no_profile: Ningún perfil activo
@@ -620,7 +620,7 @@ desktop:
       para una aplicación externa todavía puede dar acceso a este perfil.
     services_down: Los servicios en segundo plano no están en marcha
     sign_out: Cerrar sesión
-    sign_out_failed: No se ha podido cerrar la sesión ({code}).
+    sign_out_failed: No se ha podido cerrar la sesión. Inténtalo de nuevo.
     sign_out_hint: Cierra tu sesión en todas las ventanas de Cadrumo.
     signed_in: Sesión iniciada
     signed_out: Sin sesión iniciada
@@ -709,7 +709,7 @@ desktop:
     event:
       filing: Presentación
       message: Mensaje
-    failed: No se ha podido leer el calendario ({code}).
+    failed: No se ha podido cargar el calendario. Prueba a actualizarlo.
     loading: Cargando el calendario…
     local:
       external_baseline_imported: Importado de una presentación anterior
@@ -720,7 +720,7 @@ desktop:
     more: '{count} más'
     moved: Trasladado desde el {date}
     observed: Historial de presentaciones y mensajes
-    open_tui: Abrir en la TUI
+    open_tui: Abrir en el espacio de trabajo
     payment_cutoff: Domiciliación hasta el {date}
     refresh: Actualizar
     show_all: Mostrar todo
@@ -748,14 +748,12 @@ desktop:
     frame_title: Documentación de Cadrumo
     hide: Ocultar la documentación
     loading: Cargando la documentación…
-    not_bundled: Esta copia de Cadrumo se ha compilado sin la documentación. Todo
-      lo demás funciona con normalidad.
+    not_bundled: La documentación no está disponible en esta instalación.
     show: Mostrar la documentación
-    unavailable: No se ha podido abrir la documentación. Todo lo demás funciona con
-      normalidad.
+    unavailable: No se ha podido abrir la documentación. Inténtalo más tarde.
   google:
     checking: Comprobando el acceso a Google…
-    not_in_this_build: Esta versión de Cadrumo no puede iniciar sesión en Google.
+    not_in_this_build: El inicio de sesión con Google no está disponible ahora.
     open_drive: Abrir la carpeta del perfil en Google Drive
     palette_sign_in: Autenticarse con Google
     sign_in: Iniciar sesión
@@ -822,7 +820,7 @@ desktop:
     paste: Pegar
     select_all: Seleccionar todo
   messages:
-    failed: No se han podido leer ({code})
+    failed: No se han podido cargar las notificaciones. Inténtalo más tarde.
     never: Aún sin sincronizar con la AEAT
     none_unread: Ninguno sin leer en la última sincronización
     unread: '{count} sin leer'
@@ -844,9 +842,9 @@ desktop:
     maximize_docs: Maximizar la documentación
     maximize_focused: Maximizar el área activa
     maximize_panel: Maximizar el panel inferior
-    maximize_tui: Maximizar la TUI
+    maximize_tui: Maximizar el espacio de trabajo
     restore: Restaurar la disposición
-    tui: TUI
+    tui: Espacio de trabajo
   panel:
     hide: Ocultar el panel inferior
     label: Panel inferior
@@ -863,18 +861,18 @@ desktop:
     python: Shell de Python
     search: Buscar
     settings: Ajustes
-    tui: TUI
+    tui: Espacio de trabajo
   session:
     enter_restarts: Intro lo reinicia
     exit_line: '[El proceso terminó con el código {code}. Pulsa Intro para volver
       a empezar.]'
     exited: terminó ({code})
-    failed: 'La sesión no ha podido iniciarse: {reason}'
+    failed: No se ha podido iniciar la sesión.
   settings:
     always_dark: Siempre oscuro
     appearance: Apariencia
     dark: Oscuro
-    docs_and_tui: Documentación y TUI
+    docs_and_tui: Documentación y espacio de trabajo
     first_pane: Primer panel
     follow_cadrumo: Igual que Cadrumo
     follow_docs: Como la documentación
@@ -1017,9 +1015,8 @@ desktop:
         El llavero del sistema no está disponible.
       login_mismatch: Tu inicio de sesión es de una sesión anterior en este ordenador.
         Vuelve a iniciar sesión.
-      manager: No se han podido iniciar los servicios en segundo plano ({code}). Abre
-        Registros para ver los detalles.
-      other: No se ha podido iniciar sesión ({code}).
+      manager: Cadrumo no ha podido iniciarse. Abre los registros para ver los detalles.
+      other: No se ha podido iniciar sesión. Inténtalo de nuevo.
       profile_locked: Este perfil está bloqueado. Inicia sesión con su contraseña
         para desbloquearlo.
       receipt_absent: No has iniciado sesión.
@@ -1029,19 +1026,19 @@ desktop:
     services_recovered: Los servicios en segundo plano están listos. Comprobando el
       inicio de sesión…
     show_password: Mostrar la contraseña
-    signed_out_lead: Inicia sesión para abrir tu espacio de trabajo en la TUI.
+    signed_out_lead: Inicia sesión para abrir tu espacio de trabajo.
     start_services: Iniciar servicios en segundo plano
     starting_services: Iniciando servicios en segundo plano…
     submit: Iniciar sesión
     submitting: Iniciando sesión…
     title: Inicia sesión en Cadrumo
-    unnameable: Un perfil cuyo nombre contiene * ? [ % o $ se abre en la TUI.
-    unsupported: En este sistema, inicia sesión desde la TUI.
+    unnameable: Abre el espacio de trabajo para iniciar sesión en este perfil.
+    unsupported: En este sistema, inicia sesión desde el espacio de trabajo.
   split:
-    resize: Cambiar el tamaño de documentación y TUI
-    side_by_side: Poner documentación y TUI lado a lado
-    stack: Apilar documentación y TUI
-    swap: Intercambiar documentación y TUI
+    resize: Cambiar el tamaño de documentación y espacio de trabajo
+    side_by_side: Poner documentación y espacio de trabajo lado a lado
+    stack: Apilar documentación y espacio de trabajo
+    swap: Intercambiar documentación y espacio de trabajo
   titlebar:
     close: Cerrar ventana
     failed: No se ha podido completar la acción de la ventana.
@@ -1057,9 +1054,9 @@ desktop:
     paste_failed: No se ha podido pegar.
     paste_too_large: Es demasiado texto para pegar de una vez.
   tui:
-    hide: Ocultar la TUI
-    label: TUI de Cadrumo
-    show: Mostrar la TUI
+    hide: Ocultar el espacio de trabajo
+    label: Espacio de trabajo de Cadrumo
+    show: Mostrar el espacio de trabajo
 entries:
   portal_calendario_contribuyente:
     label: Calendario del contribuyente

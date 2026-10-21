@@ -3,6 +3,27 @@ import { test } from "node:test";
 import { ESLint } from "eslint";
 
 const lint = new ESLint();
+test("product pane states reuse the canonical composition", async () => {
+  for (const module of ["@/components/ui/empty", "./ui/empty"]) {
+    const [fragmented] = await lint.lintText(
+      `import { Empty, EmptyMedia } from "${module}";`,
+      { filePath: "src/components/Fixture.tsx" },
+    );
+    assert.ok(
+      fragmented.messages.some(
+        (item) => item.ruleId === "no-restricted-imports",
+      ),
+    );
+    const [shared] = await lint.lintText(
+      `import { EmptyState } from "${module}";`,
+      { filePath: "src/components/Fixture.tsx" },
+    );
+    assert.ok(
+      !shared.messages.some((item) => item.ruleId === "no-restricted-imports"),
+    );
+  }
+});
+
 async function violations(source, filePath = "src/components/Fixture.tsx") {
   const [result] = await lint.lintText(source, { filePath });
   assert.equal(result.fatalErrorCount, 0);

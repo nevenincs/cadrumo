@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
+import { PaneHeaderFrame } from "@/components/ui/pane-header";
 import { useStrings } from "../../shell/strings";
 import type { OpenMenu } from "../ContextMenu";
 import { AgentIconAction } from "./AgentAction";
@@ -63,15 +64,7 @@ export function AgentHeader({
   const [editing, setEditing] = useState(false);
   const renaming = editing && onRename !== undefined;
   return (
-    <div
-      className="flex min-h-control-lg shrink-0 items-center gap-1 border-b bg-chrome py-1 pr-1.5 pl-3"
-      onDoubleClick={(event) => {
-        if (!onToggleMaximize) return;
-        if ((event.target as Element).closest("button, [role='button']"))
-          return;
-        onToggleMaximize();
-      }}
-    >
+    <PaneHeaderFrame onToggleMaximize={onToggleMaximize}>
       <div className="grid min-w-0 flex-1">
         {renaming ? (
           <TitleEditor
@@ -172,6 +165,6 @@ export function AgentHeader({
           {trailing}
         </>
       )}
-    </div>
+    </PaneHeaderFrame>
   );
 }

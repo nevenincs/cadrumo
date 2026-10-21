@@ -1,6 +1,7 @@
 import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
+import { PaneHeaderFrame } from "@/components/ui/pane-header";
 
 export type PaneControl = {
   id: string;
@@ -54,13 +55,7 @@ export function PaneHeader({
   onToggleMaximize: () => void;
 }) {
   return (
-    <div
-      className="pane-head @container/head flex h-control-lg shrink-0 items-center gap-2 border-b bg-chrome pr-1.5 pl-3 text-muted-foreground select-none"
-      onDoubleClick={(event) => {
-        if (!(event.target as HTMLElement).closest("button"))
-          onToggleMaximize();
-      }}
-    >
+    <PaneHeaderFrame className="pane-head" onToggleMaximize={onToggleMaximize}>
       {status && <SessionDot phase={status.phase} />}
       {/* The note gives way first: the title is cut only once the note has
           gone. Cut, it still says all of itself to a pointer that rests on
@@ -92,6 +87,6 @@ export function PaneHeader({
           <Icon name={control.icon} />
         </IconButton>
       ))}
-    </div>
+    </PaneHeaderFrame>
   );
 }

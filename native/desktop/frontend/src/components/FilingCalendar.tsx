@@ -19,19 +19,13 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import {
   SegmentedControl,
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
-import { Spinner } from "@/components/ui/spinner";
 import {
   evaluatedDay,
   evaluatedWord,
@@ -621,41 +615,34 @@ export function FilingCalendarView({
   let body: ReactNode;
   if (state.kind === "loading") {
     body = (
-      <Empty role="status">
-        <Spinner />
-        <EmptyDescription>{t("desktop.calendar.loading")}</EmptyDescription>
-      </Empty>
+      <EmptyState
+        role="status"
+        busy
+        description={t("desktop.calendar.loading")}
+      />
     );
   } else if (state.kind === "withheld") {
     body = withheld ?? (
-      <Empty>
-        <EmptyMedia>
-          <Icon name="lock" />
-        </EmptyMedia>
-        <div className="grid gap-1">
-          <EmptyTitle>{t("desktop.account.signed_out")}</EmptyTitle>
-          <EmptyDescription>
-            {t("desktop.calendar.signed_out")}
-          </EmptyDescription>
-        </div>
-      </Empty>
+      <EmptyState
+        icon="lock"
+        heading={t("desktop.account.signed_out")}
+        description={t("desktop.calendar.signed_out")}
+      />
     );
   } else if (state.kind === "failed") {
     body = (
-      <Empty>
-        <EmptyMedia>
-          <Icon name="alert" />
-        </EmptyMedia>
-        {/* The sentence is the alert, made anew for each read that fails,
-            so a second failure is heard. The button beside it stays as it
-            is, and keeps the keyboard. */}
-        <EmptyDescription key={attempt} role="alert">
-          {t("desktop.calendar.failed", { code: state.code })}
-        </EmptyDescription>
+      <EmptyState
+        icon="alert"
+        description={
+          <span key={attempt} role="alert">
+            {t("desktop.calendar.failed")}
+          </span>
+        }
+      >
         <Button variant="outline" pending={refreshing} onClick={onRefresh}>
           {t("desktop.calendar.refresh")}
         </Button>
-      </Empty>
+      </EmptyState>
     );
   } else {
     const { warnings, coverage, generated_at } = state.calendar;
@@ -923,12 +910,11 @@ export function FilingCalendarView({
             </Alert>
           )}
           {nothing ? (
-            <Empty role="status">
-              <EmptyMedia>
-                <Icon name="calendar" />
-              </EmptyMedia>
-              <EmptyDescription>{t("desktop.calendar.empty")}</EmptyDescription>
-            </Empty>
+            <EmptyState
+              role="status"
+              icon="calendar"
+              description={t("desktop.calendar.empty")}
+            />
           ) : wide || view === "months" ? (
             <CalendarMonths
               calendar={state.calendar}

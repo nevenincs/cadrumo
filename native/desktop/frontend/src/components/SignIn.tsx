@@ -10,12 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { EmptyState } from "@/components/ui/empty";
 import {
   Field,
   FieldDescription,
@@ -27,7 +22,6 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Separator } from "@/components/ui/separator";
-import { Spinner } from "@/components/ui/spinner";
 import { nameable } from "../shell/profiles";
 import type { SignInController } from "../shell/signIn";
 import { useStrings } from "../shell/strings";
@@ -487,10 +481,11 @@ export function SignedOut({
     );
   if (!gate)
     return (
-      <Empty role="status">
-        <Spinner />
-        <EmptyDescription>{t("desktop.signin.checking")}</EmptyDescription>
-      </Empty>
+      <EmptyState
+        role="status"
+        busy
+        description={t("desktop.signin.checking")}
+      />
     );
   const password = account.canSignIn;
   // With no profile on this computer, and a host that can make one, the way
@@ -507,22 +502,19 @@ export function SignedOut({
     code !== "CREDENTIAL_REJECTED" &&
     !(code === "THROTTLED" && account.retrySeconds <= 0);
   return (
-    <Empty>
-      <EmptyMedia>
-        <Icon name={gate.icon} />
-      </EmptyMedia>
-      <div className="grid gap-1">
-        <EmptyTitle>{t(gate.title)}</EmptyTitle>
-        {gate.lead && !refused && (
-          <EmptyDescription>
-            {makes
-              ? t("desktop.account.first_run_lead")
-              : password && lead
-                ? lead
-                : t(gate.lead)}
-          </EmptyDescription>
-        )}
-      </div>
+    <EmptyState
+      icon={gate.icon}
+      heading={t(gate.title)}
+      description={
+        gate.lead && !refused
+          ? makes
+            ? t("desktop.account.first_run_lead")
+            : password && lead
+              ? lead
+              : t(gate.lead)
+          : undefined
+      }
+    >
       {refused && (
         <div className="w-full max-w-dialog text-left">
           <AccountRefusal
@@ -543,6 +535,6 @@ export function SignedOut({
           </Button>
         )}
       </div>
-    </Empty>
+    </EmptyState>
   );
 }

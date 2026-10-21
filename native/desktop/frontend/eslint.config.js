@@ -19,6 +19,11 @@ const composition = {
   message:
     "Components and shell modules do not import application composition.",
 };
+const paneStates = {
+  group: ["**/ui/empty"],
+  importNames: ["Empty", "EmptyMedia", "EmptyTitle", "EmptyDescription"],
+  message: "Use EmptyState so pane status layout stays canonical.",
+};
 const aboveShared = {
   group: [
     "@/shell/**",
@@ -95,7 +100,7 @@ export default tseslint.config(
     // reaches the host API.
     files: ["src/**/*.{ts,tsx}"],
     ignores: [...tooling, ...primitives, ...adapter],
-    rules: restricted(development, host, composition),
+    rules: restricted(development, host, composition, paneStates),
   },
   {
     files: adapter,

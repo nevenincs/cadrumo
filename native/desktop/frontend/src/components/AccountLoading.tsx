@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/empty";
 import { useStrings } from "../shell/strings";
 
 /** A non-interactive placeholder; readiness still comes from the desktop host. */
@@ -12,23 +13,18 @@ export function AccountLoading({
 }) {
   const t = useStrings();
   return (
-    <div
+    <EmptyState
       data-slot="account-loading"
       aria-busy="true"
-      className="flex flex-1 flex-col items-center justify-center gap-5 p-6"
+      role={quiet ? undefined : "status"}
+      description={t(
+        recovering
+          ? "desktop.signin.recovering_services"
+          : starting
+            ? "desktop.signin.starting_services"
+            : "desktop.signin.checking",
+      )}
     >
-      <p
-        role={quiet ? undefined : "status"}
-        className="text-sm text-muted-foreground"
-      >
-        {t(
-          recovering
-            ? "desktop.signin.recovering_services"
-            : starting
-              ? "desktop.signin.starting_services"
-              : "desktop.signin.checking",
-        )}
-      </p>
       <div
         aria-hidden="true"
         className="grid w-full max-w-80 gap-4 motion-safe:animate-pulse"
@@ -39,6 +35,6 @@ export function AccountLoading({
         <div className="h-10 rounded bg-muted" />
         <div className="mt-2 h-10 rounded bg-muted" />
       </div>
-    </div>
+    </EmptyState>
   );
 }

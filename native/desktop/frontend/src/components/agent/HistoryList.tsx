@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
+import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { useStrings } from "../../shell/strings";
@@ -213,19 +213,19 @@ export function HistoryList({
       </div>
       <div ref={list} className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
         {nothing ? (
-          <Empty>
-            <EmptyTitle>
-              {viewingArchived
+          <EmptyState
+            heading={
+              viewingArchived
                 ? t("desktop.agent.archived_empty")
-                : t("desktop.agent.history_empty")}
-            </EmptyTitle>
-          </Empty>
+                : t("desktop.agent.history_empty")
+            }
+          />
         ) : shown.length === 0 ? (
-          <Empty>
-            <EmptyDescription>
-              {t("desktop.agent.history_no_match", { query: query.trim() })}
-            </EmptyDescription>
-          </Empty>
+          <EmptyState
+            description={t("desktop.agent.history_no_match", {
+              query: query.trim(),
+            })}
+          />
         ) : (
           shown.map((group) => (
             <section key={group.heading} className="grid gap-0.5 pt-2">

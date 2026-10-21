@@ -12,8 +12,7 @@ import { useStrings } from "../shell/strings";
 import { failureCode } from "../errors";
 import { terminalFont } from "../shell/terminalFont";
 import { terminalRenderer } from "../shell/terminalRenderer";
-import { Empty, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
-import { Icon } from "@/components/ui/icon";
+import { EmptyState } from "@/components/ui/empty";
 
 export type TerminalStatus =
   | { phase: "starting" }
@@ -349,14 +348,13 @@ export function TerminalPane({
         style={unavailable ? { visibility: "hidden" } : undefined}
       />
       {unavailable && (
-        <Empty role="status" className="absolute inset-0">
-          <EmptyMedia>
-            <Icon name="unplug" />
-          </EmptyMedia>
-          <EmptyDescription className="terminal-note">
-            {t("desktop.host.unavailable")}
-          </EmptyDescription>
-        </Empty>
+        <EmptyState
+          role="status"
+          className="absolute inset-0"
+          icon="unplug"
+          descriptionClassName="terminal-note"
+          description={t("desktop.host.unavailable")}
+        />
       )}
     </div>
   );

@@ -222,7 +222,7 @@ export function AccountMenu({
         )}
         {failure && (
           <Alert tone="danger" role="alert" icon={<Icon name="alert" />}>
-            {t("desktop.account.sign_out_failed", { code: failure.code })}
+            {t("desktop.account.sign_out_failed")}
           </Alert>
         )}
       </DropdownMenuContent>

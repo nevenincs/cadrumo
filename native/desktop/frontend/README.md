@@ -229,6 +229,12 @@ camelCase `.ts` files, and host subscriptions live in `src/shell/use*.ts`.
 Import the defining module directly; do not add barrel exports or forwarding
 components.
 
+Pane placeholders compose `EmptyState` from `ui/empty.tsx`; product components
+do not reconstruct its icon, heading and description layout. Workspace headers
+compose `PaneHeaderFrame` from `ui/pane-header.tsx`, including its shared
+maximize gesture and exclusion of interactive controls. Keep implementation names
+and transport codes out of ordinary prompts; diagnostic views own technical detail.
+
 `src/shared/` holds dependency-free helpers reused across features, such as
 ISO calendar-date arithmetic and cached locale formats. These modules import
 no components, shell policy, IPC or host adapter. Product-specific shared rules

@@ -9,7 +9,7 @@ import {
 } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/cn";
-import { Empty, EmptyDescription } from "@/components/ui/empty";
+import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { useStrings, type Translate } from "../../shell/strings";
@@ -466,11 +466,9 @@ export function Transcript({
     >
       <div ref={content} className="flex flex-1 flex-col">
         {items.length === 0 ? (
-          <Empty>
-            <EmptyDescription>
-              {emptyHint ?? t("desktop.agent.transcript_empty")}
-            </EmptyDescription>
-          </Empty>
+          <EmptyState
+            description={emptyHint ?? t("desktop.agent.transcript_empty")}
+          />
         ) : (
           <ol className="mt-auto grid gap-4 px-3 py-4">
             {items.map((item) =>

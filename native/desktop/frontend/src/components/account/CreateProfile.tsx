@@ -195,7 +195,7 @@ export function CreateProfile({
 
       {refused && !nameTaken(refused) && (
         <Alert tone="danger" role="alert" icon={<Icon name="alert" />}>
-          {t("desktop.account.create.refused", { code: refused.code })}
+          {t("desktop.account.create.refused")}
         </Alert>
       )}
       {/* No answer came: it is not said that there is no such profile. */}

@@ -587,12 +587,13 @@ desktop:
       password_long: Használj rövidebb jelszót.
       password_short: Használj legalább {min} karaktert.
       policy: Legalább {min} karakter.
-      refused: A profil nem jött létre ({code}).
+      refused: A profilt nem sikerült létrehozni. Ellenőrizd az adatait, és próbáld
+        újra.
       submit: Profil létrehozása
       submitting: Létrehozás…
       title: Profil létrehozása
-      unknown: Nem tudni, hogy a profil létrejött-e ({code}). Mielőtt újra próbálod,
-        keresd meg a profilok között.
+      unknown: Lehet, hogy a profil létrejött. Ellenőrizd a profillistát, mielőtt
+        újra próbálkozol.
     first_run_lead: A kezdéshez hozz létre egy profilt.
     new_profile: Új profil
     no_profile: Nincs aktív profil
@@ -601,7 +602,7 @@ desktop:
       kulcsok közül legalább egy még hozzáférést adhat ehhez a profilhoz.
     services_down: A háttérszolgáltatások nem futnak
     sign_out: Kijelentkezés
-    sign_out_failed: A kijelentkezés nem sikerült ({code}).
+    sign_out_failed: Nem sikerült kijelentkezni. Próbáld újra.
     sign_out_hint: Minden Cadrumo-ablakból kijelentkeztet.
     signed_in: Bejelentkezve
     signed_out: Nincs bejelentkezve
@@ -689,7 +690,7 @@ desktop:
     event:
       filing: Bevallás
       message: Üzenet
-    failed: A naptárat nem sikerült beolvasni ({code}).
+    failed: A naptárt nem sikerült betölteni. Próbáld frissíteni.
     loading: A naptár betöltése…
     local:
       external_baseline_imported: Korábbi bevallásból importálva
@@ -700,7 +701,7 @@ desktop:
     more: még {count}
     moved: 'Áthelyezve erről: {date}'
     observed: Bevallási előzmények és üzenetek
-    open_tui: Megnyitás a TUI-ban
+    open_tui: Megnyitás a munkaterületen
     payment_cutoff: 'Beszedési megbízás eddig: {date}'
     refresh: Frissítés
     show_all: Összes megjelenítése
@@ -728,14 +729,12 @@ desktop:
     frame_title: Cadrumo-dokumentáció
     hide: Dokumentáció elrejtése
     loading: A dokumentáció betöltése…
-    not_bundled: A Cadrumo ezen példánya dokumentáció nélkül készült. Minden más a
-      megszokott módon működik.
+    not_bundled: A dokumentáció ebben a telepítésben nem érhető el.
     show: Dokumentáció megjelenítése
-    unavailable: A dokumentációt nem sikerült megnyitni. Minden más a megszokott módon
-      működik.
+    unavailable: A dokumentációt nem sikerült megnyitni. Próbáld újra később.
   google:
     checking: A Google-bejelentkezés ellenőrzése…
-    not_in_this_build: A Cadrumo ezen verziója nem tud bejelentkezni a Google-be.
+    not_in_this_build: A Google-bejelentkezés most nem érhető el.
     open_drive: A profil mappájának megnyitása a Google Drive-ban
     palette_sign_in: Hitelesítés a Google-lel
     sign_in: Bejelentkezés
@@ -802,7 +801,7 @@ desktop:
     paste: Beillesztés
     select_all: Az összes kijelölése
   messages:
-    failed: Nem sikerült beolvasni ({code})
+    failed: Az értesítéseket nem sikerült betölteni. Próbáld újra később.
     never: Még nincs szinkronizálva az AEAT-tal
     none_unread: A legutóbbi szinkronizáláskor nem volt olvasatlan
     unread: '{count} olvasatlan'
@@ -824,9 +823,9 @@ desktop:
     maximize_docs: Dokumentáció teljes méretben
     maximize_focused: Aktív terület teljes méretben
     maximize_panel: Alsó panel teljes méretben
-    maximize_tui: TUI teljes méretben
+    maximize_tui: Munkaterület teljes méretre
     restore: Elrendezés visszaállítása
-    tui: TUI
+    tui: Munkaterület
   panel:
     hide: Alsó panel elrejtése
     label: Alsó panel
@@ -843,17 +842,17 @@ desktop:
     python: Python-shell
     search: Keresés
     settings: Beállítások
-    tui: TUI
+    tui: Munkaterület
   session:
     enter_restarts: Enter újraindítja
     exit_line: '[A folyamat {code} kóddal kilépett. Nyomd meg az Entert az újraindításhoz.]'
     exited: kilépett ({code})
-    failed: 'A munkamenet nem tudott elindulni: {reason}'
+    failed: A munkamenet nem tudott elindulni.
   settings:
     always_dark: Mindig sötét
     appearance: Megjelenés
     dark: Sötét
-    docs_and_tui: Dokumentáció és TUI
+    docs_and_tui: Dokumentáció és munkaterület
     first_pane: Első panel
     follow_cadrumo: Ugyanaz, mint a Cadrumo
     follow_docs: A dokumentáció szerint
@@ -992,9 +991,8 @@ desktop:
         A rendszer kulcstartója nem érhető el.
       login_mismatch: A bejelentkezésed egy korábbi munkamenetből származik ezen a
         számítógépen. Jelentkezz be újra.
-      manager: A háttérszolgáltatások nem tudtak elindulni ({code}). A részletekért
-        nyisd meg a Naplókat.
-      other: A bejelentkezés nem sikerült ({code}).
+      manager: A Cadrumo nem tudott elindulni. A részletekért nyisd meg a naplókat.
+      other: Nem sikerült bejelentkezni. Próbáld újra.
       profile_locked: Ez a profil zárolva van. A feloldásához jelentkezz be a jelszavával.
       receipt_absent: Nem vagy bejelentkezve.
       receipt_expired: A bejelentkezésed lejárt. Jelentkezz be újra.
@@ -1002,20 +1000,19 @@ desktop:
       throttled: Túl sok próbálkozás. {seconds} mp múlva próbálhatod újra.
     services_recovered: A háttérszolgáltatások készen állnak. Bejelentkezés ellenőrzése…
     show_password: Jelszó megjelenítése
-    signed_out_lead: Jelentkezz be, hogy megnyisd a munkaterületedet a TUI-ban.
+    signed_out_lead: Jelentkezz be a munkaterületed megnyitásához.
     start_services: Háttérszolgáltatások indítása
     starting_services: Háttérszolgáltatások indítása…
     submit: Bejelentkezés
     submitting: Bejelentkezés…
     title: Jelentkezz be a Cadrumóba
-    unnameable: Az olyan profil, amelynek nevében * ? [ % vagy $ szerepel, a TUI-ban
-      nyitható meg.
-    unsupported: Ezen a rendszeren a TUI-ban jelentkezz be.
+    unnameable: Nyisd meg a munkaterületet, hogy bejelentkezz ebbe a profilba.
+    unsupported: Ezen a rendszeren a munkaterületen jelentkezhetsz be.
   split:
-    resize: Dokumentáció és TUI átméretezése
-    side_by_side: Dokumentáció és TUI egymás mellé
-    stack: Dokumentáció és TUI egymás alá
-    swap: Dokumentáció és TUI felcserélése
+    resize: Dokumentáció és munkaterület átméretezése
+    side_by_side: Dokumentáció és munkaterület egymás mellé
+    stack: Dokumentáció és munkaterület egymás alá
+    swap: Dokumentáció és munkaterület felcserélése
   titlebar:
     close: Ablak bezárása
     failed: Az ablakműveletet nem sikerült végrehajtani.
@@ -1031,9 +1028,9 @@ desktop:
     paste_failed: Nem sikerült a beillesztés.
     paste_too_large: Ez túl sok szöveg egyszerre a beillesztéshez.
   tui:
-    hide: TUI elrejtése
-    label: Cadrumo TUI
-    show: TUI megjelenítése
+    hide: Munkaterület elrejtése
+    label: Cadrumo-munkaterület
+    show: Munkaterület megjelenítése
 entries:
   portal_calendario_contribuyente:
     label: Adófizetői naptár

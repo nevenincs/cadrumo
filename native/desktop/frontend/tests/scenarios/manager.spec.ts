@@ -98,7 +98,10 @@ for (const [scenario, code] of [
     await open(page, scenario);
     await start(page).click();
     await page.clock.runFor(10);
-    await expect(page.locator(".sign-in")).toContainText(code);
+    await expect(page.locator(".sign-in")).toContainText(
+      label("desktop.signin.refused.manager"),
+    );
+    await expect(page.locator(".sign-in")).not.toContainText(code);
     await expect(start(page)).toBeVisible();
     await expect(start(page)).not.toHaveAttribute("aria-busy", "true");
     expect(await calls(page, "startManager")).toBe(1);
@@ -175,7 +178,10 @@ test("repeated retry clicks share the pending manager dispatch", async ({
   await open(page, "manager-retry-delayed");
   await start(page).click();
   await page.clock.runFor(4_500);
-  await expect(page.locator(".sign-in")).toContainText("spawn_failed");
+  await expect(page.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.manager"),
+  );
+  await expect(page.locator(".sign-in")).not.toContainText("spawn_failed");
   expect(await calls(page, "startManager")).toBe(1);
 
   await start(page).click();
@@ -207,7 +213,10 @@ test("a rejected readiness read preserves the previously unavailable runtime", a
   await expect(page.locator(".sign-in").getByRole("heading")).toHaveText(
     label("desktop.account.services_down"),
   );
-  await expect(page.locator(".sign-in")).toContainText("timed_out");
+  await expect(page.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.other"),
+  );
+  await expect(page.locator(".sign-in")).not.toContainText("timed_out");
   await expect(start(page)).toBeVisible();
   await expect(page.locator('[data-slot="account-loading"]')).toHaveCount(0);
 });
@@ -219,7 +228,10 @@ test("an initial unreadable status keeps the existing unknown-state form", async
   await expect(
     page.getByLabel(label("desktop.signin.password"), { exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".sign-in")).toContainText("timed_out");
+  await expect(page.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.other"),
+  );
+  await expect(page.locator(".sign-in")).not.toContainText("timed_out");
   expect(await calls(page, "startManager")).toBe(0);
   expect(await calls(page, "signIn")).toBe(0);
 });
@@ -283,7 +295,7 @@ test("supervisor loss gates signed-in views without focus and ready waits for fr
   expect(await calls(page, "signIn")).toBe(0);
 });
 
-test("supervisor observation failure gates private access and exposes only a public code", async ({
+test("supervisor observation failure gates private access without exposing internal codes", async ({
   page,
 }) => {
   await observedClock(page);
@@ -292,7 +304,10 @@ test("supervisor observation failure gates private access and exposes only a pub
   );
   await page.clock.runFor(1_100);
   await expect(password(page)).toHaveCount(0);
-  await expect(page.locator(".sign-in")).toContainText("read_failed");
+  await expect(page.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.manager"),
+  );
+  await expect(page.locator(".sign-in")).not.toContainText("read_failed");
   await expect(page.locator("body")).not.toContainText(
     "private supervisor path",
   );

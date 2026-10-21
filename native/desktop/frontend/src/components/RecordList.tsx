@@ -14,9 +14,8 @@ import {
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { IconButton } from "@/components/ui/icon-button";
-import { Empty, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
+import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
-import { Spinner } from "@/components/ui/spinner";
 import type { LogRecord, LogSourceStates } from "../ipc/contract";
 import { useMetric } from "../shell/metrics";
 import { fromPointer } from "../shell/pointer";
@@ -876,10 +875,12 @@ export const RecordList = memo(function RecordList({
         }}
       >
         {loading && (
-          <Empty role="status" className="min-h-full font-sans">
-            <Spinner />
-            <EmptyDescription>{t("desktop.logs.loading")}</EmptyDescription>
-          </Empty>
+          <EmptyState
+            role="status"
+            className="min-h-full font-sans"
+            busy
+            description={t("desktop.logs.loading")}
+          />
         )}
         {dropped > 0 && drawn.length > 0 && drawn[0] === visible[0] && (
           <p className="px-3 py-2 font-sans text-faint">
@@ -887,15 +888,14 @@ export const RecordList = memo(function RecordList({
           </p>
         )}
         {empty && (
-          <Empty role="status" className="min-h-full font-sans">
-            <EmptyMedia>
-              <Icon name="logs" />
-            </EmptyMedia>
-            <EmptyDescription>
-              {all.length
-                ? t("desktop.logs.no_match")
-                : t("desktop.logs.empty")}
-            </EmptyDescription>
+          <EmptyState
+            role="status"
+            className="min-h-full font-sans"
+            icon="logs"
+            description={
+              all.length ? t("desktop.logs.no_match") : t("desktop.logs.empty")
+            }
+          >
             {all.length > 0 && (
               <IconButton
                 variant="outline"
@@ -909,7 +909,7 @@ export const RecordList = memo(function RecordList({
                 <Icon name="reset" />
               </IconButton>
             )}
-          </Empty>
+          </EmptyState>
         )}
         {blocks.map((records) => {
           const seqs = new Set(records.map((record) => record.seq));

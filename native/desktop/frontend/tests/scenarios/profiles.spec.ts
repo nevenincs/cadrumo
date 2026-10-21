@@ -710,7 +710,7 @@ test("a profile that is there although its creation got no answer is found in th
   expect(await calls(target, "createProfile")()).toBe(1);
 });
 
-test("a refusal the shell does not name is shown with its code", async ({
+test("a refusal the shell does not name uses product wording without its code", async ({
   page: target,
 }) => {
   await open(target, "create-refused-other");
@@ -723,6 +723,7 @@ test("a refusal the shell does not name is shown with its code", async ({
       code: "REFUSED_PROFILE_REGISTRATION",
     }),
   );
+  await expect(form(target)).not.toContainText("REFUSED_PROFILE_REGISTRATION");
   await expect(form(target).locator(".create-unknown")).toHaveCount(0);
   expect(await calls(target, "createProfile")()).toBe(1);
 });

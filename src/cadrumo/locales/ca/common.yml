@@ -599,12 +599,12 @@ desktop:
       password_long: Fes servir una contrasenya més curta.
       password_short: Fes servir almenys {min} caràcters.
       policy: Almenys {min} caràcters.
-      refused: No s'ha creat el perfil ({code}).
+      refused: No s'ha pogut crear el perfil. Revisa'n les dades i torna-ho a provar.
       submit: Crea el perfil
       submitting: S'està creant…
       title: Crea un perfil
-      unknown: No se sap si el perfil s'ha creat ({code}). Busca'l entre els perfils
-        abans de tornar-ho a provar.
+      unknown: Pot ser que el perfil s'hagi creat. Revisa la llista de perfils abans
+        de tornar-ho a provar.
     first_run_lead: Crea un perfil per començar.
     new_profile: Perfil nou
     no_profile: Cap perfil actiu
@@ -613,7 +613,7 @@ desktop:
       per a una aplicació externa encara pot donar accés a aquest perfil.
     services_down: Els serveis en segon pla no estan en marxa
     sign_out: Tanca la sessió
-    sign_out_failed: No s'ha pogut tancar la sessió ({code}).
+    sign_out_failed: No s'ha pogut tancar la sessió. Torna-ho a provar.
     sign_out_hint: Tanca la teva sessió a totes les finestres de Cadrumo.
     signed_in: Sessió iniciada
     signed_out: Sense sessió iniciada
@@ -702,7 +702,7 @@ desktop:
     event:
       filing: Presentació
       message: Missatge
-    failed: No s'ha pogut llegir el calendari ({code}).
+    failed: No s'ha pogut carregar el calendari. Prova d'actualitzar-lo.
     loading: S'està carregant el calendari…
     local:
       external_baseline_imported: Importat d'una presentació anterior
@@ -713,7 +713,7 @@ desktop:
     more: '{count} més'
     moved: Traslladat des del {date}
     observed: Historial de presentacions i missatges
-    open_tui: Obre a la TUI
+    open_tui: Obre a l'espai de treball
     payment_cutoff: Domiciliació fins al {date}
     refresh: Actualitza
     show_all: Mostra-ho tot
@@ -741,13 +741,12 @@ desktop:
     frame_title: Documentació de Cadrumo
     hide: Amaga la documentació
     loading: S'està carregant la documentació…
-    not_bundled: Aquesta còpia de Cadrumo s'ha compilat sense la documentació. Tota
-      la resta funciona amb normalitat.
+    not_bundled: La documentació no està disponible en aquesta instal·lació.
     show: Mostra la documentació
-    unavailable: No s'ha pogut obrir la documentació. Tota la resta funciona amb normalitat.
+    unavailable: No s'ha pogut obrir la documentació. Torna-ho a provar més tard.
   google:
     checking: Comprovant l'accés a Google…
-    not_in_this_build: Aquesta versió de Cadrumo no pot iniciar la sessió a Google.
+    not_in_this_build: L'inici de sessió amb Google no està disponible ara.
     open_drive: Obre la carpeta del perfil a Google Drive
     palette_sign_in: Autentica't amb Google
     sign_in: Inicia la sessió
@@ -814,7 +813,7 @@ desktop:
     paste: Enganxa
     select_all: Selecciona-ho tot
   messages:
-    failed: No s'han pogut llegir ({code})
+    failed: No s'han pogut carregar les notificacions. Torna-ho a provar més tard.
     never: Encara sense sincronitzar amb l'AEAT
     none_unread: Cap sense llegir a l'última sincronització
     unread: '{count} sense llegir'
@@ -836,9 +835,9 @@ desktop:
     maximize_docs: Maximitza la documentació
     maximize_focused: Maximitza l'àrea activa
     maximize_panel: Maximitza el panell inferior
-    maximize_tui: Maximitza la TUI
+    maximize_tui: Maximitza l'espai de treball
     restore: Restaura la disposició
-    tui: TUI
+    tui: Espai de treball
   panel:
     hide: Amaga el panell inferior
     label: Panell inferior
@@ -855,18 +854,18 @@ desktop:
     python: Shell de Python
     search: Cerca
     settings: Configuració
-    tui: TUI
+    tui: Espai de treball
   session:
     enter_restarts: Retorn el reinicia
     exit_line: '[El procés ha acabat amb el codi {code}. Prem Retorn per tornar a
       començar.]'
     exited: ha acabat ({code})
-    failed: 'La sessió no s''ha pogut iniciar: {reason}'
+    failed: No s'ha pogut iniciar la sessió.
   settings:
     always_dark: Sempre fosc
     appearance: Aparença
     dark: Fosc
-    docs_and_tui: Documentació i TUI
+    docs_and_tui: Documentació i espai de treball
     first_pane: Primer panell
     follow_cadrumo: Igual que Cadrumo
     follow_docs: Com la documentació
@@ -1008,9 +1007,8 @@ desktop:
         El clauer del sistema no està disponible.
       login_mismatch: El teu inici de sessió és d'una sessió anterior en aquest ordinador.
         Torna a iniciar la sessió.
-      manager: No s'han pogut iniciar els serveis en segon pla ({code}). Obre Registres
-        per veure els detalls.
-      other: No s'ha pogut iniciar la sessió ({code}).
+      manager: Cadrumo no s'ha pogut iniciar. Obre els registres per veure'n els detalls.
+      other: No s'ha pogut iniciar la sessió. Torna-ho a provar.
       profile_locked: Aquest perfil està bloquejat. Inicia la sessió amb la seva contrasenya
         per desbloquejar-lo.
       receipt_absent: No has iniciat la sessió.
@@ -1020,19 +1018,19 @@ desktop:
     services_recovered: Els serveis en segon pla estan preparats. S’està comprovant
       l’inici de sessió…
     show_password: Mostra la contrasenya
-    signed_out_lead: Inicia la sessió per obrir el teu espai de treball a la TUI.
+    signed_out_lead: Inicia la sessió per obrir el teu espai de treball.
     start_services: Inicia els serveis en segon pla
     starting_services: S’estan iniciant els serveis en segon pla…
     submit: Inicia la sessió
     submitting: S'està iniciant la sessió…
     title: Inicia la sessió a Cadrumo
-    unnameable: Un perfil amb * ? [ % o $ al nom s'obre a la TUI.
-    unsupported: En aquest sistema, inicia la sessió des de la TUI.
+    unnameable: Obre l'espai de treball per iniciar la sessió en aquest perfil.
+    unsupported: En aquest sistema, inicia la sessió des de l'espai de treball.
   split:
-    resize: Canvia la mida de la documentació i la TUI
-    side_by_side: Posa la documentació i la TUI una al costat de l'altra
-    stack: Apila la documentació i la TUI
-    swap: Intercanvia la documentació i la TUI
+    resize: Canvia la mida de la documentació i l'espai de treball
+    side_by_side: Posa la documentació i l'espai de treball de costat
+    stack: Apila la documentació i l'espai de treball
+    swap: Intercanvia la documentació i l'espai de treball
   titlebar:
     close: Tanca la finestra
     failed: No s’ha pogut completar l’acció de la finestra.
@@ -1048,9 +1046,9 @@ desktop:
     paste_failed: No s'ha pogut enganxar.
     paste_too_large: És massa text per enganxar d'una vegada.
   tui:
-    hide: Amaga la TUI
-    label: TUI de Cadrumo
-    show: Mostra la TUI
+    hide: Amaga l'espai de treball
+    label: Espai de treball de Cadrumo
+    show: Mostra l'espai de treball
 entries:
   portal_calendario_contribuyente:
     label: Calendari del contribuent

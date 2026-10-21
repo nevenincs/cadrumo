@@ -13,8 +13,13 @@ const BUSY = {
   icon: "clock",
 } as const;
 
-// How each typed refusal is said: its text, its tone and its icon. A code the
-// shell does not name is still shown, with the code, never swallowed.
+const MANAGER = {
+  key: "desktop.signin.refused.manager",
+  tone: "danger",
+  icon: "alert",
+} as const;
+
+// Typed refusals select product wording; unknown codes use a general refusal.
 const REFUSALS: Record<string, { key: string; tone: Tone; icon: IconName }> = {
   INSTALLATION_UNAVAILABLE: {
     key: "desktop.signin.refused.installation_unavailable",
@@ -98,6 +103,9 @@ const REFUSALS: Record<string, { key: string; tone: Tone; icon: IconName }> = {
   KDF_RESOURCE_LIMIT: BUSY,
   KDF_SUPERVISION_UNAVAILABLE: BUSY,
   SIGN_IN_TIMED_OUT: BUSY,
+  SPAWN_FAILED: MANAGER,
+  MANAGER_UNAVAILABLE: MANAGER,
+  MANAGER_UNSUPPORTED: MANAGER,
 };
 
 const OTHER = {
@@ -127,7 +135,7 @@ export function AccountRefusal({
   const code = refusal.code.toUpperCase();
   const entry =
     refusal.operation === "manager"
-      ? { ...OTHER, key: "desktop.signin.refused.manager" }
+      ? MANAGER
       : (code && REFUSALS[code]) || OTHER;
   const total = refusal.retryAfterSeconds ?? 0;
   if (code === "THROTTLED") {
@@ -153,14 +161,7 @@ export function AccountRefusal({
       role={quiet ? "note" : entry.tone === "danger" ? "alert" : "status"}
       icon={<Icon name={entry.icon} />}
     >
-      {t(entry.key, { code: refusal.code })}
-      {refusal.operation && (
-        <code className="text-sm text-muted-foreground">
-          {[refusal.operation, refusal.ioKind, refusal.osCode]
-            .filter((value) => value !== undefined)
-            .join(" · ")}
-        </code>
-      )}
+      {t(entry.key)}
     </Alert>
   );
 }

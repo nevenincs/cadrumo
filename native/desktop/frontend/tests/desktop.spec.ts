@@ -420,6 +420,16 @@ test("a package without documentation says so and keeps every terminal working",
   await expect(target.locator(".pane-docs")).toContainText(
     label("desktop.docs.not_bundled"),
   );
+  await expect(target.locator(".pane-docs")).not.toContainText(
+    /built|compiled|Everything else works/,
+  );
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".pane-tui")).toContainText(
+    "Sign in to open your workspace.",
+  );
+  await expect(target.locator(".pane-tui")).not.toContainText(
+    /\blocked\b|\bTUI\b/,
+  );
   await expect(target.locator(".docs-frame")).toHaveCount(0);
   await target.keyboard.press("Escape");
   for (const kind of ["console", "python"] as const) {
@@ -541,7 +551,10 @@ test("a failed status read releases its slot for the next focus refresh", async 
     );
     window.dispatchEvent(new Event("focus"));
   });
-  await expect(target.locator(".sign-in")).toContainText("queue_full");
+  await expect(target.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.other"),
+  );
+  await expect(target.locator(".sign-in")).not.toContainText("queue_full");
   await target.evaluate(() => {
     Object.assign(
       (window as unknown as { __signInTest: object }).__signInTest,
@@ -550,6 +563,9 @@ test("a failed status read releases its slot for the next focus refresh", async 
     window.dispatchEvent(new Event("focus"));
   });
   await expect(target.locator(".sign-in")).not.toContainText("queue_full");
+  await expect(target.locator(".sign-in")).not.toContainText(
+    label("desktop.signin.refused.other"),
+  );
   expect((await signInState(target)).statusReads).toBe(3);
   expect((await signInState(target)).submissions).toBe(0);
 });
@@ -588,6 +604,9 @@ test("explicit sign-in dispatches beside a pending status read and submits once"
     target.getByText(label("desktop.signin.refused.invalid")),
   ).toBeVisible();
   expect((await signInState(target)).submissions).toBe(1);
+  await expect(target.locator(".sign-in")).not.toContainText(
+    label("desktop.signin.refused.other"),
+  );
   expect((await signInState(target)).statusReads).toBe(3);
 });
 

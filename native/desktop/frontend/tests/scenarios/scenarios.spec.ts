@@ -312,8 +312,11 @@ test("error: refusals are shown, not swallowed", async ({ page: target }) => {
   await expect(target.locator(".pane-docs")).toContainText(
     label("desktop.host.failed"),
   );
-  // The failed status read is said in the sign-in dialog, with its code.
-  await expect(target.locator(".sign-in")).toContainText("timed_out");
+  // The failure stays visible without exposing the transport's code.
+  await expect(target.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.other"),
+  );
+  await expect(target.locator(".sign-in")).not.toContainText("timed_out");
   await target.keyboard.press("Escape");
   await expect(target.locator(".sign-in")).toHaveCount(0);
   await openLogs(target);
@@ -372,7 +375,8 @@ test("sign-out refused: the sign-in stays and the failure shows", async ({
     .click();
   await expect.poll(calls(target, "signOut")).toBe(1);
   const account = target.locator(".account-menu");
-  await expect(account).toContainText("timed_out");
+  await expect(account).toContainText(label("desktop.account.sign_out_failed"));
+  await expect(account).not.toContainText("timed_out");
   await expect(
     account.getByText(label("desktop.account.signed_in"), { exact: true }),
   ).toBeVisible();
@@ -4044,7 +4048,10 @@ test("views-refused: a read that fails is said, never drawn as an empty calendar
   const page = target.getByRole("region", {
     name: label("desktop.calendar.title"),
   });
-  await expect(page.getByRole("alert")).toContainText("timed_out");
+  await expect(page.getByRole("alert")).toContainText(
+    label("desktop.calendar.failed"),
+  );
+  await expect(page.getByRole("alert")).not.toContainText("timed_out");
   await expect(page).not.toContainText(label("desktop.calendar.empty"));
   await expect.poll(calendarReads(target)).toBe(1);
   const again = page.getByRole("button", {
@@ -4064,7 +4071,10 @@ test("views-refused: a read that fails is said, never drawn as an empty calendar
   await again.focus();
   await target.keyboard.press("Enter");
   await expect.poll(calendarReads(target)).toBe(2);
-  await expect(page.getByRole("alert")).toContainText("timed_out");
+  await expect(page.getByRole("alert")).toContainText(
+    label("desktop.calendar.failed"),
+  );
+  await expect(page.getByRole("alert")).not.toContainText("timed_out");
   // The button that asked is the same one, and still holds the keyboard.
   await expect(again).toBeFocused();
   await expect(again).toHaveAttribute("data-kept", "");
@@ -4217,6 +4227,9 @@ test("putting the calendar away from the rail leaves the keyboard on the rail", 
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
+  await expect(
+    target.locator('[data-terminal="console"] textarea'),
+  ).toBeFocused();
   await calendarButton(target).focus();
   await target.keyboard.press("Enter");
   await expect(
@@ -4784,7 +4797,10 @@ test("what is not known of the messages is said, never shown as none unread", as
   );
   // The tooltip says what the name says.
   await messagesButton(target).hover();
-  await expect(target.getByRole("tooltip")).toContainText("timed_out");
+  await expect(target.getByRole("tooltip")).toContainText(
+    label("desktop.messages.failed"),
+  );
+  await expect(target.getByRole("tooltip")).not.toContainText("timed_out");
 });
 
 test("messages are read again when the window is returned to, at most once a minute", async ({
