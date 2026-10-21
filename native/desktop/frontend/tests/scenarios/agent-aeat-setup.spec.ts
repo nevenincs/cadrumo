@@ -49,6 +49,11 @@ test("the setup handoff preserves the workbench and resumes with a fresh check",
     );
   const input = dialog.locator(".xterm-helper-textarea");
   await expect(input).toHaveCount(1);
+  await expect(dialog.locator('[data-terminal="tui"]')).toHaveAttribute(
+    "aria-busy",
+    "false",
+  );
+  await expect(input).toBeFocused();
   await input.press("q");
   const done = dialog.getByRole("button", {
     name: label("desktop.agent.aeat_setup_return"),

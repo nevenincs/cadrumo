@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ITheme } from "@xterm/xterm";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +11,11 @@ import {
 } from "@/components/ui/dialog";
 import type { Host } from "../../shell/host";
 import { useStrings } from "../../shell/strings";
-import { TerminalPane, type TerminalStatus } from "../TerminalPane";
+import {
+  TerminalPane,
+  type TerminalApi,
+  type TerminalStatus,
+} from "../TerminalPane";
 
 export function AeatSetupDialog({
   host,
@@ -30,6 +34,10 @@ export function AeatSetupDialog({
 }) {
   const t = useStrings();
   const [status, setStatus] = useState<TerminalStatus>({ phase: "starting" });
+  const terminal = useRef<TerminalApi | null>(null);
+  useEffect(() => {
+    if (status.phase === "running") terminal.current?.focus();
+  }, [status.phase]);
   const target = useMemo(
     () => ({ aeat_setup: { profile_id: profile } }),
     [profile],
@@ -64,7 +72,9 @@ export function AeatSetupDialog({
             onStatus={(_, next) => setStatus(next)}
             onMenu={() => undefined}
             onAppearanceToggle={() => undefined}
-            register={(_, api) => api.focus()}
+            register={(_, api) => {
+              terminal.current = api;
+            }}
           />
         </div>
         <DialogFooter>
