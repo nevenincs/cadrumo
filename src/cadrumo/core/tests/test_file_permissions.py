@@ -21,7 +21,8 @@ from __future__ import annotations
 import os
 import stat
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Generator, Iterator
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from types import FrameType
 
@@ -132,12 +133,51 @@ _SHAPES: dict[str, Callable[[Path], None]] = {
 }
 
 
+@contextmanager
+def _restored_directory_acls(directories: tuple[Path, ...]) -> Generator[None]:
+    """Restore each test-owned directory's original DACL on every exit path."""
+    import win32security
+
+    with ExitStack() as restoration:
+        for directory in directories:
+            descriptor = win32security.GetNamedSecurityInfo(
+                str(directory), win32security.SE_FILE_OBJECT, win32security.DACL_SECURITY_INFORMATION
+            )
+            control, _revision = descriptor.GetSecurityDescriptorControl()
+            protection = (
+                win32security.PROTECTED_DACL_SECURITY_INFORMATION
+                if control & win32security.SE_DACL_PROTECTED
+                else win32security.UNPROTECTED_DACL_SECURITY_INFORMATION
+            )
+            restoration.callback(
+                win32security.SetNamedSecurityInfo,
+                str(directory),
+                win32security.SE_FILE_OBJECT,
+                win32security.DACL_SECURITY_INFORMATION | protection,
+                None,
+                None,
+                _dacl_of(descriptor),
+                None,
+            )
+        yield
+
+
+@pytest.fixture
+def permission_twins(tmp_path: Path) -> Iterator[tuple[Path, Path]]:
+    """Keep deliberately denied permissions inside the comparison's lifetime."""
+    twins = (tmp_path / "rewritten", tmp_path / "reference")
+    for directory in twins:
+        directory.mkdir()
+    if os.name != "nt":
+        yield twins
+        return
+    with _restored_directory_acls(twins):
+        yield twins
+
+
 @pytest.mark.parametrize("shape", sorted(_SHAPES))
-def test_directory_hardening_matches_icacls(tmp_path: Path, shape: str) -> None:
-    rewritten = tmp_path / "rewritten"
-    reference = tmp_path / "reference"
-    rewritten.mkdir()
-    reference.mkdir()
+def test_directory_hardening_matches_icacls(permission_twins: tuple[Path, Path], shape: str) -> None:
+    rewritten, reference = permission_twins
 
     if os.name != "nt":
         restrict_directory_permissions(rewritten)
@@ -166,6 +206,25 @@ def test_directory_hardening_matches_icacls(tmp_path: Path, shape: str) -> None:
     assert all(not flags & win32security.INHERITED_ACE for _type, flags, _mask, _sid in hardened[2]), (
         "no inherited ACE may survive"
     )
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows DACL restoration contract")
+@pytest.mark.parametrize("shape", ("foreign-explicit-aces", "operator-deny-and-other-flags"))
+def test_failed_permission_comparison_restores_both_twins(tmp_path: Path, shape: str) -> None:
+    """An assertion failure still restores exact ACLs and permits normal removal."""
+    twins = (tmp_path / "rewritten", tmp_path / "reference")
+    for directory in twins:
+        directory.mkdir()
+    before = tuple(_dacl_shape(directory) for directory in twins)
+    with pytest.raises(AssertionError, match="fixture assertion fails"), _restored_directory_acls(twins):
+        for directory in twins:
+            _SHAPES[shape](directory)
+            restrict_directory_permissions(directory)
+        raise AssertionError("fixture assertion fails")
+    assert tuple(_dacl_shape(directory) for directory in twins) == before
+    for directory in twins:
+        directory.rmdir()
+        assert not directory.exists()
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows DACL propagation contract")
