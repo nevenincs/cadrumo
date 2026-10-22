@@ -273,6 +273,89 @@ def _ledger_import_account_surfaces() -> tuple[Surface, ...]:
     )
 
 
+def _ledger_entries_surfaces() -> tuple[Surface, ...]:
+    """Every state of the ledger entries and export tools over synthetic doors."""
+    from .ledger_entries_fixtures import EntriesFixtureState, build_entries_fixture, entries_fixture_interfaces
+
+    return tuple(
+        Surface(
+            f"ledger-entries-{state.value}",
+            f"Ledger entries and export: {state.value}",
+            partial(build_entries_fixture, state),
+            interfaces=entries_fixture_interfaces(state),
+        )
+        for state in EntriesFixtureState
+    )
+
+
+def _ledger_categorisation_surfaces() -> tuple[Surface, ...]:
+    """Every state of the ledger categorisation tools over synthetic doors."""
+    from .ledger_categorisation_fixtures import (
+        CategorisationFixtureState,
+        build_categorisation_fixture,
+        categorisation_fixture_interfaces,
+    )
+
+    return tuple(
+        Surface(
+            f"ledger-categorisation-{state.value}",
+            f"Ledger categorisation: {state.value}",
+            partial(build_categorisation_fixture, state),
+            interfaces=categorisation_fixture_interfaces(state),
+        )
+        for state in CategorisationFixtureState
+    )
+
+
+def _ledger_evidence_files_surfaces() -> tuple[Surface, ...]:
+    """Every state of the ledger evidence and attachments tools over synthetic doors."""
+    from .ledger_evidence_files_fixtures import (
+        EvidenceFilesFixtureState,
+        build_evidence_files_fixture,
+        evidence_files_fixture_interfaces,
+    )
+
+    return tuple(
+        Surface(
+            f"ledger-evidence-files-{state.value}",
+            f"Ledger evidence and attachments: {state.value}",
+            partial(build_evidence_files_fixture, state),
+            interfaces=evidence_files_fixture_interfaces(state),
+        )
+        for state in EvidenceFilesFixtureState
+    )
+
+
+def _ledger_invoices_surfaces() -> tuple[Surface, ...]:
+    """Every state of the ledger records, invoices and reconciliation tools over synthetic doors."""
+    from .ledger_invoices_fixtures import InvoicesFixtureState, build_invoices_fixture, invoices_fixture_interfaces
+
+    return tuple(
+        Surface(
+            f"ledger-invoices-{state.value}",
+            f"Ledger records, invoices and reconciliation: {state.value}",
+            partial(build_invoices_fixture, state),
+            interfaces=invoices_fixture_interfaces(state),
+        )
+        for state in InvoicesFixtureState
+    )
+
+
+def _ledger_registers_surfaces() -> tuple[Surface, ...]:
+    """Every state of the ledger registers tools over synthetic doors."""
+    from .ledger_registers_fixtures import RegisterFixtureState, build_register_fixture, register_fixture_interfaces
+
+    return tuple(
+        Surface(
+            f"ledger-registers-{state.value}",
+            f"Ledger registers: {state.value}",
+            partial(build_register_fixture, state),
+            interfaces=register_fixture_interfaces(state),
+        )
+        for state in RegisterFixtureState
+    )
+
+
 def _modelo_export_surfaces() -> tuple[Surface, ...]:
     """The export dialog's own-account choice and the result that names it."""
     from .modelo_export_fixtures import (
@@ -300,6 +383,11 @@ SURFACES: dict[str, Surface] = {
         *_profile_surfaces(),
         *_ledger_own_account_surfaces(),
         *_ledger_import_account_surfaces(),
+        *_ledger_entries_surfaces(),
+        *_ledger_categorisation_surfaces(),
+        *_ledger_evidence_files_surfaces(),
+        *_ledger_invoices_surfaces(),
+        *_ledger_registers_surfaces(),
         *_modelo_export_surfaces(),
         Surface(
             "registration",
