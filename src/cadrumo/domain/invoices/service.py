@@ -13,6 +13,7 @@ independent argument. Persisted cross-catalogue workflows belong in
 
 from __future__ import annotations
 
+from bisect import bisect_left
 from decimal import Decimal
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -176,10 +177,10 @@ def suggest_reconciliations(
         ``(score desc, invoice_id asc, transaction_id asc)``.
     """
     unmatched_invoices = _unmatched_reconciliation_invoices(invoices)
-    candidate_transactions = _unlinked_reconciliation_transactions(transactions)
+    amount_index = _ReconciliationAmountIndex(_unlinked_reconciliation_transactions(transactions))
     suggestions: list[ReconciliationSuggestion] = []
     for invoice in unmatched_invoices:
-        for transaction in candidate_transactions:
+        for transaction in amount_index.candidates(invoice, amount_tolerance=amount_tolerance):
             suggestion = _suggestion_for_pair(invoice, transaction, amount_tolerance=amount_tolerance)
             if suggestion is not None:
                 suggestions.append(suggestion)
@@ -198,6 +199,60 @@ def _unlinked_reconciliation_transactions(catalogue: TransactionCatalogue) -> tu
     return tuple(transaction for transaction in catalogue.values() if transaction.invoice_id is None)
 
 
+class _ReconciliationAmountIndex:
+    """Transactions bucketed by direction and sorted by amount, probed per invoice.
+
+    A pair can only become a suggestion when its direction is the invoice's
+    expected flow and :func:`_reconciliation_amount_matches` accepts it, so the
+    index yields exactly the transactions of the expected direction that the
+    amount rule itself accepts, without visiting the rest.
+
+    Invariant: for one settlement ``s``, ``|round(amount - s)| <= tolerance`` is
+    monotone on each side of ``s``. Every :mod:`decimal` rounding mode is
+    monotone with ``round(0) == 0``, so among amounts ``>= s`` the accepted ones
+    form a prefix of the ascending order, and among amounts ``< s`` they form a
+    suffix. Walking outward from the insertion point of ``s`` and stopping at the
+    first refusal on each side therefore visits every accepted transaction. A
+    negative tolerance accepts nothing and stops both walks at once. The
+    insertion point uses exact :class:`~decimal.Decimal` comparison, and the
+    acceptance test is the unchanged amount rule, so no tolerance arithmetic is
+    duplicated here.
+    """
+
+    __slots__ = ("_by_direction",)
+
+    def __init__(self, transactions: tuple[Transaction, ...]) -> None:
+        grouped: dict[TransactionDirection, list[Transaction]] = {}
+        for transaction in transactions:
+            grouped.setdefault(transaction.direction, []).append(transaction)
+        self._by_direction: dict[TransactionDirection, tuple[list[Decimal], list[Transaction]]] = {}
+        for direction, members in grouped.items():
+            members.sort(key=lambda transaction: transaction.raw.amount)
+            self._by_direction[direction] = ([member.raw.amount for member in members], members)
+
+    def candidates(self, invoice: Invoice, *, amount_tolerance: Decimal) -> list[Transaction]:
+        """Return the expected-direction transactions whose amount the rule accepts."""
+        bucket = self._by_direction.get(_expected_reconciliation_direction(invoice))
+        if bucket is None:
+            return []
+        amounts, members = bucket
+        start = bisect_left(amounts, _reconciliation_settlement(invoice))
+        stop = start
+        while stop < len(members) and _reconciliation_amount_matches(
+            invoice,
+            members[stop],
+            amount_tolerance=amount_tolerance,
+        ):
+            stop += 1
+        while start > 0 and _reconciliation_amount_matches(
+            invoice,
+            members[start - 1],
+            amount_tolerance=amount_tolerance,
+        ):
+            start -= 1
+        return members[start:stop]
+
+
 def _expected_reconciliation_direction(invoice: Invoice) -> TransactionDirection:
     """Return the ledger flow expected for an invoice kind."""
     # ``amount`` is a non-negative magnitude; flow is carried by ``direction``.
@@ -212,13 +267,17 @@ def _reconciliation_amount_matches(
     *,
     amount_tolerance: Decimal,
 ) -> bool:
-    """Return whether the transaction settles the invoice within the requested tolerance.
+    """Return whether the transaction settles the invoice within the requested tolerance."""
+    return abs(transaction.raw.amount - _reconciliation_settlement(invoice)) <= amount_tolerance
+
+
+def _reconciliation_settlement(invoice: Invoice) -> Decimal:
+    """Return the cash an invoice settles for.
 
     A retención is withheld at source, so the cash that moves is the total less
     the withheld figure; the total itself never reaches the bank.
     """
-    settlement = invoice.grand_total - (invoice.retention_amount or Decimal("0"))
-    return abs(transaction.raw.amount - settlement) <= amount_tolerance
+    return invoice.grand_total - (invoice.retention_amount or Decimal("0"))
 
 
 def _reconciliation_counterparty_matches(invoice: Invoice, transaction: Transaction) -> bool:

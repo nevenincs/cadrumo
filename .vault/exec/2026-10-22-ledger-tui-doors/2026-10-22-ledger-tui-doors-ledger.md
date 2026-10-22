@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:e7bff07be5f9e92edd5dcfc97ed8c83a5d60f9130705cb1dc4979eb34d6fc918'
+body_hash: 'sha256:94dd524e55b9213112a69ebfbbcc0a82d819b0a9353a6f20a4dc7c377c9ff27a'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -219,6 +219,13 @@ related:
 - `S12` `verify:` `identity over 30k rows and a varied seed either side of Madrid midnight; 784 mutated payloads refuse identically` -> `pass`
 - `S12` `verify:` `ruff, lint-imports, ty on touched files` -> `pass`
 - `S12` `by:` `O4`
+- `S14` `M` `src/cadrumo/domain/invoices/service.py`
+- `S14` `A` `src/cadrumo/domain/invoices/tests/test_reconciliation_index_parity.py`
+- `S14` `verify:` `suggest_reconciliations on the S11 seed: CPU mean 106.3s to 0.13s, identical 287 suggestions` -> `pass`
+- `S14` `verify:` `workbench.generation at 30k: CPU mean 146.2s to 19.9s (n=5)` -> `pass`
+- `S14` `verify:` `parity against the inlined all-pairs oracle over 24 worlds, all tolerances and 7 rounding modes; mutation-checked` -> `pass`
+- `S14` `verify:` `invoice, workspace and reconciliation tests (266)` -> `pass`
+- `S14` `by:` `S14`
 
 ## Notes
 
@@ -235,3 +242,4 @@ related:
 - `S13` Behaviour change: a session lapsing or being replaced mid-read now refuses the whole read with a session refusal; before, a lapse surfaced as an unreadable row and a same-profile re-login released the records. transactions.py still digests each object key a second time (about 6 us/row); left for a follow-up.
 - `S11` At 30k rows after S09 and S10: workbench.generation 118 CPU-s mean (90M reconciliation pair checks), status 41 (4 full loads), check 32, view 30 (3 loads), track 19, preflight 12, unfiltered list 10, history 11, invoice.list 9, review 9, llm-diagnostics 8, participation 7, invoice.view 7. Period list page 0.59. Results and profiles in the scratchpad run4.log and prof folder.
 - `S12` Remaining domain cost is about 140 us of 212 us per row across `~75` validator calls; further cuts need a user decision (skip revalidating authenticated stored rows, native pydantic types, or paging the unfiltered listing).
+- `S14` When many items share one settlement amount, every true match is still built (about 12-25 us each); capping or paging suggestions would change output and needs a user decision.
