@@ -119,6 +119,22 @@ pub struct SignOutResult {
     pub remaining_access: RemainingAccess,
 }
 
+impl SignOutResult {
+    /// What the runtime's own sign-out answer says remains.
+    pub(crate) fn remaining(
+        automation_enabled: Option<bool>,
+        automation_access_remains: Option<bool>,
+    ) -> Self {
+        Self {
+            remaining_access: RemainingAccess {
+                automation_enabled,
+                automation_access_remains,
+                automation_revoked: false,
+            },
+        }
+    }
+}
+
 #[derive(Deserialize)]
 struct Envelope {
     schema_version: String,

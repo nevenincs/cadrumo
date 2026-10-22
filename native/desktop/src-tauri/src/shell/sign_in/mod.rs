@@ -39,6 +39,35 @@ use process::Children;
 pub(crate) use wire::Presence;
 use wire::{ProfileCreateResult, ProfileList, SignInResult, SignInStatus, SignOutResult};
 
+/// The longest a connection to the runtime for the window's own sign-in may take.
+#[cfg(windows)]
+const NATIVE_CONNECT: std::time::Duration = std::time::Duration::from_secs(10);
+/// The longest the runtime may take to prove a password and admit the window's session.
+#[cfg(windows)]
+const NATIVE_SIGN_IN: std::time::Duration = std::time::Duration::from_secs(120);
+/// The longest a status or activity exchange on the window's session may take.
+#[cfg(windows)]
+const NATIVE_EXCHANGE: std::time::Duration = std::time::Duration::from_secs(30);
+
+/// The window's own session with the runtime: the one its password opened,
+/// held on the window's own connection. Reads, activity and the sign-out go
+/// through it; a hold child only resumes the sign-in it stored.
+#[cfg(windows)]
+#[derive(Clone)]
+struct WindowSession {
+    connection: Arc<cadrumo_application::runtime_client::Connection>,
+    admitted: cadrumo_application::runtime_client::Admitted,
+}
+
+/// Why the window could not sign in on its own connection.
+enum NativeSignIn {
+    /// The runtime refused the sign-in itself, as the command line would report it.
+    Refused(wire::Refusal),
+    /// No native session is possible here: the runtime does not admit the
+    /// window as the holder, or cannot be reached natively. The hold signs in.
+    Unavailable,
+}
+
 /// The header that names a profile by its label, percent-encoded as UTF-8:
 /// a header carries no other text, and the body is the password alone.
 const PROFILE_HEADER: &str = "x-cadrumo-profile";
@@ -122,6 +151,11 @@ struct Files {
 pub struct SignIn {
     child: Result<ChildConfiguration>,
     runtime: Result<ChildConfiguration>,
+    /// What the window's own runtime connections are made from.
+    native: Result<watch::Native>,
+    /// The window's own session, while one is held.
+    #[cfg(windows)]
+    session: Arc<std::sync::Mutex<Option<WindowSession>>>,
     service: Result<ChildConfiguration>,
     pub children: Children,
     observation: observation::Observer,
@@ -142,9 +176,13 @@ pub struct SignIn {
 impl SignIn {
     pub fn new(launch: &Launch) -> Self {
         let runtime = resolve_image(launch, "cadrumo-runtime");
+        let native = native_runtime(launch);
         Self {
             child: resolve_cli(launch),
-            watch: watch::Watch::new(runtime.clone()),
+            watch: watch::Watch::new(native.clone()),
+            native,
+            #[cfg(windows)]
+            session: Arc::new(std::sync::Mutex::new(None)),
             runtime,
             service: resolve_image(launch, "cadrumo-agent-service"),
             children: Children::new(launch.diagnostics.clone()),
@@ -192,6 +230,14 @@ impl SignIn {
             return wire::login(self.run(&LOGIN, label, Some(encoded_bytes(&password, false)?))?);
         };
         let _mutation = self.watch.mutation();
+        // The window signs in on its own connection; the hold then only resumes
+        // the sign-in it stored. A runtime that admits only a hold child as the
+        // holder gets the password through the hold, as before.
+        let window = match self.native_sign_in(&profile_id, &password) {
+            Ok(session) => Some(session),
+            Err(NativeSignIn::Refused(refusal)) => return Ok(SignInResult::Refused { refusal }),
+            Err(NativeSignIn::Unavailable) => None,
+        };
         let prepared = self
             .prepared
             .lock()
@@ -199,9 +245,14 @@ impl SignIn {
             .take()
             .filter(|hold| hold.profile() == profile_id)
             .and_then(|mut hold| hold.waiting().then_some(hold));
-        let signed_in = match prepared {
-            Some(hold) => hold.sign_in(&password),
-            None => crate::agent::person::Person::sign_in(
+        let signed_in = match (window.is_some(), prepared) {
+            (true, Some(hold)) => hold.resume(),
+            (true, None) => {
+                crate::agent::person::Person::hold(self.runtime()?.command(), &profile_id)
+                    .map_err(crate::agent::person::SignInFailure::from)
+            }
+            (false, Some(hold)) => hold.sign_in(&password),
+            (false, None) => crate::agent::person::Person::sign_in(
                 self.runtime()?.command(),
                 &profile_id,
                 &password,
@@ -214,15 +265,22 @@ impl SignIn {
             }
             Err(crate::agent::person::SignInFailure::Failed(error)) => return Err(error),
         };
-        if !person.session_persisted() {
+        let persisted = match &window {
+            Some(session) => self.window_session_persisted(session),
+            None => person.session_persisted(),
+        };
+        if !persisted {
             // As the command line answers it: a sign-in no other frontend can resume is refused, and
-            // dropping the hold here ends its session.
+            // dropping the hold and the window's session here ends them.
             return Ok(SignInResult::Refused {
                 refusal: wire::Refusal {
                     code: "session_not_persisted".into(),
                     retry_after_seconds: None,
                 },
             });
+        }
+        if let Some(session) = window {
+            self.retain_window_session(session);
         }
         person.observe_events(self.person_events.clone())?;
         let held = Arc::new(std::sync::Mutex::new(person));
@@ -324,8 +382,12 @@ impl SignIn {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .take();
+        #[cfg(windows)]
+        let session = self.session.clone();
         super::blocking(move || {
             drop(prepared);
+            #[cfg(windows)]
+            drop(session.lock().unwrap_or_else(|e| e.into_inner()).take());
             watch.close();
             Ok(())
         })
@@ -334,9 +396,172 @@ impl SignIn {
         joined
     }
 
+    /// Signs `profile_id` in on a connection of the window's own, storing the
+    /// sign-in for the other frontends.
+    #[cfg(windows)]
+    fn native_sign_in(
+        &self,
+        profile_id: &str,
+        password: &[u8],
+    ) -> std::result::Result<WindowSession, NativeSignIn> {
+        use cadrumo_application::runtime_client::{
+            Cohort, Connection, Endpoint, Frontend, Refusal,
+        };
+        use std::time::Instant;
+
+        let native = self
+            .native
+            .as_ref()
+            .map_err(|_| NativeSignIn::Unavailable)?;
+        let endpoint = Endpoint::of(&native.storage_root).map_err(|_| NativeSignIn::Unavailable)?;
+        let cohort = Cohort {
+            product_version: native.product_version.clone(),
+            authority_generation: None,
+        };
+        let connection = Connection::open(&endpoint, &cohort, Instant::now() + NATIVE_CONNECT)
+            .map_err(|_| NativeSignIn::Unavailable)?;
+        let admitted = connection.login_password(
+            profile_id,
+            Frontend::Desktop,
+            password,
+            true,
+            Instant::now() + NATIVE_SIGN_IN,
+        );
+        match admitted {
+            Ok(admitted) => Ok(WindowSession {
+                connection: Arc::new(connection),
+                admitted,
+            }),
+            // The runtime does not admit this process as the desktop holder.
+            Err(Refusal::PeerUntrusted) => Err(NativeSignIn::Unavailable),
+            Err(refusal @ Refusal::Denied { .. }) if refusal.code() != "runtime_peer_untrusted" => {
+                let refusal = wire::sign_in_refusal(
+                    refusal.code(),
+                    refusal.sign_in_reason(),
+                    refusal.remaining_seconds(),
+                )
+                .map_err(|_| NativeSignIn::Unavailable)?;
+                Err(NativeSignIn::Refused(refusal))
+            }
+            Err(_) => Err(NativeSignIn::Unavailable),
+        }
+    }
+
+    #[cfg(not(windows))]
+    fn native_sign_in(&self, _: &str, _: &[u8]) -> std::result::Result<(), NativeSignIn> {
+        Err(NativeSignIn::Unavailable)
+    }
+
+    #[cfg(windows)]
+    fn window_session_persisted(&self, session: &WindowSession) -> bool {
+        session.admitted.session_persisted == Some(true)
+    }
+
+    #[cfg(not(windows))]
+    fn window_session_persisted(&self, _: &()) -> bool {
+        false
+    }
+
+    /// Keeps `session` as the window's own, until the runtime retires it or a
+    /// later sign-in replaces it.
+    #[cfg(windows)]
+    fn retain_window_session(&self, session: WindowSession) {
+        use cadrumo_application::runtime_client::Event;
+
+        let events = session.connection.subscribe();
+        let connection_id = session.admitted.connection_id.clone();
+        let sessions = self.session.clone();
+        *sessions.lock().unwrap_or_else(|e| e.into_inner()) = Some(session);
+        let _ = std::thread::Builder::new()
+            .name("window-session-events".into())
+            .spawn(move || {
+                for event in events {
+                    if matches!(event, Event::SessionRetired { .. } | Event::Disconnected) {
+                        let mut held = sessions.lock().unwrap_or_else(|e| e.into_inner());
+                        if held
+                            .as_ref()
+                            .is_some_and(|session| session.admitted.connection_id == connection_id)
+                        {
+                            *held = None;
+                        }
+                        return;
+                    }
+                }
+            });
+    }
+
+    #[cfg(not(windows))]
+    fn retain_window_session(&self, _: ()) {}
+
+    /// Notes the person's input on the window's own session; `false` when the
+    /// window holds none, so the caller notes it through the hold instead.
+    #[cfg(windows)]
+    fn note_window_activity(&self) -> bool {
+        use std::time::Instant;
+
+        let session = self
+            .session
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone();
+        let Some(session) = session else {
+            return false;
+        };
+        if session
+            .connection
+            .note_activity(&session.admitted, Instant::now() + NATIVE_EXCHANGE)
+            .is_ok()
+        {
+            return true;
+        }
+        // The session is gone; let it go so the next sign-in starts afresh.
+        let mut held = self.session.lock().unwrap_or_else(|e| e.into_inner());
+        if held
+            .as_ref()
+            .is_some_and(|current| current.admitted.connection_id == session.admitted.connection_id)
+        {
+            *held = None;
+        }
+        false
+    }
+
+    #[cfg(not(windows))]
+    fn note_window_activity(&self) -> bool {
+        false
+    }
+
+    /// Signs the person out through the window's own session, or `None` when
+    /// the window holds none and the command line signs out instead.
+    #[cfg(windows)]
+    fn window_sign_out(&self) -> Option<SignOutResult> {
+        use std::time::Instant;
+
+        let session = self
+            .session
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take()?;
+        let out = session
+            .connection
+            .sign_out(&session.admitted, Instant::now() + NATIVE_EXCHANGE)
+            .ok()?;
+        Some(SignOutResult::remaining(
+            out.automation_enabled,
+            out.automation_access_remains,
+        ))
+    }
+
+    #[cfg(not(windows))]
+    fn window_sign_out(&self) -> Option<SignOutResult> {
+        None
+    }
+
     /// Notes the person's input through the session this window holds, so a
     /// report starts no process and never waits on the credential lanes.
     fn record_activity(&self) -> Result<()> {
+        if self.note_window_activity() {
+            return Ok(());
+        }
         let profile_id =
             self.watch.latest()?.profile_id.ok_or_else(|| {
                 failure(ErrorCode::ReadFailed).with_reason("activity_profile_absent")
@@ -432,6 +657,28 @@ fn arguments(call: &Call, label: Option<&str>, secret: bool) -> Vec<String> {
 
 fn resolve_cli(launch: &Launch) -> Result<ChildConfiguration> {
     resolve_image(launch, "aeat")
+}
+
+/// What the window's own runtime connection is made from: the storage root it
+/// serves and the installed product version the package manifest states.
+fn native_runtime(launch: &Launch) -> Result<watch::Native> {
+    let contract: Contract =
+        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
+            .map_err(|_| failure(ErrorCode::PackageUnavailable))?;
+    let manifest = PackageManifest::read(
+        &launch.package_root,
+        &contract.layout.files.package_manifest,
+    )
+    .map_err(|_| failure(ErrorCode::PackageUnavailable))?;
+    let product_version = manifest
+        .distributions
+        .get("cadrumo")
+        .filter(|version| !version.is_empty())
+        .ok_or_else(|| failure(ErrorCode::PackageUnavailable))?;
+    Ok(watch::Native {
+        storage_root: launch.working_directory.clone(),
+        product_version: product_version.clone(),
+    })
 }
 
 fn resolve_image(launch: &Launch, entrypoint: &str) -> Result<ChildConfiguration> {
@@ -611,10 +858,16 @@ pub async fn sign_out(
     let state = state.inner().clone();
     let outcome = super::blocking(move || {
         *state.signed_in.lock().unwrap_or_else(|e| e.into_inner()) = None;
-        state.run(&LOGOUT, None, None)
+        if let Some(result) = state.window_sign_out() {
+            return Ok(Err(result));
+        }
+        state.run(&LOGOUT, None, None).map(Ok)
     })
     .await?;
-    wire::logout(outcome)
+    match outcome {
+        Err(result) => Ok(result),
+        Ok(outcome) => wire::logout(outcome),
+    }
 }
 
 /// The label a call names, or none. Refused unless it is text the product

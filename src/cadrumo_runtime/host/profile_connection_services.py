@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 from uuid import UUID, uuid4
 
 from cadrumo.application.operations.person_acts import is_persons_frontend
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import Availability
-from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import ByteChannel, Peer, RefusalCode, RefusalError
 from cadrumo_client.contracts.service_access import (
     InstalledServiceDescriptor,
     ServiceAdmission,
@@ -30,6 +30,58 @@ if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
 
 _MAXIMUM_ANCESTRY_DEPTH = 32
+
+
+# The argument that starts the desktop image as one of its roles; the window has none.
+_ROLE_ARGUMENT = "--role"
+
+
+class DesktopImageMatcher(Protocol):
+    """The one verifier question a desktop window's admission asks."""
+
+    def installed_parent_image_matches(self, image_path: str, descriptor_path: str, image_digest: str) -> bool:
+        """Whether ``image_path`` is the package's ``descriptor_path`` image with ``image_digest``."""
+        ...
+
+
+def desktop_window_peer(
+    verifier: DesktopImageMatcher,
+    context: ConnectionContext,
+    channel_peer: Peer,
+    descriptor: InstalledServiceDescriptor,
+) -> bool:
+    """Whether the peer is the installed desktop image itself, connected from its window.
+
+    The desktop window holds its own runtime connection. It is admitted as the
+    desktop holder on the same evidence its hold child's parent was: the peer
+    runs one of the images the package names as a desktop, by exact bytes, and
+    was not started by this runtime. A role argument makes the image one of the
+    runtime's own children, never the window.
+    """
+    from pathlib import Path
+
+    from ..adapters.service_verification import native_process_arguments, native_process_identity
+
+    pid, owner = context.peer.process_id, context.peer.os_owner_id
+    if pid is None or context.peer != channel_peer or not descriptor.allowed_parent_images:
+        return False
+    try:
+        identity = native_process_identity(pid, owner)
+        image = channel_peer.image_path
+        if image is None or Path(image).resolve() != Path(identity.image).resolve():
+            return False
+        if not any(
+            verifier.installed_parent_image_matches(identity.image, item.launch_image, item.image_digest)
+            for item in descriptor.allowed_parent_images
+        ):
+            return False
+        if native_process_arguments(pid, owner)[:1] == (_ROLE_ARGUMENT,):
+            return False
+        if _descends_from_this_runtime(identity, owner):
+            return False
+        return native_process_identity(pid, owner) == identity
+    except (RefusalError, OSError):
+        return False
 
 
 def _descends_from_this_runtime(process: NativeProcessIdentity, owner: str) -> bool:
@@ -274,6 +326,8 @@ class ProfileConnectionServicesMixin:
                 native_process_identity(context.peer.process_id, context.peer.os_owner_id)
                 return
             raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_descriptor_absent")
+        if self._desktop_window_peer(context, channel, descriptor):
+            return
         if self._service_verifier.verify_service(context, channel, descriptor) is None:
             raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_unverified")
         child = native_process_identity(context.peer.process_id, context.peer.os_owner_id)
@@ -291,6 +345,9 @@ class ProfileConnectionServicesMixin:
             raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_parent_identity_changed")
         if _descends_from_this_runtime(parent, context.peer.os_owner_id):
             raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_started_by_runtime")
+
+    def _desktop_window_peer(self: RuntimeProfileConnections, context, channel, descriptor) -> bool:
+        return desktop_window_peer(self._service_verifier, context, channel.peer, descriptor)
 
     def _nonhuman_peer(self: RuntimeProfileConnections, context, channel) -> bool:
         if self._service_tree_owner(context, channel) is not None:

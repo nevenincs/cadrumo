@@ -56,6 +56,15 @@ class FakeClient:
             human_login=SimpleNamespace(session_persisted=mode == "persisted"),
         )
 
+    def resume_receipt(self):
+        sys.stderr.write(json.dumps({"resumed": True}) + "\n")
+        return SimpleNamespace(
+            status=SimpleNamespace(session_id=UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")),
+            runtime_boot_id=UUID("cccccccc-cccc-4ccc-8ccc-cccccccccccc"),
+            connection_id=UUID("dddddddd-dddd-4ddd-8ddd-dddddddddddd"),
+            human_login=None,
+        )
+
     def subscribe_session_retirement(self, callback):
         timer = threading.Timer(0.5, callback)
         timer.daemon = True
@@ -86,7 +95,9 @@ sys.exit(session_hold.main(["--profile-id", str(profile_id), "--password-stdin",
 """
 
 
-async def _sign_in(tmp_path: Path, mode: str) -> tuple[int, list[dict[str, object]], dict[str, object]]:
+async def _sign_in(
+    tmp_path: Path, mode: str, password: bytes = _PASSWORD
+) -> tuple[int, list[dict[str, object]], dict[str, object]]:
     source_root = Path(__file__).resolve().parents[3]
     environment = os.environ.copy()
     existing = environment.get("PYTHONPATH")
@@ -103,7 +114,7 @@ async def _sign_in(tmp_path: Path, mode: str) -> tuple[int, list[dict[str, objec
         stderr=asyncio.subprocess.PIPE,
     )
     assert process.stdin is not None
-    process.stdin.write(struct.pack("!I", len(_PASSWORD)) + _PASSWORD)
+    process.stdin.write(struct.pack("!I", len(password)) + password)
     await process.stdin.drain()
     try:
         # Bounds only a hung child: importing the runtime takes tens of seconds on a loaded machine.
@@ -132,6 +143,16 @@ async def test_a_window_sign_in_asks_the_runtime_to_keep_it_and_says_whether_it_
     assert asked == {"persist_receipt": True, "secret": _PASSWORD.decode()}
     assert lines[0]["kind"] == "session_held"
     assert lines[0]["session_persisted"] is persisted
+    assert exit_code == 0
+
+
+@pytest.mark.asyncio
+async def test_an_empty_password_frame_resumes_the_sign_in_the_window_stored(tmp_path: Path) -> None:
+    """The window signed in on its own connection; the prepared hold resumes that sign-in instead."""
+    exit_code, lines, asked = await _sign_in(tmp_path, "persisted", password=b"")
+    assert asked == {"resumed": True}
+    assert lines[0]["kind"] == "session_held"
+    assert lines[0]["session_persisted"] is True
     assert exit_code == 0
 
 

@@ -34,6 +34,8 @@ pub mod process;
 pub mod python;
 pub mod role;
 pub mod runtime;
+#[cfg(all(windows, feature = "platform"))]
+pub mod runtime_client;
 pub mod value;
 
 mod filesystem;

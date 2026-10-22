@@ -17,6 +17,8 @@ pub mod file_changes;
 #[cfg(windows)]
 pub mod installation;
 pub mod launch;
+#[cfg(windows)]
+pub mod runtime_pipe;
 #[cfg(all(test, unix))]
 mod posix_tests;
 pub mod storage;

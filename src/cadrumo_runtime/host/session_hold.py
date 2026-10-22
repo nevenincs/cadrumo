@@ -149,24 +149,35 @@ async def _hold(
     client = await open_installed_client(profile_id=profile_id, frontend=frontend)
     try:
         stdin_fd = sys.stdin.fileno()
+        resumed = not password_stdin
         if password_stdin:
             header = _read_stdin_bytes(stdin_fd, 4)
             if len(header) != 4:
                 return 1
             length = struct.unpack("!I", header)[0]
-            if not 0 < length <= _MAXIMUM_PASSWORD_BYTES:
+            if length > _MAXIMUM_PASSWORD_BYTES:
                 return 1
-            secret = _read_stdin_bytes(stdin_fd, length)
-            try:
-                if len(secret) != length:
+            if length == 0:
+                # The window signed in on its own connection and stored the sign-in; this
+                # hold, started while the form showed, resumes it instead of asking again.
+                resumed = True
+                try:
+                    status = client.resume_receipt()
+                except FrontendRefusedError as refused:
+                    _emit(_sign_in_refusal(refused))
                     return 1
-                status = client.login_password(secret, persist_receipt=persist_receipt)
-            except FrontendRefusedError as refused:
-                # A refused password is the person's to try again; this hold ends with the reason.
-                _emit(_sign_in_refusal(refused))
-                return 1
-            finally:
-                secret[:] = bytes(len(secret))
+            else:
+                secret = _read_stdin_bytes(stdin_fd, length)
+                try:
+                    if len(secret) != length:
+                        return 1
+                    status = client.login_password(secret, persist_receipt=persist_receipt)
+                except FrontendRefusedError as refused:
+                    # A refused password is the person's to try again; this hold ends with the reason.
+                    _emit(_sign_in_refusal(refused))
+                    return 1
+                finally:
+                    secret[:] = bytes(len(secret))
         else:
             status = client.resume_receipt()
         held: dict[str, object] = {
@@ -178,7 +189,9 @@ async def _hold(
         }
         if persist_receipt:
             # The window's own sign-in: other frontends resume it only from a stored receipt.
-            held["session_persisted"] = status.human_login is not None and status.human_login.session_persisted
+            held["session_persisted"] = resumed or (
+                status.human_login is not None and status.human_login.session_persisted
+            )
         _emit(held)
         # One inbox for the parent's requests and the runtime's pushes: the hold
         # sleeps until either arrives. Retirement, including a lost connection, is

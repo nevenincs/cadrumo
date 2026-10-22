@@ -113,6 +113,20 @@ impl PreparedSignIn {
         !self.ended
     }
 
+    /// Resumes, through this hold, the sign-in the window stored on its own
+    /// connection: the hold reads an empty password frame and presents the
+    /// stored proof instead.
+    pub fn resume(self) -> std::result::Result<Person, SignInFailure> {
+        let Self {
+            mut person,
+            profile,
+            ..
+        } = self;
+        person.send_frame(&0u32.to_be_bytes())?;
+        person.identity = person.read()?;
+        Person::signed_in(person, &profile)
+    }
+
     /// Signs the person in with `password` through this hold, as
     /// [`Person::sign_in`] does through a new one.
     pub fn sign_in(self, password: &[u8]) -> std::result::Result<Person, SignInFailure> {
@@ -378,12 +392,16 @@ impl Person {
         let mut frame = zeroize::Zeroizing::new(Vec::with_capacity(4 + password.len()));
         frame.extend_from_slice(&length.to_be_bytes());
         frame.extend_from_slice(password);
+        self.send_frame(&frame)
+    }
+
+    fn send_frame(&mut self, frame: &[u8]) -> Result<()> {
         let stdin = self
             .stdin
             .as_mut()
             .ok_or_else(|| failed("person_hold_stdin_missing"))?;
         stdin
-            .write_all(&frame)
+            .write_all(frame)
             .and_then(|()| stdin.flush())
             .map_err(|error| {
                 ApplicationError::new(ErrorCode::WriteFailed, Operation::Cli)

@@ -380,12 +380,14 @@ dependencies = [
 name = "cadrumo-application"
 version = "0.1.0"
 dependencies = [
+ "cadrumo-platform",
  "object",
  "serde",
  "serde_json",
  "sha2",
  "tokio",
  "ureq",
+ "zeroize",
  "zip",
 ]
 

@@ -45,6 +45,7 @@ dependencies = [
  "sha2",
  "tokio",
  "ureq",
+ "zeroize",
  "zip",
 ]
 
