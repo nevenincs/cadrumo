@@ -18,9 +18,12 @@ from .....application.user_profile.access_contracts import AccessSession, Sessio
 from .....application.user_profile.access_errors import ProfileAccessRefusedError
 from .....application.user_profile.access_policy import intersect_scopes
 from .....application.user_profile.profile_record_repository import close_active_profile_record_session
+from .....core.storage_taxonomy import StorageCategory
 from .....core.time.clock import now
 from .....core.time.utc import UtcInstant
 from ..custody.automation_profile import validate_automation_profile_binding
+from ..custody.change_witness import CustodyChangeWitness, WatchedDirectory
+from ..custody.paths import profile_custody_path
 from .active_session import bind_active_bucket_session, close_active_bucket_session, current_active_bucket_session
 from .bucket_session import BucketSession
 from .profile_worker_binding import profile_worker_binding
@@ -56,6 +59,24 @@ class ProfileWorkerCustody:
         self._closed = False
         self._sections = 0
         self._material_update_pending = False
+        profile_id = identity.binding.profile_id
+        # Every guard proves the committed capsule still names this binding; the proof is kept until the capsule moves.
+        self._capsule: CustodyChangeWitness[None] = CustodyChangeWitness(
+            (
+                WatchedDirectory(
+                    profile_custody_path(profile_id, StorageCategory.PROFILE_CAPSULE_COMMIT, root=storage_root).parent,
+                    subtree=False,
+                ),
+                WatchedDirectory(
+                    profile_custody_path(profile_id, StorageCategory.PROFILE_CAPSULE_CUSTODY, root=storage_root),
+                    subtree=True,
+                ),
+                WatchedDirectory(
+                    profile_custody_path(profile_id, StorageCategory.PROFILE_CAPSULE_DATA, root=storage_root),
+                    subtree=True,
+                ),
+            )
+        )
 
     def _live(self, lease: AccessSession) -> bool:
         instant, elapsed = self.clock(), self.monotonic() - lease.issued_monotonic
@@ -76,7 +97,10 @@ class ProfileWorkerCustody:
 
     def _validate(self, lease: AccessSession) -> None:
         self._validate_lease(lease)
-        validate_automation_profile_binding(self.identity.binding, root=self.root)
+        self._validate_binding()
+
+    def _validate_binding(self) -> None:
+        self._capsule.observe(lambda: validate_automation_profile_binding(self.identity.binding, root=self.root))
 
     def install(self, lease: AccessSession, dek: bytearray) -> None:
         """Copy authenticated material from the verified runtime's borrowed buffer."""
@@ -139,7 +163,7 @@ class ProfileWorkerCustody:
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
             self._validate_lease(lease)
             if not binding_validated:
-                validate_automation_profile_binding(self.identity.binding, root=self.root)
+                self._validate_binding()
             return lease
 
     @contextmanager
@@ -181,7 +205,7 @@ class ProfileWorkerCustody:
         """Expire under the custody lock, reporting this call's binding proof.
 
         require() consumes the proof only inside the same critical section.
-        Every later request, idle poll and final section exit revalidates afresh.
+        Every later request, idle poll and final section exit revalidates, held only while the capsule is unchanged.
         """
         # A publication may replace its own envelope inside a held native
         # fence. Revalidate at the last section exit; each new require still
@@ -189,7 +213,7 @@ class ProfileWorkerCustody:
         binding_validated = bool(self._leases) and not self._sections
         if binding_validated:
             try:
-                validate_automation_profile_binding(self.identity.binding, root=self.root)
+                self._validate_binding()
             except BaseException:
                 self.close()
                 raise
@@ -324,6 +348,7 @@ class ProfileWorkerCustody:
         with self._lock:
             self._closed = True
             self._leases.clear()
+            self._capsule.close()
             self._release_material()
 
     def _release_material(self) -> None:

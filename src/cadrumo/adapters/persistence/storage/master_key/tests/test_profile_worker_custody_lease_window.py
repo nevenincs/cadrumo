@@ -33,6 +33,7 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.config import override_settings
+from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.time.clock import frozen_clock, now
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -41,6 +42,7 @@ from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ...bucket.errors import BucketLockedError
 from ...custody.capsule import load_committed_profile_password_material
+from ...custody.paths import profile_custody_path
 from ...errors import SessionExpiredError
 from ...profile_persistence_composition import composed_profile_persistence_ports
 from ...runtime_repository import secure_object_repository_for_active_bucket
@@ -311,7 +313,8 @@ def _human_activity(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) ->
         assert current_active_bucket_session() is None
 
 
-def _require_binding_once(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> None:
+def _binding_proof_follows_the_capsule(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> None:
+    """Every boundary proves the committed capsule; Windows answers it from memory until the capsule moves."""
     with clock.at(minutes=0):
         human = _lease(custody.identity, clock, SessionKind.HUMAN, minutes=15)
         custody.install(human, bytearray(key))
@@ -323,20 +326,31 @@ def _require_binding_once(custody: ProfileWorkerCustody, clock: _Clock, key: byt
             calls += 1
             validate(binding, root=root, dek=dek)
 
+        # Without change notifications every boundary reads the capsule again.
+        per_boundary = 0 if sys.platform == "win32" else 1
         with pytest.MonkeyPatch.context() as patch:
             patch.setattr(profile_worker_custody, "validate_automation_profile_binding", counted)
             assert custody.require(human.session_id) == human
-            assert calls == 1
+            assert calls == per_boundary
             assert custody.require(human.session_id) == human
-            assert calls == 2
+            assert calls == 2 * per_boundary
             with custody.section(human.session_id):
-                assert calls == 3
+                assert calls == 3 * per_boundary
                 assert custody.require(human.session_id) == human
-                assert calls == 4
+                assert calls == 4 * per_boundary
                 _read_storage()
-            assert calls == 5  # final exit remains an independent currentness boundary
+            assert calls == 5 * per_boundary  # final exit remains an independent currentness boundary
             custody.expire()
-            assert calls == 6  # idle expiry also revalidates
+            assert calls == 6 * per_boundary  # idle expiry also revalidates
+            commit = profile_custody_path(
+                custody.identity.binding.profile_id, StorageCategory.PROFILE_CAPSULE_COMMIT, root=custody.root
+            )
+            replaced = commit.with_name(commit.name + ".replaced")
+            replaced.write_bytes(commit.read_bytes())
+            replaced.replace(commit)
+            before = calls
+            assert custody.require(human.session_id) == human
+            assert calls == before + 1  # a capsule that moved is proved again at the next boundary
 
 
 def _expiry_deadline(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> None:
@@ -361,7 +375,7 @@ def _expiry_deadline(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -
 
 _CASES: dict[str, Callable[[ProfileWorkerCustody, _Clock, bytes], None]] = {
     "expiry_deadline": _expiry_deadline,
-    "require_binding_once": _require_binding_once,
+    "binding_proof_follows_the_capsule": _binding_proof_follows_the_capsule,
     "human_activity": _human_activity,
     "attended_child_lapse": _attended_child_lapse,
     "sign_in_lease": _sign_in_lease,

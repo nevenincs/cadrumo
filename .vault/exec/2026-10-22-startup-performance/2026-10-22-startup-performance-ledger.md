@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:69a22ed9f822e827a4698d9344f54c6e8428800232f82d5665c22b547e3eeaf6'
+body_hash: 'sha256:6d2b3834e49d24d6d7775854ddd10c667a220f5e776754289e88bf7528179366'
 related:
   - "[[2026-10-22-startup-performance-plan]]"
 ---
@@ -118,3 +118,7 @@ related:
 - `S03` `verify:` `pytest runtime host and custody suites, all lanes (606 + new)` -> `pass`
 - `S03` `verify:` `just check-types (one diagnostic in another session's uncommitted tui/app_navigation.py)` -> `pass`
 - `S03` `verify:` `lint-imports 28 kept` -> `pass`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_profile_worker_custody_lease_window.py`
+- `S04` `verify:` `pytest worker custody suites, all lanes` -> `pass`
+- `S04` `verify:` `ruff, ty` -> `pass`
