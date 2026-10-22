@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:8af1f1f0965096f87d56b58706e801afda5c3ffd346b503a326805faa8c67436'
+body_hash: 'sha256:47d85d9399775e34de4172e8e47c49bcbe93a4f9a142f13403d832ec11e63933'
 related:
   - "[[2026-10-22-startup-performance-plan]]"
 ---
@@ -103,3 +103,7 @@ related:
 - `S01` `verify:` `pytest 28 files importing the moved types (379)` -> `pass`
 - `S01` `verify:` `just check-types` -> `pass`
 - `S01` `verify:` `lint-imports` -> `pass`
+- `S02` `A` `src/cadrumo/adapters/persistence/storage/custody/change_witness.py`
+- `S02` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_change_witness.py`
+- `S02` `verify:` `pytest test_change_witness.py (17)` -> `pass`
+- `S02` `verify:` `ruff, ty on touched files` -> `pass`

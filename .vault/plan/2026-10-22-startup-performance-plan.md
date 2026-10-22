@@ -9,7 +9,7 @@ related:
   - '[[2026-10-22-startup-performance-request-path-audit]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:2daf560206d8c9aa3ed8a44d510c6c620a8a55bb37366d4919c140728133d17f'
+body_hash: 'sha256:b88496a38b63d8862a702f10c3b3dc9e3c265e9460009df3b3b9611612a83ec1'
 ---
 
 # `startup-performance` plan
@@ -25,7 +25,7 @@ The findings are in `2026-10-22-startup-performance-request-path-audit`. `2026-1
 ## Steps
 
 - [x] `S01` - Memoize the redaction gate's NIF-IVA catalogue and Spanish format per authority incarnation and Madrid date so log scrubbing stops re-resolving registry facts per record; `src/cadrumo/domain/calculations/registry/tax_identity_admission.py and its tests`.
-- [ ] `S02` - Add the custody change witness over directory change notifications with re-arm-before-read, unwatchable fallback and 0.5 s maximum age; `src/cadrumo/adapters/persistence/storage/custody/change_witness.py and its tests`.
+- [x] `S02` - Add the custody change witness over directory change notifications with re-arm-before-read, unwatchable fallback and 0.5 s maximum age; `src/cadrumo/adapters/persistence/storage/custody/change_witness.py and its tests`.
 - [ ] `S03` - Serve runtime facts lock, enrollment and binding observations and the logon inventory through the witness and WTS invalidation, invalidating on own publications; `src/cadrumo_runtime/host/profile_host.py, src/cadrumo_runtime/host/profile_connections.py, custody stores and owning tests`.
 - [ ] `S04` - Serve the worker's capsule binding validation through the witness; `src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py and owning tests`.
 - [ ] `S05` - Measure the request path on an overlaid package copy and record before and after timings in the audit; `.vault/audit/2026-10-22-startup-performance-request-path-audit.md`.
