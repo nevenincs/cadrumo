@@ -930,8 +930,8 @@ test-tui:
     #!/usr/bin/env bash
     set -uo pipefail
     failed=0
-    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/tests/test_import_quality_gate.py || failed=1
-    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/tests/test_import_quality_gate.py
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo_runtime/host/tests/frontend/cli/test_tui_launcher.py dev/tests/test_import_quality_gate.py || failed=1
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo_runtime/host/tests/frontend/cli/test_tui_launcher.py dev/tests/test_import_quality_gate.py
     serial_status=$?
     if [[ "$serial_status" -eq 5 ]]; then
         echo "No serial TUI tests are currently declared."
@@ -947,9 +947,9 @@ test-tui:
     #!pwsh
     $ErrorActionPreference = 'Stop'
     $failed = $false
-    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/tests/test_import_quality_gate.py
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo_runtime/host/tests/frontend/cli/test_tui_launcher.py dev/tests/test_import_quality_gate.py
     if ($LASTEXITCODE -ne 0) { $failed = $true }
-    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/tests/test_import_quality_gate.py
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo_runtime/host/tests/frontend/cli/test_tui_launcher.py dev/tests/test_import_quality_gate.py
     $serialStatus = $LASTEXITCODE
     if ($serialStatus -eq 5) {
         Write-Host 'No serial TUI tests are currently declared.'
