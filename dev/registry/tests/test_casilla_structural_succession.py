@@ -302,7 +302,8 @@ def test_structural_endpoint_sources_match_their_own_context(defect: str) -> Non
     elif defect == "wrong-period":
         sources["aeat-dr-309-2016"] = sources["aeat-dr-309-2016"].model_copy(
             update={
-                "period_selector": PeriodSelector(years=(2016, 2017), periods=("0A",)),
+                # 309/2016-2017 serves 1T-4T, 01-12 and 0A; an instalment clave is none of them.
+                "period_selector": PeriodSelector(years=(2016, 2017), periods=("1P",)),
             }
         )
     elif defect == "multi-edition":
