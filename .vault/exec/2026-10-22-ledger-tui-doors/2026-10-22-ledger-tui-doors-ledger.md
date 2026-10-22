@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ba368e95dc793c2650fe78d479ef0366a5491686bb9474bdd1c051370f1dfed'
+body_hash: 'sha256:c4d0261c1d436e6c2be4e073fe4107c7a63787765ac37ef1c89fad4077e9cfe0'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -115,6 +115,11 @@ related:
 - `S04` `verify:` `D3 screen, runtime door, harness and seam tests (194)` -> `pass`
 - `S04` `verify:` `ruff, ty on D3 files; lint-imports` -> `pass`
 - `S04` `by:` `D3`
+- `S08` `M` `src/cadrumo_runtime/host/frontend/tui/operations/runtime_profile_session.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_own_accounts.py`
+- `S08` `verify:` `runtime door tests (421)` -> `pass`
+- `S08` `verify:` `new off-loop binding test fails against the old code` -> `pass`
+- `S08` `by:` `orchestrator`
 
 ## Notes
 
@@ -122,3 +127,4 @@ related:
 - `S05` Invoice and transaction updates carry no baseline on the wire; the door re-reads before writing, leaving a race window. Invoice import has no dry run; the apply is bound to the reviewed file by `source_sha256.` The tools composer entry and locale strings land in the integration commit.
 - `S06` The three register list operations have no paging fields; screens hold the register and render one page. The tools composer entry and locale strings land in the integration commit.
 - `S04` evidence.query, `attachment_queue` and consent.list take no paging fields; screens hold the result and render one page. Detach takes typed identities because no operation lists an entry's attachments. A whole-repo ruff safe-fix run touched four files outside D3; owners confirmed nothing was lost. The tools composer entry and locale strings land in the integration commit.
+- `S08` Gate B1 finding from D2: every runtime door's session binding check made a blocking IPC status read on the event loop.

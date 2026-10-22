@@ -241,6 +241,37 @@ def test_own_account_door_submits_the_exact_request_and_reads_its_masked_result(
     assert controller.result_reads == [(LedgerOwnAccountResult, 1, False)]
 
 
+def test_own_account_door_reads_its_session_binding_off_the_event_loop(monkeypatch: pytest.MonkeyPatch) -> None:
+    from ....frontend.tui.operations import runtime_profile_session as bridge
+
+    client = _Client()
+    result = LedgerOwnAccountResult(
+        profile_id=_PROFILE_ID, action="add", own_account_id="acc-01", accounts=(_account(),), changed=True
+    )
+    _install(monkeypatch, client, _Controller(observation=_observation(effect=OperationEffect.UPDATED), result=result))
+    read_session = bridge.read_runtime_account_session
+    on_loop: list[bool] = []
+
+    def recording_read(
+        received_client: FrontendClient, *, profile_id: UUID, session_id: UUID, profile_label: str
+    ) -> object:
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            on_loop.append(False)
+        else:
+            on_loop.append(True)
+        return read_session(received_client, profile_id=profile_id, session_id=session_id, profile_label=profile_label)
+
+    monkeypatch.setattr(bridge, "read_runtime_account_session", recording_read)
+    door = _door(client)
+
+    assert asyncio.run(door(_add_request())) == result
+    # The constructor's check plus at least one during the submission.
+    assert len(on_loop) >= 2
+    assert not any(on_loop)
+
+
 @pytest.mark.parametrize(
     ("result", "effect"),
     [

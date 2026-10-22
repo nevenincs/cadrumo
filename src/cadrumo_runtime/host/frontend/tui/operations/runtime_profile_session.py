@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 from collections.abc import Callable
 from uuid import UUID
@@ -101,7 +102,8 @@ class RuntimeProfileSession:
         With ``explain_failure``, a refused or failed operation that recorded a
         registered error raises that error, so the screen can say why.
         """
-        self.require_binding()
+        # The binding check reads the session over IPC; on the loop it froze every key for the round trip.
+        await asyncio.to_thread(self.require_binding)
         if getattr(request, "profile_id", None) != self._profile_id:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         subject_ref = profile_operation_subject(str(self._profile_id))
@@ -144,7 +146,7 @@ class RuntimeProfileSession:
             raise session_expired_with_receipt(controller, terminal_projection) from error
         except (FrontendRefusedError, RefusalError):
             try:
-                self.require_binding()
+                await asyncio.to_thread(self.require_binding)
             except AccountSessionExpiredError as error:
                 raise session_expired_with_receipt(controller, terminal_projection) from error
             raise
@@ -179,7 +181,7 @@ class RuntimeProfileSession:
             result_version=result_version,
             allow_refusal_detail=allow_refusal_detail,
         )
-        self.require_binding()
+        await asyncio.to_thread(self.require_binding)
         settle(result, condition, terminal, str(controller.operation_id))
         return result
 
@@ -192,7 +194,7 @@ class RuntimeProfileSession:
         detail = await controller.settled_error_detail(terminal)
         if detail is None or detail.kind is not OperationErrorDetailKind.REGISTERED_ERROR or detail.error_code is None:
             return
-        self.require_binding()
+        await asyncio.to_thread(self.require_binding)
         raise RecordedRegisteredError(
             detail.error_code,
             context=detail.context_mapping(),
