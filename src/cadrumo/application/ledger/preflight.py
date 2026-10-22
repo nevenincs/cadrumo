@@ -1,12 +1,12 @@
 """Backend readiness preflight for bucket-scoped ledger transactions.
 
-:func:`preflight_ledger_tax_readiness` loads a
+:func:`preflight_ledger_tax_readiness` reads the period's rows of a
 :class:`~cadrumo.domain.transactions.models.TransactionCatalogue` via
 :class:`~cadrumo.domain.transactions.protocols.TransactionCatalogueRepositoryProtocol` from the
-active bucket and delegates to :func:`preflight_transaction_catalogue` for pure
-in-memory analysis. The report is consumed by modelo readiness projection and
-ledger read surfaces; it is not a calculation engine and never mutates the
-catalogue it inspects.
+active bucket, or takes a catalogue the caller already holds, and delegates to
+:func:`preflight_transaction_catalogue` for pure in-memory analysis. The report
+is consumed by modelo readiness projection and ledger read surfaces; it is not a
+calculation engine and never mutates the catalogue it inspects.
 
 See Also:
     :func:`~cadrumo.application.state_projection.build_operator_state_projection`
@@ -175,8 +175,9 @@ def preflight_ledger_tax_readiness(
     operation: PinnedAuthorityOperation,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     raw_afectacion_ratio: Decimal | None = None,
+    catalogue: TransactionCatalogue | None = None,
 ) -> LedgerPreflightReport:
-    """Load a bucket-local catalogue and report modelo-readiness gaps.
+    """Read a bucket-local catalogue and report modelo-readiness gaps.
 
     Args:
         bucket_id: Bucket whose ledger catalogue is being checked.
@@ -190,6 +191,10 @@ def preflight_ledger_tax_readiness(
             is resolved when ``None``.
         raw_afectacion_ratio: Optional home-office usage ratio from censo data,
             used only to surface proportionality mismatches.
+        catalogue: The bucket's rows when the caller already holds them,
+            either the whole catalogue or any superset of the period's rows;
+            otherwise the period's rows are read through
+            :func:`load_period_preflight_catalogue`.
 
     Returns:
         A :class:`LedgerPreflightReport` describing blocking or advisory ledger
@@ -205,7 +210,7 @@ def preflight_ledger_tax_readiness(
             "transaction repository bucket_id does not match the ledger preflight bucket",
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    transactions = repository.load()
+    transactions = catalogue if catalogue is not None else load_period_preflight_catalogue(repository, period)
     censo_ratio_mismatch_detail = None
     missing_home_office_afectacion_detail = None
     if _catalogue_uses_home_office_usage_ratio(period=period, transactions=transactions):
@@ -235,6 +240,29 @@ def preflight_ledger_tax_readiness(
         censo_ratio_mismatch_detail=censo_ratio_mismatch_detail,
         missing_home_office_afectacion_detail=missing_home_office_afectacion_detail,
     )
+
+
+def load_period_preflight_catalogue(
+    repository: TransactionCatalogueRepositoryProtocol,
+    period: Period,
+) -> TransactionCatalogue:
+    """Read only the stored rows a preflight of ``period`` can inspect.
+
+    The preflight keys every row on its ledger filing date (value date, else
+    booked date), which is the date the plaintext routing index records. The
+    period's date partition therefore holds every row the preflight can check,
+    without decrypting the rest of the bucket. The partition runs its own
+    completeness gate and falls back to a full scan when the index is stale
+    or partial, so the report can be slower but never short of a row.
+
+    The in-window half is a superset chosen by each row's eligible date span;
+    :func:`preflight_transaction_catalogue` still narrows it to the filing
+    date. A period without a date span reads the whole catalogue, as before,
+    and the preflight reports it as unsupported.
+    """
+    if not period.has_date_span():
+        return repository.load()
+    return repository.partition_by_date_range(period.start_date, period.end_date).in_window
 
 
 def preflight_transaction_catalogue(
@@ -273,12 +301,7 @@ def preflight_transaction_catalogue(
         )
     issues: list[LedgerPreflightIssue] = []
     checked = 0
-    for transaction in _sorted_transactions(transactions):
-        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-            continue
-        operation_date = transaction.raw.value_date or transaction.raw.booked_date
-        if not resolved_period.contains(operation_date):
-            continue
+    for transaction in _period_transactions(period=resolved_period, transactions=transactions):
         checked += 1
         issues.extend(
             _issues_for_transaction(
@@ -308,26 +331,28 @@ def _unsupported_period_issue(period: Period) -> LedgerPreflightIssue:
     )
 
 
-def _sorted_transactions(transactions: TransactionCatalogue) -> tuple[Transaction, ...]:
+def _period_transactions(*, period: Period, transactions: TransactionCatalogue) -> tuple[Transaction, ...]:
+    """Return the active rows filed in ``period``, ordered by filing date then id.
+
+    Filtering before sorting orders only the period's rows instead of the
+    whole bucket. The key is unique per row, so the order is the one a sort of
+    every row followed by the same filter would give.
+    """
+    if not period.has_date_span():
+        return ()
     return tuple(
         sorted(
-            transactions.values(),
+            (
+                transaction
+                for transaction in transactions.values()
+                if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
+                and period.contains(transaction.raw.value_date or transaction.raw.booked_date)
+            ),
             key=lambda transaction: (
                 transaction.raw.value_date or transaction.raw.booked_date,
                 transaction.transaction_id,
             ),
-        ),
-    )
-
-
-def _period_transactions(*, period: Period, transactions: TransactionCatalogue) -> tuple[Transaction, ...]:
-    if not period.has_date_span():
-        return ()
-    return tuple(
-        transaction
-        for transaction in _sorted_transactions(transactions)
-        if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
-        and period.contains(transaction.raw.value_date or transaction.raw.booked_date)
+        )
     )
 
 
@@ -968,6 +993,7 @@ __all__ = [
     "LedgerPreflightIssue",
     "LedgerPreflightIssueReason",
     "LedgerPreflightReport",
+    "load_period_preflight_catalogue",
     "preflight_ledger_tax_readiness",
     "preflight_transaction_catalogue",
 ]

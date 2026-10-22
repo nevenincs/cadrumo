@@ -21,7 +21,7 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
 from .actions_manual import get_manual_transaction, ledger_transaction_payload, ledger_transaction_tracking_payload
-from .id_resolution import resolve_lineage_transaction_id
+from .id_resolution import resolve_lineage_transaction
 from .participation_read import TransactionParticipationIndexRepositoryFactory, get_transaction_participation
 from .read_access import resolve_ledger_read_access
 from .tracking_projection import (
@@ -87,8 +87,10 @@ class LedgerTrackExecutor:
             ports = self._ports(bucket_id=bucket_id, operation=operation)
             if ports.transaction_repository.bucket_id != bucket_id or ports.operation is not operation:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            selected = resolve_lineage_transaction_id(payload.transaction_prefix, ports.transaction_repository.load())
-            result = get_manual_transaction(bucket_id=bucket_id, transaction_id=selected, ports=ports)
+            selected, catalogue = resolve_lineage_transaction(payload.transaction_prefix, ports.transaction_repository)
+            result = get_manual_transaction(
+                bucket_id=bucket_id, transaction_id=selected, ports=ports, catalogue=catalogue
+            )
             if result.ref.bucket_id != bucket_id or result.ref.transaction_id != selected:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             participation_repository = self._participation(bucket_id=bucket_id)

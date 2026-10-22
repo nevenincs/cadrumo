@@ -26,6 +26,7 @@ if TYPE_CHECKING:
 
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal.formatting import format_decimal
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.period import Period
 from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
@@ -114,7 +115,7 @@ from .models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
-from .preflight import preflight_ledger_tax_readiness
+from .preflight import LedgerPreflightReport, preflight_ledger_tax_readiness
 from .protocols import (
     BucketEventHistoryCoCommitWriterProtocol,
     RevisionGuardedTransactionCatalogueCoCommitWriterProtocol,
@@ -485,10 +486,19 @@ def get_manual_transaction(
     bucket_id: str,
     transaction_id: str,
     ports: LedgerActionPorts,
+    catalogue: TransactionCatalogue | None = None,
 ) -> ManualLedgerTransactionResult:
-    """Return one :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult` from a bucket catalogue."""
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
-    transaction = require_transaction(repository.load(), transaction_id)
+    """Return one :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult` from a bucket catalogue.
+
+    ``catalogue`` is a catalogue the caller already read that holds the row,
+    such as the one its id was resolved against; otherwise the bucket's
+    catalogue is loaded here. A row the catalogue does not hold is refused as
+    not found either way.
+    """
+    if catalogue is None:
+        repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+        catalogue = repository.load()
+    transaction = require_transaction(catalogue, transaction_id)
     return build_manual_ledger_result(bucket_id, transaction, ())
 
 
@@ -687,11 +697,11 @@ def _manual_transaction_snapshot(
     bucket_id: str,
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None,
     catalogue: TransactionCatalogue | None,
-) -> tuple[Transaction, ...]:
+) -> TransactionCatalogue:
     """Load one stable transaction snapshot, reusing a caller-owned catalogue."""
     if catalogue is None:
         catalogue = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository).load()
-    return tuple(catalogue.values())
+    return catalogue
 
 
 def _review_status_counts(transactions: tuple[Transaction, ...]) -> dict[LedgerReviewStatus, int]:
@@ -713,20 +723,33 @@ def _readiness_summary(
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
     operation: PinnedAuthorityOperation,
+    catalogue: TransactionCatalogue,
+    preflight: LedgerPreflightReport | None,
 ) -> tuple[int, int, bool | None]:
-    """Return readiness counts while preserving the period-gated repository read."""
+    """Return readiness counts for ``period`` from the summarised snapshot.
+
+    A caller that already ran the period's preflight on this snapshot passes
+    its report; otherwise the preflight inspects the snapshot itself rather
+    than reading the bucket a second time.
+    """
     if period is None:
+        if preflight is not None:
+            raise InternalInvariantError("a ledger summary without a period received a preflight report")
         return 0, 0, None
-    preflight = preflight_ledger_tax_readiness(
-        bucket_id=bucket_id,
-        period=period,
-        transaction_repository=resolve_transaction_repository(
+    if preflight is None:
+        preflight = preflight_ledger_tax_readiness(
             bucket_id=bucket_id,
-            repository=transaction_repository,
-        ),
-        usage_ratio_profile_loader=usage_ratio_profile_loader,
-        operation=operation,
-    )
+            period=period,
+            transaction_repository=resolve_transaction_repository(
+                bucket_id=bucket_id,
+                repository=transaction_repository,
+            ),
+            usage_ratio_profile_loader=usage_ratio_profile_loader,
+            operation=operation,
+            catalogue=catalogue,
+        )
+    elif preflight.bucket_id != bucket_id or preflight.period != period:
+        raise InternalInvariantError("a ledger summary received the preflight report of another bucket or period")
     return preflight.checked_transaction_count, len(preflight.issues), preflight.ready
 
 
@@ -796,22 +819,26 @@ def summarize_manual_transactions(
     period: Period | None = None,
     ports: LedgerActionPorts,
     catalogue: TransactionCatalogue | None = None,
+    preflight: LedgerPreflightReport | None = None,
 ) -> LedgerStatusReport:
     """Return a read-only :class:`~cadrumo.application.ledger.models.LedgerStatusReport` for one bucket.
 
     ``catalogue`` lets a caller that has already loaded this bucket's
     transactions summarise that exact snapshot. Reloading would cost a second
     decrypted read and, if a write interleaved, would describe a different
-    instant from the rows the caller is projecting beside it.
+    instant from the rows the caller is projecting beside it. The period's
+    readiness preflight inspects the same snapshot, and ``preflight`` lets a
+    caller that already ran it on that snapshot reuse its report.
 
     Core types:
     :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
-    transactions = _manual_transaction_snapshot(
+    snapshot = _manual_transaction_snapshot(
         bucket_id=bucket_id,
         transaction_repository=ports.transaction_repository,
         catalogue=catalogue,
     )
+    transactions = tuple(snapshot.values())
     status_counts = _review_status_counts(transactions)
     checked, issue_count, ready = _readiness_summary(
         bucket_id=bucket_id,
@@ -819,6 +846,8 @@ def summarize_manual_transactions(
         transaction_repository=ports.transaction_repository,
         usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
         operation=ports.operation,
+        catalogue=snapshot,
+        preflight=preflight,
     )
     # Money roll-up over active business/mixed rows (period-filtered when given):
     # the year-end / readiness money picture the personas asked for. Gross EUR

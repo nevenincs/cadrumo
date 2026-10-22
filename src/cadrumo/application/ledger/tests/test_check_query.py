@@ -22,15 +22,11 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import (
-    LedgerDatePartition,
-    OutOfWindowTransactionIndexEntry,
-    OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
-)
+from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..check_query import ledger_check_years, read_ledger_check
@@ -90,49 +86,62 @@ class _InvoiceReader:
         return self._catalogue
 
 
-class _TransactionReader:
-    """Inward fake for the application-owned transaction read capability."""
+class _UnreadTransactionReader:
+    """A transaction reader the check must not use: it checks the catalogue it was handed.
 
-    def __init__(self, catalogue: TransactionCatalogue) -> None:
-        self._catalogue = catalogue
+    Preflight and links describe one ledger. Reading the catalogue a second
+    time for the links would cost a second whole decrypt and could describe a
+    different instant from the rows the preflight inspected.
+    """
 
     def load(self) -> TransactionCatalogue:
-        return self._catalogue
+        raise AssertionError("the ledger check must check the catalogue it was given, not read it again")
 
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        """Mirror the public date-partition contract over the in-memory rows."""
-        in_window: list[Transaction] = []
-        out_of_window: list[OutOfWindowTransactionIndexEntry] = []
-        for transaction in self._catalogue.values():
-            filing_date = transaction.raw.value_date or transaction.raw.booked_date
-            if start <= filing_date <= end:
-                in_window.append(transaction)
-                continue
-            out_of_window.append(
-                OutOfWindowTransactionIndexEntry(
-                    transaction_id=transaction.transaction_id,
-                    filing_date=filing_date,
-                ),
-            )
-        return LedgerDatePartition(
-            in_window=TransactionCatalogue.from_transactions(in_window),
-            out_of_window=tuple(out_of_window),
-            out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
-            index_complete=True,
-        )
+        raise AssertionError(f"the ledger check must not read a partition ({start}..{end})")
 
 
-def _read_ports(*, one_sided_link: bool = False) -> InvoiceCatalogueReadPorts:
-    transactions = TransactionCatalogue()
-    if one_sided_link:
-        transaction = _transaction(provider_id="link", booked=date(2024, 4, 10)).model_copy(
-            update={"invoice_id": "inv-1"},
-        )
-        transactions = TransactionCatalogue.from_transactions((transaction,))
+def _read_ports(*, invoices: InvoiceCatalogue | None = None) -> InvoiceCatalogueReadPorts:
     return InvoiceCatalogueReadPorts(
-        invoice_reader=_InvoiceReader(InvoiceCatalogue()),
-        transaction_reader=_TransactionReader(transactions),
+        invoice_reader=_InvoiceReader(invoices if invoices is not None else InvoiceCatalogue()),
+        transaction_reader=_UnreadTransactionReader(),
     )
+
+
+def _one_sided_link_row() -> Transaction:
+    """A personal row citing an invoice the invoice catalogue does not hold."""
+    return _transaction(provider_id="link", booked=date(2024, 4, 10)).model_copy(update={"invoice_id": "inv-1"})
+
+
+def _invoice_citing_a_missing_row() -> InvoiceCatalogue:
+    """An invoice linked to a transaction the ledger does not hold."""
+    invoice = Invoice.model_validate(
+        {
+            "kind": InvoiceKind.ISSUED,
+            "invoice_number": "INV-ONE-SIDED",
+            "issued_at": date(2024, 4, 1),
+            "counterparty_name": "Cliente SL",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "base_total": Decimal("100.00"),
+            "iva_total": Decimal("21.00"),
+            "grand_total": Decimal("121.00"),
+            "currency": "EUR",
+            "lines": (
+                InvoiceLine(
+                    description="Consultoria",
+                    quantity=Decimal("1"),
+                    unit_price=Decimal("100.00"),
+                    subtotal=Decimal("100.00"),
+                    iva_rate=IvaRate.from_registry("RATE_21"),
+                    iva_amount=Decimal("21.00"),
+                ),
+            ),
+            "payment_status": PaymentStatus.PAID,
+            "linked_transaction_ids": ("a" * 64,),
+        },
+    )
+    return InvoiceCatalogue(invoices={invoice.invoice_id: invoice})
 
 
 @contextmanager
@@ -175,16 +184,18 @@ def test_a_one_sided_invoice_link_alone_makes_a_ledger_not_ready(operation: Pinn
     A branch spelling readiness as preflight-only would pass this ledger, and
     the operator would file against catalogues that disagree.
     """
-    with _stored(_transaction(provider_id="a", booked=date(2024, 4, 10))) as catalogue:
+    with _stored(_transaction(provider_id="a", booked=date(2024, 4, 10)), _one_sided_link_row()) as catalogue:
         check = read_ledger_check(
             bucket_id=_BUCKET,
             transactions=catalogue,
-            ports=_read_ports(one_sided_link=True),
+            ports=_read_ports(),
             operation=operation,
         )
 
     assert check.issues == ()
-    assert len(check.link_inconsistencies) == 1
+    assert [(link.invoice_id, link.direction.value) for link in check.link_inconsistencies] == [
+        ("inv-1", "transaction-only")
+    ]
     assert check.ready is False
 
 
@@ -196,7 +207,7 @@ def test_an_empty_ledger_is_ready_only_when_its_links_are_clean(operation: Pinne
     dirty = read_ledger_check(
         bucket_id=_BUCKET,
         transactions=empty,
-        ports=_read_ports(one_sided_link=True),
+        ports=_read_ports(invoices=_invoice_citing_a_missing_row()),
         operation=operation,
     )
 
@@ -204,6 +215,9 @@ def test_an_empty_ledger_is_ready_only_when_its_links_are_clean(operation: Pinne
     assert clean.periods == ()
     assert clean.checked_transaction_count == 0
     assert dirty.ready is False
+    assert [(link.transaction_id, link.direction.value) for link in dirty.link_inconsistencies] == [
+        ("a" * 64, "invoice-only")
+    ]
 
 
 def test_an_explicit_period_reports_only_that_period(operation: PinnedAuthorityOperation) -> None:

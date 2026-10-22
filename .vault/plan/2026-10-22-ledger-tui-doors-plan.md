@@ -10,7 +10,7 @@ related:
   - '[[2026-10-22-ledger-tui-doors-authenticated-stored-reads-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:402cadf475afde4549101522b531d1900d7a6b49872cc4a869a66c54b35209e1'
+body_hash: 'sha256:8f8f80c7446480b674c8da292d54c90f35a41d4cc1f8e555715570c1dc4954d6'
 ---
 
 # `ledger-tui-doors` plan
@@ -57,7 +57,7 @@ Dedicated agents make the ledger reads behind the Records screens meet the 30,00
 - [x] `P04.S12` - stop the domain Transaction model repeating raw revalidation and registry vocabulary lookups for every loaded row; `src/cadrumo/domain/transactions/models.py`.
 - [x] `P04.S13` - cut the per-row session freshness checks and repeated object-key digests in the secure object batch read; `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`.
 - [x] `P04.S14` - make workbench generation pair invoices with transactions through an index instead of every invoice against every transaction, with identical suggestions; `src/cadrumo/domain/invoices/service.py`.
-- [ ] `P04.S15` - load the transaction catalogue once per ledger read, read the period partition for status, check and preflight, and read one row by id for view, track, history and participation; `src/cadrumo/application/ledger`.
+- [x] `P04.S15` - load the transaction catalogue once per ledger read, read the period partition for status, check and preflight, and read one row by id for view, track, history and participation; `src/cadrumo/application/ledger`.
 - [x] `P04.S16` - stop revalidating the whole invoice catalogue and its registry lookups on every invoice read; `src/cadrumo/domain/invoices/models.py`.
 - [ ] `P04.S17` - decode authenticated current-schema transaction rows without admission re-derivations, remove duplicated validators, and move the transaction model to pydantic-native coercion; `src/cadrumo/domain/transactions/models.py`.
 - [ ] `P04.S18` - decode an authenticated current-schema invoice catalogue without admission re-derivations and validate only the invoice a view returns; `src/cadrumo/adapters/persistence/profile/invoices.py`.

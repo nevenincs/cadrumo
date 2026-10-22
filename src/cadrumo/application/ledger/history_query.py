@@ -104,6 +104,11 @@ def ledger_history_object_ids(
     Split siblings are a different relationship -- rows that came from the same
     parent, not earlier names for this row -- so they are included only when
     the caller opts in.
+
+    Both relationships are recorded on the row itself, so ``catalogue`` need
+    only hold ``transaction_id``'s row: the row read on its own, or the whole
+    catalogue its id was resolved against. When it is omitted the whole
+    catalogue is loaded.
     """
     if catalogue is None:
         catalogue = transaction_repository.load()
@@ -136,7 +141,8 @@ def read_ledger_history(
         bucket_id: The owning profile bucket.
         transaction_repository: Explicit bucket-scoped catalogue port.
         bucket_event_repository: Explicit bucket-scoped event-history port.
-        transaction_catalogue: The :class:`TransactionCatalogue` already read for prefix resolution, if any.
+        transaction_catalogue: The :class:`TransactionCatalogue` already read for prefix resolution, if
+            any. It must hold the query's transaction: that row alone, or the whole catalogue.
 
     Returns:
         The chain, ordered by occurrence, with the anchor ids it came from.

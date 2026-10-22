@@ -25,7 +25,8 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
 from .actions_manual import summarize_manual_transactions
 from .models import LedgerStatusReport
-from .readiness_query import LedgerReadinessIssueV1, read_ledger_readiness
+from .preflight import preflight_ledger_tax_readiness
+from .readiness_query import LedgerReadinessIssueV1, ledger_readiness_issues
 from .stale_filing_query import LedgerStaleFilingV1, read_stale_ledger_filings
 
 LEDGER_STATUS_OPERATION_DEFINITION_ID = "ledger.status"
@@ -183,22 +184,27 @@ class LedgerStatusExecutor:
                 or ports.operation is not operation
             ):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+            # Counts and stale filings span the whole bucket, so the whole
+            # catalogue is read once; the period's preflight, its readiness
+            # facts and the summary all inspect that one snapshot.
             transactions = ports.transaction_repository.load()
             period = payload.period.to_period() if payload.period is not None else None
-            report = summarize_manual_transactions(
-                bucket_id=bucket_id, period=period, ports=ports, catalogue=transactions
-            )
-            readiness = (
-                read_ledger_readiness(
+            preflight = (
+                preflight_ledger_tax_readiness(
                     bucket_id=bucket_id,
                     period=period,
                     transaction_repository=ports.transaction_repository,
                     usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
                     operation=operation,
+                    catalogue=transactions,
                 )
                 if period is not None
-                else ()
+                else None
             )
+            report = summarize_manual_transactions(
+                bucket_id=bucket_id, period=period, ports=ports, catalogue=transactions, preflight=preflight
+            )
+            readiness = ledger_readiness_issues(preflight, transactions) if preflight is not None else ()
             stale = read_stale_ledger_filings(
                 bucket_id=bucket_id,
                 revisions=repositories.calculation.load(operation=operation).revisions,

@@ -25,7 +25,7 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
 from .actions_manual import get_manual_transaction, ledger_transaction_result_payload
 from .history_query import LedgerHistoryQuery, read_ledger_history
-from .id_resolution import resolve_lineage_transaction_id
+from .id_resolution import resolve_lineage_transaction
 from .list_query import LLM_DECISION_EVENT_TYPES
 from .read_access import resolve_ledger_read_access
 from .transaction_projection import LedgerTransactionProjection
@@ -80,8 +80,10 @@ class LedgerViewExecutor:
             ports = self._ports(bucket_id=bucket_id, operation=operation)
             if ports.transaction_repository.bucket_id != bucket_id or ports.operation is not operation:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            selected = resolve_lineage_transaction_id(payload.transaction_prefix, ports.transaction_repository.load())
-            result = get_manual_transaction(bucket_id=bucket_id, transaction_id=selected, ports=ports)
+            selected, catalogue = resolve_lineage_transaction(payload.transaction_prefix, ports.transaction_repository)
+            result = get_manual_transaction(
+                bucket_id=bucket_id, transaction_id=selected, ports=ports, catalogue=catalogue
+            )
             canonical = ledger_transaction_result_payload(result)
             if canonical.bucket_id != bucket_id or canonical.transaction_id != selected:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
@@ -90,6 +92,7 @@ class LedgerViewExecutor:
                 bucket_id=bucket_id,
                 transaction_repository=ports.transaction_repository,
                 bucket_event_repository=ports.bucket_event_repository,
+                transaction_catalogue=catalogue,
             )
             decisions = tuple(event for event in history.events if event.event_type in LLM_DECISION_EVENT_TYPES)
             rejection = None

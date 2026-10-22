@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:ff51020d79c146e58d9e2ad5e4d7ede288ca6503fa47a230f7ceb8c715a380a3'
+body_hash: 'sha256:bd5bd8d0d0eb0b438d681ba996ba43372b79a78e91a10e9b090ab153789dfdeb'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -238,6 +238,25 @@ related:
 - `S16` `verify:` `HEAD-versus-new identity and refusal parity over varied seeds incl. every rate window edge; memo-key mutations caught` -> `pass`
 - `S16` `verify:` `invoice, ledger, profile persistence tests (4908)` -> `pass`
 - `S16` `by:` `S16`
+- `S15` `M` `src/cadrumo/application/ledger/preflight.py`
+- `S15` `M` `src/cadrumo/application/ledger/readiness_query.py`
+- `S15` `M` `src/cadrumo/application/ledger/actions_manual.py`
+- `S15` `M` `src/cadrumo/application/ledger/status_operation.py`
+- `S15` `M` `src/cadrumo/application/ledger/check_query.py`
+- `S15` `M` `src/cadrumo/application/invoices/catalogue_reads.py`
+- `S15` `M` `src/cadrumo/application/ledger/id_resolution.py`
+- `S15` `M` `src/cadrumo/application/ledger/view_operation.py`
+- `S15` `M` `src/cadrumo/application/ledger/track_operation.py`
+- `S15` `M` `src/cadrumo/application/ledger/participation_operation.py`
+- `S15` `M` `src/cadrumo/application/ledger/history_operation.py`
+- `S15` `M` `src/cadrumo/application/ledger/history_query.py`
+- `S15` `M` `src/cadrumo/application/ledger/tests/test_check_query.py`
+- `S15` `A` `src/cadrumo/entrypoints/tests/test_ledger_read_operation_parity.py`
+- `S15` `verify:` `CPU means at 30k: view 24.3s to 0.12s, track 16.0s to 0.09s, history 7.7s to 0.08s, participation 7.5s to 0.10s, preflight 7.6s to 0.59s, status 45.6s to 9.0s, check 22.2s to 9.5s` -> `pass`
+- `S15` `verify:` `parity against full-load answers with decrypt counts pinned, stale index, split and edited rows, exact refusals (9 tests)` -> `pass`
+- `S15` `verify:` `ledger, invoices, overview, modelo suites (5120) and ledger entrypoint/CLI/runtime/TUI files (1919)` -> `pass`
+- `S15` `verify:` `ruff, lint-imports, check-types` -> `pass`
+- `S15` `by:` `S15`
 
 ## Notes
 
@@ -256,3 +275,4 @@ related:
 - `S12` Remaining domain cost is about 140 us of 212 us per row across `~75` validator calls; further cuts need a user decision (skip revalidating authenticated stored rows, native pydantic types, or paging the unfiltered listing).
 - `S14` When many items share one settlement amount, every true match is still built (about 12-25 us each); capping or paging suggestions would change output and needs a user decision.
 - `S16` invoice.view decoding only the selected invoice is covered by the authenticated-stored-read decision recorded next.
+- `S15` Status and check remain one whole-catalogue load each by design. Pre-existing: ledger.status with an instalment period (1P) fails with PeriodError in the money totals; pinned by a test, not fixed.

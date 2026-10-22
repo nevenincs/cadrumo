@@ -17,6 +17,9 @@ operator lineage handle across edits:
   (or an unambiguous prefix of it) names a superseded id in some live
   row's edit-lineage chain, the resolver returns that current row's id,
   so an old handle written down before an edit keeps answering.
+- :func:`resolve_lineage_transaction` answers the same question from a
+  repository, reading one row when the handle is a full live id and the
+  whole catalogue only when the prefix or lineage resolution needs it.
 
 The matching rule: a prefix matches a full id when the full id starts
 with the prefix (lowercase, hex). A prefix that equals a full id resolves
@@ -38,6 +41,7 @@ from collections.abc import Iterable
 from ...core.hashing import HEX_ALPHABET
 from ...domain.transactions.errors import TransactionIdPrefixError
 from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from .actions_common import transaction_modelo_source_ids
 
 MINIMUM_DISPLAY_ID_WIDTH = 8
@@ -218,10 +222,46 @@ def resolve_lineage_transaction_id(prefix: str, catalogue: TransactionCatalogue)
         return next(iter(resolved))
 
 
+def resolve_lineage_transaction(
+    prefix: str,
+    repository: TransactionCatalogueRepositoryProtocol,
+) -> tuple[str, TransactionCatalogue]:
+    """Resolve ``prefix`` as :func:`resolve_lineage_transaction_id` does, reading as little as it can.
+
+    A full-length id that names a live row resolves to that row whatever else
+    the bucket holds: ids are unique, so it is the only live match, and step 1
+    of the lineage resolver returns it before any lineage is walked. That row
+    is read on its own. Any other handle -- a shorter prefix, a superseded id,
+    an id that names nothing -- is resolved against the whole catalogue, so
+    every refusal (no match, ambiguous prefix, malformed input) is the one the
+    lineage resolver gives.
+
+    Args:
+        prefix: A user-supplied prefix or full id. Lowercase hex.
+        repository: The active bucket's transaction catalogue port.
+
+    Returns:
+        The resolved live id and a catalogue holding that row: the row alone
+        when the full id was read directly, else the whole catalogue it was
+        resolved against.
+
+    Raises:
+        TransactionIdPrefixError: As :func:`resolve_lineage_transaction_id`.
+    """
+    normalized = normalise_transaction_id_prefix(prefix)
+    if len(normalized) == _FULL_ID_LENGTH:
+        addressed = repository.load_by_ids((normalized,))
+        if normalized in addressed:
+            return normalized, addressed
+    catalogue = repository.load()
+    return resolve_lineage_transaction_id(prefix, catalogue), catalogue
+
+
 __all__ = [
     "MINIMUM_DISPLAY_ID_WIDTH",
     "compute_display_id_width",
     "normalise_transaction_id_prefix",
+    "resolve_lineage_transaction",
     "resolve_lineage_transaction_id",
     "resolve_transaction_id",
 ]

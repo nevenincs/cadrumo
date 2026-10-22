@@ -81,8 +81,10 @@ def read_ledger_check(
 
     Args:
         bucket_id: The owning profile bucket.
-        transactions: The live ledger to assess.
-        ports: Required invoice and transaction catalogue read capabilities.
+        transactions: The live ledger to assess, the whole catalogue: the
+            link check spans every row whatever the period.
+        ports: Required invoice catalogue read capability; the transaction
+            reader is not read again because ``transactions`` is the catalogue.
         operation: Caller-owned generation-pinned authority for preflight facts.
         period: One period to check; when omitted, every year the ledger spans
             is swept over its annual period.
@@ -93,7 +95,7 @@ def read_ledger_check(
     Core types:
     :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
-    link_inconsistencies = tuple(verify_invoice_repository_links(ports=ports))
+    link_inconsistencies = tuple(verify_invoice_repository_links(ports=ports, transactions=transactions))
 
     if period is not None:
         report = preflight_transaction_catalogue(

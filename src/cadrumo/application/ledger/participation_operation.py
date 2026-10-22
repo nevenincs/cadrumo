@@ -21,7 +21,7 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
-from .id_resolution import resolve_lineage_transaction_id
+from .id_resolution import resolve_lineage_transaction
 from .participation_read import TransactionParticipationIndexRepositoryFactory, get_transaction_participation
 from .read_access import resolve_ledger_read_access
 from .tracking_projection import LedgerParticipationProjection as LedgerParticipationEntryProjection
@@ -72,7 +72,7 @@ class LedgerParticipationExecutor:
             ports = self._ports(bucket_id=bucket_id, operation=operation)
             if ports.transaction_repository.bucket_id != bucket_id or ports.operation is not operation:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            selected = resolve_lineage_transaction_id(payload.transaction_prefix, ports.transaction_repository.load())
+            selected, _catalogue = resolve_lineage_transaction(payload.transaction_prefix, ports.transaction_repository)
             participation_repository = self._participation(bucket_id=bucket_id)
             if participation_repository.bucket_id != bucket_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
