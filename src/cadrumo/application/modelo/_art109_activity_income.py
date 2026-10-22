@@ -42,7 +42,7 @@ from ...domain.transactions.irpf_categories import has_activity_irpf_category, h
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
-from ...domain.transactions.volumen_ingresos import counts_toward_art_109_activity_income
+from ..aggregation.concepto_ingreso_admission import row_counts_toward_art_109_activity_income
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -243,6 +243,11 @@ def derive_art109_activity_income_coverage(
 
     Returns:
         The proven or insufficient :class:`Art109ActivityIncomeCoverage`.
+
+    Raises:
+        UnacceptedLedgerRegistryValueError: When a current-period row of a
+            net-of-subvenciones activity declares an income concept the pinned
+            vocabulary does not list.
     """
     if not period.has_date_span():
         return _insufficient("period_without_date_span")
@@ -284,6 +289,7 @@ def derive_art109_activity_income_coverage(
             period=period,
             exempt_activities=exempt_activities,
             net_of_subvenciones_activities=net_of_subvenciones_activities,
+            operation=operation,
         )
         if insufficient_reason is not None:
             return _insufficient(insufficient_reason)
@@ -345,8 +351,15 @@ def _current_period_income_contribution(
     period: Period,
     exempt_activities: frozenset[TipoActividad],
     net_of_subvenciones_activities: frozenset[TipoActividad],
+    operation: PinnedAuthorityOperation,
 ) -> tuple[Decimal | None, str | None]:
-    """Return one row's computable income or its fail-closed reason."""
+    """Return one row's computable income or its fail-closed reason.
+
+    A declared income concept the pinned vocabulary does not list is refused,
+    not reported as insufficient: nothing is missing from the row, and
+    insufficiency would silently leave the coverage fact unapplied while the
+    stored value stayed uncorrected.
+    """
     row = _classify_current_period_row(transaction, period=period)
     if row is _RowKind.IGNORE:
         return None, None
@@ -364,9 +377,10 @@ def _current_period_income_contribution(
         # "en relacion con las mismas", so an empresarial row neither claims it
         # nor dilutes the class that does.
         return None, None
-    if activity in net_of_subvenciones_activities and not counts_toward_art_109_activity_income(
-        transaction.concepto_ingreso,
+    if activity in net_of_subvenciones_activities and not row_counts_toward_art_109_activity_income(
+        transaction,
         effective_date=period.end_date,
+        authority=operation,
     ):
         # Apartados 3 and 4 measure the 70 per cent net of subvenciones and
         # indemnizaciones. A subsidy carries no retencion, so leaving it in the

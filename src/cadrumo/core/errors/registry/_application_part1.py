@@ -628,6 +628,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.aggregation.errors.UnacceptedLedgerRegistryValueError",
+        ErrorCode(
+            code="REFUSED_LEDGER_REGISTRY_VALUE_UNACCEPTED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_ledger_registry_value_unaccepted",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.filing.errors.ModeloApplicationError",
         ErrorCode(
             code="ERROR_FILING_APPLICATION",

@@ -10,6 +10,7 @@ or resolver ownership contracts are violated.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 
 from ...core.errors.hierarchy import CadrumoError, CoreError, TerminalPreconditionErrorMixin
 from ...core.i18n.translatable import Translatable as tr
@@ -77,6 +78,30 @@ class AggregationValidationError(AggregationError):
     """
 
 
+class UnacceptedLedgerRegistryValueError(AggregationError):
+    """Raised when a ledger row carries a registry value the operation's pinned authority does not accept.
+
+    Write-time admission accepted the value under the authority current when the
+    row was written. The operation consuming the row may pin an authority that
+    does not declare it, and the value then has no meaning in that calculation.
+    Reading it as the nearest ordinary meaning -- ordinary income, cash
+    accounting, an exempt acquirer, a mixed-use input -- would put a figure no
+    authority supports into a filing, so the consumer refuses instead.
+    """
+
+    def __init__(self, *, field: str, value: str, transaction_id: str, effective_date: date) -> None:
+        """Name the field, the refused value, the ledger row and the date the authority was read for."""
+        super().__init__(
+            tr("errors.refused.canonical_ledger_registry_value_unaccepted"),
+            context={
+                "field": field,
+                "value": value,
+                "transaction_id": transaction_id,
+                "effective_date": effective_date.isoformat(),
+            },
+        )
+
+
 __all__ = [
     "AggregationCategoryCoverageError",
     "AggregationConfigError",
@@ -85,4 +110,5 @@ __all__ = [
     "AggregationPeriodError",
     "AggregationUnsupportedModeloError",
     "AggregationValidationError",
+    "UnacceptedLedgerRegistryValueError",
 ]

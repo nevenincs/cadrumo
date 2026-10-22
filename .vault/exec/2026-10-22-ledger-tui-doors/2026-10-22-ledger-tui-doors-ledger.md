@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:5dec0b6dfba603138f4e1748a1afb1feeea37bd72fb5dd7c876535bc557994a0'
+body_hash: 'sha256:f7470857ccc9d50ffb9317badaec9d4dc71b19a2fa182ba49ef7f98f22c8c4b6'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -284,6 +284,52 @@ related:
 - `S18` `verify:` `invoice, profile, ledger, aggregation and runtime invoice suites (5813)` -> `pass`
 - `S18` `verify:` `ruff, lint-imports, ty on S18 files` -> `pass`
 - `S18` `by:` `S18`
+- `S19` `M` `src/cadrumo/application/aggregation/_iva_transaction.py`
+- `S19` `M` `src/cadrumo/application/aggregation/iva_ledger.py`
+- `S19` `M` `src/cadrumo/application/aggregation/errors.py`
+- `S19` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S19` `M` `src/cadrumo/application/aggregation/renta_income_ledger.py`
+- `S19` `A` `src/cadrumo/application/aggregation/concepto_ingreso_admission.py`
+- `S19` `M` `src/cadrumo/application/modelo/_art109_activity_income.py`
+- `S19` `M` `src/cadrumo/application/modelo/verification_revision_findings.py`
+- `S19` `M` `src/cadrumo/application/ledger/preflight.py`
+- `S19` `M` `src/cadrumo/domain/transactions/volumen_ingresos.py`
+- `S19` `M` `src/cadrumo/domain/iva/schema.py`
+- `S19` `M` `src/cadrumo/core/errors/registry/_application_part1.py`
+- `S19` `M` `src/cadrumo/locales/en/common.yml`
+- `S19` `M` `src/cadrumo/locales/es/common.yml`
+- `S19` `M` `src/cadrumo/locales/ca/common.yml`
+- `S19` `M` `src/cadrumo/locales/hu/common.yml`
+- `S19` `M` `src/cadrumo/locales/en/errors.yml`
+- `S19` `M` `src/cadrumo/locales/es/errors.yml`
+- `S19` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S19` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S19` `M` `src/cadrumo/application/aggregation/tests/test_m131_volumen_agrario.py`
+- `S19` `M` `src/cadrumo/application/aggregation/tests/test_undeclared_activity_advisory.py`
+- `S19` `A` `src/cadrumo/application/aggregation/tests/test_iva_ledger_refuses_unaccepted_registry_values.py`
+- `S19` `A` `src/cadrumo/application/aggregation/tests/test_m131_refuses_unaccepted_concepto_ingreso.py`
+- `S19` `A` `src/cadrumo/application/aggregation/tests/test_unaccepted_ledger_registry_value_error.py`
+- `S19` `A` `src/cadrumo/application/modelo/tests/test_art109_refuses_unaccepted_concepto_ingreso.py`
+- `S19` `M` `src/cadrumo/domain/transactions/tests/test_volumen_ingresos.py`
+- `S19` `A` `src/cadrumo/domain/iva/tests/test_cash_accounting_predicates_refuse_undeclared_treatment.py`
+- `S19` `verify:` `seeded before/after parity, 1321 valid rows: 60 IVA aggregations, 120 general and especial binding resolutions, 48 M131, 48 Art. 109; 0 differences` -> `pass`
+- `S19` `verify:` `per-field stale-row refusal tests through the real resolvers (13), each failing against the reinstated old behaviour` -> `pass`
+- `S19` `verify:` `aggregation, IVA, transactions, Renta, calculations, Modelo and ledger suites (7309) plus 24 adapter and entrypoint files (266)` -> `pass`
+- `S19` `verify:` `ruff format and check, lint-imports (28 kept), check-locales findings on new keys (0)` -> `pass`
+- `S19` `by:` `vaultspec-high-executor`
+- `S17` `M` `src/cadrumo/domain/transactions/models.py`
+- `S17` `M` `src/cadrumo/domain/transactions/model_validation.py`
+- `S17` `M` `src/cadrumo/adapters/persistence/profile/transactions.py`
+- `S17` `M` `src/cadrumo/adapters/persistence/profile/transaction_row_contracts.py`
+- `S17` `M` `src/cadrumo/application/ledger/read_ports.py`
+- `S17` `M` `src/cadrumo/application/ledger/action_ports.py`
+- `S17` `M` `src/cadrumo/application/ledger/check_operation.py`
+- `S17` `M` `src/cadrumo/entrypoints/ledger_action_composition.py`
+- `S17` `A` `src/cadrumo/domain/transactions/tests/test_authenticated_stored_row.py`
+- `S17` `A` `src/cadrumo/adapters/persistence/profile/tests/test_transaction_authenticated_reads.py`
+- `S17` `M` `src/cadrumo/entrypoints/tests/test_ledger_read_operation_parity.py`
+- `S17` `verify:` `uv run --no-sync pytest src/cadrumo/domain/transactions/tests src/cadrumo/adapters/persistence/profile/tests src/cadrumo/application/ledger/tests` -> `pass`
+- `S17` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -305,3 +351,7 @@ related:
 - `S15` Status and check remain one whole-catalogue load each by design. Pre-existing: ledger.status with an instalment period (1P) fails with PeriodError in the money totals; pinned by a test, not fixed.
 - `S08` Pre-existing crash found by P04.S15: the money totals called Period.contains on a period with no date span. The overview pipeline now also gets the typed refusal for such a period; whether an instalment-period overview should show ledger totals is an open question.
 - `S18` Secure records report the current schema version, not the stored one; safe while older rows are refused outright, but a future row upgrader must expose the stored version to the trusted path.
+- `S19` Adding two IvaLedgerAggregationIssueReason members required classifying them in src/cadrumo/application/ledger/preflight.py, whose import-time invariant refuses an unclassified reason; both are declared as not reaching preflight.
+- `S19` The ledger preflight counterparty screen still compares an identification state only with the Spanish token; only the calculation refuses an undeclared one.
+- `S19` The IVA admission gate calls `validate_cash_accounting_axis` from `domain/transactions/cash_accounting_validation.py,` which P04.S17 owns; a rename there must update this caller.
+- `S17` full src/cadrumo run left 3 failures outside S17: docstring core-struct links on S15 ledger modules, and one `archive_fetch` test that did not reproduce; both routed to root-cause work

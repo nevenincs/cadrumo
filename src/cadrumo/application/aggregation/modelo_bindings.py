@@ -193,8 +193,27 @@ _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS = frozenset(
         IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT,
         IvaLedgerAggregationIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION,
         IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
+        IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE,
+        IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EVIDENCE_INCOHERENT,
     }
 )
+
+# Reasons whose marker also carries the issue's own sentence. Their detail names
+# a registry field and token, never a taxpayer figure, and without it the marker
+# could not say which stored value to correct.
+_IVA_SELECTED_SCOPE_DETAILED_REASONS = frozenset(
+    {
+        IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE,
+        IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EVIDENCE_INCOHERENT,
+    }
+)
+
+
+def _selected_scope_iva_evidence_message(issue: IvaLedgerAggregationIssue) -> str:
+    marker = f"selected-scope IVA evidence failure: {issue.reason.value}"
+    if issue.reason in _IVA_SELECTED_SCOPE_DETAILED_REASONS:
+        return f"{marker}: {issue.detail}"
+    return marker
 
 
 def _selected_scope_iva_evidence_diagnostics(
@@ -209,7 +228,7 @@ def _selected_scope_iva_evidence_diagnostics(
             source_kind="ledger_iva_aggregation",
             resolver_id=resolver_id,
             source_ref=f"transaction:{issue.transaction_id}",
-            message=f"selected-scope IVA evidence failure: {issue.reason.value}",
+            message=_selected_scope_iva_evidence_message(issue),
         )
         for issue in issues
         if issue.reason in _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS
@@ -644,6 +663,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                         activity_category_matcher=activity_category_matcher,
                         employment_category_matcher=employment_category_matcher,
                         ports=self._ports,
+                        operation=operation,
                     )
                 else:
                     aggregation = aggregate_renta_income_ledger_from_repositories(

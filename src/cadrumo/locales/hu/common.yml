@@ -42,7 +42,13 @@ aggregation:
         forrás-joghatósági hatókört ehhez a bruttó jövedelem mezőhöz.
   iva_ledger:
     errors:
+      art_104_tres_exclusion_not_operator_declared: A(z) %{value} Art. 104.tres kizárást
+        az adónyilvántartás származtatja, ezért főkönyvi tételen nem deklarálható.
+        Töröld a tételről.
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
+      cash_accounting_evidence_incoherent: 'A pénzforgalmi elszámolás időzítési adatai
+        ezen az IVA-tételen ellentmondásosak: %{refusal}. Javítsd a főkönyvi tétel
+        ügyleti dátumát vagy fizetési bizonyítékát.'
       deduction_authority_on_non_deducible_row: Az olyan IVA-sor, amely nem hordoz
         levonható adóösszeget, nem viselhet levonási osztályozást; a %{category} IVA-kategória
         %{flow_direction} irányban számol el. Töröld a megadott levonási típust, vagy
@@ -57,6 +63,9 @@ aggregation:
         nem érvényes Közösségen belüli ügylethez.
       eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá
         eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
+      exemption_article_outside_domestic_exempt: A(z) %{value} mentességi cikk csak
+        belföldi, mentes IVA-tételre alkalmazható, ez a tétel viszont a(z) %{category}
+        IVA-kategóriában számol el. Javítsd a mentességi cikket vagy az IVA-kategóriát.
       inadmissible_deduction_classification: 'A megadott %{deduction_fact_kind} IVA-levonási
         típus nem fogadható el a %{iva_category} IVA-kategóriába tartozó sornál: %{refusal}.
         Javítsd a megadott levonási típust, az IVA-kategóriát vagy a hozzárendelt
@@ -81,6 +90,10 @@ aggregation:
         kifejezett szektorazonosítót.
       sectorized_input_unknown_sector: Egy szektorizált áfa-tétel ismeretlen szektorra
         hivatkozik.
+      unaccepted_registry_value: A(z) %{field} mező értéke %{value}, amelyet a rögzített
+        adónyilvántartási jogosultság %{effective_date} dátumra nem fogad el, ezért
+        a tétel nem kerülhet be az IVA-számításba. Javítsd ezt az értéket a főkönyvi
+        tételen.
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: Az arányosítási nyilvántartás

@@ -446,6 +446,7 @@ def collect_revision_verification_findings(
         work_unit=work_unit,
         profile=profile,
         transaction_repository=transaction_repository,
+        operation=operation,
     )
     append_registry_predicate_findings(
         work_unit=work_unit,
@@ -480,14 +481,19 @@ def profile_with_art109_period_evidence(
     work_unit: WorkUnit,
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> TaxpayerProfile:
     """Add the work unit’s grounded period-income evidence to the retained profile.
+
+    The coverage is derived under the verification's own pinned authority, so
+    the evidence and the predicates it feeds read one generation.
 
     Parameter types: ``profile`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
     """
     coverage = _derive_art109_coverage(
         work_unit,
         transaction_repository=transaction_repository,
+        operation=operation,
     )
     if not coverage.is_proven or coverage.meets_threshold is None:
         return profile

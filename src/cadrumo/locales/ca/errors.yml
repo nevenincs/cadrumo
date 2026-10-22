@@ -869,6 +869,10 @@ errors:
       la retenció.
     canonical_ledger_payment_withholding_evidence: El pagament del llibre no permet
       registrar la retenció.
+    canonical_ledger_registry_value_unaccepted: L'apunt %{transaction_id} registra
+      %{field} com a %{value}, un valor que l'autoritat fixada del registre tributari
+      no admet per a %{effective_date}. Corregeix aquest valor a l'apunt i torna a
+      executar l'operació.
     canonical_m036_declaration_ambiguous: El prefix de l'identificador de la declaració
       del Model 036 coincideix amb més d'un registre.
     canonical_m036_declaration_not_found: Cap declaració del Model 036 coincideix

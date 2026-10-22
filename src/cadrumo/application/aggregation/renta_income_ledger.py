@@ -41,16 +41,17 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
 from ...core.prose_elision import IssueDetail
 from ...core.tipos_actividad import TipoActividad
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
-from ...domain.transactions.volumen_ingresos import counts_toward_volumen_de_ingresos
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from . import _renta_income_evidence, _shared_issue_reasons
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 from .business_proportion import business_proportion
 from .catalogue_read_binding import require_catalogue_reads_bound_to
+from .concepto_ingreso_admission import row_counts_toward_volumen_de_ingresos
 from .currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
 from .errors import AggregationPeriodError
 from .source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
@@ -542,6 +543,7 @@ def aggregate_renta_m131_agrario_income_ledger_from_repositories(
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
     ports: InvoiceCatalogueReadPorts,
+    operation: PinnedAuthorityOperation,
 ) -> RentaIncomeLedgerAggregation:
     """Load the catalogue and aggregate a selected activity-narrowed quarter.
 
@@ -560,6 +562,7 @@ def aggregate_renta_m131_agrario_income_ledger_from_repositories(
         agrarian_activity_codes=agrarian_activity_codes,
         activity_category_matcher=activity_category_matcher,
         employment_category_matcher=employment_category_matcher,
+        operation=operation,
     )
 
 
@@ -574,6 +577,7 @@ def aggregate_renta_m131_agrario_income_ledger(
     agrarian_activity_codes: frozenset[TipoActividad],
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
+    operation: PinnedAuthorityOperation,
 ) -> RentaIncomeLedgerAggregation:
     """Aggregate an activity-narrowed quarterly income volume into a target.
 
@@ -591,7 +595,8 @@ def aggregate_renta_m131_agrario_income_ledger(
     * **Concept.** Rows whose :class:`~core.concepto_ingreso.ConceptoIngreso` art. 110.1.c) excludes —
       subvenciones de capital and indemnizaciones — are dropped. An undeclared
       concept IS included, because an unmarked receipt is far more likely to be
-      ordinary income than an exceptional one.
+      ordinary income than an exceptional one. A declared concept the pinned
+      vocabulary does not list is refused: it can be placed on neither side.
 
     The window is the quarter itself rather than a cumulative year-to-date window.
 
@@ -606,12 +611,16 @@ def aggregate_renta_m131_agrario_income_ledger(
         agrarian_activity_codes: Selected activity-code set supplied by the registry.
         activity_category_matcher: Predicate for activity-category transactions.
         employment_category_matcher: Predicate for employment-category transactions.
+        operation: The operation's generation-pinned authority; the concept
+            vocabulary and exclusion set are read from it.
 
     Returns:
         The :class:`RentaIncomeLedgerAggregation` for the selected target.
 
     Raises:
         AggregationPeriodError: If ``period`` is not a quarter.
+        UnacceptedLedgerRegistryValueError: If an agrarian row declares an
+            income concept the pinned vocabulary does not list.
     """
     if period.kind is not PeriodKind.QUARTERLY:
         raise AggregationPeriodError(
@@ -630,9 +639,10 @@ def aggregate_renta_m131_agrario_income_ledger(
         employment_category_matcher=employment_category_matcher,
         admits=lambda transaction: (
             transaction.tipo_actividad in agrarian_activity_codes
-            and counts_toward_volumen_de_ingresos(
-                transaction.concepto_ingreso,
+            and row_counts_toward_volumen_de_ingresos(
+                transaction,
                 effective_date=period.end_date,
+                authority=operation,
             )
         ),
     )

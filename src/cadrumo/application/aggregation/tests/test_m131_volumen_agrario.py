@@ -97,6 +97,7 @@ def _total(*transactions: Transaction) -> Decimal:
             agrarian_activity_codes=agrarian_activity_codes,
             activity_category_matcher=_activity_category_matcher(operation),
             employment_category_matcher=_employment_category_matcher(operation),
+            operation=operation,
         )
     return sum((o.gross_amount for o in aggregation.observations), start=Decimal("0"))
 

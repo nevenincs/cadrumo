@@ -45,8 +45,14 @@ aggregation:
         íntegros.
   iva_ledger:
     errors:
+      art_104_tres_exclusion_not_operator_declared: La exclusión del Art. 104.tres
+        %{value} la deriva el registro tributario y no puede declararse en un apunte.
+        Elimina la exclusión del apunte.
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
         bucket de agregación solicitado.
+      cash_accounting_evidence_incoherent: 'Los datos de criterio de caja de este
+        apunte de IVA son incoherentes: %{refusal}. Corrige la fecha de la operación
+        o la evidencia de cobro o pago del apunte.'
       deduction_authority_on_non_deducible_row: Una fila de IVA que no soporta cuota
         deducible no puede llevar una clasificación de deducción; la categoría de
         IVA %{category} se liquida como %{flow_direction}. Elimina el tipo de deducción
@@ -61,6 +67,10 @@ aggregation:
         efectos del IVA española no es válida para una operación intracomunitaria.
       eu_member_state_on_export_transaction: Las operaciones de exportación o asimiladas
         no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
+      exemption_article_outside_domestic_exempt: El artículo de exención %{value}
+        solo se aplica a un apunte de IVA exento interior, pero este apunte se liquida
+        en la categoría de IVA %{category}. Corrige el artículo de exención o la categoría
+        de IVA.
       inadmissible_deduction_classification: 'El tipo de deducción de IVA declarado
         %{deduction_fact_kind} no es admisible en una fila de la categoría de IVA
         %{iva_category}: %{refusal}. Corrige el tipo de deducción declarado, la categoría
@@ -88,6 +98,9 @@ aggregation:
         aporta identidad de sector explícita.
       sectorized_input_unknown_sector: Una entrada de IVA sectorizada referencia un
         sector desconocido.
+      unaccepted_registry_value: '%{field} figura como %{value}, un valor que la autoridad
+        fijada del registro tributario no admite para %{effective_date}, así que el
+        apunte no puede alimentar el cálculo del IVA. Corrige ese valor en el apunte.'
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: El registro de prorrata

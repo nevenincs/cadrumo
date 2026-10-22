@@ -854,6 +854,13 @@ _IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT: Final[Mapping[IvaLedgerAggregationIss
     IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EXCLUDED_CATEGORY: (
         "projection-path regime screen requiring the bucket's cash-accounting treatment"
     ),
+    IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE: (
+        "classification-path check of stored registry values against the calculation's pinned authority; "
+        "preflight reads no pinned calculation authority to judge them against"
+    ),
+    IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EVIDENCE_INCOHERENT: (
+        "classification-path re-check of the criterio-de-caja coupling the settlement split reads"
+    ),
 }
 
 
@@ -895,6 +902,10 @@ OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE: Mapping[
             OperatorActionAxis.RESOLVE_IDENTITY
         ),
         IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EXCLUDED_CATEGORY: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE: OperatorActionAxis.RESOLVE_REVISION_MISMATCH,
+        IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EVIDENCE_INCOHERENT: (
+            OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
+        ),
         IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION: (
             OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE
         ),

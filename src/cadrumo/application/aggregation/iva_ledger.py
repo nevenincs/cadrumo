@@ -118,7 +118,7 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from . import _shared_issue_reasons
 from .business_proportion import business_proportion
-from .errors import AggregationValidationError
+from .errors import AggregationValidationError, UnacceptedLedgerRegistryValueError
 from .invoice_kind import invoice_kind_for_direction
 
 
@@ -233,6 +233,24 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     # every typed gate, so the operator's data error surfaced as an internal
     # payload-boundary defect with no row, no field and no remedy named.
     INADMISSIBLE_DEDUCTION_CLASSIFICATION = "inadmissible_deduction_classification"
+    # The row carries a registry value -- a cash-accounting treatment, an
+    # exemption article, an art. 106 input classification, an Art. 104.tres
+    # exclusion, a counterparty identification state -- that the operation's
+    # pinned authority does not declare, or does not admit on this row. Write
+    # admission accepted it under the authority then current; this calculation
+    # pins its own. Each value used to be read as its nearest ordinary meaning
+    # (criterio de caja, an exempt acquirer, a mixed-use input, a volume
+    # exclusion), so a value no authority supports reached the return.
+    #
+    # Distinct from every absence reason: nothing is missing, and the remedy is
+    # to CORRECT a stored value rather than to supply one.
+    UNACCEPTED_REGISTRY_VALUE = "unaccepted_registry_value"
+    # The row's criterio-de-caja facts contradict each other: a non-ordinary
+    # treatment with no operation date, settlement evidence on an ordinary row,
+    # evidence exceeding the operation's base or cuota, or a payment after the
+    # statutory fallback date. The settlement split reads exactly these facts,
+    # so a contradiction would split the cuota across the wrong periods.
+    CASH_ACCOUNTING_EVIDENCE_INCOHERENT = "cash_accounting_evidence_incoherent"
 
 
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
@@ -894,13 +912,31 @@ def _partition_by_input_classification(
     (the mixed-use default). Shared by the general especial-regime
     apportionment and the per-partition primitive so both partition
     identically.
+
+    Raises:
+        UnacceptedLedgerRegistryValueError: When an observation declares a
+            classification the pinned vocabulary does not list. No deduction
+            percentage exists for it, so it is refused rather than routed.
     """
+    effective_date = today_madrid()
     partitions: dict[InputClassification, list[IvaLedgerObservation]] = {
-        classification: [] for classification in input_classification_tokens(authority=operation)
+        classification: []
+        for classification in input_classification_tokens(effective_date=effective_date, authority=operation)
     }
     for observation in observations:
-        classification = observation.input_classification or default_input_classification(authority=operation)
-        partitions[classification].append(observation)
+        classification = observation.input_classification or default_input_classification(
+            effective_date=effective_date,
+            authority=operation,
+        )
+        partition = partitions.get(classification)
+        if partition is None:
+            raise UnacceptedLedgerRegistryValueError(
+                field="input_classification",
+                value=str(classification),
+                transaction_id=observation.ledger_id,
+                effective_date=effective_date,
+            )
+        partition.append(observation)
     return partitions
 
 

@@ -44,8 +44,14 @@ aggregation:
         àmbit de jurisdicció de la font per a aquesta casella de rendiments íntegres.
   iva_ledger:
     errors:
+      art_104_tres_exclusion_not_operator_declared: L'exclusió de l'Art. 104.tres
+        %{value} la deriva el registre tributari i no es pot declarar en un apunt.
+        Elimina-la de l'apunt.
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
         bucket d'agregació sol·licitat.
+      cash_accounting_evidence_incoherent: 'Les dades de criteri de caixa d''aquest
+        apunt d''IVA són incoherents: %{refusal}. Corregeix la data de l''operació
+        o l''evidència de cobrament o pagament de l''apunt.'
       deduction_authority_on_non_deducible_row: Una fila d'IVA que no suporta quota
         deduïble no pot portar una classificació de deducció; la categoria d'IVA %{category}
         es liquida com %{flow_direction}. Elimina el tipus de deducció declarat o
@@ -60,6 +66,10 @@ aggregation:
         efectes de l'IVA espanyola no és vàlida per a una operació intracomunitària.
       eu_member_state_on_export_transaction: Les operacions d'exportació o assimilades
         no poden portar un Estat membre de la UE; rebut %{member_state}.
+      exemption_article_outside_domestic_exempt: L'article d'exempció %{value} només
+        s'aplica a un apunt d'IVA exempt interior, però aquest apunt es liquida en
+        la categoria d'IVA %{category}. Corregeix l'article d'exempció o la categoria
+        d'IVA.
       inadmissible_deduction_classification: 'El tipus de deducció d''IVA declarat
         %{deduction_fact_kind} no és admissible en una fila de la categoria d''IVA
         %{iva_category}: %{refusal}. Corregeix el tipus de deducció declarat, la categoria
@@ -85,6 +95,9 @@ aggregation:
         aporta identitat de sector explícita.
       sectorized_input_unknown_sector: Una entrada d'IVA sectoritzada referencia un
         sector desconegut.
+      unaccepted_registry_value: '%{field} consta com a %{value}, un valor que l''autoritat
+        fixada del registre tributari no admet per a %{effective_date}, així que l''apunt
+        no pot alimentar el càlcul de l''IVA. Corregeix aquest valor a l''apunt.'
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: El registre de prorrata

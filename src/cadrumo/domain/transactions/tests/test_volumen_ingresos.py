@@ -6,6 +6,7 @@ sole authority for whether that vocabulary is excluded from the regulatory base.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 
 import pytest
@@ -16,8 +17,9 @@ from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.facts.payloads import EntitySetFactPayload
 from ...calculations.registry.governed_fact_scope import GovernedFactSource
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from ..errors import TransactionValidationError
 from ..tipo_actividad_partitions import tipo_actividad_code_set
-from ..volumen_ingresos import counts_toward_volumen_de_ingresos
+from ..volumen_ingresos import counts_toward_art_109_activity_income, counts_toward_volumen_de_ingresos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -140,3 +142,22 @@ def test_pesquera_is_absent_because_the_form_is_narrower_than_article_110(
 
     assert TipoActividad.B05_PESQUERA not in declared
     assert TipoActividad.B04_PRODUCCION_DE_MEJILLON not in declared
+
+
+@pytest.mark.parametrize("predicate", [counts_toward_volumen_de_ingresos, counts_toward_art_109_activity_income])
+def test_a_concept_the_vocabulary_does_not_declare_is_refused_not_counted(
+    predicate: Callable[..., bool],
+    authority: GovernedFactSource,
+) -> None:
+    """A stale stored concept used to fall outside both exclusion sets and count as income.
+
+    The predicate cannot place a concept its vocabulary does not list on either
+    side of the rule, so it refuses instead of answering ``True``.
+    """
+    retired = ConceptoIngreso.from_registry("retired_concept")
+
+    with pytest.raises(TransactionValidationError) as refusal:
+        predicate(retired, effective_date=date(2026, 4, 1), authority=authority)
+
+    assert "concepto_ingreso" in str(refusal.value)
+    assert "retired_concept" in str(refusal.value)

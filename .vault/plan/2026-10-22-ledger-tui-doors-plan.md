@@ -10,7 +10,7 @@ related:
   - '[[2026-10-22-ledger-tui-doors-authenticated-stored-reads-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:528c1435579e52bcf0d154d7ccbf9224e701e69a0cf7a33693ff2fdb1edee4b1'
+body_hash: 'sha256:5cbca28d2525839921e19048873372649afdeb1119e0c3c32577d8a11927081e'
 ---
 
 # `ledger-tui-doors` plan
@@ -28,6 +28,8 @@ Decision coverage: the navigation-join ADR governs the whole plan. It makes Reco
 Every domain agent works from the verified base brief, which carries the architecture, calls interface, design primitives, core modules, file ownership and gates B1 to B8, plus a domain brief that names that domain's operations, request and result models and acceptance scenarios. Domain membership: P02.S02 entries and export, P02.S03 categorisation, P02.S04 evidence and attachments, P02.S05 records, invoices and reconciliation, P02.S06 registers.
 
 P04 added 2026-10-22 on the user's instruction. The D1 CPU gate measured a period-filtered `ledger.list` page at about 12.6 CPU-seconds for 30,000 transactions, against the 3-second budget, because the list query loads and decodes the whole catalogue before filtering. The user chose to fix it and to dedicate extra agents to optimisation. TUI enrolment of the ledger operations remains the priority; the optimisation exists so those screens load in usable time. The ledger latency budget ADR governs P04: period-first partitioning through the existing plaintext date index, a per-read completeness gate (stale index falls back to a full scan, never a silent drop), full-scan-versus-partition parity tests, no new index columns, and no change to regulated results. The unfiltered full-catalogue listing stays outside that decision; a lever for it needs its own decision before implementation.
+
+P04.S17 and P04.S18 implement the authenticated-stored-reads ADR, accepted on the user's instruction. P04.S19 was added 2026-10-22 when the user answered "Yes, harden": the filing consumers that default an unaccepted registry value instead of refusing it (income concept, Art. 104.tres tag, cash-accounting treatment, counterparty identification state, and the untyped input-classification failure) must refuse at use against the operation's pinned authority, with typed refusals. It changes no registry data or request contract, and any later widening of the authenticated read's skip set remains a separate decision.
 
 ## Steps
 
@@ -59,8 +61,9 @@ Dedicated agents make the ledger reads behind the Records screens meet the 30,00
 - [x] `P04.S14` - make workbench generation pair invoices with transactions through an index instead of every invoice against every transaction, with identical suggestions; `src/cadrumo/domain/invoices/service.py`.
 - [x] `P04.S15` - load the transaction catalogue once per ledger read, read the period partition for status, check and preflight, and read one row by id for view, track, history and participation; `src/cadrumo/application/ledger`.
 - [x] `P04.S16` - stop revalidating the whole invoice catalogue and its registry lookups on every invoice read; `src/cadrumo/domain/invoices/models.py`.
-- [ ] `P04.S17` - decode authenticated current-schema transaction rows without admission re-derivations, remove duplicated validators, and move the transaction model to pydantic-native coercion; `src/cadrumo/domain/transactions/models.py`.
+- [x] `P04.S17` - decode authenticated current-schema transaction rows without admission re-derivations, remove duplicated validators, and move the transaction model to pydantic-native coercion; `src/cadrumo/domain/transactions/models.py`.
 - [x] `P04.S18` - decode an authenticated current-schema invoice catalogue without admission re-derivations and validate only the invoice a view returns; `src/cadrumo/adapters/persistence/profile/invoices.py`.
+- [x] `P04.S19` - make the IVA, Renta and Modelo consumers refuse registry values the pinned authority does not accept at use, with typed refusals, and fix the untyped input-classification KeyError; `src/cadrumo/application/aggregation`.
 
 ### Phase `P03` - integrate, verify and review
 

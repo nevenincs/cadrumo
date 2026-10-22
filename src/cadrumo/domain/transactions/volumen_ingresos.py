@@ -18,7 +18,7 @@ from datetime import date
 from typing import Final
 
 from ...core.concepto_ingreso import ConceptoIngreso
-from ..calculations.registry.concepto_ingreso import resolve_concepto_ingreso_catalogue
+from ..calculations.registry.concepto_ingreso import ConceptoIngresoCatalogue, resolve_concepto_ingreso_catalogue
 from ..calculations.registry.errors import RegistryError
 from ..calculations.registry.facts.resolution import EntitySetFactQuery, ResolvedEntitySetFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
@@ -35,9 +35,9 @@ def _excluded_concepts(
     fact_id: str,
     *,
     effective_date: date,
-    authority: GovernedFactSource | None = None,
+    authority: GovernedFactSource,
+    catalogue: ConceptoIngresoCatalogue,
 ) -> frozenset[ConceptoIngreso]:
-    authority = require_governed_fact_authority(authority, subject="income-concept fact resolution")
     try:
         resolved = authority.resolve_governed_fact(
             EntitySetFactQuery(fact_id=fact_id, date_axis=DateAxis.FILING_PERIOD, effective_date=effective_date)
@@ -46,16 +46,44 @@ def _excluded_concepts(
         raise TransactionValidationError(f"failed to resolve income-concept fact {fact_id!r}: {exc}") from exc
     if not isinstance(resolved, ResolvedEntitySetFact):
         raise TransactionValidationError(f"income-concept fact {fact_id!r} did not resolve to an entity set")
-    catalogue = resolve_concepto_ingreso_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    )
     try:
         return frozenset(catalogue.require(token) for token in resolved.payload.entities)
     except RegistryError as exc:
         raise TransactionValidationError(
             f"income-concept fact {fact_id!r} contains an unknown concept",
         ) from exc
+
+
+def _counts_toward(
+    fact_id: str,
+    concepto: ConceptoIngreso,
+    *,
+    effective_date: date,
+    authority: GovernedFactSource | None,
+) -> bool:
+    """Classify a declared concept against the exclusion fact, refusing one the vocabulary lacks.
+
+    The vocabulary and the exclusion set are read from the same authority on the
+    same date. A concept that vocabulary does not declare cannot be placed on
+    either side of the rule, so it is refused rather than counted as ordinary
+    income: counting it would put a receipt the authority does not recognise into
+    a declared base.
+    """
+    selected = require_governed_fact_authority(authority, subject="income-concept fact resolution")
+    catalogue = resolve_concepto_ingreso_catalogue(effective_date=effective_date, authority=selected)
+    try:
+        declared = catalogue.require(concepto)
+    except RegistryError as exc:
+        raise TransactionValidationError(
+            f"concepto_ingreso {str(concepto)!r} is not declared by the income-concept vocabulary "
+            f"for {effective_date.isoformat()}",
+        ) from exc
+    return declared not in _excluded_concepts(
+        fact_id,
+        effective_date=effective_date,
+        authority=selected,
+        catalogue=catalogue,
+    )
 
 
 def counts_toward_volumen_de_ingresos(
@@ -86,11 +114,19 @@ def counts_toward_volumen_de_ingresos(
         alternative — treating silence as exclusion — would drop real income out of a
         declared volume. The cost is that an unmarked capital subsidy over-declares,
         which is the tolerable side of a rule that cannot be inferred from the row.
+
+    Raises:
+        TransactionValidationError: When ``concepto`` is not declared by the
+            income-concept vocabulary on ``effective_date``, or the exclusion
+            fact cannot be resolved.
     """
     if concepto is None:
         return True
-    return concepto not in _excluded_concepts(
-        _ART_110_EXCLUDED_CONCEPTS_FACT_ID, effective_date=effective_date, authority=authority
+    return _counts_toward(
+        _ART_110_EXCLUDED_CONCEPTS_FACT_ID,
+        concepto,
+        effective_date=effective_date,
+        authority=authority,
     )
 
 
@@ -121,9 +157,17 @@ def counts_toward_art_109_activity_income(
     Returns:
         ``True`` for ordinary income and for an undeclared concept; ``False`` for a
         subvención of either kind and for an indemnización.
+
+    Raises:
+        TransactionValidationError: When ``concepto`` is not declared by the
+            income-concept vocabulary on ``effective_date``, or the exclusion
+            fact cannot be resolved.
     """
     if concepto is None:
         return True
-    return concepto not in _excluded_concepts(
-        _ART_109_EXCLUDED_CONCEPTS_FACT_ID, effective_date=effective_date, authority=authority
+    return _counts_toward(
+        _ART_109_EXCLUDED_CONCEPTS_FACT_ID,
+        concepto,
+        effective_date=effective_date,
+        authority=authority,
     )

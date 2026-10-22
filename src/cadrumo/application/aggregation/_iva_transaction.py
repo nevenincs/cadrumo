@@ -14,11 +14,22 @@ from decimal import Decimal
 from ...core.i18n.render import tr as render_tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.period import Period
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.iva_cash_accounting_vocabulary import resolve_iva_cash_accounting_catalogue
+from ...domain.calculations.registry.iva_category_catalogue import (
+    require_iva_category,
+    resolve_iva_category_catalogue,
+)
+from ...domain.calculations.registry.iva_legal_vocabulary import resolve_iva_exemption_article_catalogue
 from ...domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.prorrata_exclusions import resolve_art104_tres_exclusion_catalogue
+from ...domain.calculations.registry.prorrata_vocabulary import resolve_input_classification_catalogue
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.iva.components import (
     category_components,
@@ -52,7 +63,9 @@ from ...domain.iva.schema import (
     is_iva_cash_accounting_none,
     spanish_eu_member_state,
 )
+from ...domain.transactions.cash_accounting_validation import validate_cash_accounting_axis
 from ...domain.transactions.enums import BusinessClassification
+from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
 from .currency_predicates import is_non_eur_without_conversion
 from .invoice_kind import invoice_kind_for_direction
@@ -194,6 +207,209 @@ def _substrate_admission_issue(transaction: Transaction) -> IvaLedgerAggregation
     return None
 
 
+def _unaccepted_registry_value_issue(
+    transaction_id: str,
+    *,
+    field: str,
+    value: str,
+    effective_date: date,
+) -> IvaLedgerAggregationIssue:
+    return IvaLedgerAggregationIssue(
+        transaction_id=transaction_id,
+        reason=IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE,
+        detail=render_tr(
+            "aggregation.iva_ledger.errors.unaccepted_registry_value",
+            field=field,
+            value=value,
+            effective_date=effective_date.isoformat(),
+        ),
+    )
+
+
+def _unaccepted_cash_accounting_treatment_issue(
+    transaction: Transaction,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> IvaLedgerAggregationIssue | None:
+    """Refuse a treatment the pinned vocabulary does not declare.
+
+    Read on the date every other treatment comparison in this pipeline reads
+    it, so a treatment this check admits is one those comparisons can answer.
+    """
+    effective_date = today_madrid()
+    catalogue = resolve_iva_cash_accounting_catalogue(effective_date=effective_date, authority=operation)
+    try:
+        catalogue.require(transaction.cash_accounting_treatment)
+    except RegistryValidationError:
+        return _unaccepted_registry_value_issue(
+            transaction.transaction_id,
+            field="cash_accounting_treatment",
+            value=str(transaction.cash_accounting_treatment),
+            effective_date=effective_date,
+        )
+    return None
+
+
+def _cash_accounting_evidence_issue(
+    transaction: Transaction,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> IvaLedgerAggregationIssue | None:
+    """Re-check the criterio-de-caja coupling the settlement split depends on.
+
+    The split reads the operation date, the payment evidence and the substrate
+    that caps them. The write path's own rule judges them here, scoped to this
+    operation's pinned facts, so admission and use cannot disagree.
+    """
+    try:
+        with validating_governed_facts(operation):
+            validate_cash_accounting_axis(
+                treatment=transaction.cash_accounting_treatment,
+                operation_date=transaction.operation_date,
+                payment_evidence=transaction.cash_accounting_payment_evidence,
+                taxable_base=transaction.taxable_base,
+                iva_amount=transaction.iva_amount,
+                recargo_amount=transaction.recargo_amount,
+                direction=transaction.direction,
+            )
+    except TransactionValidationError as exc:
+        return IvaLedgerAggregationIssue(
+            transaction_id=transaction.transaction_id,
+            reason=IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EVIDENCE_INCOHERENT,
+            detail=render_tr(
+                "aggregation.iva_ledger.errors.cash_accounting_evidence_incoherent",
+                refusal=str(exc),
+            ),
+        )
+    return None
+
+
+def _unaccepted_row_value_issue(
+    transaction: Transaction,
+    *,
+    transaction_id: str,
+    effective_category: IvaCategory,
+    operation: PinnedAuthorityOperation,
+) -> IvaLedgerAggregationIssue | None:
+    """Refuse a declared registry value this operation's authority does not accept.
+
+    Each value is judged against the pinned authority on the date its write
+    admission judged it, so a value admitted under the same authority is never
+    refused here. The identification state is judged only where it is used: the
+    intra-community gate reads it for a declared intra-community supply alone.
+    """
+    exemption_issue = _unaccepted_exemption_article_issue(
+        transaction,
+        transaction_id=transaction_id,
+        effective_category=effective_category,
+        operation=operation,
+    )
+    if exemption_issue is not None:
+        return exemption_issue
+    ledger_date = transaction.raw.value_date or transaction.raw.booked_date
+    input_classification = transaction.input_classification
+    if input_classification is not None:
+        input_catalogue = resolve_input_classification_catalogue(effective_date=ledger_date, authority=operation)
+        try:
+            input_catalogue.require(input_classification)
+        except RegistryValidationError:
+            return _unaccepted_registry_value_issue(
+                transaction_id,
+                field="input_classification",
+                value=str(input_classification),
+                effective_date=ledger_date,
+            )
+    exclusion_issue = _unaccepted_art_104_tres_exclusion_issue(
+        transaction,
+        transaction_id=transaction_id,
+        operation=operation,
+    )
+    if exclusion_issue is not None:
+        return exclusion_issue
+    identification_state = transaction.counterparty_identification_state
+    if identification_state is not None and transaction.iva_category == require_iva_category(
+        "intra_community_supply",
+        authority=operation,
+    ):
+        member_states = resolve_eu_member_state_catalogue(effective_date=ledger_date, authority=operation)
+        try:
+            member_states.require(identification_state)
+        except RegistryValidationError:
+            return _unaccepted_registry_value_issue(
+                transaction_id,
+                field="counterparty_identification_state",
+                value=str(identification_state),
+                effective_date=ledger_date,
+            )
+    return None
+
+
+def _unaccepted_exemption_article_issue(
+    transaction: Transaction,
+    *,
+    transaction_id: str,
+    effective_category: IvaCategory,
+    operation: PinnedAuthorityOperation,
+) -> IvaLedgerAggregationIssue | None:
+    exemption_article = transaction.exemption_article
+    if exemption_article is None:
+        return None
+    effective_date = today_madrid()
+    catalogue = resolve_iva_exemption_article_catalogue(effective_date=effective_date, authority=operation)
+    try:
+        catalogue.require(exemption_article)
+    except RegistryValidationError:
+        return _unaccepted_registry_value_issue(
+            transaction_id,
+            field="exemption_article",
+            value=str(exemption_article),
+            effective_date=effective_date,
+        )
+    if effective_category != require_iva_category("domestic_exempt", authority=operation):
+        return IvaLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE,
+            detail=render_tr(
+                "aggregation.iva_ledger.errors.exemption_article_outside_domestic_exempt",
+                value=str(exemption_article),
+                category=effective_category.value,
+            ),
+        )
+    return None
+
+
+def _unaccepted_art_104_tres_exclusion_issue(
+    transaction: Transaction,
+    *,
+    transaction_id: str,
+    operation: PinnedAuthorityOperation,
+) -> IvaLedgerAggregationIssue | None:
+    exclusion = transaction.art_104_tres_exclusion
+    if exclusion is None:
+        return None
+    effective_date = today_madrid()
+    catalogue = resolve_art104_tres_exclusion_catalogue(effective_date=effective_date, authority=operation)
+    try:
+        declared = catalogue.require(exclusion)
+    except RegistryValidationError:
+        return _unaccepted_registry_value_issue(
+            transaction_id,
+            field="art_104_tres_exclusion",
+            value=str(exclusion),
+            effective_date=effective_date,
+        )
+    if declared not in catalogue.operator_declared:
+        return IvaLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE,
+            detail=render_tr(
+                "aggregation.iva_ledger.errors.art_104_tres_exclusion_not_operator_declared",
+                value=str(declared),
+            ),
+        )
+    return None
+
+
 def _resolve_iva_transaction_context(
     transaction: Transaction,
     *,
@@ -204,15 +420,21 @@ def _resolve_iva_transaction_context(
     ledger_date = transaction.raw.value_date or transaction.raw.booked_date
     operation_date = transaction.operation_date or ledger_date
     cash_treatment = transaction.cash_accounting_treatment
-    period_issue = _period_admission_issue(
-        transaction,
-        resolved_period=resolved_period,
-        operation_date=operation_date,
-        cash_treatment=cash_treatment,
-        operation=operation,
-    )
-    if period_issue is not None:
-        return _IvaTransactionOutcome(gate_issue=period_issue)
+    # The filing window depends on the treatment, so an undeclared one cannot
+    # be placed in or out of the period. Its refusal is held until the
+    # candidate filters below have had their say: a personal row or one with no
+    # IVA flow does not feed this calculation, whatever its treatment says.
+    unaccepted_treatment = _unaccepted_cash_accounting_treatment_issue(transaction, operation=operation)
+    if unaccepted_treatment is None:
+        period_issue = _period_admission_issue(
+            transaction,
+            resolved_period=resolved_period,
+            operation_date=operation_date,
+            cash_treatment=cash_treatment,
+            operation=operation,
+        )
+        if period_issue is not None:
+            return _IvaTransactionOutcome(gate_issue=period_issue)
     invoice_kind = invoice_kind_for_direction(transaction.direction)
     if invoice_kind is None:
         return _IvaTransactionOutcome(
@@ -242,6 +464,11 @@ def _resolve_iva_transaction_context(
     substrate_issue = _substrate_admission_issue(transaction)
     if substrate_issue is not None:
         return _IvaTransactionOutcome(gate_issue=substrate_issue)
+    if unaccepted_treatment is not None:
+        return _IvaTransactionOutcome(gate_issue=unaccepted_treatment)
+    incoherent_cash_accounting = _cash_accounting_evidence_issue(transaction, operation=operation)
+    if incoherent_cash_accounting is not None:
+        return _IvaTransactionOutcome(gate_issue=incoherent_cash_accounting)
     return _IvaTransactionContext(
         transaction_id=transaction_id,
         operation_date=operation_date,
@@ -463,6 +690,14 @@ def _resolve_iva_transaction_classification(
 ) -> _IvaTransactionClassification | _IvaTransactionOutcome:
     rate_kind = amounts.rate_kind
     effective_category = _effective_iva_category_for(transaction, rate_kind=rate_kind, operation=operation)
+    unaccepted_value = _unaccepted_row_value_issue(
+        transaction,
+        transaction_id=transaction_id,
+        effective_category=effective_category,
+        operation=operation,
+    )
+    if unaccepted_value is not None:
+        return _IvaTransactionOutcome(gate_issue=unaccepted_value)
     declared_issue = _declared_transaction_category_issue(
         transaction,
         transaction_id=transaction_id,

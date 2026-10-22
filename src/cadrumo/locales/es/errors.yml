@@ -859,6 +859,10 @@ errors:
       registrar la retención.
     canonical_ledger_payment_withholding_evidence: El pago del libro no permite registrar
       la retención.
+    canonical_ledger_registry_value_unaccepted: El apunte %{transaction_id} registra
+      %{field} como %{value}, un valor que la autoridad fijada del registro tributario
+      no admite para %{effective_date}. Corrige ese valor en el apunte y vuelve a
+      ejecutar la operación.
     canonical_m036_declaration_ambiguous: El prefijo del identificador de la declaración
       del Modelo 036 coincide con varios registros.
     canonical_m036_declaration_not_found: Ninguna declaración del Modelo 036 coincide

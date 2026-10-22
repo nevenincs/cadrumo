@@ -42,8 +42,14 @@ aggregation:
         scope for this gross-income casilla.
   iva_ledger:
     errors:
+      art_104_tres_exclusion_not_operator_declared: Art. 104.tres exclusion %{value}
+        is derived by the tax registry and cannot be declared on a ledger entry. Remove
+        it from the entry.
       bucket_mismatch: Transaction repository bucket does not match the requested
         aggregation bucket.
+      cash_accounting_evidence_incoherent: 'The cash accounting timing on this IVA
+        row is inconsistent: %{refusal}. Correct the operation date or the payment
+        evidence on the ledger entry.'
       deduction_authority_on_non_deducible_row: An IVA row that bears no deductible
         cuota cannot carry a deduction classification; IVA category %{category} settles
         as %{flow_direction}. Remove the declared deduction kind, or correct the category.
@@ -57,6 +63,9 @@ aggregation:
         is not valid for an intra-community transaction.
       eu_member_state_on_export_transaction: Export or export-assimilated operations
         must not carry an EU member state; got %{member_state}.
+      exemption_article_outside_domestic_exempt: Exemption article %{value} applies
+        only to a domestic exempt IVA row, but this row settles under IVA category
+        %{category}. Correct the exemption article or the IVA category.
       inadmissible_deduction_classification: 'The declared IVA deduction kind %{deduction_fact_kind}
         is not admissible for a row in IVA category %{iva_category}: %{refusal}. Correct
         the declared deduction kind, the IVA category, or the linked evidence.'
@@ -80,6 +89,9 @@ aggregation:
         explicit sector identity.
       sectorized_input_unknown_sector: A sectorised IVA input references an unknown
         sector.
+      unaccepted_registry_value: '%{field} is recorded as %{value}, which the pinned
+        tax registry authority does not accept for %{effective_date}, so the row cannot
+        feed the IVA calculation. Correct that value on the ledger entry.'
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: The prorrata register records

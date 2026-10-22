@@ -338,8 +338,22 @@ def is_iva_cash_accounting_none(
     *,
     authority: GovernedFactSource | None = None,
 ) -> bool:
-    """Return whether a treatment is the registry-declared ordinary token."""
-    return treatment == default_iva_cash_accounting_treatment(on_date, authority=authority)
+    """Return whether a treatment is the registry-declared ordinary token.
+
+    A treatment the vocabulary does not declare is refused rather than answered
+    ``False``: answering would read an unknown token as criterio de caja and move
+    the row's devengo onto its collections.
+
+    Raises:
+        RegistryValidationError: When the selected vocabulary does not declare
+            ``treatment``.
+    """
+    from ..calculations.registry.iva_cash_accounting_vocabulary import (
+        resolve_iva_cash_accounting_catalogue,
+    )
+
+    catalogue = resolve_iva_cash_accounting_catalogue(effective_date=on_date, authority=authority)
+    return catalogue.require(treatment) == catalogue.none_token
 
 
 def is_iva_cash_accounting_supplier_regime(
@@ -348,13 +362,18 @@ def is_iva_cash_accounting_supplier_regime(
     *,
     authority: GovernedFactSource | None = None,
 ) -> bool:
-    """Return whether a treatment is the registry-declared supplier token."""
+    """Return whether a treatment is the registry-declared supplier token.
+
+    Raises:
+        RegistryValidationError: When the selected vocabulary does not declare
+            ``treatment``.
+    """
     from ..calculations.registry.iva_cash_accounting_vocabulary import (
         resolve_iva_cash_accounting_catalogue,
     )
 
     catalogue = resolve_iva_cash_accounting_catalogue(effective_date=on_date, authority=authority)
-    return treatment == catalogue.supplier_regime_token
+    return catalogue.require(treatment) == catalogue.supplier_regime_token
 
 
 _RegistryLegalRef = Annotated[

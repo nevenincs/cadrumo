@@ -33,6 +33,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.tipos_actividad import TipoActividad
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -110,22 +111,24 @@ def _catalogue(*transactions: Transaction) -> TransactionCatalogue:
 def _advisories(
     *transactions: Transaction,
 ) -> tuple[RentaIncomeLedgerAggregation, tuple[CalculationSourceDiagnostic, ...]]:
-    aggregation = aggregate_renta_m131_agrario_income_ledger(
-        _catalogue(*transactions),
-        bucket_id=_BUCKET,
-        period=_Q1,
-        modelo=Modelo("131").value,
-        target_casilla_id=validated_casilla_id(_CASILLA_05),
-        agrarian_activity_codes=frozenset(
-            TipoActividad(code)
-            for code in tipo_actividad_code_set(
-                "modelo-131:selector-m036-volumen-ingresos-agrario",
-                effective_date=_Q1.end_date,
-            )
-        ),
-        activity_category_matcher=m130_activity_category_matcher,
-        employment_category_matcher=m130_employment_category_matcher,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        aggregation = aggregate_renta_m131_agrario_income_ledger(
+            _catalogue(*transactions),
+            bucket_id=_BUCKET,
+            period=_Q1,
+            modelo=Modelo("131").value,
+            target_casilla_id=validated_casilla_id(_CASILLA_05),
+            agrarian_activity_codes=frozenset(
+                TipoActividad(code)
+                for code in tipo_actividad_code_set(
+                    "modelo-131:selector-m036-volumen-ingresos-agrario",
+                    effective_date=_Q1.end_date,
+                )
+            ),
+            activity_category_matcher=m130_activity_category_matcher,
+            employment_category_matcher=m130_employment_category_matcher,
+            operation=operation,
+        )
     return aggregation, undeclared_activity_income_advisory_observations(aggregation, _m131_revision())
 
 

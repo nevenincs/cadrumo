@@ -805,6 +805,10 @@ errors:
       nem rögzíthető.
     canonical_ledger_payment_withholding_evidence: A főkönyvi kifizetés alapján a
       forrásadó-levonás nem rögzíthető.
+    canonical_ledger_registry_value_unaccepted: A(z) %{transaction_id} főkönyvi tétel
+      %{field} mezője %{value} értéket tartalmaz, amelyet a rögzített adónyilvántartási
+      jogosultság %{effective_date} dátumra nem fogad el. Javítsd ezt az értéket a
+      tételen, majd futtasd újra a műveletet.
     canonical_m036_declaration_ambiguous: A Modelo 036 bevallás azonosítójának előtagja
       több rekordra illeszkedik.
     canonical_m036_declaration_not_found: A kért azonosítónak megfelelő Modelo 036
