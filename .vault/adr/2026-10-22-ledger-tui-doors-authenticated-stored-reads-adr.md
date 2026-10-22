@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:414c149441682a0139dbc9e11d056bfd49d2e51fb730ac70f6d2479d34f73364'
+body_hash: 'sha256:41d06b2eb8b3137617126e6531559c68f7e28ab03c3c530622f905478c5fd8fc'
 related:
   - "[[2026-07-05-ledger-latency-budget-adr]]"
   - "[[2026-07-06-ledger-perf-optimization-adr]]"
@@ -40,13 +40,14 @@ Every read of a stored ledger record re-runs the full admission validation that 
 ## Constraints
 
 - Applies only to a record the secure store decrypted and authenticated in the same call, written under the current row schema version. A record with an older schema version, or read through any path that did not authenticate it, receives full validation.
-- On such a record, the read skips the admission re-derivations: the derived-id re-hash, the gross reconstitution, and the dated registry vocabulary and rule checks. It keeps structural typing and field-level constraints, including enum membership, decimal and UTC typing, and the non-negative amount, so the amount-direction refusal still fires.
+- On such a record, the read skips only re-derivations the store's authentication already proves: the derived-id re-hash for transactions and the derived invoice-id check for invoices, because the AEAD binds the object key and the repository asserts the addressed id. It keeps structural typing and field-level constraints, including enum membership, decimal and UTC typing, and the non-negative amount, so the amount-direction refusal still fires.
+- The dated registry vocabulary and rule checks and the gross and totals reconstitution stay on every read. Several filing consumers do not refuse an out-of-vocabulary value at use: an unknown income concept counts as ordinary income (`src/cadrumo/domain/transactions/volumen_ingresos.py`), any Art. 104.tres tag leaves the prorrata volume (`src/cadrumo/application/aggregation/iva_ledger.py`), an undeclared cash-accounting token reads as cash accounting (`src/cadrumo/domain/iva/schema.py`), and an undeclared identification state passes the intracommunity exemption gate (`iva_ledger.py`). The gross relaxations read registry category sets that change by generation, and a stored row does not record its generation. Moving any of these checks off the read requires those consumers to refuse at use first, and a further decision.
 - Writes, imports, edits and every other admission path keep full validation unchanged.
 - An explicit full re-validation path stays available to operators (the ledger check), so drift between stored records and current rules remains detectable.
 - Consumers that apply registry rules at use (calculation, filing, export) keep refusing a value the pinned authority does not accept; skipping load-time checks must not let an unaccepted value reach a filing silently.
 - Duplicated validation is removed where one check subsumes another, with identical accepted inputs and refusals.
 - The `Transaction` model moves from strict types plus before-coercers to pydantic-native coercion only after every Python-mode constructor is inventoried and converted; accepted inputs for real callers stay identical.
-- The same rule covers the invoice catalogue: an authenticated current-schema catalogue may validate only the invoices a read returns.
+- The same rule covers the invoice catalogue: an authenticated current-schema catalogue may validate only the invoices a read returns, each with the checks this record keeps.
 - No plaintext cache, no new index column and no change to stored formats.
 
 Amended wording in prior records:
@@ -54,7 +55,7 @@ Amended wording in prior records:
 
 ## Implementation
 
-We will add a trusted-read decode path for authenticated current-schema transaction rows and invoice catalogues that constructs records without re-running admission re-derivations while keeping structural typing; remove duplicated validators; and move the transaction model to pydantic-native JSON-mode coercion after converting Python-mode constructors. The exact split between structural checks kept on read and admission checks skipped is an implementation detail within the constraints above, proven by parity tests that compare trusted reads with full validation over varied seeds and by refusal tests for the paths still in force.
+We will add a trusted-read decode path for authenticated current-schema transaction rows and invoice catalogues that skips the id re-derivation the store already proves, behind an explicit skip set, while keeping structural typing and the registry and arithmetic admission this record keeps; remove duplicated validators; and move the transaction model to pydantic-native JSON-mode coercion after converting Python-mode constructors. The exact split between structural checks kept on read and admission checks skipped is an implementation detail within the constraints above, proven by parity tests that compare trusted reads with full validation over varied seeds and by refusal tests for the paths still in force.
 
 ## Rationale
 
@@ -62,4 +63,4 @@ The store's authentication already proves a record is the one this profile wrote
 
 ## Consequences
 
-Whole-ledger reads and invoice views become several times cheaper. A stored record that no longer satisfies a tightened admission rule now loads and is caught at use or by the explicit check rather than at load; a change to admission rules that must apply to existing records requires a schema-version change or a migration. Reconsider if a stored record is ever found to have bypassed write-time admission, or if a filing path is found to rely on load-time registry checks.
+Most of the per-row saving comes from removing duplicated validation and from native coercion; the trusted read removes the id re-derivation, and invoice views validate one invoice instead of the catalogue. Registry and arithmetic admission stays on read because the filing consumers named above rely on it. Reconsider the kept checks once those consumers refuse unaccepted values at use, or if a stored record is ever found to have bypassed write-time admission.
