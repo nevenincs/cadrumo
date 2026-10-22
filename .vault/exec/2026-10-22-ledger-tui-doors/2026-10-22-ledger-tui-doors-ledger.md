@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:c4d0261c1d436e6c2be4e073fe4107c7a63787765ac37ef1c89fad4077e9cfe0'
+body_hash: 'sha256:69f0e44cfc2d6af769f01310eb736a2a61a0ee058cdf7b2bd82faa7cc910f5a9'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -120,6 +120,26 @@ related:
 - `S08` `verify:` `runtime door tests (421)` -> `pass`
 - `S08` `verify:` `new off-loop binding test fails against the old code` -> `pass`
 - `S08` `by:` `orchestrator`
+- `S02` `A` `dev/ci/tests/test_ledger_list_page_benchmark.py`
+- `S02` `A` `dev/tui/harness/ledger_entries_fixtures.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_add.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_browse.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_common.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_doors.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_export.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_health.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_reset.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_trace.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/tests/entries_door_fixtures.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_entries_browse.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_entries_forms.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_entries_off_loop_and_fit.py`
+- `S02` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_entries.py`
+- `S02` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_entries.py`
+- `S02` `verify:` `D1 product, runtime and workspace tests (with D2: 394)` -> `pass`
+- `S02` `verify:` `list page CPU benchmark: period page p95 0.547s within 3.0s budget` -> `pass`
+- `S02` `verify:` `ruff, ty on D1 files; lint-imports` -> `pass`
+- `S02` `by:` `D1`
 
 ## Notes
 
@@ -128,3 +148,4 @@ related:
 - `S06` The three register list operations have no paging fields; screens hold the register and render one page. The tools composer entry and locale strings land in the integration commit.
 - `S04` evidence.query, `attachment_queue` and consent.list take no paging fields; screens hold the result and render one page. Detach takes typed identities because no operation lists an entry's attachments. A whole-repo ruff safe-fix run touched four files outside D3; owners confirmed nothing was lost. The tools composer entry and locale strings land in the integration commit.
 - `S08` Gate B1 finding from D2: every runtime door's session binding check made a blocking IPC status read on the event loop.
+- `S02` Export drives OperationController directly so a partial export reports as partial. The exclusion submitter, tools composer entry and locale strings land in the integration commit.
