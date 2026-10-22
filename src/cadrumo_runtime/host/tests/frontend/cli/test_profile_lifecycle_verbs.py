@@ -369,12 +369,16 @@ def test_config_profile_view_named_profile_includes_canonical_facts(_isolated_ba
 def test_config_profile_delete_requires_yes() -> None:
     seed("operator")
     result = _invoke_profile_app(("delete", "operator"))
-    assert result.exit_code != 0
+    assert result.exit_code == 0, result.output
+    assert "deleted\tfalse" in result.output
+    listed = _invoke_profile(("list",))
+    assert listed.exit_code == 0, listed.output
+    assert "operator" in listed.output
 
 
 def test_config_profile_delete_tombstones_with_yes() -> None:
-    # Registration selects the profile, and deleting the selected profile is
-    # refused, so the selection is cleared before the verb under test.
+    # Registration selects the profile; clearing the selection first keeps
+    # this case about an unselected profile.
     register_cli_profile(log_in=False, label="operator")
     _clear_selection()
     result = _invoke_profile_app(("delete", "operator", "--yes"))
@@ -392,8 +396,8 @@ def test_config_profile_list_excludes_a_tombstoned_profile() -> None:
     listing, indistinguishable from a live one.
     """
 
-    # Registration selects the profile, and deleting the selected profile is
-    # refused, so the selection is cleared before the verb under test.
+    # Registration selects the profile; clearing the selection first keeps
+    # this case about an unselected profile.
     register_cli_profile(log_in=False, label="operator")
     _clear_selection()
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
@@ -429,8 +433,8 @@ def test_config_profile_view_refuses_a_deleted_profile_by_label_and_uuid() -> No
 
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
-    # Registration selects the profile, and deleting the selected profile is
-    # refused, so the selection is cleared before the verb under test.
+    # Registration selects the profile; clearing the selection first keeps
+    # this case about an unselected profile.
     register_cli_profile(log_in=False, label="operator")
     pointer = read_profile_bucket("operator")
     assert pointer is not None

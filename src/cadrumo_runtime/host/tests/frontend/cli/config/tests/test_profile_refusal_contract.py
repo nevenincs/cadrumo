@@ -66,17 +66,20 @@ def test_every_verb_answers_an_unknown_profile_the_same_way() -> None:
     assert all(error["context"] == {"name": _UNKNOWN} for error in errors.values()), errors
 
 
-def test_deleting_the_selected_profile_names_the_command_that_unblocks_it() -> None:
-    """Signing out keeps the selection, so only selecting another profile unblocks the delete.
+def test_deleting_the_selected_profile_is_not_a_refusal() -> None:
+    """Being selected never blocks a confirmed delete, so there is nothing to recover from.
 
-    Reproduction: the refusal once pointed at ``config logout``, which leaves
-    the profile selected and the delete still refused. The action channel now
-    names ``config login`` for the profile to select instead.
+    The runtime owns the selected profile's teardown and clears its selection,
+    so an automation sees a success envelope rather than a refusal that would
+    send it to select another profile first.
     """
-    error = _error(profile_cli("delete", "Editor", "--yes"))
+    result = profile_cli("delete", "Editor", "--yes")
 
-    assert _action_id(error) == "operator.profile.login"
-    assert error["context"] == {"name": "Editor", "profile_id": "<profile-id>"}
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.stdout)
+    assert envelope["status"] == "success"
+    assert envelope["active_profile"] is None
+    assert envelope["result"]["deleted"] is True
 
 
 def test_a_valid_descendant_is_added() -> None:

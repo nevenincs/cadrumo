@@ -150,7 +150,7 @@ def main(*, app: typer.Typer | None = None) -> None:
     # having to read the runtime log. stderr keeps the stdout JSON envelope
     # pure; the code is non-secret operator guidance, not a credential.
     progress_sink = nullcontext()
-    with _pointer_repair_scope(arguments):
+    with _pointer_repair_scope(arguments), _diagnostic_routing_scope(arguments):
         if not metadata_invocation:
             try:
                 _admit_authority_at_startup()
@@ -176,6 +176,22 @@ def _pointer_repair_scope(arguments: list[str]) -> AbstractContextManager[None]:
     from ...core.bucket_pointer import corrupt_pointer_reads_as_unselected
 
     return corrupt_pointer_reads_as_unselected()
+
+
+def _diagnostic_routing_scope(arguments: list[str]) -> AbstractContextManager[None]:
+    """Keep the invocation's diagnostics in their file while stderr carries a JSON document.
+
+    A JSON invocation's stderr is the machine-readable error channel, so a
+    diagnostic logged at the stderr level during the run, such as a refused
+    runtime connection, must not precede the document a caller parses.
+    """
+    from ...core.click_context import argv_requests_json
+
+    if not argv_requests_json(arguments):
+        return nullcontext()
+    from ...core.logging import operator_document_output
+
+    return operator_document_output()
 
 
 def _admit_authority_at_startup() -> None:

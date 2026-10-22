@@ -223,9 +223,15 @@ def _admitted_before(observed: _DatabaseIdentity) -> bool:
 
 
 def _record_admission(observed: _DatabaseIdentity) -> None:
-    """Leave a receipt for later processes; failing to write one only costs them a hash."""
+    """Leave a receipt for later processes; failing to write one only costs them a hash.
+
+    Admission runs before a help request, a parse-time refusal or a refused
+    storage dependency is decided, and each of those must leave the storage
+    tree as it found it. The receipt therefore joins a cache directory the
+    storage materializer already provisioned and never provisions one itself.
+    """
     path = _receipt_path(observed.digest)
-    if path is None:
+    if path is None or not path.parent.parent.is_dir():
         return
     from ....core.atomic_write import atomic_write_best_effort_bytes
 

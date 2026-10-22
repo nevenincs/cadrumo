@@ -23,6 +23,8 @@ from cadrumo.adapters.persistence.profile.tests.password_only_profile import (
 from cadrumo.adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
 from cadrumo.core.config import load_settings
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.tests.audited_process import WindowsStartupInfo, run_audited_process
 from cadrumo.tests.inventory import SRC_CADRUMO
 from cadrumo.tests.subprocess_cli import as_text_completed_process, subprocess_cli_env
@@ -523,13 +525,19 @@ def _combined(result: subprocess.CompletedProcess[str]) -> str:
 
 
 def _storage_snapshot(root: Path) -> dict[str, bytes]:
-    """Capture every durable custody artifact except diagnostic logs."""
+    """Capture every durable custody artifact except diagnostic logs.
+
+    Any process that reads the tax authority may leave its per-user admission
+    receipt in a provisioned cache; the receipt names the authority file and
+    no profile, so it is no custody artifact.
+    """
     if not root.exists():
         return {}
+    receipts = root / storage_location(StorageCategory.AUTHORITY_ADMISSION_RECEIPTS).relative_path()
     return {
         path.relative_to(root).as_posix(): path.read_bytes()
         for path in root.rglob("*")
-        if path.is_file() and "log" not in path.name.lower()
+        if path.is_file() and "log" not in path.name.lower() and not path.is_relative_to(receipts)
     }
 
 

@@ -130,15 +130,15 @@ def test_profile_rename_verb_is_not_registered(_per_bucket_backend: Path) -> Non
 # with no bucket session opened for it.
 
 
-def test_delete_active_profile_is_refused_and_survivors_stay_reachable(
+def test_delete_active_profile_leaves_survivors_reachable(
     _per_bucket_backend: Path,
 ) -> None:
-    """The active profile cannot be deleted; survivors stay reachable.
+    """Deleting the signed-in active profile never locks the operator out of the others.
 
     Reproduces the delete-active hazard: with two profiles, ``login`` to
-    the first so it is active, then ``delete`` it. The custody redesign
-    refuses the delete outright — the refusal is the lockout guard — and
-    the survivor must remain reachable afterwards.
+    the first so it is active, then ``delete`` it. The runtime tears the
+    target down and clears its selection, so the survivor must still
+    resolve and accept a login afterwards.
     """
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
     from cadrumo.core.bucket_pointer import resolve_active_bucket_id
@@ -148,18 +148,18 @@ def test_delete_active_profile_is_refused_and_survivors_stay_reachable(
     assert _invoke(("config", "login", "alpha")).exit_code == 0
 
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
-    assert deleted.exit_code != 0, deleted.output
-    # Signing out keeps the selection, so the refusal's action is signing in to another profile.
-    assert "operator.profile.login" in deleted.output
+    assert deleted.exit_code == 0, deleted.output
+    assert "deleted\ttrue" in deleted.output
 
-    # The refusal is a projection: the target profile still resolves.
-    survivor = read_profile_bucket("alpha")
+    assert read_profile_bucket("alpha") is None
+    survivor = read_profile_bucket("beta")
     assert survivor is not None
-    assert resolve_active_bucket_id() == survivor.bucket_id
+    assert resolve_active_bucket_id() is None
 
     switched = _invoke(("config", "login", "beta"))
     assert switched.exit_code == 0, switched.output
     assert "active_profile\tbeta" in switched.output
+    assert resolve_active_bucket_id() == survivor.bucket_id
 
 
 def test_first_switch_from_a_no_active_profile_state_succeeds(
@@ -209,27 +209,29 @@ def test_list_and_status_work_from_a_no_active_session_state(
     assert "bucket session" not in status.output
 
 
-def test_delete_active_profile_refuses_and_keeps_the_pointer_intact(
+def test_delete_active_profile_clears_the_pointer_it_names(
     _per_bucket_backend: Path,
 ) -> None:
-    """Deleting the active profile is refused; the pointer survives.
+    """Deleting the only, active profile clears the pointer instead of leaving it dangling.
 
-    The old delete-active path cleared the active-profile pointer; the
-    custody redesign refuses the delete instead. The refusal must not
-    leave the pointer cleared — the profile remains active afterwards.
+    A pointer that still named the destroyed capsule would send every later
+    command to a profile that no longer exists, so the deletion journal
+    clears the selection together with the capsule.
     """
     from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 
     create_profile_via_cli("alpha", log_in=False)
     assert _invoke(("config", "login", "alpha")).exit_code == 0
-    pointer_before = resolve_active_bucket_id()
-    assert pointer_before is not None
+    assert resolve_active_bucket_id() is not None
 
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
-    assert deleted.exit_code != 0, deleted.output
-    assert "deleted\ttrue" not in deleted.output
-    assert "operator.profile.login" in deleted.output
-    assert resolve_active_bucket_id() == pointer_before
+    assert deleted.exit_code == 0, deleted.output
+    assert "deleted\ttrue" in deleted.output
+    assert resolve_active_bucket_id() is None
+
+    listed = _invoke(("config", "profile", "list"))
+    assert listed.exit_code == 0, listed.output
+    assert "alpha" not in listed.output
 
 
 def test_delete_non_active_profile_omits_the_cleared_pointer_notice(

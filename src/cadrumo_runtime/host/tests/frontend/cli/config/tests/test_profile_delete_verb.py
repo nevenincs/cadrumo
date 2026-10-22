@@ -76,12 +76,10 @@ def _delete(label: str, *, confirm: bool, invoke_cli: Callable[..., Result]) -> 
 
 
 def _two_profiles() -> tuple[str, str]:
-    """Register a delete target and a second profile that takes the session.
+    """Register a delete target and a second profile that takes the selection.
 
-    Registration selects the profile it creates, so the SECOND registration is
-    what leaves the first one non-active and therefore deletable. A single
-    profile cannot exercise the success path at all, which is itself part of
-    this verb's contract rather than a fixture inconvenience.
+    Registration selects the profile it creates, so the SECOND registration
+    leaves the first one unselected and the second one active.
     """
     _register("doomed", "00000001R")
     _register("survivor", "00000002W")
@@ -121,19 +119,19 @@ def test_confirmed_delete_destroys_the_named_profile_only(run_cadrumo_cli: Calla
     assert survivor in remaining
 
 
-def test_deleting_the_active_profile_is_refused_and_the_profile_survives(
+def test_deleting_the_active_profile_clears_its_selection_and_spares_the_others(
     run_cadrumo_cli: Callable[..., Result],
 ) -> None:
-    """The capsule a live session is bound to is refused, not destroyed."""
-    _, active = _two_profiles()
+    """The runtime tears the selected capsule down and clears the selection that named it."""
+    other, active = _two_profiles()
 
     result = _delete(active, confirm=True, invoke_cli=run_cadrumo_cli)
 
-    assert result.exit_code != 0, result.output
-    assert active in _registered_labels(run_cadrumo_cli)
-    action = json.loads(result.output)["error"]["action"]
-    assert action["action"]["action_id"] == "operator.profile.login"
-    assert action["missing_argument_names"] == ["name"]
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.output)
+    assert envelope["active_profile"] is None
+    assert envelope["result"]["deleted"] is True
+    assert _registered_labels(run_cadrumo_cli) == {other}
 
 
 def test_unknown_profile_is_refused_by_name(run_cadrumo_cli: Callable[..., Result]) -> None:

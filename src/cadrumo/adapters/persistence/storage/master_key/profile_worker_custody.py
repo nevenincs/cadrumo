@@ -52,6 +52,17 @@ class ProfileWorkerCustody:
         if current_active_bucket_session() is not None:
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
         profile_worker_binding.bind(identity, storage_root=storage_root)
+        self._hold_nothing(identity, storage_root=storage_root, clock=clock, monotonic=monotonic)
+
+    def _hold_nothing(
+        self,
+        identity: ProfileWorkerIdentity,
+        *,
+        storage_root: Path,
+        clock: Callable[[], UtcInstant],
+        monotonic: Callable[[], float],
+    ) -> None:
+        """Start with no lease or material, watching the committed capsule this binding names."""
         self.identity, self.root, self.clock, self.monotonic = identity, storage_root, clock, monotonic
         self._leases: dict[UUID, AccessSession] = {}
         self._ended: dict[UUID, AccessDenialCode] = {}

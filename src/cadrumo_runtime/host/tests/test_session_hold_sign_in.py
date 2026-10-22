@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.type_guards import is_str_keyed_dict
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PASSWORD = b"synthetic-window-password"
@@ -88,7 +90,7 @@ async def _sign_in(tmp_path: Path, mode: str) -> tuple[int, list[dict[str, objec
     source_root = Path(__file__).resolve().parents[3]
     environment = os.environ.copy()
     existing = environment.get("PYTHONPATH")
-    environment["PYTHONPATH"] = os.pathsep.join(value for value in (str(source_root), existing) if value)
+    environment["PYTHONPATH"] = os.pathsep.join(value for value in (str(source_root), existing) if value is not None)
     process = await asyncio.create_subprocess_exec(
         sys.executable,
         "-c",
@@ -104,15 +106,21 @@ async def _sign_in(tmp_path: Path, mode: str) -> tuple[int, list[dict[str, objec
     process.stdin.write(struct.pack("!I", len(_PASSWORD)) + _PASSWORD)
     await process.stdin.drain()
     try:
-        output, errors = await asyncio.wait_for(process.communicate(), timeout=30)
+        # Bounds only a hung child: importing the runtime takes tens of seconds on a loaded machine.
+        output, errors = await asyncio.wait_for(process.communicate(), timeout=120)
     finally:
         if process.returncode is None:
             process.kill()
             await process.wait()
     assert process.returncode is not None
-    lines = [json.loads(line) for line in output.splitlines() if line.strip()]
-    asked = json.loads(errors.splitlines()[0])
-    return process.returncode, lines, asked
+    lines = [_document(line) for line in output.splitlines() if line.strip()]
+    return process.returncode, lines, _document(errors.splitlines()[0])
+
+
+def _document(line: bytes) -> dict[str, object]:
+    document: object = json.loads(line)
+    assert is_str_keyed_dict(document)
+    return document
 
 
 @pytest.mark.asyncio
