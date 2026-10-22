@@ -114,6 +114,11 @@ _LITERAL_NON_PROFILE_EXCLUSIONS = (
         "test_calendar_warnings_include_registry_deadline_window_predicates",
         "raw calendar warning diagnostics",
     ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/overview/tests/test_calendar_profile_context.py",
+        "test_calendar_warnings_carry_their_sentence_in_the_read_language",
+        "raw calendar values that provoke the warnings whose read-language sentence is checked",
+    ),
 )
 
 _FACT_CONTAINER_NON_PROFILE_EXCLUSIONS = (
