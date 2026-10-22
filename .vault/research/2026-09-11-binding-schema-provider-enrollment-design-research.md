@@ -173,25 +173,38 @@ class BindingDefinition(RegistryModel):
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = ()
 
+
 BindingProvider = Annotated[
-    ManualInputProvider | DesignConstantProvider | ProfileProvider
-    | PreviousFilingProvider | RelationPrefillProvider
-    | LedgerIvaProvider | LedgerOssProvider | LedgerRentaIncomeProvider | ...
-    | WithholdingProvider | InvoiceProvider | ForeignAssetProvider | ...,
+    ManualInputProvider
+    | DesignConstantProvider
+    | ProfileProvider
+    | PreviousFilingProvider
+    | RelationPrefillProvider
+    | LedgerIvaProvider
+    | LedgerOssProvider
+    | LedgerRentaIncomeProvider
+    | ...
+    | WithholdingProvider
+    | InvoiceProvider
+    | ForeignAssetProvider
+    | ...,
     Field(discriminator="kind"),
 ]
 
+
 class BindingValueContract(RegistryModel):
-    data_type: BindingDataType          # money | integer | boolean | text | date | enum | rows
-    channel: BindingValueChannel        # decimal | integer | boolean | text | date | enum | row_set
+    data_type: BindingDataType  # money | integer | boolean | text | date | enum | rows
+    channel: BindingValueChannel  # decimal | integer | boolean | text | date | enum | row_set
     typed_enum: BindingTypedEnumKind | None = None
-    row_grouping: RowSetGrouping | None = None   # required iff channel == row_set
+    row_grouping: RowSetGrouping | None = None  # required iff channel == row_set
+
 
 class TerminalOriginExpectation(RegistryModel):
-    source_class: TerminalOriginClass    # operator_input | design_constant | profile_field | filed_modelo_casilla | ledger_aggregate | invoice_catalogue | perceptor_observation | detail_record | derived_calculation
-    role: CalculationSourceLineageRole   # PRIMARY | CONTRIBUTOR (existing enum)
+    source_class: TerminalOriginClass  # operator_input | design_constant | profile_field | filed_modelo_casilla | ledger_aggregate | invoice_catalogue | perceptor_observation | detail_record | derived_calculation
+    role: CalculationSourceLineageRole  # PRIMARY | CONTRIBUTOR (existing enum)
     cardinality: Literal["exactly_one", "at_least_one", "zero_or_more"]
     fingerprint: Literal["required", "optional"]
+
 
 class BindingProviderRegistration(RegistryModel):
     kind: BindingSourceKind
@@ -202,7 +215,7 @@ class BindingProviderRegistration(RegistryModel):
     permitted_terminal_origins: frozenset[TerminalOriginClass]
     output: Literal["scalar", "rows", "scalar_and_rows"]
     disposition: Literal["filing_grade", "advisory", "deferred", "non_runtime"]
-    route: RouteOwnership | NonRuntimeOwnership   # resolver id + stage, or pseudo-owner
+    route: RouteOwnership | NonRuntimeOwnership  # resolver id + stage, or pseudo-owner
     authoring: Literal["scaffold", "generator", "none"]
 ```
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -50,3 +50,17 @@ class PresentationDelivered(BaseModel):
     connection_id: UUID
     destination: PresentationDestination
     delivered: Annotated[int, Field(ge=0)]
+
+
+_NIL_PROFILE: Final = UUID(int=0)
+
+
+def destination_link(profile_id: UUID, destination: PresentationDestination) -> str:
+    """Spell the desktop link that asks this profile's TUI to show ``destination``.
+
+    The link grammar is exact: a lowercase, non-nil profile UUID and the page
+    word, which writes the destination's underscores as hyphens.
+    """
+    if profile_id == _NIL_PROFILE:
+        raise ValueError("a page link names a real profile")
+    return f"cadrumo://profiles/{profile_id}/{destination.replace('_', '-')}"

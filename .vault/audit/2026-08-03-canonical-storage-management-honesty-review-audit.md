@@ -955,8 +955,8 @@ showed it.** The corrected version is narrower and worth less alarm.
 
 ```python
 try:
-    root.chmod(STORAGE_ROOT_MODE)                      # 0o700, config.py:1330
-except (OSError, NotImplementedError):                 # pragma: no cover
+    root.chmod(STORAGE_ROOT_MODE)  # 0o700, config.py:1330
+except (OSError, NotImplementedError):  # pragma: no cover
     _LOGGER.debug("could not restrict permissions on %s; relying on filesystem ACLs", root)
 ```
 

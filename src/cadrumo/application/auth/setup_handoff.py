@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.presentation import destination_link
+
 from ...core.auth_provider import AuthProviderKind
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .sync_readiness import AuthSyncReadiness
@@ -38,7 +40,7 @@ class AuthSetupHandoff(BaseModel):
 def auth_setup_handoff(profile_id: UUID, readiness: AuthSyncReadiness) -> AuthSetupHandoff:
     """Build a bounded handoff from the saved method's actual requirements."""
     return AuthSetupHandoff(
-        url=f"cadrumo://profiles/{profile_id}/aeat-auth",
+        url=destination_link(profile_id, "aeat_auth"),
         supported_methods=tuple(AuthProviderKind),
         missing=tuple(
             AuthSetupRequirement(field=item.field, explanation=sync_requirement_reason(item.reason), secret=item.secret)

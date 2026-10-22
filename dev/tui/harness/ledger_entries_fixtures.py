@@ -8,14 +8,13 @@ and amount is synthetic; nothing is written to storage or to disk.
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable
 from enum import StrEnum
 from pathlib import Path
 from typing import cast, override
 
 from textual.events import Mount
-from textual.widgets import Button, Collapsible, DataTable, Input, Select
+from textual.widgets import Collapsible, DataTable, Input, Select
 
 from cadrumo.core.operations import OperationEffect
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
@@ -32,6 +31,8 @@ from cadrumo.entrypoints.tui.ledger.tests.entries_door_fixtures import (
     entries_controller,
     entry_id,
 )
+
+from .settling import press_when_enabled, settle, settle_until
 
 _INTERFACES = {
     "browse": "cadrumo.entrypoints.tui.ledger.entries_browse.LedgerEntriesBrowseScreen",
@@ -92,25 +93,21 @@ class EntriesCaptureHost(ScreenHostApp[None]):
         await _STEPS[self.fixture_state](self)
 
     async def settle(self) -> None:
-        """Let posted messages land, then wait for every door call they started."""
-        for _ in range(5):
-            await asyncio.sleep(0.01)
-        await self.workers.wait_for_complete()
-        await asyncio.sleep(0.01)
+        """Wait until the screen has handled every posted message and finished every door call."""
+        await settle(self)
 
     async def press(self, button_id: str) -> None:
-        """Press one control on the tool screen and wait for the work it started."""
-        self.tool_screen.query_one(f"#{button_id}", Button).press()
-        await self.settle()
+        """Press one control on the tool screen once it is enabled, and wait for the work it started."""
+        await press_when_enabled(self, button_id, within=self.tool_screen)
 
     async def accept(self) -> None:
         """Accept the confirmation dialog on top."""
-        self.screen.query_one("#btn-confirm-accept", Button).press()
-        await self.settle()
+        await press_when_enabled(self, "btn-confirm-accept")
 
     async def choose(self, row: int) -> None:
         """Choose one row of the entry list."""
         table = cast("DataTable[str]", self.tool_screen.query_one("#entries-browse", DataTable))
+        await settle_until(self, lambda: table.row_count > row, f"the entry list to show row {row}")
         table.move_cursor(row=row)
         table.action_select_cursor()
         await self.settle()

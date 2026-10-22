@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#desktop-shell-capabilities'
 date: '2026-10-06'
-modified: '2026-10-12'
+modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:d9bd395ba9ee96be9339155b9b4c452dbf5e5d4255c5fa4b3aa6eb529e761f63'
+body_hash: 'sha256:0620b66af695278389ccdaa8810b4d9b9c8f761fa4b864d90e9b6f716afd0e42'
 related:
   - '[[2026-10-06-desktop-shell-capabilities-research]]'
   - '[[2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#desktop-shell-capabilities`.
 
 ### adr
 
-- `2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr` - `desktop-shell-capabilities` adr: `The desktop shell may show named read-only views of the signed-in profile` | (**status:** `proposed`)
+- `2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr` - `desktop-shell-capabilities` adr: `The desktop shell may show named read-only views of the signed-in profile` | (**status:** `accepted`)
 
 ### research
 

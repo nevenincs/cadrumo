@@ -27,6 +27,7 @@ The governing audit (`2026-08-09-...-audit.md`) already measured the headline ga
 
 ```python
 from cadrumo.application.wizard import ensure_profile_keys_registered
+
 ensure_profile_keys_registered()
 from cadrumo.domain.contribuyente import PROFILE_KEYS
 from cadrumo.domain.user_profile import load_user_profile_schema

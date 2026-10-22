@@ -68,14 +68,16 @@ def emit(payload):
 try:
     with owner.operation() as operation:
         pin = operation.pin()
-        emit({
-            "stage": "operation-pin",
-            "descriptor": str(path.resolve()),
-            "descriptor_logical_generation": descriptor.logical_generation,
-            "logical_generation": pin.logical_generation,
-            "reader_incarnation": pin.reader_incarnation,
-            "matches_r03_generation": pin.logical_generation == R03_LOGICAL_GENERATION,
-        })
+        emit(
+            {
+                "stage": "operation-pin",
+                "descriptor": str(path.resolve()),
+                "descriptor_logical_generation": descriptor.logical_generation,
+                "logical_generation": pin.logical_generation,
+                "reader_incarnation": pin.reader_incarnation,
+                "matches_r03_generation": pin.logical_generation == R03_LOGICAL_GENERATION,
+            }
+        )
         revision = operation.revision_for_context("720", filing_year=2025, period="0A")
         emit({"stage": "selected-revision", "revision": str(revision.id)})
 
@@ -92,11 +94,13 @@ try:
                     provider.get("source_casilla_ids") or []
                 ):
                     candidates.append((binding, dumped))
-            emit({
-                "stage": "binding-candidates",
-                "source_casilla": casilla_id,
-                "binding_ids": [binding.id for binding, _ in candidates],
-            })
+            emit(
+                {
+                    "stage": "binding-candidates",
+                    "source_casilla": casilla_id,
+                    "binding_ids": [binding.id for binding, _ in candidates],
+                }
+            )
             if len(candidates) != 1:
                 raise RuntimeError(
                     f"Expected exactly one published binding targeting {casilla_id}; found {len(candidates)}"
@@ -121,11 +125,13 @@ try:
                 emit({"stage": "published-declarations", "declarations": declarations})
                 raise RuntimeError(f"Published declaration for {binding.id} differs from fixed case")
             binding_by_casilla[casilla_id] = binding
-        emit({
-            "stage": "published-declarations",
-            "binding_to_source_casilla": {b.id: c for c, b in binding_by_casilla.items()},
-            "declarations": declarations,
-        })
+        emit(
+            {
+                "stage": "published-declarations",
+                "binding_to_source_casilla": {b.id: c for c, b in binding_by_casilla.items()},
+                "declarations": declarations,
+            }
+        )
 
         observation = RegistryModeloObservation(
             modelo="720",
@@ -141,13 +147,15 @@ try:
                 for casilla_id, value in SYNTHETIC_VALUES.items()
             ),
         )
-        emit({
-            "stage": "synthetic-observation",
-            "synthetic": True,
-            "source": {"modelo": "720", "filing_year": 2024, "period": "0A"},
-            "values": {casilla_id: str(value) for casilla_id, value in SYNTHETIC_VALUES.items()},
-            "observation": observation.model_dump(mode="json"),
-        })
+        emit(
+            {
+                "stage": "synthetic-observation",
+                "synthetic": True,
+                "source": {"modelo": "720", "filing_year": 2024, "period": "0A"},
+                "values": {casilla_id: str(value) for casilla_id, value in SYNTHETIC_VALUES.items()},
+                "observation": observation.model_dump(mode="json"),
+            }
+        )
 
         refusal = None
         try:
@@ -163,11 +171,13 @@ try:
 
         generation_stable = pin.logical_generation == descriptor.logical_generation
         selector_stable = path.read_bytes() == before
-        emit({
-            "stage": "selector-stability",
-            "generation_matches_descriptor": generation_stable,
-            "selector_bytes_unchanged": selector_stable,
-        })
+        emit(
+            {
+                "stage": "selector-stability",
+                "generation_matches_descriptor": generation_stable,
+                "selector_bytes_unchanged": selector_stable,
+            }
+        )
         if not (generation_stable and selector_stable):
             emit({"signal": "BLOCKED", "reason": "selector or generation changed during observation"})
             exit_code = 2
@@ -176,10 +186,12 @@ try:
             emit({"signal": "BLOCKED"})
             exit_code = 2
         else:
-            emit({
-                "stage": "resolved-values",
-                "resolved": {key: str(value) for key, value in resolved.items()},
-            })
+            emit(
+                {
+                    "stage": "resolved-values",
+                    "resolved": {key: str(value) for key, value in resolved.items()},
+                }
+            )
             checks = {}
             for casilla_id, expected in SYNTHETIC_VALUES.items():
                 binding_id = binding_by_casilla[casilla_id].id

@@ -238,7 +238,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "15c73db63eb68dbca655408b3b1d478ea3bffc19c2205327fd91f5d99739f843"
+          "value": "2d76dc603da7b944a69337c6fdfc8f05f76b420929d3d93fa54a82b626b12732"
         }
       ],
       "envelope": {
@@ -308,7 +308,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "15c73db63eb68dbca655408b3b1d478ea3bffc19c2205327fd91f5d99739f843",
+          "calculation_revision_id": "2d76dc603da7b944a69337c6fdfc8f05f76b420929d3d93fa54a82b626b12732",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -876,7 +876,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 15c73db63eb68dbca655408b3b1d478ea3bffc19c2205327fd91f5d99739f843 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 2d76dc603da7b944a69337c6fdfc8f05f76b420929d3d93fa54a82b626b12732 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -937,7 +937,7 @@
         "modelo",
         "work",
         "verify",
-        "15c73db63eb68dbca655408b3b1d478ea3bffc19c2205327fd91f5d99739f843"
+        "2d76dc603da7b944a69337c6fdfc8f05f76b420929d3d93fa54a82b626b12732"
       ],
       "captures": [],
       "envelope": {
@@ -985,7 +985,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "15c73db63eb68dbca655408b3b1d478ea3bffc19c2205327fd91f5d99739f843",
+          "calculation_revision_id": "2d76dc603da7b944a69337c6fdfc8f05f76b420929d3d93fa54a82b626b12732",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1036,7 +1036,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "2dcaffa835c8d23bf4c04342cca09f3b9a4e0a4f3e924edff8b5d3e379e43d23",
+          "verification_report_id": "56db62d480877a74645cb30b5942e6550976e895f5238d285ac6d6a3b29207cd",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1068,7 +1068,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.file\nfiling_record_id\t0430ac06968dd0881eec0161a4cc89ba207c038ee95d4bbd0661b52a0429d0bb\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\t15c73db63eb68dbca655408b3b1d478ea3bffc19c2205327fd91f5d99739f843\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.file\nfiling_record_id\t1d29203aacd7379c93d28a9b78382a94315d6026f4fc617e71b57dfb3c39c198\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\t2d76dc603da7b944a69337c6fdfc8f05f76b420929d3d93fa54a82b626b12732\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -1125,10 +1125,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "9420471d6c7a01ed27fc2e9c73c0524147c1e456cf875d8c4c1382900863ea20",
+          "bucket_event_id": "03c30d68c7e78b63b6afa09682d790dd18ae88b30bf267c5f6dc674a0a83fc6d",
           "bucket_id": "<bucket-id>",
           "byte_size": 2948,
-          "calculation_revision_id": "15c73db63eb68dbca655408b3b1d478ea3bffc19c2205327fd91f5d99739f843",
+          "calculation_revision_id": "2d76dc603da7b944a69337c6fdfc8f05f76b420929d3d93fa54a82b626b12732",
           "file_sha256": "310281eedac7a2d810c82addcf66519d9a522aad42908c40d9739311bf5fb16a",
           "filing_year": 2026,
           "format": "fichero-boe",

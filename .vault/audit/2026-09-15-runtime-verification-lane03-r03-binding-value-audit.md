@@ -69,13 +69,15 @@ def emit(payload):
 try:
     with owner.operation() as operation:
         pin = operation.pin()
-        emit({
-            "stage": "operation-pin",
-            "descriptor": str(path.resolve()),
-            "descriptor_logical_generation": descriptor.logical_generation,
-            "logical_generation": pin.logical_generation,
-            "reader_incarnation": pin.reader_incarnation,
-        })
+        emit(
+            {
+                "stage": "operation-pin",
+                "descriptor": str(path.resolve()),
+                "descriptor_logical_generation": descriptor.logical_generation,
+                "logical_generation": pin.logical_generation,
+                "reader_incarnation": pin.reader_incarnation,
+            }
+        )
         revision = operation.revision_for_context("720", filing_year=2025, period="0A")
         emit({"stage": "selected-revision", "revision": str(revision.id)})
 
@@ -86,14 +88,16 @@ try:
         dumped = binding.model_dump(mode="json")
         provider = dumped["provider"]
         temporal = provider.get("temporal", {})
-        emit({
-            "stage": "published-declaration",
-            "binding_id": binding.id,
-            "provider": provider,
-            "aggregation": dumped["aggregation"],
-            "legal_refs": dumped["legal_refs"],
-            "source_refs": dumped["source_refs"],
-        })
+        emit(
+            {
+                "stage": "published-declaration",
+                "binding_id": binding.id,
+                "provider": provider,
+                "aggregation": dumped["aggregation"],
+                "legal_refs": dumped["legal_refs"],
+                "source_refs": dumped["source_refs"],
+            }
+        )
         if not (
             provider.get("kind") == "previous_filing"
             and provider.get("source_modelo") == "720"
@@ -120,11 +124,13 @@ try:
                 ),
             ),
         )
-        emit({
-            "stage": "synthetic-observation",
-            "synthetic": True,
-            "observation": observation.model_dump(mode="json"),
-        })
+        emit(
+            {
+                "stage": "synthetic-observation",
+                "synthetic": True,
+                "observation": observation.model_dump(mode="json"),
+            }
+        )
 
         try:
             resolved = resolve_previous_filing_binding_values(
@@ -134,11 +140,13 @@ try:
                 period="0A",
             )
         except RegistryValidationError as exc:
-            emit({
-                "stage": "resolver-refused",
-                "error_type": type(exc).__name__,
-                "message": str(exc),
-            })
+            emit(
+                {
+                    "stage": "resolver-refused",
+                    "error_type": type(exc).__name__,
+                    "message": str(exc),
+                }
+            )
             resolved = None
 
         if pin.logical_generation != descriptor.logical_generation:
@@ -150,12 +158,14 @@ try:
             emit({"signal": "BLOCKED"})
             exit_code = 2
         else:
-            emit({
-                "stage": "resolved-values",
-                "resolved": {key: str(value) for key, value in resolved.items()},
-                "selected_present": binding_id in resolved,
-                "siblings_present": {sid: sid in resolved for sid in sibling_ids},
-            })
+            emit(
+                {
+                    "stage": "resolved-values",
+                    "resolved": {key: str(value) for key, value in resolved.items()},
+                    "selected_present": binding_id in resolved,
+                    "siblings_present": {sid: sid in resolved for sid in sibling_ids},
+                }
+            )
             value = resolved.get(binding_id)
             if not (isinstance(value, Decimal) and value == expected_value and str(value) == "1234.56"):
                 raise RuntimeError(f"Resolved value {value!r} differs from expected {expected_value!r}")

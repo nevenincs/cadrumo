@@ -87,14 +87,16 @@ def run_case(name, revision, observations):
 try:
     with owner.operation() as operation:
         pin = operation.pin()
-        emit({
-            "stage": "operation-pin",
-            "descriptor": str(path.resolve()),
-            "descriptor_logical_generation": descriptor.logical_generation,
-            "logical_generation": pin.logical_generation,
-            "reader_incarnation": pin.reader_incarnation,
-            "matches_r04_generation": pin.logical_generation == R04_LOGICAL_GENERATION,
-        })
+        emit(
+            {
+                "stage": "operation-pin",
+                "descriptor": str(path.resolve()),
+                "descriptor_logical_generation": descriptor.logical_generation,
+                "logical_generation": pin.logical_generation,
+                "reader_incarnation": pin.reader_incarnation,
+                "matches_r04_generation": pin.logical_generation == R04_LOGICAL_GENERATION,
+            }
+        )
         revision = operation.revision_for_context("720", filing_year=2025, period="0A")
         emit({"stage": "selected-revision", "revision": str(revision.id)})
 
@@ -127,10 +129,12 @@ try:
                 raise RuntimeError(f"Published declaration for {binding.id} differs from fixed case")
             binding_by_casilla[casilla_id] = binding
         binding_ids = tuple(binding_by_casilla[c].id for c in SOURCE_CASILLAS)
-        emit({
-            "stage": "published-bindings",
-            "binding_to_source_casilla": {binding_by_casilla[c].id: c for c in SOURCE_CASILLAS},
-        })
+        emit(
+            {
+                "stage": "published-bindings",
+                "binding_to_source_casilla": {binding_by_casilla[c].id: c for c in SOURCE_CASILLAS},
+            }
+        )
 
         # Case A: no source filing at all.
         case_a = run_case("A-absent-filing", revision, ())
@@ -150,35 +154,30 @@ try:
                 for casilla_id in SOURCE_CASILLAS
             ),
         )
-        emit({
-            "stage": "synthetic-zero-observation",
-            "synthetic": True,
-            "observation": zero_observation.model_dump(mode="json"),
-        })
+        emit(
+            {
+                "stage": "synthetic-zero-observation",
+                "synthetic": True,
+                "observation": zero_observation.model_dump(mode="json"),
+            }
+        )
         case_b = run_case("B-explicit-zero", revision, (zero_observation,))
 
         generation_stable = pin.logical_generation == descriptor.logical_generation
         selector_stable = path.read_bytes() == before
-        emit({
-            "stage": "selector-stability",
-            "generation_matches_descriptor": generation_stable,
-            "selector_bytes_unchanged": selector_stable,
-        })
+        emit(
+            {
+                "stage": "selector-stability",
+                "generation_matches_descriptor": generation_stable,
+                "selector_bytes_unchanged": selector_stable,
+            }
+        )
 
-        a_membership = (
-            {bid: bid in case_a["raw"] for bid in binding_ids} if case_a["kind"] == "mapping" else None
-        )
-        b_membership = (
-            {bid: bid in case_b["raw"] for bid in binding_ids} if case_b["kind"] == "mapping" else None
-        )
-        b_zero_exact = (
-            case_b["kind"] == "mapping"
-            and all(
-                bid in case_b["raw"]
-                and isinstance(case_b["raw"][bid], Decimal)
-                and case_b["raw"][bid] == Decimal("0")
-                for bid in binding_ids
-            )
+        a_membership = {bid: bid in case_a["raw"] for bid in binding_ids} if case_a["kind"] == "mapping" else None
+        b_membership = {bid: bid in case_b["raw"] for bid in binding_ids} if case_b["kind"] == "mapping" else None
+        b_zero_exact = case_b["kind"] == "mapping" and all(
+            bid in case_b["raw"] and isinstance(case_b["raw"][bid], Decimal) and case_b["raw"][bid] == Decimal("0")
+            for bid in binding_ids
         )
         if case_a["kind"] == "refused":
             a_form = "refused"
@@ -189,14 +188,16 @@ try:
         else:
             a_form = "partial"
         distinguishable = b_zero_exact and a_form in ("refused", "omitted")
-        emit({
-            "stage": "interpretation",
-            "case_a_form": a_form,
-            "case_a_membership": a_membership,
-            "case_b_membership": b_membership,
-            "case_b_all_exact_zero": b_zero_exact,
-            "absence_distinguishable_from_zero": distinguishable,
-        })
+        emit(
+            {
+                "stage": "interpretation",
+                "case_a_form": a_form,
+                "case_a_membership": a_membership,
+                "case_b_membership": b_membership,
+                "case_b_all_exact_zero": b_zero_exact,
+                "absence_distinguishable_from_zero": distinguishable,
+            }
+        )
 
         if not (generation_stable and selector_stable):
             emit({"signal": "BLOCKED", "reason": "selector or generation changed during observation"})

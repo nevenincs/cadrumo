@@ -14,7 +14,7 @@ from enum import StrEnum
 from typing import cast, override
 
 from textual.events import Mount
-from textual.widgets import Button, Input, Select
+from textual.widgets import Input, Select
 
 from cadrumo.application.prorrata_register.projection_contracts import (
     ProrrataRefusalProjection,
@@ -44,6 +44,8 @@ from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
     ledger_review_action,
 )
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
+
+from .settling import press_when_enabled, settle
 
 _PRORRATA_INTERFACE = "cadrumo.entrypoints.tui.ledger.registers_prorrata.LedgerProrrataRegisterScreen"
 _CAPITAL_GOODS_INTERFACE = "cadrumo.entrypoints.tui.ledger.registers_capital_goods.LedgerCapitalGoodsScreen"
@@ -94,16 +96,12 @@ class RegisterCaptureHost(ScreenHostApp[None]):
             await result
 
     async def settle(self) -> None:
-        """Let posted messages land, then wait for every door call they started."""
-        for _ in range(5):
-            await asyncio.sleep(0.01)
-        await self.workers.wait_for_complete()
-        await asyncio.sleep(0.01)
+        """Wait until the screen has handled every posted message and finished every door call."""
+        await settle(self)
 
     async def press(self, button_id: str) -> None:
-        """Press one control and wait for what it started."""
-        self.register_screen.query_one(f"#{button_id}", Button).press()
-        await self.settle()
+        """Press one control once it is enabled, and wait for what it started."""
+        await press_when_enabled(self, button_id, within=self.register_screen)
 
     async def choose(self, select_id: str, value: str) -> None:
         """Choose one value in a closed choice."""

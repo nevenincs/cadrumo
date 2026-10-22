@@ -47,39 +47,50 @@ owner = bundled_indexed_authority()
 try:
     with owner.operation() as operation:
         pin = operation.pin()
-        print(json.dumps({
-            "stage": "operation-pin",
-            "descriptor": str(path.resolve()),
-            "descriptor_logical_generation": descriptor.logical_generation,
-            "logical_generation": pin.logical_generation,
-            "reader_incarnation": pin.reader_incarnation,
-        }, sort_keys=True), flush=True)
-        revision = operation.revision_for_context(
-            "720", filing_year=2025, period="0A"
+        print(
+            json.dumps(
+                {
+                    "stage": "operation-pin",
+                    "descriptor": str(path.resolve()),
+                    "descriptor_logical_generation": descriptor.logical_generation,
+                    "logical_generation": pin.logical_generation,
+                    "reader_incarnation": pin.reader_incarnation,
+                },
+                sort_keys=True,
+            ),
+            flush=True,
         )
-        print(json.dumps({
-            "stage": "selected-revision",
-            "revision": str(revision.id),
-        }, sort_keys=True), flush=True)
-        matches = [
-            binding for binding in revision.bindings
-            if binding.id == binding_id
-        ]
+        revision = operation.revision_for_context("720", filing_year=2025, period="0A")
+        print(
+            json.dumps(
+                {
+                    "stage": "selected-revision",
+                    "revision": str(revision.id),
+                },
+                sort_keys=True,
+            ),
+            flush=True,
+        )
+        matches = [binding for binding in revision.bindings if binding.id == binding_id]
         if len(matches) != 1:
-            raise RuntimeError(
-                f"Expected exactly one published binding; found {len(matches)}"
-            )
+            raise RuntimeError(f"Expected exactly one published binding; found {len(matches)}")
 
         binding = matches[0]
         provider = binding.provider.model_dump(mode="json")
-        print(json.dumps({
-            "stage": "published-declaration",
-            "descriptor": str(path.resolve()),
-            "logical_generation": pin.logical_generation,
-            "reader_incarnation": pin.reader_incarnation,
-            "revision": str(revision.id),
-            "binding": binding.model_dump(mode="json"),
-        }, sort_keys=True), flush=True)
+        print(
+            json.dumps(
+                {
+                    "stage": "published-declaration",
+                    "descriptor": str(path.resolve()),
+                    "logical_generation": pin.logical_generation,
+                    "reader_incarnation": pin.reader_incarnation,
+                    "revision": str(revision.id),
+                    "binding": binding.model_dump(mode="json"),
+                },
+                sort_keys=True,
+            ),
+            flush=True,
+        )
 
         temporal = provider.get("temporal", {})
         if not (
@@ -92,25 +103,21 @@ try:
         ):
             raise RuntimeError("Published declaration differs from fixed case")
 
-        requirements = previous_filing_observation_requirements(
-            revision, filing_year=2025, period="0A"
+        requirements = previous_filing_observation_requirements(revision, filing_year=2025, period="0A")
+        selected = [requirement for requirement in requirements if binding_id in requirement.binding_ids]
+        print(
+            json.dumps(
+                {
+                    "stage": "resolved-requirements",
+                    "requirements": [requirement.model_dump(mode="json") for requirement in selected],
+                },
+                sort_keys=True,
+            ),
+            flush=True,
         )
-        selected = [
-            requirement for requirement in requirements
-            if binding_id in requirement.binding_ids
-        ]
-        print(json.dumps({
-            "stage": "resolved-requirements",
-            "requirements": [
-                requirement.model_dump(mode="json")
-                for requirement in selected
-            ],
-        }, sort_keys=True), flush=True)
 
         if len(selected) != 1:
-            raise RuntimeError(
-                f"Expected one source requirement; found {len(selected)}"
-            )
+            raise RuntimeError(f"Expected one source requirement; found {len(selected)}")
 
         result = selected[0]
         if not (

@@ -9,14 +9,13 @@ storage.
 
 from __future__ import annotations
 
-import asyncio
 from enum import StrEnum
 from pathlib import Path, PurePath
 from typing import cast, override
 
 from textual.events import Mount
 from textual.screen import Screen
-from textual.widgets import Button, DataTable, Input
+from textual.widgets import DataTable, Input
 
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
@@ -39,6 +38,8 @@ from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
     ledger_review_action,
 )
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
+
+from .settling import press_when_enabled, settle, settle_until
 
 _PACKAGE = "cadrumo.entrypoints.tui.ledger"
 _WRITE_INTERFACE = f"{_PACKAGE}.evidence_files_write.LedgerEvidenceFilesWriteScreen"
@@ -148,19 +149,16 @@ class EvidenceFilesCaptureHost(ScreenHostApp[None]):
             self._driving = False
 
     async def _settle(self) -> None:
-        """Let posted messages land, then wait for every door call they started."""
-        for _ in range(5):
-            await asyncio.sleep(0.01)
-        await self.workers.wait_for_complete()
-        await asyncio.sleep(0.01)
+        """Wait until the screen has handled every posted message and finished every door call."""
+        await settle(self)
 
     async def _press(self, button_id: str) -> None:
-        self.screen.query_one(f"#{button_id}", Button).press()
-        await self._settle()
+        await press_when_enabled(self, button_id)
         await self._apply_pending_swap()
 
     async def _select(self, table_id: str, row: int) -> None:
         table = cast("DataTable[str]", self.screen.query_one(f"#{table_id}", DataTable))
+        await settle_until(self, lambda: table.row_count > row, f"#{table_id} to show row {row}")
         table.move_cursor(row=row)
         table.action_select_cursor()
         await self._settle()

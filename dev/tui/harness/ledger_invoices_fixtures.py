@@ -14,7 +14,7 @@ from typing import cast, override
 
 from textual.events import Mount
 from textual.screen import Screen
-from textual.widgets import Button, Input, Select
+from textual.widgets import Input, Select
 
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
@@ -38,6 +38,8 @@ from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
 )
 from cadrumo.entrypoints.tui.ledger.transaction_views import LedgerTransactionDetailScreen
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
+
+from .settling import press_when_enabled, settle
 
 
 class InvoicesFixtureState(StrEnum):
@@ -110,16 +112,12 @@ class InvoicesCaptureHost(ScreenHostApp[None]):
             await self.settle()
 
     async def settle(self) -> None:
-        """Let posted messages land, then wait for every door call they started."""
-        for _ in range(5):
-            await asyncio.sleep(0.01)
-        await self.workers.wait_for_complete()
-        await asyncio.sleep(0.01)
+        """Wait until the screen has handled every posted message and finished every door call."""
+        await settle(self)
 
     async def press(self, button_id: str) -> None:
-        """Press one of the captured screen's buttons and wait for what it started."""
-        self.captured.query_one(f"#{button_id}", Button).press()
-        await self.settle()
+        """Press one of the captured screen's buttons once it is enabled, and wait for what it started."""
+        await press_when_enabled(self, button_id, within=self.captured)
 
     def type_into(self, selector: str, value: str) -> None:
         """Type a value into one of the captured screen's inputs."""

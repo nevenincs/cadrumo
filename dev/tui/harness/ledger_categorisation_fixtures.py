@@ -9,13 +9,12 @@ declared state. Values are synthetic; nothing is written to storage.
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable
 from enum import StrEnum
 from typing import override
 
 from textual.events import Mount
-from textual.widgets import Button, Input
+from textual.widgets import Input
 
 from cadrumo.domain.transactions.classification_rule import LedgerClassificationRule
 from cadrumo.domain.transactions.enums import BusinessClassification
@@ -28,6 +27,8 @@ from cadrumo.entrypoints.tui.ledger.tests.categorisation_memory_doors import (
     MemoryCategorisationProfile,
     categorisation_controller,
 )
+
+from .settling import press_when_enabled, settle
 
 _INTERFACES = {
     "ledger.tool.categorisation.bulk": "cadrumo.entrypoints.tui.ledger.categorisation_bulk.LedgerBulkClassifyScreen",
@@ -127,15 +128,11 @@ class CategorisationCaptureHost(ScreenHostApp[None]):
             await drive(self)
 
     async def _settle(self) -> None:
-        for _ in range(5):
-            await asyncio.sleep(0.01)
-        await self.workers.wait_for_complete()
-        await asyncio.sleep(0.01)
+        await settle(self)
 
     async def press(self, button_id: str) -> None:
-        """Press one of the tool's buttons and wait for what it started."""
-        self.tool_screen.query_one(f"#{button_id}", Button).press()
-        await self._settle()
+        """Press one of the tool's buttons once it is enabled, and wait for what it started."""
+        await press_when_enabled(self, button_id, within=self.tool_screen)
 
     def type(self, selector: str, value: str) -> None:
         """Type one value into one of the tool's inputs."""

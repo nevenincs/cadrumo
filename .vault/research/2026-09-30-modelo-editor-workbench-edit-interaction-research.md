@@ -240,66 +240,110 @@ The public, semantically named modules, following the architecture boundaries ru
 
 ```python
 class ModeloEditValueFamily(StrEnum):
-    DECIMAL = "decimal"; INTEGER = "integer"; BOOLEAN = "boolean"; DATE = "date"; TEXT = "text"
+    DECIMAL = "decimal"
+    INTEGER = "integer"
+    BOOLEAN = "boolean"
+    DATE = "date"
+    TEXT = "text"
 
-class ModeloEditValueChannel(StrEnum):      # where the engine can take it
-    DECIMAL = "decimal"; TEXT = "text"; UNAVAILABLE = "unavailable"   # year and date today
+
+class ModeloEditValueChannel(StrEnum):  # where the engine can take it
+    DECIMAL = "decimal"
+    TEXT = "text"
+    UNAVAILABLE = "unavailable"  # year and date today
+
 
 class ModeloEditRatioUnit(StrEnum):
-    PERCENT = "percent"; FRACTION = "fraction"; UNDECLARED = "undeclared"
+    PERCENT = "percent"
+    FRACTION = "fraction"
+    UNDECLARED = "undeclared"
+
 
 class ModeloEditChoiceV1(EditModel):
-    token: str                               # stored value, never translated
-    label_key: str | None                    # catalogue key when one exists (lens A)
+    token: str  # stored value, never translated
+    label_key: str | None  # catalogue key when one exists (lens A)
 
-class ModeloEditValueGrammarV1(EditModel):   # value-free: safe inside the baseline
+
+class ModeloEditValueGrammarV1(EditModel):  # value-free: safe inside the baseline
     data_type: CasillaDataTypeValue
     family: ModeloEditValueFamily
     channel: ModeloEditValueChannel
-    max_fraction_digits: int | None          # money 2; others from registry or None
+    max_fraction_digits: int | None  # money 2; others from registry or None
     sign: CasillaSignConstraint
-    minimum: Decimal | None; maximum: Decimal | None
+    minimum: Decimal | None
+    maximum: Decimal | None
     choices: tuple[ModeloEditChoiceV1, ...] | None
-    min_length: int | None; max_length: int | None; has_pattern: bool
+    min_length: int | None
+    max_length: int | None
+    has_pattern: bool
     ratio_unit: ModeloEditRatioUnit | None
     required: bool
-    constraints_declared: bool               # drives the "sin restricciones declaradas" display
+    constraints_declared: bool  # drives the "sin restricciones declaradas" display
+
 
 # The writable entries gain `grammar: ModeloEditValueGrammarV1`. An entry whose channel is
 # UNAVAILABLE, or that is a row-field template, is projected NON-writable with a new reason
 # (VALUE_CHANNEL_UNAVAILABLE, ROW_FIELD_TEMPLATE).
 
+
 class ModeloEditParseRequestV1(EditModel):
     address: ModeloEditScalarAddressV1 | ModeloEditBindingAddressV1
     entry_locale: OutputLanguage
-    lexeme: TransientLexeme                  # repr and serialisation redacted; excluded from model_dump
+    lexeme: TransientLexeme  # repr and serialisation redacted; excluded from model_dump
+
 
 class ModeloEditParseReason(StrEnum):
-    EMPTY = "empty"; NOT_A_NUMBER = "not_a_number"; AMBIGUOUS_SEPARATOR = "ambiguous_separator"
-    BAD_GROUPING = "bad_grouping"; SCIENTIFIC_NOTATION = "scientific_notation"; NON_FINITE = "non_finite"
-    EXPLICIT_PLUS = "explicit_plus"; TOO_MANY_DECIMALS = "too_many_decimals"; NOT_AN_INTEGER = "not_an_integer"
-    NEGATIVE_NOT_ALLOWED = "negative_not_allowed"; POSITIVE_NOT_ALLOWED = "positive_not_allowed"
-    BELOW_MINIMUM = "below_minimum"; ABOVE_MAXIMUM = "above_maximum"; OUT_OF_OPERAND_RANGE = "out_of_operand_range"
-    NOT_A_BOOLEAN = "not_a_boolean"; NOT_A_DATE = "not_a_date"; NOT_IN_CHOICES = "not_in_choices"
-    TOO_SHORT = "too_short"; TOO_LONG = "too_long"; PATTERN_MISMATCH = "pattern_mismatch"
-    NIF_LENGTH = "nif_length"; NIF_LEADER = "nif_leader"; NIF_CHECKSUM = "nif_checksum"
-    IBAN_SHAPE = "iban_shape"; IBAN_CHECKSUM = "iban_checksum"; INVALID_CODE = "invalid_code"
+    EMPTY = "empty"
+    NOT_A_NUMBER = "not_a_number"
+    AMBIGUOUS_SEPARATOR = "ambiguous_separator"
+    BAD_GROUPING = "bad_grouping"
+    SCIENTIFIC_NOTATION = "scientific_notation"
+    NON_FINITE = "non_finite"
+    EXPLICIT_PLUS = "explicit_plus"
+    TOO_MANY_DECIMALS = "too_many_decimals"
+    NOT_AN_INTEGER = "not_an_integer"
+    NEGATIVE_NOT_ALLOWED = "negative_not_allowed"
+    POSITIVE_NOT_ALLOWED = "positive_not_allowed"
+    BELOW_MINIMUM = "below_minimum"
+    ABOVE_MAXIMUM = "above_maximum"
+    OUT_OF_OPERAND_RANGE = "out_of_operand_range"
+    NOT_A_BOOLEAN = "not_a_boolean"
+    NOT_A_DATE = "not_a_date"
+    NOT_IN_CHOICES = "not_in_choices"
+    TOO_SHORT = "too_short"
+    TOO_LONG = "too_long"
+    PATTERN_MISMATCH = "pattern_mismatch"
+    NIF_LENGTH = "nif_length"
+    NIF_LEADER = "nif_leader"
+    NIF_CHECKSUM = "nif_checksum"
+    IBAN_SHAPE = "iban_shape"
+    IBAN_CHECKSUM = "iban_checksum"
+    INVALID_CODE = "invalid_code"
     CHANNEL_UNAVAILABLE = "channel_unavailable"
 
-class ModeloEditParseRefusalV1(EditModel):   # joins the closed ModeloEditRefusalV1 union
+
+class ModeloEditParseRefusalV1(EditModel):  # joins the closed ModeloEditRefusalV1 union
     kind: Literal["parse"] = "parse"
     address: ModeloEditScalarAddressV1 | ModeloEditBindingAddressV1
     reason: ModeloEditParseReason
-    message_arguments: tuple[str, ...]       # min, max, scale, choice count: never the lexeme
+    message_arguments: tuple[str, ...]  # min, max, scale, choice count: never the lexeme
+
 
 class ModeloEditNormalisation(StrEnum):
-    FOREIGN_DECIMAL_MARK_READ = "foreign_decimal_mark_read"   # e.g. es user typed 1234.56
-    SEPARATORS_REMOVED = "separators_removed"; UPPER_CASED = "upper_cased"; TRIMMED = "trimmed"
+    FOREIGN_DECIMAL_MARK_READ = "foreign_decimal_mark_read"  # e.g. es user typed 1234.56
+    SEPARATORS_REMOVED = "separators_removed"
+    UPPER_CASED = "upper_cased"
+    TRIMMED = "trimmed"
+
 
 # ModeloEditParsedValueV1 (edit_models.py:504) gains `normalisations: tuple[ModeloEditNormalisation, ...]`.
 
+
 def parse_modelo_edit_lexeme(
-    request: ModeloEditParseRequestV1, *, baseline: ModeloEditBaselineV1, tax_id_format: SpanishTaxIdFormat,
+    request: ModeloEditParseRequestV1,
+    *,
+    baseline: ModeloEditBaselineV1,
+    tax_id_format: SpanishTaxIdFormat,
 ) -> ModeloEditParseResultV1: ...
 ```
 
@@ -343,18 +387,19 @@ TUI-local, memory only. The location is the former source file.
 ```python
 @dataclass(frozen=True)
 class StagedChange:
-    address_key: tuple[str, str]           # ("scalar", casilla_id) | ("binding", binding_id)
+    address_key: tuple[str, str]  # ("scalar", casilla_id) | ("binding", binding_id)
     kind: Literal["set", "clear", "restore"]  # -> SET_TYPED_VALUE | CLEAR_DECLARED_VALUE | REMOVE_OVERRIDE
-    value: ModeloScalar | None             # typed, locale-free; None unless set
-    before: ValueView                      # value + origin as displayed when staged (manual | source kind | computed | empty | cleared)
+    value: ModeloScalar | None  # typed, locale-free; None unless set
+    before: ValueView  # value + origin as displayed when staged (manual | source kind | computed | empty | cleared)
     displaces: Literal["none", "source", "computed", "operator"]  # drives override warnings
+
 
 @dataclass
 class ModeloEditSession:
-    read_coordinates: ...                  # workspace consistency identity (ADR D3)
+    read_coordinates: ...  # workspace consistency identity (ADR D3)
     baseline: ModeloEditBaselineV1 | None  # lazily admitted; renewed (2.5)
     changes: dict[tuple[str, str], StagedChange]
-    invalid: set[tuple[str, str]]          # a widget holds an unparsed lexeme (the lexeme itself stays in the widget)
+    invalid: set[tuple[str, str]]  # a widget holds an unparsed lexeme (the lexeme itself stays in the widget)
     state: SessionState
 ```
 

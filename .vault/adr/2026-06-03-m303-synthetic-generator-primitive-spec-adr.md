@@ -127,18 +127,18 @@ After `c45: Decimal` (line ~1648), add:
 # 2026-06-02-m303-parser-engine-totals-impedance-adr.
 # Single-rate filer pattern: all base/cuota on the 21% general bracket;
 # other repercutido/soportado brackets set to zero.
-repercutido_general_base: Decimal      # iva.repercutido.general.base
-repercutido_general_cuota: Decimal     # iva.repercutido.general.cuota (= c27)
-repercutido_reducido_base: Decimal     # iva.repercutido.reducido.base (= 0)
-repercutido_reducido_cuota: Decimal    # iva.repercutido.reducido.cuota (= 0)
-repercutido_super_reducido_base: Decimal   # = 0
+repercutido_general_base: Decimal  # iva.repercutido.general.base
+repercutido_general_cuota: Decimal  # iva.repercutido.general.cuota (= c27)
+repercutido_reducido_base: Decimal  # iva.repercutido.reducido.base (= 0)
+repercutido_reducido_cuota: Decimal  # iva.repercutido.reducido.cuota (= 0)
+repercutido_super_reducido_base: Decimal  # = 0
 repercutido_super_reducido_cuota: Decimal  # = 0
-autorepercutido_intra_base: Decimal    # iva.autorepercutido.intracomunitaria.base (= 0)
-autorepercutido_intra_cuota: Decimal   # = 0
-autoconsumo_promotor_base: Decimal     # iva.autoconsumo.promotor.base (= 0)
-autoconsumo_promotor_cuota: Decimal    # = 0
-soportado_interiores_base: Decimal     # iva.soportado.interiores.base
-soportado_interiores_cuota: Decimal    # iva.soportado.interiores.cuota (= c29)
+autorepercutido_intra_base: Decimal  # iva.autorepercutido.intracomunitaria.base (= 0)
+autorepercutido_intra_cuota: Decimal  # = 0
+autoconsumo_promotor_base: Decimal  # iva.autoconsumo.promotor.base (= 0)
+autoconsumo_promotor_cuota: Decimal  # = 0
+soportado_interiores_base: Decimal  # iva.soportado.interiores.base
+soportado_interiores_cuota: Decimal  # iva.soportado.interiores.cuota (= c29)
 ```
 
 ### 2. `_compute_m303_primitives` helper
@@ -182,22 +182,24 @@ via `**_compute_m303_primitives(c27, c29)`. Worked example for the first
 fixture (lines ~1702-1716):
 
 ```python
-_Modelo303CorpusFixture(
-    filename="303/2021-2T.pdf",
-    ejercicio="2021",
-    periodo="2T",
-    tax_id="Y0000001S",
-    new_template=False,
-    c27=Decimal("12000.00"),
-    c29=Decimal("7800.00"),
-    c45=Decimal("7800.00"),
-    c46=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[0],
-    c64=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[1],
-    c66=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[2],
-    c69=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[3],
-    c71=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[4],
-    **_compute_m303_primitives(Decimal("12000.00"), Decimal("7800.00")),
-),
+(
+    _Modelo303CorpusFixture(
+        filename="303/2021-2T.pdf",
+        ejercicio="2021",
+        periodo="2T",
+        tax_id="Y0000001S",
+        new_template=False,
+        c27=Decimal("12000.00"),
+        c29=Decimal("7800.00"),
+        c45=Decimal("7800.00"),
+        c46=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[0],
+        c64=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[1],
+        c66=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[2],
+        c69=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[3],
+        c71=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[4],
+        **_compute_m303_primitives(Decimal("12000.00"), Decimal("7800.00")),
+    ),
+)
 ```
 
 This propagation is mechanical across all 15 fixtures.
@@ -360,12 +362,12 @@ The correct encoding is **6 cuota-only primitive fields** (5 in the
 2009-y-siguientes legacy revision; see Finding 3):
 
 ```python
-repercutido_general: Decimal           # iva.repercutido.general
-repercutido_reducido: Decimal          # iva.repercutido.reducido
-repercutido_super_reducido: Decimal    # iva.repercutido.super-reducido
-autorepercutido_intra: Decimal         # iva.autorepercutido.intracomunitaria
-autoconsumo_promotor_base: Decimal     # iva.autoconsumo.promotor.base (2023+ only)
-soportado_interiores: Decimal          # iva.soportado.interiores
+repercutido_general: Decimal  # iva.repercutido.general
+repercutido_reducido: Decimal  # iva.repercutido.reducido
+repercutido_super_reducido: Decimal  # iva.repercutido.super-reducido
+autorepercutido_intra: Decimal  # iva.autorepercutido.intracomunitaria
+autoconsumo_promotor_base: Decimal  # iva.autoconsumo.promotor.base (2023+ only)
+soportado_interiores: Decimal  # iva.soportado.interiores
 ```
 
 The base values per-rate were a useful authoring intuition (operator

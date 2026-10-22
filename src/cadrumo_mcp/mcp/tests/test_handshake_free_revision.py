@@ -50,14 +50,16 @@ def _answered(called: CallToolResult) -> tuple[bool, Any, list[str]]:
 
 
 def _without_identities(document: Any) -> Any:
-    """Drop the identifiers the runtime mints for each submission, which no two calls share."""
+    """Drop the identifiers each submission and lease carries, which no two calls share."""
     receipt = dict(document["receipt"]) | {"operation_id": None}
     start = {key: value for key, value in document["start"].items() if not key.endswith("_id")}
     next_call = document["next_call"]
     assert next_call["arguments"]["observation"]["operation_id"] == document["receipt"]["operation_id"]
     observation = {**next_call["arguments"]["observation"], "operation_id": None}
     normalized_call = {**next_call, "arguments": {**next_call["arguments"], "observation": observation}}
-    return dict(document) | {"receipt": receipt, "start": start, "next_call": normalized_call}
+    # The page link names the lease's own profile.
+    page = dict(document["page"]) | {"url": None}
+    return dict(document) | {"receipt": receipt, "start": start, "next_call": normalized_call, "page": page}
 
 
 @pytest.mark.anyio
@@ -179,6 +181,7 @@ async def test_execute_on_a_read_operation_is_submitted_and_started_for_a_handsh
     assert submitted.subject_ref == f"profile:{modern_lease.profile_id}"
     assert [type(item) for item in legacy_lease.exchanges] == [OperationSubmit, OperationControl]
     assert _without_identities(document) == _without_identities(executed_after_handshake.structured_content)
+    assert document["page"]["url"] == f"cadrumo://profiles/{modern_lease.profile_id}/aeat-auth"
     assert unfit.is_error is True
     # No tool takes a secret, so a call that gives one is refused at the wire, before anything is sent.
     assert unfit.structured_content == {"outcome": "refused", "code": "invalid_request"}

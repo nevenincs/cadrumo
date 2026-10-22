@@ -323,6 +323,8 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "A refusal with code subject_busy means an earlier operation of this definition on the same subject has "
         "not settled, and holder_operation_id names it; signing in again changes nothing, so report it to the "
         "person with that id rather than retrying. "
+        "A submitted or unresolved reply carries page: the workspace page that shows the operation's records, "
+        "with url, a link for the person to open it; it is navigation, not evidence of a change. "
         "Every call submits a new operation, so two identical calls run twice. "
         "Use wait_seconds=2 for short work: wait on runtime cues and include completion (the authorized "
         "result envelope) when settled. Otherwise retain the receipt and follow next_call; pending human "

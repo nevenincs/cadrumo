@@ -189,8 +189,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 authority = bundled_authority()
-authority.snapshot("303", filing_year=2025, period="1T",
-                   grade=RegistryAuthorityGrade.APPLICABILITY)
+authority.snapshot("303", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.APPLICABILITY)
 ```
 
 For timing, measure imports separately, time the first `bundled_authority()` in a fresh process, then median 50 warm lookups and five warm snapshots per coordinate. Parse section sizes from `authority.json` using compact UTF-8 JSON. Use `cProfile` only for attribution, separately from wall-time runs. Recheck these measurements after the in-flight work settles; do not freeze corpus counts as correctness assertions.

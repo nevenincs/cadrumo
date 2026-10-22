@@ -344,38 +344,43 @@ and never hand-edited in place.
 
 ```python
 class FormLayoutSeedSource(StrEnum):
-    EXPORT_RECORD_DESIGN = "export_record_design"   # fixed-width offsets + design descriptions
-    XML_DICTIONARY = "xml_dictionary"               # RentaWeb dictionary + XSD (modelo 100)
-    DESIGN_BOX_NUMBER = "design_box_number"         # [NN] join without offsets (200/2024, 036, 220)
-    CASILLA_NUMBER = "casilla_number"               # numeric order only, no official heading
-    AUTHORED = "authored"                           # a reviewer moved/added it
+    EXPORT_RECORD_DESIGN = "export_record_design"  # fixed-width offsets + design descriptions
+    XML_DICTIONARY = "xml_dictionary"  # RentaWeb dictionary + XSD (modelo 100)
+    DESIGN_BOX_NUMBER = "design_box_number"  # [NN] join without offsets (200/2024, 036, 220)
+    CASILLA_NUMBER = "casilla_number"  # numeric order only, no official heading
+    AUTHORED = "authored"  # a reviewer moved/added it
+
 
 class FormLayoutReviewState(StrEnum):
     GENERATED = "generated"
     REVIEWED = "reviewed"
 
+
 class FormPlacementKind(StrEnum):
-    ON_FORM = "on_form"              # primary official position
+    ON_FORM = "on_form"  # primary official position
     WORKING_FIGURE = "working_figure"  # app-internal intermediate; shown under "Calculation details"
-    UNPLACED = "unplaced"            # declared, with reason; never omitted
+    UNPLACED = "unplaced"  # declared, with reason; never omitted
+
 
 class FormUnplacedReason(StrEnum):
     NO_OFFICIAL_ANCHOR = "no_official_anchor"
-    AMBIGUOUS_ANCHOR = "ambiguous_anchor"          # e.g. [NN] matches several design rows
+    AMBIGUOUS_ANCHOR = "ambiguous_anchor"  # e.g. [NN] matches several design rows
     ANCHOR_CONFLICTS_WITH_SECTION = "anchor_conflicts_with_section"
     PENDING_REVIEW = "pending_review"
+
 
 class FormCellKind(StrEnum):
     CASILLA = "casilla"
     BINDING_INPUT = "binding_input"
     DESIGN_CONSTANT = "design_constant"  # e.g. 303 Tipo % literal "00400"
-    BLANK = "blank"                      # the paper form has no box here
+    BLANK = "blank"  # the paper form has no box here
+
 
 class FormPageCondition(StrEnum):
     ALWAYS = "always"
-    OPTIONAL_RECORD = "optional_record"                 # ExportRecordDefinition.required = False
+    OPTIONAL_RECORD = "optional_record"  # ExportRecordDefinition.required = False
     REQUIRES_POSITIVE_CASILLA = "requires_positive_casilla"
-    PERIOD_RESTRICTED = "period_restricted"             # e.g. 303 page 4 "último periodo"
+    PERIOD_RESTRICTED = "period_restricted"  # e.g. 303 page 4 "último periodo"
 ```
 
 - **`FormLayoutDefinition`**: `id`, `revision_id`, `seed_source`, `review: FormLayoutReview`,
@@ -434,36 +439,39 @@ pydantic `STRICT_FROZEN_CONFIG`, bounded tuples and no Textual types.
 
 ```python
 class ModeloFormLayoutProvenance(StrEnum):
-    REVIEWED = "reviewed"          # declared + reviewed
-    GENERATED = "generated"        # declared, generator output, disclosure shown
+    REVIEWED = "reviewed"  # declared + reviewed
+    GENERATED = "generated"  # declared, generator output, disclosure shown
     INSPECTION_ONLY = "inspection_only"  # no usable declaration; read-only list, reason stated
 
+
 class ModeloFormEditability(StrEnum):
-    EDITABLE_VALUE = "editable_value"        # manual casilla, set/clear admitted
+    EDITABLE_VALUE = "editable_value"  # manual casilla, set/clear admitted
     EDITABLE_OVERRIDE = "editable_override"  # manual-input binding override admitted
     OVERRIDABLE_SOURCE = "overridable_source"  # CARRY-disposition source: override wins, disclosed
-    LOCKED_SOURCE = "locked_source"          # LOCK disposition (ledger/invoices/347/...): fix at source
-    CALCULATED = "calculated"                # formula
-    DESIGN_CONSTANT = "design_constant"      # fixed by the official design (F9)
-    INFORMATIONAL = "informational"          # identification/period etc.
-    UNSUPPORTED_KIND = "unsupported_kind"    # declared refusal view, never a text box
-    NO_BASELINE = "no_baseline"              # admission absent/stale/refused; reason carried
+    LOCKED_SOURCE = "locked_source"  # LOCK disposition (ledger/invoices/347/...): fix at source
+    CALCULATED = "calculated"  # formula
+    DESIGN_CONSTANT = "design_constant"  # fixed by the official design (F9)
+    INFORMATIONAL = "informational"  # identification/period etc.
+    UNSUPPORTED_KIND = "unsupported_kind"  # declared refusal view, never a text box
+    NO_BASELINE = "no_baseline"  # admission absent/stale/refused; reason carried
+
 
 class ModeloFormValueState(StrEnum):
-    NEEDS_INPUT = "needs_input"      # manifest member ∧ writable ∧ no value ∧ not absent-by-design
-    EMPTY = "empty"                  # optional and empty
-    ENTERED = "entered"              # operator value present in revision.input_values_by_casilla_id
-    OVERRIDDEN = "overridden"        # binding override present, or OPERATOR_OVERRIDE anomaly
-    IMPORTED = "imported"            # resolved binding from a non-manual source (ledger, profile, borrador…)
+    NEEDS_INPUT = "needs_input"  # manifest member ∧ writable ∧ no value ∧ not absent-by-design
+    EMPTY = "empty"  # optional and empty
+    ENTERED = "entered"  # operator value present in revision.input_values_by_casilla_id
+    OVERRIDDEN = "overridden"  # binding override present, or OPERATOR_OVERRIDE anomaly
+    IMPORTED = "imported"  # resolved binding from a non-manual source (ledger, profile, borrador…)
     CALCULATED = "calculated"
-    PROVEN_ZERO = "proven_zero"      # absent_by_design — never shown as a plain 0
-    BLOCKED = "blocked"              # blocked_by non-empty / BROKEN_CALCULATION_CHAIN
-    STALE = "stale"                  # value predates an uncalculated edit (from lens C's session)
+    PROVEN_ZERO = "proven_zero"  # absent_by_design — never shown as a plain 0
+    BLOCKED = "blocked"  # blocked_by non-empty / BROKEN_CALCULATION_CHAIN
+    STALE = "stale"  # value predates an uncalculated edit (from lens C's session)
+
 
 class ModeloFormBoxNumberKind(StrEnum):
-    OFFICIAL = "official"            # printed box number
-    RECORD_FIELD = "record_field"    # informative modelos (347/190…): record position, no box
-    NONE = "none"                    # working figure
+    OFFICIAL = "official"  # printed box number
+    RECORD_FIELD = "record_field"  # informative modelos (347/190…): record position, no box
+    NONE = "none"  # working figure
 ```
 
 - **`ModeloFormField`**:

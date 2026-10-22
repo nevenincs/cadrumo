@@ -18,6 +18,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResponseRejectRequestV1,
     OperationReviewProjectionRequestV1,
 )
+from cadrumo.application.operations.operation_pages import operation_destination
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
@@ -45,6 +46,7 @@ from cadrumo_client.contracts.operation_access import (
     OperationSubmit,
     OperationSubmitted,
 )
+from cadrumo_client.contracts.presentation import destination_link
 from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -212,6 +214,15 @@ def _operator_input_json_schema() -> dict[str, object]:
 
 
 def _execute(client: FrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
+    response = _submit(client, binding, args, deadline)
+    page = operation_destination(args["definition_id"])
+    # A refused call changed nothing; a submitted or unresolved one may have, so the person can look.
+    if page is not None and response["outcome"] in {"submitted", "unresolved"}:
+        response["page"] = {"destination": page, "url": destination_link(binding.profile_id, page)}
+    return response
+
+
+def _submit(client: FrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     definition_id = args["definition_id"]
     description = binding.contracts.description(client, definition_id, deadline=deadline)
     contract = description.contract
