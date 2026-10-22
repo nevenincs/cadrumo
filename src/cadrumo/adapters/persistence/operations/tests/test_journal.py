@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import multiprocessing
+import os
 import sys
 import threading
 from datetime import UTC, datetime, timedelta
@@ -710,3 +711,52 @@ def test_the_event_loop_file_io_gate_detects_a_port_that_reads_on_the_loop(tmp_p
     loop_io = asyncio.run(_exercise_operation_ports(_JournalOnTheLoop(storage_root=storage_root), storage_root))
 
     assert any(access.startswith("open:") and access.endswith(f"{'a' * 64}.json") for access in loop_io), loop_io
+
+
+_ROOT_PREPARATION_CALLS: list[list[tuple[str, str]] | None] = [None]
+
+
+def _record_root_preparation(event: str, arguments: tuple[object, ...]) -> None:
+    recorded = _ROOT_PREPARATION_CALLS[0]
+    if recorded is None or event not in {"os.mkdir", "os.chmod"} or not arguments:
+        return
+    target = arguments[0]
+    if isinstance(target, (str, os.PathLike)):
+        recorded.append((event, os.path.normcase(os.fspath(target))))
+
+
+# An audit hook cannot be removed; outside a recording it returns at once.
+sys.addaudithook(_record_root_preparation)
+
+
+def test_journal_and_lease_transitions_prepare_the_shared_root_once_per_repository(tmp_path: Path) -> None:
+    """Many transitions create and restrict the operation-journal root once, not once per call."""
+    storage_root = tmp_path / "state"
+    journal_root = os.path.normcase(os.fspath(storage_root / "operation-journals"))
+    journal = OperationJournalRepository(storage_root=storage_root)
+    leases = OperationLeaseFilesystemRepository(storage_root=storage_root)
+    lease = _lease()
+    snapshots = tuple(_snapshot(revision=revision, sequence=revision + 1) for revision in range(8))
+    recorded: list[tuple[str, str]] = []
+    _ROOT_PREPARATION_CALLS[0] = recorded
+    try:
+
+        async def transitions() -> None:
+            await leases.inspect(lease.scope_ref, lease.operation_id, observed_at=_STARTED)
+            await leases.acquire(lease, observed_at=_STARTED)
+            await journal.create(snapshots[0], lease=lease)
+            for expected_revision, snapshot in enumerate(snapshots[1:]):
+                await journal.commit(snapshot, expected_revision=expected_revision, lease=lease)
+            renewed = lease.model_copy(update={"expires_at": lease.expires_at + timedelta(minutes=1)})
+            await leases.compare_and_swap(lease, renewed, observed_at=_STARTED)
+            await leases.release(renewed, observed_at=_STARTED)
+
+        asyncio.run(transitions())
+    finally:
+        _ROOT_PREPARATION_CALLS[0] = None
+
+    storage_root_key = os.path.normcase(os.fspath(storage_root))
+    # One preparation each for the lease port and the journal port.
+    assert recorded.count(("os.chmod", journal_root)) == 2
+    assert recorded.count(("os.mkdir", storage_root_key)) == 2
+    assert asyncio.run(journal.load(snapshots[0].operation_id)) == snapshots[-1]
