@@ -44,8 +44,8 @@ from cadrumo_runtime.contracts.worker_authorization import (
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 
 from ..windows_process import WindowsProcessScope
-from ..worker_authorization import WorkerAuthorizationServer
-from ..worker_transport import WorkerChannel
+from ..worker_authorization import WorkerAuthorizationServer, worker_authorization_namespace
+from ..worker_transport import WorkerChannel, worker_endpoint
 from .profile_worker_support import owner_id
 from .worker_authorization_reuse_fixture import Mode, ReuseSeed
 
@@ -397,3 +397,55 @@ def test_losing_a_reused_connection_with_an_outstanding_permit_contains_the_work
         # The COMMIT permit was issued on the connection the first stage had already used.
         assert worker.server.accepted == 1
         assert worker.owner.admitted == [AccessAction.START, AccessAction.COMMIT]
+
+
+def _quiet_and_healthy(worker: Harness) -> None:
+    """Give the runtime time to act on what it saw, then require that it contained and latched nothing."""
+    time.sleep(1.0)
+    assert worker.contained == 0
+    worker.server.require_healthy()
+
+
+def test_a_foreign_peer_that_connects_and_closes_contains_nothing(tmp_path: Path) -> None:
+    """A same-user process that is not the worker is refused at verification and only its channel closes."""
+    with _worker(tmp_path, "foreign_peer") as worker:
+        worker.wait("idle")
+        endpoint = worker_endpoint(
+            storage_root=tmp_path, worker_namespace=worker_authorization_namespace(worker.owner.seed.identity.worker_id)
+        )
+        try:
+            endpoint.connect(timeout=5).close()
+        finally:
+            endpoint.close()
+        _quiet_and_healthy(worker)
+        worker.signal("changed")
+        assert worker.opened() == 1
+        assert _exit_code(worker.handle) == 0
+        assert worker.server.accepted == 2
+        assert worker.owner.admitted == [AccessAction.START, AccessAction.START]
+        assert worker.contained == 0
+
+
+def test_the_worker_abandoning_a_handshake_contains_nothing(tmp_path: Path) -> None:
+    with _worker(tmp_path, "abandoned_handshake") as worker:
+        worker.wait("idle")
+        _quiet_and_healthy(worker)
+        worker.signal("changed")
+        assert worker.opened() == 1
+        assert _exit_code(worker.handle) == 0
+        assert worker.server.accepted == 2
+        assert worker.owner.admitted == [AccessAction.START, AccessAction.START]
+        assert worker.contained == 0
+
+
+def test_the_live_worker_closing_an_idle_reused_connection_contains_nothing(tmp_path: Path) -> None:
+    with _worker(tmp_path, "idle_close") as worker:
+        worker.wait("idle")
+        _quiet_and_healthy(worker)
+        worker.signal("changed")
+        assert worker.opened() == 1
+        assert _exit_code(worker.handle) == 0
+        # Two stages on the closed connection, then one on the replacement.
+        assert worker.server.accepted == 2
+        assert worker.owner.admitted == [AccessAction.START, AccessAction.START, AccessAction.START]
+        assert worker.contained == 0

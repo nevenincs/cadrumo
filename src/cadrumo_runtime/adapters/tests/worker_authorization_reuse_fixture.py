@@ -25,7 +25,9 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorizationRequest,
 )
 
+from ..worker_authorization import worker_authorization_namespace
 from ..worker_authorization_client import WorkerAuthorizationClient
+from ..worker_transport import worker_endpoint
 
 type Mode = Literal[
     "reuse",
@@ -39,6 +41,9 @@ type Mode = Literal[
     "stop",
     "idle_loss",
     "permit_loss",
+    "foreign_peer",
+    "abandoned_handshake",
+    "idle_close",
 ]
 
 
@@ -166,6 +171,30 @@ async def exercise(root: Path, seed: ReuseSeed) -> int:
         await _stage(client, seed)
         _mark(root, "opened", str(client.connections.opened))
         os._exit(0)
+    elif mode == "foreign_peer":
+        _mark(root, "idle")
+        _wait(root, "changed")
+        await _stage(client, seed)
+    elif mode == "abandoned_handshake":
+        # The exact worker connects and closes before its hello, as a checkout past its deadline would.
+        endpoint = worker_endpoint(
+            storage_root=root, worker_namespace=worker_authorization_namespace(seed.identity.worker_id)
+        )
+        try:
+            endpoint.connect(timeout=5).close()
+        finally:
+            endpoint.close()
+        _mark(root, "idle")
+        _wait(root, "changed")
+        await _stage(client, seed)
+    elif mode == "idle_close":
+        await _stage(client, seed)
+        # The live worker closes its idle, already reused connection.
+        client.close()
+        _mark(root, "idle")
+        _wait(root, "changed")
+        client = WorkerAuthorizationClient(identity=seed.identity, root=root, parent_pid=seed.parent_pid)
+        await _stage(client, seed)
     else:
         async with client.guard(_request(seed, AccessAction.COMMIT)):
             _mark(root, "opened", str(client.connections.opened))

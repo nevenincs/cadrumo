@@ -200,6 +200,10 @@ class WorkerAuthorizationServer:
             self._verify_worker_channel(channel)
             while self._exchange(channel):
                 pass
+        except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
+            # A peer refused or lost during verification, the handshake or an idle wait has
+            # nothing outstanding; a lost permit was already contained where it was held.
+            pass
         except Exception:
             self._failed.set()
             self._stop.set()
