@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:7ebcf596041d7d8d0c7374cdf2a3e996c8fcdbdc0e8eea184fea2a164a40ac7a'
+body_hash: 'sha256:3dbe506609c4ed11d48a1435723cac81c340d8964a8e0855e2407384819edf29'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -57,7 +57,28 @@ related:
 - `S10` `verify:` `old/new timestamp witness oracle (43 cases)` -> `pass`
 - `S10` `verify:` `ruff, lint-imports, check-types` -> `pass`
 - `S10` `by:` `O2`
+- `S05` `A` `src/cadrumo/entrypoints/tui/ledger/invoices_import.py`
+- `S05` `A` `src/cadrumo/entrypoints/tui/ledger/invoices_wizard.py`
+- `S05` `A` `src/cadrumo/entrypoints/tui/ledger/tests/invoices_fixtures.py`
+- `S05` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_invoices_import.py`
+- `S05` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_invoices_wizard.py`
+- `S05` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_records.py`
+- `S05` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_invoices.py`
+- `S05` `A` `src/cadrumo_runtime/host/tests/frontend/tui/ledger_invoices_runtime_harness.py`
+- `S05` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_records.py`
+- `S05` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_invoices.py`
+- `S05` `A` `dev/tui/harness/ledger_invoices_fixtures.py`
+- `S05` `A` `dev/tui/harness/tests/test_ledger_invoices_fixtures.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/ledger/record_views.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/ledger/transaction_views.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_record_views.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/ledger/models.py`
+- `S05` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_workbench.py`
+- `S05` `verify:` `D4 screen, runtime door and harness tests plus ledger workspace tests (191)` -> `pass`
+- `S05` `verify:` `ruff, ty on D4 files; lint-imports` -> `pass`
+- `S05` `by:` `D4`
 
 ## Notes
 
 - `S10` Row cost after the change is about 360 us; the rest sits in the domain Transaction model and shared secure storage, outside this step.
+- `S05` Invoice and transaction updates carry no baseline on the wire; the door re-reads before writing, leaving a race window. Invoice import has no dry run; the apply is bound to the reviewed file by `source_sha256.` The tools composer entry and locale strings land in the integration commit.

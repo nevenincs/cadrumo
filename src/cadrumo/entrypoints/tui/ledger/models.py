@@ -12,6 +12,7 @@ from typing import Final, Literal, Protocol
 from pydantic import BaseModel, Field, model_validator
 
 from ....application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
+from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from ....application.ledger.actions_import import LedgerProviderID
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.classify_requests import LedgerClassifyPatch
@@ -21,6 +22,8 @@ from ....application.ledger.models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
+from ....application.ledger.transaction_projection import LedgerTransactionProjection
+from ....application.ledger.update_contracts import LedgerUpdatePatch, LedgerUpdatePatchField
 from ....application.ledger.workspace import (
     LedgerAffectedDeclarationRefV1,
     LedgerInvoiceReconciliationRefV1,
@@ -37,9 +40,7 @@ from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.invoices.business_premises import SituacionInmueble
-from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind, IvaCategory
-from ....domain.transactions.models import Transaction
 from ....domain.transactions.own_accounts import OwnAccountId
 from ..destination_alias import closed_destination_ids
 
@@ -414,28 +415,41 @@ class LedgerInvoiceAddDoorV1(Protocol):
 class LedgerRecordDoorsV1(Protocol):
     """Injected application doors that read and edit canonical invoice and transaction records.
 
-    The bound implementation captures one profile and authority generation,
-    so navigating between records can never retarget a write.
+    Every value is the registered operation's public projection: the worker
+    keeps the domain records, and the screens receive only the facts it admits.
+    The bound implementation captures one profile and session, so navigating
+    between records can never retarget a write.
     """
 
-    async def invoices(self) -> tuple[Invoice, ...]:
-        """List the bucket's canonical invoices."""
+    async def invoices(self) -> tuple[CatalogueInvoiceSnapshot, ...]:
+        """List the profile's canonical invoices."""
         ...
 
-    async def invoice(self, invoice_id: str) -> Invoice:
+    async def invoice(self, invoice_id: str) -> CatalogueInvoiceSnapshot:
         """Resolve one canonical invoice by its full identity."""
         ...
 
-    async def update_invoice(self, baseline: Invoice, patch: CatalogueInvoicePatch) -> Invoice:
-        """Submit a baseline-guarded metadata patch through the shared writer."""
+    async def update_invoice(
+        self, baseline: CatalogueInvoiceSnapshot, patch: CatalogueInvoicePatch
+    ) -> CatalogueInvoiceSnapshot:
+        """Correct the invoice the operator saw, refusing it if it changed since."""
         ...
 
-    async def transaction(self, transaction_id: str) -> Transaction:
-        """Resolve one typed transaction."""
+    async def remove_invoice(self, baseline: CatalogueInvoiceSnapshot) -> CatalogueInvoiceSnapshot:
+        """Remove the invoice the operator saw, refusing it if it changed since."""
         ...
 
-    async def update_transaction(self, baseline: Transaction, patch: ManualLedgerTransactionPatch) -> Transaction:
-        """Apply a typed edit against the captured transaction baseline."""
+    async def transaction(self, transaction_id: str) -> LedgerTransactionProjection:
+        """Resolve one transaction by its identity."""
+        ...
+
+    async def update_transaction(
+        self,
+        baseline: LedgerTransactionProjection,
+        patch: LedgerUpdatePatch,
+        fields: tuple[LedgerUpdatePatchField, ...],
+    ) -> LedgerTransactionProjection:
+        """Apply the selected fields to the transaction the operator saw, refusing it if it changed since."""
         ...
 
 
