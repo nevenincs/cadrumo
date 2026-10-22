@@ -2,12 +2,17 @@
 
 The screen renders one already-composed :class:`HomeProjectionV1`.  It neither
 reads application state nor invokes an action: its host receives semantic row
-selections and owns any later destination or action hand-off.
+selections and owns any later destination or action hand-off.  Its links name
+the rest of the workbench in words; the host says which of them it can open and
+performs whichever one is chosen.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
+from enum import StrEnum, auto
+from types import MappingProxyType
 from typing import ClassVar, Final, cast, override
 
 from textual import events
@@ -31,6 +36,7 @@ from ...application.overview.home import (
     HomeTargetKind,
     HomeZoneState,
 )
+from ...application.search.workbench import WorkbenchDestinationAdmissionState
 from ...core.i18n.render import lookup_translation, output_language, tr
 from .components.account_chrome import AccountChromeScreen
 from .components.language import localized, repaint_tables
@@ -60,6 +66,38 @@ class HomeBackRequested(Message):
     """Ask the host to return without making a business call."""
 
 
+class HomeLinkV1(StrEnum):
+    """One door Home offers into the rest of the workbench.
+
+    Home names the door; the host owns where it leads and whether it opens.
+    """
+
+    DECLARATIONS = auto()
+    NEW_DECLARATION = auto()
+    SEARCH_DECLARATIONS = auto()
+    CALENDAR = auto()
+    LEDGER = auto()
+    AEAT_SYNC = auto()
+    REFERENCE = auto()
+    PROFILE = auto()
+    SIGN_OUT = auto()
+
+
+HOME_ACCOUNT_LINKS: Final[tuple[HomeLinkV1, ...]] = (HomeLinkV1.PROFILE, HomeLinkV1.SIGN_OUT)
+"""The links kept apart under the account heading, after the workbench's own."""
+
+type HomeLinkStatesV1 = Mapping[HomeLinkV1, WorkbenchDestinationAdmissionState]
+
+
+class HomeLinkSelected(Message):
+    """Ask the host to open one of Home's links."""
+
+    def __init__(self, link: HomeLinkV1) -> None:
+        """Carry only which link was chosen."""
+        super().__init__()
+        self.link = link
+
+
 _AVAILABILITY_LOCALE_KEYS: Final = {
     HomeAvailability.AVAILABLE: "tui.home.availability.available",
     HomeAvailability.LOCKED: "tui.home.availability.locked",
@@ -84,6 +122,45 @@ _UNFILED_STATUS_LOCALE_KEYS: Final = {
     OverviewPeriodState.LATE: "tui.home.filing_status.overdue",
     OverviewPeriodState.UNKNOWN: "tui.home.filing_status.unknown",
 }
+_LINK_LABEL_LOCALE_KEYS: Final = {
+    HomeLinkV1.DECLARATIONS: "tui.destination.declarations",
+    HomeLinkV1.NEW_DECLARATION: "tui.declarations.list.key.new",
+    HomeLinkV1.SEARCH_DECLARATIONS: "tui.home.link.search_declarations",
+    HomeLinkV1.CALENDAR: "tui.declarations.destination.calendar",
+    HomeLinkV1.LEDGER: "tui.destination.ledger",
+    HomeLinkV1.AEAT_SYNC: "tui.destination.aeat_sync",
+    HomeLinkV1.REFERENCE: "tui.destination.reference",
+    HomeLinkV1.PROFILE: "tui.root.account.profile",
+    HomeLinkV1.SIGN_OUT: "tui.root.account.sign_out",
+}
+_LINK_BINDING_KEYS: Final = {
+    HomeLinkV1.DECLARATIONS: "d",
+    HomeLinkV1.NEW_DECLARATION: "plus",
+    HomeLinkV1.SEARCH_DECLARATIONS: "slash",
+    HomeLinkV1.CALENDAR: "c",
+    HomeLinkV1.LEDGER: "r",
+    HomeLinkV1.AEAT_SYNC: "a",
+    HomeLinkV1.PROFILE: "p",
+}
+"""Keys Home binds itself; Home has no text field, so a bare letter is free here."""
+_LINK_KEY_GLYPHS: Final = {
+    HomeLinkV1.DECLARATIONS: "d",
+    HomeLinkV1.NEW_DECLARATION: "+",
+    HomeLinkV1.SEARCH_DECLARATIONS: "/",
+    HomeLinkV1.CALENDAR: "c",
+    HomeLinkV1.LEDGER: "r",
+    HomeLinkV1.AEAT_SYNC: "a",
+    HomeLinkV1.PROFILE: "p",
+    # Bound by the root on every destination, not by Home.
+    HomeLinkV1.SIGN_OUT: "F10",
+}
+_LINK_STATE_LOCALE_KEYS: Final = {
+    WorkbenchDestinationAdmissionState.LOCKED: "tui.home.link_state.locked",
+    WorkbenchDestinationAdmissionState.STALE: "tui.home.link_state.stale",
+    WorkbenchDestinationAdmissionState.NEVER_CAPTURED: "tui.home.link_state.never_captured",
+    WorkbenchDestinationAdmissionState.UNAVAILABLE: "tui.home.link_state.unavailable",
+}
+_LINK_ROW_PREFIX: Final = "link:"
 _IMPORTED_STATUS_LOCALE_KEY: Final = "tui.home.filing_status.imported"
 _MARKED_FILED_STATUS_LOCALE_KEY: Final = "tui.home.filing_status.marked_filed"
 
@@ -216,6 +293,23 @@ def _filing_status_key(item: HomeAgendaEntry) -> str:
     return _UNFILED_STATUS_LOCALE_KEYS[item.period_state]
 
 
+def _link_label(link: HomeLinkV1) -> str:
+    """Name one link after the key that opens it."""
+    return f"{_LINK_KEY_GLYPHS.get(link, ''):<3} {tr(_LINK_LABEL_LOCALE_KEYS[link])}"
+
+
+def _link_cell(link: HomeLinkV1, state: WorkbenchDestinationAdmissionState) -> tuple[str, int]:
+    """Name one link, and say on a second line why it cannot open.
+
+    A link the session cannot open stays listed, so the operator learns the
+    page exists and why it is closed rather than finding it missing.
+    """
+    state_key = _LINK_STATE_LOCALE_KEYS.get(state)
+    if state_key is None:
+        return _link_label(link), 1
+    return f"{_link_label(link)}\n{'':<3} {tr(state_key)}", 2
+
+
 def _agenda_cells(item: HomeAgendaEntry) -> tuple[str, str, str]:
     return (
         item.due_on.strftime("%d/%m"),
@@ -228,7 +322,10 @@ class HomeScreen(AccountChromeScreen):
     """The selected responsive due-driven layout over one immutable projection."""
 
     WIDE_MINIMUM: ClassVar[int] = 120
-    BINDINGS: ClassVar = [Binding("escape", "back", "", show=False)]
+    BINDINGS: ClassVar = [
+        Binding("escape", "back", "", show=False),
+        *(Binding(key, f"open_link('{link.value}')", "", show=False) for link, key in _LINK_BINDING_KEYS.items()),
+    ]
     CSS = BASE_CSS + tokenised(
         """
         HomeScreen { layout: vertical; }
@@ -238,6 +335,10 @@ class HomeScreen(AccountChromeScreen):
         HomeScreen.wide #home-layout { layout: horizontal; }
         HomeScreen.wide #home-main { width: 2fr; padding-right: $cadrumo-control-gap; }
         HomeScreen.wide #home-sidebar { width: 1fr; }
+        /* Wide, the links head the side column in plain view. At the floor
+           that column follows the zones, so one line of keys at the top
+           names every link before any scrolling. */
+        HomeScreen.wide #home-link-keys { display: none; }
         /* Rhythm comes from the shared .cadrumo-heading rule. */
         /* Same inset as the headings and the table rows: a state line that
            starts a cell to their left reads as belonging to something else. */
@@ -250,11 +351,22 @@ class HomeScreen(AccountChromeScreen):
         """
     )
 
-    def __init__(self, projection: HomeProjectionV1, *, restore_target: HomeTarget | None = None) -> None:
-        """Bind one immutable projection and an optional semantic focus target."""
+    def __init__(
+        self,
+        projection: HomeProjectionV1,
+        *,
+        restore_target: HomeTarget | None = None,
+        link_states: HomeLinkStatesV1 | None = None,
+    ) -> None:
+        """Bind one immutable projection, an optional semantic focus target, and link admissions.
+
+        A link the host does not mention is offered as open: a standalone host
+        has no catalogue to consult, and choosing a link only sends a message.
+        """
         super().__init__(id="home-screen")
         self._projection = projection
         self._restore_target = restore_target
+        self._link_states: HomeLinkStatesV1 = MappingProxyType(dict(link_states or {}))
         self._targets: dict[str, HomeTarget] = {}
         self.selected_target: HomeTarget | None = None
         self.highlighted_target: HomeTarget | None = None
@@ -269,85 +381,108 @@ class HomeScreen(AccountChromeScreen):
     def compose(self) -> ComposeResult:
         projection = self.projection
         yield localized(Static(tr("tui.home.title"), classes="cadrumo-banner", markup=False), "tui.home.title")
-        with ContentScroll(id="home-page", classes="cadrumo-scroll"), Static(id="home-layout"):
-            with Static(id="home-main"):
-                yield localized(
-                    Static(
-                        tr("tui.home.heading.actions"),
-                        classes="cadrumo-heading cadrumo-heading-lead",
-                        markup=False,
-                    ),
-                    "tui.home.heading.actions",
-                )
-                yield Static(
-                    _state_copy(
-                        projection.actions_state,
-                        empty_key="tui.home.empty.actions" if not projection.actions else None,
-                    ),
-                    id="home-actions-state",
-                    classes="home-state",
+        with ContentScroll(id="home-page", classes="cadrumo-scroll"):
+            yield Static(id="home-link-keys", classes="home-state", markup=False)
+            with Static(id="home-layout"):
+                yield from self._compose_zones(projection)
+
+    def _compose_links(self) -> ComposeResult:
+        """The doors to every other page, kept in the column beside the work.
+
+        A rail of their own would cost the main column the width its
+        declaration rows need at the wide breakpoint.
+        """
+        yield localized(
+            Static(tr("tui.home.heading.navigation"), classes="cadrumo-heading", markup=False),
+            "tui.home.heading.navigation",
+        )
+        yield ContentDataTable[str](id="home-links", cursor_type="row", show_header=False, classes="home-table")
+        yield localized(
+            Static(tr("tui.home.heading.account"), classes="cadrumo-heading", markup=False),
+            "tui.home.heading.account",
+        )
+        yield ContentDataTable[str](id="home-account-links", cursor_type="row", show_header=False, classes="home-table")
+
+    def _compose_zones(self, projection: HomeProjectionV1) -> ComposeResult:
+        with Static(id="home-main"):
+            yield localized(
+                Static(
+                    tr("tui.home.heading.actions"),
+                    classes="cadrumo-heading cadrumo-heading-lead",
                     markup=False,
-                )
-                yield ContentDataTable[str](
-                    id="home-actions",
-                    cursor_type="row",
-                    zebra_stripes=True,
-                    show_header=False,
-                    classes="home-table",
-                )
-                yield Static(id="home-action-contexts", classes="home-state", markup=False)
-                yield localized(
-                    Static(tr("tui.home.heading.declarations"), classes="cadrumo-heading", markup=False),
-                    "tui.home.heading.declarations",
-                )
-                yield Static(
-                    _state_copy(
-                        projection.declarations_state,
-                        empty_key="tui.home.empty.declarations" if not projection.declarations else None,
-                    ),
-                    id="home-declarations-state",
-                    classes="home-state",
-                    markup=False,
-                )
-                yield ContentDataTable[str](
-                    id="home-declarations",
-                    cursor_type="row",
-                    zebra_stripes=True,
-                    show_header=False,
-                    classes="home-table",
-                )
-            with Static(id="home-sidebar"):
-                yield localized(
-                    Static(tr("tui.home.heading.agenda"), classes="cadrumo-heading", markup=False),
-                    "tui.home.heading.agenda",
-                )
-                yield Static(
-                    _state_copy(
-                        projection.agenda_state,
-                        empty_key="tui.home.empty.agenda" if not projection.agenda else None,
-                    ),
-                    id="home-agenda-state",
-                    classes="home-state",
-                    markup=False,
-                )
-                yield ContentDataTable[str](
-                    id="home-agenda",
-                    cursor_type="row",
-                    zebra_stripes=True,
-                    show_header=False,
-                    classes="home-table",
-                )
-                yield Static(id="home-evidence", classes="home-state", markup=False)
-                yield localized(
-                    Static(tr("tui.home.heading.ledger"), classes="cadrumo-heading", markup=False),
-                    "tui.home.heading.ledger",
-                )
-                yield Static(id="home-ledger", classes="home-state", markup=False)
-                yield localized(
-                    Static(tr("tui.home.heading.messages"), classes="cadrumo-heading", markup=False),
-                    "tui.home.heading.messages",
-                )
-                yield Static(id="home-messages", classes="home-state", markup=False)
+                ),
+                "tui.home.heading.actions",
+            )
+            yield Static(
+                _state_copy(
+                    projection.actions_state,
+                    empty_key="tui.home.empty.actions" if not projection.actions else None,
+                ),
+                id="home-actions-state",
+                classes="home-state",
+                markup=False,
+            )
+            yield ContentDataTable[str](
+                id="home-actions",
+                cursor_type="row",
+                zebra_stripes=True,
+                show_header=False,
+                classes="home-table",
+            )
+            yield Static(id="home-action-contexts", classes="home-state", markup=False)
+            yield localized(
+                Static(tr("tui.home.heading.declarations"), classes="cadrumo-heading", markup=False),
+                "tui.home.heading.declarations",
+            )
+            yield Static(
+                _state_copy(
+                    projection.declarations_state,
+                    empty_key="tui.home.empty.declarations" if not projection.declarations else None,
+                ),
+                id="home-declarations-state",
+                classes="home-state",
+                markup=False,
+            )
+            yield ContentDataTable[str](
+                id="home-declarations",
+                cursor_type="row",
+                zebra_stripes=True,
+                show_header=False,
+                classes="home-table",
+            )
+        with Static(id="home-sidebar"):
+            yield from self._compose_links()
+            yield localized(
+                Static(tr("tui.home.heading.agenda"), classes="cadrumo-heading", markup=False),
+                "tui.home.heading.agenda",
+            )
+            yield Static(
+                _state_copy(
+                    projection.agenda_state,
+                    empty_key="tui.home.empty.agenda" if not projection.agenda else None,
+                ),
+                id="home-agenda-state",
+                classes="home-state",
+                markup=False,
+            )
+            yield ContentDataTable[str](
+                id="home-agenda",
+                cursor_type="row",
+                zebra_stripes=True,
+                show_header=False,
+                classes="home-table",
+            )
+            yield Static(id="home-evidence", classes="home-state", markup=False)
+            yield localized(
+                Static(tr("tui.home.heading.ledger"), classes="cadrumo-heading", markup=False),
+                "tui.home.heading.ledger",
+            )
+            yield Static(id="home-ledger", classes="home-state", markup=False)
+            yield localized(
+                Static(tr("tui.home.heading.messages"), classes="cadrumo-heading", markup=False),
+                "tui.home.heading.messages",
+            )
+            yield Static(id="home-messages", classes="home-state", markup=False)
 
     def on_resize(self, event: events.Resize) -> None:
         """Swap geometry at the measured breakpoint without changing rows."""
@@ -364,6 +499,7 @@ class HomeScreen(AccountChromeScreen):
         agenda = cast("ContentDataTable[str]", self.query_one("#home-agenda", ContentDataTable))
         self._populate_agenda(agenda, projection.agenda)
         self._render_zone_summaries(projection)
+        self._populate_links()
         self._focus_initial_table((actions, declarations, agenda))
 
     @override
@@ -377,6 +513,7 @@ class HomeScreen(AccountChromeScreen):
             self._populate_declarations(self.query_one("#home-declarations", ContentDataTable), projection.declarations)
             self._populate_agenda(self.query_one("#home-agenda", ContentDataTable), projection.agenda)
             self._render_zone_summaries(projection)
+            self._populate_links()
 
         repaint_tables(self, paint)
         for zone, state, items in (
@@ -387,6 +524,29 @@ class HomeScreen(AccountChromeScreen):
             self.query_one(f"#home-{zone}-state", Static).update(
                 _state_copy(state, empty_key=f"tui.home.empty.{zone}" if not items else None)
             )
+
+    def link_state(self, link: HomeLinkV1) -> WorkbenchDestinationAdmissionState:
+        """Return whether the host can open one link now."""
+        return self._link_states.get(link, WorkbenchDestinationAdmissionState.AVAILABLE)
+
+    def _populate_links(self) -> None:
+        for table_id, links in (
+            ("#home-links", tuple(link for link in HomeLinkV1 if link not in HOME_ACCOUNT_LINKS)),
+            ("#home-account-links", HOME_ACCOUNT_LINKS),
+        ):
+            table = cast("ContentDataTable[str]", self.query_one(table_id, ContentDataTable))
+            table.add_column("")
+            for link in links:
+                text, height = _link_cell(link, self.link_state(link))
+                table.add_row(text, height=height, key=f"{_LINK_ROW_PREFIX}{link.value}")
+        # Only the links that can open are promised in the line of keys.
+        self.query_one("#home-link-keys", Static).update(
+            " · ".join(
+                f"{_LINK_KEY_GLYPHS[link]} {tr(_LINK_LABEL_LOCALE_KEYS[link])}"
+                for link in HomeLinkV1
+                if link in _LINK_KEY_GLYPHS and self.link_state(link) is WorkbenchDestinationAdmissionState.AVAILABLE
+            )
+        )
 
     def _populate_actions(
         self,
@@ -473,14 +633,12 @@ class HomeScreen(AccountChromeScreen):
             # order is simply overwritten by it.
             self.call_after_refresh(self._scroll_to_top)
         if first is None:
-            # Every zone is empty or refused, so the three tables are hidden and
-            # nothing on the page can take focus. Home is the destination an
-            # operator lands on first, and a keyboard user needs somewhere to
-            # arrive: the page itself takes focus so the zone states can be
-            # read and scrolled, and Escape still returns.
-            page = self.query_one("#home-page", ContentScroll)
-            page.can_focus = True
-            self.set_focus(page)
+            # Every zone is empty or refused, so the three tables are hidden.
+            # Home is the destination an operator lands on first, and a
+            # keyboard user needs somewhere to arrive: the links are always
+            # there, and from them every other page is one key away.
+            self.set_focus(self.query_one("#home-links", ContentDataTable))
+            self.call_after_refresh(self._scroll_to_top)
 
     def _scroll_to_top(self) -> None:
         """Return the page to its opening heading after focus has settled."""
@@ -508,15 +666,25 @@ class HomeScreen(AccountChromeScreen):
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         """Track a semantic target, never a row number."""
         table = cast("DataTable[str]", event.data_table)
-        if table is self.focused:
+        # The links are not a Home row to restore; moving through them keeps
+        # the row the operator last stood on.
+        if table is self.focused and not str(event.row_key.value).startswith(_LINK_ROW_PREFIX):
             self._highlight(event.row_key.value)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Notify the host of a selection without dispatching a business action."""
-        target = self._targets.get(str(event.row_key.value))
+        row_key = str(event.row_key.value)
+        if row_key.startswith(_LINK_ROW_PREFIX):
+            self.action_open_link(row_key.removeprefix(_LINK_ROW_PREFIX))
+            return
+        target = self._targets.get(row_key)
         if target is not None:
             self.selected_target = target
             self.post_message(HomeTargetSelected(target))
+
+    def action_open_link(self, link: str) -> None:
+        """Ask the host to open one link; the host refuses a link it cannot open."""
+        self.post_message(HomeLinkSelected(HomeLinkV1(link)))
 
     def action_back(self) -> None:
         """Return control to the host without dismissing the application."""
@@ -525,7 +693,11 @@ class HomeScreen(AccountChromeScreen):
 
 
 __all__ = [
+    "HOME_ACCOUNT_LINKS",
     "HomeBackRequested",
+    "HomeLinkSelected",
+    "HomeLinkStatesV1",
+    "HomeLinkV1",
     "HomeScreen",
     "HomeTarget",
     "HomeTargetSelected",

@@ -60,7 +60,7 @@ from ...components.host import ScreenHostApp
 from ...modelo.lifecycle import ModeloLifecycleActionUnavailableError
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
-from ..controller import DeclarationsWorkspaceController
+from ..controller import NEW_DECLARATION_FOCUS_KEY, SEARCH_DECLARATIONS_FOCUS_KEY, DeclarationsWorkspaceController
 from ..filing_history import DeclarationsFilingHistoryScreen
 from ..models import (
     DeclarationsWorkspaceWiringV1,
@@ -348,6 +348,48 @@ async def _select_creation(pilot: Pilot[None], modelo: str, period: Period) -> N
     assert pilot.app.focused is picker.query_one("#declaration-picker-create", Button)
     await pilot.press("enter")
     await pilot.pause()
+
+
+@pytest.mark.asyncio
+async def test_overview_opened_for_a_new_declaration_goes_straight_to_the_picker(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    context = TuiScreenContextV1(
+        destination="workbench.declarations",
+        focus=TuiFocusIdentityV1(destination="workbench.declarations", semantic_key=NEW_DECLARATION_FOCUS_KEY),
+    )
+    screen = DeclarationsOverviewScreen(
+        _controller(
+            _projection(authority_operation),
+            context,
+            work_create_handoff=lambda *_: ModeloWorkCreateResultV1(reused=False),
+            creation_targets=declaration_targets(authority_operation),
+        )
+    )
+    async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
+        await pilot.pause()
+        await pilot.pause()
+        assert isinstance(pilot.app.screen, NewDeclarationPicker)
+        await pilot.press("escape")
+        await pilot.pause()
+        assert pilot.app.screen is screen
+
+
+@pytest.mark.asyncio
+async def test_overview_opened_for_search_is_ready_for_typing() -> None:
+    workspace, calendar = portfolio_projection()
+    context = TuiScreenContextV1(
+        destination="workbench.declarations",
+        focus=TuiFocusIdentityV1(destination="workbench.declarations", semantic_key=SEARCH_DECLARATIONS_FOCUS_KEY),
+    )
+    controller = _controller(workspace, context)
+    controller.calendar_projection = calendar
+    screen = DeclarationsOverviewScreen(controller)
+    app = ScreenHostApp(screen)
+    async with app.run_test(size=(100, 42)) as pilot:
+        await pilot.pause()
+        await pilot.pause()
+        assert app.focused is screen.query_one("#declarations-search", Input)
 
 
 def _select_declaration(table: DataTable[str], identity: str) -> None:

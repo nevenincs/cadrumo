@@ -2493,13 +2493,22 @@ tui:
       submitted: Presentada a l'AEAT
       unknown: Sense presentar, termini desconegut
     heading:
+      account: Compte
       actions: Properes accions
       agenda: Calendari fiscal
       declarations: Declaracions
       ledger: Preparació dels registres
       messages: Missatges
+      navigation: Anar a
     ledger_summary: Disponible - %{entries} apunts; %{requiring_review} necessiten
       revisió; %{unclassified} sense classificar; %{missing_evidence} sense justificant
+    link:
+      search_declarations: Cercar declaracions
+    link_state:
+      locked: Bloquejat
+      never_captured: Encara sense llegir
+      stale: Desactualitzat
+      unavailable: No disponible
     messages_summary: Disponible - %{count} requereixen atenció
     reason:
       blocked_dependency: Una dependència de la declaració està blocada

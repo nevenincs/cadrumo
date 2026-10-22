@@ -466,6 +466,14 @@ def _validate_calendar_recovery_actions(projection: DeclarationsCalendarProjecti
             raise ValueError("calendar recovery action contradicts its natural address")
 
 
+CALENDAR_FOCUS_KEY: Final = "declarations.calendar"
+"""The focus that opens the calendar itself rather than one of its rows."""
+NEW_DECLARATION_FOCUS_KEY: Final = "declarations.new"
+"""The focus that opens the overview straight onto its new-declaration picker."""
+SEARCH_DECLARATIONS_FOCUS_KEY: Final = "declarations.search"
+"""The focus that opens the overview with its search field ready for typing."""
+
+
 def calendar_focus_key(row: DeclarationsCalendarEntryRefV1) -> str:
     """Return a NamespacedId-compatible public natural calendar focus key."""
     modelo, year, period = row.semantic_key()
@@ -547,6 +555,9 @@ def calendar_aeat_label(value: OverviewAeatSubmissionState | None) -> str:
 
 
 __all__ = [
+    "CALENDAR_FOCUS_KEY",
+    "NEW_DECLARATION_FOCUS_KEY",
+    "SEARCH_DECLARATIONS_FOCUS_KEY",
     "DeclarationsCalendarController",
     "DeclarationsProjectionScreen",
     "DeclarationsRouteRequested",

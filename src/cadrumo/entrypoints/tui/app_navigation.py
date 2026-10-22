@@ -3,26 +3,95 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+from collections.abc import Mapping
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Final
 
 from textual.screen import Screen
 from textual.widgets import Button, Static
 
+from ...application.search.workbench import WorkbenchDestinationAdmissionState
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.logging import get_logger
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
-from .declarations.controller import calendar_address_focus_key
-from .home import HomeTarget, home_target_action_id, home_target_agenda_address, home_target_work_unit_id
-from .navigation import DestinationFactoryError, NavigationContractError, TuiFocusIdentityV1, TuiNavigationTargetV1
+from .components.account_chrome import AccountActionV1
+from .declarations.controller import (
+    CALENDAR_FOCUS_KEY,
+    NEW_DECLARATION_FOCUS_KEY,
+    SEARCH_DECLARATIONS_FOCUS_KEY,
+    calendar_address_focus_key,
+)
+from .home import (
+    HomeLinkV1,
+    HomeTarget,
+    home_target_action_id,
+    home_target_agenda_address,
+    home_target_work_unit_id,
+)
+from .navigation import (
+    DestinationFactoryError,
+    NavigationContractError,
+    TuiDestinationIdV1,
+    TuiFocusIdentityV1,
+    TuiNavigationTargetV1,
+)
 
 if TYPE_CHECKING:
     from .app import CadrumoTuiApp
     from .secret.passphrase import PassphraseScreen
 
 
+_HOME_LINK_ROUTES: Final[Mapping[HomeLinkV1, tuple[TuiDestinationIdV1, str]]] = MappingProxyType(
+    {
+        HomeLinkV1.DECLARATIONS: ("workbench.declarations", "navigation.declarations"),
+        HomeLinkV1.NEW_DECLARATION: ("workbench.declarations", NEW_DECLARATION_FOCUS_KEY),
+        HomeLinkV1.SEARCH_DECLARATIONS: ("workbench.declarations", SEARCH_DECLARATIONS_FOCUS_KEY),
+        HomeLinkV1.CALENDAR: ("workbench.declarations", CALENDAR_FOCUS_KEY),
+        HomeLinkV1.LEDGER: ("workbench.ledger", "navigation.ledger"),
+        HomeLinkV1.AEAT_SYNC: ("workbench.aeat_sync", "navigation.aeat_sync"),
+        HomeLinkV1.REFERENCE: ("workbench.reference", "navigation.reference"),
+    }
+)
+"""Where each workbench link on Home leads, with the focus its page opens on."""
+_HOME_ACCOUNT_LINK_ACTIONS: Final[Mapping[HomeLinkV1, AccountActionV1]] = MappingProxyType(
+    {HomeLinkV1.PROFILE: AccountActionV1.PROFILE, HomeLinkV1.SIGN_OUT: AccountActionV1.SIGN_OUT}
+)
+"""The account links, performed by the same doors as their keys and palette entries."""
+
+
 class RootNavigationMixin:
     """Own destination lifecycle, Home restoration, and expired-root teardown."""
+
+    def _home_link_states(self: CadrumoTuiApp) -> dict[HomeLinkV1, WorkbenchDestinationAdmissionState]:
+        """Say which of Home's links this session can open, from the catalogue Home was read with."""
+        catalogue = self._active_destination_catalogue
+        states = {
+            link: WorkbenchDestinationAdmissionState.UNAVAILABLE
+            if catalogue is None
+            else catalogue.resolve(destination).admission.state
+            for link, (destination, _focus) in _HOME_LINK_ROUTES.items()
+        }
+        account = (
+            WorkbenchDestinationAdmissionState.UNAVAILABLE
+            if self._account_factories is None
+            else WorkbenchDestinationAdmissionState.AVAILABLE
+        )
+        return states | dict.fromkeys(_HOME_ACCOUNT_LINK_ACTIONS, account)
+
+    def _open_home_link(self: CadrumoTuiApp, link: HomeLinkV1) -> None:
+        """Open one Home link through the door its keys and palette entry already use."""
+        action = _HOME_ACCOUNT_LINK_ACTIONS.get(link)
+        if action is not None:
+            self.run_account_action(action)
+            return
+        destination, semantic_key = _HOME_LINK_ROUTES[link]
+        self.navigate_to(
+            TuiNavigationTargetV1(
+                destination=destination,
+                focus=TuiFocusIdentityV1(destination=destination, semantic_key=semantic_key),
+            )
+        )
 
     def navigate_to(self: CadrumoTuiApp, target: TuiNavigationTargetV1, /) -> None:
         """Mount only the current admitted destination with its semantic focus."""

@@ -2429,13 +2429,22 @@ tui:
       submitted: Filed with AEAT
       unknown: Not filed, deadline unknown
     heading:
+      account: Account
       actions: Next actions
       agenda: Filing calendar
       declarations: Declarations
       ledger: Records readiness
       messages: Messages
+      navigation: Go to
     ledger_summary: Available - %{entries} entries; %{requiring_review} need review;
       %{unclassified} unclassified; %{missing_evidence} missing supporting documents
+    link:
+      search_declarations: Search declarations
+    link_state:
+      locked: Locked
+      never_captured: Not read yet
+      stale: Out of date
+      unavailable: Unavailable
     messages_summary: Available - %{count} requiring attention
     reason:
       blocked_dependency: A declaration dependency is blocked

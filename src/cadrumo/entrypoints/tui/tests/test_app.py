@@ -570,6 +570,102 @@ async def test_password_rotation_recomposes_before_the_old_session_root_can_be_r
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("key", "destination", "semantic_key"),
+    [
+        ("d", "workbench.declarations", "navigation.declarations"),
+        ("plus", "workbench.declarations", "declarations.new"),
+        ("slash", "workbench.declarations", "declarations.search"),
+        ("c", "workbench.declarations", "declarations.calendar"),
+        ("r", "workbench.ledger", "navigation.ledger"),
+        ("a", "workbench.aeat_sync", "navigation.aeat_sync"),
+        ("p", "workbench.profile", "profile.overview"),
+    ],
+)
+async def test_home_link_keys_open_their_page_through_the_admitted_catalogue(
+    key: str, destination: str, semantic_key: str
+) -> None:
+    contexts: list[TuiScreenContextV1] = []
+    app = CadrumoTuiApp(
+        destination_catalogue=_catalogue(contexts),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        account_factories=_account_factories(),
+    )
+    async with app.run_test(size=(120, 40)) as pilot:
+        await _settle(app, pilot)
+        await pilot.press(key)
+        await pilot.pause()
+        assert isinstance(app.screen, MarkerScreen)
+        context = app.screen.context
+        await pilot.press("escape")
+        await _settle(app, pilot)
+        assert isinstance(app.screen, HomeScreen)
+    assert context.destination == destination
+    assert context.focus is not None and context.focus.semantic_key == semantic_key
+
+
+@pytest.mark.asyncio
+async def test_home_lists_a_closed_page_with_its_reason_and_refuses_to_open_it() -> None:
+    contexts: list[TuiScreenContextV1] = []
+    app = CadrumoTuiApp(
+        destination_catalogue=_catalogue(contexts, destination_state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        account_factories=_account_factories(),
+    )
+    async with app.run_test(size=(120, 40)) as pilot:
+        await _settle(app, pilot)
+        links = app.screen.query_one("#home-links", DataTable)
+        rows = tuple(str(links.get_row_at(index)[0]) for index in range(links.row_count))
+        assert f"r   {tr('tui.destination.ledger')}\n    {tr('tui.home.link_state.never_captured')}" in rows
+        await pilot.press("r")
+        await pilot.pause()
+        assert isinstance(app.screen, HomeScreen)
+        assert str(app.query_one("#root-navigation-refusal", Static).render()) == tr("tui.root.navigation.unavailable")
+    assert contexts == []
+
+
+@pytest.mark.asyncio
+async def test_home_sign_out_link_signs_out_through_the_account_door() -> None:
+    async def complete() -> AccountRecomposeRequiredV1:
+        return AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.SIGNED_OUT)
+
+    app = CadrumoTuiApp(
+        destination_catalogue=_catalogue([]),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        account_factories=_account_factories(sign_out=AccountDirectSessionActionV1(complete=complete)),
+    )
+    async with app.run_test(size=(120, 40)) as pilot:
+        await _settle(app, pilot)
+        links = app.screen.query_one("#home-account-links", DataTable)
+        # The first click moves the cursor onto the row, the second chooses it.
+        assert await pilot.click("#home-account-links", offset=(2, 1))
+        await pilot.pause()
+        assert links.ordered_rows[links.cursor_row].key.value == "link:sign_out"
+        assert await pilot.click("#home-account-links", offset=(2, 1))
+        async with asyncio.timeout(5):
+            while app.return_value is None:
+                await pilot.pause(0.02)
+    assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.SIGNED_OUT)
+
+
+@pytest.mark.asyncio
+async def test_home_without_account_doors_marks_its_account_links_unavailable() -> None:
+    app = CadrumoTuiApp(
+        destination_catalogue=_catalogue([]),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+    )
+    async with app.run_test(size=(120, 40)) as pilot:
+        await _settle(app, pilot)
+        links = app.screen.query_one("#home-account-links", DataTable)
+        rows = tuple(str(links.get_row_at(index)[0]) for index in range(links.row_count))
+    unavailable = tr("tui.home.link_state.unavailable")
+    assert rows == (
+        f"p   {tr('tui.root.account.profile')}\n    {unavailable}",
+        f"F10 {tr('tui.root.account.sign_out')}\n    {unavailable}",
+    )
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("completion", ["success", "refusal", "wrong_reason"])
 async def test_sign_out_direct_action_recomposes_success_or_requires_fresh_admission(completion: str) -> None:
     """A dispatched action retires the root; only its matching receipt claims logout."""

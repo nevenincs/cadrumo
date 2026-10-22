@@ -2476,13 +2476,22 @@ tui:
       submitted: Benyújtva az AEAT adatai szerint
       unknown: Nincs benyújtva, ismeretlen határidő
     heading:
+      account: Fiók
       actions: Következő teendők
       agenda: Bevallási naptár
       declarations: Bevallások
       ledger: A nyilvántartás készültsége
       messages: Üzenetek
+      navigation: Oldalak
     ledger_summary: Elérhető - %{entries} tétel; %{requiring_review} ellenőrzésre
       vár; %{unclassified} besorolatlan; %{missing_evidence} hiányzó bizonylat
+    link:
+      search_declarations: Bevallások keresése
+    link_state:
+      locked: Zárolva
+      never_captured: Még nincs beolvasva
+      stale: Elavult
+      unavailable: Nem érhető el
     messages_summary: Elérhető - %{count} igényel figyelmet
     reason:
       blocked_dependency: A bevallás egyik függősége blokkolva van

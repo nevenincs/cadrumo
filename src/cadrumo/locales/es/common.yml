@@ -2504,13 +2504,22 @@ tui:
       submitted: Presentada en la AEAT
       unknown: Sin presentar, plazo desconocido
     heading:
+      account: Cuenta
       actions: Próximas acciones
       agenda: Calendario fiscal
       declarations: Declaraciones
       ledger: Preparación de los registros
       messages: Mensajes
+      navigation: Ir a
     ledger_summary: Disponible - %{entries} apuntes; %{requiring_review} necesitan
       revisión; %{unclassified} sin clasificar; %{missing_evidence} sin justificante
+    link:
+      search_declarations: Buscar declaraciones
+    link_state:
+      locked: Bloqueado
+      never_captured: Aún sin leer
+      stale: Sin actualizar
+      unavailable: No disponible
     messages_summary: Disponible - %{count} requieren atención
     reason:
       blocked_dependency: Una dependencia de la declaración está bloqueada

@@ -23,6 +23,8 @@ from ..components.language import localized
 from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
+    NEW_DECLARATION_FOCUS_KEY,
+    SEARCH_DECLARATIONS_FOCUS_KEY,
     DeclarationsRouteRequested,
     DeclarationsWorkspaceController,
     DeclarationsWorkspaceScreen,
@@ -131,6 +133,12 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             ).value not in {"available", "stale"}
         self._render_sources()
         self._restore_declaration_focus(None)
+        # Home's New and Search links land here and carry on into the act.
+        focus = self.controller.context.focus
+        if focus is not None and focus.semantic_key == NEW_DECLARATION_FOCUS_KEY:
+            self.call_after_refresh(self.action_new)
+        elif focus is not None and focus.semantic_key == SEARCH_DECLARATIONS_FOCUS_KEY:
+            self.call_after_refresh(self.action_search)
 
     @override
     async def refresh_language(self) -> None:

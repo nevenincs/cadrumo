@@ -58,6 +58,7 @@ from .components.quiet_app import QuietApp
 from .components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from .home import (
     HomeBackRequested,
+    HomeLinkSelected,
     HomeScreen,
     HomeTarget,
     HomeTargetSelected,
@@ -910,6 +911,10 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
             return
         self.navigate_to(target)
 
+    def on_home_link_selected(self, event: HomeLinkSelected) -> None:
+        """Open the page or account control a Home link names."""
+        self._open_home_link(event.link)
+
     def on_home_back_requested(self, _: HomeBackRequested) -> None:
         """Refresh Home after a completed or dismissed journey."""
         if self._refresh_home is not None:
@@ -983,7 +988,9 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         if self._destination_catalogue is not None:
             self._active_destination_catalogue = self._destination_catalogue
         self._active_target = None
-        self._replace_destination(HomeScreen(projection, restore_target=semantic_focus))
+        self._replace_destination(
+            HomeScreen(projection, restore_target=semantic_focus, link_states=self._home_link_states())
+        )
         factories = self._account_factories
         if factories is not None and factories.onboarding_pending and not self._onboarding_offered:
             # A profile that is not set up yet cannot prepare a declaration,
