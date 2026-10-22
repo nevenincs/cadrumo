@@ -5,6 +5,8 @@ published. Windows announces each change to a directory through a change
 notification handle whose signaled state is read without touching the disk, so
 a check reads custody again only when a watched directory changed, when the
 observation is older than its maximum age, or when its owner invalidated it.
+An owner whose custody also lives where no notification reaches names a cheap
+probe of it: an aged observation whose probe still answers the same is kept.
 A directory that cannot be watched leaves every check reading custody itself.
 """
 
@@ -100,6 +102,7 @@ class _Held[T]:
     generation: int
     read_at: float
     value: T
+    unnotified: object
 
 
 class CustodyChangeWitness[T]:
@@ -116,12 +119,18 @@ class CustodyChangeWitness[T]:
         directories: Sequence[WatchedDirectory],
         *,
         maximum_age: float = MAXIMUM_OBSERVATION_AGE_SECONDS,
+        unnotified: Callable[[], object] | None = None,
         monotonic: Callable[[], float] = time.monotonic,
         notifications: _ChangeNotifications | None = None,
     ) -> None:
-        """Watch nothing until the first observation; the directories may not exist yet."""
+        """Watch nothing until the first observation; the directories may not exist yet.
+
+        ``unnotified`` probes the custody no directory notification covers; it
+        is taken before each read and again once that read has aged.
+        """
         self._directories = tuple(directories)
         self._maximum_age = maximum_age
+        self._unnotified = unnotified
         self._monotonic = monotonic
         self._notifications = notifications if notifications is not None else _platform_notifications()
         self._lock = Lock()
@@ -136,18 +145,25 @@ class CustodyChangeWitness[T]:
     def observe(self, read: Callable[[], T]) -> T:
         """Return the held observation while nothing changed, else read, hold and return a fresh one."""
         with self._lock:
-            held = self._current()
-            if held is not None:
+            held, aged = self._current()
+            if held is not None and not aged:
                 return held.value
             generation = self._generation
             watched = bool(self._handles)
         read_at = self._monotonic()
+        # Taken before the read: a change during it differs from this probe at the next aged check.
+        unnotified = None if self._unnotified is None else self._unnotified()
+        if held is not None and unnotified == held.unnotified:
+            with self._lock:
+                if self._held is held and generation == self._generation and not self._closed:
+                    self._held = _Held(generation, read_at, held.value, unnotified)
+            return held.value
         value = read()
         if watched:
             with self._lock:
                 # An invalidation or a change seen by another check during this read is newer than it.
                 if generation == self._generation and not self._closed:
-                    self._held = _Held(generation, read_at, value)
+                    self._held = _Held(generation, read_at, value, unnotified)
         return value
 
     def invalidate(self) -> None:
@@ -163,25 +179,27 @@ class CustodyChangeWitness[T]:
             self._held = None
             self._release()
 
-    def _current(self) -> _Held[T] | None:
+    def _current(self) -> tuple[_Held[T] | None, bool]:
+        """The held observation no directory changed since, and whether it has aged."""
         if self._closed or self._notifications is None:
-            return None
+            return None, False
         if not self._handles:
             self._watch()
-            return None
+            return None, False
         changed = False
         for handle in self._handles:
             signaled = self._notifications.signaled(handle)
             if signaled is None or (signaled and not self._notifications.rearm(handle)):
                 self._release()
-                return None
+                return None, False
             changed = changed or signaled
         held = self._held
-        if changed or held is None or self._monotonic() - held.read_at >= self._maximum_age:
+        aged = held is not None and self._monotonic() - held.read_at >= self._maximum_age
+        if changed or held is None or (aged and self._unnotified is None):
             self._generation += 1
             self._held = None
-            return None
-        return held
+            return None, False
+        return held, aged
 
     def _watch(self) -> None:
         """Open every notification; a directory the first read creates is watched from the next check."""

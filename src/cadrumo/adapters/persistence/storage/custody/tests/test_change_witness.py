@@ -124,6 +124,37 @@ def test_an_observation_older_than_its_maximum_age_is_read_again() -> None:
     assert witness.observe(reads) == 2
 
 
+def test_an_aged_observation_is_kept_while_its_unnotified_probe_answers_the_same() -> None:
+    notifications, reads, clock = _Notifications(), _Reads(), _Clock()
+    native = ["anchor-1"]
+    probes: list[str] = []
+
+    def probe() -> str:
+        probes.append(native[0])
+        return native[0]
+
+    witness = CustodyChangeWitness(
+        (WatchedDirectory(Path("custody"), subtree=True),),
+        maximum_age=0.5,
+        unnotified=probe,
+        monotonic=clock,
+        notifications=notifications,
+    )
+    assert [witness.observe(reads) for _ in range(3)] == [1, 1, 1]
+    assert probes == ["anchor-1"], "a young observation needs no probe"
+    clock.now += 0.5
+    assert witness.observe(reads) == 1
+    assert len(probes) == 2
+    clock.now += 0.49
+    assert witness.observe(reads) == 1
+    assert len(probes) == 2, "a kept observation ages again from its last probe"
+    native[0] = "anchor-2"
+    clock.now += 0.01
+    assert witness.observe(reads) == 2
+    notifications.change()
+    assert witness.observe(reads) == 3, "a directory change reads whatever the probe answers"
+
+
 def test_a_read_that_raises_is_not_held() -> None:
     notifications = _Notifications()
     witness = _witness(notifications)

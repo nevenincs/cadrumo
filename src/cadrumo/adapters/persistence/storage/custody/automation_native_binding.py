@@ -14,8 +14,9 @@ from .....application.user_profile.access_contracts import (
 from .....application.user_profile.automation_custody_port import AutomationSecretStore, NativeSecretBackend
 from .....application.user_profile.automation_enrollment import EnrollmentControlState
 from .....application.user_profile.automation_lifecycle import ProfileGlobalLockState
+from .....core.hashing import sha256_hex
 from .....core.storage_taxonomy import StorageCategory
-from .automation_native_identity import automation_native_account
+from .automation_native_identity import CONTROL_NAMESPACE, automation_native_account
 from .change_witness import CustodyChangeWitness, WatchedDirectory
 from .paths import profile_custody_path
 
@@ -61,9 +62,15 @@ class AutomationNativeBinding:
                         profile_custody_path(binding.profile_id, StorageCategory.PROFILE_CAPSULE_DATA, root=root),
                         subtree=True,
                     ),
-                )
+                ),
+                unnotified=self._native_control,
             )
         )
+
+    def _native_control(self) -> str | None:
+        """The digest of the control anchor in the native store, which no directory notification covers."""
+        anchor = self.secrets.read(CONTROL_NAMESPACE, self.account)
+        return None if anchor is None else sha256_hex(anchor.get_secret_value())
 
     @property
     def secrets(self) -> AutomationSecretStore:

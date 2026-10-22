@@ -9,6 +9,7 @@ rotation, which nothing tells the observing store about except the directory.
 from __future__ import annotations
 
 import sys
+import time
 from collections.abc import Iterator
 from pathlib import Path
 from uuid import uuid4
@@ -16,7 +17,9 @@ from uuid import uuid4
 import pytest
 from pydantic import SecretBytes
 
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CONTROL_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
+from cadrumo.adapters.persistence.storage.custody.change_witness import MAXIMUM_OBSERVATION_AGE_SECONDS
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     AdministrationSubject,
@@ -59,6 +62,27 @@ def test_an_unchanged_custody_is_answered_without_reading_it_again(
     monkeypatch.setattr(observer, "profile_lock_state", lambda: reads.append("lock") or first[0])
     assert [observer.observed_access_state() for _ in range(3)] == [first, first, first]
     assert reads == []
+
+
+def test_a_native_control_anchor_is_probed_once_the_observation_ages(
+    subject: AdministrationSubject, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    observer = _observer(subject)
+    observer.observed_access_state()
+    first = observer.observed_access_state()
+    reads: list[str] = []
+    read = observer.enrollment_state
+    monkeypatch.setattr(observer, "enrollment_state", lambda: reads.append("enrollment") or read())
+    time.sleep(MAXIMUM_OBSERVATION_AGE_SECONDS + 0.1)
+    assert observer.observed_access_state() == first
+    assert reads == [], "an unchanged native store keeps the aged observation"
+    # The native store announces nothing; an anchor written outside custody is seen once the observation ages.
+    subject.native.replace(CONTROL_NAMESPACE, observer.account, SecretBytes(b"{}"))
+    assert observer.observed_access_state() == first
+    time.sleep(MAXIMUM_OBSERVATION_AGE_SECONDS + 0.1)
+    with pytest.raises(AutomationCustodyError):
+        observer.observed_access_state()
+    assert reads == ["enrollment"]
 
 
 def test_a_lock_published_by_another_store_is_seen_at_the_next_check(subject: AdministrationSubject) -> None:
