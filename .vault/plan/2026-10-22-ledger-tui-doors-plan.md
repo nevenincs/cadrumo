@@ -9,7 +9,7 @@ related:
   - '[[2026-07-05-ledger-latency-budget-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:8e82148a2bd58d923921497b37f8e12eb8ac66846a5bc8ccaa7dbd68994ce203'
+body_hash: 'sha256:c578a126bc10ac0690e1d0708ac31d95fc5cdf635e8013500bf0f243a8a63de3'
 ---
 
 # `ledger-tui-doors` plan
@@ -41,7 +41,7 @@ The orchestrator adds the tools seam every domain attaches its screens to, befor
 Five domain agents run in parallel, each giving its ledger operations their own Records screens through injected doors.
 
 - [x] `P02.S02` - give entries and export (16 operations) a paged entry browser, add, lifecycle, health, reset and export tools, and the exclusion submitter; `src/cadrumo/entrypoints/tui/ledger/entries_*.py and runtime_ledger_entries.py`.
-- [ ] `P02.S03` - give categorisation (18 operations) bulk and IVA classification, rules, counterparties, splits, allocation, participation and ratios screens; `src/cadrumo/entrypoints/tui/ledger/categorisation_*.py and runtime_ledger_categorisation.py`.
+- [x] `P02.S03` - give categorisation (18 operations) bulk and IVA classification, rules, counterparties, splits, allocation, participation and ratios screens; `src/cadrumo/entrypoints/tui/ledger/categorisation_*.py and runtime_ledger_categorisation.py`.
 - [x] `P02.S04` - give evidence and attachments (12 operations) attach, detach, batch intake and evidence view, update, remove and review screens; `src/cadrumo/entrypoints/tui/ledger/evidence_files_*.py and runtime_ledger_evidence_files.py`.
 - [x] `P02.S05` - give records, invoices and reconciliation (9 operations) the record doors, invoice import, wizard and removal, and the link submitter; `src/cadrumo/entrypoints/tui/ledger/invoices_*.py and runtime_ledger_invoices.py`.
 - [x] `P02.S06` - give registers (15 operations) prorrata, bienes de inversion and inventory screens; `src/cadrumo/entrypoints/tui/ledger/registers_*.py and runtime_ledger_registers.py`.

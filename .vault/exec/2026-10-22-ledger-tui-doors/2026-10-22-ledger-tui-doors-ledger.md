@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:69f0e44cfc2d6af769f01310eb736a2a61a0ee058cdf7b2bd82faa7cc910f5a9'
+body_hash: 'sha256:a77f96b7c5b1bbe2eb1d075920e966a3c74288d63ba54508b60cc104ac90f87f'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -140,6 +140,39 @@ related:
 - `S02` `verify:` `list page CPU benchmark: period page p95 0.547s within 3.0s budget` -> `pass`
 - `S02` `verify:` `ruff, ty on D1 files; lint-imports` -> `pass`
 - `S02` `by:` `D1`
+- `S03` `A` `dev/tui/harness/ledger_categorisation_fixtures.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_allocate.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_bulk.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_common.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_counterparties.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_diagnostics.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_doors.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_iva.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_participation.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_ratios.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_review.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_rules.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_split.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_tools.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_entry_fixtures.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_fixtures.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_memory_doors.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_pilot.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_register_fixtures.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_review_fixtures.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_bulk.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_entry_tools.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_event_loop.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_geometry.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_registers.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_review.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_rules.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_tools.py`
+- `S03` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_categorisation.py`
+- `S03` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_categorisation.py`
+- `S03` `verify:` `D2 product and runtime tests (with D1: 394)` -> `pass`
+- `S03` `verify:` `ruff, ty on D2 files; lint-imports` -> `pass`
+- `S03` `by:` `D2`
 
 ## Notes
 
@@ -149,3 +182,4 @@ related:
 - `S04` evidence.query, `attachment_queue` and consent.list take no paging fields; screens hold the result and render one page. Detach takes typed identities because no operation lists an entry's attachments. A whole-repo ruff safe-fix run touched four files outside D3; owners confirmed nothing was lost. The tools composer entry and locale strings land in the integration commit.
 - `S08` Gate B1 finding from D2: every runtime door's session binding check made a blocking IPC status read on the event loop.
 - `S02` Export drives OperationController directly so a partial export reports as partial. The exclusion submitter, tools composer entry and locale strings land in the integration commit.
+- `S03` Whole-ledger tools (bulk, rules, counterparties, ratios, diagnostics) attach to Entries because Classification needs a selected entry. classify.iva-derive has no preview; derived values show after the write. rule.list has no paging. The tools composer entry and locale strings land in the integration commit.
