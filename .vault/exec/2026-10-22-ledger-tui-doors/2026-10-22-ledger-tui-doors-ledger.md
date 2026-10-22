@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:5d589fda00de390866577ac0f691dc410b52163143ab6ba6280a05d8c038764c'
+body_hash: 'sha256:502a767c601c3d1c508be2ab50a27fbf22c66bda6a18cde46e91feb5bd8a8cf5'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -206,6 +206,9 @@ related:
 - `S13` `verify:` `mid-read lapse, seal, handover and re-login refuse the whole read; tamper refusals still fire (20 tests, mutation-checked)` -> `pass`
 - `S13` `verify:` `ruff, lint-imports, check-types` -> `pass`
 - `S13` `by:` `O5`
+- `S11` `A` `dev/ci/tests/test_ledger_tui_reads_benchmark.py`
+- `S11` `verify:` `pytest dev/ci/tests/test_ledger_tui_reads_benchmark.py -m perf -n0 (28 reads, diagnostics only)` -> `pass`
+- `S11` `by:` `O3`
 
 ## Notes
 
@@ -220,3 +223,4 @@ related:
 - `S07` Applied D1-D5 manifests and three orchestrator wording fixes. Accepted unknown-word findings are official untranslated terms (prorrata, Modelo, bienes de inversion, recargo de equivalencia, cuota), product names and valid inflections the pinned dictionaries lack. Harness surfaces not yet registered. Exclusion wiring in `runtime_workbench.py` is left uncommitted because that file carries another session's uncommitted startup work.
 - `S07` The exclusion submitter wiring (import, compose call, `exclusion_submitter=)` landed inside another session's commit 35934fefa0 together with its startup change; verified present in HEAD.
 - `S13` Behaviour change: a session lapsing or being replaced mid-read now refuses the whole read with a session refusal; before, a lapse surfaced as an unreadable row and a same-profile re-login released the records. transactions.py still digests each object key a second time (about 6 us/row); left for a follow-up.
+- `S11` At 30k rows after S09 and S10: workbench.generation 118 CPU-s mean (90M reconciliation pair checks), status 41 (4 full loads), check 32, view 30 (3 loads), track 19, preflight 12, unfiltered list 10, history 11, invoice.list 9, review 9, llm-diagnostics 8, participation 7, invoice.view 7. Period list page 0.59. Results and profiles in the scratchpad run4.log and prof folder.

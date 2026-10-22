@@ -9,7 +9,7 @@ related:
   - '[[2026-07-05-ledger-latency-budget-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:3bd1e4767a95d437881dbe9a7ed4fedf77ec64cf72a5e95131a6eae4af09f9d5'
+body_hash: 'sha256:4536e1d01d328c98b5327950be1618fa450b8c95450bf5e679fe90dc94dac24a'
 ---
 
 # `ledger-tui-doors` plan
@@ -52,9 +52,12 @@ Dedicated agents make the ledger reads behind the Records screens meet the 30,00
 
 - [x] `P04.S09` - make a period-filtered ledger.list read only the date-index partition, with the completeness gate, parity tests and the D1 CPU gate as acceptance; `src/cadrumo/application/ledger/list_query.py`.
 - [x] `P04.S10` - cut the per-row cost of the full transaction catalogue load without changing encryption, binding or results; `src/cadrumo/adapters/persistence/profile/transactions.py`.
-- [ ] `P04.S11` - measure every ledger read the Records screens call at 30,000 transactions and rank the overruns with their causes; `dev/ci/tests/test_ledger_tui_reads_benchmark.py`.
+- [x] `P04.S11` - measure every ledger read the Records screens call at 30,000 transactions and rank the overruns with their causes; `dev/ci/tests/test_ledger_tui_reads_benchmark.py`.
 - [ ] `P04.S12` - stop the domain Transaction model repeating raw revalidation and registry vocabulary lookups for every loaded row; `src/cadrumo/domain/transactions/models.py`.
 - [x] `P04.S13` - cut the per-row session freshness checks and repeated object-key digests in the secure object batch read; `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`.
+- [ ] `P04.S14` - make workbench generation pair invoices with transactions through an index instead of every invoice against every transaction, with identical suggestions; `src/cadrumo/domain/invoices/service.py`.
+- [ ] `P04.S15` - load the transaction catalogue once per ledger read, read the period partition for status, check and preflight, and read one row by id for view, track, history and participation; `src/cadrumo/application/ledger`.
+- [ ] `P04.S16` - stop revalidating the whole invoice catalogue and its registry lookups on every invoice read; `src/cadrumo/domain/invoices/models.py`.
 
 ### Phase `P03` - integrate, verify and review
 
