@@ -9,9 +9,11 @@ related:
   - '[[2026-10-22-startup-performance-request-path-audit]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr]]'
   - '[[2026-10-22-startup-performance-worker-before-sign-in-adr]]'
+  - '[[2026-10-04-application-sign-in-adr]]'
+  - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:52dd7d9550620cd461a7e6b565590c2b2ddc0acec3b511f17ea32f55d83dc9ac'
+body_hash: 'sha256:e5ebfc995ba93fda8c65b7598c56c3511fb68a6ac3338820533a76de99b4b880'
 ---
 
 # `startup-performance` plan
@@ -32,11 +34,12 @@ The findings are in `2026-10-22-startup-performance-request-path-audit`. `2026-1
 - [x] `S04` - Serve the worker's capsule binding validation through the witness; `src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py and owning tests`.
 - [x] `S05` - Measure the request path on an overlaid package copy and record before and after timings in the audit; `.vault/audit/2026-10-22-startup-performance-request-path-audit.md`.
 - [x] `S06` - Pre-start one unbound profile worker so sign-in binds an imported worker and the first operation skips cold start; `src/cadrumo_runtime/adapters/profile_worker*.py, src/cadrumo_runtime/host/worker*.py and owning tests`.
-- [ ] `S07` - Remove CLI children from the desktop sign-in path: profile inventory from session watch, password sign-in through a pre-started session hold that persists the receipt; `src/cadrumo_runtime/host/session_watch.py, session_hold.py, native/desktop/src-tauri/src/shell/sign_in and owning tests`.
+- [x] `S07` - Remove CLI children from the desktop sign-in path: profile inventory from session watch, password sign-in through a pre-started session hold that persists the receipt; `src/cadrumo_runtime/host/session_watch.py, session_hold.py, native/desktop/src-tauri/src/shell/sign_in and owning tests`.
 - [x] `S08` - Stop hashing the whole authority database in every process while keeping corruption refusal; `src/cadrumo/domain/calculations/registry/authority_store.py and owning tests`.
 - [ ] `S09` - Cut the TUI first screen's serial operations and eager imports; `src/cadrumo/entrypoints/tui and src/cadrumo_client/transport/frontend_profile_view_client.py`.
 - [ ] `S10` - Rebuild the stage with the operator, measure the real desktop launch to usable Home and confirm no slow-request warnings; `build/windows-x64/stage/Release/app, audit`.
 - [x] `S11` - Keep the workbench generation's module graph off the first operation's execution binding and pin it with an import gate; `src/cadrumo_runtime/host/operation_authority.py, src/cadrumo_runtime/host/tests/test_worker_startup_import_graph.py`.
+- [ ] `S12` - Serve the sign-in view's profile list from the session watch and pre-start the window's person hold while the sign-in form is shown, so no process starts between password and signed-in; `src/cadrumo_runtime/host/session_watch.py, native/desktop/src-tauri/src/shell/sign_in and owning tests`.
 
 ## Parallelization
 

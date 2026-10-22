@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd518a60e9c0ad87c115cccc7311e534321bc5c19501f83ab03963e24ad7cd99'
+body_hash: 'sha256:e500ac4935b606d52231bba84e0b320897d3dc6e64a34412714faf786cd78264'
 related:
   - "[[2026-10-22-startup-performance-plan]]"
 ---
@@ -127,3 +127,19 @@ related:
 - `S06` `verify:` `pytest session owner, sign-in status and watch suites, all lanes (88)` -> `pass`
 - `S06` `verify:` `ruff, ty` -> `pass`
 - `S06` `verify:` `harness: login 5.1 s -> 2.8 s with a session watch` -> `pass`
+- `S07` `M` `src/cadrumo_runtime/host/session_hold.py`
+- `S07` `M` `src/cadrumo_runtime/host/tests/test_session_hold_frontend.py`
+- `S07` `A` `src/cadrumo_runtime/host/tests/test_session_hold_sign_in.py`
+- `S07` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S07` `M` `.vault/adr/2026-10-04-application-sign-in-adr.md`
+- `S07` `M` `.vault/adr/2026-10-04-desktop-shell-adr.md`
+- `S07` `verify:` `pytest session hold suites (14)` -> `pass`
+- `S07` `verify:` `desktop-host-unit-test filter sign_in (65) and agent:: (92)` -> `pass`
+- `S07` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S07` `verify:` `rustfmt, ruff, ty` -> `pass`
+
+## Notes
+
+- `S07` Real desktop sign-in with a persisted receipt needs the verified desktop parent; verified at S10 on the rebuilt stage

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-sign-in'
 date: '2026-10-04'
-modified: '2026-10-18'
+modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:51d07a6b7993996bce898e6a41a34985caa930adc75de36b4545f83ca8476d68'
+body_hash: 'sha256:ad302a33a459ff324fa5afd3411598d743ec6ddf25249bb4ef56669aebd71812'
 related:
   - "[[2026-10-04-application-sign-in-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
@@ -154,9 +154,9 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
 
 **Desktop sign-in view.**
 - It lives in the shell's own origin, never in the documentation frame. It is shown before the TUI pane starts whenever the active profile has no live sign-in. It is shown again whenever the sign-in times out, goes inactive or is locked, or when no profile exists. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that only the absence of a live sign-in was named.)
-- One dedicated token-checked host command takes the password in a raw IPC body. It spawns a fresh `aeat config login --secrets-stdin --json` with a piped stdin, which is closed after writing. The host zeroizes its own buffers, and stdout is kept out of diagnostics.
+- One dedicated token-checked host command takes the password in a raw IPC body. For the selected profile it starts the window's person hold, `cadrumo-runtime session hold --profile-id ID --password-stdin --persist-receipt`, writes the password to its stdin as one length-prefixed frame, and keeps that hold as the window's person session; the hold answers with its held line, which says whether the sign-in was stored, or with a typed refusal naming the runtime's reason, sign-in reason and retry wait. A sign-in naming another profile spawns a fresh `aeat config login --secrets-stdin --json` with a piped stdin, which is closed after writing. The host zeroizes its own buffers, and stdout is kept out of diagnostics.
 - Tauri and WebView2 copies of the password cannot be wiped, and the record says so.
-- The command runs as the CLI frontend. The shell holds no session, receipt or credential, never retries automatically and has DevTools disabled in release builds.
+- The selected profile's sign-in runs as the desktop person frontend through the hold child, and another profile's as the CLI frontend. The shell process holds no session, receipt or credential, never retries automatically and has DevTools disabled in release builds.
 - The view re-reads status after any failure. Recovery and `PROFILE_LOCKED` hand over to the TUI.
 
 **Profiles in the desktop view (amended 2026-10-06).**
@@ -173,7 +173,7 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
 **Desktop status.**
 - A new unauthenticated runtime `sign_in_status` request reports presence and deadlines only. It never resumes or extends.
 - It is exposed under its own CLI leaf, `cadrumo-runtime config sign-in-status`, for the desktop to read.
-- It creates no profile host or worker and never reads the keychain.
+- It never reads the keychain. An unwatched read creates no profile host or worker; a watched read of a signed-out profile starts that profile's key-free worker ahead of its sign-in (`2026-10-22-startup-performance-worker-before-sign-in-adr`).
 - It reports `present`, `absent` or `unknown`, evaluated against the generation, the bound login and the deadlines.
 
 **TUI.**
@@ -306,3 +306,5 @@ Amended 2026-10-16 under `2026-10-16-idle-churn-adr`, on the operator's ruling t
 Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
 
 The wording "the legacy in-process paths are retired" above is kept as accepted history. It now reads together with this ruling: The Lifetime locators under `src/cadrumo/adapters/persistence/storage/` follow the code into `src/cadrumo_runtime`. The retirement of the legacy in-process paths named under Implementation is completed by `2026-10-18-runtime-authority-boundary-adr`: no CLI or TUI path authenticates, publishes a session or holds a DEK. The desktop's runtime-free profile list is unchanged. Its profile creation command still spawns `aeat config profile create`, which now presents the password to a runtime installation act.
+
+Amended 2026-10-22 under the operator's instruction to fix the root causes of a 40-50 s desktop start (`2026-10-22-startup-performance-request-path-audit`, finding sign-in-process-chain): the desktop signs the selected profile in through the person hold it keeps anyway, instead of a `config login` child followed by a second hold resuming the receipt; and a watched status read may start the signed-out profile's worker. Before, every desktop sign-in spawned `aeat config login`, and a status read never created a host or worker.

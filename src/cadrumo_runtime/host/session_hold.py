@@ -119,6 +119,17 @@ def _report_failure(error: BaseException) -> dict[str, object] | None:
         return None
 
 
+def _sign_in_refusal(refused: FrontendRefusedError) -> dict[str, object]:
+    """Name a refused password as the CLI does: the runtime's reason, the sign-in reason and any retry wait."""
+    sign_in = refused.sign_in
+    return {
+        "kind": "sign_in_refused",
+        "code": refused.reason,
+        "sign_in_reason": None if sign_in is None else str(sign_in.reason),
+        "seconds": None if sign_in is None else sign_in.remaining_seconds,
+    }
+
+
 def _emit_refusal(code: str, request_id: UUID | None = None, report: Mapping[str, object] | None = None) -> None:
     document: dict[str, object] = {"kind": "session_refused", "code": code}
     if request_id is not None:
@@ -133,6 +144,7 @@ async def _hold(
     *,
     password_stdin: bool,
     frontend: OperationFrontendProjection = OperationFrontendProjection.DESKTOP,
+    persist_receipt: bool = False,
 ) -> int:
     client = await open_installed_client(profile_id=profile_id, frontend=frontend)
     try:
@@ -148,20 +160,26 @@ async def _hold(
             try:
                 if len(secret) != length:
                     return 1
-                status = client.login_password(secret, persist_receipt=False)
+                status = client.login_password(secret, persist_receipt=persist_receipt)
+            except FrontendRefusedError as refused:
+                # A refused password is the person's to try again; this hold ends with the reason.
+                _emit(_sign_in_refusal(refused))
+                return 1
             finally:
                 secret[:] = bytes(len(secret))
         else:
             status = client.resume_receipt()
-        _emit(
-            {
-                "kind": "session_held",
-                "profile_id": str(profile_id),
-                "session_id": str(status.status.session_id),
-                "runtime_boot_id": str(status.runtime_boot_id),
-                "connection_id": str(status.connection_id),
-            }
-        )
+        held: dict[str, object] = {
+            "kind": "session_held",
+            "profile_id": str(profile_id),
+            "session_id": str(status.status.session_id),
+            "runtime_boot_id": str(status.runtime_boot_id),
+            "connection_id": str(status.connection_id),
+        }
+        if persist_receipt:
+            # The window's own sign-in: other frontends resume it only from a stored receipt.
+            held["session_persisted"] = status.human_login is not None and status.human_login.session_persisted
+        _emit(held)
         # One inbox for the parent's requests and the runtime's pushes: the hold
         # sleeps until either arrives. Retirement, including a lost connection, is
         # pushed, so the hold never asks the runtime whether its session lives.
@@ -413,6 +431,7 @@ def main(arguments: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="cadrumo-runtime session hold", allow_abbrev=False)
     parser.add_argument("--profile-id", type=UUID, required=True)
     parser.add_argument("--password-stdin", action="store_true")
+    parser.add_argument("--persist-receipt", action="store_true")
     parser.add_argument(
         "--frontend",
         type=OperationFrontendProjection,
@@ -420,6 +439,8 @@ def main(arguments: list[str] | None = None) -> int:
         default=OperationFrontendProjection.DESKTOP,
     )
     options = parser.parse_args(arguments)
+    if options.persist_receipt and not options.password_stdin:
+        parser.error("--persist-receipt stores the receipt of a password sign-in; it needs --password-stdin")
     try:
         with composed_profile_persistence_ports():
             return asyncio.run(
@@ -427,6 +448,7 @@ def main(arguments: list[str] | None = None) -> int:
                     options.profile_id,
                     password_stdin=options.password_stdin,
                     frontend=options.frontend,
+                    persist_receipt=options.persist_receipt,
                 )
             )
     except Exception as error:

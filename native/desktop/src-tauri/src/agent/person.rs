@@ -71,6 +71,20 @@ fn pushed(value: &Value) -> Option<Option<PersonEvent>> {
     }
 }
 
+/// Why a window sign-in through a hold did not hold the person.
+#[derive(Debug)]
+pub enum SignInFailure {
+    /// The runtime refused the password, as the command line would report it.
+    Refused(crate::shell::sign_in::wire::Refusal),
+    Failed(ApplicationError),
+}
+
+impl From<ApplicationError> for SignInFailure {
+    fn from(error: ApplicationError) -> Self {
+        Self::Failed(error)
+    }
+}
+
 pub struct Person {
     child: Child,
     stdin: Option<ChildStdin>,
@@ -106,9 +120,92 @@ impl Person {
         Self::hold_within(command, profile, reply_limit)
     }
 
-    fn hold_within(mut command: Command, profile: &str, reply_limit: Duration) -> Result<Self> {
+    fn hold_within(command: Command, profile: &str, reply_limit: Duration) -> Result<Self> {
+        let person = Self::spawn(command, profile, None, reply_limit)?;
+        if person.identity["kind"] == "session_refused" {
+            return Err(person.refused("person_hold_refused", &person.identity.clone()));
+        }
+        person.require_held(profile, 5)?;
+        Ok(person)
+    }
+
+    /// Signs the person in to `profile` with `password` through a new hold that
+    /// keeps the sign-in for the other frontends, and holds it for the window.
+    /// A refused password ends that hold and comes back as its refusal.
+    pub fn sign_in(
+        command: Command,
+        profile: &str,
+        password: &[u8],
+    ) -> std::result::Result<Self, SignInFailure> {
+        Self::sign_in_within(command, profile, password, REPLY_LIMIT)
+    }
+
+    pub(crate) fn sign_in_within(
+        command: Command,
+        profile: &str,
+        password: &[u8],
+        reply_limit: Duration,
+    ) -> std::result::Result<Self, SignInFailure> {
+        let person = Self::spawn(command, profile, Some(password), reply_limit)?;
+        match person.identity["kind"].as_str() {
+            Some("sign_in_refused") => {
+                let refused = &person.identity;
+                let refusal = crate::shell::sign_in::wire::sign_in_refusal(
+                    refused["code"].as_str().unwrap_or_default(),
+                    refused["sign_in_reason"].as_str(),
+                    refused["seconds"].as_u64(),
+                )?;
+                Err(SignInFailure::Refused(refusal))
+            }
+            Some("session_refused") => Err(person
+                .refused("person_sign_in_refused", &person.identity.clone())
+                .into()),
+            _ => {
+                person.require_held(profile, 6)?;
+                if !person.identity["session_persisted"].is_boolean() {
+                    return Err(failed("person_hold_identity_shape").into());
+                }
+                Ok(person)
+            }
+        }
+    }
+
+    /// Whether the window's sign-in left a stored receipt for the other frontends.
+    pub fn session_persisted(&self) -> bool {
+        self.identity["session_persisted"] == true
+    }
+
+    fn require_held(&self, profile: &str, members: usize) -> Result<()> {
+        if !self
+            .identity
+            .as_object()
+            .is_some_and(|object| object.len() == members)
+            || self.identity["kind"] != "session_held"
+            || self.identity["profile_id"] != profile
+            || ["session_id", "runtime_boot_id", "connection_id"]
+                .iter()
+                .any(|key| {
+                    !self.identity[key]
+                        .as_str()
+                        .is_some_and(crate::shell::agent_access::wire::is_uuid)
+                })
+        {
+            return Err(failed("person_hold_identity_shape"));
+        }
+        Ok(())
+    }
+
+    fn spawn(
+        mut command: Command,
+        profile: &str,
+        password: Option<&[u8]>,
+        reply_limit: Duration,
+    ) -> Result<Self> {
+        command.args(["session", "hold", "--profile-id", profile]);
+        if password.is_some() {
+            command.args(["--password-stdin", "--persist-receipt"]);
+        }
         command
-            .args(["session", "hold", "--profile-id", profile])
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
@@ -123,10 +220,28 @@ impl Person {
                     .with_reason("person_hold_spawn")
                     .caused_by(error)
             })?;
-        let stdin = child
+        let mut stdin = child
             .stdin
             .take()
             .ok_or_else(|| failed("person_hold_stdin_missing"))?;
+        if let Some(password) = password {
+            // The hold reads one length-prefixed frame and wipes it; the window's copy is the caller's.
+            let length = u32::try_from(password.len())
+                .ok()
+                .filter(|length| (1..=4096).contains(length))
+                .ok_or_else(|| failed("person_password_length"))?;
+            let mut frame = zeroize::Zeroizing::new(Vec::with_capacity(4 + password.len()));
+            frame.extend_from_slice(&length.to_be_bytes());
+            frame.extend_from_slice(password);
+            stdin
+                .write_all(&frame)
+                .and_then(|()| stdin.flush())
+                .map_err(|error| {
+                    ApplicationError::new(ErrorCode::WriteFailed, Operation::Cli)
+                        .with_reason("person_password_write")
+                        .caused_by(error)
+                })?;
+        }
         let stdout = child
             .stdout
             .take()
@@ -200,25 +315,6 @@ impl Person {
             identity: Value::Null,
         };
         person.identity = person.read()?;
-        if person.identity["kind"] == "session_refused" {
-            return Err(person.refused("person_hold_refused", &person.identity.clone()));
-        }
-        if !person
-            .identity
-            .as_object()
-            .is_some_and(|object| object.len() == 5)
-            || person.identity["kind"] != "session_held"
-            || person.identity["profile_id"] != profile
-            || ["session_id", "runtime_boot_id", "connection_id"]
-                .iter()
-                .any(|key| {
-                    !person.identity[key]
-                        .as_str()
-                        .is_some_and(crate::shell::agent_access::wire::is_uuid)
-                })
-        {
-            return Err(failed("person_hold_identity_shape"));
-        }
         Ok(person)
     }
 
@@ -614,6 +710,89 @@ mod language_tests {
             let mut invalid = reply.clone();
             invalid[key] = value;
             assert!(!presented_reply(&identity, &request, &invalid), "{key}");
+        }
+    }
+}
+
+#[cfg(all(test, windows))]
+mod sign_in_tests {
+    use super::*;
+    use crate::agent::runner::tests::powershell;
+
+    const PROFILE: &str = "12345678-1234-4234-8234-123456789abc";
+    const PASSWORD: &str = "window-password-1";
+
+    /// A fake hold that reads the password frame, refuses unless it is `PASSWORD`,
+    /// answers `line` and then waits for its input to close.
+    fn holding(line: &Value) -> Command {
+        powershell(&format!(
+            "& {{ $in = [Console]::OpenStandardInput(); \
+             $h = New-Object byte[] 4; $n = 0; while ($n -lt 4) {{ $n += $in.Read($h, $n, 4 - $n) }}; \
+             [Array]::Reverse($h); $len = [BitConverter]::ToInt32($h, 0); \
+             $p = New-Object byte[] $len; $n = 0; while ($n -lt $len) {{ $n += $in.Read($p, $n, $len - $n) }}; \
+             if ([Text.Encoding]::UTF8.GetString($p) -ne '{PASSWORD}') {{ exit 8 }}; \
+             [Console]::Out.WriteLine('{line}'); [Console]::Out.Flush(); \
+             $in.ReadByte() | Out-Null }}"
+        ))
+    }
+
+    fn held(persisted: Value) -> Value {
+        json!({
+            "kind": "session_held",
+            "profile_id": PROFILE,
+            "session_id": request_id().unwrap(),
+            "runtime_boot_id": request_id().unwrap(),
+            "connection_id": request_id().unwrap(),
+            "session_persisted": persisted,
+        })
+    }
+
+    fn refused(failure: SignInFailure) -> crate::shell::sign_in::wire::Refusal {
+        match failure {
+            SignInFailure::Refused(refusal) => refusal,
+            SignInFailure::Failed(error) => panic!("expected a refusal, got {error:?}"),
+        }
+    }
+
+    #[test]
+    fn a_window_sign_in_sends_the_password_frame_and_holds_the_signed_in_session() {
+        let person =
+            Person::sign_in(holding(&held(json!(true))), PROFILE, PASSWORD.as_bytes()).unwrap();
+        assert!(person.session_persisted());
+        assert_eq!(person.identity["profile_id"], PROFILE);
+        let unpersisted =
+            Person::sign_in(holding(&held(json!(false))), PROFILE, PASSWORD.as_bytes()).unwrap();
+        assert!(!unpersisted.session_persisted());
+    }
+
+    #[test]
+    fn a_refused_password_comes_back_as_the_refusal_the_command_line_shows() {
+        let throttled = json!({"kind":"sign_in_refused","code":"authentication_required","sign_in_reason":"throttled","seconds":30});
+        let refusal = refused(
+            Person::sign_in(holding(&throttled), PROFILE, PASSWORD.as_bytes())
+                .err()
+                .unwrap(),
+        );
+        assert_eq!(refusal.code, "THROTTLED");
+        assert_eq!(refusal.retry_after_seconds, Some(30));
+        let rejected = json!({"kind":"sign_in_refused","code":"credential_rejected","sign_in_reason":"credential_rejected","seconds":null});
+        let refusal = refused(
+            Person::sign_in(holding(&rejected), PROFILE, PASSWORD.as_bytes())
+                .err()
+                .unwrap(),
+        );
+        assert_eq!(refusal.code, "CREDENTIAL_REJECTED");
+        assert_eq!(refusal.retry_after_seconds, None);
+    }
+
+    #[test]
+    fn a_held_line_that_does_not_say_whether_the_sign_in_was_kept_is_refused() {
+        let mut line = held(json!(true));
+        line.as_object_mut().unwrap().remove("session_persisted");
+        line["extra"] = json!(true);
+        match Person::sign_in(holding(&line), PROFILE, PASSWORD.as_bytes()) {
+            Err(SignInFailure::Failed(error)) => assert_eq!(error.code, ErrorCode::ReadFailed),
+            _ => panic!("a held line without the persisted flag must not hold the person"),
         }
     }
 }

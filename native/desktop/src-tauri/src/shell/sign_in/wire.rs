@@ -178,62 +178,75 @@ pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
             })?;
             let context = error.context.unwrap_or_default();
             let code = context.get("reason").cloned().unwrap_or(error.code);
-            // Only a code crosses IPC; translated error messages and arbitrary
-            // CLI context never reach shell logs or the documentation bridge.
-            if code.is_empty()
-                || code.len() > 160
-                || !code.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+            // A registration refused for its password names a reason. One
+            // refused because the label is taken names none: its context
+            // is that label and nothing else.
+            let code = if code == "REFUSED_PROFILE_REGISTRATION"
+                && context.len() == 1
+                && context.contains_key("profile")
             {
-                return Err(failure(ErrorCode::ReadFailed).with_reason("helper_refusal_code_shape"));
-            }
-            // The runtime uses lower-case public reasons. Throttling carries
-            // authentication_required plus the typed sign-in provenance; do
-            // not infer it from an arbitrary message or a seconds field alone.
-            let code = match code.as_str() {
-                "credential_rejected" => "CREDENTIAL_REJECTED".into(),
-                "REFUSED_PROFILE_LOGIN_THROTTLED" => "THROTTLED".into(),
-                // A registration refused for its password names a reason. One
-                // refused because the label is taken names none: its context
-                // is that label and nothing else.
-                "REFUSED_PROFILE_REGISTRATION"
-                    if context.len() == 1 && context.contains_key("profile") =>
-                {
-                    "profile_already_exists".into()
-                }
-                "authentication_required"
-                    if context.get("sign_in_reason").map(String::as_str) == Some("throttled") =>
-                {
-                    "THROTTLED".into()
-                }
-                _ => code,
-            };
-            let retry_after_seconds = if code == "THROTTLED" {
-                Some(
-                    context
-                        .get("seconds")
-                        .ok_or_else(|| {
-                            failure(ErrorCode::ReadFailed)
-                                .with_reason("helper_throttle_seconds_missing")
-                        })?
-                        .parse()
-                        .map_err(|error| {
-                            failure(ErrorCode::ReadFailed)
-                                .with_reason("helper_throttle_seconds_parse")
-                                .caused_by(error)
-                        })?,
-                )
+                "profile_already_exists".to_owned()
             } else {
-                None
+                code
             };
+            let seconds = context
+                .get("seconds")
+                .map(|seconds| {
+                    seconds.parse().map_err(|error| {
+                        failure(ErrorCode::ReadFailed)
+                            .with_reason("helper_throttle_seconds_parse")
+                            .caused_by(error)
+                    })
+                })
+                .transpose()?;
             Ok(Outcome::Refused {
-                refusal: Refusal {
-                    code,
-                    retry_after_seconds,
-                },
+                refusal: sign_in_refusal(
+                    &code,
+                    context.get("sign_in_reason").map(String::as_str),
+                    seconds,
+                )?,
             })
         }
         _ => Err(failure(ErrorCode::ReadFailed).with_reason("helper_status_unexpected")),
     }
+}
+
+/// The refusal the window shows for a sign-in the runtime refused, from the
+/// runtime's reason, its typed sign-in reason and any retry wait. The command
+/// line's answer and a person hold's refusal line both come through here.
+pub(crate) fn sign_in_refusal(
+    code: &str,
+    sign_in_reason: Option<&str>,
+    seconds: Option<u64>,
+) -> Result<Refusal> {
+    // Only a code crosses IPC; translated error messages and arbitrary
+    // CLI context never reach shell logs or the documentation bridge.
+    if code.is_empty()
+        || code.len() > 160
+        || !code.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+    {
+        return Err(failure(ErrorCode::ReadFailed).with_reason("helper_refusal_code_shape"));
+    }
+    // The runtime uses lower-case public reasons. Throttling carries
+    // authentication_required plus the typed sign-in provenance; do
+    // not infer it from an arbitrary message or a seconds field alone.
+    let code = match code {
+        "credential_rejected" => "CREDENTIAL_REJECTED",
+        "REFUSED_PROFILE_LOGIN_THROTTLED" => "THROTTLED",
+        "authentication_required" if sign_in_reason == Some("throttled") => "THROTTLED",
+        _ => code,
+    };
+    let retry_after_seconds = if code == "THROTTLED" {
+        Some(seconds.ok_or_else(|| {
+            failure(ErrorCode::ReadFailed).with_reason("helper_throttle_seconds_missing")
+        })?)
+    } else {
+        None
+    };
+    Ok(Refusal {
+        code: code.to_owned(),
+        retry_after_seconds,
+    })
 }
 
 fn error_envelope(bytes: &[u8]) -> Result<Envelope> {

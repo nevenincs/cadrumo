@@ -129,6 +129,9 @@ pub struct SignIn {
     // The one person session this window holds; each consumer keeps it alive
     // only while it uses it.
     person: std::sync::Mutex<std::sync::Weak<std::sync::Mutex<crate::agent::person::Person>>>,
+    // The session the window's own sign-in opened, kept until a consumer's
+    // hold replaces it or the person signs out, so no second hold resumes it.
+    signed_in: std::sync::Mutex<Option<crate::agent::person::HeldPerson>>,
     // What every person session of this window was pushed, whichever is held.
     person_events: crate::agent::person::PersonEvents,
 }
@@ -144,6 +147,7 @@ impl SignIn {
             children: Children::new(launch.diagnostics.clone()),
             observation: observation::Observer::default(),
             person: std::sync::Mutex::new(std::sync::Weak::new()),
+            signed_in: std::sync::Mutex::new(None),
             person_events: tokio::sync::broadcast::channel(16).0,
         }
     }
@@ -164,7 +168,60 @@ impl SignIn {
         person.observe_events(self.person_events.clone())?;
         let held = Arc::new(std::sync::Mutex::new(person));
         *cached = Arc::downgrade(&held);
+        *self.signed_in.lock().unwrap_or_else(|e| e.into_inner()) = None;
         Ok(held)
+    }
+
+    /// Signs the selected profile in through a hold that keeps the sign-in for
+    /// the TUI and the command line, and keeps that hold as the window's person
+    /// session. Another named profile still signs in through the command line,
+    /// which selects it.
+    fn sign_in(&self, label: Option<&str>, password: Zeroizing<Vec<u8>>) -> Result<SignInResult> {
+        let selected = self.watch.latest().ok().and_then(|observed| {
+            observed
+                .status
+                .active_profile
+                .zip(observed.profile_id)
+                .filter(|(active, _)| label.is_none_or(|label| label == active))
+        });
+        let Some((active, profile_id)) = selected.filter(|_| password.len() <= 4096) else {
+            return wire::login(self.run(&LOGIN, label, Some(encoded_bytes(&password, false)?))?);
+        };
+        let _mutation = self.watch.mutation();
+        let mut person = match crate::agent::person::Person::sign_in(
+            self.runtime()?.command(),
+            &profile_id,
+            &password,
+        ) {
+            Ok(person) => person,
+            Err(crate::agent::person::SignInFailure::Refused(refusal)) => {
+                return Ok(SignInResult::Refused { refusal });
+            }
+            Err(crate::agent::person::SignInFailure::Failed(error)) => return Err(error),
+        };
+        if !person.session_persisted() {
+            // As the command line answers it: a sign-in no other frontend can resume is refused, and
+            // dropping the hold here ends its session.
+            return Ok(SignInResult::Refused {
+                refusal: wire::Refusal {
+                    code: "session_not_persisted".into(),
+                    retry_after_seconds: None,
+                },
+            });
+        }
+        person.observe_events(self.person_events.clone())?;
+        let held = Arc::new(std::sync::Mutex::new(person));
+        *self.person.lock().unwrap_or_else(|e| e.into_inner()) = Arc::downgrade(&held);
+        *self.signed_in.lock().unwrap_or_else(|e| e.into_inner()) = Some(held);
+        Ok(SignInResult::SignedIn {
+            status: SignInStatus {
+                supported: true,
+                state: Presence::Present,
+                active_profile: Some(active),
+                runtime_available: true,
+                refusal: None,
+            },
+        })
     }
 
     /// Every later push to whichever person session this window holds.
@@ -435,9 +492,9 @@ pub async fn sign_in_submit(
     // Named, the profile is the one signed in to; unnamed, the product's
     // selected one is.
     let profile = label(request.headers())?;
-    let secret = secret(request.body())?;
+    let password = password(request.body())?;
     let state = state.inner().clone();
-    super::blocking(move || wire::login(state.run(&LOGIN, profile.as_deref(), Some(secret))?)).await
+    super::blocking(move || state.sign_in(profile.as_deref(), password)).await
 }
 
 /// The profiles on this computer, by label. It needs no password, session or
@@ -479,7 +536,11 @@ pub async fn sign_out(
         return Err(failure(ErrorCode::UnsupportedPlatform).into());
     }
     let state = state.inner().clone();
-    let outcome = super::blocking(move || state.run(&LOGOUT, None, None)).await?;
+    let outcome = super::blocking(move || {
+        *state.signed_in.lock().unwrap_or_else(|e| e.into_inner()) = None;
+        state.run(&LOGOUT, None, None)
+    })
+    .await?;
     wire::logout(outcome)
 }
 
@@ -524,6 +585,19 @@ fn label(headers: &HeaderMap) -> Result<Option<String>> {
     Ok(Some(label))
 }
 
+/// The password a sign-in carries, as the person typed it, for a person hold's frame.
+fn password(body: &InvokeBody) -> Result<Zeroizing<Vec<u8>>> {
+    let InvokeBody::Raw(bytes) = body else {
+        return Err(failure(ErrorCode::InvalidArguments));
+    };
+    if bytes.len() > 8192 || std::str::from_utf8(bytes).is_err() {
+        return Err(failure(ErrorCode::InvalidArguments));
+    }
+    Ok(Zeroizing::new(bytes.clone()))
+}
+
+/// The command line's sign-in secret for a body, as the tests drive it.
+#[cfg(test)]
 fn secret(body: &InvokeBody) -> Result<Zeroizing<Vec<u8>>> {
     encoded(body, false)
 }
@@ -538,6 +612,10 @@ fn encoded(body: &InvokeBody, confirmed: bool) -> Result<Zeroizing<Vec<u8>>> {
     let InvokeBody::Raw(bytes) = body else {
         return Err(failure(ErrorCode::InvalidArguments));
     };
+    encoded_bytes(bytes, confirmed)
+}
+
+fn encoded_bytes(bytes: &[u8], confirmed: bool) -> Result<Zeroizing<Vec<u8>>> {
     if bytes.len() > 8192 {
         return Err(failure(ErrorCode::InvalidArguments));
     }

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:7fb744d4a5b7cd0d20890d0cf4020402213f5104160cba55bc404f69eb1c0b5c'
+body_hash: 'sha256:f596b3475f90054b5daffb2b01fdc9816e1f4860ea5ff3206f7abd07a94a4ebb'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -92,7 +92,7 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
   - A second GUI launch hands its activation to the open window and exits 0.
   - A newer version launched while an older window is open hands activation to that window, and the user finishes the switch by closing the old window.
   - The headless CLI passthrough is exempt.
-- The shell hosts the application sign-in view of `2026-10-04-application-sign-in-adr`. It submits only through its dedicated host command to the canonical CLI login, and holds no session, receipt or credential. The runtime's profile worker still launches the Cl@ve browser, and approval prompts still belong to the TUI.
+- The shell hosts the application sign-in view of `2026-10-04-application-sign-in-adr`. It submits only through its dedicated host command, which signs the selected profile in through the window's person hold child and another profile through the canonical CLI login; the shell process holds no session, receipt or credential. The runtime's profile worker still launches the Cl@ve browser, and approval prompts still belong to the TUI.
 - The shell never caches, forwards or persists session, lease, receipt or credential material between TUI processes. Restarting a session starts a new process that goes through admission again.
 - No shell or host copy says that work completes after a terminal closes or the window closes.
 - The host adds no storage-root, log-directory or other Settings variable to its child processes beyond the pinned set `2026-10-04-canonical-environment-adr` declares. The host, every terminal kind and the CLI passthrough resolve the same root whatever their working directory, and a regression test in a relocated packaged layout proves it (desktop-shell plan S02).
@@ -364,3 +364,5 @@ Accepted by the user on 2026-10-22. A link `cadrumo://profiles/{id}/{page}` in a
 No link is silent. A malformed link, a link for another profile, a signed-out window, a TUI that did not start or received nothing, and a refused request each show a toast; a link for another profile leaves the layout untouched. `cadrumo:` links never reach `open-external`. The modal AEAT setup terminal, its terminal target and its terminal kind are retired; AEAT setup opens the workspace's profile page, and the agent's check-again affordance follows a successful presentation.
 
 Evidence: `native/desktop/frontend/src/components/agent/cadrumoLink.ts`, `native/desktop/frontend/src/App.tsx`, `native/desktop/src-tauri/src/shell/presentation.rs`, `native/desktop/src-tauri/src/agent/person.rs` (`presented_reply`), `native/desktop/src-tauri/src/shell/window_controls.rs`, and `native/desktop/frontend/tests/scenarios/agent-page-links.spec.ts`.
+
+Amended 2026-10-22 under `2026-10-04-application-sign-in-adr` as amended that day: the sign-in host command signs the selected profile in through the window's person hold child instead of the canonical CLI login, which remains for a sign-in naming another profile.
