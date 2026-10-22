@@ -36,7 +36,7 @@ from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.iva.schema import IvaCategory
 from .catalogue_lifecycle_ports import CatalogueLifecyclePorts
-from .catalogue_selection import InvoiceLookupRefusalReason, InvoiceLookupRefusedError
+from .catalogue_selection import select_catalogue_invoice_id
 
 
 class CatalogueInvoiceRemoveResult(BaseModel):
@@ -63,22 +63,7 @@ def resolve_catalogue_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> I
     Returns:
         The resolved :class:`Invoice`.
     """
-    trimmed = invoice_id.strip()
-    if not trimmed:
-        raise InvoiceLookupRefusedError(reason=InvoiceLookupRefusalReason.REQUIRED, invoice_id=trimmed)
-    exact = catalogue.get(trimmed)
-    if exact is not None:
-        return exact
-    matches = tuple(invoice for invoice in catalogue.values() if invoice.invoice_id.startswith(trimmed))
-    if not matches:
-        raise InvoiceLookupRefusedError(reason=InvoiceLookupRefusalReason.NOT_FOUND, invoice_id=trimmed)
-    if len(matches) > 1:
-        raise InvoiceLookupRefusedError(
-            reason=InvoiceLookupRefusalReason.AMBIGUOUS,
-            invoice_id=trimmed,
-            candidate_ids=tuple(invoice.invoice_id for invoice in matches),
-        )
-    return next(iter(matches))
+    return catalogue.invoices[select_catalogue_invoice_id(catalogue.invoices.keys(), invoice_id)]
 
 
 def remove_catalogue_invoice(

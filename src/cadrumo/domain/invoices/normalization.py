@@ -336,7 +336,7 @@ def derive_invoice_id_when_complete(
     # art. 6.1.d mandatory cases): omitting the key entirely is now a legal
     # way to state "no tax id", not an incomplete payload, so it defaults here
     # before the completeness check rather than short-circuiting derivation.
-    payload.setdefault("counterparty_tax_id", None)
+    default_absent_counterparty_tax_id(payload)
     if not _INVOICE_ID_REQUIRED_FIELDS.issubset(payload):
         return payload
     kind, invoice_number, issued_at, counterparty_tax_id, currency, grand_total = _validated_invoice_identity_values(
@@ -354,6 +354,12 @@ def derive_invoice_id_when_complete(
     if existing is not None and str(existing).strip().lower() != derived:
         raise InvoiceValidationError("invoice_id must match the stable hash derived from identity fields")
     payload["invoice_id"] = derived
+    return payload
+
+
+def default_absent_counterparty_tax_id(payload: dict[str, object]) -> dict[str, object]:
+    """Declare an omitted counterparty tax id absent, exactly as identity derivation does."""
+    payload.setdefault("counterparty_tax_id", None)
     return payload
 
 

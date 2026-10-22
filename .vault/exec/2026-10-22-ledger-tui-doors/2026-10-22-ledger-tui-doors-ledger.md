@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:654bfa990471516da2752df145faa1790db73fccc07c433ec4167df20abb7bf8'
+body_hash: 'sha256:5dec0b6dfba603138f4e1748a1afb1feeea37bd72fb5dd7c876535bc557994a0'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -267,6 +267,23 @@ related:
 - `S08` `M` `src/cadrumo/locales/hu/errors.yml`
 - `S08` `verify:` `ledger.status with 1P refuses with a registered typed refusal before reading; dated periods unchanged (parity tests and error registry tests, 66)` -> `pass`
 - `S08` `by:` `status-fix`
+- `S18` `M` `src/cadrumo/domain/invoices/models.py`
+- `S18` `M` `src/cadrumo/domain/invoices/normalization.py`
+- `S18` `M` `src/cadrumo/adapters/persistence/profile/invoices.py`
+- `S18` `M` `src/cadrumo/adapters/persistence/profile/catalogue_reads.py`
+- `S18` `M` `src/cadrumo/application/invoices/catalogue_read_operation.py`
+- `S18` `M` `src/cadrumo/application/invoices/inspection_read_ports.py`
+- `S18` `M` `src/cadrumo/application/invoices/catalogue_selection.py`
+- `S18` `M` `src/cadrumo/application/invoices/catalogue_lifecycle.py`
+- `S18` `M` `src/cadrumo/domain/invoices/tests/test_catalogue_validation_pass.py`
+- `S18` `A` `src/cadrumo/domain/invoices/tests/invoice_catalogue_seed.py`
+- `S18` `A` `src/cadrumo/domain/invoices/tests/test_authenticated_stored_read.py`
+- `S18` `A` `src/cadrumo/adapters/persistence/profile/tests/test_invoices_authenticated_read.py`
+- `S18` `verify:` `invoice.view CPU mean 2.56s to 0.19s (5 samples, two runs); invoice.list unchanged by design` -> `pass`
+- `S18` `verify:` `trusted read equals full validation over five seeds; kept refusals fire on trusted reads; write, intake and plain validation still refuse a stale id; mutation-checked` -> `pass`
+- `S18` `verify:` `invoice, profile, ledger, aggregation and runtime invoice suites (5813)` -> `pass`
+- `S18` `verify:` `ruff, lint-imports, ty on S18 files` -> `pass`
+- `S18` `by:` `S18`
 
 ## Notes
 
@@ -287,3 +304,4 @@ related:
 - `S16` invoice.view decoding only the selected invoice is covered by the authenticated-stored-read decision recorded next.
 - `S15` Status and check remain one whole-catalogue load each by design. Pre-existing: ledger.status with an instalment period (1P) fails with PeriodError in the money totals; pinned by a test, not fixed.
 - `S08` Pre-existing crash found by P04.S15: the money totals called Period.contains on a period with no date span. The overview pipeline now also gets the typed refusal for such a period; whether an instalment-period overview should show ledger totals is an open question.
+- `S18` Secure records report the current schema version, not the stored one; safe while older rows are refused outright, but a future row upgrader must expose the stored version to the trusted path.

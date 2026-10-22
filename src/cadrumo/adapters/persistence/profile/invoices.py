@@ -22,13 +22,16 @@ and the :class:`~domain.invoices.errors.InvoicePersistenceError` boundary error.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Mapping
 from typing import TYPE_CHECKING
 
+from pydantic import BaseModel, Field
+
 from ....core.logging import get_logger
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ....domain.invoices.errors import InvoicePersistenceError
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.models import InvoiceCatalogue, StoredInvoiceCatalogue, decode_authenticated_invoice_catalogue
 from ..storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
@@ -52,6 +55,18 @@ def _resolve_invoice_bucket_id(bucket_id: str | None) -> str:
     from ....core.bucket_pointer import resolve_repository_bucket_id
 
     return resolve_repository_bucket_id(bucket_id, error_type=InvoicePersistenceError)
+
+
+class _AuthenticatedInvoiceRecords(BaseModel):
+    """The stored catalogue document, each invoice kept as its decoded JSON object.
+
+    Read only through the namespace's own enveloped kernel, so it inherits
+    every check that kernel applies before handing a document back.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    invoices: Mapping[str, Mapping[str, object]] = Field(default_factory=dict)
 
 
 class InvoiceCatalogueRepository:
@@ -95,6 +110,12 @@ class InvoiceCatalogueRepository:
             definition=INVOICE_CATALOGUE_NAMESPACE,
             model_type=InvoiceCatalogue,
             empty_document=InvoiceCatalogue,
+        )
+        self._authenticated_records = ProfileEnvelopedModelSecurePersistence(
+            objects=self._objects,
+            definition=INVOICE_CATALOGUE_NAMESPACE,
+            model_type=_AuthenticatedInvoiceRecords,
+            empty_document=_AuthenticatedInvoiceRecords,
         )
 
     @property
@@ -142,15 +163,18 @@ class InvoiceCatalogueRepository:
             InvoicePersistenceError: An invoice names a bucket other than the
                 one this repository is bound to.
         """
+        self._refuse_foreign_buckets(
+            (invoice.bucket_id for invoice in catalogue.invoices.values()),
+            direction=direction,
+        )
+
+    def _refuse_foreign_buckets(self, bucket_ids: Iterable[str | None], *, direction: str) -> None:
+        """Refuse any populated bucket id other than the one this repository is bound to."""
         bound = self._bucket_id
         if bound is None:
             return
         foreign = sorted(
-            {
-                str(invoice.bucket_id)
-                for invoice in catalogue.invoices.values()
-                if invoice.bucket_id is not None and str(invoice.bucket_id) != bound
-            },
+            {str(bucket_id) for bucket_id in bucket_ids if bucket_id is not None and str(bucket_id) != bound},
         )
         if foreign:
             raise InvoicePersistenceError(
@@ -176,6 +200,38 @@ class InvoiceCatalogueRepository:
         """
         catalogue = self._storage.load()
         self._assert_catalogue_bucket(catalogue, direction="read from")
+        return catalogue
+
+    def load_authenticated(self) -> StoredInvoiceCatalogue:
+        """Return the stored invoices for a read that validates only what it returns.
+
+        The read-only inspection path. Invariants that make it sound, each
+        established inside this one call before any invoice is trusted:
+
+        - the secure store decrypts the row and its AEAD tag binds the payload
+          to this namespace, object key and schema version, so the bytes are
+          the ones this profile wrote;
+        - the store refuses a row whose schema version is above or below the
+          namespace's current one, and the enveloped kernel refuses an inner
+          envelope stamp or classification that differs from it, so the
+          catalogue was written under the current schema;
+        - the bucket-ownership guard runs over every stored record, returned
+          or not.
+
+        Only then does :func:`decode_authenticated_invoice_catalogue` wrap the
+        records; each invoice is validated in full as it is read, except for
+        re-deriving its stored id. The write paths -- :meth:`load`,
+        :meth:`load_revisioned`, :meth:`mutate` and everything composed from
+        them -- never come here: they read through full validation, and the
+        returned view cannot be saved.
+
+        Raises:
+            InvoicePersistenceError: A stored invoice is attributed to another
+                bucket.
+        """
+        records = self._authenticated_records.load()
+        catalogue = decode_authenticated_invoice_catalogue(records.invoices)
+        self._refuse_foreign_buckets(catalogue.attributed_bucket_ids(), direction="read from")
         return catalogue
 
     def save(self, catalogue: InvoiceCatalogue) -> None:

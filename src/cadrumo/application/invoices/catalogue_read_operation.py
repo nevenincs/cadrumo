@@ -1,6 +1,10 @@
 """Recorded invoice inspection under exact-profile, whole-period authority.
 
-Core types: :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+Both reads open the authenticated stored catalogue and validate only the
+invoices they return: the list each invoice it lists, the view the one invoice
+it selects. Selection itself reads stored ids alone.
+
+Core types: :class:`~cadrumo.domain.invoices.models.StoredInvoiceCatalogue`.
 """
 
 from __future__ import annotations
@@ -28,7 +32,7 @@ from ...core.operations import (
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.invoices.models import Invoice, InvoiceCatalogue
+from ...domain.invoices.models import StoredInvoiceCatalogue
 from ...domain.iva.schema import InvoiceKind
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -48,9 +52,8 @@ from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .catalogue_lifecycle import resolve_catalogue_invoice
 from .catalogue_read_projection import CatalogueInvoiceSnapshot
-from .catalogue_selection import InvoiceLookupRefusalReason, InvoiceLookupRefusedError
+from .catalogue_selection import InvoiceLookupRefusalReason, InvoiceLookupRefusedError, select_catalogue_invoice_id
 from .inspection_read_ports import InvoiceInspectionReadPortsFactory
 
 INVOICE_LIST_OPERATION_DEFINITION_ID = "ledger.invoice.list"
@@ -235,8 +238,8 @@ class InvoiceCatalogueReadExecutor:
         if ports.bucket_id != profile or ports.invoices.bucket_id != profile:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         with validating_governed_facts(operation):
-            catalogue = ports.invoices.load()
-            if any(row.bucket_id is not None and row.bucket_id != profile for row in catalogue.values()):
+            catalogue = ports.invoices.load_authenticated()
+            if any(bucket_id != profile for bucket_id in catalogue.attributed_bucket_ids()):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             if isinstance(payload, InvoiceListRequest):
                 return _capture_invoice_list(payload, catalogue)
@@ -268,25 +271,21 @@ class InvoiceCatalogueReadExecutor:
         return await await_cancellation_complete(capture(), task_name="invoice-catalogue-read")
 
 
-def _capture_invoice_list(payload: InvoiceListRequest, catalogue: InvoiceCatalogue) -> InvoiceListResult:
+def _capture_invoice_list(payload: InvoiceListRequest, catalogue: StoredInvoiceCatalogue) -> InvoiceListResult:
     return InvoiceListResult(
         profile_id=payload.profile_id,
         kind=payload.kind,
-        invoices=tuple(
-            CatalogueInvoiceSnapshot.from_invoice(row)
-            for row in catalogue.values()
-            if payload.kind is None or row.kind is payload.kind
-        ),
+        invoices=tuple(CatalogueInvoiceSnapshot.from_invoice(row) for row in catalogue.values(kind=payload.kind)),
     )
 
 
-def _capture_invoice_view(payload: InvoiceViewRequest, catalogue: InvoiceCatalogue) -> InvoiceViewResult:
+def _capture_invoice_view(payload: InvoiceViewRequest, catalogue: StoredInvoiceCatalogue) -> InvoiceViewResult:
     try:
-        invoice: Invoice = resolve_catalogue_invoice(catalogue, payload.invoice_id)
+        invoice_id = select_catalogue_invoice_id(catalogue.invoice_ids(), payload.invoice_id)
     except InvoiceLookupRefusedError as exc:
         outcome: InvoiceViewOutcome = InvoiceViewRefusal(reason=exc.reason, candidate_ids=exc.candidate_ids)
     else:
-        outcome = InvoiceViewSuccess(invoice=CatalogueInvoiceSnapshot.from_invoice(invoice))
+        outcome = InvoiceViewSuccess(invoice=CatalogueInvoiceSnapshot.from_invoice(catalogue.require(invoice_id)))
     return InvoiceViewResult(profile_id=payload.profile_id, invoice_id=payload.invoice_id, outcome=outcome)
 
 

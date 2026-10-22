@@ -18,7 +18,7 @@ from ....application.invoices.catalogue_reads_ports import (
     TransactionCatalogueReader,
 )
 from ....domain.invoices.errors import InvoicePersistenceError
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.models import InvoiceCatalogue, StoredInvoiceCatalogue
 from ....domain.transactions.errors import TransactionPersistenceError
 from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from ..storage.errors import StorageError
@@ -45,6 +45,13 @@ class InvoiceCatalogueReadAdapter(InvoiceCatalogueReader):
         """Load the catalogue while hiding persistence implementation errors."""
         try:
             return self._repository.load()
+        except (InvoicePersistenceError, StorageError, OSError) as exc:
+            raise InvoiceCatalogueReadPersistenceError("invoice_catalogue_load") from exc
+
+    def load_authenticated(self) -> StoredInvoiceCatalogue:
+        """Load the authenticated stored invoices while hiding persistence implementation errors."""
+        try:
+            return self._repository.load_authenticated()
         except (InvoicePersistenceError, StorageError, OSError) as exc:
             raise InvoiceCatalogueReadPersistenceError("invoice_catalogue_load") from exc
 

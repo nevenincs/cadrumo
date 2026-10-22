@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.invoices.models import StoredInvoiceCatalogue
 from .catalogue_reads_ports import InvoiceCatalogueReader
 
 
@@ -15,6 +16,10 @@ class BoundInvoiceCatalogueReader(InvoiceCatalogueReader, Protocol):
     @property
     def bucket_id(self) -> str | None:
         """Return the storage profile to validate before opening private records."""
+        ...
+
+    def load_authenticated(self) -> StoredInvoiceCatalogue:
+        """Return the authenticated stored invoices, each validated only when read."""
         ...
 
 
