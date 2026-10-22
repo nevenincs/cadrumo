@@ -7,13 +7,13 @@ from dataclasses import is_dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from types import UnionType
-from typing import Union, cast, get_args, get_origin, get_type_hints
+from typing import Union, cast, get_args, get_origin
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
 from . import public_mirror as _mirror
-from ._dataclass_fields import dataclass_type_fields
+from ._dataclass_fields import dataclass_type_fields, dataclass_type_hints
 
 type _MirrorCompletion = Callable[[type[object], dict[str, object], BaseModel], None]
 
@@ -94,7 +94,7 @@ def _canonical_field_annotations(
         return target_fields, target_annotations
     if is_dataclass(canonical_type):
         target_fields = {field.name: field for field in dataclass_type_fields(canonical_type)}
-        return target_fields, get_type_hints(canonical_type)
+        return target_fields, dataclass_type_hints(canonical_type)
     raise TypeError("public-mirror canonical model changed")
 
 

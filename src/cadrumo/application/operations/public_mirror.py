@@ -21,13 +21,14 @@ from collections.abc import Callable, Mapping
 from dataclasses import is_dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
+from functools import cache
 from types import GenericAlias, UnionType
-from typing import Annotated, Literal, Self, TypeAliasType, Union, get_args, get_origin, get_type_hints
+from typing import Annotated, Literal, Self, TypeAliasType, Union, get_args, get_origin
 
 from pydantic import BaseModel, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ._dataclass_fields import dataclass_type_fields
+from ._dataclass_fields import dataclass_type_fields, dataclass_type_hints
 
 
 class PublicFactEntryV1(BaseModel):
@@ -120,6 +121,22 @@ def _validate_scalar_text(kind: str, text: str, subject: str) -> None:
 
 def bare_annotation(annotation: object) -> object:
     """Strip aliases, ``Annotated`` metadata and an optional ``None`` arm from one annotation."""
+    # A mirror strips the same few model annotations tens of thousands of times
+    # per document. Equal annotations share one entry; one whose metadata
+    # cannot be hashed is stripped every time.
+    try:
+        hash(annotation)
+    except TypeError:
+        return _bare_annotation(annotation)
+    return _cached_bare_annotation(annotation)
+
+
+@cache
+def _cached_bare_annotation(annotation: object) -> object:
+    return _bare_annotation(annotation)
+
+
+def _bare_annotation(annotation: object) -> object:
     if isinstance(annotation, TypeAliasType):
         return bare_annotation(annotation.__value__)
     origin = get_origin(annotation)
@@ -164,7 +181,7 @@ def _inspect_dataclass_fields(
     discovered: set[tuple[type[BaseModel], str]],
     visited: set[type[BaseModel]],
 ) -> None:
-    hints = get_type_hints(annotation)
+    hints = dataclass_type_hints(annotation)
     for field in dataclass_type_fields(annotation):
         _inspect_canonical_annotation(
             hints[field.name],

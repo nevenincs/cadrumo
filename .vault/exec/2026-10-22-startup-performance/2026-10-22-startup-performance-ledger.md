@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:402ad9ccdf509e2f57cf3241cb3cfcf9da8977b359837ddaec9ea17dafee161f'
+body_hash: 'sha256:b422e63dd65d63140db267392368c79bff957ec9ee8bd52e25dfc5490a868fd0'
 related:
   - "[[2026-10-22-startup-performance-plan]]"
 ---
@@ -165,6 +165,11 @@ related:
 - `S13` `M` `src/cadrumo/application/modelo/workspace_manifest.py`
 - `S13` `M` `.vault/audit/2026-10-22-startup-performance-request-path-audit.md`
 - `S13` `verify:` `pytest src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/adapters/persistence/profile/tests/test_workspace.py` -> `pass`
+- `S13` `M` `src/cadrumo/application/operations/_dataclass_fields.py`
+- `S13` `M` `src/cadrumo/application/operations/_public_mirror_projection.py`
+- `S13` `M` `src/cadrumo/application/operations/_public_mirror_restoration.py`
+- `S13` `M` `src/cadrumo/application/operations/public_mirror.py`
+- `S13` `verify:` `pytest public-mirror and workbench generation tests (67)` -> `pass`
 
 ## Notes
 

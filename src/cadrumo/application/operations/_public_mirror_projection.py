@@ -7,12 +7,12 @@ from dataclasses import is_dataclass
 from datetime import date
 from decimal import Decimal
 from types import UnionType
-from typing import Union, cast, get_args, get_origin, get_type_hints
+from typing import Union, cast, get_args, get_origin
 
 from pydantic import BaseModel
 
 from . import public_mirror as _mirror
-from ._dataclass_fields import dataclass_instance_fields
+from ._dataclass_fields import dataclass_instance_fields, dataclass_type_hints
 
 
 def _scalar(value: object) -> _mirror.PublicScalarValueV1:
@@ -119,7 +119,7 @@ def _project_model(
         source_annotations = {name: field.annotation for name, field in source_fields.items()}
     else:
         source_fields = {field.name: field for field in dataclass_instance_fields(value)}
-        source_annotations = get_type_hints(type(value))
+        source_annotations = dataclass_type_hints(type(value))
     allowed_missing = omissions.get(target, frozenset())
     if frozenset(set(source_fields) - set(target_fields)) != allowed_missing or set(target_fields) - set(source_fields):
         raise ValueError("public-mirror model field inventory drifted")
