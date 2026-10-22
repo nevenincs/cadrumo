@@ -9,6 +9,8 @@ from __future__ import annotations
 import asyncio
 import base64
 import gzip
+import os
+from collections import Counter
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -23,6 +25,7 @@ if TYPE_CHECKING:
     from _ctypes import _CArgObject
 
 from cadrumo.adapters.persistence.storage.custody import automation_secret_store as windows_secret_store
+from cadrumo.adapters.persistence.storage.custody import filesystem_primitives
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import (
     api_key_verifier,
     canonical_record,
@@ -195,6 +198,34 @@ def test_binding_substitution_refuses(subject: Subject, field: str, value: objec
     )
     with pytest.raises(AutomationCustodyError):
         substitute.unwrap(credential=subject.credential, now=NOW)
+
+
+@pytest.mark.skipif(os.name != "nt", reason="the Windows anchor exists only on Windows")
+def test_an_authority_read_verifies_the_storage_ancestry_twice_per_root_lock(
+    subject: Subject, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The lock and enrollment reads each take one root lock, whatever number of records they anchor.
+
+    Per root lock the ancestry is verified once to create the root and once for
+    the lock that then holds it; every anchor inside stands on that hold.
+    """
+    subject.publish()
+    opened: list[str] = []
+    open_component = filesystem_primitives._open_verified_component
+
+    def counting(current: str, access: int, **kwargs: Any) -> int:
+        opened.append(current)
+        return open_component(current, access, **kwargs)
+
+    monkeypatch.setattr(filesystem_primitives, "_open_verified_component", counting)
+    ancestry = filesystem_primitives.windows_component_paths(subject.store.root)[:-1]
+
+    subject.store.profile_lock_state()
+    subject.store.enrollment_state()
+
+    below_root = [path for path in opened if path.startswith(str(subject.store.root) + os.sep)]
+    assert len(below_root) > 2 * 2
+    assert Counter(path for path in opened if path in ancestry) == dict.fromkeys(ancestry, 2 * 2)
 
 
 def test_incorrect_expired_revoked_and_suspended_authority(subject: Subject) -> None:

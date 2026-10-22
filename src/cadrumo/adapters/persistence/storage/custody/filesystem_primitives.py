@@ -6,7 +6,8 @@ import errno
 import os
 import stat
 import sys
-from collections.abc import Generator
+import threading
+from collections.abc import Callable, Generator
 from contextlib import ExitStack, contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
@@ -87,24 +88,50 @@ def ensure_profile_custody_local_directory(path: Path) -> None:
         raise ProfileCustodyRecordError("local custody directory must name one child")
     if os.name != "nt":
         with posix_directory_fd(path.parent) as parent_fd:
-            try:
-                os.mkdir(path.name, 0o700, dir_fd=parent_fd)
-            except FileExistsError:
-                pass
-            except OSError as exc:
-                raise ProfileCustodyRecordError("local custody directory cannot be created") from exc
+            if not _posix_child_entry_present(parent_fd, path.name):
+                _create_custody_child(lambda: os.mkdir(path.name, 0o700, dir_fd=parent_fd))
             descriptor = posix_open_child_directory(parent_fd, path.name)
             os.close(descriptor)
             return
-    with ExitStack() as anchors:
+    # The child's anchor stands on the parent's held, verified chain rather than opening it again.
+    with shared_directory_anchors(), ExitStack() as anchors:
         anchor_directory(anchors, path.parent, final_access=0x80000000)
-        try:
-            path.mkdir(mode=0o700)
-        except FileExistsError:
-            pass
-        except OSError as exc:
-            raise ProfileCustodyRecordError("local custody directory cannot be created") from exc
+        if not _windows_child_entry_present(path):
+            _create_custody_child(lambda: path.mkdir(mode=0o700))
         anchor_directory(anchors, path, final_access=0x80000000)
+
+
+def _posix_child_entry_present(parent_fd: int, name: str) -> bool:
+    """Return whether any entry, link or not, is named ``name`` below the pinned parent.
+
+    Presence only spares the creation attempt. The anchored open that follows
+    decides whether the entry is a real directory, exactly as it did after a
+    creation that found the name taken.
+    """
+    try:
+        os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+    except OSError:
+        return False
+    return True
+
+
+def _windows_child_entry_present(path: Path) -> bool:
+    """Return whether any entry, reparse point or not, is named by ``path`` below its anchored parent."""
+    try:
+        os.lstat(path)
+    except OSError:
+        return False
+    return True
+
+
+def _create_custody_child(create: Callable[[], None]) -> None:
+    """Create one custody directory; a racing creator that got there first is not a failure."""
+    try:
+        create()
+    except FileExistsError:
+        pass
+    except OSError as exc:
+        raise ProfileCustodyRecordError("local custody directory cannot be created") from exc
 
 
 @cache
@@ -182,10 +209,13 @@ class _HeldComponent:
 
 @dataclass(slots=True)
 class _AnchorSession:
-    """Component handles shared by the anchors of one custody operation."""
+    """Component handles shared by the anchors of one custody operation on its own thread."""
 
+    thread: int
     held: dict[str, list[_HeldComponent]] = field(default_factory=dict)
 
+
+_DELETE: Final = 0x00010000
 
 _ANCHOR_SESSION: ContextVar[_AnchorSession | None] = ContextVar("profile_custody_anchor_session", default=None)
 
@@ -203,11 +233,16 @@ def shared_directory_anchors() -> Generator[None]:
     under an ancestor that was released; a handle closes when its last user
     leaves. The scope holds nothing of its own, so nothing outlives the
     operation. Nested scopes share the outermost session.
+
+    A session belongs to the thread that opened it. Another thread that
+    inherited the context, such as a worker started with a copied context,
+    neither joins it nor alters its counts: that thread opens its own scope or
+    anchors alone.
     """
-    if _ANCHOR_SESSION.get() is not None:
+    if _current_anchor_session() is not None:
         yield
         return
-    session = _AnchorSession()
+    session = _AnchorSession(thread=threading.get_ident())
     token = _ANCHOR_SESSION.set(session)
     try:
         yield
@@ -220,6 +255,14 @@ def shared_directory_anchors() -> Generator[None]:
                 kernel32.CloseHandle(component.handle)
 
 
+def _current_anchor_session() -> _AnchorSession | None:
+    """Return the session this thread opened, never one carried in from another thread's context."""
+    session = _ANCHOR_SESSION.get()
+    if session is None or session.thread != threading.get_ident():
+        return None
+    return session
+
+
 @contextmanager
 def windows_directory_anchor(
     path: Path,
@@ -228,7 +271,7 @@ def windows_directory_anchor(
     errors: WindowsDirectoryAnchorErrors = _PROFILE_CUSTODY_DIRECTORY_ANCHOR_ERRORS,
 ) -> Generator[int]:
     """Lock every real component against reparse and delete substitution."""
-    session = _ANCHOR_SESSION.get()
+    session = _current_anchor_session()
     if session is None:
         with _windows_directory_anchor_owned(path, final_access=final_access, errors=errors) as handle:
             yield handle
@@ -268,11 +311,19 @@ def _windows_directory_anchor_shared(
     errors: WindowsDirectoryAnchorErrors,
 ) -> Generator[int]:
     _ctypes, _wintypes, kernel32, _create_file = windows_create_file_api()
-    relied_on: list[tuple[str, _HeldComponent]] = []
+    relied_on: list[tuple[str | None, _HeldComponent]] = []
     try:
         component_paths = windows_component_paths(path)
         for index, current in enumerate(component_paths):
             access = final_access if index == len(component_paths) - 1 else 0
+            if access & _DELETE:
+                # A handle that can rename or delete its directory is never
+                # offered to another anchor: once moved, it no longer names
+                # the path it would be shared under.
+                private = _HeldComponent(handle=_open_verified_component(current, access, errors=errors), access=access)
+                private.users += 1
+                relied_on.append((None, private))
+                continue
             key = os.path.normcase(current)
             held = session.held.setdefault(key, [])
             component = next((candidate for candidate in held if candidate.access & access == access), None)
@@ -290,7 +341,8 @@ def _windows_directory_anchor_shared(
             component.users -= 1
             if component.users == 0:
                 kernel32.CloseHandle(component.handle)
-                session.held[key].remove(component)
+                if key is not None:
+                    session.held[key].remove(component)
 
 
 def _open_verified_component(current: str, access: int, *, errors: WindowsDirectoryAnchorErrors) -> int:

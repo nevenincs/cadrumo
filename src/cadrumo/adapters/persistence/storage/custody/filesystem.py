@@ -20,7 +20,11 @@ from ._capsule_filesystem import (
     windows_mark_handle_for_deletion as _windows_mark_handle_for_deletion,
 )
 from .errors import ProfileCustodyLockContendedError, ProfileCustodyPathAbsentError, ProfileCustodyRecordError
-from .filesystem_primitives import ProfileCustodyPasswordReadOperation, ensure_profile_custody_local_directory
+from .filesystem_primitives import (
+    ProfileCustodyPasswordReadOperation,
+    ensure_profile_custody_local_directory,
+    shared_directory_anchors,
+)
 from .filesystem_primitives import anchor_directory as _anchor_directory
 from .filesystem_primitives import posix_directory_fd as _posix_directory_fd
 from .filesystem_primitives import windows_create_file_api as _windows_create_file_api
@@ -67,6 +71,13 @@ def profile_custody_local_lock(path: Path, *, timeout_seconds: float = 30.0) -> 
     with ``flock``.  Windows opens the exact no-reparse leaf with no sharing;
     the kernel releases that exclusion when a process dies.  Neither platform
     relies on a stale lock-file convention.
+
+    The locked body is one custody operation, so its Windows anchors share the
+    components they hold at the same time. The lock holds every component of
+    its parent for the whole body, verified and denied deletion, so an anchor
+    inside reuses those handles rather than opening the storage root's
+    ancestry again. A component below what is held is still opened and
+    verified by every anchor that reaches it.
     """
     if timeout_seconds <= 0:
         raise ProfileCustodyRecordError("local custody lock timeout must be positive")
@@ -75,7 +86,7 @@ def profile_custody_local_lock(path: Path, *, timeout_seconds: float = 30.0) -> 
             yield
         return
 
-    with _profile_custody_windows_lock(path, timeout_seconds=timeout_seconds):
+    with shared_directory_anchors(), _profile_custody_windows_lock(path, timeout_seconds=timeout_seconds):
         yield
 
 
