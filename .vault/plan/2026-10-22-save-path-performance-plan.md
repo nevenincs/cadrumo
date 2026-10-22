@@ -8,7 +8,7 @@ related:
   - '[[2026-10-22-worker-authorization-channel-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:293b2d603f405c0bbeb2df6a528aebdcef225984ffee96cc09be50139651eac5'
+body_hash: 'sha256:4e1a3fb6919e2505584816814974a01cb040202c86a5b88b44ba87f95a4497bb'
 ---
 
 # `save-path-performance` plan
@@ -23,6 +23,8 @@ An external harness outside the repository drove TUI profile field saves (`Profi
 
 Decision coverage: S04 implements `2026-10-22-worker-authorization-channel-adr`. S01-S03, S05 and S06 are implementation within existing decisions and change no contract, protocol or persisted schema; S05 keeps every containment, link and ownership refusal the custody primitives make today. The logon-inventory cost that remains on a caller-owned runtime belongs to `2026-10-22-startup-performance-authority-observation-adr` and was handed to that plan's owner. The overview re-read after a save belongs to S09 of `2026-10-22-startup-performance-plan`. Neither is in this plan.
 
+S08 was added 2026-10-22 on the operator's instruction "delegate the debug yes", after the audit finding debug-record-cost. It is implementation within settled decisions.
+
 ## Steps
 
 - [x] `S01` - Intersect access scopes with set algebra bounded to what one access names; `src/cadrumo/application/user_profile/access_policy.py, operation_access_policy.py and tests`.
@@ -32,6 +34,7 @@ Decision coverage: S04 implements `2026-10-22-worker-authorization-channel-adr`.
 - [x] `S05` - Cut per-save custody path verification opens while keeping containment and link refusal; `src/cadrumo/adapters/persistence/storage/custody/filesystem_primitives.py, filesystem.py and owning tests`.
 - [x] `S06` - Stop creating the operation journal root on every journal call; `src/cadrumo/adapters/persistence/operations/journal.py, src/cadrumo/application/journal_repository.py and owning tests`.
 - [x] `S07` - Re-measure the TUI save path on the external harness and record before and after results; `.vault/audit`.
+- [x] `S08` - Cut per-record debug logging cost: lock acquire and release records on hot paths and the per-record log identity stat; `src/cadrumo/core/locks.py, src/cadrumo/core/log_file_handler.py, hot-path debug call sites and owning tests`.
 
 ## Parallelization
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:92e7418442e96a97fbe5a0f26dc3e01b3c851ac35ff91d38c475fa8065928966'
+body_hash: 'sha256:16ef4b1830360834fa8e798b1748941bc7dc6a9289415e835839805b7fbf37db'
 related:
   - "[[2026-10-22-save-path-performance-plan]]"
 ---
@@ -54,6 +54,26 @@ Measured by the owner of `2026-10-22-startup-performance-plan` with cProfile on 
 
 `d63d4ac50f` restores the pre-S04 rule. A refusal during verification, the handshake or an idle wait only closes that channel (`src/cadrumo_runtime/adapters/worker_authorization.py:203-206`). A permit lost while held is still contained inside `_permit_exchange` before a held COMMIT fence drops. A refusal before any permit still answers `AccessRefusal`. A failed approval phase still retires its proof. Faults that are not refusals still latch and contain. The foreign-peer and abandoned-handshake tests fail with the c9c4ee9e8b `_connection` body swapped in and pass at HEAD. The incarnation tests hand the verified pipe to the parent, so only the retained-handle recheck can refuse; this closes incarnation-test-covers-job-membership-only. The probe gives contained 0 and healthy for both cases. Verdict: PASS. No POSIX run.
 
+### s08-deletion-without-rename | medium | A cached file name misses a log or lock file deleted without a rename
+
+Plan-close review of S08 (`f02532f127`). `src/cadrumo/core/log_file_handler.py:326-335` (`_PathNames.names`) treats an unchanged handle name as proof the path still names the file. A non-POSIX deletion (`SetFileInformationByHandle(FileDispositionInfo)`, `FILE_FLAG_DELETE_ON_CLOSE`, or any delete on FAT, exFAT or SMB) leaves the file delete-pending under its old name. In a two-writer probe against the real handler, the writer with a cached name appended three records to the pending file, which vanished at close, and the other writer's three records failed with `PermissionError`. Before S08 the per-record `os.stat` caught this. The docstrings at `:12-15` and `:312-314` claim deletion always changes the name. Mutual exclusion is unaffected. S08 is reopened to fix it.
+
+### s08-name-length-unclamped | low | The OS-reported name length is read without a bound
+
+`src/cadrumo/core/log_file_handler.py:295-296` passes the reported length to `wstring_at` unclamped. A driver that reports success with an oversized length would read past the 2,052-byte buffer. NTFS returns failure for a long name, and the handler falls back correctly.
+
+### s08-contended-test-timing | low | The contention test assumes the holder releases within the slow-hold threshold
+
+`src/cadrumo/core/tests/test_locks_diagnostics.py:53-72` asserts exactly two records. On a loaded host the holder's hold can reach `SLOW_LOCK_HOLD_SECONDS`, which adds a third.
+
+### s08-hung-holder-invisible | low | A hung lock holder no longer leaves a record
+
+`src/cadrumo/core/locks.py:292-311` writes nothing for an uncontended acquire, and the slow-hold record is written only at release. A hang shows only the waiter's timeout warning, which names the lock but not its holder. This is the trade-off the debug-record-cost recommendation authorized. The attempt and contention accounting, timeout warnings and failed-release records are correct. The S08 tests fail against the pre-S08 code and against injected broken variants. Verdict for S08: PASS apart from s08-deletion-without-rename.
+
+### s08-fix-review | low | Re-review: 89b0ce8ec8 resolves s08-deletion-without-rename and the two lows
+
+The Windows handle query now reads `FILE_STANDARD_INFO` first (`src/cadrumo/core/log_file_handler.py:298-305`, DeletePending at byte 20, after two LARGE_INTEGERs and a DWORD), and a delete-pending file reports no name. The writer then runs the path lookup and reopens, as it did before S08. The reported name length is clamped to the buffer. The contention test raises `SLOW_LOCK_HOLD_SECONDS` to 60. The new `windows_only` test `test_a_settled_writer_leaves_a_log_deleted_pending_its_last_handle` fails on `f02532f127` and passes at the fix. The two-writer probe now writes all six records with no errors, the same as the per-record lookup. The focused files pass 18 of 18 with `-m ''`. A record costs 324-358 µs, against 435-474 µs before S08. Verdict: PASS. No POSIX run; the POSIX path is unchanged from before S08.
+
 ## Recommendations
 
 - worker-overview-reread: either return the committed overview, or the changed section, with the field mutation result, or keep the re-read off the durable journal. Changing the mutation result is a protocol change that needs an ADR, which S09's owner should weigh.
@@ -62,3 +82,6 @@ Measured by the owner of `2026-10-22-startup-performance-plan` with cProfile on 
 - incarnation-test-covers-job-membership-only: add tests for an exited peer handle and a substituted channel peer on both sides.
 - debug-record-cost: stop emitting lock acquire and release records at DEBUG on hot paths, or keep them in memory; and replace the per-record path identity stat with the change-witness pattern or a check limited to rotation. Both are implementation within settled decisions.
 - pre-plan-tui-run-hang: only reproduce it if a regression on HEAD shows the same symptom.
+- s08-deletion-without-rename: also query the handle's delete-pending state, and fall back to the path lookup when it is set; add a Windows test that deletes the file without a rename.
+- s08-name-length-unclamped and s08-contended-test-timing: clamp the length to the buffer; raise the slow-hold threshold inside the contention test.
+- s08-hung-holder-invisible: if hangs need diagnosing, keep an in-memory table of current holders and dump it on timeout. This is optional follow-on work.

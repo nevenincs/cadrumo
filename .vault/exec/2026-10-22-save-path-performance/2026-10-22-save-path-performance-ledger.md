@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:b8bc758c766cf366f8d70e7861236f73438e43b1304a4cc02833898032afd2ce'
+body_hash: 'sha256:65952fbdb80b29429bc4b735bebdf004637fe5319a8c50a7c8aea55148fc9448'
 related:
   - "[[2026-10-22-save-path-performance-plan]]"
 ---
@@ -73,6 +73,23 @@ related:
 - `S04` `A` `src/cadrumo_runtime/adapters/tests/worker_authorization_incarnation_fixture.py`
 - `S04` `M` `.vault/audit/2026-10-22-save-path-performance-audit.md`
 - `S04` `verify:` `uv run --no-sync pytest -m '' -n 0 src/cadrumo_runtime/adapters/tests/test_worker_authorization_reuse.py src/cadrumo_runtime/adapters/tests/test_worker_authorization_incarnation.py` -> `pass`
+- `S08` `M` `src/cadrumo/core/locks.py`
+- `S08` `M` `src/cadrumo/core/log_file_handler.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/profile/modelos_work_units.py`
+- `S08` `A` `src/cadrumo/core/tests/test_locks_diagnostics.py`
+- `S08` `M` `src/cadrumo/core/tests/test_log_file_handler.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/profile/tests/test_workspace.py`
+- `S08` `verify:` `pytest core operations custody master_key secret_store` -> `pass`
+- `S08` `verify:` `just check-style` -> `pass`
+- `S08` `verify:` `just check-format` -> `pass`
+- `S08` `verify:` `lint-imports` -> `pass`
+- `S08` `verify:` `test_no_git_cli` -> `pass`
+- `S08` `by:` `vaultspec-high-executor`
+- `S08` `M` `src/cadrumo/core/tests/test_locks_diagnostics.py`
+- `S08` `verify:` `pytest test_log_file_handler test_locks_diagnostics -m ''` -> `pass`
+- `S08` `verify:` `legacy_delete probe old and new` -> `pass`
+- `S08` `verify:` `just check-style` -> `pass`
+- `S08` `verify:` `just check-format` -> `pass`
 
 ## Notes
 
