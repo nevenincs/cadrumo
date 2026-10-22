@@ -16,6 +16,7 @@ import psutil
 from cadrumo.core.diagnostic_log import diagnostic_process
 from cadrumo.core.logging import configure_logging, get_logger, register_first_party_logger
 from cadrumo.core.paths import effective_storage_root
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from .admin import AdminServer
 from .contracts import ServiceStartupFrame
@@ -27,6 +28,7 @@ from .service import AgentService, service_failure
 _LOGGER = get_logger(__name__)
 _OUTPUT_GUARD = Lock()
 _MAX_STARTUP_FRAME_BYTES = 64 * 1024
+_CLAIM_RETRY_SECONDS = 1.0
 
 
 def _process_uptime() -> float:
@@ -160,7 +162,18 @@ def _serve() -> None:
         while not stop.is_set():
             # Clear before claiming, so a push that lands during the claim wakes the next turn.
             wake.clear()
-            lease = client.claim()
+            try:
+                lease = client.claim()
+            except RefusalError as error:
+                # A claim that ran out of time while the connection stayed open
+                # was queued behind another exchange: the admission stands and
+                # the tree keeps running. One that closed the connection ended
+                # the admission with it.
+                if error.reason is not RefusalCode.DEADLINE_EXCEEDED or client.connection.closed:
+                    raise
+                _LOGGER.warning("agent service lease claim overran; claiming again")
+                wake.wait(_CLAIM_RETRY_SECONDS)
+                continue
             if lease is None:
                 if admitted:
                     break

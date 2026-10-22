@@ -201,3 +201,153 @@ print(f"claims={client.claims}", file=sys.stderr)
     assert b"B" * 32 not in output + errors
     if ending == "idle_then_eof":
         assert b"claims=1" in errors, errors
+
+
+@pytest.mark.parametrize("connection_closed", (False, True))
+@pytest.mark.asyncio
+async def test_overrun_lease_claim_keeps_the_tree_only_while_its_connection_stays_open(
+    connection_closed: bool, tmp_path: Path
+) -> None:
+    """A slow runtime is not a lost one; a claim that closed the connection still ends the service."""
+    source_root = Path(__file__).resolve().parents[3]
+    environment = os.environ.copy()
+    existing_pythonpath = environment.get("PYTHONPATH")
+    environment["PYTHONPATH"] = os.pathsep.join(
+        value for value in (str(source_root), existing_pythonpath) if value is not None and value != ""
+    )
+    script = r"""
+import sys
+import threading
+from pathlib import Path
+from types import SimpleNamespace
+from uuid import UUID
+
+import cadrumo_agent_service.main as service_main
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
+profile_id = UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
+
+class FakeClient:
+    connected = SimpleNamespace(
+        runtime_boot_id=UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
+        connection_id=UUID("cccccccc-cccc-4ccc-8ccc-cccccccccccc"),
+        profile_id=profile_id,
+    )
+    connection = SimpleNamespace(closed=CONNECTION_CLOSED)
+
+    def __init__(self):
+        self.claims = 0
+        self.changed = None
+
+    def subscribe_changes(self, changed):
+        self.changed = changed
+        return lambda: None
+
+    def subscribe_model_runs(self, requested):
+        return lambda: None
+
+    def claim(self):
+        self.claims += 1
+        if self.claims == 2:
+            # The runtime retired the lease's session and is slow to re-attend it.
+            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        if self.claims == 4:
+            return None
+        # A pushed frame wakes the next claim.
+        threading.Timer(0.1, self.changed).start()
+        return object()
+
+    async def close(self):
+        pass
+
+client = FakeClient()
+
+async def open_client(**_kwargs):
+    return client
+
+class FakeService:
+    stops = 0
+    observes = 0
+
+    def __init__(self, **_kwargs):
+        pass
+
+    def start(self):
+        return {"event": "agent_ready"}
+
+    def observe(self):
+        FakeService.observes += 1
+        return True
+
+    def runtime_changed(self):
+        pass
+
+    def model_runs(self):
+        return None
+
+    def stop(self):
+        FakeService.stops += 1
+
+    def request_close(self):
+        pass
+
+    def close(self):
+        pass
+
+class FakeAdminServer:
+    port = 32123
+
+    def __init__(self, *_args, **_kwargs):
+        pass
+
+    def close(self):
+        pass
+
+service_main.open_service_client = open_client
+service_main.AgentService = FakeService
+service_main.AdminServer = FakeAdminServer
+service_main.effective_storage_root = lambda: Path(".")
+sys.argv = ["cadrumo-agent-service", "serve", "--profile-id", str(profile_id)]
+service_main._serve()
+print(f"claims={client.claims} observes={FakeService.observes} stops={FakeService.stops}", file=sys.stderr)
+""".replace("CONNECTION_CLOSED", repr(connection_closed))
+    process = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-c",
+        script,
+        cwd=tmp_path,
+        env=environment,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    assert process.stdin is not None
+    assert process.stdout is not None
+    assert process.stderr is not None
+    try:
+        startup = json.dumps({"bearer": "A" * 32, "gateway_bearer": "B" * 32}).encode("ascii") + b"\n"
+        process.stdin.write(startup)
+        await process.stdin.drain()
+        try:
+            exit_code = await asyncio.wait_for(process.wait(), timeout=10)
+        except TimeoutError:
+            process.kill()
+            await process.wait()
+            pytest.fail("service did not end once its lease was withdrawn")
+    finally:
+        if process.returncode is None:
+            process.kill()
+            await process.wait()
+        if not process.stdin.is_closing():
+            process.stdin.close()
+
+    output, errors = await asyncio.wait_for(asyncio.gather(process.stdout.read(), process.stderr.read()), timeout=5)
+    assert exit_code == 0, (output, errors)
+    assert b'"event":"stopped"' in output
+    if connection_closed:
+        assert b'"event":"refused","code":"service_failed"' in output
+        assert b"claims=2 observes=0 stops=0" in errors
+    else:
+        assert b'"event":"refused"' not in output
+        # The tree was observed after the retried claim and never retired by the loop.
+        assert b"claims=4 observes=1 stops=0" in errors

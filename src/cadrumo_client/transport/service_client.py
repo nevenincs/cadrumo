@@ -7,6 +7,7 @@ from collections.abc import Callable
 from typing import Literal
 from uuid import UUID, uuid4
 
+from ..contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from ..contracts.extension_records import ExtensionRecordRequest
 from ..contracts.model_runs import (
     ModelRunCompleted,
@@ -20,6 +21,18 @@ from ..contracts.profile_access import AccessRefusal, SessionRequest
 from ..contracts.service_access import ServiceConnect, ServiceConnected, ServiceLease
 from .framing import VerifiedConnection
 from .frontend_client_contracts import FrontendRefusedError
+
+SERVICE_EXCHANGE_TIMEOUT_SECONDS = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+"""How long one exchange on the service connection waits for the runtime.
+
+An exchange that overruns closes the connection, and with it the admission the
+person granted, which no later request can recover. A slow runtime is not a lost
+one: its supervisor judges that and ends the service. So the service waits as
+long as a person's frontend connection would."""
+
+
+def _deadline() -> float:
+    return time.monotonic() + SERVICE_EXCHANGE_TIMEOUT_SECONDS
 
 
 class InstalledServiceClient:
@@ -67,7 +80,7 @@ class InstalledServiceClient:
                 lease_id=lease.lease_id,
                 run_id=run_id,
             ),
-            deadline=time.monotonic() + 10,
+            deadline=_deadline(),
         )
         if isinstance(reply, AccessRefusal):
             return None
@@ -86,7 +99,7 @@ class InstalledServiceClient:
                 outcome=outcome,
             ),
             text,
-            deadline=time.monotonic() + 10,
+            deadline=_deadline(),
         )
         return isinstance(reply, ModelRunCompleted) and reply.accepted
 
@@ -99,7 +112,7 @@ class InstalledServiceClient:
         """Request or refresh the service lease for this profile connection."""
         reply = self.connection.service_access(
             ServiceConnect(request_id=uuid4(), profile_id=self.profile_id, service_id=self.service_id),
-            deadline=time.monotonic() + 10,
+            deadline=_deadline(),
         )
         if isinstance(reply, AccessRefusal):
             raise FrontendRefusedError(reply.code.value)
@@ -132,7 +145,7 @@ class InstalledServiceClient:
     def record_read(self, capability: str, object_key: str):
         """Read one extension record under the current service lease."""
         reply, material = self.connection.extension_record(
-            self._request("extension_record_read", capability, object_key=object_key), deadline=time.monotonic() + 10
+            self._request("extension_record_read", capability, object_key=object_key), deadline=_deadline()
         )
         if isinstance(reply, AccessRefusal):
             raise FrontendRefusedError(reply.code.value)
@@ -150,7 +163,7 @@ class InstalledServiceClient:
                     byte_count=len(payload),
                 ),
                 payload,
-                deadline=time.monotonic() + 10,
+                deadline=_deadline(),
             )
             if isinstance(reply, AccessRefusal):
                 raise FrontendRefusedError(reply.code.value)
@@ -164,7 +177,7 @@ class InstalledServiceClient:
             self._request(
                 "extension_record_delete", capability, object_key=object_key, expected_revision=expected_revision
             ),
-            deadline=time.monotonic() + 10,
+            deadline=_deadline(),
         )
         if isinstance(reply, AccessRefusal):
             raise FrontendRefusedError(reply.code.value)
@@ -173,7 +186,7 @@ class InstalledServiceClient:
     def observe_generation(self, capability: str):
         """Read the current generation for one service-owned record namespace."""
         reply, _ = self.connection.extension_record(
-            self._request("extension_record_generation", capability), deadline=time.monotonic() + 10
+            self._request("extension_record_generation", capability), deadline=_deadline()
         )
         if isinstance(reply, AccessRefusal):
             raise FrontendRefusedError(reply.code.value)
@@ -191,7 +204,7 @@ class InstalledServiceClient:
                 profile_id=self.profile_id,
                 session_id=self.lease.session_id,
             ),
-            deadline=time.monotonic() + 10,
+            deadline=_deadline(),
         )
 
     async def close(self) -> None:

@@ -206,6 +206,16 @@ class VerifiedTransport:
         with self._claimed():
             return self._connection_id
 
+    @property
+    def closed(self) -> bool:
+        """Whether exchanges have stopped, by request or after a failed exchange.
+
+        Read without claiming the exchange, so a caller can tell a refusal that
+        left the connection open from one that ended it while another exchange
+        is still in flight.
+        """
+        return self._closed
+
     def send_secret(self, secret: bytearray, *, deadline: float) -> None:
         """Consume a one-shot secret buffer after peer and cohort verification."""
         with self._exchange(deadline=deadline, secret=secret):
