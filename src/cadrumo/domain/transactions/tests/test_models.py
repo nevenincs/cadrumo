@@ -980,21 +980,15 @@ def test_group_label_is_required_but_nullable() -> None:
         )
 
 
-def test_dict_mode_model_validate_accepts_json_shaped_dict_values() -> None:
-    """A strict-mode ``model_validate`` call accepts JSON-shaped strings too.
+def test_json_text_coerces_natively_and_python_mode_takes_typed_values() -> None:
+    """JSON text validates through pydantic's own coercion; a Python-mode dict carries typed values.
 
-    ``Transaction`` is strict-mode, but a python-mode ``dict`` (real
-    enum/``Decimal``/``date`` instances, as ``model_dump(mode="python")``
-    produces) and a JSON-decoded ``dict`` (string stand-ins for those types,
-    as ``model_dump(mode="json")`` or a deserialised storage payload
-    produces) are BOTH valid ``model_validate`` inputs -- neither is a
-    second-class caller. Field-level ``mode="before"`` coercions on the
-    affected fields (enum/Decimal/datetime/the nested ``raw`` record) bridge
-    the JSON-shaped case without a model-level re-route: a model-level
-    ``mode="before"`` that re-dispatched to ``model_validate_json`` would
-    recurse forever, because ``model_validate_json`` re-decodes to a plain
-    dict and re-runs every model-level ``mode="before"`` validator on that
-    still string-shaped dict before applying the rest of the schema.
+    ``Transaction`` is strict. Text stand-ins for its enums, decimals, dates
+    and instants are JSON-mode input, so they are coerced when the payload is
+    JSON text, and the nested ``raw`` record is validated in the same pass. A
+    Python-mode dict carries the typed values ``model_dump(mode="python")``
+    produces; the JSON-shaped dict ``model_dump(mode="json")`` produces is
+    validated as JSON text, not as Python input.
     """
     original = Transaction.model_validate(
         {
@@ -1014,14 +1008,17 @@ def test_dict_mode_model_validate_accepts_json_shaped_dict_values() -> None:
     assert isinstance(json_shaped_dict["taxable_base"], str)
     assert isinstance(json_shaped_dict["raw"]["booked_date"], str)
 
-    restored = Transaction.model_validate(json_shaped_dict)
-    assert restored == original
-    assert restored.direction is TransactionDirection.INCOMING
-    assert restored.business_classification is BusinessClassification.BUSINESS
-    assert restored.taxable_base == Decimal("100.00")
-
     restored_via_json = Transaction.model_validate_json(json.dumps(json_shaped_dict))
     assert restored_via_json == original
+    assert restored_via_json.direction is TransactionDirection.INCOMING
+    assert restored_via_json.taxable_base == Decimal("100.00")
+    assert Transaction.model_validate(original.model_dump()) == original
+
+    with pytest.raises(ValidationError) as caught:
+        Transaction.model_validate(json_shaped_dict)
+    refused = {error["loc"] for error in caught.value.errors()}
+    assert ("direction",) in refused
+    assert ("taxable_base",) in refused
 
 
 def test_dict_mode_model_validate_still_rejects_genuinely_malformed_payload() -> None:

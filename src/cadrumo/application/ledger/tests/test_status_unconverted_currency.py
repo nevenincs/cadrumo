@@ -38,7 +38,7 @@ from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
@@ -456,7 +456,7 @@ def iva_transaction(
             "direction": direction,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "business_classification": "BUSINESS",
+            "business_classification": BusinessClassification.BUSINESS,
             "category_id": "material_oficina",
             "taxable_base": taxable_base,
             "iva_rate": _IVA_RATE,

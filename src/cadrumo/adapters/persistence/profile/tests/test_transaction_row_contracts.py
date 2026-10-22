@@ -1,21 +1,21 @@
-"""Refusal parity for the stored-transaction D6 timestamp witness.
+"""Refusal parity for the stored-transaction D6 timestamp requirement.
 
-The witness used to decode every stored row into Python dictionaries with
-``json.loads`` and validate the payload's two timestamps in Python mode. It now
-validates the same lax ``UtcInstant`` pair straight from the JSON bytes. The
-former logic is inlined below as the oracle, and each table drives both it and
-the shipped :func:`validate_persisted_transaction_timestamps` over the same
-bytes, so a row accepted by one and refused by the other fails here.
+A stored row must carry its two lifecycle timestamps, because ``Transaction``
+would otherwise default them. The repository once checked that with a separate
+witness parse of the stored bytes ahead of the envelope decode; it now reads
+the decoded record's set fields after the one decode. The former witness is
+inlined below as the oracle, and each table drives the old composed read
+(witness, then envelope) and the shipped one (envelope, then
+:func:`require_persisted_transaction_timestamps`) over the same bytes, so a
+row accepted by one and refused by the other fails here.
 
 Duplicate keys: ``json.loads`` keeps the last occurrence of a repeated key, and
-pydantic's JSON parser does the same; the duplicate-key rows prove the
-shipped witness agrees with the oracle in both orders.
+pydantic's JSON parser does the same, so both reads see the same members.
 
 The one input class the parsers disagree on is JSON that pydantic's parser
-rejects but ``json.loads`` accepts (a lone UTF-16 surrogate escape). The
-shipped witness passes such bytes through, and the authoritative envelope
-validation, which uses the same parser, refuses the row, so the composed read
-still refuses it.
+rejects but ``json.loads`` accepts (a lone UTF-16 surrogate escape). The oracle
+witness refuses it for its missing timestamps; the envelope decode refuses it as
+invalid JSON, so both composed reads still refuse it.
 """
 
 from __future__ import annotations
@@ -32,11 +32,12 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 from .....core.time.utc import UtcInstant
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
+from .....domain.transactions.errors import TransactionValidationError
 from .....domain.transactions.models import Transaction
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...storage.envelope.contract import Envelope
 from ...storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
-from ..transaction_row_contracts import validate_persisted_transaction_timestamps
+from ..transaction_row_contracts import require_persisted_transaction_timestamps
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -47,6 +48,12 @@ _VALID = '"2024-04-14T09:30:00Z"'
 class _OracleTimestampWitness(BaseModel):
     created_at: UtcInstant = Field()
     modified_at: UtcInstant = Field()
+
+
+@pytest.fixture
+def _authority_operation() -> Iterator[None]:
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _oracle_witness(payload: bytes) -> None:
@@ -72,6 +79,31 @@ def _witness_outcome(witness: object, payload: bytes) -> str:
     except ValidationError:
         return "refuse"
     return "pass"
+
+
+#: A payload without ``raw`` fails the transaction id's default factory with the
+#: domain error itself rather than a ``ValidationError``; both are refusals.
+_ROW_REFUSALS = (ValidationError, TransactionValidationError)
+
+
+def _old_read(payload: bytes) -> str:
+    """The removed composition: the witness parse, then the envelope decode."""
+    try:
+        _oracle_witness(payload)
+        Envelope[Transaction].model_validate_json(payload)
+    except _ROW_REFUSALS:
+        return "refuse"
+    return "accept"
+
+
+def _shipped_read(payload: bytes) -> str:
+    """The repository's composition: one envelope decode, then the set-field requirement."""
+    try:
+        envelope = Envelope[Transaction].model_validate_json(payload)
+        require_persisted_transaction_timestamps(envelope.payload)
+    except _ROW_REFUSALS:
+        return "refuse"
+    return "accept"
 
 
 def _envelope(created: str | None, modified: str | None = _VALID) -> bytes:
@@ -138,10 +170,11 @@ _WITNESS_CASES: tuple[tuple[str, bytes, str], ...] = (
 @pytest.mark.parametrize(
     ("payload", "expected"), [case[1:] for case in _WITNESS_CASES], ids=[case[0] for case in _WITNESS_CASES]
 )
-def test_timestamp_witness_matches_the_removed_decode_logic(payload: bytes, expected: str) -> None:
-    """Old and new witnesses accept and refuse exactly the same stored bytes."""
+@pytest.mark.usefixtures("_authority_operation")
+def test_partial_rows_read_identically_through_the_old_and_shipped_composition(payload: bytes, expected: str) -> None:
+    """The oracle witness still judges each row as recorded, and both reads agree on every one."""
     assert _witness_outcome(_oracle_witness, payload) == expected
-    assert _witness_outcome(validate_persisted_transaction_timestamps, payload) == expected
+    assert _shipped_read(payload) == _old_read(payload)
 
 
 @pytest.mark.parametrize(
@@ -149,9 +182,10 @@ def test_timestamp_witness_matches_the_removed_decode_logic(payload: bytes, expe
     [b"\x00\x01not json", b'{"payload":{"created_at":"\xff"}}', b"[1,2]", b'{"payload":"x"}', b'{"schema_version":2}'],
     ids=["not json", "invalid utf-8", "array envelope", "string payload", "payload absent"],
 )
-def test_malformed_rows_pass_the_witness_and_reach_envelope_validation(payload: bytes) -> None:
-    """A row the witness cannot read is left for the authoritative envelope refusal."""
-    validate_persisted_transaction_timestamps(payload)
+def test_malformed_rows_are_refused_by_the_envelope_decode(payload: bytes) -> None:
+    """A row the old witness could not read was left for the envelope refusal, which still fires."""
+    assert _witness_outcome(_oracle_witness, payload) == "pass"
+    assert _shipped_read(payload) == "refuse"
     with pytest.raises(ValidationError) as refusal:
         Envelope[Transaction].model_validate_json(payload)
     assert refusal.value.title == "Envelope[Transaction]"
@@ -167,16 +201,10 @@ def test_lone_surrogate_row_is_still_refused_by_the_composed_read() -> None:
     """
     payload = b'{"payload":{"\\ud800":1}}'
     assert _witness_outcome(_oracle_witness, payload) == "refuse"
-    validate_persisted_transaction_timestamps(payload)
+    assert _shipped_read(payload) == "refuse"
     with pytest.raises(ValidationError) as refusal:
         Envelope[Transaction].model_validate_json(payload)
     assert any(error["type"] == "json_invalid" for error in refusal.value.errors())
-
-
-@pytest.fixture
-def _authority_operation() -> Iterator[None]:
-    with bundled_indexed_authority().operation():
-        yield
 
 
 def _stored_row() -> dict[str, object]:
@@ -248,7 +276,7 @@ _ROW_TIMESTAMP_CASES: tuple[tuple[str, dict[str, object], str], ...] = (
     [case[1:] for case in _ROW_TIMESTAMP_CASES],
     ids=[case[0] for case in _ROW_TIMESTAMP_CASES],
 )
-def test_real_stored_row_reads_identically_through_old_and_new_witness(
+def test_real_stored_row_reads_identically_through_the_old_and_shipped_composition(
     changes: dict[str, object],
     expected: str,
 ) -> None:
@@ -264,4 +292,4 @@ def test_real_stored_row_reads_identically_through_old_and_new_witness(
     payload = json.dumps(row).encode()
 
     assert _composed_read(_oracle_witness, payload) == expected
-    assert _composed_read(validate_persisted_transaction_timestamps, payload) == expected
+    assert _shipped_read(payload) == expected

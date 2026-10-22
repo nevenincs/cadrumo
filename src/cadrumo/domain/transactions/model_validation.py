@@ -2,16 +2,13 @@
 
 The transaction models keep their Pydantic validators on the boundary records,
 while this helper module owns the reusable parsing and invariant checks those
-validators call. It normalizes raw transactions, UTC timestamps, classifier
+validators call. It normalizes UTC timestamps, classifier
 provenance, confidence ranges, identifier tuples, lineage text, and non-negative
 tax amount fields without turning those rules into a separate public API.
 
 See Also:
     :class:`~domain.transactions.models.Transaction`
         Strict transaction record whose validators delegate to these helpers.
-    :class:`~domain.transactions.raw_transaction.RawTransaction`
-        Upstream row model accepted directly or coerced from JSON-compatible
-        payloads.
     :class:`~domain.transactions.enums.BusinessClassification`
         Classification enum coupled to ``business_pct`` by this module.
     :class:`~domain.transactions.errors.TransactionValidationError`
@@ -22,11 +19,8 @@ See Also:
 
 from __future__ import annotations
 
-import json
 from datetime import datetime
 from decimal import Decimal
-
-from pydantic import ValidationError
 
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
@@ -34,7 +28,6 @@ from ...core.time.utc import parse_iso_datetime, validate_utc_aware
 from ...core.unit_proportion import is_unit_proportion
 from .enums import BusinessClassification, takes_business_share
 from .errors import TransactionValidationError
-from .raw_transaction import RawTransaction
 
 _NON_NEGATIVE_DECIMAL_HINTS = {
     "taxable_base": (
@@ -50,10 +43,6 @@ _NON_NEGATIVE_DECIMAL_HINTS = {
         "retailer, never a signed delta"
     ),
 }
-
-
-def _json_default(value: object) -> str:
-    return str(value)
 
 
 def require_aware_datetime(value: datetime) -> datetime:
@@ -187,13 +176,3 @@ def validate_non_negative_decimal(value: Decimal | None, *, field_name: str) -> 
             _NON_NEGATIVE_DECIMAL_HINTS.get(field_name, f"{field_name} must be non-negative"),
         )
     return value
-
-
-def coerce_raw_transaction(raw: object) -> RawTransaction:
-    """Return *raw* as a RawTransaction, accepting the model or its payload."""
-    if isinstance(raw, RawTransaction):
-        return raw
-    try:
-        return RawTransaction.model_validate(raw, strict=False)
-    except ValidationError:
-        return RawTransaction.model_validate_json(json.dumps(raw, default=_json_default, ensure_ascii=True))

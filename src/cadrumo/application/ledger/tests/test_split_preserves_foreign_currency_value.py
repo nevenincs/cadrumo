@@ -26,7 +26,7 @@ import pytest
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.money.rounding import round_to_cents
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...aggregation.currency_predicates import is_non_eur_without_conversion
@@ -80,7 +80,7 @@ def iva_transaction(
             "direction": direction,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "business_classification": "BUSINESS",
+            "business_classification": BusinessClassification.BUSINESS,
             "category_id": "material_oficina",
             "taxable_base": taxable_base,
             "iva_rate": _IVA_RATE,

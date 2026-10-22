@@ -16,7 +16,7 @@ from ....domain.modelos.participation_index import (
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
 )
-from ....domain.transactions.enums import TransactionLifecycleState
+from ....domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.lineage_models import (
     TransactionEditLineageEntry,
     TransactionEvidenceProvenanceEntry,
@@ -163,7 +163,7 @@ def _transaction(*, created_event_id: str | None = None) -> Transaction:
     return Transaction.model_validate(
         {
             "raw": raw,
-            "direction": "OUTGOING",
+            "direction": TransactionDirection.OUTGOING,
             "source_jurisdiction": "ES",
             "group_label": None,
             "created_event_id": created_event_id,

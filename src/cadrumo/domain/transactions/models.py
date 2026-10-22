@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Self, override
+from typing import Annotated, Self, override
 
 from pydantic import (
+    AfterValidator,
     BaseModel,
     Field,
     field_serializer,
@@ -28,11 +30,9 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
-from ...core.parsing.dates import parse_iso8601_date
 from ...core.prorrata_exclusions import Art104TresExclusion
 from ...core.text_fold import fold_diacritics
 from ...core.time.clock import now
-from ...core.time.utc import parse_iso_datetime
 from ...core.tipos_actividad import TipoActividad
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.type_guards import is_object_mapping
@@ -75,7 +75,6 @@ from .lineage_models import (
 )
 from .m210_income_classification import M210IncomeClassification
 from .model_validation import (
-    coerce_raw_transaction,
     normalize_identifier_tuple,
     require_aware_datetime,
     validate_business_pct_coupling,
@@ -225,6 +224,57 @@ def _derive_transaction_id_from_validated_data(data: dict[str, object]) -> str:
     return derive_transaction_id(raw, own_account_id=own_account_id if isinstance(own_account_id, str) else None)
 
 
+class _AuthenticatedStoredRow:
+    """Validation context for a row the secure store authenticated in the same call.
+
+    It names the admission checks such a row may skip. Validators recognise the
+    context by identity of this private class, so no dictionary, flag or
+    ambient state reaches it: the single instance below is passed only by
+    :func:`validate_authenticated_stored_transaction_json`.
+    """
+
+    __slots__ = ("skipped_checks",)
+
+    def __init__(self, skipped_checks: frozenset[str]) -> None:
+        self.skipped_checks = skipped_checks
+
+
+_DERIVED_TRANSACTION_ID_CHECK = "derived_transaction_id"
+
+#: The derived-id re-hash re-proves what the store's binding already proves:
+#: the transaction id is the object key the AEAD authenticates, and the
+#: repository asserts the decoded id equals the addressed key. Every dated
+#: registry rule stays, because a stored row does not record the authority
+#: generation it was admitted under.
+_AUTHENTICATED_STORED_ROW = _AuthenticatedStoredRow(frozenset({_DERIVED_TRANSACTION_ID_CHECK}))
+
+
+def _skips_admission_check(info: core_schema.ValidationInfo, check: str) -> bool:
+    context = info.context
+    return isinstance(context, _AuthenticatedStoredRow) and check in context.skipped_checks
+
+
+def validate_authenticated_stored_transaction_json[ModelT: BaseModel](model: type[ModelT], payload: bytes) -> ModelT:
+    """Validate one stored transaction row the secure store authenticated in this call.
+
+    Only the transaction repository's read paths call this, after the store
+    decrypted the row under the AEAD binding of its namespace, object key,
+    schema version and revision, and only for rows of the current schema
+    version. Every structural, field and registry check runs; only the checks
+    named by the authenticated-row context are skipped. Writes, imports, edits
+    and every other decode validate in full through the ordinary constructors.
+
+    Args:
+        model: The model the stored bytes encode, such as the storage envelope
+            parameterised with :class:`Transaction`.
+        payload: The authenticated plaintext row bytes.
+
+    Returns:
+        The validated model.
+    """
+    return model.model_validate_json(payload, context=_AUTHENTICATED_STORED_ROW)
+
+
 def _effective_date_for_enum_projection(info: core_schema.ValidationInfo) -> date | None:
     raw = info.data.get("raw")
     if isinstance(raw, RawTransaction):
@@ -277,39 +327,29 @@ def _coerce_counterparty_identification_state_field(value: object, info: core_sc
     return _translate_registry_enum_error(lambda: require_eu_member_state(value, effective_date=effective_date))
 
 
-_PLAIN_ENUM_BY_FIELD: Mapping[str, type] = MappingProxyType(
-    {
-        "direction": TransactionDirection,
-        "business_classification": BusinessClassification,
-        "lifecycle_state": TransactionLifecycleState,
-        "iva_category": IvaCategory,
-        "exemption_article": IvaExemptionArticle,
-        "cash_accounting_treatment": IvaCashAccountingTreatment,
-        "art_104_tres_exclusion": Art104TresExclusion,
-        "tipo_actividad": TipoActividad,
-        "classification_origin": ClassificationOrigin,
-    },
+_REGISTRY_TOKEN_PROJECTION_BY_FIELD: Mapping[str, Callable[[object, core_schema.ValidationInfo], object]] = (
+    MappingProxyType(
+        {
+            "concepto_ingreso": _coerce_concepto_ingreso_field,
+            "deduction_fact_kind": _coerce_deduction_fact_kind_field,
+            "input_classification": _coerce_input_classification_field,
+            "counterparty_identification_state": _coerce_counterparty_identification_state_field,
+        },
+    )
 )
 
 
-def _coerce_transaction_enum_field(value: object, info: core_schema.ValidationInfo) -> object:
-    # Every branch below returns ``None`` unchanged, and a loaded row carries
-    # ``None`` in most of these fields, so answering it first spares the
-    # dispatch on each of them.
+def _project_registry_token_field(value: object, info: core_schema.ValidationInfo) -> object:
+    # A loaded row carries ``None`` in most of these fields, and every
+    # projection returns it unchanged, so it is answered before the dispatch.
     if value is None:
         return None
-    field_name = info.field_name
-    if field_name == "concepto_ingreso":
-        return _coerce_concepto_ingreso_field(value, info)
-    if field_name == "deduction_fact_kind":
-        return _coerce_deduction_fact_kind_field(value, info)
-    if field_name == "input_classification":
-        return _coerce_input_classification_field(value, info)
-    if field_name == "counterparty_identification_state":
-        return _coerce_counterparty_identification_state_field(value, info)
-    if not isinstance(value, str):
-        return value
-    return _PLAIN_ENUM_BY_FIELD[field_name or ""](value)
+    return _REGISTRY_TOKEN_PROJECTION_BY_FIELD[info.field_name or ""](value, info)
+
+
+#: A UTC lifecycle instant. JSON text is parsed natively; the one check that
+#: follows is the UTC rule, raised as a transaction error.
+_TransactionInstant = Annotated[datetime, AfterValidator(pydantic_validation_boundary(require_aware_datetime))]
 
 
 class Transaction(BaseModel):
@@ -318,8 +358,9 @@ class Transaction(BaseModel):
     Attributes:
         transaction_id: Lowercase 64-char SHA-256 derived deterministically
             from the wrapped raw record (and ``own_account_id`` when bound) by
-            :func:`derive_transaction_id`. Re-validated on every parse to
-            detect tampering.
+            :func:`derive_transaction_id`. Re-validated on every parse except
+            an authenticated stored-row read, whose id the store's binding
+            already proves.
         raw: The verbatim
             :class:`domain.transactions.raw_transaction.RawTransaction`.
         own_account_id: The taxpayer's own bank account the movement belongs
@@ -577,7 +618,7 @@ class Transaction(BaseModel):
     split_lineage: SplitLineage | None = None
     notes: str = ""
     import_fingerprint: str | None = None
-    classified_at: datetime | None = None
+    classified_at: _TransactionInstant | None = None
     classified_by: str = Field(default=CLASSIFIED_BY_AUTO, min_length=1)
     classification_origin: ClassificationOrigin | None = None
     classification_reason: str = ""
@@ -619,79 +660,27 @@ class Transaction(BaseModel):
     # split/merge). They make ``--sort-by created_at|modified_at`` honest for
     # hand-added rows, which otherwise carry no creation timestamp (only
     # imported rows have ``raw.provenance.ingested_at``). Both are UTC-aware.
-    created_at: datetime = Field(default_factory=now)
-    modified_at: datetime = Field(default_factory=now)
-
-    @field_validator("raw", mode="before")
-    @classmethod
-    @pydantic_validation_boundary
-    def _coerce_raw_field(cls, value: object) -> object:
-        """Accept a ``RawTransaction`` or a JSON-shaped/python-native mapping.
-
-        Delegates to :func:`coerce_raw_transaction`, which validates through
-        ``RawTransaction``'s own validators -- never ``Transaction``'s -- so
-        this carries no re-entrant recursion risk (unlike a model-level
-        ``Transaction`` before-validator that called back into
-        ``Transaction.model_validate*``, which recurses forever because that
-        re-invokes this exact model-level hook on the still string-shaped
-        JSON-decoded dict).
-        """
-        return coerce_raw_transaction(value)
+    created_at: _TransactionInstant = Field(default_factory=now)
+    modified_at: _TransactionInstant = Field(default_factory=now)
 
     @field_validator(
-        "direction",
-        "business_classification",
-        "lifecycle_state",
-        "iva_category",
         "deduction_fact_kind",
-        "exemption_article",
         "counterparty_identification_state",
-        "cash_accounting_treatment",
-        "art_104_tres_exclusion",
         "input_classification",
-        "tipo_actividad",
         "concepto_ingreso",
-        "classification_origin",
         mode="before",
     )
     @classmethod
     @pydantic_validation_boundary
-    def _coerce_enum_field(cls, value: object, info: core_schema.ValidationInfo) -> object:
-        """Accept a JSON-decoded enum string alongside a real enum instance.
+    def _project_registry_token(cls, value: object, info: core_schema.ValidationInfo) -> object:
+        """Project a registry token's text through the vocabulary dated on the row.
 
-        A field-level ``mode="before"`` coercion inspects only this one
-        field's value and never re-triggers model-level validation, so it
-        carries no re-entrancy risk. No-op for an already-typed enum member
-        or ``None``.
+        The other enumerations and opaque tokens validate natively, from JSON
+        text or from a member, through the field's own type. These four are
+        dated registry vocabulary, so their text is resolved against the
+        catalogue effective on the row's own date. A projected token is kept.
         """
-        return _coerce_transaction_enum_field(value, info)
-
-    @field_validator("operation_date", mode="before")
-    @classmethod
-    @pydantic_validation_boundary
-    def _parse_operation_date(cls, value: object) -> object:
-        if isinstance(value, str):
-            return parse_iso8601_date(value)
-        return value
-
-    @field_validator(
-        "business_pct",
-        "taxable_base",
-        "iva_rate",
-        "iva_amount",
-        "recargo_amount",
-        "classification_confidence",
-        "fx_rate",
-        "value_in_eur",
-        mode="before",
-    )
-    @classmethod
-    @pydantic_validation_boundary
-    def _coerce_decimal_field(cls, value: object) -> object:
-        """Accept a JSON-decoded ``Decimal`` string alongside a real ``Decimal``."""
-        if isinstance(value, str):
-            return Decimal(value)
-        return value
+        return _project_registry_token_field(value, info)
 
     @field_validator("iva_rate")
     @classmethod
@@ -720,50 +709,6 @@ class Transaction(BaseModel):
                 f"iva_rate is a decimal fraction, not a percentage: got {value}. Express 21% IVA as 0.21.",
             )
         return value
-
-    @field_validator("classified_at", "created_at", "modified_at", mode="before")
-    @classmethod
-    @pydantic_validation_boundary
-    def _coerce_datetime_field(cls, value: object) -> object:
-        """Accept a JSON-decoded ISO-8601 datetime string alongside a real ``datetime``."""
-        if isinstance(value, str):
-            return parse_iso_datetime(value)
-        return value
-
-    @field_validator(
-        "attachment_ids",
-        "evidence_provenance",
-        "edit_lineage",
-        "lifecycle_lineage",
-        "classification_history",
-        "cash_accounting_payment_evidence",
-        mode="before",
-    )
-    @classmethod
-    @pydantic_validation_boundary
-    def _coerce_collection_field(cls, value: object) -> object:
-        """Freeze a JSON-decoded list into the declared tuple shape.
-
-        Under strict mode a python-mode ``list`` fails ``tuple_type`` even
-        though a JSON-decoded array is legitimately a list; this makes the
-        JSON-shaped list acceptable without loosening the frozen-tuple
-        contract on the stored value. ``None`` also collapses to the field's
-        empty-tuple default rather than failing ``tuple_type``.
-        """
-        if value is None:
-            return ()
-        if isinstance(value, list):
-            # An empty JSON array is the common case and has one tuple form.
-            return OBJECT_TUPLE_ADAPTER.validate_python(value) if value else ()
-        return value
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _enforce_derived_transaction_id(self) -> Self:
-        """Validate ``transaction_id`` against the already-validated raw record."""
-        if self.transaction_id != derive_transaction_id(self.raw, own_account_id=self.own_account_id):
-            raise TransactionValidationError("transaction_id must match the stable hash derived from raw")
-        return self
 
     @field_validator(
         "invoice_id",
@@ -814,15 +759,6 @@ class Transaction(BaseModel):
     def _validate_classified_by(cls, value: str) -> str:
         """Restrict ``classified_by`` to the approved shapes."""
         return validate_classified_by_shape(value)
-
-    @field_validator("classified_at", "created_at", "modified_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _require_aware_timestamp(cls, value: datetime | None) -> datetime | None:
-        """Reject naive classification/lifecycle timestamps; ``None`` remains valid here."""
-        if value is None:
-            return None
-        return require_aware_datetime(value)
 
     @field_validator("classification_confidence")
     @classmethod
@@ -918,13 +854,38 @@ class Transaction(BaseModel):
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
+    def _enforce_whole_row_rules(self, info: core_schema.ValidationInfo) -> Self:
+        """Run every whole-row admission rule, in order, behind one validation boundary.
+
+        The first rule a row breaks is the one reported, exactly as when each
+        rule was its own validator. An authenticated stored row skips only the
+        rules its validation context names.
+        """
+        if not _skips_admission_check(info, _DERIVED_TRANSACTION_ID_CHECK):
+            self._enforce_derived_transaction_id()
+        self._enforce_business_pct()
+        self._enforce_exemption_article_category()
+        self._enforce_art_104_tres_exclusion_is_operator_declared()
+        self._enforce_cash_accounting_axis()
+        self._enforce_fx_coupling()
+        self._enforce_gross_equals_base_plus_iva_plus_recargo()
+        return self
+
+    def _enforce_derived_transaction_id(self) -> Self:
+        """Validate ``transaction_id`` against the already-validated raw record.
+
+        An authenticated stored row skips the re-hash: its id is the object key
+        the store's AEAD binding authenticates.
+        """
+        if self.transaction_id != derive_transaction_id(self.raw, own_account_id=self.own_account_id):
+            raise TransactionValidationError("transaction_id must match the stable hash derived from raw")
+        return self
+
     def _enforce_business_pct(self) -> Self:
         """Enforce the classification/business percentage coupling."""
         validate_business_pct_coupling(self.business_classification, self.business_pct)
         return self
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
     def _enforce_exemption_article_category(self) -> Self:
         """Keep the Art. 20 discriminator coupled to domestic exempt IVA rows."""
         if self.exemption_article is not None:
@@ -936,8 +897,6 @@ class Transaction(BaseModel):
             )
         return self
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
     def _enforce_art_104_tres_exclusion_is_operator_declared(self) -> Self:
         """Reject registry-declared auto-derived exclusions as transaction tags."""
         if self.art_104_tres_exclusion is None:
@@ -957,8 +916,6 @@ class Transaction(BaseModel):
             )
         return self
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
     def _enforce_cash_accounting_axis(self) -> Self:
         """Keep cash-accounting timing evidence independent and complete.
 
@@ -981,8 +938,6 @@ class Transaction(BaseModel):
         )
         return self
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
     def _enforce_fx_coupling(self) -> Self:
         """Enforce that fx_rate and value_in_eur are both set or both absent.
 
@@ -1001,8 +956,6 @@ class Transaction(BaseModel):
             raise TransactionValidationError("rate_source/rate_date require an fx_rate (rate provenance needs a rate)")
         return self
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
     def _enforce_gross_equals_base_plus_iva_plus_recargo(self) -> Self:
         """Enforce ``gross == taxable_base + iva_amount + recargo_amount`` to the cent.
 
@@ -1122,6 +1075,11 @@ def existing_transaction_import_fingerprints(transaction: Transaction) -> frozen
     return frozenset(fingerprints)
 
 
+def _json_catalogue_member(value: object) -> Transaction:
+    """Validate one catalogue member decoded from JSON text as that text."""
+    return Transaction.model_validate_json(json.dumps(value))
+
+
 class TransactionCatalogue(BaseModel):
     """Immutable catalogue keyed by ``transaction_id``.
 
@@ -1137,19 +1095,31 @@ class TransactionCatalogue(BaseModel):
     @model_validator(mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _coerce_catalogue_input(cls, data: object) -> object:
-        """Accept either a bare mapping or an iterable of transactions."""
+    def _coerce_catalogue_input(cls, data: object, info: core_schema.ValidationInfo) -> object:
+        """Accept either a bare mapping or an iterable of transactions.
+
+        Reshaping the input hands the members to Python-mode validation, so a
+        member decoded from JSON text is validated from that text here, with
+        the same native coercion a stored row receives.
+        """
         if isinstance(data, cls):
             return data
         if is_object_mapping(data):
             payload = _string_keyed_mapping(data)
-            if "transactions" in payload:
-                return payload
-            return {"transactions": payload}
+            wrapped = "transactions" in payload
+            members = payload["transactions"] if wrapped else payload
+            if info.mode == "json" and is_object_mapping(members):
+                members = {key: _json_catalogue_member(value) for key, value in _string_keyed_mapping(members).items()}
+            return {**payload, "transactions": members} if wrapped else {"transactions": members}
         if isinstance(data, Iterable) and not isinstance(data, str | bytes):
             transactions: dict[str, Transaction] = {}
             for item in OBJECT_TUPLE_ADAPTER.validate_python(data):
-                transaction = item if isinstance(item, Transaction) else Transaction.model_validate(item)
+                if isinstance(item, Transaction):
+                    transaction = item
+                elif info.mode == "json":
+                    transaction = _json_catalogue_member(item)
+                else:
+                    transaction = Transaction.model_validate(item)
                 if transaction.transaction_id in transactions:
                     raise TransactionValidationError(f"duplicate transaction_id: {transaction.transaction_id}")
                 transactions[transaction.transaction_id] = transaction

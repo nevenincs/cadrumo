@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.invoices.service import LinkInconsistency
@@ -115,7 +116,12 @@ class LedgerCheckProjection(BaseModel):
 
 
 class LedgerCheckExecutor:
-    """Read both catalogues and preflight inside retained profile custody."""
+    """Read both catalogues and preflight inside retained profile custody.
+
+    The check is the explicit full re-validation path: it reads the transaction
+    catalogue once, with every admission check re-run on every row, including
+    the id re-derivation an ordinary read skips.
+    """
 
     def __init__(self, ports: LedgerActionPortsFactory) -> None:
         """Retain the explicit profile-bound ledger port factory."""
@@ -139,9 +145,14 @@ class LedgerCheckExecutor:
                 or ports.operation is not operation
             ):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+            reader = ports.fully_validated_transaction_reader
+            if reader is None:
+                raise InternalInvariantError("ledger check requires the fully validating transaction catalogue read")
+            if reader.bucket_id != bucket_id:
+                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             check = read_ledger_check(
                 bucket_id=bucket_id,
-                transactions=ports.transaction_repository.load(),
+                transactions=reader.load_fully_validated(),
                 ports=InvoiceCatalogueReadPorts(
                     invoice_reader=ports.invoice_repository,
                     transaction_reader=ports.transaction_repository,

@@ -21,6 +21,7 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
+from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
@@ -103,7 +104,7 @@ def _activity_invoice(
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva,
             "irpf_category": "actividad_economica",
-            "tipo_actividad": "A05",
+            "tipo_actividad": TipoActividad.A05_PROFESIONALES,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
@@ -126,7 +127,7 @@ def _gross_only_activity_receipt(provider_id: str, *, amount: Decimal) -> Transa
             "iva_rate": None,
             "iva_amount": None,
             "irpf_category": "actividad_economica",
-            "tipo_actividad": "A05",
+            "tipo_actividad": TipoActividad.A05_PROFESIONALES,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",

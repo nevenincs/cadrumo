@@ -193,7 +193,8 @@ def test_an_unknown_plain_enum_token_is_refused_on_its_field() -> None:
     error = _single_refusal(payload)
 
     assert error["loc"] == ("direction",)
-    assert error["msg"] == "Value error, 'sideways' is not a valid TransactionDirection"
+    assert error["type"] == "enum"
+    assert error["input"] == "sideways"
 
 
 def test_an_absent_required_enum_is_refused_rather_than_defaulted() -> None:
@@ -253,7 +254,7 @@ def test_absent_optional_tokens_stay_absent() -> None:
 def test_collections_freeze_to_tuples_whether_empty_absent_or_populated() -> None:
     payload = _first_payload(treatment="none")
     payload["attachment_ids"] = []
-    payload["edit_lineage"] = None
+    del payload["edit_lineage"]
     payload["classification_history"] = []
 
     empty = Transaction.model_validate_json(json.dumps(payload))
@@ -264,6 +265,17 @@ def test_collections_freeze_to_tuples_whether_empty_absent_or_populated() -> Non
     assert empty.edit_lineage == ()
     assert empty.classification_history == ()
     assert populated.attachment_ids == ("attachment-a", "attachment-b")
+
+
+def test_a_null_collection_is_refused_rather_than_emptied() -> None:
+    """A stored row always writes its collections as arrays, so ``null`` is not one of them."""
+    payload = _first_payload(treatment="none")
+    payload["edit_lineage"] = None
+
+    error = _single_refusal(payload)
+
+    assert error["loc"] == ("edit_lineage",)
+    assert error["type"] == "tuple_type"
 
 
 def test_a_collection_that_is_not_an_array_is_refused() -> None:

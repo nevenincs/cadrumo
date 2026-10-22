@@ -117,8 +117,10 @@ def test_one_stale_row_still_refuses_the_whole_read(tmp_path: Path) -> None:
             TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
 
 
-def test_a_load_still_proves_every_stored_row(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """A read from storage re-derives each row's id; appends trusting members never reach here."""
+def test_the_explicit_revalidation_read_proves_every_stored_row(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An ordinary read trusts the store's binding for each row's id; the explicit re-validation re-derives it."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
             TransactionCatalogue.from_transactions([_transaction(f"row-{index}") for index in range(3)]),
@@ -132,12 +134,15 @@ def test_a_load_still_proves_every_stored_row(tmp_path: Path, monkeypatch: pytes
 
         monkeypatch.setattr(transaction_models, "derive_transaction_id", counting)
         TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+        ordinary = len(derivations)
+        TransactionCatalogueRepository(bucket_id=profile.bucket_id).load_fully_validated()
 
+    assert ordinary == 0
     assert len(derivations) >= 3
 
 
-def test_a_tampered_stored_row_is_refused_on_load(tmp_path: Path) -> None:
-    """TEETH: a stored row whose body no longer derives its id does not load."""
+def test_a_tampered_stored_row_is_refused_by_the_explicit_revalidation(tmp_path: Path) -> None:
+    """TEETH: a stored row whose body no longer derives its id fails the explicit re-validation read."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         target = _transaction("row-tampered")
         TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
@@ -163,4 +168,4 @@ def test_a_tampered_stored_row_is_refused_on_load(tmp_path: Path) -> None:
         )
 
         with pytest.raises(StoredTransactionDriftError):
-            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load_fully_validated()

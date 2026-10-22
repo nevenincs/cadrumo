@@ -16,6 +16,7 @@ the refusals.
 from __future__ import annotations
 
 import asyncio
+import json
 from collections import Counter
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass, replace
@@ -23,7 +24,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Protocol, cast, override
+from typing import Any, Protocol, cast, override
 from uuid import UUID
 
 import pytest
@@ -32,6 +33,7 @@ from sqlalchemy import delete
 
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ...adapters.persistence.storage.sql import orm
 from ...adapters.persistence.storage.sql.session import session_scope
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -92,15 +94,17 @@ from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.owner import OperationExecutorContext
 from ...application.operations.public_period import PublicPeriod
 from ...core.errors.error_codes import ErrorCategory, get_registered_error_code, resolve_error_message
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.period import Period
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
-from ...domain.transactions.errors import TransactionIdPrefixError
+from ...domain.transactions.errors import StoredTransactionDriftError, TransactionIdPrefixError
 from ...domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...domain.transactions.repository import transaction_object_key
 from ..adapter_composition import build_verification_repository_bundle
 from ..ledger_action_composition import compose_ledger_action_ports, compose_ledger_read_ports
 
@@ -317,7 +321,7 @@ class _ObservedReads(TransactionCatalogueCoCommitWriterProtocol):
     whole-catalogue read gave before the reads were narrowed.
     """
 
-    def __init__(self, repository: TransactionCatalogueCoCommitWriterProtocol, *, widen: bool) -> None:
+    def __init__(self, repository: TransactionCatalogueRepository, *, widen: bool) -> None:
         self._repository = repository
         self._widen = widen
         self.calls: Counter[str] = Counter()
@@ -336,6 +340,10 @@ class _ObservedReads(TransactionCatalogueCoCommitWriterProtocol):
     def load(self) -> TransactionCatalogue:
         self.calls["load"] += 1
         return self._repository.load()
+
+    def load_fully_validated(self) -> TransactionCatalogue:
+        self.calls["load_fully_validated"] += 1
+        return self._repository.load_fully_validated()
 
     @override
     def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
@@ -386,6 +394,7 @@ class _Observer:
     repositories: list[_ObservedReads]
 
     def observe(self, repository: TransactionCatalogueCoCommitWriterProtocol) -> _ObservedReads:
+        assert isinstance(repository, TransactionCatalogueRepository)
         observed = _ObservedReads(repository, widen=self.widen)
         self.repositories.append(observed)
         return observed
@@ -400,7 +409,9 @@ class _Observer:
 def _action_ports(observer: _Observer) -> LedgerActionPortsFactory:
     def build(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerActionPorts:
         ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=operation)
-        return replace(ports, transaction_repository=observer.observe(ports.transaction_repository))
+        observed = observer.observe(ports.transaction_repository)
+        assert ports.fully_validated_transaction_reader is ports.transaction_repository
+        return replace(ports, transaction_repository=observed, fully_validated_transaction_reader=observed)
 
     return build
 
@@ -710,7 +721,9 @@ def test_check_reads_the_catalogue_once_and_keeps_links_global_under_a_period(
     for period in (_Q4_2030, Period.from_year_and_code(2030, "2T"), None):
         outcome, calls, reference = _paired(_check(period, authority_operation))
         assert outcome == reference
-        assert calls == Counter(load=1), f"check for {period} must read the whole catalogue exactly once"
+        assert calls == Counter(load_fully_validated=1), (
+            f"check for {period} must read the whole catalogue exactly once, in full"
+        )
         assert isinstance(outcome, LedgerCheckProjection)
         assert [(link.transaction_id, link.invoice_id) for link in outcome.link_inconsistencies] == [
             (seeded.direct["prior-year-one-sided-link"].transaction_id, "INV-NOT-STORED-0001")
@@ -723,6 +736,102 @@ def test_check_reads_the_catalogue_once_and_keeps_links_global_under_a_period(
     assert isinstance(preflight, LedgerPreflightProjection)
     assert q4.checked_transaction_count == preflight.checked_transaction_count
     assert [issue.to_issue() for issue in q4.issues] == [issue.to_issue() for issue in preflight.issues]
+
+
+class _OrdinaryReadAsFullValidation:
+    """The ledger check as it read before: the ordinary catalogue read in place of full validation."""
+
+    def __init__(self, repository: TransactionCatalogueRepository) -> None:
+        self._repository = repository
+
+    @property
+    def bucket_id(self) -> str:
+        return self._repository.bucket_id
+
+    def load_fully_validated(self) -> TransactionCatalogue:
+        return self._repository.load()
+
+
+def _check_with(
+    period: Period | None,
+    operation: PinnedAuthorityOperation,
+    reader: Callable[[TransactionCatalogueRepository], object | None],
+) -> _Outcome:
+    def build(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerActionPorts:
+        ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=operation)
+        repository = ports.transaction_repository
+        assert isinstance(repository, TransactionCatalogueRepository)
+        return replace(ports, fully_validated_transaction_reader=cast(Any, reader(repository)))
+
+    return _execute(
+        LedgerCheckExecutor(build),
+        LEDGER_CHECK_OPERATION_DEFINITION_ID,
+        LedgerCheckRequest(
+            profile_id=_PROFILE_UUID,
+            period=PublicPeriod.from_period(period) if period is not None else None,
+        ),
+        operation,
+    )
+
+
+def _rewrite_stored_description(profile: TestRuntimeProfile, transaction_id: str) -> None:
+    """Re-encrypt one row with a narrative its id was not derived from, as only a key holder could."""
+    object_key = transaction_object_key(_BUCKET, transaction_id)
+    record = profile.repository.load(
+        TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+        object_key,
+        expected_class=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
+        max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
+    )
+    assert record is not None
+    envelope = json.loads(record.payload.decode("utf-8"))
+    envelope["payload"]["raw"]["description"] = "rewritten after the id was derived"
+    profile.repository.save(
+        namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+        object_key=object_key,
+        classification=record.classification,
+        schema_version=record.schema_version,
+        written_at=record.written_at,
+        payload=json.dumps(envelope).encode("utf-8"),
+    )
+
+
+def test_check_answers_clean_data_exactly_as_the_ordinary_read_did(
+    seeded: _Seeded,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Reading the catalogue in full changes no finding, count or verdict on rows that pass admission."""
+    del seeded
+    for period in (_Q4_2030, Period.from_year_and_code(2030, "2T"), None):
+        full = _check_with(period, authority_operation, lambda repository: repository)
+        ordinary = _check_with(period, authority_operation, _OrdinaryReadAsFullValidation)
+        assert isinstance(full, LedgerCheckProjection)
+        assert full == ordinary
+
+
+def test_check_refuses_a_stored_row_the_ordinary_read_accepts(
+    seeded: _Seeded,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """TEETH: a row whose id no longer derives from its fields loads, and the explicit check refuses it."""
+    target = seeded.direct["q4-first-day"]
+    _rewrite_stored_description(seeded.profile, target.transaction_id)
+
+    loaded = TransactionCatalogueRepository(bucket_id=_BUCKET).load()
+    assert loaded.transactions[target.transaction_id].raw.description == "rewritten after the id was derived"
+
+    with pytest.raises(StoredTransactionDriftError):
+        _check_with(None, authority_operation, lambda repository: repository)
+
+
+def test_check_refuses_a_composition_without_the_fully_validating_read(
+    seeded: _Seeded,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """The check never falls back to the ordinary read when full validation is not supplied."""
+    del seeded
+    with pytest.raises(InternalInvariantError):
+        _check_with(None, authority_operation, lambda _repository: None)
 
 
 # ---------------------------------------------------------------------------

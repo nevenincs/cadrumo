@@ -72,9 +72,10 @@ def compose_ledger_action_ports(
     ) -> UsageRatioProfile:
         return load_usage_ratios(bucket_id=bucket_id, operation=operation)
 
+    transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id)
     return LedgerActionPorts(
         operation=operation,
-        transaction_repository=TransactionCatalogueRepository(bucket_id=bucket_id),
+        transaction_repository=transaction_repository,
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id=bucket_id),
         attachment_store=AttachmentStore(objects=objects, bucket_id=bucket_id),
@@ -83,6 +84,7 @@ def compose_ledger_action_ports(
         work_unit_repository=WorkUnitCatalogueRepository(bucket_id=bucket_id),
         calculation_repository=calculation_persistence.calculation_repository(),
         purchase_invoice_evidence_records=evidence_records,
+        fully_validated_transaction_reader=transaction_repository,
     )
 
 

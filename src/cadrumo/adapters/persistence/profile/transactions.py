@@ -36,6 +36,7 @@ from ....domain.transactions.models import (
     OutOfWindowTransactionSummary,
     Transaction,
     TransactionCatalogue,
+    validate_authenticated_stored_transaction_json,
 )
 from ....domain.transactions.repository import transaction_index_object_key, transaction_object_key
 from ..storage.errors import (
@@ -60,7 +61,7 @@ from .transaction_date_projection import (
 from .transaction_iva_migration import migrated_iva_deduction_fact, migrated_iva_rate_kind
 from .transaction_row_contracts import (
     TransactionMembershipIndex,
-    validate_persisted_transaction_timestamps,
+    require_persisted_transaction_timestamps,
 )
 from .transaction_storage_failures import translating_transaction_storage_failures
 
@@ -68,6 +69,7 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from sqlalchemy.orm import Session
 
     from ....core.secure_object_write import SecureObjectWrite
+    from ..storage.envelope.contract import Envelope
     from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
     from ..storage.sql.secure_object_records import SecureObjectDeletion, SecureObjectRevisionAssertion
     from ..storage.sql.secure_objects import SecureObjectRepository
@@ -199,6 +201,11 @@ class TransactionCatalogueRepository:
     def load(self) -> TransactionCatalogue:
         """Return the persisted catalogue, assembled from this bucket's rows.
 
+        Each row is decoded as an authenticated stored row: the store decrypted
+        it under its AEAD binding in this call, so the derived-id re-hash is
+        skipped while every structural, field and registry check runs.
+        :meth:`load_fully_validated` re-runs every admission check instead.
+
         The per-bucket membership index names exactly the transaction ids this
         bucket owns; only the rows whose digest the index lists are read, so a
         shared secure store never leaks another bucket's transactions.
@@ -217,6 +224,20 @@ class TransactionCatalogueRepository:
             StoredTransactionDriftError: If a row payload fails pydantic schema
                 validation on deserialization.
         """
+        return self._load_catalogue(authenticated=True)
+
+    @translating_transaction_storage_failures
+    def load_fully_validated(self) -> TransactionCatalogue:
+        """Return the persisted catalogue with every admission check re-run on every row.
+
+        The explicit re-validation read: unlike :meth:`load`, it also re-derives
+        each row's id from its raw record, so a stored row that no longer
+        satisfies admission is refused here as schema drift.
+        """
+        return self._load_catalogue(authenticated=False)
+
+    def _load_catalogue(self, *, authenticated: bool) -> TransactionCatalogue:
+        """Assemble this bucket's catalogue, decoding rows as authenticated or in full."""
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
 
         index_ids = self._load_index_ids()
@@ -245,7 +266,7 @@ class TransactionCatalogueRepository:
             record = records_by_digest.get(secure_object_key_digest(object_key))
             if record is None:
                 continue
-            transaction = self._validated_catalogue_row(record.payload, transaction_id)
+            transaction = self._validated_catalogue_row(record.payload, transaction_id, authenticated=authenticated)
             self._assert_transaction_row_identity(transaction, expected_transaction_id=transaction_id)
             # Write-path cache: memoize the stored envelope's payload hash against this exact
             # loaded instance. An untouched row at save time is the SAME
@@ -260,37 +281,18 @@ class TransactionCatalogueRepository:
         )
         return catalogue_from_loaded_transactions(transactions)
 
-    def _validated_catalogue_row(self, payload: bytes, transaction_id: str) -> Transaction:
+    def _validated_catalogue_row(self, payload: bytes, transaction_id: str, *, authenticated: bool) -> Transaction:
         """Decode a current transaction row with all schema and classification refusals."""
-        from ..storage.envelope.contract import Envelope
         from ..storage.schema_lineage import (
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
 
-        try:
-            # The D6 timestamp guard runs first, so a row that lost its
-            # lifecycle timestamps is refused before the envelope can default
-            # them. Both parse the original bytes in JSON mode, which the
-            # envelope's ``strict=True`` config needs for string -> datetime
-            # and string -> enum coercion.
-            validate_persisted_transaction_timestamps(payload)
-            envelope = Envelope[Transaction].model_validate_json(payload)
-        except ValidationError as exc:
-            if governed_facts_in_scope() is None:
-                # A row validates against registry vocabulary, so a decode
-                # attempted outside an authority operation cannot tell drift
-                # from its own missing scope. Reporting drift here sent the
-                # operator to repair data that may be perfectly current.
-                raise InternalInvariantError(
-                    "stored transaction decode requires an explicit authority operation or scope"
-                ) from exc
-            _log.error(
-                "transaction row schema drift bucket_id=%s",
-                self._bucket_id,
-                exc_info=True,
-            )
-            raise StoredTransactionDriftError(self._bucket_id, exc) from exc
+        # The row is parsed once, in JSON mode, which the envelope's
+        # ``strict=True`` config needs for string -> datetime and string -> enum
+        # coercion. The store decrypted it under its AEAD binding in the same
+        # call, so an ordinary read decodes it as an authenticated stored row.
+        envelope = self._decode_catalogue_row(payload, authenticated=authenticated)
         if not inner_envelope_classification_is_expected(
             envelope.classification, TRANSACTION_CATALOGUE_NAMESPACE.sensitivity
         ):
@@ -318,6 +320,9 @@ class TransactionCatalogueRepository:
         if not inner_envelope_version_is_current(
             envelope.schema_version, TRANSACTION_CATALOGUE_NAMESPACE.schema_version
         ):
+            # The authenticated-row exemption covers only the current schema, so
+            # a row of any other version is validated in full before it is refused.
+            self._decode_catalogue_row(payload, authenticated=False)
             raise EnvelopeVersionError(
                 context={
                     "namespace": TRANSACTION_CATALOGUE_NAMESPACE.namespace,
@@ -330,6 +335,40 @@ class TransactionCatalogueRepository:
             )
         transaction = envelope.payload
         return transaction
+
+    def _decode_catalogue_row(self, payload: bytes, *, authenticated: bool) -> Envelope[Transaction]:
+        """Decode one stored row, translating a validation failure into drift.
+
+        ``authenticated`` selects the authenticated stored-row decode, which only
+        a row the store decrypted in this call and written under the current
+        schema version may use; every other row is validated in full.
+        """
+        from ..storage.envelope.contract import Envelope
+
+        try:
+            if authenticated:
+                envelope = validate_authenticated_stored_transaction_json(Envelope[Transaction], payload)
+            else:
+                envelope = Envelope[Transaction].model_validate_json(payload)
+            # A row that lost its D6 lifecycle timestamps is refused rather than
+            # returned with the defaults the decode stamped on it.
+            require_persisted_transaction_timestamps(envelope.payload)
+        except ValidationError as exc:
+            if governed_facts_in_scope() is None:
+                # A row validates against registry vocabulary, so a decode
+                # attempted outside an authority operation cannot tell drift
+                # from its own missing scope. Reporting drift here sent the
+                # operator to repair data that may be perfectly current.
+                raise InternalInvariantError(
+                    "stored transaction decode requires an explicit authority operation or scope"
+                ) from exc
+            _log.error(
+                "transaction row schema drift bucket_id=%s",
+                self._bucket_id,
+                exc_info=True,
+            )
+            raise StoredTransactionDriftError(self._bucket_id, exc) from exc
+        return envelope
 
     def _validated_migrated_transactions(self, payloads: Mapping[str, bytes]) -> tuple[Transaction, ...]:
         """Return the complete semantically validated upgraded transaction set."""
@@ -767,7 +806,7 @@ class TransactionCatalogueRepository:
             # scan and filter in memory so correctness never depends on the
             # plaintext index being present or fresh.
             full_catalogue = self.load()
-            return TransactionCatalogue.from_transactions(
+            return catalogue_from_loaded_transactions(
                 transaction
                 for transaction in full_catalogue.values()
                 if start <= transaction_filing_date(transaction) <= end
@@ -781,7 +820,7 @@ class TransactionCatalogueRepository:
             end.isoformat(),
             len(transactions),
         )
-        return TransactionCatalogue.from_transactions(transactions)
+        return catalogue_from_loaded_transactions(transactions)
 
     @translating_transaction_storage_failures
     def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
@@ -801,7 +840,7 @@ class TransactionCatalogueRepository:
             self._bucket_id,
             len(transactions),
         )
-        return TransactionCatalogue.from_transactions(transactions)
+        return catalogue_from_loaded_transactions(transactions)
 
     def _partition_from_full_scan(self, start: date, end: date) -> LedgerDatePartition:
         """Partition every decrypted row after the date index fails completeness."""
@@ -829,7 +868,7 @@ class TransactionCatalogueRepository:
             len(out_of_window),
         )
         return LedgerDatePartition(
-            in_window=TransactionCatalogue.from_transactions(in_window),
+            in_window=catalogue_from_loaded_transactions(in_window),
             out_of_window=tuple(out_of_window),
             out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
             index_complete=False,
@@ -969,6 +1008,7 @@ class TransactionCatalogueRepository:
         """Load selected transaction rows through one targeted secure-object batch."""
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
         from ..storage.envelope.contract import Envelope
+        from ..storage.schema_lineage import inner_envelope_version_is_current
 
         selected_ids = tuple(sorted(transaction_ids))
         if not selected_ids:
@@ -995,7 +1035,14 @@ class TransactionCatalogueRepository:
             if transaction_id is None:
                 continue
             try:
-                envelope = Envelope[Transaction].model_validate_json(record.payload)
+                # The store decrypted this current-version row under its AEAD
+                # binding in this call; a row whose inner envelope names another
+                # schema version is validated in full instead.
+                envelope = validate_authenticated_stored_transaction_json(Envelope[Transaction], record.payload)
+                if not inner_envelope_version_is_current(
+                    envelope.schema_version, TRANSACTION_CATALOGUE_NAMESPACE.schema_version
+                ):
+                    envelope = Envelope[Transaction].model_validate_json(record.payload)
             except ValidationError as exc:
                 _log.error(
                     "transaction row schema drift bucket_id=%s (%s)",

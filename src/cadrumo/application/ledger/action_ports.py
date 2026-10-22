@@ -20,7 +20,7 @@ from .evidence import PurchaseInvoiceEvidence
 from .protocols import (
     InvoiceCatalogueCoCommitWriterProtocol,
 )
-from .read_ports import LedgerReadPorts
+from .read_ports import FullyValidatedTransactionCatalogueReader, LedgerReadPorts
 from .usage_ratio_repository import UsageRatioProfileLoader
 
 if TYPE_CHECKING:
@@ -38,6 +38,10 @@ class LedgerActionPorts(LedgerReadPorts):
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
     purchase_invoice_evidence_records: tuple[PurchaseInvoiceEvidence, ...]
+    #: The explicit full re-validation read of the transaction catalogue. The
+    #: production composition always supplies it; a read that requires it
+    #: refuses rather than falling back to the ordinary read.
+    fully_validated_transaction_reader: FullyValidatedTransactionCatalogueReader | None = None
 
 
 class LedgerActionPortsFactory(Protocol):
