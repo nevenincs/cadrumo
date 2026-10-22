@@ -9,7 +9,7 @@ related:
   - '[[2026-07-05-ledger-latency-budget-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:33bedb91cfa9ce9bd41d2b52c3edc17ec2b9da1db55a11770124e8aec3e2c27b'
+body_hash: 'sha256:23af986c782a180c4768c66631bcd7ae43b107d6b46c951614119173d5fca5d4'
 ---
 
 # `ledger-tui-doors` plan
@@ -42,7 +42,7 @@ Five domain agents run in parallel, each giving its ledger operations their own 
 
 - [ ] `P02.S02` - give entries and export (16 operations) a paged entry browser, add, lifecycle, health, reset and export tools, and the exclusion submitter; `src/cadrumo/entrypoints/tui/ledger/entries_*.py and runtime_ledger_entries.py`.
 - [ ] `P02.S03` - give categorisation (18 operations) bulk and IVA classification, rules, counterparties, splits, allocation, participation and ratios screens; `src/cadrumo/entrypoints/tui/ledger/categorisation_*.py and runtime_ledger_categorisation.py`.
-- [ ] `P02.S04` - give evidence and attachments (12 operations) attach, detach, batch intake and evidence view, update, remove and review screens; `src/cadrumo/entrypoints/tui/ledger/evidence_files_*.py and runtime_ledger_evidence_files.py`.
+- [x] `P02.S04` - give evidence and attachments (12 operations) attach, detach, batch intake and evidence view, update, remove and review screens; `src/cadrumo/entrypoints/tui/ledger/evidence_files_*.py and runtime_ledger_evidence_files.py`.
 - [x] `P02.S05` - give records, invoices and reconciliation (9 operations) the record doors, invoice import, wizard and removal, and the link submitter; `src/cadrumo/entrypoints/tui/ledger/invoices_*.py and runtime_ledger_invoices.py`.
 - [x] `P02.S06` - give registers (15 operations) prorrata, bienes de inversion and inventory screens; `src/cadrumo/entrypoints/tui/ledger/registers_*.py and runtime_ledger_registers.py`.
 
@@ -53,6 +53,8 @@ Dedicated agents make the ledger reads behind the Records screens meet the 30,00
 - [x] `P04.S09` - make a period-filtered ledger.list read only the date-index partition, with the completeness gate, parity tests and the D1 CPU gate as acceptance; `src/cadrumo/application/ledger/list_query.py`.
 - [x] `P04.S10` - cut the per-row cost of the full transaction catalogue load without changing encryption, binding or results; `src/cadrumo/adapters/persistence/profile/transactions.py`.
 - [ ] `P04.S11` - measure every ledger read the Records screens call at 30,000 transactions and rank the overruns with their causes; `dev/ci/tests/test_ledger_tui_reads_benchmark.py`.
+- [ ] `P04.S12` - stop the domain Transaction model repeating raw revalidation and registry vocabulary lookups for every loaded row; `src/cadrumo/domain/transactions/models.py`.
+- [ ] `P04.S13` - cut the per-row session freshness checks and repeated object-key digests in the secure object batch read; `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`.
 
 ### Phase `P03` - integrate, verify and review
 

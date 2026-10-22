@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:ef1cba848806f4bb7ba5227351bfecbad3bee622cb51d9cb85c968d85c8ddd98'
+body_hash: 'sha256:4ba368e95dc793c2650fe78d479ef0366a5491686bb9474bdd1c051370f1dfed'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -92,9 +92,33 @@ related:
 - `S06` `verify:` `D5 screen and runtime door tests (117)` -> `pass`
 - `S06` `verify:` `ruff, ty on D5 files; lint-imports` -> `pass`
 - `S06` `by:` `D5`
+- `S04` `A` `dev/tui/harness/ledger_evidence_files_fixtures.py`
+- `S04` `A` `dev/tui/harness/tests/test_ledger_evidence_files_fixtures.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_attachments.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_batch.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_common.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_consent.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_doors.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_queue.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_records.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_review.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_tools.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_write.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/tests/evidence_files_fixtures.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_attachments.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_batch.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_reads.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_records.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_tools.py`
+- `S04` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_evidence_files.py`
+- `S04` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_evidence_files.py`
+- `S04` `verify:` `D3 screen, runtime door, harness and seam tests (194)` -> `pass`
+- `S04` `verify:` `ruff, ty on D3 files; lint-imports` -> `pass`
+- `S04` `by:` `D3`
 
 ## Notes
 
 - `S10` Row cost after the change is about 360 us; the rest sits in the domain Transaction model and shared secure storage, outside this step.
 - `S05` Invoice and transaction updates carry no baseline on the wire; the door re-reads before writing, leaving a race window. Invoice import has no dry run; the apply is bound to the reviewed file by `source_sha256.` The tools composer entry and locale strings land in the integration commit.
 - `S06` The three register list operations have no paging fields; screens hold the register and render one page. The tools composer entry and locale strings land in the integration commit.
+- `S04` evidence.query, `attachment_queue` and consent.list take no paging fields; screens hold the result and render one page. Detach takes typed identities because no operation lists an entry's attachments. A whole-repo ruff safe-fix run touched four files outside D3; owners confirmed nothing was lost. The tools composer entry and locale strings land in the integration commit.
