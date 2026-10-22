@@ -80,7 +80,9 @@ export class SignInFixture {
     this.python = resolve(config.packageRoot, layout.paths.executable);
     this.messages = [];
     this.stderr = "";
-    this.cliSamples = 0;
+    this.childSamples = 0;
+    this.cliLogins = 0;
+    this.watchChildren = 0;
     this.argvLeak = false;
     this.created = false;
     this.profileBound = false;
@@ -236,7 +238,8 @@ export class SignInFixture {
     const script = fileURLToPath(
       new URL("./runtime_fixture.py", import.meta.url),
     );
-    this.child = spawn(this.python, ["-I", script, this.runtime], {
+    const mode = this.config.hostSupervisesRuntime ? ["--host-supervised"] : [];
+    this.child = spawn(this.python, ["-I", script, this.runtime, ...mode], {
       cwd: this.config.run,
       env: this.env,
       stdio: ["pipe", "pipe", "pipe"],
@@ -352,15 +355,13 @@ export class SignInFixture {
       );
       this.profileBound = true;
     });
-    this.measure("initial-cli-status", () => {
-      const before = this.runtimeCall(["config", "sign-in-status"]);
-      assert.equal(before.command, "config.sign-in-status");
-      assert.equal(before.result.status.presence, "absent");
-    });
+    // With a window-supervised runtime the first status read waits for the window.
+    if (!this.config.hostSupervisesRuntime) this.initialStatus();
     return {
       verdict: PASS,
-      detail:
-        "contained packaged runtime completed verified handshake; canonical CLI then created fresh profile",
+      detail: this.config.hostSupervisesRuntime
+        ? "canonical CLI created a fresh profile; the window's supervised runtime will serve it"
+        : "contained packaged runtime completed verified handshake; canonical CLI then created fresh profile",
       data: {
         profileCreateSeconds,
         setupSeconds: (performance.now() - setupStarted) / 1000,
@@ -457,21 +458,38 @@ export class SignInFixture {
     }
   }
 
+  /** The runtime's own sign-in status before any sign-in: absent. */
+  initialStatus() {
+    this.measure("initial-cli-status", () => {
+      const before = this.runtimeCall(["config", "sign-in-status"]);
+      assert.equal(before.command, "config.sign-in-status");
+      assert.equal(before.result.status.presence, "absent");
+    });
+  }
+
   async signIn(session, input, hostPid) {
     let observing = true;
+    // The window signs in on its own runtime connection: no login command
+    // line and no session watch child. Every child of the window is sampled
+    // for a password in its arguments all the same.
     const observer = (async () => {
       while (observing) {
-        for (const process of await input.processes(["aeat.exe"])) {
-          if (
-            process.ppid === hostPid &&
-            process.commandLine?.includes("config") &&
-            process.commandLine.includes("login")
-          ) {
-            this.cliSamples += 1;
-            this.argvLeak ||= [this.secret, this.wrong].some((secret) =>
-              process.commandLine.includes(secret),
-            );
-          }
+        for (const process of await input.processes([
+          "aeat.exe",
+          "cadrumo.exe",
+          "cadrumo-runtime.exe",
+          "python.exe",
+        ])) {
+          if (process.ppid !== hostPid) continue;
+          const commandLine = process.commandLine ?? "";
+          this.childSamples += 1;
+          if (commandLine.includes("config") && commandLine.includes("login"))
+            this.cliLogins += 1;
+          if (commandLine.includes("session") && commandLine.includes("watch"))
+            this.watchChildren += 1;
+          this.argvLeak ||= [this.secret, this.wrong].some((secret) =>
+            commandLine.includes(secret),
+          );
         }
         await sleep(50);
       }
@@ -495,6 +513,7 @@ export class SignInFixture {
         true,
         "native sign-in support must be available",
       );
+      if (this.config.hostSupervisesRuntime) this.initialStatus();
       // The form says, under a label of its own, which profile the
       // password is for.
       const named = session.page.locator(".sign-in .profile-named");
@@ -595,12 +614,22 @@ export class SignInFixture {
 
   async isolation(session, input, projected) {
     assert(
-      this.cliSamples > 0,
-      "at least one live canonical login process must be observed",
+      this.childSamples > 0,
+      "the window's children must have been observed while it signed in",
+    );
+    assert.equal(
+      this.cliLogins,
+      0,
+      "the window signs in on its own runtime connection, never through a login command line",
+    );
+    assert.equal(
+      this.watchChildren,
+      0,
+      "the window observes its sign-in on its own runtime connection, never through a watch child",
     );
     assert(
       !this.argvLeak,
-      "a submitted password appeared in a live CLI argument list",
+      "a submitted password appeared in a live child's argument list",
     );
     const processes = await input.processes([
       "aeat.exe",
@@ -643,7 +672,7 @@ export class SignInFixture {
     }
     return {
       verdict: PASS,
-      detail: `submitted passwords absent from ${this.cliSamples} live CLI argv observations, host diagnostics, raw log files, IPC evidence and docs DOM/state`,
+      detail: `no login command line and no watch child; submitted passwords absent from ${this.childSamples} live child argv observations, host diagnostics, raw log files, IPC evidence and docs DOM/state`,
     };
   }
 

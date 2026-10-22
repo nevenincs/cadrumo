@@ -406,19 +406,26 @@ export async function connect({
   ).connectOverCDP(endpoint, { timeout });
   let session;
   try {
-    const context = await waitFor(() => browser.contexts()[0], {
-      timeout,
-      what: "a browser context",
-    });
+    // The startup window shares the shell origin and lives until the window
+    // has brought its runtime to readiness; the shell document is the other
+    // one, in the workspace window's own data directory and so its own context.
+    let seen = [];
     const page = await waitFor(
-      () =>
-        context
-          .pages()
-          .find((candidate) =>
-            shellOrigins.includes(originOf(candidate.url())),
-          ),
+      () => {
+        const pages = browser.contexts().flatMap((context) => context.pages());
+        seen = pages.map((candidate) => candidate.url());
+        return pages.find(
+          (candidate) =>
+            shellOrigins.includes(originOf(candidate.url())) &&
+            !new URL(candidate.url()).pathname.endsWith("/startup.html"),
+        );
+      },
       { timeout, what: "the shell document" },
-    );
+    ).catch((error) => {
+      throw new Error(
+        `${error.message}; pages seen: ${seen.join(", ") || "none"}`,
+      );
+    });
     session = new Session({ browser, page, shellOrigins, docsOrigin });
     await page.addInitScript(instrument, {
       shellOrigins,

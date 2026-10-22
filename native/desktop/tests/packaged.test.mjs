@@ -24,11 +24,7 @@ import { buildPath } from "../scripts/build-paths.mjs";
 import { docsOrigin as docsOriginOf } from "../scripts/configuration.mjs";
 import { docsProbe, pagefindSearch, pasteInto } from "./packaged/browser.mjs";
 import { hostRefusals, refusalProbe, tokenCheck } from "./packaged/probes.mjs";
-import {
-  installedHost,
-  packagedHost,
-  packagedHostPaths,
-} from "./packaged/host.mjs";
+import { installedHost, packagedHostPaths } from "./packaged/host.mjs";
 import { SignInFixture } from "./packaged/sign-in.mjs";
 import { docsUiChecks } from "./packaged/docs-ui.mjs";
 import {
@@ -310,7 +306,14 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
 
   try {
     // Preflight ----------------------------------------------------------
-    const testHost = packagedHost();
+    // The desktop supervises its runtime only as the installed image of the
+    // package it is pointed at, so the window, its runtime and its CLI start
+    // from the stager's mirror of the staged package, never the stage itself.
+    const testHost = installedHost();
+    config.packageRoot = testHost.package;
+    // The window hosts the shared supervision core and starts the runtime that
+    // serves the run's root; a fixture-owned runtime would leave it owner-busy.
+    config.hostSupervisesRuntime = true;
     const desktop = await input.session();
     summary.host = testHost.executable;
     summary.hostSha256 = testHost.sha256;
@@ -366,7 +369,7 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
     });
     const fixture = await check(
       "sign-in-fixture",
-      "canonical profile creation and explicitly owned packaged runtime",
+      "canonical profile creation; the window supervises the packaged runtime",
       () => signIn.start(),
     );
     if (fixture.verdict !== PASS) return;
@@ -476,8 +479,15 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
     const { page } = session;
     const environment = await session.call("desktop_environment");
     evidence("desktop-environment.json", environment);
-    await session.waitDocs(60000);
-    summary.hostToDocsReadyMs = performance.now() - hostLaunchStarted;
+    // The documentation frame is its own set of checks below; a window whose
+    // docs never settle still signs in, so that is not waited out here.
+    const docsReady = await session
+      .waitDocs(60000)
+      .then(() => true)
+      .catch(() => false);
+    summary.hostToDocsReadyMs = docsReady
+      ? performance.now() - hostLaunchStarted
+      : null;
     await results.screenshot(page, "01-loaded");
 
     const webviewProcesses = async () =>

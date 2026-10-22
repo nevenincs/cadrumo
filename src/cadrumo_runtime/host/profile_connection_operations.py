@@ -173,8 +173,17 @@ class ProfileConnectionOperationMixin:
                 deadline = self._operation_deadline(expires_at)
             except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as error:
                 release_guard.close()
-                # Preserve bounded typed refusal facts; no secret or private result is disclosed.
-                _log.warning("runtime operation refused code=%s", error.reason, exc_info=error)
+                # A typed refusal is an answer, not a fault: name the request and the
+                # registered fault codes, never a traceback, a payload or a message.
+                _log.warning(
+                    "runtime operation refused code=%s request=%s definition=%s faults=%s",
+                    error.reason,
+                    type(request).__name__,
+                    request.definition_id if isinstance(request, OperationSubmit) else "-",
+                    ",".join(fault.type for fault in error.request_faults)
+                    if isinstance(error, AutomationCustodyError) and error.request_faults
+                    else "-",
+                )
                 reply = AccessRefusal(
                     request_id=request.request_id,
                     runtime_boot_id=self.boot,

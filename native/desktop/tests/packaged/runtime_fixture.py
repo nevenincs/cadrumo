@@ -62,46 +62,51 @@ def main() -> None:
             installation(
                 storage_root=root, os_owner_id=endpoint.os_owner_id, storage_identity=endpoint.storage_identity
             )
-            process = scope.launch(
-                executable=runtime,
-                directory=root,
-                environment=dict(os.environ),
-                arguments=(
-                    "--storage-root",
-                    str(root),
-                    "--storage-identity",
-                    endpoint.storage_identity,
-                    "--expected-version",
-                    product,
-                ),
-            )
-            expected = ClientHello(
-                product_version=product,
-                storage_identity=endpoint.storage_identity,
-                authority_generation=published_authority_generation(),
-            )
-            deadline = time.monotonic() + 90
-            while True:
-                try:
-                    channel = endpoint.connect(timeout=0.2, expected_image=runtime)
-                    connection = VerifiedConnection(channel, expected=expected, deadline=deadline)
-                    connection.close()
-                    break
-                except RefusalError as error:
-                    if error.reason is not RefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
-                        raise
+            # With --host-supervised the window's own supervised runtime serves the root;
+            # this fixture then only creates the profile and cleans its receipt up.
+            host_supervised = "--host-supervised" in sys.argv[2:]
+            process = None
+            if not host_supervised:
+                process = scope.launch(
+                    executable=runtime,
+                    directory=root,
+                    environment=dict(os.environ),
+                    arguments=(
+                        "--storage-root",
+                        str(root),
+                        "--storage-identity",
+                        endpoint.storage_identity,
+                        "--expected-version",
+                        product,
+                    ),
+                )
+                expected = ClientHello(
+                    product_version=product,
+                    storage_identity=endpoint.storage_identity,
+                    authority_generation=published_authority_generation(),
+                )
+                deadline = time.monotonic() + 90
+                while True:
                     try:
-                        code = process.wait(timeout=0)
-                    except RefusalError as waiting:
-                        if waiting.reason is not RefusalCode.DEADLINE_EXCEEDED:
+                        channel = endpoint.connect(timeout=0.2, expected_image=runtime)
+                        connection = VerifiedConnection(channel, expected=expected, deadline=deadline)
+                        connection.close()
+                        break
+                    except RefusalError as error:
+                        if error.reason is not RefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
                             raise
-                        time.sleep(0.05)
-                    else:
-                        raise RuntimeError(f"runtime exited before handshake: {code}") from error
+                        try:
+                            code = process.wait(timeout=0)
+                        except RefusalError as waiting:
+                            if waiting.reason is not RefusalCode.DEADLINE_EXCEEDED:
+                                raise
+                            time.sleep(0.05)
+                        else:
+                            raise RuntimeError(f"runtime exited before handshake: {code}") from error
             emit(
                 {
                     "kind": "ready",
-                    "pid": process.pid,
+                    "pid": None if process is None else process.pid,
                     "storageIdentity": endpoint.storage_identity,
                     "osOwnerId": endpoint.os_owner_id,
                 }
@@ -113,14 +118,15 @@ def main() -> None:
                 if profile_id is None:
                     raise RuntimeError("profile creation did not select a profile")
                 emit({"kind": "profile-ready", "profileId": str(profile_id)})
-            try:
-                exit_code = process.wait(timeout=0)
-            except RefusalError as waiting:
-                if waiting.reason is not RefusalCode.DEADLINE_EXCEEDED:
-                    raise
-                emit({"kind": "runtime-alive-before-cleanup", "pid": process.pid})
-            else:
-                emit({"kind": "runtime-exited-before-cleanup", "pid": process.pid, "exitCode": exit_code})
+            if process is not None:
+                try:
+                    exit_code = process.wait(timeout=0)
+                except RefusalError as waiting:
+                    if waiting.reason is not RefusalCode.DEADLINE_EXCEEDED:
+                        raise
+                    emit({"kind": "runtime-alive-before-cleanup", "pid": process.pid})
+                else:
+                    emit({"kind": "runtime-exited-before-cleanup", "pid": process.pid, "exitCode": exit_code})
     finally:
         # Narrow fixture teardown, as in the secure-storage integration fixtures:
         # address only the new profile under this fresh root, after runtime exit.

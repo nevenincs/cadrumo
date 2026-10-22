@@ -404,14 +404,15 @@ def assemble(
         if len(candidates) != 1:
             raise ValueError("PDFium must have exactly one bundled native library")
         source = bindings.read_text(encoding="utf-8")
-        old = "libpaths = ('./{prefix}{name}.{suffix}',),"
-        if source.count(old) != 1:
+        # ctypesgen has written this line with either quote style across pypdfium2 releases.
+        loader = re.compile(r"libpaths\s*=\s*\(\s*(['\"])\./\{prefix\}\{name\}\.\{suffix\}\1,?\s*\),")
+        if len(loader.findall(source)) != 1:
             raise ValueError("Unrecognized pypdfium2 ctypesgen loader")
         before = digest(bindings)
         relative = candidates[0].relative_to(root).as_posix()
         parent = contract["package_root_from_executable"]
         replacement = f"libpaths = (str(pathlib.Path(sys.executable).parent / {parent!r} / {relative!r}),),"
-        bindings.write_text(source.replace(old, replacement), encoding="utf-8")
+        bindings.write_text(loader.sub(lambda _match: replacement, source, count=1), encoding="utf-8")
         patches.append(
             {
                 "file": bindings.relative_to(root).as_posix(),
