@@ -8,6 +8,11 @@ absolute path of an executable the application layer already located:
 * :func:`run_runtime_installer` runs one non-interactive package-manager
   install and returns its exit code.
 
+On Windows both children get a hidden console of their own. A console-less
+child (``DETACHED_PROCESS``, which also voids ``CREATE_NO_WINDOW``) would make
+Windows open a visible console window for every console program it starts,
+and the runtime's server starts one per model load and hardware probe.
+
 Neither function inspects, signals or waits on any process it did not start.
 """
 
@@ -20,6 +25,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from ....application.provisioning_host import RuntimeInstaller
+from ....core.child_console import WINDOWS_CREATE_NO_WINDOW
 
 __all__ = ["run_runtime_installer", "spawn_runtime_server"]
 
@@ -33,9 +39,7 @@ def _detached_launch_options() -> dict[str, object]:
         "close_fds": True,
     }
     if sys.platform == "win32":
-        options["creationflags"] = (
-            subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
-        )
+        options["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP | WINDOWS_CREATE_NO_WINDOW
     else:
         options["start_new_session"] = True
     return options
@@ -79,6 +83,7 @@ def _run_installer(installer: RuntimeInstaller, executable: Path, timeout_s: flo
         "stderr": subprocess.DEVNULL,
         "timeout": timeout_s,
         "check": False,
+        "creationflags": WINDOWS_CREATE_NO_WINDOW if sys.platform == "win32" else 0,
     }
     if installer is RuntimeInstaller.WINGET:
         completed: subprocess.CompletedProcess[Any] = subprocess.run(
@@ -89,6 +94,7 @@ def _run_installer(installer: RuntimeInstaller, executable: Path, timeout_s: flo
                 "Ollama.Ollama",
                 "--exact",
                 "--silent",
+                "--disable-interactivity",
                 "--accept-package-agreements",
                 "--accept-source-agreements",
             ],
