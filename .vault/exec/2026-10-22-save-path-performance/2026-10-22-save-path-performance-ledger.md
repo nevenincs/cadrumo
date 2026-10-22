@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:f2cf11859ba844cbd362fc80294aa6bfc058d2c55c24670c70e1f1ead1cec679'
+body_hash: 'sha256:b8bc758c766cf366f8d70e7861236f73438e43b1304a4cc02833898032afd2ce'
 related:
   - "[[2026-10-22-save-path-performance-plan]]"
 ---
@@ -67,3 +67,13 @@ related:
 - `S04` `by:` `vaultspec-high-executor`
 - `S07` `A` `.vault/audit/2026-10-22-save-path-performance-audit.md`
 - `S07` `by:` `orchestrator`
+- `S04` `M` `src/cadrumo_runtime/adapters/tests/test_worker_authorization_reuse.py`
+- `S04` `M` `src/cadrumo_runtime/adapters/tests/worker_authorization_reuse_fixture.py`
+- `S04` `A` `src/cadrumo_runtime/adapters/tests/test_worker_authorization_incarnation.py`
+- `S04` `A` `src/cadrumo_runtime/adapters/tests/worker_authorization_incarnation_fixture.py`
+- `S04` `M` `.vault/audit/2026-10-22-save-path-performance-audit.md`
+- `S04` `verify:` `uv run --no-sync pytest -m '' -n 0 src/cadrumo_runtime/adapters/tests/test_worker_authorization_reuse.py src/cadrumo_runtime/adapters/tests/test_worker_authorization_incarnation.py` -> `pass`
+
+## Notes
+
+- `S04` plan-close review finding worker-auth-handshake-failure-contains-worker fixed in d63d4ac50f; re-review PASS

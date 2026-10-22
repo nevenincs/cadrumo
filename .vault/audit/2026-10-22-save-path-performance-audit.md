@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:97552226fbe3d9b5c3ff7f330babdd4a2047ae888cd71f196366ecd977fcd443'
+body_hash: 'sha256:92e7418442e96a97fbe5a0f26dc3e01b3c851ac35ff91d38c475fa8065928966'
 related:
   - "[[2026-10-22-save-path-performance-plan]]"
 ---
@@ -38,8 +38,27 @@ The pre-plan run of the TUI driver produced no iteration and was stopped by its 
 
 Four empty `index.lock` files in the shared tui worktree, at about 16:14, 17:37, 19:54 and 19:59, each had no git process holding it. They were removed only after checking. Long-running git calls killed by tool timeouts during hooks are the likely cause. Read-only git now runs with `--no-optional-locks`, and commits run with long timeouts.
 
+### worker-auth-handshake-failure-contains-worker | high | A failed connection handshake contains the worker and latches the authorization server as failed
+
+Plan-close review of S01-S06. In `src/cadrumo_runtime/adapters/worker_authorization.py:198-212` after S04 (`c9c4ee9e8b`), `_connection` runs `_verify_worker_channel` (`:507-523`) under a bare `except Exception` that sets `_failed` and `_stop` and calls `_contain()`. Before S04, a `RefusalError` from verification or the handshake only closed the channel. A scratch probe against the real server reproduced it: a same-user process with the wrong pid, or the expected peer closing before the handshake completes, each caused one `contain()`, and `require_healthy()` and `settle()` then raised `runtime_unavailable`. A worker that abandons a handshake at its deadline, or any same-user process opening the pipe, contains a healthy worker and turns its in-flight operations into UNKNOWN. This contradicts the ADR constraints "Containment unchanged" and "refusal codes unchanged". S04 is reopened.
+
+### incarnation-test-covers-job-membership-only | low | The reuse incarnation test changes only job membership
+
+`src/cadrumo_runtime/adapters/tests/test_worker_authorization_reuse.py:345-357` exercises `_owns_process`. It covers neither the runtime's `require_live_native_peer` pid and creation-time recheck nor the worker's recheck of the runtime (`src/cadrumo_runtime/adapters/worker_authorization_connections.py:101-108`). Both delegate to existing native checks.
+
+### debug-record-cost | medium | Each worker debug record costs about 4 ms, and lock acquire and release lines are the biggest source
+
+Measured by the owner of `2026-10-22-startup-performance-plan` with cProfile on the native workbench test (storage on C:, merged over 16 workbench generations, per generation). `src/cadrumo/core/log_file_handler.py` `_names_descriptor` makes about 212 `os.stat` calls, one per record (about 0.17 s of native stat). A worker debug record costs about 3.9 ms (lock, stat, append announce). The largest record sources are `src/cadrumo/core/locks.py` `held_descriptor_lock` acquire and release lines (about 40 per generation) and `modelos_work_units.load_revisioned` (33). Together they take about 0.33 s of handler time per generation. S02 removed the per-record directory creation and reopens; the per-record identity check and the volume of lock-event records remain. The same measurement found journal settlement at 0.08-0.55 s on C:. On Y:, hardened fsync showed a 0.5 s 90th percentile and one 23.8 s outlier under concurrent load, so measurements with storage on Y: overstate journal cost.
+
+### worker-auth-handshake-fix-review | low | Re-review: the handshake containment finding is resolved by d63d4ac50f
+
+`d63d4ac50f` restores the pre-S04 rule. A refusal during verification, the handshake or an idle wait only closes that channel (`src/cadrumo_runtime/adapters/worker_authorization.py:203-206`). A permit lost while held is still contained inside `_permit_exchange` before a held COMMIT fence drops. A refusal before any permit still answers `AccessRefusal`. A failed approval phase still retires its proof. Faults that are not refusals still latch and contain. The foreign-peer and abandoned-handshake tests fail with the c9c4ee9e8b `_connection` body swapped in and pass at HEAD. The incarnation tests hand the verified pipe to the parent, so only the retained-handle recheck can refuse; this closes incarnation-test-covers-job-membership-only. The probe gives contained 0 and healthy for both cases. Verdict: PASS. No POSIX run.
+
 ## Recommendations
 
 - worker-overview-reread: either return the committed overview, or the changed section, with the field mutation result, or keep the re-read off the durable journal. Changing the mutation result is a protocol change that needs an ADR, which S09's owner should weigh.
 - frontend-login-observation: re-measure on HEAD after the aged-observation probe. If the cost remains, the authority-observation ADR's owner should decide whether a frontend connection's login capture can be held per connection like the worker's peer identity.
+- worker-auth-handshake-failure-contains-worker: in `_connection`, close the channel without containment or a failure latch when verification or the handshake refuses, and add reuse tests for a foreign peer and an aborted handshake. This restores the behaviour the accepted ADR already requires, so no new decision is needed.
+- incarnation-test-covers-job-membership-only: add tests for an exited peer handle and a substituted channel peer on both sides.
+- debug-record-cost: stop emitting lock acquire and release records at DEBUG on hot paths, or keep them in memory; and replace the per-record path identity stat with the change-witness pattern or a check limited to rotation. Both are implementation within settled decisions.
 - pre-plan-tui-run-hang: only reproduce it if a regression on HEAD shows the same symptom.
