@@ -206,7 +206,6 @@ class WorkUnitCatalogueRepository:
                 translated_message=_WORK_UNIT_PERSISTENCE_MESSAGE,
                 logger=_LOGGER,
             )
-        _LOGGER.debug("loaded work-unit catalogue with %d entr(y/ies)", len(catalogue))
         return catalogue, revision_id
 
     def save_with_secure_object_writes(

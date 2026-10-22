@@ -81,6 +81,9 @@ DEFAULT_LOCK_TIMEOUT: Final[_DefaultLockTimeout] = _DefaultLockTimeout()
 _DEFAULT_RETRY_BACKOFF: Final[_DefaultLockTimeout] = _DefaultLockTimeout()
 """Sentinel for :func:`exclusive_file_lock` ``retry_backoff``; resolves at call time."""
 
+SLOW_LOCK_HOLD_SECONDS: Final = 1.0
+"""A hold at least this long is recorded at release even when its acquisition did not wait."""
+
 
 def sidecar_lock_path(target: Path) -> Path:
     """Return the canonical lock-file path adjacent to ``target``."""
@@ -232,8 +235,12 @@ def exclusive_file_lock(
             Must be strictly positive, matching the ``gt=0`` bound on the
             :class:`~core.config.Settings` field that supplies its default.
             Tests may shorten this; defaults to ``0.05``.
-        log_events: Emit lock diagnostics. Logging sinks disable this to avoid
-            recursively writing to the resource whose lock they are acquiring.
+        log_events: Emit lock diagnostics: an acquisition that waited, with its
+            wait, and its release; a release after a hold of at least
+            :data:`SLOW_LOCK_HOLD_SECONDS`; a timeout; a failed release. An
+            uncontended, short hold records nothing. Logging sinks disable this
+            to avoid recursively writing to the resource whose lock they are
+            acquiring.
 
     Yields:
         The :class:`Path` of the acquired lock sidecar.
@@ -272,18 +279,33 @@ def held_descriptor_lock(
     released on exit and the descriptor stays open. A caller that retains
     the descriptor across holds is responsible for noticing that the sidecar
     it names was replaced, since two descriptors of different files exclude
-    nobody. Timeout, backoff and refusal are those of
-    :func:`exclusive_file_lock`.
+    nobody. Timeout, backoff, refusal and the diagnostics ``log_events``
+    enables are those of :func:`exclusive_file_lock`.
     """
     timeout, retry_backoff = _resolved_lock_budget(timeout, retry_backoff)
-    deadline = time.monotonic() + timeout
+    requested = time.monotonic()
+    deadline = requested + timeout
+    attempts = 1
     while not _lock_acquired_before_deadline(fd, lock_path, deadline=deadline, timeout=timeout, log_events=log_events):
         time.sleep(retry_backoff)
-    if log_events:
-        _log.debug("exclusive_file_lock: acquired %s", lock_path)
+        attempts += 1
+    # An uncontended acquire and a short hold say nothing an operator can act
+    # on, and hot paths take this lock many times per operation: only waits,
+    # long holds, timeouts and release failures are recorded.
+    contended = attempts > 1
+    acquired = time.monotonic()
+    if log_events and contended:
+        _log.debug(
+            "exclusive_file_lock: acquired %s after waiting %.3fs over %d attempts",
+            lock_path,
+            acquired - requested,
+            attempts,
+        )
     try:
         yield
     finally:
         _release_lock(fd, log_events=log_events)
         if log_events:
-            _log.debug("exclusive_file_lock: released %s", lock_path)
+            held = time.monotonic() - acquired
+            if contended or held >= SLOW_LOCK_HOLD_SECONDS:
+                _log.debug("exclusive_file_lock: released %s after holding it %.3fs", lock_path, held)

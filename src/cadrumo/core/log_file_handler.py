@@ -8,8 +8,12 @@ retained handle never stops another process renaming the log during rotation.
 Under the lock a writer compares the files its descriptors hold with the ones
 the paths name now. It reopens after another writer rotated the log or the
 directory was replaced, so no record lands in a rotated backup and no writer
-locks an unlinked sidecar. A forked child reopens both rather than share its
-parent's lock. After each append the handler sets a session-local event named
+locks an unlinked sidecar. Looking a path up for every record cost a scanned
+open on Windows, so there a writer remembers the name a lookup last confirmed
+for the open file and asks the open file for its current name instead. A
+rename, including rotation, or a deletion changes that name, and only then
+does the writer look the path up again. A forked child reopens both rather
+than share its parent's lock. After each append the handler sets a session-local event named
 for the user and the log directory. The desktop's log view waits on that event instead of reading the
 files on a timer. The event belongs to this user alone: it is created
 owner-only, and a name another account holds, or an object of another type,
@@ -48,6 +52,9 @@ _OPEN_EXISTING = 3
 _OPEN_ALWAYS = 4
 _FILE_ATTRIBUTE_NORMAL = 0x00000080
 _SIDECAR_REOPEN_ATTEMPTS = 3
+_FILE_NAME_INFO = 2
+# The name's length, then up to 1024 UTF-16 code units; a longer name is looked up by path.
+_FILE_NAME_INFO_BYTES = 4 + 2 * 1024
 
 
 def append_signal_name(directory: str, sid: str) -> str:
@@ -255,6 +262,79 @@ def _names_descriptor(path: str, descriptor: int) -> bool:
     return (named.st_dev, named.st_ino) == (held.st_dev, held.st_ino)
 
 
+@cache
+def _file_name_query() -> Callable[[int], str | None] | None:
+    """Return what asks an open file for its current name, built once per process; ``None`` where none exists."""
+    if sys.platform == "win32":
+        try:
+            return _windows_file_name_query()
+        except Exception:
+            # Every record then looks its paths up, as it did before this query.
+            return None
+    return None
+
+
+if sys.platform == "win32":
+
+    def _windows_file_name_query() -> Callable[[int], str | None]:
+        # Imported here: only a process that writes the diagnostic log file needs them.
+        import ctypes
+        import msvcrt
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        information = kernel32.GetFileInformationByHandleEx
+        information.argtypes = (wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD)
+        information.restype = wintypes.BOOL
+
+        def file_name(descriptor: int) -> str | None:
+            # FILE_NAME_INFO: the name's length in bytes, then the name relative to its volume.
+            buffer = ctypes.create_string_buffer(_FILE_NAME_INFO_BYTES)
+            if not information(msvcrt.get_osfhandle(descriptor), _FILE_NAME_INFO, buffer, _FILE_NAME_INFO_BYTES):
+                return None
+            length = wintypes.DWORD.from_buffer(buffer).value
+            return ctypes.wstring_at(ctypes.addressof(buffer) + 4, length // 2)
+
+        return file_name
+
+
+def _file_name(descriptor: int) -> str | None:
+    """The current name of the file open on ``descriptor``, or ``None`` where the OS cannot say."""
+    query = _file_name_query()
+    return None if query is None else query(descriptor)
+
+
+class _PathNames:
+    """Answer whether a path still names an open file, looking the path up only when the file's name changed.
+
+    The name an open file reports was confirmed to be where the path leads by
+    a lookup taken between two equal readings of it. While the file still
+    reports that name, the path leads to it. Rotation renames the file and a
+    deletion moves it out of its directory; either changes the name, and the
+    next check looks the path up again. Where the OS reports no name, every
+    check looks the path up. A directory on the path re-pointed elsewhere, as
+    by retargeting a junction, changes where the path leads without renaming
+    the file, and goes unseen until the file's name changes.
+    """
+
+    __slots__ = ("_name", "_path")
+
+    def __init__(self, path: str) -> None:
+        self._path = path
+        self._name: str | None = None
+
+    def names(self, descriptor: int) -> bool:
+        """Whether the path still names the file open on ``descriptor``."""
+        before = _file_name(descriptor)
+        if before is not None and before == self._name:
+            return True
+        if not _names_descriptor(self._path, descriptor):
+            return False
+        # A rename racing the lookup leaves the two readings different, and nothing is remembered.
+        self._name = before if before is not None and _file_name(descriptor) == before else None
+        return True
+
+
 class AnnouncingRotatingFileHandler(RotatingFileHandler):
     """Coordinate process writers before rotation and announce completed appends."""
 
@@ -276,6 +356,9 @@ class AnnouncingRotatingFileHandler(RotatingFileHandler):
         self._lock_path = sidecar_lock_path(Path(self.baseFilename))
         self._lock_descriptor: int | None = None
         self._descriptor_owner = os.getpid()
+        self._lock_names = _PathNames(str(self._lock_path))
+        self._log_names = _PathNames(self.baseFilename)
+        self._formatted: tuple[logging.LogRecord, str] | None = None
 
     @override
     def _open(self) -> TextIOWrapper:
@@ -285,12 +368,26 @@ class AnnouncingRotatingFileHandler(RotatingFileHandler):
 
     @override
     def emit(self, record: logging.LogRecord) -> None:
+        self._formatted = None
         try:
             with self._exclusive_append():
                 super().emit(record)
             announce_append(os.path.dirname(self.baseFilename))
         except Exception:
             self.handleError(record)
+        finally:
+            self._formatted = None
+
+    @override
+    def format(self, record: logging.LogRecord) -> str:
+        # The rollover check formats the record to measure it, then the append
+        # formats it again; within one emit the second returns the first.
+        formatted = self._formatted
+        if formatted is not None and formatted[0] is record:
+            return formatted[1]
+        text = super().format(record)
+        self._formatted = (record, text)
+        return text
 
     @override
     def close(self) -> None:
@@ -316,7 +413,7 @@ class AnnouncingRotatingFileHandler(RotatingFileHandler):
             if descriptor is None:
                 descriptor = self._lock_descriptor = self._open_lock_descriptor()
             with held_descriptor_lock(descriptor, self._lock_path, timeout=5.0, retry_backoff=0.005, log_events=False):
-                if _names_descriptor(str(self._lock_path), descriptor):
+                if self._lock_names.names(descriptor):
                     self._follow_rotation()
                     yield
                     return
@@ -335,7 +432,7 @@ class AnnouncingRotatingFileHandler(RotatingFileHandler):
         """Reopen after another writer rotated the log; otherwise measure the shared file's end."""
         if self.stream is None:
             return
-        if _names_descriptor(self.baseFilename, self.stream.fileno()):
+        if self._log_names.names(self.stream.fileno()):
             # Other writers appended since this stream last wrote; rollover measures the whole file.
             self.stream.seek(0, os.SEEK_END)
         else:

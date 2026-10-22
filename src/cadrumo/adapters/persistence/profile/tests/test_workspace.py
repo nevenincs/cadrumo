@@ -81,7 +81,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
 )
-from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 
 from .published_authority_support import published_authority_operation
@@ -141,6 +141,19 @@ def workspace_repos(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalogueRepo
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_WORKSPACE_PROFILE_ID) as profile:
         _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
         yield profile.bucket_id, WorkUnitCatalogueRepository(objects=profile.repository)
+
+
+def _counted_catalogue_reads(monkeypatch: pytest.MonkeyPatch) -> list[WorkUnitCatalogueRepository]:
+    """Record each encrypted-SQL catalogue read, which still runs, by any repository from here on."""
+    reads: list[WorkUnitCatalogueRepository] = []
+    read = WorkUnitCatalogueRepository.load_revisioned
+
+    def recorded(repository: WorkUnitCatalogueRepository) -> tuple[WorkUnitCatalogue, str]:
+        reads.append(repository)
+        return read(repository)
+
+    monkeypatch.setattr(WorkUnitCatalogueRepository, "load_revisioned", recorded)
+    return reads
 
 
 def _seed_work_unit(
@@ -930,7 +943,7 @@ def test_resolve_static_inspection_result_assembles_a_complete_valid_projection(
 
 def test_resolve_static_inspection_result_reads_the_work_catalogue_once_to_capture_and_once_to_confirm(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
-    caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
@@ -941,39 +954,33 @@ def test_resolve_static_inspection_result_reads_the_work_catalogue_once_to_captu
     nothing is built from it. A third read would mean a contributor re-read
     what it had already captured.
     """
-    import logging
-
     bucket_id, repository = workspace_repos
     _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     authority = published_authority_operation()
 
     from cadrumo.core.external_constants import OutputLanguage
 
-    caplog.clear()
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.profile.modelos_work_units"):
-        result = resolve_static_inspection_result(
-            _visible_target(bucket_id),
-            bucket_id=bucket_id,
-            catalogue_repository=repository,
-            authority=authority,
-            output_language=OutputLanguage.ES,
-        )
+    reads = _counted_catalogue_reads(monkeypatch)
+    result = resolve_static_inspection_result(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+        output_language=OutputLanguage.ES,
+    )
 
     assert isinstance(result, ModeloWorkspaceStaticInspectionResultV1)
     assert result.projection.target.modelo == "130"
-    load_log_lines = [record for record in caplog.records if "loaded work-unit catalogue" in record.message]
-    assert len(load_log_lines) == 2
+    assert len(reads) == 2
 
 
 def test_capture_with_a_grade_admits_a_registry_snapshot_reading_work_and_registry_exactly_once(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
-    caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Capture core: passing a grade switches REGISTRY's admission, not the read count or ordering."""
-    import logging
-
     from cadrumo.core.authority_grade import RegistryAuthorityGrade
     from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
@@ -981,15 +988,14 @@ def test_capture_with_a_grade_admits_a_registry_snapshot_reading_work_and_regist
     _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     authority = published_authority_operation()
 
-    caplog.clear()
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.profile.modelos_work_units"):
-        work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
-            _visible_target(bucket_id),
-            bucket_id=bucket_id,
-            catalogue_repository=repository,
-            authority=authority,
-            grade=RegistryAuthorityGrade.CALCULATION,
-        )
+    reads = _counted_catalogue_reads(monkeypatch)
+    work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
 
     assert work_capture.projection.work_unit is not None
     assert registry_capture.projection.snapshot is not None
@@ -997,8 +1003,7 @@ def test_capture_with_a_grade_admits_a_registry_snapshot_reading_work_and_regist
     assert registry_capture.projection.inspection is None
     assert axes.law_selected_revision_id == _LAW_SELECTED_REVISION_ID
 
-    load_log_lines = [record for record in caplog.records if "loaded work-unit catalogue" in record.message]
-    assert len(load_log_lines) == 1
+    assert len(reads) == 1
 
 
 def _real_calculation_revision_with_row_materialization():
