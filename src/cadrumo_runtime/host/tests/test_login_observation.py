@@ -123,9 +123,22 @@ def test_an_observation_a_lifecycle_interval_old_is_taken_again(tmp_path: Path, 
     assert inventory.taken == 2
 
 
+def test_a_logon_without_a_lock_surface_is_held_for_one_lifecycle_interval(tmp_path: Path, clock: _Clock) -> None:
+    """A batch or service logon changes only by ending, which the lifecycle pass observes at this interval too."""
+    inventory = _Inventory((_Logon("desktop"), _Logon("service", lock_state=OsLockState.NOT_APPLICABLE)))
+    service = _service(tmp_path, inventory, pushed=True)
+    service._login_contexts()
+    for _ in range(3):
+        service._observed_login_contexts()
+    assert inventory.taken == 1
+    clock.now += 0.5
+    service._observed_login_contexts()
+    assert inventory.taken == 2
+
+
 @pytest.mark.parametrize(
     ("pushed", "lock_state"),
-    [(False, OsLockState.UNLOCKED), (True, OsLockState.NOT_APPLICABLE), (True, OsLockState.UNKNOWN)],
+    [(False, OsLockState.UNLOCKED), (True, OsLockState.UNKNOWN)],
 )
 def test_a_logon_no_notification_reports_is_observed_at_every_check(
     tmp_path: Path, clock: _Clock, pushed: bool, lock_state: OsLockState

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:668ebd5d7cfc73b8a06e00f7875bbe34dc3f85feecf44cb091f16b5cd795bb47'
+body_hash: 'sha256:ee4735f9f75b8382f8e563803fc1d8a3fc91708f67c53f470d4e0ec6e6003eb0'
 related:
   - "[[2026-10-22-startup-performance-request-path-audit]]"
   - "[[2026-10-16-idle-churn-adr]]"
@@ -35,7 +35,7 @@ Every runtime round trip and every worker guard re-derives the same authority fa
 ## Constraints
 
 - Every boundary that checks authority today still checks it. Only the source of the custody and logon facts changes; scope, session, generation, deadline and kernel-incarnation checks are untouched.
-- An observation is re-read when any watched directory reports a change, when the WTS registration is absent or a logon reports no lock state, when the peer logons the runtime holds change, and when it is older than 0.5 s. The notification is re-armed before the re-read, so a change during the read invalidates the result it produces.
+- An observation is re-read when any watched directory reports a change, when the WTS registration is absent or a logon's lock state is unknown, when the peer logons the runtime holds change, and when it is older than 0.5 s. A logon with no lock surface, such as a batch or service logon, changes only by ending, which the lifecycle pass observes at the same 0.5 s interval, so it does not by itself force a re-read. The notification is re-armed before the re-read, so a change during the read invalidates the result it produces.
 - A directory that cannot be watched (missing, unsupported platform, a failed re-arm) disables the observation for that witness: every check reads from disk as before. Failing to watch never extends a cached answer.
 - A read that raises is never cached; the next check reads again.
 - Writes and denials performed through the runtime or worker invalidate their own observation immediately, independent of the notification.
@@ -57,3 +57,5 @@ The re-check exists to see a change published by someone else. The OS already an
 - Tests must show that a publication by another process invalidates the observation before the next check, that an unwatchable directory falls back to per-check reads, and that a raising read is not cached.
 
 Accepted 2026-10-22 under the operator's instruction in this session: "fix the roots causes. if you have to refactor everything." The operator did not answer the follow-up question offering this option within five minutes; it is recorded as accepted on that instruction and is open to the operator's veto.
+
+Amended 2026-10-22 on a measurement from a concurrent session: a caller-owned runtime whose owner also had a logon without a lock surface re-read the whole logon inventory on every check, about 0.9 s per profile save, because any such logon disabled holding. It read "or a logon reports no lock state".

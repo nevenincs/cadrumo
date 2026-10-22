@@ -106,6 +106,7 @@ class _LoginObservation:
     observed_at: float
     peers: frozenset[str]
     logins: tuple[LoginEvidence, ...]
+    unknown_lock: bool
 
 
 class RuntimeProfileConnections(
@@ -379,10 +380,12 @@ class RuntimeProfileConnections(
     def _observed_login_contexts(self) -> tuple[LoginEvidence, ...]:
         """Return the logons an authority check reads, from the last observation while it still stands.
 
-        It stands only while OS session notifications cover every observed
-        logon. It is taken afresh after the OS reports a session change, when
-        the logons held for connections change, and once it is a lifecycle
-        interval old.
+        It stands only while OS session notifications are registered and no
+        observed logon's lock state is unknown. A logon with no lock surface
+        changes only by ending, which the lifecycle pass observes at the same
+        interval. It is taken afresh after the OS reports a session change,
+        when the logons held for connections change, and once it is a
+        lifecycle interval old.
         """
         with self._guard:
             peers = frozenset(self._logins)
@@ -390,7 +393,7 @@ class RuntimeProfileConnections(
         if (
             held is not None
             and self._session_changes_pushed
-            and not self._unreported_logins
+            and not held.unknown_lock
             and held.changes == self._login_changes
             and held.peers == peers
             and time.monotonic() - held.observed_at < _LIFECYCLE_INTERVAL_SECONDS
@@ -474,7 +477,11 @@ class RuntimeProfileConnections(
         held = tuple(_HeldLogin(login, seen) for login, seen in zip(logins.values(), observed, strict=True))
         with self._guard:
             self._login_observation = _LoginObservation(
-                changes, inventory_started, frozenset(login.login_id for login in peers), held
+                changes,
+                inventory_started,
+                frozenset(login.login_id for login in peers),
+                held,
+                any(login.lock_state is OsLockState.UNKNOWN for login in observed),
             )
         return tuple(logins.values())
 
