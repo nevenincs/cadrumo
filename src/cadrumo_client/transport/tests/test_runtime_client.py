@@ -108,7 +108,7 @@ class _Endpoint(_ReleasePort):
 def _install(monkeypatch: pytest.MonkeyPatch, root: Path, endpoint: _Endpoint) -> None:
     """Substitute native acquisition only; keep actual opening and release."""
     monkeypatch.setattr(installed_client, "effective_storage_root", lambda: root)
-    monkeypatch.setattr(installed_client, "version", lambda _: "opener-test")
+    monkeypatch.setattr(installed_client, "installed_product_version", lambda: "opener-test")
     monkeypatch.setattr(installed_client, "WindowsEndpoint", lambda **_: endpoint)
     monkeypatch.setattr(installed_client, "PosixEndpoint", lambda **_: endpoint)
 

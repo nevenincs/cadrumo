@@ -6,7 +6,6 @@ import asyncio
 import time
 from collections.abc import AsyncGenerator
 from contextlib import ExitStack, asynccontextmanager
-from importlib.metadata import version
 from pathlib import Path
 from uuid import uuid4
 
@@ -21,6 +20,7 @@ from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document, write_secret
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.posix_channel import PosixChannel
+from cadrumo_client.transport.product_version import installed_product_version
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationAcknowledgement,
@@ -109,7 +109,9 @@ class WorkerAuthorizationClient:
             require_live_native_peer(channel)
         verified = VerifiedConnection(
             channel,
-            expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
+            expected=ClientHello(
+                product_version=installed_product_version(), storage_identity=endpoint.storage_identity
+            ),
             deadline=deadline,
         )
         if verified.hello.boot_id != self.identity.runtime_boot_id:

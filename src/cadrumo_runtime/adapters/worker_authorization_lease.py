@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import sys
 import time
-from importlib.metadata import version
 from pathlib import Path
 from uuid import uuid4
 
@@ -27,6 +26,7 @@ from cadrumo_client.transport.frame_io import read_document, write_document
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.model_run_frames import read_secret_chunks, write_secret_chunks
 from cadrumo_client.transport.posix_channel import PosixChannel
+from cadrumo_client.transport.product_version import installed_product_version
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationAcknowledgement,
@@ -110,7 +110,9 @@ class WorkerAuthorizationLease:
             deadline = exchange_deadline()
             verified = VerifiedConnection(
                 channel,
-                expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
+                expected=ClientHello(
+                    product_version=installed_product_version(), storage_identity=endpoint.storage_identity
+                ),
                 deadline=deadline,
             )
             if verified.hello.boot_id != self.identity.runtime_boot_id:

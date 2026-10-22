@@ -621,7 +621,7 @@ def test_a_runtime_that_cannot_be_verified_is_not_a_reason_to_reset_in_process(
     assert all(capsule.exists() for capsule in capsules)
 
 
-def _no_package_metadata(_name: str) -> str:
+def _no_package_metadata() -> str:
     raise PackageNotFoundError("cadrumo")
 
 
@@ -644,7 +644,7 @@ def test_with_no_runtime_for_the_root_the_command_is_refused_as_unavailable_and_
     _forbid_the_in_process_reset(monkeypatch)
     if metadata == "missing":
         # A client that cannot name its own cohort can still see that nothing is listening.
-        monkeypatch.setattr(installation_client, "version", _no_package_metadata)
+        monkeypatch.setattr(installation_client, "installed_product_version", _no_package_metadata)
     root, profile = _profile_under_another_root(tmp_path)
     arguments = ("start", "--yes") if verb == "start" else ("resume", "--operation-id", "0" * 64, "--yes")
     with derived_storage_settings(root):
@@ -705,7 +705,7 @@ def test_a_client_that_cannot_name_its_cohort_beside_a_running_runtime_never_res
     _forbid_the_in_process_reset(monkeypatch)
     with _installed(tmp_path) as installation:
         capsules = [_capsule(installation, profile) for profile in installation.profiles]
-        monkeypatch.setattr(installation_client, "version", _no_package_metadata)
+        monkeypatch.setattr(installation_client, "installed_product_version", _no_package_metadata)
 
         printed = _invoke("start", "--yes")
         with pytest.raises(CliRefusedBoundaryError) as refused:

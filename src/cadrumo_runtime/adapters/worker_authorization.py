@@ -9,7 +9,6 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack, suppress
 from datetime import datetime
 from functools import cache
-from importlib.metadata import version
 from pathlib import Path
 from threading import BoundedSemaphore, Event, Thread
 from uuid import UUID, uuid4, uuid5
@@ -35,6 +34,7 @@ from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES, read_document, read_secret, write_document
 from cadrumo_client.transport.model_run_frames import read_secret_chunks, write_secret_chunks
 from cadrumo_client.transport.native_wake import NativeWake
+from cadrumo_client.transport.product_version import installed_product_version
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
 from cadrumo_runtime.contracts.worker_authorization import (
     WORKER_AUTOMATION_INVENTORY_MAX_BYTES,
@@ -424,7 +424,7 @@ class WorkerAuthorizationServer:
         accept_connection_handshake(
             channel,
             identity=ServerHello(
-                product_version=version("cadrumo"),
+                product_version=installed_product_version(),
                 storage_identity=self._endpoint.storage_identity,
                 boot_id=self.identity.runtime_boot_id,
             ),

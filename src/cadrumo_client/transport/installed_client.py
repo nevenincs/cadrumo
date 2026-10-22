@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import sys
 from collections.abc import Callable
-from importlib.metadata import PackageNotFoundError, version
+from importlib.metadata import PackageNotFoundError
 from uuid import UUID
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -18,6 +18,7 @@ from ..contracts.contracts import ClientHello, RefusalCode, RefusalError
 from ..contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from .frontend_client import FrontendClient
 from .posix_endpoint import PosixEndpoint
+from .product_version import installed_product_version
 from .startup import LaunchDoor
 from .windows import WindowsEndpoint
 
@@ -70,7 +71,7 @@ async def open_installed_client(
     """
     try:
         root = effective_storage_root().resolve(strict=True)
-        product_version = version("cadrumo")
+        product_version = installed_product_version()
     except (OSError, PackageNotFoundError):
         raise RefusalError(RefusalCode.UNAVAILABLE) from None
     endpoint = (

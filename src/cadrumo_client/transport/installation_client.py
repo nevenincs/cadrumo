@@ -12,7 +12,7 @@ from __future__ import annotations
 import asyncio
 import sys
 from collections.abc import Callable
-from importlib.metadata import PackageNotFoundError, version
+from importlib.metadata import PackageNotFoundError
 from pathlib import Path
 from typing import NoReturn, Self
 from uuid import uuid4
@@ -48,6 +48,7 @@ from .framing import VerifiedConnection
 from .frontend_client_contracts import FrontendRefusedError
 from .installation_frame_io import read_installation_reply
 from .posix_endpoint import PosixEndpoint
+from .product_version import installed_product_version
 from .startup import LaunchDoor
 from .transport_cleanup import TransportCleanup
 from .verified_transport import HeldExchange
@@ -343,7 +344,7 @@ async def open_installed_installation_client(*, timeout: float = 10) -> Installa
     """
     try:
         root = effective_storage_root().resolve(strict=True)
-        product_version = version("cadrumo")
+        product_version = installed_product_version()
     except (OSError, PackageNotFoundError):
         raise RefusalError(RefusalCode.UNAVAILABLE) from None
     endpoint = _installed_endpoint(root)
