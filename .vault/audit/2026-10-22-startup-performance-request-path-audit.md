@@ -114,3 +114,21 @@ The operator's runtime log for a TUI start before these Steps shows the preferen
 The profile pane's overview is read off the capture whenever a status names a newer revision; opening the pane during that read waits for it. Only an incomplete profile, which opens on the profile pane, reads the overview before its first screen. The launch time on the rebuilt stage is S10's measurement.
 
 The runtime TUI suite also exposed an intermittent restricted-session test: its request button sat below the fold once the asynchronous status rows filled, so the pilot's click missed in 2 of 3 runs. The test now scrolls the button into view, as its login branch already did; 6 of 6 runs pass.
+
+### generation-in-process-measurement | info | Where one workbench generation's time goes
+
+Measured in the native workbench test (real runtime in-process, real profile worker) with storage on the operator's C: drive; no sampling profiler. A first run under py-spy with child processes leaked handles and was stopped by the host's security tripwire; the figures here come from in-process instruments only: a client and runtime frame timeline, an audit hook counting opens, and cProfile around the worker's capture.
+
+| Segment of one 1.86-2.0 s generation | Time |
+| --- | --- |
+| Contract, submit and start | about 145 ms (contract alone 38 ms) |
+| Worker capture (permit to release) | about 960 ms |
+| Settlement until the operation advances | 80-550 ms, median about 120 ms |
+| Last observation and five result pages | about 250 ms; each page is a worker request plus one authorize cycle, about 25 ms |
+| Client restore and verification | about 200 ms |
+
+Per generation: about 70 frames each way (250 KiB), 12.7 worker authorize/release/acknowledge cycles answered in about 0.4 ms each, about 128 opens in the runtime process. Inside the worker capture: the workspace field manifest walked 3 times (77 ms each), about 1,700 `stat` calls (210 from the log handler's per-record descriptor check, 400 from `profile_worker_binding.require_session`), about 110 DEBUG records at about 3.9 ms each through the file handler, 11 profile record loads.
+
+The Y: drive stalls under concurrent sessions (hardened write p90 0.5 s, one 23.8 s); C: is a steady 3.5 ms, so journal and settlement figures from tests on Y: overstate the operator's cost.
+
+S13 caches the manifest walk per traversal-root set: about 230 ms less per generation after a worker's first. The log handler and lock records belong to another workstream's files and were handed to it with these figures; the `require_session` stat is a storage-replacement check left unchanged.

@@ -13,7 +13,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:8879629a1b1da497ef6b01d97646483b811d53853129d1622f3d04310ace9fa2'
+body_hash: 'sha256:b4544712e165b2923477761a318a47be2521580a6fa16079858eaec22b6d6da8'
 ---
 
 # `startup-performance` plan
@@ -40,6 +40,7 @@ The findings are in `2026-10-22-startup-performance-request-path-audit`. `2026-1
 - [ ] `S10` - Rebuild the stage with the operator, measure the real desktop launch to usable Home and confirm no slow-request warnings; `build/windows-x64/stage/Release/app, audit`.
 - [x] `S11` - Keep the workbench generation's module graph off the first operation's execution binding and pin it with an import gate; `src/cadrumo_runtime/host/operation_authority.py, src/cadrumo_runtime/host/tests/test_worker_startup_import_graph.py`.
 - [x] `S12` - Serve the sign-in view's profile list from the session watch and pre-start the window's person hold while the sign-in form is shown, so no process starts between password and signed-in; `src/cadrumo_runtime/host/session_watch.py, native/desktop/src-tauri/src/shell/sign_in and owning tests`.
+- [ ] `S13` - Measure the TUI's workbench generation in-process (frame timeline, audit-hook open counts, worker cProfile) and cut the repeated work it shows; `src/cadrumo/application/modelo/workspace_manifest.py, src/cadrumo_runtime/host/frontend/tui and owning tests`.
 
 ## Parallelization
 

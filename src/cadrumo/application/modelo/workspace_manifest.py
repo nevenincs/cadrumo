@@ -264,7 +264,10 @@ def generate_modelo_workspace_field_manifest_for_inspection(
     return _generate_manifest_from_roots(_sorted_unique_roots(roots))
 
 
+@cache
 def _generate_manifest_from_roots(roots: tuple[_Root, ...]) -> ModeloWorkspaceFieldManifestV1:
+    # The walk reads only the root types, which never change in a process, and
+    # its manifest is frozen: one walk serves every capture and coordinate read.
     nodes: dict[str, _Node] = {}
     for root_path, root_model in roots:
         _walk_annotation(

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:346673ac2f6da20103e1d199e031375a8c381be59eeb209c41ebdaf8a0ee78af'
+body_hash: 'sha256:402ad9ccdf509e2f57cf3241cb3cfcf9da8977b359837ddaec9ea17dafee161f'
 related:
   - "[[2026-10-22-startup-performance-plan]]"
 ---
@@ -162,6 +162,9 @@ related:
 - `S09` `M` `src/cadrumo_runtime/host/tests/frontend/tui/entrypoints/tui/tests/test_runtime_automation_requester_native.py`
 - `S09` `M` `.vault/audit/2026-10-22-startup-performance-request-path-audit.md`
 - `S09` `verify:` `pytest src/cadrumo_runtime/host/tests/frontend/tui` -> `pass`
+- `S13` `M` `src/cadrumo/application/modelo/workspace_manifest.py`
+- `S13` `M` `.vault/audit/2026-10-22-startup-performance-request-path-audit.md`
+- `S13` `verify:` `pytest src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/adapters/persistence/profile/tests/test_workspace.py` -> `pass`
 
 ## Notes
 
