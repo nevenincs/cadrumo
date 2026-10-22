@@ -1,4 +1,4 @@
-"""A page the person picks at their desktop reaches only their own signed-in TUI on that profile."""
+"""A page the person picks reaches only their own signed-in page surfaces on that profile."""
 
 from __future__ import annotations
 
@@ -90,8 +90,16 @@ def _join(
     *,
     login: str = "person",
     signed_in: bool = True,
+    presents_pages: bool | None = None,
 ) -> ConnectionContext:
-    context = ConnectionContext(uuid4(), profiles.boot, Peer(os_owner_id="synthetic-owner", process_id=1))
+    if presents_pages is None:
+        presents_pages = frontend is OperationFrontendProjection.TUI
+    context = ConnectionContext(
+        uuid4(),
+        profiles.boot,
+        Peer(os_owner_id="synthetic-owner", process_id=1),
+        presentation=presents_pages,
+    )
     profiles.connect_events(context)
     profiles._connections[context.connection_id] = ProfileConnection(
         context=context,
@@ -119,7 +127,7 @@ def _ask(profiles: RuntimeProfileConnections, asker: ConnectionContext, destinat
     return profiles._present(asker, request)
 
 
-def test_the_page_reaches_only_the_same_persons_signed_in_tui_on_that_profile(tmp_path: Path) -> None:
+def test_the_page_reaches_only_the_same_persons_signed_in_page_surfaces_on_that_profile(tmp_path: Path) -> None:
     profiles = _runtime(tmp_path)
     profile_id = uuid4()
     desktop = _join(profiles, profile_id, OperationFrontendProjection.DESKTOP)
@@ -128,6 +136,7 @@ def test_the_page_reaches_only_the_same_persons_signed_in_tui_on_that_profile(tm
         _join(profiles, profile_id, OperationFrontendProjection.TUI, login="someone-else"),
         _join(profiles, uuid4(), OperationFrontendProjection.TUI),
         _join(profiles, profile_id, OperationFrontendProjection.TUI, signed_in=False),
+        _join(profiles, profile_id, OperationFrontendProjection.TUI, presents_pages=False),
         _join(profiles, profile_id, OperationFrontendProjection.CLI),
     )
 
@@ -168,15 +177,32 @@ def test_no_signed_in_tui_is_reported_as_nothing_delivered(tmp_path: Path) -> No
     assert profiles.take_events(waiting) == ()
 
 
-@pytest.mark.parametrize("frontend", [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI])
-def test_only_the_desktop_may_choose_a_tui_page(tmp_path: Path, frontend: OperationFrontendProjection) -> None:
+@pytest.mark.parametrize(
+    "frontend", [OperationFrontendProjection.EXTERNAL_CLIENT, OperationFrontendProjection.INSTALLED_SERVICE]
+)
+def test_a_delegated_client_may_not_choose_a_page(tmp_path: Path, frontend: OperationFrontendProjection) -> None:
     profiles = _runtime(tmp_path)
     profile_id = uuid4()
     asker = _join(profiles, profile_id, frontend)
     tui = _join(profiles, profile_id, OperationFrontendProjection.TUI)
 
-    assert _ask(profiles, asker) == AccessDenied(code=AccessDenialCode.FRONTEND_DENIED)
+    assert _ask(profiles, asker) == AccessDenied(code=AccessDenialCode.PERSON_ACT_REQUIRED)
     assert profiles.take_events(tui) == ()
+
+
+@pytest.mark.parametrize("frontend", [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI])
+def test_any_persons_frontend_may_choose_a_page(tmp_path: Path, frontend: OperationFrontendProjection) -> None:
+    profiles = _runtime(tmp_path)
+    profile_id = uuid4()
+    asker = _join(profiles, profile_id, frontend, presents_pages=False)
+    tui = _join(profiles, profile_id, OperationFrontendProjection.TUI)
+
+    delivered = _ask(profiles, asker, "reference")
+    assert isinstance(delivered, PresentationDelivered)
+    assert delivered.delivered == 1
+    events = profiles.take_events(tui)
+    assert [event.destination for event in events if isinstance(event, PresentationRequested)] == ["reference"]
+    assert profiles.take_events(asker) == ()
 
 
 def test_a_denied_or_foreign_session_sends_nothing(tmp_path: Path) -> None:

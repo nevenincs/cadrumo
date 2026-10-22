@@ -8,6 +8,7 @@ receipt, or an effect the request cannot have caused.
 
 from __future__ import annotations
 
+import asyncio
 import time
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
@@ -99,7 +100,6 @@ from cadrumo.entrypoints.tui.ledger.entries_browse import LedgerEntriesBrowseScr
 from cadrumo.entrypoints.tui.ledger.entries_doors import (
     LedgerEntriesDoorsV1,
     LedgerExportOutcomeV1,
-    call_door_off_loop,
 )
 from cadrumo.entrypoints.tui.ledger.entries_export import LedgerEntriesExportScreen
 from cadrumo.entrypoints.tui.ledger.entries_health import LedgerHealthScreen
@@ -467,7 +467,8 @@ class RuntimeLedgerExportTuiDoorV1:
 
     async def __call__(self, request: LedgerExportRequest) -> LedgerExportOutcomeV1:
         """Write one export; return its report, or the effect a failed export left behind."""
-        self._session.require_binding()
+        # The binding check reads the session over IPC; it never runs on the event loop.
+        await asyncio.to_thread(self._session.require_binding)
         if request.profile_id != self._session.profile_id:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         definition_id = LEDGER_EXPORT_OPERATION_DEFINITION_ID
@@ -499,7 +500,7 @@ class RuntimeLedgerExportTuiDoorV1:
             raise session_expired_with_receipt(controller, terminal) from error
         except (FrontendRefusedError, RefusalError):
             try:
-                self._session.require_binding()
+                await asyncio.to_thread(self._session.require_binding)
             except AccountSessionExpiredError as error:
                 raise session_expired_with_receipt(controller, terminal) from error
             raise
@@ -512,12 +513,12 @@ class RuntimeLedgerExportTuiDoorV1:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         if condition is OperationTerminalCondition.SUCCEEDED:
             result = await controller.read_settled_result(terminal, LedgerExportProjection, result_version=1)
-            self._session.require_binding()
+            await asyncio.to_thread(self._session.require_binding)
             if not _export_matches(result, request, terminal):
                 raise RefusalError(RefusalCode.INVALID_FRAME)
             return LedgerExportOutcomeV1(effect=terminal.effect, projection=result)
         detail = await controller.settled_error_detail(terminal)
-        self._session.require_binding()
+        await asyncio.to_thread(self._session.require_binding)
         error: CadrumoError = FrontendRefusedError(
             terminal.refusal_ref or terminal.failure_error_code or "operation_not_successful"
         )
@@ -533,11 +534,7 @@ class RuntimeLedgerExportTuiDoorV1:
 
 
 class RuntimeLedgerExclusionSubmitterV1:
-    """Exclude one reviewed entry through ``ledger.exclude``, answering with the identity it settled.
-
-    The review screen awaits its submitter on the event loop, so this door runs
-    its session check and submission on a worker thread.
-    """
+    """Exclude one reviewed entry through ``ledger.exclude``, answering with the identity it settled."""
 
     def __init__(self, session: RuntimeProfileSession) -> None:
         """Pin the admitted session every exclusion is submitted under."""
@@ -550,7 +547,7 @@ class RuntimeLedgerExclusionSubmitterV1:
         request = LedgerLifecycleMutationRequest(
             profile_id=self._door.profile_id, transaction_id=submission.transaction_id
         )
-        result = await call_door_off_loop(lambda: self._door(request))
+        result = await self._door(request)
         if result.validation is not None:
             raise LedgerLifecycleValidationRefusedError(result.validation)
         projection = result.result

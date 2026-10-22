@@ -30,7 +30,7 @@ from ..components.workspace_host import replace_workspace_body
 from .controller import LedgerWorkspaceController, review_status_label
 from .entries_browse import BROWSE_PAGE_SIZE, LedgerBrowseStateV1, LedgerEntriesBrowseScreen
 from .entries_common import CLASSIFICATION_LOCALE_KEYS, DIRECTION_LOCALE_KEYS, entry_label, joined
-from .entries_doors import LedgerEntriesDoorsV1, call_door_off_loop
+from .entries_doors import LedgerEntriesDoorsV1
 from .models import LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
@@ -346,7 +346,7 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
         if request is None:
             raise InternalInvariantError("the reviewed entry disappeared before submission")
         try:
-            result = await call_door_off_loop(lambda: self.doors.add(request))
+            result = await self.doors.add(request)
         except AccountSessionExpiredError as error:
             self._clear_private_form()
             self._transition(LedgerFlowState.FAILED)

@@ -26,7 +26,7 @@ from ..components.theme import tokenised
 from ..components.workspace_host import replace_workspace_body
 from .controller import LedgerWorkspaceController
 from .entries_common import joined, period_label, period_options, read_period, selected_value
-from .entries_doors import LedgerEntriesDoorsV1, LedgerExportOutcomeV1, call_door_off_loop
+from .entries_doors import LedgerEntriesDoorsV1, LedgerExportOutcomeV1
 from .models import LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
@@ -250,7 +250,7 @@ class LedgerEntriesExportScreen(LedgerConfirmationFlowScreen):
         if request is None:
             raise InternalInvariantError("the reviewed export disappeared before submission")
         try:
-            outcome = await call_door_off_loop(lambda: self.doors.export(request))
+            outcome = await self.doors.export(request)
         except AccountSessionExpiredError as error:
             self._transition(LedgerFlowState.FAILED)
             status.update(tr("tui.ledger.entry_tools.export.failed"))

@@ -13,7 +13,6 @@ from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.access_policy import intersect_scopes
@@ -372,20 +371,23 @@ class ProfileConnectionSessionMixin:
     def _present(
         self: RuntimeProfileConnections, context: ConnectionContext, request: PresentationRequest
     ) -> PresentationDelivered | AccessDenied:
-        """Pass a page the person chose at their desktop to their own signed-in TUI on the same profile.
+        """Pass a page the person chose to their own signed-in page surfaces on the same profile.
 
-        Only the desktop asks: the command line never selects a TUI page. The
+        A person's frontend asks; a delegated client never selects a page. The
         asking session is checked as a status read is. The request reaches each
-        TUI connection of the profile that holds a session under the same
-        native login, and names a page and nothing else; the TUI admits it.
+        connection of the profile that declared it shows pages and holds a
+        session under the same native login, and names a page and nothing
+        else; the receiving surface admits it.
         """
         connection = self._connected(context.connection_id)
         if connection.context != context or connection.profile_id != request.profile_id:
             return AccessDenied(code=AccessDenialCode.PROFILE_MISMATCH)
         if connection.session_id != request.session_id:
             return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
-        if connection.frontend is not OperationFrontendProjection.DESKTOP:
-            return AccessDenied(code=AccessDenialCode.FRONTEND_DENIED)
+        try:
+            self._require_persons_frontend(connection.frontend)
+        except ProfileAccessRefusedError as refusal:
+            return AccessDenied(code=refusal.reason)
         with self._guard:
             host = self._profiles[connection.profile_id]
         with host.guard:
@@ -406,7 +408,7 @@ class ProfileConnectionSessionMixin:
                     destination=request.destination,
                 )
                 for recipient in self._connections.values()
-                if recipient.frontend is OperationFrontendProjection.TUI
+                if recipient.context.presentation
                 and recipient.profile_id == connection.profile_id
                 and recipient.session_id is not None
                 and recipient.login.login_id == connection.login.login_id

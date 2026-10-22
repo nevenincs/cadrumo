@@ -169,6 +169,7 @@ class RuntimeConnectionHandling:
                 context.runtime_boot_id,
                 context.peer,
                 lifecycle_notices=hello.lifecycle_notices == "v1",
+                presentation=hello.presentation == "v1",
             )
             queued = NativeWake()
             if self.profiles is not None:

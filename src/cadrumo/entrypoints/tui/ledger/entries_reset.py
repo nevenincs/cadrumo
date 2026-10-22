@@ -24,7 +24,7 @@ from ..components.theme import tokenised
 from ..components.workspace_host import replace_workspace_body
 from .controller import LedgerWorkspaceController
 from .entries_common import joined
-from .entries_doors import LedgerEntriesDoorsV1, call_door_off_loop
+from .entries_doors import LedgerEntriesDoorsV1
 from .models import LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
@@ -180,7 +180,7 @@ class LedgerResetScreen(LedgerConfirmationFlowScreen):
     async def _run_preview(self, request: LedgerResetRequest) -> None:
         status = self.query_one("#ledger-flow-status", Static)
         try:
-            preview = await call_door_off_loop(lambda: self.doors.reset(request))
+            preview = await self.doors.reset(request)
         except CadrumoError as error:
             if isinstance(error, AccountSessionExpiredError):
                 self.query_one("#entries-reset-reason", Input).value = ""
@@ -231,7 +231,7 @@ class LedgerResetScreen(LedgerConfirmationFlowScreen):
         request = previewed.model_copy(update={"dry_run": False})
         status = self.query_one("#ledger-flow-status", Static)
         try:
-            result = await call_door_off_loop(lambda: self.doors.reset(request))
+            result = await self.doors.reset(request)
         except CadrumoError as error:
             self._transition(LedgerFlowState.FAILED)
             status.update(tr("tui.ledger.records.failed"))

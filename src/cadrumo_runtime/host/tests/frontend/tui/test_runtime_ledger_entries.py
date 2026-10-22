@@ -166,6 +166,7 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 from cadrumo_client.transport.operation_controller import OperationController
 
 from ....frontend.tui.runtime_ledger_entries import (
+    RuntimeLedgerEntryTuiDoorV1,
     compose_entries_tools,
     compose_runtime_ledger_entries_doors,
     compose_runtime_ledger_exclusion_submitter,
@@ -246,6 +247,8 @@ class _Client:
     def __init__(self) -> None:
         self.profile_id = _PROFILE_ID
         self.session_id = _SESSION_ID
+        self.session_read_threads: list[int] = []
+        """The thread of each blocking session read: at composition, then around each operation."""
 
 
 class _Controller:
@@ -263,10 +266,8 @@ class _Controller:
         self.result = result
         self.detail = detail
         self.result_reads: list[tuple[type[BaseModel], bool]] = []
-        self.threads: list[int] = []
 
     async def start(self) -> str:
-        self.threads.append(threading.get_ident())
         return self.operation_id
 
     async def observe(self, after_cursor: int, *, page_limit: int) -> OperationObservationSuccessV1:
@@ -352,6 +353,7 @@ def _install(monkeypatch: pytest.MonkeyPatch, client: _Client, controller: _Cont
 
     def read_session(_client: FrontendClient, *, profile_id: UUID, session_id: UUID, profile_label: str) -> object:
         assert profile_label == _LABEL
+        client.session_read_threads.append(threading.get_ident())
         if client.profile_id != profile_id or client.session_id != session_id:
             raise AccountSessionExpiredError()
         return object()
@@ -455,6 +457,54 @@ def test_each_door_submits_its_own_operation_and_reads_its_result(monkeypatch: p
     assert submissions[0]["payload"] == case.request
     assert submissions[0]["expected_session_id"] == _SESSION_ID
     assert [result_type for result_type, _ in controller.result_reads] == [type(case.result)]
+
+
+@pytest.mark.parametrize("case", _CASES, ids=_IDS)
+def test_each_door_reads_its_session_off_the_event_loop_thread(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
+    """The session read is a blocking IPC exchange; a door awaited on the loop never runs it there."""
+    client = _Client()
+    controller = _Controller(observation=_observation(case.definition_id, effect=case.effect), result=case.result)
+    _install(monkeypatch, client, controller)
+    doors = _doors(client)
+    assert client.session_read_threads, "composing the doors reads the session once, before any loop runs"
+    client.session_read_threads.clear()
+
+    _call(doors, case)
+
+    assert client.session_read_threads, "a door reads its session around its operation"
+    assert threading.get_ident() not in client.session_read_threads
+
+
+def test_the_export_door_reads_its_session_off_the_event_loop_thread(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    client = _Client()
+    request = _export_request(tmp_path)
+    observation = _observation(LEDGER_EXPORT_OPERATION_DEFINITION_ID, effect=OperationEffect.UPDATED)
+    _install(monkeypatch, client, _Controller(observation=observation, result=_export_projection(request)))
+    doors = _doors(client)
+    client.session_read_threads.clear()
+
+    asyncio.run(doors.export(request))
+
+    assert client.session_read_threads
+    assert threading.get_ident() not in client.session_read_threads
+
+
+def test_the_gate_catches_a_session_read_on_the_loop_thread(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Detector teeth: a binding check called directly on the loop thread is recorded there."""
+    client = _Client()
+    observation = _observation(LEDGER_LIST_OPERATION_DEFINITION_ID)
+    _install(monkeypatch, client, _Controller(observation=observation, result=None))
+    door = cast(RuntimeLedgerEntryTuiDoorV1[BaseModel, BaseModel], _doors(client).list_entries)
+    client.session_read_threads.clear()
+
+    async def read_on_the_loop() -> None:
+        door._session.require_binding()
+
+    asyncio.run(read_on_the_loop())
+
+    assert client.session_read_threads == [threading.get_ident()]
 
 
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
@@ -722,15 +772,16 @@ def test_the_exclusion_submitter_excludes_exactly_the_submitted_entry_off_the_lo
     observation = _observation(LEDGER_EXCLUDE_OPERATION_DEFINITION_ID, effect=OperationEffect.UPDATED)
     controller = _Controller(observation=observation, result=_excluded(entry_id(1)))
     submissions = _install(monkeypatch, client, controller)
-    loop_thread = threading.get_ident()
+    submitter = _submitter(client)
+    client.session_read_threads.clear()
 
-    result = asyncio.run(_submitter(client)(_exclusion(entry_id(1))))
+    result = asyncio.run(submitter(_exclusion(entry_id(1))))
 
     assert result == LedgerExclusionResultV1(transaction_id=entry_id(1))
     assert submissions[0]["definition_id"] == LEDGER_EXCLUDE_OPERATION_DEFINITION_ID
     assert cast(LedgerLifecycleMutationRequest, submissions[0]["payload"]).transaction_id == entry_id(1)
-    assert controller.threads
-    assert loop_thread not in controller.threads
+    assert client.session_read_threads
+    assert threading.get_ident() not in client.session_read_threads
 
 
 def test_the_exclusion_submitter_refuses_a_settled_entry_it_did_not_submit(monkeypatch: pytest.MonkeyPatch) -> None:

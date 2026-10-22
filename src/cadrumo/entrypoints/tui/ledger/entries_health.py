@@ -25,7 +25,7 @@ from ..components.language import localized
 from ..components.theme import tokenised
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .entries_common import joined, period_label, period_options, read_period, selected_value, short_id
-from .entries_doors import LedgerEntriesDoorsV1, call_door_off_loop
+from .entries_doors import LedgerEntriesDoorsV1
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
 
 _LINK_DIRECTION_LOCALE_KEYS: Final[dict[LinkInconsistencyDirection, str]] = {
@@ -205,16 +205,12 @@ class LedgerHealthScreen(LedgerWorkspaceScreen):
     async def _read(self, period: PublicPeriod | None) -> None:
         profile_id = self.doors.profile_id
         try:
-            status = await call_door_off_loop(
-                lambda: self.doors.status(LedgerStatusRequest(profile_id=profile_id, period=period))
-            )
-            check = await call_door_off_loop(
-                lambda: self.doors.check(LedgerCheckRequest(profile_id=profile_id, period=period))
-            )
+            status = await self.doors.status(LedgerStatusRequest(profile_id=profile_id, period=period))
+            check = await self.doors.check(LedgerCheckRequest(profile_id=profile_id, period=period))
             preflight: LedgerPreflightProjection | None = None
             if period is not None:
                 preflight_request = LedgerPreflightRequest(profile_id=profile_id, period=period)
-                preflight = await call_door_off_loop(lambda: self.doors.preflight(preflight_request))
+                preflight = await self.doors.preflight(preflight_request)
         except AccountSessionExpiredError as error:
             self.status = self.check = self.preflight = None
             self._settle(error)

@@ -30,7 +30,7 @@ from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .entries_common import joined, lifecycle_label
-from .entries_doors import LedgerEntriesDoorsV1, call_door_off_loop
+from .entries_doors import LedgerEntriesDoorsV1
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
 
 
@@ -175,8 +175,8 @@ class LedgerEntryTraceScreen(LedgerWorkspaceScreen):
         track_request = LedgerTrackRequest(profile_id=self.doors.profile_id, transaction_prefix=self.transaction_id)
         history_request = self._history_request()
         try:
-            track = await call_door_off_loop(lambda: self.doors.track(track_request))
-            typed = await call_door_off_loop(lambda: self.doors.history_typed(history_request))
+            track = await self.doors.track(track_request)
+            typed = await self.doors.history_typed(history_request)
         except AccountSessionExpiredError as error:
             self._clear_private_view()
             self._settle(error)
@@ -191,7 +191,7 @@ class LedgerEntryTraceScreen(LedgerWorkspaceScreen):
     async def _read_full(self) -> None:
         request = self._history_request()
         try:
-            full = await call_door_off_loop(lambda: self.doors.history(request))
+            full = await self.doors.history(request)
         except AccountSessionExpiredError as error:
             self._clear_private_view()
             self._settle(error)

@@ -61,13 +61,16 @@ async def open_installed_client(
     frontend: OperationFrontendProjection,
     timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
     scope: AccessScope | None = None,
+    presents_pages: bool = False,
 ) -> FrontendClient:
     """Connect to the exact running owner through the installed transport.
 
     This opens no profile and reads no credential. The caller must explicitly
     authenticate the returned connection and own it for its frontend lifetime.
     An absent or untrusted endpoint returns a typed refusal. An optional scope
-    narrows a later API-key login on this connection.
+    narrows a later API-key login on this connection. A caller that shows
+    pages declares ``presents_pages`` so a page the person chooses elsewhere
+    is delivered to this connection.
     """
     try:
         root = effective_storage_root().resolve(strict=True)
@@ -85,6 +88,7 @@ async def open_installed_client(
             endpoint,
             expected=ClientHello(
                 lifecycle_notices="v1",
+                presentation="v1" if presents_pages else None,
                 product_version=product_version,
                 storage_identity=endpoint.storage_identity,
                 authority_generation=published_authority_generation(),

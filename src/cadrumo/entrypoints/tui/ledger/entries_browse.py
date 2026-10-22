@@ -59,7 +59,7 @@ from .entries_common import (
     selected_value,
     short_id,
 )
-from .entries_doors import LedgerEntriesDoorsV1, LedgerLifecycleDoorV1, call_door_off_loop
+from .entries_doors import LedgerEntriesDoorsV1, LedgerLifecycleDoorV1
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
 
 #: The most rows one page holds; the list never reads more than this at once.
@@ -452,7 +452,7 @@ class LedgerEntriesBrowseScreen(LedgerWorkspaceScreen):
         status = self.query_one("#ledger-flow-status", Static)
         refusal = self.query_one("#ledger-refusal", Static)
         try:
-            page = await call_door_off_loop(lambda: self.doors.list_entries(request))
+            page = await self.doors.list_entries(request)
         except AccountSessionExpiredError as error:
             self._clear_private_view()
             refusal.update(door_refusal_text(error))
@@ -708,7 +708,7 @@ class LedgerEntriesBrowseScreen(LedgerWorkspaceScreen):
     ) -> None:
         refusal = self.query_one("#ledger-refusal", Static)
         try:
-            result: LedgerLifecycleOperationResult = await call_door_off_loop(lambda: door(request))
+            result: LedgerLifecycleOperationResult = await door(request)
         except AccountSessionExpiredError as error:
             self._settle_failure(error, private=True)
             return
@@ -735,7 +735,7 @@ class LedgerEntriesBrowseScreen(LedgerWorkspaceScreen):
 
     async def _removal_preview(self, request: LedgerRemoveRequest, label: str) -> None:
         try:
-            preview = await call_door_off_loop(lambda: self.doors.remove(request))
+            preview = await self.doors.remove(request)
         except AccountSessionExpiredError as error:
             self._settle_failure(error, private=True)
             return
@@ -774,7 +774,7 @@ class LedgerEntriesBrowseScreen(LedgerWorkspaceScreen):
 
     async def _submit_removal(self, request: LedgerRemoveRequest, label: str) -> None:
         try:
-            result = await call_door_off_loop(lambda: self.doors.remove(request))
+            result = await self.doors.remove(request)
         except AccountSessionExpiredError as error:
             self._settle_failure(error, private=True)
             return
@@ -810,7 +810,7 @@ class LedgerEntriesBrowseScreen(LedgerWorkspaceScreen):
 
     async def _submit_merge(self, request: LedgerMergeRequest) -> None:
         try:
-            result = await call_door_off_loop(lambda: self.doors.merge(request))
+            result = await self.doors.merge(request)
         except AccountSessionExpiredError as error:
             self._settle_failure(error, private=True)
             return

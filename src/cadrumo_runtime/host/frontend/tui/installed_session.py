@@ -157,7 +157,9 @@ def _run_registration_screen() -> bool:
 
 
 async def _open_client(profile_id: UUID) -> FrontendClient:
-    return await open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
+    return await open_installed_client(
+        profile_id=profile_id, frontend=OperationFrontendProjection.TUI, presents_pages=True
+    )
 
 
 async def _open_credential_client(

@@ -180,10 +180,12 @@ class ClientHello(BaseModel):
     storage_identity: ContentDigest
     authority_generation: AuthorityGeneration | None = None
     lifecycle_notices: Literal["v1"] | None = None
+    presentation: Literal["v1"] | None = None
+    """Declared by a connection that shows pages, so a chosen page is delivered to it."""
 
     #: Members left out of the frame while unset: a peer built before they
     #: existed refuses a document that carries them.
-    frame_omits_when_unset: ClassVar[frozenset[str]] = frozenset({"lifecycle_notices"})
+    frame_omits_when_unset: ClassVar[frozenset[str]] = frozenset({"lifecycle_notices", "presentation"})
 
 
 class ServerHello(BaseModel):

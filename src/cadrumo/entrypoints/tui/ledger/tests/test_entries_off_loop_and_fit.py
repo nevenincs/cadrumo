@@ -1,14 +1,13 @@
-"""Gates for the entry tools: no door runs on the event-loop thread, and every screen fits.
+"""Gates for the entry tools: every door is reached from its screen, and every screen fits.
 
-The off-loop gate records, at each door's transport boundary, whether it was
-entered on the thread that runs the application's event loop. A runtime door
-checks its session with a blocking exchange, so a door entered there would
-freeze every key while it waits.
+A screen awaits a door on the event loop; the door owns its off-loop work, and
+the runtime door's own tests hold that gate. Here the memory doors record which
+of them the screens reached, so a tool that silently stopped calling its door
+is caught.
 """
 
 from __future__ import annotations
 
-import threading
 from collections.abc import Callable
 from typing import cast, override
 
@@ -18,7 +17,6 @@ from textual.pilot import Pilot
 from textual.screen import Screen
 from textual.widgets import Button, Collapsible, DataTable, Input, Select
 
-from .....application.ledger.list_operation import LedgerListRequest
 from .....core.config import override_settings
 from ...components.dialogs import ConfirmScreen
 from ...tests.frame import geometry_band
@@ -30,7 +28,6 @@ from ..entries_health import LedgerHealthScreen
 from ..entries_reset import LedgerResetScreen
 from ..entries_trace import LedgerEntryTraceScreen
 from .entries_door_fixtures import (
-    ENTRIES_PROFILE_ID,
     MemoryEntriesLedger,
     entries_controller,
     entry_id,
@@ -62,26 +59,21 @@ _ALL_DOORS = frozenset(
 )
 
 
-class _ThreadBoundary(MemoryEntriesLedger):
-    """A memory ledger whose doors record whether they were entered on the event-loop thread."""
+class _Reached(MemoryEntriesLedger):
+    """A memory ledger whose doors record that a screen reached them."""
 
     def __init__(self, count: int) -> None:
         super().__init__(tuple(synthetic_entry(index) for index in range(count)))
-        self.loop_thread = threading.get_ident()
-        self.entered: list[tuple[str, bool]] = []
+        self.entered: list[str] = []
 
     @override
     def raise_if_configured(self, name: str) -> None:
-        self.entered.append((name, threading.get_ident() == self.loop_thread))
+        self.entered.append(name)
         super().raise_if_configured(name)
 
     @property
-    def on_loop(self) -> list[str]:
-        return [name for name, on_loop in self.entered if on_loop]
-
-    @property
     def names(self) -> set[str]:
-        return {name for name, _ in self.entered}
+        return set(self.entered)
 
 
 async def _settle(pilot: Pilot[None]) -> None:
@@ -110,7 +102,7 @@ async def _choose(pilot: Pilot[None], screen: LedgerEntriesBrowseScreen, row: in
     await _settle(pilot)
 
 
-async def _drive_browse(ledger: _ThreadBoundary) -> None:
+async def _drive_browse(ledger: _Reached) -> None:
     screen = LedgerEntriesBrowseScreen(entries_controller(), ledger.doors())
     app = _WorkspaceHostApp(screen)
     async with app.run_test(size=(120, 40)) as pilot:
@@ -137,7 +129,7 @@ async def _drive_browse(ledger: _ThreadBoundary) -> None:
         await _press(pilot, trace, "entries-trace-full")
 
 
-async def _drive_forms(ledger: _ThreadBoundary, export_path: str) -> None:
+async def _drive_forms(ledger: _Reached, export_path: str) -> None:
     doors = ledger.doors()
     add = LedgerEntryAddScreen(entries_controller(), doors)
     async with _WorkspaceHostApp(add).run_test(size=(120, 40)) as pilot:
@@ -169,23 +161,13 @@ async def _drive_forms(ledger: _ThreadBoundary, export_path: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_every_entry_door_is_entered_off_the_event_loop_thread(tmp_path_factory: pytest.TempPathFactory) -> None:
-    ledger = _ThreadBoundary(6)
+async def test_every_entry_door_is_reached_from_its_screen(tmp_path_factory: pytest.TempPathFactory) -> None:
+    ledger = _Reached(6)
     export_path = str(tmp_path_factory.mktemp("export") / "ledger.csv")
     with override_settings(cadrumo_output_language="en"):
         await _drive_browse(ledger)
         await _drive_forms(ledger, export_path)
     assert ledger.names == _ALL_DOORS
-    assert ledger.on_loop == []
-
-
-@pytest.mark.asyncio
-async def test_the_gate_catches_a_door_entered_on_the_loop() -> None:
-    """Detector teeth: awaiting a door directly on the loop is recorded as on the loop."""
-    ledger = _ThreadBoundary(1)
-    request = LedgerListRequest(profile_id=ENTRIES_PROFILE_ID, limit=10)
-    await ledger.doors().list_entries(request)
-    assert ledger.on_loop == ["list"]
 
 
 _SIZES = ((80, 24), (100, 30), (120, 40), (200, 50))

@@ -2,14 +2,12 @@
 
 Each door is bound to one admitted profile and submits exactly the typed
 request it is given, returning the operation's own receipt-correlated result.
-Screens call a door only through :func:`call_door_off_loop`, so no part of a
-door, including its synchronous session checks, runs on the event-loop thread.
+A door is awaited on the event loop and owns its own off-loop work: its session
+checks and transport exchanges run on worker threads, so a screen never blocks.
 """
 
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
@@ -219,23 +217,6 @@ class LedgerEntriesDoorsV1:
         return self.list_entries.profile_id
 
 
-async def _complete[ResultT](call: Callable[[], Awaitable[ResultT]]) -> ResultT:
-    return await call()
-
-
-async def call_door_off_loop[ResultT](call: Callable[[], Awaitable[ResultT]]) -> ResultT:
-    """Run one door call to completion on a worker thread, never on the event loop.
-
-    A runtime door checks its session with a blocking status exchange before it
-    submits; awaited on the event loop, that exchange would freeze every key.
-    """
-
-    def run() -> ResultT:
-        return asyncio.run(_complete(call))
-
-    return await asyncio.to_thread(run)
-
-
 __all__ = [
     "LedgerAddDoorV1",
     "LedgerCheckDoorV1",
@@ -252,5 +233,4 @@ __all__ = [
     "LedgerResetDoorV1",
     "LedgerStatusDoorV1",
     "LedgerTrackDoorV1",
-    "call_door_off_loop",
 ]
