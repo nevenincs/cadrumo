@@ -8,7 +8,7 @@ related:
   - '[[2026-10-22-worker-authorization-channel-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:105f0fff4440f269780056f5705a8ef3b9813311f29f1a869d1ad2b2d7009612'
+body_hash: 'sha256:293b2d603f405c0bbeb2df6a528aebdcef225984ffee96cc09be50139651eac5'
 ---
 
 # `save-path-performance` plan
@@ -28,10 +28,10 @@ Decision coverage: S04 implements `2026-10-22-worker-authorization-channel-adr`.
 - [x] `S01` - Intersect access scopes with set algebra bounded to what one access names; `src/cadrumo/application/user_profile/access_policy.py, operation_access_policy.py and tests`.
 - [x] `S02` - Keep the diagnostic log's descriptors between records with delete sharing and rotation following; `src/cadrumo/core/log_file_handler.py, src/cadrumo/core/locks.py and tests`.
 - [x] `S03` - Read the installed product version once per process for every handshake; `src/cadrumo_client/transport/product_version.py and handshake call sites`.
-- [ ] `S04` - Reuse verified worker authorization connections with a per-exchange incarnation recheck and a check-only exchange; `src/cadrumo_runtime/adapters/worker_authorization*.py, src/cadrumo_runtime/host/operation_progress_reporter.py, src/cadrumo_runtime/host/operation_authority.py and owning tests`.
-- [ ] `S05` - Cut per-save custody path verification opens while keeping containment and link refusal; `src/cadrumo/adapters/persistence/storage/custody/filesystem_primitives.py, filesystem.py and owning tests`.
-- [ ] `S06` - Stop creating the operation journal root on every journal call; `src/cadrumo/adapters/persistence/operations/journal.py, src/cadrumo/application/journal_repository.py and owning tests`.
-- [ ] `S07` - Re-measure the TUI save path on the external harness and record before and after results; `.vault/audit`.
+- [x] `S04` - Reuse verified worker authorization connections with a per-exchange incarnation recheck and a check-only exchange; `src/cadrumo_runtime/adapters/worker_authorization*.py, src/cadrumo_runtime/host/operation_progress_reporter.py, src/cadrumo_runtime/host/operation_authority.py and owning tests`.
+- [x] `S05` - Cut per-save custody path verification opens while keeping containment and link refusal; `src/cadrumo/adapters/persistence/storage/custody/filesystem_primitives.py, filesystem.py and owning tests`.
+- [x] `S06` - Stop creating the operation journal root on every journal call; `src/cadrumo/adapters/persistence/operations/journal.py, src/cadrumo/application/journal_repository.py and owning tests`.
+- [x] `S07` - Re-measure the TUI save path on the external harness and record before and after results; `.vault/audit`.
 
 ## Parallelization
 
