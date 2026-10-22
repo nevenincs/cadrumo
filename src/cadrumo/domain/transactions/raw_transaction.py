@@ -12,7 +12,7 @@ emit, before they are wrapped in
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
@@ -25,7 +25,7 @@ from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_bo
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing.codes import normalise_iso_4217_currency
-from ...core.time.utc import UtcInstant, validate_utc_aware
+from ...core.time.utc import UtcInstant
 from .errors import TransactionValidationError
 
 
@@ -113,16 +113,6 @@ class RawProvenance(BaseModel):
         change what the boundary admits.
         """
         return value.strip().lower() if isinstance(value, str) else value
-
-    @field_validator("ingested_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _require_aware_timestamp(cls, value: datetime) -> datetime:
-        """Reject naive timestamps; ingest must record UTC offsets."""
-        try:
-            return validate_utc_aware(value)
-        except CoreValidationError as exc:
-            raise TransactionValidationError(str(exc)) from exc
 
     @field_validator("provider_name")
     @classmethod

@@ -7,13 +7,12 @@ from decimal import Decimal
 
 from ...core.decimal.constants import ZERO
 from ..calculations.registry.iva_cash_accounting_vocabulary import (
-    require_iva_cash_accounting_treatment,
+    IvaCashAccountingTreatmentCatalogue,
+    resolve_iva_cash_accounting_catalogue,
 )
 from ..iva.schema import (
     IvaCashAccountingPaymentEvidence,
     IvaCashAccountingTreatment,
-    is_iva_cash_accounting_none,
-    is_iva_cash_accounting_supplier_regime,
 )
 from .enums import TransactionDirection
 from .errors import TransactionValidationError
@@ -54,10 +53,11 @@ def _require_tax_substrate(
 def _require_supplier_regime_direction(
     *,
     treatment: IvaCashAccountingTreatment,
+    catalogue: IvaCashAccountingTreatmentCatalogue,
     direction: TransactionDirection,
 ) -> None:
     """Keep supplier-regime treatment on received/purchase rows only."""
-    if is_iva_cash_accounting_supplier_regime(treatment) and direction is not TransactionDirection.OUTGOING:
+    if treatment == catalogue.supplier_regime_token and direction is not TransactionDirection.OUTGOING:
         raise TransactionValidationError(
             "supplier-regime cash-accounting treatment is only valid on received/purchase rows",
         )
@@ -107,9 +107,14 @@ def validate_cash_accounting_axis(
     recargo_amount: Decimal | None,
     direction: TransactionDirection,
 ) -> None:
-    """Validate timing, direction, substrate, and settlement evidence coupling."""
-    treatment = require_iva_cash_accounting_treatment(treatment)
-    if is_iva_cash_accounting_none(treatment):
+    """Validate timing, direction, substrate, and settlement evidence coupling.
+
+    The membership check and both token comparisons read one catalogue, so a
+    row is judged against a single resolution of the dated vocabulary.
+    """
+    catalogue = resolve_iva_cash_accounting_catalogue()
+    treatment = catalogue.require(treatment)
+    if treatment == catalogue.none_token:
         if payment_evidence:
             raise TransactionValidationError(
                 "cash_accounting_payment_evidence requires a non-NONE cash_accounting_treatment",
@@ -118,7 +123,7 @@ def validate_cash_accounting_axis(
     required_date = _required_operation_date(operation_date)
     _require_payment_evidence(payment_evidence)
     taxable_base, iva_amount = _require_tax_substrate(taxable_base, iva_amount)
-    _require_supplier_regime_direction(treatment=treatment, direction=direction)
+    _require_supplier_regime_direction(treatment=treatment, catalogue=catalogue, direction=direction)
     _validate_payment_totals(
         payment_evidence=payment_evidence,
         taxable_base=taxable_base,

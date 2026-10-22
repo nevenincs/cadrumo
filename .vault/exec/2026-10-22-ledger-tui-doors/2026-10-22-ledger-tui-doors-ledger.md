@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:502a767c601c3d1c508be2ab50a27fbf22c66bda6a18cde46e91feb5bd8a8cf5'
+body_hash: 'sha256:e7bff07be5f9e92edd5dcfc97ed8c83a5d60f9130705cb1dc4979eb34d6fc918'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -209,6 +209,16 @@ related:
 - `S11` `A` `dev/ci/tests/test_ledger_tui_reads_benchmark.py`
 - `S11` `verify:` `pytest dev/ci/tests/test_ledger_tui_reads_benchmark.py -m perf -n0 (28 reads, diagnostics only)` -> `pass`
 - `S11` `by:` `O3`
+- `S12` `M` `src/cadrumo/domain/transactions/models.py`
+- `S12` `M` `src/cadrumo/domain/transactions/cash_accounting_validation.py`
+- `S12` `M` `src/cadrumo/domain/transactions/raw_transaction.py`
+- `S12` `A` `src/cadrumo/domain/transactions/tests/test_transaction_load_validation.py`
+- `S12` `A` `src/cadrumo/domain/transactions/tests/varied_ledger_seed.py`
+- `S12` `verify:` `load() at 30k: CPU mean 6.80s to 6.36s, load plus list 7.63s to 7.27s (10 alternating in-process samples, 10 of 10 faster)` -> `pass`
+- `S12` `verify:` `transactions, iva, profile persistence and ledger tests (5253)` -> `pass`
+- `S12` `verify:` `identity over 30k rows and a varied seed either side of Madrid midnight; 784 mutated payloads refuse identically` -> `pass`
+- `S12` `verify:` `ruff, lint-imports, ty on touched files` -> `pass`
+- `S12` `by:` `O4`
 
 ## Notes
 
@@ -224,3 +234,4 @@ related:
 - `S07` The exclusion submitter wiring (import, compose call, `exclusion_submitter=)` landed inside another session's commit 35934fefa0 together with its startup change; verified present in HEAD.
 - `S13` Behaviour change: a session lapsing or being replaced mid-read now refuses the whole read with a session refusal; before, a lapse surfaced as an unreadable row and a same-profile re-login released the records. transactions.py still digests each object key a second time (about 6 us/row); left for a follow-up.
 - `S11` At 30k rows after S09 and S10: workbench.generation 118 CPU-s mean (90M reconciliation pair checks), status 41 (4 full loads), check 32, view 30 (3 loads), track 19, preflight 12, unfiltered list 10, history 11, invoice.list 9, review 9, llm-diagnostics 8, participation 7, invoice.view 7. Period list page 0.59. Results and profiles in the scratchpad run4.log and prof folder.
+- `S12` Remaining domain cost is about 140 us of 212 us per row across `~75` validator calls; further cuts need a user decision (skip revalidating authenticated stored rows, native pydantic types, or paging the unfiltered listing).

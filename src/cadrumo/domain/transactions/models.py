@@ -277,7 +277,27 @@ def _coerce_counterparty_identification_state_field(value: object, info: core_sc
     return _translate_registry_enum_error(lambda: require_eu_member_state(value, effective_date=effective_date))
 
 
+_PLAIN_ENUM_BY_FIELD: Mapping[str, type] = MappingProxyType(
+    {
+        "direction": TransactionDirection,
+        "business_classification": BusinessClassification,
+        "lifecycle_state": TransactionLifecycleState,
+        "iva_category": IvaCategory,
+        "exemption_article": IvaExemptionArticle,
+        "cash_accounting_treatment": IvaCashAccountingTreatment,
+        "art_104_tres_exclusion": Art104TresExclusion,
+        "tipo_actividad": TipoActividad,
+        "classification_origin": ClassificationOrigin,
+    },
+)
+
+
 def _coerce_transaction_enum_field(value: object, info: core_schema.ValidationInfo) -> object:
+    # Every branch below returns ``None`` unchanged, and a loaded row carries
+    # ``None`` in most of these fields, so answering it first spares the
+    # dispatch on each of them.
+    if value is None:
+        return None
     field_name = info.field_name
     if field_name == "concepto_ingreso":
         return _coerce_concepto_ingreso_field(value, info)
@@ -289,18 +309,7 @@ def _coerce_transaction_enum_field(value: object, info: core_schema.ValidationIn
         return _coerce_counterparty_identification_state_field(value, info)
     if not isinstance(value, str):
         return value
-    enum_by_field: dict[str, type] = {
-        "direction": TransactionDirection,
-        "business_classification": BusinessClassification,
-        "lifecycle_state": TransactionLifecycleState,
-        "iva_category": IvaCategory,
-        "exemption_article": IvaExemptionArticle,
-        "cash_accounting_treatment": IvaCashAccountingTreatment,
-        "art_104_tres_exclusion": Art104TresExclusion,
-        "tipo_actividad": TipoActividad,
-        "classification_origin": ClassificationOrigin,
-    }
-    return enum_by_field[field_name or ""](value)
+    return _PLAIN_ENUM_BY_FIELD[field_name or ""](value)
 
 
 class Transaction(BaseModel):
@@ -744,7 +753,8 @@ class Transaction(BaseModel):
         if value is None:
             return ()
         if isinstance(value, list):
-            return OBJECT_TUPLE_ADAPTER.validate_python(value)
+            # An empty JSON array is the common case and has one tuple form.
+            return OBJECT_TUPLE_ADAPTER.validate_python(value) if value else ()
         return value
 
     @model_validator(mode="after")
