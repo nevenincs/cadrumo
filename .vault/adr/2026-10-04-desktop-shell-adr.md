@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-21'
+modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:b0ee4fd6258a7214a7277ae8d3a4c8f20eee138bc6ba8ad37fa795d5d31809d3'
+body_hash: 'sha256:7fb744d4a5b7cd0d20890d0cf4020402213f5104160cba55bc404f69eb1c0b5c'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -75,7 +75,7 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - Origins are computed at runtime: http or https per the platform's scheme setting, the custom-scheme form on Linux, and the dev server URL in development.
 - The frontend bundle contains no location, path, origin or environment variable name. Every runtime value comes from `desktop_environment`. The only build-time inputs are the dev-server host and ports from the canonical definition.
 - PTY bytes never enter diagnostics, host logs or the log view. The log view shows host events and Python log records only.
-- Nothing remote loads in the webview. External https and mailto links open in the system browser through a host command that revalidates the URL. Every other scheme is refused. The shell acts on a bridge `open-external` only while `navigator.userActivation.isActive`, and under a rate limit.
+- Nothing remote loads in the webview. External https and mailto links open in the system browser through a host command that revalidates the URL. A well-formed `cadrumo://profiles/{id}/{page}` link opens that page in the window's own TUI (amendment of 2026-10-22) and never reaches the browser. Every other scheme is refused. The shell acts on a bridge `open-external` only while `navigator.userActivation.isActive`, and under a rate limit.
 - The shell never captures F1 to F10, Ctrl+P, Ctrl+Q, Ctrl+C, Ctrl+K, Escape or plain keys while a terminal has focus.
 - The log view keeps "available", "missing" and "unreadable" sources distinct from an empty list. It only reads the log and never truncates, rotates or deletes it.
 - The log reader expects rotation to be late, skipped or racing, because several processes share one `RotatingFileHandler` file and a rename on Windows fails while another process has the file open. It never infers that a process exited from a file event. It also doesn't assume that profile workers log to this file.
@@ -356,3 +356,11 @@ Authorized by the user's request to hide the TUI startup sequence behind a loadi
 The frontend keeps parsing and acknowledging output while covered, including ConPTY cursor replies, and keeps terminal dimensions available. On Windows, OSC can precede buffered screen text: the frontend waits for a short output-quiescence interval and an xterm repaint before revealing readiness, restarting that wait for each output batch. This is a presentation settling guard, not a transport ordering guarantee or an authentication signal. No maximum startup timeout guesses readiness. Reconsider the settling guard if native traces show a repaint delayed beyond the guard; do not bypass runtime admission or add a second terminal launch.
 
 Evidence: `src/cadrumo_runtime/host/frontend/tui/runtime_admission.py`, `src/cadrumo_runtime/host/frontend/tui/secret/runtime_login_form.py`, `src/cadrumo/entrypoints/tui/app.py`, `src/cadrumo/entrypoints/tui/components/quiet_app.py`, `native/desktop/frontend/src/components/TerminalPane.tsx`, and the real-PTY presentation test in `native/desktop/src-tauri/src/terminal/tests.rs`. The native Windows test observed an OSC marker emitted after screen text arriving before that text.
+
+### Amendment 2026-10-22: cadrumo:// page links open the workspace page
+
+Accepted by the user on 2026-10-22. A link `cadrumo://profiles/{id}/{page}` in an agent reply or a profile action raises the window (unminimize, show, focus), shows the TUI pane with keyboard focus, and, once the TUI is running, asks the held person session to present the page; the protocol, its closed page vocabulary and its admission rules are the 2026-10-22 amendment of `2026-08-11-tui-architecture-adr`. The link grammar is exact: a lowercase, non-nil profile UUID and one page among `home`, `ledger`, `withholding`, `declarations`, `aeat-sync`, `operations`, `installation`, `setup`, `reference`, `profile`, `aeat-auth`, with no query, fragment or further segment. The host, not the window, matches the link's profile against the active profile's identity, because the window knows the profile only by label.
+
+No link is silent. A malformed link, a link for another profile, a signed-out window, a TUI that did not start or received nothing, and a refused request each show a toast; a link for another profile leaves the layout untouched. `cadrumo:` links never reach `open-external`. The modal AEAT setup terminal, its terminal target and its terminal kind are retired; AEAT setup opens the workspace's profile page, and the agent's check-again affordance follows a successful presentation.
+
+Evidence: `native/desktop/frontend/src/components/agent/cadrumoLink.ts`, `native/desktop/frontend/src/App.tsx`, `native/desktop/src-tauri/src/shell/presentation.rs`, `native/desktop/src-tauri/src/agent/person.rs` (`presented_reply`), `native/desktop/src-tauri/src/shell/window_controls.rs`, and `native/desktop/frontend/tests/scenarios/agent-page-links.spec.ts`.

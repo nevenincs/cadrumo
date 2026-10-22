@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-10-14'
+modified: '2026-10-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:4e4077749003b78d840bdf83d1094f22abfbf056541f286cdc93e112d6991d0d'
+body_hash: 'sha256:d61d58f16270f7ed96cb06bf8689d2d49a6797a0a910c0742761e8f6feb0a8c0'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -1531,6 +1531,7 @@ root owns every journey after process start.
 CLI uses of `FullScreenDestination`, `FullScreenSessionRequest`, and
 `FullScreenSessionOutcome` are retired. Any destination protocol is TUI-internal unless a
 separately identified non-CLI peer needs it; delete the shared protocol if no such peer remains.
+The desktop is such a peer; its page requests follow the 2026-10-22 amendment below.
 The launch command contains only child-process construction and exit-status propagation; it must
 not recreate a route protocol or presentation-capability gate.
 
@@ -1558,3 +1559,15 @@ The private journal and affected public definition contracts use existing curren
 ### Amendment 2026-10-14: TUI belongs to the runtime host
 
 The production topology is amended: the installed Textual frontend now lives under `src/cadrumo_runtime/host/frontend/tui/` (`cadrumo_runtime.host.frontend.tui`) and the canonical launch is `cadrumo-runtime tui`. The runtime host owns and composes that frontend. The `cadrumo` tax application never imports `cadrumo_runtime`; host-side composition may consume inward Cadrumo services through their public APIs. References above to `cadrumo.entrypoints.tui`, its tests or launcher, and `aeat app tui` record the prior accepted placement and are superseded for current path, ownership, dependency direction, and launch only. Operation, profile, secret, flow, Modelo, and application contracts in this ADR remain in force.
+
+### Amendment 2026-10-22: the desktop asks the running TUI to show a page
+
+Accepted by the user on 2026-10-22 after review of the desktop page-presentation proposal. A `cadrumo://` link in the desktop did nothing: the window compared the link's profile UUID with the signed-in profile's label, dropped every other link silently, and the AEAT setup link opened a second TUI in a modal instead of the open workspace.
+
+The desktop asks the TUI it hosts for a page through the runtime, not through launch arguments, terminal input or a desktop-owned pipe. The held desktop person session sends `present_destination` with one token from a closed page vocabulary: `home`, `ledger`, `withholding`, `declarations`, `aeat_sync`, `operations`, `installation`, `setup`, `reference`, `profile`, `aeat_auth`. The vocabulary names pages only and carries no profile fact, query or credential. Only a desktop-frontend person connection may ask: a CLI or TUI frontend is refused with `frontend_denied`, a non-person peer with `person_act_required`, and the asking session is checked as a status read is. The runtime relays the token, without interpreting a route, as a `presentation_requested` cue to each TUI connection on the same profile that holds a session under the same native login, and reports how many it reached. Delivery grants nothing.
+
+The TUI admits a requested page exactly as it admits a palette choice, against its current destination catalogue; `aeat_auth` opens the profile page with its AEAT access editor. Over a credential or modal form the request stands down with a visible notice rather than discarding the form. The TUI's invocation grammar stays the bare and self-test forms; the separate AEAT setup process and its `--aeat-auth-profile` argument are retired. Adding a page extends the client contract, the TUI mapping and the desktop link grammar together.
+
+Rejected: a desktop-owned pipe or socket named to the TUI child (new native IPC on every platform and duplicated peer verification; `portable-pty` cannot pass an inherited handle), a private escape sequence in terminal input (Textual parses no input OSC, ConPTY may drop it, and typed or pasted input could imitate it), and relaunching with a page argument (it discards open work and reverses the 2026-09-08 amendment). A standalone TUI the same person runs on the same profile also receives the request; that is accepted because it is their own workspace and the request grants nothing.
+
+Evidence: `src/cadrumo_client/contracts/presentation.py`, `src/cadrumo_client/contracts/session_events.py`, `src/cadrumo_runtime/host/profile_connection_sessions.py` (`_present`), `src/cadrumo_runtime/host/session_hold.py`, `src/cadrumo/entrypoints/tui/presentation.py`, `src/cadrumo/entrypoints/tui/app.py`, and the tests `src/cadrumo_runtime/host/tests/test_presentation_routing.py` and `src/cadrumo/entrypoints/tui/tests/test_presentation_navigation.py`. Grounding: `2026-10-06-desktop-shell-capabilities-research`.

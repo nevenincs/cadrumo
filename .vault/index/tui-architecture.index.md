@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:111df4604efee0ad4810e20f9e03fe679945ca81820f2718deb2ea3ce3652234'
+body_hash: 'sha256:8ff0c4b583ef28155e675aea18b7887bf64f6591388dd78d4e3d37c427538fa6'
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-research]]'
@@ -143,7 +143,6 @@ related:
   - '[[2026-09-03-tui-architecture-w08-p28-s403-review-audit]]'
   - '[[2026-09-04-tui-architecture-authenticated-tui-visibility-adr]]'
   - '[[2026-09-08-tui-architecture-s340-audit]]'
-  - '[[2026-10-22-tui-architecture-desktop-page-presentation-adr]]'
 ---
 
 # `tui-architecture` feature index
@@ -160,7 +159,6 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-27-tui-architecture-modelo-347-counterparty-residency-scope-adr` - `tui-architecture` adr: `modelo 347 counterparty residency scope` | (**status:** `accepted`)
 - `2026-09-02-tui-architecture-out-of-process-destination-protocol-adr` - `tui-architecture` adr: `the out-of-process protocol that opens a full-screen destination` | (**status:** `accepted`)
 - `2026-09-04-tui-architecture-authenticated-tui-visibility-adr` - `tui-architecture` adr: `the authenticated TUI shows the operator their own data` | (**status:** `accepted`)
-- `2026-10-22-tui-architecture-desktop-page-presentation-adr` - `tui-architecture` adr: `the desktop asks the running TUI to show a page` | (**status:** `proposed`)
 
 ### audit
 
