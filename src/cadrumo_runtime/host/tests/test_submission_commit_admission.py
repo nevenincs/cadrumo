@@ -199,6 +199,12 @@ class _RuntimePolicyClient(WorkerAuthorizationClient):
         self._callers = {caller.session.session_id: caller for caller in callers}
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # This port's guard stands in for the runtime's admission; a check holds it for no body.
+        async with self.guard(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         caller = self._callers[request.session_id]
@@ -215,9 +221,7 @@ class _RuntimePolicyClient(WorkerAuthorizationClient):
         )
         if isinstance(decision, AccessDenied):
             raise ProfileAccessRefusedError(decision.code)
-        yield WorkerAuthorizationLease(
-            identity=self.identity, root=self.root, parent_pid=self.parent_pid, request=request
-        )
+        yield WorkerAuthorizationLease(connections=self.connections, request=request)
 
 
 def test_a_refused_committing_submission_stores_nothing_and_leaves_its_subject_free(

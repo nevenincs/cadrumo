@@ -1,11 +1,10 @@
-"""One native channel and exact held worker authority permit with explicit release."""
+"""One exact held worker authority permit, on a pooled verified channel, with explicit release."""
 
 from __future__ import annotations
 
 import asyncio
 import sys
 import time
-from pathlib import Path
 from uuid import uuid4
 
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
@@ -17,17 +16,15 @@ from cadrumo.core.diagnostic_log import diagnostic_timing_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_vocabulary import AccessAction
-from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.model_runs import ModelRunHeader, ModelRunOutcome
 from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
-from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.model_run_frames import read_secret_chunks, write_secret_chunks
-from cadrumo_client.transport.posix_channel import PosixChannel
-from cadrumo_client.transport.product_version import installed_product_version
 from cadrumo_runtime.contracts.worker_authorization import (
+    WorkerAuthorityChecked,
     WorkerAuthorityRequest,
     WorkerAuthorizationAcknowledgement,
     WorkerAuthorizationPermit,
@@ -53,28 +50,35 @@ from cadrumo_runtime.contracts.worker_enrollment import (
 )
 
 from ..application.approval_binding import RuntimeApprovalBinding
-from .native_peer import require_live_native_peer
-from .worker_authorization import runtime_server_start_definitions, worker_authorization_namespace
+from .worker_authorization import runtime_server_start_definitions
+from .worker_authorization_connections import WorkerAuthorizationConnections
 from .worker_authorization_refusals import raise_worker_access_refusal
-from .worker_transport import WorkerChannel, worker_endpoint
+from .worker_transport import WorkerChannel
 
 _LOGGER = get_logger(__name__)
 
 
 class WorkerAuthorizationLease:
-    """One native connection with explicit acquisition/release, never an ordinary result."""
+    """One permit on one pooled connection, with explicit acquisition/release, never an ordinary result.
+
+    The connection goes back to its pool only when every exchange on it ended
+    on its terminal frame: the release acknowledged, or the request's refusal
+    acknowledged. Anything else closes it.
+    """
 
     def __init__(
         self,
         *,
-        identity: ProfileWorkerIdentity,
-        root: Path,
-        parent_pid: int,
+        connections: WorkerAuthorizationConnections,
         request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest,
     ) -> None:
         """Capture only trusted worker routing and registered operation coordinates."""
-        self.identity, self.root, self.parent_pid, self.request = identity, root, parent_pid, request
+        self.connections, self.request = connections, request
+        self.identity: ProfileWorkerIdentity = connections.identity
         self._channel: WorkerChannel | None = None
+        # False while an instruction is in flight, and for good once one fails.
+        self._settled = True
+        self._abandoned = False
         self._permit: WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit | None = (
             None
         )
@@ -92,31 +96,12 @@ class WorkerAuthorizationLease:
             )
 
     def acquire(self) -> None:
-        """Authenticate the retained native parent before requesting a held fence."""
-        endpoint = worker_endpoint(
-            storage_root=self.root, worker_namespace=worker_authorization_namespace(self.identity.worker_id)
-        )
-        channel: WorkerChannel | None = None
+        """Request a held fence on a verified connection to the retained native parent."""
+        # The runtime may queue this admission behind a running COMMIT's fence.
+        deadline = exchange_deadline()
+        channel: WorkerChannel | None = self.connections.checkout(deadline)
+        clean = False
         try:
-            channel = endpoint.connect(timeout=5)
-            if (
-                channel.peer.process_id != self.parent_pid
-                or channel.peer.os_owner_id != self.identity.binding.os_owner_id
-            ):
-                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-            if isinstance(channel, PosixChannel):
-                require_live_native_peer(channel)
-            # The runtime may queue this admission behind a running COMMIT's fence.
-            deadline = exchange_deadline()
-            verified = VerifiedConnection(
-                channel,
-                expected=ClientHello(
-                    product_version=installed_product_version(), storage_identity=endpoint.storage_identity
-                ),
-                deadline=deadline,
-            )
-            if verified.hello.boot_id != self.identity.runtime_boot_id:
-                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
             write_document(channel, self.request, deadline=deadline)
             reply = read_document(channel, WorkerAuthorizationReply, deadline=deadline).root
             if reply.request_id != self.request.request_id:
@@ -130,6 +115,7 @@ class WorkerAuthorizationLease:
                 write_document(
                     channel, WorkerAuthorizationAcknowledgement(request_id=self.request.request_id), deadline=deadline
                 )
+                clean = True
                 raise_worker_access_refusal(reply)
             reply = _validated_authority_permit(reply, self.request, self.identity)
             self._permit, self._channel = reply, channel
@@ -137,8 +123,11 @@ class WorkerAuthorizationLease:
             self._commit_phase("permit_validated")
         finally:
             if channel is not None:
-                channel.close()
-            endpoint.close()
+                self.connections.checkin(channel, reusable=clean)
+
+    def abandon(self) -> None:
+        """Close this lease's connection after its release instead of reusing it; the release itself still runs."""
+        self._abandoned = True
 
     def inventory(self) -> AutomationInventory:
         """Return only an exact inventory permit, never an ordinary guard reply."""
@@ -161,8 +150,10 @@ class WorkerAuthorizationLease:
             phase=phase,
         )
         self._publication_sent = True
+        self._settled = False
         write_document(channel, command, deadline=exchange_deadline())
         reply = self._publication_reply(channel, request, permit, command)
+        self._settled = True
         if reply.receipt is None:
             if phase != "commit_review":
                 raise RefusalError(RefusalCode.INVALID_FRAME)
@@ -194,6 +185,7 @@ class WorkerAuthorizationLease:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         command = WorkerServerStart(request_id=request.request_id, permit_id=permit.permit_id, command_id=uuid4())
         self._runtime_server_start_sent = True
+        self._settled = False
         write_document(channel, command, deadline=exchange_deadline())
         reply = read_document(channel, WorkerServerStarted, deadline=exchange_deadline())
         if (
@@ -203,6 +195,7 @@ class WorkerAuthorizationLease:
             or reply.runtime_boot_id != self.identity.runtime_boot_id
         ):
             raise RefusalError(RefusalCode.INVALID_FRAME)
+        self._settled = True
         return reply.process_id
 
     def model_run(
@@ -233,6 +226,7 @@ class WorkerAuthorizationLease:
             body_byte_count=len(body),
         )
         self._model_run_sent = True
+        self._settled = False
         try:
             write_document(channel, command, deadline=exchange_deadline())
         except BaseException:
@@ -248,6 +242,7 @@ class WorkerAuthorizationLease:
         ):
             raise RefusalError(RefusalCode.INVALID_FRAME)
         text = read_secret_chunks(channel, reply.outcome.text_byte_count, deadline=exchange_deadline())
+        self._settled = True
         return reply.outcome, text
 
     def release(self) -> None:
@@ -256,6 +251,7 @@ class WorkerAuthorizationLease:
         self._channel, self._permit = None, None
         if channel is None:
             return
+        clean = False
         try:
             self._commit_phase("release_executor_start")
             if permit is None:
@@ -279,8 +275,9 @@ class WorkerAuthorizationLease:
                 WorkerAuthorizationAcknowledgement(request_id=self.request.request_id),
                 deadline=exchange_deadline(),
             )
+            clean = self._settled and not self._abandoned
         finally:
-            channel.close()
+            self.connections.checkin(channel, reusable=clean)
 
     async def close(self) -> None:
         """Complete blocking native release through the existing cleanup owner."""
@@ -327,6 +324,8 @@ class WorkerAuthorizationLease:
         if isinstance(reply, AccessRefusal):
             if reply.connection_id != request.connection_id:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
+            # The refusal is the publication's whole reply; the held fence still awaits its release.
+            self._settled = True
             raise_worker_access_refusal(reply)
         if (
             not isinstance(reply, WorkerApprovalPublished)
@@ -349,6 +348,7 @@ def _validated_authority_permit(
     | WorkerAuthorizationPermit
     | WorkerResponseScopePermit
     | WorkerAutomationInventoryPermit
+    | WorkerAuthorityChecked
     | WorkerAuthorizationReleased
     | WorkerApprovalReady
     | WorkerApprovalPhaseResult

@@ -38,6 +38,7 @@ from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublicatio
 
 from ...adapters.tests.profile_worker_support import changed, lease, worker_profiles
 from ...adapters.worker_authorization_client import WorkerAuthorizationClient
+from ...adapters.worker_authorization_connections import WorkerAuthorizationConnections
 from ...adapters.worker_authorization_lease import WorkerAuthorizationLease
 from ...application.approval_binding import RuntimeApprovalBinding
 from ..operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
@@ -51,14 +52,12 @@ class HeldApprovalLease(WorkerAuthorizationLease):
     def __init__(
         self,
         *,
-        identity: ProfileWorkerIdentity,
-        root: Path,
-        parent_pid: int,
+        connections: WorkerAuthorizationConnections,
         request: WorkerAuthorityRequest,
         entered: Event,
         release_publication: Event,
     ) -> None:
-        super().__init__(identity=identity, root=root, parent_pid=parent_pid, request=request)
+        super().__init__(connections=connections, request=request)
         self.entered = entered
         self.release_publication = release_publication
         self.active = True
@@ -89,12 +88,16 @@ class HeldAuthorizationClient(WorkerAuthorizationClient):
         self.leases: list[HeldApprovalLease] = []
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # This port's guard stands in for the runtime's admission; a check holds it for no body.
+        async with self.guard(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[HeldApprovalLease]:
         held = HeldApprovalLease(
-            identity=self.identity,
-            root=self.root,
-            parent_pid=self.parent_pid,
+            connections=self.connections,
             request=request,
             entered=self.entered,
             release_publication=self.release_publication,

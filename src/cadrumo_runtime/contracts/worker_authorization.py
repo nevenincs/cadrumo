@@ -110,12 +110,32 @@ type WorkerAuthorityRequest = Annotated[
 ]
 
 
+class WorkerAuthorityCheck(BaseModel):
+    """Ask whether one stage is admitted now, for a caller that runs no body under the answer.
+
+    The runtime evaluates admission and answers at once. It holds no fence and
+    issues no permit, so a COMMIT, whose fence is what it asks for, is never
+    checked this way.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["check"] = "check"
+    authority: WorkerAuthorityRequest
+
+    @model_validator(mode="after")
+    def _refuse_commit(self) -> WorkerAuthorityCheck:
+        if self.authority.request.action is AccessAction.COMMIT:
+            raise ValueError("a COMMIT holds its fence and is never only checked")
+        return self
+
+
 type WorkerAuthorityEnvelopeRequest = Annotated[
     WorkerAuthorizationRequest
     | WorkerResponseScopeRequest
     | WorkerAutomationInventoryRequest
     | WorkerApprovalRequest
-    | WorkerOperationsAdvanced,
+    | WorkerOperationsAdvanced
+    | WorkerAuthorityCheck,
     Field(discriminator="kind"),
 ]
 
@@ -143,6 +163,16 @@ class WorkerResponseScopePermit(BaseModel):
     request_id: UUID
     runtime_boot_id: UUID
     permit_id: UUID
+    expires_at: UtcInstant
+
+
+class WorkerAuthorityChecked(BaseModel):
+    """Admission held when the runtime answered; nothing is held once this is sent."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["checked"] = "checked"
+    request_id: UUID
+    runtime_boot_id: UUID
     expires_at: UtcInstant
 
 
@@ -272,6 +302,7 @@ class WorkerAuthorizationReply(
             WorkerAuthorizationPermit
             | WorkerResponseScopePermit
             | WorkerAutomationInventoryPermit
+            | WorkerAuthorityChecked
             | WorkerAuthorizationReleased
             | WorkerApprovalReady
             | WorkerApprovalPhaseResult

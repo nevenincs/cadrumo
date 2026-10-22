@@ -464,8 +464,13 @@ class ProfileWorkerOperationAuthority:
         authorization = await self._resolve_binding_off_loop(identity, action, binding)
         if task is not None and self._held.get(task) == (identity, action):
             return
-        async with self.client.guard(authorization):
-            pass
+        if action is AccessAction.COMMIT:
+            # A COMMIT is admitted only as its held fence, so even an empty one is taken whole.
+            async with self.client.guard(authorization):
+                pass
+            return
+        # Nothing runs under this answer, so the runtime only evaluates admission and holds nothing.
+        await self.client.check(authorization)
 
     @asynccontextmanager
     async def guard(self, identity: OperationIdentity, action: AccessAction) -> AsyncGenerator[None]:

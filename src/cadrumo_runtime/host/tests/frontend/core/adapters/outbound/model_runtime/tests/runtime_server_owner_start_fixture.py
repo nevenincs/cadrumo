@@ -18,6 +18,7 @@ from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
 from cadrumo_runtime.adapters.worker_authorization_client import WorkerAuthorizationClient
+from cadrumo_runtime.adapters.worker_authorization_connections import WorkerAuthorizationConnections
 from cadrumo_runtime.adapters.worker_authorization_lease import WorkerAuthorizationLease
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorizationPermit,
@@ -80,7 +81,10 @@ def exercise_unchecked(root: Path, seed: Seed) -> int:
     pending_pid.replace(root / "worker.pid")
     while not (root / "listening").exists():
         time.sleep(0.01)
-    lease = _UncheckedLease(identity=seed.identity, root=root, parent_pid=seed.parent_pid, request=seed.request)
+    lease = _UncheckedLease(
+        connections=WorkerAuthorizationConnections(identity=seed.identity, root=root, parent_pid=seed.parent_pid),
+        request=seed.request,
+    )
     try:
         lease.acquire()
         reply = lease.send_unchecked_start()

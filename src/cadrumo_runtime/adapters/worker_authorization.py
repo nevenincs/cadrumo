@@ -38,6 +38,8 @@ from cadrumo_client.transport.product_version import installed_product_version
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
 from cadrumo_runtime.contracts.worker_authorization import (
     WORKER_AUTOMATION_INVENTORY_MAX_BYTES,
+    WorkerAuthorityCheck,
+    WorkerAuthorityChecked,
     WorkerAuthorityEnvelope,
     WorkerAuthorityRequest,
     WorkerAuthorizationAcknowledgement,
@@ -66,6 +68,7 @@ from cadrumo_runtime.contracts.worker_enrollment import (
     WorkerApprovalRequest,
 )
 
+from .native_peer import require_live_native_peer
 from .worker_transport import WorkerChannel, worker_endpoint
 
 
@@ -100,6 +103,9 @@ _FRAME_SECONDS = 5.0
 _SETTLE_JOIN_SECONDS = 35.0
 """How long shutdown joins the callback thread; its worker is contained first, so the thread ends promptly."""
 
+WORKER_AUTHORIZATION_CONNECTIONS = 8
+"""Connections the runtime serves for one worker at once, idle and busy together; the worker opens no more."""
+
 
 class WorkerAuthorizationServer:
     """Keep the profile RLock on one thread until release or owned-process containment.
@@ -107,6 +113,12 @@ class WorkerAuthorizationServer:
     Shutdown signals do not join while a caller holds the profile guard. The
     host separately calls settle after releasing that guard. At most eight
     native channels may wait for or hold authority for one worker.
+
+    A channel is verified once, when it is accepted, and then serves one
+    exchange at a time until it closes. Before each exchange the worker's
+    kernel incarnation and its membership in the owned job are checked again,
+    and the exchange itself is admitted afresh: a channel carries no
+    authority from one exchange to the next.
     """
 
     def __init__(
@@ -134,7 +146,7 @@ class WorkerAuthorizationServer:
         self._runtime_server_starter = runtime_server_starter
         # A stage's wait for the worker's next frame blocks on this stop too.
         self._stop, self._failed = NativeWake(), Event()
-        self._slots = BoundedSemaphore(8)
+        self._slots = BoundedSemaphore(WORKER_AUTHORIZATION_CONNECTIONS)
         self._endpoint = worker_endpoint(
             storage_root=root, worker_namespace=worker_authorization_namespace(identity.worker_id)
         )
@@ -148,7 +160,9 @@ class WorkerAuthorizationServer:
 
     def _serve(self) -> None:
         try:
-            with ThreadPoolExecutor(max_workers=8, thread_name_prefix="profile-effect") as pool:
+            with ThreadPoolExecutor(
+                max_workers=WORKER_AUTHORIZATION_CONNECTIONS, thread_name_prefix="profile-effect"
+            ) as pool:
                 while not self._stop.is_set():
                     try:
                         channel = self._endpoint.accept(timeout=None, wakes=(self._stop,))
@@ -160,8 +174,14 @@ class WorkerAuthorizationServer:
                         }:
                             continue
                         raise
-                    if self._stop.is_set() or not self._slots.acquire(blocking=False):
+                    # A connection the worker just closed may not have handed back its slot yet.
+                    # Every slot holder wakes on stop, so this wait also ends promptly then.
+                    if not self._slots.acquire(timeout=_FRAME_SECONDS):
                         channel.close()
+                        continue
+                    if self._stop.is_set():
+                        channel.close()
+                        self._slots.release()
                         continue
                     try:
                         pool.submit(self._connection, channel)
@@ -176,86 +196,10 @@ class WorkerAuthorizationServer:
             self._endpoint.close()
 
     def _connection(self, channel: WorkerChannel) -> None:
-        request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest | WorkerApprovalRequest | None = None
         try:
             self._verify_worker_channel(channel)
-            envelope = read_document(channel, WorkerAuthorityEnvelope, deadline=time.monotonic() + 5).root
-            if isinstance(envelope, WorkerOperationsAdvanced):
-                self._operations_advanced(channel, envelope)
-                return
-            request = envelope
-            owner = self._request_owner(request)
-            if isinstance(request, WorkerApprovalRequest):
-                try:
-                    self._approval_phase(channel, request)
-                except BaseException:
-                    # A lost phase reply must not strand proof until expiry.
-                    # Retirement is peer-bound cleanup and needs no live lease.
-                    owner.approval_phase(request.model_copy(update={"phase": "close"}), None)
-                    raise
-                return
-            permit_id = uuid4()
-            guard = (
-                owner.automation_inventory(request)
-                if isinstance(request, WorkerAutomationInventoryRequest)
-                else owner.authorize(request)
-            )
-            # Authority is checked once, as the stage starts. Only a COMMIT keeps the
-            # profile's admission fence through its body: its effects are irreversible,
-            # and an approval publishes on the fence's own thread. Every other stage runs
-            # unfenced, so it never holds up the profile's other requests.
-            hold_fence = (
-                isinstance(request, WorkerAuthorizationRequest) and request.request.action is AccessAction.COMMIT
-            )
-            with ExitStack() as fence:
-                allowed = fence.enter_context(guard)
-                permit = self._held_permit(request, allowed, permit_id)
-                write_document(channel, permit, deadline=time.monotonic() + 5)
-                if not hold_fence:
-                    fence.close()
-                try:
-                    # A stage is never ended for the time it takes; it ends when the
-                    # worker releases it, its channel dies, or the runtime stops.
-                    self._held_body(channel, request, permit_id=permit_id)
-                except BaseException as error:
-                    # A lost release cannot prove the effect body stopped. Contain
-                    # the owned job before dropping the fence.
-                    diagnostic_event(
-                        _LOGGER,
-                        "profile_worker_permit_contained",
-                        fields={"request_kind": request.kind, **diagnostic_error_fields(error)},
-                        level=logging.WARNING,
-                        primary_error=error,
-                    )
-                    try:
-                        self._contain()
-                    except BaseException:
-                        self._failed.set()
-                        self._stop.set()
-                        raise
-                    raise
-            write_document(
-                channel,
-                WorkerAuthorizationReleased(request_id=request.request_id, permit_id=permit_id),
-                deadline=time.monotonic() + 5,
-            )
-            acknowledged = read_document(channel, WorkerAuthorizationAcknowledgement, deadline=time.monotonic() + 5)
-            if acknowledged.request_id != request.request_id:
-                raise RefusalError(RefusalCode.INVALID_FRAME)
-        except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError) as error:
-            if request is not None:
-                with suppress(RefusalError):
-                    write_document(
-                        channel,
-                        AccessRefusal(
-                            request_id=request.request_id,
-                            runtime_boot_id=self.identity.runtime_boot_id,
-                            connection_id=request.connection_id,
-                            code=error.reason,
-                        ),
-                        deadline=time.monotonic() + 1,
-                    )
-                    read_document(channel, WorkerAuthorizationAcknowledgement, deadline=time.monotonic() + 5)
+            while self._exchange(channel):
+                pass
         except Exception:
             self._failed.set()
             self._stop.set()
@@ -267,8 +211,144 @@ class WorkerAuthorizationServer:
             channel.close()
             self._slots.release()
 
-    def _operations_advanced(self, channel: WorkerChannel, report: WorkerOperationsAdvanced) -> None:
-        """Cue observers of the reported operations; a report holds no authority, so nothing here contains."""
+    def _exchange(self, channel: WorkerChannel) -> bool:
+        """Serve the channel's next exchange and return whether the channel may serve another.
+
+        Between exchanges nothing is outstanding, so a channel lost, refused or
+        stopped while it waits here contains nothing.
+        """
+        try:
+            if not channel.wait_readable(self._stop) or self._stop.is_set():
+                return False
+            self._require_worker_incarnation(channel)
+            envelope = read_document(channel, WorkerAuthorityEnvelope, deadline=time.monotonic() + 5).root
+        except RefusalError:
+            return False
+        if isinstance(envelope, WorkerOperationsAdvanced):
+            return self._operations_advanced(channel, envelope)
+        request = envelope.authority if isinstance(envelope, WorkerAuthorityCheck) else envelope
+        # Set before the first reply is attempted. A refusal after that may follow a partial
+        # frame, a secret or a protected body, so the channel then closes instead of serving on.
+        replied = [False]
+        try:
+            owner = self._request_owner(request)
+            if isinstance(envelope, WorkerAuthorityCheck):
+                self._check(channel, owner, envelope.authority, replied)
+            elif isinstance(request, WorkerApprovalRequest):
+                try:
+                    self._approval_phase(channel, request, replied)
+                except BaseException:
+                    # A lost phase reply must not strand proof until expiry.
+                    # Retirement is peer-bound cleanup and needs no live lease.
+                    owner.approval_phase(request.model_copy(update={"phase": "close"}), None)
+                    raise
+            else:
+                self._permit_exchange(channel, owner, request, replied)
+        except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError) as error:
+            try:
+                write_document(
+                    channel,
+                    AccessRefusal(
+                        request_id=request.request_id,
+                        runtime_boot_id=self.identity.runtime_boot_id,
+                        connection_id=request.connection_id,
+                        code=error.reason,
+                    ),
+                    deadline=time.monotonic() + 1,
+                )
+                acknowledged = read_document(channel, WorkerAuthorizationAcknowledgement, deadline=time.monotonic() + 5)
+            except RefusalError:
+                return False
+            # Only a refusal given before any other reply ends the exchange where the worker expects it.
+            return not replied[0] and acknowledged.request_id == request.request_id
+        return True
+
+    def _permit_exchange(
+        self,
+        channel: WorkerChannel,
+        owner: WorkerAuthorizationOwner,
+        request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest,
+        replied: list[bool],
+    ) -> None:
+        """Issue one permit, run its body on this thread and end with an acknowledged release."""
+        permit_id = uuid4()
+        guard = (
+            owner.automation_inventory(request)
+            if isinstance(request, WorkerAutomationInventoryRequest)
+            else owner.authorize(request)
+        )
+        # Authority is checked once, as the stage starts. Only a COMMIT keeps the
+        # profile's admission fence through its body: its effects are irreversible,
+        # and an approval publishes on the fence's own thread. Every other stage runs
+        # unfenced, so it never holds up the profile's other requests.
+        hold_fence = isinstance(request, WorkerAuthorizationRequest) and request.request.action is AccessAction.COMMIT
+        with ExitStack() as fence:
+            allowed = fence.enter_context(guard)
+            permit = self._held_permit(request, allowed, permit_id)
+            replied[0] = True
+            write_document(channel, permit, deadline=time.monotonic() + 5)
+            if not hold_fence:
+                fence.close()
+            try:
+                # A stage is never ended for the time it takes; it ends when the
+                # worker releases it, its channel dies, or the runtime stops.
+                self._held_body(channel, request, permit_id=permit_id)
+            except BaseException as error:
+                # A lost release cannot prove the effect body stopped. Contain
+                # the owned job before dropping the fence.
+                diagnostic_event(
+                    _LOGGER,
+                    "profile_worker_permit_contained",
+                    fields={"request_kind": request.kind, **diagnostic_error_fields(error)},
+                    level=logging.WARNING,
+                    primary_error=error,
+                )
+                try:
+                    self._contain()
+                except BaseException:
+                    self._failed.set()
+                    self._stop.set()
+                    raise
+                raise
+        # The fence is already released, before the channel waits for its next exchange.
+        write_document(
+            channel,
+            WorkerAuthorizationReleased(request_id=request.request_id, permit_id=permit_id),
+            deadline=time.monotonic() + 5,
+        )
+        acknowledged = read_document(channel, WorkerAuthorizationAcknowledgement, deadline=time.monotonic() + 5)
+        if acknowledged.request_id != request.request_id:
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+
+    def _check(
+        self,
+        channel: WorkerChannel,
+        owner: WorkerAuthorizationOwner,
+        request: WorkerAuthorityRequest,
+        replied: list[bool],
+    ) -> None:
+        """Answer whether one stage is admitted now, leaving the guard before the answer is sent.
+
+        No permit is issued and no fence outlives the evaluation, so nothing is
+        outstanding if the channel is lost while the answer is in flight.
+        """
+        with owner.authorize(request) as allowed:
+            _require_allowed_request_family(request, allowed)
+            expires = self._admitted_until(allowed)
+        replied[0] = True
+        write_document(
+            channel,
+            WorkerAuthorityChecked(
+                request_id=request.request_id, runtime_boot_id=self.identity.runtime_boot_id, expires_at=expires
+            ),
+            deadline=time.monotonic() + 5,
+        )
+
+    def _operations_advanced(self, channel: WorkerChannel, report: WorkerOperationsAdvanced) -> bool:
+        """Cue observers of the reported operations; a report holds no authority, so nothing here contains.
+
+        Return whether the acknowledgement was sent, which ends the exchange cleanly.
+        """
         if self._owner is not None:
             try:
                 self._owner.operations_advanced(report.operation_ids, records_changed=report.records_changed)
@@ -281,19 +361,23 @@ class WorkerAuthorizationServer:
                     level=logging.WARNING,
                     primary_error=error,
                 )
-        with suppress(RefusalError):
+        try:
             write_document(
                 channel,
                 WorkerAuthorizationAcknowledgement(request_id=report.request_id),
                 deadline=time.monotonic() + 5,
             )
+        except RefusalError:
+            return False
+        return True
 
-    def _approval_phase(self, channel: WorkerChannel, request: WorkerApprovalRequest) -> None:
+    def _approval_phase(self, channel: WorkerChannel, request: WorkerApprovalRequest, replied: list[bool]) -> None:
         if self._owner is None or self._stop.is_set():
             raise RefusalError(RefusalCode.DRAINING)
         self._owner.approval_preflight(request)
         deadline = time.monotonic() + 60
         if request.phase == "prepare":
+            replied[0] = True
             write_document(
                 channel,
                 WorkerApprovalReady(request_id=request.request_id, runtime_boot_id=self.identity.runtime_boot_id),
@@ -303,6 +387,7 @@ class WorkerAuthorizationServer:
                 result = self._owner.approval_phase(request, SecretBytes(bytes(secret)))
         else:
             result = self._owner.approval_phase(request, None)
+        replied[0] = True
         write_document(
             channel,
             WorkerApprovalPhaseResult(
@@ -413,6 +498,12 @@ class WorkerAuthorizationServer:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         return self._owner
 
+    def _require_worker_incarnation(self, channel: WorkerChannel) -> None:
+        """Recheck, before each exchange, that the verified worker is the same live process in the owned job."""
+        require_live_native_peer(channel)
+        if channel.peer.process_id != self._pid or not self._owns_process(self._pid):
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+
     def _verify_worker_channel(self, channel: WorkerChannel) -> None:
         """Authenticate the retained worker process before accepting any request."""
         if (
@@ -439,14 +530,7 @@ class WorkerAuthorizationServer:
     ) -> WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit:
         """Build a live exact-family permit while the owning profile guard is held."""
         _require_allowed_request_family(request, allowed)
-        # A queued callback may acquire the profile guard only after
-        # shutdown began. It must not publish a new permit then.
-        if self._stop.is_set():
-            raise RefusalError(RefusalCode.DRAINING)
-        # The permit names when the admitting lease ends; a stage already running is not ended by it.
-        expires = allowed.expires_at
-        if expires <= self._wall_clock():
-            raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
+        expires = self._admitted_until(allowed)
         if isinstance(request, WorkerAutomationInventoryRequest):
             if not isinstance(allowed, WorkerAutomationInventoryAllowed):
                 raise RefusalError(RefusalCode.INVALID_FRAME)
@@ -475,6 +559,20 @@ class WorkerAuthorizationServer:
                 expires_at=expires,
             )
         return permit
+
+    def _admitted_until(
+        self, allowed: AccessAllowed | OperationResponseScopeAllowed | WorkerAutomationInventoryAllowed
+    ) -> datetime:
+        """Return when the admitting lease ends, refusing once shutdown began or the lease has ended."""
+        # A queued callback may acquire the profile guard only after
+        # shutdown began. It must not publish a new permit or answer then.
+        if self._stop.is_set():
+            raise RefusalError(RefusalCode.DRAINING)
+        # The permit names when the admitting lease ends; a stage already running is not ended by it.
+        expires = allowed.expires_at
+        if expires <= self._wall_clock():
+            raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
+        return expires
 
     def _runtime_server_start_result(
         self,

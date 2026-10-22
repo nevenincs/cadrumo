@@ -62,6 +62,7 @@ from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityReques
 
 from ...adapters.worker_authorization import runtime_server_start_definitions
 from ...adapters.worker_authorization_client import WorkerAuthorizationClient
+from ...adapters.worker_authorization_connections import WorkerAuthorizationConnections
 from ...adapters.worker_authorization_lease import WorkerAuthorizationLease
 from ..operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
 
@@ -110,12 +111,10 @@ class _StartingLease(WorkerAuthorizationLease):
         self,
         *,
         starts: list[WorkerAuthorityRequest],
-        identity: ProfileWorkerIdentity,
-        root: Path,
-        parent_pid: int,
+        connections: WorkerAuthorizationConnections,
         request: WorkerAuthorityRequest,
     ) -> None:
-        super().__init__(identity=identity, root=root, parent_pid=parent_pid, request=request)
+        super().__init__(connections=connections, request=request)
         self._starts = starts
         self._fence = request
 
@@ -132,12 +131,16 @@ class _ClientWitness(WorkerAuthorizationClient):
         self.starts: list[WorkerAuthorityRequest] = []
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # This port's guard stands in for the runtime's admission; a check holds it for no body.
+        async with self.guard(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         self.guards.append(request)
-        yield _StartingLease(
-            starts=self.starts, identity=self.identity, root=self.root, parent_pid=self.parent_pid, request=request
-        )
+        yield _StartingLease(starts=self.starts, connections=self.connections, request=request)
 
 
 @dataclass(frozen=True)

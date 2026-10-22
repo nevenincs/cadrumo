@@ -209,6 +209,12 @@ class _ScopeCeilingPermit(WorkerAuthorizationClient):
         self._custody = custody
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # This port's guard stands in for the runtime's admission; a check holds it for no body.
+        async with self.guard(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         refusal = operation_scope_refusal(
@@ -216,9 +222,7 @@ class _ScopeCeilingPermit(WorkerAuthorizationClient):
         )
         if refusal is not None:
             raise ProfileAccessRefusedError(refusal.code)
-        yield WorkerAuthorizationLease(
-            identity=self.identity, root=self.root, parent_pid=self.parent_pid, request=request
-        )
+        yield WorkerAuthorizationLease(connections=self.connections, request=request)
 
 
 class _SealedDocumentHost(ProfileWorkerOperationHost):

@@ -70,6 +70,12 @@ class FaultAuthorizationClient(WorkerAuthorizationClient):
         self.held: set[AccessAction] = set()
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # This port's guard stands in for the runtime's admission; a check holds it for no body.
+        async with self.guard(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         if isinstance(request, WorkerResponseScopeRequest):
@@ -77,9 +83,7 @@ class FaultAuthorizationClient(WorkerAuthorizationClient):
         action = request.request.action
         self.held.add(action)
         try:
-            yield WorkerAuthorizationLease(
-                identity=self.identity, root=self.root, parent_pid=self.parent_pid, request=request
-            )
+            yield WorkerAuthorizationLease(connections=self.connections, request=request)
         finally:
             self.held.remove(action)
 

@@ -81,13 +81,17 @@ class HeldPermitClient(WorkerAuthorizationClient):
         self.released = 0
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # This port's guard stands in for the runtime's admission; a check holds it for no body.
+        async with self.guard(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         try:
             yield WorkerAuthorizationLease(
-                identity=self.identity,
-                root=self.root,
-                parent_pid=self.parent_pid,
+                connections=self.connections,
                 request=request,
             )
         finally:

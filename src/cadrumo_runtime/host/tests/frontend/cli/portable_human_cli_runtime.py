@@ -50,7 +50,6 @@ from cadrumo.core.time.utc import UtcInstant
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import (
@@ -204,14 +203,8 @@ class _LoanCustody(ProfileWorkerCustody):
             raise AssertionError("the portable custody loan requires its parent oracle")
         if oracle.bucket_id != str(identity.binding.profile_id):
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-        self.identity, self.root, self.oracle = identity, storage_root, oracle
-        self.clock, self.monotonic = clock, monotonic
-        self._leases: dict[UUID, AccessSession] = {}
-        self._ended: dict[UUID, AccessDenialCode] = {}
-        self._lock = RLock()
-        self._closed = False
-        self._sections = 0
-        self._material_update_pending = False
+        self.oracle = oracle
+        self._hold_nothing(identity, storage_root=storage_root, clock=clock, monotonic=monotonic)
 
     @override
     def _replace_key_session(self, leases: dict[UUID, AccessSession], dek: bytes) -> None:
@@ -241,13 +234,17 @@ class _Authorization(WorkerAuthorizationClient):
         self.owner = owner
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # The actual runtime owner evaluates admission and holds nothing once it answers.
+        with self.owner.authorize(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         # The actual runtime owner evaluates and holds its thread-affine fence.
         with self.owner.authorize(request):
-            yield WorkerAuthorizationLease(
-                identity=self.identity, root=self.root, parent_pid=self.parent_pid, request=request
-            )
+            yield WorkerAuthorizationLease(connections=self.connections, request=request)
 
     @override
     async def inventory(self, request: WorkerAutomationInventoryRequest) -> AutomationInventory:

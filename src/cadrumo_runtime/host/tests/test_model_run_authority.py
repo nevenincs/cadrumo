@@ -68,6 +68,7 @@ from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
 from ...adapters.worker_authorization_client import WorkerAuthorizationClient
+from ...adapters.worker_authorization_connections import WorkerAuthorizationConnections
 from ...adapters.worker_authorization_lease import WorkerAuthorizationLease
 from ..operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
 
@@ -117,12 +118,10 @@ class _AnsweringLease(WorkerAuthorizationLease):
         *,
         answers: list[tuple[WorkerAuthorityRequest, str, ModelRunHeader | None, bytes]],
         outcome: tuple[ModelRunOutcome, bytes],
-        identity: ProfileWorkerIdentity,
-        root: Path,
-        parent_pid: int,
+        connections: WorkerAuthorizationConnections,
         request: WorkerAuthorityRequest,
     ) -> None:
-        super().__init__(identity=identity, root=root, parent_pid=parent_pid, request=request)
+        super().__init__(connections=connections, request=request)
         self._answers, self._outcome, self._fence = answers, outcome, request
 
     @override
@@ -141,14 +140,18 @@ class _ClientWitness(WorkerAuthorizationClient):
         self.outcome: tuple[ModelRunOutcome, bytes] = (ModelRunOutcome(lane=_LANE), b"")
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # This port's guard stands in for the runtime's admission; a check holds it for no body.
+        async with self.guard(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         yield _AnsweringLease(
             answers=self.answers,
             outcome=self.outcome,
-            identity=self.identity,
-            root=self.root,
-            parent_pid=self.parent_pid,
+            connections=self.connections,
             request=request,
         )
 

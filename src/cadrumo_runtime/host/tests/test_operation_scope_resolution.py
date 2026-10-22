@@ -130,14 +130,18 @@ class _PermitWitness(WorkerAuthorizationClient):
         self.released = 0
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # This port's guard stands in for the runtime's admission; a check holds it for no body.
+        async with self.guard(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         self.requests.append(request)
         self.tasks.append(asyncio.current_task())
         try:
-            yield WorkerAuthorizationLease(
-                identity=self.identity, root=self.root, parent_pid=self.parent_pid, request=request
-            )
+            yield WorkerAuthorizationLease(connections=self.connections, request=request)
         finally:
             self.released += 1
 

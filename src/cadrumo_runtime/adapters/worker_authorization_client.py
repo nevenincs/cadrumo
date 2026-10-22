@@ -3,81 +3,94 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 import time
 from collections.abc import AsyncGenerator
-from contextlib import ExitStack, asynccontextmanager
+from contextlib import asynccontextmanager
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from pydantic import SecretBytes
 
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
-from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
+from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document, write_secret
-from cadrumo_client.transport.framing import VerifiedConnection
-from cadrumo_client.transport.posix_channel import PosixChannel
-from cadrumo_client.transport.product_version import installed_product_version
 from cadrumo_runtime.contracts.worker_authorization import (
+    WorkerAuthorityCheck,
+    WorkerAuthorityChecked,
     WorkerAuthorityRequest,
     WorkerAuthorizationAcknowledgement,
-    WorkerAuthorizationPermit,
-    WorkerAuthorizationReleased,
     WorkerAuthorizationReply,
-    WorkerAutomationInventoryPermit,
     WorkerAutomationInventoryRequest,
     WorkerOperationsAdvanced,
-    WorkerResponseScopePermit,
 )
 from cadrumo_runtime.contracts.worker_enrollment import (
     WorkerApprovalPhaseResult,
-    WorkerApprovalPublished,
     WorkerApprovalReady,
     WorkerApprovalRequest,
 )
 
-from .native_peer import require_live_native_peer
-from .worker_authorization import worker_authorization_namespace
+from .worker_authorization_connections import WorkerAuthorizationConnections
 from .worker_authorization_lease import WorkerAuthorizationLease
 from .worker_authorization_refusals import raise_worker_access_refusal
-from .worker_transport import WorkerChannel, worker_endpoint
+from .worker_transport import WorkerChannel
+
+_REPORT_SECONDS = 5.0
+_APPROVAL_PHASE_SECONDS = 60.0
 
 
 class WorkerAuthorizationClient:
-    """Use a distinct connection for each concurrent protected body."""
+    """Run each exchange on its own pooled verified connection, one exchange at a time on each."""
 
     def __init__(self, *, identity: ProfileWorkerIdentity, root: Path, parent_pid: int) -> None:
         """Bind one immutable worker to its verified runtime parent."""
         self.identity, self.root, self.parent_pid = identity, root, parent_pid
+        self.connections = WorkerAuthorizationConnections(identity=identity, root=root, parent_pid=parent_pid)
+
+    def close(self) -> None:
+        """Close the pooled connections; an exchange still running closes its own when it ends."""
+        self.connections.close()
 
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         """Finish acquisition and release even when the operation task is cancelled."""
-        lease = WorkerAuthorizationLease(
-            identity=self.identity, root=self.root, parent_pid=self.parent_pid, request=request
-        )
+        lease = WorkerAuthorizationLease(connections=self.connections, request=request)
         try:
             await await_cancellation_complete(asyncio.to_thread(lease.acquire), task_name="worker-authority-acquire")
             yield lease
         finally:
+            if isinstance(sys.exception(), asyncio.CancelledError):
+                # The release still runs to its end; only the connection is not reused.
+                lease.abandon()
             await close_async_resources(lease, task_name="worker-authority-release")
+
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        """Ask whether one stage is admitted now, for a caller that runs no body under the answer.
+
+        The runtime holds no fence and issues no permit. A refusal raises its
+        exact category, as a refused guard does.
+        """
+        await await_cancellation_complete(asyncio.to_thread(self._check, request), task_name="worker-authority-check")
 
     async def inventory(self, request: WorkerAutomationInventoryRequest) -> AutomationInventory:
         """Read held human inventory and finish its native release before returning."""
-        lease = WorkerAuthorizationLease(
-            identity=self.identity, root=self.root, parent_pid=self.parent_pid, request=request
-        )
+        lease = WorkerAuthorizationLease(connections=self.connections, request=request)
         try:
             await await_cancellation_complete(asyncio.to_thread(lease.acquire), task_name="worker-inventory-acquire")
             return lease.inventory()
         finally:
+            if isinstance(sys.exception(), asyncio.CancelledError):
+                lease.abandon()
             await close_async_resources(lease, task_name="worker-inventory-release")
 
     async def approval_phase(self, request: WorkerApprovalRequest, password: SecretBytes | None = None) -> bool | None:
-        """Complete an unguarded proof or recipient phase on a separately verified channel."""
+        """Complete an unguarded proof or recipient phase on a verified connection of its own."""
         return await await_cancellation_complete(
             asyncio.to_thread(self._approval_phase, request, password), task_name="worker-approval-phase"
         )
@@ -87,117 +100,93 @@ class WorkerAuthorizationClient:
         report = WorkerOperationsAdvanced(
             request_id=uuid4(), operation_ids=operation_ids, records_changed=records_changed
         )
-        with ExitStack() as resources:
-            channel = self._verified_parent_channel(resources, time.monotonic() + 5)
-            deadline = time.monotonic() + 5
+        deadline = time.monotonic() + _REPORT_SECONDS
+        channel = self.connections.checkout(deadline)
+        clean = False
+        try:
             write_document(channel, report, deadline=deadline)
             acknowledged = read_document(channel, WorkerAuthorizationAcknowledgement, deadline=deadline)
             if acknowledged.request_id != report.request_id:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
+            clean = True
+        finally:
+            self.connections.checkin(channel, reusable=clean)
 
-    def _verified_parent_channel(self, resources: ExitStack, deadline: float) -> WorkerChannel:
-        """Connect to this worker's runtime parent and prove both ends before any request."""
-        endpoint = worker_endpoint(
-            storage_root=self.root, worker_namespace=worker_authorization_namespace(self.identity.worker_id)
-        )
-        resources.callback(endpoint.close)
-        channel = endpoint.connect(timeout=5)
-        resources.callback(channel.close)
-        if channel.peer.process_id != self.parent_pid or channel.peer.os_owner_id != self.identity.binding.os_owner_id:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-        if isinstance(channel, PosixChannel):
-            require_live_native_peer(channel)
-        verified = VerifiedConnection(
-            channel,
-            expected=ClientHello(
-                product_version=installed_product_version(), storage_identity=endpoint.storage_identity
-            ),
-            deadline=deadline,
-        )
-        if verified.hello.boot_id != self.identity.runtime_boot_id:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-        return channel
+    def _check(self, request: WorkerAuthorityRequest) -> None:
+        # The runtime may queue this admission behind a running COMMIT's fence.
+        deadline = exchange_deadline()
+        channel = self.connections.checkout(deadline)
+        clean = False
+        try:
+            write_document(channel, WorkerAuthorityCheck(authority=request), deadline=deadline)
+            reply = read_document(channel, WorkerAuthorizationReply, deadline=deadline).root
+            if (
+                not isinstance(reply, AccessRefusal | WorkerAuthorityChecked)
+                or reply.request_id != request.request_id
+                or reply.runtime_boot_id != self.identity.runtime_boot_id
+            ):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            if isinstance(reply, AccessRefusal):
+                _acknowledge_refusal(channel, reply, request.request_id, request.connection_id, deadline)
+                clean = True
+                raise_worker_access_refusal(reply)
+            clean = True
+            # Admission is checked as the stage starts; a lease already ended admits nothing.
+            if reply.expires_at <= now():
+                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        finally:
+            self.connections.checkin(channel, reusable=clean)
 
     def _approval_phase(self, request: WorkerApprovalRequest, password: SecretBytes | None) -> bool | None:
         if (request.phase == "prepare") != (password is not None):
             raise RefusalError(RefusalCode.INVALID_FRAME)
-        with ExitStack() as resources:
-            deadline = time.monotonic() + 60
-            channel = self._verified_parent_channel(resources, deadline)
+        deadline = time.monotonic() + _APPROVAL_PHASE_SECONDS
+        channel = self.connections.checkout(deadline)
+        clean = False
+        try:
             write_document(channel, request, deadline=deadline)
-            reply = read_document(channel, WorkerAuthorizationReply, deadline=deadline).root
-            reply = _complete_password_phase(channel, reply, request, password, self.identity, deadline)
-            return _accepted_approval_phase_reply(channel, reply, request, self.identity, deadline)
+            first = read_document(channel, WorkerAuthorizationReply, deadline=deadline).root
+            if (
+                not isinstance(first, AccessRefusal | WorkerApprovalReady | WorkerApprovalPhaseResult)
+                or first.request_id != request.request_id
+                or first.runtime_boot_id != self.identity.runtime_boot_id
+            ):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            reply = first
+            if isinstance(first, WorkerApprovalReady):
+                # Fresh proof is sent only after the exact worker has acknowledged preparation.
+                if request.phase != "prepare" or password is None:
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
+                write_secret(channel, bytearray(password.get_secret_value()), deadline=deadline)
+                reply = read_document(channel, WorkerAuthorizationReply, deadline=deadline).root
+                if (
+                    not isinstance(reply, AccessRefusal | WorkerApprovalPhaseResult)
+                    or reply.request_id != request.request_id
+                    or reply.runtime_boot_id != self.identity.runtime_boot_id
+                ):
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
+            if isinstance(reply, AccessRefusal):
+                _acknowledge_refusal(channel, reply, request.request_id, request.connection_id, deadline)
+                # A refusal after the proof was sent closes the connection, as the runtime does.
+                clean = reply is first
+                raise_worker_access_refusal(reply)
+            if not isinstance(reply, WorkerApprovalPhaseResult) or (
+                (request.phase == "inspect_recipient") != (reply.needs_candidate is not None)
+            ):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            write_document(
+                channel, WorkerAuthorizationAcknowledgement(request_id=request.request_id), deadline=deadline
+            )
+            clean = True
+            return reply.needs_candidate
+        finally:
+            self.connections.checkin(channel, reusable=clean)
 
 
-def _complete_password_phase(
-    channel: WorkerChannel,
-    reply: AccessRefusal
-    | WorkerAuthorizationPermit
-    | WorkerResponseScopePermit
-    | WorkerAutomationInventoryPermit
-    | WorkerAuthorizationReleased
-    | WorkerApprovalReady
-    | WorkerApprovalPhaseResult
-    | WorkerApprovalPublished,
-    request: WorkerApprovalRequest,
-    password: SecretBytes | None,
-    identity: ProfileWorkerIdentity,
-    deadline: float,
-) -> (
-    AccessRefusal
-    | WorkerAuthorizationPermit
-    | WorkerResponseScopePermit
-    | WorkerAutomationInventoryPermit
-    | WorkerAuthorizationReleased
-    | WorkerApprovalReady
-    | WorkerApprovalPhaseResult
-    | WorkerApprovalPublished
-):
-    """Send fresh proof only after the exact worker has acknowledged preparation."""
-    if (
-        not isinstance(reply, AccessRefusal | WorkerApprovalReady | WorkerApprovalPhaseResult)
-        or reply.request_id != request.request_id
-        or reply.runtime_boot_id != identity.runtime_boot_id
-    ):
+def _acknowledge_refusal(
+    channel: WorkerChannel, reply: AccessRefusal, request_id: UUID, connection_id: UUID, deadline: float
+) -> None:
+    """Acknowledge only a refusal addressed to this exact request and connection."""
+    if reply.request_id != request_id or reply.connection_id != connection_id:
         raise RefusalError(RefusalCode.INVALID_FRAME)
-    if isinstance(reply, WorkerApprovalReady):
-        if request.phase != "prepare" or password is None:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        write_secret(channel, bytearray(password.get_secret_value()), deadline=deadline)
-        reply = read_document(channel, WorkerAuthorizationReply, deadline=deadline).root
-    return reply
-
-
-def _accepted_approval_phase_reply(
-    channel: WorkerChannel,
-    reply: AccessRefusal
-    | WorkerAuthorizationPermit
-    | WorkerResponseScopePermit
-    | WorkerAutomationInventoryPermit
-    | WorkerAuthorizationReleased
-    | WorkerApprovalReady
-    | WorkerApprovalPhaseResult
-    | WorkerApprovalPublished,
-    request: WorkerApprovalRequest,
-    identity: ProfileWorkerIdentity,
-    deadline: float,
-) -> bool | None:
-    """Acknowledge only the addressed final phase result or exact received refusal."""
-    if (
-        not isinstance(reply, AccessRefusal | WorkerApprovalPhaseResult)
-        or reply.request_id != request.request_id
-        or reply.runtime_boot_id != identity.runtime_boot_id
-    ):
-        raise RefusalError(RefusalCode.INVALID_FRAME)
-    if isinstance(reply, AccessRefusal):
-        if reply.connection_id != request.connection_id:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        write_document(channel, WorkerAuthorizationAcknowledgement(request_id=request.request_id), deadline=deadline)
-        raise_worker_access_refusal(reply)
-    if not isinstance(reply, WorkerApprovalPhaseResult) or (
-        (request.phase == "inspect_recipient") != (reply.needs_candidate is not None)
-    ):
-        raise RefusalError(RefusalCode.INVALID_FRAME)
-    write_document(channel, WorkerAuthorizationAcknowledgement(request_id=request.request_id), deadline=deadline)
-    return reply.needs_candidate
+    write_document(channel, WorkerAuthorizationAcknowledgement(request_id=reply.request_id), deadline=deadline)
