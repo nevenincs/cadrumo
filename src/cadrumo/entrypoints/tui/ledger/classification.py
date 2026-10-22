@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Final, cast, override
+from typing import ClassVar, Final, cast, override
 
 from pydantic import ValidationError
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Input, Static
 
 from ....application.ledger.models import ManualLedgerTransactionPatch
+from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.decimal.constants import ONE
 from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
@@ -78,6 +79,8 @@ def _validate_iva_rate(value: Decimal | None) -> Decimal | None:
 
 class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
     """Let an operator explicitly edit, confirm, or cancel one classification."""
+
+    WORKSPACE_AREA: ClassVar[LedgerWorkspaceArea | None] = LedgerWorkspaceArea.CLASSIFICATION
 
     def __init__(self, controller: LedgerWorkspaceController) -> None:
         """Retain an injected command-capable workspace controller."""

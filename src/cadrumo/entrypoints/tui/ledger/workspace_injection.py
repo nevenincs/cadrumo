@@ -32,11 +32,13 @@ from .models import (
     LedgerInvoiceAddDoorV1,
     LedgerLinkSubmitterV1,
 )
+from .tools import require_unique_tool_keys
 
 if TYPE_CHECKING:
     from .actividad_asset import ActivityAssetTuiActionsV1
     from .models import LedgerRecordDoorsV1
     from .own_accounts import LedgerOwnAccountDoorV1
+    from .tools import LedgerToolV1
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,15 +83,18 @@ class LedgerWorkspaceInjection:
     """Bucket-bound canonical invoice and transaction detail operations."""
     own_account_door: LedgerOwnAccountDoorV1 | None = None
     """Registered own bank account operations; absent means no account setup affordance."""
+    tools: tuple[LedgerToolV1, ...] = ()
+    """Further screens each area lists; an area with none lists nothing."""
 
     def __post_init__(self) -> None:
-        """Refuse a miswired action."""
+        """Refuse a miswired action or two tools sharing a key."""
         require_canonical_ledger_actions(
             review_action=self.review_action,
             classify_action=self.classify_action,
             evidence_action=self.evidence_action,
             link_action=self.link_action,
         )
+        require_unique_tool_keys(self.tools)
 
 
 __all__ = ["LedgerWorkspaceInjection", "LedgerWorkspaceRefreshDoorV1", "LedgerWorkspaceRefreshV1"]

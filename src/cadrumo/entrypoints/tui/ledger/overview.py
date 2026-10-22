@@ -28,6 +28,8 @@ from .own_accounts import LedgerOwnAccountsScreen
 class LedgerOverviewScreen(LedgerWorkspaceScreen):
     """Lead with unresolved work and affected declarations, never financial totals."""
 
+    WORKSPACE_AREA: ClassVar[LedgerWorkspaceArea | None] = LedgerWorkspaceArea.OVERVIEW
+
     IS_WORKSPACE_OVERVIEW: ClassVar[bool] = True
     AUTO_FOCUS: ClassVar[str | None] = ""
     """No compose-time focus: it centres the table before layout and scrolls a tall page past its heading."""

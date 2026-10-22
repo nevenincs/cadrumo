@@ -7,8 +7,10 @@ from collections.abc import Callable
 from dataclasses import replace
 from typing import ClassVar, Final, cast, override
 
+from textual import events, on
 from textual.binding import Binding
 from textual.message import Message
+from textual.widget import Widget
 from textual.widgets import DataTable, Static
 
 from ....application.ledger.models import (
@@ -30,8 +32,9 @@ from ....core.i18n.render import tr
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ..components.account_chrome import AccountChromeScreen
-from ..components.language import reword_navigation
+from ..components.language import localized, reword_navigation
 from ..components.theme import BASE_CSS, tokenised
+from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from .models import (
@@ -57,6 +60,7 @@ from .models import (
     LedgerRouteRefusalV1,
     LedgerRouteTargetV1,
 )
+from .tools import LedgerToolV1
 from .workspace_injection import LedgerWorkspaceInjection
 
 _AREA_LOCALE_KEYS: Final = {
@@ -158,7 +162,16 @@ class LedgerWorkspaceController:
         self.activity_asset_actions = injection.activity_asset_actions
         self.record_doors = injection.record_doors
         self.own_account_door = injection.own_account_door
+        self.tools = injection.tools
         self._states = {row.area: row for row in projection.areas}
+
+    def tools_for(self, area: LedgerWorkspaceArea) -> tuple[LedgerToolV1, ...]:
+        """Return the tools an area lists, in the order they were given."""
+        return tuple(tool for tool in self.tools if tool.area is area)
+
+    def tool(self, key: str) -> LedgerToolV1 | None:
+        """Return the tool with this key, if the workspace was given one."""
+        return next((tool for tool in self.tools if tool.key == key), None)
 
     def classification_target_coordinate(self) -> tuple[int, int, str]:
         """Return a safe position and redacted identifier from the visible projection."""
@@ -590,6 +603,8 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
     BINDINGS: ClassVar = [Binding("escape", "back", "", show=False)]
     IS_WORKSPACE_OVERVIEW: ClassVar[bool] = False
     """Whether Back from this body leaves the workspace rather than returning to its overview."""
+    WORKSPACE_AREA: ClassVar[LedgerWorkspaceArea | None] = None
+    """The area this body is, whose tools it lists; ``None`` for a body that is not an area."""
     CSS = BASE_CSS + tokenised(
         """
         .ledger-page { width: 100%; height: 1fr; }
@@ -611,6 +626,8 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         self._after_refresh: Callable[[], object] | None = None
         self.refresh_seconds: list[float] = []
         """How long each completed re-read took, newest last."""
+        self.back_area: LedgerWorkspaceArea | None = None
+        """The area Back returns to when this body was opened as one of its tools."""
 
     def refresh_then(self, then: Callable[[], object]) -> None:
         """Re-read the workspace off the event loop, then continue with ``then``.
@@ -656,6 +673,49 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         """Reword navigation without replacing forms or restarting their workers."""
         await super().refresh_language()
         reword_navigation(self, "#ledger-navigation", self.populate_navigation)
+        # After the body's own repaint, which clears every table on the screen.
+        self.call_after_refresh(reword_navigation, self, "#ledger-tools", self._populate_tools)
+
+    @on(events.Mount)
+    def _mount_tools(self) -> None:
+        """List this area's tools beneath the area navigation, when it has any.
+
+        Mounted rather than composed so every area body gets the list without
+        each one composing it, beside whatever ``on_mount`` the body defines.
+        """
+        area = self.WORKSPACE_AREA
+        pages = self.query("#ledger-page")
+        if area is None or not self.controller.tools_for(area) or not pages or not self.is_attached:
+            return
+        # The page shell composes the navigation as the page's first child.
+        page = pages.first(Widget)
+        heading = localized(
+            Static(tr("tui.ledger.tools.heading"), id="ledger-tools-heading", classes="cadrumo-heading", markup=False),
+            "tui.ledger.tools.heading",
+        )
+        table = ContentDataTable[str](id="ledger-tools", cursor_type="row", show_header=False)
+        page.mount(heading, table, after=page.query_one("#ledger-navigation", DataTable))
+        self.call_after_refresh(self._populate_tools)
+
+    def _populate_tools(self) -> None:
+        found = self.query("#ledger-tools")
+        if not found or self.WORKSPACE_AREA is None:
+            return
+        table = cast("DataTable[str]", found.first())
+        if not table.columns:
+            table.add_column("", key="tool")
+        for tool in self.controller.tools_for(self.WORKSPACE_AREA):
+            table.add_row(tr(tool.label_key), key=tool.key)
+
+    @on(DataTable.RowSelected, "#ledger-tools")
+    def _open_tool(self, event: DataTable.RowSelected) -> None:
+        """Open the chosen tool in place of this body; Back returns to this area."""
+        tool = self.controller.tool(str(event.row_key.value))
+        if tool is None:
+            return
+        screen = tool.build(self.controller)
+        screen.back_area = tool.area
+        replace_workspace_body(self.app, screen)
 
     def populate_navigation(self) -> None:
         """Populate the complete seven-area catalogue in canonical order."""
@@ -679,6 +739,9 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
     def handle_navigation_selection(self, event: DataTable.RowSelected) -> bool:
         """Handle the common navigation table and expose refusals as visible copy."""
         event_table = cast("DataTable[str]", event.data_table)
+        if event_table.id == "ledger-tools":
+            # Answered by the tool handler; claimed here so a body never reads a tool as its own row.
+            return True
         if event_table.id != "ledger-navigation":
             return False
         area = LedgerWorkspaceArea(str(event.row_key.value))
@@ -765,7 +828,10 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         )
 
     def on_ledger_back_requested(self, _: LedgerBackRequested) -> None:
-        """Return an area to the Ledger overview; leave the workspace only from the overview."""
+        """Return a tool to its area and an area to the overview; leave the workspace only from the overview."""
+        if self.back_area is not None and self.controller.refusal_for(self.back_area) is None:
+            self.post_message(LedgerRouteRequested(self.controller.route_target(self.back_area)))
+            return
         # An overview that cannot open would bounce Back straight back here.
         if self.IS_WORKSPACE_OVERVIEW or self.controller.refusal_for(LedgerWorkspaceArea.OVERVIEW) is not None:
             self.dismiss(None)

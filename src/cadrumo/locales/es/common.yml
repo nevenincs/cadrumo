@@ -3202,6 +3202,8 @@ tui:
       needs_attention: Requiere atención
       ready: Preparado
       unmeasured: Sin medir
+    tools:
+      heading: Herramientas
     unavailable:
       title: Registros no disponibles
   local_reader:

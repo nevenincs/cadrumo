@@ -40,6 +40,7 @@ from .overview import LedgerOverviewScreen
 from .own_accounts import LedgerOwnAccountDoorV1
 from .reconciliation import LedgerReconciliationScreen
 from .review import LedgerReviewScreen
+from .tools import LedgerToolV1
 from .workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshDoorV1
 from .workspace_presentation import ledger_workspace_page
 
@@ -169,6 +170,7 @@ def ledger_screen_factory(
     activity_asset_actions: ActivityAssetTuiActionsV1 | None = None,
     record_doors: LedgerRecordDoorsV1 | None = None,
     own_account_door: LedgerOwnAccountDoorV1 | None = None,
+    tools: tuple[LedgerToolV1, ...] = (),
 ) -> TuiScreenFactoryV1:
     """Bind an injected immutable projection to the outer navigation factory contract."""
     injection = LedgerWorkspaceInjection(
@@ -188,6 +190,7 @@ def ledger_screen_factory(
         activity_asset_actions=activity_asset_actions,
         record_doors=record_doors,
         own_account_door=own_account_door,
+        tools=tools,
     )
 
     # Which area performs each injected action. Classification needs an entry

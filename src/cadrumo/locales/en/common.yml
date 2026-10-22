@@ -3114,6 +3114,8 @@ tui:
       needs_attention: Needs attention
       ready: Ready
       unmeasured: Not measured
+    tools:
+      heading: Tools
     unavailable:
       title: Records unavailable
   local_reader:

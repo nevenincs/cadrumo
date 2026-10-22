@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Final, cast, override
+from typing import ClassVar, Final, cast, override
 
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Input, Select, Static
 
+from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.i18n.render import tr
 from ....domain.iva.schema import InvoiceKind
 from ..components.language import localized
@@ -26,6 +27,8 @@ _KIND_LOCALE_KEYS: Final[dict[InvoiceKind, str]] = {
 
 class LedgerEvidenceScreen(LedgerEvidenceRecordActions):
     """Render safe evidence metadata without document contents or source locators."""
+
+    WORKSPACE_AREA: ClassVar[LedgerWorkspaceArea | None] = LedgerWorkspaceArea.EVIDENCE
 
     def __init__(self, controller: LedgerWorkspaceController) -> None:
         """Retain an injected canonical review queue."""

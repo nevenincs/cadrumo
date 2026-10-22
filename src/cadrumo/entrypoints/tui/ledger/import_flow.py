@@ -97,6 +97,8 @@ def import_outcome_lines(outcome: LedgerImportOutcomeV1) -> tuple[str, ...]:
 class LedgerImportScreen(LedgerConfirmationFlowScreen):
     """Read an operator-chosen source, show what it would write, and write it on confirmation."""
 
+    WORKSPACE_AREA: ClassVar[LedgerWorkspaceArea | None] = LedgerWorkspaceArea.IMPORT
+
     FLOW_NAME = "import"
     CSS: ClassVar[str] = LedgerConfirmationFlowScreen.CSS + tokenised(
         """

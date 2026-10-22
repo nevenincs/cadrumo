@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import cast, override
+from typing import ClassVar, cast, override
 
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
-from ....application.ledger.workspace import LedgerInvoiceReconciliationRefV1
+from ....application.ledger.workspace import LedgerInvoiceReconciliationRefV1, LedgerWorkspaceArea
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.identity.hex_ids import InvoiceId
@@ -38,6 +38,8 @@ DIRECTION_STATE_LOCALE_KEYS: dict[str, str] = {
 
 class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
     """Render local-only reconciliation and submit admitted visible links."""
+
+    WORKSPACE_AREA: ClassVar[LedgerWorkspaceArea | None] = LedgerWorkspaceArea.RECONCILIATION
 
     def __init__(self, controller: LedgerWorkspaceController) -> None:
         """Retain the injected safe workspace projection and link door."""

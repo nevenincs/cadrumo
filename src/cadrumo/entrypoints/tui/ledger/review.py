@@ -33,6 +33,8 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
     asking withdraws the request.
     """
 
+    WORKSPACE_AREA: ClassVar[LedgerWorkspaceArea | None] = LedgerWorkspaceArea.REVIEW
+
     BINDINGS: ClassVar = [
         *LedgerWorkspaceScreen.BINDINGS,
         Binding("x", "exclude", "", show=False),

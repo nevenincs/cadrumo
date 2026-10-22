@@ -71,6 +71,7 @@ from .runtime_ledger_classification import (
     build_runtime_ledger_classification_patch,
 )
 from .runtime_ledger_import import compose_runtime_ledger_import_door
+from .runtime_ledger_tools import compose_runtime_ledger_tools
 from .runtime_own_accounts import compose_runtime_own_account_door
 from .runtime_profile_language import RuntimeProfileLanguage
 
@@ -354,6 +355,7 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
         evidence = RuntimeEvidenceTuiDoorV1(self._client, profile_label=self._label)
         own_accounts = compose_runtime_own_account_door(client=self._client, profile_label=self._label)
         imports = compose_runtime_ledger_import_door(client=self._client, profile_label=self._label)
+        tools = compose_runtime_ledger_tools(self._client, profile_label=self._label)
 
         def refresh_ledger() -> LedgerWorkspaceRefreshV1:
             nonlocal current, current_epoch
@@ -392,6 +394,7 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
                 evidence_door=evidence,
                 own_account_door=own_accounts,
                 import_door=imports,
+                tools=tools,
             )(context)
 
         return create

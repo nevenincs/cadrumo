@@ -7,6 +7,7 @@ from typing import ClassVar, cast, override
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
+from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.i18n.render import tr
 from ....core.identity.transaction_ids import TransactionId
 from ..components.language import localized, repaint_tables
@@ -90,6 +91,8 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
     Nothing is withheld -- every column returns as the terminal widens, and the
     projection behind it always carries the full record.
     """
+
+    WORKSPACE_AREA: ClassVar[LedgerWorkspaceArea | None] = LedgerWorkspaceArea.ENTRIES
 
     _COLUMNS: ClassVar[tuple[tuple[str, str, int], ...]] = (
         ("date", "tui.ledger.column.date", 10),

@@ -3191,6 +3191,8 @@ tui:
       needs_attention: Requereix atenció
       ready: Preparat
       unmeasured: Sense mesurar
+    tools:
+      heading: Eines
     unavailable:
       title: Registres no disponibles
   local_reader:

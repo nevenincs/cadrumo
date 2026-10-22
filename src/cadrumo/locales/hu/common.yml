@@ -3167,6 +3167,8 @@ tui:
       needs_attention: Figyelmet igényel
       ready: Kész
       unmeasured: Nincs mérve
+    tools:
+      heading: Eszközök
     unavailable:
       title: A Nyilvántartás nem érhető el
   local_reader:
