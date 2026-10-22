@@ -7,9 +7,10 @@ tier: L2
 related:
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
   - '[[2026-07-05-ledger-latency-budget-adr]]'
+  - '[[2026-10-22-ledger-tui-doors-authenticated-stored-reads-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:3c7b74ea6418a81a8a378183994fe821179711512e7c69969f5c3eeb5c43fe6d'
+body_hash: 'sha256:402cadf475afde4549101522b531d1900d7a6b49872cc4a869a66c54b35209e1'
 ---
 
 # `ledger-tui-doors` plan
@@ -58,6 +59,8 @@ Dedicated agents make the ledger reads behind the Records screens meet the 30,00
 - [x] `P04.S14` - make workbench generation pair invoices with transactions through an index instead of every invoice against every transaction, with identical suggestions; `src/cadrumo/domain/invoices/service.py`.
 - [ ] `P04.S15` - load the transaction catalogue once per ledger read, read the period partition for status, check and preflight, and read one row by id for view, track, history and participation; `src/cadrumo/application/ledger`.
 - [x] `P04.S16` - stop revalidating the whole invoice catalogue and its registry lookups on every invoice read; `src/cadrumo/domain/invoices/models.py`.
+- [ ] `P04.S17` - decode authenticated current-schema transaction rows without admission re-derivations, remove duplicated validators, and move the transaction model to pydantic-native coercion; `src/cadrumo/domain/transactions/models.py`.
+- [ ] `P04.S18` - decode an authenticated current-schema invoice catalogue without admission re-derivations and validate only the invoice a view returns; `src/cadrumo/adapters/persistence/profile/invoices.py`.
 
 ### Phase `P03` - integrate, verify and review
 

@@ -3,14 +3,15 @@ tags:
   - '#adr'
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:4c9c4ba9872623291b6fa90ea913eec346f7652ae4117b64cfd5172c542f258c'
+body_hash: 'sha256:0bc2f386805db401a785ea989cc2c49a69ed6bae8d4789384b6854c3341334fc'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-research]]"
   - "[[2026-08-22-secure-storage-performance-hardening-reference]]"
   - "[[2026-08-13-secure-storage-hardening-successor-adr]]"
   - "[[2026-08-13-profile-password-custody-rollup-adr]]"
+  - '[[2026-10-22-ledger-tui-doors-authenticated-stored-reads-adr]]'
 ---
 
 # `secure-storage-performance-hardening` adr: `command-scoped loading and pure secure-storage reads` | (**status:** `accepted`)
@@ -30,7 +31,10 @@ weakening custody, integrity, durability, or public-facade contracts.
   decision narrows when their implementations load dependencies or enter
   custody workflows.
 - Listing is discovery, not authentication, inspection, recovery, or repair.
-- Performance work must preserve refusal semantics and authoritative validation.
+- Performance work must preserve refusal semantics and authoritative validation,
+  except that a ledger record the store authenticated in the same call under the
+  current schema version may skip admission re-derivations on read, as scoped by
+  `2026-10-22-ledger-tui-doors-authenticated-stored-reads-adr`.
 - Portable structural gates accompany calibrated latency budgets;
   `2026-08-22-secure-storage-performance-hardening-reference`.
 
