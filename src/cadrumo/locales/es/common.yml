@@ -2724,6 +2724,326 @@ tui:
       never_captured: Aún sin leer
       stale: Desactualizado
       unavailable: No disponible
+    categorisation:
+      allocate:
+        business_pct: Porcentaje profesional (fracción de 0 a 1, como 0.6)
+        category: Categoría de gasto (opcional)
+        done: 'Asignado: %{classification} · porcentaje profesional %{share} · categoría
+          %{category}.'
+        heading: Uso profesional
+        prompt: Registra la parte del apunte seleccionado que es de uso profesional.
+          La clasificación se deduce de esa parte.
+        prorrata: Referencia de prorrata (opcional)
+        review: Revisar la asignación
+        stage: Asignar porcentaje profesional %{share} · categoría %{category} · proporción
+          de uso %{ratio} · prorrata %{prorrata}.
+        title: Asignar uso profesional
+        usage_ratio: ID de proporción de uso (opcional)
+      bulk:
+        business_pct: Porcentaje profesional (fracción de 0 a 1; solo Mixta)
+        category: Categoría de gasto (opcional)
+        column:
+          amount: Importe
+          date: Fecha
+        done: '%{applied} apuntes clasificados · %{skipped} omitidos · %{failed} rechazados.'
+        empty: Ningún apunte coincide con estos filtros.
+        failure: 'Fila %{row} (%{entry}): %{reason}'
+        filter_heading: Qué apuntes
+        nothing_changes: Todos los apuntes de esta página ya tienen esa clasificación;
+          no cambiaría nada.
+        period: Periodo (1T a 4T, 0A o 01 a 12; requiere el ejercicio)
+        prompt: Lee una página de apuntes con los filtros de abajo, elige una clasificación
+          y revisa las filas que cambiarán antes de confirmar.
+        read: Leer apuntes
+        refused: 'No se ha clasificado nada: %{messages}'
+        review: Revisar cambios
+        share_mixed_only: El porcentaje profesional va con Mixta, y Mixta lo necesita.
+        stage: Clasificar los %{count} apuntes de abajo como %{classification} · categoría
+          %{category}.
+        status_any: Cualquier estado de revisión
+        target_heading: Clasificar como
+        text: Texto que contiene la descripción (opcional)
+        title: Clasificación masiva
+        year: Ejercicio (AAAA, opcional)
+      cancel: Cancelar
+      cancelled: Cambio cancelado; no se ha escrito nada.
+      choose_entry: Primero elige un apunte en Apuntes o Revisión; esta herramienta
+        actúa sobre el apunte seleccionado.
+      classification:
+        business: Profesional
+        failed_validation: No superó la validación
+        mixed: Mixta
+        not_yet_processed: Aún sin procesar
+        personal: Personal
+        processed_unclassified: Procesado sin clasificar
+        reviewed_excluded: Revisado y excluido
+        skipped_by_rule: Omitido por una regla
+      column:
+        classification: Clasificación
+        description: Descripción
+        entry: Apunte
+      confirm: Confirmar
+      counterparty:
+        asserted_by: Quién lo confirma (tu nombre)
+        confirm_heading: Confirmar el establecimiento
+        confirmed: '%{identifier} confirmado: ámbito territorial %{scope} · estado
+          miembro %{state}.'
+        conflict: '%{identifier} no se ha confirmado porque contradice lo registrado:
+          %{detail}'
+        contradiction: 'Retenido: tu confirmación dice %{confirmed} y el documento
+          muestra %{evidenced}. %{detail}'
+        country: Código de país (2 letras, opcional)
+        evidenced: Ámbito que muestra un documento, para la consulta (opcional)
+        identification: Estado miembro de la UE de su NIF-IVA (2 letras)
+        identifier: Identificador fiscal
+        identifier_required: Escribe primero el identificador fiscal de la contraparte.
+        note: Nota (opcional)
+        nothing_known: No se sabe nada de %{identifier}.
+        nothing_to_withdraw: No había ninguna confirmación de %{identifier} que retirar.
+        prompt: Consulta lo que se sabe del establecimiento de una contraparte, confirma
+          tú mismo ese establecimiento o retira tu confirmación.
+        review_confirm: Revisar la confirmación
+        review_withdraw: Revisar la retirada
+        scope: '%{identifier}: ámbito territorial %{scope} (fuente: %{source})'
+        stage_confirm: 'Confirmar %{identifier}: ámbito territorial %{scope} · estado
+          miembro %{state}.'
+        stage_withdraw: Retirar tu confirmación de %{identifier}.
+        state: 'Estado miembro %{state} (fuente: %{source})'
+        territorial: Ámbito territorial (código)
+        title: Contrapartes
+        unchanged: '%{identifier} ya tenía esta confirmación: ámbito territorial %{scope}
+          · estado miembro %{state}.'
+        view: Consultar
+        who_heading: Qué contraparte
+        withdrawn: Se ha retirado tu confirmación de %{identifier}.
+      destructive_accept: Sí, adelante
+      destructive_title: Confirma este cambio
+      diagnostics:
+        column:
+          cache_hits: En caché
+          calls: Llamadas
+          classified: Clasificados
+          cost: Coste (USD)
+          high: Alta
+          low: Baja
+          mean: Media aritmética
+          medium: Media
+          provider: Proveedor
+          tokens: Unidades de texto entrada / salida
+          unpriced: Sin precio
+        confidence_heading: Confianza por proveedor
+        confidence_totals: 'Clasificados %{classified} · por debajo de %{threshold}:
+          %{low}'
+        empty: No se registraron clasificaciones sugeridas en este intervalo.
+        prompt: Uso, coste y confianza de las clasificaciones sugeridas. Las llamadas
+          sin precio se cuentan, nunca se valoran a cero.
+        read: Leer informe
+        since: Desde (AAAA-MM-DD, opcional)
+        threshold: Umbral de confianza baja (0 a 1)
+        title: Diagnóstico del clasificador
+        until: Hasta (AAAA-MM-DD, opcional)
+        usage_heading: Uso por proveedor
+        usage_totals: Llamadas %{calls} · en caché %{cache_hits} · unidades de texto
+          %{input_tokens} entrada / %{output_tokens} salida · coste %{cost} USD ·
+          sin precio %{unpriced}
+      entry: 'Apunte: %{entry}'
+      failed: No se ha hecho.
+      iva:
+        category: Categoría de IVA (código)
+        category_required: Escribe primero la categoría de IVA.
+        derived: 'Categoría %{category}: tipo %{rate} · base %{base} · IVA %{amount}
+          · %{note}'
+        heading: Categoría de IVA
+        not_derivable: La categoría %{category} no permite derivar el IVA de este
+          apunte; no se ha registrado nada. %{note}
+        prompt: Elige la categoría de IVA del apunte seleccionado. El tipo, la base
+          y la cuota que implica se derivan y se registran en un solo paso.
+        refused: 'El IVA no se ha derivado: %{messages}'
+        review: Revisar la derivación
+        stage: Derivar y registrar el IVA de este apunte a partir de la categoría
+          %{category}.
+        title: Derivar el IVA
+      loading: Leyendo…
+      not_done: No se ha cambiado nada.
+      page:
+        empty: No hay registros.
+        next: Página siguiente
+        none: No hay ninguna página en esa dirección.
+        previous: Página anterior
+        window: '%{first} a %{last} de %{total}'
+      participation:
+        column:
+          modelo: Modelo
+          period: Periodo
+          receipt: Justificante
+          state: Estado
+        empty: Este apunte no forma parte de ninguna declaración finalizada.
+        heading: Declaraciones
+        prompt: Las declaraciones finalizadas en las que participó el apunte seleccionado.
+        rebuild_heading: Reconstruir el índice
+        rebuilt: 'Índice reconstruido: %{transactions} apuntes · %{participations}
+          participaciones · %{revisions} revisiones · %{removed} filas obsoletas eliminadas.'
+        review_rebuild: Revisar la reconstrucción
+        stage_rebuild: Reconstruir el índice de participación a partir de todas las
+          declaraciones finalizadas, sustituyendo por completo el índice actual.
+        title: Participación
+      ratios:
+        category: Categoría
+        category_required: Escribe o elige primero una categoría.
+        censo_mismatch: Tus proporciones de %{year} no se muestran porque no coinciden
+          con tu situación censal.
+        column:
+          category: Categoría
+          default: Por defecto
+          kind: Tipo
+          override: Tu proporción
+          ratio: Proporción
+        eligible_heading: Categorías admitidas
+        no_overrides: No has fijado proporciones para %{year}; se aplican las de por
+          defecto.
+        override_absent: Sin fijar
+        override_present: Fijada
+        overrides_heading: Tus proporciones
+        prompt: Una proporción de uso sustituye el porcentaje profesional por defecto
+          de una categoría en tu perfil.
+        ratio: Proporción (fracción de 0 a 1)
+        read: Leer proporciones
+        review_set: Revisar la proporción
+        review_unset: Revisar la eliminación
+        set_done: '%{category} usa ahora la proporción %{ratio} (antes: %{prior}).'
+        set_heading: Fijar o quitar una proporción
+        stage_set: Fijar la proporción de %{category} en %{ratio} (ejercicio %{year}).
+        stage_unset: Quitar tu proporción de %{category}; vuelve a aplicarse la de
+          por defecto.
+        title: Proporciones de uso
+        unset_done: Se ha quitado tu proporción de %{category} (era %{prior}).
+        unset_nothing: '%{category} no tenía ninguna proporción tuya que quitar.'
+        validate: Validar
+        validation_clean: Todas las proporciones guardadas han superado la validación.
+        validation_counts: '%{eligible} categorías admitidas · %{overrides} proporciones
+          fijadas.'
+        validation_finding: '%{category}: %{kind} · %{detail}'
+        validation_missing: 'Sin proporción fijada para: %{categories}'
+        validation_no_profile: Aún no hay ningún perfil de proporciones de uso guardado.
+        year: Ejercicio (AAAA)
+        year_invalid: El ejercicio tiene cuatro cifras, como 2026.
+      review:
+        ask: Pedir una sugerencia
+        asking: Pidiendo una sugerencia…
+        business_pct: Porcentaje profesional si se aplica como Mixta (fracción decimal,
+          opcional)
+        classified: 'Sugerencia aplicada: el apunte ahora es %{classification}.'
+        decide: Aplicar escribe esta sugerencia; Rechazar deja el apunte como está.
+        detached: La revisión sigue en curso sin esta ventana; aquí aún no se conoce
+          su resultado.
+        evidence_no: No leer el documento adjunto
+        evidence_yes: Leer también el documento adjunto
+        mode:
+          auto_split: Una división, si el documento muestra varios conceptos
+          classification: Una clasificación
+          saturated: Una clasificación con sus valores de IVA
+        options_heading: Qué sugerir
+        previewed: La sugerencia solo se ha mostrado; no se ha escrito nada.
+        prompt: 'Pide una sugerencia para el apunte seleccionado. Es una propuesta:
+          no se escribe nada salvo que la apliques en la ventana que se abre.'
+        reason: Tu nota para el registro (opcional)
+        rejected: Sugerencia rechazada; el apunte no ha cambiado.
+        split: 'División sugerida aplicada: %{count} apuntes nuevos.'
+        suggested_business_pct: 'Porcentaje profesional: %{value}'
+        suggested_category: 'Categoría: %{value}'
+        suggested_child: '%{index}. %{amount} · %{description} · categoría %{category}'
+        suggested_classification: 'Clasificación: %{value}'
+        suggested_confidence: 'Confianza: %{value}'
+        suggested_iva_amount: 'Cuota de IVA: %{value}'
+        suggested_iva_category: 'Categoría de IVA: %{value}'
+        suggested_iva_rate: 'Tipo de IVA: %{value}'
+        suggested_note: 'Nota: %{value}'
+        suggested_parent_amount: 'Importe a dividir: %{value}'
+        suggested_reason: 'Motivo: %{value}'
+        suggested_taxable_base: 'Base imponible: %{value}'
+        suggestion_heading: Sugerencia (una propuesta; no se escribe nada salvo que
+          la apliques)
+        title: Revisar una clasificación sugerida
+        waiting: 'Decide sobre la sugerencia en la ventana: aplicarla o rechazarla.'
+      reviewed: Revisa el cambio de arriba y después confirma o cancela.
+      rules:
+        add_heading: Añadir una regla
+        add_refused: 'La regla no se ha añadido: %{messages}'
+        added: Regla añadida para “%{pattern}”.
+        applied: 'Reglas aplicadas: %{applied} apuntes clasificados · %{skipped} ya
+          clasificados · %{unmatched} sin coincidencia.'
+        apply_heading: Aplicar las reglas
+        apply_refused: 'Las reglas no se han aplicado: %{messages}'
+        category: Categoría de gasto (opcional)
+        column:
+          category: Categoría
+          classification: Clasificación
+          pattern: Patrón
+          priority: Prioridad
+        empty: Aún no hay reglas.
+        list_heading: Reglas
+        nothing_matches: Ningún apunte cambiaría; no hay nada que aplicar.
+        pattern: Texto que debe contener la descripción
+        preview: Ver coincidencias
+        previewed: 'Simulación: cambiarían %{count} apuntes. Aparecen abajo.'
+        priority: Prioridad (1 se aplica primero; por defecto 100)
+        priority_invalid: La prioridad debe ser un número entero a partir de 1.
+        prompt: Una regla clasifica cada apunte cuya descripción contiene su patrón.
+          Antes de aplicarla, revisa una simulación.
+        review_add: Revisar la regla nueva
+        scope_reaffirm: También los apuntes clasificados a mano (sustituye su clasificación)
+        scope_unclassified: Solo los apuntes aún sin clasificar
+        stage_add: 'Añadir regla: la descripción contiene “%{pattern}” → %{classification}
+          · categoría %{category} · prioridad %{priority}'
+        stage_apply: Aplicar las reglas a los %{count} apuntes de la simulación aún
+          sin clasificar.
+        stage_apply_reaffirm: Aplicar las reglas a los %{count} apuntes de la simulación,
+          sustituyendo las clasificaciones hechas a mano.
+        title: Reglas de clasificación
+      saved: Guardado.
+      saving: Guardando…
+      split:
+        add_child: Añadir parte
+        amount: Importe de la parte (positivo, misma moneda)
+        amount_invalid: El importe de una parte es un número positivo con dos decimales
+          como máximo, como 125.50.
+        ask: Pedir una división sugerida
+        children_heading: Partes
+        column:
+          amount: Importe
+          child: Parte
+        description: Descripción de la parte
+        description_required: Describe primero la parte.
+        done: Dividido en %{count} apuntes nuevos; el original conserva su clasificación
+          (%{parent}).
+        parent_unreadable: No se puede leer el importe del apunte, así que no se puede
+          dividir aquí.
+        prompt: Divide el apunte seleccionado en dos o más partes que sumen su importe,
+          o pide una división sugerida.
+        reason: Motivo (opcional)
+        remove_child: Quitar la última parte
+        review: Revisar la división
+        stage: Dividir el apunte de %{parent} %{currency} en las %{count} partes de
+          arriba.
+        suggestion_heading: División sugerida
+        title: Dividir apunte
+        too_few: Una división necesita al menos dos partes.
+        too_many: Una división tiene como máximo %{limit} partes.
+        total: Partes %{children} de %{parent} %{currency} · pendiente de asignar
+          %{remaining}
+        unbalanced: Las partes suman %{children}, no los %{parent} %{currency} del
+          apunte.
+      tool:
+        allocate: Asignar uso profesional
+        bulk: Clasificación masiva
+        counterparties: Contrapartes
+        diagnostics: Diagnóstico del clasificador
+        iva: Derivar el IVA
+        participation: Participación
+        ratios: Proporciones de uso
+        review: Revisar clasificaciones sugeridas
+        rules: Reglas
+        split: Dividir apunte
     classification:
       boundary: La clasificación de entrada, el sector de prorrata y el justificante
         de compra se registran mediante sus propios flujos de captura o adjunto.
@@ -2769,6 +3089,286 @@ tui:
       empty: Todavía no hay apuntes.
       title: Apuntes
     entry_label: '{date} · {description}'
+    entry_tools:
+      add:
+        another: Añadir otro apunte
+        confirming: Revisa los datos de arriba y confirma para guardar el apunte.
+        created: 'Añadido: {entry}. Estado de revisión: {status}.'
+        edit_again: Volver a editar
+        field:
+          amount: Importe, sin signo
+          art_104_tres_exclusion: Exclusión del art. 104.Tres
+          booked_date: Fecha de operación (AAAA-MM-DD)
+          business_classification: Clasificación
+          business_pct: Parte afecta a la actividad (0 a 1)
+          category_id: Categoría de gasto
+          counterparty: Contraparte
+          counterparty_country: País de la contraparte (dos letras)
+          counterparty_identification_state: Estado de identificación IVA de la contraparte
+          currency: Moneda (EUR si se deja en blanco)
+          deduction_fact_kind: Hecho de deducción de IVA
+          description: Concepto
+          direction: Sentido
+          input_classification: Clasificación de entrada para prorrata
+          investment_asset_id: Identificador del bien de inversión
+          irpf_category: Categoría de IRPF
+          iva_amount: Cuota de IVA
+          iva_category: Categoría de IVA
+          iva_rate: Tipo de IVA (por ejemplo 0.21)
+          notes: Notas
+          own_account_id: Cuenta propia (acc-01)
+          prorrata_reference: Referencia de prorrata
+          prorrata_sector: Sector de prorrata
+          purchase_invoice_evidence_id: Identificador del justificante de compra
+          recargo_amount: Importe del recargo de equivalencia
+          source_jurisdiction: Jurisdicción de origen (código de país)
+          taxable_base: Base imponible
+          usage_ratio_id: Identificador del porcentaje de uso
+          value_date: Fecha valor (AAAA-MM-DD)
+        input_classification_inert: La clasificación de entrada no afecta a la prorrata
+          de este apunte.
+        open_in_browse: Abrirlo en Explorar apuntes
+        optional: Datos fiscales (opcional)
+        prompt: Introduce los cuatro datos que necesita todo apunte. Abre los datos
+          fiscales solo si los tienes.
+        refused: 'El libro ha rechazado este apunte:'
+        review: Revisar apunte
+        sector_unmatched: El sector de prorrata no coincide con ningún sector de tu
+          registro.
+        source_jurisdiction_required_beckham: En el régimen especial de trabajadores
+          desplazados, indica la jurisdicción de origen de este apunte.
+        source_jurisdiction_required_irnr: Como contribuyente no residente, indica
+          la jurisdicción de origen de este apunte.
+        title: Añadir apunte
+      blocker: El Modelo {modelo} {year} {period} ({state}) cita este apunte.
+      browse:
+        account: Cuenta propia (acc-01)
+        action:
+          archive: Archivar
+          exclude: Excluir de la declaración
+          merge: Fusionar marcados ({count})
+          remove: Eliminar
+          restore: Restaurar
+          stash: Apartar
+        any_classification: Cualquier clasificación
+        any_direction: Cualquier sentido
+        any_issue: Cualquier incidencia de importación
+        any_status: Cualquier estado de revisión
+        apply: Aplicar filtros
+        by_group: Agrupar las filas
+        cancelled: No se ha cambiado nada.
+        choose: Elige un apunte con Intro.
+        consequence:
+          archive: ¿Archivar {entry}? Deja las listas y los cálculos por defecto,
+            y se puede restaurar.
+          exclude: ¿Excluir {entry} de la declaración? Sigue en el libro pero sale
+            de todas las declaraciones.
+          restore: ¿Restaurar {entry} como activo? Vuelve a las listas y los cálculos.
+          stash: ¿Apartar {entry}? Deja los cálculos hasta que lo restaures.
+        done:
+          archive: 'Archivado: {entry}'
+          exclude: 'Excluido de la declaración: {entry}'
+          merge: Fusionado en el apunte {entry}
+          remove: 'Eliminado: {entry}'
+          restore: 'Restaurado: {entry}'
+          stash: 'Apartado: {entry}'
+        empty: Ningún apunte coincide con estos filtros.
+        filters_invalid: No se pueden leer estos filtros. Revisa el identificador
+          de cuenta propia (acc-01) y el periodo.
+        group: Grupo
+        hide_rejected: Ocultar sugerencias rechazadas
+        import: Lote de importación
+        ledger_order: Orden del libro
+        mark: Marcar para fusionar
+        marked: Marcado
+        merge_confirm: Fusionar
+        merge_consequence: ¿Fusionar estas {count} partes de una división en un único
+          apunte?
+        merge_needs_two: Marca al menos dos apuntes para fusionar.
+        merge_title: Fusionar apuntes
+        next: Página siguiente
+        open: Abrir apunte
+        previewing: Comprobando qué haría eliminarlo…
+        previous: Página anterior
+        prompt: Filtra el libro, elige un apunte con Intro y actúa sobre él. Se muestra
+          una página cada vez.
+        reading: Leyendo la página…
+        reason_line: 'Motivo: {reason}'
+        refused: 'El libro ha rechazado este cambio:'
+        remove_blocked: 'No se puede eliminar {entry}: lo cita una declaración finalizada.'
+        remove_cascade: 'Justificantes eliminados con él: {evidence}. Adjuntos eliminados
+          con él: {attachments}.'
+        remove_confirm: Eliminar apunte
+        remove_consequence: ¿Eliminar {entry} del libro? Esto borra el apunte.
+        remove_not_done: El libro no ha eliminado el apunte.
+        selected: 'Elegido: {entry} ({state})'
+        text: Texto del apunte
+        title: Explorar apuntes
+        trace: Historial y trazabilidad
+        unmark: Desmarcar
+        window: Apuntes {first}–{last} de {total}
+        window_empty: No hay apuntes en esta página de {total}
+      cancel: Cancelar
+      cancelled: Cancelado. No se ha escrito nada.
+      classification:
+        business: Actividad
+        failed_validation: No superó la validación
+        mixed: Mixto
+        not_yet_processed: Sin procesar
+        personal: Personal
+        processed_unclassified: Procesado sin clasificar
+        reviewed_excluded: Revisado y excluido
+        skipped_by_rule: Omitido por una regla
+      column:
+        lifecycle: Estado
+        marked: Fusionar
+      confirm: Confirmar y guardar
+      direction:
+        incoming: Ingreso
+        internal_transfer: Traspaso propio
+        outgoing: Gasto
+      entry_label: '{date} · {amount} {currency} · {description}'
+      export:
+        again: Iniciar otra exportación
+        confirming: Revisa el destino de arriba y confirma para escribir el fichero.
+        digest: 'SHA-256: {digest}'
+        failed: La exportación se ha rechazado o no se ha podido escribir.
+        format:
+          csv: CSV
+          jsonl: JSON Lines
+          xlsx: Libro de Excel
+        include_inactive: Incluir apuntes archivados y apartados
+        partial: 'Parcial: puede que se haya escrito el fichero {path}, pero el libro
+          no ha registrado la exportación.'
+        path: Ruta completa del fichero que se escribirá
+        path_invalid: Escribe una ruta completa, desde la unidad o la carpeta raíz.
+        prompt: Elige el formato y el periodo, escribe dónde se guarda el fichero
+          y revisa.
+        review: Revisar exportación
+        staged:
+          format: 'Formato: {format}'
+          inactive_included: Se incluyen los apuntes archivados y apartados.
+          inactive_left_out: Se dejan fuera los apuntes archivados y apartados.
+          path: 'Fichero: {path}'
+          period: 'Periodo: {period}'
+        title: Exportar apuntes
+        unknown: 'Resultado desconocido: puede que se haya escrito o no el fichero
+          {path}.'
+        writing: Escribiendo la exportación…
+        written: 'Escrito: {path}'
+        written_facts: '{rows} apuntes, {bytes} bytes, {format}'
+      field:
+        reason: Motivo (opcional)
+        year: Ejercicio (AAAA)
+      health:
+        check_heading: Comprobación de {period}
+        counts: 'Apuntes: {total} (activos {active}, archivados {archived}, apartados
+          {stashed}, divididos {split})'
+        link:
+          invoice_only: La factura {invoice} cita el apunte {entry}, que no la cita
+            a ella.
+          transaction_only: El apunte {entry} cita la factura {invoice}, que no lo
+            cita a él.
+        not_measured: 'Preparación no medida: elige un periodo para medirla.'
+        not_ready: 'No está listo: {findings} hallazgos en {checked} apuntes comprobados.'
+        preflight_heading: Comprobación previa de {period}
+        preflight_needs_period: La comprobación previa necesita un periodo.
+        prompt: Elige un periodo para medir si está listo, o déjalo en blanco para
+          todo el libro. No se cambia nada.
+        read: Leer estado y comprobaciones
+        ready: 'Listo: ningún hallazgo en {checked} apuntes comprobados.'
+        review_counts: 'Revisión: pendientes {pending}, revisados {reviewed}, omitidos
+          {skipped}'
+        stale_filing: 'El Modelo {modelo} {year} {period} se presentó con apuntes
+          que han cambiado: {changed} cambiados, {removed} eliminados'
+        status_heading: Estado de {period}
+        title: Estado y comprobaciones del libro
+        totals: Ingresos de la actividad {income}, gastos {expense}, neto {net}
+        unconverted: 'Apuntes en moneda extranjera fuera de los totales: {count}'
+      issue:
+        duplicate: Posible duplicado
+        gap: Hueco en el extracto
+        original_file: Incidencia del fichero original
+        parser: Incidencia de lectura
+      lifecycle:
+        active: Activo
+        archived: Archivado
+        split: Dividido
+        stashed: Apartado
+      order:
+        asc: Ascendente
+        desc: Descendente
+      period:
+        all: todos los periodos
+        any: Cualquier periodo
+        invalid: Ese ejercicio y periodo no corresponden a ningún periodo de declaración.
+        named: '{year} {code}'
+        pair: Elige un ejercicio y un periodo, o ninguno de los dos.
+        required: Elige un ejercicio y un periodo.
+      reset:
+        again: Empezar de nuevo
+        blocked: 'No se puede restablecer el libro: hay declaraciones finalizadas
+          que citan sus apuntes.'
+        cancelled: Restablecimiento cancelado. No se ha escrito nada.
+        cannot_reset: Este libro no se puede restablecer mientras haya declaraciones
+          que lo citen.
+        cascade: 'Justificantes eliminados con ellos: {evidence}. Adjuntos eliminados
+          con ellos: {attachments}.'
+        confirm_message: Esto elimina los {count} apuntes del libro. No se pueden
+          recuperar desde esta pantalla.
+        confirm_title: ¿Restablecer todo el libro?
+        done: 'Se ha restablecido el libro. Apuntes eliminados: {count}'
+        keep: Conservar el libro
+        not_done: No se ha restablecido el libro.
+        preview: Vista previa del restablecimiento
+        previewed: Vista previa lista. Restablece solo si es lo que quieres.
+        previewing: Comprobando qué eliminaría el restablecimiento…
+        prompt: 'Restablecer elimina todos los apuntes. Primero revisa la vista previa:
+          no se escribe nada hasta que confirmes dos veces.'
+        reason: Motivo del restablecimiento
+        reason_required: Escribe un motivo antes de ver la vista previa.
+        resetting: Restableciendo el libro…
+        run: Restablecer el libro
+        title: Restablecer el libro
+        would_remove: 'Apuntes que eliminaría el restablecimiento: {count}'
+      sort:
+        amount: Ordenar por importe
+        classification: Ordenar por clasificación
+        classified_at: Ordenar por fecha de clasificación
+        created_at: Ordenar por fecha de registro
+        date: Ordenar por fecha
+        description: Ordenar por concepto
+        lifecycle_state: Ordenar por estado
+        modified_at: Ordenar por último cambio
+        value_date: Ordenar por fecha valor
+      stale_drafts: 'Borradores de declaración que habría que recalcular: {count}'
+      tool:
+        add: Añadir apunte
+        browse: Explorar apuntes
+        export: Exportar apuntes
+        health: Estado y comprobaciones del libro
+        reset: Restablecer el libro
+      trace:
+        changes: 'Correcciones: {edits}. Justificantes vinculados: {evidence}.'
+        column:
+          actor: Por
+          details: Detalles
+          event: Evento
+          when: Cuándo
+        full: Mostrar el registro completo de eventos
+        full_heading: 'Registro completo: {count} eventos'
+        imported: Importado por {provider} desde {file}, fila {row}
+        lifecycle_change: '{when}: {previous} → {state} (motivo: {reason})'
+        manual: Introducido a mano
+        no_participation: Ninguna declaración finalizada usa este apunte.
+        participation: Usado por el Modelo {modelo} {year} {period} ({state})
+        read: Volver a leer
+        siblings: Incluir las otras partes de una división
+        state: 'Estado: {state}'
+        title: Historial y trazabilidad del apunte
+        typed_heading: 'Historial: {count} eventos'
+        withheld: 'Eventos con un motivo del modelo o una ruta de exportación reservados:
+          {count}'
     evidence:
       add: Añadir documento
       add_failed: El documento no se ha añadido.
@@ -2868,6 +3468,222 @@ tui:
       safe_metadata: El documento de origen permanece protegido y cifrado; los campos
         obtenidos de él se muestran para tu revisión.
       title: Revisión de justificantes
+    evidence_files:
+      attachments:
+        attach_heading: Adjuntar justificantes
+        attach_required: Indica al menos un adjunto o un registro de justificante
+          para adjuntar.
+        attach_title: Adjuntar justificantes al apunte
+        choose_entry: No hay ningún apunte seleccionado. Vuelve a Apuntes, elige un
+          apunte con Intro y abre de nuevo Adjuntos.
+        detach_heading: Desvincular justificantes
+        detach_required: Indica al menos un adjunto para desvincular.
+        detach_title: Desvincular justificantes del apunte
+        entry: 'Apunte: {entry}'
+        evidence: Identificador del registro de justificante (opcional)
+        ids: Identificadores de adjunto, separados por espacios
+        linked_hint: Adjuntos de este apunte ahora. Elige uno para añadirlo a los
+          identificadores que vas a desvincular.
+        linked_none: Este apunte no tiene adjuntos ahora.
+        linked_unknown: Los adjuntos actuales del apunte aparecen aquí después de
+          adjuntar o desvincular. También puedes escribir los identificadores debajo.
+        outcome:
+          attached: Adjuntado. El apunte tiene ahora {count} adjuntos.
+          attachment: Adjunto {attachment}
+          detached: Desvinculado. El apunte tiene ahora {count} adjuntos.
+          revision: Modelo {modelo} {year} {period} ({state})
+          stale: '{count} revisiones finalizadas de Modelo se calcularon antes de
+            este cambio y no lo incluyen:'
+          unchanged: 'No ha cambiado nada: el apunte ya tenía exactamente estos adjuntos.'
+        pending_empty: Ningún adjunto guardado está esperando a vincularse.
+        pending_hint: Elige un adjunto pendiente para añadirlo a los identificadores
+          que vas a adjuntar, o escribe los identificadores.
+        review_attach: Revisar el adjunto
+        review_detach: Revisar desvinculación
+        stage:
+          attach: 'Adjuntar a {entry}:'
+          detach: 'Desvincular de {entry}:'
+          evidence: Registro de justificante {record}
+          kept: Los ficheros guardados se conservan; solo se eliminan sus vínculos
+            con este apunte.
+        title: Adjuntos
+      batch:
+        direction: Dirección de todos los documentos
+        directory: Carpeta
+        directory_placeholder: Ruta completa de la carpeta con los documentos
+        directory_required: Escribe la carpeta que contiene los documentos.
+        outcome:
+          counts: 'Guardados: {ingested}. Ya guardados: {no_op}. Pendientes de revisión:
+            {pending}. En pausa: {paused}. Rechazados: {refused}. Ilegibles: {unreadable}.'
+          partial: 'Este lote fue parcial: algunos documentos se guardaron y otros
+            no. Vuelve a lanzarlo después de corregir los rechazados; los documentos
+            guardados no se guardan dos veces.'
+          paused: La lectura se pausó porque no se pudo admitir el lector de modelos.
+            Vuelve a lanzar el lote más tarde para terminar los documentos en pausa.
+          writes: 'Registros escritos: {count}.'
+        prompt: Añade como justificantes de factura todos los documentos que están
+          directamente en una carpeta. Los documentos se leen en este equipo.
+        review: Revisar el lote
+        stage: 'Leer todos los documentos que están directamente en {directory}. Dirección:
+          {direction}.'
+        stage_local: Los documentos se leen en este equipo. Un documento ya guardado
+          con esta dirección se deja como está.
+        status:
+          ingested: Guardado
+          no_op: Ya guardado
+          paused: En pausa
+          pending_review: Pendiente de revisión
+          refused: Rechazado
+          unreadable: Ilegible
+        title: Añadir documentos en bloque
+      column:
+        attachment: Adjunto
+        captured: Capturado
+        date: Fecha
+        document: Documento
+        drafted: Borrador creado
+        file: Fichero
+        invoice: Factura
+        model: Modelo de lectura
+        outcome: Resultado
+        provider: Proveedor del lector
+        reason: Motivo
+        record: Registro
+        recorded: Registrado
+        size: Bytes
+        stamp: Origen
+        supplier: Proveedor
+        surface: Finalidad
+        transport: Transporte
+        type: Tipo
+      consent:
+        artefacts: Borradores creados por un lector externo
+        dispatches: Documentos enviados fuera de este equipo
+        no_artefacts: Ningún lector externo ha creado borradores de documentos.
+        no_dispatches: No se ha enviado ningún documento fuera de este equipo para
+          leerlo.
+        prompt: Qué documentos se enviaron fuera de este equipo para leerlos, cuándo
+          y a qué lector. Este historial es de solo lectura.
+        title: Historial de consentimientos
+        unrecallable: Un documento ya enviado no se puede recuperar del lector al
+          que se envió.
+      failed: La solicitud se rechazó o no se pudo completar.
+      field:
+        invoice_date: Fecha de la factura (AAAA-MM-DD)
+        invoice_number: Número de factura
+        iva_amount: Cuota de IVA
+        iva_rate: Tipo de IVA (%)
+        notes: Notas
+        supplier: Proveedor
+        taxable_base: Base imponible
+      loading: Leyendo…
+      page:
+        next: Página siguiente
+        position: Filas {first} a {last} de {total}
+        previous: Página anterior
+      queue:
+        detail:
+          file: Tipo {type}, {size} bytes, procedente de {source}.
+          identity: Adjunto {attachment}, huella del contenido {digest}.
+          state: 'Capturado el {captured}. Facturas vinculadas: {invoices}. {state}'
+        empty: Ningún adjunto guardado está esperando una factura.
+        linked: Vinculado a una factura.
+        pending: Esperando una factura.
+        prompt: Adjuntos guardados que todavía no están vinculados a ninguna factura.
+          Elige uno para ver sus detalles.
+        title: Cola de adjuntos
+      records:
+        all: Mostrar todos
+        choose_record: Elige primero un registro de la lista.
+        detail:
+          amounts: Base imponible {base}, tipo de IVA {rate}, cuota de IVA {iva}.
+          dates: Añadido el {added}, último cambio el {updated}.
+          identity: 'Registro {record}: {file} ({kind}).'
+          invoice: Proveedor {supplier}, factura {number}, con fecha {date}.
+          notes: 'Notas: {notes}'
+        edit_heading: Corrige el registro seleccionado
+        edit_hint: Cambia un valor y revísalo. Un campo vacío conserva su valor actual.
+          Los importes usan decimales sencillos como 100 o 21.5.
+        empty: Todavía no hay registros de justificantes.
+        filter: Busca un registro por su identificador
+        gone: Ese registro ya no existe. Pulsa Mostrar todos para volver a leer la
+          lista.
+        no_change: Cambia algún valor antes de revisar.
+        none_found: Ningún registro tiene ese identificador.
+        open_review: Abrir la revisión de su borrador
+        outcome:
+          removed: Registro {record} eliminado.
+          unchanged: 'No ha cambiado nada: el registro {record} ya tenía estos valores.'
+          updated: Registro {record} guardado.
+        prompt: Los justificantes de factura del perfil. Elige un registro para verlo,
+          corregirlo o eliminarlo.
+        remove_title: Eliminar un registro de justificante
+        review_remove: Revisar eliminación
+        review_update: Revisar corrección
+        search: Buscar
+        stage:
+          change: '{field}: {current} -> {new}'
+          remove: Eliminar el registro {record} ({file}, proveedor {supplier}, factura
+            {number}).
+          update: 'Corregir el registro {record} ({file}):'
+        title: Registros de justificantes
+        update_title: Corregir un registro de justificante
+      review:
+        amounts: Base imponible {base}, tipo de IVA {rate}, cuota de IVA {iva}, total
+          {total}.
+        blocker: '- {reason} (campo: {field})'
+        blockers: 'Preguntas que bloquean la confirmación: {count}'
+        findings: 'Hallazgos: {count}'
+        full: Revisión completa
+        kind: 'Dirección sugerida: {kind}'
+        prompt: Lee el borrador de un documento leído. El resumen omite el texto del
+          propio documento; la revisión completa lo muestra. Confirma un borrador
+          desde el área de justificantes.
+        read_by: Borrador {reference}, leído por {extractor} el {date}.
+        reason:
+          ambiguous_identity: La identidad de la contraparte no está clara
+          closure_discrepancy: Las cifras del propio documento no cuadran
+          contradicted_invoice_class: Su clase de factura y su referencia rectificativa
+            no coinciden
+          contradicted_regime: El régimen indicado contradice el impuesto repercutido
+          undetermined_establishment: No consta dónde está establecida una de las
+            partes
+          unmodelled_invoice_class: La clase de factura que declara no tiene representación
+            aquí
+          unresolved_direction: No está claro qué parte emitió el documento
+        reference: Referencia del justificante
+        reference_required: Escribe primero la referencia del justificante.
+        summary: Resumen
+        text_withheld: El texto del propio documento se omite en este resumen. Abre
+          la revisión completa para leerlo.
+        title: Revisión de justificantes leídos
+      source:
+        gmail: Gmail
+        google_drive: Google Drive
+        inline: una parte incrustada de un mensaje
+        local_file: un fichero local
+        url: una dirección web
+      tool:
+        attachments: Adjuntos
+        batch: Añadir documentos en bloque
+        consent: Historial de consentimientos
+        queue: Cola de adjuntos
+        records: Registros de justificantes
+        review: Revisión de justificantes leídos
+      write:
+        cancel: Cancelar
+        confirm: Confirmar y enviar
+        confirm_destructive: Sí, hazlo
+        confirming: Revisa este cambio y confírmalo. No se envía nada antes de que
+          confirmes.
+        done: Volver a la herramienta
+        failed: El cambio se rechazó o no se pudo completar.
+        keep: No, consérvalo
+        partial: 'Guardado en parte: solo se escribió una parte del cambio.'
+        refused: El cambio se rechazó antes de escribir nada.
+        review_heading: Qué va a cambiar
+        saved: Cambio guardado.
+        saving: Enviando el cambio…
     flow:
       in_flight_refusal: Espera a que termine la operación actual antes de salir de
         esta pantalla.
@@ -3038,6 +3854,74 @@ tui:
         rectifies: Rectifica la factura {number}
         retention: 'Retención de IRPF: tipo {rate} · importe {amount}'
       title: Añadir una factura
+    invoices:
+      import:
+        again: Importar otro fichero
+        cancelled: Importación cancelada. No se ha importado nada.
+        column:
+          field: Campo
+          reason: Motivo
+          row: Fila
+        confirm: Importar este fichero
+        confirming: Comprueba el fichero y luego impórtalo.
+        country: País de la contraparte cuando el libro no lo indica (dos letras,
+          opcional)
+        counts: 'Filas: {rows} · Añadidas: {created} · Ya existían: {skipped} · Rechazadas:
+          {refused}'
+        failed: La importación se ha rechazado o no ha podido terminar. Revisa el
+          catálogo de facturas antes de volver a intentarlo.
+        importing: Importando facturas…
+        nothing_created: No se ha añadido ninguna factura.
+        partial: 'Importación aplicada en parte: algunas filas se han rechazado y
+          no se han importado.'
+        path: Ruta del fichero (absoluta)
+        path_required: Escribe la ruta del fichero que quieres importar.
+        prompt: Importa un libro de facturas (hoja de cálculo) en el catálogo de facturas.
+          La revisión muestra el nombre, el tamaño y la huella SHA-256 del fichero;
+          al importar se lee exactamente ese fichero y se rechaza si ha cambiado.
+        reading: Leyendo el fichero…
+        review: Revisar fichero
+        succeeded: Importación terminada. No se ha rechazado ninguna fila.
+        summary:
+          digest: 'SHA-256: {digest}'
+          file: 'Fichero: {name} ({size} bytes)'
+          kind: 'Tipo de factura: {kind} · País: {country}'
+          no_preview: 'Esta importación no tiene vista previa: las facturas solo se
+            comprueban al escribirlas. Las filas que fallen se mostrarán después y
+            no se importarán.'
+        title: Importar facturas
+        tool: Importar facturas
+        unmapped: 'Columnas no utilizadas: {columns}'
+      wizard:
+        again: Introducir otra factura
+        already_existed: Esta factura ya estaba registrada; no se ha añadido nada.
+        cancelled: Cancelado. No se ha registrado nada.
+        confirm: Registrar factura
+        confirming: Comprueba todos los valores y luego registra la factura.
+        correct: Corregir los campos
+        euro_value_pending: Aún no se ha encontrado un tipo de cambio en euros para
+          esta factura; su valor en euros está pendiente.
+        failed: La factura se ha rechazado o no se ha podido registrar.
+        next: Paso siguiente
+        previous: Paso anterior
+        recorded: 'Factura {number} registrada: {total}.'
+        recording: Registrando la factura…
+        refused: Se han rechazado algunos campos. No se ha registrado nada.
+        step: 'Paso {index} de {total}: {name}'
+        step_name:
+          amounts: Importes e impuestos
+          counterparty: Contraparte
+          invoice: Factura
+          notes: Notas y revisión
+        summary_heading: 'La factura que se registrará:'
+        title: Asistente de facturas
+        tool: Asistente de facturas
+    link:
+      refused:
+        cross_bucket_invoice: La factura pertenece a otro perfil, así que no se puede
+          vincular.
+        missing_invoice: La factura ya no está en el catálogo, así que no se puede
+          vincular.
     overview:
       affected_declarations: Declaraciones afectadas
       areas: Áreas de Registros
@@ -3155,22 +4039,68 @@ tui:
       title: 'Registros: conciliación local'
       'yes': Sí
     records:
+      cancel: Cancelar
+      change: '{field}: {before} → {after}'
+      correct_heading: Corregir este registro
+      direction:
+        incoming: Entrada de dinero
+        internal_transfer: Traspaso entre cuentas propias
+        outgoing: Salida de dinero
       failed: El cambio se rechazó o no se pudo guardar.
+      field:
+        payment_status: Estado del pago
       identity: ID del registro
+      invalid_decimal: '{field}: escribe un número como 21 o 15.5.'
       invoice_detail: Detalle de la factura
       invoices: Facturas registradas
+      kind_all: Todas las facturas
+      kind_filter: Mostrar
       lines: Líneas
       links: Registros vinculados
       loading: Leyendo el registro…
       no_change: Introduce un valor diferente antes de revisar.
+      no_invoices: Todavía no hay facturas registradas.
       open_invoices: Ver facturas
       open_transaction: Ver o editar el apunte seleccionado
+      page: Página {page} de {pages} · {count} facturas
+      page_next: Página siguiente
+      page_previous: Página anterior
+      payment_status:
+        cancelled: Anulada
+        overdue: Vencida
+        paid: Pagada
+        partially_paid: Pagada en parte
+        pending: Pendiente
+      remove: Eliminar factura
+      remove_cancelled: Eliminación cancelada. No se ha cambiado nada.
+      remove_message: La factura {number} de {counterparty} por {total} se eliminará
+        del catálogo. No se puede deshacer.
+      remove_title: ¿Eliminar esta factura?
+      removed: Factura {number} eliminada.
+      removing: Eliminando la factura…
       reviewed: Revisa el valor y después guárdalo.
       save: Guardar cambio
       saved: Cambio guardado.
       saving: Guardando cambio…
       source: Fichero de origen
+      staged_heading: 'Se guardarán estos cambios:'
+      stale: Este registro ha cambiado después de que lo abrieras. Vuelve atrás y
+        ábrelo de nuevo antes de cambiarlo.
+      totals: '{base} + {iva} = {total} {currency}'
       transaction_detail: Detalle del apunte
+      transaction_field:
+        amount: Importe (sin signo)
+        booked_date: Fecha de apunte (AAAA-MM-DD)
+        counterparty: Contraparte (opcional)
+        currency: Moneda
+        description: Descripción
+        direction: Sentido
+        iva_amount: Cuota de IVA (opcional)
+        iva_rate: Tipo de IVA (opcional)
+        notes: Notas
+        taxable_base: Base imponible (opcional)
+        value_date: Fecha valor (AAAA-MM-DD, opcional)
+      update_refused: 'El cambio se ha rechazado: {detail}'
     refusal:
       application_state: Esta área no está disponible en el estado actual de Registros.
       destination_pending: Esta área aún no está disponible en esta versión.
@@ -3179,6 +4109,218 @@ tui:
         él.
       submission_unavailable: Esta tarea no se puede realizar desde esta pantalla
         en esta sesión.
+    registers:
+      attached: aportado desde el archivo indicado
+      cancel: Cancelar
+      capital_goods:
+        column:
+          cuota: Cuota soportada
+          deduction: Deducción
+          description: Descripción
+          identifier: Identificador
+          kind: Tipo
+          year: Año
+        declared: Bien de inversión declarado; el registro tiene ahora %{count}.
+        detail: '%{identifier} · %{description} · %{year} · %{kind} · cuota %{cuota}
+          · prorrata inicial %{prorrata} · deducción %{deduction} · apunte %{ledger}
+          · transmisión %{disposal}'
+        empty: Aún no hay bienes de inversión declarados.
+        field:
+          acquisition_ledger_id: Apunte de adquisición
+          acquisition_year: Año de adquisición
+          art108_elegible: Elegible según el artículo 108 LIVA
+          cuota_soportada: Cuota de IVA soportada
+          description: Descripción
+          disposal_regime: Régimen de la transmisión (opcional)
+          disposal_year: Año de transmisión (opcional)
+          identifier: Identificador
+          kind: Tipo de bien
+          prorrata_inicial_pct: Porcentaje de prorrata inicial
+          prorrata_sector_id: Sector de prorrata (opcional)
+        list: Bienes declarados
+        missing:
+          regime: 'Falta: el régimen de la transmisión.'
+          year: 'Falta: el año de la transmisión.'
+        prompt: Cada bien de inversión declarado para la regularización del IVA. Rellena
+          un bien nuevo, revísalo y confírmalo. La deducción que ves es la que calcula
+          el registro.
+        refusal:
+          disposal_incomplete: 'El registro ha rechazado la declaración: una transmisión
+            necesita su año y su régimen.'
+          duplicate_identifier: 'El registro ha rechazado la declaración: ya hay un
+            bien declarado con este identificador.'
+          validation: 'El registro ha rechazado la declaración: no supera la validación
+            del registro.'
+        refusal_identifier: 'Identificador: %{identifier}'
+        title: Registro de bienes de inversión
+        tool: Bienes de inversión
+      confirm: Confirmar
+      date_placeholder: AAAA-MM-DD
+      invalid_date: '%{field}: %{value} no es una fecha. Escríbela como AAAA-MM-DD.'
+      invalid_decimal: '%{field}: %{value} no es un importe. Escribe cifras con punto
+        decimal, como máximo dos decimales y sin separador de miles.'
+      invalid_number: '%{field}: %{value} no es un número entero.'
+      inventory:
+        action:
+          closing_authority: Registrar una autoridad de cierre
+          create: Crear un inventario
+          movement_add: Añadir un movimiento
+          valuation_preview: Previsualizar la valoración
+        column:
+          actividad: Actividad
+          method: Método
+          movements: Movimientos
+          opening: Inicial
+          year: Año
+        detail: '%{actividad} · %{year} · %{method} · existencias iniciales %{opening}
+          · %{movements} movimientos'
+        done:
+          create: Inventario creado.
+          movement_add: Movimiento añadido.
+        empty: Aún no hay ningún inventario de actividad.
+        field:
+          acquisition_cost: Archivo del coste de compra (solo compras)
+          action: Petición
+          actividad_id: Actividad
+          authority_record: Archivo de la autoridad de cierre
+          kind: Tipo de movimiento
+          movement_date: Fecha del movimiento
+          movement_id: Identificador del movimiento
+          opening_stock: Existencias iniciales (opcional)
+          quantity: Cantidad
+          taxable_base: Base imponible (opcional)
+          unit_cost: Coste unitario (opcional)
+          valuation_method: Método de valoración
+          year: Año
+        kind:
+          cogs: Coste de las ventas
+          count: Recuento
+          opening: Apertura
+          purchase: Compra
+        list: Inventarios
+        method:
+          coste_medio: Coste medio
+          fifo: FIFO
+          pmp: Precio medio ponderado
+        prompt: Cada inventario de actividad por año. Elige una petición, rellena
+          sus campos, revísala y confírmala. Las valoraciones y el coste de las ventas
+          son cifras del propio registro. Los costes de compra y las autoridades de
+          cierre se leen del archivo JSON que indiques.
+        refusal:
+          activity_conflict: 'El registro ha rechazado la petición: ya existe un inventario
+            para esa actividad y año.'
+          activity_not_found: 'El registro ha rechazado la petición: no existe ningún
+            inventario para esa actividad y año.'
+          closing_authority_conflict: 'El registro ha rechazado la autoridad de cierre:
+            ya hay otra registrada para ese año.'
+          closing_authority_invalid: 'El registro ha rechazado la autoridad de cierre:
+            no coincide con el inventario que indica.'
+          duplicate_movement_id: 'El registro ha rechazado el movimiento: ese identificador
+            de movimiento ya existe.'
+          invalid_valuation_method: 'El registro ha rechazado la petición: no admite
+            ese método de valoración.'
+          inventory_validation: 'El registro ha rechazado la petición: no supera la
+            validación del inventario.'
+        result:
+          closing: 'Autoridad de cierre de %{actividad} %{year} registrada. Cambió:
+            %{changed}.'
+          fingerprint: 'Huella del registro: %{fingerprint}'
+          ledger: '%{actividad} · %{year} · %{method} · existencias iniciales %{opening}
+            · %{movements} movimientos'
+          valuation: 'Valoración de %{actividad} %{year} (%{method}): valor de cierre
+            %{closing}, coste de las ventas %{cogs}.'
+        source: 'Leído de: %{path}'
+        source_invalid: 'El archivo %{path} no es un registro válido: se han encontrado
+          %{count} problemas.'
+        source_unreadable: No se ha podido leer el archivo %{path}.
+        title: Inventarios de actividad
+        tool: Inventario
+      next: Siguiente
+      'no': 'No'
+      page: Página %{page} de %{pages} · %{total} registros
+      previous: Anterior
+      prorrata:
+        accepted_provenances: 'Procedencias admitidas: %{values}'
+        action:
+          declare_sector: Declarar un sector diferenciado
+          elect_especial: Optar por prorrata especial
+          elect_general: Optar por prorrata general
+          revoke_especial: Revocar la prorrata especial
+          seed: Trasladar la prorrata definitiva del año anterior
+          seed_sector: Trasladar la prorrata definitiva anterior de un sector
+          settle_sector: Liquidar la prorrata definitiva de un sector
+        column:
+          activities: Actividades
+          definitive: Definitiva %
+          ejercicio: Ejercicio
+          letra: Letra
+          provenance: Procedencia
+          provisional: Provisional %
+          regime: Régimen
+          sector: Sector
+        done:
+          declare_sector: Sector diferenciado declarado.
+          elect_especial: Prorrata especial elegida.
+          elect_general: Prorrata general elegida.
+          revoke_especial: Prorrata especial revocada.
+          seed: Prorrata definitiva anterior trasladada.
+          seed_sector: Prorrata definitiva anterior del sector trasladada.
+          settle_sector: Prorrata definitiva del sector registrada.
+        empty: El registro de prorrata aún no tiene entradas.
+        entries: Ejercicios
+        field:
+          action: Cambio
+          con_derecho_volume: Volumen con derecho a deducir
+          ejercicio: Ejercicio
+          evidence_reference: Referencia del justificante
+          letra: Letra del sector
+          member_activity_codes: Códigos de actividad, separados por comas
+          percentage: Porcentaje provisional
+          provenance: Procedencia del porcentaje
+          reference: Referencia de autorización
+          sector_id: Sector
+          sin_derecho_volume: Volumen sin derecho a deducir
+        prompt: La prorrata de IVA de cada ejercicio tal como la guarda el registro.
+          Elige un cambio, rellena sus campos, revísalo y confírmalo. El propio registro
+          calcula cada cifra definitiva.
+        refusal:
+          provenance_not_electable: 'El registro ha rechazado la opción: no puedes
+            elegir esa procedencia.'
+          provenance_required: 'El registro ha rechazado la opción: indica la procedencia
+            del porcentaje provisional.'
+          reference_not_permitted: 'El registro ha rechazado la opción: esa procedencia
+            no admite referencia de autorización.'
+          reference_required: 'El registro ha rechazado la opción: esa procedencia
+            necesita una referencia de autorización.'
+          regulated_override_standing: 'El registro ha rechazado el traslado: ya consta
+            un porcentaje provisional regulado para este año.'
+          sector_prior_definitive_absent: 'El registro ha rechazado el traslado: el
+            sector no tiene prorrata definitiva anterior.'
+          sector_settlement_entry_absent: 'El registro ha rechazado la liquidación:
+            el sector no tiene entrada para este año.'
+          seed_existing_blocked: 'El registro ha rechazado el traslado: la entrada
+            existente de este año lo bloquea.'
+          seed_source_absent: 'El registro ha rechazado el traslado: no hay liquidación
+            del año anterior de la que trasladar.'
+          seed_source_blocked: 'El registro ha rechazado el traslado: la fuente del
+            año anterior tiene avisos que bloquean.'
+          validation: 'El registro de prorrata ha rechazado el cambio: no supera la
+            validación del registro.'
+        result:
+          entry: '%{ejercicio} · %{sector} · %{regime} · provisional %{provisional}
+            · definitiva %{definitive}'
+          finding: 'Aviso [%{code}]: %{message}'
+          prior: Trasladada desde el ejercicio %{ejercicio}.
+          sector: Sector %{sector} · letra %{letra} · actividades %{activities}
+          seed_source: Trasladada desde la observación local del Modelo %{modelo}
+            de %{year} %{period}.
+        sectors: Sectores diferenciados
+        title: Registro de prorrata
+        tool: Registro de prorrata
+        whole_entity: toda la actividad
+      required: '%{field} es obligatorio.'
+      review: Revisar
+      'yes': Sí
     review:
       empty: Ahora mismo no hay apuntes que revisar.
       exclude_cancel: Mantener apunte

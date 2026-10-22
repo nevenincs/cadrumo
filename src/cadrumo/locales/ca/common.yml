@@ -2713,6 +2713,321 @@ tui:
       never_captured: Encara sense llegir
       stale: Desactualitzat
       unavailable: No disponible
+    categorisation:
+      allocate:
+        business_pct: Percentatge professional (fracció de 0 a 1, com ara 0.6)
+        category: Categoria de despesa (opcional)
+        done: 'Assignat: %{classification} · percentatge professional %{share} · categoria
+          %{category}.'
+        heading: Ús professional
+        prompt: Registra la part de l'apunt seleccionat que és d'ús professional.
+          La classificació es dedueix d'aquesta part.
+        prorrata: Referència de prorrata (opcional)
+        review: Revisa l'assignació
+        stage: Assigna percentatge professional %{share} · categoria %{category} ·
+          proporció d'ús %{ratio} · prorrata %{prorrata}.
+        title: Assigna l'ús professional
+        usage_ratio: ID de proporció d'ús (opcional)
+      bulk:
+        business_pct: Percentatge professional (fracció de 0 a 1; només Mixta)
+        category: Categoria de despesa (opcional)
+        column:
+          amount: Import
+          date: Data
+        done: '%{applied} apunts classificats · %{skipped} omesos · %{failed} rebutjats.'
+        empty: Cap apunt no coincideix amb aquests filtres.
+        failure: 'Fila %{row} (%{entry}): %{reason}'
+        filter_heading: Quins apunts
+        nothing_changes: Tots els apunts d'aquesta pàgina ja tenen aquesta classificació;
+          no canviaria res.
+        period: Període (1T a 4T, 0A o 01 a 12; requereix l'exercici)
+        prompt: Llegeix una pàgina d'apunts amb els filtres de sota, tria una classificació
+          i revisa les files que canviaran abans de confirmar.
+        read: Llegeix apunts
+        refused: 'No s''ha classificat res: %{messages}'
+        review: Revisa els canvis
+        share_mixed_only: El percentatge professional va amb Mixta, i Mixta el necessita.
+        stage: Classifica els %{count} apunts de sota com a %{classification} · categoria
+          %{category}.
+        status_any: Qualsevol estat de revisió
+        target_heading: Classifica com a
+        text: Text que conté la descripció (opcional)
+        title: Classificació massiva
+        year: Exercici (AAAA, opcional)
+      cancel: Cancel·la
+      cancelled: Canvi cancel·lat; no s'ha escrit res.
+      choose_entry: Primer tria un apunt a Apunts o Revisió; aquesta eina actua sobre
+        l'apunt seleccionat.
+      classification:
+        business: Professional
+        failed_validation: No ha superat la validació
+        mixed: Mixta
+        not_yet_processed: Encara sense processar
+        personal: Personal
+        processed_unclassified: Processat sense classificar
+        reviewed_excluded: Revisat i exclòs
+        skipped_by_rule: Omès per una regla
+      column:
+        classification: Classificació
+        description: Descripció
+        entry: Apunt
+      confirm: Confirma
+      counterparty:
+        asserted_by: Qui ho confirma (el teu nom)
+        confirm_heading: Confirma l'establiment
+        confirmed: '%{identifier} confirmat: àmbit territorial %{scope} · estat membre
+          %{state}.'
+        conflict: '%{identifier} no s''ha confirmat perquè contradiu el que hi ha
+          registrat: %{detail}'
+        contradiction: 'Retingut: la teva confirmació diu %{confirmed} i el document
+          mostra %{evidenced}. %{detail}'
+        country: Codi de país (2 lletres, opcional)
+        evidenced: Àmbit que mostra un document, per a la consulta (opcional)
+        identification: Estat membre de la UE del seu NIF-IVA (2 lletres)
+        identifier: Identificador fiscal
+        identifier_required: Escriu primer l'identificador fiscal de la contrapart.
+        note: Nota (opcional)
+        nothing_known: No se sap res de %{identifier}.
+        nothing_to_withdraw: No hi havia cap confirmació de %{identifier} per retirar.
+        prompt: Consulta el que se sap de l'establiment d'una contrapart, confirma-ho
+          tu mateix o retira la teva confirmació.
+        review_confirm: Revisa la confirmació
+        review_withdraw: Revisa la retirada
+        scope: '%{identifier}: àmbit territorial %{scope} (font: %{source})'
+        stage_confirm: 'Confirma %{identifier}: àmbit territorial %{scope} · estat
+          membre %{state}.'
+        stage_withdraw: Retira la teva confirmació de %{identifier}.
+        state: 'Estat membre %{state} (font: %{source})'
+        territorial: Àmbit territorial (codi)
+        title: Contraparts
+        unchanged: '%{identifier} ja tenia aquesta confirmació: àmbit territorial
+          %{scope} · estat membre %{state}.'
+        view: Consulta
+        who_heading: Quina contrapart
+        withdrawn: S'ha retirat la teva confirmació de %{identifier}.
+      destructive_accept: Sí, endavant
+      destructive_title: Confirma aquest canvi
+      diagnostics:
+        column:
+          cache_hits: A la memòria cau
+          calls: Crides
+          classified: Classificats
+          cost: Cost (USD)
+          high: Alta
+          low: Baixa
+          mean: Mitjana aritmètica
+          medium: Mitjana
+          provider: Proveïdor
+          tokens: Tokens entrada / sortida
+          unpriced: Sense preu
+        confidence_heading: Confiança per proveïdor
+        confidence_totals: 'Classificats %{classified} · per sota de %{threshold}:
+          %{low}'
+        empty: No es van registrar classificacions suggerides en aquest interval.
+        prompt: Ús, cost i confiança de les classificacions suggerides. Les crides
+          sense preu es compten, mai no es valoren a zero.
+        read: Llegeix l'informe
+        since: Des de (AAAA-MM-DD, opcional)
+        threshold: Llindar de confiança baixa (0 a 1)
+        title: Diagnòstic del classificador
+        until: Fins a (AAAA-MM-DD, opcional)
+        usage_heading: Ús per proveïdor
+        usage_totals: Crides %{calls} · a la memòria cau %{cache_hits} · tokens %{input_tokens}
+          entrada / %{output_tokens} sortida · cost %{cost} USD · sense preu %{unpriced}
+      entry: 'Apunt: %{entry}'
+      failed: No s'ha fet.
+      iva:
+        category: Categoria d'IVA (codi)
+        category_required: Escriu primer la categoria d'IVA.
+        derived: 'Categoria %{category}: tipus %{rate} · base %{base} · IVA %{amount}
+          · %{note}'
+        heading: Categoria d'IVA
+        not_derivable: La categoria %{category} no permet derivar l'IVA d'aquest apunt;
+          no s'ha registrat res. %{note}
+        prompt: Tria la categoria d'IVA de l'apunt seleccionat. El tipus, la base
+          i la quota que implica es deriven i es registren en un sol pas.
+        refused: 'L''IVA no s''ha derivat: %{messages}'
+        review: Revisa la derivació
+        stage: Deriva i registra l'IVA d'aquest apunt a partir de la categoria %{category}.
+        title: Deriva l'IVA
+      loading: Llegint…
+      not_done: No s'ha canviat res.
+      page:
+        empty: No hi ha registres.
+        next: Pàgina següent
+        none: No hi ha cap pàgina en aquella direcció.
+        previous: Pàgina anterior
+        window: '%{first} a %{last} de %{total}'
+      participation:
+        column:
+          modelo: Modelo
+          period: Període
+          receipt: Justificant
+          state: Estat
+        empty: Aquest apunt no forma part de cap declaració finalitzada.
+        heading: Declaracions
+        prompt: Les declaracions finalitzades en què va participar l'apunt seleccionat.
+        rebuild_heading: Reconstrueix l'índex
+        rebuilt: 'Índex reconstruït: %{transactions} apunts · %{participations} participacions
+          · %{revisions} revisions · %{removed} files obsoletes eliminades.'
+        review_rebuild: Revisa la reconstrucció
+        stage_rebuild: Reconstrueix l'índex de participació a partir de totes les
+          declaracions finalitzades, substituint completament l'índex actual.
+        title: Participació
+      ratios:
+        category: Categoria
+        category_required: Escriu o tria primer una categoria.
+        censo_mismatch: Les teves proporcions de %{year} no es mostren perquè no coincideixen
+          amb la teva situació censal.
+        column:
+          category: Categoria
+          default: Per defecte
+          kind: Tipus
+          override: La teva proporció
+          ratio: Proporció
+        eligible_heading: Categories admeses
+        no_overrides: No has fixat proporcions per a %{year}; s'apliquen les per defecte.
+        override_absent: Sense fixar
+        override_present: Fixada
+        overrides_heading: Les teves proporcions
+        prompt: Una proporció d'ús substitueix el percentatge professional per defecte
+          d'una categoria al teu perfil.
+        ratio: Proporció (fracció de 0 a 1)
+        read: Llegeix proporcions
+        review_set: Revisa la proporció
+        review_unset: Revisa l'eliminació
+        set_done: '%{category} ara fa servir la proporció %{ratio} (abans: %{prior}).'
+        set_heading: Fixa o treu una proporció
+        stage_set: Fixa la proporció de %{category} en %{ratio} (exercici %{year}).
+        stage_unset: Treu la teva proporció de %{category}; torna a aplicar-se la
+          per defecte.
+        title: Proporcions d'ús
+        unset_done: S'ha tret la teva proporció de %{category} (era %{prior}).
+        unset_nothing: '%{category} no tenia cap proporció teva per treure.'
+        validate: Valida
+        validation_clean: Totes les proporcions desades han superat la validació.
+        validation_counts: '%{eligible} categories admeses · %{overrides} proporcions
+          fixades.'
+        validation_finding: '%{category}: %{kind} · %{detail}'
+        validation_missing: 'Sense proporció fixada per a: %{categories}'
+        validation_no_profile: Encara no hi ha cap perfil de proporcions d'ús desat.
+        year: Exercici (AAAA)
+        year_invalid: L'exercici té quatre xifres, com ara 2026.
+      review:
+        ask: Demana un suggeriment
+        asking: Demanant un suggeriment…
+        business_pct: Percentatge professional si s'aplica com a Mixta (fracció decimal,
+          opcional)
+        classified: 'Suggeriment aplicat: ara l''apunt és %{classification}.'
+        decide: Aplicar escriu aquest suggeriment; Rebutjar deixa l'apunt tal com
+          és.
+        detached: La revisió continua en curs sense aquesta finestra; aquí encara
+          no se'n coneix el resultat.
+        evidence_no: No llegeixis el document adjunt
+        evidence_yes: Llegeix també el document adjunt
+        mode:
+          auto_split: Una divisió, si el document mostra diversos conceptes
+          classification: Una classificació
+          saturated: Una classificació amb els seus valors d'IVA
+        options_heading: Què suggerir
+        previewed: El suggeriment només s'ha mostrat; no s'ha escrit res.
+        prompt: 'Demana un suggeriment per a l''apunt seleccionat. És una proposta:
+          no s''escriu res tret que l''apliquis a la finestra que s''obre.'
+        reason: La teva nota per al registre (opcional)
+        rejected: Suggeriment rebutjat; l'apunt no ha canviat.
+        split: 'Divisió suggerida aplicada: %{count} apunts nous.'
+        suggested_business_pct: 'Percentatge professional: %{value}'
+        suggested_category: 'Categoria: %{value}'
+        suggested_child: '%{index}. %{amount} · %{description} · categoria %{category}'
+        suggested_classification: 'Classificació: %{value}'
+        suggested_confidence: 'Confiança: %{value}'
+        suggested_iva_amount: 'Quota d''IVA: %{value}'
+        suggested_iva_category: 'Categoria d''IVA: %{value}'
+        suggested_iva_rate: 'Tipus d''IVA: %{value}'
+        suggested_note: 'Nota: %{value}'
+        suggested_parent_amount: 'Import a dividir: %{value}'
+        suggested_reason: 'Motiu: %{value}'
+        suggested_taxable_base: 'Base imposable: %{value}'
+        suggestion_heading: Suggeriment (una proposta; no s'escriu res tret que l'apliquis)
+        title: Revisa una classificació suggerida
+        waiting: 'Decideix sobre el suggeriment a la finestra: aplica''l o rebutja''l.'
+      reviewed: Revisa el canvi de dalt i després confirma'l o cancel·la'l.
+      rules:
+        add_heading: Afegeix una regla
+        add_refused: 'La regla no s''ha afegit: %{messages}'
+        added: Regla afegida per a “%{pattern}”.
+        applied: 'Regles aplicades: %{applied} apunts classificats · %{skipped} ja
+          classificats · %{unmatched} sense coincidència.'
+        apply_heading: Aplica les regles
+        apply_refused: 'Les regles no s''han aplicat: %{messages}'
+        category: Categoria de despesa (opcional)
+        column:
+          category: Categoria
+          classification: Classificació
+          pattern: Patró
+          priority: Prioritat
+        empty: Encara no hi ha regles.
+        list_heading: Regles
+        nothing_matches: Cap apunt no canviaria; no hi ha res a aplicar.
+        pattern: Text que ha de contenir la descripció
+        preview: Previsualitza coincidències
+        previewed: 'Simulació: canviarien %{count} apunts. Apareixen a sota.'
+        priority: Prioritat (1 s'aplica primer; per defecte 100)
+        priority_invalid: La prioritat ha de ser un nombre enter a partir d'1.
+        prompt: Una regla classifica cada apunt la descripció del qual conté el seu
+          patró. Previsualitza una execució abans d'aplicar-la.
+        review_add: Revisa la regla nova
+        scope_reaffirm: També els apunts classificats a mà (en substitueix la classificació)
+        scope_unclassified: Només els apunts encara sense classificar
+        stage_add: 'Afegeix regla: la descripció conté “%{pattern}” → %{classification}
+          · categoria %{category} · prioritat %{priority}'
+        stage_apply: Aplica les regles als %{count} apunts previsualitzats encara
+          sense classificar.
+        stage_apply_reaffirm: Aplica les regles als %{count} apunts previsualitzats,
+          substituint les classificacions fetes a mà.
+        title: Regles de classificació
+      saved: Desat.
+      saving: Desant…
+      split:
+        add_child: Afegeix una part
+        amount: Import de la part (positiu, mateixa moneda)
+        amount_invalid: L'import d'una part és un nombre positiu amb dos decimals
+          com a màxim, com ara 125.50.
+        ask: Demana una divisió suggerida
+        children_heading: Parts
+        column:
+          amount: Import
+          child: Part
+        description: Descripció de la part
+        description_required: Descriu primer la part.
+        done: Dividit en %{count} apunts nous; l'original conserva la seva classificació
+          (%{parent}).
+        parent_unreadable: No es pot llegir l'import de l'apunt, de manera que no
+          es pot dividir aquí.
+        prompt: Divideix l'apunt seleccionat en dues o més parts que sumin el seu
+          import, o demana una divisió suggerida.
+        reason: Motiu (opcional)
+        remove_child: Treu l'última part
+        review: Revisa la divisió
+        stage: Divideix l'apunt de %{parent} %{currency} en les %{count} parts de
+          dalt.
+        suggestion_heading: Divisió suggerida
+        title: Divideix l'apunt
+        too_few: Una divisió necessita almenys dues parts.
+        too_many: Una divisió té com a màxim %{limit} parts.
+        total: Parts %{children} de %{parent} %{currency} · pendent d'assignar %{remaining}
+        unbalanced: Les parts sumen %{children}, no els %{parent} %{currency} de l'apunt.
+      tool:
+        allocate: Assigna l'ús professional
+        bulk: Classificació massiva
+        counterparties: Contraparts
+        diagnostics: Diagnòstic del classificador
+        iva: Deriva l'IVA
+        participation: Participació
+        ratios: Proporcions d'ús
+        review: Revisa classificacions suggerides
+        rules: Regles
+        split: Divideix l'apunt
     classification:
       boundary: La classificació d'entrada, el sector de prorrata i el justificant
         de compra es recullen mitjançant els seus fluxos específics de captura o d'adjunció.
@@ -2758,6 +3073,283 @@ tui:
       empty: Encara no hi ha cap apunt.
       title: Apunts
     entry_label: '{date} · {description}'
+    entry_tools:
+      add:
+        another: Afegeix un altre apunt
+        confirming: Revisa les dades de dalt i confirma per desar l'apunt.
+        created: 'Afegit: {entry}. Estat de revisió: {status}.'
+        edit_again: Torna a editar
+        field:
+          amount: Import, sense signe
+          art_104_tres_exclusion: Exclusió de l'art. 104.Tres
+          booked_date: Data d'operació (AAAA-MM-DD)
+          business_classification: Classificació
+          business_pct: Part afecta a l'activitat (0 a 1)
+          category_id: Categoria de despesa
+          counterparty: Contrapart
+          counterparty_country: País de la contrapart (dues lletres)
+          counterparty_identification_state: Estat d'identificació IVA de la contrapart
+          currency: Moneda (EUR si es deixa en blanc)
+          deduction_fact_kind: Fet de deducció d'IVA
+          description: Concepte
+          direction: Sentit
+          input_classification: Classificació d'entrada per a prorrata
+          investment_asset_id: Identificador del bé d'inversió
+          irpf_category: Categoria d'IRPF
+          iva_amount: Quota d'IVA
+          iva_category: Categoria d'IVA
+          iva_rate: Tipus d'IVA (per exemple 0.21)
+          notes: Notes
+          own_account_id: Compte propi (acc-01)
+          prorrata_reference: Referència de prorrata
+          prorrata_sector: Sector de prorrata
+          purchase_invoice_evidence_id: Identificador del justificant de compra
+          recargo_amount: Import del recàrrec d'equivalència
+          source_jurisdiction: Jurisdicció d'origen (codi de país)
+          taxable_base: Base imposable
+          usage_ratio_id: Identificador del percentatge d'ús
+          value_date: Data valor (AAAA-MM-DD)
+        input_classification_inert: La classificació d'entrada no afecta la prorrata
+          d'aquest apunt.
+        open_in_browse: Obre'l a Explora els apunts
+        optional: Dades fiscals (opcional)
+        prompt: Introdueix les quatre dades que necessita tot apunt. Obre les dades
+          fiscals només si les tens.
+        refused: 'El llibre ha rebutjat aquest apunt:'
+        review: Revisa l'apunt
+        sector_unmatched: El sector de prorrata no coincideix amb cap sector del teu
+          registre.
+        source_jurisdiction_required_beckham: En el règim especial de treballadors
+          desplaçats, indica la jurisdicció d'origen d'aquest apunt.
+        source_jurisdiction_required_irnr: Com a contribuent no resident, indica la
+          jurisdicció d'origen d'aquest apunt.
+        title: Afegeix un apunt
+      blocker: El Modelo {modelo} {year} {period} ({state}) cita aquest apunt.
+      browse:
+        account: Compte propi (acc-01)
+        action:
+          archive: Arxiva
+          exclude: Exclou de la declaració
+          merge: Fusiona els marcats ({count})
+          remove: Elimina
+          restore: Restaura
+          stash: Aparta
+        any_classification: Qualsevol classificació
+        any_direction: Qualsevol sentit
+        any_issue: Qualsevol incidència d'importació
+        any_status: Qualsevol estat de revisió
+        apply: Aplica els filtres
+        by_group: Agrupa les files
+        cancelled: No s'ha canviat res.
+        choose: Tria un apunt amb Retorn.
+        consequence:
+          archive: Vols arxivar {entry}? Surt de les llistes i dels càlculs per defecte,
+            i es pot restaurar.
+          exclude: Vols excloure {entry} de la declaració? Es queda al llibre però
+            surt de totes les declaracions.
+          restore: Vols restaurar {entry} com a actiu? Torna a les llistes i als càlculs.
+          stash: Vols apartar {entry}? Surt dels càlculs fins que el restauris.
+        done:
+          archive: 'Arxivat: {entry}'
+          exclude: 'Exclòs de la declaració: {entry}'
+          merge: Fusionat a l'apunt {entry}
+          remove: 'Eliminat: {entry}'
+          restore: 'Restaurat: {entry}'
+          stash: 'Apartat: {entry}'
+        empty: Cap apunt no coincideix amb aquests filtres.
+        filters_invalid: No es poden llegir aquests filtres. Revisa l'identificador
+          del compte propi (acc-01) i el període.
+        group: Grup
+        hide_rejected: Amaga els suggeriments rebutjats
+        import: Lot d'importació
+        ledger_order: Ordre del llibre
+        mark: Marca per fusionar
+        marked: Marcat
+        merge_confirm: Fusiona
+        merge_consequence: Vols fusionar aquestes {count} parts d'una divisió en un
+          únic apunt?
+        merge_needs_two: Marca almenys dos apunts per fusionar.
+        merge_title: Fusiona els apunts
+        next: Pàgina següent
+        open: Obre l'apunt
+        previewing: Comprovant què faria eliminar-lo…
+        previous: Pàgina anterior
+        prompt: Filtra el llibre, tria un apunt amb Retorn i actua-hi. Es mostra una
+          pàgina cada vegada.
+        reading: Llegint la pàgina…
+        reason_line: 'Motiu: {reason}'
+        refused: 'El llibre ha rebutjat aquest canvi:'
+        remove_blocked: 'No es pot eliminar {entry}: el cita una declaració finalitzada.'
+        remove_cascade: 'Justificants eliminats amb ell: {evidence}. Adjunts eliminats
+          amb ell: {attachments}.'
+        remove_confirm: Elimina l'apunt
+        remove_consequence: Vols eliminar {entry} del llibre? Això esborra l'apunt.
+        remove_not_done: El llibre no ha eliminat l'apunt.
+        selected: 'Triat: {entry} ({state})'
+        text: Text de l'apunt
+        title: Explora els apunts
+        trace: Historial i traçabilitat
+        unmark: Desmarca
+        window: Apunts {first}–{last} de {total}
+        window_empty: No hi ha apunts en aquesta pàgina de {total}
+      cancel: Cancel·la
+      cancelled: Cancel·lat. No s'ha escrit res.
+      classification:
+        business: Activitat
+        failed_validation: No ha superat la validació
+        mixed: Mixt
+        not_yet_processed: Sense processar
+        personal: Personal
+        processed_unclassified: Processat sense classificar
+        reviewed_excluded: Revisat i exclòs
+        skipped_by_rule: Omès per una regla
+      column:
+        lifecycle: Estat
+        marked: Fusiona
+      confirm: Confirma i desa
+      direction:
+        incoming: Ingrés
+        internal_transfer: Traspàs propi
+        outgoing: Despesa
+      entry_label: '{date} · {amount} {currency} · {description}'
+      export:
+        again: Inicia una altra exportació
+        confirming: Revisa la destinació de dalt i confirma per escriure el fitxer.
+        digest: 'SHA-256: {digest}'
+        failed: L'exportació s'ha rebutjat o no s'ha pogut escriure.
+        format:
+          csv: CSV
+          jsonl: JSON Lines
+          xlsx: Llibre d'Excel
+        include_inactive: Inclou els apunts arxivats i apartats
+        partial: 'Parcial: pot ser que s''hagi escrit el fitxer {path}, però el llibre
+          no ha registrat l''exportació.'
+        path: Camí complet del fitxer que s'escriurà
+        path_invalid: Escriu un camí complet, des de la unitat o la carpeta arrel.
+        prompt: Tria el format i el període, escriu on es desa el fitxer i revisa.
+        review: Revisa l'exportació
+        staged:
+          format: 'Format: {format}'
+          inactive_included: S'inclouen els apunts arxivats i apartats.
+          inactive_left_out: Es deixen fora els apunts arxivats i apartats.
+          path: 'Fitxer: {path}'
+          period: 'Període: {period}'
+        title: Exporta els apunts
+        unknown: 'Resultat desconegut: pot ser que s''hagi escrit o no el fitxer {path}.'
+        writing: Escrivint l'exportació…
+        written: 'Escrit: {path}'
+        written_facts: '{rows} apunts, {bytes} bytes, {format}'
+      field:
+        reason: Motiu (opcional)
+        year: Exercici (AAAA)
+      health:
+        check_heading: Comprovació de {period}
+        counts: 'Apunts: {total} (actius {active}, arxivats {archived}, apartats {stashed},
+          dividits {split})'
+        link:
+          invoice_only: La factura {invoice} cita l'apunt {entry}, que no la cita
+            a ella.
+          transaction_only: L'apunt {entry} cita la factura {invoice}, que no el cita
+            a ell.
+        not_measured: 'Preparació no mesurada: tria un període per mesurar-la.'
+        not_ready: 'No està a punt: {findings} troballes en {checked} apunts comprovats.'
+        preflight_heading: Comprovació prèvia de {period}
+        preflight_needs_period: La comprovació prèvia necessita un període.
+        prompt: Tria un període per mesurar si està a punt, o deixa'l en blanc per
+          a tot el llibre. No es canvia res.
+        read: Llegeix l'estat i les comprovacions
+        ready: 'A punt: cap troballa en {checked} apunts comprovats.'
+        review_counts: 'Revisió: pendents {pending}, revisats {reviewed}, omesos {skipped}'
+        stale_filing: 'El Modelo {modelo} {year} {period} es va presentar amb apunts
+          que han canviat: {changed} canviats, {removed} eliminats'
+        status_heading: Estat de {period}
+        title: Estat i comprovacions del llibre
+        totals: Ingressos de l'activitat {income}, despeses {expense}, net {net}
+        unconverted: 'Apunts en moneda estrangera fora dels totals: {count}'
+      issue:
+        duplicate: Possible duplicat
+        gap: Buit a l'extracte
+        original_file: Incidència del fitxer original
+        parser: Incidència de lectura
+      lifecycle:
+        active: Actiu
+        archived: Arxivat
+        split: Dividit
+        stashed: Apartat
+      order:
+        asc: Ascendent
+        desc: Descendent
+      period:
+        all: tots els períodes
+        any: Qualsevol període
+        invalid: Aquest exercici i període no corresponen a cap període de declaració.
+        named: '{year} {code}'
+        pair: Tria un exercici i un període, o cap dels dos.
+        required: Tria un exercici i un període.
+      reset:
+        again: Torna a començar
+        blocked: 'No es pot restablir el llibre: hi ha declaracions finalitzades que
+          citen els seus apunts.'
+        cancelled: Restabliment cancel·lat. No s'ha escrit res.
+        cannot_reset: Aquest llibre no es pot restablir mentre hi hagi declaracions
+          que el citin.
+        cascade: 'Justificants eliminats amb ells: {evidence}. Adjunts eliminats amb
+          ells: {attachments}.'
+        confirm_message: Això elimina els {count} apunts del llibre. No es poden recuperar
+          des d'aquesta pantalla.
+        confirm_title: Vols restablir tot el llibre?
+        done: 'S''ha restablert el llibre. Apunts eliminats: {count}'
+        keep: Conserva el llibre
+        not_done: No s'ha restablert el llibre.
+        preview: Previsualitza el restabliment
+        previewed: Previsualització a punt. Restableix només si és el que vols.
+        previewing: Comprovant què eliminaria el restabliment…
+        prompt: 'Restablir elimina tots els apunts. Primer revisa la previsualització:
+          no s''escriu res fins que confirmis dues vegades.'
+        reason: Motiu del restabliment
+        reason_required: Escriu un motiu abans de veure la previsualització.
+        resetting: Restablint el llibre…
+        run: Restableix el llibre
+        title: Restableix el llibre
+        would_remove: 'Apunts que eliminaria el restabliment: {count}'
+      sort:
+        amount: Ordena per import
+        classification: Ordena per classificació
+        classified_at: Ordena per data de classificació
+        created_at: Ordena per data de registre
+        date: Ordena per data
+        description: Ordena per concepte
+        lifecycle_state: Ordena per estat
+        modified_at: Ordena per darrer canvi
+        value_date: Ordena per data valor
+      stale_drafts: 'Esborranys de declaració que caldria recalcular: {count}'
+      tool:
+        add: Afegeix un apunt
+        browse: Explora els apunts
+        export: Exporta els apunts
+        health: Estat i comprovacions del llibre
+        reset: Restableix el llibre
+      trace:
+        changes: 'Correccions: {edits}. Justificants vinculats: {evidence}.'
+        column:
+          actor: Per
+          details: Detalls
+          event: Esdeveniment
+          when: Quan
+        full: Mostra el registre complet d'esdeveniments
+        full_heading: 'Registre complet: {count} esdeveniments'
+        imported: Importat per {provider} des de {file}, fila {row}
+        lifecycle_change: '{when}: {previous} → {state} (motiu: {reason})'
+        manual: Introduït a mà
+        no_participation: Cap declaració finalitzada no fa servir aquest apunt.
+        participation: Utilitzat pel Modelo {modelo} {year} {period} ({state})
+        read: Torna a llegir
+        siblings: Inclou les altres parts d'una divisió
+        state: 'Estat: {state}'
+        title: Historial i traçabilitat de l'apunt
+        typed_heading: 'Historial: {count} esdeveniments'
+        withheld: 'Esdeveniments amb un motiu del model o un camí d''exportació reservats:
+          {count}'
     evidence:
       add: Afegeix el document
       add_failed: El document no s'ha afegit.
@@ -2856,6 +3448,219 @@ tui:
       safe_metadata: El document d’origen continua protegit i xifrat; els camps recuperats
         es mostren per revisar-los.
       title: Revisió de justificants
+    evidence_files:
+      attachments:
+        attach_heading: Adjunta justificants
+        attach_required: Indica almenys un adjunt o un registre de justificant per
+          adjuntar.
+        attach_title: Adjunta justificants a l'apunt
+        choose_entry: No hi ha cap apunt seleccionat. Torna a Apunts, tria un apunt
+          amb Retorn i obre de nou Adjunts.
+        detach_heading: Desvincula justificants
+        detach_required: Indica almenys un adjunt per desvincular.
+        detach_title: Desvincula justificants de l'apunt
+        entry: 'Apunt: {entry}'
+        evidence: Identificador del registre de justificant (opcional)
+        ids: Identificadors d'adjunt, separats per espais
+        linked_hint: Adjunts d'aquest apunt ara. Tria'n un per afegir-lo als identificadors
+          que desvincularàs.
+        linked_none: Aquest apunt no té adjunts ara.
+        linked_unknown: Els adjunts actuals de l'apunt apareixen aquí després d'adjuntar
+          o desvincular. També pots escriure els identificadors a sota.
+        outcome:
+          attached: Adjuntat. L'apunt té ara {count} adjunts.
+          attachment: Adjunt {attachment}
+          detached: Desvinculat. L'apunt té ara {count} adjunts.
+          revision: Modelo {modelo} {year} {period} ({state})
+          stale: '{count} revisions finalitzades de Modelo es van calcular abans d''aquest
+            canvi i no l''inclouen:'
+          unchanged: 'No ha canviat res: l''apunt ja tenia exactament aquests adjunts.'
+        pending_empty: Cap adjunt desat no està esperant a vincular-se.
+        pending_hint: Tria un adjunt pendent per afegir-lo als identificadors que
+          adjuntaràs, o escriu els identificadors.
+        review_attach: Revisa l'adjunció
+        review_detach: Revisa la desvinculació
+        stage:
+          attach: 'Adjunta a {entry}:'
+          detach: 'Desvincula de {entry}:'
+          evidence: Registre de justificant {record}
+          kept: Els fitxers desats es conserven; només s'eliminen els vincles amb
+            aquest apunt.
+        title: Adjunts
+      batch:
+        direction: Direcció de tots els documents
+        directory: Carpeta
+        directory_placeholder: Camí complet de la carpeta amb els documents
+        directory_required: Escriu la carpeta que conté els documents.
+        outcome:
+          counts: 'Desats: {ingested}. Ja desats: {no_op}. Pendents de revisió: {pending}.
+            En pausa: {paused}. Rebutjats: {refused}. Il·legibles: {unreadable}.'
+          partial: 'Aquest lot ha estat parcial: alguns documents s''han desat i d''altres
+            no. Torna a llançar-lo després de corregir els rebutjats; els documents
+            desats no es desen dues vegades.'
+          paused: La lectura s'ha pausat perquè no s'ha pogut admetre el lector de
+            models. Torna a llançar el lot més tard per acabar els documents en pausa.
+          writes: 'Registres escrits: {count}.'
+        prompt: Afegeix com a justificants de factura tots els documents que hi ha
+          directament en una carpeta. Els documents es llegeixen en aquest equip.
+        review: Revisa el lot
+        stage: 'Llegeix tots els documents que hi ha directament a {directory}. Direcció:
+          {direction}.'
+        stage_local: Els documents es llegeixen en aquest equip. Un document ja desat
+          amb aquesta direcció es deixa com està.
+        status:
+          ingested: Desat
+          no_op: Ja desat
+          paused: En pausa
+          pending_review: Pendent de revisió
+          refused: Rebutjat
+          unreadable: Il·legible
+        title: Afegeix documents en bloc
+      column:
+        attachment: Adjunt
+        captured: Capturat
+        date: Data
+        document: Document
+        drafted: Esborrany creat
+        file: Fitxer
+        invoice: Factura
+        model: Model de lectura
+        outcome: Resultat
+        provider: Proveïdor del lector
+        reason: Motiu
+        record: Registre
+        recorded: Registrat
+        size: Bytes
+        stamp: Origen
+        supplier: Proveïdor
+        surface: Finalitat
+        transport: Transport
+        type: Tipus
+      consent:
+        artefacts: Esborranys creats per un lector extern
+        dispatches: Documents enviats fora d'aquest equip
+        no_artefacts: Cap lector extern no ha creat esborranys de documents.
+        no_dispatches: No s'ha enviat cap document fora d'aquest equip per llegir-lo.
+        prompt: Quins documents s'han enviat fora d'aquest equip per llegir-los, quan
+          i a quin lector. Aquest historial és només de lectura.
+        title: Historial de consentiments
+        unrecallable: Un document ja enviat no es pot recuperar del lector al qual
+          es va enviar.
+      failed: La sol·licitud s'ha rebutjat o no s'ha pogut completar.
+      field:
+        invoice_date: Data de la factura (AAAA-MM-DD)
+        invoice_number: Número de factura
+        iva_amount: Quota d'IVA
+        iva_rate: Tipus d'IVA (%)
+        notes: Notes
+        supplier: Proveïdor
+        taxable_base: Base imposable
+      loading: Llegint…
+      page:
+        next: Pàgina següent
+        position: Files {first} a {last} de {total}
+        previous: Pàgina anterior
+      queue:
+        detail:
+          file: Tipus {type}, {size} bytes, procedent de {source}.
+          identity: Adjunt {attachment}, empremta del contingut {digest}.
+          state: 'Capturat el {captured}. Factures vinculades: {invoices}. {state}'
+        empty: Cap adjunt desat no està esperant una factura.
+        linked: Vinculat a una factura.
+        pending: Esperant una factura.
+        prompt: Adjunts desats que encara no estan vinculats a cap factura. Tria'n
+          un per veure'n els detalls.
+        title: Cua d'adjunts
+      records:
+        all: Mostra-ho tot
+        choose_record: Tria primer un registre de la llista.
+        detail:
+          amounts: Base imposable {base}, tipus d'IVA {rate}, quota d'IVA {iva}.
+          dates: Afegit el {added}, darrer canvi el {updated}.
+          identity: 'Registre {record}: {file} ({kind}).'
+          invoice: Proveïdor {supplier}, factura {number}, amb data {date}.
+          notes: 'Notes: {notes}'
+        edit_heading: Corregeix el registre seleccionat
+        edit_hint: Canvia un valor i revisa'l. Un camp buit conserva el valor actual.
+          Els imports fan servir decimals senzills com 100 o 21.5.
+        empty: Encara no hi ha registres de justificants.
+        filter: Cerca un registre pel seu identificador
+        gone: Aquest registre ja no existeix. Prem Mostra-ho tot per tornar a llegir
+          la llista.
+        no_change: Canvia algun valor abans de revisar.
+        none_found: Cap registre no té aquest identificador.
+        open_review: Obre la revisió del seu esborrany
+        outcome:
+          removed: Registre {record} eliminat.
+          unchanged: 'No ha canviat res: el registre {record} ja tenia aquests valors.'
+          updated: Registre {record} desat.
+        prompt: Els justificants de factura del perfil. Tria un registre per veure'l,
+          corregir-lo o eliminar-lo.
+        remove_title: Elimina un registre de justificant
+        review_remove: Revisa l'eliminació
+        review_update: Revisa la correcció
+        search: Cerca
+        stage:
+          change: '{field}: {current} -> {new}'
+          remove: Elimina el registre {record} ({file}, proveïdor {supplier}, factura
+            {number}).
+          update: 'Corregeix el registre {record} ({file}):'
+        title: Registres de justificants
+        update_title: Corregeix un registre de justificant
+      review:
+        amounts: Base imposable {base}, tipus d'IVA {rate}, quota d'IVA {iva}, total
+          {total}.
+        blocker: '- {reason} (camp: {field})'
+        blockers: 'Preguntes que bloquegen la confirmació: {count}'
+        findings: 'Troballes: {count}'
+        full: Revisió completa
+        kind: 'Direcció suggerida: {kind}'
+        prompt: Llegeix l'esborrany d'un document llegit. El resum omet el text del
+          document; la revisió completa el mostra. Confirma un esborrany des de l'àrea
+          de justificants.
+        read_by: Esborrany {reference}, llegit per {extractor} el {date}.
+        reason:
+          ambiguous_identity: La identitat de la contrapart no està clara
+          closure_discrepancy: Les xifres del document no quadren
+          contradicted_invoice_class: La seva classe de factura i la referència rectificativa
+            no coincideixen
+          contradicted_regime: El règim indicat contradiu l'impost repercutit
+          undetermined_establishment: No consta on està establerta una de les parts
+          unmodelled_invoice_class: La classe de factura que declara no té representació
+            aquí
+          unresolved_direction: No està clar quina part va emetre el document
+        reference: Referència del justificant
+        reference_required: Escriu primer la referència del justificant.
+        summary: Resum
+        text_withheld: El text del document s'omet en aquest resum. Obre la revisió
+          completa per llegir-lo.
+        title: Revisió de justificants llegits
+      source:
+        gmail: Gmail
+        google_drive: Google Drive
+        inline: una part incrustada d'un missatge
+        local_file: un fitxer local
+        url: una adreça web
+      tool:
+        attachments: Adjunts
+        batch: Afegeix documents en bloc
+        consent: Historial de consentiments
+        queue: Cua d'adjunts
+        records: Registres de justificants
+        review: Revisió de justificants llegits
+      write:
+        cancel: Cancel·la
+        confirm: Confirma i envia
+        confirm_destructive: Sí, fes-ho
+        confirming: Revisa aquest canvi i confirma'l. No s'envia res abans que confirmis.
+        done: Torna a l'eina
+        failed: El canvi s'ha rebutjat o no s'ha pogut completar.
+        keep: No, conserva-ho
+        partial: 'Desat en part: només s''ha escrit una part del canvi.'
+        refused: El canvi s'ha rebutjat abans d'escriure res.
+        review_heading: Què canviarà
+        saved: Canvi desat.
+        saving: Enviant el canvi…
     flow:
       in_flight_refusal: Espera que acabi l'operació actual abans de sortir d'aquesta
         pantalla.
@@ -3026,6 +3831,72 @@ tui:
         rectifies: Rectifica la factura {number}
         retention: 'Retenció d''IRPF: tipus {rate} · import {amount}'
       title: Afegeix una factura
+    invoices:
+      import:
+        again: Importa un altre fitxer
+        cancelled: Importació cancel·lada. No s'ha importat res.
+        column:
+          field: Camp
+          reason: Motiu
+          row: Fila
+        confirm: Importa aquest fitxer
+        confirming: Comprova el fitxer i després importa'l.
+        country: País de la contrapart quan el llibre no l'indica (dues lletres, opcional)
+        counts: 'Files: {rows} · Afegides: {created} · Ja existien: {skipped} · Rebutjades:
+          {refused}'
+        failed: La importació s'ha rebutjat o no s'ha pogut acabar. Revisa el catàleg
+          de factures abans de tornar-ho a provar.
+        importing: S'estan important les factures…
+        nothing_created: No s'ha afegit cap factura.
+        partial: 'Importació aplicada en part: algunes files s''han rebutjat i no
+          s''han importat.'
+        path: Camí del fitxer (absolut)
+        path_required: Escriu el camí del fitxer que vols importar.
+        prompt: Importa un llibre de factures (full de càlcul) al catàleg de factures.
+          La revisió mostra el nom, la mida i l'empremta SHA-256 del fitxer; en importar
+          es llegeix exactament aquest fitxer i es rebutja si ha canviat.
+        reading: S'està llegint el fitxer…
+        review: Revisa el fitxer
+        succeeded: Importació acabada. No s'ha rebutjat cap fila.
+        summary:
+          digest: 'SHA-256: {digest}'
+          file: 'Fitxer: {name} ({size} bytes)'
+          kind: 'Tipus de factura: {kind} · País: {country}'
+          no_preview: 'Aquesta importació no té vista prèvia: les factures només es
+            comproven en escriure-les. Les files que fallin es mostraran després i
+            no s''importaran.'
+        title: Importa factures
+        tool: Importa factures
+        unmapped: 'Columnes no utilitzades: {columns}'
+      wizard:
+        again: Introdueix una altra factura
+        already_existed: Aquesta factura ja estava registrada; no s'ha afegit res.
+        cancelled: Cancel·lat. No s'ha registrat res.
+        confirm: Registra la factura
+        confirming: Comprova tots els valors i després registra la factura.
+        correct: Corregeix els camps
+        euro_value_pending: Encara no s'ha trobat cap tipus de canvi en euros per
+          a aquesta factura; el seu valor en euros està pendent.
+        failed: La factura s'ha rebutjat o no s'ha pogut registrar.
+        next: Pas següent
+        previous: Pas anterior
+        recorded: 'Factura {number} registrada: {total}.'
+        recording: S'està registrant la factura…
+        refused: S'han rebutjat alguns camps. No s'ha registrat res.
+        step: 'Pas {index} de {total}: {name}'
+        step_name:
+          amounts: Imports i impostos
+          counterparty: Contrapart
+          invoice: Factura
+          notes: Notes i revisió
+        summary_heading: 'La factura que es registrarà:'
+        title: Assistent de factures
+        tool: Assistent de factures
+    link:
+      refused:
+        cross_bucket_invoice: La factura pertany a un altre perfil, així que no es
+          pot vincular.
+        missing_invoice: La factura ja no és al catàleg, així que no es pot vincular.
     overview:
       affected_declarations: Declaracions afectades
       areas: Àrees de Registres
@@ -3144,22 +4015,68 @@ tui:
       title: 'Registres: conciliació local'
       'yes': Sí
     records:
+      cancel: Cancel·la
+      change: '{field}: {before} → {after}'
+      correct_heading: Corregeix aquest registre
+      direction:
+        incoming: Entrada de diners
+        internal_transfer: Traspàs entre comptes propis
+        outgoing: Sortida de diners
       failed: El canvi s'ha rebutjat o no s'ha pogut desar.
+      field:
+        payment_status: Estat del pagament
       identity: ID del registre
+      invalid_decimal: '{field}: escriu un nombre com ara 21 o 15.5.'
       invoice_detail: Detall de la factura
       invoices: Factures registrades
+      kind_all: Totes les factures
+      kind_filter: Mostra
       lines: Línies
       links: Registres vinculats
       loading: Llegint el registre…
       no_change: Introdueix un valor diferent abans de revisar.
+      no_invoices: Encara no hi ha factures registrades.
       open_invoices: Veure factures
       open_transaction: Veure o editar l'apunt seleccionat
+      page: Pàgina {page} de {pages} · {count} factures
+      page_next: Pàgina següent
+      page_previous: Pàgina anterior
+      payment_status:
+        cancelled: Anul·lada
+        overdue: Vençuda
+        paid: Pagada
+        partially_paid: Pagada en part
+        pending: Pendent
+      remove: Elimina la factura
+      remove_cancelled: Eliminació cancel·lada. No s'ha canviat res.
+      remove_message: La factura {number} de {counterparty} per {total} s'eliminarà
+        del catàleg. No es pot desfer.
+      remove_title: Vols eliminar aquesta factura?
+      removed: Factura {number} eliminada.
+      removing: S'està eliminant la factura…
       reviewed: Revisa el valor i després desa'l.
       save: Desar el canvi
       saved: Canvi desat.
       saving: Desant el canvi…
       source: Fitxer d'origen
+      staged_heading: 'Es desaran aquests canvis:'
+      stale: Aquest registre ha canviat després que l'obrissis. Torna enrere i obre'l
+        de nou abans de canviar-lo.
+      totals: '{base} + {iva} = {total} {currency}'
       transaction_detail: Detall de l'apunt
+      transaction_field:
+        amount: Import (sense signe)
+        booked_date: Data d'apunt (AAAA-MM-DD)
+        counterparty: Contrapart (opcional)
+        currency: Moneda
+        description: Descripció
+        direction: Sentit
+        iva_amount: Quota d'IVA (opcional)
+        iva_rate: Tipus d'IVA (opcional)
+        notes: Notes
+        taxable_base: Base imposable (opcional)
+        value_date: Data valor (AAAA-MM-DD, opcional)
+      update_refused: 'El canvi s''ha rebutjat: {detail}'
     refusal:
       application_state: Aquesta àrea no està disponible en l'estat actual de Registres.
       destination_pending: Aquesta àrea encara no està disponible en aquesta versió.
@@ -3168,6 +4085,218 @@ tui:
         per a ell.
       submission_unavailable: Aquesta tasca no es pot fer des d'aquesta pantalla en
         aquesta sessió.
+    registers:
+      attached: aportat des del fitxer indicat
+      cancel: Cancel·la
+      capital_goods:
+        column:
+          cuota: Quota suportada
+          deduction: Deducció
+          description: Descripció
+          identifier: Identificador
+          kind: Tipus
+          year: Any
+        declared: Bé declarat; el registre en té ara %{count}.
+        detail: '%{identifier} · %{description} · %{year} · %{kind} · quota %{cuota}
+          · prorrata inicial %{prorrata} · deducció %{deduction} · assentament %{ledger}
+          · transmissió %{disposal}'
+        empty: Encara no hi ha bienes de inversión declarats.
+        field:
+          acquisition_ledger_id: Assentament d'adquisició
+          acquisition_year: Any d'adquisició
+          art108_elegible: Elegible segons l'article 108 LIVA
+          cuota_soportada: Quota d'IVA suportada
+          description: Descripció
+          disposal_regime: Règim de la transmissió (opcional)
+          disposal_year: Any de transmissió (opcional)
+          identifier: Identificador
+          kind: Tipus de bé
+          prorrata_inicial_pct: Percentatge de prorrata inicial
+          prorrata_sector_id: Sector de prorrata (opcional)
+        list: Béns declarats
+        missing:
+          regime: 'Falta: el règim de la transmissió.'
+          year: 'Falta: l''any de la transmissió.'
+        prompt: Cada bé declarat com a bienes de inversión per a la regularització
+          de l'IVA. Omple un bé nou, revisa'l i confirma'l. La deducció que veus és
+          la que calcula el registre.
+        refusal:
+          disposal_incomplete: 'El registre ha rebutjat la declaració: una transmissió
+            necessita l''any i el règim.'
+          duplicate_identifier: 'El registre ha rebutjat la declaració: ja hi ha un
+            bé declarat amb aquest identificador.'
+          validation: 'El registre ha rebutjat la declaració: no supera la validació
+            del registre.'
+        refusal_identifier: 'Identificador: %{identifier}'
+        title: Registre de bienes de inversión
+        tool: Bienes de inversión
+      confirm: Confirma
+      date_placeholder: AAAA-MM-DD
+      invalid_date: '%{field}: %{value} no és una data. Escriu-la com AAAA-MM-DD.'
+      invalid_decimal: '%{field}: %{value} no és un import. Escriu xifres amb punt
+        decimal, com a màxim dos decimals i sense separador de milers.'
+      invalid_number: '%{field}: %{value} no és un nombre enter.'
+      inventory:
+        action:
+          closing_authority: Registra una autoritat de tancament
+          create: Crea un inventari
+          movement_add: Afegeix un moviment
+          valuation_preview: Previsualitza la valoració
+        column:
+          actividad: Activitat
+          method: Mètode
+          movements: Moviments
+          opening: Inicial
+          year: Any
+        detail: '%{actividad} · %{year} · %{method} · existències inicials %{opening}
+          · %{movements} moviments'
+        done:
+          create: Inventari creat.
+          movement_add: Moviment afegit.
+        empty: Encara no hi ha cap inventari d'activitat.
+        field:
+          acquisition_cost: Fitxer del cost de compra (només compres)
+          action: Petició
+          actividad_id: Activitat
+          authority_record: Fitxer de l'autoritat de tancament
+          kind: Tipus de moviment
+          movement_date: Data del moviment
+          movement_id: Identificador del moviment
+          opening_stock: Existències inicials (opcional)
+          quantity: Quantitat
+          taxable_base: Base imposable (opcional)
+          unit_cost: Cost unitari (opcional)
+          valuation_method: Mètode de valoració
+          year: Any
+        kind:
+          cogs: Cost de les vendes
+          count: Recompte
+          opening: Obertura
+          purchase: Compra
+        list: Inventaris
+        method:
+          coste_medio: Cost mitjà
+          fifo: FIFO
+          pmp: Preu mitjà ponderat
+        prompt: Cada inventari d'activitat per any. Tria una petició, omple'n els
+          camps, revisa-la i confirma-la. Les valoracions i el cost de les vendes
+          són xifres del registre mateix. Els costos de compra i les autoritats de
+          tancament es llegeixen del fitxer JSON que indiquis.
+        refusal:
+          activity_conflict: 'El registre ha rebutjat la petició: ja existeix un inventari
+            per a aquesta activitat i any.'
+          activity_not_found: 'El registre ha rebutjat la petició: no existeix cap
+            inventari per a aquesta activitat i any.'
+          closing_authority_conflict: 'El registre ha rebutjat l''autoritat de tancament:
+            ja n''hi ha una altra registrada per a aquest any.'
+          closing_authority_invalid: 'El registre ha rebutjat l''autoritat de tancament:
+            no coincideix amb l''inventari que indica.'
+          duplicate_movement_id: 'El registre ha rebutjat el moviment: aquest identificador
+            de moviment ja existeix.'
+          invalid_valuation_method: 'El registre ha rebutjat la petició: no admet
+            aquest mètode de valoració.'
+          inventory_validation: 'El registre ha rebutjat la petició: no supera la
+            validació de l''inventari.'
+        result:
+          closing: 'Autoritat de tancament de %{actividad} %{year} registrada. Ha
+            canviat: %{changed}.'
+          fingerprint: 'Empremta del registre: %{fingerprint}'
+          ledger: '%{actividad} · %{year} · %{method} · existències inicials %{opening}
+            · %{movements} moviments'
+          valuation: 'Valoració de %{actividad} %{year} (%{method}): valor de tancament
+            %{closing}, cost de les vendes %{cogs}.'
+        source: 'Llegit de: %{path}'
+        source_invalid: 'El fitxer %{path} no és un registre vàlid: s''han trobat
+          %{count} problemes.'
+        source_unreadable: No s'ha pogut llegir el fitxer %{path}.
+        title: Inventaris d'activitat
+        tool: Inventari
+      next: Següent
+      'no': 'No'
+      page: Pàgina %{page} de %{pages} · %{total} registres
+      previous: Anterior
+      prorrata:
+        accepted_provenances: 'Procedències admeses: %{values}'
+        action:
+          declare_sector: Declara un sector diferenciat
+          elect_especial: Opta per la prorrata especial
+          elect_general: Opta per la prorrata general
+          revoke_especial: Revoca la prorrata especial
+          seed: Trasllada la prorrata definitiva de l'any anterior
+          seed_sector: Trasllada la prorrata definitiva anterior d'un sector
+          settle_sector: Liquida la prorrata definitiva d'un sector
+        column:
+          activities: Activitats
+          definitive: Definitiva %
+          ejercicio: Exercici
+          letra: Lletra
+          provenance: Procedència
+          provisional: Provisional %
+          regime: Règim
+          sector: Sector
+        done:
+          declare_sector: Sector diferenciat declarat.
+          elect_especial: Prorrata especial triada.
+          elect_general: Prorrata general triada.
+          revoke_especial: Prorrata especial revocada.
+          seed: Prorrata definitiva anterior traslladada.
+          seed_sector: Prorrata definitiva anterior del sector traslladada.
+          settle_sector: S'ha registrat la prorrata definitiva del sector.
+        empty: El registre de prorrata encara no té entrades.
+        entries: Exercicis
+        field:
+          action: Canvi
+          con_derecho_volume: Volum amb dret a deduir
+          ejercicio: Exercici
+          evidence_reference: Referència del justificant
+          letra: Lletra del sector
+          member_activity_codes: Codis d'activitat, separats per comes
+          percentage: Percentatge provisional
+          provenance: Procedència del percentatge
+          reference: Referència d'autorització
+          sector_id: Sector
+          sin_derecho_volume: Volum sense dret a deduir
+        prompt: La prorrata d'IVA de cada exercici tal com la desa el registre. Tria
+          un canvi, omple'n els camps, revisa'l i confirma'l. El registre mateix calcula
+          cada xifra definitiva.
+        refusal:
+          provenance_not_electable: 'El registre ha rebutjat l''opció: no pots triar
+            aquesta procedència.'
+          provenance_required: 'El registre ha rebutjat l''opció: indica la procedència
+            del percentatge provisional.'
+          reference_not_permitted: 'El registre ha rebutjat l''opció: aquesta procedència
+            no admet referència d''autorització.'
+          reference_required: 'El registre ha rebutjat l''opció: aquesta procedència
+            necessita una referència d''autorització.'
+          regulated_override_standing: 'El registre ha rebutjat el trasllat: ja consta
+            un percentatge provisional regulat per a aquest any.'
+          sector_prior_definitive_absent: 'El registre ha rebutjat el trasllat: el
+            sector no té prorrata definitiva anterior.'
+          sector_settlement_entry_absent: 'El registre ha rebutjat la liquidació:
+            el sector no té entrada per a aquest any.'
+          seed_existing_blocked: 'El registre ha rebutjat el trasllat: l''entrada
+            existent d''aquest any el bloqueja.'
+          seed_source_absent: 'El registre ha rebutjat el trasllat: no hi ha liquidació
+            de l''any anterior de la qual traslladar.'
+          seed_source_blocked: 'El registre ha rebutjat el trasllat: la font de l''any
+            anterior té avisos que bloquegen.'
+          validation: 'El registre de prorrata ha rebutjat el canvi: no supera la
+            validació del registre.'
+        result:
+          entry: '%{ejercicio} · %{sector} · %{regime} · provisional %{provisional}
+            · definitiva %{definitive}'
+          finding: 'Avís [%{code}]: %{message}'
+          prior: Traslladada des de l'exercici %{ejercicio}.
+          sector: Sector %{sector} · lletra %{letra} · activitats %{activities}
+          seed_source: Traslladada des de l'observació local del Modelo %{modelo}
+            de %{year} %{period}.
+        sectors: Sectors diferenciats
+        title: Registre de prorrata
+        tool: Registre de prorrata
+        whole_entity: tota l'activitat
+      required: '%{field} és obligatori.'
+      review: Revisa
+      'yes': Sí
     review:
       empty: Ara mateix no hi ha cap apunt per revisar.
       exclude_cancel: Mantén l'apunt

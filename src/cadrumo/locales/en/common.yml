@@ -2642,6 +2642,318 @@ tui:
       never_captured: Not read yet
       stale: Out of date
       unavailable: Unavailable
+    categorisation:
+      allocate:
+        business_pct: Business share (decimal fraction from 0 to 1, such as 0.6)
+        category: Spending category (optional)
+        done: 'Allocated: %{classification} · business share %{share} · category %{category}.'
+        heading: Business use
+        prompt: Record the share of the selected entry that is business use. The classification
+          follows from the share.
+        prorrata: Prorrata reference (optional)
+        review: Review allocation
+        stage: Allocate business share %{share} · category %{category} · usage ratio
+          %{ratio} · prorrata %{prorrata}.
+        title: Allocate business use
+        usage_ratio: Usage ratio ID (optional)
+      bulk:
+        business_pct: Business share (decimal fraction from 0 to 1; Mixed only)
+        category: Spending category (optional)
+        column:
+          amount: Amount
+          date: Date
+        done: Classified %{applied} entries · %{skipped} skipped · %{failed} refused.
+        empty: No entries match these filters.
+        failure: 'Row %{row} (%{entry}): %{reason}'
+        filter_heading: Which entries
+        nothing_changes: Every entry on this page already has that classification;
+          nothing would change.
+        period: Period (1T to 4T, 0A or 01 to 12; needs the year)
+        prompt: Read a page of entries with the filters below, choose a classification,
+          and review the rows that will change before you confirm.
+        read: Read entries
+        refused: 'Nothing was classified: %{messages}'
+        review: Review changes
+        share_mixed_only: A business share goes with Mixed, and Mixed needs one.
+        stage: Classify the %{count} entries listed below as %{classification} · category
+          %{category}.
+        status_any: Any review status
+        target_heading: Classify as
+        text: Text the description contains (optional)
+        title: Bulk classify
+        year: Filing year (YYYY, optional)
+      cancel: Cancel
+      cancelled: Change cancelled; nothing was written.
+      choose_entry: Choose an entry in Entries or Review first; this tool acts on
+        the selected entry.
+      classification:
+        business: Business
+        failed_validation: Failed validation
+        mixed: Mixed
+        not_yet_processed: Not processed yet
+        personal: Personal
+        processed_unclassified: Processed, not classified
+        reviewed_excluded: Reviewed and excluded
+        skipped_by_rule: Skipped by a rule
+      column:
+        classification: Classification
+        description: Description
+        entry: Entry
+      confirm: Confirm
+      counterparty:
+        asserted_by: Who confirms it (your name)
+        confirm_heading: Confirm establishment
+        confirmed: 'Confirmed %{identifier}: territorial scope %{scope} · member state
+          %{state}.'
+        conflict: '%{identifier} was not confirmed because it contradicts what is
+          recorded: %{detail}'
+        contradiction: 'Withheld: your confirmation says %{confirmed}, the document
+          shows %{evidenced}. %{detail}'
+        country: Country code (2 letters, optional)
+        evidenced: Scope a document shows, for the lookup (optional)
+        identification: EU member state of its VAT number (2 letters)
+        identifier: Tax identifier
+        identifier_required: Type the counterparty's tax identifier first.
+        note: Note (optional)
+        nothing_known: Nothing is known about %{identifier}.
+        nothing_to_withdraw: There was no confirmation of %{identifier} to withdraw.
+        prompt: Look up what is known about a counterparty's establishment, confirm
+          it yourself, or withdraw your confirmation.
+        review_confirm: Review confirmation
+        review_withdraw: Review withdrawal
+        scope: '%{identifier}: territorial scope %{scope} (source: %{source})'
+        stage_confirm: 'Confirm %{identifier}: territorial scope %{scope} · member
+          state %{state}.'
+        stage_withdraw: Withdraw your confirmation of %{identifier}.
+        state: 'Member state %{state} (source: %{source})'
+        territorial: Territorial scope (code)
+        title: Counterparties
+        unchanged: '%{identifier} already had this confirmation: territorial scope
+          %{scope} · member state %{state}.'
+        view: Look up
+        who_heading: Which counterparty
+        withdrawn: Your confirmation of %{identifier} was withdrawn.
+      destructive_accept: Yes, go ahead
+      destructive_title: Confirm this change
+      diagnostics:
+        column:
+          cache_hits: Cached
+          calls: Calls
+          classified: Classified
+          cost: Cost (USD)
+          high: High
+          low: Low
+          mean: Mean
+          medium: Medium
+          provider: Provider
+          tokens: Tokens in / out
+          unpriced: No price
+        confidence_heading: Confidence by provider
+        confidence_totals: 'Classified %{classified} · below %{threshold}: %{low}'
+        empty: No suggested classifications were recorded in this range.
+        prompt: Usage, cost and confidence of suggested classifications. Calls without
+          a price are counted, never priced at zero.
+        read: Read report
+        since: From (YYYY-MM-DD, optional)
+        threshold: Low-confidence threshold (0 to 1)
+        title: Classifier diagnostics
+        until: To (YYYY-MM-DD, optional)
+        usage_heading: Usage by provider
+        usage_totals: Calls %{calls} · cached %{cache_hits} · tokens %{input_tokens}
+          in / %{output_tokens} out · cost %{cost} USD · no price %{unpriced}
+      entry: 'Entry: %{entry}'
+      failed: Not done.
+      iva:
+        category: IVA category (code)
+        category_required: Type the IVA category first.
+        derived: 'Category %{category}: rate %{rate} · base %{base} · IVA %{amount}
+          · %{note}'
+        heading: IVA category
+        not_derivable: Category %{category} does not let the IVA be derived for this
+          entry; nothing was recorded. %{note}
+        prompt: Choose the IVA category of the selected entry. The rate, base and
+          amount it implies are derived and recorded in one step.
+        refused: 'The IVA was not derived: %{messages}'
+        review: Review derivation
+        stage: Derive and record the IVA of this entry from category %{category}.
+        title: Derive IVA
+      loading: Reading…
+      not_done: Nothing was changed.
+      page:
+        empty: No records.
+        next: Next page
+        none: There is no page in that direction.
+        previous: Previous page
+        window: '%{first} to %{last} of %{total}'
+      participation:
+        column:
+          modelo: Modelo
+          period: Period
+          receipt: Receipt
+          state: State
+        empty: This entry is not part of any finalised declaration.
+        heading: Declarations
+        prompt: The finalised declarations the selected entry took part in.
+        rebuild_heading: Rebuild the index
+        rebuilt: 'Index rebuilt: %{transactions} entries · %{participations} links
+          to declarations · %{revisions} revisions · %{removed} stale rows removed.'
+        review_rebuild: Review rebuild
+        stage_rebuild: Rebuild the participation index from every finalised declaration,
+          replacing the current index as a whole.
+        title: Participation
+      ratios:
+        category: Category
+        category_required: Type or choose a category first.
+        censo_mismatch: Your ratios for %{year} are not shown because they do not
+          match your census registration.
+        column:
+          category: Category
+          default: Default
+          kind: Kind
+          override: Your ratio
+          ratio: Ratio
+        eligible_heading: Eligible categories
+        no_overrides: You have set no ratios for %{year}; the defaults apply.
+        override_absent: Not set
+        override_present: Set
+        overrides_heading: Your ratios
+        prompt: A usage ratio replaces the default business share of one category
+          for your profile.
+        ratio: Ratio (decimal fraction from 0 to 1)
+        read: Read ratios
+        review_set: Review ratio
+        review_unset: Review removal
+        set_done: '%{category} now uses ratio %{ratio} (before: %{prior}).'
+        set_heading: Set or remove a ratio
+        stage_set: Set the ratio of %{category} to %{ratio} (filing year %{year}).
+        stage_unset: Remove your ratio for %{category}; the default applies again.
+        title: Usage ratios
+        unset_done: Your ratio for %{category} was removed (it was %{prior}).
+        unset_nothing: '%{category} had no ratio of yours to remove.'
+        validate: Validate
+        validation_clean: Every stored ratio passed validation.
+        validation_counts: '%{eligible} eligible categories · %{overrides} ratios
+          set.'
+        validation_finding: '%{category}: %{kind} · %{detail}'
+        validation_missing: 'No ratio set for: %{categories}'
+        validation_no_profile: No usage ratio profile is stored yet.
+        year: Filing year (YYYY)
+        year_invalid: The filing year is four digits, such as 2026.
+      review:
+        ask: Ask for a suggestion
+        asking: Asking for a suggestion…
+        business_pct: Business share if applied as Mixed (decimal fraction, optional)
+        classified: 'Suggestion applied: the entry is now %{classification}.'
+        decide: Apply writes this suggestion; Reject leaves the entry as it is.
+        detached: The review is still running without this window; its outcome is
+          not known here yet.
+        evidence_no: Do not read the attached document
+        evidence_yes: Also read the attached document
+        mode:
+          auto_split: A split, when the document shows several items
+          classification: A classification
+          saturated: A classification with its IVA values
+        options_heading: What to suggest
+        previewed: The suggestion was only shown; nothing was written.
+        prompt: 'Ask for a suggestion for the selected entry. It is a proposal: nothing
+          is written unless you apply it in the window that opens.'
+        reason: Your note for the record (optional)
+        rejected: Suggestion rejected; the entry is unchanged.
+        split: 'Suggested split applied: %{count} new entries.'
+        suggested_business_pct: 'Business share: %{value}'
+        suggested_category: 'Category: %{value}'
+        suggested_child: '%{index}. %{amount} · %{description} · category %{category}'
+        suggested_classification: 'Classification: %{value}'
+        suggested_confidence: 'Confidence: %{value}'
+        suggested_iva_amount: 'IVA amount: %{value}'
+        suggested_iva_category: 'IVA category: %{value}'
+        suggested_iva_rate: 'IVA rate: %{value}'
+        suggested_note: 'Note: %{value}'
+        suggested_parent_amount: 'Amount to split: %{value}'
+        suggested_reason: 'Why: %{value}'
+        suggested_taxable_base: 'Taxable base: %{value}'
+        suggestion_heading: Suggestion (a proposal; nothing is written unless you
+          apply it)
+        title: Review a suggested classification
+        waiting: 'Decide on the suggestion in the window: apply or reject it.'
+      reviewed: Check the change above, then confirm or cancel it.
+      rules:
+        add_heading: Add a rule
+        add_refused: 'The rule was not added: %{messages}'
+        added: Rule added for “%{pattern}”.
+        applied: 'Rules applied: %{applied} entries classified · %{skipped} already
+          classified · %{unmatched} without a match.'
+        apply_heading: Apply the rules
+        apply_refused: 'The rules were not applied: %{messages}'
+        category: Spending category (optional)
+        column:
+          category: Category
+          classification: Classification
+          pattern: Pattern
+          priority: Priority
+        empty: No rules yet.
+        list_heading: Rules
+        nothing_matches: No entry would change; there is nothing to apply.
+        pattern: Text the description must contain
+        preview: Preview matches
+        previewed: 'Dry run: %{count} entries would change. They are listed below.'
+        priority: Priority (1 runs first; default 100)
+        priority_invalid: The priority must be a whole number from 1 upwards.
+        prompt: A rule classifies every entry whose description contains its pattern.
+          Preview a run before applying it.
+        review_add: Review new rule
+        scope_reaffirm: Also entries classified by hand (replaces their classification)
+        scope_unclassified: Only entries not classified yet
+        stage_add: 'Add rule: description contains “%{pattern}” → %{classification}
+          · category %{category} · priority %{priority}'
+        stage_apply: Apply the rules to the %{count} previewed entries not classified
+          yet.
+        stage_apply_reaffirm: Apply the rules to the %{count} previewed entries, replacing
+          classifications made by hand.
+        title: Classification rules
+      saved: Saved.
+      saving: Saving…
+      split:
+        add_child: Add child
+        amount: Child amount (positive, same currency)
+        amount_invalid: A child amount is a positive number with at most two decimals,
+          such as 125.50.
+        ask: Ask for a suggested split
+        children_heading: Children
+        column:
+          amount: Amount
+          child: Child
+        description: Child description
+        description_required: Describe the child first.
+        done: Split into %{count} new entries; the original keeps its classification
+          (%{parent}).
+        parent_unreadable: The entry's amount cannot be read, so it cannot be split
+          here.
+        prompt: Split the selected entry into two or more children that add up to
+          its amount, or ask for a suggested split.
+        reason: Reason (optional)
+        remove_child: Remove last child
+        review: Review split
+        stage: Split the entry of %{parent} %{currency} into the %{count} children
+          above.
+        suggestion_heading: Suggested split
+        title: Split entry
+        too_few: A split needs at least two children.
+        too_many: A split has at most %{limit} children.
+        total: Children %{children} of %{parent} %{currency} · left to assign %{remaining}
+        unbalanced: The children add up to %{children}, not to the entry's %{parent}
+          %{currency}.
+      tool:
+        allocate: Allocate business use
+        bulk: Bulk classify
+        counterparties: Counterparties
+        diagnostics: Classifier diagnostics
+        iva: Derive IVA
+        participation: Participation
+        ratios: Usage ratios
+        review: Review suggested classifications
+        rules: Rules
+        split: Split entry
     classification:
       boundary: Input classification, the prorrata sector, and purchase documents
         are recorded through their dedicated capture or attachment flows.
@@ -2687,6 +2999,280 @@ tui:
       empty: No entries yet.
       title: Entries
     entry_label: '{date} · {description}'
+    entry_tools:
+      add:
+        another: Add another entry
+        confirming: Check the facts above, then confirm to save the entry.
+        created: 'Added: {entry}. Review status: {status}.'
+        edit_again: Edit again
+        field:
+          amount: Amount, without a sign
+          art_104_tres_exclusion: Art. 104.Tres exclusion
+          booked_date: Booked date (YYYY-MM-DD)
+          business_classification: Classification
+          business_pct: Business share (0 to 1)
+          category_id: Spending category
+          counterparty: Counterparty
+          counterparty_country: Counterparty country (two letters)
+          counterparty_identification_state: Counterparty IVA identification state
+          currency: Currency (EUR if blank)
+          deduction_fact_kind: IVA deduction fact
+          description: Description
+          direction: Direction
+          input_classification: Input classification for prorrata
+          investment_asset_id: Capital good id
+          irpf_category: IRPF category
+          iva_amount: IVA amount
+          iva_category: IVA category
+          iva_rate: IVA rate (for example 0.21)
+          notes: Notes
+          own_account_id: Own account (acc-01)
+          prorrata_reference: Prorrata reference
+          prorrata_sector: Prorrata sector
+          purchase_invoice_evidence_id: Purchase invoice evidence id
+          recargo_amount: Recargo de equivalencia amount
+          source_jurisdiction: Source jurisdiction (country code)
+          taxable_base: Taxable base
+          usage_ratio_id: Usage ratio id
+          value_date: Value date (YYYY-MM-DD)
+        input_classification_inert: The input classification has no effect on this
+          entry's prorrata.
+        open_in_browse: Open it in Browse entries
+        optional: Tax details (optional)
+        prompt: Enter the four facts every entry needs. Open the tax details only
+          if you have them.
+        refused: 'The ledger refused this entry:'
+        review: Review entry
+        sector_unmatched: The prorrata sector matches no sector in your register.
+        source_jurisdiction_required_beckham: Under the special regime for posted
+          workers, give the source jurisdiction of this entry.
+        source_jurisdiction_required_irnr: As a non-resident taxpayer, give the source
+          jurisdiction of this entry.
+        title: Add entry
+      blocker: Modelo {modelo} {year} {period} ({state}) cites this entry.
+      browse:
+        account: Own account (acc-01)
+        action:
+          archive: Archive
+          exclude: Exclude from filing
+          merge: Merge marked ({count})
+          remove: Remove
+          restore: Restore
+          stash: Set aside
+        any_classification: Any classification
+        any_direction: Any direction
+        any_issue: Any import issue
+        any_status: Any review status
+        apply: Apply filters
+        by_group: Group the rows
+        cancelled: Nothing was changed.
+        choose: Choose an entry with Enter.
+        consequence:
+          archive: Archive {entry}? It leaves default lists and calculations, and
+            can be restored.
+          exclude: Exclude {entry} from filing? It stays in the ledger but leaves
+            every declaration.
+          restore: Restore {entry} to active? It returns to lists and calculations.
+          stash: Set {entry} aside? It leaves calculations until you restore it.
+        done:
+          archive: 'Archived: {entry}'
+          exclude: 'Excluded from filing: {entry}'
+          merge: Merged into entry {entry}
+          remove: 'Removed: {entry}'
+          restore: 'Restored: {entry}'
+          stash: 'Set aside: {entry}'
+        empty: No entries match these filters.
+        filters_invalid: These filters cannot be read. Check the own account id (acc-01)
+          and the period.
+        group: Group
+        hide_rejected: Hide rejected suggestions
+        import: Import batch
+        ledger_order: Ledger order
+        mark: Mark for merge
+        marked: Marked
+        merge_confirm: Merge
+        merge_consequence: Merge these {count} parts of one split back into a single
+          entry?
+        merge_needs_two: Mark at least two entries to merge.
+        merge_title: Merge entries
+        next: Next page
+        open: Open entry
+        previewing: Checking what removing it would do…
+        previous: Previous page
+        prompt: Filter the ledger, choose an entry with Enter, then act on it. One
+          page is shown at a time.
+        reading: Reading the page…
+        reason_line: 'Reason: {reason}'
+        refused: 'The ledger refused this change:'
+        remove_blocked: '{entry} cannot be removed: a finalized declaration cites
+          it.'
+        remove_cascade: 'Evidence removed with it: {evidence}. Attachments removed
+          with it: {attachments}.'
+        remove_confirm: Remove entry
+        remove_consequence: Remove {entry} from the ledger? This deletes the entry.
+        remove_not_done: The ledger did not remove the entry.
+        selected: 'Chosen: {entry} ({state})'
+        text: Text in the entry
+        title: Browse entries
+        trace: History and lineage
+        unmark: Unmark
+        window: Entries {first}–{last} of {total}
+        window_empty: No entries on this page of {total}
+      cancel: Cancel
+      cancelled: Cancelled. Nothing was written.
+      classification:
+        business: Business
+        failed_validation: Failed validation
+        mixed: Mixed
+        not_yet_processed: Not yet processed
+        personal: Personal
+        processed_unclassified: Processed, not classified
+        reviewed_excluded: Reviewed and excluded
+        skipped_by_rule: Skipped by a rule
+      column:
+        lifecycle: State
+        marked: Merge
+      confirm: Confirm and save
+      direction:
+        incoming: Incoming
+        internal_transfer: Own transfer
+        outgoing: Outgoing
+      entry_label: '{date} · {amount} {currency} · {description}'
+      export:
+        again: Start another export
+        confirming: Check the destination above, then confirm to write the file.
+        digest: 'SHA-256: {digest}'
+        failed: The export was refused or could not be written.
+        format:
+          csv: CSV
+          jsonl: JSON Lines
+          xlsx: Excel workbook
+        include_inactive: Include archived and set-aside entries
+        partial: 'Partial: the file {path} may have been written, but the ledger did
+          not record the export.'
+        path: Full path of the file to write
+        path_invalid: Type a full path, starting from the drive or root folder.
+        prompt: Choose the format and period, type where the file goes, then review.
+        review: Review export
+        staged:
+          format: 'Format: {format}'
+          inactive_included: Archived and set-aside entries are included.
+          inactive_left_out: Archived and set-aside entries are left out.
+          path: 'File: {path}'
+          period: 'Period: {period}'
+        title: Export entries
+        unknown: 'Unknown outcome: the file {path} may or may not have been written.'
+        writing: Writing the export…
+        written: 'Written: {path}'
+        written_facts: '{rows} entries, {bytes} bytes, {format}'
+      field:
+        reason: Reason (optional)
+        year: Filing year (YYYY)
+      health:
+        check_heading: Check for {period}
+        counts: 'Entries: {total} (active {active}, archived {archived}, set aside
+          {stashed}, split {split})'
+        link:
+          invoice_only: Invoice {invoice} lists entry {entry}, which does not link
+            back.
+          transaction_only: Entry {entry} names invoice {invoice}, which does not
+            list it.
+        not_measured: 'Readiness not measured: choose a period to measure it.'
+        not_ready: 'Not ready: {findings} findings in {checked} checked entries.'
+        preflight_heading: Preflight for {period}
+        preflight_needs_period: Preflight needs a chosen period.
+        prompt: Choose a period to measure readiness, or leave it blank for the whole
+          ledger. Nothing is changed.
+        read: Read status and checks
+        ready: 'Ready: no findings in {checked} checked entries.'
+        review_counts: 'Review: pending {pending}, reviewed {reviewed}, skipped {skipped}'
+        stale_filing: 'Modelo {modelo} {year} {period} was filed on entries that changed
+          since: {changed} changed, {removed} removed'
+        status_heading: Status for {period}
+        title: Ledger status and checks
+        totals: Business income {income}, expenses {expense}, net {net}
+        unconverted: 'Foreign-currency entries left out of the totals: {count}'
+      issue:
+        duplicate: Possible duplicate
+        gap: Gap in the statement
+        original_file: Original file issue
+        parser: Reading issue
+      lifecycle:
+        active: Active
+        archived: Archived
+        split: Split
+        stashed: Set aside
+      order:
+        asc: Ascending
+        desc: Descending
+      period:
+        all: every period
+        any: Any period
+        invalid: That year and period do not name a filing period.
+        named: '{year} {code}'
+        pair: Choose both a filing year and a period, or neither.
+        required: Choose a filing year and a period.
+      reset:
+        again: Start again
+        blocked: 'The ledger cannot be reset: finalized declarations cite its entries.'
+        cancelled: Reset cancelled. Nothing was written.
+        cannot_reset: This ledger cannot be reset while declarations cite it.
+        cascade: 'Evidence removed with them: {evidence}. Attachments removed with
+          them: {attachments}.'
+        confirm_message: This removes all {count} entries from the ledger. They cannot
+          be brought back from this screen.
+        confirm_title: Reset the whole ledger?
+        done: 'The ledger was reset. Entries removed: {count}'
+        keep: Keep the ledger
+        not_done: The ledger was not reset.
+        preview: Preview reset
+        previewed: Preview ready. Reset only if this is what you want.
+        previewing: Checking what the reset would remove…
+        prompt: 'Resetting removes every entry. Preview first: nothing is written
+          until you confirm twice.'
+        reason: Reason for the reset
+        reason_required: Type a reason before previewing the reset.
+        resetting: Resetting the ledger…
+        run: Reset ledger
+        title: Reset ledger
+        would_remove: 'Entries the reset would remove: {count}'
+      sort:
+        amount: Sort by amount
+        classification: Sort by classification
+        classified_at: Sort by date classified
+        created_at: Sort by date recorded
+        date: Sort by date
+        description: Sort by description
+        lifecycle_state: Sort by state
+        modified_at: Sort by last change
+        value_date: Sort by value date
+      stale_drafts: 'Draft declarations that would need recalculating: {count}'
+      tool:
+        add: Add entry
+        browse: Browse entries
+        export: Export entries
+        health: Ledger status and checks
+        reset: Reset ledger
+      trace:
+        changes: 'Corrections: {edits}. Evidence links: {evidence}.'
+        column:
+          actor: By
+          details: Details
+          event: Event
+          when: When
+        full: Show the full event record
+        full_heading: 'Full event record: {count} events'
+        imported: Imported by {provider} from {file}, row {row}
+        lifecycle_change: '{when}: {previous} → {state} (reason: {reason})'
+        manual: Entered by hand
+        no_participation: No finalized declaration uses this entry.
+        participation: Used by Modelo {modelo} {year} {period} ({state})
+        read: Read again
+        siblings: Include the other parts of a split
+        state: 'State: {state}'
+        title: Entry history and lineage
+        typed_heading: 'History: {count} events'
+        withheld: 'Events with a model reason or export path kept private: {count}'
     evidence:
       add: Add document
       add_failed: The document was not added.
@@ -2784,6 +3370,213 @@ tui:
       safe_metadata: The source document remains protected and encrypted; fields recovered
         from it are shown for review.
       title: Supporting documents review
+    evidence_files:
+      attachments:
+        attach_heading: Attach evidence
+        attach_required: Name at least one attachment or an evidence record to attach.
+        attach_title: Attach evidence to the entry
+        choose_entry: No entry is selected. Go back to Entries, choose an entry with
+          Enter, then open Attachments again.
+        detach_heading: Detach evidence
+        detach_required: Name at least one attachment to detach.
+        detach_title: Detach evidence from the entry
+        entry: 'Entry: {entry}'
+        evidence: Evidence record identity (optional)
+        ids: Attachment identities, separated by spaces
+        linked_hint: Attached to this entry now. Choose one to add it to the identities
+          to detach.
+        linked_none: This entry has no attachments now.
+        linked_unknown: The entry's current attachments are listed here after an attach
+          or a detach. You can also type identities below.
+        outcome:
+          attached: Attached. The entry now has {count} attachments.
+          attachment: Attachment {attachment}
+          detached: Detached. The entry now has {count} attachments.
+          revision: Modelo {modelo} {year} {period} ({state})
+          stale: '{count} finalized Modelo revisions were calculated before this change
+            and do not include it:'
+          unchanged: 'Nothing changed: the entry already held exactly these attachments.'
+        pending_empty: No stored attachment is waiting to be linked.
+        pending_hint: Choose a pending attachment to add it to the identities to attach,
+          or type identities.
+        review_attach: Review attach
+        review_detach: Review detach
+        stage:
+          attach: 'Attach to {entry}:'
+          detach: 'Detach from {entry}:'
+          evidence: Evidence record {record}
+          kept: The stored files are kept; only their links to this entry are removed.
+        title: Attachments
+      batch:
+        direction: Direction of every document
+        directory: Folder
+        directory_placeholder: Full path of the folder that holds the documents
+        directory_required: Type the folder that holds the documents.
+        outcome:
+          counts: 'Stored: {ingested}. Already stored: {no_op}. Waiting for review:
+            {pending}. Paused: {paused}. Refused: {refused}. Unreadable: {unreadable}.'
+          partial: 'This batch was partial: some documents were stored and others
+            were not. Run it again after fixing the refused ones; stored documents
+            are not stored twice.'
+          paused: Reading paused because the model reader could not be admitted. Run
+            the batch again later to finish the paused documents.
+          writes: 'Records written: {count}.'
+        prompt: Add every document directly inside one folder as invoice evidence.
+          Documents are read on this machine.
+        review: Review the batch
+        stage: 'Read every document directly inside {directory}. Direction: {direction}.'
+        stage_local: Documents are read on this machine. A document already stored
+          under this direction is left as it is.
+        status:
+          ingested: Stored
+          no_op: Already stored
+          paused: Paused
+          pending_review: Waiting for review
+          refused: Refused
+          unreadable: Unreadable
+        title: Add documents in bulk
+      column:
+        attachment: Attachment
+        captured: Captured
+        date: Date
+        document: Document
+        drafted: Drafted
+        file: File
+        invoice: Invoice
+        model: Model
+        outcome: Outcome
+        provider: Provider
+        reason: Reason
+        record: Record
+        recorded: Recorded
+        size: Bytes
+        stamp: Origin
+        supplier: Supplier
+        surface: Purpose
+        transport: Transport
+        type: Type
+      consent:
+        artefacts: Drafts made by a hosted reader
+        dispatches: Documents sent off this machine
+        no_artefacts: No hosted reader has drafted any document.
+        no_dispatches: No document has been sent off this machine to be read.
+        prompt: Which documents were sent off this machine to be read, when, and to
+          which reader. This history is read-only.
+        title: Consent history
+        unrecallable: A document already sent cannot be recalled from the reader it
+          was sent to.
+      failed: The request was refused or could not be completed.
+      field:
+        invoice_date: Invoice date (YYYY-MM-DD)
+        invoice_number: Invoice number
+        iva_amount: IVA amount
+        iva_rate: IVA rate (%)
+        notes: Notes
+        supplier: Supplier
+        taxable_base: Taxable base
+      loading: Reading…
+      page:
+        next: Next page
+        position: Rows {first} to {last} of {total}
+        previous: Previous page
+      queue:
+        detail:
+          file: Type {type}, {size} bytes, from {source}.
+          identity: Attachment {attachment}, content digest {digest}.
+          state: 'Captured {captured}. Linked invoices: {invoices}. {state}'
+        empty: No stored attachment is waiting for an invoice.
+        linked: Linked to an invoice.
+        pending: Waiting for an invoice.
+        prompt: Stored attachments no invoice is linked to yet. Choose one to see
+          its details.
+        title: Attachment queue
+      records:
+        all: Show all
+        choose_record: Choose a record in the list first.
+        detail:
+          amounts: Taxable base {base}, IVA rate {rate}, IVA amount {iva}.
+          dates: Added {added}, last changed {updated}.
+          identity: 'Record {record}: {file} ({kind}).'
+          invoice: Supplier {supplier}, invoice {number}, dated {date}.
+          notes: 'Notes: {notes}'
+        edit_heading: Correct the selected record
+        edit_hint: Change a value and review it. A field left blank keeps its current
+          value. Amounts use plain decimals such as 100 or 21.5.
+        empty: No evidence records yet.
+        filter: Find one record by its identity
+        gone: That record no longer exists. Show all to read the list again.
+        no_change: Change a value before reviewing.
+        none_found: No record has that identity.
+        open_review: Open its draft review
+        outcome:
+          removed: Removed record {record}.
+          unchanged: 'Nothing changed: record {record} already held these values.'
+          updated: Saved record {record}.
+        prompt: The profile's invoice evidence. Choose a record to see it, correct
+          it or remove it.
+        remove_title: Remove an evidence record
+        review_remove: Review removal
+        review_update: Review correction
+        search: Find
+        stage:
+          change: '{field}: {current} -> {new}'
+          remove: Remove record {record} ({file}, supplier {supplier}, invoice {number}).
+          update: 'Correct record {record} ({file}):'
+        title: Evidence records
+        update_title: Correct an evidence record
+      review:
+        amounts: Taxable base {base}, IVA rate {rate}, IVA amount {iva}, total {total}.
+        blocker: '- {reason} (field: {field})'
+        blockers: 'Questions that block confirmation: {count}'
+        findings: 'Findings: {count}'
+        full: Full review
+        kind: 'Suggested direction: {kind}'
+        prompt: Read the draft of one read document. The summary leaves out the document's
+          own text; the full review shows it. Confirm a draft from the Supporting
+          documents area.
+        read_by: Draft {reference}, read by {extractor} on {date}.
+        reason:
+          ambiguous_identity: The counterparty's identity is not settled
+          closure_discrepancy: The document's own figures do not add up
+          contradicted_invoice_class: Its invoice class and corrective reference disagree
+          contradicted_regime: The stated regime contradicts the tax charged
+          undetermined_establishment: Where a party is established is not determined
+          unmodelled_invoice_class: The invoice class it declares has no representation
+            here
+          unresolved_direction: It is not clear which party issued the document
+        reference: Evidence reference
+        reference_required: Type the evidence reference first.
+        summary: Summary
+        text_withheld: The document's own text is left out of this summary. Open the
+          full review to read it.
+        title: Evidence review
+      source:
+        gmail: Gmail
+        google_drive: Google Drive
+        inline: an inline part of a message
+        local_file: a local file
+        url: a web address
+      tool:
+        attachments: Attachments
+        batch: Add documents in bulk
+        consent: Consent history
+        queue: Attachment queue
+        records: Evidence records
+        review: Evidence review
+      write:
+        cancel: Cancel
+        confirm: Confirm and send
+        confirm_destructive: Yes, do it
+        confirming: Review this change, then confirm it. Nothing is sent before you
+          confirm.
+        done: Back to the tool
+        failed: The change was refused or could not be completed.
+        keep: No, keep it
+        partial: 'Saved in part: only some of the change was written.'
+        refused: The change was refused before anything was written.
+        review_heading: What will change
+        saved: Change saved.
+        saving: Sending the change…
     flow:
       in_flight_refusal: Wait for the current operation to finish before leaving this
         screen.
@@ -2951,6 +3744,72 @@ tui:
         rectifies: Corrects invoice {number}
         retention: 'IRPF withholding: rate {rate} · amount {amount}'
       title: Add an invoice
+    invoices:
+      import:
+        again: Import another file
+        cancelled: Import cancelled. Nothing was imported.
+        column:
+          field: Field
+          reason: Reason
+          row: Row
+        confirm: Import this file
+        confirming: Check the file, then import it.
+        country: Counterparty country when the book does not state it (two letters,
+          optional)
+        counts: 'Rows: {rows} · Added: {created} · Already present: {skipped} · Refused:
+          {refused}'
+        failed: The import was refused or could not finish. Check the invoice catalogue
+          before trying again.
+        importing: Importing invoices…
+        nothing_created: No invoice was added.
+        partial: 'Import partly applied: some rows were refused and not imported.'
+        path: File path (absolute)
+        path_required: Enter the path of the file to import.
+        prompt: Import an invoice book (spreadsheet) into the invoice catalogue. The
+          review shows the file's name, size and SHA-256 fingerprint; importing then
+          reads exactly that file and refuses it if it has changed.
+        reading: Reading the file…
+        review: Review file
+        succeeded: Import finished. No row was refused.
+        summary:
+          digest: 'SHA-256: {digest}'
+          file: 'File: {name} ({size} bytes)'
+          kind: 'Invoice type: {kind} · Country: {country}'
+          no_preview: 'This import has no preview: invoices are only checked as they
+            are written. Rows that fail are listed afterwards and are not imported.'
+        title: Import invoices
+        tool: Import invoices
+        unmapped: 'Columns not used: {columns}'
+      wizard:
+        again: Enter another invoice
+        already_existed: This invoice was already recorded; nothing was added.
+        cancelled: Cancelled. Nothing was recorded.
+        confirm: Record invoice
+        confirming: Check every value, then record the invoice.
+        correct: Correct the fields
+        euro_value_pending: No euro exchange rate was found for this invoice yet;
+          its euro value is pending.
+        failed: The invoice was refused or could not be recorded.
+        next: Next step
+        previous: Previous step
+        recorded: 'Invoice {number} recorded: {total}.'
+        recording: Recording the invoice…
+        refused: Some fields were refused. Nothing was recorded.
+        step: 'Step {index} of {total}: {name}'
+        step_name:
+          amounts: Amounts and tax
+          counterparty: Counterparty
+          invoice: Invoice
+          notes: Notes and review
+        summary_heading: 'The invoice to record:'
+        title: Invoice wizard
+        tool: Invoice wizard
+    link:
+      refused:
+        cross_bucket_invoice: The invoice belongs to another profile, so it cannot
+          be linked.
+        missing_invoice: The invoice is no longer in the catalogue, so it cannot be
+          linked.
     overview:
       affected_declarations: Affected declarations
       areas: Areas of Records
@@ -3068,22 +3927,68 @@ tui:
       title: 'Records: local reconciliation'
       'yes': 'Yes'
     records:
+      cancel: Cancel
+      change: '{field}: {before} → {after}'
+      correct_heading: Correct this record
+      direction:
+        incoming: Money in
+        internal_transfer: Transfer between own accounts
+        outgoing: Money out
       failed: The change was refused or could not be saved.
+      field:
+        payment_status: Payment status
       identity: Record ID
+      invalid_decimal: '{field}: enter a number such as 21 or 15.5.'
       invoice_detail: Invoice detail
       invoices: Recorded invoices
+      kind_all: All invoices
+      kind_filter: Show
       lines: Lines
       links: Linked records
       loading: Reading the record…
       no_change: Enter a different value before reviewing.
+      no_invoices: No invoices are recorded yet.
       open_invoices: View invoices
       open_transaction: View or edit selected entry
+      page: Page {page} of {pages} · {count} invoices
+      page_next: Next page
+      page_previous: Previous page
+      payment_status:
+        cancelled: Cancelled
+        overdue: Overdue
+        paid: Paid
+        partially_paid: Partly paid
+        pending: Pending
+      remove: Remove invoice
+      remove_cancelled: Removal cancelled. Nothing was changed.
+      remove_message: Invoice {number} from {counterparty} for {total} will be removed
+        from the catalogue. This cannot be undone.
+      remove_title: Remove this invoice?
+      removed: Invoice {number} removed.
+      removing: Removing the invoice…
       reviewed: Check the value, then save it.
       save: Save change
       saved: Change saved.
       saving: Saving change…
       source: Source file
+      staged_heading: 'These changes will be saved:'
+      stale: This record changed after you opened it. Go back and open it again before
+        changing it.
+      totals: '{base} + {iva} = {total} {currency}'
       transaction_detail: Entry detail
+      transaction_field:
+        amount: Amount (without sign)
+        booked_date: Booking date (YYYY-MM-DD)
+        counterparty: Counterparty (optional)
+        currency: Currency
+        description: Description
+        direction: Direction
+        iva_amount: VAT amount (optional)
+        iva_rate: VAT rate (optional)
+        notes: Notes
+        taxable_base: Taxable base (optional)
+        value_date: Value date (YYYY-MM-DD, optional)
+      update_refused: 'The change was refused: {detail}'
     refusal:
       application_state: This area is unavailable in the current state of Records.
       destination_pending: This area is not available in this version yet.
@@ -3091,6 +3996,218 @@ tui:
       selection_required: Choose an entry first, then open this task for it.
       submission_unavailable: This task can't be carried out from this screen in this
         session.
+    registers:
+      attached: provided from the named file
+      cancel: Cancel
+      capital_goods:
+        column:
+          cuota: IVA borne
+          deduction: Deduction
+          description: Description
+          identifier: Identifier
+          kind: Kind
+          year: Year
+        declared: Capital good declared; the register now holds %{count}.
+        detail: '%{identifier} · %{description} · %{year} · %{kind} · cuota %{cuota}
+          · initial prorrata %{prorrata} · deduction %{deduction} · entry %{ledger}
+          · disposal %{disposal}'
+        empty: No capital goods are declared yet.
+        field:
+          acquisition_ledger_id: Acquisition entry
+          acquisition_year: Acquisition year
+          art108_elegible: Eligible under LIVA article 108
+          cuota_soportada: IVA borne on acquisition
+          description: Description
+          disposal_regime: Disposal regime (optional)
+          disposal_year: Disposal year (optional)
+          identifier: Identifier
+          kind: Kind of good
+          prorrata_inicial_pct: Initial prorrata percentage
+          prorrata_sector_id: Prorrata sector (optional)
+        list: Declared goods
+        missing:
+          regime: 'Missing: the disposal regime.'
+          year: 'Missing: the disposal year.'
+        prompt: Every capital good declared for the IVA regularisation. Fill in a
+          new good, review it, then confirm. The deduction shown is the one the register
+          works out.
+        refusal:
+          disposal_incomplete: 'The register refused the declaration: a disposal needs
+            both its year and its regime.'
+          duplicate_identifier: 'The register refused the declaration: a good with
+            this identifier is already declared.'
+          validation: 'The register refused the declaration: it does not pass the
+            register''s validation.'
+        refusal_identifier: 'Identifier: %{identifier}'
+        title: Capital goods register (bienes de inversión)
+        tool: Capital goods (bienes de inversión)
+      confirm: Confirm
+      date_placeholder: YYYY-MM-DD
+      invalid_date: '%{field}: %{value} is not a date. Type it as YYYY-MM-DD.'
+      invalid_decimal: '%{field}: %{value} is not an amount. Type digits with a dot
+        for decimals, at most two decimals, and no thousands separator.'
+      invalid_number: '%{field}: %{value} is not a whole number.'
+      inventory:
+        action:
+          closing_authority: Record a closing authority
+          create: Create an inventory
+          movement_add: Add a movement
+          valuation_preview: Preview the valuation
+        column:
+          actividad: Activity
+          method: Method
+          movements: Movements
+          opening: Opening
+          year: Year
+        detail: '%{actividad} · %{year} · %{method} · opening stock %{opening} · %{movements}
+          movements'
+        done:
+          create: Inventory created.
+          movement_add: Movement added.
+        empty: No activity inventory exists yet.
+        field:
+          acquisition_cost: Purchase cost file (purchases only)
+          action: Request
+          actividad_id: Activity
+          authority_record: Closing authority file
+          kind: Movement kind
+          movement_date: Movement date
+          movement_id: Movement identifier
+          opening_stock: Opening stock (optional)
+          quantity: Quantity
+          taxable_base: Taxable base (optional)
+          unit_cost: Unit cost (optional)
+          valuation_method: Valuation method
+          year: Year
+        kind:
+          cogs: Cost of goods sold
+          count: Count
+          opening: Opening
+          purchase: Purchase
+        list: Inventories
+        method:
+          coste_medio: Average cost
+          fifo: FIFO
+          pmp: Weighted average price
+        prompt: Every activity inventory by year. Choose a request, fill in its fields,
+          review it, then confirm. Valuations and costs of goods sold are the register's
+          own figures. Purchase costs and closing authorities are read from the JSON
+          file you name.
+        refusal:
+          activity_conflict: 'The register refused the request: an inventory already
+            exists for that activity and year.'
+          activity_not_found: 'The register refused the request: no inventory exists
+            for that activity and year.'
+          closing_authority_conflict: 'The register refused the closing authority:
+            a different one is already recorded for that year.'
+          closing_authority_invalid: 'The register refused the closing authority:
+            it does not match the inventory it names.'
+          duplicate_movement_id: 'The register refused the movement: that movement
+            identifier is already used.'
+          invalid_valuation_method: 'The register refused the request: the valuation
+            method is not one it accepts.'
+          inventory_validation: 'The register refused the request: it does not pass
+            the inventory''s validation.'
+        result:
+          closing: 'Closing authority for %{actividad} %{year} recorded. Changed:
+            %{changed}.'
+          fingerprint: 'Record fingerprint: %{fingerprint}'
+          ledger: '%{actividad} · %{year} · %{method} · opening stock %{opening} ·
+            %{movements} movements'
+          valuation: 'Valuation for %{actividad} %{year} (%{method}): closing value
+            %{closing}, cost of goods sold %{cogs}.'
+        source: 'Read from: %{path}'
+        source_invalid: 'The file %{path} is not a valid record: %{count} problems
+          found.'
+        source_unreadable: The file %{path} could not be read.
+        title: Activity inventories
+        tool: Inventory
+      next: Next
+      'no': 'No'
+      page: Page %{page} of %{pages} · %{total} records
+      previous: Previous
+      prorrata:
+        accepted_provenances: 'Accepted provenances: %{values}'
+        action:
+          declare_sector: Declare a differentiated sector
+          elect_especial: Elect special prorrata
+          elect_general: Elect general prorrata
+          revoke_especial: Revoke special prorrata
+          seed: Carry the prior year's definitive prorrata
+          seed_sector: Carry a sector's prior definitive prorrata
+          settle_sector: Settle a sector's definitive prorrata
+        column:
+          activities: Activities
+          definitive: Definitive %
+          ejercicio: Year
+          letra: Letter
+          provenance: Provenance
+          provisional: Provisional %
+          regime: Regime
+          sector: Sector
+        done:
+          declare_sector: Differentiated sector declared.
+          elect_especial: Special prorrata elected.
+          elect_general: General prorrata elected.
+          revoke_especial: Special prorrata revoked.
+          seed: Prior definitive prorrata carried.
+          seed_sector: Sector's prior definitive prorrata carried.
+          settle_sector: Sector's definitive prorrata recorded.
+        empty: The prorrata register has no entries yet.
+        entries: Exercises
+        field:
+          action: Change
+          con_derecho_volume: Turnover with right to deduct
+          ejercicio: Exercise year
+          evidence_reference: Evidence reference
+          letra: Sector letter
+          member_activity_codes: Activity codes, separated by commas
+          percentage: Provisional percentage
+          provenance: Provenance of the percentage
+          reference: Authorisation reference
+          sector_id: Sector
+          sin_derecho_volume: Turnover without right to deduct
+        prompt: Each exercise's IVA prorrata as the register holds it. Choose a change,
+          fill in its fields, review it, then confirm. The register itself works out
+          every definitive figure.
+        refusal:
+          provenance_not_electable: 'The register refused the election: you cannot
+            elect that provenance.'
+          provenance_required: 'The register refused the election: name the provenance
+            of the provisional percentage.'
+          reference_not_permitted: 'The register refused the election: that provenance
+            takes no authorisation reference.'
+          reference_required: 'The register refused the election: that provenance
+            needs an authorisation reference.'
+          regulated_override_standing: 'The register refused the carry: a regulated
+            provisional percentage already stands for this year.'
+          sector_prior_definitive_absent: 'The register refused the carry: the sector
+            has no prior definitive prorrata.'
+          sector_settlement_entry_absent: 'The register refused the settlement: the
+            sector has no entry for this year.'
+          seed_existing_blocked: 'The register refused the carry: the existing entry
+            for this year blocks it.'
+          seed_source_absent: 'The register refused the carry: there is no prior-year
+            settlement to carry from.'
+          seed_source_blocked: 'The register refused the carry: the prior-year source
+            has blocking findings.'
+          validation: 'The prorrata register refused the change: it does not pass
+            the register''s validation.'
+        result:
+          entry: '%{ejercicio} · %{sector} · %{regime} · provisional %{provisional}
+            · definitive %{definitive}'
+          finding: 'Notice [%{code}]: %{message}'
+          prior: Carried from exercise %{ejercicio}.
+          sector: Sector %{sector} · letter %{letra} · activities %{activities}
+          seed_source: Carried from the local Modelo %{modelo} observation for %{year}
+            %{period}.
+        sectors: Differentiated sectors
+        title: Prorrata register
+        tool: Prorrata register
+        whole_entity: whole activity
+      required: '%{field} is required.'
+      review: Review
+      'yes': 'Yes'
     review:
       empty: No entries currently need review.
       exclude_cancel: Keep entry
