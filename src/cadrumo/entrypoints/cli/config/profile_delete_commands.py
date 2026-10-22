@@ -152,9 +152,9 @@ def config_profile_delete(
     ctx: typer.Context,
     name: str,
     yes: bool = False,
-    output_language: OutputLanguage | None = None,
     expected_profile_id: str | None = None,
     expected_digest: str | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Destroy one named profile capsule, after a preflight the operator confirms."""
     from ....application.bucket_maintenance.deletion_preflight import assess_named_profile_deletion
