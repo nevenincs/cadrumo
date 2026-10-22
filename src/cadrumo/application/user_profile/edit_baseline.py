@@ -16,6 +16,12 @@ def require_profile_edit_baseline(
     """Refuse a stale edit and report addresses, never values or content hashes.
 
     Callers supply schema-owned addresses rather than unchecked input strings.
+
+    Args:
+        current: The profile's current :class:`UserProfileRecord`.
+        expected_revision: The record revision the edit was prepared against.
+        expected_content_digest: The content digest the edit was prepared against.
+        field_paths: Schema-owned addresses of the fields the edit touches.
     """
     revision_matches = current.record_revision == expected_revision
     digest_matches = current.content_digest == expected_content_digest
