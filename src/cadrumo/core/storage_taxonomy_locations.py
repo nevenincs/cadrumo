@@ -317,6 +317,15 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(
+        StorageCategory.AUTHORITY_ADMISSION_RECEIPTS,
+        "cache/authority-admissions",
+        consumer_module="domain/calculations/registry/authority_store.py",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.CACHE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+        override_policy=StorageOverridePolicy.FIXED,
+    ),
+    _location(
         # Was the bare literal ``_INDEX_FILENAME = "corpus.sqlite"`` in
         # ``corpus_search/_runtime.py``. Same override caveat as above.
         StorageCategory.CORPUS_SEARCH_INDEX,

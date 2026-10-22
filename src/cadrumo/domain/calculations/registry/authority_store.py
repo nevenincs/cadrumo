@@ -37,6 +37,8 @@ AUTHORITY_DESCRIPTOR_FORMAT: Final = "cadrumo-authority-descriptor-v1"
 AUTHORITY_DESCRIPTOR_FILENAME: Final = "authority.current.json"
 _DESCRIPTOR_MEMBERS: Final = frozenset({"format", "database", "database_size", "database_sha256", "logical_generation"})
 _DATABASE_NAME = re.compile(r"authority-([0-9a-f]{64})\.sqlite3")
+_SHA256_HEX = re.compile(r"[0-9a-f]{64}")
+_RECEIPT_MAX_BYTES: Final = 4096
 
 
 class AuthorityStoreError(CadrumoError):
@@ -180,6 +182,57 @@ class _DatabaseIdentity:
     modified_ns: int
     changed_ns: int
     digest: str
+
+    def receipt(self) -> dict[str, object]:
+        """Return the receipt document a later process compares its own observation with."""
+        return {
+            "database_sha256": self.digest,
+            "device": self.device,
+            "inode": self.inode,
+            "size": self.size,
+            "modified_ns": self.modified_ns,
+            "changed_ns": self.changed_ns,
+        }
+
+
+def _receipt_path(digest: str) -> Path | None:
+    """Locate the per-user receipt for one content-addressed database, or ``None`` when storage is unresolved."""
+    if not _SHA256_HEX.fullmatch(digest):
+        return None
+    try:
+        from ....core.storage_taxonomy import StorageCategory
+        from ....core.storage_taxonomy_locations import storage_path
+
+        return storage_path(StorageCategory.AUTHORITY_ADMISSION_RECEIPTS) / f"{digest}.json"
+    except (CadrumoError, OSError, ValueError):
+        return None
+
+
+def _admitted_before(observed: _DatabaseIdentity) -> bool:
+    """Say whether a process already proved this exact file object's digest; anything unreadable says no."""
+    path = _receipt_path(observed.digest)
+    if path is None:
+        return False
+    try:
+        if path.stat().st_size > _RECEIPT_MAX_BYTES:
+            return False
+        recorded = json.loads(path.read_bytes(), object_pairs_hook=reject_duplicate_json_members)
+    except (OSError, ValueError):
+        return False
+    return is_str_keyed_dict(recorded) and recorded == observed.receipt()
+
+
+def _record_admission(observed: _DatabaseIdentity) -> None:
+    """Leave a receipt for later processes; failing to write one only costs them a hash."""
+    path = _receipt_path(observed.digest)
+    if path is None:
+        return
+    from ....core.atomic_write import atomic_write_best_effort_bytes
+
+    try:
+        atomic_write_best_effort_bytes(path, json.dumps(observed.receipt(), sort_keys=True).encode("utf-8"))
+    except OSError:
+        return
 
 
 class SQLiteAuthorityReader:
@@ -364,33 +417,58 @@ class SQLiteAuthorityReader:
             raise AuthorityStoreCorruptionError("authority database manifest disagrees with its descriptor")
 
     def _read_database_identity(self) -> _DatabaseIdentity:
-        """Hash the whole published database once per reader, streaming it.
+        """Prove the published database's whole digest, once per file object rather than once per process.
 
         The full digest is the integrity proof :meth:`_admit_database` relies on
-        instead of structural scans, so it runs on every admission. It is read
-        in chunks: holding the entire database in memory to hash it cost every
-        process its full size and failed outright under memory pressure.
+        instead of structural scans. It is read in chunks: holding the entire
+        database in memory to hash it cost every process its full size and
+        failed outright under memory pressure. Every process on the machine
+        opens the same 118 MB file, so a process that proves it leaves a receipt
+        naming the file's device, file id, size, write and change times; a later
+        process whose file shows exactly that identity relies on the receipt,
+        and any rewrite, replacement or restored timestamp moves the change time
+        and is hashed again.
         """
         try:
             status = self._database_path.stat()
+            observed = _DatabaseIdentity(
+                device=status.st_dev,
+                inode=status.st_ino,
+                size=status.st_size,
+                modified_ns=status.st_mtime_ns,
+                changed_ns=file_change_time_ns(self._database_path, status),
+                digest=self._descriptor.database_sha256,
+            )
+            if observed.size == self._descriptor.database_size and _admitted_before(observed):
+                return observed
             digest, hashed_length = hash_file(self._database_path)
         except OSError as exc:
             raise AuthorityStoreError(f"authority database is unavailable at {self._database_path}") from exc
-        identity = _DatabaseIdentity(
-            device=status.st_dev,
-            inode=status.st_ino,
-            size=status.st_size,
-            modified_ns=status.st_mtime_ns,
-            changed_ns=file_change_time_ns(self._database_path, status),
-            digest=digest,
-        )
         if (
-            identity.size != self._descriptor.database_size
-            or hashed_length != identity.size
-            or identity.digest != self._descriptor.database_sha256
+            observed.size != self._descriptor.database_size
+            or hashed_length != observed.size
+            or digest != self._descriptor.database_sha256
         ):
             raise AuthorityStoreCorruptionError("authority database bytes disagree with the published descriptor")
-        return identity
+        try:
+            after = self._database_path.stat()
+        except OSError as exc:
+            raise AuthorityStoreError(f"authority database is unavailable at {self._database_path}") from exc
+        if (
+            after.st_dev,
+            after.st_ino,
+            after.st_size,
+            after.st_mtime_ns,
+            file_change_time_ns(self._database_path, after),
+        ) == (
+            observed.device,
+            observed.inode,
+            observed.size,
+            observed.modified_ns,
+            observed.changed_ns,
+        ):
+            _record_admission(observed)
+        return observed
 
     def _verify_database_identity(self) -> None:
         try:

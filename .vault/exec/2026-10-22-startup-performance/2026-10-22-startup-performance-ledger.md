@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:8ea72245744020461c9c8d77c299e0c221d477da98f56d24f8f77186e863fbc0'
+body_hash: 'sha256:f13c333d9bbadd697e57449035b273212c66a770908f6c080431ff9afb0cc41c'
 related:
   - "[[2026-10-22-startup-performance-plan]]"
 ---
@@ -136,3 +136,10 @@ related:
 - `S11` `verify:` `import gate fails on the previous operation_authority` -> `pass`
 - `S11` `verify:` `just check-types` -> `pass`
 - `S11` `verify:` `lint-imports` -> `pass`
+- `S08` `M` `src/cadrumo/domain/calculations/registry/authority_store.py`
+- `S08` `M` `src/cadrumo/domain/calculations/registry/tests/test_authority_store_admission.py`
+- `S08` `M` `src/cadrumo/core/storage_taxonomy.py`
+- `S08` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S08` `M` `.vault/adr/2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr.md`
+- `S08` `verify:` `pytest authority admission, root relocation, storage taxonomy, dev registry authority (97)` -> `pass`
+- `S08` `verify:` `ruff, ty` -> `pass`

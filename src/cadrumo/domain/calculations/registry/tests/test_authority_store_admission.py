@@ -4,14 +4,17 @@ Every test uses this checkout's real published pair. The first measures the
 reader's peak Python allocation while it admits the database: hashing by
 reading the file whole allocates at least the database's size, streaming it
 allocates a few chunks. The second proves the streamed digest still refuses a
-database whose bytes differ from the descriptor by a single byte. The rest
-republish an edited copy under its own content address, so the digest admits
-it and only the manifest decides.
+database whose bytes differ from the descriptor by a single byte. Receipts let
+a later process skip the hash for the very file object an earlier one proved,
+and the receipt cases show a rewrite is hashed again. The rest republish an
+edited copy under its own content address, so the digest admits it and only
+the manifest decides.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import sqlite3
 import tracemalloc
@@ -19,7 +22,9 @@ from pathlib import Path
 
 import pytest
 
+from .....core.config import override_settings
 from .....core.hashing import sha256_hex
+from .. import authority_store
 from ..authority_location import bundled_authority_descriptor_path
 from ..authority_store import (
     AuthorityDescriptor,
@@ -29,6 +34,14 @@ from ..authority_store import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _own_receipts(tmp_path: Path) -> object:
+    """Keep admission receipts to this test, so every case starts from a database nobody has proved."""
+    with override_settings(cadrumo_local_storage_root=tmp_path / "storage"):
+        yield
+
 
 _DESCRIPTOR_NAME = "authority.current.json"
 
@@ -115,4 +128,62 @@ def test_admission_refuses_the_previous_format_that_recorded_the_compiler_and_it
     )
 
     with pytest.raises(AuthorityStoreFormatError, match="cadrumo-authority-sqlite-v3"):
+        SQLiteAuthorityReader(descriptor, max_connections=1)
+
+
+def _counting_hashes(monkeypatch: pytest.MonkeyPatch) -> list[Path]:
+    hashed: list[Path] = []
+    real = authority_store.hash_file
+
+    def counted(path: Path) -> tuple[str, int]:
+        hashed.append(path)
+        return real(path)
+
+    monkeypatch.setattr(authority_store, "hash_file", counted)
+    return hashed
+
+
+def _copied_pair(directory: Path) -> tuple[Path, Path]:
+    source_descriptor = bundled_authority_descriptor_path()
+    database_name = json.loads(source_descriptor.read_text(encoding="utf-8"))["database"]
+    directory.mkdir()
+    shutil.copy2(source_descriptor, directory / _DESCRIPTOR_NAME)
+    shutil.copy2(source_descriptor.parent / database_name, directory / database_name)
+    return directory / _DESCRIPTOR_NAME, directory / database_name
+
+
+def test_a_later_reader_of_the_same_file_relies_on_the_proof_an_earlier_one_left(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    descriptor, database = _copied_pair(tmp_path / "pair")
+    hashed = _counting_hashes(monkeypatch)
+    SQLiteAuthorityReader(descriptor, max_connections=1).close()
+    SQLiteAuthorityReader(descriptor, max_connections=1).close()
+    assert hashed == [database]
+
+
+def test_a_rewritten_database_is_hashed_again_although_its_bytes_are_unchanged(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    descriptor, database = _copied_pair(tmp_path / "pair")
+    hashed = _counting_hashes(monkeypatch)
+    SQLiteAuthorityReader(descriptor, max_connections=1).close()
+    database.write_bytes(database.read_bytes())
+    SQLiteAuthorityReader(descriptor, max_connections=1).close()
+    assert hashed == [database, database]
+
+
+def test_a_proved_database_edited_with_its_write_time_restored_is_still_refused(tmp_path: Path) -> None:
+    descriptor, database = _copied_pair(tmp_path / "pair")
+    SQLiteAuthorityReader(descriptor, max_connections=1).close()
+    before = database.stat()
+    middle = before.st_size // 2
+    with database.open("r+b") as stream:
+        stream.seek(middle)
+        original = stream.read(1)
+        stream.seek(middle)
+        stream.write(bytes([original[0] ^ 0xFF]))
+    os.utime(database, ns=(before.st_atime_ns, before.st_mtime_ns))
+
+    with pytest.raises(AuthorityStoreCorruptionError, match="disagree with the published descriptor"):
         SQLiteAuthorityReader(descriptor, max_connections=1)

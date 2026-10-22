@@ -7,9 +7,10 @@ tier: L1
 related:
   - '[[2026-10-22-startup-performance-authority-observation-adr]]'
   - '[[2026-10-22-startup-performance-request-path-audit]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:0a865ab5f65d620368ca4ca650927e5e54ec484b1e373087555eabc73ff83211'
+body_hash: 'sha256:e220d9867d43b8bee733c56a83afe181699140414400324405f33575bd640d1d'
 ---
 
 # `startup-performance` plan
@@ -20,7 +21,7 @@ Make sign-in to a usable first screen fast by removing the request-path costs me
 
 Approved 2026-10-22. Basis: the operator's instruction in this session, "fix the roots causes. if you have to refactor everything", given with a measured 40-50 s launch against an expected sub-2 s one. The operator did not answer the follow-up question offering the three design options within five minutes; the recommended options are taken under that instruction and remain open to the operator's veto.
 
-The findings are in `2026-10-22-startup-performance-request-path-audit`. `2026-10-22-startup-performance-authority-observation-adr` governs S02-S04. S06 and S07 each change a settled design (a pre-started worker; the desktop sign-in process chain, which amends the desktop shell's sign-in observation) and get their own ADR before they execute. S01, S05, S08, S09 and S10 are implementation within existing decisions: `2026-10-13-startup-performance-operation-contract-manifest-adr`, `2026-10-16-idle-churn-adr` and `2026-10-17-idle-churn-operation-observation-adr` are unchanged. The staged package is the operator's running application; it is rebuilt only with the operator (S10). Measurements in between use an independent copy with changed modules overlaid.
+The findings are in `2026-10-22-startup-performance-request-path-audit`. `2026-10-22-startup-performance-authority-observation-adr` governs S02-S04. S06 and S07 each change a settled design (a pre-started worker; the desktop sign-in process chain, which amends the desktop shell's sign-in observation) and get their own ADR before they execute. S08 amends the runtime admission paragraph of `2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr` under the same instruction. S01, S05, S09, S10 and S11 are implementation within existing decisions: `2026-10-13-startup-performance-operation-contract-manifest-adr`, `2026-10-16-idle-churn-adr` and `2026-10-17-idle-churn-operation-observation-adr` are unchanged. The staged package is the operator's running application; it is rebuilt only with the operator (S10). Measurements in between use an independent copy with changed modules overlaid.
 
 ## Steps
 
@@ -31,7 +32,7 @@ The findings are in `2026-10-22-startup-performance-request-path-audit`. `2026-1
 - [x] `S05` - Measure the request path on an overlaid package copy and record before and after timings in the audit; `.vault/audit/2026-10-22-startup-performance-request-path-audit.md`.
 - [ ] `S06` - Pre-start one unbound profile worker so sign-in binds an imported worker and the first operation skips cold start; `src/cadrumo_runtime/adapters/profile_worker*.py, src/cadrumo_runtime/host/worker*.py and owning tests`.
 - [ ] `S07` - Remove CLI children from the desktop sign-in path: profile inventory from session watch, password sign-in through a pre-started session hold that persists the receipt; `src/cadrumo_runtime/host/session_watch.py, session_hold.py, native/desktop/src-tauri/src/shell/sign_in and owning tests`.
-- [ ] `S08` - Stop hashing the whole authority database in every process while keeping corruption refusal; `src/cadrumo/domain/calculations/registry/authority_store.py and owning tests`.
+- [x] `S08` - Stop hashing the whole authority database in every process while keeping corruption refusal; `src/cadrumo/domain/calculations/registry/authority_store.py and owning tests`.
 - [ ] `S09` - Cut the TUI first screen's serial operations and eager imports; `src/cadrumo/entrypoints/tui and src/cadrumo_client/transport/frontend_profile_view_client.py`.
 - [ ] `S10` - Rebuild the stage with the operator, measure the real desktop launch to usable Home and confirm no slow-request warnings; `build/windows-x64/stage/Release/app, audit`.
 - [x] `S11` - Keep the workbench generation's module graph off the first operation's execution binding and pin it with an import gate; `src/cadrumo_runtime/host/operation_authority.py, src/cadrumo_runtime/host/tests/test_worker_startup_import_graph.py`.

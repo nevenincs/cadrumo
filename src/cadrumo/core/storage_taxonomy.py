@@ -246,6 +246,7 @@ class StorageCategory(StrEnum):
     LLM_CACHE = "llm-cache"
     CORPUS_SEARCH_CACHE = "corpus-search-cache"
     CORPUS_SEARCH_INDEX = "corpus-search-cache.index"
+    AUTHORITY_ADMISSION_RECEIPTS = "authority-admission-receipts"
     PYWIN32_GENERATED_CACHE = "pywin32-generated-cache"
     # ── Durable generated outputs ───────────────────────────────────────────
     SUBMISSIONS = "submissions"
