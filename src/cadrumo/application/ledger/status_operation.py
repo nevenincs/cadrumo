@@ -23,7 +23,7 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
-from .actions_manual import summarize_manual_transactions
+from .actions_manual import require_summary_period_span, summarize_manual_transactions
 from .models import LedgerStatusReport
 from .preflight import preflight_ledger_tax_readiness
 from .readiness_query import LedgerReadinessIssueV1, ledger_readiness_issues
@@ -184,11 +184,14 @@ class LedgerStatusExecutor:
                 or ports.operation is not operation
             ):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+            period = payload.period.to_period() if payload.period is not None else None
+            # The money totals select rows by filing date, so a period without
+            # a date span is refused before the catalogue is decrypted.
+            require_summary_period_span(period)
             # Counts and stale filings span the whole bucket, so the whole
             # catalogue is read once; the period's preflight, its readiness
             # facts and the summary all inspect that one snapshot.
             transactions = ports.transaction_repository.load()
-            period = payload.period.to_period() if payload.period is not None else None
             preflight = (
                 preflight_ledger_tax_readiness(
                     bucket_id=bucket_id,

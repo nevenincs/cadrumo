@@ -69,6 +69,17 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.ledger.actions_manual.LedgerSummaryPeriodWithoutSpanError",
+        ErrorCode(
+            code="REFUSED_LEDGER_SUMMARY_PERIOD_WITHOUT_SPAN",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.ledger_summary_period_without_span",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.prorrata_register.sector_lifecycle.ProrrataSectorLifecycleUnavailableError",
         ErrorCode(
             code="REFUSED_PROFILE_PRORRATA_SECTOR_LIFECYCLE",

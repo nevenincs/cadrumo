@@ -944,6 +944,10 @@ errors:
       model perquè encara no es pot presentar.
     ledger_source_jurisdiction_required: Indica la jurisdicció fiscal del contribuent
       abans d'afegir aquest moviment al llibre.
+    ledger_summary_period_without_span: Aquest període no abasta dates del calendari,
+      així que el registre no pot totalitzar els seus moviments. Els períodes de pagament
+      fraccionat com 1P són terminis de pagament. Fes servir un trimestre, un mes
+      o 0A.
     locale_catalogue_capture_not_current: Aquesta captura del catàleg d'idiomes ja
       no és vigent.
     m145_communication_record_ambiguous: El prefix de l'id de registre de comunicació

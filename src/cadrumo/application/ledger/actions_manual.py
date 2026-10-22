@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal.formatting import format_decimal
-from ...core.errors.hierarchy import InternalInvariantError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.period import Period
 from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
@@ -813,6 +813,28 @@ def _lifecycle_counts(transactions: tuple[Transaction, ...]) -> tuple[int, int, 
     )
 
 
+class LedgerSummaryPeriodWithoutSpanError(CadrumoError):
+    """A ledger summary was asked to scope its money totals to a period without dates.
+
+    Instalment claves (``1P``-``4P``) and extended union members are filing or
+    payment events, not calendar spans, so no transaction falls inside them and
+    a total for one would read as a proven zero.
+    """
+
+    def __init__(self, period: Period) -> None:
+        """Keep the refused period for the structured error context."""
+        super().__init__(
+            translated_message="errors.refused.ledger_summary_period_without_span",
+            context={"period": str(period)},
+        )
+
+
+def require_summary_period_span(period: Period | None) -> None:
+    """Refuse a summary period that cannot select transactions by their filing date."""
+    if period is not None and not period.has_date_span():
+        raise LedgerSummaryPeriodWithoutSpanError(period)
+
+
 def summarize_manual_transactions(
     *,
     bucket_id: str,
@@ -830,9 +852,13 @@ def summarize_manual_transactions(
     readiness preflight inspects the same snapshot, and ``preflight`` lets a
     caller that already ran it on that snapshot reuse its report.
 
+    A period without a calendar date span is refused with
+    :class:`LedgerSummaryPeriodWithoutSpanError` before anything is read.
+
     Core types:
     :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
+    require_summary_period_span(period)
     snapshot = _manual_transaction_snapshot(
         bucket_id=bucket_id,
         transaction_repository=ports.transaction_repository,
@@ -2057,6 +2083,7 @@ command_from_patch = _command_from_patch
 prepare_manual_transaction_update = _prepare_manual_transaction_update
 
 __all__ = [
+    "LedgerSummaryPeriodWithoutSpanError",
     "PreparedManualTransaction",
     "attach_manual_transaction_evidence",
     "commit_manual_transaction",
@@ -2070,6 +2097,7 @@ __all__ = [
     "list_manual_transactions",
     "prepare_manual_transaction",
     "query_ledger_review_rows",
+    "require_summary_period_span",
     "summarize_manual_transactions",
     "update_manual_transaction",
     "update_manual_transaction_fields",

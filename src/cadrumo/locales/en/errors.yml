@@ -863,6 +863,9 @@ errors:
       fileable.
     ledger_source_jurisdiction_required: Provide the taxpayer jurisdiction before
       adding this ledger transaction.
+    ledger_summary_period_without_span: This period has no calendar date span, so
+      the ledger cannot total its records. Instalment periods such as 1P are payment
+      events. Use a quarter, a month or 0A.
     locale_catalogue_capture_not_current: This locale catalogue capture is no longer
       current.
     m145_communication_record_ambiguous: The Modelo 145 communication record id prefix

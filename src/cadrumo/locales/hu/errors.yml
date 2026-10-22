@@ -876,6 +876,10 @@ errors:
       mert az még nem nyújtható be.
     ledger_source_jurisdiction_required: A könyvelési tétel hozzáadása előtt add meg
       az adózó adóügyi joghatóságát.
+    ledger_summary_period_without_span: Ez az időszak nem fed le naptári dátumokat,
+      ezért a nyilvántartás nem tudja összesíteni a tételeit. Az olyan részletfizetési
+      időszakok, mint az 1P, fizetési események. Használj negyedévet, hónapot vagy
+      0A-t.
     locale_catalogue_capture_not_current: Ez a nyelvi katalógus rögzítés már nem érvényes.
     m145_communication_record_ambiguous: A Modelo 145 kommunikációs rekord azonosítójának
       előtagja több rekorddal egyezik.

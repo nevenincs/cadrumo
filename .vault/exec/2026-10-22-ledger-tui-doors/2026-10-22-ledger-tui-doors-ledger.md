@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:bd5bd8d0d0eb0b438d681ba996ba43372b79a78e91a10e9b090ab153789dfdeb'
+body_hash: 'sha256:654bfa990471516da2752df145faa1790db73fccc07c433ec4167df20abb7bf8'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -257,6 +257,16 @@ related:
 - `S15` `verify:` `ledger, invoices, overview, modelo suites (5120) and ledger entrypoint/CLI/runtime/TUI files (1919)` -> `pass`
 - `S15` `verify:` `ruff, lint-imports, check-types` -> `pass`
 - `S15` `by:` `S15`
+- `S08` `M` `src/cadrumo/application/ledger/actions_manual.py`
+- `S08` `M` `src/cadrumo/application/ledger/status_operation.py`
+- `S08` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/test_ledger_read_operation_parity.py`
+- `S08` `M` `src/cadrumo/locales/en/errors.yml`
+- `S08` `M` `src/cadrumo/locales/es/errors.yml`
+- `S08` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S08` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S08` `verify:` `ledger.status with 1P refuses with a registered typed refusal before reading; dated periods unchanged (parity tests and error registry tests, 66)` -> `pass`
+- `S08` `by:` `status-fix`
 
 ## Notes
 
@@ -276,3 +286,4 @@ related:
 - `S14` When many items share one settlement amount, every true match is still built (about 12-25 us each); capping or paging suggestions would change output and needs a user decision.
 - `S16` invoice.view decoding only the selected invoice is covered by the authenticated-stored-read decision recorded next.
 - `S15` Status and check remain one whole-catalogue load each by design. Pre-existing: ledger.status with an instalment period (1P) fails with PeriodError in the money totals; pinned by a test, not fixed.
+- `S08` Pre-existing crash found by P04.S15: the money totals called Period.contains on a period with no date span. The overview pipeline now also gets the typed refusal for such a period; whether an instalment-period overview should show ledger totals is an open question.

@@ -36,7 +36,11 @@ from ...adapters.persistence.storage.sql import orm
 from ...adapters.persistence.storage.sql.session import session_scope
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.action_ports import LedgerActionPorts, LedgerActionPortsFactory
-from ...application.ledger.actions_manual import summarize_manual_transactions, update_manual_transaction_fields
+from ...application.ledger.actions_manual import (
+    LedgerSummaryPeriodWithoutSpanError,
+    summarize_manual_transactions,
+    update_manual_transaction_fields,
+)
 from ...application.ledger.actions_split_merge import split_transaction
 from ...application.ledger.check_operation import (
     LEDGER_CHECK_OPERATION_DEFINITION_ID,
@@ -87,8 +91,9 @@ from ...application.ledger.view_operation import (
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.owner import OperationExecutorContext
 from ...application.operations.public_period import PublicPeriod
+from ...core.errors.error_codes import ErrorCategory, get_registered_error_code, resolve_error_message
 from ...core.operations import OperationEffect, profile_operation_subject
-from ...core.period import Period, PeriodError
+from ...core.period import Period
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
@@ -637,14 +642,6 @@ def test_status_reads_the_catalogue_once_and_reports_what_separate_full_reads_re
         assert outcome == _full_scan_status(period, authority_operation), f"status differs for {period}"
         assert calls == Counter(load=1), f"status for {period} must read the whole catalogue exactly once"
 
-    # A period with no calendar span cannot scope the money totals; the status
-    # read refuses it from the totals, as it did before its reads were joined.
-    for period in (period for period in _PERIODS if not period.has_date_span()):
-        with pytest.raises(PeriodError):
-            _status(period, authority_operation)(_Observer(widen=False, repositories=[]))
-        with pytest.raises(PeriodError):
-            _full_scan_status(period, authority_operation)
-
     q4 = _status(_Q4_2030, authority_operation)(_Observer(widen=False, repositories=[]))
     assert isinstance(q4, LedgerStatusProjection)
     assert q4.total_count == len(_ROWS) + 1 + len(seeded.split_child_ids) + 1
@@ -652,6 +649,42 @@ def test_status_reads_the_catalogue_once_and_reports_what_separate_full_reads_re
     assert q4.checked_transaction_count == len(_Q4_2030_DIRECT) + len(seeded.split_child_ids) + 1
     assert q4.readiness_issue_count == len(q4.readiness_issues)
     assert all(issue.transaction_present for issue in q4.readiness_issues)
+
+
+def test_status_refuses_a_period_without_a_date_span_before_reading_the_catalogue(
+    seeded: _Seeded,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """An instalment clave selects no filing dates, so its money totals are refused, never zero."""
+    no_span = Period.from_year_and_code(2030, "1P")
+    assert not no_span.has_date_span()
+    # Active business rows are what reach the money totals' date check.
+    assert any(row.classification is BusinessClassification.BUSINESS for row in _ROWS)
+
+    observer = _Observer(widen=False, repositories=[])
+    with pytest.raises(LedgerSummaryPeriodWithoutSpanError) as refused:
+        _status(no_span, authority_operation)(observer)
+    assert observer.calls() == Counter(), "a refused period must not decrypt the catalogue"
+    assert refused.value.context == {"period": "2030 1P"}
+
+    code = get_registered_error_code(refused.value)
+    assert code.code == "REFUSED_LEDGER_SUMMARY_PERIOD_WITHOUT_SPAN"
+    assert code.category is ErrorCategory.REFUSED
+    message = resolve_error_message(refused.value, locale="en")
+    assert "no calendar date span" in message
+    assert "1P" in message
+
+    # The summary itself refuses the same period, whoever calls it.
+    with pytest.raises(LedgerSummaryPeriodWithoutSpanError):
+        _full_scan_status(no_span, authority_operation)
+
+    # A dated period in the same year still reports its status and money totals.
+    q4 = _status(_Q4_2030, authority_operation)(_Observer(widen=False, repositories=[]))
+    assert isinstance(q4, LedgerStatusProjection)
+    assert q4.period == PublicPeriod.from_period(_Q4_2030)
+    assert q4 == _full_scan_status(_Q4_2030, authority_operation)
+    assert Decimal(q4.business_income_total) + Decimal(q4.business_expense_total) > 0
+    assert q4.total_count == len(_ROWS) + 1 + len(seeded.split_child_ids) + 1
 
 
 def _check(period: Period | None, operation: PinnedAuthorityOperation) -> _Run:
