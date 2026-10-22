@@ -83,6 +83,57 @@ async def test_home_renders_the_selected_due_driven_projection_without_overflow(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("scenario", "expected"),
+    (
+        (
+            HomeFixtureScenario.READY,
+            {
+                "M130 2T": "Filed with AEAT",
+                "M303 3T": "Marked as filed, not yet confirmed by AEAT",
+                "M390 0A": "Filed, AEAT receipt verified",
+            },
+        ),
+        (
+            HomeFixtureScenario.BLOCKED,
+            {
+                "M130 2T": "Filed with AEAT",
+                "M303 3T": "Not filed yet",
+                "M390 0A": "Filed, accepted by AEAT",
+            },
+        ),
+    ),
+)
+async def test_home_agenda_rows_carry_one_filing_status_each(
+    scenario: HomeFixtureScenario, expected: dict[str, str]
+) -> None:
+    screen = HomeScreen(build_home_projection_fixture(scenario))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        table = cast("DataTable[str]", screen.query_one("#home-agenda", DataTable))
+        rows = tuple(str(table.get_row_at(index)[0]) for index in range(table.row_count))
+        evidence = screen.query_one("#home-evidence", Static)
+        text = "\n".join(str(widget.render()) for widget in screen.query(Static) if widget.display)
+    statuses = {row.split(" · ")[1]: row.split(" · ", 2)[2] for row in rows}
+    assert statuses == expected
+    assert not evidence.display
+    assert "Local:" not in text
+    assert "observed" not in text
+
+
+@pytest.mark.asyncio
+async def test_home_names_an_unread_aeat_source_under_the_agenda() -> None:
+    screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario.NEVER_CAPTURED))
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        evidence = screen.query_one("#home-evidence", Static)
+        assert evidence.display
+        assert str(evidence.render()).startswith("AEAT data: Not read yet")
+
+
+@pytest.mark.asyncio
 async def test_home_selection_and_escape_are_host_requests_not_business_calls() -> None:
     screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario.READY))
     app = ScreenHostApp[None](screen)

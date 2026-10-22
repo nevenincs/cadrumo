@@ -2419,13 +2419,7 @@ tui:
       reason: A helyi áttekintés javaslata
     action_context: '%{label} - %{reason} · %{context}'
     address: Modelo %{modelo} · %{filing_year} · %{period}
-    aeat_evidence: 'AEAT-állapot: %{state}'
-    aeat_state:
-      accepted: az AEAT elfogadta
-      justificante_verified: AEAT-igazolás ellenőrizve
-      not_observed: az AEAT-nál nem megfigyelt
-      submitted_observed: benyújtás megfigyelve az AEAT-nál
-    agenda_evidence_row: '%{address} - %{evidence}'
+    aeat_evidence: 'AEAT-adatok: %{state}'
     availability:
       available: Elérhető
       available_empty: '%{label} - %{detail}'
@@ -2465,7 +2459,15 @@ tui:
       actions: nincs javasolt teendő
       agenda: nincs közelgő benyújtási határidő
       declarations: nincs folytatható bevallás
-    evidence: 'Helyi: %{local} · AEAT: %{aeat}'
+    filing_status:
+      accepted: Benyújtva, az AEAT elfogadta
+      due: Még nincs benyújtva
+      imported: Máshol benyújtva, importálva
+      marked_filed: Benyújtottként jelölve, az AEAT még nem igazolta
+      overdue: Lejárt, nincs benyújtva
+      receipt_verified: Benyújtva, AEAT-igazolás ellenőrizve
+      submitted: Benyújtva az AEAT adatai szerint
+      unknown: Nincs benyújtva, ismeretlen határidő
     heading:
       actions: Következő teendők
       agenda: Bevallási naptár
@@ -2474,16 +2476,7 @@ tui:
       messages: Üzenetek
     ledger_summary: Elérhető - %{entries} tétel; %{requiring_review} ellenőrzésre
       vár; %{unclassified} besorolatlan; %{missing_evidence} hiányzó bizonylat
-    local_state:
-      external_baseline_imported: külső benyújtás importálva
-      not_ready_to_file: még nem benyújtható
-      ready_to_file: benyújtható
     messages_summary: Elérhető - %{count} igényel figyelmet
-    period_state:
-      due: Esedékes
-      filed: Benyújtottként rögzítve
-      late: Lejárt
-      unknown: Ismeretlen határidő
     reason:
       blocked_dependency: A bevallás egyik függősége blokkolva van
       blocked_evidence: Egy blokkolóhoz bizonylat kell

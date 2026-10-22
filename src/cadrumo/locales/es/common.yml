@@ -2447,13 +2447,7 @@ tui:
       reason: Sugerida por el resumen local
     action_context: '%{label} - %{reason} · %{context}'
     address: Modelo %{modelo} · %{filing_year} · %{period}
-    aeat_evidence: 'Estado en la AEAT: %{state}'
-    aeat_state:
-      accepted: aceptada por la AEAT
-      justificante_verified: justificante de la AEAT verificado
-      not_observed: no observada en la AEAT
-      submitted_observed: presentación observada en la AEAT
-    agenda_evidence_row: '%{address} - %{evidence}'
+    aeat_evidence: 'Datos de la AEAT: %{state}'
     availability:
       available: Disponible
       available_empty: '%{label} - %{detail}'
@@ -2493,7 +2487,15 @@ tui:
       actions: sin acciones sugeridas
       agenda: sin próximas fechas de presentación
       declarations: sin declaraciones que retomar
-    evidence: 'Local: %{local} · AEAT: %{aeat}'
+    filing_status:
+      accepted: Presentada, aceptada por la AEAT
+      due: Sin presentar
+      imported: Presentada por otra vía, importada
+      marked_filed: Marcada como presentada, sin confirmar por la AEAT
+      overdue: Vencida, sin presentar
+      receipt_verified: Presentada, justificante de la AEAT verificado
+      submitted: Presentada en la AEAT
+      unknown: Sin presentar, plazo desconocido
     heading:
       actions: Próximas acciones
       agenda: Calendario fiscal
@@ -2502,16 +2504,7 @@ tui:
       messages: Mensajes
     ledger_summary: Disponible - %{entries} apuntes; %{requiring_review} necesitan
       revisión; %{unclassified} sin clasificar; %{missing_evidence} sin justificante
-    local_state:
-      external_baseline_imported: presentación externa importada
-      not_ready_to_file: no lista para presentar
-      ready_to_file: lista para presentar
     messages_summary: Disponible - %{count} requieren atención
-    period_state:
-      due: Pendiente
-      filed: Registrada como presentada
-      late: Vencida
-      unknown: Calendario desconocido
     reason:
       blocked_dependency: Una dependencia de la declaración está bloqueada
       blocked_evidence: Un bloqueo necesita un justificante

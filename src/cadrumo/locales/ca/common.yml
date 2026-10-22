@@ -2436,13 +2436,7 @@ tui:
       reason: Suggerida pel resum local
     action_context: '%{label} - %{reason} · %{context}'
     address: Model %{modelo} · %{filing_year} · %{period}
-    aeat_evidence: 'Estat a l''AEAT: %{state}'
-    aeat_state:
-      accepted: acceptada per l'AEAT
-      justificante_verified: justificant de l'AEAT verificat
-      not_observed: no observada a l'AEAT
-      submitted_observed: presentació observada a l'AEAT
-    agenda_evidence_row: '%{address} - %{evidence}'
+    aeat_evidence: 'Dades de l''AEAT: %{state}'
     availability:
       available: Disponible
       available_empty: '%{label} - %{detail}'
@@ -2482,7 +2476,15 @@ tui:
       actions: sense accions suggerides
       agenda: sense properes dates de presentació
       declarations: sense declaracions per reprendre
-    evidence: 'Local: %{local} · AEAT: %{aeat}'
+    filing_status:
+      accepted: Presentada, acceptada per l'AEAT
+      due: Sense presentar
+      imported: Presentada per una altra via, importada
+      marked_filed: Marcada com a presentada, sense confirmar per l'AEAT
+      overdue: Vençuda, sense presentar
+      receipt_verified: Presentada, justificant de l'AEAT verificat
+      submitted: Presentada a l'AEAT
+      unknown: Sense presentar, termini desconegut
     heading:
       actions: Properes accions
       agenda: Calendari fiscal
@@ -2491,16 +2493,7 @@ tui:
       messages: Missatges
     ledger_summary: Disponible - %{entries} apunts; %{requiring_review} necessiten
       revisió; %{unclassified} sense classificar; %{missing_evidence} sense justificant
-    local_state:
-      external_baseline_imported: presentació externa importada
-      not_ready_to_file: no preparada per presentar
-      ready_to_file: preparada per presentar
     messages_summary: Disponible - %{count} requereixen atenció
-    period_state:
-      due: Pendent
-      filed: Registrada com a presentada
-      late: Vençuda
-      unknown: Calendari desconegut
     reason:
       blocked_dependency: Una dependència de la declaració està blocada
       blocked_evidence: Un bloqueig necessita un justificant

@@ -74,23 +74,18 @@ _DECLARATION_LOCALE_KEYS: Final = {
     HomeDeclarationState.FILED: "tui.home.declaration_state.filed",
     HomeDeclarationState.DISCARDED: "tui.home.declaration_state.discarded",
 }
-_PERIOD_LOCALE_KEYS: Final = {
-    OverviewPeriodState.DUE: "tui.home.period_state.due",
-    OverviewPeriodState.LATE: "tui.home.period_state.late",
-    OverviewPeriodState.FILED: "tui.home.period_state.filed",
-    OverviewPeriodState.UNKNOWN: "tui.home.period_state.unknown",
+_AEAT_FILING_STATUS_LOCALE_KEYS: Final = {
+    OverviewAeatSubmissionState.SUBMITTED_OBSERVED: "tui.home.filing_status.submitted",
+    OverviewAeatSubmissionState.ACCEPTED: "tui.home.filing_status.accepted",
+    OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED: "tui.home.filing_status.receipt_verified",
 }
-_LOCAL_LOCALE_KEYS: Final = {
-    OverviewLocalFilingState.NOT_READY_TO_FILE: "tui.home.local_state.not_ready_to_file",
-    OverviewLocalFilingState.READY_TO_FILE: "tui.home.local_state.ready_to_file",
-    OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED: "tui.home.local_state.external_baseline_imported",
+_UNFILED_STATUS_LOCALE_KEYS: Final = {
+    OverviewPeriodState.DUE: "tui.home.filing_status.due",
+    OverviewPeriodState.LATE: "tui.home.filing_status.overdue",
+    OverviewPeriodState.UNKNOWN: "tui.home.filing_status.unknown",
 }
-_AEAT_LOCALE_KEYS: Final = {
-    OverviewAeatSubmissionState.NOT_OBSERVED: "tui.home.aeat_state.not_observed",
-    OverviewAeatSubmissionState.SUBMITTED_OBSERVED: "tui.home.aeat_state.submitted_observed",
-    OverviewAeatSubmissionState.ACCEPTED: "tui.home.aeat_state.accepted",
-    OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED: "tui.home.aeat_state.justificante_verified",
-}
+_IMPORTED_STATUS_LOCALE_KEY: Final = "tui.home.filing_status.imported"
+_MARKED_FILED_STATUS_LOCALE_KEY: Final = "tui.home.filing_status.marked_filed"
 
 
 def _has_copy(translation_key: str) -> bool:
@@ -201,19 +196,31 @@ def _declaration_cells(item: HomeDeclarationResume) -> tuple[str, str, str]:
     )
 
 
+def _filing_status_key(item: HomeAgendaEntry) -> str:
+    """Name the one status an agenda row shows.
+
+    AEAT evidence outranks the local record and the local record outranks the
+    deadline, so a row never repeats a claim a stronger source already settled.
+    A locally recorded filing still says AEAT has not confirmed it.
+    """
+    aeat_key = _AEAT_FILING_STATUS_LOCALE_KEYS.get(item.aeat_submission_state)
+    if aeat_key is not None:
+        return aeat_key
+    if item.local_filing_state is OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED:
+        return _IMPORTED_STATUS_LOCALE_KEY
+    if (
+        item.local_filing_state is OverviewLocalFilingState.READY_TO_FILE
+        or item.period_state is OverviewPeriodState.FILED
+    ):
+        return _MARKED_FILED_STATUS_LOCALE_KEY
+    return _UNFILED_STATUS_LOCALE_KEYS[item.period_state]
+
+
 def _agenda_cells(item: HomeAgendaEntry) -> tuple[str, str, str]:
     return (
         item.due_on.strftime("%d/%m"),
         f"M{item.modelo} {item.period.registry_token}",
-        tr(_PERIOD_LOCALE_KEYS[item.period_state]),
-    )
-
-
-def _evidence_copy(item: HomeAgendaEntry) -> str:
-    return tr(
-        "tui.home.evidence",
-        local=tr(_LOCAL_LOCALE_KEYS[item.local_filing_state]),
-        aeat=tr(_AEAT_LOCALE_KEYS[item.aeat_submission_state]),
+        tr(_filing_status_key(item)),
     )
 
 
@@ -330,7 +337,6 @@ class HomeScreen(AccountChromeScreen):
                     show_header=False,
                     classes="home-table",
                 )
-                yield Static(id="home-agenda-evidence", classes="home-state", markup=False)
                 yield Static(id="home-evidence", classes="home-state", markup=False)
                 yield localized(
                     Static(tr("tui.home.heading.ledger"), classes="cadrumo-heading", markup=False),
@@ -416,21 +422,21 @@ class HomeScreen(AccountChromeScreen):
         items: tuple[HomeAgendaEntry, ...],
     ) -> None:
         table.add_column("")
-        evidence_rows: list[str] = []
         for item in items:
             due, address, state = _agenda_cells(item)
             table.add_row(
                 f"{due} · {address} · {state}",
                 key=self._remember(HomeTargetKind.AGENDA, home_agenda_identity(item)),
             )
-            evidence_rows.append(tr("tui.home.agenda_evidence_row", address=address, evidence=_evidence_copy(item)))
         table.display = bool(items)
-        self.query_one("#home-agenda-evidence", Static).update("\n".join(evidence_rows))
 
     def _render_zone_summaries(self, projection: HomeProjectionV1) -> None:
-        self.query_one("#home-evidence", Static).update(
-            tr("tui.home.aeat_evidence", state=_state_copy(projection.agenda_evidence_state))
-        )
+        # Only a missing, locked or stale AEAT read changes how the agenda
+        # statuses should be read; a current read needs no line of its own.
+        evidence_state = projection.agenda_evidence_state
+        evidence = self.query_one("#home-evidence", Static)
+        evidence.update(tr("tui.home.aeat_evidence", state=_state_copy(evidence_state)))
+        evidence.display = evidence_state.availability is not HomeAvailability.AVAILABLE
         ledger = projection.ledger
         self.query_one("#home-ledger", Static).update(
             _state_copy(projection.ledger_state)

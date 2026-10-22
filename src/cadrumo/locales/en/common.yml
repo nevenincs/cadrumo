@@ -2373,13 +2373,7 @@ tui:
       reason: Suggested by the local overview
     action_context: '%{label} - %{reason} · %{context}'
     address: Modelo %{modelo} · %{filing_year} · %{period}
-    aeat_evidence: 'AEAT status: %{state}'
-    aeat_state:
-      accepted: accepted by AEAT
-      justificante_verified: AEAT receipt verified
-      not_observed: not observed at AEAT
-      submitted_observed: submission observed at AEAT
-    agenda_evidence_row: '%{address} - %{evidence}'
+    aeat_evidence: 'AEAT data: %{state}'
     availability:
       available: Available
       available_empty: '%{label} - %{detail}'
@@ -2418,7 +2412,15 @@ tui:
       actions: no suggested actions
       agenda: no upcoming filing dates
       declarations: no resumable declarations
-    evidence: 'Local: %{local} · AEAT: %{aeat}'
+    filing_status:
+      accepted: Filed, accepted by AEAT
+      due: Not filed yet
+      imported: Filed elsewhere, imported
+      marked_filed: Marked as filed, not yet confirmed by AEAT
+      overdue: Overdue, not filed
+      receipt_verified: Filed, AEAT receipt verified
+      submitted: Filed with AEAT
+      unknown: Not filed, deadline unknown
     heading:
       actions: Next actions
       agenda: Filing calendar
@@ -2427,16 +2429,7 @@ tui:
       messages: Messages
     ledger_summary: Available - %{entries} entries; %{requiring_review} need review;
       %{unclassified} unclassified; %{missing_evidence} missing supporting documents
-    local_state:
-      external_baseline_imported: external filing imported
-      not_ready_to_file: not ready to file
-      ready_to_file: ready to file
     messages_summary: Available - %{count} requiring attention
-    period_state:
-      due: Due
-      filed: Recorded as filed
-      late: Overdue
-      unknown: Schedule unknown
     reason:
       blocked_dependency: A declaration dependency is blocked
       blocked_evidence: A blocker needs a supporting document
