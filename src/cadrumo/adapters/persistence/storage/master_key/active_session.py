@@ -117,13 +117,18 @@ def bind_active_bucket_session(session: BucketSession) -> None:
     active_session.bind(session)
 
 
-def _require_fresh_active_session() -> BucketSession:
+def require_fresh_active_session() -> BucketSession:
     """Return the active, unexpired :class:`BucketSession` or raise.
 
     The shared resolution behind :func:`get_active_master_key` and
     :func:`get_active_hmac_subkey`: both key surfaces must refuse
     identically when no session is bound or the bound session expired,
     so the checks live once here.
+
+    A batch reader that resolves key material once for one storage call
+    calls this directly, keeps the returned session for that call only, and
+    calls it again before releasing what it decrypted, so the call still ends
+    in this refusal when the session lapsed while it ran.
 
     Raises:
         NoActiveBucketSessionError: When no :func:`activate_session` block is
@@ -157,7 +162,7 @@ def get_active_master_key() -> bytes:
             currently active on the calling thread or task.
         BucketLockedError: When the active session has expired.
     """
-    return _require_fresh_active_session().dek
+    return require_fresh_active_session().dek
 
 
 def get_active_hmac_subkey(context: bytes) -> bytes:
@@ -182,7 +187,7 @@ def get_active_hmac_subkey(context: bytes) -> bytes:
             currently active on the calling thread or task.
         BucketLockedError: When the active session has expired.
     """
-    return _require_fresh_active_session().hmac_subkey(context)
+    return require_fresh_active_session().hmac_subkey(context)
 
 
 def has_active_bucket_session() -> bool:
@@ -325,5 +330,6 @@ __all__ = [
     "get_active_hmac_subkey",
     "get_active_master_key",
     "has_active_bucket_session",
+    "require_fresh_active_session",
     "session_serves_bucket",
 ]

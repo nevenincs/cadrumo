@@ -92,6 +92,7 @@ def decode_secure_object_row(
     max_supported_version: int,
     namespace_definition: SecureObjectNamespaceDefinition | None,
     enforce_registered_row_schema: Callable[..., None],
+    payload_key: bytes | None = None,
 ) -> SecureObjectRecord:
     """Validate and decrypt one secure-object row, raising on every failure.
 
@@ -150,6 +151,10 @@ def decode_secure_object_row(
             invoked in step 2. Injected so the codec does not reach back into
             the registry, and so tests can drive registration failures
             directly.
+        payload_key: The DEK a batch caller resolved once for its whole call,
+            or ``None`` to resolve it from the active session for this row.
+            It changes only where the key comes from: step 4 still verifies
+            the tag against this row's own associated data.
 
     Raises:
         ClassificationError: Unknown classification, or one that does not match
@@ -209,6 +214,7 @@ def decode_secure_object_row(
     payload_plain = decrypt_secure_object_payload(
         payload_wire,
         associated_data=secure_object_payload_aad(namespace, object_key, schema_version),
+        key=payload_key,
     )
     return SecureObjectRecord(
         namespace=namespace,
@@ -391,11 +397,13 @@ def secure_object_list_item_from_raw_row(
     max_supported_version: int,
     namespace_definition: SecureObjectNamespaceDefinition | None,
     enforce_registered_row_schema: Callable[..., None],
+    payload_key: bytes | None = None,
 ) -> SecureObjectBatchLoadItem:
     """Decode one raw ``iter_records_with_failures`` row into a typed outcome.
 
     ``expected_class`` is the :class:`SensitivityClass` required for the
-    namespace.
+    namespace. ``payload_key`` is forwarded verbatim to
+    :func:`decode_secure_object_row`.
 
     Fault-isolated: every failure mode (unknown classification, classification
     mismatch, unreadable schema version, revision-lineage inconsistency,
@@ -469,6 +477,7 @@ def secure_object_list_item_from_raw_row(
             max_supported_version=max_supported_version,
             namespace_definition=namespace_definition,
             enforce_registered_row_schema=enforce_registered_row_schema,
+            payload_key=payload_key,
         )
     except SecureObjectUnreadableError:
         return unreadable("revision lineage self-consistency check failed")

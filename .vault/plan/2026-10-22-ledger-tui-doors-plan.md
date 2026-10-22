@@ -9,7 +9,7 @@ related:
   - '[[2026-07-05-ledger-latency-budget-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:c578a126bc10ac0690e1d0708ac31d95fc5cdf635e8013500bf0f243a8a63de3'
+body_hash: 'sha256:3bd1e4767a95d437881dbe9a7ed4fedf77ec64cf72a5e95131a6eae4af09f9d5'
 ---
 
 # `ledger-tui-doors` plan
@@ -54,7 +54,7 @@ Dedicated agents make the ledger reads behind the Records screens meet the 30,00
 - [x] `P04.S10` - cut the per-row cost of the full transaction catalogue load without changing encryption, binding or results; `src/cadrumo/adapters/persistence/profile/transactions.py`.
 - [ ] `P04.S11` - measure every ledger read the Records screens call at 30,000 transactions and rank the overruns with their causes; `dev/ci/tests/test_ledger_tui_reads_benchmark.py`.
 - [ ] `P04.S12` - stop the domain Transaction model repeating raw revalidation and registry vocabulary lookups for every loaded row; `src/cadrumo/domain/transactions/models.py`.
-- [ ] `P04.S13` - cut the per-row session freshness checks and repeated object-key digests in the secure object batch read; `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `P04.S13` - cut the per-row session freshness checks and repeated object-key digests in the secure object batch read; `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`.
 
 ### Phase `P03` - integrate, verify and review
 

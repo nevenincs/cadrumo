@@ -17,7 +17,7 @@ from .....core.logging import get_logger
 from .....core.secure_object_write import SecureObjectWrite
 from .....core.time.clock import now as _utc_now
 from .....core.time.utc import coerce_utc_aware
-from ..crypto.encrypted_columns import secure_object_key_digest
+from ..crypto.encrypted_columns import SecureObjectCallKeys, secure_object_key_digest
 from ..errors import (
     ClassificationError,
     EnvelopeVersionError,
@@ -702,6 +702,12 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         yielded.  A legacy row therefore reaches the owning repository's
         explicit-cutover refusal without an implicit upgrade or partial read.
 
+        The call is one storage access under one active session. The session is
+        checked and its keys resolved once, every row is decoded under those
+        keys, and the session is checked again before the first record is
+        released. A session that lapsed, was sealed or was replaced while the
+        rows were decoded refuses the whole call; no record is yielded.
+
         Core types:
         :class:`~cadrumo.core.classification.policies.SensitivityClass`.
         """
@@ -713,9 +719,11 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         keys = tuple(dict.fromkeys(object_keys))
         if not keys:
             return
-        key_by_digest = {secure_object_key_digest(key): key for key in keys}
+        call_keys = SecureObjectCallKeys()
+        lookup_key = call_keys.lookup_key
+        key_by_digest = {secure_object_key_digest(key, lookup_key=lookup_key): key for key in keys}
         with session_scope(self._engine) as session:
-            rows = tuple(
+            rows = (
                 cast(
                     "Result[*_ListColumns]",
                     session.execute(
@@ -739,7 +747,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                         ),
                     ),
                 )
-            )
+            ).all()
             legacy_keys: list[str] = []
             for row in rows:
                 try:
@@ -750,6 +758,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                     legacy_keys.append(key_by_digest[bytes(row[1])])
             if legacy_keys:
                 refuse_legacy(tuple(legacy_keys))
+            payload_key = call_keys.payload_key
             items = tuple(
                 self._list_item_from_raw_row(
                     row,
@@ -757,9 +766,15 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                     expected_class=expected_class,
                     max_supported_version=current_version,
                     namespace_definition=namespace_definition,
+                    payload_key=payload_key,
                 )
                 for row in rows
             )
+        # This generator's frame stays alive while the caller consumes the
+        # records, so the call's keys are dropped before the first release.
+        del payload_key, lookup_key
+        self._require_call_session_current(namespace, call_keys)
+        del call_keys
         for item in items:
             if isinstance(item, SecureObjectRecord):
                 yield item
@@ -991,6 +1006,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         expected_class: SensitivityClass,
         max_supported_version: int,
         namespace_definition: SecureObjectNamespaceDefinition | None,
+        payload_key: bytes | None = None,
     ) -> SecureObjectBatchLoadItem:
         return secure_object_list_item_from_raw_row(
             raw,
@@ -999,7 +1015,23 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             max_supported_version=max_supported_version,
             namespace_definition=namespace_definition,
             enforce_registered_row_schema=self._enforce_registered_row_schema,
+            payload_key=payload_key,
         )
+
+    def _require_call_session_current(self, namespace: str, call_keys: SecureObjectCallKeys) -> None:
+        """Refuse to release a call's decoded rows unless its session is still in force.
+
+        Runs after the rows were decoded under ``call_keys`` and before any is
+        released. The first check is the one every repository call opens
+        with, minus the idle touch the call already made: a sealed, expired or
+        rebucketed session refuses here exactly as it would at the start of a
+        call. The second repeats the per-key resolution's own refusals and
+        adds identity: a different session, even a fresh one for the same
+        bucket, did not authorize this read.
+        """
+        self._check_session_freshness(namespace, touch=False)
+        if not call_keys.still_active():
+            raise runtime_not_ready_error(StorageRuntimeReadinessCode.SESSION_CHANGED)
 
     def load(
         self,

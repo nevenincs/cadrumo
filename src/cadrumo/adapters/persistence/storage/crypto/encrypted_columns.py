@@ -22,7 +22,7 @@ Secure-object payloads use row-identity AAD.
 
 from __future__ import annotations
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from sqlalchemy import LargeBinary
 from sqlalchemy.engine import Dialect
@@ -32,8 +32,15 @@ from .....core.keyed_digest import keyed_digest_bytes
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
-from ..master_key.active_session import get_active_hmac_subkey, get_active_master_key
+from ..master_key.active_session import (
+    get_active_hmac_subkey,
+    get_active_master_key,
+    require_fresh_active_session,
+)
 from .aead import EncryptedBlob, decrypt_record, encrypt_record
+
+if TYPE_CHECKING:
+    from ..master_key.bucket_session import BucketSession
 
 _HKDF_CONTEXT_COLUMN_LOOKUP = b"cadrumo.column.hashed_lookup.v1"
 
@@ -63,16 +70,20 @@ def secure_object_payload_aad(namespace: str, object_key_digest: bytes, schema_v
     )
 
 
-def secure_object_key_digest(object_key: str | bytes) -> bytes:
+def secure_object_key_digest(object_key: str | bytes, *, lookup_key: bytes | None = None) -> bytes:
     """Return the stored ``object_key`` digest for a natural or pre-digested key.
 
     Mirrors the :class:`HashedLookup` column's bind behaviour so the digest used
     to build the payload AAD at write time matches the digest persisted in the
     ``object_key`` column (and therefore the value reconstructed on read).
+
+    ``lookup_key`` is the column-lookup sub-key a caller resolved once for one
+    storage call through :class:`SecureObjectCallKeys`. Omitted, the sub-key is
+    resolved from the active session for this digest alone.
     """
     if isinstance(object_key, bytes | bytearray | memoryview):
         return bytes(object_key)
-    return HashedLookup.compute(object_key)
+    return HashedLookup.compute(object_key, sub_key=lookup_key)
 
 
 def encrypt_secure_object_payload(plaintext: bytes, *, associated_data: bytes) -> bytes:
@@ -81,11 +92,76 @@ def encrypt_secure_object_payload(plaintext: bytes, *, associated_data: bytes) -
     return encrypt_record(plaintext, key=key, associated_data=associated_data).to_wire()
 
 
-def decrypt_secure_object_payload(wire: bytes, *, associated_data: bytes) -> bytes:
-    """Decrypt a row-AAD-bound secure-object payload; raises on a tag mismatch."""
+def decrypt_secure_object_payload(wire: bytes, *, associated_data: bytes, key: bytes | None = None) -> bytes:
+    """Decrypt a row-AAD-bound secure-object payload; raises on a tag mismatch.
+
+    ``key`` is the DEK a caller resolved once for one storage call through
+    :class:`SecureObjectCallKeys`. Omitted, the DEK is resolved from the active
+    session for this payload alone. Either way the tag is verified against
+    ``associated_data`` exactly as given.
+    """
     blob = EncryptedBlob.from_wire(wire)
-    key = _resolve_master_key()
+    if key is None:
+        key = _resolve_master_key()
     return decrypt_record(blob, key=key, associated_data=associated_data)
+
+
+class SecureObjectCallKeys:
+    """The active session's key material, resolved once for one secure-object read call.
+
+    A batch read otherwise resolves the session again for every object-key
+    digest and every payload it opens. Those per-key resolutions exist because
+    SQLAlchemy column decorators cannot be handed a session; a repository call
+    can. One call is one storage access under one session, so it resolves the
+    session once, keeps the keys for that call only, and proves the session
+    again with :meth:`still_active` before it releases anything decrypted.
+
+    The keys are never exposed through ``repr``, and the object must not
+    outlive the call that resolved it.
+    """
+
+    __slots__ = ("_lookup_key", "_payload_key", "_session")
+
+    def __init__(self) -> None:
+        """Resolve the active, unexpired session's lookup sub-key and DEK.
+
+        Raises:
+            NoActiveBucketSessionError: When no session is bound.
+            BucketLockedError: When the bound session expired or was sealed.
+        """
+        session = require_fresh_active_session()
+        self._session: BucketSession = session
+        self._lookup_key = session.hmac_subkey(_HKDF_CONTEXT_COLUMN_LOOKUP)
+        self._payload_key = session.dek
+
+    @override
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(bucket_id={self._session.bucket_id!r})"
+
+    @property
+    def lookup_key(self) -> bytes:
+        """Return the column-lookup sub-key for :func:`secure_object_key_digest`."""
+        return self._lookup_key
+
+    @property
+    def payload_key(self) -> bytes:
+        """Return the DEK for :func:`decrypt_secure_object_payload`."""
+        return self._payload_key
+
+    def still_active(self) -> bool:
+        """Return whether the session these keys came from is still the active one.
+
+        The active session is re-resolved under the same checks every per-key
+        resolution applies, so this raises exactly as they do when no session
+        is bound or the bound session expired or was sealed. A different,
+        fresh session returns ``False``: the keys were resolved under a session
+        that is no longer the one in force.
+
+        Raises:
+            NoActiveBucketSessionError: When no session is bound.
+            BucketLockedError: When the bound session expired or was sealed.
+        """
+        return require_fresh_active_session() is self._session
 
 
 _HASHED_LOOKUP_DIGEST_SIZE = 32
@@ -138,11 +214,14 @@ class HashedLookup(TypeDecorator[bytes]):
     cache_ok = True
 
     @classmethod
-    def compute(cls, plaintext: str) -> bytes:
+    def compute(cls, plaintext: str, *, sub_key: bytes | None = None) -> bytes:
         """Compute the HMAC-SHA256 digest of ``plaintext``.
 
         Args:
             plaintext: The natural-key string to digest.
+            sub_key: The column-lookup sub-key, when the caller already resolved
+                it from the active session for this call. Omitted, it is
+                resolved here.
 
         Returns:
             32 raw bytes — the deterministic lookup digest.
@@ -157,7 +236,8 @@ class HashedLookup(TypeDecorator[bytes]):
         # than re-derived per digest; the HMAC over ``plaintext`` is the only
         # per-call work. The same HKDF-then-HMAC recipe as the secret store's
         # own (private, single-caller) digest helper, by construction.
-        sub_key = get_active_hmac_subkey(_HKDF_CONTEXT_COLUMN_LOOKUP)
+        if sub_key is None:
+            sub_key = get_active_hmac_subkey(_HKDF_CONTEXT_COLUMN_LOOKUP)
         return keyed_digest_bytes(key=sub_key, message=plaintext.encode("utf-8"))
 
     @override

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:d95c8a627a45b1ad32c4041711ab3f789c8e0ecc8e64ab38c49e4e5dda1a5bfe'
+body_hash: 'sha256:5d589fda00de390866577ac0f691dc410b52163143ab6ba6280a05d8c038764c'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -195,6 +195,17 @@ related:
 - `S07` `verify:` `check-locales on the 888 new keys, no placeholder or catalogue-only findings after the D2 and D3 follow-ups` -> `pass`
 - `S07` `by:` `orchestrator`
 - `S07` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_workbench.py`
+- `S13` `M` `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`
+- `S13` `M` `src/cadrumo/adapters/persistence/storage/crypto/encrypted_columns.py`
+- `S13` `M` `src/cadrumo/adapters/persistence/storage/sql/_secure_object_row_codec.py`
+- `S13` `M` `src/cadrumo/adapters/persistence/storage/master_key/active_session.py`
+- `S13` `A` `src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_batch_read_session.py`
+- `S13` `verify:` `load_many_current at 30k: CPU mean 1.517s to 1.299s; transaction load() 7.33s to 7.05s (9 alternating samples)` -> `pass`
+- `S13` `verify:` `storage suite (1916 passed, 140 existing skips)` -> `pass`
+- `S13` `verify:` `profile persistence suite (2066)` -> `pass`
+- `S13` `verify:` `mid-read lapse, seal, handover and re-login refuse the whole read; tamper refusals still fire (20 tests, mutation-checked)` -> `pass`
+- `S13` `verify:` `ruff, lint-imports, check-types` -> `pass`
+- `S13` `by:` `O5`
 
 ## Notes
 
@@ -208,3 +219,4 @@ related:
 - `S03` Follow-up: titles and prompts now reach tr() as literal keys so the locale scanner sees them.
 - `S07` Applied D1-D5 manifests and three orchestrator wording fixes. Accepted unknown-word findings are official untranslated terms (prorrata, Modelo, bienes de inversion, recargo de equivalencia, cuota), product names and valid inflections the pinned dictionaries lack. Harness surfaces not yet registered. Exclusion wiring in `runtime_workbench.py` is left uncommitted because that file carries another session's uncommitted startup work.
 - `S07` The exclusion submitter wiring (import, compose call, `exclusion_submitter=)` landed inside another session's commit 35934fefa0 together with its startup change; verified present in HEAD.
+- `S13` Behaviour change: a session lapsing or being replaced mid-read now refuses the whole read with a session refusal; before, a lapse surfaced as an unreadable row and a same-profile re-login released the records. transactions.py still digests each object key a second time (about 6 us/row); left for a follow-up.
