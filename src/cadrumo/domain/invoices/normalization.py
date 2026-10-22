@@ -20,7 +20,8 @@ from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ..iva.identification import identification_state_for_printed_tax_identifier
-from ..iva.schema import InvoiceKind
+from ..iva.schema import EUMemberState, InvoiceKind
+from ._validation_pass import answer_once
 from .errors import InvoiceValidationError
 from .validators import validate_counterparty_tax_id, validate_country_code
 
@@ -153,7 +154,7 @@ def normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obje
     if isinstance(country_raw, str):
         payload["counterparty_country"] = _judging(
             "counterparty_country",
-            lambda: validate_country_code(country_raw),
+            lambda: answer_once(validate_country_code, country_raw),
         )
     tax_id = payload.get("counterparty_tax_id")
     if isinstance(tax_id, str):
@@ -162,7 +163,7 @@ def normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obje
         country_key = country if isinstance(country, str) else None
         payload["counterparty_tax_id"] = _judging(
             "counterparty_tax_id",
-            lambda: validate_counterparty_tax_id(tax_id_raw, country=country_key),
+            lambda: answer_once(validate_counterparty_tax_id, tax_id_raw, country=country_key),
         )
     # Every structured creation path -- bulk import, the wizard, the CLI, the
     # ingestion mapper -- reaches this one normaliser, so reading the
@@ -178,11 +179,14 @@ def normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obje
     if payload.get("counterparty_identification_state") is None:
         printed = payload.get("counterparty_tax_id")
         payload["counterparty_identification_state"] = (
-            identification_state_for_printed_tax_identifier(printed, operation=_pinned_invoice_operation())
-            if isinstance(printed, str)
-            else None
+            answer_once(_printed_identification_state, printed) if isinstance(printed, str) else None
         )
     return payload
+
+
+def _printed_identification_state(printed: str) -> EUMemberState | None:
+    """Read the identification a printed tax identifier states, under the pinned operation."""
+    return identification_state_for_printed_tax_identifier(printed, operation=_pinned_invoice_operation())
 
 
 def normalise_invoice_currency(payload: dict[str, object]) -> dict[str, object]:

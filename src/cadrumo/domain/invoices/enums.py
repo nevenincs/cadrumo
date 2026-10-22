@@ -39,6 +39,7 @@ from ..iva.errors import IvaRateNotFoundError
 from ..iva.lookup import rate_kinds_for_declared_rate, rate_table_covers, resolve_iva_rate
 from ..iva.rates import rate_record_from_fact
 from ..iva.schema import IvaRateKind, spanish_eu_member_state
+from ._validation_pass import answer_once
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
@@ -63,7 +64,7 @@ class IvaRate(RegistryToken):
             return value
         if isinstance(value, str):
             try:
-                resolved = resolve_iva_rate_token(value, today_madrid())
+                resolved = answer_once(resolve_iva_rate_token, value, today_madrid())
                 return cls.from_registry(str(resolved))
             except RegistryValidationError as exc:
                 raise ValueError("IvaRate token is not declared by the scoped facts registry") from exc
@@ -431,6 +432,17 @@ def resolve_iva_rate_slot_fact(rate: IvaRate, on_date: date):
     kind = _iva_rate_slot_kind(declarations, on_date)
     if kind == resolve_iva_rate_kind_catalogue(effective_date=on_date, authority=operation).zero_token:
         return None
+    return _resolve_numeric_iva_rate_slot_fact(rate, on_date, declarations, kind, operation)
+
+
+def _resolve_numeric_iva_rate_slot_fact(
+    rate: IvaRate,
+    on_date: date,
+    declarations: Mapping[str, str],
+    kind: IvaRateKind,
+    operation: PinnedAuthorityOperation,
+) -> ResolvedMappingFact:
+    """Resolve the rate fact of a numeric, nonzero slot whose declarations are already read."""
     resolved = resolve_iva_rate(
         spanish_eu_member_state(effective_date=on_date, authority=operation),
         kind,
@@ -506,9 +518,9 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
             raise IvaRateNotFoundError("zero IVA slot is not accepted by the IVA authority")
         return Decimal("0")
     try:
-        resolved = resolve_iva_rate_slot_fact(rate, on_date)
-        if resolved is None:
-            raise RegistryValidationError("numeric IVA slot resolved without an authority fact")
+        # The slot's declarations, operation and tier were read above; reading
+        # them again for the fact would ask the registry the same questions.
+        resolved = _resolve_numeric_iva_rate_slot_fact(rate, on_date, declarations, kind, operation)
         return rate_record_from_fact(resolved, authority=operation).pct / Decimal("100")
     except RegistryValidationError as exc:
         # Coverage and legality are different facts and must not share a

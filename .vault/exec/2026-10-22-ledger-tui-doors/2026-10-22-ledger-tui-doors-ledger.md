@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:94dd524e55b9213112a69ebfbbcc0a82d819b0a9353a6f20a4dc7c377c9ff27a'
+body_hash: 'sha256:ff51020d79c146e58d9e2ad5e4d7ede288ca6503fa47a230f7ceb8c715a380a3'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -226,6 +226,18 @@ related:
 - `S14` `verify:` `parity against the inlined all-pairs oracle over 24 worlds, all tolerances and 7 rounding modes; mutation-checked` -> `pass`
 - `S14` `verify:` `invoice, workspace and reconciliation tests (266)` -> `pass`
 - `S14` `by:` `S14`
+- `S16` `A` `src/cadrumo/domain/invoices/_validation_pass.py`
+- `S16` `M` `src/cadrumo/domain/invoices/models.py`
+- `S16` `M` `src/cadrumo/domain/invoices/enums.py`
+- `S16` `M` `src/cadrumo/domain/invoices/normalization.py`
+- `S16` `M` `src/cadrumo/domain/invoices/_payload_normalisation.py`
+- `S16` `A` `src/cadrumo/domain/invoices/tests/test_validation_pass.py`
+- `S16` `A` `src/cadrumo/domain/invoices/tests/test_catalogue_validation_pass.py`
+- `S16` `verify:` `3,000-invoice catalogue decode: CPU 7.0s to 2.0s (5 paired rounds)` -> `pass`
+- `S16` `verify:` `invoice.list CPU mean 8.8s to 3.4s; invoice.view 6.8s to 2.4s` -> `pass`
+- `S16` `verify:` `HEAD-versus-new identity and refusal parity over varied seeds incl. every rate window edge; memo-key mutations caught` -> `pass`
+- `S16` `verify:` `invoice, ledger, profile persistence tests (4908)` -> `pass`
+- `S16` `by:` `S16`
 
 ## Notes
 
@@ -243,3 +255,4 @@ related:
 - `S11` At 30k rows after S09 and S10: workbench.generation 118 CPU-s mean (90M reconciliation pair checks), status 41 (4 full loads), check 32, view 30 (3 loads), track 19, preflight 12, unfiltered list 10, history 11, invoice.list 9, review 9, llm-diagnostics 8, participation 7, invoice.view 7. Period list page 0.59. Results and profiles in the scratchpad run4.log and prof folder.
 - `S12` Remaining domain cost is about 140 us of 212 us per row across `~75` validator calls; further cuts need a user decision (skip revalidating authenticated stored rows, native pydantic types, or paging the unfiltered listing).
 - `S14` When many items share one settlement amount, every true match is still built (about 12-25 us each); capping or paging suggestions would change output and needs a user decision.
+- `S16` invoice.view decoding only the selected invoice is covered by the authenticated-stored-read decision recorded next.

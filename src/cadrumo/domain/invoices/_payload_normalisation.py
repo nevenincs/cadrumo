@@ -32,6 +32,7 @@ from ..calculations.registry.travel_agency_mediation import require_travel_agenc
 from ..iva.classification import TransactionKind
 from ..iva.oss import OssIossRegime, require_oss_ioss_regime
 from ..iva.schema import EUMemberState, InvoiceKind, IvaCategory
+from ._validation_pass import answer_once
 from .enums import (
     InvoiceClass,
     InvoiceLegalMention,
@@ -149,7 +150,7 @@ def _coerce_enum_field(payload: dict[str, object], rule: _EnumFieldRule) -> None
     if not isinstance(effective_date, date):
         effective_date = today_madrid()
     try:
-        payload[rule.field] = _coerce_enum_value(rule, text, effective_date=effective_date)
+        payload[rule.field] = answer_once(_coerce_enum_value, rule, text, effective_date=effective_date)
     except (RegistryValidationError, TypeError, ValueError) as exc:
         raise InvoiceValidationError(rule.message) from exc
 
@@ -195,7 +196,7 @@ def _coerce_legal_mentions(payload: dict[str, object]) -> None:
         if not isinstance(value, str):
             raise InvoiceValidationError("legal_mentions entries must be an InvoiceLegalMention or its value")
         try:
-            coerced.append(resolve_invoice_legal_mention(value, effective_date))
+            coerced.append(answer_once(resolve_invoice_legal_mention, value, effective_date))
         except (RegistryValidationError, TypeError, ValueError) as exc:
             raise InvoiceValidationError("legal_mentions entries must be an InvoiceLegalMention") from exc
     payload["legal_mentions"] = tuple(coerced)
@@ -214,7 +215,8 @@ def _coerce_travel_agency_mediation(payload: dict[str, object]) -> None:
     if not isinstance(effective_date, date):
         raise InvoiceValidationError("travel_agency_mediation requires a normalized issued_at date")
     try:
-        payload["travel_agency_mediation"] = require_travel_agency_mediation(
+        payload["travel_agency_mediation"] = answer_once(
+            require_travel_agency_mediation,
             raw,
             effective_date=effective_date,
         )

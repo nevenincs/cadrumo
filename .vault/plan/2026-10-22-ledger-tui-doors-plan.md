@@ -9,7 +9,7 @@ related:
   - '[[2026-07-05-ledger-latency-budget-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:bc023a2584288ce0f89aab1ca2275f48265bb2b3fa526e05595818fc8fb6de24'
+body_hash: 'sha256:3c7b74ea6418a81a8a378183994fe821179711512e7c69969f5c3eeb5c43fe6d'
 ---
 
 # `ledger-tui-doors` plan
@@ -57,7 +57,7 @@ Dedicated agents make the ledger reads behind the Records screens meet the 30,00
 - [x] `P04.S13` - cut the per-row session freshness checks and repeated object-key digests in the secure object batch read; `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`.
 - [x] `P04.S14` - make workbench generation pair invoices with transactions through an index instead of every invoice against every transaction, with identical suggestions; `src/cadrumo/domain/invoices/service.py`.
 - [ ] `P04.S15` - load the transaction catalogue once per ledger read, read the period partition for status, check and preflight, and read one row by id for view, track, history and participation; `src/cadrumo/application/ledger`.
-- [ ] `P04.S16` - stop revalidating the whole invoice catalogue and its registry lookups on every invoice read; `src/cadrumo/domain/invoices/models.py`.
+- [x] `P04.S16` - stop revalidating the whole invoice catalogue and its registry lookups on every invoice read; `src/cadrumo/domain/invoices/models.py`.
 
 ### Phase `P03` - integrate, verify and review
 

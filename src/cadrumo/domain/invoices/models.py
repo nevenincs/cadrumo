@@ -19,7 +19,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, Self, override
 
-from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, ModelWrapValidatorHandler, field_serializer, field_validator, model_validator
 
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from ...core.country_code import CountryCodeAlpha2
@@ -49,6 +49,7 @@ from ..iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, s
 from ..transactions.raw_transaction import RawProvenance, SourceFormat
 from . import normalization as _normalization
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
+from ._validation_pass import answer_once, invoice_validation_pass
 from .business_premises import BusinessPremisesLease, normalise_legacy_business_premises_lease
 from .enums import (
     InvoiceClass,
@@ -207,11 +208,11 @@ class InvoiceLine(BaseModel):
             if key in payload:
                 payload[key] = coerce_decimal(payload[key])
         if "iva_rate" in payload and isinstance(payload["iva_rate"], str):
-            payload["iva_rate"] = resolve_iva_rate_token(payload["iva_rate"], today_madrid())
+            payload["iva_rate"] = answer_once(resolve_iva_rate_token, payload["iva_rate"], today_madrid())
         if "oss_rate_kind" in payload and isinstance(payload["oss_rate_kind"], str):
             stripped = payload["oss_rate_kind"].strip()
             payload["oss_rate_kind"] = (
-                require_iva_rate_kind(stripped, effective_date=today_madrid()) if stripped else None
+                answer_once(require_iva_rate_kind, stripped, effective_date=today_madrid()) if stripped else None
             )
         return payload
 
@@ -222,7 +223,7 @@ class InvoiceLine(BaseModel):
         """Refuse an OSS/IOSS rate tier absent from the IVA facts catalogue."""
         if value is None:
             return None
-        return require_iva_rate_kind(value, effective_date=today_madrid())
+        return answer_once(require_iva_rate_kind, value, effective_date=today_madrid())
 
     @field_validator("description")
     @classmethod
@@ -673,7 +674,7 @@ class Invoice(BaseModel):
         devengo_date = self.operation_date or self.issued_at
         for line in self.lines:
             try:
-                rate = iva_rate_percentage(line.iva_rate, devengo_date)
+                rate = answer_once(iva_rate_percentage, line.iva_rate, devengo_date)
             except IvaRateNotFoundError as exc:
                 raise InvoiceValidationError(
                     f"line rate {line.iva_rate.name} was not in force on {devengo_date.isoformat()}: {exc}",
@@ -712,7 +713,9 @@ class Invoice(BaseModel):
             "grand_total must equal base_total + iva_total + recargo_amount + suplido_amount exactly",
         )
         devengo_date = self.operation_date or self.issued_at
-        all_non_numeric = all(iva_rate_percentage(line.iva_rate, devengo_date) is None for line in self.lines)
+        all_non_numeric = all(
+            answer_once(iva_rate_percentage, line.iva_rate, devengo_date) is None for line in self.lines
+        )
         if all_non_numeric:
             # Checked before the grand-total equality below so the operator is
             # told which component is impossible, rather than being handed a
@@ -903,8 +906,9 @@ class Invoice(BaseModel):
         category = self.iva_category
         missing_tax_id = self.counterparty_tax_id is None
         category_value = getattr(category, "value", "")
-        simplificada = invoice_class_simplificada()
-        rectificativa = invoice_class_rectificativa()
+        simplificada = answer_once(invoice_class_simplificada)
+        rectificativa = answer_once(invoice_class_rectificativa)
+        intra_community_supply = answer_once(require_iva_category, "intra_community_supply")
         relief_case = (self.invoice_class, self.kind) == (simplificada, InvoiceKind.ISSUED)
         _normalization.raise_first_invoice_violation(
             (
@@ -926,7 +930,7 @@ class Invoice(BaseModel):
                     "rectifies_invoice_number only applies to a factura rectificativa",
                 ),
                 (
-                    (self.invoice_class, category) == (simplificada, require_iva_category("intra_community_supply")),
+                    (self.invoice_class, category) == (simplificada, intra_community_supply),
                     "a factura simplificada must not be issued for an entrega intracomunitaria exenta "
                     "(RD 1619/2012 art. 4.4.a); issue an ordinaria or rectificativa instead",
                 ),
@@ -936,7 +940,8 @@ class Invoice(BaseModel):
                     "on a RECEIVED invoice it names the issuer's own identity, which stays mandatory",
                 ),
                 (
-                    (missing_tax_id, category in _simplificada_mandatory_tax_id_categories()) == (True, True),
+                    (missing_tax_id, category in answer_once(_simplificada_mandatory_tax_id_categories))
+                    == (True, True),
                     "counterparty_tax_id is required on a factura simplificada whose iva_category is "
                     f"{category_value!r} (RD 1619/2012 art. 6.1.d)",
                 ),
@@ -983,9 +988,9 @@ class Invoice(BaseModel):
         M349/export classification decides between; this guard only refuses the
         one identification the category can never legitimately name.
         """
-        if (
-            self.iva_category == require_iva_category("intra_community_supply")
-            and self.counterparty_identification_state == spanish_eu_member_state()
+        intra_community_supply = answer_once(require_iva_category, "intra_community_supply")
+        if self.iva_category == intra_community_supply and (
+            self.counterparty_identification_state == answer_once(spanish_eu_member_state)
         ):
             raise InvoiceValidationError(
                 "an entrega intracomunitaria exenta cannot name an acquirer purchasing under a "
@@ -1014,9 +1019,9 @@ class Invoice(BaseModel):
         """
         if (self.operation_date is None) != (self.operation_date_role is None):
             raise InvoiceValidationError("operation_date and operation_date_role must be set together")
-        advance_payment_role = advance_payment_received_role()
+        advance_payment_role = answer_once(advance_payment_received_role)
         if self.operation_date_role == advance_payment_role:
-            if self.iva_category == require_iva_category("intra_community_supply"):
+            if self.iva_category == answer_once(require_iva_category, "intra_community_supply"):
                 raise InvoiceValidationError(
                     "a pago anticipado devengo does not apply to an entrega intracomunitaria exenta "
                     "(LIVA art. 75.Dos, párrafo segundo, excludes art. 25 entregas)",
@@ -1102,6 +1107,15 @@ class Invoice(BaseModel):
         if not is_eu_member_state_code(self.counterparty_country):
             return None
         return require_eu_member_state(self.counterparty_country)
+
+    # Declared last on purpose: pydantic nests wrap and after validators in
+    # declaration order, so the last one encloses every other validator.
+    @model_validator(mode="wrap")
+    @classmethod
+    def _validate_in_one_pass(cls, data: object, handler: ModelWrapValidatorHandler[Self]) -> Self:
+        """Answer each registry question once while this invoice validates."""
+        with invoice_validation_pass():
+            return handler(data)
 
 
 def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
@@ -1235,6 +1249,14 @@ class InvoiceCatalogue(BaseModel):
     @field_serializer("invoices")
     def _serialize_invoices(self, value: Mapping[str, Invoice]) -> dict[str, Invoice]:
         return dict(value)
+
+    # Declared after every other model validator so it encloses them all.
+    @model_validator(mode="wrap")
+    @classmethod
+    def _validate_in_one_pass(cls, data: object, handler: ModelWrapValidatorHandler[Self]) -> Self:
+        """Share one registry pass across every invoice this catalogue validates."""
+        with invoice_validation_pass():
+            return handler(data)
 
     @override
     def __iter__(self) -> Iterator[Invoice]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional Pydantic catalogue iteration adapter; the established public API yields Invoice records, not BaseModel field-value tuples
