@@ -1,10 +1,16 @@
 """The diagnostic log file handler, which tells a following reader about each append.
 
-Writers serialize rotation and append through one OS file lock and close the
-log before releasing it. Retaining a handle between records prevents another
-Windows process from rotating the file and loses its next record. After each
-append the handler sets a session-local event named for the user and the log
-directory. The desktop's log view waits on that event instead of reading the
+Writers serialize rotation and append through one OS file lock on a sidecar.
+Each writer keeps its log and sidecar descriptors between records, because
+reopening them for every record cost a directory creation and two opens, each
+scanned on Windows. On Windows both are opened with delete sharing, so a
+retained handle never stops another process renaming the log during rotation.
+Under the lock a writer compares the files its descriptors hold with the ones
+the paths name now. It reopens after another writer rotated the log or the
+directory was replaced, so no record lands in a rotated backup and no writer
+locks an unlinked sidecar. A forked child reopens both rather than share its
+parent's lock. After each append the handler sets a session-local event named
+for the user and the log directory. The desktop's log view waits on that event instead of reading the
 files on a timer. The event belongs to this user alone: it is created
 owner-only, and a name another account holds, or an object of another type,
 is refused, which leaves the reader observing the files on its interval.
@@ -17,8 +23,10 @@ import logging
 import ntpath
 import os
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from functools import cache
+from io import TextIOWrapper
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import override
@@ -32,6 +40,14 @@ _SDDL_REVISION_1 = 1
 _SE_KERNEL_OBJECT = 6
 _OWNER_SECURITY_INFORMATION = 0x00000001
 _ERROR_SUCCESS = 0
+
+_GENERIC_READ = 0x80000000
+_GENERIC_WRITE = 0x40000000
+_SHARE_READ_WRITE_DELETE = 0x00000007
+_OPEN_EXISTING = 3
+_OPEN_ALWAYS = 4
+_FILE_ATTRIBUTE_NORMAL = 0x00000080
+_SIDECAR_REOPEN_ATTEMPTS = 3
 
 
 def append_signal_name(directory: str, sid: str) -> str:
@@ -210,6 +226,35 @@ def announce_append(directory: str) -> None:
             return
 
 
+def _shared_open(path: str, flags: int) -> int:
+    """Open ``path`` like :func:`os.open`; on Windows also let other processes rename or delete it."""
+    if sys.platform == "win32":
+        import _winapi
+        import msvcrt
+
+        access = _GENERIC_READ | _GENERIC_WRITE if flags & os.O_RDWR else _GENERIC_WRITE
+        disposition = _OPEN_ALWAYS if flags & os.O_CREAT else _OPEN_EXISTING
+        handle = _winapi.CreateFile(path, access, _SHARE_READ_WRITE_DELETE, 0, disposition, _FILE_ATTRIBUTE_NORMAL, 0)
+        try:
+            # Without O_TEXT the descriptor is binary, and the handle was created non-inheritable.
+            return msvcrt.open_osfhandle(handle, flags & os.O_APPEND)
+        except BaseException:
+            _winapi.CloseHandle(handle)
+            raise
+    else:
+        return os.open(path, flags | os.O_CLOEXEC, 0o600)
+
+
+def _names_descriptor(path: str, descriptor: int) -> bool:
+    """Whether ``path`` still names the file open on ``descriptor``."""
+    try:
+        named = os.stat(path)
+    except FileNotFoundError:
+        return False
+    held = os.fstat(descriptor)
+    return (named.st_dev, named.st_ino) == (held.st_dev, held.st_ino)
+
+
 class AnnouncingRotatingFileHandler(RotatingFileHandler):
     """Coordinate process writers before rotation and announce completed appends."""
 
@@ -223,22 +268,85 @@ class AnnouncingRotatingFileHandler(RotatingFileHandler):
         delay: bool = False,
         errors: str | None = None,
     ) -> None:
-        """Keep the standard handler configuration without retaining a file handle."""
-        # Always open under the process lock, including the first record.
+        """Keep the standard handler configuration and open nothing before the first record."""
+        from .locks import sidecar_lock_path
+
+        # The first open happens under the process lock, like every reopen.
         super().__init__(filename, mode, maxBytes, backupCount, encoding, delay=True, errors=errors)
+        self._lock_path = sidecar_lock_path(Path(self.baseFilename))
+        self._lock_descriptor: int | None = None
+        self._descriptor_owner = os.getpid()
+
+    @override
+    def _open(self) -> TextIOWrapper:
+        if sys.platform == "win32" and self.mode == "a":
+            return open(self.baseFilename, "a", encoding=self.encoding, errors=self.errors, opener=_shared_open)
+        return super()._open()
 
     @override
     def emit(self, record: logging.LogRecord) -> None:
-        from .locks import exclusive_file_lock
-
         try:
-            with exclusive_file_lock(Path(self.baseFilename), timeout=5.0, retry_backoff=0.005, log_events=False):
-                try:
-                    super().emit(record)
-                finally:
-                    if self.stream is not None:
-                        self.stream.close()
-                        self.stream = None
+            with self._exclusive_append():
+                super().emit(record)
             announce_append(os.path.dirname(self.baseFilename))
         except Exception:
             self.handleError(record)
+
+    @override
+    def close(self) -> None:
+        self.acquire()
+        try:
+            self._close_lock_descriptor()
+        finally:
+            self.release()
+        super().close()
+
+    @contextmanager
+    def _exclusive_append(self) -> Generator[None]:
+        """Hold the writers' lock with the stream, if any, on the file the log path names now."""
+        from .locks import held_descriptor_lock
+
+        if self._descriptor_owner != os.getpid():
+            # Inherited across fork: the parent's lock description would admit both processes.
+            self._close_lock_descriptor()
+            self._close_stream()
+            self._descriptor_owner = os.getpid()
+        for _ in range(_SIDECAR_REOPEN_ATTEMPTS):
+            descriptor = self._lock_descriptor
+            if descriptor is None:
+                descriptor = self._lock_descriptor = self._open_lock_descriptor()
+            with held_descriptor_lock(descriptor, self._lock_path, timeout=5.0, retry_backoff=0.005, log_events=False):
+                if _names_descriptor(str(self._lock_path), descriptor):
+                    self._follow_rotation()
+                    yield
+                    return
+            self._close_lock_descriptor()
+        raise OSError(f"the log lock {self._lock_path} was replaced while it was being acquired")
+
+    def _open_lock_descriptor(self) -> int:
+        try:
+            return _shared_open(str(self._lock_path), os.O_RDWR | os.O_CREAT)
+        except FileNotFoundError:
+            # The log directory was removed since this writer last opened it.
+            self._lock_path.parent.mkdir(parents=True, exist_ok=True)
+            return _shared_open(str(self._lock_path), os.O_RDWR | os.O_CREAT)
+
+    def _follow_rotation(self) -> None:
+        """Reopen after another writer rotated the log; otherwise measure the shared file's end."""
+        if self.stream is None:
+            return
+        if _names_descriptor(self.baseFilename, self.stream.fileno()):
+            # Other writers appended since this stream last wrote; rollover measures the whole file.
+            self.stream.seek(0, os.SEEK_END)
+        else:
+            self._close_stream()
+
+    def _close_stream(self) -> None:
+        if self.stream is not None:
+            self.stream.close()
+            self.stream = None
+
+    def _close_lock_descriptor(self) -> None:
+        if self._lock_descriptor is not None:
+            os.close(self._lock_descriptor)
+            self._lock_descriptor = None

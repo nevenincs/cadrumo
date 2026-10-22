@@ -82,7 +82,7 @@ _DEFAULT_RETRY_BACKOFF: Final[_DefaultLockTimeout] = _DefaultLockTimeout()
 """Sentinel for :func:`exclusive_file_lock` ``retry_backoff``; resolves at call time."""
 
 
-def _lock_path_for(target: Path) -> Path:
+def sidecar_lock_path(target: Path) -> Path:
     """Return the canonical lock-file path adjacent to ``target``."""
     return target.with_name(target.name + ".lock")
 
@@ -154,7 +154,7 @@ def _resolved_lock_budget(
 
 def _open_lock_fd(target: Path) -> tuple[int, Path]:
     """Open the sidecar lock descriptor for ``target``."""
-    lock_path = _lock_path_for(target)
+    lock_path = sidecar_lock_path(target)
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     # Add the close-on-exec / no-inherit flag so the lock-file descriptor
     # cannot leak into a subprocess spawned while the lock is held.
@@ -250,18 +250,40 @@ def exclusive_file_lock(
     timeout, retry_backoff = _resolved_lock_budget(timeout, retry_backoff)
     fd, lock_path = _open_lock_fd(target)
     try:
-        deadline = time.monotonic() + timeout
-        while not _lock_acquired_before_deadline(
-            fd, lock_path, deadline=deadline, timeout=timeout, log_events=log_events
-        ):
-            time.sleep(retry_backoff)
-        if log_events:
-            _log.debug("exclusive_file_lock: acquired %s", lock_path)
-        try:
+        with held_descriptor_lock(fd, lock_path, timeout=timeout, retry_backoff=retry_backoff, log_events=log_events):
             yield lock_path
-        finally:
-            _release_lock(fd, log_events=log_events)
-            if log_events:
-                _log.debug("exclusive_file_lock: released %s", lock_path)
     finally:
         os.close(fd)
+
+
+@contextmanager
+def held_descriptor_lock(
+    fd: int,
+    lock_path: Path,
+    *,
+    timeout: float | _DefaultLockTimeout = DEFAULT_LOCK_TIMEOUT,
+    retry_backoff: float | _DefaultLockTimeout = _DEFAULT_RETRY_BACKOFF,
+    log_events: bool = True,
+) -> Generator[None]:
+    """Hold the exclusive lock of :func:`exclusive_file_lock` on an already open sidecar descriptor.
+
+    ``fd`` must be a read-write descriptor of ``lock_path``, positioned at
+    offset zero, which the caller opened and keeps owning; the lock is
+    released on exit and the descriptor stays open. A caller that retains
+    the descriptor across holds is responsible for noticing that the sidecar
+    it names was replaced, since two descriptors of different files exclude
+    nobody. Timeout, backoff and refusal are those of
+    :func:`exclusive_file_lock`.
+    """
+    timeout, retry_backoff = _resolved_lock_budget(timeout, retry_backoff)
+    deadline = time.monotonic() + timeout
+    while not _lock_acquired_before_deadline(fd, lock_path, deadline=deadline, timeout=timeout, log_events=log_events):
+        time.sleep(retry_backoff)
+    if log_events:
+        _log.debug("exclusive_file_lock: acquired %s", lock_path)
+    try:
+        yield
+    finally:
+        _release_lock(fd, log_events=log_events)
+        if log_events:
+            _log.debug("exclusive_file_lock: released %s", lock_path)

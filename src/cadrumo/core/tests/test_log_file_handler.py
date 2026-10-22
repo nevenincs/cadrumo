@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import logging
+import os
+import shutil
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -89,3 +92,102 @@ def test_a_squatted_signal_name_costs_no_record(tmp_path: Path) -> None:
             assert win32event.WaitForSingleObject(squatter, 0) != win32event.WAIT_OBJECT_0
         finally:
             handler.close()
+
+
+_FILE_EVENTS = frozenset({"open", "os.mkdir", "_winapi.CreateFile"})
+_observed_file_events: list[tuple[str, str]] | None = None
+
+
+def _record_file_event(event: str, arguments: tuple[object, ...]) -> None:
+    if _observed_file_events is not None and event in _FILE_EVENTS and arguments:
+        target = arguments[0]
+        if isinstance(target, (str, bytes, os.PathLike)):
+            _observed_file_events.append((event, os.fsdecode(target)))
+
+
+sys.addaudithook(_record_file_event)
+
+
+def _file_events_under(directory: Path, action: Callable[[], None]) -> list[tuple[str, str]]:
+    """Return the audited opens and directory creations below ``directory`` while ``action`` runs."""
+    global _observed_file_events
+    _observed_file_events = []
+    try:
+        action()
+        events = _observed_file_events
+    finally:
+        _observed_file_events = None
+    prefix = os.path.normcase(os.path.abspath(directory))
+    return [(event, path) for event, path in events if os.path.normcase(os.path.abspath(path)).startswith(prefix)]
+
+
+def _record(message: str) -> logging.LogRecord:
+    return logging.makeLogRecord({"msg": message, "levelno": logging.INFO})
+
+
+def test_steady_state_records_open_and_create_nothing(tmp_path: Path) -> None:
+    handler = AnnouncingRotatingFileHandler(tmp_path / "diagnostics" / "probe.log", maxBytes=1 << 20, encoding="utf-8")
+    try:
+        (tmp_path / "diagnostics").mkdir()
+        first = _file_events_under(tmp_path, lambda: handler.emit(_record("first record")))
+
+        def emit_fifty() -> None:
+            for index in range(50):
+                handler.emit(_record(f"record {index:02d}"))
+
+        later = _file_events_under(tmp_path, emit_fifty)
+    finally:
+        handler.close()
+    # The first record opens the sidecar and the log once each.
+    assert {path for _event, path in first} == {
+        str(tmp_path / "diagnostics" / "probe.log.lock"),
+        str(tmp_path / "diagnostics" / "probe.log"),
+    }
+    assert later == []
+    lines = (tmp_path / "diagnostics" / "probe.log").read_text(encoding="utf-8").splitlines()
+    assert lines == ["first record", *(f"record {index:02d}" for index in range(50))]
+
+
+def test_a_retained_writer_appends_to_the_log_another_writer_rotated(tmp_path: Path) -> None:
+    target = tmp_path / "shared.log"
+    idle = AnnouncingRotatingFileHandler(target, maxBytes=100, backupCount=3, encoding="utf-8")
+    rotating = AnnouncingRotatingFileHandler(target, maxBytes=100, backupCount=3, encoding="utf-8")
+    try:
+        idle.emit(_record("idle before"))
+        # Together with the idle writer's record this passes the cap, so this writer rotates first.
+        rotating.emit(_record("r" * 88))
+        idle.emit(_record("x"))
+    finally:
+        idle.close()
+        rotating.close()
+    assert (tmp_path / "shared.log.1").read_text(encoding="utf-8").splitlines() == ["idle before"]
+    assert target.read_text(encoding="utf-8").splitlines() == ["r" * 88, "x"]
+
+
+def test_a_retained_writer_measures_what_other_writers_appended(tmp_path: Path) -> None:
+    target = tmp_path / "shared.log"
+    idle = AnnouncingRotatingFileHandler(target, maxBytes=100, backupCount=3, encoding="utf-8")
+    other = AnnouncingRotatingFileHandler(target, maxBytes=100, backupCount=3, encoding="utf-8")
+    try:
+        idle.emit(_record("a" * 10))
+        for _ in range(3):
+            other.emit(_record("b" * 25))
+        # Its own stream wrote one short record, but the shared file is near the cap.
+        idle.emit(_record("c" * 10))
+    finally:
+        idle.close()
+        other.close()
+    assert (tmp_path / "shared.log.1").read_text(encoding="utf-8").splitlines() == ["a" * 10, *(["b" * 25] * 3)]
+    assert target.read_text(encoding="utf-8").splitlines() == ["c" * 10]
+
+
+def test_a_removed_log_directory_is_recreated_for_the_next_record(tmp_path: Path) -> None:
+    directory = tmp_path / "diagnostics"
+    handler = AnnouncingRotatingFileHandler(directory / "probe.log", maxBytes=1 << 20, encoding="utf-8")
+    try:
+        handler.emit(_record("before removal"))
+        shutil.rmtree(directory)
+        handler.emit(_record("after removal"))
+    finally:
+        handler.close()
+    assert (directory / "probe.log").read_text(encoding="utf-8") == "after removal\n"
