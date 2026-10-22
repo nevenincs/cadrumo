@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:04880165be2d7a2bd5ed1c19d6496165cc1dcb67de187318231290e5c1895925'
+body_hash: 'sha256:d95c8a627a45b1ad32c4041711ab3f789c8e0ecc8e64ab38c49e4e5dda1a5bfe'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -194,6 +194,7 @@ related:
 - `S07` `verify:` `pytest Records, runtime door and harness tests (1063 of 1064; sequence golden divergence under root-cause)` -> `fail`
 - `S07` `verify:` `check-locales on the 888 new keys, no placeholder or catalogue-only findings after the D2 and D3 follow-ups` -> `pass`
 - `S07` `by:` `orchestrator`
+- `S07` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_workbench.py`
 
 ## Notes
 
@@ -206,3 +207,4 @@ related:
 - `S03` Whole-ledger tools (bulk, rules, counterparties, ratios, diagnostics) attach to Entries because Classification needs a selected entry. classify.iva-derive has no preview; derived values show after the write. rule.list has no paging. The tools composer entry and locale strings land in the integration commit.
 - `S03` Follow-up: titles and prompts now reach tr() as literal keys so the locale scanner sees them.
 - `S07` Applied D1-D5 manifests and three orchestrator wording fixes. Accepted unknown-word findings are official untranslated terms (prorrata, Modelo, bienes de inversion, recargo de equivalencia, cuota), product names and valid inflections the pinned dictionaries lack. Harness surfaces not yet registered. Exclusion wiring in `runtime_workbench.py` is left uncommitted because that file carries another session's uncommitted startup work.
+- `S07` The exclusion submitter wiring (import, compose call, `exclusion_submitter=)` landed inside another session's commit 35934fefa0 together with its startup change; verified present in HEAD.
