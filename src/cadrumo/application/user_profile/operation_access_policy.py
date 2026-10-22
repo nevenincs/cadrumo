@@ -31,7 +31,7 @@ from .access_contracts import (
     ProfileAccessState,
     SessionKind,
 )
-from .access_policy import intersect_scopes
+from .access_policy import intersect_scopes_within
 
 
 def operation_scope_refusal(
@@ -150,7 +150,7 @@ def _evaluate_operation_scope(
     contract = _registered_contract_or_refusal(request, policy, registry, session)
     if isinstance(contract, AccessDenied):
         return contract
-    scope = _effective_operation_scope(session, ancestors, grant, profile)
+    scope = _effective_operation_scope(request, policy, session, ancestors, grant, profile)
     refusal = _scope_effect_refusal(request, policy, scope)
     if refusal is not None:
         return refusal
@@ -167,15 +167,25 @@ def _evaluate_operation_scope(
 
 
 def _effective_operation_scope(
+    request: OperationAccessRequest,
+    policy: OperationAccessPolicy,
     session: AccessSession,
     ancestors: tuple[AccessSession, ...],
     grant: AutomationGrant | None,
     profile: ProfileAccessState,
 ) -> AccessScope:
+    """Intersect every current authority over the operation and disclosures this access names.
+
+    The refusals read no other operation or disclosure from the scope, so they
+    decide as they would on the whole intersection, at a cost that does not
+    grow with how many operations and disclosures the session lists.
+    """
     scopes = (profile.scope, session.scope, *(item.scope for item in ancestors))
     if grant is not None and session.kind is not SessionKind.HUMAN:
         scopes += (grant.scope,)
-    return intersect_scopes(scopes)
+    return intersect_scopes_within(
+        scopes, operations=frozenset({request.definition_id}), disclosures=policy.disclosures
+    )
 
 
 def _operation_profile_refusal(
