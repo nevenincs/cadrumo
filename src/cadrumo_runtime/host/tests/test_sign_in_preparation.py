@@ -14,11 +14,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from threading import Event
 from types import SimpleNamespace
+from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody.paths import profile_custody_path
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
+from cadrumo.application.operations.registry import OperationRegistry
+from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import Peer
 from cadrumo_client.contracts.transport import ConnectionContext
@@ -51,6 +55,10 @@ def _service(tmp_path: Path, owner: _Owner, monkeypatch: pytest.MonkeyPatch) -> 
         os_owner_id="synthetic-owner",
     )
     monkeypatch.setattr(service, "_host", lambda profile_id, context: SimpleNamespace(owner=owner))
+    service._registry = cast(OperationRegistry, object())
+    commit = profile_custody_path(owner.profile_id, StorageCategory.PROFILE_CAPSULE_COMMIT, root=tmp_path)
+    commit.parent.mkdir(parents=True)
+    commit.write_text("{}", encoding="utf-8")
     return service
 
 
@@ -92,6 +100,25 @@ def test_a_draining_runtime_prepares_nothing(tmp_path: Path, monkeypatch: pytest
     owner = _Owner()
     service = _service(tmp_path, owner, monkeypatch)
     service.stop.set()
+    service.prepare_for_sign_in(owner.profile_id, _context())
+    assert not owner.done.wait(0.2)
+    assert owner.prepared == []
+
+
+def test_a_profile_with_no_committed_custody_is_not_prepared(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A watch may name any profile; one that does not exist must cost nothing and start nothing."""
+    owner = _Owner()
+    service = _service(tmp_path, owner, monkeypatch)
+    service.prepare_for_sign_in(uuid4(), _context())
+    assert not owner.done.wait(0.2)
+    assert owner.prepared == []
+
+
+def test_preparation_never_builds_the_operation_registry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Building it would hold the guard every other request waits on; a sign-in builds it instead."""
+    owner = _Owner()
+    service = _service(tmp_path, owner, monkeypatch)
+    service._registry = None
     service.prepare_for_sign_in(owner.profile_id, _context())
     assert not owner.done.wait(0.2)
     assert owner.prepared == []

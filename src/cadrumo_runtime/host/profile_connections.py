@@ -15,6 +15,7 @@ from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.bucket.output_language_hint import read_bucket_output_language_hint
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
+from cadrumo.adapters.persistence.storage.custody.paths import profile_custody_path
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
@@ -22,6 +23,7 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
+from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
 from cadrumo_client.contracts.access_vocabulary import Availability
@@ -248,10 +250,16 @@ class RuntimeProfileConnections(
         """Start a watched, signed-out profile's worker in the background so its sign-in finds it ready.
 
         The worker holds no key or lease until a sign-in installs one. If it
-        cannot start here, the sign-in starts it, as it always did.
+        cannot start here, the sign-in starts it, as it always did. Only a
+        committed profile is prepared, and only once the operation registry is
+        ready: preparing must never build the registry under the guard that
+        every other request waits on.
         """
+        committed = profile_custody_path(profile_id, StorageCategory.PROFILE_CAPSULE_COMMIT, root=self.root)
+        if not committed.is_file():
+            return
         with self._guard:
-            if not self._admitting() or profile_id in self._prepared_profiles:
+            if not self._admitting() or self._registry is None or profile_id in self._prepared_profiles:
                 return
             self._prepared_profiles.add(profile_id)
 
