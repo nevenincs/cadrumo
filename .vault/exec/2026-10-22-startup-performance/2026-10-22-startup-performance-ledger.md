@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:6d2b3834e49d24d6d7775854ddd10c667a220f5e776754289e88bf7528179366'
+body_hash: 'sha256:510423ecdd0ac616c83a4df4fdeb79181ac9e1efcf8b4e21e4d6111e81e04746'
 related:
   - "[[2026-10-22-startup-performance-plan]]"
 ---
@@ -122,3 +122,5 @@ related:
 - `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_profile_worker_custody_lease_window.py`
 - `S04` `verify:` `pytest worker custody suites, all lanes` -> `pass`
 - `S04` `verify:` `ruff, ty` -> `pass`
+- `S05` `M` `.vault/audit/2026-10-22-startup-performance-request-path-audit.md`
+- `S05` `verify:` `perf harness on overlaid package copy` -> `pass`

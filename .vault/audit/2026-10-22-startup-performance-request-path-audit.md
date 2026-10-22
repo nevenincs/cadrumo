@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:215fb409654244eaebadab25de7892a843192e58182ff16a32e6c90a510e054f'
+body_hash: 'sha256:18e5323fdf116729bd3becfcf82ea1cca29b9fc325e07768155eed9c863e3863'
 related: []
 ---
 
@@ -83,3 +83,20 @@ The operation journal lock alone wrote 1,548 lines in seven minutes (`src/cadrum
 - sign-in-process-chain: a decision is needed on removing CLI children from the sign-in path, which amends the desktop shell's sign-in observation.
 - worker-cold-first-operation: a decision is needed on a pre-started unbound worker, as the KDF child already is.
 - redaction-opens-tax-authority, authority-full-hash-per-process, lock-debug-volume, tui-first-screen-serial-operations: implementation within existing decisions.
+
+### progress-request-path | info | S01-S04 measured on the same package copy
+
+The disposable-root harness ran against one independent copy of the operator's stage, first as staged and then with only the S01-S04 modules overlaid and compiled by the package's own interpreter; every overlaid module matched its pre-change source in the copy. Empty profile, operator's host, same session.
+
+| Step | Before | After |
+| --- | --- | --- |
+| One `user-profile.view` page through the hold (median of 8) | 0.828 s | 0.153 s |
+| Runtime `status` round trip (median) | 0.052 s | 0.007 s |
+| Hold `activity` (median) | 0.103 s | 0.010 s |
+| Hold `attendance_inventory` (median) | 0.048 s | 0.001 s |
+| First `language_observe` after sign-in | 2.470 s | 1.869 s |
+| `config profile status` | 3.6-3.9 s | 2.6-2.7 s |
+| `config login` | 5.6 s | 5.2 s |
+| `session hold` admitted | 2.1 s | 2.0 s |
+
+Per-operation cost fell about fivefold. Process start, imports and the worker's cold first operation, which dominate sign-in, are unchanged by these Steps.
