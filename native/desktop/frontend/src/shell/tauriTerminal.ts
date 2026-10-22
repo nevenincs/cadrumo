@@ -5,7 +5,7 @@ import {
   type ShellToken,
   type TerminalWriteBody,
   type TerminalWriteHeaders,
-  type TerminalTarget,
+  type TerminalKind,
 } from "../ipc/contract";
 import type { TerminalEvent, TerminalSession } from "./host";
 import type { HostCall } from "./hostCall";
@@ -62,7 +62,7 @@ const pause = (ms: number) =>
 export async function openTauriTerminal(
   token: ShellToken,
   call: HostCall,
-  kind: TerminalTarget,
+  kind: TerminalKind,
   size: { cols: number; rows: number },
   listener: (event: TerminalEvent) => void,
 ): Promise<TerminalSession> {

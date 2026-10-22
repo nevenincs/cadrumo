@@ -10,6 +10,7 @@ from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 from .access_refusals import AccessDenialCode
 from .model_runs import ModelRunRequested
+from .presentation import PresentationDestination
 
 
 class SessionEvent(BaseModel):
@@ -125,6 +126,23 @@ class OperationChanged(BaseModel):
     session_id: UUID
 
 
+class PresentationRequested(BaseModel):
+    """The person asked, from another of their frontends, that this exact session show a page.
+
+    It names a page and nothing else: the receiver admits it against its own
+    current projection, and it extends neither the session nor its authority.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["presentation_requested"] = "presentation_requested"
+    runtime_boot_id: UUID
+    connection_id: UUID
+    profile_id: UUID
+    session_id: UUID
+    destination: PresentationDestination
+
+
 type ConnectionEvent = (
     SessionEvent
     | LifecycleNotice
@@ -135,6 +153,7 @@ type ConnectionEvent = (
     | AttendanceChanged
     | AttendanceAnswered
     | OperationChanged
+    | PresentationRequested
     | ModelRunRequested
 )
 
@@ -148,6 +167,7 @@ CONNECTION_EVENT_TYPES = (
     AttendanceChanged,
     AttendanceAnswered,
     OperationChanged,
+    PresentationRequested,
     ModelRunRequested,
 )
 """Every frame the runtime may push between replies, for exhaustive transport checks."""

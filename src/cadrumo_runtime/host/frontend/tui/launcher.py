@@ -8,10 +8,7 @@ from typing import TYPE_CHECKING
 
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_process, diagnostic_scope
 from cadrumo.core.logging import get_logger
-from cadrumo.entrypoints.tui.module_arguments import (
-    aeat_setup_profile,
-    headless_invocation,
-)
+from cadrumo.entrypoints.tui.module_arguments import headless_invocation
 
 _LOGGER = get_logger(__name__)
 
@@ -37,19 +34,6 @@ async def run_precomposed_runtime_root_session(
 
 def run_module(arguments: list[str]) -> int:
     """Parse the product arguments before starting the installed session."""
-    profile = aeat_setup_profile(arguments)
-    if profile is not None:
-        from cadrumo.core.logging import configure_logging
-        from cadrumo.domain.calculations.registry.authority import release_bundled_indexed_authority
-
-        from .aeat_setup_session import run_aeat_setup_session
-
-        configure_logging()
-        with diagnostic_process("tui"), diagnostic_scope():
-            try:
-                return run_aeat_setup_session(profile)
-            finally:
-                release_bundled_indexed_authority()
     return main(headless=headless_invocation(arguments))
 
 

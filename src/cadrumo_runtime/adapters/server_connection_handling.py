@@ -51,6 +51,7 @@ from cadrumo_client.contracts.operation_access import (
     OperationSubmit,
     OperationSubmitPayload,
 )
+from cadrumo_client.contracts.presentation import PresentationDelivered, PresentationRequest
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
     ProfileDisclosurePage,
@@ -89,6 +90,7 @@ type _ProfileConnectionRequest = (
     | LoginTargetRequest
     | SessionRequest
     | ProfileDisclosurePageRequest
+    | PresentationRequest
     | AttendanceAsk
     | AttendanceDecide
     | OperationRequest
@@ -250,6 +252,7 @@ class RuntimeConnectionHandling:
     ) -> (
         ProfileStatus
         | ProfileDisclosurePage
+        | PresentationDelivered
         | SessionsLocked
         | SignInStatusReply
         | ActiveProfileReply
@@ -319,6 +322,7 @@ class RuntimeConnectionHandling:
             ProfileLogin
             | SessionRequest
             | ProfileDisclosurePageRequest
+            | PresentationRequest
             | SignInStatusRequest
             | ActiveProfileRequest
             | LoginTargetRequest

@@ -17,6 +17,8 @@ pub enum Action {
     ToggleMaximize,
     Close,
     Drag,
+    /// Restores and raises the window, as when something in it asks for the person.
+    Focus,
 }
 
 /// One top-document listener. A reload replaces it; an old cleanup cannot
@@ -61,6 +63,10 @@ pub fn shell_window_action<R: Runtime>(window: Window<R>, action: Action) -> Res
         // close() raises CloseRequested, preserving cleanup and refusal.
         Action::Close => window.close(),
         Action::Drag => window.start_dragging(),
+        Action::Focus => window
+            .unminimize()
+            .and_then(|()| window.show())
+            .and_then(|()| window.set_focus()),
         Action::ToggleMaximize => {
             if window.is_fullscreen().map_err(failure)? {
                 return Ok(());

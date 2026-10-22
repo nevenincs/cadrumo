@@ -50,6 +50,7 @@ from cadrumo_client.contracts.attendance import (
 )
 from cadrumo_client.contracts.contracts import ByteChannel, ClientHello
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
+from cadrumo_client.contracts.presentation import PresentationDelivered, PresentationRequest
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
     ProfileDisclosurePage,
@@ -107,6 +108,7 @@ class RecordingProfileConnections(RuntimeProfileConnections):
         request: ProfileLogin
         | SessionRequest
         | ProfileDisclosurePageRequest
+        | PresentationRequest
         | SignInStatusRequest
         | ActiveProfileRequest
         | LoginTargetRequest
@@ -115,6 +117,7 @@ class RecordingProfileConnections(RuntimeProfileConnections):
     ) -> (
         ProfileStatus
         | ProfileDisclosurePage
+        | PresentationDelivered
         | SessionsLocked
         | SignInStatusReply
         | ActiveProfileReply

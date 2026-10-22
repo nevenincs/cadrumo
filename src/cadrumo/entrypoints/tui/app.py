@@ -69,11 +69,14 @@ from .navigation import (
     TuiScreenContextV1,
 )
 from .operations.palette import WorkbenchOperationProviderV1
+from .presentation import PagePresentationRequested, presentation_target
 from .search import WorkbenchCommandProviderV1, WorkbenchSearchDoorV1, WorkbenchSearchProviderV1
 
 if TYPE_CHECKING:
     from textual.timer import Timer
     from textual.worker import Worker
+
+    from cadrumo_client.contracts.presentation import PresentationDestination
 
     from ...application.overview.home import HomeAccountSession, HomeProjectionV1
     from .secret.passphrase import PassphraseScreen
@@ -211,6 +214,7 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         """Fires at the known expiry when retirement is pushed; nothing polls meanwhile."""
         self._unsubscribe_notices: Callable[[], None] | None = None
         self._unsubscribe_language: Callable[[], None] | None = None
+        self._unsubscribe_presentation: Callable[[], None] | None = None
         self._language_pending = False
         self._language_refreshing = False
         self._language_revision = 0
@@ -349,6 +353,8 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
             self._unsubscribe_language = factories.subscribe_language(self._post_language_invalidated)
         if factories is not None and factories.subscribe_notices is not None:
             self._unsubscribe_notices = factories.subscribe_notices(self._post_upgrade_notice)
+        if factories is not None and factories.subscribe_presentation is not None:
+            self._unsubscribe_presentation = factories.subscribe_presentation(self._post_presentation_requested)
         if factories is not None and factories.subscribe_retirement is not None:
             self._unsubscribe_retirement = factories.subscribe_retirement(self._post_session_retired)
         if self._unsubscribe_retirement is not None:
@@ -414,6 +420,25 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         """Clear on the UI thread; the transport callback never waits for rendering."""
         # The callback also covers a disconnected transport; no expiry was proven.
         self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.UNAVAILABLE))
+
+    def _post_presentation_requested(self, destination: PresentationDestination) -> None:
+        self.post_message(PagePresentationRequested(destination))
+
+    def on_page_presentation_requested(self, message: PagePresentationRequested) -> None:
+        """Open the page the person chose at their desktop, as a palette choice would.
+
+        Over a credential or modal form the request stands down with a notice:
+        replacing the destination would discard what that form holds.
+        """
+        if self._recomposition_pending or self._active_destination_catalogue is None:
+            return
+        if not self._account_controls_apply():
+            notice = tr("tui.root.navigation.busy")
+            self.query_one("#root-navigation-refusal", Static).update(notice)
+            self.notify(notice, severity="warning")
+            return
+        self.query_one("#root-navigation-refusal", Static).update("")
+        self.navigate_to(presentation_target(message.destination))
 
     def on_runtime_upgrade_pending(self, _: RuntimeUpgradePending) -> None:
         """Render a manager upgrade notice on the existing UI thread."""
@@ -514,6 +539,9 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         unsubscribe_language, self._unsubscribe_language = self._unsubscribe_language, None
         if unsubscribe_language is not None:
             unsubscribe_language()
+        unsubscribe_presentation, self._unsubscribe_presentation = self._unsubscribe_presentation, None
+        if unsubscribe_presentation is not None:
+            unsubscribe_presentation()
         unsubscribe_notice, self._unsubscribe_notices = self._unsubscribe_notices, None
         if unsubscribe_notice is not None:
             unsubscribe_notice()

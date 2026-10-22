@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, ClassVar, Protocol, override, runtime_checkabl
 from textual.command import DiscoveryHit, Hit, Hits, Provider
 from textual.message import Message
 
+from cadrumo_client.contracts.presentation import PresentationDestination
 from cadrumo_client.contracts.session_events import LifecycleNotice
 
 from ...core.errors.hierarchy import CadrumoError
@@ -125,6 +126,8 @@ class AccountFactoriesV1:
     subscribe_retirement: Callable[[Callable[[], None]], Callable[[], None]] | None = None
     subscribe_notices: Callable[[Callable[[LifecycleNotice], None]], Callable[[], None]] | None = None
     subscribe_language: Callable[[Callable[[], None]], Callable[[], None]] | None = None
+    subscribe_presentation: Callable[[Callable[[PresentationDestination], None]], Callable[[], None]] | None = None
+    """Hears the pages the person asks this session to show from their desktop."""
     refresh_language: Callable[[], Awaitable[bool]] | None = None
 
 

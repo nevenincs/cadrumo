@@ -2,13 +2,9 @@ desktop:
   agent:
     add_files: Añadir archivos
     aeat_setup_check: Comprobar la configuración y continuar
-    aeat_setup_help: Guarda aquí los datos de autenticación y cierra el editor para
-      volver a la conversación. Las credenciales no se envían al chat.
     aeat_setup_resume_message: He terminado con los ajustes de la AEAT. Comprueba
       la configuración guardada, ayúdame con los requisitos pendientes y continúa
       nuestra tarea cuando esté lista.
-    aeat_setup_return: Volver a la conversación
-    aeat_setup_title: Configurar el acceso a la AEAT
     agent_replied: El agente respondió
     approval_allow_always: Permitir
     approval_allow_once: Permitir una vez

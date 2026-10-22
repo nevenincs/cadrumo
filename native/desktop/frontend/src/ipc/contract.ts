@@ -386,9 +386,6 @@ export type ContextMenuResult = { chosen: string | null };
  * user's home; `tui` is the Cadrumo TUI, started in the storage root.
  */
 export type TerminalKind = "console" | "python" | "tui";
-/** A protected editor has its own session and an exact profile target. */
-export type TerminalTarget =
-  TerminalKind | { aeat_setup: { profile_id: string } };
 
 /** A session id from `terminal_open`; a replaced or closed id is refused. */
 export type TerminalSessionId = number;
@@ -470,7 +467,7 @@ export type TerminalFrame =
   | TerminalFailedFrame;
 
 export type TerminalOpenArguments = TerminalSize & {
-  kind: TerminalTarget;
+  kind: TerminalKind;
   /** Receives the session's frames, each as an `ArrayBuffer`. */
   frames: Channel<ArrayBuffer>;
 };
@@ -1224,6 +1221,16 @@ export interface HostCommands {
     args: Authorized<{ language: string }>;
     result: DesktopLanguage;
   };
+  /** Opens `destination` in the person's own TUI, where `profileId` is the
+   * profile signed in here. Refuses `invalid_arguments` for any other profile
+   * shape or page. */
+  desktop_present_destination: {
+    args: Authorized<{
+      profileId: string;
+      destination: PresentationDestination;
+    }>;
+    result: PresentationOutcome;
+  };
   desktop_language_observe: {
     args: Authorized<{ updates: Channel<DesktopLanguage> }>;
     result: number;
@@ -1551,7 +1558,32 @@ export interface HostCommands {
 
 /** Native presentation only; no profile or runtime authority. */
 export type WindowPresentation = { maximized: boolean; fullscreen: boolean };
-export type WindowAction = "minimize" | "toggle_maximize" | "close" | "drag";
+export type WindowAction =
+  "minimize" | "toggle_maximize" | "close" | "drag" | "focus";
+
+/** A page of the TUI a link may open, in the runtime's closed vocabulary. */
+export type PresentationDestination =
+  | "home"
+  | "ledger"
+  | "withholding"
+  | "declarations"
+  | "aeat_sync"
+  | "operations"
+  | "installation"
+  | "setup"
+  | "reference"
+  | "profile"
+  | "aeat_auth";
+
+/**
+ * What became of a page asked for. `delivered` counts the person's signed-in
+ * TUIs on the profile that were passed it; none is zero. A page is only where
+ * to look, never access to anything.
+ */
+export type PresentationOutcome =
+  | { outcome: "presented"; delivered: number }
+  | { outcome: "signed_out" }
+  | { outcome: "other_profile" };
 
 export type HostCommand = keyof HostCommands;
 export type HostArguments<C extends HostCommand> = HostCommands[C]["args"];

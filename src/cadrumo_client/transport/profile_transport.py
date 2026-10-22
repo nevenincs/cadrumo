@@ -41,6 +41,7 @@ from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.extension_records import ExtensionRecordReply, ExtensionRecordRequest
 from ..contracts.model_runs import ModelRunCompleted, ModelRunCompleteRequest, ModelRunFetched, ModelRunFetchRequest
 from ..contracts.operation_access import OperationAcknowledged, OperationSecret
+from ..contracts.presentation import PresentationDelivered, PresentationRequest
 from ..contracts.profile_access import (
     AccessRefusal,
     ProfileDisclosurePage,
@@ -244,6 +245,21 @@ class ProfileTransport(VerifiedTransport):
                 write_document(self._channel, request, deadline=deadline)
                 result = self._reply(request.request_id, deadline=deadline).root
                 if not isinstance(result, (ProfileDisclosurePage, AccessRefusal)):
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
+                return result
+            except BaseException as error:
+                self._close_after_failure(error)
+                raise
+
+    def present(self, request: PresentationRequest, *, deadline: float) -> PresentationDelivered | AccessRefusal:
+        """Ask the person's own TUI on this profile to show one page."""
+        with self._exchange(deadline=deadline):
+            if self._closed:
+                raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+            try:
+                write_document(self._channel, request, deadline=deadline)
+                result = self._reply(request.request_id, deadline=deadline).root
+                if not isinstance(result, (PresentationDelivered, AccessRefusal)):
                     raise RefusalError(RefusalCode.INVALID_FRAME)
                 return result
             except BaseException as error:

@@ -12,7 +12,7 @@ import time
 from collections.abc import Mapping
 from queue import Queue
 from threading import Event, Semaphore, Thread
-from typing import Literal
+from typing import Literal, get_args
 from uuid import UUID, uuid4
 
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
@@ -21,6 +21,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import reject_duplicate_json_members
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.presentation import PresentationDestination
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
@@ -242,6 +243,7 @@ async def _hold(
                 "service_admission": {"recipient_connection_id", "service_id"},
                 "attendance_decision": {"attendance_id", "approve"},
                 "language_set": {"language"},
+                "present_destination": {"destination"},
                 **RELAY_ACTION_KEYS,
             }
             if set(request) != {"request_id", "action"} | action_keys.get(action, set()):
@@ -301,6 +303,32 @@ async def _hold(
                         _emit_refusal("unavailable", request_id)
                         continue
                     _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
+                elif action == "present_destination":
+                    destination = request["destination"]
+                    if destination not in get_args(PresentationDestination.__value__):
+                        _emit_refusal("invalid", request_id)
+                        return 1
+                    try:
+                        presented = client.present_destination(destination)
+                    except FrontendRefusedError as error:
+                        if error.reason != AccessDenialCode.OS_SESSION_UNAVAILABLE.value:
+                            _emit({"kind": "session_refused", "request_id": str(request_id), "code": "inactive"})
+                            return 1
+                        # As for activity: an uncertain OS observation refuses the page but keeps the held sign-in.
+                        _emit_refusal("unavailable", request_id)
+                        continue
+                    _emit(
+                        {
+                            "kind": "destination_presented",
+                            "request_id": str(request_id),
+                            "profile_id": str(profile_id),
+                            "session_id": str(client.session_id),
+                            "runtime_boot_id": str(status.runtime_boot_id),
+                            "connection_id": str(status.connection_id),
+                            "destination": presented.destination,
+                            "delivered": presented.delivered,
+                        }
+                    )
                 elif action in RELAY_ACTION_KEYS:
                     try:
                         fields, refusal = relay.handle(action, request), None
@@ -369,6 +397,7 @@ async def _hold(
                             "language_read",
                             "language_set",
                             "language_observe",
+                            "present_destination",
                             *RELAY_ACTION_KEYS,
                         }
                         else "invalid",

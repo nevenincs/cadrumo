@@ -60,6 +60,7 @@ from ..contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
 from ..contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared, EnrollmentReconcile, EnrollmentRecorded
 from ..contracts.model_runs import ModelRunRequested
 from ..contracts.operation_access import OperationAcknowledged, OperationSecret
+from ..contracts.presentation import PresentationDelivered, PresentationDestination, PresentationRequest
 from ..contracts.profile_access import (
     PROFILE_ADMISSION_TIMEOUT_SECONDS,
     ProfileDisclosurePage,
@@ -77,6 +78,7 @@ from ..contracts.session_events import (
     ConnectionEvent,
     LifecycleNotice,
     OperationChanged,
+    PresentationRequested,
     ProfileLanguageChanged,
     ProfileRecordsChanged,
     ServiceLeaseChanged,
@@ -155,6 +157,7 @@ class FrontendClient(ProfileViewFrontend):
         self._attendance_receivers: list[Callable[[], None]] = []
         self._answer_receivers: list[Callable[[], None]] = []
         self._operation_receivers: list[Callable[[], None]] = []
+        self._presentation_receivers: list[Callable[[PresentationDestination], None]] = []
 
     def _session_retired(self, event: ConnectionEvent) -> None:
         if isinstance(event, LifecycleNotice):
@@ -197,6 +200,14 @@ class FrontendClient(ProfileViewFrontend):
                 receivers_records = tuple(self._record_receivers) if event.session_id == self._session_id else ()
             for receive_records in receivers_records:
                 receive_records()
+            return
+        if isinstance(event, PresentationRequested):
+            with self._event_guard:
+                receivers_presentation = (
+                    tuple(self._presentation_receivers) if event.session_id == self._session_id else ()
+                )
+            for receive_presentation in receivers_presentation:
+                receive_presentation(event.destination)
             return
         if isinstance(event, ProfileLanguageChanged):
             with self._event_guard:
@@ -747,6 +758,36 @@ class FrontendClient(ProfileViewFrontend):
                     self._operation_receivers.remove(receive)
 
         return unsubscribe
+
+    def subscribe_presentation_requests(self, receive: Callable[[PresentationDestination], None]) -> Callable[[], None]:
+        """Hear the pages the person asks this exact session to show; each grants nothing and may be refused."""
+        self._observe_events()
+        with self._event_guard:
+            self._presentation_receivers.append(receive)
+
+        def unsubscribe() -> None:
+            with self._event_guard:
+                if receive in self._presentation_receivers:
+                    self._presentation_receivers.remove(receive)
+
+        return unsubscribe
+
+    def present_destination(
+        self, destination: PresentationDestination, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+    ) -> PresentationDelivered:
+        """Ask the person's own signed-in TUI on this profile to show `destination`."""
+        reply = self._reply(
+            self._connection.present(
+                PresentationRequest(
+                    request_id=uuid4(), profile_id=self.profile_id, session_id=self._session(), destination=destination
+                ),
+                deadline=deadline_after(timeout),
+            ),
+            PresentationDelivered,
+        )
+        if reply.destination != destination:
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return reply
 
     def _observe_events(self) -> None:
         if self._event_subscription is None:

@@ -605,12 +605,12 @@ test("saved Cl@ve setup asks specifically for the NIE support number", async ({
       exact: true,
     })
     .click();
-  await expect(
-    page.getByRole("dialog", {
-      name: label("desktop.agent.aeat_setup_title"),
-      exact: true,
-    }),
-  ).toBeVisible();
+  // Setting up AEAT access is the workspace's own page, for this profile.
+  await expect(dialog).toHaveCount(0);
+  await expect
+    .poll(() => page.evaluate(() => window.__scenarioHostCalls ?? []))
+    .toContain("presentDestination aeat_auth presented");
+  await expect(page.locator('[data-terminal="tui"]')).toBeVisible();
 });
 
 test("discarding Censo changes does not write profile data", async ({

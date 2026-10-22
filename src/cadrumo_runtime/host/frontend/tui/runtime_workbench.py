@@ -43,6 +43,7 @@ from cadrumo.entrypoints.tui.modelo.workbench.factory import compose_installed_m
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1, TuiScreenFactoryV1, build_destination_catalogue
 from cadrumo.entrypoints.tui.operations.catalogue import OperationCatalogueSourceV1
 from cadrumo.entrypoints.tui.operations.destination import OperationsDestinationV1
+from cadrumo.entrypoints.tui.presentation import opens_aeat_auth
 from cadrumo.entrypoints.tui.reconciliation_export import ReconciliationExportScreen
 from cadrumo.entrypoints.tui.reference.destination import reference_screen_factory
 from cadrumo.entrypoints.tui.setup.destination import setup_screen_factory
@@ -443,9 +444,12 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
                 language, latest = self._language, self._latest_profile
             if latest is None:
                 raise RefusalError(RefusalCode.UNAVAILABLE)
-            return ProfileManagerClientComposition(
+            screen = ProfileManagerClientComposition(
                 self._client, profile_label=self._label, output_language=language
             ).compose_from_overview(latest)
+            if opens_aeat_auth(context):
+                screen.request_aeat_auth_editor()
+            return screen
 
         search = generation.search.projection
         presentation = RootPresentationV1(

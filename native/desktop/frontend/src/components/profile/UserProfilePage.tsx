@@ -5,7 +5,6 @@ import {
   type RefObject,
   type SetStateAction,
 } from "react";
-import type { ITheme } from "@xterm/xterm";
 import type { ProfileView } from "../../shell/layout";
 import { IconButton } from "@/components/ui/icon-button";
 import type { Host } from "../../shell/host";
@@ -26,7 +25,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { Icon } from "@/components/ui/icon";
 import { ProfileEditor, type ProfileDraft } from "./ProfileEditor";
 import { ProfileSectionCard } from "./ProfileSectionCard";
-import { AeatSetupDialog } from "../agent/AeatSetupDialog";
 import { CensoDialog } from "./CensoDialog";
 
 export function UserProfilePage({
@@ -34,23 +32,22 @@ export function UserProfilePage({
   reader,
   language,
   shown,
-  theme,
-  fontSize,
   page,
   maximized,
   view,
   onViewChange,
+  onAeatSetup,
 }: {
   host: Host;
   reader: string;
   language: string;
   shown: boolean;
-  theme: ITheme;
-  fontSize: number;
   page: RefObject<HTMLElement | null>;
   maximized: boolean;
   view: ProfileView;
   onViewChange(update: (current: ProfileView) => ProfileView): void;
+  /** Opens the profile's AEAT access page in the workspace. */
+  onAeatSetup?: (profile: string) => void;
 }) {
   const t = useStrings();
   const profile = useUserProfile(host.userProfile, reader, language, shown);
@@ -79,7 +76,6 @@ export function UserProfilePage({
   const setCollapsed = (update: SetStateAction<Set<string>>) =>
     setMembership("collapsed", update);
   const [draft, setDraft] = useState<ProfileDraft | null>(null);
-  const [auth, setAuth] = useState(false);
   const [censo, setCenso] = useState(false);
   const [returnToCenso, setReturnToCenso] = useState(false);
   const query = profileText(useDeferredValue(search));
@@ -359,7 +355,7 @@ export function UserProfilePage({
                     missing={missing}
                     busy={busy}
                     onEdit={(field, remove) => open(item, field, remove)}
-                    onAuth={() => setAuth(true)}
+                    onAuth={() => onAeatSetup?.(data.profile_id)}
                   />
                 ))}
               </div>
@@ -410,29 +406,6 @@ export function UserProfilePage({
           }}
         />
       )}
-      {auth && data && (
-        <AeatSetupDialog
-          host={host}
-          profile={data.profile_id}
-          theme={theme}
-          fontSize={fontSize}
-          onClose={() => {
-            setAuth(false);
-            if (returnToCenso) {
-              setReturnToCenso(false);
-              setCenso(true);
-            }
-          }}
-          onDone={() => {
-            setAuth(false);
-            profile.refresh();
-            if (returnToCenso) {
-              setReturnToCenso(false);
-              setCenso(true);
-            }
-          }}
-        />
-      )}
       {data && (
         <CensoDialog
           key={data.profile_id}
@@ -443,8 +416,7 @@ export function UserProfilePage({
           onRefresh={profile.refresh}
           onSetup={() => {
             setCenso(false);
-            setReturnToCenso(true);
-            setAuth(true);
+            onAeatSetup?.(data.profile_id);
           }}
           onIdentity={() => {
             setCenso(false);

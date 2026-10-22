@@ -41,6 +41,7 @@ def _client(profile_id: UUID) -> FrontendClient:
             frontend=OperationFrontendProjection.TUI,
             subscribe_session_retirement=None,
             subscribe_lifecycle_notices=None,
+            subscribe_presentation_requests=None,
             subscribe_profile_language_changes=None,
         ),
     )

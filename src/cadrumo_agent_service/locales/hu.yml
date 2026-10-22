@@ -2,13 +2,9 @@ desktop:
   agent:
     add_files: Fájlok hozzáadása
     aeat_setup_check: Beállítások ellenőrzése és folytatás
-    aeat_setup_help: Mentsd el itt a hitelesítési adatokat, majd zárd be a szerkesztőt
-      a beszélgetés folytatásához. A hitelesítő adatok nem kerülnek a csevegésbe.
     aeat_setup_resume_message: Befejeztem az AEAT-beállításokat. Ellenőrizd újra a
       mentett beállításokat, segíts a hiányzó adatokkal, és folytasd a feladatunkat,
       ha minden készen áll.
-    aeat_setup_return: Vissza a beszélgetéshez
-    aeat_setup_title: AEAT-hozzáférés beállítása
     agent_replied: Az ügynök válasza
     approval_allow_always: Engedélyezem
     approval_allow_once: Egyszer engedélyezem

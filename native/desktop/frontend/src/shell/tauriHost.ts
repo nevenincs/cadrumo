@@ -178,6 +178,10 @@ export function tauriHost(): Host {
         };
       },
     },
+    presentation: {
+      present: (profileId, destination) =>
+        call("desktop_present_destination", { profileId, destination }),
+    },
     environment: () => call("desktop_environment", {}),
     about: () => call("about_info", {}),
     language: {

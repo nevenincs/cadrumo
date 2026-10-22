@@ -1111,6 +1111,13 @@ desktop:
   toast:
     copied: Másolva
     copy_failed: Nem sikerült a másolás.
+    link_failed: Nem sikerült megnyitni ezt az oldalt a munkaterületen.
+    link_invalid: Ez a hivatkozás nem nyit meg oldalt a munkaterületen.
+    link_not_received: A munkaterület nem kapta meg az oldalt. Várd meg, amíg betöltődik,
+      majd próbáld újra.
+    link_other_profile: Ez a hivatkozás egy másik profilhoz tartozik. Jelentkezz be
+      abba a profilba az oldal megnyitásához.
+    link_sign_in: Jelentkezz be, hogy megnyithasd ezt az oldalt a munkaterületen.
     open_failed: Nem sikerült megnyitni.
     paste_failed: Nem sikerült a beillesztés.
     paste_too_large: Ez túl sok szöveg egyszerre a beillesztéshez.
@@ -4101,6 +4108,7 @@ tui:
       profile: Profil
       sign_out: Kijelentkezés
     navigation:
+      busy: Előbb zárd be a nyitott űrlapot, aztán nyisd meg újra a hivatkozást.
       unavailable: A kért terület ebben a munkamenetben nem nyitható meg.
     no_areas: Ebben a munkamenetben még egyetlen terület sem érhető el.
     opening: A Cadrumo megnyitása…

@@ -14,6 +14,7 @@ import type {
   LogBatch,
   LogLevel,
   ManagerStatus,
+  PresentationOutcome,
   SignInSignal,
   SignInStatus,
 } from "../ipc/contract";
@@ -143,6 +144,11 @@ function failure(
 ): HostFailure {
   return { code, operation, message: `${SCENARIO_HOST_MARKER}: ${code}` };
 }
+
+const PROFILE_ID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+/** The id of the profile the profile fixture reads. */
+const FIXTURE_PROFILE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
 export function scenarioHost(
   scenario: Scenario,
@@ -462,6 +468,26 @@ export function scenarioHost(
     },
     userProfile,
     censo: censoFixture(userProfile, scenario.censo),
+    presentation: {
+      async present(profile, destination) {
+        await wait(options.latencyMs);
+        // The window knows the signed-in profile by its label; its id is
+        // the one the profile fixture reads, unless the scenario signs in
+        // with an id for a label.
+        const signedInId =
+          active !== null && PROFILE_ID.test(active)
+            ? active
+            : FIXTURE_PROFILE_ID;
+        const outcome: PresentationOutcome =
+          presence !== "present"
+            ? { outcome: "signed_out" }
+            : profile !== signedInId
+              ? { outcome: "other_profile" }
+              : { outcome: "presented", delivered: 1 };
+        say(`presentDestination ${destination} ${outcome.outcome}`);
+        return outcome;
+      },
+    },
     available: true,
     ...(scenario.views === "none"
       ? {}
@@ -652,9 +678,7 @@ export function scenarioHost(
     },
 
     openTerminal(kind, size, listener) {
-      say(
-        `openTerminal ${typeof kind === "string" ? kind : JSON.stringify(kind)} ${size.cols}x${size.rows}`,
-      );
+      say(`openTerminal ${kind} ${size.cols}x${size.rows}`);
       if (scenario.terminals === "pending") return never();
       if (scenario.terminals === "failed")
         return Promise.reject(failure("spawn_failed", "terminal"));

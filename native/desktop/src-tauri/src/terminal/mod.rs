@@ -42,12 +42,11 @@ pub enum Kind {
     Console,
     Python,
     Tui,
-    AeatSetup,
 }
 
 impl Kind {
     #[cfg(test)]
-    const ALL: [Self; 4] = [Self::Console, Self::Python, Self::Tui, Self::AeatSetup];
+    const ALL: [Self; 3] = [Self::Console, Self::Python, Self::Tui];
 
     fn slot(self) -> usize {
         self as usize
@@ -55,21 +54,6 @@ impl Kind {
 }
 
 impl Program {
-    fn for_aeat_setup(launch: &Launch, profile: &str) -> Result<Self> {
-        if !crate::shell::agent_access::wire::is_uuid(profile)
-            || profile != profile.to_ascii_lowercase()
-            || profile == "00000000-0000-0000-0000-000000000000"
-        {
-            return Err(failure(ErrorCode::InvalidArguments));
-        }
-        let mut program = Self::for_kind(launch, Kind::Tui)?;
-        program.arguments.extend([
-            OsString::from("--aeat-auth-profile"),
-            OsString::from(profile),
-        ]);
-        Ok(program)
-    }
-
     /// All terminal kinds share the pinned environment, bundled command path
     /// and taxonomy-owned operator workspace.
     fn for_kind(launch: &Launch, kind: Kind) -> Result<Self> {
@@ -78,7 +62,6 @@ impl Program {
             console::with_package_first(launch.child.environment().clone(), &interpreter)?;
         console::validate_workspace(&launch.console_workspace, &launch.working_directory)?;
         Ok(match kind {
-            Kind::AeatSetup => return Err(failure(ErrorCode::InvalidArguments)),
             Kind::Console => {
                 let (executable, arguments) = console::shell(&environment)?;
                 Self {
@@ -145,7 +128,7 @@ struct Entry<S> {
 pub struct Registry<S> {
     next: u64,
     closed: bool,
-    slots: [Option<Entry<S>>; 4],
+    slots: [Option<Entry<S>>; 3],
     lingering: Vec<S>,
 }
 
@@ -154,7 +137,7 @@ impl<S> Default for Registry<S> {
         Self {
             next: 0,
             closed: false,
-            slots: [None, None, None, None],
+            slots: [None, None, None],
             lingering: Vec::new(),
         }
     }
@@ -352,25 +335,6 @@ impl TerminalState {
         open_for(&self.registry, &self.documents, document, kind, || {
             Session::start(program, cols, rows, sink, self.launch.diagnostics.clone())
         })
-    }
-
-    /// A separate owned PTY preserves the person's existing workbench.
-    pub fn open_aeat_setup(
-        &self,
-        profile: &str,
-        cols: u16,
-        rows: u16,
-        sink: Sink,
-        document: u64,
-    ) -> Result<u64> {
-        let program = Program::for_aeat_setup(&self.launch, profile)?;
-        open_for(
-            &self.registry,
-            &self.documents,
-            document,
-            Kind::AeatSetup,
-            || Session::start(program, cols, rows, sink, self.launch.diagnostics.clone()),
-        )
     }
 
     pub fn with_session<T>(

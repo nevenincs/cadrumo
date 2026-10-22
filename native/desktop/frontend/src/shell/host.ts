@@ -23,7 +23,8 @@ import type {
   SetupItemId,
   WindowAction,
   WindowPresentation,
-  TerminalTarget,
+  PresentationDestination,
+  PresentationOutcome,
 } from "../ipc/contract";
 import type { ProfileAccounts } from "./profiles";
 import type { AgentAccess } from "./agentAccess";
@@ -131,6 +132,14 @@ export interface Host {
     set(language: string): Promise<DesktopLanguage>;
     observe(listener: (state: DesktopLanguage) => void): Promise<() => void>;
   };
+  /** Opens a page in the person's own TUI on `profile`, a profile id, where
+   * this host can reach it. */
+  readonly presentation?: {
+    present(
+      profile: string,
+      destination: PresentationDestination,
+    ): Promise<PresentationOutcome>;
+  };
   signInStatus(): Promise<SignInStatus>;
   /** Reports a person gesture; background observations must never call it. */
   noteActivity?(): Promise<void>;
@@ -150,7 +159,7 @@ export interface Host {
   signIn(password: Uint8Array, profile?: string): Promise<SignInResult>;
   signOut(): Promise<SignOutResult>;
   openTerminal(
-    kind: TerminalTarget,
+    kind: TerminalKind,
     size: { cols: number; rows: number },
     listener: (event: TerminalEvent) => void,
   ): Promise<TerminalSession>;

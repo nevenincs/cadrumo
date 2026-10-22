@@ -140,5 +140,6 @@ def compose_runtime_account_factories(
         subscribe_retirement=client.subscribe_session_retirement,
         subscribe_notices=client.subscribe_lifecycle_notices,
         subscribe_language=lambda receive: client.subscribe_profile_language_changes(lambda _event: receive()),
+        subscribe_presentation=client.subscribe_presentation_requests,
         refresh_language=refresh_language,
     )

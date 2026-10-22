@@ -33,12 +33,15 @@ import type {
   ContextMenuItem,
   DocsTheme,
   HostFailure,
+  PresentationDestination,
+  PresentationOutcome,
   SetupItemId,
   SetupRow,
 } from "./ipc/contract";
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
 import { AgentColumn } from "./components/AgentColumn";
+import { cadrumoLink } from "./components/agent/cadrumoLink";
 import { AttendanceRequests } from "./components/AttendanceRequests";
 import { HostRecordList } from "./components/HostRecordList";
 import type { RecordMenuRequest } from "./components/RecordList";
@@ -53,7 +56,6 @@ import { Settings } from "./components/Settings";
 import { GoogleAccount } from "./components/GoogleAccount";
 import { SetupAdvisory } from "./components/setup/SetupAdvisory";
 import { SetupDialog } from "./components/setup/SetupDialog";
-import { AeatSetupDialog } from "./components/agent/AeatSetupDialog";
 import { SetupPrompt } from "./components/setup/SetupPrompt";
 import { canSignInGoogle, outcomeToast } from "./components/setup/setupWords";
 import { liveRun, needsSetup, setupTargetOf, useSetup } from "./shell/setup";
@@ -126,6 +128,8 @@ const TOAST_MS = 2400;
 const SAVE_DELAY_MS = 250;
 // How long a wish to focus a view waits for that view to be shown.
 const FOCUS_WISH_MS = 1000;
+// How long a page a link opens waits for a TUI still starting.
+const TUI_START_WAIT_MS = 30_000;
 const TABS: readonly (readonly [PanelTab, string, IconName])[] = [
   ["console", "desktop.rail.console", "console"],
   ["python", "desktop.rail.python", "python"],
@@ -538,15 +542,6 @@ export function App({ host }: { host: Host }) {
     },
     [host, say, t],
   );
-  const [aeatSetup, setAeatSetup] = useState<{
-    profile: string;
-    done: () => void;
-  } | null>(null);
-  useEffect(() => {
-    setAeatSetup((held) =>
-      held?.profile === reader && signedIn ? held : null,
-    );
-  }, [reader, signedIn]);
 
   const copy = useCallback(
     (text: string) => {
@@ -801,6 +796,94 @@ export function App({ host }: { host: Host }) {
     patch({ tuiShown: true });
     focusView("tui");
   }, [patch, focusView, setMaximized]);
+  // The TUI's phase as last drawn, and the pages waiting for it to run.
+  const tuiPhase = useRef(status.tui.phase);
+  const tuiWaiters = useRef(new Set<() => void>());
+  useEffect(() => {
+    tuiPhase.current = status.tui.phase;
+    for (const wake of [...tuiWaiters.current]) wake();
+  }, [status.tui.phase]);
+  // Whether the TUI runs, once it does or `ms` have passed.
+  const tuiRunning = useCallback(
+    (ms: number) =>
+      new Promise<boolean>((resolve) => {
+        if (tuiPhase.current === "running") {
+          resolve(true);
+          return;
+        }
+        const wake = () => {
+          if (tuiPhase.current !== "running") return;
+          window.clearTimeout(timer);
+          tuiWaiters.current.delete(wake);
+          resolve(true);
+        };
+        const timer = window.setTimeout(() => {
+          tuiWaiters.current.delete(wake);
+          resolve(false);
+        }, ms);
+        tuiWaiters.current.add(wake);
+      }),
+    [],
+  );
+  // A page of the person's own TUI: the window comes forward and the TUI is
+  // shown with the keyboard, on the page. A page that cannot open says why,
+  // and a page for another profile disturbs nothing.
+  const presentPage = useCallback(
+    async (
+      profile: string,
+      destination: PresentationDestination,
+      presented: () => void = () => undefined,
+    ) => {
+      void host.window?.action("focus").catch(() => undefined);
+      if (!signedIn) {
+        showTui();
+        say(t("desktop.toast.link_sign_in"));
+        return;
+      }
+      const presentation = host.presentation;
+      if (!presentation) {
+        say(t("desktop.toast.link_failed"));
+        return;
+      }
+      // Only a running TUI hears the page: one still starting is shown, so
+      // its start is seen, and waited for.
+      if (tuiPhase.current !== "running") {
+        showTui();
+        if (!(await tuiRunning(TUI_START_WAIT_MS))) {
+          say(t("desktop.toast.link_not_received"));
+          return;
+        }
+      }
+      let outcome: PresentationOutcome;
+      try {
+        outcome = await presentation.present(profile, destination);
+      } catch {
+        say(t("desktop.toast.link_failed"));
+        return;
+      }
+      if (outcome.outcome === "other_profile") {
+        say(t("desktop.toast.link_other_profile"));
+        return;
+      }
+      showTui();
+      if (outcome.outcome === "signed_out")
+        say(t("desktop.toast.link_sign_in"));
+      else if (outcome.delivered === 0)
+        say(t("desktop.toast.link_not_received"));
+      else presented();
+    },
+    [host, signedIn, showTui, say, t, tuiRunning],
+  );
+  // A link a reply carries to a Cadrumo page. It never reaches the browser.
+  const openPage = useCallback(
+    (url: string, presented?: () => void) => {
+      const link = cadrumoLink(url);
+      if (link.kind === "page")
+        void presentPage(link.profile, link.destination, presented);
+      else say(t("desktop.toast.link_invalid"));
+    },
+    [presentPage, say, t],
+  );
   // Whether the last render showed a gate the person could act on, with
   // the dialog put aside. The first status read is a gate too, but not one
   // anybody was standing at: being let through it at startup moves no
@@ -2331,8 +2414,7 @@ export function App({ host }: { host: Host }) {
             reader={reader}
             language={locale}
             shown={firstPaneShown}
-            theme={scheme === "dark" ? DARK_TUI : LIGHT_TUI}
-            fontSize={terminalFontSize}
+            onAeatSetup={(profile) => void presentPage(profile, "aeat_auth")}
           />
         ) : (
           <SignedOut
@@ -2493,7 +2575,7 @@ export function App({ host }: { host: Host }) {
         onMenu={openMenu}
         onToolRefused={onToolRefused}
         onOpenLink={openLink}
-        onAeatSetup={(profile, done) => setAeatSetup({ profile, done })}
+        onOpenPage={openPage}
         trailing={[
           maximizeControl("agent", "desktop.pane.maximize_agent"),
           {
@@ -2940,20 +3022,6 @@ export function App({ host }: { host: Host }) {
               />
             )}
             <Toast>{toast}</Toast>
-            {aeatSetup && signedIn && aeatSetup.profile === reader && (
-              <AeatSetupDialog
-                key={aeatSetup.profile}
-                host={host}
-                profile={aeatSetup.profile}
-                theme={scheme === "dark" ? DARK_TUI : LIGHT_TUI}
-                fontSize={terminalFontSize}
-                onClose={() => setAeatSetup(null)}
-                onDone={() => {
-                  aeatSetup.done();
-                  setAeatSetup(null);
-                }}
-              />
-            )}
             {setupOffered && (
               <>
                 <SetupDialog

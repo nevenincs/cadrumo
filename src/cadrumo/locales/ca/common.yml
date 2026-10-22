@@ -1132,6 +1132,13 @@ desktop:
   toast:
     copied: Copiat
     copy_failed: No s'ha pogut copiar.
+    link_failed: No s'ha pogut obrir aquesta pàgina a l'espai de treball.
+    link_invalid: Aquest enllaç no obre cap pàgina de l'espai de treball.
+    link_not_received: L'espai de treball no ha rebut la pàgina. Espera que acabi
+      de carregar i torna-ho a provar.
+    link_other_profile: Aquest enllaç és d'un altre perfil. Inicia la sessió en aquest
+      perfil per obrir la pàgina.
+    link_sign_in: Inicia la sessió per obrir aquesta pàgina a l'espai de treball.
     open_failed: No s'ha pogut obrir.
     paste_failed: No s'ha pogut enganxar.
     paste_too_large: És massa text per enganxar d'una vegada.
@@ -4122,6 +4129,7 @@ tui:
       profile: Perfil
       sign_out: Tanca sessió
     navigation:
+      busy: Tanca primer el formulari obert i torna a obrir l'enllaç.
       unavailable: No es pot obrir l'àrea sol·licitada en aquesta sessió.
     no_areas: Cap àrea no està disponible encara en aquesta sessió.
     opening: S'està obrint Cadrumo…

@@ -7,8 +7,6 @@ import type {
   TerminalKind,
   TerminalSession,
 } from "../../shell/host";
-import type { TerminalTarget } from "../../ipc/contract";
-
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
@@ -171,7 +169,7 @@ function program(kind: TerminalKind, io: Io, size: Size): Program {
  * an idle or just-started child looks like.
  */
 export function openFixtureTerminal(
-  kind: TerminalTarget,
+  kind: TerminalKind,
   size: Size,
   listener: (event: TerminalEvent) => void,
   mode: "fixture" | "silent" | "failing",
@@ -192,10 +190,7 @@ export function openFixtureTerminal(
       listener({ type: "exited", code });
     },
   };
-  const running =
-    mode === "fixture"
-      ? program(typeof kind === "string" ? kind : "tui", io, size)
-      : null;
+  const running = mode === "fixture" ? program(kind, io, size) : null;
   // After the open call resolves, as a host session's first frame usually is.
   window.setTimeout(() => {
     if (!open) return;

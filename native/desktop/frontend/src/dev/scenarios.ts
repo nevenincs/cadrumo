@@ -204,7 +204,8 @@ export const SCENARIOS: readonly Scenario[] = [
     ...base,
     id: "aeat-setup",
     title: "AEAT setup handoff",
-    summary: "A conversation opens the protected editor for its exact profile.",
+    summary:
+      "A conversation's setup link opens the AEAT access page of the workspace for its exact profile.",
     signIn: {
       status: { ...signedOut, state: "present" },
       profile: "5aa00000-0000-4000-8000-0000000000aa",

@@ -8,7 +8,7 @@ import {
   type Ref,
 } from "react";
 import { Button } from "@/components/ui/button";
-import { aeatSetupProfile } from "./agent/aeatSetupLink";
+import { cadrumoLink } from "./agent/cadrumoLink";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { failureCode } from "../errors";
@@ -173,7 +173,7 @@ export function AgentColumn({
   onMenu,
   onToolRefused,
   onOpenLink,
-  onAeatSetup,
+  onOpenPage,
 }: {
   agent: AgentViews | undefined;
   /** Sending and the live stream, where the host offers them. */
@@ -204,7 +204,9 @@ export function AgentColumn({
   onToolRefused?: (key: string, refusal: AgentToolRefusal) => void;
   /** Opens an address a reply links to, in the system browser. */
   onOpenLink?: (url: string) => void;
-  onAeatSetup?: (profile: string, done: () => void) => void;
+  /** Opens a Cadrumo page a reply links to, in the workspace. `presented`
+   * runs once the workspace was passed the page. */
+  onOpenPage?: (url: string, presented: () => void) => void;
 }) {
   const t = useStrings();
   const [setupCheck, setSetupCheck] = useState<{
@@ -1019,17 +1021,26 @@ export function AgentColumn({
               locale={locale}
               onOpenProviderSettings={openSettings}
               onOpenLink={(url) => {
-                const profile = aeatSetupProfile(url);
-                if (!profile) {
-                  if (!url.startsWith("cadrumo:")) onOpenLink?.(url);
+                const link = cadrumoLink(url);
+                // Cadrumo's own addresses never reach the browser.
+                if (link.kind === "other") {
+                  onOpenLink?.(url);
                   return;
                 }
-                if (profile !== reader || !onAeatSetup) return;
-                const origin = {
-                  reader: profile,
-                  conversation: conversationId,
-                };
-                onAeatSetup(profile, () => setSetupCheck(origin));
+                const origin =
+                  reader === null
+                    ? null
+                    : { reader, conversation: conversationId };
+                onOpenPage?.(url, () => {
+                  // Back from setting up AEAT access, the person can have
+                  // the agent check it again.
+                  if (
+                    origin &&
+                    link.kind === "page" &&
+                    link.destination === "aeat_auth"
+                  )
+                    setSetupCheck(origin);
+                });
               }}
             />
           </>

@@ -1138,6 +1138,13 @@ desktop:
   toast:
     copied: Copiado
     copy_failed: No se ha podido copiar.
+    link_failed: No se ha podido abrir esa página en el espacio de trabajo.
+    link_invalid: Ese enlace no abre ninguna página del espacio de trabajo.
+    link_not_received: El espacio de trabajo no ha recibido la página. Espera a que
+      termine de cargar y vuelve a intentarlo.
+    link_other_profile: Ese enlace es de otro perfil. Inicia sesión en él para abrir
+      la página.
+    link_sign_in: Inicia sesión para abrir esa página en el espacio de trabajo.
     open_failed: No se ha podido abrir.
     paste_failed: No se ha podido pegar.
     paste_too_large: Es demasiado texto para pegar de una vez.
@@ -4124,6 +4131,7 @@ tui:
       profile: Perfil
       sign_out: Cerrar sesión
     navigation:
+      busy: Cierra primero el formulario abierto y vuelve a abrir el enlace.
       unavailable: No se puede abrir el área solicitada en esta sesión.
     no_areas: Ninguna área está disponible todavía en esta sesión.
     opening: Abriendo Cadrumo…

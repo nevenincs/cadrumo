@@ -106,7 +106,7 @@ def _catalogue(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("period", ["AD-HOC", "EXT-1T", "EVENT-3", "1T"])
+@pytest.mark.parametrize("period", ["0A", "EXT-1T", "EVENT-3", "1T"])
 async def test_mouse_click_home_filing_opens_matching_calendar_row(period: str) -> None:
     home = build_home_projection_fixture(HomeFixtureScenario.READY)
     address = {"modelo": "360", "filing_year": 2025, "period": Period.from_year_and_code(2025, period)}
@@ -422,6 +422,7 @@ def _account_factories(
     object.__setattr__(factories, "subscribe_retirement", None)
     object.__setattr__(factories, "subscribe_notices", None)
     object.__setattr__(factories, "subscribe_language", None)
+    object.__setattr__(factories, "subscribe_presentation", None)
     object.__setattr__(factories, "refresh_language", None)
     object.__setattr__(factories, "profile", lambda context: MarkerScreen(context))
     object.__setattr__(
@@ -443,9 +444,10 @@ async def test_with_pushed_retirement_the_session_is_read_only_at_its_expiry() -
     """No interval polls the session; one timer wakes at each expiry it learns."""
     reads: list[float] = []
     loop = asyncio.get_running_loop()
-    first_expiry = datetime.now(UTC) + timedelta(seconds=0.6)
+    first_expiry: datetime | None = None
 
     async def read() -> HomeAccountSession:
+        assert first_expiry is not None
         reads.append(loop.time())
         if len(reads) == 1:
             # Activity extended the session: the root must wake again at the new expiry.
@@ -461,6 +463,8 @@ async def test_with_pushed_retirement_the_session_is_read_only_at_its_expiry() -
     app = CadrumoTuiApp(account_factories=factories, read_account_session=read)
     async with app.run_test() as pilot:
         started = loop.time()
+        # Measured from here, not from before the app started, so start-up time cannot eat the margin.
+        first_expiry = datetime.now(UTC) + timedelta(seconds=0.6)
         app._account_session = HomeAccountSession(
             posture=HomeSessionPosture.ACTIVE, profile_label="Current profile", expires_at=first_expiry
         )

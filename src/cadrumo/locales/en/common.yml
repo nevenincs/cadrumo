@@ -1091,6 +1091,13 @@ desktop:
   toast:
     copied: Copied
     copy_failed: Couldn't copy that.
+    link_failed: Couldn't open that page in the workspace.
+    link_invalid: That link doesn't open a page in the workspace.
+    link_not_received: The workspace didn't get the page. Wait for it to finish loading,
+      then try again.
+    link_other_profile: That link is for another profile. Sign in to it to open the
+      page.
+    link_sign_in: Sign in to open that page in the workspace.
     open_failed: Couldn't open that.
     paste_failed: Could not paste that.
     paste_too_large: That is too much text to paste at once.
@@ -4022,6 +4029,7 @@ tui:
       profile: Profile
       sign_out: Sign out
     navigation:
+      busy: Close the open form first, then open the link again.
       unavailable: The requested area cannot be opened in this session.
     no_areas: No area is available in this session yet.
     opening: Opening Cadrumo…

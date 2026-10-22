@@ -3104,6 +3104,7 @@
         "cadrumo.entrypoints.tui.operations.run_result",
         "cadrumo.entrypoints.tui.operations.run_screen",
         "cadrumo.entrypoints.tui.operations.settled_submission",
+        "cadrumo.entrypoints.tui.presentation",
         "cadrumo.entrypoints.tui.profile",
         "cadrumo.entrypoints.tui.profile.aeat_auth_setup",
         "cadrumo.entrypoints.tui.profile.auth_fields",

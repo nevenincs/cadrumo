@@ -1,6 +1,6 @@
 import { Fragment, useMemo, type ReactNode } from "react";
 import { cn } from "@/components/ui/cn";
-import { aeatSetupProfile } from "./aeatSetupLink";
+import { cadrumoLink } from "./cadrumoLink";
 
 // The agent writes Markdown. This reads the part of it a reply uses (the
 // CommonMark blocks, GitHub's tables and strikethrough, and bare addresses)
@@ -340,7 +340,7 @@ function Link({
 }) {
   // An address the host would refuse is not a door that does not open: its
   // words stay, and the address is there to read.
-  if (!OPENABLE.test(url) && !aeatSetupProfile(url))
+  if (!OPENABLE.test(url) && cadrumoLink(url).kind !== "page")
     return <span title={url}>{children}</span>;
   return (
     <a

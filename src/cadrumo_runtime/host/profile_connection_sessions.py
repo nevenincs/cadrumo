@@ -13,6 +13,7 @@ from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
+from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.access_policy import intersect_scopes
@@ -39,6 +40,7 @@ from cadrumo_client.contracts.attendance import (
 )
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
+from cadrumo_client.contracts.presentation import PresentationDelivered, PresentationRequest
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
     ProfileDisclosurePage,
@@ -55,6 +57,7 @@ from cadrumo_client.contracts.profile_selection import (
     LoginTargetReply,
     LoginTargetRequest,
 )
+from cadrumo_client.contracts.session_events import PresentationRequested
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frame_io import read_secret, write_document
@@ -366,6 +369,58 @@ class ProfileConnectionSessionMixin:
             page=page,
         )
 
+    def _present(
+        self: RuntimeProfileConnections, context: ConnectionContext, request: PresentationRequest
+    ) -> PresentationDelivered | AccessDenied:
+        """Pass a page the person chose at their desktop to their own signed-in TUI on the same profile.
+
+        Only the desktop asks: the command line never selects a TUI page. The
+        asking session is checked as a status read is. The request reaches each
+        TUI connection of the profile that holds a session under the same
+        native login, and names a page and nothing else; the TUI admits it.
+        """
+        connection = self._connected(context.connection_id)
+        if connection.context != context or connection.profile_id != request.profile_id:
+            return AccessDenied(code=AccessDenialCode.PROFILE_MISMATCH)
+        if connection.session_id != request.session_id:
+            return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
+        if connection.frontend is not OperationFrontendProjection.DESKTOP:
+            return AccessDenied(code=AccessDenialCode.FRONTEND_DENIED)
+        with self._guard:
+            host = self._profiles[connection.profile_id]
+        with host.guard:
+            if not self._admitting():
+                raise RefusalError(RefusalCode.DRAINING)
+            status = self._status(connection, host, request.request_id, request.session_id)
+        if isinstance(status, AccessDenied):
+            return status
+        if status.status.denial is not None:
+            return AccessDenied(code=status.status.denial)
+        with self._guard:
+            recipients = tuple(
+                PresentationRequested(
+                    runtime_boot_id=self.boot,
+                    connection_id=recipient.context.connection_id,
+                    profile_id=recipient.profile_id,
+                    session_id=recipient.session_id,
+                    destination=request.destination,
+                )
+                for recipient in self._connections.values()
+                if recipient.frontend is OperationFrontendProjection.TUI
+                and recipient.profile_id == connection.profile_id
+                and recipient.session_id is not None
+                and recipient.login.login_id == connection.login.login_id
+            )
+        for event in recipients:
+            self._events.publish(event)
+        return PresentationDelivered(
+            request_id=request.request_id,
+            runtime_boot_id=self.boot,
+            connection_id=context.connection_id,
+            destination=request.destination,
+            delivered=len(recipients),
+        )
+
     def _human_sign_out(
         self: RuntimeProfileConnections,
         host: RuntimeProfileHost,
@@ -483,6 +538,7 @@ class ProfileConnectionSessionMixin:
         request: ProfileLogin
         | SessionRequest
         | ProfileDisclosurePageRequest
+        | PresentationRequest
         | SignInStatusRequest
         | ActiveProfileRequest
         | LoginTargetRequest
@@ -491,6 +547,7 @@ class ProfileConnectionSessionMixin:
     ) -> (
         ProfileStatus
         | ProfileDisclosurePage
+        | PresentationDelivered
         | SessionsLocked
         | SignInStatusReply
         | ActiveProfileReply
@@ -509,10 +566,9 @@ class ProfileConnectionSessionMixin:
             if not self._admitting():
                 raise RefusalError(RefusalCode.DRAINING)
             if (
-                isinstance(request, SessionRequest)
-                and request.action == "session_activity"
-                and self._nonhuman_peer(context, channel)
-            ):
+                (isinstance(request, SessionRequest) and request.action == "session_activity")
+                or isinstance(request, PresentationRequest)
+            ) and self._nonhuman_peer(context, channel):
                 raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
             if isinstance(request, SignInStatusRequest):
                 login = self._capture(channel).observe(credential_facilities=Availability.UNAVAILABLE)
@@ -547,6 +603,8 @@ class ProfileConnectionSessionMixin:
                     self._sign_in_changed()
             elif isinstance(request, ProfileDisclosurePageRequest):
                 result = self._disclosure_page(context, request)
+            elif isinstance(request, PresentationRequest):
+                result = self._present(context, request)
             else:
                 result = self._session(context, request)
             if not isinstance(result, AccessDenied):
