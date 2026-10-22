@@ -204,10 +204,24 @@ class LedgerExclusionSubmissionV1(BaseModel):
     transaction_id: TransactionId
 
 
+class LedgerExclusionResultV1(BaseModel):
+    """Identity-only acknowledgement of a settled runtime exclusion.
+
+    The registered lifecycle operation returns display facts, not a domain
+    transaction, so a runtime door answers with the identity it settled.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    transaction_id: TransactionId
+
+
 class LedgerExclusionSubmitterV1(Protocol):
     """Injected application door that marks one entry reviewed and excluded."""
 
-    async def __call__(self, submission: LedgerExclusionSubmissionV1) -> ManualLedgerTransactionResult:
+    async def __call__(
+        self, submission: LedgerExclusionSubmissionV1
+    ) -> ManualLedgerTransactionResult | LedgerExclusionResultV1:
         """Exclude one active entry through the canonical lifecycle writer."""
         ...
 
@@ -610,6 +624,7 @@ __all__ = [
     "LedgerEvidenceRecordRowV1",
     "LedgerEvidenceRecordStatus",
     "LedgerEvidenceRowV1",
+    "LedgerExclusionResultV1",
     "LedgerExclusionSubmissionV1",
     "LedgerExclusionSubmitterV1",
     "LedgerFlowState",

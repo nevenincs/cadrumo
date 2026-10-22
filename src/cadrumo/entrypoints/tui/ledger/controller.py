@@ -48,6 +48,7 @@ from .models import (
     LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
     LedgerEvidenceRowV1,
+    LedgerExclusionResultV1,
     LedgerExclusionSubmissionV1,
     LedgerImportOutcomeV1,
     LedgerImportRequestV1,
@@ -408,7 +409,9 @@ class LedgerWorkspaceController:
         """Report whether excluding an entry is admitted: the classify authority and its writer."""
         return self.classify_action is not None and self.exclusion_submitter is not None
 
-    async def submit_exclusion(self, transaction_id: TransactionId) -> ManualLedgerTransactionResult:
+    async def submit_exclusion(
+        self, transaction_id: TransactionId
+    ) -> ManualLedgerTransactionResult | LedgerExclusionResultV1:
         """Exclude one entry the operator can see in the review list."""
         if self.classify_action is None or self.exclusion_submitter is None:
             raise InternalInvariantError("exclusion is unavailable")
@@ -417,7 +420,8 @@ class LedgerWorkspaceController:
         result = await self.exclusion_submitter(
             LedgerExclusionSubmissionV1(action=self.classify_action, transaction_id=transaction_id)
         )
-        if result.ref.transaction_id != transaction_id:
+        settled = result.transaction_id if isinstance(result, LedgerExclusionResultV1) else result.ref.transaction_id
+        if settled != transaction_id:
             raise ValueError("exclusion result transaction identity disagrees")
         return result
 

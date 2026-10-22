@@ -15,6 +15,7 @@ from .....application.ledger.invoice_evidence_operation_dtos import InvoiceDraft
 from .....application.ledger.models import ManualLedgerTransactionResult
 from .....application.ledger.workspace import LedgerWorkspaceArea
 from .....core.config import override_settings
+from .....core.identity.transaction_ids import TransactionId
 from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.iva.schema import InvoiceKind
 from .....domain.transactions.models import BucketTransactionRef
@@ -30,6 +31,7 @@ from ..models import (
     LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
     LedgerEvidenceRecordStatus,
+    LedgerExclusionResultV1,
     LedgerExclusionSubmissionV1,
     LedgerFlowState,
     LedgerInvoiceAddResultV1,
@@ -531,6 +533,47 @@ async def test_exclude_names_the_entry_withdraws_on_escape_and_writes_once_on_co
     assert [call.transaction_id for call in door.calls] == [first]
     assert door.calls[0].action == _classify_action()
     assert refreshes == [1]
+
+
+class _IdentityExclusionDoor:
+    """A runtime-shaped door that answers with the identity it settled."""
+
+    def __init__(self, settled: TransactionId | None = None) -> None:
+        self.settled = settled
+
+    async def __call__(self, submission: LedgerExclusionSubmissionV1) -> LedgerExclusionResultV1:
+        return LedgerExclusionResultV1(transaction_id=self.settled or submission.transaction_id)
+
+
+def _exclusion_controller(door: _IdentityExclusionDoor) -> LedgerWorkspaceController:
+    return LedgerWorkspaceController(
+        ledger_context(),
+        ledger_projection(),
+        LedgerWorkspaceInjection(
+            review_action=ledger_review_action(),
+            classify_action=_classify_action(),
+            classification_submitter=_ClassificationDoor(),
+            exclusion_submitter=door,
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_an_identity_only_exclusion_result_settles_for_the_entry_it_names() -> None:
+    controller = _exclusion_controller(_IdentityExclusionDoor())
+    target = controller.projection.review_transaction_ids[0]
+    result = await controller.submit_exclusion(target)
+    assert result == LedgerExclusionResultV1(transaction_id=target)
+
+
+@pytest.mark.asyncio
+async def test_an_exclusion_result_for_another_entry_is_refused() -> None:
+    projection = ledger_projection()
+    first, other = projection.review_transaction_ids[0], projection.entries[-1].transaction_id
+    assert first != other
+    controller = _exclusion_controller(_IdentityExclusionDoor(settled=other))
+    with pytest.raises(ValueError, match="identity disagrees"):
+        await controller.submit_exclusion(first)
 
 
 def test_exclude_is_not_offered_without_the_classify_authority() -> None:
