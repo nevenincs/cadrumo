@@ -9,7 +9,7 @@ related:
   - '[[2026-10-22-startup-performance-request-path-audit]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:e3ef16eaebcca27fb3978d80ab487b4260b79cc4bf8bf1c78783d79e58d770d3'
+body_hash: 'sha256:1eecd8152436410634043c38e5f4855bab520aa4fb50cd004db41209548ae207'
 ---
 
 # `startup-performance` plan
@@ -28,7 +28,7 @@ The findings are in `2026-10-22-startup-performance-request-path-audit`. `2026-1
 - [x] `S02` - Add the custody change witness over directory change notifications with re-arm-before-read, unwatchable fallback and 0.5 s maximum age; `src/cadrumo/adapters/persistence/storage/custody/change_witness.py and its tests`.
 - [x] `S03` - Serve runtime facts lock, enrollment and binding observations and the logon inventory through the witness and WTS invalidation, invalidating on own publications; `src/cadrumo_runtime/host/profile_host.py, src/cadrumo_runtime/host/profile_connections.py, custody stores and owning tests`.
 - [x] `S04` - Serve the worker's capsule binding validation through the witness; `src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py and owning tests`.
-- [ ] `S05` - Measure the request path on an overlaid package copy and record before and after timings in the audit; `.vault/audit/2026-10-22-startup-performance-request-path-audit.md`.
+- [x] `S05` - Measure the request path on an overlaid package copy and record before and after timings in the audit; `.vault/audit/2026-10-22-startup-performance-request-path-audit.md`.
 - [ ] `S06` - Pre-start one unbound profile worker so sign-in binds an imported worker and the first operation skips cold start; `src/cadrumo_runtime/adapters/profile_worker*.py, src/cadrumo_runtime/host/worker*.py and owning tests`.
 - [ ] `S07` - Remove CLI children from the desktop sign-in path: profile inventory from session watch, password sign-in through a pre-started session hold that persists the receipt; `src/cadrumo_runtime/host/session_watch.py, session_hold.py, native/desktop/src-tauri/src/shell/sign_in and owning tests`.
 - [ ] `S08` - Stop hashing the whole authority database in every process while keeping corruption refusal; `src/cadrumo/domain/calculations/registry/authority_store.py and owning tests`.
