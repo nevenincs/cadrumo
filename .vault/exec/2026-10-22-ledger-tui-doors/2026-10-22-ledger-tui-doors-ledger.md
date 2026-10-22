@@ -5,16 +5,14 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:97ad369eb825e5a1a529eb3291abfb320e53deddf8eda87c3e7ac362543bf134'
+body_hash: 'sha256:6b583f37d8adbbf7bff402743c6e1199416c3b5734debbcaaa7d7f096f6ca3f9'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
 
-
 # `ledger-tui-doors` ledger
 
 ## Changes
-
 
 - `S01` `A` `src/cadrumo/entrypoints/tui/ledger/tools.py`
 - `S01` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
@@ -41,3 +39,10 @@ related:
 - `S01` `verify:` `lint-imports` -> `pass`
 - `S01` `verify:` `ty on touched files` -> `pass`
 - `S01` `by:` `orchestrator`
+- `S09` `M` `src/cadrumo/application/ledger/list_query.py`
+- `S09` `M` `src/cadrumo/application/ledger/tests/test_list_query.py`
+- `S09` `A` `src/cadrumo/entrypoints/tests/test_ledger_list_period_partition.py`
+- `S09` `verify:` `test_ledger_list_page_benchmark period page cpu_p95 15.6s to 1.06s (budget 3.0)` -> `pass`
+- `S09` `verify:` `list query, operation, partition parity and stale-index fallback tests (31)` -> `pass`
+- `S09` `verify:` `ruff, lint-imports, ty on touched files` -> `pass`
+- `S09` `by:` `O1`

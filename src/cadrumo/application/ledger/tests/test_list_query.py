@@ -21,6 +21,8 @@ import pytest
 
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
+from ....domain.transactions.dates import transaction_eligible_date_span
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import (
     LedgerDatePartition,
@@ -42,12 +44,17 @@ _BUCKET = "11111111-1111-4111-8111-111111111111"
 
 
 def _transaction(
-    *, provider_id: str, amount: Decimal, group_label: str | None = None, own_account_id: str | None = None
+    *,
+    provider_id: str,
+    amount: Decimal,
+    group_label: str | None = None,
+    own_account_id: str | None = None,
+    filing_date: date = date(2024, 4, 10),
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2024, 4, 10),
-        value_date=date(2024, 4, 10),
+        booked_date=filing_date,
+        value_date=filing_date,
         amount=amount,
         currency="EUR",
         counterparty="Supplier SL",
@@ -337,3 +344,133 @@ def test_sort_ledger_results_is_reusable_on_its_own() -> None:
     ordered = sort_ledger_results(results, sort_by=LedgerSortField.AMOUNT, sort_order=LedgerSortOrder.ASC)
 
     assert [item.transaction.raw.amount for item in ordered] == [Decimal("10.00"), Decimal("30.00")]
+
+
+def _cash_accounting_transaction(*, provider_id: str, filing_date: date, operation_date: date) -> Transaction:
+    """A criterio-de-caja row whose devengo date sits apart from its ledger filing date."""
+    base = _transaction(provider_id=provider_id, amount=Decimal("1210.00"), filing_date=filing_date)
+    return Transaction.model_validate(
+        {
+            **base.model_dump(),
+            "business_classification": BusinessClassification.BUSINESS,
+            "taxable_base": Decimal("1000.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("210.00"),
+            "iva_category": IvaCategory("domestic_general"),
+            "cash_accounting_treatment": IvaCashAccountingTreatment("supplier_regime"),
+            "operation_date": operation_date,
+            "cash_accounting_payment_evidence": (
+                IvaCashAccountingPaymentEvidence(
+                    payment_date=filing_date,
+                    taxable_base=Decimal("1000.00"),
+                    iva_amount=Decimal("210.00"),
+                    recargo_amount=Decimal("0.00"),
+                ),
+            ),
+            "classified_at": datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
+            "classified_by": "manual",
+        }
+    )
+
+
+class _PartitionOnlyRepository(_InMemoryTransactionRepository):
+    """A read port that serves a period read from its date partition alone.
+
+    The in-window half is chosen by overlap with each row's eligible date span,
+    the same candidate superset the stored partition returns, so it can hold a
+    row whose filing date lies outside the window. A whole-catalogue read
+    refuses, which is what makes reaching for it observable.
+    """
+
+    def __init__(self, *, bucket_id: str, catalogue: TransactionCatalogue) -> None:
+        super().__init__(bucket_id=bucket_id, catalogue=catalogue)
+        self.windows: list[tuple[date, date]] = []
+
+    @override
+    def load(self) -> TransactionCatalogue:
+        raise AssertionError("a period listing read the whole catalogue")
+
+    @override
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        self.windows.append((start, end))
+        in_window: list[Transaction] = []
+        for transaction in self._catalogue:
+            earliest, latest = transaction_eligible_date_span(transaction)
+            if earliest <= end and latest >= start:
+                in_window.append(transaction)
+        return LedgerDatePartition(in_window=TransactionCatalogue.from_transactions(in_window), index_complete=True)
+
+
+def _period_query(period: str, year: int, **overrides: Unpack[_QueryOverrides]) -> LedgerTransactionListQuery:
+    return LedgerTransactionListQuery(
+        spec=LedgerReviewFilterSpec.from_strings([f"period={period}", f"year={year}"]), **overrides
+    )
+
+
+def test_a_period_listing_reads_only_that_periods_date_partition() -> None:
+    """A period filter asks for its own window and never decrypts the whole bucket."""
+    repository = _PartitionOnlyRepository(
+        bucket_id=_BUCKET,
+        catalogue=TransactionCatalogue.from_transactions(
+            (
+                _transaction(provider_id="before", amount=Decimal("1.00"), filing_date=date(2024, 3, 31)),
+                _transaction(provider_id="first", amount=Decimal("2.00"), filing_date=date(2024, 4, 1)),
+                _transaction(provider_id="last", amount=Decimal("3.00"), filing_date=date(2024, 6, 30)),
+                _transaction(provider_id="after", amount=Decimal("4.00"), filing_date=date(2024, 7, 1)),
+            )
+        ),
+    )
+
+    page = _page(repository, _period_query("2T", 2024, sort_by=LedgerSortField.DATE))
+
+    assert repository.windows == [(date(2024, 4, 1), date(2024, 6, 30))]
+    assert [item.transaction.raw.provider_transaction_id for item in page.results] == ["first", "last"]
+    assert page.total == 2
+    assert page.truncated is False
+
+
+def test_a_period_listing_narrows_the_partition_superset_to_the_filing_date() -> None:
+    """A row the partition offers only for its devengo date stays off the period page.
+
+    The partition selects candidates by eligible date span, so a criterio-de-caja
+    row filed in July but accrued in May is in its in-window half. The listing
+    filters on the ledger filing date; showing that row would make the period
+    page disagree with the full-scan page.
+    """
+    accrued_in_window = _cash_accounting_transaction(
+        provider_id="accrued-in-window", filing_date=date(2024, 7, 15), operation_date=date(2024, 5, 2)
+    )
+    filed_in_window = _cash_accounting_transaction(
+        provider_id="filed-in-window", filing_date=date(2024, 5, 20), operation_date=date(2024, 3, 2)
+    )
+    repository = _PartitionOnlyRepository(
+        bucket_id=_BUCKET,
+        catalogue=TransactionCatalogue.from_transactions(
+            (
+                accrued_in_window,
+                filed_in_window,
+                _transaction(provider_id="plain", amount=Decimal("5.00"), filing_date=date(2024, 6, 1)),
+            )
+        ),
+    )
+    offered = repository.partition_by_date_range(date(2024, 4, 1), date(2024, 6, 30)).in_window
+    assert accrued_in_window.transaction_id in offered.transactions, (
+        "fixture must place the devengo-only row inside the partition superset for this proof to mean anything"
+    )
+
+    page = _page(repository, _period_query("2T", 2024, sort_by=LedgerSortField.DATE))
+
+    assert [item.transaction.raw.provider_transaction_id for item in page.results] == ["filed-in-window", "plain"]
+    assert page.total == 2
+
+
+def test_a_listing_without_a_period_reads_the_whole_catalogue() -> None:
+    """Only a period filter can bound the read; other clauses still see every row."""
+    repository = _PartitionOnlyRepository(
+        bucket_id=_BUCKET,
+        catalogue=TransactionCatalogue.from_transactions((_transaction(provider_id="a", amount=Decimal("1.00")),)),
+    )
+
+    with pytest.raises(AssertionError, match="whole catalogue"):
+        _page(repository, _query())
+    assert repository.windows == []

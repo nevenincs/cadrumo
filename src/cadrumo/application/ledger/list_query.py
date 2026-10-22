@@ -323,6 +323,34 @@ def _page_results(
     )
 
 
+def _listing_catalogue(
+    query: LedgerTransactionListQuery,
+    *,
+    bucket_id: str,
+    ports: LedgerReadPorts,
+) -> TransactionCatalogue:
+    """Read only the stored rows this listing's filters can select.
+
+    A period filter keys on the ledger filing date (value date, else booked
+    date), which is the date the plaintext routing index records. Asking the
+    repository for that window's date partition therefore decrypts only rows
+    that can match instead of every row in the bucket. The partition runs its
+    own completeness gate and falls back to a full scan when the index is
+    stale or partial, so a period page can be slow but never silently short.
+
+    The in-window half is a superset chosen by each row's eligible date span,
+    which can reach past its filing date; the review filter's period predicate
+    still narrows it to the filing date, so the page is the one a full scan
+    would select. Without a date-spanned period the whole catalogue is read,
+    leaving any refusal to the filter that owns it.
+    """
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    period = query.spec.period
+    if period is None or not period.has_date_span():
+        return repository.load()
+    return repository.partition_by_date_range(period.start_date, period.end_date).in_window
+
+
 def query_ledger_transaction_list(
     query: LedgerTransactionListQuery,
     *,
@@ -347,7 +375,7 @@ def query_ledger_transaction_list(
     """
     # One read serves both the listing and the review filter; loading twice
     # decrypted and validated every stored row a second time per filtered list.
-    catalogue = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository).load()
+    catalogue = _listing_catalogue(query, bucket_id=bucket_id, ports=ports)
     results = list_manual_transactions(bucket_id=bucket_id, ports=ports, catalogue=catalogue)
     results = _filter_by_review_spec(
         results,
