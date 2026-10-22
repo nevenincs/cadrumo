@@ -191,7 +191,8 @@ def preflight_ledger_tax_readiness(
             is resolved when ``None``.
         raw_afectacion_ratio: Optional home-office usage ratio from censo data,
             used only to surface proportionality mismatches.
-        catalogue: The bucket's rows when the caller already holds them,
+        catalogue: The bucket's rows as a :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`
+            when the caller already holds them,
             either the whole catalogue or any superset of the period's rows;
             otherwise the period's rows are read through
             :func:`load_period_preflight_catalogue`.

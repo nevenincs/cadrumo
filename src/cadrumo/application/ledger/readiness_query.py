@@ -77,7 +77,8 @@ def read_ledger_readiness(
         transaction_repository: Explicit bucket-scoped catalogue port.
         usage_ratio_profile_loader: Profile-scoped declared ratio reader.
         operation: Caller-owned authority pin shared with the ledger workflow.
-        catalogue: The bucket's rows when the caller already holds them,
+        catalogue: The bucket's rows as a :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`
+            when the caller already holds them,
             either the whole catalogue or any superset of the period's rows.
 
     Returns:
@@ -105,7 +106,8 @@ def ledger_readiness_issues(
 ) -> tuple[LedgerReadinessIssueV1, ...]:
     """Join each issue of ``report`` to the explaining facts of its row in ``catalogue``.
 
-    ``catalogue`` must hold every row the report could name: the catalogue the
+    ``catalogue`` is a :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`
+    that must hold every row the report could name: the catalogue the
     report was computed from, or the whole bucket. An issue whose row it does
     not hold is kept with ``transaction_present`` false.
     """

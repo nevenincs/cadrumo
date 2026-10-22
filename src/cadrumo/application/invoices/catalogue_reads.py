@@ -24,7 +24,8 @@ def verify_invoice_repository_links(
 ) -> tuple[LinkInconsistency, ...]:
     """Load both catalogues and return one-sided invoice/transaction links.
 
-    ``transactions`` must be the whole transaction catalogue, never a period's
+    ``transactions`` must be the whole :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`,
+    never a period's
     rows: a row outside the caller's period can still hold a one-sided link.
     """
     return verify_link_consistency(

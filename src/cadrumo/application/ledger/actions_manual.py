@@ -490,7 +490,8 @@ def get_manual_transaction(
 ) -> ManualLedgerTransactionResult:
     """Return one :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult` from a bucket catalogue.
 
-    ``catalogue`` is a catalogue the caller already read that holds the row,
+    ``catalogue`` is a :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`
+    the caller already read that holds the row,
     such as the one its id was resolved against; otherwise the bucket's
     catalogue is loaded here. A row the catalogue does not hold is refused as
     not found either way.
