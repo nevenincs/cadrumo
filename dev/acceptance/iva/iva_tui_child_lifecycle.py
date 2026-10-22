@@ -71,6 +71,7 @@ def _capture_child(
     capture_stage = "launcher_not_entered"
 
     from textual.css.query import NoMatches
+    from textual.worker import WorkerCancelled, WorkerFailed
 
     from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
     from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
@@ -94,6 +95,12 @@ def _capture_child(
         except NoMatches as error:
             capture_error = InstalledTuiChildError(
                 f"installed IVA TUI public control was absent (stage={capture_stage})",
+                diagnostic=public_surface_diagnostic(pilot),
+            )
+            capture_error.__cause__ = error
+        except (WorkerCancelled, WorkerFailed) as error:
+            capture_error = InstalledTuiChildError(
+                f"installed IVA TUI public worker did not settle (stage={capture_stage})",
                 diagnostic=public_surface_diagnostic(pilot),
             )
             capture_error.__cause__ = error

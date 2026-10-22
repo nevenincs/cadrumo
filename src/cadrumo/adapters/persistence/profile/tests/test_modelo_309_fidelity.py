@@ -1,11 +1,11 @@
 """E2E calculation continuity: Modelo 309 IVA no periódico cross-renta cuota.
 
-Modelo 309 (IVA no periódico — Orden HAC/3625/2003) is an ad-hoc IVA
+Modelo 309 (IVA no periódico — Orden HAC/3625/2003) is an IVA
 declaration for operators who trigger an IVA obligation outside the standard
 periodic schedule: acquisitions of new means of transport from the EU,
 operators under the régimen especial de la agricultura, operators who become
 taxable on a recargo-de-equivalencia discharge, or ejecución forzosa
-proceedings. The period code is ``"AD-HOC"``.
+proceedings. It settles by quarter, so these filings use ``3T``.
 
 The casilla schema has two bound leaves and one computed total:
 - ``iva.autorepercutido.intracomunitaria`` — cuota IVA autorepercutida en
@@ -30,7 +30,7 @@ Grounding (non-tautological): the two cuota leaves are supplied as the
 ledger-aggregation binding facts (the autorepercutido and recargo-equivalencia
 cuotas); the load-bearing assertion is the *wiring* invariant — the engine's
 ``iva.cuota-no-periodica-total`` equals the sum of the two supplied leaves,
-which Orden HAC/3625/2003 apartado 1 defines as the total cuota of the ad-hoc
+which Orden HAC/3625/2003 apartado 1 defines as the total cuota of the
 declaration. The total is _produced by the real engine from the leaf inputs,
 never hand-computed against the formula under test.
 
@@ -65,22 +65,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO = "309"
 _YEAR_N = 2024
 _YEAR_N_PLUS_1 = 2025
-_PERIOD = "AD-HOC"
+_PERIOD = "3T"
 _CLOCK_N = datetime(2024, 4, 10, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2025, 3, 5, 10, 0, 0, tzinfo=UTC)
 
 #: The computed total casilla and its two bound leaves.
 _CASILLA_TOTAL: CasillaId = validated_casilla_id(
     "iva.cuota-no-periodica-total",
-    surface="test_modelo_309_adhoc_fidelity:_CASILLA_TOTAL",
+    surface="test_modelo_309_fidelity:_CASILLA_TOTAL",
 )
 _CASILLA_AUTOREPERCUTIDO: CasillaId = validated_casilla_id(
     "iva.autorepercutido.intracomunitaria",
-    surface="test_modelo_309_adhoc_fidelity:_CASILLA_AUTOREPERCUTIDO",
+    surface="test_modelo_309_fidelity:_CASILLA_AUTOREPERCUTIDO",
 )
 _CASILLA_RECARGO: CasillaId = validated_casilla_id(
     "iva.soportado.recargo-equivalencia",
-    surface="test_modelo_309_adhoc_fidelity:_CASILLA_RECARGO",
+    surface="test_modelo_309_fidelity:_CASILLA_RECARGO",
 )
 
 #: The two ``ledger_iva_aggregation`` bindings whose facts feed the leaves.
@@ -242,7 +242,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         assert loaded.observation == obs
 
 
-def test_modelo_309_adhoc_calculation_enrolls_two_renta_years(tmp_path: Path) -> None:
+def test_modelo_309_calculation_enrolls_two_renta_years(tmp_path: Path) -> None:
     """End-to-end calculation enrollment: 309 cuota total across two renta years.
 
     Drives the REAL 309 calculation engine for both ejercicios (real authority

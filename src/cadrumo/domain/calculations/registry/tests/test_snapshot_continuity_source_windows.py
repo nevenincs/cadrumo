@@ -47,7 +47,7 @@ def _modelo_and_catalogues(modelo_id: str) -> tuple[ModeloDefinition, RegistryCa
     ("modelo_id", "filing_year", "period", "revision_id", "historical_source"),
     [
         ("322", 2023, "01", "2023", "aeat-dr-322-2022"),
-        ("308", 2019, "AD-HOC", "2019-y-siguientes", "aeat-dr-308-2009"),
+        ("308", 2019, "0A", "2019-y-siguientes", "aeat-dr-308-2009"),
     ],
 )
 def test_real_historical_continuity_sources_are_carried_from_their_valid_endpoints(
@@ -154,7 +154,7 @@ def test_structural_succession_grounding_is_available_in_the_snapshot() -> None:
         catalogues,
         source_root=bundled_path(),
         filing_year=2016,
-        period="AD-HOC",
+        period="0A",
         grade=RegistryAuthorityGrade.APPLICABILITY,
     )
 

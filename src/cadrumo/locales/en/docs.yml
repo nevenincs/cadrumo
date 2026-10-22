@@ -39,8 +39,8 @@ docs:
       withholding: from the withholdings you recorded
       withholding296: from the modelo 296 withholdings per perceptor
     cadence:
-      ad_hoc: Filed when the event occurs
       annual: Filed annually
+      event: Filed when the event occurs
       monthly: Filed monthly
       profile_based: Filed when your profile requires it
       quarterly: Filed quarterly

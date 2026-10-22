@@ -47,7 +47,7 @@ def _ledger_aeat_token(token: str) -> str | None:
     Validates ``token`` against the registry period union and accepts it only
     when it is a span-shaped :class:`StandardPeriodCode` member the
     ledger can filter by (quarters, months, annual). Extended-union members the ledger
-    does not filter by (``EXT-*``, ``AD-HOC``, ``EVENT-N``) and instalment
+    does not filter by (``EXT-*``, ``EVENT-N``) and instalment
     claves (``1P``-``4P``) return ``None``.
     """
     from ...core.period import StandardPeriodCode

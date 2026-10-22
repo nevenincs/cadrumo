@@ -52,7 +52,7 @@ def test_historical_232_assembly_preserves_real_registry_inputs_without_a_snapsh
 def test_historical_308_preview_keeps_filing_refusal_and_real_formula() -> None:
     authority = compiled_bundled_authority()
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        authority.snapshot("308", filing_year=2018, period="AD-HOC", revision_id="2016-2018")
+        authority.snapshot("308", filing_year=2018, period="0A", revision_id="2016-2018")
     source, plan = build_historical_refund_plan()
     values = {v.casilla_id: v.value for v in refund_inputs(2018, historical=True).values}
     assert values["papel-nif"] == "12345678Z"
@@ -71,12 +71,16 @@ def test_historical_308_preview_keeps_filing_refusal_and_real_formula() -> None:
     )
 
 
-@pytest.mark.parametrize("year,revision_id", [(2010, "2009-2011-junio"), (2015, "2011-julio-2015")])
-def test_old_308_preview_uses_complete_name_and_old_bank_account(year: int, revision_id: str) -> None:
+@pytest.mark.parametrize(
+    "year,revision_id,period",
+    # aeat-dr-308-2009 admits only the quarters; the July 2011 design adds 0A.
+    [(2010, "2009-2011-junio", "3T"), (2015, "2011-julio-2015", "0A")],
+)
+def test_old_308_preview_uses_complete_name_and_old_bank_account(year: int, revision_id: str, period: str) -> None:
     source, plan = build_historical_refund_plan(year=year)
     assert source.revision.id == revision_id
     assert plan.metadata.preview_year == year
-    assert plan.metadata.preview_period == "AD-HOC"
+    assert plan.metadata.preview_period == period
     titles = [
         c.value
         for c in plan.value_cells

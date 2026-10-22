@@ -778,4 +778,4 @@ modelo:
               label: 5. Amendment of the previous year's pro rata. Tax year
           field:
             label: Modelo 360, tax years 2010 onwards (Order EHA/789/2010, amended
-              by HAP/841/2016). Ad hoc, triggered by a refund request.
+              by HAP/841/2016). Filed when a refund is requested.

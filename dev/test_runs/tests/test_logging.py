@@ -195,6 +195,40 @@ def test_a_passing_run_that_read_the_registry_removes_its_scratch() -> None:
     assert not scratch.exists()
 
 
+def test_deselected_prorrata_suite_does_not_retain_authority_at_collection() -> None:
+    """A collected but deselected suite never starts its authority lease lifetime."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "--collect-only",
+            "-q",
+            "-n0",
+            "-m",
+            "serial",
+            "src/cadrumo/adapters/persistence/profile/tests/test_prorrata_lifecycle_atomic_sources.py",
+        ],
+        cwd=REPO_ROOT,
+        env=_registry_reading_environment(),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    output, run_log = result.stdout + result.stderr, _child_run_log(result)
+    scratch = _scratch_of(run_log)
+    try:
+        assert result.returncode == pytest.ExitCode.NO_TESTS_COLLECTED, output
+        assert "the shared registry authority stayed open" not in output, output
+        assert "was created in a different Context" not in output, output
+        assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH REMOVED {scratch}"
+        assert not scratch.exists()
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
 def test_a_parallel_run_that_read_the_registry_removes_its_scratch() -> None:
     """Workers read the controller's snapshot and are gone before the controller removes it."""
     result = subprocess.run(

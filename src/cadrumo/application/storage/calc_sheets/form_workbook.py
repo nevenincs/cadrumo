@@ -17,7 +17,7 @@ from decimal import Decimal
 from textwrap import wrap
 
 from ....core.i18n.render import lookup_translation, tr
-from ....core.period import AD_HOC_PERIOD_CODE, Period
+from ....core.period import Period
 from ....domain.calculations.registry.export_semantics import ExportDraftAttribute
 from ....domain.calculations.registry.form_context import form_context_choice, resolve_form_context_field
 from ....domain.calculations.registry.form_projection_fields import resolve_form_projection_fields
@@ -993,9 +993,7 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
             self.row += 1
 
     def render(self) -> None:
-        period_suffix = (
-            f" · {self.frame.code}" if isinstance(self.frame, Period) and self.frame.code != AD_HOC_PERIOD_CODE else ""
-        )
+        period_suffix = f" · {self.frame.code}" if isinstance(self.frame, Period) else ""
         self.line(f"Modelo {self.modelo_id} · {self.frame.filing_year}{period_suffix}", StyleRole.TITLE)
         if isinstance(self.plan.metadata, SheetReviewMetadata):
             caption = self.plan.metadata.title + " · copia de valores guardados; no válida para presentar"

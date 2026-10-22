@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#registry-authority-flow'
 date: '2026-06-01'
-modified: '2026-08-25'
-body_hash: 'sha256:ddb67a28ebb7359220fc656e61b406f103256d43528bd6146f4e4df3f6656807'
+modified: '2026-10-22'
+body_hash: 'sha256:41f0371aad7267dbb7b29569475d99e5ae840882b4b777d3296562664daa6d40'
 related:
   - '[[2026-06-04-registry-period-code-union-research]]'
 ---
@@ -15,9 +15,9 @@ related:
 The registry loader compiles TOML period-code strings into ModeloRevision objects. The schema defines two period-code surfaces:
 
 - `StandardPeriodCode` (StrEnum): closed enumeration of standard filing-period forms (1T-4T, 1P-4P, 0A, 01-12)
-- `PeriodCode` (Annotated[str]): validator that accepts StandardPeriodCode members + extended forms (EXT-*T, AD-HOC, EVENT-N)
+- `PeriodCode` (Annotated[str]): validator that accepts StandardPeriodCode members + extended forms (EXT-*T, EVENT-N)
 
-The question is whether the loader should hydrate TOML period-code strings to `StandardPeriodCode` enum members when the token matches the closed subset, falling back to raw strings for EXT-*T/AD-HOC/EVENT-N tokens, OR always emit raw strings and let runtime consumers cast if they need typed values.
+The question is whether the loader should hydrate TOML period-code strings to `StandardPeriodCode` enum members when the token matches the closed subset, falling back to raw strings for EXT-*T/EVENT-N tokens, OR always emit raw strings and let runtime consumers cast if they need typed values.
 
 ## Considerations
 
@@ -41,7 +41,7 @@ When runtime code needs `StandardPeriodCode` certainty, it should:
 
 1. Accept a `PeriodCode` string (already validated by pydantic)
 2. Attempt to construct `StandardPeriodCode(value)` if enum membership is required
-3. Handle `ValueError` if the token is an extended form (EXT-*T, AD-HOC, EVENT-N)
+3. Handle `ValueError` if the token is an extended form (EXT-*T, EVENT-N)
 4. Fall back to raw string or raise a domain-specific error depending on context
 
 This pattern preserves the loader as a strict schema compiler: it does not add pre-validation casting. Consumers that need typed period codes perform their own hydration based on runtime requirements.

@@ -18,7 +18,7 @@ from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.period import AD_HOC_PERIOD_CODE, Period
+from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...domain.calculations.registry.ids import RecordId
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -47,14 +47,6 @@ _ENVELOPE_CLOSER_EXTENT: int = 18
 #: of its record identifier ``<T{modelo}0{AAAA}{PP}0000>``, in the prefix and
 #: again in the relative closer.
 _ENVELOPE_PERIOD_EXTENT: int = 2
-#: What the envelope prints for a filing period the registry addresses by its
-#: obligation rather than by a settlement window. The record designs that carry
-#: an ad-hoc modelo admit exactly the four quarters and ``0A`` in that span
-#: (``aeat-dr-308-2019`` M30800 row 5 "Período. (PP)", and ``aeat-dr-309-2023``
-#: M30900 row 5), and an ad-hoc settlement falls in no quarter, so ``0A`` is the
-#: only token those designs leave for it. Keyed on the period token, so the
-#: mapping refuses to stand in for a cadence it does not name.
-_ENVELOPE_PERIOD_TOKENS: Mapping[str, str] = {AD_HOC_PERIOD_CODE: "0A"}
 _ENVELOPE_FILLER_ROLES: frozenset[FilingEnvelopePrefixRole] = frozenset(
     {
         FilingEnvelopePrefixRole.PRE_PROGRAM_FILLER,
@@ -183,9 +175,7 @@ def _validate_envelope_filing_producer(
 def envelope_period_token(period: Period) -> str:
     """Return the two-character ``PP`` token the envelope grammar prints for ``period``.
 
-    A filing period whose registry token is already two characters prints
-    itself. A period the registry addresses by its obligation rather than by a
-    settlement window prints the token its record design admits instead. Every
+    A filing period whose registry token is two characters prints itself. Every
     other period has no place in the two-character span and is refused rather
     than truncated.
 
@@ -193,7 +183,7 @@ def envelope_period_token(period: Period) -> str:
         FilingExportValidationError: When ``period`` has no two-character
             envelope representation.
     """
-    token = _ENVELOPE_PERIOD_TOKENS.get(period.registry_token, period.registry_token)
+    token = period.registry_token
     if len(token) != _ENVELOPE_PERIOD_EXTENT:
         raise FilingExportValidationError(
             f"filing period {period!s} has no {_ENVELOPE_PERIOD_EXTENT}-character envelope representation"

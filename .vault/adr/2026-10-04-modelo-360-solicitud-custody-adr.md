@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#modelo-360-solicitud-custody'
 date: '2026-10-04'
-modified: '2026-10-04'
+modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:de557bf6bc677af08bd55d688964eb2000cde7d0cef97c13a2dd80760071b1b5'
+body_hash: 'sha256:cfd04613a0b12272eaad9990dee2d6f2dc2cb9a69ca2c197d35fee55eec42704'
 related:
   - "[[2026-06-24-m303-refund-fichero-block-adr]]"
   - '[[2026-10-04-modelo-360-solicitud-custody-reference]]'
@@ -22,7 +22,7 @@ Modelo 360 could not be exported. The typed página 1 facts (`Modelo360ProfileFa
 ## Considerations
 
 - DR360 campo 114 lets the refund account belong to the representante, and campo 116 makes the BIC obligatorio, so the 360 account is a fact of the solicitud rather than the taxpayer's standing IVA refund account (`2026-06-24-m303-refund-fichero-block-adr`).
-- The solicitud header (destination Member State, causa, earlier registro number) changes per solicitud; the work unit addresses one solicitud per filing year and the revision's single `AD-HOC` period.
+- The solicitud header (destination Member State, causa, earlier registro number) changes per solicitud; the work unit addresses one solicitud per filing year and the revision's single `0A` period.
 - An encrypted singleton register with revision-guarded mutation already exists for comparable operator-declared filing inputs (`src/cadrumo/adapters/persistence/profile/foreign_assets.py`, `src/cadrumo/adapters/persistence/profile/_secure_model_document.py`).
 
 ## Considered options

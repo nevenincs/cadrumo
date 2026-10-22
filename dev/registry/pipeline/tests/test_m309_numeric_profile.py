@@ -35,7 +35,7 @@ def inputs():
             supersedes_layout_id="modelo-309-fichero-boe",
         ),
         filing_year=2023,
-        period="AD-HOC",
+        period="0A",
         source_root=bundled_path(),
     )
 

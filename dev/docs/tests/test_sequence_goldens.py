@@ -235,7 +235,7 @@ def _execute_in_child_interpreter(sequence_id: str, payload_path: Path) -> tuple
 def profile_delete_double_run(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[str, SequenceTranscript, SequenceTranscript]:
-    """Execute the real logout/delete contract twice in independent interpreters."""
+    """Execute the real preflight/delete contract twice in independent interpreters."""
     payloads = tmp_path_factory.mktemp("delete-transcripts")
     page, first = _execute_in_child_interpreter(_PROFILE_DELETE_SEQUENCE_ID, payloads / "first.json")
     _page, second = _execute_in_child_interpreter(_PROFILE_DELETE_SEQUENCE_ID, payloads / "second.json")
@@ -246,10 +246,18 @@ def _set_delete_fingerprint_leaf(
     value: SequenceGolden | SequenceTranscript,
     leaf: str,
     replacement: object,
+    *,
+    deleted: bool,
 ) -> SequenceGolden | SequenceTranscript:
-    """Return ``value`` with one real profile-delete fingerprint leaf changed."""
+    """Change one fingerprint leaf in the selected preflight or confirmed-delete frame."""
     document = value.model_dump(mode="json")
-    delete_frames = [frame for frame in document["frames"] if frame["envelope"]["command"] == "config.profile.delete"]
+    delete_frames = [
+        frame
+        for frame in document["frames"]
+        if frame["envelope"] is not None
+        and frame["envelope"]["command"] == "config.profile.delete"
+        and frame["envelope"]["result"]["deleted"] is deleted
+    ]
     assert len(delete_frames) == 1
     fingerprint = delete_frames[0]["envelope"]["result"]["fingerprint"]
     fingerprint[leaf] = replacement
@@ -369,9 +377,11 @@ class TestProfileDeletePathMaskHonesty:
             residual |= differing_paths(left.envelope, right.envelope)
         assert residual == {_PROFILE_DELETE_DIGEST_PATH}
 
+    @pytest.mark.parametrize("deleted", [False, True], ids=["preflight", "confirmed-delete"])
     def test_only_digest_flap_compares_clean_and_sibling_tampering_bites(
         self,
         profile_delete_double_run: tuple[str, SequenceTranscript, SequenceTranscript],
+        deleted: bool,
     ) -> None:
         """The path mask hides the real flap but preserves fingerprint evidence."""
         page, first, second = profile_delete_double_run
@@ -379,7 +389,7 @@ class TestProfileDeletePathMaskHonesty:
         assert compare_transcript_to_golden(second, golden, page=page) == ()
 
         for leaf, tampered in (("file_count", 999), ("total_bytes", 999999)):
-            changed = _set_delete_fingerprint_leaf(second, leaf, tampered)
+            changed = _set_delete_fingerprint_leaf(second, leaf, tampered, deleted=deleted)
             assert isinstance(changed, SequenceTranscript)
             problems = compare_transcript_to_golden(changed, golden, page=page)
             assert len(problems) == 1

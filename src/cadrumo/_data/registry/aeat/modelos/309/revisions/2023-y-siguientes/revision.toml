@@ -39,7 +39,7 @@ reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 authority_grade = "filing"
 valid_from = 2023-01-01
-period_selector = { year_from = 2023, periods = ["AD-HOC"] }
+period_selector = { year_from = 2023, periods = ["1T", "2T", "3T", "4T", "0A"] }
 legal_refs = [
     "orden-hfp-1245-2022:art-unico",
     "orden-hac-3625-2003:apartado-1",
@@ -59,12 +59,12 @@ scoped_families = ["workbook_parity_refs", "verification_expectations", "complet
 
 
 [revisions."2023-y-siguientes".family_dispositions.applicability]
-reason = "Modelo 309 is filed AD-HOC, one declaracion no periodica per settlement event as the non-EU operations occur: the filing condition is the operation itself, modeled by the filing_schedules AD-HOC entry, not a periodic taxpayer-condition profile state."
+reason = "Modelo 309 is a declaracion no periodica: a taxpayer files it only for a period in which it performed the operations the modelo liquidates, so the filing condition is the operation itself, not a taxpayer-condition profile state. The filing_schedules entries declare the periods its design admits."
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure"]
 
 [revisions."2023-y-siguientes".family_dispositions.deadline_windows]
-reason = "Modelo 309's AD-HOC filing models its obligation through filing_schedules; the deadline_windows family holds per-period presentation calendars for periodic modelos, and an AD-HOC declaration's presentation window is the settlement event itself, which the schedule already carries."
+reason = "Modelo 309's presentation windows apply only to a taxpayer who performed the operations in the period, and no profile state identifies that taxpayer, so a window declared here would put the modelo on every calendar. The 0A cases run from the operation itself: thirty days for a new means of transport, one month from payment of an enforced-sale adjudicacion."
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure"]
 
@@ -74,7 +74,7 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure"]
 
 [revisions."2023-y-siguientes".family_dispositions.extraction_profiles]
-reason = "The application's pull surface for modelo 309 is the operator-entered AD-HOC declaration, not a periodic declaracion PDF replay, and no inbound parser for a 309 artefact exists to name. Empty by the application's surface rather than omitted."
+reason = "The application's pull surface for modelo 309 is the operator-entered declaration, not a periodic declaracion PDF replay, and no inbound parser for a 309 artefact exists to name. Empty by the application's surface rather than omitted."
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure"]
 

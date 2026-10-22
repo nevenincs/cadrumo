@@ -21,10 +21,10 @@ source_refs = ["aeat-dr-308-2019"]
 
 [revisions.2019-y-siguientes.period_selector]
 year_from = 2019
-periods = ["AD-HOC"]
+periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "0A"]
 
 [revisions.2019-y-siguientes.family_dispositions.applicability]
-reason = "Modelo 308 is filed AD-HOC, one declaration per settlement period as the intra-community operations occur: the filing condition is the operation itself, modeled by the filing_schedules AD-HOC entry, not a periodic taxpayer-condition profile state. The applicability family has no periodic condition to declare."
+reason = "Modelo 308 is a solicitud de devolucion a taxpayer files only for a period in which it made the operations the refund covers, so the filing condition is the operation itself, not a taxpayer-condition profile state. The filing_schedules entries declare the periods its design admits for each tipo de tributacion. The applicability family has no profile condition to declare."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
@@ -34,7 +34,7 @@ legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
 [revisions.2019-y-siguientes.family_dispositions.deadline_windows]
-reason = "Modelo 308's AD-HOC filing models its obligation through filing_schedules; the deadline_windows family holds per-period presentation calendars for periodic modelos, and an AD-HOC declaration's presentation window is the settlement event itself, which the schedule already carries. Empty by the period shape, not by omission."
+reason = "Modelo 308's presentation windows apply only to a taxpayer who made the refundable operations in the period, and no profile state identifies that taxpayer, so a window declared here would put the modelo on every calendar. Empty until an applicability condition can scope it, not by omission."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
@@ -44,7 +44,7 @@ legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
 [revisions.2019-y-siguientes.family_dispositions.extraction_profiles]
-reason = "An extraction profile names an AEAT artefact this application ingests and the parser that reads it. The application's pull surface for modelo 308 is the operator-entered AD-HOC declaration, not a periodic declaracion PDF replay, and no inbound parser for a 308 artefact exists to name. Empty by the application's surface rather than omitted."
+reason = "An extraction profile names an AEAT artefact this application ingests and the parser that reads it. The application's pull surface for modelo 308 is the operator-entered declaration, not a periodic declaracion PDF replay, and no inbound parser for a 308 artefact exists to name. Empty by the application's surface rather than omitted."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
@@ -851,7 +851,12 @@ family = "filing_schedules"
 
 [revisions.2019-y-siguientes.family_overrides.selector]
 revision = "2016-2018"
-id = "modelo-308-ad-hoc"
+id = "modelo-308-devolucion"
+
+# aeat-dr-308-2019 admits the months again, for the tipo de tributacion that
+# settles monthly.
+[revisions.2019-y-siguientes.family_overrides.fields]
+periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "0A"]
 
 [revisions.2019-y-siguientes.family_overrides.sequence_additions]
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]

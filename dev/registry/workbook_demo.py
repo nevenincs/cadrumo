@@ -205,8 +205,8 @@ DEMO_CASES = (
         for year in (2019, 2023, 2024)
     ),
     DemoCase("156", "2003-y-siguientes", None, None, period="0A", authority_grade=RegistryAuthorityGrade.APPLICABILITY),
-    DemoCase("308", "2019-y-siguientes", "decl.req-iva-devolver-17", Decimal("250.35"), period="AD-HOC"),
-    DemoCase("309", "2023-y-siguientes", "decl.resultado-24", Decimal("210"), period="AD-HOC"),
+    DemoCase("308", "2019-y-siguientes", "decl.req-iva-devolver-17", Decimal("250.35"), period="0A"),
+    DemoCase("309", "2023-y-siguientes", "decl.resultado-24", Decimal("210"), period="0A"),
     DemoCase("322", "2026-y-siguientes", "70", Decimal("1500"), filing_year=2026, period="12"),
     DemoCase(
         "309",
@@ -214,7 +214,7 @@ DEMO_CASES = (
         "decl.resultado-24",
         Decimal("210"),
         filing_year=2022,
-        period="AD-HOC",
+        period="0A",
         authority_grade=RegistryAuthorityGrade.APPLICABILITY,
     ),
 )

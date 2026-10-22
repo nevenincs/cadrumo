@@ -23,7 +23,7 @@ source_refs = ["aeat-dr-308-2016"]
 [revisions.2016-2018.period_selector]
 year_from = 2016
 year_to = 2018
-periods = ["AD-HOC"]
+periods = ["1T", "2T", "3T", "4T", "0A"]
 
 [[revisions.2016-2018.casilla_overrides]]
 removed_fields = ["legal_refs"]
@@ -586,7 +586,11 @@ family = "filing_schedules"
 
 [revisions.2016-2018.family_overrides.selector]
 revision = "2011-julio-2015"
-id = "modelo-308-ad-hoc"
+id = "modelo-308-devolucion"
+
+# aeat-dr-308-2016 admits only the quarters and 0A.
+[revisions.2016-2018.family_overrides.fields]
+periods = ["1T", "2T", "3T", "4T", "0A"]
 
 [revisions.2016-2018.family_overrides.sequence_removals]
 legal_refs = [1]

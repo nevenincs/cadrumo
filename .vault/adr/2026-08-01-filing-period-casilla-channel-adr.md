@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#filing-period-casilla-channel'
 date: '2026-08-01'
-modified: '2026-08-01'
+modified: '2026-10-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:b795f33d9c8b70376da6def3e5aa18033054fa344c1e351d0de8054ad27b028c'
+body_hash: 'sha256:7b8795d04ea8b95f01e27a0fcc3bdc7f84e3dc3ae1543b421aef6d494cf1de47'
 related:
   - "[[2026-08-01-filing-period-casilla-channel-audit]]"
 ---
@@ -38,8 +38,8 @@ latent drift persisting.
   `1T`-`4T` (audit, grounding boundary).
 - The period token is total over every declared period form
   (`_validate_period_code` accepts `1T`-`4T`, `1P`-`4P`, `0A`, `01`-`12`,
-  `EXT-1T`-`EXT-4T`, `AD-HOC`, `EVENT-N`); the ordinal is partial —
-  `declaration_period_ordinal` returns `None` for extended, event, ad-hoc forms
+  `EXT-1T`-`EXT-4T`, `EVENT-N`); the ordinal is partial —
+  `declaration_period_ordinal` returns `None` for extended and event forms
   and `4P`, so Modelo 369's `EXT-1T` is inexpressible (audit, finding 3).
 - The persisted revision already carries two typed value channels:
   `CalculationRevision.casilla_values: Mapping[CasillaId, Decimal]` (computed

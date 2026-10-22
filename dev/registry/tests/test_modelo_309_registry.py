@@ -9,7 +9,9 @@ import pytest
 
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.iva.schema import IvaLedgerObservationRole
 
@@ -43,7 +45,7 @@ def test_modelo_309_validator_accepts_committed_definition() -> None:
 def test_modelo_309_metadata_matches_orden_hac_3625_2003() -> None:
     modelo, catalogues = _load_modelo_309()
     assert modelo.tax_domain == "iva"
-    assert modelo.cadence == "ad_hoc"
+    assert modelo.cadence == "event"
     assert "orden-hac-3625-2003:apartado-1" in modelo.legal_refs
     assert "orden-hac-3625-2003:apartado-3" in modelo.legal_refs
     assert "orden-hfp-1245-2022:art-unico" in modelo.legal_refs
@@ -53,17 +55,36 @@ def test_modelo_309_metadata_matches_orden_hac_3625_2003() -> None:
     assert catalogues.sources["boe-modelo-309-2003-form"].evidence_tier == "layout_authority"
 
 
-def test_modelo_309_revision_uses_ad_hoc_period_selector() -> None:
+@pytest.mark.parametrize(
+    ("revision_id", "periods"),
+    [
+        # aeat-dr-309-2004 field 7 "Periodo": 1T, 2T, 3T, 4T.
+        ("2004-2015", ("1T", "2T", "3T", "4T")),
+        # aeat-dr-309-2016 field 11: "1T".."4T", "01".."12" o "0A".
+        ("2016-2017", ("1T", "2T", "3T", "4T", *(f"{month:02d}" for month in range(1, 13)), "0A")),
+        # aeat-dr-309-2018 and aeat-dr-309-2023 field 11: "1T".."4T" o "0A".
+        ("2018-2022", ("1T", "2T", "3T", "4T", "0A")),
+        ("2023-y-siguientes", ("1T", "2T", "3T", "4T", "0A")),
+    ],
+)
+def test_modelo_309_period_selector_is_the_record_design_period_field(
+    revision_id: str, periods: tuple[str, ...]
+) -> None:
+    modelo, _ = _load_modelo_309()
+    assert modelo.revisions[revision_id].period_selector.periods == periods
+
+
+def test_modelo_309_revision_metadata() -> None:
     modelo, _ = _load_modelo_309()
     revision = modelo.revisions["2023-y-siguientes"]
     assert revision.period_selector.year_from == 2023
-    assert revision.period_selector.periods == ("AD-HOC",)
     assert revision.orden_aplicabilidad == ("orden-hfp-1245-2022:art-unico",)
 
 
-def test_modelo_309_snapshot_builds_for_ad_hoc_period() -> None:
+@pytest.mark.parametrize("period", ["3T", "0A"])
+def test_modelo_309_snapshot_builds_for_a_design_period(period: str) -> None:
     modelo, catalogues = _load_modelo_309()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="AD-HOC")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period=period)
     assert snapshot.revision.id == "2023-y-siguientes"
     assert snapshot.revision.orden_aplicabilidad == ("orden-hfp-1245-2022:art-unico",)
     assert "orden-hfp-1245-2022:art-unico" in snapshot.legal
@@ -73,12 +94,18 @@ def test_modelo_309_snapshot_builds_for_ad_hoc_period() -> None:
     assert "boe-modelo-309-2003-form" in snapshot.sources
 
 
-def test_modelo_309_filing_schedule_is_ad_hoc() -> None:
+def test_modelo_309_selects_no_revision_for_a_month_the_2023_design_does_not_admit() -> None:
+    modelo, _ = _load_modelo_309()
+    with pytest.raises(NoRevisionForPeriodError):
+        select_revision(modelo, filing_year=2025, period="03")
+
+
+def test_modelo_309_filing_schedule_is_event_triggered_over_the_design_periods() -> None:
     modelo, _ = _load_modelo_309()
     revision = modelo.revisions["2023-y-siguientes"]
-    schedule = next(s for s in revision.filing_schedules if s.id == "modelo-309-ad-hoc")
-    assert schedule.period_kind == "ad_hoc"
-    assert schedule.periods == ("AD-HOC",)
+    schedule = next(s for s in revision.filing_schedules if s.id == "modelo-309-no-periodica")
+    assert schedule.period_kind == "event"
+    assert schedule.periods == ("1T", "2T", "3T", "4T", "0A")
 
 
 def test_modelo_309_live_cross_references_forbid_writes() -> None:
@@ -96,7 +123,7 @@ def test_modelo_309_construct_links_workbook_parity() -> None:
     revision = modelo.revisions["2023-y-siguientes"]
     construct = next(c for c in revision.constructs if c.id == "modelo-309-iva-no-periodica")
     assert "modelo-309-dr" in construct.workbook_parity_refs
-    assert construct.filing_schedules == ("modelo-309-ad-hoc",)
+    assert construct.filing_schedules == ("modelo-309-no-periodica",)
 
 
 def test_modelo_309_declares_autorepercutido_and_recargo_soportado_bindings() -> None:

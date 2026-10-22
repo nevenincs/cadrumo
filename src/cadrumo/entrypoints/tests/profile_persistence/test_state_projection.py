@@ -675,7 +675,7 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
     assert "ledger_iva_aggregation" not in {binding.source for binding in readiness.missing_bindings}
 
 
-def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period(
+def test_modelo_369_extended_period_readiness_fails_closed_for_non_span_ledger_period(
     state_projection_dependencies,
 ) -> None:
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
@@ -688,12 +688,12 @@ def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period(
             read_ports=read_ports,
             modelo_readiness_requests=(
                 ModeloReadinessRequest(
-                    modelo="309",
+                    modelo="369",
                     revision_id=active_registry_revision_id(
-                        modelo="309", filing_year=2026, period="AD-HOC", operation=operation
+                        modelo="369", filing_year=2026, period="EXT-1T", operation=operation
                     ),
                     filing_year=2026,
-                    period=Period.from_year_and_code(2026, "AD-HOC"),
+                    period=Period.from_year_and_code(2026, "EXT-1T"),
                 ),
             ),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -706,7 +706,7 @@ def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period(
     assert readiness.ledger_preflight_required is True
     assert readiness.ledger_ready is False
     assert readiness.ready is False
-    assert readiness.ledger_period == Period.from_year_and_code(2026, "AD-HOC")
+    assert readiness.ledger_period == Period.from_year_and_code(2026, "EXT-1T")
     assert readiness.ledger_checked_transaction_count == 0
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["unsupported_period"]
 

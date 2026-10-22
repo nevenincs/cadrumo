@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-export-workbook-parity'
 date: '2026-06-03'
-modified: '2026-10-07'
-body_hash: 'sha256:5b6784227589377fa9f99755fece77bcf14b784a83b3fedeab064cd46970732e'
+modified: '2026-10-22'
+body_hash: 'sha256:8417e44c8fbbb93ff9f8294507f29cfc1758e799a6a57abe289377e6db83de79'
 related:
   - "[[2026-06-03-modelo-export-evidence-parity-research]]"
   - "[[2026-06-03-modelo-export-evidence-parity-adr]]"
@@ -110,7 +110,7 @@ Omission is limited to unnumbered working figures classified as transport contro
 
 ### Administrative communication workbooks (2026-10-06)
 
-The approved all-modelo template scope includes registry communications that are not tax filings, such as Modelo 145. Shared workbook metadata preserves these administrative selectors in a separate strict typed frame; it must not substitute a quarterly, annual or ad-hoc filing period. Core filing-period validation remains unchanged. The existing wire coordinate fields and shared materializers are retained. Calendar filing pull must refuse administrative frames, including a forged matching-metadata verdict. This is presentation support, not a new filing capability, legal validity claim, or permission to ingest scenario edits. Tests cover distinct frame admission, coordinate round trips, year binding, unchanged filing refusals and populated form references.
+The approved all-modelo template scope includes registry communications that are not tax filings, such as Modelo 145. Shared workbook metadata preserves these administrative selectors in a separate strict typed frame; it must not substitute a quarterly or annual filing period. Core filing-period validation remains unchanged. The existing wire coordinate fields and shared materializers are retained. Calendar filing pull must refuse administrative frames, including a forged matching-metadata verdict. This is presentation support, not a new filing capability, legal validity claim, or permission to ingest scenario edits. Tests cover distinct frame admission, coordinate round trips, year binding, unchanged filing refusals and populated form references.
 
 ### Fictional historical template previews (2026-10-06)
 

@@ -14,7 +14,7 @@ from ..registry import OperationSchemaBindingV1
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.mark.parametrize("code", ["1T", "0A", "03", "AD-HOC", "EVENT-3"])
+@pytest.mark.parametrize("code", ["1T", "0A", "03", "EVENT-3"])
 def test_public_period_preserves_canonical_domain_meaning(code: str) -> None:
     canonical = Period.from_year_and_code(2026, code)
     projection = PublicPeriod.from_period(canonical)

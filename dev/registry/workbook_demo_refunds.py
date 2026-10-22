@@ -47,17 +47,17 @@ def build_historical_refund_plan(
 ) -> tuple[WorkbookTemplateSource, SheetExportPlan[SheetTemplatePreviewMetadata]]:
     """Build an evidenced historical example without widening filing support."""
     editions = {
-        2010: ("2009-2011-junio", "aeat-dr-308-2009"),
-        2015: ("2011-julio-2015", "aeat-dr-308-2011-july"),
-        2018: ("2016-2018", "aeat-dr-308-2016"),
+        2010: ("2009-2011-junio", "aeat-dr-308-2009", "3T"),
+        2015: ("2011-julio-2015", "aeat-dr-308-2011-july", "0A"),
+        2018: ("2016-2018", "aeat-dr-308-2016", "0A"),
     }
-    revision_id, source_ref = editions[year]
+    revision_id, source_ref, period = editions[year]
     source = load_workbook_template_source(
         "308",
         revision_id=revision_id,
         source_ref=source_ref,
         preview_year=year,
-        preview_period="AD-HOC",
+        preview_period=period,
     )
     inputs = refund_inputs(year, historical=True)
     if year in (2010, 2015):

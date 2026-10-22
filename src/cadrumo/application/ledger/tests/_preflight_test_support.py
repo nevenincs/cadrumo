@@ -22,7 +22,7 @@ def _period(year: int, code: str) -> Period:
 
 
 _Q2_2026 = _period(2026, "2T")
-_AD_HOC_2026 = _period(2026, "AD-HOC")
+_EVENT_2026 = _period(2026, "EVENT-1")
 
 
 def _raw_transaction(

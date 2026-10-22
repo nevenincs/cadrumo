@@ -1,7 +1,7 @@
 [modelo]
 id = "210"
 tax_domain = "irnr"
-cadence = "ad_hoc"
+cadence = "profile_based"
 jurisdiction = "ES-AEAT"
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-2",

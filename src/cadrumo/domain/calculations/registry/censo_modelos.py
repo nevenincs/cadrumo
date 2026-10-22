@@ -181,8 +181,8 @@ def active_036_ownership_from_registry(
 
 
 def _require_active_036_metadata(tax_domain: str, cadence: str) -> None:
-    if tax_domain != "censo" or cadence != "ad_hoc":
-        raise RegistryValidationError("active censo modelo 036 must be an ad_hoc censo registry definition")
+    if tax_domain != "censo" or cadence != "event":
+        raise RegistryValidationError("active censo modelo 036 must be an event-cadence censo registry definition")
 
 
 def _latest_active_036_revision(revisions: tuple[ModeloRevision, ...]) -> ModeloRevision:

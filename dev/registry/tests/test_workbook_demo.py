@@ -1281,7 +1281,7 @@ def test_309_historical_example_keeps_seven_rows_and_cannot_acquire_filing_autho
     values = _numeric_inputs(inputs)
     assert snapshot.revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
     with pytest.raises(RegistryValidationError, match="authority"):
-        compiled_bundled_authority().snapshot("309", filing_year=2022, period="AD-HOC", revision_id="2018-2022")
+        compiled_bundled_authority().snapshot("309", filing_year=2022, period="0A", revision_id="2018-2022")
     assert {value.casilla_id for value in inputs.values}.isdisjoint(
         {"decl.rg-base-25", "decl.rg-tipo-26", "decl.rg-cuota-27"}
     )

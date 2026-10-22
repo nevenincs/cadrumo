@@ -324,16 +324,17 @@ M490_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2022-2t-4t": Period.from_year_and_code(2022, "2T"),
     "2023-y-siguientes": Period.from_year_and_code(2023, "1T"),
 }
-#: The ad-hoc period each Modelo 309 edition is rendered for; 309 is event-driven.
+#: The period each Modelo 309 edition is rendered for: 0A wherever the design
+#: admits it, and a quarter for the 2004 design, which admits only quarters.
 M309_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2004-2015": Period.from_year_and_code(2004, "AD-HOC"),
-    "2016-2017": Period.from_year_and_code(2016, "AD-HOC"),
-    "2018-2022": Period.from_year_and_code(2022, "AD-HOC"),
-    "2023-y-siguientes": Period.from_year_and_code(2023, "AD-HOC"),
+    "2004-2015": Period.from_year_and_code(2004, "3T"),
+    "2016-2017": Period.from_year_and_code(2016, "0A"),
+    "2018-2022": Period.from_year_and_code(2022, "0A"),
+    "2023-y-siguientes": Period.from_year_and_code(2023, "0A"),
 }
-#: The ad-hoc period Modelo 308's one export-bearing edition is rendered for.
+#: The period Modelo 308's one export-bearing edition is rendered for.
 M308_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2019-y-siguientes": Period.from_year_and_code(2022, "AD-HOC"),
+    "2019-y-siguientes": Period.from_year_and_code(2022, "0A"),
 }
 #: The quarter each Modelo 123 edition is rendered for.
 M123_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {

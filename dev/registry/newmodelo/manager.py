@@ -155,7 +155,7 @@ def _manifest_toml(modelo_id: str, title: str) -> str:
         f'id = "{modelo_id}"\n'
         '# tax_domain: one of "iva" | "irpf" | "sociedades" | "informative" | ... (see TaxDomain)\n'
         'tax_domain = "TODO"\n'
-        '# cadence: "monthly" | "quarterly" | "annual" | "ad_hoc" | "profile_based"\n'
+        '# cadence: "monthly" | "quarterly" | "annual" | "event" | "profile_based"\n'
         'cadence = "TODO"\n'
         'jurisdiction = "ES-AEAT"\n'
         "legal_refs = []  # TODO: legal catalogue ids grounding this modelo's authority\n"

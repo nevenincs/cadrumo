@@ -87,12 +87,12 @@ _PUBLIC_MAPPING_ADAPTER: TypeAdapter[dict[object, object]] = TypeAdapter(
 )
 
 #: Bare registry period tokens (``0A``, ``1T``-``4T``, ``01``-``12``,
-#: ``1P``-``4P``, ``EXT-1T``-``EXT-4T``, ``AD-HOC``, ``EVENT-N``) carry
+#: ``1P``-``4P``, ``EXT-1T``-``EXT-4T``, ``EVENT-N``) carry
 #: no filing year. ``describe`` accepts them to narrow a modelo to a
 #: revision that declares the token, without forcing the operator to
 #: compose an artificial ``YYYY``-prefixed string.
 _BARE_PERIOD_RE = re.compile(
-    r"^(?:0A|[1-4]T|[1-4]P|0[1-9]|1[0-2]|EXT-[1-4]T|AD-HOC|EVENT-\d+)$",
+    r"^(?:0A|[1-4]T|[1-4]P|0[1-9]|1[0-2]|EXT-[1-4]T|EVENT-\d+)$",
     re.I,
 )
 

@@ -340,7 +340,7 @@ def _filing_period_for_observation(filing_year: int, registry_selector: str) -> 
     """Resolve the parser's registry selector to the stored filing period.
 
     An administrative censo selector names a registration event, not a period a
-    filing occupies, so it is stored as ``AD-HOC``. Membership is asked of
+    filing occupies, so it is stored under the annual ``0A`` period of its year. Membership is asked of
     :func:`~cadrumo.core.period.is_administrative_period_token` rather than a local set:
     a hand-copied set here already drifted two members behind the authority, and
     the drift was invisible because the two it lacked belong to a modelo that
@@ -352,9 +352,9 @@ def _filing_period_for_observation(filing_year: int, registry_selector: str) -> 
     rest of the vocabulary is ASCII, so the fold is a no-op there.
     """
     normalized = fold_diacritics(registry_selector).strip().upper()
-    if is_administrative_period_token(normalized):
-        return Period.from_year_and_code(filing_year, "AD-HOC")
-    return Period.from_year_and_code(filing_year, "0A" if normalized == str(filing_year) else normalized)
+    if is_administrative_period_token(normalized) or normalized == str(filing_year):
+        return Period.from_year_and_code(filing_year, "0A")
+    return Period.from_year_and_code(filing_year, normalized)
 
 
 def _resolve_template(

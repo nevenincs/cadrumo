@@ -47,7 +47,7 @@ def test_modelo_036_validator_accepts_committed_definition() -> None:
 def test_modelo_036_metadata_matches_its_approving_and_amending_ordenes() -> None:
     modelo, _ = _load_modelo_036()
     assert modelo.tax_domain == "censo"
-    assert modelo.cadence == "ad_hoc"
+    assert modelo.cadence == "event"
     assert modelo.jurisdiction == "ES-AEAT"
     assert "orden-eha-1274-2007:art-1" in modelo.legal_refs
     assert "orden-eha-1274-2007:art-2" in modelo.legal_refs
@@ -79,7 +79,7 @@ def test_modelo_036_revision_starts_when_the_amending_orden_applies() -> None:
 
 
 def test_modelo_036_snapshot_builds_for_event_periods() -> None:
-    # M036 is event-triggered (cadence="ad_hoc"); the period names are
+    # M036 is event-triggered (cadence="event"); the period names are
     # the three censal event kinds the form supports. Snapshot.period
     # max_length=32 accommodates these descriptive names.
     for period in ("alta", "modificacion", "baja"):
@@ -131,7 +131,7 @@ def test_modelo_036_filing_schedule_is_event_triggered() -> None:
     modelo, _ = _load_modelo_036()
     revision = modelo.revisions["2025-02-03-y-siguientes"]
     schedule = next(s for s in revision.filing_schedules if s.id == "modelo-036-event-triggered")
-    assert schedule.period_kind == "ad_hoc"
+    assert schedule.period_kind == "event"
     assert set(schedule.periods) == {"alta", "modificacion", "baja"}
 
 

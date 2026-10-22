@@ -1,6 +1,6 @@
 """E2E threshold/continuity: Modelo 036 censal alta→modificacion across 2 annual contexts.
 
-Modelo 036 (Censo de empresarios, profesionales y retenedores) is an ad_hoc
+Modelo 036 (Censo de empresarios, profesionales y retenedores) is an event-cadence
 censal declaration (Orden EHA/1274/2007, updated by Orden HAC/1526/2024).
 Cadence is event-driven: the registry snapshot selector carries event types
 (``alta``/``modificacion``/``baja``), not periodic filing codes. There is no

@@ -6,15 +6,15 @@ Period codes represent the filing frequency and scheme for tax returns:
 - Annual: 0A
 - Monthly: 01-12 (calendar months)
 - OSS/IOSS: EXT-1T, EXT-2T, EXT-3T, EXT-4T (extra-Union scheme)
-- Ad-hoc/Event: AD-HOC, EVENT-N (event-driven filings)
+- Event: EVENT-N (event-driven filings)
 
 :class:`StandardPeriodCode` is the canonical :class:`~enum.StrEnum` for
 the closed standard vocabulary (1T-4T, 1P-4P, 0A, 01-12). It includes both
 calendar spans and instalment claves, so callers that need date boundaries
 must still check :meth:`Period.has_date_span`. :data:`RegistryPeriodCode`
 is the pydantic field annotation for the full registry union: standard
-members plus extended OSS/IOSS literals, ``AD-HOC``, the open-ended event
-shape, the administrative censo tokens, and the symbolic ``EVENT-N`` selector.
+members plus extended OSS/IOSS literals, the open-ended event shape, the
+administrative censo tokens, and the symbolic ``EVENT-N`` selector.
 :data:`FilingPeriodCode` is the narrower annotation for a period a taxpayer
 files in — the same union minus the administrative tokens and the symbolic
 selector, neither of which names one concrete filing period. Two boundaries
@@ -39,7 +39,7 @@ import calendar
 import re
 from datetime import date
 from enum import StrEnum
-from typing import Annotated, Final, override
+from typing import Annotated, override
 
 from pydantic import BaseModel, BeforeValidator, Field
 
@@ -83,11 +83,6 @@ class StandardPeriodCode(StrEnum):
 
 _STANDARD_PERIOD_SET: frozenset[str] = frozenset(member.value for member in StandardPeriodCode)
 _EXTENDED_PERIOD_SET: frozenset[str] = frozenset(("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"))
-#: The filing-period token for a declaration whose obligation is an event rather
-#: than a settlement window. Public because consumers that must name the ad-hoc
-#: period -- the filing-envelope grammar, which prints a two-character period --
-#: would otherwise spell the token a second time.
-AD_HOC_PERIOD_CODE: Final = "AD-HOC"
 _ADMINISTRATIVE_PERIOD_SET: frozenset[str] = frozenset(
     ("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIACION"),
 )
@@ -111,9 +106,9 @@ def _validate_filing_period(value: str) -> str:
     """Validate and normalize a period code that a taxpayer can actually file.
 
     Accepts StandardPeriodCode members, extended OSS/IOSS forms (EXT-1T..EXT-4T),
-    the ad-hoc literal (AD-HOC), and event-driven forms carrying a concrete event
-    NUMBER (EVENT-3). It admits neither the administrative censo/comunicación
-    tokens nor the symbolic ``EVENT-N`` selector: an administrative token names a
+    and event-driven forms carrying a concrete event NUMBER (EVENT-3). It admits
+    neither the administrative censo/comunicación tokens nor the symbolic
+    ``EVENT-N`` selector: an administrative token names a
     registration event rather than a period, and ``EVENT-N`` is declared to COVER
     the concrete ``EVENT-1``/``EVENT-2`` scopes rather than to be one of them. A
     symbolic stand-in for a set is a type error at a boundary whose whole contract
@@ -127,8 +122,6 @@ def _validate_filing_period(value: str) -> str:
     if normalized in _STANDARD_PERIOD_SET:
         return normalized
     if normalized in _EXTENDED_PERIOD_SET:
-        return normalized
-    if normalized == AD_HOC_PERIOD_CODE:
         return normalized
     if _EVENT_NUMBER_PERIOD_RE.match(normalized):
         return normalized
@@ -221,7 +214,7 @@ def accepted_filing_period_codes() -> tuple[str, ...]:
     The administrative tokens are excluded — they address a registry revision,
     not a filing period — as is the infinite ``EVENT-<number>`` family.
     """
-    return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {AD_HOC_PERIOD_CODE}))
+    return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET))
 
 
 def _format_accepted_filing_period_set() -> str:
@@ -231,7 +224,6 @@ def _format_accepted_filing_period_set() -> str:
     lines = [
         f"StandardPeriodCode: {', '.join(standard)}",
         f"Extended: {', '.join(extended)}",
-        f"Ad-hoc: {AD_HOC_PERIOD_CODE}",
         "Event-driven: EVENT-N (where N is an event-number integer, e.g. EVENT-3)",
     ]
     return "; ".join(lines)
@@ -356,7 +348,7 @@ class Period(BaseModel):
     period" across the whole application. It composes exactly two authoritative
     fields — the :attr:`filing_year` and the registry period :attr:`code`
     (a :class:`StandardPeriodCode` member such as ``1T`` / ``0A`` / ``03``, or an
-    extended union member such as ``EXT-1T`` / ``AD-HOC`` / ``EVENT-3``) — and
+    extended union member such as ``EXT-1T`` / ``EVENT-3``) — and
     never a combined calendar string (``2026Q1`` / ``2026-03`` / ``2026``).
     Those calendar shapes are neither accepted inputs nor canonical outputs.
     The only display projection is the space-separated :meth:`__str__` form
@@ -396,8 +388,7 @@ class Period(BaseModel):
             year: The filing year (e.g. ``2026``).
             code: A bare filing period code — a :class:`StandardPeriodCode`
                 value (``1T``-``4T`` / ``1P``-``4P`` / ``0A`` / ``01``-``12``) or
-                an extended union member (``EXT-1T``-``EXT-4T`` / ``AD-HOC`` /
-                ``EVENT-3``). The code is validated against
+                an extended union member (``EXT-1T``-``EXT-4T`` / ``EVENT-3``). The code is validated against
                 :data:`FilingPeriodCode`; a combined calendar string, an
                 administrative censo token, and the symbolic ``EVENT-N``
                 selector are all refused.
@@ -555,7 +546,6 @@ class Period(BaseModel):
 
 
 __all__ = [
-    "AD_HOC_PERIOD_CODE",
     "FilingPeriodCode",
     "Period",
     "PeriodError",

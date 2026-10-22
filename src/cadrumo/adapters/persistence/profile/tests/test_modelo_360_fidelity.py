@@ -1,11 +1,11 @@
-"""E2E data-fidelity: Modelo 360 year-over-year ad-hoc cadence continuity.
+"""E2E data-fidelity: Modelo 360 year-over-year continuity.
 
 Modelo 360 (Solicitud de devolución de cuotas del IVA soportadas por
 empresarios o profesionales no establecidos en el territorio de aplicación
 del impuesto pero establecidos en la Comunidad — Orden EHA/789/2010,
-modificada por HAP/841/2016) is an ad-hoc refund request filed by EU-based
+modificada por HAP/841/2016) is a refund request filed by EU-based
 businesses for Spanish IVA they incurred but could not deduct (Directiva
-2008/9/CE, LIVA art. 117-bis). The period code is ``"AD-HOC"``.
+2008/9/CE, LIVA art. 117-bis), one per ejercicio under the ``0A`` period.
 
 The casilla schema has two fields:
 - ``decl.ejercicio`` — ejercicio al que se refiere la solicitud
@@ -13,7 +13,7 @@ The casilla schema has two fields:
   las cuotas (the EU member state of the claimant's establishment)
 
 There is no calculation engine and no cross-year binding resolver. The
-cross-year invariant is data-fidelity and cadence continuity: two ad-hoc
+cross-year invariant is data-fidelity and cadence continuity: two
 refund requests in distinct ejercicios survive the encrypted-SQL roundtrip,
 are independently retrievable, and their estado-miembro values do not bleed
 between years.
@@ -46,7 +46,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO = "360"
 _YEAR_N = 2024
 _YEAR_N_PLUS_1 = 2025
-_CONTEXT_LABEL = "360-adhoc-devolucion-iva-no-establecidos-cadence-year-over-year"
+_CONTEXT_LABEL = "360-devolucion-iva-no-establecidos-cadence-year-over-year"
 _CLOCK_N = datetime(2024, 9, 30, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2025, 9, 30, 10, 0, 0, tzinfo=UTC)
 
@@ -65,7 +65,7 @@ def _year_n_observation() -> RegistryModeloObservation:
     return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N,
-        period="AD-HOC",
+        period="0A",
         casilla_values={
             _DECL_EJERCICIO_CASILLA: Decimal(str(_YEAR_N)),
             _DECL_ESTADO_MIEMBRO_CASILLA: _ESTADO_MIEMBRO_N,
@@ -81,7 +81,7 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
     return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N_PLUS_1,
-        period="AD-HOC",
+        period="0A",
         casilla_values={
             _DECL_EJERCICIO_CASILLA: Decimal(str(_YEAR_N_PLUS_1)),
             _DECL_ESTADO_MIEMBRO_CASILLA: _ESTADO_MIEMBRO_N_PLUS_1,
@@ -102,7 +102,7 @@ def test_year_n_observation_persists_and_reloads_strictly(tmp_path: Path) -> Non
                 stamped_revision_id=revision_id_for_observation(obs_n),
             )
         )
-        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="AD-HOC")
+        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
         assert loaded is not None
         assert loaded.observation == obs_n
         assert loaded.source_kind == "app_filing"
@@ -122,7 +122,7 @@ def test_year_n_plus_1_observation_persists_and_reloads_strictly(tmp_path: Path)
                 stamped_revision_id=revision_id_for_observation(obs_n1),
             )
         )
-        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="AD-HOC")
+        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
         assert loaded is not None
         assert loaded.observation == obs_n1
         assert loaded.captured_at == _CLOCK_N_PLUS_1
@@ -150,8 +150,8 @@ def test_both_observations_are_independently_retrievable_no_bleed(tmp_path: Path
                 stamped_revision_id=revision_id_for_observation(obs_n1),
             )
         )
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="AD-HOC")
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="AD-HOC")
+        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
+        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
 
         assert loaded_n is not None and loaded_n1 is not None
         assert loaded_n.observation == obs_n
@@ -172,7 +172,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
     obs_n_missing = RegistryModeloObservation(
         modelo=_MODELO,
         filing_year=_YEAR_N,
-        period="AD-HOC",
+        period="0A",
         observations=tuple(o for o in obs_n.observations if o.casilla_id != _DECL_ESTADO_MIEMBRO_CASILLA),
     )
     assert obs_n != obs_n_missing
@@ -187,16 +187,16 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
                 stamped_revision_id=revision_id_for_observation(obs_n),
             )
         )
-        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="AD-HOC")
+        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
         assert loaded is not None
         assert loaded.observation != obs_n_missing
         assert loaded.observation == obs_n
 
 
-def test_modelo_360_adhoc_fidelity_enrolls_two_renta_years(tmp_path: Path) -> None:
+def test_modelo_360_fidelity_enrolls_two_renta_years(tmp_path: Path) -> None:
     """cross-year observation proves both exercises and matches the cross-year claim.
 
-    Drives the real CalculationObservationRepository for both ad-hoc ejercicios
+    Drives the real CalculationObservationRepository for both ejercicios
     (real encrypted-SQLite, no mocks), records each via record_context_year, and
     calls the cross-year behavior assertion. Manifest must declare
     renta_years = [2024, 2025] in the same commit.
@@ -214,7 +214,7 @@ def test_modelo_360_adhoc_fidelity_enrolls_two_renta_years(tmp_path: Path) -> No
                 stamped_revision_id=revision_id_for_observation(obs_n),
             )
         )
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="AD-HOC")
+        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
         assert loaded_n is not None and loaded_n.observation == obs_n
         _count_n = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N)
 
@@ -226,6 +226,6 @@ def test_modelo_360_adhoc_fidelity_enrolls_two_renta_years(tmp_path: Path) -> No
                 stamped_revision_id=revision_id_for_observation(obs_n1),
             )
         )
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="AD-HOC")
+        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
         assert loaded_n1 is not None and loaded_n1.observation == obs_n1
         _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)

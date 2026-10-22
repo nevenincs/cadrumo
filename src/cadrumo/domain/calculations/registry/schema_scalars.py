@@ -139,7 +139,6 @@ field as ``ModeloYear``.
 
 _STANDARD_PERIOD_CODES = frozenset(StandardPeriodCode)
 _EXT_PATTERN = re.compile(r"^EXT-[1-4]T$")
-_AD_HOC_PATTERN = re.compile(r"^AD-HOC$")
 _EVENT_PATTERN = re.compile(r"^EVENT-\d+$")
 
 
@@ -151,7 +150,6 @@ def _validate_period_code(value: object) -> object:
 
     - StandardPeriodCode: 1T-4T (quarterly), 1P-4P (instalment), 0A (annual), 01-12 (monthly).
     - ``EXT-1T``-``EXT-4T``: OSS extra-Union scheme quarters (modelo 369).
-    - ``AD-HOC``: ad-hoc / event-driven (modelos 308, 309).
     - ``EVENT-N``: numbered event filings.
 
     Modellers introducing a new form must extend this validator.
@@ -160,7 +158,7 @@ def _validate_period_code(value: object) -> object:
         raise RegistryValidationError(f"period_code value must be a string, got {type(value).__name__}")
     if value in _STANDARD_PERIOD_CODES:
         return value
-    if _EXT_PATTERN.match(value) or _AD_HOC_PATTERN.match(value) or _EVENT_PATTERN.match(value):
+    if _EXT_PATTERN.match(value) or _EVENT_PATTERN.match(value):
         return value
     raise RegistryValidationError(f"period_code value {value!r} does not match a supported filing-period form")
 

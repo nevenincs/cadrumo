@@ -112,7 +112,7 @@ def test_modelo_145_loads_as_local_payer_communication_not_filing() -> None:
     surfaces = {link.surface for link in revision.application_links}
 
     assert modelo.calculation_class == "informative"
-    assert modelo.cadence == "ad_hoc"
+    assert modelo.cadence == "event"
     assert surfaces == {"communication", "payer_delivery", "export"}
     assert {link.id for link in revision.application_links} == {
         "modelo-145-communication",

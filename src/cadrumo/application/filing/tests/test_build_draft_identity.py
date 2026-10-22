@@ -306,4 +306,3 @@ def test_typed_extended_and_event_periods_resolve_filing_date_context() -> None:
 
     assert filing_period_date(Period.from_year_and_code(2025, "EXT-1T")) == date(2025, 3, 31)
     assert filing_period_date(Period.from_year_and_code(2025, "EXT-4T")) == date(2025, 12, 31)
-    assert filing_period_date(Period.from_year_and_code(2025, "AD-HOC")) == date(2025, 12, 31)

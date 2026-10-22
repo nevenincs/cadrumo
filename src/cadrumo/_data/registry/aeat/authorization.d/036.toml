@@ -4,7 +4,7 @@
 # real encrypted-SQLite CalculationObservationRepository, loaded back, and
 # asserted for strict pydantic equality + event-kind isolation + vigencia
 # normativa identity across both contexts. Evidence class is
-# threshold_continuity (ad_hoc cadence, no calculation engine;
+# threshold_continuity (event cadence, no calculation engine;
 # RD 1065/2007 arts. 9-11 / Orden HAC/1526/2024).
 [modelo]
 modelo = "036"

@@ -1,7 +1,7 @@
 [modelo]
 id = "309"
 tax_domain = "iva"
-cadence = "ad_hoc"
+cadence = "event"
 jurisdiction = "ES-AEAT"
 legal_refs = [
     "orden-hfp-1245-2022:art-unico",

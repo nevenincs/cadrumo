@@ -1,7 +1,7 @@
 [modelo]
 id = "145"
 tax_domain = "irpf"
-cadence = "ad_hoc"
+cadence = "event"
 jurisdiction = "ES-AEAT"
 calculation_class = "informative"
 output_sensitivity = "identity"

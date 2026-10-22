@@ -113,7 +113,7 @@ def test_registry_union_validator_is_the_token_authority() -> None:
 
     Quarters, the annual period, and months are ledger-meaningful and resolve.
     The extended-union members the registry validator also accepts (``EXT-*``,
-    ``AD-HOC``, ``EVENT-N``) and the instalment claves (``1P``-``4P``) are NOT
+    ``EVENT-N``) and the instalment claves (``1P``-``4P``) are NOT
     a ledger date span, so they refuse rather than resolve to a usable period.
     """
 
@@ -123,7 +123,7 @@ def test_registry_union_validator_is_the_token_authority() -> None:
 
     # Non-span registry-union members and instalment claves do not resolve to a
     # ledger date span; they raise rather than emit an unusable period.
-    for non_ledger in ("1P", "EXT-1T", "EVENT-3", "AD-HOC"):
+    for non_ledger in ("1P", "EXT-1T", "EVENT-3"):
         with pytest.raises(typer.BadParameter):
             _canonical_period(non_ledger, year=2024)
 

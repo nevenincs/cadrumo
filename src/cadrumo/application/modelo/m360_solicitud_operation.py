@@ -56,8 +56,8 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 
 MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID = "modelo.m360_solicitud"
-#: The Modelo 360 revision addresses one solicitud per filing year through its single period.
-MODELO_360_SOLICITUD_PERIOD_CODE: Final = "AD-HOC"
+#: The Modelo 360 revision addresses one solicitud per filing year through its annual period.
+MODELO_360_SOLICITUD_PERIOD_CODE: Final = "0A"
 
 Modelo360SolicitudAction = Literal["declare", "list", "remove"]
 

@@ -6,8 +6,7 @@ canonical filing-period validation surface for the registry
 boundary. Period tokens span six concrete forms documented in the
 schema-hardening fiscal-period inventory: quarterly (`1T`-`4T`),
 IS-instalment (`1P`-`4P`), annual (`0A`), monthly (`01`-`12`),
-OSS-quarter (`EXT-1T`-`EXT-4T`), and ad-hoc (`AD-HOC`,
-`EVENT-N`).
+OSS-quarter (`EXT-1T`-`EXT-4T`), and event (`EVENT-N`).
 """
 
 from __future__ import annotations
@@ -69,7 +68,6 @@ class TestPeriodCodeAccepts:
             "EXT-2T",
             "EXT-3T",
             "EXT-4T",
-            "AD-HOC",
             "EVENT-1",
             "EVENT-42",
             "EVENT-9999",
@@ -97,12 +95,8 @@ class TestPeriodCodeRejects:
             "Q1",  # wrong letter
             "FY2024",  # year-style
             "EVENT-",  # event needs number
-            "AD HOC",  # space variant rejected
-            "^AD-HOC$",  # the raw regex literal must NOT pass — a previous
-            # bug compared values against this string instead
-            # of regex-matching against the AD-HOC pattern;
-            # this anti-tautology guard pins the fix and would
-            # accept the literal back if the regression returns
+            "AD-HOC",  # not an AEAT period code
+            r"^EVENT-\d+$",  # the raw regex literal must not pass as a token
             1,
         )
 

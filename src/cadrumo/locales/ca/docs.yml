@@ -38,8 +38,8 @@ docs:
       withholding: des de les retencions suportades
       withholding296: des de les retencions per perceptor del model 296
     cadence:
-      ad_hoc: Es presenta quan es produeix el fet
       annual: Es presenta anualment
+      event: Es presenta quan es produeix el fet
       monthly: Es presenta mensualment
       profile_based: Es presenta segons el teu perfil
       quarterly: Es presenta trimestralment

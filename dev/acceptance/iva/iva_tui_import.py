@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from pathlib import Path
 from typing import Any, cast
 
@@ -90,6 +91,7 @@ async def _classify_transaction(
 ) -> None:
     """Submit one combined IVA classification through the public TUI form."""
     from textual.widgets import DataTable, Input, Static
+    from textual.worker import WorkerCancelled
 
     from cadrumo.core.i18n.render import tr
 
@@ -131,4 +133,12 @@ async def _classify_transaction(
             "installed combined IVA classification did not reach its succeeded public terminal"
         )
     await pilot.press("escape")
-    await pilot.app.workers.wait_for_complete()
+    # Settle this write's read before starting the existing public-control
+    # polling budget. Other application workers have independent lifetimes.
+    refresh_workers = [worker for worker in pilot.app.workers if worker.group == "ledger-refresh"]
+    if refresh_workers:
+        # Screen replacement can cancel its departing worker. Only the visible
+        # destination below can prove that the return completed.
+        with suppress(WorkerCancelled):
+            await pilot.app.workers.wait_for_complete(refresh_workers)
+    await wait_for_public_selector(pilot, "#ledger-quality", polls=180)

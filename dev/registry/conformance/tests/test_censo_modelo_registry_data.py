@@ -39,7 +39,7 @@ def _snapshot(period: str = "alta") -> RegistrySnapshot:
     # reviewed to that rung. Ask for the rung the law-selected revision itself
     # declares rather than the FILING default, and a later promotion of 036
     # carries here without an edit.
-    # 2025 is split between two editions on 3 February, so an ad-hoc event names
+    # 2025 is split between two editions on 3 February, so an event names
     # the day it happened; this one falls in the later edition.
     on = date(2025, 6, 1)
     revision = select_revision(modelo, filing_year=2025, period=period, on=on)
@@ -58,9 +58,9 @@ def test_committed_modelo_036_registry_data_loads_as_active_censo_foundation() -
     snapshot = _snapshot()
 
     assert snapshot.modelo.id == "036"
-    assert snapshot.modelo.cadence == "ad_hoc"
+    assert snapshot.modelo.cadence == "event"
     assert snapshot.revision.period_selector.periods == ("alta", "modificacion", "baja")
-    assert snapshot.filing_schedules["modelo-036-event-triggered"].period_kind == "ad_hoc"
+    assert snapshot.filing_schedules["modelo-036-event-triggered"].period_kind == "event"
     assert snapshot.filing_schedules["modelo-036-event-triggered"].periods == ("alta", "modificacion", "baja")
 
 

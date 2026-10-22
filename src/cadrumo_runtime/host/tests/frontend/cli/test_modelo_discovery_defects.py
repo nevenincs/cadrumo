@@ -401,14 +401,14 @@ def test_modelo_readiness_refuses_period_without_registry_coverage(seed_profile:
             "--year",
             "2025",
             "--period",
-            "AD-HOC",
+            "3T",
         ],
     )
     # Refused outright, naming the uncovered period and the revisions that exist.
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
     flat = " ".join(result.output.split())
-    assert "AD-HOC" in flat
+    assert "3T" in flat
     assert "2026-y-siguientes" in flat
 
 

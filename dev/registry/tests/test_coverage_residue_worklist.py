@@ -109,7 +109,7 @@ def test_the_render_groups_by_kind_and_detail() -> None:
     """The grouping is what makes several hundred rows readable."""
     rendered = render_worklist(
         (
-            ResidueCell(kind="refused-selection", modelo="308", filing_year=2011, period="AD-HOC", detail="ambiguous"),
+            ResidueCell(kind="refused-selection", modelo="308", filing_year=2011, period="0A", detail="ambiguous"),
             ResidueCell(kind="unbacked-declaration", modelo="036", filing_year=2025, period="alta", detail="missing x"),
         ),
     )

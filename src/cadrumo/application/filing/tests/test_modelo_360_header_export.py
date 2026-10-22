@@ -67,7 +67,7 @@ from .export_support import _schema_provider
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _YEAR = 2025
-_PERIOD_CODE = "AD-HOC"
+_PERIOD_CODE = "0A"
 _TAX_ID = "12345678Z"
 _REPRESENTANTE_TAX_ID = "00000000T"
 #: DR360 página 1, "TOTAL 3400 Posiciones".

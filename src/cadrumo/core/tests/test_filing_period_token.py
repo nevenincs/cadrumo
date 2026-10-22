@@ -9,7 +9,7 @@ from ..period import Period, is_filing_period_token
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-@pytest.mark.parametrize("token", ["1T", "0A", "12", "2P", "EXT-3T", "AD-HOC", "EVENT-3", " 4t "])
+@pytest.mark.parametrize("token", ["1T", "0A", "12", "2P", "EXT-3T", "EVENT-3", " 4t "])
 def test_filable_tokens_build_a_period(token: str) -> None:
     assert is_filing_period_token(token)
     Period.from_year_and_code(2026, token)

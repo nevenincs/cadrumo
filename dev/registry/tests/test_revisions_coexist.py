@@ -101,19 +101,19 @@ class TestRevisionsCoexistPredicate:
         )
         assert not revisions_coexist(earlier, later)
 
-    def test_meeting_windows_ad_hoc_tokens_do_not_coexist(self) -> None:
-        """The 308 shape: a shared ('AD-HOC',) token, windows meeting 06-30/07-01."""
+    def test_meeting_windows_with_shared_tokens_do_not_coexist(self) -> None:
+        """Consecutive editions sharing their quarter tokens, windows meeting 06-30/07-01."""
         earlier = _revision(
             revision_id="test-2009-2011-junio",
             valid_from=date(2009, 1, 1),
             valid_to=date(2011, 6, 30),
-            period_selector=PeriodSelector(year_from=2009, year_to=2011, periods=("AD-HOC",)),
+            period_selector=PeriodSelector(year_from=2009, year_to=2011, periods=("1T", "2T", "3T", "4T")),
         )
         later = _revision(
             revision_id="test-2011-julio-2015",
             valid_from=date(2011, 7, 1),
             valid_to=date(2015, 12, 31),
-            period_selector=PeriodSelector(year_from=2011, year_to=2015, periods=("AD-HOC",)),
+            period_selector=PeriodSelector(year_from=2011, year_to=2015, periods=("1T", "2T", "3T", "4T")),
         )
         assert revisions_overlap(earlier, later)
         assert not revisions_coexist(earlier, later)

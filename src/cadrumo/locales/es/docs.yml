@@ -39,8 +39,8 @@ docs:
       withholding: desde las retenciones soportadas
       withholding296: desde las retenciones por perceptor del modelo 296
     cadence:
-      ad_hoc: Se presenta cuando ocurre el hecho
       annual: Se presenta anualmente
+      event: Se presenta cuando ocurre el hecho
       monthly: Se presenta mensualmente
       profile_based: Se presenta según tu perfil
       quarterly: Se presenta trimestralmente

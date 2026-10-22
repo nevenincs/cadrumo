@@ -300,7 +300,7 @@ def test_modelo_scope_failure_retains_its_public_detail_over_durable_settlement(
     error = NoRevisionForPeriodError(
         modelo_id="210",
         filing_year=2025,
-        period="AD-HOC",
+        period="1T",
         revision_id=None,
         available_revision_ids=("2025", "2026-y-siguientes"),
     )
@@ -311,7 +311,7 @@ def test_modelo_scope_failure_retains_its_public_detail_over_durable_settlement(
         attempts.append(error)
         raise error
 
-    period = PublicPeriod(filing_year=2025, code="AD-HOC")
+    period = PublicPeriod(filing_year=2025, code="1T")
     if definition_id == "modelo.work.create":
         definition = build_modelo_work_create_definition(unavailable_ports)
         registration = build_modelo_work_create_registration(definition)
@@ -371,6 +371,6 @@ def test_modelo_scope_failure_retains_its_public_detail_over_durable_settlement(
         context = {entry.key: entry.value for entry in detail.context}
         assert context["modelo_id"] == "210"
         assert context["filing_year"] == "2025"
-        assert context["period"] == "AD-HOC"
+        assert context["period"] == "1T"
         assert context["available_revision_ids"] == "2025, 2026-y-siguientes"
         assert OperationErrorDetailV1.model_validate_json(detail.model_dump_json()) == detail

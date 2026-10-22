@@ -81,7 +81,7 @@ _FINDING_CLASS: Final[str] = "ModeloVerificationFinding"
 _LEGAL_REF: Final[str] = "ley-37-1992:art-99"
 
 _REPRESENTATIVE: Final[Mapping[FindingFactKind, tuple[str | int | Decimal, ...]]] = {
-    FindingFactKind.PERIOD: ("4T", "0A", "01", "2P", "EXT-3T", "AD-HOC"),
+    FindingFactKind.PERIOD: ("4T", "0A", "01", "2P", "EXT-3T", "EVENT-3"),
     FindingFactKind.DATE: ("2025-03-01", "unknown"),
     FindingFactKind.BOX: ("op.codigo-pais", "0435", "m100.casilla-rnt"),
     FindingFactKind.BOX_NUMBER: ("76-77", "12"),
@@ -97,7 +97,7 @@ _REPRESENTATIVE: Final[Mapping[FindingFactKind, tuple[str | int | Decimal, ...]]
 _VARIANTS: Final[int] = max(len(values) for values in _REPRESENTATIVE.values())
 
 _TOKENS: Final[Mapping[str, re.Pattern[str]]] = {
-    "period code": re.compile(r"(?<![\w.-])(?:[1-4][TP]|0A|EXT-[1-4]T|AD-HOC|EVENT-\d+)(?![\w-])"),
+    "period code": re.compile(r"(?<![\w.-])(?:[1-4][TP]|0A|EXT-[1-4]T|EVENT-\d+)(?![\w-])"),
     "ISO date": re.compile(r"\b\d{4}-\d{2}-\d{2}\b"),
     "dotted identifier": re.compile(r"\b[a-z][a-z0-9_-]*\.[a-z0-9_-]+"),
     "snake-case identifier": re.compile(r"\b[a-z]+_[a-z0-9_]+\b"),

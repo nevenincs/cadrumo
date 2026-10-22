@@ -284,7 +284,7 @@ def test_profile_source_resolver_projects_each_registered_modelo_revision(
             bucket_id=_BUCKET_ID,
             modelo=modelo,
             filing_year=filing_year,
-            period=Period.from_year_and_code(filing_year, "AD-HOC" if modelo == "036" else period),
+            period=Period.from_year_and_code(filing_year, "0A" if modelo == "036" else period),
             revision=snapshot.revision,
         ),
     )

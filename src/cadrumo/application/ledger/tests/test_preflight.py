@@ -26,8 +26,8 @@ from ..preflight import (
     preflight_transaction_catalogue,
 )
 from ._preflight_test_support import (
-    _AD_HOC_2026,
     _BUCKET_ID,
+    _EVENT_2026,
     _Q2_2026,
     _transaction,
 )
@@ -38,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_preflight_refuses_non_span_period_even_with_empty_catalogue(operation: PinnedAuthorityOperation) -> None:
     report = preflight_transaction_catalogue(
         bucket_id=_BUCKET_ID,
-        period=_AD_HOC_2026,
+        period=_EVENT_2026,
         transactions=TransactionCatalogue.from_transactions(()),
         operation=operation,
     )
@@ -52,7 +52,7 @@ def test_preflight_refuses_non_span_period_even_with_empty_catalogue(operation: 
 def test_preflight_refuses_non_span_period_before_touching_transactions(operation: PinnedAuthorityOperation) -> None:
     report = preflight_transaction_catalogue(
         bucket_id=_BUCKET_ID,
-        period=_AD_HOC_2026,
+        period=_EVENT_2026,
         transactions=TransactionCatalogue.from_transactions((_transaction("row-ready"),)),
         operation=operation,
     )

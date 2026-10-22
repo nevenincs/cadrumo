@@ -102,7 +102,6 @@ class TestRegistryPeriodCodeValidator:
             ("EXT-2T", "EXT-2T"),
             ("EXT-3T", "EXT-3T"),
             ("EXT-4T", "EXT-4T"),
-            ("AD-HOC", "AD-HOC"),
             ("alta", "ALTA"),
             ("modificacion", "MODIFICACION"),
             ("baja", "BAJA"),
@@ -114,13 +113,12 @@ class TestRegistryPeriodCodeValidator:
             ("EVENT-27", "EVENT-27"),
             ("EVENT-142", "EVENT-142"),
             ("1t", "1T"),
-            ("ad-hoc", "AD-HOC"),
             ("  1T  ", "1T"),
         ):
             assert _validate_test_model(raw) == expected, raw
 
     def test_rejects_invalid_period_codes(self) -> None:
-        for bad in ("BOGUS", "EVENT-abc", "EXT-5T"):
+        for bad in ("BOGUS", "EVENT-abc", "EXT-5T", "AD-HOC"):
             with pytest.raises(ValidationError):
                 _validate_test_model(bad)
 
@@ -238,7 +236,7 @@ class TestPeriodTypeBoundarySplit:
             Period.from_year_and_code(2025, "ALTA")
         message = str(exc_info.value)
         assert "accepted forms" in message
-        assert "AD-HOC" in message
+        assert "EXT-1T" in message
         # The filing-scoped listing must not advertise the vocabulary it refuses.
         assert "Administrative" not in message
 
@@ -286,7 +284,6 @@ class TestPeriodConstruction:
             ("1P", PeriodKind.INSTALMENT),
             ("4P", PeriodKind.INSTALMENT),
             ("EXT-1T", PeriodKind.EXTENDED),
-            ("AD-HOC", PeriodKind.EXTENDED),
             ("EVENT-3", PeriodKind.EXTENDED),
         ):
             period = Period.from_year_and_code(2026, code)
@@ -323,7 +320,6 @@ class TestPeriodConstruction:
             ("2026 03", Period.from_year_and_code(2026, "03")),
             ("2026 1P", Period.from_year_and_code(2026, "1P")),
             ("2026 EXT-1T", Period.from_year_and_code(2026, "EXT-1T")),
-            ("2026 AD-HOC", Period.from_year_and_code(2026, "AD-HOC")),
             ("2026 EVENT-1", Period.from_year_and_code(2026, "EVENT-1")),
         ):
             assert Period.from_string(display) == expected, display
@@ -348,7 +344,6 @@ class TestPeriodAccessors:
             pytest.param("3P", None, id="third-instalment-is-not-a-quarter"),
             pytest.param("4P", None, id="fourth-instalment-is-not-a-quarter"),
             pytest.param("EXT-1T", None, id="extended-token-is-not-a-quarter"),
-            pytest.param("AD-HOC", None, id="ad-hoc-token-is-not-a-quarter"),
             pytest.param("EVENT-1", None, id="event-token-is-not-a-quarter"),
         ),
     )
@@ -390,7 +385,7 @@ class TestPeriodAccessors:
         assert Period.from_year_and_code(2026, "EXT-1T").standard_code is None
 
     def test_non_span_periods_refuse_date_access(self) -> None:
-        for code in ("1P", "EXT-1T", "AD-HOC", "EVENT-1"):
+        for code in ("1P", "EXT-1T", "EVENT-1"):
             period = Period.from_year_and_code(2026, code)
             assert period.has_date_span() is False, code
             with pytest.raises(PeriodError):

@@ -604,7 +604,7 @@ semantic_role = "proveedor_pais"
 # Design operacion 2 proveedor pais ISO 3166-1.
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 
-# Modelo 360 casillas: the AD-HOC refund request's operator values. Every
+# Modelo 360 casillas: the refund request's operator values. Every
 # value is the operator's own datum; the modelo computes nothing, which is
 # why the formula family stays empty.
 

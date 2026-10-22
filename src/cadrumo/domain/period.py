@@ -118,8 +118,7 @@ def calculation_filing_date(period: Period) -> date:
     Returns:
         The inclusive end date for contiguous periods; the corresponding
         ordinary quarter end for ``EXT-nT``; Modelo 202 payment-month ends for
-        ``1P`` through ``3P``; and 31 December for ``4P``, ``AD-HOC``, and
-        ``EVENT-N``.
+        ``1P`` through ``3P``; and 31 December for ``4P`` and ``EVENT-N``.
     """
     if period.has_date_span():
         return period.end_date
@@ -133,7 +132,7 @@ def calculation_filing_date(period: Period) -> date:
         return date(period.filing_year, 10, 31)
     if code == "3P":
         return date(period.filing_year, 12, 31)
-    if code == "4P" or code == "AD-HOC" or code.startswith("EVENT-"):
+    if code == "4P" or code.startswith("EVENT-"):
         return date(period.filing_year, 12, 31)
     raise PeriodValidationError(f"calculation filing date is undefined for registry period {code!r}")
 

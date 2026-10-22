@@ -156,7 +156,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "83ac6491cc41922a1d750ec2268bfca9ff1aee49950f232f8dcee08f4def9439",
+          "calculation_revision_id": "c7201dfaa5c46d57cd2d6b30fb80930e77bb52d180ccf37dbd464e6d9587dac1",
           "observation_count": 1818,
           "observations": [
             {"absent_by_design":false,"casilla_id":"0002","formula_id":null,"legal_refs":["ley-35-2006:art-17","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},

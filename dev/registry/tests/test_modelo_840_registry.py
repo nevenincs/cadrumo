@@ -138,15 +138,15 @@ def test_committed_modelo_840_authenticated_read_surface_is_read_only_and_guarde
         assert _FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
 
 
-def test_committed_modelo_840_filing_schedule_is_ad_hoc() -> None:
+def test_committed_modelo_840_filing_schedule_is_event_triggered() -> None:
     modelo, _ = _load_modelo_840()
+    assert modelo.cadence == "event"
     for revision in modelo.revisions.values():
         assert revision.filing_schedules, revision.id
         for schedule in revision.filing_schedules:
             # IAE is event-driven (alta/variación/baja within 1 month per RD 243/1995)
-            # rather than a fixed annual plazo; cadence is ad_hoc with the standard 0A
-            # ejercicio reference.
-            assert schedule.period_kind == "ad_hoc"
+            # rather than a fixed annual plazo; the declaration names its 0A ejercicio.
+            assert schedule.period_kind == "event"
             assert schedule.periods == ("0A",)
 
 

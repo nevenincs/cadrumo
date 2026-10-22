@@ -68,7 +68,7 @@ __all__ = ["isolated_backend"]
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _YEAR = 2025
-_PERIOD = Period.from_year_and_code(_YEAR, "AD-HOC")
+_PERIOD = Period.from_year_and_code(_YEAR, "0A")
 _TAX_ID = "12345678Z"
 _SYNTHETIC_IBAN = "ES9121000418450200051332"
 _SYNTHETIC_BIC = "CAIXESBBXXX"
@@ -458,7 +458,7 @@ def test_a_solicitud_declared_for_another_period_does_not_answer_this_one(
     bucket_id = seed_profile(tax_id=_TAX_ID)
     calculation_revision_id = _seed_360_revision(bucket_id)
     other_year = Modelo360SolicitudEntry(
-        period=Period.from_year_and_code(_YEAR - 1, "AD-HOC"),
+        period=Period.from_year_and_code(_YEAR - 1, "0A"),
         facts=_facts(),
         account=_register_own_account(bucket_id),
     )

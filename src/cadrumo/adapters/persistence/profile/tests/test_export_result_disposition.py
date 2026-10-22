@@ -189,7 +189,7 @@ def _result_disposition_profile(kind: str) -> TaxpayerProfile:
         # A filing-grade Modelo 390 year: the 2026 edition claims applicability only.
         # Its layout declares no Tipo de declaración, so it records no disposition.
         ("390", {}, Period.from_year_and_code(2025, "0A"), None),
-        ("360", {}, Period.from_year_and_code(2025, "AD-HOC"), "D"),
+        ("360", {}, Period.from_year_and_code(2025, "0A"), "D"),
     ),
     ids=(
         "m303-positive-ingreso",
@@ -268,7 +268,7 @@ def test_resolve_modelo_result_disposition_redeme_upgrade_boundaries(
         ("303", "ordinary", ("2024", "1T"), {_M303_RESULT_CASILLA: Decimal("-210.00")}, "DE", "C"),
         ("303", "redeme", ("2024", "01"), {_M303_RESULT_CASILLA: Decimal("357.00")}, "DE", "I"),
         ("200", "ordinary", ("2025", "0A"), {_M200_REFUND_RESULT_CASILLA: Decimal("-1000.00")}, "BR", "X"),
-        ("360", "ordinary", ("2025", "AD-HOC"), {}, "DE", "D"),
+        ("360", "ordinary", ("2025", "0A"), {}, "DE", "D"),
     ),
     ids=(
         "m303-refund-without-account-stays-d",
@@ -461,6 +461,6 @@ def test_modelo_360_refuses_a_domiciliacion_election() -> None:
             modelo="360",
             casilla_values={},
             profile=_profile(),
-            period=Period.from_year_and_code(2025, "AD-HOC"),
+            period=Period.from_year_and_code(2025, "0A"),
             payment_election=PaymentElection.DOMICILIACION,
         )

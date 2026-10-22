@@ -33,8 +33,8 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 authority_grade = "filing"
-valid_from = 2010-04-01
-period_selector = { year_from = 2010, periods = ["AD-HOC"] }
+valid_from = 2010-01-01
+period_selector = { year_from = 2010, periods = ["0A"] }
 legal_refs = [
     "ley-37-1992:art-117-bis",
     "orden-eha-789-2010:art-1",
@@ -68,7 +68,7 @@ source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
 
 
 [revisions."2010-y-siguientes".family_dispositions.extraction_profiles]
-reason = "The application's surface for modelo 360 is the operator-entered AD-HOC refund request, not a periodic declaracion PDF replay, and no inbound parser for a 360 artefact exists to name. Empty by the application's surface rather than omitted."
+reason = "The application's surface for modelo 360 is the operator-entered annual refund request, not a periodic declaracion PDF replay, and no inbound parser for a 360 artefact exists to name. Empty by the application's surface rather than omitted."
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
 
@@ -78,7 +78,7 @@ legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-
 source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
 
 [revisions."2010-y-siguientes".family_dispositions.verification_expectations]
-reason = "A verification expectation reconciles a FILED return against this application's engine. Modelo 360's AD-HOC refund requests carry only the operator's own entered values with no engine-computed figures to reconcile, and the application holds no reconciliation surface for the refund justificante. The family is empty until such a surface is authored, not by omission."
+reason = "A verification expectation reconciles a FILED return against this application's engine. Modelo 360's refund requests carry only the operator's own entered values with no engine-computed figures to reconcile, and the application holds no reconciliation surface for the refund justificante. The family is empty until such a surface is authored, not by omission."
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
 

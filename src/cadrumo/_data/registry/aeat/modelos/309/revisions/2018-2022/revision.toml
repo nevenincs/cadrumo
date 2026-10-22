@@ -40,7 +40,7 @@ reviewed_at = 2026-08-19
 authority_grade = "applicability"
 valid_from = 2018-01-01
 valid_to = 2022-12-31
-period_selector = { year_from = 2018, year_to = 2022, periods = ["AD-HOC"] }
+period_selector = { year_from = 2018, year_to = 2022, periods = ["1T", "2T", "3T", "4T", "0A"] }
 legal_refs = [
     "orden-hac-3625-2003:apartado-1",
     "orden-hac-3625-2003:apartado-3",
@@ -59,12 +59,12 @@ scoped_families = ["workbook_parity_refs", "verification_expectations", "complet
 
 
 [revisions."2018-2022".family_dispositions.applicability]
-reason = "Modelo 309 is filed AD-HOC, one declaracion no periodica per settlement event as the non-EU operations occur: the filing condition is the operation itself, modeled by the filing_schedules AD-HOC entry, not a periodic taxpayer-condition profile state."
+reason = "Modelo 309 is a declaracion no periodica: a taxpayer files it only for a period in which it performed the operations the modelo liquidates, so the filing condition is the operation itself, not a taxpayer-condition profile state. The filing_schedules entries declare the periods its design admits."
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-procedure"]
 
 [revisions."2018-2022".family_dispositions.deadline_windows]
-reason = "Modelo 309's AD-HOC filing models its obligation through filing_schedules; the deadline_windows family holds per-period presentation calendars for periodic modelos, and an AD-HOC declaration's presentation window is the settlement event itself, which the schedule already carries."
+reason = "Modelo 309's presentation windows apply only to a taxpayer who performed the operations in the period, and no profile state identifies that taxpayer, so a window declared here would put the modelo on every calendar. The 0A cases run from the operation itself: thirty days for a new means of transport, one month from payment of an enforced-sale adjudicacion."
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-procedure"]
 
@@ -74,7 +74,7 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-procedure"]
 
 [revisions."2018-2022".family_dispositions.extraction_profiles]
-reason = "The application's pull surface for modelo 309 is the operator-entered AD-HOC declaration, not a periodic declaracion PDF replay, and no inbound parser for a 309 artefact exists to name. Empty by the application's surface rather than omitted."
+reason = "The application's pull surface for modelo 309 is the operator-entered declaration, not a periodic declaracion PDF replay, and no inbound parser for a 309 artefact exists to name. Empty by the application's surface rather than omitted."
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-procedure"]
 
@@ -597,3 +597,9 @@ selector = { revision = "2016-2017", id = "papel-ccc-cuenta" }
 [[revisions."2018-2022".family_removals]]
 family = "constructs"
 selector = { revision = "2016-2017", id = "modelo-309-papel-domicilio-cuenta" }
+
+# aeat-dr-309-2018 admits only the quarters and 0A.
+[[revisions."2018-2022".family_overrides]]
+family = "filing_schedules"
+selector = { revision = "2016-2017", id = "modelo-309-no-periodica" }
+fields = { periods = ["1T", "2T", "3T", "4T", "0A"] }

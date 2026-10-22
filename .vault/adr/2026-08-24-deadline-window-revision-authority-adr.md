@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-25'
+modified: '2026-10-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:77075bb99ceaf32ce3090ef67e20a0c64492ba2d2a86f7099d2b13b3b42c18b2'
+body_hash: 'sha256:b60431a9aa9709fb45b9330a63838bfa7b4803639af2b8aa3f54c67ae2c5fed3'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-research]]"
   - '[[2026-08-24-deadline-window-revision-authority-reference]]'
@@ -76,7 +76,7 @@ the redundant year to match the period year, the containing revision to be the u
 law-selected owner, and IDs and semantic coordinates to be unique across revisions.
 For periodic schedules, validation requires every selected cadence token for each
 filing year declared supported by the canonical temporal-coverage projection. Sparse
-coverage is permitted only for an explicitly typed ad-hoc/event schedule, never inferred
+coverage is permitted only for an explicitly typed event schedule, never inferred
 from missing rows.
 
 Repair all affected modelo data. M190 and M193 align identity year while retaining

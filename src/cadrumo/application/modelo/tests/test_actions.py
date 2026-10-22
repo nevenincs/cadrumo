@@ -433,7 +433,6 @@ def test_workflow_period_resolves_quarterfrom_registry_deadline_shape(modelo: st
     (
         pytest.param("1P", id="instalment"),
         pytest.param("EXT-1T", id="extended-oss-quarter-shaped-token"),
-        pytest.param("AD-HOC", id="ad-hoc"),
         pytest.param("EVENT-1", id="event"),
     ),
 )

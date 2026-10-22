@@ -1,6 +1,6 @@
 [[revisions."2025-02-03-y-siguientes".filing_schedules]]
 id = "modelo-036-event-triggered"
-period_kind = "ad_hoc"
+period_kind = "event"
 periods = ["alta", "modificacion", "baja"]
 legal_refs = [
     "rd-1065-2007:art-9",

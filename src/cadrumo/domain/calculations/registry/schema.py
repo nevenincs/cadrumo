@@ -273,7 +273,7 @@ class ModeloCadence(StrEnum):
     MONTHLY = "monthly"
     QUARTERLY = "quarterly"
     ANNUAL = "annual"
-    AD_HOC = "ad_hoc"
+    EVENT = "event"
     PROFILE_BASED = "profile_based"
 
 

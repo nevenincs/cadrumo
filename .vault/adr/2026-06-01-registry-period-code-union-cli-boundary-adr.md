@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#registry-period-code-union'
 date: '2026-06-01'
-modified: '2026-10-03'
-body_hash: 'sha256:9714a2ea51ba11765754f9c0b9876054ec0a912908aa7ba038e05b5a59ba5efb'
+modified: '2026-10-22'
+body_hash: 'sha256:3095d0eded365013e6b02e96f7664115712cf246abd0c888cc8f2ec03b71af2d'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - '[[2026-06-04-registry-period-code-union-research]]'
@@ -18,14 +18,13 @@ Authored via the Write tool following the canonical frontmatter shape — the ar
 
 ## Problem statement
 
-The CLI exposes ~15 `--period` sites (per the S801 α-survey at commit `b9ff9dc09`) that span multi-modelo contexts. The legitimate value space at the CLI boundary is the UNION of four sub-vocabularies:
+The CLI exposes ~15 `--period` sites (per the S801 α-survey at commit `b9ff9dc09`) that span multi-modelo contexts. The legitimate value space at the CLI boundary is the UNION of three sub-vocabularies:
 
-- **StandardPeriodCode** (closed StrEnum ): `1T-4T`, `1P-4P`, `0A`, `01-12`. 21 members. Covers the dominant case for M100/M130/M131/M200/M303 quarterly + monthly periods.
+- **StandardPeriodCode** (closed StrEnum ): `1T-4T`, `1P-4P`, `0A`, `01-12`. 21 members. Covers the dominant case for M100/M130/M131/M200/M303 quarterly + monthly periods, and the non-periodic IVA declarations M308, M309 and M360, whose record designs print an ordinary period (see D4).
 - **Extended OSS/IOSS scheme**: `EXT-1T`, `EXT-2T`, `EXT-3T`, `EXT-4T`. Used by M369 (Régimen Especial de la Unión OSS).
-- **Ad-hoc lifecycle filings**: `AD-HOC` literal. Used by M308 (devolución a sujetos no establecidos), M309 (declaración no periódica), M360 (devolución intracomunitaria).
 - **Event-driven informativas**: `EVENT-N` where `N` is a per-event counter integer. Used by event-triggered informativa filings (M180/M193/M210 event mode, etc.). The integer is operator-supplied per filing event.
 
-The α-scope proposal — "type CLI `--period` flags as `StandardPeriodCode`" — would force Typer to render `Choice([...])` against the 21-member set and REFUSE legitimate `EXT-1T`/`AD-HOC`/`EVENT-N` inputs at parse time. That's wrong: those values are operator-actionable for the corresponding modelos.
+The α-scope proposal — "type CLI `--period` flags as `StandardPeriodCode`" — would force Typer to render `Choice([...])` against the 21-member set and REFUSE legitimate `EXT-1T`/`EVENT-N` inputs at parse time. That's wrong: those values are operator-actionable for the corresponding modelos.
 
 The β-scope migration (~50-site application-layer data-class fields under `aggregation/`, `calculations/`, `workflow/`, `modelos/`) needs the same union answer plus persistence-roundtrip-discipline review per `aeat-roundtrip-discipline` — every persisted typed period field must roundtrip through the encrypted-envelope boundary identical to its in-memory form.
 
@@ -47,32 +46,31 @@ This ADR adjudicates the typing shape for both α (CLI hint) and β (application
 
 ### Candidate 1 — Wider StrEnum subsuming all extended forms
 
-Extend `StandardPeriodCode` with `EXT_Q1..EXT_Q4`, `AD_HOC`, and per-event members `EVENT_1..EVENT_N` for some bounded N.
+Extend `StandardPeriodCode` with `EXT_Q1..EXT_Q4` and per-event members `EVENT_1..EVENT_N` for some bounded N.
 
 **Pros**: Single type. CLI gets `Choice([...])`. Pydantic validation is trivial.
 
 **Cons (fatal):**
 - `EVENT-N` is genuinely unbounded — the operator may supply event-number 1, 2, 27, 142. Bounding `EVENT_N` at any constant (1..50, 1..100) is arbitrary and the bound IS the gate: filings beyond the bound get silently refused without registry grounding.
 - Loses regex-precision for `EVENT-N`. The structural shape `EVENT-` + integer cannot be expressed as enum members; trying to enumerate it produces an explosion of dead members.
-- Conflates regulatory vocabularies — Spanish-territory + OSS + ad-hoc + event are four distinct regulatory regimes; folding them into one enum hides the discriminator that runtime code may legitimately want to consult.
+- Conflates regulatory vocabularies — Spanish-territory + OSS + event are three distinct regulatory regimes; folding them into one enum hides the discriminator that runtime code may legitimately want to consult.
 
 REJECT.
 
 ### Candidate 2 — Discriminated union
 
-Pydantic `Union[StandardPeriodCode, ExtendedPeriodCode, AdHocLiteral, EventPeriodCode]` where:
+Pydantic `Union[StandardPeriodCode, ExtendedPeriodCode, EventPeriodCode]` where:
 - `StandardPeriodCode` is the existing 21-member StrEnum (unchanged).
 - `ExtendedPeriodCode` is a separate StrEnum with 4 members (`EXT-1T..EXT-4T`).
-- `AdHocLiteral` is `Literal["AD-HOC"]`.
 - `EventPeriodCode` is a typed model with a `number: int` field and a `__str__` that produces `EVENT-{number}`.
 
 **Pros:**
 - Each sub-vocabulary stays cleanly typed and regulator-anchored.
 - Pydantic discriminated-union validation accepts every legitimate value and refuses anything not in the union.
-- Persistence roundtrip survives — the union's discriminator (e.g. a `kind: Literal["standard", "extended", "ad_hoc", "event"]` field) tags each member; JSON roundtrip preserves both the kind and the value.
+- Persistence roundtrip survives — the union's discriminator (e.g. a `kind: Literal["standard", "extended", "event"]` field) tags each member; JSON roundtrip preserves both the kind and the value.
 
 **Cons:**
-- CLI `Choice([...])` rendering loses fidelity. Typer's choice surface can't represent a union with one unbounded member (`EVENT-N`); the best it can do is render the 21 + 4 + 1 = 26 fully-enumerable values plus an "or EVENT-N where N is an event number" prose hint. The hint is non-machine-checkable; operators may still type `EVENT-abc` and get a late refusal.
+- CLI `Choice([...])` rendering loses fidelity. Typer's choice surface can't represent a union with one unbounded member (`EVENT-N`); the best it can do is render the 21 + 4 = 25 fully-enumerable values plus an "or EVENT-N where N is an event number" prose hint. The hint is non-machine-checkable; operators may still type `EVENT-abc` and get a late refusal.
 - ~50-site application-layer migration is heavier — every data-class field becomes `RegistryPeriodCode = Union[...]` instead of a single enum. Roundtrip tests need explicit kind-discriminator assertions.
 - Pydantic v2 discriminated-union shape requires a discriminator field on each member; adding `kind` to `StandardPeriodCode` is a behavioural change (StrEnum doesn't carry metadata cleanly).
 
@@ -93,7 +91,6 @@ Where `_validate_period_against_registry(value: str) -> str`:
 - Strips + upper-cases the input.
 - Checks against `StandardPeriodCode` membership (fast path).
 - Checks against `_EXT_PERIOD_RE` regex (`^EXT-[1-4]T$`).
-- Checks against `AD-HOC` literal.
 - Checks against `_EVENT_PERIOD_RE` regex (`^EVENT-\d+$`).
 - Raises `PeriodValidationError` with the accepted-set in the message if none match.
 
@@ -109,7 +106,7 @@ CLI `--period` argument keeps `str` type. The Typer-side `--help` text manually 
 **Cons:**
 - Loses Typer `Choice([...])` rendering. The closed-set hint at the CLI parse layer is replaced by an application-layer refusal. Operator sees the same accepted set but slightly later in the flow (after pressing Enter, not as a tab-completion / parse-time error).
 - Static type checkers see `str`, not a constrained type. mypy / pyright won't catch a string-literal mismatch. Counter-argument: the runtime validator catches it on every call, and registry-driven axes need runtime checking anyway (the union members shift per-modelo).
-- The validator is the "registry-authoritative" surface, but for `EXT-` / `AD-HOC` / `EVENT-` codes the validator is essentially hardcoded regex/literal sets — there's no registry TOML for period vocabularies today. Means the validator is the de-facto single source even though it's Python, not TOML.
+- The validator is the "registry-authoritative" surface, but for `EXT-` / `EVENT-` codes the validator is essentially hardcoded regex sets — there's no registry TOML for period vocabularies today. Means the validator is the de-facto single source even though it's Python, not TOML.
 
 ACCEPT.
 
@@ -138,9 +135,15 @@ The validator function exposes the accepted set via a public function (`accepted
 
 If a future need arises to dispatch on period-kind at runtime (e.g. an engine that routes `EXT-` periods differently from `EVENT-N`), the migration path is from D2's `Annotated[str, ...]` to D2-evolved-into-discriminated-union. The validator's existing categorisation logic becomes the union's discriminator function. Migration cost stays bounded because the type alias hides the underlying representation from call sites.
 
-### D4 — Update the M308/M309/M360 modelo registrations to use `AD-HOC`
+### D4 — M308, M309 and M360 use the period codes their record designs print
 
-Spot-check during investigation: M308, M309, M360 currently carry varied period strings in their registry TOMLs. Out of scope for this ADR's authoring Step, but a follow-up should harmonise them to the canonical `AD-HOC` literal so the validator's set membership covers them cleanly. File as FU when prioritised.
+These non-periodic IVA declarations carry an ordinary two-character period in their AEAT record designs, and the registry declares exactly those codes; there is no ad-hoc period token.
+
+- M308: `1T-4T`, `01-12` and `0A` by tipo de tributación (`aeat-dr-308-2019` field 11; Orden EHA/3786/2008 art. 11 sets a quarterly plazo for recargo de equivalencia, a monthly one for road transport, and per-operation plazos for new means of transport and art. 2.2.d filers). `aeat-dr-308-2009` admits only `1T-4T`, `aeat-dr-308-2011-july` adds `01-12` and `0A`, and `aeat-dr-308-2016` admits `1T-4T` and `0A`. The July 2011 boundary falls between `2T` and `3T`, so the two 2011 revisions partition that year by period, through `period_overrides`, without any date axis.
+- M309: `1T-4T`, with `0A` for new means of transport and enforced-sale procedures (`aeat-dr-309-2018` and `aeat-dr-309-2023` field 11; Orden HAC/3625/2003 apartado tercero). `aeat-dr-309-2004` admits only `1T-4T`, and `aeat-dr-309-2016` also admits `01-12`.
+- M360: one solicitud per ejercicio under `0A`; the design carries the ejercicio and the refund period's start and end dates, not a period code.
+
+A declaration filed for a single operation uses the `0A` code its design gives it. Because these declarations are filed only when the operations occur, their filing schedules are `event` schedules over those codes and declare no recurring deadline window.
 
 ### D5 — Author the validator with the registry-authority-flow rule in mind
 
@@ -168,7 +171,7 @@ The validator is Python today (no period-vocabulary TOML). If a future ADR estab
 ### Operator surface
 
 - CLI parse failure on `--period BOGUS` now produces an error message listing every accepted code AND the accepted patterns (`EVENT-N` where N is an integer). Per `aeat-architecture-boundaries`: "the refusal MUST list the accepted set in the error message — never a bare 'value invalid' without options".
-- `--help` text for each `--period` site includes the accepted-set list scoped to the command's modelo (M100 sees `1T-4T, 0A, 01-12`; M369 sees `EXT-1T..EXT-4T`; M308 sees `AD-HOC`; etc.). Per-modelo scoping is documentation, not validation — the validator accepts the full union regardless of which command invoked it.
+- `--help` text for each `--period` site includes the accepted-set list scoped to the command's modelo (M100 sees `1T-4T, 0A, 01-12`; M369 sees `EXT-1T..EXT-4T`; M308 sees `1T-4T, 01-12, 0A`; etc.). Per-modelo scoping is documentation, not validation — the validator accepts the full union regardless of which command invoked it.
 
 ### Future-proofing
 
@@ -180,7 +183,6 @@ The validator is Python today (no period-vocabulary TOML). If a future ADR estab
 - The β-scope ~50-site migration itself. This ADR adjudicates the type shape; the migration lands under a separate plan Step (or task) once D1-D2 ship.
 - Period-vocabulary TOML registry (per D5). Future-hardening direction; not Phase 1.
 - Per-modelo period-applicability validation (i.e. "M100 cannot file with period EXT-1T"). That's the existing modelo-revision applicability gate, not this ADR's scope.
-- Harmonising M308/M309/M360 to the `AD-HOC` literal (per D4). FU when prioritised.
 
 ## Sibling impact assessment
 
@@ -281,7 +283,7 @@ filing boundary), it arrived by the same conflation, and any fix scoped to the
 administrative branch alone will leave it standing.
 
 **The record's Problem statement and Future-proofing sections are corrected** to read
-five sub-vocabularies at the registry coordinate: standard, extended OSS/IOSS, ad-hoc,
+four sub-vocabularies at the registry coordinate: standard, extended OSS/IOSS,
 event-driven, and administrative (censo/comunicación registration events). The claim in
 Operator surface that "the validator accepts the full union regardless of which command
 invoked it" is superseded by A2 below: from this amendment there are two validators, and
@@ -302,7 +304,7 @@ vocabulary. It applies a different casing rule to them; what it lacked was a dif
 
 Introduce `FilingPeriodCode` in `core/_period.py` alongside the existing aliases: the
 same `Annotated[str, BeforeValidator(...)]` shape this ADR's D1 adopted, running the
-standard / extended / ad-hoc / event-number checks and **never** the administrative
+standard / extended / event-number checks and **never** the administrative
 branch, and rejecting the literal `EVENT-N` placeholder while continuing to accept
 `EVENT-3`. `Period.code` is retyped to it. This restores the pre-`972e8636ff` refusal and
 with it the entire `_resolve_year_period` cascade, contained to one module — no change to
@@ -405,20 +407,15 @@ admitted. Revisit this decision when a `period_selector` first mixes the vocabul
   `snapshot.period` and a `Period` carrying the normalised one
   (`adapters/inbound/declaracion/_parser.py:295-303`), which is A1 and A2 already
   co-existing correctly in one function.
-- **One implementation caveat the implementer must resolve before landing.**
-  `_filing_period_for_observation` (`adapters/inbound/declaracion/_parser.py:318-323`)
-  normalises only `ALTA` / `MODIFICACION` / `MODIFICACIÓN` / `BAJA` to `AD-HOC`; a
-  `comunicacion` or `variacion` selector falls through to line 323 and builds a `Period`
-  directly. That call succeeds today only because of the widening, and will raise
-  `PeriodError` once `Period.code` narrows. Confirm whether an M145 template can reach
-  this parser; if it can, extend the normalisation set to all five administrative tokens
-  in the same change. If it cannot, the new refusal is correct and wanted. Do not
-  discover this from a red suite.
+- `_filing_period_for_observation` (`adapters/inbound/declaracion/parser.py`) stores
+  every administrative selector, all five tokens through
+  `is_administrative_period_token`, under the annual `0A` period of its year, so no
+  administrative token reaches `Period`.
 - `period-filter-single-boundary-authority` is reinforced rather than altered:
   `Period.contains()` remains the single date-boundary authority, and the narrow type
   keeps values that have no date span from reaching it in the first place.
-- This record's D4 (harmonise M308/M309/M360 to `AD-HOC`) and D5 (period-vocabulary TOML
-  registry) are untouched and still open. D5 gains a data point: when the vocabularies do
+- This record's D5 (period-vocabulary TOML registry) is untouched and still open. D5
+  gains a data point: when the vocabularies do
   move to TOML, they must move as *two* declared sets, not one.
 
 ### Observation, not a ruling

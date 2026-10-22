@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 @pytest.mark.parametrize(
     "token",
-    [*(code.value for code in StandardPeriodCode), "AD-HOC", "EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T", "EVENT-3"],
+    [*(code.value for code in StandardPeriodCode), "EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T", "EVENT-3"],
 )
 def test_calendar_focus_accepts_all_filing_period_families_and_resolves_exact_row(token: str) -> None:
     projection = calendar_projection()

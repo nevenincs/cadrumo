@@ -64,7 +64,7 @@ def _modelo(left: ModeloRevision, right: ModeloRevision) -> ModeloDefinition:
             "title_localization_key": "test.registry.modelo.title",
             "official_name_localization_key": "test.registry.modelo.official_name",
             "tax_domain": "censo",
-            "cadence": "ad_hoc",
+            "cadence": "event",
             "jurisdiction": "ES-AEAT",
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),

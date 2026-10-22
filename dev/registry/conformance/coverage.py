@@ -539,10 +539,8 @@ def _inspect_declared_revision(
 
     A revision whose validity starts or ends INSIDE a filing year shares that
     year with its neighbour, and where both declare the same period token the
-    undated question genuinely has two right answers. Modelo 308 is the live
-    case: its January-to-June and July-to-December eras both declare AD-HOC, and
-    refusing an undated 2011 request is the ADJUDICATED behaviour, asserted by
-    that modelo's own selector regression -- not a defect for an audit to report.
+    undated question genuinely has two right answers. Refusing that undated
+    request is the adjudicated behaviour, not a defect for an audit to report.
 
     An audit's real question is narrower than the one it asks, being "does THIS
     revision cover this coordinate", so it re-asks with a date the revision

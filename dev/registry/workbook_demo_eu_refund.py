@@ -28,7 +28,7 @@ def build_eu_refund_plan(
         revision_id="2010-y-siguientes",
         source_ref="boe-modelo-360-2010-original-form-pdf",
         preview_year=year,
-        preview_period="AD-HOC",
+        preview_period="0A",
     )
     values: dict[str, Decimal | str] = {
         "decl.ejercicio": Decimal(year),

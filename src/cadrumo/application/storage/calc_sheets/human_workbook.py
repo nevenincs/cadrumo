@@ -16,7 +16,7 @@ from decimal import Decimal
 
 from ....core.decimal.coercion import coerce_decimal
 from ....core.i18n.render import lookup_translation, tr
-from ....core.period import AD_HOC_PERIOD_CODE, Period
+from ....core.period import Period
 from ....domain.calculations.registry.afiliado_contribution_bindings import AfiliadoContributionProvider
 from ....domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ....domain.calculations.registry.binding_temporal import FilingYearOffset, TargetPeriodOffset
@@ -304,7 +304,7 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
         for column, value in enumerate(items, 1):
             values.append(SheetValueCell(address=SheetCellAddress.at(tab, row, column), value=value, role="label"))
 
-    period_suffix = f" · {frame.code}" if isinstance(frame, Period) and frame.code != AD_HOC_PERIOD_CODE else ""
+    period_suffix = f" · {frame.code}" if isinstance(frame, Period) else ""
     preview_guide = isinstance(plan.metadata, SheetTemplatePreviewMetadata)
     emit(
         TabName.GUIDE,

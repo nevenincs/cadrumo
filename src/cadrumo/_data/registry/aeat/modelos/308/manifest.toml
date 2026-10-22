@@ -1,7 +1,7 @@
 [modelo]
 id = "308"
 tax_domain = "iva"
-cadence = "ad_hoc"
+cadence = "event"
 jurisdiction = "ES-AEAT"
 legal_refs = [
     "ley-37-1992:art-21",

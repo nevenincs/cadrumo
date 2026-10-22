@@ -251,7 +251,7 @@ source_refs = ["aeat-dr-210-2022", "aeat-modelo-210-procedure"]
 # Original filing_schedules fragment 0001-declarations.toml: #
 # Original filing_schedules fragment 0001-declarations.toml: #   * Every renta OTHER than imputed urban-property income is filed per
 # Original filing_schedules fragment 0001-declarations.toml: #     devengo. There is no recurring calendar obligation -- the obligation
-# Original filing_schedules fragment 0001-declarations.toml: #     exists only where a renta accrued -- so this is an ad-hoc schedule keyed
+# Original filing_schedules fragment 0001-declarations.toml: #     exists only where a renta accrued -- so this is an event schedule keyed
 # Original filing_schedules fragment 0001-declarations.toml: #     on the event token.
 # Original filing_schedules fragment 0001-declarations.toml: #   * Imputed income from urban property (TRLIRNR art. 13.1.h) is filed once
 # Original filing_schedules fragment 0001-declarations.toml: #     for the whole calendar year, during the year FOLLOWING the devengo, which

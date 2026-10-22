@@ -150,5 +150,5 @@ application_links = [
     "modelo-840-filing",
     "modelo-840-extractor",
 ]
-filing_schedules = ["modelo-840-ad-hoc"]
+filing_schedules = ["modelo-840-declaracion"]
 extraction_profiles = ["modelo-840-declaracion-pdf"]

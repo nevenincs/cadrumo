@@ -38,8 +38,8 @@ docs:
       withholding: a levont forrásadókból
       withholding296: a Modelo 296 kedvezményezettenkénti levonásaiból
     cadence:
-      ad_hoc: Az esemény bekövetkezésekor benyújtandó
       annual: Évente benyújtandó
+      event: Az esemény bekövetkezésekor benyújtandó
       monthly: Havonta benyújtandó
       profile_based: A profilod szerint benyújtandó
       quarterly: Negyedévente benyújtandó

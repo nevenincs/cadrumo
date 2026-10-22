@@ -50,8 +50,8 @@ from ..modelo_360_solicitud import Modelo360SolicitudRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_PERIOD_2025 = Period.from_year_and_code(2025, "AD-HOC")
-_PERIOD_2024 = Period.from_year_and_code(2024, "AD-HOC")
+_PERIOD_2025 = Period.from_year_and_code(2025, "0A")
+_PERIOD_2024 = Period.from_year_and_code(2024, "0A")
 #: Synthetic, checksum-valid IBANs: the ISO 13616 published example and a German sibling.
 _IBAN = "ES9121000418450200051332"
 _OTHER_VALID_IBAN = "DE89370400440532013000"

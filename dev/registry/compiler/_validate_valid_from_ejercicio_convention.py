@@ -20,8 +20,8 @@ modelos by cross-checking against ``LegalReference.effective_from``.
 SCOPE, deliberately narrow. This check applies ONLY to annual-cadence
 revisions declaring exactly the single ``0A`` period -- the shape where "the
 ejercicio this revision covers" is a well-defined single year. Event-driven
-modelos (censal alta/modificacion/baja, comunicacion/variacion), AD-HOC
-filings, and periodic multi-token schemes (OSS quarterly/monthly) have no
+modelos (censal alta/modificacion/baja, comunicacion/variacion, EVENT-N
+accruals) and periodic multi-token schemes (OSS quarterly/monthly) have no
 single ejercicio for ``valid_from`` to date, and are excluded by that
 PROPERTY -- never by a list of modelo ids, which would go stale the moment a
 new annual-cadence revision is authored.
@@ -38,7 +38,7 @@ def revision_declares_single_annual_period(revision: ModeloRevision) -> bool:
     """Report whether a revision's own period declaration is exactly the annual token.
 
     The sole property this check gates on. A revision declaring ANY other
-    period shape -- event-driven, ad-hoc, or a periodic multi-token scheme --
+    period shape -- event-driven or a periodic multi-token scheme --
     has no single ejercicio for ``valid_from`` to name, and is excluded here
     rather than by a hand-maintained modelo-id allowlist.
     """

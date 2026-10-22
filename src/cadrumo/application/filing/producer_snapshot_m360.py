@@ -392,7 +392,7 @@ class Modelo360SolicitudRegister(BaseModel):
     """Encrypted register document: every declared modelo 360 solicitud, one per period.
 
     The work unit addresses a solicitud by its filing year and the revision's single
-    ``AD-HOC`` period, so the period is the entry's identity and a second declaration for
+    ``0A`` period, so the period is the entry's identity and a second declaration for
     it replaces the first. A period with no entry has declared nothing, which the export
     refuses; it never resolves to an empty or default solicitud.
     """

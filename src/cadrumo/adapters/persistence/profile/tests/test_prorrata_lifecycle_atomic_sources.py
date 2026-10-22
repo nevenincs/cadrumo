@@ -29,11 +29,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _runtime_profile = bucket_scoped_runtime_profile_fixture("11961196-1196-4196-8196-119611961196")
 _PERCENTAGE = validated_casilla_id("iva.prorrata-porcentaje")
-_AUTHORITY = published_authority_operation()
 
 
 def _service(repository: ProrrataRegisterRepository | None = None) -> ProrrataRegisterService:
-    return ProrrataRegisterService(repository=repository or ProrrataRegisterRepository(), operation=_AUTHORITY)
+    return ProrrataRegisterService(
+        repository=repository or ProrrataRegisterRepository(), operation=published_authority_operation()
+    )
 
 
 def _observation(
@@ -50,7 +51,7 @@ def _observation(
     observation = registry_grounded_modelo_observation(
         modelo="303", filing_year=2025, period=period, casilla_values=values
     )
-    revision = _AUTHORITY.snapshot("303", filing_year=2025, period=period).revision.id
+    revision = published_authority_operation().snapshot("303", filing_year=2025, period=period).revision.id
     repository.save(
         repository.prepare_observation_envelope(
             observation,
@@ -137,7 +138,7 @@ def test_member_only_settlement_cannot_seed_whole_entity() -> None:
 
 
 def _sector_entry(year: int, *, provisional: str, definitive: str | None = None) -> ProrrataRegisterEntry:
-    ref = _AUTHORITY.snapshot("303", filing_year=year - 1, period="4T").snapshot_ref
+    ref = published_authority_operation().snapshot("303", filing_year=year - 1, period="4T").snapshot_ref
     definitive_value = Decimal(definitive) if definitive is not None else None
     return ProrrataRegisterEntry(
         ejercicio=year,
@@ -198,7 +199,7 @@ def test_sector_settlement_retry_preserves_new_provisional(monkeypatch: pytest.M
         return original_mutate(_apply)
 
     monkeypatch.setattr(repository._storage, "mutate", _mutate_with_interloper)
-    producing_ref = _AUTHORITY.snapshot("303", filing_year=2026, period="4T").snapshot_ref
+    producing_ref = published_authority_operation().snapshot("303", filing_year=2026, period="4T").snapshot_ref
     committed, entry = _service(repository).settle_sector(
         2026,
         "comercio",

@@ -1,7 +1,7 @@
 [modelo]
 id = "369"
 tax_domain = "iva"
-cadence = "ad_hoc"
+cadence = "profile_based"
 jurisdiction = "ES-AEAT"
 legal_refs = [
     "orden-hac-610-2021:art-1",

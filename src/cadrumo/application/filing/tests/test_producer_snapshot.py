@@ -879,7 +879,7 @@ _NON_OFFICIAL_PERIOD_REFUSAL = (
 )
 
 
-@pytest.mark.parametrize("period_code", ("0A", "1P", "EXT-1T", "AD-HOC"))
+@pytest.mark.parametrize("period_code", ("0A", "1P", "EXT-1T"))
 def test_m303_filing_facts_refuse_annual_and_non_official_filing_periods(period_code: str) -> None:
     period = Period.from_year_and_code(2026, period_code)
 

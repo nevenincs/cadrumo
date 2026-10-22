@@ -37,7 +37,9 @@ class _PublicRoot(App[None]):
         super().exit(result=result, return_code=return_code, message=message)
 
 
-@pytest.mark.parametrize("failure", ["missing_second_classification", "typed_import_refusal"])
+@pytest.mark.parametrize(
+    "failure", ["missing_second_classification", "cancelled_second_classification_worker", "typed_import_refusal"]
+)
 def test_capture_failure_exits_and_writes_failed_receipt_even_when_launcher_returns_zero(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: str
 ) -> None:
@@ -60,9 +62,13 @@ def test_capture_failure_exits_and_writes_failed_receipt_even_when_launcher_retu
         return "first-entry", "second-entry"
 
     async def classify(pilot: Any, *, transaction_id: str, scenario_row: Any) -> None:
+        from textual.worker import WorkerCancelled
+
         del scenario_row
         classifications.append(transaction_id)
         if transaction_id == "second-entry":
+            if failure == "cancelled_second_classification_worker":
+                raise WorkerCancelled("private-worker-error-detail")
             pilot.app.query_one("#absent-classification-control")
 
     def launch(*, headless: bool, auto_pilot: Any) -> int:
@@ -112,10 +118,15 @@ def test_capture_failure_exits_and_writes_failed_receipt_even_when_launcher_retu
         assert classifications == ["first-entry", "second-entry"]
         assert document["error"] == "installed IVA TUI public control was absent (stage=classifying_entry_2)"
         assert "public-ledger-root" in document["diagnostic"]["mounted_widget_ids"]
+    elif failure == "cancelled_second_classification_worker":
+        assert classifications == ["first-entry", "second-entry"]
+        assert document["error"] == "installed IVA TUI public worker did not settle (stage=classifying_entry_2)"
+        assert "public-ledger-root" in document["diagnostic"]["mounted_widget_ids"]
     else:
         assert classifications == []
         assert document["error"] == "installed IVA import refused"
     rendered = receipt_path.read_text(encoding="utf-8")
     assert passphrase not in rendered
     assert "private-rendered-value" not in rendered
+    assert "private-worker-error-detail" not in rendered
     assert "transaction_ids" not in document

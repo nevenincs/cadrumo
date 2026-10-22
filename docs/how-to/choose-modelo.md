@@ -70,7 +70,7 @@ To see every form the tool knows, list the catalogue with `aeat app modelo list`
 :verify: Confirm the catalogue lists the known forms and describes Modelo 303 in detail.
 ```
 
-The list shows each modelo's code, official Spanish title, cadence, tax domain, and number of versions. Cadence values include `quarterly`, `annual`, `monthly`, `ad_hoc`, and `profile_based` (the rhythm depends on your situation). Domains include `iva`, `irpf`, `is` (corporate income tax), `censo`, `informative`, `cross_tax`, `irnr` (non-resident income tax), `patrimonio` (wealth tax), and `iae` (tax on economic activities). Being listed does not mean a form applies to you - the catalogue covers everything the tool understands.
+The list shows each modelo's code, official Spanish title, cadence, tax domain, and number of versions. Cadence values include `quarterly`, `annual`, `monthly`, `event` (filed only when something happens, such as a census change or a refundable operation), and `profile_based` (the rhythm depends on your situation). Domains include `iva`, `irpf`, `is` (corporate income tax), `censo`, `informative`, `cross_tax`, `irnr` (non-resident income tax), `patrimonio` (wealth tax), and `iae` (tax on economic activities). Being listed does not mean a form applies to you - the catalogue covers everything the tool understands.
 
 The description shows the form's official name (Spanish), domain, cadence, active version ID, the full list of version IDs, the valid period codes, and three structure counts - boxes (boxes), vinculaciones (values Cadrumo fills in), and fórmulas (formulas) - that describe how complex the form is. Keep both commands as lookup aids. Applicability always comes from `overview explain`.
 

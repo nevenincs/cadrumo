@@ -40,7 +40,7 @@ reviewed_at = 2026-08-19
 authority_grade = "applicability"
 valid_from = 2016-01-01
 valid_to = 2017-12-31
-period_selector = { year_from = 2016, year_to = 2017, periods = ["AD-HOC"] }
+period_selector = { year_from = 2016, year_to = 2017, periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "0A"] }
 legal_refs = [
     "orden-hac-3625-2003:apartado-1",
     "orden-hac-3625-2003:apartado-3",
@@ -59,12 +59,12 @@ scoped_families = ["completeness_manifest"]
 
 
 [revisions."2016-2017".family_dispositions.applicability]
-reason = "Modelo 309 is filed AD-HOC, one declaracion no periodica per settlement event as the non-EU operations occur: the filing condition is the operation itself, modeled by the filing_schedules AD-HOC entry, not a periodic taxpayer-condition profile state."
+reason = "Modelo 309 is a declaracion no periodica: a taxpayer files it only for a period in which it performed the operations the modelo liquidates, so the filing condition is the operation itself, not a taxpayer-condition profile state. The filing_schedules entries declare the periods its design admits."
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-procedure"]
 
 [revisions."2016-2017".family_dispositions.deadline_windows]
-reason = "Modelo 309's AD-HOC filing models its obligation through filing_schedules; the deadline_windows family holds per-period presentation calendars for periodic modelos, and an AD-HOC declaration's presentation window is the settlement event itself, which the schedule already carries."
+reason = "Modelo 309's presentation windows apply only to a taxpayer who performed the operations in the period, and no profile state identifies that taxpayer, so a window declared here would put the modelo on every calendar. The 0A cases run from the operation itself: thirty days for a new means of transport, one month from payment of an enforced-sale adjudicacion."
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-procedure"]
 
@@ -74,7 +74,7 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-procedure"]
 
 [revisions."2016-2017".family_dispositions.extraction_profiles]
-reason = "The application's pull surface for modelo 309 is the operator-entered AD-HOC declaration, not a periodic declaracion PDF replay, and no inbound parser for a 309 artefact exists to name. Empty by the application's surface rather than omitted."
+reason = "The application's pull surface for modelo 309 is the operator-entered declaration, not a periodic declaracion PDF replay, and no inbound parser for a 309 artefact exists to name. Empty by the application's surface rather than omitted."
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-procedure"]
 
@@ -466,7 +466,7 @@ source_refs = ["boe-modelo-309-2003-form-pdf"]
 [[revisions."2016-2017".family_overrides]]
 family = "constructs"
 selector = {revision = "2004-2015", id = "modelo-309-iva-no-periodica"}
-fields = {bindings = ["modelo-309-iva-autorepercutido-intracomunitaria-cuota", "modelo-309-iva-soportado-recargo-equivalencia-cuota"], deadline_windows = [], filing_schedules = ["modelo-309-ad-hoc"], formulas = ["modelo-309-cuota-devengada-total", "modelo-309-iva-cuota-no-periodica-total", "modelo-309-resultado"], live_cross_references = ["modelo-309-static-documentation", "modelo-309-filed-declarations-read"]}
+fields = {bindings = ["modelo-309-iva-autorepercutido-intracomunitaria-cuota", "modelo-309-iva-soportado-recargo-equivalencia-cuota"], deadline_windows = [], filing_schedules = ["modelo-309-no-periodica"], formulas = ["modelo-309-cuota-devengada-total", "modelo-309-iva-cuota-no-periodica-total", "modelo-309-resultado"], live_cross_references = ["modelo-309-static-documentation", "modelo-309-filed-declarations-read"]}
 removed_fields = ["export_layouts"]
 sequence_additions = {application_links = ["modelo-309-portal", "modelo-309-review", "modelo-309-approval", "modelo-309-reconciliation", "modelo-309-workflow", "modelo-309-deadline", "modelo-309-calculation"], casilla_ids = ["iva.autorepercutido.intracomunitaria", "iva.soportado.recargo-equivalencia", "iva.cuota-no-periodica-total", "decl.tipo-trigger"], legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-instructions", "boe-modelo-309-2003-form"], workbook_parity_refs = ["modelo-309-dr"]}
 sequence_removals = {application_links = [1, 2, 3, 4, 5, 6], casilla_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57], source_refs = [0, 3], workbook_parity_refs = [0]}

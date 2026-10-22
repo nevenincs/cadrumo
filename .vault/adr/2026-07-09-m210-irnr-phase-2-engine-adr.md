@@ -7,8 +7,8 @@ related:
   - "[[2026-06-04-m210-irnr-phase-2-engine-research]]"
   - "[[2026-06-30-convenio-doble-imposicion-adr]]"
 superseded_by: '2026-07-10-m210-irnr-phase-2-engine-adr'
-modified: '2026-10-03'
-body_hash: 'sha256:f4d7535b6cb3d44888051a31586ce2a574a43b2d35c56f37c0888c3215264e05'
+modified: '2026-10-22'
+body_hash: 'sha256:f82b21e9053555e67cb864739b8537f671823191b8ef2b0f6aab15f2e2d8b209'
 ---
 # `m210-irnr-phase-2-engine` adr: `Phase 2 registry design, grounding strategy, and slice decomposition` | (**status:** `superseded`)
 
@@ -62,7 +62,8 @@ executable slices.
   plazos are the first 20 natural days of April/July/October/January, and for
   agrupacion anual the first 20 days of January of the following year.
 - **Existing period and deadline machinery.** `Period.contains()` is the single
-  boundary authority; M210 cadence is `ad_hoc` today; the deadline engine
+  boundary authority; M210 cadence is `profile_based`, with an `event` schedule for
+  per-devengo filings and an annual one for imputed rents; the deadline engine
   already carries per-modelo windows.
 - **Revision-window discipline.** Each filing year must resolve to exactly one
   revision; the layout authorities are time-windowed (the HAC/56/2024 form

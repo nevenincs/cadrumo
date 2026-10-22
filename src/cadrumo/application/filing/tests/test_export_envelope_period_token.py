@@ -19,8 +19,8 @@ from ..export_envelope import envelope_closer_bytes, envelope_period_token, rend
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-#: Modelo 308's ad-hoc settlement, the period the envelope cannot print verbatim.
-_AD_HOC = Period.from_year_and_code(2022, "AD-HOC")
+#: A Modelo 308 solicitud for a new means of transport, which its design files under ``0A``.
+_ANNUAL_308 = Period.from_year_and_code(2022, "0A")
 
 
 def _software_identity() -> AeatProductSoftwareIdentity:
@@ -36,11 +36,6 @@ def test_a_two_character_filing_period_prints_itself(code: str) -> None:
     assert envelope_period_token(Period.from_year_and_code(2025, code)) == code
 
 
-def test_an_ad_hoc_settlement_prints_the_only_token_its_record_design_admits() -> None:
-    """``aeat-dr-308-2019`` M30800 row 5 admits ``1T``-``4T`` or ``0A``; ad-hoc is in no quarter."""
-    assert envelope_period_token(_AD_HOC) == "0A"
-
-
 @pytest.mark.parametrize("code", ["EXT-1T", "EXT-4T", "EVENT-3"])
 def test_a_period_with_no_two_character_representation_is_refused(code: str) -> None:
     period = Period.from_year_and_code(2025, code)
@@ -49,21 +44,23 @@ def test_a_period_with_no_two_character_representation_is_refused(code: str) -> 
         envelope_period_token(period)
 
 
-def test_the_declared_period_prefix_field_renders_the_ad_hoc_token_to_its_declared_extent() -> None:
+def test_the_declared_period_prefix_field_renders_the_period_to_its_declared_extent() -> None:
     rendered = render_envelope_prefix_field(
         FilingEnvelopePrefixRole.PERIOD,
         length=2,
         modelo=Modelo("308"),
-        period=_AD_HOC,
+        period=_ANNUAL_308,
         product_software_identity=_software_identity(),
     )
 
     assert rendered == b"0A"
 
 
-def test_the_relative_closer_spends_two_characters_on_an_ad_hoc_period() -> None:
+def test_the_relative_closer_spends_two_characters_on_the_period() -> None:
     """``aeat-dr-308-2019`` M30800 row 15 declares ``</T3080AAAAPP0000>`` at eighteen bytes."""
-    assert envelope_closer_bytes(modelo=Modelo("308"), period=_AD_HOC) == b"</T308020220A0000>"
+    assert envelope_closer_bytes(modelo=Modelo("308"), period=_ANNUAL_308) == b"</T308020220A0000>"
+    quarterly = Period.from_year_and_code(2022, "3T")
+    assert envelope_closer_bytes(modelo=Modelo("308"), period=quarterly) == b"</T308020223T0000>"
 
 
 def test_the_closer_refuses_a_period_the_envelope_cannot_print() -> None:

@@ -26,9 +26,12 @@ def build_historical_nonperiodic_plan(
     *, year: int = 2016
 ) -> tuple[WorkbookTemplateSource, SheetExportPlan[SheetTemplatePreviewMetadata]]:
     """Build fictional historical facts without extending the filing support envelope."""
-    revision_id, source_ref = {2015: ("2004-2015", "aeat-dr-309-2004"), 2016: ("2016-2017", "aeat-dr-309-2016")}[year]
+    revision_id, source_ref, period = {
+        2015: ("2004-2015", "aeat-dr-309-2004", "1T"),
+        2016: ("2016-2017", "aeat-dr-309-2016", "0A"),
+    }[year]
     source = load_workbook_template_source(
-        "309", revision_id=revision_id, source_ref=source_ref, preview_year=year, preview_period="AD-HOC"
+        "309", revision_id=revision_id, source_ref=source_ref, preview_year=year, preview_period=period
     )
     case = DemoCase(
         "309",
@@ -37,7 +40,7 @@ def build_historical_nonperiodic_plan(
         Decimal("210"),
         filing_year=year,
         authority_grade=RegistryAuthorityGrade.APPLICABILITY,
-        period="AD-HOC",
+        period=period,
     )
     inputs = nonperiodic_vat_inputs(year, additional_rate_row=False)
     if year == 2015:
