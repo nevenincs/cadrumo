@@ -39,9 +39,9 @@ from .operations.registry import (
 from .operations.subject_reference import OperationSubjectReferenceV1
 from .user_profile.access_errors import ProfileAccessRefusedError
 from .workbench_generation_contracts import WorkbenchGenerationV1
+from .workbench_generation_identity import WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
 from .workbench_generation_projection import WorkbenchGenerationOperationProjection, project_workbench_generation
 
-WORKBENCH_GENERATION_OPERATION_DEFINITION_ID = "workbench.generation"
 _PHASE = WORKBENCH_GENERATION_OPERATION_DEFINITION_ID + ".execute"
 
 

@@ -7,7 +7,7 @@ import sys
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, replace
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, SecretBytes
@@ -42,10 +42,7 @@ from cadrumo.application.user_profile.automation_operations import (
 )
 from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
 from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
-from cadrumo.application.workbench_generation_operation import (
-    WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
-    WorkbenchGenerationOperationRequest,
-)
+from cadrumo.application.workbench_generation_identity import WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.diagnostic_log import diagnostic_scope, diagnostic_timing_event
 from cadrumo.core.errors.hierarchy import CadrumoError
@@ -79,6 +76,9 @@ from ..adapters.worker_authorization import runtime_server_start_definitions
 from ..adapters.worker_authorization_client import WorkerAuthorizationClient
 from ..adapters.worker_authorization_lease import WorkerAuthorizationLease
 from ..application.approval_binding import RuntimeApprovalBinding
+
+if TYPE_CHECKING:
+    from cadrumo.application.workbench_generation_operation import WorkbenchGenerationOperationRequest
 
 _LOGGER = get_logger(__name__)
 

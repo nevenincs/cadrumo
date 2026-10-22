@@ -658,7 +658,7 @@ class ProfileWorkerOperationHost:
         if task is None or task in self._output_tasks:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         self._output_tasks[task] = operation_id
-        from cadrumo.application.workbench_generation_operation import WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
+        from cadrumo.application.workbench_generation_identity import WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
 
         from .operation_authority import WorkerOperationBinding
 

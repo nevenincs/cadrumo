@@ -89,12 +89,12 @@ from cadrumo.application.workbench_generation_contracts import (
     WorkbenchGenerationSourceResultV1,
     WorkbenchGenerationV1,
 )
+from cadrumo.application.workbench_generation_identity import WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
 from cadrumo.application.workbench_generation_modelo_contracts import (
     PublicBlockerRef,
     PublicModeloWorkConditionalRecargoPreview,
 )
 from cadrumo.application.workbench_generation_operation import (
-    WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
     WorkbenchGenerationExecutor,
     WorkbenchGenerationOperationRequest,
     build_workbench_generation_operation_definition,

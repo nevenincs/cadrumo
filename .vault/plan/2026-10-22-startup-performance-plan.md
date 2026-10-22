@@ -9,7 +9,7 @@ related:
   - '[[2026-10-22-startup-performance-request-path-audit]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:1eecd8152436410634043c38e5f4855bab520aa4fb50cd004db41209548ae207'
+body_hash: 'sha256:0a865ab5f65d620368ca4ca650927e5e54ec484b1e373087555eabc73ff83211'
 ---
 
 # `startup-performance` plan
@@ -34,6 +34,7 @@ The findings are in `2026-10-22-startup-performance-request-path-audit`. `2026-1
 - [ ] `S08` - Stop hashing the whole authority database in every process while keeping corruption refusal; `src/cadrumo/domain/calculations/registry/authority_store.py and owning tests`.
 - [ ] `S09` - Cut the TUI first screen's serial operations and eager imports; `src/cadrumo/entrypoints/tui and src/cadrumo_client/transport/frontend_profile_view_client.py`.
 - [ ] `S10` - Rebuild the stage with the operator, measure the real desktop launch to usable Home and confirm no slow-request warnings; `build/windows-x64/stage/Release/app, audit`.
+- [x] `S11` - Keep the workbench generation's module graph off the first operation's execution binding and pin it with an import gate; `src/cadrumo_runtime/host/operation_authority.py, src/cadrumo_runtime/host/tests/test_worker_startup_import_graph.py`.
 
 ## Parallelization
 

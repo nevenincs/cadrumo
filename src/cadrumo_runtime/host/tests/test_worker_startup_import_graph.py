@@ -68,15 +68,16 @@ _FORBIDDEN_AT_READY: tuple[str, ...] = (
 _READY_MODULE_CEILING = 760
 
 
-def _ready_modules(prelude: str = "") -> frozenset[str]:
+def _ready_modules(prelude: str = "", then: str = "") -> frozenset[str]:
     """Bring a worker to readiness in a fresh interpreter and report its module graph.
 
     A real isolated subprocess, because the runtime launches the worker that
     way and it is the only clean module table. ``prelude`` runs first so a
-    caller can prove the gate still bites.
+    caller can prove the gate still bites; ``then`` runs after readiness.
     """
     source = (
-        f"{prelude}\n{_READY.format(worker=_WORKER_MODULE)}\nimport json, sys\nprint(json.dumps(sorted(sys.modules)))"
+        f"{prelude}\n{_READY.format(worker=_WORKER_MODULE)}\n{then}\n"
+        "import json, sys\nprint(json.dumps(sorted(sys.modules)))"
     )
     completed = run_audited_process(
         [sys.executable, "-I", "-B", "-c", source],
@@ -127,10 +128,34 @@ def test_the_exclusion_probe_bites(prelude_target: str) -> None:
     assert len(modules) > _READY_MODULE_CEILING, "the ceiling no longer separates a ready worker from the eager graph"
 
 
+# An operation's first execution binds its authority; only a generation itself needs the workbench graph.
+_BIND = "import cadrumo_runtime.host.operation_authority"
+
+_FORBIDDEN_AT_BIND: tuple[str, ...] = (
+    "cadrumo.application.workbench_generation_operation",
+    "cadrumo.application.workbench_generation_contracts",
+    "cadrumo.application.ledger.workspace",
+    "cadrumo.application.modelo.declarations_workspace_contracts",
+    "cadrumo.domain.calculations.registry.schema",
+)
+
+
+def test_binding_an_operation_excludes_the_workbench_graph() -> None:
+    """The first profile read after sign-in binds an execution; it must not load the Home generation's graph."""
+    modules = _ready_modules(then=_BIND)
+
+    assert "cadrumo_runtime.host.operation_authority" in modules
+    present = sorted(target for target in _FORBIDDEN_AT_BIND if target in modules)
+    assert present == [], (
+        f"binding an operation imported {present}. The first operation after every sign-in "
+        "pays for it; import it where the workbench generation runs."
+    )
+
+
 def test_every_forbidden_target_still_resolves() -> None:
     """A renamed module is absent from every graph, which would retire its entry silently."""
     unresolvable: list[str] = []
-    for target in _FORBIDDEN_AT_READY:
+    for target in (*_FORBIDDEN_AT_READY, *_FORBIDDEN_AT_BIND):
         try:
             importlib.import_module(target)
         except ImportError:

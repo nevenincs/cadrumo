@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:510423ecdd0ac616c83a4df4fdeb79181ac9e1efcf8b4e21e4d6111e81e04746'
+body_hash: 'sha256:8ea72245744020461c9c8d77c299e0c221d477da98f56d24f8f77186e863fbc0'
 related:
   - "[[2026-10-22-startup-performance-plan]]"
 ---
@@ -124,3 +124,15 @@ related:
 - `S04` `verify:` `ruff, ty` -> `pass`
 - `S05` `M` `.vault/audit/2026-10-22-startup-performance-request-path-audit.md`
 - `S05` `verify:` `perf harness on overlaid package copy` -> `pass`
+- `S11` `A` `src/cadrumo/application/workbench_generation_identity.py`
+- `S11` `M` `src/cadrumo/application/workbench_generation_operation.py`
+- `S11` `M` `src/cadrumo/application/tests/test_workbench_generation_operation.py`
+- `S11` `M` `src/cadrumo_client/transport/workbench_generation.py`
+- `S11` `M` `src/cadrumo_runtime/host/operation_authority.py`
+- `S11` `M` `src/cadrumo_runtime/host/operation_host.py`
+- `S11` `M` `src/cadrumo_runtime/host/tests/frontend/tui/entrypoints/tui/tests/test_runtime_workbench_native.py`
+- `S11` `M` `src/cadrumo_runtime/host/tests/test_worker_startup_import_graph.py`
+- `S11` `verify:` `pytest operation host/authority/workbench suites, all lanes (223)` -> `pass`
+- `S11` `verify:` `import gate fails on the previous operation_authority` -> `pass`
+- `S11` `verify:` `just check-types` -> `pass`
+- `S11` `verify:` `lint-imports` -> `pass`

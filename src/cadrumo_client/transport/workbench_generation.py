@@ -9,8 +9,8 @@ from pydantic import ValidationError
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionSuccessV1
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.workbench_generation_contracts import WorkbenchGenerationV1
+from cadrumo.application.workbench_generation_identity import WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
 from cadrumo.application.workbench_generation_operation import (
-    WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
     WorkbenchGenerationOperationRequest,
     build_workbench_generation_operation_definition,
     build_workbench_generation_operation_registration,

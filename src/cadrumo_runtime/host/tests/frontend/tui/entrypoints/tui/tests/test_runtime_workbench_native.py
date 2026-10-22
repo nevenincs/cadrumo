@@ -49,10 +49,8 @@ from cadrumo.application.overview.home import HomeAccountSession, HomeSessionPos
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmissionState
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext, SessionKind
 from cadrumo.application.workbench_generation_contracts import WorkbenchGenerationAvailability, WorkbenchGenerationV1
-from cadrumo.application.workbench_generation_operation import (
-    WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
-    WorkbenchGenerationOperationRequest,
-)
+from cadrumo.application.workbench_generation_identity import WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
+from cadrumo.application.workbench_generation_operation import WorkbenchGenerationOperationRequest
 from cadrumo.application.workbench_generation_projection import (
     WorkbenchGenerationOperationProjection,
     project_workbench_generation,
