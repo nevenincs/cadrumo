@@ -3,7 +3,9 @@
 A person's sign-in never composes the registry. The first operation does, off
 the service loop; every concurrent caller joins that one composition, and
 shutdown waits for it, so one worker never holds two supervisors or releases
-its authority lease under a composition still using it.
+its authority lease under a composition still using it. An idle worker imports
+the composition's graph beforehand: a composition waits for that import, a
+sign-in does not.
 
 The composition itself is replaced here: these cases isolate the host's own
 once-only and shutdown bookkeeping, which is independent of what is composed.
@@ -14,14 +16,17 @@ from __future__ import annotations
 import asyncio
 import threading
 from datetime import timedelta
+from pathlib import Path
 from typing import TYPE_CHECKING, cast, override
 
 import pytest
 
 from cadrumo.application.operations.composition import OperationComposedServices
 from cadrumo.application.operations.drain import OperationDrainResult
+from cadrumo.domain.calculations.registry.tests.shared_authority_isolation import isolated_shared_authority
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 
+from .. import operation_host
 from ..operation_host import ProfileWorkerOperationHost
 
 if TYPE_CHECKING:
@@ -137,3 +142,75 @@ def test_a_failed_composition_is_raised_and_the_next_caller_composes_again() -> 
         host._composed()
     assert host._composed() is host._services
     assert host.compositions == 2
+
+
+class _GatedImports:
+    """Stand in for the idle import of the composition graph and hold it until the case releases it."""
+
+    def __init__(self) -> None:
+        self.started = threading.Event()
+        self.unblock = threading.Event()
+        self.imported: list[str] = []
+
+    def __call__(self, name: str) -> object:
+        self.started.set()
+        self.unblock.wait(timeout=30)
+        self.imported.append(name)
+        return object()
+
+
+def test_a_composition_waits_for_the_idle_imports_under_way(monkeypatch: pytest.MonkeyPatch) -> None:
+    imports = _GatedImports()
+    monkeypatch.setattr(operation_host, "import_module", imports)
+    host = _GatedHost()
+    host.unblock.set()
+    warming = threading.Thread(target=host.warm_imports)
+    warming.start()
+    assert imports.started.wait(timeout=30)
+    composing = threading.Thread(target=host._composed)
+    composing.start()
+
+    composing.join(timeout=0.2)
+    assert composing.is_alive() and host.compositions == 0, "a composition raced the idle imports"
+    imports.unblock.set()
+    warming.join(timeout=30)
+    composing.join(timeout=30)
+
+    assert host.compositions == 1
+    assert imports.imported, "the idle warm-up imported nothing"
+
+
+def test_a_sign_in_reads_the_authority_while_the_idle_imports_run(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    imports = _GatedImports()
+    monkeypatch.setattr(operation_host, "import_module", imports)
+    with isolated_shared_authority(tmp_path):
+        host = _GatedHost()
+        warming = threading.Thread(target=host.warm_imports)
+        warming.start()
+        assert imports.started.wait(timeout=30)
+        decoded: list[object] = []
+        signing_in = threading.Thread(target=lambda: decoded.append(host.profile_decode_context()))
+        signing_in.start()
+
+        signing_in.join(timeout=30)
+        try:
+            assert decoded, "a sign-in's profile decode waited for the idle imports"
+        finally:
+            imports.unblock.set()
+            warming.join(timeout=30)
+            asyncio.run(host.close())
+
+
+def test_a_composed_host_warms_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
+    imports = _GatedImports()
+    imports.unblock.set()
+    monkeypatch.setattr(operation_host, "import_module", imports)
+    host = _GatedHost()
+    host.unblock.set()
+    host._composed()
+
+    host.warm_imports()
+
+    assert imports.imported == []

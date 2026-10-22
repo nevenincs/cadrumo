@@ -5,8 +5,8 @@ registered-operation composition, every handler and the pinned tax authority
 before it could answer its parent -- about 3000 modules -- and then composed
 the registry again before the sign-in reply. The worker now serves its
 channels from the transport, its custody and the profile worker protocol; the
-registry, its handlers and the authority load when an operation first needs
-them.
+registry and its handlers load after readiness, while the worker waits for its
+first operation, and the authority when an operation first needs it.
 
 This gate pins that PROPERTY: the module graph a worker holds once it can
 serve. It deliberately asserts no wall-clock budget -- a timing threshold on a
@@ -155,7 +155,7 @@ def test_binding_an_operation_excludes_the_workbench_graph() -> None:
 def test_every_forbidden_target_still_resolves() -> None:
     """A renamed module is absent from every graph, which would retire its entry silently."""
     unresolvable: list[str] = []
-    for target in (*_FORBIDDEN_AT_READY, *_FORBIDDEN_AT_BIND):
+    for target in (*_FORBIDDEN_AT_READY, *_FORBIDDEN_AT_BIND, *_WARMED):
         try:
             importlib.import_module(target)
         except ImportError:
@@ -164,4 +164,24 @@ def test_every_forbidden_target_still_resolves() -> None:
     assert not unresolvable, (
         f"these forbidden import targets no longer resolve: {unresolvable}. Re-point each "
         "at the module that now owns the subsystem, or drop it deliberately."
+    )
+
+
+# While it waits for a first operation, the worker imports what that operation composes.
+_WARMED: tuple[str, ...] = (
+    "cadrumo.entrypoints.operation_composition",
+    "cadrumo.application.operations.composition",
+    "cadrumo.application.operations.supervisor",
+    "cadrumo.application.user_profile.operations",
+)
+
+
+def test_an_idle_worker_imports_the_first_composition_after_readiness() -> None:
+    """The graph readiness withholds loads in the time before the first operation, not on its path."""
+    modules = _ready_modules(then="host.warm_imports()")
+
+    missing = sorted(target for target in _WARMED if target not in modules)
+    assert missing == [], (
+        f"an idle worker's warm-up left {missing} for the first operation to import; "
+        "the person's first read after sign-in waits for each of them"
     )

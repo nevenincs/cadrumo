@@ -15,6 +15,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Generator
 from contextlib import AbstractContextManager, ExitStack, asynccontextmanager, contextmanager
 from datetime import timedelta
+from importlib import import_module
 from math import isfinite
 from threading import RLock
 from time import monotonic
@@ -92,6 +93,19 @@ _PROJECTION_DOCUMENT = TypeAdapter(dict[str, JsonValue])
 _LAPSE_CHECK_SECONDS = 30.0
 _log = get_logger(__name__)
 _PRIVATE_RESULT_RELEASE_ACTIONS = frozenset({AccessAction.RESULT, AccessAction.REVIEW})
+# What the first composition imports: its own entry points, the persistence and
+# supervisor modules it binds, and the profile operations a session reads first.
+_COMPOSITION_MODULES = (
+    "cadrumo.application.local_reader_provisioning",
+    "cadrumo.entrypoints.operation_composition",
+    "cadrumo.adapters.persistence.operations.durability_router",
+    "cadrumo.adapters.persistence.operations.journal",
+    "cadrumo.adapters.persistence.operations.lease",
+    "cadrumo.adapters.persistence.operations.secure_references",
+    "cadrumo.adapters.persistence.operations.typed_financial_operand_custody",
+    "cadrumo.application.operations.composition",
+    "cadrumo.application.user_profile.operations",
+)
 
 
 @contextmanager
@@ -146,6 +160,9 @@ class ProfileWorkerOperationHost:
         # One composition and one authority lease, whichever thread asks first:
         # a worker thread serving an operation or the service loop.
         self._composition_lock = RLock()
+        # The idle import of the composition graph. A sign-in never waits for
+        # it; a composition does, so the two never import the graph at once.
+        self._imports_lock = RLock()
 
     def _report_progress(self, operation_ids: tuple[OperationId, ...]) -> None:
         with self._record_effects_guard:
@@ -181,7 +198,7 @@ class ProfileWorkerOperationHost:
         services = self._services
         if services is not None:
             return services
-        with self._composition_lock:
+        with self._imports_lock, self._composition_lock:
             if self._closed:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
             if self._services is None:
@@ -224,6 +241,21 @@ class ProfileWorkerOperationHost:
                 runtime_server_owner_start=RuntimeServerOwnerStart(self._start_runtime_server),
                 journal_committed=self._journal_committed,
             )
+
+    def warm_imports(self) -> None:
+        """Import the composition's module graph while the worker waits for its first operation.
+
+        A watched profile's worker starts before its password is typed and
+        reaches readiness without this graph. Loading it now, key-free, keeps
+        it off the first operation. A composition that starts meanwhile waits
+        for these imports instead of racing them; a sign-in does not.
+        """
+        with self._imports_lock:
+            if self._closed or self._services is not None:
+                return
+            with startup_phase(_log, "worker_operation_imports"):
+                for module in _COMPOSITION_MODULES:
+                    import_module(module)
 
     def in_flight_operation_count(self) -> int:
         """Read the owning supervisor without creating services or touching custody."""

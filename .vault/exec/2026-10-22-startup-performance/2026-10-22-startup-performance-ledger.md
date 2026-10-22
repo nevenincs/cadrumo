@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#startup-performance'
 date: '2026-10-22'
-modified: '2026-10-22'
+modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:b422e63dd65d63140db267392368c79bff957ec9ee8bd52e25dfc5490a868fd0'
+body_hash: 'sha256:8b5d3cd44faacfa86948ae8b1e88cbfc35b1ac47a06e72cd440c077471f52524'
 related:
   - "[[2026-10-22-startup-performance-plan]]"
 ---
@@ -170,8 +170,21 @@ related:
 - `S13` `M` `src/cadrumo/application/operations/_public_mirror_restoration.py`
 - `S13` `M` `src/cadrumo/application/operations/public_mirror.py`
 - `S13` `verify:` `pytest public-mirror and workbench generation tests (67)` -> `pass`
+- `S14` `M` `src/cadrumo_runtime/host/operation_host.py`
+- `S14` `M` `src/cadrumo_runtime/host/worker_service.py`
+- `S14` `M` `src/cadrumo_runtime/host/tests/test_operation_host_composition.py`
+- `S14` `M` `src/cadrumo_runtime/host/tests/test_worker_startup_import_graph.py`
+- `S14` `M` `src/cadrumo_runtime/host/tests/test_worker_exit_cleanup.py`
+- `S14` `M` `.vault/audit/2026-10-22-startup-performance-request-path-audit.md`
+- `S14` `M` `.vault/plan/2026-10-22-startup-performance-plan.md`
+- `S14` `verify:` `pytest src/cadrumo_runtime/host/tests` -> `pass`
+- `S14` `verify:` `ruff check and format on touched files` -> `pass`
+- `S14` `verify:` `ty check on touched files` -> `pass`
+- `S14` `verify:` `lint-imports` -> `pass`
+- `S14` `verify:` `mutation check of the three new tests` -> `pass`
 
 ## Notes
 
 - `S07` Real desktop sign-in with a persisted receipt needs the verified desktop parent; verified at S10 on the rebuilt stage
 - `S03` aged custody observations probe the Credential Manager anchor instead of re-reading custody (peer measurement: 40 aged re-reads per save)
+- `S14` just check-types reports one diagnostic in `native/desktop/tests/packaged/runtime_fixture.py:107` from commit 8133f368d5, outside this Step

@@ -511,12 +511,12 @@ async def _serve_control_requests(context: _WorkerControl) -> None:
 
 
 async def _collect_task_failures(
-    expiry: asyncio.Task[None], executing: asyncio.Task[None], primary_error: BaseException | None
+    tasks: tuple[asyncio.Task[None], ...], primary_error: BaseException | None
 ) -> tuple[BaseException | None, tuple[BaseException, ...]]:
     task_failures: list[BaseException] = []
 
     async def settle() -> None:
-        for task in (expiry, executing):
+        for task in tasks:
             try:
                 await task
             except asyncio.CancelledError as cancellation:
@@ -545,6 +545,7 @@ async def _finish_service(
     stop: asyncio.Event,
     expiry: asyncio.Task[None],
     executing: asyncio.Task[None],
+    warming: asyncio.Task[None],
     operation_release: _worker_cleanup.WorkerRelease[OperationDrainResult],
     human_release: _worker_cleanup.WorkerRelease[None],
     upload_release: _worker_cleanup.WorkerRelease[None],
@@ -552,7 +553,7 @@ async def _finish_service(
 ) -> None:
     stop.set()
     executing.cancel()
-    primary_error, task_failures = await _collect_task_failures(expiry, executing, primary_error)
+    primary_error, task_failures = await _collect_task_failures((expiry, executing, warming), primary_error)
     raise_task_failure = primary_error is None and bool(task_failures)
     if raise_task_failure:
         primary_error = task_failures[0]
@@ -599,6 +600,7 @@ async def _serve(
         _worker_requests.operate(operation_channel, operations, failed, uploads, changed),
         name="profile-operation-requests",
     )
+    warming = asyncio.create_task(asyncio.to_thread(operations.warm_imports), name="profile-operation-imports")
     try:
         await _serve_control_requests(context)
     finally:
@@ -606,6 +608,7 @@ async def _serve(
             stop,
             expiry,
             executing,
+            warming,
             operation_release,
             human_release,
             upload_release,

@@ -132,3 +132,24 @@ Per generation: about 70 frames each way (250 KiB), 12.7 worker authorize/releas
 The Y: drive stalls under concurrent sessions (hardened write p90 0.5 s, one 23.8 s); C: is a steady 3.5 ms, so journal and settlement figures from tests on Y: overstate the operator's cost.
 
 S13 caches the manifest walk per traversal-root set: about 230 ms less per generation after a worker's first. The log handler and lock records belong to another workstream's files and were handed to it with these figures; the `require_session` stat is a storage-replacement check left unchanged.
+
+### first-operation-cold-composition | medium | The rebuilt stage still warns once: the first operation after sign-in composes cold
+
+S10 rebuilt `build/windows-x64/stage/Release/app` with the `app-payload` target on 2026-10-23 (no installer targets). The disposable-root harness on that stage, empty profile, C: storage, no sampling profiler:
+
+| Step | S05 after | Rebuilt stage |
+| --- | --- | --- |
+| Runtime ready | | 2.11 s |
+| `config profile list` | | 1.28 s |
+| `config login` | 5.2 s | 4.67 s |
+| `session hold` admitted | 2.0 s | 1.76 s |
+| First `language_observe` | 1.869 s | 1.360 s |
+| `language_read` (median) | | 0.097 s |
+| Hold `status` / `activity` / `attendance_inventory` (median) | 0.007 / 0.010 / 0.001 s | 0.005 / 0.008 / 0.001 s |
+| `config profile status` | 2.6-2.7 s | 2.59-2.92 s |
+
+The runtime log recorded one `session_hold_request_slow` warning (threshold 1.0 s), for that first `language_observe`. Timestamps from probes overlaid on an independent copy of the stage split its 1.29-1.36 s: 0.17 s importing the profile view graph in the hold, then the first operation contract, 0.92 s against 15 ms afterwards. In the worker that contract composed the registry (0.39 s, mostly imports of `local_reader_provisioning`, the persistence adapters and the supervisor) and then built the user-profile operation group on its first lookup (0.70 s of the 0.88 s spent importing `cadrumo.application.user_profile.operations` and the registry schema behind it). The profile view page itself took 0.20 s.
+
+S14 imports that graph after readiness, while a watched worker waits for the password. Readiness stays as the startup import gate pins it. A sign-in's authority lease does not wait for the import; a composition does. On the same overlaid copy the first `language_observe` fell to 0.585-0.704 s over five runs, two of them with a watched profile, `config login` stayed at 4.2-4.4 s, and the log has no slow-request warning.
+
+The operator's own launch to Home on a stage that includes S14 is still open under S10: Home sits behind the operator's password.

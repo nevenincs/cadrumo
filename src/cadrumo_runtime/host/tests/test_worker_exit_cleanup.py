@@ -368,6 +368,9 @@ class _Operations:
     def profile_decode_context(self) -> None:
         """Only the entrypoint's constructor binding is under test."""
 
+    def warm_imports(self) -> None:
+        """The idle import is the host's own; these cases test the loop's cleanup."""
+
     async def close(self) -> OperationDrainResult:
         self.owner.close()
         return OperationDrainResult(unresolved=(), recovery_required=())
