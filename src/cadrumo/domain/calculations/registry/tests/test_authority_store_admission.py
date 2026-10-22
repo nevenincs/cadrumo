@@ -18,6 +18,7 @@ import os
 import shutil
 import sqlite3
 import tracemalloc
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -37,7 +38,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
 
 @pytest.fixture(autouse=True)
-def _own_receipts(tmp_path: Path) -> object:
+def _own_receipts(tmp_path: Path) -> Iterator[None]:
     """Keep admission receipts to this test, so every case starts from a database nobody has proved."""
     with override_settings(cadrumo_local_storage_root=tmp_path / "storage"):
         yield
@@ -145,7 +146,7 @@ def _counting_hashes(monkeypatch: pytest.MonkeyPatch) -> list[Path]:
 
 def _copied_pair(directory: Path) -> tuple[Path, Path]:
     source_descriptor = bundled_authority_descriptor_path()
-    database_name = json.loads(source_descriptor.read_text(encoding="utf-8"))["database"]
+    database_name = AuthorityDescriptor.read(source_descriptor).database
     directory.mkdir()
     shutil.copy2(source_descriptor, directory / _DESCRIPTOR_NAME)
     shutil.copy2(source_descriptor.parent / database_name, directory / database_name)
