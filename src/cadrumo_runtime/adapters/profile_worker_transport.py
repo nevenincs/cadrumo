@@ -51,7 +51,11 @@ from .worker_transport import WorkerChannel
 #: single-exchange budget, so this wait matches it: a missed reply contains the
 #: whole worker, and a shorter wait would stop it while it still waits its turn.
 _OPERATION_EXCHANGE_SECONDS = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
-_CONTROL_EXCHANGE_SECONDS = 10
+#: A missed control reply contains the worker and ends every session it holds,
+#: so a worker the host starves of CPU must not count as hung: its replies have
+#: arrived 13 s late under load. Containment still comes well inside the runtime
+#: supervisor's 30 s busy hang bound, which control callers can hold up.
+_CONTROL_EXCHANGE_SECONDS = 20
 
 _LOGGER = get_logger(__name__)
 

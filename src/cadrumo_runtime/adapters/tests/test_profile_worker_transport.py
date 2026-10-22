@@ -137,8 +137,20 @@ def test_operation_reply_beyond_the_worker_authority_budget_still_contains_the_w
     assert worker._stopping.is_set()
 
 
-def test_control_reply_keeps_its_short_budget() -> None:
-    worker = _worker(latency=11)
+def test_starved_worker_control_reply_keeps_the_worker() -> None:
+    """A control reply as late as one observed on a saturated host still reaches the runtime."""
+    worker = _worker(latency=13)
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        worker.status()
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+    assert not worker.contained
+    assert not worker._stopping.is_set()
+
+
+def test_control_reply_beyond_its_budget_contains_the_worker() -> None:
+    worker = _worker(latency=transport._CONTROL_EXCHANGE_SECONDS + 1)
 
     with pytest.raises(RefusalError) as refused:
         worker.status()
@@ -252,7 +264,7 @@ def test_stopped_worker_refusal_does_not_repeat_containment() -> None:
 
 
 def test_failed_exchange_is_fenced_before_retirement(monkeypatch: pytest.MonkeyPatch) -> None:
-    worker = _worker(latency=11)
+    worker = _worker(latency=transport._CONTROL_EXCHANGE_SECONDS + 1)
     retiring = transport.ProfileWorkerTransport._retire_failed_exchange
 
     def retire(self: transport.ProfileWorkerTransport, error: BaseException, deadline: float | None) -> None:
