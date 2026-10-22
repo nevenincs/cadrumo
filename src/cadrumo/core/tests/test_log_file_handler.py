@@ -299,3 +299,63 @@ def test_each_record_is_formatted_once(tmp_path: Path) -> None:
     # A capped log measures each record before the append writes it; both use one formatting.
     assert formatter.calls == 10
     assert len((tmp_path / "probe.log").read_text(encoding="utf-8").splitlines()) == 10
+
+
+def _delete_when_last_handle_closes(path: Path) -> None:
+    """Delete ``path`` by disposition, as file systems without POSIX deletion do: the name stays until it closes."""
+    if sys.platform == "win32":
+        import _winapi
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        set_information = kernel32.SetFileInformationByHandle
+        set_information.argtypes = (wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD)
+        set_information.restype = wintypes.BOOL
+        # DELETE access, shared read, write and delete; FileDispositionInfo with DeleteFile set.
+        handle = _winapi.CreateFile(str(path), 0x00010000, 7, 0, 3, 0x80, 0)
+        try:
+            delete = wintypes.BOOLEAN(True)
+            assert set_information(handle, 4, ctypes.byref(delete), 1), ctypes.get_last_error()
+        finally:
+            _winapi.CloseHandle(handle)
+        return
+    raise AssertionError("a disposition deletion is a Windows fixture")
+
+
+class _FailureRecordingHandler(AnnouncingRotatingFileHandler):
+    """Keep each record the handler failed to append, instead of printing it."""
+
+    failures: list[logging.LogRecord]
+
+    @override
+    def handleError(self, record: logging.LogRecord) -> None:
+        self.failures.append(record)
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="deletion by disposition is a Windows file system behaviour")
+def test_a_settled_writer_leaves_a_log_deleted_pending_its_last_handle(tmp_path: Path) -> None:
+    target = tmp_path / "probe.log"
+    failures: list[logging.LogRecord] = []
+    settled = _FailureRecordingHandler(target, maxBytes=1 << 20, encoding="utf-8")
+    other = _FailureRecordingHandler(target, maxBytes=1 << 20, encoding="utf-8")
+    settled.failures = other.failures = failures
+    try:
+        for index in range(3):
+            settled.emit(_record(f"before deletion {index}"))
+        _delete_when_last_handle_closes(target)
+        for index in range(2):
+            settled.emit(_record(f"settled after {index}"))
+            other.emit(_record(f"other after {index}"))
+    finally:
+        settled.close()
+        other.close()
+    # The settled writer let the doomed file go, so both writers append to the log the path names.
+    assert [record.getMessage() for record in failures] == []
+    assert target.read_text(encoding="utf-8").splitlines() == [
+        "settled after 0",
+        "other after 0",
+        "settled after 1",
+        "other after 1",
+    ]

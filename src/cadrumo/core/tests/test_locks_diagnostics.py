@@ -50,7 +50,11 @@ def _hold_until(target: Path, held: threading.Event, release: threading.Event) -
         release.wait(5.0)
 
 
-def test_a_contended_acquire_records_its_wait_and_its_release(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+def test_a_contended_acquire_records_its_wait_and_its_release(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A slow host must not turn the holder's uncontended hold into a long one.
+    monkeypatch.setattr(locks, "SLOW_LOCK_HOLD_SECONDS", 60.0)
     target = tmp_path / "resource.json"
     held, release = threading.Event(), threading.Event()
     holder = threading.Thread(target=_hold_until, args=(target, held, release))

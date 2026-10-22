@@ -11,8 +11,11 @@ directory was replaced, so no record lands in a rotated backup and no writer
 locks an unlinked sidecar. Looking a path up for every record cost a scanned
 open on Windows, so there a writer remembers the name a lookup last confirmed
 for the open file and asks the open file for its current name instead. A
-rename, including rotation, or a deletion changes that name, and only then
-does the writer look the path up again. A forked child reopens both rather
+rename, including rotation, or a deletion that unlinks the name at once
+changes that name. A deletion that waits for the last handle to close leaves
+the name in place but marks the file delete-pending, which the writer reads
+as no name. Only in those cases does the writer look the path up again. A
+forked child reopens both rather
 than share its parent's lock. After each append the handler sets a session-local event named
 for the user and the log directory. The desktop's log view waits on that event instead of reading the
 files on a timer. The event belongs to this user alone: it is created
@@ -52,7 +55,11 @@ _OPEN_EXISTING = 3
 _OPEN_ALWAYS = 4
 _FILE_ATTRIBUTE_NORMAL = 0x00000080
 _SIDECAR_REOPEN_ATTEMPTS = 3
+_FILE_STANDARD_INFO = 1
 _FILE_NAME_INFO = 2
+# FILE_STANDARD_INFO: two LARGE_INTEGER sizes, the link count, then DeletePending and Directory.
+_FILE_STANDARD_INFO_BYTES = 24
+_DELETE_PENDING_OFFSET = 20
 # The name's length, then up to 1024 UTF-16 code units; a longer name is looked up by path.
 _FILE_NAME_INFO_BYTES = 4 + 2 * 1024
 
@@ -288,18 +295,26 @@ if sys.platform == "win32":
         information.restype = wintypes.BOOL
 
         def file_name(descriptor: int) -> str | None:
+            handle = msvcrt.get_osfhandle(descriptor)
+            # A file deleted without POSIX semantics keeps its name until its last
+            # handle closes, so a pending deletion has to be read separately.
+            standard = ctypes.create_string_buffer(_FILE_STANDARD_INFO_BYTES)
+            if not information(handle, _FILE_STANDARD_INFO, standard, _FILE_STANDARD_INFO_BYTES):
+                return None
+            if standard.raw[_DELETE_PENDING_OFFSET]:
+                return None
             # FILE_NAME_INFO: the name's length in bytes, then the name relative to its volume.
             buffer = ctypes.create_string_buffer(_FILE_NAME_INFO_BYTES)
-            if not information(msvcrt.get_osfhandle(descriptor), _FILE_NAME_INFO, buffer, _FILE_NAME_INFO_BYTES):
+            if not information(handle, _FILE_NAME_INFO, buffer, _FILE_NAME_INFO_BYTES):
                 return None
-            length = wintypes.DWORD.from_buffer(buffer).value
+            length = min(wintypes.DWORD.from_buffer(buffer).value, _FILE_NAME_INFO_BYTES - 4)
             return ctypes.wstring_at(ctypes.addressof(buffer) + 4, length // 2)
 
         return file_name
 
 
 def _file_name(descriptor: int) -> str | None:
-    """The current name of the file open on ``descriptor``, or ``None`` where the OS cannot say."""
+    """The current name of the file open on ``descriptor``; ``None`` if the OS cannot say or it is delete-pending."""
     query = _file_name_query()
     return None if query is None else query(descriptor)
 
@@ -310,9 +325,11 @@ class _PathNames:
     The name an open file reports was confirmed to be where the path leads by
     a lookup taken between two equal readings of it. While the file still
     reports that name, the path leads to it. Rotation renames the file and a
-    deletion moves it out of its directory; either changes the name, and the
-    next check looks the path up again. Where the OS reports no name, every
-    check looks the path up. A directory on the path re-pointed elsewhere, as
+    POSIX deletion moves it out of its directory; either changes the name. A
+    deletion that waits for the last handle leaves the name but makes the file
+    delete-pending, which reads as no name. After any of these the next check
+    looks the path up again. Where the OS reports no name, every check looks
+    the path up. A directory on the path re-pointed elsewhere, as
     by retargeting a junction, changes where the path leads without renaming
     the file, and goes unseen until the file's name changes.
     """
