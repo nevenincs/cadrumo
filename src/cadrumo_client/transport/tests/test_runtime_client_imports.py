@@ -22,6 +22,13 @@ import importlib.abc, json, sys
 excluded = {
     'cadrumo.domain.calculations.registry.authority',
     'cadrumo.application.user_profile.view_operation',
+    'cadrumo.application.user_profile.profile_operation_contracts',
+    'cadrumo.application.workflow.profile_health',
+    'cadrumo.domain.deadlines.profiles',
+    'cadrumo.domain.user_profile.setup_answers',
+    'cadrumo.adapters.persistence.storage.custody.automation_client_credentials',
+    'cadrumo.adapters.persistence.storage.crypto.aead',
+    'cryptography',
 }
 class RefuseUnusedModels(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path=None, target=None):

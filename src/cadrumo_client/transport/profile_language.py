@@ -2,15 +2,14 @@
 
 from dataclasses import dataclass
 
-from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
-from cadrumo.application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.identity.digest import ContentDigest
-from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
 from .frontend_client import FrontendClient
 from .operation_settlement import PinnedConnection
-from .profile_mutations import run_profile_mutation
+
+# The desktop's session hold imports this module before the person has signed in.
+# The profile-view and mutation model graphs load on the first read or write.
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,6 +23,9 @@ class ProfileLanguage:
 
 def read_profile_language(client: FrontendClient) -> ProfileLanguage:
     """Read the encrypted preference through the registered exact-profile view."""
+    from cadrumo.application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
+    from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+
     pinned = PinnedConnection.of(client)
     viewed = client.read_profile_view((ProfileViewPageKind.PREFERENCES,))
     pinned.require_held(client)
@@ -40,6 +42,11 @@ def read_profile_language(client: FrontendClient) -> ProfileLanguage:
 
 def set_profile_language(client: FrontendClient, language: OutputLanguage) -> ProfileLanguage:
     """Set only the language through the existing guarded CAS fact operation."""
+    from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
+    from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+
+    from .profile_mutations import run_profile_mutation
+
     pinned = PinnedConnection.of(client)
     current = read_profile_language(client)
     pinned.require_held(client)

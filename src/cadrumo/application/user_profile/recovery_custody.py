@@ -31,9 +31,10 @@ from hmac import compare_digest
 from secrets import token_bytes
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.bootstrap import ProfilePassphraseResetOutcome
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginThrottledError
 
 from ...core.credentials import assess_profile_password
@@ -127,17 +128,6 @@ class ProfileRecoveryEnrollmentOutcome(BaseModel):
     profile_id: ProfileId
     enrolled: bool
     changed: bool
-
-
-class ProfilePassphraseResetOutcome(BaseModel):
-    """Non-secret result of one passphrase reset proved by the recovery code."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    profile_id: ProfileId
-    password_generation: int = Field(ge=2)
-    dek_epoch_preserved: bool
-    recovery_enrollment_retained: bool
 
 
 def profile_recovery_status(*, profile_id: UUID, root: Path | None = None) -> ProfileRecoveryStatus:
@@ -372,7 +362,6 @@ def _unlock_with_passphrase(
 
 
 __all__ = [
-    "ProfilePassphraseResetOutcome",
     "ProfileRecoveryEnrollment",
     "ProfileRecoveryEnrollmentOutcome",
     "ProfileRecoveryError",

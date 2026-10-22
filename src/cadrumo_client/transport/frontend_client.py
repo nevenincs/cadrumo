@@ -7,7 +7,7 @@ import hmac
 import time
 from collections.abc import Callable
 from threading import RLock
-from typing import Final, Literal, Self, override
+from typing import TYPE_CHECKING, Final, Literal, Self, override
 from uuid import UUID, uuid4
 
 from cadrumo.application.bucket_deletion_contracts import BucketDeletionFingerprint
@@ -86,12 +86,14 @@ from ..contracts.session_events import (
 )
 from ..contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from ..contracts.sign_in_outcomes import ProfileLoginThrottledError, ProfileReceiptRefusedError
-from .enrollment_client import NativeEnrollmentClient
 from .framing import VerifiedConnection
 from .frontend_client_contracts import FrontendRefusedError
 from .frontend_profile_view_client import ProfileViewFrontend
 from .startup import LaunchDoor
 from .transport_cleanup import TransportCleanup
+
+if TYPE_CHECKING:
+    from .enrollment_client import NativeEnrollmentClient
 
 _CONNECTION_RECEIPT_REFUSALS: Final[dict[str, ProfileSessionRefusalReason]] = {
     # The runtime deleted a receipt that no longer signs this login in.
@@ -1047,6 +1049,9 @@ class FrontendClient(ProfileViewFrontend):
         self, secrets_store: AutomationSecretStore, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
     ) -> NativeEnrollmentClient:
         """Prepare one pre-unlock client handoff on a fresh verified connection."""
+        # Every runtime client imports this module; only an enrollment needs the credential custody stack.
+        from .enrollment_client import NativeEnrollmentClient
+
         if self._connection_purpose != "fresh" or self._session_id is not None:
             raise FrontendRefusedError(AutomationCustodyCode.CONFLICT.value)
         self._connection_purpose = "enrollment"
@@ -1068,6 +1073,8 @@ class FrontendClient(ProfileViewFrontend):
         Renewal and scope approval invalidate old leases; a fresh key login is
         required after the human's canonical approval receipt confirms the change.
         """
+        from .enrollment_client import NativeEnrollmentClient
+
         if self._connection_purpose != "admission":
             raise FrontendRefusedError(AutomationCustodyCode.CONFLICT.value)
         prepared = self._reply(

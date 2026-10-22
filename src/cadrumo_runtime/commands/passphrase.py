@@ -22,7 +22,7 @@ from .presentation import emit_envelope, notice_lines
 
 if TYPE_CHECKING:
     from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
-    from cadrumo.application.user_profile.recovery_custody import ProfilePassphraseResetOutcome
+    from cadrumo_client.contracts.bootstrap import ProfilePassphraseResetOutcome
 
 
 class PassphraseChangeSecrets(MachineSecretPayload):

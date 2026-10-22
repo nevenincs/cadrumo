@@ -9,11 +9,22 @@ from pydantic import BaseModel, Field, SecretStr, model_validator
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.prospective_password import ProspectiveProfilePasswordRefusal
-from cadrumo.application.user_profile.recovery_custody import ProfilePassphraseResetOutcome
 from cadrumo.core.identity.digest import PrefixedContentDigest
-from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.identity.profile import ProfileId
+from cadrumo.core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 from .automation_lifecycle import HumanSignInRevocationResult
+
+
+class ProfilePassphraseResetOutcome(BaseModel):
+    """Non-secret result of one passphrase reset proved by the recovery code."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    profile_id: ProfileId
+    password_generation: int = Field(ge=2)
+    dek_epoch_preserved: bool
+    recovery_enrollment_retained: bool
 
 
 class PasswordResetPrepare(BaseModel):
