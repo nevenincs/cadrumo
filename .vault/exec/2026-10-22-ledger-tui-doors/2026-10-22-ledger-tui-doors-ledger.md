@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:a77f96b7c5b1bbe2eb1d075920e966a3c74288d63ba54508b60cc104ac90f87f'
+body_hash: 'sha256:3667948a740edacd8cb286e6fc5a7432d4eb7ef5c9c0e9e35aef58513cc2ee08'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -173,6 +173,19 @@ related:
 - `S03` `verify:` `D2 product and runtime tests (with D1: 394)` -> `pass`
 - `S03` `verify:` `ruff, ty on D2 files; lint-imports` -> `pass`
 - `S03` `by:` `D2`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_allocate.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_bulk.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_common.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_counterparties.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_diagnostics.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_iva.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_participation.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_ratios.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_review.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_rules.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_split.py`
+- `S03` `verify:` `categorisation, runtime and seam tests (177)` -> `pass`
+- `S03` `verify:` `key scanner sees all 254 D2 keys` -> `pass`
 
 ## Notes
 
@@ -183,3 +196,4 @@ related:
 - `S08` Gate B1 finding from D2: every runtime door's session binding check made a blocking IPC status read on the event loop.
 - `S02` Export drives OperationController directly so a partial export reports as partial. The exclusion submitter, tools composer entry and locale strings land in the integration commit.
 - `S03` Whole-ledger tools (bulk, rules, counterparties, ratios, diagnostics) attach to Entries because Classification needs a selected entry. classify.iva-derive has no preview; derived values show after the write. rule.list has no paging. The tools composer entry and locale strings land in the integration commit.
+- `S03` Follow-up: titles and prompts now reach tr() as literal keys so the locale scanner sees them.

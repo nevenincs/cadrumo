@@ -36,6 +36,7 @@ from .categorisation_common import (
     classification_label,
     field,
     heading,
+    line,
     page_label,
     short_id,
 )
@@ -110,8 +111,13 @@ def bulk_result_text(projection: LedgerBulkClassifyProjection) -> str:
 class LedgerBulkClassifyScreen(CategorisationScreen):
     """Classify the entries of one filtered page that differ from the chosen classification."""
 
-    TITLE_KEY = "tui.ledger.categorisation.bulk.title"
-    PROMPT_KEY = "tui.ledger.categorisation.bulk.prompt"
+    @override
+    def banner(self) -> Static:
+        return line("tui.ledger.categorisation.bulk.title", classes="cadrumo-banner")
+
+    @override
+    def prompt(self) -> Static:
+        return line("tui.ledger.categorisation.bulk.prompt")
 
     def __init__(
         self,

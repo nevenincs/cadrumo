@@ -23,7 +23,7 @@ from ....application.operations.public_scalar import PublicDecimal
 from ....core.i18n.render import tr
 from ....core.parsing.dates import require_iso8601_date_unless_blank
 from ..components.widgets import ContentDataTable
-from .categorisation_common import CategorisationScreen, action, action_row, field, heading
+from .categorisation_common import CategorisationScreen, action, action_row, field, heading, line
 from .categorisation_doors import LedgerLlmDiagnosticsDoorV1
 from .controller import LedgerWorkspaceController
 
@@ -59,8 +59,13 @@ def totals_text(report: LedgerLlmDiagnosticsProjection) -> str:
 class LedgerDiagnosticsScreen(CategorisationScreen):
     """Read the classifier's usage, cost and confidence report."""
 
-    TITLE_KEY = "tui.ledger.categorisation.diagnostics.title"
-    PROMPT_KEY = "tui.ledger.categorisation.diagnostics.prompt"
+    @override
+    def banner(self) -> Static:
+        return line("tui.ledger.categorisation.diagnostics.title", classes="cadrumo-banner")
+
+    @override
+    def prompt(self) -> Static:
+        return line("tui.ledger.categorisation.diagnostics.prompt")
 
     def __init__(self, controller: LedgerWorkspaceController, *, door: LedgerLlmDiagnosticsDoorV1) -> None:
         """Keep the profile-bound diagnostics door."""

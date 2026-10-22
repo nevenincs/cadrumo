@@ -14,7 +14,7 @@ from typing import Final, Literal, cast, override
 
 from pydantic import BaseModel, ValidationError
 from textual.widget import Widget
-from textual.widgets import Input, Select
+from textual.widgets import Input, Select, Static
 
 from ....application.ledger.llm_review_contracts import (
     LedgerLlmReviewProjection,
@@ -38,6 +38,7 @@ from .categorisation_common import (
     classification_label,
     field,
     heading,
+    line,
 )
 from .categorisation_doors import LedgerSuggestionReviewDoorV1
 from .controller import LedgerWorkspaceController
@@ -209,9 +210,15 @@ class ReviewingCategorisationScreen(CategorisationScreen):
 class LedgerSuggestionReviewScreen(ReviewingCategorisationScreen):
     """Ask for a suggested classification of the selected entry and decide on it in the modal."""
 
-    TITLE_KEY = "tui.ledger.categorisation.review.title"
-    PROMPT_KEY = "tui.ledger.categorisation.review.prompt"
     ENTRY_SCOPED = True
+
+    @override
+    def banner(self) -> Static:
+        return line("tui.ledger.categorisation.review.title", classes="cadrumo-banner")
+
+    @override
+    def prompt(self) -> Static:
+        return line("tui.ledger.categorisation.review.prompt")
 
     def __init__(self, controller: LedgerWorkspaceController, *, door: LedgerSuggestionReviewDoorV1) -> None:
         """Keep the profile-bound classification review door."""

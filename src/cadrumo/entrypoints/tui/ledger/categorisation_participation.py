@@ -11,14 +11,14 @@ from collections.abc import Iterator
 from typing import cast, override
 
 from textual.widget import Widget
-from textual.widgets import DataTable
+from textual.widgets import DataTable, Static
 
 from ....application.ledger.participation_operation import LedgerParticipationRequest
 from ....application.ledger.participation_rebuild_operation import LedgerParticipationRebuildRequest
 from ....application.ledger.tracking_projection import LedgerParticipationProjection
 from ....core.i18n.render import tr
 from ..components.widgets import ContentDataTable
-from .categorisation_common import CategorisationScreen, StagedChangeV1, action, action_row, heading
+from .categorisation_common import CategorisationScreen, StagedChangeV1, action, action_row, heading, line
 from .categorisation_doors import LedgerParticipationDoorV1, LedgerParticipationRebuildDoorV1
 from .controller import LedgerWorkspaceController
 
@@ -26,9 +26,15 @@ from .controller import LedgerWorkspaceController
 class LedgerParticipationScreen(CategorisationScreen):
     """List the declarations the selected entry took part in, and rebuild their index."""
 
-    TITLE_KEY = "tui.ledger.categorisation.participation.title"
-    PROMPT_KEY = "tui.ledger.categorisation.participation.prompt"
     ENTRY_SCOPED = True
+
+    @override
+    def banner(self) -> Static:
+        return line("tui.ledger.categorisation.participation.title", classes="cadrumo-banner")
+
+    @override
+    def prompt(self) -> Static:
+        return line("tui.ledger.categorisation.participation.prompt")
 
     def __init__(
         self,

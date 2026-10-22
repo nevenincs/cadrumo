@@ -33,6 +33,7 @@ from .categorisation_common import (
     classification_label,
     field,
     heading,
+    line,
     page_label,
     short_id,
 )
@@ -57,8 +58,13 @@ _SCOPE_REAFFIRM: Final = "reaffirm"
 class LedgerRulesScreen(CategorisationScreen):
     """List, add and apply the profile's classification rules."""
 
-    TITLE_KEY = "tui.ledger.categorisation.rules.title"
-    PROMPT_KEY = "tui.ledger.categorisation.rules.prompt"
+    @override
+    def banner(self) -> Static:
+        return line("tui.ledger.categorisation.rules.title", classes="cadrumo-banner")
+
+    @override
+    def prompt(self) -> Static:
+        return line("tui.ledger.categorisation.rules.prompt")
 
     def __init__(
         self,

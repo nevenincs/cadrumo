@@ -12,7 +12,7 @@ from collections.abc import Iterator
 from typing import cast, override
 
 from textual.widget import Widget
-from textual.widgets import DataTable, Input
+from textual.widgets import DataTable, Input, Static
 
 from ....application.ledger.ratios_contracts import (
     LedgerRatiosEligibleRequest,
@@ -27,7 +27,7 @@ from ....application.ledger.ratios_contracts import (
 from ....core.i18n.render import tr
 from ....core.time.clock import now
 from ..components.widgets import ContentDataTable
-from .categorisation_common import CategorisationScreen, StagedChangeV1, action, action_row, field, heading
+from .categorisation_common import CategorisationScreen, StagedChangeV1, action, action_row, field, heading, line
 from .categorisation_doors import (
     LedgerRatiosEligibleDoorV1,
     LedgerRatiosListDoorV1,
@@ -70,8 +70,13 @@ def validation_text(report: LedgerRatiosValidateProjection) -> str:
 class LedgerRatiosScreen(CategorisationScreen):
     """Read, validate, set and unset the profile's usage ratio overrides."""
 
-    TITLE_KEY = "tui.ledger.categorisation.ratios.title"
-    PROMPT_KEY = "tui.ledger.categorisation.ratios.prompt"
+    @override
+    def banner(self) -> Static:
+        return line("tui.ledger.categorisation.ratios.title", classes="cadrumo-banner")
+
+    @override
+    def prompt(self) -> Static:
+        return line("tui.ledger.categorisation.ratios.prompt")
 
     def __init__(
         self,

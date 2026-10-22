@@ -108,8 +108,6 @@ class StagedChangeV1:
 class CategorisationScreen(LedgerWorkspaceScreen):
     """Review-then-write shell shared by the categorisation tools."""
 
-    TITLE_KEY: ClassVar[str]
-    PROMPT_KEY: ClassVar[str]
     ENTRY_SCOPED: ClassVar[bool] = False
     """Whether the tool acts on the entry the operator selected in the workspace."""
 
@@ -145,10 +143,10 @@ class CategorisationScreen(LedgerWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield line(self.TITLE_KEY, classes="cadrumo-banner")
+        yield self.banner()
         with ledger_workspace_page() as navigation:
             yield navigation
-            yield line(self.PROMPT_KEY)
+            yield self.prompt()
             if not self.available:
                 yield line("tui.ledger.categorisation.choose_entry", id="categorisation-choose-entry")
                 yield Static("", id="ledger-flow-status", markup=False)
@@ -166,6 +164,14 @@ class CategorisationScreen(LedgerWorkspaceScreen):
             yield Static("", id="ledger-refusal", classes="ledger-refusal", markup=False)
             yield Static("", id="categorisation-outcome", markup=False)
             yield from self.compose_body()
+
+    def banner(self) -> Static:
+        """The tool's title line, built with ``line`` from a literal key so the key is seen as used."""
+        raise NotImplementedError
+
+    def prompt(self) -> Static:
+        """The tool's one-line explanation, built with ``line`` from a literal key."""
+        raise NotImplementedError
 
     def compose_body(self) -> Iterator[Widget]:
         """Yield the tool's own controls and tables."""

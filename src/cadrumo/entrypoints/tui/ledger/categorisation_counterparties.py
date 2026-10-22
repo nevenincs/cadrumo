@@ -12,7 +12,7 @@ from collections.abc import Awaitable, Callable, Iterator
 from typing import override
 
 from textual.widget import Widget
-from textual.widgets import Input
+from textual.widgets import Input, Static
 
 from ....application.ledger.counterparty_operation import (
     CounterpartyResolutionProjection,
@@ -28,6 +28,7 @@ from .categorisation_common import (
     blank_to_none,
     field,
     heading,
+    line,
 )
 from .categorisation_doors import LedgerCounterpartyDoorV1
 from .controller import LedgerWorkspaceController
@@ -90,8 +91,13 @@ def counterparty_outcome_text(result: LedgerCounterpartyResult) -> str:
 class LedgerCounterpartiesScreen(CategorisationScreen):
     """Look up, confirm or withdraw the establishment facts of one counterparty."""
 
-    TITLE_KEY = "tui.ledger.categorisation.counterparty.title"
-    PROMPT_KEY = "tui.ledger.categorisation.counterparty.prompt"
+    @override
+    def banner(self) -> Static:
+        return line("tui.ledger.categorisation.counterparty.title", classes="cadrumo-banner")
+
+    @override
+    def prompt(self) -> Static:
+        return line("tui.ledger.categorisation.counterparty.prompt")
 
     def __init__(self, controller: LedgerWorkspaceController, *, door: LedgerCounterpartyDoorV1) -> None:
         """Keep the profile-bound counterparty door."""

@@ -24,7 +24,7 @@ from ....application.ledger.workspace import LedgerWorkspaceEntryRefV1
 from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.i18n.render import tr
 from ..components.widgets import ContentDataTable
-from .categorisation_common import StagedChangeV1, action, action_row, classification_label, field, heading
+from .categorisation_common import StagedChangeV1, action, action_row, classification_label, field, heading, line
 from .categorisation_doors import LedgerSplitDoorV1, LedgerSuggestionReviewDoorV1
 from .categorisation_review import ReviewingCategorisationScreen
 from .controller import LedgerWorkspaceController
@@ -44,9 +44,15 @@ def parse_child_amount(raw: str) -> Decimal:
 class LedgerSplitScreen(ReviewingCategorisationScreen):
     """Split the selected entry by hand, or decide on a suggested split in the modal."""
 
-    TITLE_KEY = "tui.ledger.categorisation.split.title"
-    PROMPT_KEY = "tui.ledger.categorisation.split.prompt"
     ENTRY_SCOPED = True
+
+    @override
+    def banner(self) -> Static:
+        return line("tui.ledger.categorisation.split.title", classes="cadrumo-banner")
+
+    @override
+    def prompt(self) -> Static:
+        return line("tui.ledger.categorisation.split.prompt")
 
     def __init__(
         self,

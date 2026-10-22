@@ -12,11 +12,11 @@ from collections.abc import Iterator
 from typing import override
 
 from textual.widget import Widget
-from textual.widgets import Input
+from textual.widgets import Input, Static
 
 from ....application.ledger.operator_iva_contracts import LedgerOperatorIvaRequest, LedgerOperatorIvaResult
 from ....core.i18n.render import tr
-from .categorisation_common import CategorisationScreen, StagedChangeV1, action, action_row, field, heading
+from .categorisation_common import CategorisationScreen, StagedChangeV1, action, action_row, field, heading, line
 from .categorisation_doors import LedgerOperatorIvaDoorV1
 from .controller import LedgerWorkspaceController
 
@@ -40,9 +40,15 @@ def derived_iva_text(result: LedgerOperatorIvaResult) -> str:
 class LedgerIvaDeriveScreen(CategorisationScreen):
     """Choose an IVA category for the selected entry and record what it derives."""
 
-    TITLE_KEY = "tui.ledger.categorisation.iva.title"
-    PROMPT_KEY = "tui.ledger.categorisation.iva.prompt"
     ENTRY_SCOPED = True
+
+    @override
+    def banner(self) -> Static:
+        return line("tui.ledger.categorisation.iva.title", classes="cadrumo-banner")
+
+    @override
+    def prompt(self) -> Static:
+        return line("tui.ledger.categorisation.iva.prompt")
 
     def __init__(self, controller: LedgerWorkspaceController, *, door: LedgerOperatorIvaDoorV1) -> None:
         """Keep the profile-bound IVA derivation door."""

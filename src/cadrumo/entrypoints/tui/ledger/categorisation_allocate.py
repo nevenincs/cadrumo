@@ -11,7 +11,7 @@ from collections.abc import Iterator
 from typing import override
 
 from textual.widget import Widget
-from textual.widgets import Input
+from textual.widgets import Input, Static
 
 from ....application.ledger.allocate_operation import LedgerAllocateRequest
 from ....core.i18n.render import tr
@@ -24,6 +24,7 @@ from .categorisation_common import (
     classification_label,
     field,
     heading,
+    line,
 )
 from .categorisation_doors import LedgerAllocateDoorV1
 from .controller import LedgerWorkspaceController
@@ -32,9 +33,15 @@ from .controller import LedgerWorkspaceController
 class LedgerAllocateScreen(CategorisationScreen):
     """Allocate the business share of the selected entry."""
 
-    TITLE_KEY = "tui.ledger.categorisation.allocate.title"
-    PROMPT_KEY = "tui.ledger.categorisation.allocate.prompt"
     ENTRY_SCOPED = True
+
+    @override
+    def banner(self) -> Static:
+        return line("tui.ledger.categorisation.allocate.title", classes="cadrumo-banner")
+
+    @override
+    def prompt(self) -> Static:
+        return line("tui.ledger.categorisation.allocate.prompt")
 
     def __init__(self, controller: LedgerWorkspaceController, *, door: LedgerAllocateDoorV1) -> None:
         """Keep the profile-bound allocation door."""
