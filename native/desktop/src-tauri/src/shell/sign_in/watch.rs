@@ -38,11 +38,13 @@ const RESTART: [Duration; 4] = [
 /// The longest line the child writes, with room to spare.
 const LINE_LIMIT: u64 = 16 * 1024;
 
-/// One observation: the public status and the private identity of its profile.
+/// One observation: the public status and the private identity of its profile,
+/// and the profiles on this computer when the child listed them.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Observed {
     pub status: SignInStatus,
     pub profile_id: Option<String>,
+    pub profiles: Option<super::wire::ProfileList>,
 }
 
 #[derive(Clone)]
@@ -307,6 +309,22 @@ struct Line {
     profile_id: Option<String>,
     presence: Presence,
     refusal: Option<String>,
+    #[serde(default)]
+    profiles: Option<Listing>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Listing {
+    rows: Vec<Row>,
+    complete: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Row {
+    name: String,
+    active: bool,
 }
 
 fn observed(line: &[u8]) -> Result<Observed> {
@@ -350,9 +368,26 @@ fn observed(line: &[u8]) -> Result<Observed> {
             }
         }
     };
+    let profiles = line
+        .profiles
+        .map(|listing| {
+            super::wire::profile_list(
+                listing
+                    .rows
+                    .into_iter()
+                    .map(|row| super::wire::Profile {
+                        name: row.name,
+                        active: row.active,
+                    })
+                    .collect(),
+                listing.complete,
+            )
+        })
+        .transpose()?;
     Ok(Observed {
         status,
         profile_id: line.profile_id,
+        profiles,
     })
 }
 
@@ -415,6 +450,46 @@ mod tests {
         }
     }
 
+    #[test]
+    fn a_line_carries_the_profiles_the_sign_in_view_lists() {
+        let listed = line(
+            r#"{"kind":"sign_in","active_profile":"Ana","profile_id":null,"presence":"absent","refusal":null,"profiles":{"rows":[{"name":"Ana","active":true},{"name":"Bea","active":false}],"complete":true}}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            listed.profiles,
+            Some(super::super::wire::ProfileList {
+                profiles: vec![
+                    super::super::wire::Profile {
+                        name: "Ana".into(),
+                        active: true
+                    },
+                    super::super::wire::Profile {
+                        name: "Bea".into(),
+                        active: false
+                    },
+                ],
+                complete: true,
+            })
+        );
+        let unlisted = line(
+            r#"{"kind":"sign_in","active_profile":null,"profile_id":null,"presence":"absent","refusal":null}"#,
+        )
+        .unwrap();
+        assert_eq!(unlisted.profiles, None);
+        for invalid in [
+            r#"{"kind":"sign_in","active_profile":null,"profile_id":null,"presence":"absent","refusal":null,"profiles":{"rows":[{"name":"","active":false}],"complete":true}}"#,
+            r#"{"kind":"sign_in","active_profile":null,"profile_id":null,"presence":"absent","refusal":null,"profiles":{"rows":[{"name":"A","active":true},{"name":"B","active":true}],"complete":true}}"#,
+            r#"{"kind":"sign_in","active_profile":null,"profile_id":null,"presence":"absent","refusal":null,"profiles":{"rows":[],"complete":true,"extra":1}}"#,
+        ] {
+            assert_eq!(
+                line(invalid).unwrap_err().code,
+                ErrorCode::ReadFailed,
+                "{invalid}"
+            );
+        }
+    }
+
     #[tokio::test]
     async fn a_mutation_fences_observations_until_one_arrives_after_it() {
         let watch = Watch::new(Err(failure(ErrorCode::PackageUnavailable)));
@@ -429,6 +504,7 @@ mod tests {
                 refusal: None,
             },
             profile_id: None,
+            profiles: None,
         };
         publish(&watch.inner, Ok(present.clone()));
         assert_eq!(watch.current().await.unwrap(), present);

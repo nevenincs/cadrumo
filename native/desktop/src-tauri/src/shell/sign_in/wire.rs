@@ -70,7 +70,7 @@ pub enum SignInResult {
     },
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct Profile {
     pub name: String,
     pub active: bool,
@@ -78,7 +78,7 @@ pub struct Profile {
 
 /// The profiles on this computer as the product lists them. Only labels and
 /// the selection cross: the product keeps identities out of what it prints.
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct ProfileList {
     pub profiles: Vec<Profile>,
     /// False when the product could not read its profiles coherently: its
@@ -380,14 +380,8 @@ pub fn profiles(output: &Output) -> std::result::Result<ProfileList, CommandFail
                 serde_json::from_value(result).map_err(|_| failure(ErrorCode::ReadFailed))?;
             let said: Notices = serde_json::from_slice(&output.stdout)
                 .map_err(|_| failure(ErrorCode::ReadFailed))?;
-            // A label is never empty, and at most one profile is selected.
-            if listing.profiles.iter().any(|row| row.name.is_empty())
-                || listing.profiles.iter().filter(|row| row.active).count() > 1
-            {
-                return Err(failure(ErrorCode::ReadFailed).into());
-            }
-            Ok(ProfileList {
-                profiles: listing
+            Ok(profile_list(
+                listing
                     .profiles
                     .into_iter()
                     .map(|row| Profile {
@@ -395,13 +389,24 @@ pub fn profiles(output: &Output) -> std::result::Result<ProfileList, CommandFail
                         active: row.active,
                     })
                     .collect(),
-                complete: !said
+                !said
                     .notices
                     .iter()
                     .any(|notice| notice.code == INCOHERENT_LISTING),
-            })
+            )?)
         }
     }
+}
+
+/// A listing the window may show, from the command line or the sign-in watch:
+/// a label is never empty, and at most one profile is selected.
+pub(crate) fn profile_list(profiles: Vec<Profile>, complete: bool) -> Result<ProfileList> {
+    if profiles.iter().any(|row| row.name.is_empty())
+        || profiles.iter().filter(|row| row.active).count() > 1
+    {
+        return Err(failure(ErrorCode::ReadFailed));
+    }
+    Ok(ProfileList { profiles, complete })
 }
 
 pub fn created(outcome: Outcome) -> Result<ProfileCreateResult> {

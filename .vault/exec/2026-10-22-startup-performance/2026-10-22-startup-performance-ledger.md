@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:e500ac4935b606d52231bba84e0b320897d3dc6e64a34412714faf786cd78264'
+body_hash: 'sha256:f04cb26a5738ae23ead01322112a46f5110dc71c2aec7683408adec6aab0cbef'
 related:
   - "[[2026-10-22-startup-performance-plan]]"
 ---
@@ -139,6 +139,14 @@ related:
 - `S07` `verify:` `desktop-host-unit-test filter sign_in (65) and agent:: (92)` -> `pass`
 - `S07` `verify:` `desktop-host-unit-clippy` -> `pass`
 - `S07` `verify:` `rustfmt, ruff, ty` -> `pass`
+- `S12` `M` `src/cadrumo_runtime/host/session_watch.py`
+- `S12` `M` `src/cadrumo_runtime/host/tests/test_session_watch.py`
+- `S12` `M` `native/desktop/src-tauri/src/shell/sign_in/watch.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S12` `verify:` `pytest src/cadrumo_runtime/host/tests/test_session_watch.py` -> `pass`
+- `S12` `verify:` `cmake desktop-host-unit-test sign_in` -> `pass`
+- `S12` `verify:` `cmake desktop-host-unit-clippy` -> `pass`
 
 ## Notes
 

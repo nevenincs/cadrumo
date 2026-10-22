@@ -55,6 +55,10 @@ class _Runtime:
         pass
 
 
+def _listing(*rows: tuple[str, bool]) -> dict[str, object]:
+    return {"rows": [{"name": name, "active": active} for name, active in rows], "complete": True}
+
+
 def _until(condition: Callable[[], bool], what: str) -> None:
     deadline = time.monotonic() + 5
     while not condition():
@@ -67,8 +71,10 @@ def test_the_watch_follows_cues_pointer_moves_deadlines_and_reconnects(monkeypat
     lines: list[dict[str, object]] = []
     first, second = uuid4(), uuid4()
     selection: list[tuple[UUID | None, str | None]] = [(first, "Primero")]
+    profiles: list[dict[str, object]] = [_listing(("Primero", True))]
     monkeypatch.setattr(session_watch, "open_installed_client", runtime.open)
     monkeypatch.setattr(session_watch, "_selection", lambda: selection[0])
+    monkeypatch.setattr(session_watch, "_profiles", lambda: profiles[0])
     monkeypatch.setattr(session_watch, "_emit", lambda document: lines.append(json.loads(json.dumps(document))))
     monkeypatch.setattr(session_watch, "_RECONNECT_SECONDS", (0.1,))
     wakes = session_watch._Wakes()
@@ -82,6 +88,7 @@ def test_the_watch_follows_cues_pointer_moves_deadlines_and_reconnects(monkeypat
             "profile_id": str(first),
             "presence": "absent",
             "refusal": None,
+            "profiles": {"rows": [{"name": "Primero", "active": True}], "complete": True},
         }
         time.sleep(0.5)
         assert runtime.reads == 1, "an idle watch must not read again"
@@ -109,6 +116,17 @@ def test_the_watch_follows_cues_pointer_moves_deadlines_and_reconnects(monkeypat
         wakes.refresh()
         _until(lambda: len(lines) == 4, "the requested observation")
         assert lines[3] == lines[2]
+        del lines[3]
+
+        # A profile created or removed elsewhere is a cue: the next line lists it.
+        profiles[0] = _listing(("Primero", True), ("Otro", False))
+        wakes.cue()
+        _until(lambda: len(lines) == 4, "the observation listing the new profile")
+        assert lines[3]["profiles"] == profiles[0]
+        del lines[3]
+        profiles[0] = _listing(("Primero", True))
+        wakes.refresh()
+        _until(lambda: len(lines) == 4, "the observation listing one profile again")
         del lines[3]
 
         reads = runtime.reads
@@ -142,6 +160,7 @@ def test_no_selected_profile_is_absent_until_the_pointer_moves(monkeypatch: pyte
     selection: list[tuple[UUID | None, str | None]] = [(None, None)]
     monkeypatch.setattr(session_watch, "open_installed_client", runtime.open)
     monkeypatch.setattr(session_watch, "_selection", lambda: selection[0])
+    monkeypatch.setattr(session_watch, "_profiles", lambda: _listing())
     monkeypatch.setattr(session_watch, "_emit", lines.append)
     wakes = session_watch._Wakes()
     watching = Thread(target=session_watch._watch, args=(wakes,), daemon=True)

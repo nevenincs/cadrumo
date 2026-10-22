@@ -507,6 +507,16 @@ pub async fn profile_list(
         return Err(failure(ErrorCode::UnsupportedPlatform).into());
     }
     let state = state.inner().clone();
+    // The sign-in watch lists the profiles with every observation; the command
+    // line answers only while no current observation does.
+    if let Some(listed) = state
+        .watch
+        .latest()
+        .ok()
+        .and_then(|observed| observed.profiles)
+    {
+        return Ok(listed);
+    }
     let output = super::blocking(move || state.output(&LIST, None, None)).await?;
     wire::profiles(&output)
 }
