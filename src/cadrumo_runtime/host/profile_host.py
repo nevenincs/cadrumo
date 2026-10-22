@@ -533,19 +533,25 @@ class RuntimeProfileHost:
         return scope
 
     def facts(self, connection_id: UUID) -> SessionAuthorityFacts:
-        """Observe committed profile fencing and current native dependencies per call."""
+        """Observe committed profile fencing and native dependencies as their OS-invalidated observations stand."""
         connection = self._connected(connection_id)
         if connection.profile_id != self.store.binding.profile_id:
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-        lock = self.profile_lock_state()
         available, enabled = Availability.UNAVAILABLE, False
         try:
-            snapshot = self.store.enrollment_state()
+            committed, snapshot = self.store.observed_access_state()
             available, enabled = Availability.AVAILABLE, snapshot.automation_enabled
         except AutomationCustodyError:
-            # Password admission remains independent of the optional subsystem.
-            if connection.method == "api_key":
-                raise
+            # Read apart, as before observation: the lock still refuses, and
+            # password admission remains independent of the optional subsystem.
+            committed = self.store.profile_lock_state()
+            try:
+                enabled = self.store.enrollment_state().automation_enabled
+                available = Availability.AVAILABLE
+            except AutomationCustodyError:
+                if connection.method == "api_key":
+                    raise
+        lock = self._fenced(committed)
         scope = self.scope(connection)
         logins = self._logins()
         return SessionAuthorityFacts(
@@ -573,7 +579,10 @@ class RuntimeProfileHost:
     def profile_lock_state(self) -> ProfileGlobalLockState:
         """Retain a denial fence even if durable publication fails after live retirement."""
         with self.guard:
-            current = self.store.profile_lock_state()
+            return self._fenced(self.store.profile_lock_state())
+
+    def _fenced(self, current: ProfileGlobalLockState) -> ProfileGlobalLockState:
+        with self.guard:
             fence = self._lock_fence
             if fence is not None and fence.generation >= current.generation and fence.globally_locked:
                 return fence
@@ -676,6 +685,7 @@ class RuntimeProfileHost:
                     self.owner.settle()
                 finally:
                     self.approvals.close()
+                    self.store.custody_witness.close()
 
     def lifecycle_due(self) -> float | None:
         """Return the monotonic instant this profile must be observed again even if nothing happens."""

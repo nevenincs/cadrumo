@@ -12,7 +12,12 @@ from .....application.user_profile.access_contracts import (
     ProfileAccessBinding,
 )
 from .....application.user_profile.automation_custody_port import AutomationSecretStore, NativeSecretBackend
+from .....application.user_profile.automation_enrollment import EnrollmentControlState
+from .....application.user_profile.automation_lifecycle import ProfileGlobalLockState
+from .....core.storage_taxonomy import StorageCategory
 from .automation_native_identity import automation_native_account
+from .change_witness import CustodyChangeWitness, WatchedDirectory
+from .paths import profile_custody_path
 
 
 class AutomationNativeBinding:
@@ -42,6 +47,23 @@ class AutomationNativeBinding:
             self.secrets = secrets_store
         self.directory = root / ".automation-v1" / str(binding.installation_id) / str(binding.profile_id)
         self.account = automation_native_account(root, binding.installation_id, binding.profile_id)
+        bucket = profile_custody_path(binding.profile_id, StorageCategory.PROFILE_CAPSULE_COMMIT, root=root).parent
+        self.custody_witness: CustodyChangeWitness[tuple[ProfileGlobalLockState, EnrollmentControlState]] = (
+            CustodyChangeWitness(
+                (
+                    WatchedDirectory(self.directory, subtree=True),
+                    WatchedDirectory(bucket, subtree=False),
+                    WatchedDirectory(
+                        profile_custody_path(binding.profile_id, StorageCategory.PROFILE_CAPSULE_CUSTODY, root=root),
+                        subtree=True,
+                    ),
+                    WatchedDirectory(
+                        profile_custody_path(binding.profile_id, StorageCategory.PROFILE_CAPSULE_DATA, root=root),
+                        subtree=True,
+                    ),
+                )
+            )
+        )
 
     @property
     def secrets(self) -> AutomationSecretStore:

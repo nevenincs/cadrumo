@@ -87,7 +87,7 @@ class ProfileConnectionAdmissionMixin:
                         runtime_boot_id=self.boot,
                         registry=registry,
                         connected=self._connected,
-                        logins=self._login_contexts,
+                        logins=self._observed_login_contexts,
                         admitting=lambda: self._private_work_available() and profile_id not in self._custody_mutations,
                         recipient=self._enrollments.recipient,
                         worker_script=self._worker_script,

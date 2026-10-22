@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:47d85d9399775e34de4172e8e47c49bcbe93a4f9a142f13403d832ec11e63933'
+body_hash: 'sha256:69a22ed9f822e827a4698d9344f54c6e8428800232f82d5665c22b547e3eeaf6'
 related:
   - "[[2026-10-22-startup-performance-plan]]"
 ---
@@ -107,3 +107,14 @@ related:
 - `S02` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_change_witness.py`
 - `S02` `verify:` `pytest test_change_witness.py (17)` -> `pass`
 - `S02` `verify:` `ruff, ty on touched files` -> `pass`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_native_binding.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_control_storage.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_store.py`
+- `S03` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_observation.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_host.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_connections.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_connection_admission.py`
+- `S03` `A` `src/cadrumo_runtime/host/tests/test_login_observation.py`
+- `S03` `verify:` `pytest runtime host and custody suites, all lanes (606 + new)` -> `pass`
+- `S03` `verify:` `just check-types (one diagnostic in another session's uncommitted tui/app_navigation.py)` -> `pass`
+- `S03` `verify:` `lint-imports 28 kept` -> `pass`

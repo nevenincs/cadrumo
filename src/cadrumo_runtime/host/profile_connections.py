@@ -6,9 +6,10 @@ import logging
 import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from threading import BoundedSemaphore, Condition, Event, RLock
+from threading import BoundedSemaphore, Condition, Event, Lock, RLock
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -72,6 +73,38 @@ _LOGGER = get_logger(__name__)
 # Lifecycle passes stay this far apart, and where nothing reports a login's
 # changes it is also how often that login is observed.
 _LIFECYCLE_INTERVAL_SECONDS = 0.5
+
+
+class _HeldLogin:
+    """One logon as observed when its inventory was taken, observed again only for another credential availability."""
+
+    def __init__(self, evidence: LoginEvidence, observed: OsLoginContext) -> None:
+        self._evidence = evidence
+        self._lock = Lock()
+        self._observed = {Availability.UNAVAILABLE: observed}
+
+    @property
+    def login_id(self) -> str:
+        return self._evidence.login_id
+
+    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
+        with self._lock:
+            held = self._observed.get(credential_facilities)
+        if held is None:
+            held = self._evidence.observe(credential_facilities=credential_facilities)
+            with self._lock:
+                self._observed[credential_facilities] = held
+        return held
+
+
+@dataclass(frozen=True, slots=True)
+class _LoginObservation:
+    """One logon observation and what it was taken under: the OS change count, its instant and the held peers."""
+
+    changes: int
+    observed_at: float
+    peers: frozenset[str]
+    logins: tuple[LoginEvidence, ...]
 
 
 class RuntimeProfileConnections(
@@ -173,6 +206,9 @@ class RuntimeProfileConnections(
         self._host_dues: dict[UUID, float] = {}
         self._session_changes_pushed = False
         self._unreported_logins = True
+        # The last logon observation, which request-path checks reuse until the OS reports a session change.
+        self._login_observation: _LoginObservation | None = None
+        self._login_changes = 0
         self._enrollments = RuntimeEnrollmentConnections(prepare=self._prepare_enrollment, admitting=self._admitting)
         self._management = RuntimeAccessManagement(
             resolve=self._resolve_access_management,
@@ -311,7 +347,30 @@ class RuntimeProfileConnections(
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
             return connection
 
+    def _observed_login_contexts(self) -> tuple[LoginEvidence, ...]:
+        """Return the logons an authority check reads, from the last observation while it still stands.
+
+        It stands only while OS session notifications cover every observed
+        logon. It is taken afresh after the OS reports a session change, when
+        the logons held for connections change, and once it is a lifecycle
+        interval old.
+        """
+        with self._guard:
+            peers = frozenset(self._logins)
+            held = self._login_observation
+        if (
+            held is not None
+            and self._session_changes_pushed
+            and not self._unreported_logins
+            and held.changes == self._login_changes
+            and held.peers == peers
+            and time.monotonic() - held.observed_at < _LIFECYCLE_INTERVAL_SECONDS
+        ):
+            return held.logins
+        return self._login_contexts()
+
     def _login_contexts(self) -> tuple[LoginEvidence, ...]:
+        changes = self._login_changes
         with self._guard:
             peers = tuple(self._logins.values())
         if self._login_inventory is None:
@@ -383,6 +442,11 @@ class RuntimeProfileConnections(
                     },
                 )
                 request_runtime_stop(self.stop, ExitReason.LOGIN_WITNESS_LOSS)
+        held = tuple(_HeldLogin(login, seen) for login, seen in zip(logins.values(), observed, strict=True))
+        with self._guard:
+            self._login_observation = _LoginObservation(
+                changes, inventory_started, frozenset(login.login_id for login in peers), held
+            )
         return tuple(logins.values())
 
     def _sweep_sign_ins(self, logins: tuple[OsLoginContext, ...], *, complete: bool, include_hosted: bool) -> None:
@@ -537,6 +601,8 @@ class RuntimeProfileConnections(
         This runs in the window procedure Windows calls, so it takes no lock
         another thread may hold through long work.
         """
+        # Only this callback writes the count, so it needs no lock; a check comparing it re-observes.
+        self._login_changes += 1
         self._session_change.set()
         self._lifecycle.set()
 

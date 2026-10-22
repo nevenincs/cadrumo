@@ -14,6 +14,8 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 
 from .....application.user_profile.access_contracts import ApiKeyRecord, AutomationGrant
 from .....application.user_profile.automation_custody_port import AutomationKeyVerifier
+from .....application.user_profile.automation_enrollment import EnrollmentControlState
+from .....application.user_profile.automation_lifecycle import ProfileGlobalLockState
 from .....core.time.utc import UtcInstant
 from .automation_crypto import (
     api_key_verifier,
@@ -39,6 +41,15 @@ class AutomationControlStore(AutomationDenialCustody):
     independently reads the committed password envelope and sentinel under the
     existing root lock. It never selects/unlocks the ambient human profile.
     """
+
+    def observed_access_state(self) -> tuple[ProfileGlobalLockState, EnrollmentControlState]:
+        """Read the lock and enrollment facts every authority check needs.
+
+        The pair is answered from the last read while the custody directories
+        report no change, nothing this store wrote has invalidated it and it is
+        younger than the witness's maximum age; a read that raises is never kept.
+        """
+        return self.custody_witness.observe(lambda: (self.profile_lock_state(), self.enrollment_state()))
 
     @contextmanager
     def unlocked(self, *, credential: SecretBytes, now: UtcInstant) -> Generator[bytearray]:
