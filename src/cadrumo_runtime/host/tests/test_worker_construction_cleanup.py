@@ -180,6 +180,40 @@ def test_concurrent_custody_cannot_construct_a_second_worker_while_first_launch_
     owner.settle()
 
 
+def test_a_sign_in_meeting_a_pending_construction_uses_the_worker_it_builds(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A sign-in that arrives while its watch is starting the worker waits for that worker, never a second one."""
+    owner = _owner(tmp_path)
+    candidate = _Candidate(owner.identity, owner._guard, failures=0)
+    entered, release = Event(), Event()
+    constructed: list[ProfileWorkerIdentity] = []
+
+    def paused_constructor(identity: ProfileWorkerIdentity, **kwargs: object) -> ProfileWorkerProcess:
+        constructed.append(identity)
+        entered.set()
+        assert release.wait(10)
+        return candidate
+
+    def sign_in() -> ProfileWorkerProcess:
+        with owner._custody(await_construction=True) as worker:
+            return worker
+
+    monkeypatch.setattr(session_owner, "ProfileWorkerProcess", paused_constructor)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        prepared = executor.submit(owner.prepare)
+        assert entered.wait(10)
+        signed_in = executor.submit(sign_in)
+        time.sleep(0.2)
+        assert not signed_in.done(), "the sign-in must wait for the worker being built, not be refused"
+        release.set()
+        prepared.result(timeout=10)
+        assert signed_in.result(timeout=10) is candidate
+    assert constructed == [owner.identity]
+    owner.close()
+    owner.settle()
+
+
 def test_busy_native_observation_does_not_retire_the_original_session_owner(tmp_path: Path) -> None:
     owner = _owner(tmp_path)
     connection_id = uuid4()

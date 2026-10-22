@@ -24,6 +24,9 @@ from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorizationOw
 from ..adapters.profile_worker import ProfileWorkerProcess, unreturned_profile_worker
 from ..application.session_authority_contracts import SessionAuthorityFacts
 
+_CONSTRUCTION_WAIT_SECONDS = 60.0
+"""How long a request waits for a worker another request is constructing; construction is itself bounded."""
+
 
 class ProfileWorkerSessionOwner:
     """Trusted transport/lifecycle observations and profile-fixed custody delivery.
@@ -166,8 +169,8 @@ class ProfileWorkerSessionOwner:
         return result[0]
 
     @contextmanager
-    def _custody(self) -> Generator[ProfileWorkerProcess]:
-        constructing, worker = self._select_worker_for_custody()
+    def _custody(self, *, await_construction: bool = False) -> Generator[ProfileWorkerProcess]:
+        constructing, worker = self._select_worker_for_custody(await_construction=await_construction)
         candidate: ProfileWorkerProcess | None = None
         try:
             if constructing:
@@ -200,17 +203,24 @@ class ProfileWorkerSessionOwner:
             if constructing:
                 self._construction_done.set()
 
-    def _select_worker_for_custody(self) -> tuple[bool, ProfileWorkerProcess | None]:
-        with self._lifecycle_guard:
-            if self._lost or self._stopping.is_set():
+    def _select_worker_for_custody(self, *, await_construction: bool) -> tuple[bool, ProfileWorkerProcess | None]:
+        deadline = time.monotonic() + _CONSTRUCTION_WAIT_SECONDS
+        while True:
+            with self._lifecycle_guard:
+                if self._lost or self._stopping.is_set():
+                    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+                worker = self._worker
+                if worker is not None:
+                    return False, worker
+                if self._construction_done.is_set():
+                    self._construction_done.clear()
+                    return True, None
+            # Another request is constructing the worker. Only a caller outside the profile fence, a sign-in
+            # meeting the worker its watch started, may wait for it; a fenced caller is refused, as before.
+            if not await_construction or not self._construction_done.wait(
+                timeout=max(0.0, deadline - time.monotonic())
+            ):
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-            worker = self._worker
-            if worker is not None:
-                return False, worker
-            if not self._construction_done.is_set():
-                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-            self._construction_done.clear()
-            return True, None
 
     def _retain_failed_candidate(
         self,
@@ -250,6 +260,11 @@ class ProfileWorkerSessionOwner:
         # other failed dispatched exchange fences custody.
         if not undispatched_timeout:
             self.close()
+
+    def prepare(self) -> None:
+        """Start this profile's worker before any sign-in, holding no key or lease, so the sign-in finds it ready."""
+        with self._custody():
+            pass
 
     @contextmanager
     def prepare_api_admission(self, connection_id: UUID) -> Generator[float]:
@@ -311,7 +326,7 @@ class ProfileWorkerSessionOwner:
         with self._human_guard, self._human_secret(connection_id) as proof:
             try:
                 self._persist_human_receipt = proof.persist_receipt
-                with self._custody() as worker:
+                with self._custody(await_construction=True) as worker:
                     self._prepared_human_worker = worker
                     self._human_thread = get_ident()
                     self._human_connection = connection_id

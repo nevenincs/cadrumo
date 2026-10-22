@@ -58,7 +58,7 @@ from cadrumo_client.contracts.profile_selection import (
     LoginTargetRequest,
 )
 from cadrumo_client.contracts.session_events import PresentationRequested
-from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
+from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence, SignInStatusReply, SignInStatusRequest
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frame_io import read_secret, write_document
 
@@ -577,18 +577,21 @@ class ProfileConnectionSessionMixin:
                 if request.watch:
                     # Watch before reading, so a change racing this read still cues the watcher.
                     self.watch_sign_in(context)
+                status = observe_sign_in(
+                    root=self.root,
+                    storage_identity=self.storage_identity,
+                    profile_id=request.profile_id,
+                    login=login,
+                    instant=self._wall_clock(),
+                )
+                if request.watch and status.presence is not SignInPresence.PRESENT:
+                    self.prepare_for_sign_in(request.profile_id, context)
                 return SignInStatusReply(
                     request_id=request.request_id,
                     runtime_boot_id=self.boot,
                     connection_id=context.connection_id,
                     profile_id=request.profile_id,
-                    status=observe_sign_in(
-                        root=self.root,
-                        storage_identity=self.storage_identity,
-                        profile_id=request.profile_id,
-                        login=login,
-                        instant=self._wall_clock(),
-                    ),
+                    status=status,
                 )
             if isinstance(request, ActiveProfileRequest | LoginTargetRequest):
                 return self._profile_selection(context, channel, request)

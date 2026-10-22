@@ -42,10 +42,12 @@ class SignInStatus(BaseModel):
 
 
 class SignInStatusRequest(BaseModel):
-    """Observe one profile without admitting a session or opening a worker.
+    """Observe one profile without admitting a session.
 
     ``watch`` also asks for a ``sign_in_changed`` cue on this connection whenever
-    any sign-in may have changed, until the connection closes.
+    any sign-in may have changed, until the connection closes. A watched
+    profile that is signed out has its worker started ahead of the sign-in,
+    holding no key or lease.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG

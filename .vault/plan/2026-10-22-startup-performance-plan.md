@@ -8,9 +8,10 @@ related:
   - '[[2026-10-22-startup-performance-authority-observation-adr]]'
   - '[[2026-10-22-startup-performance-request-path-audit]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr]]'
+  - '[[2026-10-22-startup-performance-worker-before-sign-in-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:e220d9867d43b8bee733c56a83afe181699140414400324405f33575bd640d1d'
+body_hash: 'sha256:52dd7d9550620cd461a7e6b565590c2b2ddc0acec3b511f17ea32f55d83dc9ac'
 ---
 
 # `startup-performance` plan
@@ -30,7 +31,7 @@ The findings are in `2026-10-22-startup-performance-request-path-audit`. `2026-1
 - [x] `S03` - Serve runtime facts lock, enrollment and binding observations and the logon inventory through the witness and WTS invalidation, invalidating on own publications; `src/cadrumo_runtime/host/profile_host.py, src/cadrumo_runtime/host/profile_connections.py, custody stores and owning tests`.
 - [x] `S04` - Serve the worker's capsule binding validation through the witness; `src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py and owning tests`.
 - [x] `S05` - Measure the request path on an overlaid package copy and record before and after timings in the audit; `.vault/audit/2026-10-22-startup-performance-request-path-audit.md`.
-- [ ] `S06` - Pre-start one unbound profile worker so sign-in binds an imported worker and the first operation skips cold start; `src/cadrumo_runtime/adapters/profile_worker*.py, src/cadrumo_runtime/host/worker*.py and owning tests`.
+- [x] `S06` - Pre-start one unbound profile worker so sign-in binds an imported worker and the first operation skips cold start; `src/cadrumo_runtime/adapters/profile_worker*.py, src/cadrumo_runtime/host/worker*.py and owning tests`.
 - [ ] `S07` - Remove CLI children from the desktop sign-in path: profile inventory from session watch, password sign-in through a pre-started session hold that persists the receipt; `src/cadrumo_runtime/host/session_watch.py, session_hold.py, native/desktop/src-tauri/src/shell/sign_in and owning tests`.
 - [x] `S08` - Stop hashing the whole authority database in every process while keeping corruption refusal; `src/cadrumo/domain/calculations/registry/authority_store.py and owning tests`.
 - [ ] `S09` - Cut the TUI first screen's serial operations and eager imports; `src/cadrumo/entrypoints/tui and src/cadrumo_client/transport/frontend_profile_view_client.py`.

@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from threading import BoundedSemaphore, Condition, Event, Lock, RLock
+from threading import BoundedSemaphore, Condition, Event, Lock, RLock, Thread
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -18,6 +18,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_store_composition i
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
@@ -206,6 +207,8 @@ class RuntimeProfileConnections(
         self._host_dues: dict[UUID, float] = {}
         self._session_changes_pushed = False
         self._unreported_logins = True
+        # Profiles whose worker a sign-in watch has started, or is starting, ahead of their sign-in.
+        self._prepared_profiles: set[UUID] = set()
         # The last logon observation, which request-path checks reuse until the OS reports a session change.
         self._login_observation: _LoginObservation | None = None
         self._login_changes = 0
@@ -239,6 +242,32 @@ class RuntimeProfileConnections(
         """Cue this connection on every later change that can move any sign-in status, until it disconnects."""
         with self._guard:
             self._sign_in_watchers.add(context.connection_id)
+
+    def prepare_for_sign_in(self, profile_id: UUID, context: ConnectionContext) -> None:
+        """Start a watched, signed-out profile's worker in the background so its sign-in finds it ready.
+
+        The worker holds no key or lease until a sign-in installs one. If it
+        cannot start here, the sign-in starts it, as it always did.
+        """
+        with self._guard:
+            if not self._admitting() or profile_id in self._prepared_profiles:
+                return
+            self._prepared_profiles.add(profile_id)
+
+        def prepare() -> None:
+            try:
+                self._host(profile_id, context).owner.prepare()
+            except (RefusalError, AutomationCustodyError, ProfileAccessRefusedError, OSError) as error:
+                with self._guard:
+                    self._prepared_profiles.discard(profile_id)
+                diagnostic_event(
+                    _LOGGER,
+                    "profile worker not started before sign-in",
+                    level=logging.DEBUG,
+                    fields={"error_type": type(error).__name__},
+                )
+
+        Thread(target=prepare, name="profile-worker-prepare", daemon=True).start()
 
     def _sign_in_changed(self) -> None:
         """Cue every sign-in watcher; each re-reads a status that still decides for itself."""
@@ -680,6 +709,7 @@ class RuntimeProfileConnections(
         profile_id = host.store.binding.profile_id
         self._enrollments.retire_profile(profile_id, host=host)
         with self._guard:
+            self._prepared_profiles.discard(profile_id)
             if self._profiles.get(profile_id) is host:
                 self._profiles.pop(profile_id)
                 for connection in self._connections.values():

@@ -6,7 +6,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:135ee05e5da48603b1d7fadf044783fdcf9d0cef9ecf3e377f5a4097ddc359fd'
+body_hash: 'sha256:a68e161d1d2a82bd3baaa0a7fdef22bea42c40eab581881bc78cd2da79fdcadc'
 related:
   - '[[2026-10-13-startup-performance-audit]]'
   - '[[2026-10-13-startup-performance-operation-contract-manifest-adr]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-10-22-startup-performance-ledger]]'
   - '[[2026-10-22-startup-performance-plan]]'
   - '[[2026-10-22-startup-performance-request-path-audit]]'
+  - '[[2026-10-22-startup-performance-worker-before-sign-in-adr]]'
 ---
 
 # `startup-performance` feature index
@@ -29,6 +30,7 @@ Auto-generated index of all documents tagged with `#startup-performance`.
 
 - `2026-10-13-startup-performance-operation-contract-manifest-adr` - `startup-performance` adr: `Generated operation contract manifest` | (**status:** `accepted`)
 - `2026-10-22-startup-performance-authority-observation-adr` - `startup-performance` adr: `Authority re-checks answered from an OS-invalidated observation` | (**status:** `accepted`)
+- `2026-10-22-startup-performance-worker-before-sign-in-adr` - `startup-performance` adr: `A watched profile's worker starts before its sign-in` | (**status:** `accepted`)
 
 ### audit
 
