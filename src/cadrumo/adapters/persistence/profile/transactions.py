@@ -60,7 +60,6 @@ from .transaction_date_projection import (
 from .transaction_iva_migration import migrated_iva_deduction_fact, migrated_iva_rate_kind
 from .transaction_row_contracts import (
     TransactionMembershipIndex,
-    decode_persisted_transaction_row,
     validate_persisted_transaction_timestamps,
 )
 from .transaction_storage_failures import translating_transaction_storage_failures
@@ -259,7 +258,7 @@ class TransactionCatalogueRepository:
             self._bucket_id,
             len(transactions),
         )
-        return TransactionCatalogue.from_transactions(transactions)
+        return catalogue_from_loaded_transactions(transactions)
 
     def _validated_catalogue_row(self, payload: bytes, transaction_id: str) -> Transaction:
         """Decode a current transaction row with all schema and classification refusals."""
@@ -270,17 +269,12 @@ class TransactionCatalogueRepository:
         )
 
         try:
-            decoded_row = decode_persisted_transaction_row(payload)
-            if decoded_row is not None:
-                # Reuse the same JSON decode for the cheap D6 timestamp
-                # guard; the authoritative Envelope validation below still
-                # parses the original bytes via ``model_validate_json``
-                # (JSON mode), which is required for correct string ->
-                # datetime / string -> enum coercion under the envelope's
-                # ``strict=True`` config -- ``model_validate`` on an
-                # already-decoded dict runs in *python* mode and rejects
-                # those coercions outright under strict config.
-                validate_persisted_transaction_timestamps(decoded_row)
+            # The D6 timestamp guard runs first, so a row that lost its
+            # lifecycle timestamps is refused before the envelope can default
+            # them. Both parse the original bytes in JSON mode, which the
+            # envelope's ``strict=True`` config needs for string -> datetime
+            # and string -> enum coercion.
+            validate_persisted_transaction_timestamps(payload)
             envelope = Envelope[Transaction].model_validate_json(payload)
         except ValidationError as exc:
             if governed_facts_in_scope() is None:

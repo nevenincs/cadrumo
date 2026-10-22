@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b583f37d8adbbf7bff402743c6e1199416c3b5734debbcaaa7d7f096f6ca3f9'
+body_hash: 'sha256:7ebcf596041d7d8d0c7374cdf2a3e996c8fcdbdc0e8eea184fea2a164a40ac7a'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -46,3 +46,18 @@ related:
 - `S09` `verify:` `list query, operation, partition parity and stale-index fallback tests (31)` -> `pass`
 - `S09` `verify:` `ruff, lint-imports, ty on touched files` -> `pass`
 - `S09` `by:` `O1`
+- `S10` `M` `src/cadrumo/adapters/persistence/profile/transactions.py`
+- `S10` `M` `src/cadrumo/adapters/persistence/profile/transaction_row_contracts.py`
+- `S10` `M` `src/cadrumo/application/ledger/actions_manual.py`
+- `S10` `A` `src/cadrumo/adapters/persistence/profile/tests/test_transaction_row_contracts.py`
+- `S10` `A` `src/cadrumo/adapters/persistence/profile/tests/test_transaction_catalogue_listing_identity.py`
+- `S10` `verify:` `unfiltered list at 30k: CPU mean 15.4s to 12.0s, load() 13.3s to 10.8s (paired, 9 samples)` -> `pass`
+- `S10` `verify:` `profile, ledger and domain transaction tests (4432)` -> `pass`
+- `S10` `verify:` `secure storage tests (1896)` -> `pass`
+- `S10` `verify:` `old/new timestamp witness oracle (43 cases)` -> `pass`
+- `S10` `verify:` `ruff, lint-imports, check-types` -> `pass`
+- `S10` `by:` `O2`
+
+## Notes
+
+- `S10` Row cost after the change is about 360 us; the rest sits in the domain Transaction model and shared secure storage, outside this step.

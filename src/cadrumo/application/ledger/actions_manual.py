@@ -53,6 +53,7 @@ from ...domain.transactions.lineage_models import (
     TransactionLifecycleLineageEntry,
 )
 from ...domain.transactions.models import (
+    BucketTransactionRef,
     Transaction,
     TransactionCatalogue,
     derive_import_fingerprint,
@@ -517,7 +518,26 @@ def list_manual_transactions(
             transaction.transaction_id,
         ),
     )
-    return tuple(build_manual_ledger_result(bucket_id, transaction, ()) for transaction in transactions)
+    return tuple(_catalogue_member_result(bucket_id, transaction) for transaction in transactions)
+
+
+def _catalogue_member_result(bucket_id: str, transaction: Transaction) -> ManualLedgerTransactionResult:
+    """Wrap one catalogue member as a listing result without validating it again.
+
+    Pydantic re-runs every ``Transaction`` model validator, including the
+    derived-id hash and the registry-backed tax couplings, whenever an
+    existing instance is assigned to a model field. A catalogue member is a
+    frozen instance that already passed those validators when it was decoded
+    or constructed, so repeating them here only multiplied the listing cost.
+    The reference is still validated, and the result carries exactly the
+    values the validated constructor would.
+    """
+    return ManualLedgerTransactionResult.model_construct(
+        ref=BucketTransactionRef(bucket_id=bucket_id, transaction_id=transaction.transaction_id),
+        transaction=transaction,
+        bucket_event_ids=(),
+        stale_finalized_revisions=(),
+    )
 
 
 def query_ledger_review_rows(

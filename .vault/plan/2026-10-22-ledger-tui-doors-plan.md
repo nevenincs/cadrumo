@@ -9,7 +9,7 @@ related:
   - '[[2026-07-05-ledger-latency-budget-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:89a34dba376b8469b8d77e09c744aa3ccc33b12b5c3875cb068ca4531e2886b8'
+body_hash: 'sha256:00e3350e9ed3b821c5a47e91c9667bde41860f9739b64a820fb9b1a9c5429824'
 ---
 
 # `ledger-tui-doors` plan
@@ -51,7 +51,7 @@ Five domain agents run in parallel, each giving its ledger operations their own 
 Dedicated agents make the ledger reads behind the Records screens meet the 30,000-transaction budget, running in parallel with the domain agents.
 
 - [x] `P04.S09` - make a period-filtered ledger.list read only the date-index partition, with the completeness gate, parity tests and the D1 CPU gate as acceptance; `src/cadrumo/application/ledger/list_query.py`.
-- [ ] `P04.S10` - cut the per-row cost of the full transaction catalogue load without changing encryption, binding or results; `src/cadrumo/adapters/persistence/profile/transactions.py`.
+- [x] `P04.S10` - cut the per-row cost of the full transaction catalogue load without changing encryption, binding or results; `src/cadrumo/adapters/persistence/profile/transactions.py`.
 - [ ] `P04.S11` - measure every ledger read the Records screens call at 30,000 transactions and rank the overruns with their causes; `dev/ci/tests/test_ledger_tui_reads_benchmark.py`.
 
 ### Phase `P03` - integrate, verify and review

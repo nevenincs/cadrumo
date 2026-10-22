@@ -2,20 +2,10 @@
 
 from __future__ import annotations
 
-import json
-from typing import TYPE_CHECKING
+from pydantic import BaseModel, Field, ValidationError
 
-from pydantic import BaseModel, Field, TypeAdapter, ValidationError
-
-from ....core.external_constants import UTF_8_ENCODING
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.time.utc import UtcInstant
-
-if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    pass
-
-
-_JSON_OBJECT = TypeAdapter(dict[str, object])
 
 
 class TransactionMembershipIndex(BaseModel):
@@ -41,41 +31,32 @@ class _PersistedTransactionTimestampWitness(BaseModel):
     created_at: UtcInstant = Field()
     modified_at: UtcInstant = Field()
 
-    @classmethod
-    def validate_payload(cls, payload: object) -> None:
-        """Raise ``ValidationError`` when a persisted row lacks timestamp keys."""
-        cls.model_validate(payload)
+
+class _PersistedTransactionEnvelopeTimestampWitness(BaseModel):
+    """The stored envelope reduced to the transaction timestamps it must carry."""
+
+    payload: _PersistedTransactionTimestampWitness
 
 
-def decode_persisted_transaction_row(payload: bytes) -> dict[str, object] | None:
-    """Return the parsed envelope dict for one persisted row, or ``None`` if not JSON.
-
-    Centralises the single JSON decode of a stored row's plaintext bytes so
-    the D6 timestamp guard and the authoritative :class:`Envelope` validation
-    share one parse instead of each independently re-decoding the same bytes
-    (a real O(n) cost at ledger scale: see the P95 scale benchmark in
-    ``application/aggregation/tests/test_ledger_scale_benchmark.py``).
-    """
-    try:
-        decoded: object = json.loads(payload.decode(UTF_8_ENCODING))
-    except (UnicodeDecodeError, json.JSONDecodeError):
-        return None
-    try:
-        return _JSON_OBJECT.validate_python(decoded)
-    except ValidationError:
-        return None
-
-
-def validate_persisted_transaction_timestamps(decoded: dict[str, object]) -> None:
+def validate_persisted_transaction_timestamps(payload: bytes) -> None:
     """Reject a persisted per-transaction row missing the mandatory D6 timestamps.
 
-    Takes the already-JSON-decoded envelope dict (see
-    :func:`decode_persisted_transaction_row`) rather than re-parsing the raw
-    bytes, so this guard adds only a cheap pydantic pass over the small
-    ``{created_at, modified_at}`` sub-shape -- not a second full JSON decode
-    of the whole row.
+    ``Transaction`` defaults both lifecycle timestamps, so the authoritative
+    envelope validation alone would silently stamp a row that lost them. The
+    witness is validated straight from the stored JSON bytes: the parse builds
+    no Python object for the fields it ignores, where decoding the whole row
+    into dictionaries first cost more than the two-field check itself.
+
+    Only a timestamp failure inside an object-shaped ``payload`` is raised.
+    Bytes that are not JSON, a non-object envelope, or a non-object payload
+    pass through so the authoritative envelope validation reports them.
+
+    Raises:
+        ValidationError: When the payload lacks ``created_at`` or
+            ``modified_at``, or either is not a UTC instant.
     """
-    transaction_payload = decoded.get("payload")
-    if not isinstance(transaction_payload, dict):
-        return
-    _PersistedTransactionTimestampWitness.validate_payload(_JSON_OBJECT.validate_python(transaction_payload))
+    try:
+        _PersistedTransactionEnvelopeTimestampWitness.model_validate_json(payload)
+    except ValidationError as exc:
+        if any(len(error["loc"]) > 1 for error in exc.errors()):
+            raise
