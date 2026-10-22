@@ -15,7 +15,7 @@ from pydantic import TypeAdapter, ValidationError
 from ..authority import bundled_indexed_authority
 from ..errors import FilingYearOutsideSupportEnvelopeError, NoRevisionForPeriodError
 from ..modelo_inception import DeclaredInception, ModeloInceptionField, UnauthoredBefore
-from ..schema import SupportedFilingYearsCatalogue
+from ..snapshot_globals import SupportedFilingYearsCatalogue
 from ..temporal import ModeloRevisionDirectory, select_revision_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

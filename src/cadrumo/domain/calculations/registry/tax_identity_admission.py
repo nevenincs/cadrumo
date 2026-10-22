@@ -9,7 +9,9 @@ not declare admits nothing.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from datetime import date
+from threading import Lock
+from typing import TYPE_CHECKING, cast
 
 from ....core.errors.hierarchy import CadrumoError
 from ....core.identity.documents import IdentityError, SpanishTaxIdFormat, validate_identity
@@ -42,24 +44,50 @@ def _with_authority[T](resolve: Callable[[GovernedFactSource], T]) -> T | None:
         return None
 
 
-def _catalogue(authority: GovernedFactSource) -> NifIvaCatalogue:
+def _catalogue(authority: GovernedFactSource, effective_date: date) -> NifIvaCatalogue:
     from .nif_iva_catalogue import resolve_nif_iva_catalogue
 
-    return resolve_nif_iva_catalogue(effective_date=today_madrid(), authority=authority)
+    return resolve_nif_iva_catalogue(effective_date=effective_date, authority=authority)
 
 
-def _spanish_format(authority: GovernedFactSource) -> SpanishTaxIdFormat:
+def _spanish_format(authority: GovernedFactSource, effective_date: date) -> SpanishTaxIdFormat:
     from .tax_id_format import tax_id_format
 
-    return tax_id_format(authority, effective_date=today_madrid())
+    return tax_id_format(authority, effective_date=effective_date)
 
 
 class RegistryTaxIdentityAdmission:
     """Admit redaction candidates against the published registry authority."""
 
+    def __init__(self) -> None:
+        """Start with nothing resolved; each answer is kept for its authority and day."""
+        self._lock = Lock()
+        self._held: dict[Callable[..., object], tuple[GovernedFactSource, date, object]] = {}
+
+    def _resolved[T](self, resolve: Callable[[GovernedFactSource, date], T]) -> T | None:
+        """Resolve once per authority generation and Madrid day; nearly every log line asks.
+
+        The published operation object is shared for as long as its generation
+        is current, so identity names the generation: a new one, or a scoped
+        validation, resolves afresh.
+        """
+
+        def resolved(authority: GovernedFactSource) -> T:
+            effective_date = today_madrid()
+            with self._lock:
+                held = self._held.get(resolve)
+            if held is not None and held[0] is authority and held[1] == effective_date:
+                return cast(T, held[2])
+            value = resolve(authority, effective_date)
+            with self._lock:
+                self._held[resolve] = (authority, effective_date, value)
+            return value
+
+        return _with_authority(resolved)
+
     def admits_spanish_identity(self, normalised: str) -> bool | None:
         """Return whether ``normalised`` validates against the Spanish tax-ID format."""
-        spanish_format = _with_authority(_spanish_format)
+        spanish_format = self._resolved(_spanish_format)
         if spanish_format is None:
             return None
         try:
@@ -74,7 +102,7 @@ class RegistryTaxIdentityAdmission:
         # Ordinary alphabetic scan matches need no catalogue lookup.
         if not any(character.isdigit() for character in normalised):
             return False
-        catalogue = _with_authority(_catalogue)
+        catalogue = self._resolved(_catalogue)
         if catalogue is None:
             return None
         spec = catalogue.format_for_country(normalised[:2])

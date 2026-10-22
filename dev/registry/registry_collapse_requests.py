@@ -6,11 +6,8 @@ from collections.abc import Mapping
 from dataclasses import asdict
 from datetime import date
 
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    ModeloRevision,
-    SupportedFilingYearsCatalogue,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.temporal import (
     revision_temporal_resolution,
     select_revision,

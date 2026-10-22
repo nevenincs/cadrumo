@@ -23,8 +23,9 @@ from ..authority_artifact import AuthorityGenerationPin, ProfileCreateContext
 from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from ..governed_fact_scope import governed_facts_in_scope
 from ..ids import RevisionId
-from ..schema import ModeloDefinition, ModeloRevision, RegistrySnapshot, SupportedFilingYearsCatalogue
+from ..schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from ..schema_references import LegalReference, SourceReference
+from ..snapshot_globals import SupportedFilingYearsCatalogue
 from ..static_inspection import RegistryRevisionInspection
 from .legal_quotation import legal_quotation_is_grounded
 

@@ -17,13 +17,10 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.facts.payloads import EntitySetFactPayload
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    RegistrySnapshot,
-    SupportedFilingYearsCatalogue,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutDefinition, FormPlacementDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from dev._paths import REPO_ROOT
 from dev.packaging import authority_staging
 from dev.registry.compiler.loader import load_modelo_directory

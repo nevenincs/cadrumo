@@ -32,8 +32,8 @@ from ...calculations.registry.facts.resolution import (
 )
 from ...calculations.registry.facts.variants import FactOwnership
 from ...calculations.registry.governed_fact_scope import GovernedFactSource
-from ...calculations.registry.schema import SupportedFilingYearsCatalogue
 from ...calculations.registry.schema_base import DateAxis
+from ...calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import TransactionValidationError
 from ..tipo_actividad_partitions import (

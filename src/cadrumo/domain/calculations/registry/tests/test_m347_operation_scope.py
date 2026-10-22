@@ -24,8 +24,8 @@ from ..errors import RegistryValidationError
 from ..facts.payloads import MappingFactEntry, MappingFactPayload
 from ..facts.resolution import GovernedFactQuery, MappingFactQuery, ResolvedGovernedFact, ResolvedMappingFact
 from ..m347_operation_scope import M347EstimacionObjetivaScope, resolve_m347_estimacion_objetiva_scope
-from ..schema import SupportedFilingYearsCatalogue
 from ..schema_base import DateAxis
+from ..snapshot_globals import SupportedFilingYearsCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

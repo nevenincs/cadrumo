@@ -9,8 +9,8 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ...errors import RegistryValidationError
-from ...schema import SupportedFilingYearsCatalogue
 from ...schema_base import DateAxis, SourceCitation
+from ...snapshot_globals import SupportedFilingYearsCatalogue
 from ..payloads import GovernedFactFamily, ScalarFactPayload
 from ..resolution import (
     GovernedFactQuery,

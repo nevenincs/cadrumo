@@ -30,7 +30,7 @@ from cadrumo.domain.calculations.registry.m347_threshold import (
     m347_declarable_party_buckets,
     resolve_m347_threshold_buckets,
 )
-from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.loader import load_shared_catalogues

@@ -71,7 +71,6 @@ from .schema_references import (
     RegistryExternalLink,
     RegistrySnapshotRef,
     TemporalProjectionDirection,
-    TemporalSupportEnvelope,
 )
 from .schema_rounding import RegistryRoundingCode as RegistryRoundingCode
 from .schema_rounding import RegistryRoundingCodeValue
@@ -135,11 +134,9 @@ __all__ = [
     "ModeloRevision",
     "RegistryCatalogues",
     "RegistrySnapshot",
-    "SnapshotGlobalCatalogues",
     "SociedadesAnnualManualCoverageCatalogue",
     "SociedadesAnnualManualCoverageDisposition",
     "SociedadesAnnualManualCoverageStatus",
-    "SupportedFilingYearsCatalogue",
 ]
 
 from ....core.filing_year import FilingYear
@@ -229,6 +226,7 @@ from .schema_surfaces import (
     CasillaDefinition,
     validate_family_identity_uniqueness,
 )
+from .snapshot_globals import SupportedFilingYearsCatalogue
 
 # Scalar and annotated value types live in ``_schema_scalars``; retaining these
 # assignments keeps the historical ``_schema`` import surface authoritative.
@@ -1087,33 +1085,6 @@ def _union_across_expectations[T](
     return frozenset(value for expectation in expectations for value in select(expectation))
 
 
-class SupportedFilingYearsCatalogue(TemporalSupportEnvelope):
-    """The registry's sole declaration of the filing years the product supports.
-
-    Authored as bounds rather than an enumeration, because the two ends of the
-    span do not carry the same force. ``floor`` is a hard gate: nothing resolves
-    below it. ``horizon`` is the last globally authored coordinate, not a gate;
-    when ``hard_ceiling`` is absent the supported range remains open above it.
-    Missing modelo editions inside that range are projected from an eligible
-    authored anchor.
-
-    The span is contiguous by construction. A product that supports 2022 and
-    2024 but not 2023 is not a state the law produces; the enumerated form could
-    express it only by accident, and nothing ever did.
-
-    :attr:`TemporalSupportEnvelope.years` still enumerates the span, derived
-    now rather than authored,
-    so a consumer asking which years are supported keeps asking the same way. It
-    is a plain property rather than a computed field on purpose: the published
-    artifact is re-validated against this model on every read, and a serialised
-    derivation would be refused there as an unexpected member.
-    """
-
-    def admits_filing_year(self, filing_year: int) -> bool:
-        """Return whether a filing year is inside the product's hard gates."""
-        return self.projection_coordinate(filing_year) is not None
-
-
 class SociedadesAnnualManualCoverageStatus(StrEnum):
     """The independently auditable availability state of one annual manual."""
 
@@ -1210,26 +1181,6 @@ class RegistryCatalogues(RegistryModel):
         if self.supported_filing_years is None:
             raise RegistryValidationError("registry catalogues declare no supported filing years")
         return self.supported_filing_years
-
-
-class SnapshotGlobalCatalogues(RegistryModel):
-    """Small registry-wide values required while assembling a point snapshot."""
-
-    convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
-    supplementary_ordenes: Annotated[Mapping[Modelo, M303AnnualOrdenAuthority], FROZEN_MAPPING] = Field(
-        default_factory=dict[Modelo, M303AnnualOrdenAuthority],
-        validate_default=True,
-    )
-    supported_filing_years: SupportedFilingYearsCatalogue
-
-    @classmethod
-    def from_catalogues(cls, catalogues: RegistryCatalogues) -> SnapshotGlobalCatalogues:
-        """Project only globals consumed by snapshot construction and fact resolution."""
-        return cls(
-            convenio=catalogues.convenio,
-            supplementary_ordenes=catalogues.supplementary_ordenes,
-            supported_filing_years=catalogues.require_supported_filing_years(),
-        )
 
 
 class RegistrySnapshot(RegistryModel):

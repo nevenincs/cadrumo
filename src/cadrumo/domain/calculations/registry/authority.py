@@ -66,18 +66,12 @@ if TYPE_CHECKING:
     from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact
     from .facts.schema import GovernedFact
     from .ids import RevisionId
-    from .schema import (
-        ModeloDefinition,
-        ModeloRevision,
-        RegistryCatalogues,
-        RegistrySnapshot,
-        SnapshotGlobalCatalogues,
-        SupportedFilingYearsCatalogue,
-    )
+    from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
     from .schema_deadlines import DeadlineWindowDefinition
     from .schema_exports import ExportLayoutDefinition
     from .schema_form_layouts import FormLayoutDefinition
     from .schema_references import LegalReference, SourceReference
+    from .snapshot_globals import SnapshotGlobalCatalogues, SupportedFilingYearsCatalogue
     from .static_inspection import RegistryRevisionInspection
     from .temporal import ModeloRevisionDirectory
 
@@ -586,7 +580,7 @@ class PinnedAuthorityOperation:
 
     def snapshot_globals(self) -> SnapshotGlobalCatalogues:
         """Load the registry-wide globals published with this generation."""
-        from .schema import SnapshotGlobalCatalogues
+        from .snapshot_globals import SnapshotGlobalCatalogues
 
         value = self.load(SnapshotGlobalsComponentQuery(), pin=self.generation)
         if not isinstance(value, SnapshotGlobalCatalogues):

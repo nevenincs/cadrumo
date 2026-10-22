@@ -37,7 +37,7 @@ from typing import Final
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import read_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
 from ..pipeline.generated_tree_dispositions import (
     GeneratedTreeBelowSupportedFilingYearsDisposition,

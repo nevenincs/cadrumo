@@ -226,7 +226,7 @@ def _decode_snapshot_globals(
 ) -> object:
     from .facts.schema import GovernedFact, GovernedFactCatalogue
     from .governed_fact_scope import CandidateFactAuthority, validating_governed_facts
-    from .schema import SnapshotGlobalCatalogues, SupportedFilingYearsCatalogue
+    from .snapshot_globals import SnapshotGlobalCatalogues, SupportedFilingYearsCatalogue
 
     facts = tuple(item for item in dependencies if isinstance(item, GovernedFact))
     fact_catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})

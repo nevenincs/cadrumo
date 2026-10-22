@@ -15,8 +15,8 @@ from ..iva_schema_vocabulary_source import (
     _BY_AUTHORITY,
     _PROJECTIONS,
 )
-from ..schema import SupportedFilingYearsCatalogue
 from ..schema_base import DateAxis
+from ..snapshot_globals import SupportedFilingYearsCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

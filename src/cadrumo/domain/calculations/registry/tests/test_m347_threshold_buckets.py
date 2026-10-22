@@ -36,7 +36,7 @@ from ..m347_threshold import (
     m347_threshold_decimal,
     resolve_m347_threshold_buckets,
 )
-from ..schema import SupportedFilingYearsCatalogue
+from ..snapshot_globals import SupportedFilingYearsCatalogue
 from .m347_fixture import resolve_m347_counterparty_annual_threshold
 from .published_authority import published_revision
 

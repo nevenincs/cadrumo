@@ -26,7 +26,7 @@ from ..errors import RegistryValidationError
 from ..facts.payloads import MappingFactEntry, MappingFactPayload
 from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact, ResolvedMappingFact
 from ..iva_category_catalogue import IvaCategoryCatalogue, IvaCategoryExclusion, resolve_iva_category_catalogue
-from ..schema import SupportedFilingYearsCatalogue
+from ..snapshot_globals import SupportedFilingYearsCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

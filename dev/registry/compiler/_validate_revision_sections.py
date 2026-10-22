@@ -24,13 +24,10 @@ from cadrumo.domain.calculations.registry.revision_context import (
     RevisionValidationContext,
     build_revision_validation_context,
 )
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    ModeloRevision,
-    SupportedFilingYearsCatalogue,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.validate_revision_identity import (
     emit_revision_payload_failures as _emit_revision_payload_failures,
 )

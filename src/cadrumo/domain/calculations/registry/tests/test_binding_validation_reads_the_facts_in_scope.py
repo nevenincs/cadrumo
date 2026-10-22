@@ -41,8 +41,8 @@ from ..iva_flow_catalogue import (
 )
 from ..iva_rate_kind_catalogue import require_registry_declared_iva_rate_kind
 from ..ledger_iva_bindings import LedgerIvaProvider
-from ..schema import SupportedFilingYearsCatalogue
 from ..schema_references import TemporalSupportEnvelope
+from ..snapshot_globals import SupportedFilingYearsCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

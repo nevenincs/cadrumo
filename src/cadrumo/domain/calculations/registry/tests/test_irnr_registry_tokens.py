@@ -17,7 +17,7 @@ from ..authority import PinnedAuthorityOperation
 from ..authority_artifact import SnapshotGlobalsComponentQuery
 from ..convenio import resolve_convenio_override
 from ..irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
-from ..schema import SnapshotGlobalCatalogues
+from ..snapshot_globals import SnapshotGlobalCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 

@@ -15,8 +15,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema import (
     SociedadesAnnualManualCoverageDisposition,
     SociedadesAnnualManualCoverageStatus,
-    SupportedFilingYearsCatalogue,
 )
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
 from ..compiler.authority import compile_validated_authority
 from ..compiler.loader import load_registry_tree, load_shared_catalogues

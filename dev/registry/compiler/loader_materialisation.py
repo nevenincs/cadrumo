@@ -27,9 +27,9 @@ from cadrumo.domain.calculations.registry.schema import (
     ModeloDefinition,
     RegistryCatalogues,
     SociedadesAnnualManualCoverageCatalogue,
-    SupportedFilingYearsCatalogue,
 )
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
 from ._loader_revision_fragments import (
     merge_revision_fragment as _merge_revision_fragment,

@@ -13,7 +13,8 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
 from cadrumo.domain.calculations.registry.facts.resolution import GovernedFactQuery
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from dev.registry.compiler.authority import compile_validated_authority
 from dev.registry.compiler.loader import clear_registry_tree_cache
 from dev.registry.pipeline.authority_publication import publish_sqlite_authority_candidate

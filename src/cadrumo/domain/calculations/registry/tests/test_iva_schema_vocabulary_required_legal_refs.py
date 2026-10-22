@@ -15,8 +15,8 @@ from ..facts.resolution import GovernedFactQuery, MappingFactQuery, ResolvedGove
 from ..governed_fact_scope import GovernedFactSource
 from ..iva_legal_vocabulary import resolve_iva_art69_dos_service_catalogue, resolve_iva_exemption_article_catalogue
 from ..m303_schema_vocabulary import resolve_m303_regime_composition_catalogue, resolve_m303_tax_territory_catalogue
-from ..schema import SupportedFilingYearsCatalogue
 from ..schema_base import DateAxis
+from ..snapshot_globals import SupportedFilingYearsCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

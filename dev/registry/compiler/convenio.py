@@ -17,9 +17,9 @@ from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, Gove
 from cadrumo.domain.calculations.registry.facts.variants import GovernedFactVariant
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr
-from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
 __all__ = ["convenio_authority_from_facts"]
 

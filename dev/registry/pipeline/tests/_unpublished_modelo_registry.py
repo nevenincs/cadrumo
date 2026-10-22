@@ -18,7 +18,7 @@ from typing import Final
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import freeze_toml, parse_toml, render_toml
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
 from ...compiler.authority import compile_validated_authority, compiled_bundled_authority
 from ...conformance.loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision

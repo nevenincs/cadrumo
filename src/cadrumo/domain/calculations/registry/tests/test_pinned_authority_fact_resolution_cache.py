@@ -9,8 +9,8 @@ import pytest
 from ..authority import PinnedAuthorityOperation
 from ..authority_artifact import GovernedFactComponentQuery, SnapshotGlobalsComponentQuery
 from ..facts.resolution import MappingFactQuery
-from ..schema import SnapshotGlobalCatalogues
 from ..schema_base import DateAxis
+from ..snapshot_globals import SnapshotGlobalCatalogues
 from .artifact_runtime_support import minimal_catalogues
 from .authority_fakes import FakeAuthorityComponentReader
 

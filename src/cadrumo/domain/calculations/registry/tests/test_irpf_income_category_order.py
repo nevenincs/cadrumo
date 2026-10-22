@@ -11,8 +11,8 @@ from ..authority import PinnedAuthorityOperation
 from ..errors import RegistryValidationError
 from ..facts.resolution import GovernedFactQuery, MappingFactQuery, ResolvedGovernedFact, ResolvedMappingFact
 from ..irpf_income_categories import resolve_irpf_income_category_catalogue
-from ..schema import SupportedFilingYearsCatalogue
 from ..schema_base import DateAxis
+from ..snapshot_globals import SupportedFilingYearsCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

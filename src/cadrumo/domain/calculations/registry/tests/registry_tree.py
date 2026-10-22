@@ -7,8 +7,9 @@ from functools import cache
 from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..authority_artifact import SnapshotGlobalsComponentQuery
 from ..errors import RegistryValidationError
-from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, SnapshotGlobalCatalogues
+from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..snapshot import collect_snapshot_ref_ids
+from ..snapshot_globals import SnapshotGlobalCatalogues
 
 
 def _with_form_layout(operation: PinnedAuthorityOperation, modelo_id: str, revision: ModeloRevision) -> ModeloRevision:

@@ -17,7 +17,7 @@ from ...calculations.registry.governed_fact_scope import (
     governed_facts_in_scope,
     validating_governed_facts,
 )
-from ...calculations.registry.schema import SupportedFilingYearsCatalogue
+from ...calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from ..errors import TransactionValidationError
 from ..m210_income_classification import M210IncomeClassification, resolve_m210_payer_mode
 

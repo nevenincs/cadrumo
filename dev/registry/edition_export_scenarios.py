@@ -151,11 +151,8 @@ from cadrumo.domain.calculations.registry.prorrata_register_catalogue import (
     general_prorrata_register_regime,
     prorrata_sector_letters,
 )
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    RegistrySnapshot,
-    SupportedFilingYearsCatalogue,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.deadlines.models import ChargeAccount, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity

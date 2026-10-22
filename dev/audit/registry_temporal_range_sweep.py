@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import TypeIs
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
-from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
 from ..registry.compiler.validate_below_floor_export_refs import SUPPORTED_FILING_YEARS_DECLARATION
 

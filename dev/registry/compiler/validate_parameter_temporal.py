@@ -10,8 +10,9 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date, timedelta
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_formula import DatedValue, ParameterDefinition
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
 __all__ = [
     "FILING_PERIOD_AXIS",

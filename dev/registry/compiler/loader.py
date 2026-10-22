@@ -38,9 +38,9 @@ from cadrumo.domain.calculations.registry.schema import (
     RegistryCatalogues,
     SociedadesAnnualManualCoverageCatalogue,
     SociedadesAnnualManualCoverageStatus,
-    SupportedFilingYearsCatalogue,
 )
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
 from .compiled_cache import (
     load_compiled_registry_cache,

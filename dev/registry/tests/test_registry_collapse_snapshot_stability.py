@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
 from .. import registry_collapse_run as collapse_run
 from ..registry_collapse_fingerprints import fingerprint_optional_tree, fingerprint_tree

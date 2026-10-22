@@ -26,7 +26,8 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from .compiler.authority import compiled_bundled_authority
