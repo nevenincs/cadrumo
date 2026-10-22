@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:3dbe506609c4ed11d48a1435723cac81c340d8964a8e0855e2407384819edf29'
+body_hash: 'sha256:ef1cba848806f4bb7ba5227351bfecbad3bee622cb51d9cb85c968d85c8ddd98'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -77,8 +77,24 @@ related:
 - `S05` `verify:` `D4 screen, runtime door and harness tests plus ledger workspace tests (191)` -> `pass`
 - `S05` `verify:` `ruff, ty on D4 files; lint-imports` -> `pass`
 - `S05` `by:` `D4`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/registers_presentation.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/registers_prorrata.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/registers_capital_goods.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/registers_inventory.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/tests/registers_fixtures.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_registers_prorrata.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_registers_capital_goods.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_registers_inventory.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_registers_surfaces.py`
+- `S06` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_registers.py`
+- `S06` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_registers.py`
+- `S06` `A` `dev/tui/harness/ledger_registers_fixtures.py`
+- `S06` `verify:` `D5 screen and runtime door tests (117)` -> `pass`
+- `S06` `verify:` `ruff, ty on D5 files; lint-imports` -> `pass`
+- `S06` `by:` `D5`
 
 ## Notes
 
 - `S10` Row cost after the change is about 360 us; the rest sits in the domain Transaction model and shared secure storage, outside this step.
 - `S05` Invoice and transaction updates carry no baseline on the wire; the door re-reads before writing, leaving a race window. Invoice import has no dry run; the apply is bound to the reviewed file by `source_sha256.` The tools composer entry and locale strings land in the integration commit.
+- `S06` The three register list operations have no paging fields; screens hold the register and render one page. The tools composer entry and locale strings land in the integration commit.

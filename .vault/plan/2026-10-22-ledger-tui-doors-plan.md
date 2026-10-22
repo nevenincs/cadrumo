@@ -9,7 +9,7 @@ related:
   - '[[2026-07-05-ledger-latency-budget-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:7674105e212ee1428c4ab914b4d850961ced5fafbe70444a2c2d5acfdb27f14b'
+body_hash: 'sha256:33bedb91cfa9ce9bd41d2b52c3edc17ec2b9da1db55a11770124e8aec3e2c27b'
 ---
 
 # `ledger-tui-doors` plan
@@ -44,7 +44,7 @@ Five domain agents run in parallel, each giving its ledger operations their own 
 - [ ] `P02.S03` - give categorisation (18 operations) bulk and IVA classification, rules, counterparties, splits, allocation, participation and ratios screens; `src/cadrumo/entrypoints/tui/ledger/categorisation_*.py and runtime_ledger_categorisation.py`.
 - [ ] `P02.S04` - give evidence and attachments (12 operations) attach, detach, batch intake and evidence view, update, remove and review screens; `src/cadrumo/entrypoints/tui/ledger/evidence_files_*.py and runtime_ledger_evidence_files.py`.
 - [x] `P02.S05` - give records, invoices and reconciliation (9 operations) the record doors, invoice import, wizard and removal, and the link submitter; `src/cadrumo/entrypoints/tui/ledger/invoices_*.py and runtime_ledger_invoices.py`.
-- [ ] `P02.S06` - give registers (15 operations) prorrata, bienes de inversion and inventory screens; `src/cadrumo/entrypoints/tui/ledger/registers_*.py and runtime_ledger_registers.py`.
+- [x] `P02.S06` - give registers (15 operations) prorrata, bienes de inversion and inventory screens; `src/cadrumo/entrypoints/tui/ledger/registers_*.py and runtime_ledger_registers.py`.
 
 ### Phase `P04` - optimise ledger reads at scale
 
