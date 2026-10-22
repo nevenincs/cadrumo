@@ -177,14 +177,15 @@ def apply_manager_profile_field_mutation(
         profile_id,
         profile_decode_context=profile_decode_context,
     ).load(profile_id)
-    if (
-        expected_revision is not None
-        and expected_content_digest is not None
-        and (current.record_revision != expected_revision or current.content_digest != expected_content_digest)
-    ):
-        from .capsule_record import ProfileRecordConflictError
+    if expected_revision is not None and expected_content_digest is not None:
+        from .edit_baseline import require_profile_edit_baseline
 
-        raise ProfileRecordConflictError("profile manager edit baseline is stale")
+        require_profile_edit_baseline(
+            current,
+            expected_revision=expected_revision,
+            expected_content_digest=expected_content_digest,
+            field_paths=(path,) if path in profile_decode_context.schema.field_paths else (),
+        )
     return apply_profile_fact_changes(
         profile_id=profile_id,
         changes=(UserProfileFact(path=path, value=value.strip() or None),),

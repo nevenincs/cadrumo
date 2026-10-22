@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from decimal import Decimal
 from uuid import UUID
 
@@ -10,6 +12,7 @@ from pydantic import BaseModel, SecretStr
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.logging import get_logger
 from ...core.operations import (
     OperationEffect,
 )
@@ -22,6 +25,7 @@ from .bundle_export_contracts import (
     ProfileBundleExportRequest,
     ProfileBundleExportTransport,
 )
+from .capsule_record import ProfileRecordConflictError
 from .descendant_rows import replace_profile_descendants
 from .fact_write import apply_manager_profile_field_mutation
 from .plantilla_media_rows import PlantillaMediaWriteSurface, remove_plantilla_media_year, set_plantilla_media_year
@@ -67,6 +71,29 @@ from .view_operation import (
 from .view_reader import read_profile_view_page
 
 __all__: list[str] = []
+_LOGGER = get_logger(__name__)
+
+
+@asynccontextmanager
+async def _profile_mutation_section(context: OperationExecutorContext) -> AsyncGenerator[None]:
+    """Keep a refused compare-and-swap distinct from an ambiguous write."""
+    async with context.cancellation.irreversible_section():
+        try:
+            yield
+        except ProfileRecordConflictError as error:
+            await context.events.effect(OperationEffect.NONE)
+            details = error.context or {}
+            _LOGGER.warning(
+                "profile edit conflict operation=%s definition=%s fields=%s "
+                "expected_revision=%s current_revision=%s digest_matches=%s",
+                context.identity.operation_id,
+                context.identity.definition_id,
+                details.get("field_paths", ()),
+                details.get("expected_revision"),
+                details.get("current_revision"),
+                details.get("digest_matches"),
+            )
+            raise
 
 
 def _require_active_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT], profile_id: UUID) -> None:
@@ -110,7 +137,7 @@ class ProfileFieldMutationOperationExecutor:
         await context.events.phase(PROFILE_FIELD_MUTATION_PHASES[0])
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(PROFILE_FIELD_MUTATION_PHASES[1])
-        async with context.cancellation.irreversible_section():
+        async with _profile_mutation_section(context):
             record = await await_cancellation_complete(
                 asyncio.to_thread(
                     apply_manager_profile_field_mutation,
@@ -153,7 +180,7 @@ class ProfilePatchOperationExecutor:
         flow = build_setup_flow(context.authority_operation)
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(PROFILE_PATCH_PHASES[1])
-        async with context.cancellation.irreversible_section():
+        async with _profile_mutation_section(context):
             record = await await_cancellation_complete(
                 asyncio.to_thread(
                     apply_profile_patch,
@@ -195,7 +222,7 @@ class ProfilePlantillaMediaOperationExecutor:
         await context.events.phase(PROFILE_PLANTILLA_MEDIA_PHASES[1])
 
         async def publish() -> str:
-            async with context.cancellation.irreversible_section():
+            async with _profile_mutation_section(context):
                 await context.events.effect(OperationEffect.UNKNOWN)
                 if isinstance(payload.change, ProfilePlantillaMediaSet):
                     mutation = await asyncio.to_thread(
@@ -252,7 +279,7 @@ class ProfileDescendantsOperationExecutor:
         await context.events.phase(PROFILE_DESCENDANTS_PHASES[1])
 
         async def publish() -> str:
-            async with context.cancellation.irreversible_section():
+            async with _profile_mutation_section(context):
                 await context.events.effect(OperationEffect.UNKNOWN)
                 mutation = await asyncio.to_thread(
                     replace_profile_descendants,
@@ -294,7 +321,7 @@ class ProfileRepeatableRowMutationOperationExecutor:
         values = {item.field_key: item.value for item in payload.values}
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(PROFILE_REPEATABLE_ROW_MUTATION_PHASES[1])
-        async with context.cancellation.irreversible_section():
+        async with _profile_mutation_section(context):
             mutation = await await_cancellation_complete(
                 asyncio.to_thread(
                     add_profile_repeatable_section_row,
@@ -335,7 +362,7 @@ class ProfileRepeatableRowUpdateOperationExecutor:
         values = {item.field_key: item.value for item in payload.values}
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(PROFILE_REPEATABLE_ROW_UPDATE_PHASES[1])
-        async with context.cancellation.irreversible_section():
+        async with _profile_mutation_section(context):
             mutation = await await_cancellation_complete(
                 asyncio.to_thread(
                     update_profile_repeatable_section_row,
@@ -370,7 +397,7 @@ class ProfileRepeatableRowRemoveOperationExecutor:
         await context.events.phase(PROFILE_REPEATABLE_ROW_REMOVE_PHASES[0])
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(PROFILE_REPEATABLE_ROW_REMOVE_PHASES[1])
-        async with context.cancellation.irreversible_section():
+        async with _profile_mutation_section(context):
             mutation = await await_cancellation_complete(
                 asyncio.to_thread(
                     remove_profile_repeatable_section_row,
@@ -403,7 +430,7 @@ class ProfileCompleteSetupOperationExecutor:
         await context.events.phase(PROFILE_COMPLETE_SETUP_PHASES[0])
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(PROFILE_COMPLETE_SETUP_PHASES[1])
-        async with context.cancellation.irreversible_section():
+        async with _profile_mutation_section(context):
             record = await await_cancellation_complete(
                 asyncio.to_thread(
                     lambda: ProfileRecordRepository.for_current_session(

@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ..user_profile.capsule_record import ProfileRecordConflictError
+from ..user_profile.edit_baseline import require_profile_edit_baseline
 from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 from ..user_profile.filing_baseline import missing_filing_baseline_flag_groups
 from ..user_profile.profile_record_repository import ProfileRecordRepository
@@ -154,8 +154,18 @@ def apply_profile_patch(
     current = ProfileRecordRepository.for_current_session(
         profile_id, profile_decode_context=profile_decode_context
     ).load(profile_id)
-    if current.record_revision != expected_revision or current.content_digest != expected_content_digest:
-        raise ProfileRecordConflictError("wizard profile patch baseline is stale")
+    require_profile_edit_baseline(
+        current,
+        expected_revision=expected_revision,
+        expected_content_digest=expected_content_digest,
+        field_paths=tuple(
+            question.profile_key
+            for section in flow.sections
+            for question in section.questions
+            if question.id in supplied and question.profile_key is not None
+        )
+        + (("withholding.colegio_concertado",) if colegio_concertado is not None else ()),
+    )
     changes = validate_profile_patch(
         flow=flow,
         current_values=record_to_path_values(current),

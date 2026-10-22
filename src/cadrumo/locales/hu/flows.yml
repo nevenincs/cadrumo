@@ -45,9 +45,14 @@ flows:
       clear: Törlés
       completed_refresh_unavailable: A művelet befejeződött, de a frissített nézet
         nem érhető el. Térj vissza a kezdőlapra a frissítéshez.
+      conflict: A profil szerkesztés közben megváltozott. A módosításodat nem mentettük.
+        Ellenőrizd az aktuális profilt, és nyisd meg újra a mezőt; az újratöltéshez
+        nyomd meg az F5 billentyűt.
       masked_kept: Ez az érték rejtett, ezért a mező üresen indul. Hagyd üresen a
         megőrzéshez, vagy írj be egy újat a cseréhez.
       no_change: Nem volt szükség módosításra.
+      refresh_failed: Az aktuális profilt nem sikerült betölteni. Szerkesztés előtt
+        nyomd meg az F5 billentyűt az újrapróbálkozáshoz.
       required_blank: A(z) {field} kötelező, ezért nem maradhat üresen. Adj meg egy
         értéket, vagy a mégse gombbal hagyd változatlanul.
       save: Mentés

@@ -11,6 +11,7 @@ declare global {
       update(value: string): void;
       refuse(): void;
       uncertain(): void;
+      conflict(): void;
       deferRead(): void;
       releaseRead(): void;
       rejectRead(): void;
@@ -52,7 +53,7 @@ export function userProfileFixture(
   const listeners = new Set<() => void>();
   let reads = 0,
     writes = 0;
-  let refuse: "refused" | "unknown" | null = null;
+  let refuse: "refused" | "unknown" | "conflict" | null = null;
   let deferred = false;
   let release: (() => void) | undefined;
   let reject: (() => void) | undefined;
@@ -77,6 +78,11 @@ export function userProfileFixture(
     },
     uncertain() {
       refuse = "unknown";
+    },
+    conflict() {
+      data.record_revision++;
+      data.content_digest = String(data.record_revision).padStart(64, "0");
+      refuse = "conflict";
     },
     deferRead() {
       deferred = true;

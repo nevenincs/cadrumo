@@ -163,6 +163,41 @@ test("external changes refresh once, preserve drafts and block stale saves", asy
     .toBe(before + 2);
 });
 
+test("a server conflict refreshes the profile without discarding the draft or retrying", async ({
+  page,
+}) => {
+  await open(page);
+  const profile = page.locator(".user-profile-page");
+  await profile
+    .getByRole("button", {
+      name: label("desktop.profile.edit_field", { field: "Given name" }),
+      exact: true,
+    })
+    .click();
+  const dialog = page.getByRole("dialog", { name: "Given name", exact: true });
+  await dialog
+    .getByLabel("Given name", { exact: true })
+    .fill("Keep this draft");
+  const before = await page.evaluate(() => window.__scenarioProfile!.reads());
+  await page.evaluate(() => window.__scenarioProfile!.conflict());
+  await dialog
+    .getByRole("button", { name: label("desktop.profile.save"), exact: true })
+    .click();
+  await expect
+    .poll(() => page.evaluate(() => window.__scenarioProfile!.reads()))
+    .toBe(before + 1);
+  await expect(dialog.getByLabel("Given name", { exact: true })).toHaveValue(
+    "Keep this draft",
+  );
+  await expect(
+    dialog.getByRole("button", {
+      name: label("desktop.profile.save"),
+      exact: true,
+    }),
+  ).toBeDisabled();
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
+});
+
 test("section navigation combines with search and saved-field filters", async ({
   page,
 }) => {

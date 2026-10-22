@@ -1617,6 +1617,7 @@
         "cadrumo.application.user_profile.custody_transactions",
         "cadrumo.application.user_profile.descendant_rows",
         "cadrumo.application.user_profile.disclosure_paging",
+        "cadrumo.application.user_profile.edit_baseline",
         "cadrumo.application.user_profile.fact_write",
         "cadrumo.application.user_profile.filing_baseline",
         "cadrumo.application.user_profile.google_configuration_executor",

@@ -234,9 +234,35 @@ impl Pages {
     }
 }
 
+pub(super) fn mutation_failure(projection: &serde_json::Value) -> &'static str {
+    if projection["effect"] != "none" {
+        return "unknown";
+    }
+    if projection["terminal_condition"] == "failed"
+        && projection["failure_error_code"] == "FAIL_PROFILE_RECORD_CONFLICT"
+    {
+        return "conflict";
+    }
+    "refused"
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn only_a_settled_no_effect_conflict_is_safe_to_correct() {
+        let mut projection = json!({
+            "terminal_condition": "failed",
+            "effect": "none",
+            "failure_error_code": "FAIL_PROFILE_RECORD_CONFLICT"
+        });
+        assert_eq!(mutation_failure(&projection), "conflict");
+        projection["effect"] = "unknown".into();
+        assert_eq!(mutation_failure(&projection), "unknown");
+        projection["effect"] = "none".into();
+        projection["failure_error_code"] = "OTHER_FAILURE".into();
+        assert_eq!(mutation_failure(&projection), "refused");
+    }
     fn page() -> Value {
         json!({"profile_id":"p","page_kind":"overview","outcome":"page","record_revision":1,"content_digest":"a".repeat(64),"setup_state":"incomplete","schema_version":1,"valid":true,"cursor":0,"next_cursor":null,"total_items":1,"items":[{"kind":"section","key":"identity","title":"Identity","summary":"","repeatable":false}]})
     }

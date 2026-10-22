@@ -45,9 +45,13 @@ flows:
       clear: Borrar
       completed_refresh_unavailable: La operación se completó, pero la vista actualizada
         no está disponible. Vuelve a Inicio para actualizarla.
+      conflict: El perfil cambió mientras lo editabas. Tu cambio no se ha guardado.
+        Revisa el perfil actual y vuelve a abrir el campo; pulsa F5 si necesitas recargarlo.
       masked_kept: Este valor está oculto, por eso el campo empieza vacío. Déjalo
         vacío para conservar el valor guardado o escribe uno nuevo para sustituirlo.
       no_change: No fue necesario realizar cambios.
+      refresh_failed: No se ha podido cargar el perfil actual. Pulsa F5 para volver
+        a intentarlo antes de editar.
       required_blank: '{field} es obligatorio, así que no puede quedar en blanco.
         Introduce un valor o cancela para dejarlo sin cambios.'
       save: Guardar

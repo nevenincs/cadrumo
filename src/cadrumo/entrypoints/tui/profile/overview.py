@@ -177,6 +177,7 @@ class ProfileManagerScreen(
         # room left for it on an eighty-column terminal.
         Binding(_COMPLETE_SETUP_KEY, _COMPLETE_SETUP_ACTION, "", show=False),
         Binding("slash", "focus_search", "", show=False),
+        Binding("f5", "refresh_profile", "", show=False),
         Binding("q", "quit", "", show=False),
         Binding("escape", "quit", "", show=False),
     ]
@@ -397,9 +398,46 @@ class ProfileManagerScreen(
                 button.styles.border = ("none", "transparent")
                 button.styles.height = 1
         await self._redraw()
+        await self.reload_profile()
         if self._aeat_auth_setup is not None:
             self.run_worker(self._refresh_auth(), group="profile-auth-readiness", exclusive=True)
         self._finish_mount()
+
+    async def action_refresh_profile(self) -> None:
+        """Reload the current profile before opening another edit."""
+        if self._pending_write is None and self._pending_completion is None:
+            await self.reload_profile()
+
+    async def reload_profile(self) -> None:
+        """Replace a cached overview through the host's admitted reader.
+
+        Root factories retain an overview across visits. It is useful for the
+        initial paint, but an editor must not keep using it after another
+        frontend or an earlier visit has changed the record.
+        """
+        reader = self._refresh_overview_language
+        if reader is None:
+            return
+        self.disabled = True
+        try:
+            refreshed = await asyncio.to_thread(reader)
+            if not self.is_attached:
+                return
+            if refreshed.profile_id != self.overview.profile_id or (
+                refreshed.record_revision < self.overview.record_revision
+                or (
+                    refreshed.record_revision == self.overview.record_revision
+                    and refreshed.content_digest != self.overview.content_digest
+                )
+            ):
+                self._refuse(tr("flows.manager.edit.refresh_failed"))
+                return
+            await self.apply_overview(refreshed, refresh_auth=False)
+        except Exception:
+            if self.is_attached:
+                self._refuse(tr("flows.manager.edit.refresh_failed"))
+        finally:
+            self.disabled = False
 
     @override
     async def refresh_language(self) -> None:

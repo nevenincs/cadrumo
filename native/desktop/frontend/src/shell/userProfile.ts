@@ -180,7 +180,7 @@ export function useUserProfile(
         } finally {
           saving = false;
           update({ saving: false });
-          if (committed || again) {
+          if (committed || again || state.error === "conflict") {
             const writeError = state.error;
             await refresh();
             if (committed && !state.data) update({ error: "saved_unread" });

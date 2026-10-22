@@ -109,6 +109,7 @@ async def _click[Result](pilot: Pilot[Result], selector: str) -> None:
 async def _walk(client: FrontendClient, label: str) -> None:
     composition = ProfileManagerClientComposition(client, profile_label=label, output_language=OutputLanguage.EN)
     screen = await asyncio.to_thread(composition.compose)
+    cached = screen.overview
     async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
         await _until(pilot, lambda: screen.query_one("#onboarding-continue", Button).is_attached, "overview")
         assert screen.overview.setup_state is ProfileSetupState.INCOMPLETE
@@ -222,6 +223,38 @@ async def _walk(client: FrontendClient, label: str) -> None:
         await _click(pilot, "#onboarding-continue")
         await _until(pilot, lambda: screen.overview.setup_state is ProfileSetupState.COMPLETE, "finish setup")
         assert screen._setup_stage is ProfileSetupStage.READY
+
+    reopened = ProfileManagerClientComposition(
+        client, profile_label=label, output_language=OutputLanguage.EN
+    ).compose_from_overview(cached)
+    async with ScreenHostApp(reopened).run_test(size=(160, 60)) as pilot:
+        await _until(
+            pilot,
+            lambda: reopened.overview.setup_state is ProfileSetupState.COMPLETE,
+            "refresh cached wizard on reopen",
+        )
+        revision = reopened.overview.record_revision
+        field = next(
+            field for section in reopened.overview.sections for field in section.fields if field.path == "identity.name"
+        )
+        reopened._open_field_editor(field)
+        await _until(
+            pilot,
+            lambda: isinstance(pilot.app.screen, FieldEditScreen) and bool(pilot.app.screen.query("#edit-input")),
+            "edit reopened profile",
+        )
+        pilot.app.screen.query_one("#edit-input", Input).value = "Edited after reopening"
+        await _click(pilot, "#btn-edit-save")
+        await _until(pilot, lambda: reopened.overview.record_revision > revision, "persist reopened profile field")
+        assert (
+            next(
+                field.value
+                for section in reopened.overview.sections
+                for field in section.fields
+                if field.path == "identity.name"
+            )
+            == "Edited after reopening"
+        )
 
 
 def test_native_wizard_registration_authentication_and_completion(

@@ -11,7 +11,7 @@ from textual.worker import Worker, WorkerState
 from ....core.i18n.render import tr
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ..components.status import PinnedStatusBar
-from .client_errors import ProfileManagerCompletedViewUnavailableError
+from .client_errors import ProfileManagerCompletedViewUnavailableError, is_profile_edit_conflict
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -262,6 +262,8 @@ class ProfileOverviewWriteMixin:
             self._carry_walk_on()
             return
         self._walking = False
+        if is_profile_edit_conflict(worker.error):
+            await self.reload_profile()
         # A refusal reaches the operator as itself. A cancelled or
         # result-less worker would otherwise leave the page looking as
         # though nothing had been asked of it.
@@ -295,12 +297,11 @@ class ProfileOverviewWriteMixin:
         if error is None:
             rendered = ""
         else:
-            from ....application.user_profile.capsule_record import ProfileRecordConflictError
             from ....core.errors.error_codes import resolve_error_message
             from ....core.errors.hierarchy import CadrumoError
 
-            if isinstance(error, ProfileRecordConflictError):
-                rendered = tr("errors.fail.fail_storage_secure_object_revision_conflict")
+            if is_profile_edit_conflict(error):
+                rendered = tr("flows.manager.edit.conflict")
             else:
                 rendered = resolve_error_message(error) if isinstance(error, CadrumoError) else ""
         self._refuse(rendered or tr(message_key))

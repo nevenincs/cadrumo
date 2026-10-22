@@ -212,7 +212,7 @@ async def test_repeatable_edit_captures_stable_row_and_baseline_then_refuses_a_s
         assert calls == [(_SECTION, _EDITED_ROW, {"description": "Corrected activity"}, (), 7, _digest("a"))]
         assert screen.overview == opened, "a conflict must not optimistically repaint the stale edit"
         assert _rendered_value(screen, _EDITED_PATH) == "Later activity"
-        assert _notice(screen) == tr("errors.fail.fail_storage_secure_object_revision_conflict")
+        assert _notice(screen) == tr("flows.manager.edit.conflict")
         pilot.app.exit(None)
 
 

@@ -44,9 +44,14 @@ flows:
       clear: Clear
       completed_refresh_unavailable: The operation completed, but its updated view
         is unavailable. Return to Home to refresh it.
+      conflict: The profile changed while you were editing. Your change was not saved.
+        Review the current profile and open the field again; press F5 if you need
+        to reload.
       masked_kept: This value is hidden, so the box starts empty. Leave it empty to
         keep the value on record, or type a new one to replace it.
       no_change: No changes were needed.
+      refresh_failed: The current profile could not be loaded. Press F5 to try again
+        before editing.
       required_blank: '{field} is required, so it cannot be left blank. Enter a value,
         or cancel to leave it unchanged.'
       save: Save

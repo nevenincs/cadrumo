@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -26,14 +27,18 @@ from cadrumo.application.user_profile.operations import (
 )
 from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
+    PROFILE_PATCH_OPERATION_DEFINITION_ID,
     PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
     ProfileFieldMutationOperationRequest,
+    ProfilePatchOperationRequest,
+    ProfilePatchValue,
     ProfileRepeatableRowMutationOperationRequest,
     ProfileRepeatableRowValue,
 )
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.core.logging import get_logger
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -113,8 +118,10 @@ def _row_request(
     )
 
 
-@pytest.mark.parametrize("request_kind", ["field", "row"])
-def test_separately_submitted_edits_cannot_overwrite_a_changed_profile(tmp_path: Path, request_kind: str) -> None:
+@pytest.mark.parametrize("request_kind", ["field", "row", "patch"])
+def test_separately_submitted_edits_cannot_overwrite_a_changed_profile(
+    tmp_path: Path, request_kind: str, caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
         with bundled_indexed_authority().operation() as authority:
@@ -126,25 +133,42 @@ def test_separately_submitted_edits_cannot_overwrite_a_changed_profile(tmp_path:
             def build_request(profile: UUID, *, revision: int, digest: str, value: str) -> OperationRequest[Any]:
                 if request_kind == "field":
                     return _field_request(profile, revision=revision, digest=digest, value=value)
+                if request_kind == "patch":
+                    return OperationRequest(
+                        definition_id=PROFILE_PATCH_OPERATION_DEFINITION_ID,
+                        subject_ref=f"profile:{profile}",
+                        payload=ProfilePatchOperationRequest(
+                            profile_id=profile,
+                            expected_revision=revision,
+                            expected_content_digest=digest,
+                            values=(ProfilePatchValue(question_id="output-language", value=value),),
+                        ),
+                    )
                 return _row_request(profile, revision=revision, digest=digest, value=value)
 
             with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
                 assert isinstance(objects, SecureObjectRepository)
                 supervisor = _supervisor(root, objects=objects, authority=authority)
+                # CLI tests configure the root logger. Capture this owner's
+                # diagnostics independently of that process-global setup.
+                logger = get_logger("cadrumo.application.user_profile.profile_operation_execution")
+                caplog.set_level(logging.WARNING, logger=logger.name)
+                monkeypatch.setattr(logger, "handlers", [caplog.handler])
+                monkeypatch.setattr(logger, "propagate", False)
 
                 async def _exercise() -> None:
                     stale_intent = build_request(
                         profile_id,
                         revision=initial.record_revision,
                         digest=initial.content_digest,
-                        value="ca" if request_kind == "field" else "Stale activity",
+                        value="ca" if request_kind != "row" else "Stale activity",
                     )
                     first = await supervisor.submit(
                         build_request(
                             profile_id,
                             revision=initial.record_revision,
                             digest=initial.content_digest,
-                            value="en" if request_kind == "field" else "First activity",
+                            value="en" if request_kind != "row" else "First activity",
                         ),
                         operation_id="a" * 64,
                     )
@@ -160,15 +184,29 @@ def test_separately_submitted_edits_cannot_overwrite_a_changed_profile(tmp_path:
                     assert stale_terminal.terminal_condition is OperationTerminalCondition.FAILED
                     assert stale_terminal.terminal_receipt is not None
                     assert stale_terminal.terminal_receipt.failure_error_code == "FAIL_PROFILE_RECORD_CONFLICT"
-                    assert stale_terminal.effect is not OperationEffect.UPDATED
+                    assert stale_terminal.effect is OperationEffect.NONE
                     assert repository.load(profile_id).content_digest == after_first.content_digest
+                    if request_kind != "row":
+                        diagnostics = [
+                            record.getMessage()
+                            for record in caplog.records
+                            if record.name.endswith("user_profile.profile_operation_execution")
+                        ]
+                        assert diagnostics == [
+                            f"profile edit conflict operation={'b' * 64} definition={stale_intent.definition_id} "
+                            f"fields={(PROFILE_OUTPUT_LANGUAGE_PATH,)} "
+                            f"expected_revision={initial.record_revision} current_revision={after_first.record_revision} "
+                            "digest_matches=False"
+                        ]
+                        assert initial.content_digest not in diagnostics[0]
+                        assert after_first.content_digest not in diagnostics[0]
 
                     fresh = await supervisor.submit(
                         build_request(
                             profile_id,
                             revision=after_first.record_revision,
                             digest=after_first.content_digest,
-                            value="ca" if request_kind == "field" else "Fresh activity",
+                            value="ca" if request_kind != "row" else "Fresh activity",
                         ),
                         operation_id="c" * 64,
                     )
@@ -183,7 +221,7 @@ def test_separately_submitted_edits_cannot_overwrite_a_changed_profile(tmp_path:
                             profile_id,
                             revision=after_fresh.record_revision,
                             digest="0" * 64,
-                            value="hu" if request_kind == "field" else "Wrong digest activity",
+                            value="hu" if request_kind != "row" else "Wrong digest activity",
                         ),
                         operation_id="d" * 64,
                     )
@@ -191,12 +229,13 @@ def test_separately_submitted_edits_cannot_overwrite_a_changed_profile(tmp_path:
                     assert wrong_digest_terminal.terminal_condition is OperationTerminalCondition.FAILED
                     assert wrong_digest_terminal.terminal_receipt is not None
                     assert wrong_digest_terminal.terminal_receipt.failure_error_code == "FAIL_PROFILE_RECORD_CONFLICT"
+                    assert wrong_digest_terminal.effect is OperationEffect.NONE
                     wrong_revision = await supervisor.submit(
                         build_request(
                             profile_id,
                             revision=initial.record_revision,
                             digest=after_fresh.content_digest,
-                            value="hu" if request_kind == "field" else "Wrong revision activity",
+                            value="hu" if request_kind != "row" else "Wrong revision activity",
                         ),
                         operation_id="e" * 64,
                     )
@@ -204,11 +243,12 @@ def test_separately_submitted_edits_cannot_overwrite_a_changed_profile(tmp_path:
                     assert wrong_revision_terminal.terminal_condition is OperationTerminalCondition.FAILED
                     assert wrong_revision_terminal.terminal_receipt is not None
                     assert wrong_revision_terminal.terminal_receipt.failure_error_code == "FAIL_PROFILE_RECORD_CONFLICT"
+                    assert wrong_revision_terminal.effect is OperationEffect.NONE
                     final = repository.load(profile_id)
                     assert final.record_revision == after_fresh.record_revision
                     assert final.content_digest == after_fresh.content_digest
                     values = record_to_path_values(final)
-                    if request_kind == "field":
+                    if request_kind != "row":
                         assert values[PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
                     else:
                         assert values["activities.0.description"] == "First activity"

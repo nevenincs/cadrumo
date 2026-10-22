@@ -149,7 +149,7 @@ impl ProfileHost {
                 }
                 if p["lifecycle"] == "terminal" {
                     if p["terminal_condition"] != "succeeded" {
-                        return Err(Failure::new(if p["effect"] == "none" {"refused"} else {"unknown"}));
+                        return Err(Failure::new(wire::mutation_failure(p)));
                     }
                     let result = Self::call(person, json!({"action":"operation_result", "operation_id":operation})).await
                         .map_err(|_| Failure::new(if mutation {"saved_unread"} else {"unavailable"}))?;
@@ -393,14 +393,20 @@ mod tests {
 
     #[tokio::test]
     async fn a_queued_profile_read_expires_without_waiting_for_the_previous_operation() {
-        let host = ProfileHost::new(Arc::new(SignIn::new(
-            &crate::terminal::tests::unit_launch(),
-        )));
+        let host = ProfileHost::new(Arc::new(
+            SignIn::new(&crate::terminal::tests::unit_launch()),
+        ));
         let serial = host.operation.lock().await;
         let result = host
             .read_with_budget("en".into(), Duration::from_millis(1))
             .await;
-        assert!(matches!(result, Err(Failure { code: "unavailable", .. })));
+        assert!(matches!(
+            result,
+            Err(Failure {
+                code: "unavailable",
+                ..
+            })
+        ));
         drop(serial);
         assert!(host.operation.try_lock().is_ok());
         host.close();
