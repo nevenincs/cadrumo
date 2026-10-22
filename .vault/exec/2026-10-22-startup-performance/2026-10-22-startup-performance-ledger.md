@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:d902933cd564ba6faaf3b8986aa0ca995f35624e589e1d11ef6140c2492840da'
+body_hash: 'sha256:346673ac2f6da20103e1d199e031375a8c381be59eeb209c41ebdaf8a0ee78af'
 related:
   - "[[2026-10-22-startup-performance-plan]]"
 ---
@@ -153,6 +153,15 @@ related:
 - `S03` `M` `.vault/adr/2026-10-22-startup-performance-authority-observation-adr.md`
 - `S03` `verify:` `pytest src/cadrumo/adapters/persistence/storage/custody/tests/test_change_witness.py src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_observation.py src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_store.py` -> `pass`
 - `S12` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S09` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_workbench.py`
+- `S09` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_initial_root.py`
+- `S09` `M` `src/cadrumo_runtime/host/frontend/tui/profile/overview_client.py`
+- `S09` `M` `src/cadrumo_runtime/host/frontend/tui/installed_session.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_initial_root.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_language_captures.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/frontend/tui/entrypoints/tui/tests/test_runtime_automation_requester_native.py`
+- `S09` `M` `.vault/audit/2026-10-22-startup-performance-request-path-audit.md`
+- `S09` `verify:` `pytest src/cadrumo_runtime/host/tests/frontend/tui` -> `pass`
 
 ## Notes
 

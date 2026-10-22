@@ -177,4 +177,11 @@ def read_profile_overview(
     return profile_overview_from_client_view(collection, profile_label=profile_label)
 
 
-__all__ = ["profile_overview_from_client_view", "read_profile_overview"]
+def read_profile_status(
+    client: FrontendClient, *, output_language: OutputLanguage, timeout: float = 60
+) -> ProfileViewCollection:
+    """Read the one-page status stream: the profile's identity, revision and setup state."""
+    return client.read_profile_view((ProfileViewPageKind.STATUS,), output_language=output_language, timeout=timeout)
+
+
+__all__ = ["profile_overview_from_client_view", "read_profile_overview", "read_profile_status"]

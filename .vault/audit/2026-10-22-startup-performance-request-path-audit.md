@@ -100,3 +100,17 @@ The disposable-root harness ran against one independent copy of the operator's s
 | `session hold` admitted | 2.1 s | 2.0 s |
 
 Per-operation cost fell about fivefold. Process start, imports and the worker's cold first operation, which dominate sign-in, are unchanged by these Steps.
+
+### progress-tui-first-screen | info | S09 cut the operations and imports before Home
+
+The operator's runtime log for a TUI start before these Steps shows the preferences page at 1.6 s and five overview pages at 1.1-2.0 s each before the first screen (`tui_initial_screen_ready` 7.2-8.6 s for an incomplete profile). A complete profile then also read the workbench generation and a status page, and every Home refresh read the five overview pages again.
+
+| Before Home | Before S09 | After S09 |
+| --- | --- | --- |
+| Profile view operations | preferences, 5 overview pages, status page | preferences, 2 status pages |
+| Workbench graph import (2.6 s in development) | after the first profile read, serially | beside the preferences read |
+| Profile view operations per Home refresh | 5 overview pages | 1 status page |
+
+The profile pane's overview is read off the capture whenever a status names a newer revision; opening the pane during that read waits for it. Only an incomplete profile, which opens on the profile pane, reads the overview before its first screen. The launch time on the rebuilt stage is S10's measurement.
+
+The runtime TUI suite also exposed an intermittent restricted-session test: its request button sat below the fold once the asynchronous status rows filled, so the pilot's click missed in 2 of 3 runs. The test now scrolls the button into view, as its login branch already did; 6 of 6 runs pass.

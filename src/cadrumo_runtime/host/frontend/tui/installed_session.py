@@ -16,6 +16,7 @@ import asyncio
 import sys
 import time
 from collections.abc import Callable
+from importlib import import_module
 from logging import DEBUG, ERROR
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -261,7 +262,14 @@ async def _run_runtime_session(
 
         from .runtime_initial_root import RuntimeInitialRoot
 
-        preference = await asyncio.to_thread(read_profile_language, handoff.client)
+        # The language read waits on the runtime while the workbench graph Home
+        # needs imports here. The initial root's graph above already holds every
+        # module the read imports, so no import runs beside another.
+        reading = asyncio.ensure_future(asyncio.to_thread(read_profile_language, handoff.client))
+        try:
+            import_module(".runtime_workbench", __package__)
+        finally:
+            preference = await reading
         adopt_profile_output_language(preference.language)
         root = RuntimeInitialRoot(
             handoff.client,

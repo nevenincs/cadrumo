@@ -505,6 +505,9 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                                 timeout=20,
                             )
                             request_button = app.query_one("#restricted-request-access", Button)
+                            # Status rows fill in after the profile line and can push the actions below the fold.
+                            request_button.scroll_visible(animate=False)
+                            await pilot.pause()
                             clicked = await pilot.click("#restricted-request-access")
                             if not clicked:
                                 raise AssertionError(

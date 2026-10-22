@@ -6,6 +6,8 @@ not native admission, which the separate worker integration covers.
 
 import asyncio
 import threading
+import time
+from collections.abc import Callable
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Never, cast
@@ -74,6 +76,17 @@ def _overview(profile_id: UUID, language: OutputLanguage) -> ProfileOverview:
     )
 
 
+def _status(profile_id: UUID, language: OutputLanguage) -> SimpleNamespace:
+    """The status page of the profile ``_overview`` describes in ``language``."""
+    overview = _overview(profile_id, language)
+    return SimpleNamespace(
+        profile_id=profile_id,
+        record_revision=overview.record_revision,
+        content_digest=overview.content_digest,
+        setup_state=overview.setup_state,
+    )
+
+
 async def _recovery() -> FrontendClient:
     raise AssertionError("language refresh cannot open another client")
 
@@ -95,6 +108,11 @@ def test_canonical_invalidation_updates_initial_root_and_new_profile_panes_off_l
         return _overview(profile_id, output_language)
 
     monkeypatch.setattr(runtime_initial_root, "read_profile_overview", overview)
+    monkeypatch.setattr(
+        runtime_initial_root,
+        "read_profile_status",
+        lambda _client, *, output_language: _status(profile_id, output_language),
+    )
     monkeypatch.setattr(runtime_initial_root.RuntimeInitialRoot, "_session", lambda _self: None)
     monkeypatch.setattr(
         profile_language, "read_profile_language", lambda _client: ProfileLanguage(OutputLanguage.CA, 2, "b" * 64)
@@ -148,6 +166,10 @@ def test_later_generation_and_profile_requests_use_one_updated_language_and_reje
         requests.append(("profile", output_language))
         return _overview(profile_id, output_language)
 
+    def status(_client: FrontendClient, *, output_language: OutputLanguage) -> SimpleNamespace:
+        requests.append(("status", output_language))
+        return _status(profile_id, output_language)
+
     def generation(_client: FrontendClient, *, output_language: OutputLanguage) -> SimpleNamespace:
         nonlocal interrupt
         requests.append(("generation", output_language))
@@ -157,6 +179,7 @@ def test_later_generation_and_profile_requests_use_one_updated_language_and_reje
         return SimpleNamespace(home=SimpleNamespace(projection=object()))
 
     monkeypatch.setattr(runtime_workbench, "read_profile_overview", overview)
+    monkeypatch.setattr(runtime_workbench, "read_profile_status", status)
     monkeypatch.setattr(runtime_workbench, "read_workbench_generation", generation)
     monkeypatch.setattr(runtime_workbench, "read_runtime_account_session", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(runtime_initial_root, "read_profile_overview", overview)
@@ -169,6 +192,7 @@ def test_later_generation_and_profile_requests_use_one_updated_language_and_reje
         operation_registry=_operations,
     )
     original = root._read()
+    _until(lambda: root._latest_profile is not None, "the first overview read off the capture")
     initial = runtime_initial_root.RuntimeInitialRoot(
         client,
         profile_label="Current profile",
@@ -179,8 +203,11 @@ def test_later_generation_and_profile_requests_use_one_updated_language_and_reje
     initial._workbench_root = root
     initial._set_output_language(OutputLanguage.CA)
     requests.clear()
-    assert root._read().profile.sections[0].fields[0].value == "ca"
-    assert requests == [("generation", OutputLanguage.CA), ("profile", OutputLanguage.CA)]
+    assert root._read().status.record_revision == 2
+    # The language change already read this revision's overview; the capture reads only its status.
+    assert requests == [("generation", OutputLanguage.CA), ("status", OutputLanguage.CA)]
+    assert root._latest_profile is not None
+    assert root._latest_profile.sections[0].fields[0].value == "ca"
     with pytest.raises(RefusalError) as stale:
         root._presentation(original)
     assert stale.value.reason is RefusalCode.UNAVAILABLE
@@ -189,5 +216,67 @@ def test_later_generation_and_profile_requests_use_one_updated_language_and_reje
         root._read()
     assert changed.value.reason is RefusalCode.UNAVAILABLE
     requests.clear()
-    assert root._read().profile.sections[0].fields[0].value == "hu"
-    assert requests == [("generation", OutputLanguage.HU), ("profile", OutputLanguage.HU)]
+    assert root._read().status.record_revision == 2
+    assert requests == [("generation", OutputLanguage.HU), ("status", OutputLanguage.HU)]
+    assert root._latest_profile is not None
+    assert root._latest_profile.sections[0].fields[0].value == "hu"
+
+
+def test_a_capture_reads_the_status_and_leaves_a_newer_overview_to_a_read_off_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    profile_id = uuid4()
+    client = _client(profile_id)
+    revision = [1]
+    release = threading.Event()
+    overview_threads: list[int] = []
+
+    def status(_client: FrontendClient, *, output_language: OutputLanguage) -> SimpleNamespace:
+        return SimpleNamespace(
+            profile_id=profile_id,
+            record_revision=revision[0],
+            content_digest="a" * 64,
+            setup_state=ProfileSetupState.COMPLETE,
+        )
+
+    def overview(_client: FrontendClient, *, profile_label: str, output_language: OutputLanguage) -> ProfileOverview:
+        overview_threads.append(threading.get_ident())
+        assert release.wait(30), "the test never released the overview read"
+        return _overview(profile_id, output_language).model_copy(update={"record_revision": revision[0]})
+
+    monkeypatch.setattr(runtime_workbench, "read_profile_overview", overview)
+    monkeypatch.setattr(runtime_workbench, "read_profile_status", status)
+    monkeypatch.setattr(
+        runtime_workbench,
+        "read_workbench_generation",
+        lambda _client, *, output_language: SimpleNamespace(home=SimpleNamespace(projection=object())),
+    )
+    monkeypatch.setattr(runtime_workbench, "read_runtime_account_session", lambda *_args, **_kwargs: None)
+    root = runtime_workbench.RuntimeWorkbenchRoot(
+        client,
+        profile_label="Current profile",
+        output_language=OutputLanguage.ES,
+        open_recovery_client=_recovery,
+        operation_registry=_operations,
+    )
+    # The capture returns before the overview: Home never waits for the profile pane.
+    assert root._read().status.record_revision == 1
+    assert root._latest_profile is None
+    release.set()
+    _until(lambda: root._latest_profile is not None, "the overview read off the capture")
+    assert overview_threads[0] != threading.get_ident()
+    assert root._latest_profile is not None and root._latest_profile.record_revision == 1
+
+    root._read()
+    assert len(overview_threads) == 1, "a status naming the cached revision reads no overview"
+    revision[0] = 2
+    root._read()
+    _until(lambda: len(overview_threads) == 2 and root._latest_profile is not None, "the newer revision's overview")
+    assert root._latest_profile is not None and root._latest_profile.record_revision == 2
+
+
+def _until(condition: Callable[[], bool], what: str) -> None:
+    deadline = time.monotonic() + 30
+    while not condition():
+        assert time.monotonic() < deadline, f"timed out waiting for {what}"
+        time.sleep(0.01)

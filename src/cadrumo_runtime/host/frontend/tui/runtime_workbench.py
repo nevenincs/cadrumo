@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from threading import Lock
+from threading import Condition, Lock, Thread
 from typing import TYPE_CHECKING
 
 from textual.screen import Screen
@@ -23,9 +23,10 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operator_actions.catalogue import lookup_action
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
-from cadrumo.application.user_profile.view_operation import ProfileViewPageKind
 from cadrumo.core.config import load_settings
+from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.logging import get_logger
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError, AccountSessionUnavailableError
 from cadrumo.entrypoints.tui.aeat_sync.routes import aeat_sync_screen_factory
@@ -56,7 +57,7 @@ from .modelo.runtime_lifecycle import compose_runtime_modelo_lifecycle_door
 from .modelo.runtime_work_create import compose_runtime_calendar_create_handoff, compose_runtime_work_create_handoff
 from .modelo.runtime_workbench_reads import RuntimeModeloWorkbenchSource
 from .profile.manager_client import ProfileManagerClientComposition
-from .profile.overview_client import read_profile_overview
+from .profile.overview_client import read_profile_overview, read_profile_status
 from .runtime_account import compose_runtime_account_factories
 from .runtime_account_session import (
     read_runtime_account_session,
@@ -70,6 +71,7 @@ from .runtime_ledger_classification import (
     RuntimeLedgerClassificationTuiDoorV1,
     build_runtime_ledger_classification_patch,
 )
+from .runtime_ledger_entries import compose_runtime_ledger_exclusion_submitter
 from .runtime_ledger_import import compose_runtime_ledger_import_door
 from .runtime_ledger_records import compose_runtime_ledger_link_submitter, compose_runtime_ledger_record_doors
 from .runtime_ledger_tools import compose_runtime_ledger_tools
@@ -79,14 +81,19 @@ from .runtime_profile_language import RuntimeProfileLanguage
 if TYPE_CHECKING:
     from cadrumo.application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
     from cadrumo.application.operations.registry import OperationRegistry
-    from cadrumo.application.user_profile.overview import ProfileOverview
     from cadrumo.application.workbench_generation_contracts import WorkbenchGenerationV1
     from cadrumo.entrypoints.tui.navigation import TuiDestinationCatalogueV1
     from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
     from cadrumo_client.transport.frontend_client import FrontendClient
+    from cadrumo_client.transport.frontend_client_contracts import ProfileViewCollection
 
     from .runtime_access_management import RecoveryClientOpener
     from .secret.automation_requester import HumanAutomationRequesterFactory
+
+
+_LOGGER = get_logger(__name__)
+# How long opening the profile pane waits for an overview read already under way.
+_OVERVIEW_WAIT_SECONDS = 60.0
 
 
 def _action(action_id: str) -> ActionReference:
@@ -102,7 +109,7 @@ class _Capture:
     """Individually guarded reads; these do not claim a shared storage revision."""
 
     generation: WorkbenchGenerationV1
-    profile: ProfileOverview
+    status: ProfileViewCollection
     language_epoch: int
 
 
@@ -209,6 +216,11 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
     Construction and ``load`` run off the UI loop. Screen factories consume
     only captured values. Mutations are supplied individually by registered
     runtime operations; a missing mutation door stays unavailable.
+
+    A capture reads the profile's one-page status, never its overview: Home
+    needs only the setup state. The profile pane's overview is read off the
+    capture whenever a status names a newer revision; opening the pane while
+    that read is under way waits for it rather than showing the older one.
     """
 
     def __init__(
@@ -236,6 +248,10 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
         self._label = profile_label
         self._open_recovery_client = open_recovery_client
         self._requester_factory = requester_factory
+        # The newest revision a status named, and whether an overview read is under way; both under _language_guard.
+        self._status_revision = 0
+        self._overview_reading = False
+        self._overview_settled = Condition(self._language_guard)
 
     def set_output_language(self, language: OutputLanguage) -> None:
         """Update future requests and profile panes through one canonical read off-loop."""
@@ -260,26 +276,14 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
         except (FrontendRefusedError, RefusalError) as error:
             raise AccountSessionUnavailableError() from error
 
-    def _read(self, initial_profile: ProfileOverview | None = None) -> _Capture:
+    def _read(self) -> _Capture:
         self._require_binding()
         with self._language_guard:
             language, epoch = self._language, self._language_epoch
         try:
             generation = read_workbench_generation(self._client, output_language=language)
-            profile = initial_profile
-            if profile is not None:
-                # Routing already captured this overview. Revalidate its exact
-                # provenance after generation before avoiding another full stream.
-                current = self._client.read_profile_view((ProfileViewPageKind.STATUS,), output_language=language)
-                if (
-                    str(current.profile_id) != profile.profile_id
-                    or current.record_revision != profile.record_revision
-                    or current.content_digest != profile.content_digest
-                    or current.setup_state is not profile.setup_state
-                ):
-                    profile = None
-            if profile is None:
-                profile = read_profile_overview(self._client, profile_label=self._label, output_language=language)
+            # Read after the generation, so the setup state is never older than it.
+            status = read_profile_status(self._client, output_language=language)
         except (FrontendRefusedError, RefusalError):
             # A permission/readiness refusal does not imply expiry. A fresh
             # status check distinguishes it from a lost originating session.
@@ -292,8 +296,46 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
         )
         if generation.home.projection is None:
             raise RefusalError(RefusalCode.UNAVAILABLE)
-        self._adopt_language_profile(profile, epoch)
-        return _Capture(generation, profile, epoch)
+        self._follow_profile(status, epoch)
+        return _Capture(generation, status, epoch)
+
+    def _follow_profile(self, status: ProfileViewCollection, epoch: int) -> None:
+        """Retire a cached overview older than ``status`` and read the current one off this capture."""
+        with self._language_guard:
+            if epoch != self._language_epoch or status.profile_id != self._profile_id:
+                raise RefusalError(RefusalCode.UNAVAILABLE)
+            self._status_revision = max(self._status_revision, status.record_revision)
+            latest = self._latest_profile
+            if latest is not None and latest.record_revision >= self._status_revision:
+                return
+            self._latest_profile = None
+            if self._overview_reading:
+                return
+            self._overview_reading = True
+            language = self._language
+        Thread(target=self._read_overview, args=(language, epoch), name="tui-profile-overview", daemon=True).start()
+
+    def _read_overview(self, language: OutputLanguage, epoch: int) -> None:
+        try:
+            while True:
+                overview = read_profile_overview(self._client, profile_label=self._label, output_language=language)
+                with self._language_guard:
+                    # A status naming a newer revision arrived during this read: read once more.
+                    stale = overview.record_revision < self._status_revision
+                if not stale:
+                    self._adopt_language_profile(overview, epoch)
+                    return
+        except (FrontendRefusedError, RefusalError) as error:
+            # A retired session or changed language refuses; the next capture reads again.
+            diagnostic_event(_LOGGER, "tui_profile_overview_refused", fields=diagnostic_error_fields(error))
+        except Exception as error:
+            diagnostic_event(
+                _LOGGER, "tui_profile_overview_failed", fields=diagnostic_error_fields(error), primary_error=error
+            )
+        finally:
+            with self._language_guard:
+                self._overview_reading = False
+                self._overview_settled.notify_all()
 
     def _destinations(
         self, generation: WorkbenchGenerationV1, profile_factory: TuiScreenFactoryV1
@@ -359,6 +401,7 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
         tools = compose_runtime_ledger_tools(self._client, profile_label=self._label)
         record_doors = compose_runtime_ledger_record_doors(self._client, profile_label=self._label)
         link_submitter = compose_runtime_ledger_link_submitter(self._client, profile_label=self._label)
+        exclusion = compose_runtime_ledger_exclusion_submitter(self._client, profile_label=self._label)
 
         def refresh_ledger() -> LedgerWorkspaceRefreshV1:
             nonlocal current, current_epoch
@@ -400,6 +443,7 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
                 record_doors=record_doors,
                 link_action=_action("operator.ledger.link"),
                 link_submitter=link_submitter,
+                exclusion_submitter=exclusion,
                 tools=tools,
             )(context)
 
@@ -450,6 +494,10 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
                 raise ValueError("profile factory requires its exact destination")
             self._require_binding()
             with self._language_guard:
+                self._overview_settled.wait_for(
+                    lambda: self._latest_profile is not None or not self._overview_reading,
+                    timeout=_OVERVIEW_WAIT_SECONDS,
+                )
                 language, latest = self._language, self._latest_profile
             if latest is None:
                 raise RefusalError(RefusalCode.UNAVAILABLE)
@@ -470,7 +518,7 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
                 profile=profile,
                 open_recovery_client=self._open_recovery_client,
                 requester_factory=self._requester_factory,
-                onboarding_pending=capture.profile.setup_state is ProfileSetupState.INCOMPLETE,
+                onboarding_pending=capture.status.setup_state is ProfileSetupState.INCOMPLETE,
                 on_language_changed=self.set_output_language,
             ),
         )
@@ -479,9 +527,9 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
                 raise RefusalError(RefusalCode.UNAVAILABLE)
         return presentation
 
-    def load(self, *, initial_profile: ProfileOverview | None = None) -> RootBindingV1:
+    def load(self) -> RootBindingV1:
         """Read the first authorized generation, then join its existing screens."""
-        first_capture = self._read(initial_profile)
+        first_capture = self._read()
         first = self._presentation(first_capture)
         pending = [first]
         pending_lock = Lock()
