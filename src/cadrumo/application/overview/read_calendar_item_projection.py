@@ -9,6 +9,7 @@ from typing import Self
 from pydantic import BaseModel, NonNegativeInt, model_validator
 
 from ...core.filing_year import FilingYear
+from ...core.i18n.render import tr
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.notificacion_estado_servicio import NotificacionEstadoServicio
@@ -277,6 +278,9 @@ class OverviewCalendarWarningSnapshot(BaseModel):
     message: str
     fix_action: PipelineNextActionSnapshot
     affected_modelos: tuple[str, ...]
+    # ``message`` is a locale key. A client that cannot render product keys
+    # reads this sentence, rendered in the read's output language.
+    text: str | None = None
 
     @classmethod
     def from_warning(cls, value: CalendarWarning) -> Self:
@@ -286,6 +290,7 @@ class OverviewCalendarWarningSnapshot(BaseModel):
             message=value.message,
             fix_action=PipelineNextActionSnapshot.from_action(value.fix_action),
             affected_modelos=value.affected_modelos,
+            text=tr(value.message),
         )
 
     def to_warning(self) -> CalendarWarning:

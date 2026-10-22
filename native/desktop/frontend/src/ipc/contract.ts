@@ -1136,6 +1136,16 @@ export interface HostCommands {
   };
   user_profile_observe: { args: { updates: Channel<null> }; result: number };
   user_profile_unobserve: { args: { subscription: number }; result: null };
+  /** Counts of the last notifications capture; no row reaches the window. */
+  profile_views_notifications: {
+    args: Authorized;
+    result: import("../shell/views").NotificationsSummary;
+  };
+  /** The filing calendar for an inclusive range of at most about a year. */
+  profile_views_calendar: {
+    args: Authorized<{ from: string; to: string; language: string }>;
+    result: import("../shell/views").FilingCalendar;
+  };
   startup_begin: { args: Authorized; result: void };
   startup_status: { args: Authorized; result: StartupProgress };
 

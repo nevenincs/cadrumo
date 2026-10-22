@@ -150,7 +150,7 @@ export function useFilingCalendar(
     // What is on screen stays up, and so does whatever was pressed to ask.
     setRefreshing(true);
     views
-      .filingCalendar(calendarRange(new Date()))
+      .filingCalendar(calendarRange(new Date()), locale)
       .then(
         (calendar): Read => ({ kind: "ready", calendar }),
         (error: unknown): Read => ({
@@ -168,7 +168,7 @@ export function useFilingCalendar(
         setAttempt((count) => count + 1);
         if (next.kind === "failed") refused.current();
       });
-  }, [views]);
+  }, [views, locale]);
 
   useEffect(() => {
     ++request.current;

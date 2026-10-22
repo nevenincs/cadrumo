@@ -90,6 +90,31 @@ def test_saved_false_and_unknown_are_distinct_on_calendar_agenda_and_backlog_row
         OverviewCalendarSnapshot.model_validate(data)
 
 
+def test_calendar_warnings_carry_their_sentence_in_the_read_language(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        with override_settings(cadrumo_output_language="es"):
+            calendar = build_overview_calendar(
+                profile(),
+                OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 1)),
+                operation=authority_operation,
+                today=date(2026, 10, 19),
+                raw_values={"iva.regime": "GENERAL", "irpf.estimation_regime": "directa_normal"},
+            )
+            captured = OverviewCalendarSnapshot.from_calendar(calendar)
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(token)
+
+    assert captured.warnings
+    for warning in captured.warnings:
+        assert warning.message.startswith("cli.")
+        assert warning.text == tr(warning.message, locale="es")
+        assert warning.text != tr(warning.message, locale="en")
+    assert captured.to_calendar() == calendar
+
+
 @pytest.mark.parametrize(
     ("language", "prefix"),
     [("en", "Your profile"), ("es", "En tu perfil"), ("ca", "Al teu perfil"), ("hu", "A profilodban")],

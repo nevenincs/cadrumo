@@ -1,6 +1,7 @@
 //! Profile presentation over the held person's registered-operation relay.
 //! No repository, credential or profile policy lives in the desktop host.
 pub(crate) mod censo;
+mod views;
 mod wire;
 use super::sign_in::{Presence, SignIn};
 use crate::agent::person::{HeldPerson, PersonEvent};
@@ -337,6 +338,21 @@ async fn user_profile_change(host: State<'_, Arc<ProfileHost>>, change: Change) 
     host.change(change).await
 }
 #[tauri::command]
+async fn profile_views_notifications(
+    host: State<'_, Arc<ProfileHost>>,
+) -> Result<views::NotificationsSummary> {
+    host.notifications().await
+}
+#[tauri::command]
+async fn profile_views_calendar(
+    host: State<'_, Arc<ProfileHost>>,
+    from: String,
+    to: String,
+    language: String,
+) -> Result<views::FilingCalendar> {
+    host.filing_calendar(from, to, language).await
+}
+#[tauri::command]
 fn user_profile_observe(host: State<'_, Arc<ProfileHost>>, updates: Channel<()>) -> u32 {
     let mut observer = lock(&host.observer);
     if let Some((_, task)) = observer.take() {
@@ -383,7 +399,9 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         user_profile_read,
         user_profile_change,
         user_profile_observe,
-        user_profile_unobserve
+        user_profile_unobserve,
+        profile_views_notifications,
+        profile_views_calendar
     ]
 }
 

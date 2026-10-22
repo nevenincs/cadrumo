@@ -118,6 +118,15 @@ export function tauriHost(): Host {
         };
       },
     },
+    views: {
+      notifications: () => call("profile_views_notifications", {}),
+      filingCalendar: (range, language) =>
+        call("profile_views_calendar", {
+          from: range.from,
+          to: range.to,
+          language,
+        }),
+    },
     attendance: {
       async inventory() {
         const reply = (await call("runtime_attendance_inventory", {})) as {

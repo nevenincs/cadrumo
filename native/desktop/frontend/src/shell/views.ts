@@ -21,10 +21,9 @@ export type AeatSubmissionState =
 export type CalendarEntry = {
   modelo: string;
   period: string;
-  /** The day the filing window opens, as an ISO date. The product's calendar
-   * command does not report it in its list today, though the product knows
-   * it; null where a host has no source for it. The window is then not
-   * drawn, only its close: an opening is never guessed. */
+  /** The day the filing window opens, as an ISO date; null where a host has
+   * no source for it. The window is then not drawn, only its close: an
+   * opening is never guessed. */
   opens_on: string | null;
   /** The legal closing date, as an ISO date. */
   closes_on: string;
@@ -117,6 +116,10 @@ export type NotificationsSummary = {
 export interface ProfileViews {
   /** Counts from the last capture. Refused when nobody is signed in. */
   notifications(): Promise<NotificationsSummary>;
-  /** Dates are inclusive ISO dates. Refused when nobody is signed in. */
-  filingCalendar(range: { from: string; to: string }): Promise<FilingCalendar>;
+  /** Dates are inclusive ISO dates; the product's sentences come in
+   * `language`. Refused when nobody is signed in. */
+  filingCalendar(
+    range: { from: string; to: string },
+    language: string,
+  ): Promise<FilingCalendar>;
 }

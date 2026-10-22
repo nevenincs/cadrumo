@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { identity } from "../../scripts/configuration.mjs";
 import { label } from "./support/strings";
 import { ABOUT_FIXTURE } from "../src/dev/fixtures/about";
+import { FIXTURE_CALENDAR } from "../src/dev/fixtures/calendar";
 
 const local = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
@@ -20,7 +21,15 @@ async function signInHost(
   logLevel = "INFO",
 ) {
   await target.addInitScript(
-    ({ supported, docs, deferInitial, deferInitialList, logLevel, about }) => {
+    ({
+      supported,
+      docs,
+      deferInitial,
+      deferInitialList,
+      logLevel,
+      about,
+      calendar,
+    }) => {
       const state = {
         presence: "absent",
         supported,
@@ -67,6 +76,7 @@ async function signInHost(
         releaseList: null as (() => void) | null,
         exitTui: null as (() => void) | null,
         signInUpdate: null as ((signal: unknown) => void) | null,
+        viewReads: [] as unknown[],
       };
       let id = 0;
       Object.assign(window, {
@@ -226,6 +236,16 @@ async function signInHost(
                 ];
                 return { kind: "created", name };
               }
+              case "profile_views_notifications":
+                state.viewReads.push({ command, ...args });
+                return {
+                  captured_at: "2026-10-20T09:00:00Z",
+                  row_count: 4,
+                  unread: 2,
+                };
+              case "profile_views_calendar":
+                state.viewReads.push({ command, ...args });
+                return calendar;
               case "sign_out":
                 ++state.signOuts;
                 state.presence = "absent";
@@ -306,6 +326,7 @@ async function signInHost(
       deferInitialList,
       logLevel,
       about: ABOUT_FIXTURE,
+      calendar: FIXTURE_CALENDAR,
     },
   );
   await target.addInitScript(() => {
@@ -1364,27 +1385,33 @@ test("unsupported platforms hide desktop sign-in and Account", async ({
   ).toHaveCount(0);
 });
 
-test("the desktop host offers no profile views, so nothing leads to one", async ({
+test("the desktop host reads the profile's calendar and message counts", async ({
   page: target,
 }) => {
   await signInHost(target, false);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
-  for (const key of ["desktop.calendar.title", "desktop.rail.messages"])
-    await expect(target.getByRole("button", { name: label(key) })).toHaveCount(
-      0,
-    );
-  await target
-    .getByRole("button", { name: label("desktop.rail.search") })
-    .click();
-  const palette = target.locator(".palette");
-  for (const key of ["desktop.calendar.title", "desktop.rail.messages"]) {
-    await palette
-      .getByRole("combobox", { name: label("desktop.palette.label") })
-      .fill(label(key));
-    await expect(
-      palette.locator(".palette-title").filter({ hasText: label(key) }),
-    ).toHaveCount(0);
-  }
+  const messages = target.locator('[data-rail="messages"]');
+  await expect(messages).toBeVisible();
+  // The count the host passes on, and nothing of the rows behind it.
+  await expect(messages).toContainText("2");
+  await target.locator('[data-rail="calendar"]').click();
+  const page = target.locator(".calendar-page");
+  await expect(page).toBeVisible();
+  await expect(page).toContainText("303");
+  const reads = (await signInState(target)).viewReads as Record<
+    string,
+    unknown
+  >[];
+  expect(reads.map((read) => read.command)).toContain(
+    "profile_views_notifications",
+  );
+  const calendarRead = reads.find(
+    (read) => read.command === "profile_views_calendar",
+  );
+  expect(calendarRead?.language).toBe("en");
+  expect(calendarRead?.token).toBe("a".repeat(64));
+  expect(String(calendarRead?.from)).toMatch(/^\d{4}-\d{2}-01$/);
+  expect(String(calendarRead?.to)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 });
 
 // A stand-in documentation origin. It is a different origin from the shell,

@@ -99,13 +99,11 @@ A scenario is a named, deterministic host behaviour, declared as data in
 | `session-failure`     | Sessions that start, print a line, then fail and exit                    |
 | `tui-unavailable`     | Signed out, with sessions that cannot start: the TUI is not a way on     |
 | `views-refused`       | Signed in, with every profile view refused: not an empty calendar        |
-| `no-views`            | Signed in on a host with no profile views, as the desktop host is today  |
+| `no-views`            | Signed in on a host with no profile views                                |
 
 Every scenario but `no-views` offers the profile views (the filing calendar
 and the notification counts behind the Messages button) from a fixture;
 `empty` offers a calendar with nothing due and notifications never captured.
-The desktop host offers none yet, so the product shows no way into one: the
-views are design evidence until a host provides them.
 
 Select one in the control or in the address:
 
@@ -332,8 +330,12 @@ typed in `src/shell/views.ts`.
 
 - **A host without views is a complete host.** The shell then draws no
   button, action, chord or page for one, so nothing leads to a view that
-  cannot load. The desktop host offers none yet: in the product none of this
-  is on screen, and what the scenarios show of it is design evidence.
+  cannot load.
+- **The desktop host reads them over the signed-in person's relay**, as it
+  reads the profile: `profile_views_calendar` runs `overview.calendar` and
+  `profile_views_notifications` runs `live.notifications.latest`, then
+  `live.notifications.show` for that capture. The window names no operation,
+  and the host keeps nothing it reads.
 - **A view is read for a profile, when something shows it.** The calendar is
   read when its page is shown, and not again for being put away and brought
   back within half a minute; its Refresh always asks. A calendar on screen
@@ -351,13 +353,15 @@ typed in `src/shell/views.ts`.
   and tooltip.
 - **Withheld, a view says what the TUI pane says**, by the same component,
   `SignedOut`, with the same ways on.
-- **The types are what a host must return.** The calendar mirrors the result
-  of `app overview calendar`, entries and observed events, field for field,
-  and adds one field that command does not print today: `opens_on`, the day
-  an obligation's filing window opens. The product's own calendar model has
-  it; a host that cannot supply it returns null. The notification summary is
-  counts only: the rows it is counted from carry names and tax numbers, and
-  they do not reach the window.
+- **The types are what a host must return.** The calendar mirrors the
+  product's calendar read, entries and observed events, field for field,
+  including `opens_on`, the day an obligation's filing window opens; a host
+  that cannot supply it returns null. A warning is the product's own
+  sentence in the read's language, and a profile without a declared taxpayer
+  model is said as a warning rather than drawn as nothing due. The
+  notification summary is counts only: the rows it is counted from carry
+  names and tax numbers, and they do not reach the window. A row whose read
+  mark was not captured is not counted as unread.
 
 The calendar has two faces over the one read, in
 `src/components/FilingCalendar.tsx`:
