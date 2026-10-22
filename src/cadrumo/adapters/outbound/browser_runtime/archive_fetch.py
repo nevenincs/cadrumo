@@ -65,29 +65,44 @@ def fetch_pinned_archive(
 
     ``progress`` receives this archive's bytes received so far. A source that
     fails for a network reason gives way to the next; a mismatch, an
-    unapproved hop, a full disk or a cancel ends the download at once.
+    unapproved hop, a full disk, a cancel or the end of ``deadline`` ends the
+    download at once, because ``deadline`` bounds every source together.
 
     Raises:
-        DependencyTransferError: The classified failure of the last source tried.
+        DependencyTransferError: The classified failure of the last source tried,
+            carrying a note for each earlier source's failure.
     """
     hosts = frozenset(host.lower() for host in allowed_hosts)
-    failure: DependencyTransferError | None = None
+    earlier: list[DependencyTransferError] = []
     for url in pin.urls:
         try:
             _fetch_from(url, pin, destination, hosts, proxy, progress, cancelled, deadline, transport)
         except DependencyTransferError as error:
             destination.unlink(missing_ok=True)
-            if error.category in _FINAL_FOR_EVERY_SOURCE:
+            if error.category in _FINAL_FOR_EVERY_SOURCE or error.facts.get("timed_out") is True:
+                _note_earlier(error, earlier, len(pin.urls))
                 raise
-            failure = error
+            earlier.append(error)
         except BaseException:
             destination.unlink(missing_ok=True)
             raise
         else:
             return
-    if failure is None:
+    if not earlier:
         raise DependencyTransferError(DependencyFailureCategory.UNEXPECTED, transient=False)
-    raise failure
+    last = earlier.pop()
+    _note_earlier(last, earlier, len(pin.urls))
+    raise last
+
+
+def _note_earlier(failure: DependencyTransferError, earlier: list[DependencyTransferError], sources: int) -> None:
+    """Note each earlier source's failure on ``failure``, so the one reported does not hide them."""
+    for index, previous in enumerate(earlier, start=1):
+        facts = ", ".join(f"{key}={value!r}" for key, value in sorted(previous.facts.items()))
+        failure.add_note(
+            f"source {index} of {sources} failed earlier: {previous.category.value}"
+            f" (transient={previous.transient}{', ' + facts if facts else ''})"
+        )
 
 
 def _fetch_from(
@@ -104,6 +119,8 @@ def _fetch_from(
     current = httpx.URL(url)
     for _hop in range(ARCHIVE_FETCH_MAX_REDIRECTS + 1):
         _admit(current, hosts)
+        if time.monotonic() >= deadline:
+            raise _timed_out()
         try:
             with (
                 _client(current.host, proxy, transport) as client,
@@ -174,9 +191,7 @@ def _receive(
             if cancelled():
                 raise DependencyTransferError(DependencyFailureCategory.CANCELLED, transient=False)
             if time.monotonic() >= deadline:
-                raise DependencyTransferError(
-                    DependencyFailureCategory.HOST_UNREACHABLE, transient=True, facts={"timed_out": True}
-                )
+                raise _timed_out()
             received += len(chunk)
             if received > pin.download_bytes:
                 raise _damaged()
@@ -185,6 +200,12 @@ def _receive(
             progress(received)
     if received != pin.download_bytes or digest.hexdigest() != pin.sha256:
         raise _damaged()
+
+
+def _timed_out() -> DependencyTransferError:
+    return DependencyTransferError(
+        DependencyFailureCategory.HOST_UNREACHABLE, transient=True, facts={"timed_out": True}
+    )
 
 
 def _damaged() -> DependencyTransferError:

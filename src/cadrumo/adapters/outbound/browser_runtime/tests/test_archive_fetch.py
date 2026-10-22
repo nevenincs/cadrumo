@@ -8,6 +8,7 @@ checks and the file handling all run for real.
 from __future__ import annotations
 
 import hashlib
+import math
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -68,8 +69,14 @@ def _serve(body: bytes, *, length: str | None = None) -> _Route:
 
 
 def _fetch(
-    network: _Network, destination: Path, *, pin: BrowserArchivePin | None = None, cancel: bool = False
+    network: _Network,
+    destination: Path,
+    *,
+    pin: BrowserArchivePin | None = None,
+    cancel: bool = False,
+    deadline: float = math.inf,
 ) -> list[int]:
+    # Only the deadline tests bound the wall clock: a loaded host must not turn another case into a timeout.
     seen: list[int] = []
     fetch_pinned_archive(
         pin or _pin(),
@@ -78,15 +85,15 @@ def _fetch(
         proxy=None,
         progress=seen.append,
         cancelled=lambda: cancel,
-        deadline=time.monotonic() + 30,
+        deadline=deadline,
         transport=httpx.MockTransport(network),
     )
     return seen
 
 
-def _refused(network: _Network, destination: Path) -> DependencyTransferError:
+def _refused(network: _Network, destination: Path, *, deadline: float = math.inf) -> DependencyTransferError:
     with pytest.raises(DependencyTransferError) as raised:
-        _fetch(network, destination)
+        _fetch(network, destination, deadline=deadline)
     assert not destination.exists()
     return raised.value
 
@@ -171,6 +178,49 @@ def test_when_every_mirror_fails_the_last_failure_is_reported_as_retryable(tmp_p
 
     assert refused.category is DependencyFailureCategory.HOST_UNREACHABLE
     assert refused.transient is True
+
+
+def test_an_earlier_mirror_failure_stays_visible_on_the_reported_one(tmp_path: Path) -> None:
+    network = _Network({_PRIMARY: lambda _request: httpx.Response(503)})
+
+    refused = _refused(network, tmp_path / "archive.zip")
+
+    assert refused.category is DependencyFailureCategory.UNEXPECTED
+    assert refused.facts == {"http_status": 404}
+    assert refused.__notes__ == ["source 1 of 2 failed earlier: host_unreachable (transient=True, http_status=503)"]
+    assert network.requested == [_PRIMARY, _FALLBACK]
+
+
+def test_a_spent_deadline_requests_nothing_and_reports_the_timeout(tmp_path: Path) -> None:
+    network = _Network({_PRIMARY: _serve(_BODY), _FALLBACK: _serve(_BODY)})
+
+    refused = _refused(network, tmp_path / "archive.zip", deadline=time.monotonic())
+
+    assert refused.category is DependencyFailureCategory.HOST_UNREACHABLE
+    assert refused.transient is True
+    assert refused.facts == {"timed_out": True}
+    assert network.requested == []
+
+
+def test_a_deadline_ending_in_the_first_mirror_is_reported_instead_of_the_next_mirror_failure(
+    tmp_path: Path,
+) -> None:
+    deadline = time.monotonic() + 0.05
+
+    def stall_past_the_deadline(_request: httpx.Request) -> httpx.Response:
+        while time.monotonic() < deadline:
+            time.sleep(0.01)
+        return _serve(_BODY)(_request)
+
+    blob = f"https://playwright.download.prss.microsoft.com/dbazure/download/playwright/{_PATH}"
+    # The fallback is absent from the table, so trying it would report its 404 in place of the timeout.
+    network = _Network({_PRIMARY: _redirect(blob), blob: stall_past_the_deadline})
+
+    refused = _refused(network, tmp_path / "archive.zip", deadline=deadline)
+
+    assert refused.category is DependencyFailureCategory.HOST_UNREACHABLE
+    assert refused.facts == {"timed_out": True}
+    assert _FALLBACK not in network.requested
 
 
 def test_a_cancel_stops_the_download_and_keeps_nothing(tmp_path: Path) -> None:
