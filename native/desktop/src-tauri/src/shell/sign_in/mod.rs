@@ -132,6 +132,9 @@ pub struct SignIn {
     // The session the window's own sign-in opened, kept until a consumer's
     // hold replaces it or the person signs out, so no second hold resumes it.
     signed_in: std::sync::Mutex<Option<crate::agent::person::HeldPerson>>,
+    // The hold a sign-in to the selected, signed-out profile will use, started
+    // while the sign-in form shows.
+    prepared: std::sync::Mutex<Option<crate::agent::person::PreparedSignIn>>,
     // What every person session of this window was pushed, whichever is held.
     person_events: crate::agent::person::PersonEvents,
 }
@@ -148,6 +151,7 @@ impl SignIn {
             observation: observation::Observer::default(),
             person: std::sync::Mutex::new(std::sync::Weak::new()),
             signed_in: std::sync::Mutex::new(None),
+            prepared: std::sync::Mutex::new(None),
             person_events: tokio::sync::broadcast::channel(16).0,
         }
     }
@@ -188,11 +192,22 @@ impl SignIn {
             return wire::login(self.run(&LOGIN, label, Some(encoded_bytes(&password, false)?))?);
         };
         let _mutation = self.watch.mutation();
-        let mut person = match crate::agent::person::Person::sign_in(
-            self.runtime()?.command(),
-            &profile_id,
-            &password,
-        ) {
+        let prepared = self
+            .prepared
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take()
+            .filter(|hold| hold.profile() == profile_id)
+            .and_then(|mut hold| hold.waiting().then_some(hold));
+        let signed_in = match prepared {
+            Some(hold) => hold.sign_in(&password),
+            None => crate::agent::person::Person::sign_in(
+                self.runtime()?.command(),
+                &profile_id,
+                &password,
+            ),
+        };
+        let mut person = match signed_in {
             Ok(person) => person,
             Err(crate::agent::person::SignInFailure::Refused(refusal)) => {
                 return Ok(SignInResult::Refused { refusal });
@@ -222,6 +237,35 @@ impl SignIn {
                 refusal: None,
             },
         })
+    }
+
+    /// Keeps a sign-in hold waiting for the selected profile while it is
+    /// signed out, so a submitted password starts no process. Another
+    /// selection, a signed-in person or an unready runtime ends that hold.
+    fn prepare_sign_in(&self) -> Result<()> {
+        let wanted = self.watch.latest().ok().and_then(|observed| {
+            (observed.status.runtime_ready() && observed.status.state == Presence::Absent)
+                .then_some(observed.profile_id)
+                .flatten()
+        });
+        let mut prepared = self.prepared.lock().unwrap_or_else(|e| e.into_inner());
+        if prepared
+            .as_mut()
+            .is_some_and(|hold| Some(hold.profile()) == wanted.as_deref() && hold.waiting())
+        {
+            return Ok(());
+        }
+        let ended = prepared.take();
+        if let Some(profile_id) = wanted {
+            *prepared = Some(crate::agent::person::Person::prepare_sign_in(
+                self.runtime()?.command(),
+                &profile_id,
+            )?);
+        }
+        drop(prepared);
+        // Ending a hold waits for it to exit: never while the slot is locked.
+        drop(ended);
+        Ok(())
     }
 
     /// Every later push to whichever person session this window holds.
@@ -275,7 +319,13 @@ impl SignIn {
         let result = self.children.stop();
         let joined = self.observation.join().await;
         let watch = self.watch.clone();
+        let prepared = self
+            .prepared
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take();
         super::blocking(move || {
+            drop(prepared);
             watch.close();
             Ok(())
         })
@@ -322,7 +372,16 @@ impl SignIn {
         secret: Option<Zeroizing<Vec<u8>>>,
         options: &[String],
     ) -> Result<process::Output> {
-        let _mutation = (!call.reads).then(|| self.watch.mutation());
+        let _mutation = (!call.reads).then(|| {
+            // No waiting sign-in hold keeps a connection to a profile the command changes.
+            drop(
+                self.prepared
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .take(),
+            );
+            self.watch.mutation()
+        });
         let image = if call.runtime {
             &self.runtime
         } else {
@@ -465,7 +524,11 @@ pub async fn sign_in_status(
     // Dispatch completion is not runtime readiness. The canonical CLI below
     // remains the only authority on availability and authentication.
     let started = manager.start(false).await;
-    status_after_manager(started, state.inner().read_status().await)
+    let status = status_after_manager(started, state.inner().read_status().await);
+    let prepared = state.inner().clone();
+    // A hold that cannot start now is started by the sign-in itself.
+    tokio::task::spawn_blocking(move || prepared.prepare_sign_in());
+    status
 }
 
 fn status_after_manager(

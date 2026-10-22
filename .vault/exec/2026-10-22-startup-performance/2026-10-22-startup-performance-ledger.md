@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:f04cb26a5738ae23ead01322112a46f5110dc71c2aec7683408adec6aab0cbef'
+body_hash: 'sha256:d902933cd564ba6faaf3b8986aa0ca995f35624e589e1d11ef6140c2492840da'
 related:
   - "[[2026-10-22-startup-performance-plan]]"
 ---
@@ -147,7 +147,14 @@ related:
 - `S12` `verify:` `pytest src/cadrumo_runtime/host/tests/test_session_watch.py` -> `pass`
 - `S12` `verify:` `cmake desktop-host-unit-test sign_in` -> `pass`
 - `S12` `verify:` `cmake desktop-host-unit-clippy` -> `pass`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/change_witness.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_change_witness.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_observation.py`
+- `S03` `M` `.vault/adr/2026-10-22-startup-performance-authority-observation-adr.md`
+- `S03` `verify:` `pytest src/cadrumo/adapters/persistence/storage/custody/tests/test_change_witness.py src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_observation.py src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_store.py` -> `pass`
+- `S12` `M` `native/desktop/src-tauri/src/agent/person.rs`
 
 ## Notes
 
 - `S07` Real desktop sign-in with a persisted receipt needs the verified desktop parent; verified at S10 on the rebuilt stage
+- `S03` aged custody observations probe the Credential Manager anchor instead of re-reading custody (peer measurement: 40 aged re-reads per save)

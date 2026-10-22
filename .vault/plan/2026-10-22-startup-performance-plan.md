@@ -13,7 +13,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-22'
 body_schema: body-v2
-body_hash: 'sha256:e5ebfc995ba93fda8c65b7598c56c3511fb68a6ac3338820533a76de99b4b880'
+body_hash: 'sha256:4b412bfd6d4d8ec514a2c5100e6808207a652770a693001aae1b3d0d6361e90c'
 ---
 
 # `startup-performance` plan
@@ -39,7 +39,7 @@ The findings are in `2026-10-22-startup-performance-request-path-audit`. `2026-1
 - [ ] `S09` - Cut the TUI first screen's serial operations and eager imports; `src/cadrumo/entrypoints/tui and src/cadrumo_client/transport/frontend_profile_view_client.py`.
 - [ ] `S10` - Rebuild the stage with the operator, measure the real desktop launch to usable Home and confirm no slow-request warnings; `build/windows-x64/stage/Release/app, audit`.
 - [x] `S11` - Keep the workbench generation's module graph off the first operation's execution binding and pin it with an import gate; `src/cadrumo_runtime/host/operation_authority.py, src/cadrumo_runtime/host/tests/test_worker_startup_import_graph.py`.
-- [ ] `S12` - Serve the sign-in view's profile list from the session watch and pre-start the window's person hold while the sign-in form is shown, so no process starts between password and signed-in; `src/cadrumo_runtime/host/session_watch.py, native/desktop/src-tauri/src/shell/sign_in and owning tests`.
+- [x] `S12` - Serve the sign-in view's profile list from the session watch and pre-start the window's person hold while the sign-in form is shown, so no process starts between password and signed-in; `src/cadrumo_runtime/host/session_watch.py, native/desktop/src-tauri/src/shell/sign_in and owning tests`.
 
 ## Parallelization
 

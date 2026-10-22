@@ -85,6 +85,48 @@ impl From<ApplicationError> for SignInFailure {
     }
 }
 
+/// A sign-in hold started before the password is known. The window starts it
+/// while the sign-in form shows, so the password reaches a process that has
+/// already started and connected to the runtime. Dropping it closes its input,
+/// which ends the hold without signing in.
+pub struct PreparedSignIn {
+    person: Person,
+    profile: String,
+    // Set once the hold answered or ended before its password: it never waits again.
+    ended: bool,
+}
+
+impl PreparedSignIn {
+    pub fn profile(&self) -> &str {
+        &self.profile
+    }
+
+    /// Whether the hold still waits for the password: it has said nothing and
+    /// still runs. A hold that could not connect has already answered.
+    pub fn waiting(&mut self) -> bool {
+        self.ended = self.ended
+            || !matches!(
+                self.person.received.try_recv(),
+                Err(mpsc::TryRecvError::Empty)
+            )
+            || !matches!(self.person.child.try_wait(), Ok(None));
+        !self.ended
+    }
+
+    /// Signs the person in with `password` through this hold, as
+    /// [`Person::sign_in`] does through a new one.
+    pub fn sign_in(self, password: &[u8]) -> std::result::Result<Person, SignInFailure> {
+        let Self {
+            mut person,
+            profile,
+            ..
+        } = self;
+        person.send_password(password)?;
+        person.identity = person.read()?;
+        Person::signed_in(person, &profile)
+    }
+}
+
 pub struct Person {
     child: Child,
     stdin: Option<ChildStdin>,
@@ -121,7 +163,7 @@ impl Person {
     }
 
     fn hold_within(command: Command, profile: &str, reply_limit: Duration) -> Result<Self> {
-        let person = Self::spawn(command, profile, None, reply_limit)?;
+        let person = Self::spawn(command, profile, reply_limit)?;
         if person.identity["kind"] == "session_refused" {
             return Err(person.refused("person_hold_refused", &person.identity.clone()));
         }
@@ -146,7 +188,28 @@ impl Person {
         password: &[u8],
         reply_limit: Duration,
     ) -> std::result::Result<Self, SignInFailure> {
-        let person = Self::spawn(command, profile, Some(password), reply_limit)?;
+        Self::prepare_sign_in_within(command, profile, reply_limit)?.sign_in(password)
+    }
+
+    /// Starts the hold a sign-in to `profile` will use, before its password is known.
+    pub fn prepare_sign_in(command: Command, profile: &str) -> Result<PreparedSignIn> {
+        Self::prepare_sign_in_within(command, profile, REPLY_LIMIT)
+    }
+
+    pub(crate) fn prepare_sign_in_within(
+        command: Command,
+        profile: &str,
+        reply_limit: Duration,
+    ) -> Result<PreparedSignIn> {
+        Ok(PreparedSignIn {
+            person: Self::start(command, profile, true, reply_limit)?,
+            profile: profile.to_owned(),
+            ended: false,
+        })
+    }
+
+    /// The person a sign-in's answer holds, or why it holds none.
+    fn signed_in(person: Self, profile: &str) -> std::result::Result<Self, SignInFailure> {
         match person.identity["kind"].as_str() {
             Some("sign_in_refused") => {
                 let refused = &person.identity;
@@ -195,14 +258,22 @@ impl Person {
         Ok(())
     }
 
-    fn spawn(
+    fn spawn(command: Command, profile: &str, reply_limit: Duration) -> Result<Self> {
+        let mut person = Self::start(command, profile, false, reply_limit)?;
+        person.identity = person.read()?;
+        Ok(person)
+    }
+
+    /// Starts a hold without reading its first line; a sign-in hold then waits
+    /// for its password frame.
+    fn start(
         mut command: Command,
         profile: &str,
-        password: Option<&[u8]>,
+        sign_in: bool,
         reply_limit: Duration,
     ) -> Result<Self> {
         command.args(["session", "hold", "--profile-id", profile]);
-        if password.is_some() {
+        if sign_in {
             command.args(["--password-stdin", "--persist-receipt"]);
         }
         command
@@ -220,28 +291,10 @@ impl Person {
                     .with_reason("person_hold_spawn")
                     .caused_by(error)
             })?;
-        let mut stdin = child
+        let stdin = child
             .stdin
             .take()
             .ok_or_else(|| failed("person_hold_stdin_missing"))?;
-        if let Some(password) = password {
-            // The hold reads one length-prefixed frame and wipes it; the window's copy is the caller's.
-            let length = u32::try_from(password.len())
-                .ok()
-                .filter(|length| (1..=4096).contains(length))
-                .ok_or_else(|| failed("person_password_length"))?;
-            let mut frame = zeroize::Zeroizing::new(Vec::with_capacity(4 + password.len()));
-            frame.extend_from_slice(&length.to_be_bytes());
-            frame.extend_from_slice(password);
-            stdin
-                .write_all(&frame)
-                .and_then(|()| stdin.flush())
-                .map_err(|error| {
-                    ApplicationError::new(ErrorCode::WriteFailed, Operation::Cli)
-                        .with_reason("person_password_write")
-                        .caused_by(error)
-                })?;
-        }
         let stdout = child
             .stdout
             .take()
@@ -302,7 +355,7 @@ impl Person {
                 }
             }
         });
-        let mut person = Self {
+        Ok(Self {
             child,
             stdin: Some(stdin),
             received,
@@ -313,9 +366,30 @@ impl Person {
             failure: tokio::sync::watch::Sender::new(None),
             reply_limit,
             identity: Value::Null,
-        };
-        person.identity = person.read()?;
-        Ok(person)
+        })
+    }
+
+    fn send_password(&mut self, password: &[u8]) -> Result<()> {
+        // The hold reads one length-prefixed frame and wipes it; the window's copy is the caller's.
+        let length = u32::try_from(password.len())
+            .ok()
+            .filter(|length| (1..=4096).contains(length))
+            .ok_or_else(|| failed("person_password_length"))?;
+        let mut frame = zeroize::Zeroizing::new(Vec::with_capacity(4 + password.len()));
+        frame.extend_from_slice(&length.to_be_bytes());
+        frame.extend_from_slice(password);
+        let stdin = self
+            .stdin
+            .as_mut()
+            .ok_or_else(|| failed("person_hold_stdin_missing"))?;
+        stdin
+            .write_all(&frame)
+            .and_then(|()| stdin.flush())
+            .map_err(|error| {
+                ApplicationError::new(ErrorCode::WriteFailed, Operation::Cli)
+                    .with_reason("person_password_write")
+                    .caused_by(error)
+            })
     }
 
     fn read(&mut self) -> Result<Value> {
@@ -783,6 +857,37 @@ mod sign_in_tests {
         );
         assert_eq!(refusal.code, "CREDENTIAL_REJECTED");
         assert_eq!(refusal.retry_after_seconds, None);
+    }
+
+    #[test]
+    fn a_prepared_hold_waits_for_the_password_and_then_signs_in() {
+        let mut prepared = Person::prepare_sign_in(holding(&held(json!(true))), PROFILE).unwrap();
+        assert_eq!(prepared.profile(), PROFILE);
+        std::thread::sleep(Duration::from_millis(300));
+        assert!(prepared.waiting());
+        let person = prepared.sign_in(PASSWORD.as_bytes()).unwrap();
+        assert!(person.session_persisted());
+        assert_eq!(person.identity["profile_id"], PROFILE);
+    }
+
+    #[test]
+    fn a_prepared_hold_that_answered_or_ended_no_longer_waits() {
+        let refused = json!({"kind":"session_refused","code":"runtime_unavailable"});
+        let mut answered = Person::prepare_sign_in(
+            powershell(&format!(
+                "& {{ [Console]::Out.WriteLine('{refused}'); [Console]::Out.Flush(); \
+                 [Console]::OpenStandardInput().ReadByte() | Out-Null }}"
+            )),
+            PROFILE,
+        )
+        .unwrap();
+        let mut ended = Person::prepare_sign_in(powershell("exit 3"), PROFILE).unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(20);
+        while (answered.waiting() || ended.waiting()) && std::time::Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(50));
+        }
+        assert!(!answered.waiting());
+        assert!(!ended.waiting());
     }
 
     #[test]
