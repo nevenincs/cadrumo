@@ -25,9 +25,11 @@ The exchange directory holds JSON files written whole, each by one side:
 
 - ``handoff.json`` (this driver): the package, the storage root, the profile,
   the relay and the scenario;
-- ``driver-profile-owner.json`` (this driver): a nonce, its live process
-  identity, the one public synthetic profile inventory and the held session's
-  public identity coordinates; it contains no profile credential;
+- ``driver-profile-owner.json`` (this driver): its live process identity, an
+  ``owner_token`` that is only a digest of that identity and the storage root,
+  the storage and secret-store paths, the one public synthetic profile inventory
+  and the held session's public identity coordinates; it contains no profile
+  credential and nothing a reader could present as authority;
 - ``gateway.json`` (runner): the gateway's process id, its URL, its home and its
   workspace;
 - ``requests/<n>.json`` (runner): a pending permission, as the gateway's run
@@ -50,7 +52,6 @@ import ctypes
 import hashlib
 import json
 import os
-import secrets
 import shutil
 import sys
 import tempfile
@@ -346,6 +347,18 @@ def _ledger_text(programs: Programs, environment: Mapping[str, str], profile: Pr
     return json.dumps(envelope.get("result"), ensure_ascii=False)
 
 
+def owner_binding(owner_pid: int, owner_start_identity: str, storage_root: Path) -> str:
+    """Return the value the runner's ``owner_token`` field carries for this invocation.
+
+    The runner only needs it to differ between driver invocations: it checks its
+    shape and compares the marker against its own copy. A digest of public
+    coordinates already in the same document meets that, so it is not a secret
+    and possessing it grants nothing.
+    """
+    material = json.dumps([owner_pid, owner_start_identity, str(storage_root)])
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()[:48]
+
+
 def _driver_profile_evidence(
     profile: Profile,
     held_session: Mapping[str, Any],
@@ -356,7 +369,6 @@ def _driver_profile_evidence(
     scenario: Mapping[str, Any],
     owner_pid: int,
     owner_start_identity: str,
-    owner_token: str,
 ) -> dict[str, Any]:
     """Record bounded public provenance after the exact profile is held."""
     require(profile.profile_id is not None, "created profile has no verified identity")
@@ -377,7 +389,7 @@ def _driver_profile_evidence(
         "version": 1,
         "owner_pid": owner_pid,
         "owner_start_identity": owner_start_identity,
-        "owner_token": owner_token,
+        "owner_token": owner_binding(owner_pid, owner_start_identity, storage_root),
         "storage_root": str(storage_root),
         "secret_store_dir": str(secret_store),
         "profile_id": profile_id,
@@ -501,7 +513,6 @@ async def run(package: Path, scratch: Path) -> Receipt:
                 scenario=_SCENARIO,
                 owner_pid=os.getpid(),
                 owner_start_identity=owner_start,
-                owner_token=secrets.token_hex(24),
             )
             write_whole(directory / _DRIVER_PROFILE_FILE, evidence)
             gateway: dict[str, ProcessIdentity | None] = {"identity": None}

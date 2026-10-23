@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
 import os
+import secrets
 import subprocess
 import sys
 from dataclasses import replace
@@ -20,6 +23,7 @@ from ..agent_live import (
     _driver_profile_evidence,
     answer_for,
     is_announced_relay,
+    owner_binding,
     read_document,
     stored_answers_disagree,
     write_whole,
@@ -156,7 +160,6 @@ def test_driver_profile_evidence_binds_only_the_observed_inventory_and_held_sess
         scenario={"taxpayer": "Synthetic taxpayer"},
         owner_pid=123,
         owner_start_identity="owner-start",
-        owner_token="a" * 48,
     )
 
     assert evidence["profile_id"] == profile_id
@@ -193,8 +196,70 @@ def test_driver_profile_evidence_refuses_more_than_the_exact_synthetic_profile(t
             scenario={"taxpayer": "Synthetic taxpayer"},
             owner_pid=123,
             owner_start_identity="owner-start",
-            owner_token="a" * 48,
         )
+
+
+def test_the_written_driver_profile_holds_no_credential_custody_or_bearer(tmp_path: Path) -> None:
+    profile_id = "250e54c8-ce41-4d97-82d2-dc47e9487d5f"
+    password = secrets.token_urlsafe(32)
+    custody = f"synthetic-custody-{secrets.token_hex(16)}"
+    profile = Profile(
+        "agent-live-acceptance", password, UUID(profile_id), (("agent-live-acceptance", profile_id, True),)
+    )
+    session = {
+        "kind": "session_held",
+        "profile_id": profile_id,
+        "session_id": "250e54c8-ce41-4d97-82d2-dc47e9487d5f",
+        "runtime_boot_id": "9428607c-b8c6-4fcd-a52c-c916fd364d8f",
+        "connection_id": "6f1c2d3e-4b5a-4c6d-8e7f-0a1b2c3d4e5f",
+        "custody": custody,
+        "password": password,
+    }
+    storage_root = tmp_path / "storage"
+    path = tmp_path / "exchange" / "driver-profile-owner.json"
+
+    write_whole(
+        path,
+        _driver_profile_evidence(
+            profile,
+            session,
+            storage_root=storage_root,
+            secret_store=tmp_path / "secrets",
+            relay=Path("/package/bin/cadrumo-mcp"),
+            scenario={"taxpayer": "Synthetic taxpayer"},
+            owner_pid=123,
+            owner_start_identity="owner-start",
+        ),
+    )
+
+    text = path.read_text(encoding="utf-8")
+    assert password not in text and custody not in text
+    written = read_document(path)
+    assert written is not None
+    assert set(written["held_session"]) == {"profile_id", "session_id", "runtime_boot_id", "connection_id"}
+    # The runner's exact-key protocol for this file.
+    assert set(written) == {
+        "version",
+        "owner_pid",
+        "owner_start_identity",
+        "owner_token",
+        "storage_root",
+        "secret_store_dir",
+        "profile_id",
+        "profile_inventory",
+        "held_session",
+        "relay",
+        "scenario",
+    }
+    assert written["secret_store_dir"] == str(tmp_path / "secrets")
+    token = written["owner_token"]
+    assert len(token) == 48 and all(character in "0123456789abcdef" for character in token)
+    # Anyone holding the file can recompute the token from its public fields, so it is no bearer.
+    expected = hashlib.sha256(
+        json.dumps([written["owner_pid"], written["owner_start_identity"], written["storage_root"]]).encode("utf-8")
+    ).hexdigest()[:48]
+    assert token == expected
+    assert owner_binding(123, "owner-start", tmp_path / "other-storage") != token
 
 
 def test_each_filed_request_is_answered_once_in_its_own_answer_file(tmp_path: Path) -> None:

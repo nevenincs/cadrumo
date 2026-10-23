@@ -32,7 +32,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 
 
-def emit(record: dict[str, str | int]) -> None:
+def emit(record: dict[str, str | int | None]) -> None:
     """Write only the fixture's bounded, credential-free control records."""
     sys.stdout.write(json.dumps(record) + "\n")
     sys.stdout.flush()
