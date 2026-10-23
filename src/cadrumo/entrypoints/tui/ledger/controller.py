@@ -622,13 +622,19 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         Leaving a body unmounts it, and unmounting cancels its workers: a write
         cancelled after submission still settles, but nobody sees how, and a
         retry may repeat it. Back, area changes and tool choices are all
-        refused while this holds. A body that submits work overrides it with
-        the state its own Back guard already keeps.
+        refused while this holds, and so is every way the root has of removing
+        the body: palette and desktop navigation, the account controls that
+        replace the page or end the session, and quitting. A body that submits
+        work overrides it with the state its own Back guard already keeps.
         """
         return False
 
     def refuse_leaving(self) -> bool:
-        """Say that this body cannot be left yet and return ``True``, or return ``False`` when it can."""
+        """Say that this body cannot be left yet and return ``True``, or return ``False`` when it can.
+
+        The workspace asks this before it swaps its own body, and the root asks
+        it, as the destination's leave guard, before it removes the destination.
+        """
         if not self.in_flight:
             return False
         message = tr("tui.ledger.flow.in_flight_refusal")

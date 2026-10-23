@@ -34,6 +34,7 @@ from .navigation import (
     NavigationContractError,
     TuiDestinationIdV1,
     TuiFocusIdentityV1,
+    TuiLeaveGuardV1,
     TuiNavigationTargetV1,
 )
 
@@ -93,8 +94,26 @@ class RootNavigationMixin:
             )
         )
 
+    def _destination_refuses_leaving(self: CadrumoTuiApp) -> bool:
+        """Ask each screen above the root shell, topmost first, whether it may be removed now.
+
+        The first screen that refuses says why on screen, and the caller keeps
+        the destination as it is. Every path that pops, replaces or swaps the
+        destination, or ends the session at the operator's request, asks here.
+        """
+        return any(
+            isinstance(screen, TuiLeaveGuardV1) and screen.refuse_leaving()
+            for screen in reversed(self.screen_stack[1:])
+        )
+
     def navigate_to(self: CadrumoTuiApp, target: TuiNavigationTargetV1, /) -> None:
-        """Mount only the current admitted destination with its semantic focus."""
+        """Mount only the current admitted destination with its semantic focus.
+
+        Refused, with the reason on screen, while the destination shown holds
+        work it must not abandon.
+        """
+        if self._destination_refuses_leaving():
+            return
         catalogue = self.destination_catalogue
         if target.destination == "workbench.home":
             self._show_home(self._home_semantic_focus)
@@ -332,8 +351,15 @@ class RootNavigationMixin:
     async def _swap_destination(
         self: CadrumoTuiApp, screen: Screen[None], return_to_home: bool, navigation_revision: int
     ) -> None:
-        """Pop every destination, then push the replacement once they are gone."""
-        if not self._navigation_is_current(navigation_revision):
+        """Pop every destination, then push the replacement once they are gone.
+
+        The destination is asked again here, at the moment of removal, because
+        a replacement can be requested before a write starts and land after
+        it: Home reads a whole generation off the loop while the operator can
+        still act on the page they are leaving. A refused swap drops the
+        replacement and leaves that page, and its write, where they are.
+        """
+        if not self._navigation_is_current(navigation_revision) or self._destination_refuses_leaving():
             return
         while len(self.screen_stack) > 1:
             await self.pop_screen()
@@ -347,7 +373,12 @@ class RootNavigationMixin:
         return navigation_revision == self._navigation_revision and self.is_running
 
     def _request_recompose(self: CadrumoTuiApp, outcome: AccountRecomposeRequiredV1) -> None:
-        """Sever every profile-bound capability before returning to bootstrap."""
+        """Sever every profile-bound capability before returning to bootstrap.
+
+        The destination is not asked whether it may be left: an expired, lost
+        or retired session, or a completed password change, already ended the
+        authority any write in flight was submitted under.
+        """
         if self._recomposition_pending:
             return
         self._recomposition_pending = True

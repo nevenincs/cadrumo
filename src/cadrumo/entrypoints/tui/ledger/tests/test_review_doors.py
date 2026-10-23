@@ -257,6 +257,35 @@ async def test_the_evidence_area_lists_the_drafts_the_review_list_operation_answ
 
 
 @pytest.mark.asyncio
+async def test_choosing_a_draft_keeps_the_cursor_and_the_scroll_on_it() -> None:
+    """The cursor stays on the chosen draft, and on it again when the copy is reworded."""
+    drafts = tuple(synthetic_draft(index) for index in range(60))
+    door = MemoryEvidenceReviewListDoor(drafts)
+    screen = LedgerEvidenceScreen(_evidence_controller(door))
+    chosen = 40
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
+            table = cast("DataTable[str]", screen.query_one("#ledger-evidence-review-queue", DataTable))
+            table.focus()
+            table.move_cursor(row=chosen)
+            await settle(pilot)
+            scrolled = table.scroll_y
+            assert scrolled > 0, "the chosen draft must lie below the first screenful for the scroll to matter"
+            reference = str(table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value)
+            await pilot.press("enter")
+            await settle(pilot)
+            assert table.cursor_row == chosen
+            assert table.scroll_y == scrolled
+            assert reference in text_of(screen, "#ledger-evidence-review-queue-detail")
+
+            await screen.refresh_language()
+            await settle(pilot)
+            assert table.cursor_row == chosen
+            assert reference in text_of(screen, "#ledger-evidence-review-queue-detail")
+
+
+@pytest.mark.asyncio
 async def test_a_refused_drafts_read_is_said_on_screen_and_lists_nothing() -> None:
     error = RecordedRegisteredError(EVIDENCE_FILES_REFUSAL_CODE, translated_message=EVIDENCE_FILES_REFUSAL_KEY)
     door = MemoryEvidenceReviewListDoor((synthetic_draft(1),), refusal=error)

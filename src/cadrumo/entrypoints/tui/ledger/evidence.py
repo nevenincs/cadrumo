@@ -217,7 +217,9 @@ class LedgerEvidenceScreen(LedgerEvidenceRecordActions):
         self._paint_review_queue()
 
     def _paint_review_queue(self) -> None:
+        """Repaint the page of drafts, keeping the cursor on the draft it was on when that draft is still listed."""
         table = cast("DataTable[str]", self.query_one(f"#{_REVIEW_QUEUE}", DataTable))
+        kept = table.coordinate_to_cell_key(table.cursor_coordinate).row_key if table.row_count else None
         table.clear(columns=True)
         table.add_column(tr("tui.ledger.evidence.review_queue.column.reference"), key="reference")
         table.add_column(tr("tui.ledger.evidence.review_queue.column.drafted"), key="drafted")
@@ -231,7 +233,13 @@ class LedgerEvidenceScreen(LedgerEvidenceRecordActions):
                 str(row.advisory_count),
                 key=row.evidence_reference,
             )
+        if kept is not None and kept in table.rows:
+            table.move_cursor(row=table.get_row_index(kept))
         paint_paging(self, _REVIEW_QUEUE, self.review_queue)
+        self._paint_review_detail()
+
+    def _paint_review_detail(self) -> None:
+        """Show the chosen draft's findings, or nothing when none is chosen."""
         draft = self.selected_draft
         self.query_one(f"#{_REVIEW_QUEUE}-detail", Static).update(
             "" if draft is None else "\n".join(review_queue_detail_lines(draft))
@@ -320,7 +328,8 @@ class LedgerEvidenceScreen(LedgerEvidenceRecordActions):
         if table.id == _REVIEW_QUEUE:
             reference = str(event.row_key.value)
             self.selected_draft = next(row for row in self.review_queue.items if row.evidence_reference == reference)
-            self._paint_review_queue()
+            # Only the detail changes; repainting the list would put the cursor back on its first row.
+            self._paint_review_detail()
             return
         if table.id != "ledger-evidence":
             return

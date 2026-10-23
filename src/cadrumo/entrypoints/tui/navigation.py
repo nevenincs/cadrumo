@@ -179,6 +179,23 @@ class TuiScreenFactoryV1(Protocol):
         ...
 
 
+@runtime_checkable
+class TuiLeaveGuardV1(Protocol):
+    """A mounted screen that can refuse to be removed while it awaits work it must not abandon.
+
+    Removing a screen unmounts it, and unmounting cancels the workers it is
+    awaiting. A write cancelled after submission still settles, but nobody sees
+    how, and a retry may repeat it. So every root path that pops, replaces or
+    swaps the destination, or ends the session at the operator's request, asks
+    each screen it would remove first. Only an end the runtime forces, such as
+    an expired or lost session, is not asked: it cannot be refused.
+    """
+
+    def refuse_leaving(self) -> bool:
+        """Say on screen why it cannot be left yet and return ``True``, or return ``False`` when it can."""
+        ...
+
+
 def _validate_screen_factory(factory: object) -> TuiScreenFactoryV1:
     """Admit only callables that accept one positional screen context."""
     if not callable(factory):
@@ -468,6 +485,7 @@ __all__ = [
     "TuiDestinationRouteV1",
     "TuiDestinationZoneV1",
     "TuiFocusIdentityV1",
+    "TuiLeaveGuardV1",
     "TuiNavigationTargetV1",
     "TuiScreenContextV1",
     "TuiScreenFactoryV1",

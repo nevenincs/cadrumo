@@ -94,6 +94,24 @@ _ACCOUNT_KEYS: Final[dict[str, AccountActionV1]] = {
 }
 """The key for each account control, reachable from every destination."""
 
+_LEAVING_ACCOUNT_ACTIONS: Final = frozenset(
+    {
+        AccountActionV1.PROFILE,
+        AccountActionV1.LANGUAGE,
+        AccountActionV1.CHANGE_USER,
+        AccountActionV1.PASSWORD,
+        AccountActionV1.SIGN_OUT,
+    }
+)
+"""The account controls that remove the destination shown, so it is asked first.
+
+Profile and Language replace it. Change user and Sign out end the session. A
+completed password change ends it too, so the form is not opened over work
+that must not be abandoned. Appearance and Access leave the destination
+mounted; Access ends the session only when the runtime reports the access
+lost, which cannot be refused.
+"""
+
 _SESSION_WATCH_SECONDS: Final = 30.0
 """How often the root checks whether the session has lapsed when no retirement is pushed to it."""
 
@@ -745,6 +763,17 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         """Flip between the light and dark appearance."""
         toggle_appearance(self)
 
+    @override
+    async def action_quit(self) -> None:
+        """Quit, unless the destination shown holds work it must not abandon.
+
+        Every quit the operator asks for ends here: the key, Ctrl+Q and the
+        palette's Quit command.
+        """
+        if self._destination_refuses_leaving():
+            return
+        await super().action_quit()
+
     def action_account(self, action: str) -> None:
         """Run the account control a key names."""
         self.run_account_action(AccountActionV1(action))
@@ -759,6 +788,8 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         factories = self._account_factories
         if factories is None or not self.account_action_available(action):
             self._refuse_account_action()
+            return
+        if action in _LEAVING_ACCOUNT_ACTIONS and self._destination_refuses_leaving():
             return
         self._dispatch_account_action(factories, action)
 

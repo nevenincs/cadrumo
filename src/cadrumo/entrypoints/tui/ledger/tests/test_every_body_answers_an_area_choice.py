@@ -104,9 +104,11 @@ type _Build = Callable[[], LedgerWorkspaceScreen]
 
 
 def _concrete_bodies() -> set[type[LedgerWorkspaceScreen]]:
-    for module in pkgutil.iter_modules(ledger_package.__path__):
-        if module.name != "tests":
-            importlib.import_module(f"{ledger_package.__name__}.{module.name}")
+    # Recursive, so a body in a future subpackage is walked too; only the tests package is left out.
+    tests_package = f"{ledger_package.__name__}.tests"
+    for module in pkgutil.walk_packages(ledger_package.__path__, prefix=f"{ledger_package.__name__}."):
+        if module.name != tests_package and not module.name.startswith(f"{tests_package}."):
+            importlib.import_module(module.name)
 
     def walk(cls: type[LedgerWorkspaceScreen]) -> Iterator[type[LedgerWorkspaceScreen]]:
         for subclass in cls.__subclasses__():

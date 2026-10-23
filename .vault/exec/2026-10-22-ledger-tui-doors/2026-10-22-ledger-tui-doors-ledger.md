@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:de6c2a6c1466a8a14775c73a50c42a938f186c4cc5d4662177f2c02809496711'
+body_hash: 'sha256:9d27447a04d70fcbe36627d12b4385dbef70b7e46b02c9dd4c76ce7a3a3bf5b0'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -412,6 +412,19 @@ related:
 - `S25` `M` `src/cadrumo/entrypoints/tui/ledger/invoices_import.py`
 - `S25` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider -m '' src/cadrumo/entrypoints/tui/ledger/tests/test_every_body_answers_an_area_choice.py` -> `pass`
 - `S25` `by:` `vaultspec-high-executor`
+- `S21` `M` `src/cadrumo/entrypoints/tui/navigation.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/app_navigation.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/evidence.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_every_body_answers_an_area_choice.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_actividad_asset_parity.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_review_doors.py`
+- `S21` `A` `src/cadrumo/entrypoints/tui/tests/test_root_waits_for_a_write.py`
+- `S21` `verify:` `pytest S21 focused (5 files)` -> `pass`
+- `S21` `verify:` `just test-tui` -> `pass`
+- `S21` `verify:` `ruff format/check` -> `pass`
+- `S21` `verify:` `lint-imports` -> `pass`
 
 ## Notes
 
@@ -444,3 +457,4 @@ related:
 - `S22` Scope path is `src/cadrumo_runtime/host/frontend/tui/operations/runtime_profile_session.py.` A failed receipt whose effect is anything but NONE, UPDATED included, is reported as unknown, never refused. The export-only workaround door is removed. In the full run, `test_runtime_automation_requester_native` failed once and passed alone; routed to root-cause work.
 - `S24` S24 and S25 share one commit because eight files serve both. ledger.review and ledger.evidence.review.list take no paging fields, so each area holds the answer and renders one page. Neither screen offers the request filters yet. Back from an entry opened in Review returns to the overview. `tui.ledger.own_accounts.*,` `classification.field.*` and `review_status.*` still build keys from values.
 - `S25` The walk test discovers 41 concrete Records bodies by subclass. With the shared row handler removed it fails 41 of 41.
+- `S21` Re-review fix: root navigation, account actions and quit ask the destination's leave guard; asset screen runs actions in a worker; guard-disabled mutation fails 10 of 10

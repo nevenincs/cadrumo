@@ -81,6 +81,13 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         self._actions = controller.activity_asset_actions
         self._last_forecast: ScheduledAmortizationCharge | None = None
         self._last_forecast_supersedes: str | None = None
+        self._busy = False
+
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """An asset action is out through the door."""
+        return self._busy
 
     @override
     def compose(self) -> ComposeResult:
@@ -88,6 +95,8 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         yield localized(
             Static(tr("tui.ledger.activity_asset.title"), classes="cadrumo-banner"), "tui.ledger.activity_asset.title"
         )
+        # Where a refusal to leave while an action is out is said.
+        yield Static("", id="ledger-flow-status", markup=False)
         yield localized(
             Input(placeholder=tr("tui.ledger.activity_asset.asset_id"), id="asset-id"),
             "tui.ledger.activity_asset.asset_id",
@@ -132,16 +141,25 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         yield Static("", id="asset-result", markup=False)
         yield Static("", id="asset-recovery", markup=False)
 
-    async def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Dispatch every mutation through the injected shared operations."""
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Dispatch every mutation through the injected shared operations, one action at a time."""
+        if self._busy:
+            return
         # A visible neutral state prevents a following public action from being
         # mistaken for the previous result while its shared operation is still
         # running on the worker thread.  It has no accounting meaning and is
         # always replaced by either the operation result or a refusal below.
         self.query_one("#asset-result", Static).update(f"pending\t{event.button.id or 'unknown'}")
         self.query_one("#asset-recovery", Static).update("")
+        self._busy = True
+        # A worker rather than an await here: awaiting would hold this screen's
+        # message queue for the whole action, so Back and the account keys
+        # would wait behind it and act once it ended, instead of being refused.
+        self.run_worker(self._run(event.button.id), group="activity-asset-action")
+
+    async def _run(self, button_id: str | None) -> None:
         try:
-            result = await asyncio.to_thread(self._dispatch, event.button.id)
+            result = await asyncio.to_thread(self._dispatch, button_id)
         except AccountSessionExpiredError as exc:
             self._clear_private_view()
             self.query_one("#asset-result", Static).update(f"refused\t{exc}")
@@ -154,6 +172,9 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             self.query_one("#asset-result", Static).update(f"refused\t{exc}")
             self._show_recovery(exc)
             return
+        finally:
+            # Cleared with no await before the outcome is on screen, so leaving never hides it.
+            self._busy = False
         self.query_one("#asset-result", Static).update(result.message)
         if result.current_revision_id is not None:
             self.query_one("#asset-current-revision-id", Static).update(

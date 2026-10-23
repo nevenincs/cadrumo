@@ -362,14 +362,22 @@ async def test_activity_asset_screen_clears_old_result_while_action_runs() -> No
         screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
         screen.query_one("#asset-result", Static).update("claim\tfixture\treused=false")
         button = screen.query_one("#asset-create", Button)
-        handler = asyncio.create_task(screen.on_button_pressed(Button.Pressed(button)))
+        button.press()
         try:
             assert await asyncio.to_thread(worker_entered.wait, 1.0)
+            # The action runs in a worker, so the screen keeps answering while it is out.
             await pilot.pause()
             assert str(screen.query_one("#asset-result", Static).render()).strip() == "pending\tasset-create"
+            assert screen.in_flight
+            # A second press while one action is out does not queue another behind it.
+            button.press()
+            await pilot.pause()
+            assert [name for name, _request in actions.requests] == ["create"]
         finally:
             release_worker.set()
-        await handler
+        await app.workers.wait_for_complete()
+        await pilot.pause()
+        assert not screen.in_flight
         assert str(screen.query_one("#asset-result", Static).render()).strip() == (
             "created\tpending-public-result\trevisions=1"
         )
