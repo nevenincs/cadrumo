@@ -83,19 +83,18 @@ const SURFACES: {
         })
         .click();
       await target
-        .getByRole("button", {
-          name: label("desktop.profile.censo.title"),
+        .getByRole("region", {
+          name: label("desktop.profile.censo.band"),
           exact: true,
         })
-        .click();
-      await target
-        .getByRole("dialog")
         .getByRole("button", {
           name: label("desktop.profile.censo.pull"),
           exact: true,
         })
         .click();
-      await expect(target.getByRole("dialog")).toContainText("Calle Nueva 1");
+      await expect(target.locator(".user-profile-page")).toContainText(
+        "Calle Nueva 1",
+      );
     },
   },
   {

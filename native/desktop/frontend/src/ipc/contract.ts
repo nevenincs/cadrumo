@@ -821,6 +821,18 @@ export type ProfileDeleteReview = {
 export type ProfileCreateResult =
   { kind: "created"; name: string } | ({ kind: "refused" } & SignInRefusal);
 
+/**
+ * profile_password_change takes a raw UTF-8 body: one JSON object with
+ * `current_passphrase`, `new_passphrase` and `new_passphrase_confirmation`,
+ * which the host hands to the product's command line and keeps nowhere.
+ * `unknown`: the change was submitted and its outcome was not observed, so
+ * the old password may or may not still sign in.
+ */
+export type PasswordChangeResult =
+  | { kind: "changed" }
+  | ({ kind: "refused" } & SignInRefusal)
+  | { kind: "unknown" };
+
 // ---------------------------------------------------------------------------
 // Component setup (desktop_setup_*)
 // ---------------------------------------------------------------------------
@@ -1226,6 +1238,8 @@ export interface HostCommands {
     };
     result: null;
   };
+  /** Raw body only: see PasswordChangeResult. */
+  profile_password_change: { args: Authorized; result: PasswordChangeResult };
   desktop_language_read: { args: Authorized; result: DesktopLanguage };
   desktop_language_set: {
     args: Authorized<{ language: string }>;

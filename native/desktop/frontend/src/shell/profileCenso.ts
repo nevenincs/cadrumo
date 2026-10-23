@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from "react";
+
 export type CensoReadiness = {
   provider: string;
   route: string;
@@ -63,3 +65,168 @@ export const censoRequirementKeys = {
   expiring: "auth.sync.requirement.expiring",
   ok: "auth.sync.requirement.ok",
 } as const;
+
+/** Codes after which a Censo act is known not to have happened. */
+const SETTLED_FAILURES = ["refused", "conflict", "not_signed_in"];
+
+/**
+ * One profile's Censo synchronization: what it still needs, and the pull in
+ * progress. Runtime pushes drive the pull; a slow check recovers a lost cue.
+ * A failure whose outcome is not known is `uncertain`, and nothing is retried
+ * or started again until the person refreshes.
+ */
+export function useCensoSync(
+  port: CensoPort | undefined,
+  profile: { profile_id: string; record_revision: number } | null,
+  active: boolean,
+  onSettled: () => void,
+) {
+  const [readiness, setReadiness] = useState<CensoReadiness | null>(null);
+  const [snapshot, setSnapshot] = useState<CensoSnapshot | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(false);
+  const [uncertain, setUncertain] = useState(false);
+  const [reload, setReload] = useState(0);
+  const settled = useRef(onSettled);
+  settled.current = onSettled;
+  const id = profile?.profile_id ?? null;
+  const revision = profile?.record_revision ?? null;
+  const operation = snapshot?.operation;
+  const state = snapshot?.state;
+  const finished = state === "done" || state === "stopped";
+
+  useEffect(() => {
+    if (!active || !port || id === null || operation) return;
+    let live = true;
+    void port
+      .readiness(id)
+      .then((value) => {
+        if (live) {
+          setReadiness(value);
+          setError(false);
+        }
+      })
+      .catch(() => {
+        if (live) setError(true);
+      });
+    return () => {
+      live = false;
+    };
+  }, [active, port, id, revision, operation, reload]);
+
+  useEffect(() => {
+    if (!active || !port || id === null || !operation || finished || busy)
+      return;
+    let live = true,
+      fetching = false,
+      queued = false;
+    let stop: (() => void) | undefined;
+    let timer: ReturnType<typeof setTimeout>;
+    const refresh = async () => {
+      if (!live) return;
+      if (fetching) {
+        queued = true;
+        return;
+      }
+      fetching = true;
+      clearTimeout(timer);
+      try {
+        const value = await port.status(id, operation);
+        if (live) {
+          setSnapshot(value);
+          setError(false);
+          setUncertain(false);
+        }
+      } catch {
+        if (live) setError(true);
+      } finally {
+        fetching = false;
+      }
+      if (live) {
+        const delay = queued ? 0 : 30000;
+        queued = false;
+        // Runtime pushes drive updates; this is a recovery check for lost cues.
+        timer = setTimeout(() => {
+          void refresh();
+        }, delay);
+      }
+    };
+    timer = setTimeout(() => {
+      void refresh();
+    }, 0);
+    if (port.observe)
+      void port
+        .observe(() => {
+          void refresh();
+        })
+        .then((unsubscribe) => {
+          if (!live) unsubscribe();
+          else {
+            stop = unsubscribe;
+            void refresh();
+          }
+        })
+        .catch(() => {
+          if (live) setError(true);
+        });
+    return () => {
+      live = false;
+      clearTimeout(timer);
+      stop?.();
+    };
+  }, [active, port, id, operation, finished, busy, reload]);
+
+  // A pull that ended may have changed the profile: it is read again once.
+  useEffect(() => {
+    if (finished) settled.current();
+  }, [finished, operation]);
+
+  const run = async (decision?: CensoDecision) => {
+    if (!port || id === null || busy) return;
+    setBusy(true);
+    setError(false);
+    try {
+      const value =
+        decision && snapshot
+          ? await port.answer(
+              id,
+              snapshot.operation,
+              snapshot.review_digest,
+              decision,
+            )
+          : await port.start(id);
+      setSnapshot(value);
+    } catch (failure) {
+      setError(true);
+      const code =
+        typeof failure === "object" && failure && "code" in failure
+          ? String(failure.code)
+          : "";
+      if (!SETTLED_FAILURES.includes(code)) setUncertain(true);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return {
+    readiness,
+    snapshot,
+    busy,
+    error,
+    uncertain,
+    start: () => run(),
+    answer: (decision: CensoDecision) => run(decision),
+    /** Puts a finished pull away, back to what the next one needs. */
+    dismiss: () => {
+      if (!finished) return;
+      setSnapshot(null);
+      setReadiness(null);
+    },
+    /** Checks again after a failure; an uncertain outcome stays uncertain
+     * until a check answers. */
+    retry: () => {
+      setError(false);
+      setReload((value) => value + 1);
+    },
+  };
+}

@@ -23,11 +23,24 @@ export type Prefs = {
 };
 
 export type ProfileView = {
-  section: string;
-  filter: "all" | "missing" | "required" | "saved";
-  expanded: string[];
+  /** Which details are listed. */
+  show: "all" | "unset" | "required" | "filled";
+  group: "section" | "status" | "none";
+  sort: "form" | "missing" | "alpha";
+  /** The groups the person closed; every other one is open. */
   collapsed: string[];
 };
+
+// What a shell from before the show filter stored as its filter.
+const LEGACY_FILTER = {
+  missing: "unset",
+  required: "required",
+  saved: "filled",
+} as const;
+const legacyShow = (filter: unknown): ProfileView["show"] =>
+  typeof filter === "string" && Object.hasOwn(LEGACY_FILTER, filter)
+    ? LEGACY_FILTER[filter as keyof typeof LEGACY_FILTER]
+    : "all";
 
 export type Layout = {
   page: "docs" | "calendar" | "profile";
@@ -65,9 +78,9 @@ export const DEFAULT_LAYOUT: Layout = {
   logLevel: null,
   calendarView: "months",
   profileView: {
-    section: "",
-    filter: "all",
-    expanded: ["identity", "contact"],
+    show: "all",
+    group: "section",
+    sort: "form",
     collapsed: [],
   },
   agentShown: true,
@@ -197,16 +210,17 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
         DEFAULT_LAYOUT.calendarView,
       ),
       profileView: {
-        section: typeof profile.section === "string" ? profile.section : "",
-        filter: pick(
-          profile.filter,
-          ["all", "missing", "required", "saved"] as const,
-          "all",
+        show: pick(
+          profile.show,
+          ["all", "unset", "required", "filled"] as const,
+          legacyShow(profile.filter),
         ),
-        expanded: identifiers(
-          profile.expanded,
-          DEFAULT_LAYOUT.profileView.expanded,
+        group: pick(
+          profile.group,
+          ["section", "status", "none"] as const,
+          "section",
         ),
+        sort: pick(profile.sort, ["form", "missing", "alpha"] as const, "form"),
         collapsed: identifiers(profile.collapsed, []),
       },
       agentShown:

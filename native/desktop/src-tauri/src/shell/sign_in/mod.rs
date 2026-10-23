@@ -1,6 +1,7 @@
 //! Short-lived canonical CLI invocations for sign-in acts, and one pushed
 //! status observation. No runtime connection or credential is retained here.
 mod observation;
+mod password;
 mod profiles;
 mod watch;
 // The child runner and the envelope decoder are also the provider settings'
@@ -10,6 +11,10 @@ pub(crate) mod wire;
 use observation::{
     __cmd__sign_in_subscribe, __cmd__sign_in_unsubscribe, __tauri_command_name_sign_in_subscribe,
     __tauri_command_name_sign_in_unsubscribe, sign_in_subscribe, sign_in_unsubscribe,
+};
+use password::{
+    __cmd__profile_password_change, __tauri_command_name_profile_password_change,
+    profile_password_change,
 };
 use profiles::{
     __cmd__profile_delete, __cmd__profile_delete_review, __tauri_command_name_profile_delete,
@@ -744,7 +749,8 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         profile_list,
         profile_create,
         profile_delete_review,
-        profile_delete
+        profile_delete,
+        profile_password_change
     ]
 }
 

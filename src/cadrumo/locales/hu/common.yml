@@ -863,20 +863,29 @@ desktop:
     resize: Alsó panel átméretezése
     show: Alsó panel megjelenítése
   profile:
+    action:
+      about: 'Tudnivalók: {field}'
+      aeat_access: AEAT-bejelentkezés beállításai
+      clear: '{field} törlése'
+      collapse: Minden profilszakasz összecsukása
+      copy: '{field} másolása'
+      edit_entry: Bejegyzés szerkesztése
+      expand: Minden profilszakasz kibontása
+      go_to: 'Ugrás a profilszakaszra: {section}'
+      menu: Profilműveletek
+      refresh: Profil frissítése
     add: Bejegyzés hozzáadása
-    all_fields: Minden adat
-    all_sections: Minden szakasz
     cancel: Mégse
     censo:
       absent: Az AEAT nem adott meg értéket. Nincs változás.
       adopt: Mentéskor az AEAT értékének használata.
       apply: Ellenőrzött módosítások mentése
+      band: AEAT Censo
+      blocked: 'A szinkronizáláshoz szükséges:'
       cancel: Szinkronizálás leállítása
-      close: Bezárás
-      current: Mentett
+      checking: A szinkronizálás feltételeinek ellenőrzése…
       device: Hagyd jóvá a bejelentkezést a Cl@ve alkalmazásban.
       done: A szinkronizálás befejeződött. Ellenőrizd a profil még hiányzó adatait.
-      field: Profiladat
       identity: Adóazonosító megadása
       incoming: AEAT
       preserve: A mentett válasz megőrzése.
@@ -885,11 +894,13 @@ desktop:
       ready: Az AEAT-bejelentkezés be van állítva. Mentés előtt áttekintheted a lekért
         adatokat.
       reject: Módosítások elvetése
-      return: Vissza a profilhoz
-      review: Ellenőrizd az AEAT adatait.
+      review_count: 'Ellenőrzendő AEAT-értékek: {count}'
+      review_hint: A változások lent, a helyükön látszanak. Semmi sem mentődik, amíg
+        meg nem erősíted.
       scope: Adócím, irányítószám és kataszteri azonosító átvétele a Censóból. A profil
         többi adatát neked kell megadnod.
       setup: AEAT-bejelentkezés beállítása
+      source: Az AEAT censóból mentve
       stopped: A szinkronizálás leállt. A profil nem módosult.
       title: Szinkronizálás az AEAT-tól
       unavailable: A szinkronizálás nem ellenőrizhető. Próbálj frissíteni.
@@ -897,41 +908,90 @@ desktop:
       unsupported: Ehhez a bejelentkezéshez a terminálban elérhető művelet szükséges.
         Szakítsd meg ezt a próbálkozást, és használd a terminál Censo-szinkronizálását.
     close: Profil bezárása
-    collapse_all: Összes összecsukása
+    close_dialog: Bezárás
+    compact: Tömör nézet
     complete: Profil beállításának befejezése
     conflict: A profilod máshol megváltozott. Zárd be a szerkesztőt, nézd át a friss
       adatokat, majd nyisd meg újra a mezőt. A piszkozatodat nem mentettük.
-    edit: Szerkesztés
+    dismiss: Elrejtés
     edit_field: '{field} szerkesztése'
     empty: Nincs a szűrőknek megfelelő adat. Próbálj más keresést vagy szakaszt.
-    expand_all: Összes kibontása
+    entries_count: 'Bejegyzések: {count}'
+    entries_none: Még nincs bejegyzés
+    entry_required: '* minden bejegyzésben kötelező'
     field_help: A mezőről
-    filter: Mezők megjelenítése
+    keys:
+      actions: A paletta megnyitása a profilműveletekkel
+      clear: Keresés törlése
+      copy: A kijelölt érték másolása
+      edit: A kijelölt adat szerkesztése
+      first_last: Első vagy utolsó adat
+      full: Teljes képernyő vagy tömör nézet
+      help: Billentyűparancsok megjelenítése
+      lead: Ezek a billentyűk akkor működnek, amikor a profiloldal van fókuszban.
+      menu: Az adat menüjének megnyitása
+      move: Mozgás az adatok között
+      search: Adatok keresése
+      section: Előző vagy következő szakasz
+      title: A profil billentyűparancsai
+      toggle: Szakasz összecsukása vagy kibontása
     loading: Profil betöltése…
     maximize: Teljes képernyő
-    missing_count: '{count} hiányzik'
-    missing_filter: Hiányzó adatok
+    missing: Hiányzik
     not_set: Nincs kitöltve
+    password:
+      again: Új jelszó még egyszer
+      changed: Jelszó módosítva
+      changing: Jelszó módosítása…
+      current: Jelenlegi jelszó
+      lead: Mostantól az új jelszóval jelentkezel be ebbe a profilba.
+      new: Új jelszó
+      refused: A jelszó nem változott.
+      rejected: Ez nem a profil jelenlegi jelszava. Semmi sem változott.
+      title: Jelszó módosítása
+      unknown: Nem sikerült megerősíteni, hogy a jelszó megváltozott-e. Legközelebb
+        az új jelszóval jelentkezz be, és ha az nem működik, a régivel.
+    progress: '{total} adatból {filled} kitöltve'
     refresh: Frissítés
     refused: Nem sikerült menteni a módosításokat. Ellenőrizd a mezők útmutatóját,
       és frissítsd a profilt az újabb próbálkozás előtt.
     remove: Bejegyzés törlése
     remove_help: Törlöd ezt a bejegyzést a profilodból? Minden mezője törlődik.
     required: Kötelező
-    required_filter: Hiányzó kötelező adatok
+    required_done: Minden kötelező adat ki van töltve
+    required_missing: 'Hiányzó kötelező adatok: {count}'
     save: Módosítások mentése
-    saved_filter: Mentett adatok
     saved_notice: Mentve
     saved_unread: A módosításokat mentettük, de a friss profilt nem sikerült betölteni.
       Frissíts az ellenőrzéshez.
     saving: Mentés…
     search: Profiladatok keresése
-    sections: Profil szakasza
+    sections: Szakaszok
     signed_out: Jelentkezz be a profilod megtekintéséhez és szerkesztéséhez.
     title: A profilod
     unavailable: Nem sikerült betölteni a profilodat. Frissíts az újrapróbálkozáshoz.
     unknown: Nem tudtuk ellenőrizni, hogy a módosítások mentése megtörtént-e. Frissíts,
       és ellenőrizd a mentett értékeket, mielőtt újra próbálkozol.
+    unnamed: Névtelen profil
+    view:
+      group: Csoportosítás
+      group_none: Nincs
+      group_section: Szakasz
+      group_status: Állapot
+      options: Nézetbeállítások
+      results: 'Megjelenített adatok: {count}'
+      show: Megjelenítés
+      show_all: Mind
+      show_filled: Kitöltött
+      show_required: Kötelező
+      show_unset: Nincs megadva
+      sort: Rendezés
+      sort_alpha: A–Z
+      sort_form: Űrlap szerinti sorrend
+      sort_missing: Hiányzók elöl
+      status_filled: Kitöltve
+      status_required: Hiányzó kötelező adatok
+      status_unset: Nincs megadva
   rail:
     aeat: Az AEAT honlapja
     console: Konzol

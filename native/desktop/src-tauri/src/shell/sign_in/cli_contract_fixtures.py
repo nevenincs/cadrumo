@@ -16,7 +16,6 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import render_error_json
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.json_contract import EnvelopeStatus, Notice, NoticeSeverity, SchemaEnvelope
-from cadrumo.entrypoints.cli._modelo_rendering import advisory_notice
 from cadrumo.entrypoints.cli.config.profile_list_payloads import ConfigListResult, ProfilePointerPayload
 from cadrumo_client.commands.custody_payloads import (
     ConfigLoginResult,
@@ -24,12 +23,14 @@ from cadrumo_client.commands.custody_payloads import (
     ConfigSignInStatusResult,
 )
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.payloads import ConfigPassphraseChangeResult
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.sign_in import SignInPresence, SignInStatus
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginThrottledError, SignInRefusal
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.profile_mutations import ProfileMutationRunError
 
 
 def documents() -> dict[str, object]:
@@ -130,9 +131,10 @@ def documents() -> dict[str, object]:
         status=EnvelopeStatus.WARNING,
         result=ConfigListResult(active_profile=None, profiles=[]),
         notices=[
-            advisory_notice(
-                "config.profile.list.incoherent_observation",
-                "The profile listing could not be trusted.",
+            Notice(
+                code="config.profile.list.incoherent_observation",
+                severity=NoticeSeverity.WARNING,
+                message="The profile listing could not be trusted.",
                 context={"outcome": "degraded", "detail": ""},
             )
         ],
@@ -168,6 +170,35 @@ def documents() -> dict[str, object]:
         ),
     )
     failure("profile-create-boundary", "profile.create", CliRefusedBoundaryError())
+    cases["passphrase-change"] = SchemaEnvelope(
+        command="config.passphrase.change",
+        active_profile="Test profile",
+        status=EnvelopeStatus.SUCCESS,
+        result=ConfigPassphraseChangeResult(
+            profile_id=profile,
+            changed=True,
+            password_generation=2,
+            dek_epoch_preserved=True,
+            recovery_enrollment_retained=True,
+        ),
+    ).model_dump(mode="json")
+    # passphrase.passphrase_change proves the current password first and
+    # forwards a refused proof exactly so.
+    rejected = FrontendRefusedError(
+        AutomationCustodyCode.CREDENTIAL_REJECTED.value, sign_in=SignInRefusal(reason="credential_rejected")
+    )
+    failure(
+        "passphrase-change-rejected",
+        "passphrase.change",
+        CliRefusedBoundaryError(rejected.reason, context=rejected.context),
+    )
+    # profile_password_rotation keeps the submitted operation when its outcome
+    # was not observed.
+    failure(
+        "passphrase-change-unknown",
+        "passphrase.change",
+        ProfileMutationRunError(operation_id="c" * 64, code="connection_closed"),
+    )
     return cases
 
 

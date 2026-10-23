@@ -339,3 +339,35 @@ fn python_profile_creation_refusals_keep_their_reason_and_name_a_taken_label() {
         "REFUSED_PROFILE_REGISTRATION"
     );
 }
+
+#[test]
+fn a_password_change_is_changed_refused_or_unconfirmed_as_the_product_reports_it() {
+    assert_eq!(
+        password_changed(&output_of(fixture("passphrase-change"))).unwrap(),
+        PasswordChangeResult::Changed
+    );
+    assert_eq!(
+        serde_json::to_value(
+            password_changed(&output_of(fixture("passphrase-change-rejected"))).unwrap()
+        )
+        .unwrap(),
+        json!({"kind": "refused", "code": "CREDENTIAL_REJECTED", "retryAfterSeconds": null})
+    );
+    // A submitted rotation whose outcome was not observed is never a refusal.
+    assert_eq!(
+        password_changed(&output_of(fixture("passphrase-change-unknown"))).unwrap(),
+        PasswordChangeResult::Unknown
+    );
+    let mut unchanged = fixture("passphrase-change");
+    unchanged["result"]["changed"] = json!(false);
+    assert!(password_changed(&output_of(unchanged)).is_err());
+    let mut observed_none = fixture("passphrase-change-unknown");
+    observed_none["error"]["context"]["effect"] = json!("none");
+    assert!(matches!(
+        password_changed(&output_of(observed_none)).unwrap(),
+        PasswordChangeResult::Refused { .. }
+    ));
+    let mut other = fixture("passphrase-change");
+    other["command"] = json!("config.login");
+    assert!(password_changed(&output_of(other)).is_err());
+}

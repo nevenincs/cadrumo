@@ -1,145 +1,340 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { label } from "../support/strings";
+import { SCENARIO_PASSWORD } from "../../src/dev/fixtures/password";
 
-async function open(page: Page, scenario = "user-profile") {
-  await page.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
+async function open(page: Page, scenario = "user-profile", language = "en") {
+  await page.goto(
+    `/scenarios.html?scenario=${scenario}&latency=0&bar=off&lang=${language}`,
+  );
   await page
     .locator(".rail")
-    .getByRole("button", { name: label("desktop.profile.title"), exact: true })
+    .getByRole("button", {
+      name: label("desktop.profile.title", {}, language),
+      exact: true,
+    })
     .click();
   await expect(page.locator(".user-profile-page")).toContainText("Soler Vidal");
+  return page.locator(".user-profile-page");
+}
+
+const band = (page: Page) =>
+  page.getByRole("region", {
+    name: label("desktop.profile.censo.band"),
+    exact: true,
+  });
+const row = (profile: Locator, path: string) =>
+  profile.locator(`[data-nav="${path}"]`);
+const editButton = (profile: Locator, field: string) =>
+  profile.getByRole("button", {
+    name: label("desktop.profile.edit_field", { field }),
+    exact: true,
+  });
+const save = (dialog: Locator) =>
+  dialog.getByRole("button", {
+    name: label("desktop.profile.save"),
+    exact: true,
+  });
+
+/** Chooses an item of the profile's actions menu. */
+async function profileAction(page: Page, key: string) {
+  await page
+    .locator(".user-profile-page")
+    .getByRole("button", {
+      name: label("desktop.profile.action.menu"),
+      exact: true,
+    })
+    .click();
+  await page.getByRole("menuitem", { name: label(key), exact: true }).click();
+}
+
+/** Opens the compact view's options and chooses one of them. */
+async function viewOption(page: Page, key: string) {
+  await page
+    .locator(".user-profile-page")
+    .getByRole("button", { name: label("desktop.profile.view.options") })
+    .click();
+  await page
+    .getByRole("menuitemradio", { name: label(key), exact: true })
+    .click();
+  await page.keyboard.press("Escape");
+}
+
+async function goToSection(page: Page, title: string) {
+  await page
+    .locator(".user-profile-page")
+    .getByRole("button", {
+      name: label("desktop.profile.sections"),
+      exact: true,
+    })
+    .click();
+  await page.getByRole("menuitem", { name: title }).click();
 }
 
 for (const language of ["en", "es", "ca", "hu"]) {
-  test(`Censo labels render clean Unicode in ${language}`, async ({ page }) => {
-    await page.goto(
-      `/scenarios.html?scenario=censo-ready&latency=0&bar=off&lang=${language}`,
-    );
-    await page
-      .locator(".rail")
-      .getByRole("button", {
-        name: label("desktop.profile.title", {}, language),
-        exact: true,
-      })
-      .click();
-    await page
-      .locator(".user-profile-page")
-      .getByRole("button", {
-        name: label("desktop.profile.censo.title", {}, language),
-        exact: true,
-      })
-      .click();
-    const dialog = page.getByRole("dialog");
+  test(`the Censo band and summary render clean Unicode in ${language}`, async ({
+    page,
+  }) => {
+    const profile = await open(page, "censo-ready", language);
+    const region = page.getByRole("region", {
+      name: label("desktop.profile.censo.band", {}, language),
+      exact: true,
+    });
     await expect(
-      dialog.getByRole("button", {
+      region.getByRole("button", {
         name: label("desktop.profile.censo.pull", {}, language),
         exact: true,
       }),
     ).toBeEnabled();
-    await expect(dialog).not.toContainText(
-      /[\u00c3\u00c2\ufffd]|\u00e2\u20ac|\u00c5[\u2018\u2019\u00b1]/,
+    await expect(profile.locator("header")).toContainText(
+      label("desktop.profile.required_missing", { count: 2 }, language),
     );
+    await expect(profile).not.toContainText(/[ÃÂ�]|â€|Å[‘’±]/);
   });
 }
-test("profile filters, edits and repeatable entries use saved data", async ({
+
+test("the summary names the taxpayer and filters to what is required and missing", async ({
   page,
 }) => {
-  await open(page);
-  const profile = page.locator(".user-profile-page");
-  await profile.getByRole("searchbox").fill("malaga");
-  await expect(profile).toContainText("Málaga");
-  await expect(profile.getByRole("region", { name: "Identity" })).toHaveCount(
-    0,
+  const profile = await open(page);
+  const header = profile.locator("header");
+  await expect(header.getByRole("heading", { level: 3 })).toHaveText(
+    "Ana Soler Vidal",
   );
-  await profile.getByRole("searchbox").clear();
-  await profile
-    .getByLabel(label("desktop.profile.filter"), { exact: true })
-    .selectOption("missing");
-  await expect(profile).toContainText("Tax ID (NIF/NIE/CIF)");
-  await expect(profile).not.toContainText("Soler Vidal");
-  await profile
-    .getByLabel(label("desktop.profile.filter"), { exact: true })
-    .selectOption("all");
-  await profile
+  await expect(header).toContainText("ana.soler@example.test");
+  await expect(header).toContainText("Calle Larios 12, 2 A, Málaga · 29005");
+  await expect(header).toContainText(label("desktop.profile.missing"));
+  await header
     .getByRole("button", {
-      name: label("desktop.profile.edit_field", { field: "Given name" }),
-      exact: true,
+      name: label("desktop.profile.required_missing", { count: 3 }),
     })
     .click();
+  await expect(row(profile, "identity.tax_id")).toBeVisible();
+  await expect(row(profile, "identity.name")).toHaveCount(0);
+  await expect(
+    profile.getByText(label("desktop.profile.view.results", { count: 3 })),
+  ).toBeVisible();
+  // Required details carry a star and are never told apart by colour alone.
+  await expect(
+    row(profile, "identity.tax_id").locator("[data-part=label]"),
+  ).toContainText("*");
+  await expect(row(profile, "identity.tax_id")).toHaveAttribute(
+    "aria-label",
+    `Tax ID (NIF/NIE/CIF) (${label("desktop.profile.required")}): ${label("desktop.profile.missing")}`,
+  );
+});
+
+test("search, show, group and sort arrange the saved details", async ({
+  page,
+}) => {
+  const profile = await open(page);
+  await profile.getByRole("searchbox").fill("malaga");
+  await expect(row(profile, "contact.fiscal_address")).toBeVisible();
+  await expect(profile.getByRole("region", { name: /^Identity/ })).toHaveCount(
+    0,
+  );
+  await profile.getByRole("searchbox").press("Escape");
+  await expect(profile.getByRole("searchbox")).toHaveValue("");
+  await viewOption(page, "desktop.profile.view.show_unset");
+  await expect(row(profile, "identity.tax_id")).toBeVisible();
+  await expect(row(profile, "identity.name")).toHaveCount(0);
+  await viewOption(page, "desktop.profile.view.show_all");
+  await viewOption(page, "desktop.profile.view.group_status");
+  const required = profile.getByRole("region", {
+    name: new RegExp(`^${label("desktop.profile.view.status_required")}`),
+  });
+  await expect(required.locator("[data-kind='row']")).toHaveCount(3);
+  // Grouped by status, each detail names its section.
+  await expect(required).toContainText("Tax residence and jurisdiction");
+  await viewOption(page, "desktop.profile.view.group_none");
+  await viewOption(page, "desktop.profile.view.sort_missing");
+  const first = profile.locator("[data-kind='row']").first();
+  await expect(first).toHaveAttribute("data-nav", "identity.tax_id");
+  await profile.getByRole("searchbox").fill("no matching detail");
+  await expect(profile).toContainText(label("desktop.profile.empty"));
+});
+
+test("edits and repeatable entries use saved data", async ({ page }) => {
+  const profile = await open(page);
+  await editButton(profile, "Given name").click();
   const dialog = page.getByRole("dialog", { name: "Given name", exact: true });
   await dialog.getByLabel("Given name", { exact: true }).fill("Ana Updated");
-  await dialog
-    .getByRole("button", { name: label("desktop.profile.save"), exact: true })
-    .click();
+  await save(dialog).click();
   await expect(dialog).toHaveCount(0);
-  await expect(profile).toContainText("Ana Updated");
-  await profile
-    .getByLabel(label("desktop.profile.sections"), { exact: true })
-    .selectOption("activities");
-  await profile
+  await expect(profile.locator("header")).toContainText("Ana Updated");
+  await goToSection(page, "Business activities");
+  const activities = profile.getByRole("region", {
+    name: "Business activities",
+  });
+  await activities
     .getByRole("button", { name: label("desktop.profile.add"), exact: true })
     .click();
-  const row = page.getByRole("dialog", {
+  const entry = page.getByRole("dialog", {
     name: "Business activities",
     exact: true,
   });
-  await row
+  await entry
     .getByRole("textbox", { name: "Activity description", exact: true })
     .fill("Partner Two");
-  await row
-    .getByRole("button", { name: label("desktop.profile.save"), exact: true })
-    .click();
-  await expect(profile).toContainText("Partner Two");
+  await save(entry).click();
+  await expect(activities).toContainText("Partner Two");
+  await expect(activities).toContainText(
+    label("desktop.profile.entries_count", { count: 1 }),
+  );
 });
 
-test("field labels, values and keyboard activation open the editor", async ({
+test("details open for editing by double click, Enter, F2 and the hover button", async ({
   page,
 }) => {
-  await open(page);
-  const profile = page.locator(".user-profile-page");
-  const field = profile.getByRole("button", {
-    name: label("desktop.profile.edit_field", { field: "Given name" }),
-    exact: true,
-  });
+  const profile = await open(page);
+  const given = row(profile, "identity.name");
   const dialog = page.getByRole("dialog", { name: "Given name", exact: true });
   for (const target of ["Given name", "Ana"]) {
-    const text = profile.getByText(target, { exact: true });
-    await text.scrollIntoViewIfNeeded();
-    const box = (await text.boundingBox())!;
-    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await given.getByText(target, { exact: true }).dblclick();
     await expect(dialog.getByLabel("Given name", { exact: true })).toHaveValue(
       "Ana",
     );
     await page.keyboard.press("Escape");
     await expect(dialog).toHaveCount(0);
   }
-  for (const key of ["Enter", "Space"]) {
-    await field.focus();
+  for (const key of ["Enter", "F2"]) {
+    await given.focus();
     await page.keyboard.press(key);
     await expect(dialog).toBeVisible();
     await page.keyboard.press("Escape");
-    await expect(field).toBeFocused();
+    await expect(given).toBeFocused();
   }
-  const empty = profile
-    .locator("dt")
-    .filter({ hasText: "Tax ID (NIF/NIE/CIF)" });
-  const box = (await empty.boundingBox())!;
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  // The edit button is drawn only on hover or focus.
+  const button = editButton(profile, "Given name");
+  await page.mouse.move(0, 0);
+  await profile.getByRole("searchbox").focus();
+  await expect(button).toHaveCSS("opacity", "0");
+  await given.hover();
+  await expect(button).toHaveCSS("opacity", "1");
+  await button.click();
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  // A guarded detail is set in the workspace's AEAT sign-in settings.
+  await row(profile, "auth.provider").focus();
+  await page.keyboard.press("Enter");
+  await expect
+    .poll(() => page.evaluate(() => window.__scenarioHostCalls ?? []))
+    .toContain("presentDestination aeat_auth presented");
+});
+
+test("the keyboard walks details and sections, and finds search and help", async ({
+  page,
+}) => {
+  const profile = await open(page);
+  await row(profile, "identity.tax_id").focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(row(profile, "identity.name")).toBeFocused();
+  await page.keyboard.press("k");
+  await expect(row(profile, "identity.tax_id")).toBeFocused();
+  await page.keyboard.press("]");
+  const operator = profile.locator("[data-kind='head']").nth(1);
+  await expect(operator).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await expect(operator).toHaveAttribute("aria-expanded", "false");
+  await page.keyboard.press("ArrowRight");
+  await expect(operator).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("[");
+  await expect(profile.locator("[data-kind='head']").first()).toBeFocused();
+  await page.keyboard.press("End");
+  await expect(profile.locator("[data-nav]").last()).toBeFocused();
+  // One stop in the tab order: the detail last focused.
+  await expect(profile.locator("[data-nav][tabindex='0']")).toHaveCount(1);
+  await page.keyboard.press("/");
+  await expect(profile.getByRole("searchbox")).toBeFocused();
+  await row(profile, "identity.name").focus();
+  await page.keyboard.press("?");
   await expect(
-    page.getByRole("dialog", { name: "Tax ID (NIF/NIE/CIF)", exact: true }),
+    page.getByRole("dialog", {
+      name: label("desktop.profile.keys.title"),
+      exact: true,
+    }),
   ).toBeVisible();
 });
+
+test("a detail's context menu offers its own actions, by pointer and by key", async ({
+  page,
+}) => {
+  const profile = await open(page);
+  await row(profile, "identity.email").click({ button: "right" });
+  const menu = page.getByRole("menu");
+  await expect(
+    menu.getByRole("menuitem", {
+      name: label("desktop.profile.edit_field", { field: "Contact email" }),
+    }),
+  ).toBeVisible();
+  await menu
+    .getByRole("menuitem", {
+      name: label("desktop.profile.action.copy", { field: "Contact email" }),
+    })
+    .click();
+  await expect(
+    page.getByRole("status").getByText(label("desktop.toast.copied")),
+  ).toBeVisible();
+  // The value itself, through the host's clipboard.
+  expect(await page.evaluate(() => window.__scenarioHostCalls ?? [])).toContain(
+    `writeClipboard ${"ana.soler@example.test".length} characters`,
+  );
+  // The menu key opens it on the focused detail; a missing value cannot be copied.
+  await row(profile, "identity.tax_id").focus();
+  await page.keyboard.press("Shift+F10");
+  await expect(
+    page.getByRole("menuitem", {
+      name: label("desktop.profile.action.copy", {
+        field: "Tax ID (NIF/NIE/CIF)",
+      }),
+    }),
+  ).toBeDisabled();
+  await page.keyboard.press("Escape");
+  await expect(row(profile, "identity.tax_id")).toBeFocused();
+});
+
+test("the palette leads with the focused detail and reaches every section", async ({
+  page,
+}) => {
+  const profile = await open(page);
+  await row(profile, "identity.email").focus();
+  await page.keyboard.press("Control+k");
+  const palette = page.getByRole("dialog", {
+    name: label("desktop.palette.label"),
+  });
+  const results = palette.getByRole("listbox");
+  await expect(results.getByRole("option").first()).toHaveText(
+    label("desktop.profile.edit_field", { field: "Contact email" }),
+  );
+  await expect(
+    results.getByRole("option", {
+      name: label("desktop.profile.password.title"),
+    }),
+  ).toBeVisible();
+  // A way to each section is listed only for a query.
+  await expect(
+    palette.getByRole("option", {
+      name: label("desktop.profile.action.go_to", {
+        section: "Contact and fiscal address",
+      }),
+    }),
+  ).toHaveCount(0);
+  // The palette's search has focus.
+  await page.keyboard.type("profile section contact");
+  await palette
+    .getByRole("option", {
+      name: label("desktop.profile.action.go_to", {
+        section: "Contact and fiscal address",
+      }),
+    })
+    .click();
+  await expect(profile.locator('[data-nav="head:contact"]')).toBeFocused();
+});
+
 test("external changes refresh once, preserve drafts and block stale saves", async ({
   page,
 }) => {
-  await open(page);
-  const profile = page.locator(".user-profile-page");
-  await profile
-    .getByRole("button", {
-      name: label("desktop.profile.edit_field", { field: "Given name" }),
-      exact: true,
-    })
-    .click();
+  const profile = await open(page);
+  await editButton(profile, "Given name").click();
   const dialog = page.getByRole("dialog", { name: "Given name", exact: true });
   await dialog.getByLabel("Given name", { exact: true }).fill("Unsaved draft");
   await page.evaluate(() =>
@@ -149,12 +344,7 @@ test("external changes refresh once, preserve drafts and block stale saves", asy
   await expect(dialog.getByLabel("Given name", { exact: true })).toHaveValue(
     "Unsaved draft",
   );
-  await expect(
-    dialog.getByRole("button", {
-      name: label("desktop.profile.save"),
-      exact: true,
-    }),
-  ).toBeDisabled();
+  await expect(save(dialog)).toBeDisabled();
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(0);
   const before = await page.evaluate(() => window.__scenarioProfile!.reads());
   await page.evaluate(() => window.__scenarioProfile!.burst());
@@ -166,157 +356,90 @@ test("external changes refresh once, preserve drafts and block stale saves", asy
 test("a server conflict refreshes the profile without discarding the draft or retrying", async ({
   page,
 }) => {
-  await open(page);
-  const profile = page.locator(".user-profile-page");
-  await profile
-    .getByRole("button", {
-      name: label("desktop.profile.edit_field", { field: "Given name" }),
-      exact: true,
-    })
-    .click();
+  const profile = await open(page);
+  await editButton(profile, "Given name").click();
   const dialog = page.getByRole("dialog", { name: "Given name", exact: true });
   await dialog
     .getByLabel("Given name", { exact: true })
     .fill("Keep this draft");
   const before = await page.evaluate(() => window.__scenarioProfile!.reads());
   await page.evaluate(() => window.__scenarioProfile!.conflict());
-  await dialog
-    .getByRole("button", { name: label("desktop.profile.save"), exact: true })
-    .click();
+  await save(dialog).click();
   await expect
     .poll(() => page.evaluate(() => window.__scenarioProfile!.reads()))
     .toBe(before + 1);
   await expect(dialog.getByLabel("Given name", { exact: true })).toHaveValue(
     "Keep this draft",
   );
-  await expect(
-    dialog.getByRole("button", {
-      name: label("desktop.profile.save"),
-      exact: true,
-    }),
-  ).toBeDisabled();
+  await expect(save(dialog)).toBeDisabled();
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
-});
-
-test("section navigation combines with search and saved-field filters", async ({
-  page,
-}) => {
-  await open(page);
-  const profile = page.locator(".user-profile-page");
-  const sections = profile.getByLabel(label("desktop.profile.sections"), {
-    exact: true,
-  });
-  const filter = profile.getByLabel(label("desktop.profile.filter"), {
-    exact: true,
-  });
-  await sections.selectOption("identity");
-  await expect(profile.getByRole("region", { name: "Identity" })).toBeVisible();
-  await expect(
-    profile.getByRole("region", { name: "Contact and fiscal address" }),
-  ).toHaveCount(0);
-  await filter.selectOption("saved");
-  await expect(profile).toContainText("Soler Vidal");
-  await expect(profile).not.toContainText("Tax ID (NIF/NIE/CIF)");
-  await profile.getByRole("searchbox").fill("no matching detail");
-  await expect(profile).toContainText(label("desktop.profile.empty"));
-  await profile.getByRole("searchbox").clear();
-  await sections.selectOption("contact");
-  await expect(profile).toContainText("Málaga");
-  await expect(profile).not.toContainText("Soler Vidal");
-  await sections.selectOption("");
-  await filter.selectOption("all");
-  await expect(profile.getByRole("region", { name: "Identity" })).toBeVisible();
-  await expect(
-    profile.getByRole("region", { name: "Contact and fiscal address" }),
-  ).toBeVisible();
 });
 
 test("repeatable entries can be updated and removed with confirmation", async ({
   page,
 }) => {
-  await open(page);
-  await page
-    .locator(".user-profile-page")
-    .getByLabel(label("desktop.profile.sections"), { exact: true })
-    .selectOption("activities");
-  const partners = page.getByRole("region", {
+  const profile = await open(page);
+  await goToSection(page, "Business activities");
+  const activities = profile.getByRole("region", {
     name: "Business activities",
-    exact: true,
   });
-  await partners
+  await expect(activities).toContainText(label("desktop.profile.entries_none"));
+  await activities
     .getByRole("button", { name: label("desktop.profile.add"), exact: true })
     .click();
   const dialog = page.getByRole("dialog", {
     name: "Business activities",
     exact: true,
   });
-  const save = dialog.getByRole("button", {
-    name: label("desktop.profile.save"),
+  const description = dialog.getByRole("textbox", {
+    name: "Activity description",
     exact: true,
   });
-  await dialog
-    .getByRole("textbox", { name: "Activity description", exact: true })
-    .fill("First Partner");
-  await save.click();
+  await description.fill("First Partner");
+  await save(dialog).click();
   await expect(dialog).toHaveCount(0);
-  await partners
+  await activities
     .getByRole("button", {
-      name: label("desktop.profile.edit_field", {
-        field: "Activity description",
-      }),
+      name: label("desktop.profile.action.edit_entry"),
       exact: true,
     })
     .click();
-  await expect(
-    dialog.getByRole("textbox", { name: "Activity description", exact: true }),
-  ).toHaveValue("First Partner");
-  await dialog
-    .getByRole("textbox", { name: "Activity description", exact: true })
-    .fill("Updated Partner");
-  await save.click();
+  await expect(description).toHaveValue("First Partner");
+  await description.fill("Updated Partner");
+  await save(dialog).click();
   await expect(dialog).toHaveCount(0);
-  await expect(partners).toContainText("Updated Partner");
-  await partners
-    .getByRole("button", { name: label("desktop.profile.remove"), exact: true })
-    .click();
+  await expect(activities).toContainText("Updated Partner");
+  const remove = activities.getByRole("button", {
+    name: label("desktop.profile.remove"),
+    exact: true,
+  });
+  await remove.click();
   await expect(dialog).toContainText(label("desktop.profile.remove_help"));
   await dialog
     .getByRole("button", { name: label("desktop.profile.cancel"), exact: true })
     .last()
     .click();
-  await expect(partners).toContainText("Updated Partner");
-  await partners
-    .getByRole("button", { name: label("desktop.profile.remove"), exact: true })
-    .click();
+  await expect(activities).toContainText("Updated Partner");
+  // Delete on a focused entry asks the same question.
+  await activities.locator("[data-kind='row']").focus();
+  await page.keyboard.press("Delete");
   await dialog
     .getByRole("button", { name: label("desktop.profile.remove"), exact: true })
     .click();
   await expect(dialog).toHaveCount(0);
-  await expect(partners).not.toContainText("Updated Partner");
-  await expect(
-    partners.getByRole("button", {
-      name: label("desktop.profile.add"),
-      exact: true,
-    }),
-  ).toBeEnabled();
+  await expect(activities).not.toContainText("Updated Partner");
+  await expect(activities).toContainText(label("desktop.profile.entries_none"));
 });
+
 test("a refused save keeps the draft without claiming success", async ({
   page,
 }) => {
-  await open(page);
-  await page
-    .locator(".user-profile-page")
-    .getByRole("button", {
-      name: label("desktop.profile.edit_field", { field: "Given name" }),
-      exact: true,
-    })
-    .click();
+  const profile = await open(page);
+  await editButton(profile, "Given name").click();
   const dialog = page.getByRole("dialog", { name: "Given name", exact: true });
   await dialog.getByLabel("Given name", { exact: true }).fill("Keep my draft");
   await page.evaluate(() => window.__scenarioProfile!.refuse());
-  await dialog
-    .getByRole("button", { name: label("desktop.profile.save"), exact: true })
-    .click();
+  await save(dialog).click();
   await expect(dialog.getByRole("alert")).toContainText(
     label("desktop.profile.refused"),
   );
@@ -328,49 +451,37 @@ test("a refused save keeps the draft without claiming success", async ({
 test("uncertain saves require an explicit refresh before retrying", async ({
   page,
 }) => {
-  await open(page);
-  await page
-    .locator(".user-profile-page")
-    .getByRole("button", {
-      name: label("desktop.profile.edit_field", { field: "Given name" }),
-      exact: true,
-    })
-    .click();
+  const profile = await open(page);
+  await editButton(profile, "Given name").click();
   const dialog = page.getByRole("dialog", { name: "Given name", exact: true });
   await dialog
     .getByLabel("Given name", { exact: true })
     .fill("Recovered draft");
   await page.evaluate(() => window.__scenarioProfile!.uncertain());
-  const save = dialog.getByRole("button", {
-    name: label("desktop.profile.save"),
-    exact: true,
-  });
-  await save.click();
+  await save(dialog).click();
   await expect(dialog.getByRole("alert")).toContainText(
     label("desktop.profile.unknown"),
   );
-  await expect(save).toBeDisabled();
+  await expect(save(dialog)).toBeDisabled();
   await dialog
     .getByRole("button", {
       name: label("desktop.profile.refresh"),
       exact: true,
     })
     .click();
-  await expect(save).toBeEnabled();
+  await expect(save(dialog)).toBeEnabled();
   await expect(dialog.getByLabel("Given name", { exact: true })).toHaveValue(
     "Recovered draft",
   );
-  await save.click();
+  await save(dialog).click();
   await expect(dialog).toHaveCount(0);
-  await expect(page.locator(".user-profile-page")).toContainText(
-    "Recovered draft",
-  );
+  await expect(profile).toContainText("Recovered draft");
 });
 
 test("signing out hides private data even when an old read completes later", async ({
   page,
 }) => {
-  await open(page);
+  const profile = await open(page);
   // The account picker may retain its public profile label after sign-out;
   // use a distinct private field value to detect disclosure from an old read.
   const privateName = "Private taxpayer detail";
@@ -378,15 +489,9 @@ test("signing out hides private data even when an old read completes later", asy
     (name) => window.__scenarioProfile!.update(name),
     privateName,
   );
-  await expect(page.locator(".user-profile-page")).toContainText(privateName);
+  await expect(profile).toContainText(privateName);
   await page.evaluate(() => window.__scenarioProfile!.deferRead());
-  await page
-    .locator(".user-profile-page")
-    .getByRole("button", {
-      name: label("desktop.profile.refresh"),
-      exact: true,
-    })
-    .click();
+  await profileAction(page, "desktop.profile.action.refresh");
   await page
     .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
     .click();
@@ -401,35 +506,27 @@ test("signing out hides private data even when an old read completes later", asy
   await expect(page.getByText(privateName, { exact: true })).toHaveCount(0);
 });
 
-test("full schema, collapsible sections, sidebar and browser autofill", async ({
+test("full schema, collapsible sections, section index and browser autofill", async ({
   page,
 }) => {
-  await open(page);
-  const profile = page.locator(".user-profile-page");
-  await expect(
-    profile
-      .getByLabel(label("desktop.profile.sections"), { exact: true })
-      .locator("option"),
-  ).toHaveCount(27);
+  const profile = await open(page);
   await profile
     .getByRole("button", {
-      name: label("desktop.profile.collapse_all"),
+      name: label("desktop.profile.sections"),
       exact: true,
     })
     .click();
-  await expect(
-    profile.getByRole("button", {
-      name: label("desktop.profile.edit_field", { field: "Given name" }),
-      exact: true,
-    }),
-  ).not.toBeVisible();
-  await profile.getByRole("button", { name: "Identity", exact: true }).click();
+  await expect(page.getByRole("menuitem")).toHaveCount(26);
+  await page.keyboard.press("Escape");
   await profile
     .getByRole("button", {
-      name: label("desktop.profile.edit_field", { field: "Given name" }),
+      name: label("desktop.profile.action.collapse"),
       exact: true,
     })
     .click();
+  await expect(row(profile, "identity.name")).toBeHidden();
+  await profile.locator('[data-nav="head:identity"]').click();
+  await editButton(profile, "Given name").click();
   await expect(
     page.getByRole("dialog").getByLabel("Given name", { exact: true }),
   ).toHaveAttribute("autocomplete", "given-name");
@@ -445,39 +542,38 @@ test("full schema, collapsible sections, sidebar and browser autofill", async ({
       exact: true,
     })
     .click();
-  await expect(profile.getByRole("navigation")).toBeVisible();
-  await profile
-    .getByRole("navigation")
-    .getByRole("button", { name: "Contact and fiscal address", exact: true })
+  const index = profile.getByRole("navigation", {
+    name: label("desktop.profile.sections"),
+  });
+  await expect(index).toBeVisible();
+  // Full screen offers its options side by side.
+  await expect(
+    profile.getByRole("radiogroup", {
+      name: label("desktop.profile.view.show"),
+    }),
+  ).toBeVisible();
+  await index
+    .getByRole("button", { name: "Contact and fiscal address" })
     .click();
+  await expect(row(profile, "contact.contact_person_phone")).toBeInViewport();
   await expect(profile).toContainText("952000000");
-  await expect(profile).not.toContainText("Review your saved details");
 });
 
 test("Censo checks saved prerequisites and edits the missing identity", async ({
   page,
 }) => {
   await open(page);
-  await page
-    .getByRole("button", {
-      name: label("desktop.profile.censo.title"),
-      exact: true,
-    })
-    .click();
-  const dialog = page.getByRole("dialog", {
-    name: label("desktop.profile.censo.title"),
-    exact: true,
-  });
-  await expect(dialog).toContainText(
+  const region = band(page);
+  await expect(region).toContainText(
     label("auth.sync.requirement.profile_tax_id_required"),
   );
   await expect(
-    dialog.getByRole("button", {
+    region.getByRole("button", {
       name: label("desktop.profile.censo.pull"),
       exact: true,
     }),
   ).toHaveCount(0);
-  await dialog
+  await region
     .getByRole("button", {
       name: label("desktop.profile.censo.identity"),
       exact: true,
@@ -488,43 +584,42 @@ test("Censo checks saved prerequisites and edits the missing identity", async ({
     exact: true,
   });
   await editor.getByRole("textbox").fill("X1234567L");
-  await editor
-    .getByRole("button", { name: label("desktop.profile.save"), exact: true })
-    .click();
-  await expect(dialog).not.toContainText(
+  await save(editor).click();
+  await expect(region).not.toContainText(
     label("auth.sync.requirement.profile_tax_id_required"),
   );
-  await expect(dialog).toContainText(
+  await expect(region).toContainText(
     label("auth.sync.requirement.auth_method_required"),
   );
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(0);
 });
 
-test("Censo review preserves manual values and saves only after approval", async ({
+test("a Censo review is shown on the details it changes and saves only after approval", async ({
   page,
 }) => {
-  await open(page, "censo-ready");
+  const profile = await open(page, "censo-ready");
   const started = Date.now();
-  await page
-    .getByRole("button", {
-      name: label("desktop.profile.censo.title"),
-      exact: true,
-    })
-    .click();
-  const dialog = page.getByRole("dialog", {
-    name: label("desktop.profile.censo.title"),
-    exact: true,
-  });
-  await dialog
+  const region = band(page);
+  await region
     .getByRole("button", {
       name: label("desktop.profile.censo.pull"),
       exact: true,
     })
     .click();
-  await expect(dialog).toContainText("Calle Nueva 1");
+  await region
+    .getByRole("button", {
+      name: label("desktop.profile.censo.review_count", { count: 3 }),
+    })
+    .click();
+  const address = row(profile, "contact.fiscal_address");
+  await expect(address).toBeFocused();
+  await expect(address).toContainText("Calle Nueva 1");
+  await expect(address).toContainText(label("desktop.profile.censo.preserve"));
   await expect(
-    dialog.getByText(label("desktop.profile.censo.preserve"), { exact: true }),
+    profile.getByText(label("desktop.profile.censo.preserve"), { exact: true }),
   ).toHaveCount(2);
+  const cadastral = row(profile, "contact.fiscal_address_cadastral_reference");
+  await expect(cadastral).toContainText(label("desktop.profile.censo.adopt"));
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(0);
   console.log(
     JSON.stringify({
@@ -532,50 +627,50 @@ test("Censo review preserves manual values and saves only after approval", async
       elapsed_ms: Date.now() - started,
     }),
   );
-  await dialog
+  await region
     .getByRole("button", {
       name: label("desktop.profile.censo.apply"),
       exact: true,
     })
     .click();
-  await expect(dialog).toContainText(label("desktop.profile.censo.done"));
-  await dialog
+  await expect(region).toContainText(label("desktop.profile.censo.done"));
+  await expect(cadastral).toContainText("1234567UF7613S0001AB");
+  await expect(
+    cadastral.getByTitle(label("desktop.profile.censo.source")),
+  ).toBeVisible();
+  await expect(address).toContainText("Calle Larios 12");
+  await expect(address).not.toContainText("Calle Nueva 1");
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
+  await region
     .getByRole("button", {
-      name: label("desktop.profile.censo.return"),
+      name: label("desktop.profile.dismiss"),
       exact: true,
     })
     .click();
-  const profile = page.locator(".user-profile-page");
-  await expect(profile).toContainText("1234567UF7613S0001AB");
-  await expect(profile).toContainText("Calle Larios 12");
-  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
+  await expect(
+    region.getByRole("button", {
+      name: label("desktop.profile.censo.pull"),
+      exact: true,
+    }),
+  ).toBeEnabled();
 });
 
 test("an uncertain Censo start is not silently retried", async ({ page }) => {
   await open(page, "censo-uncertain");
-  await page
-    .getByRole("button", {
-      name: label("desktop.profile.censo.title"),
-      exact: true,
-    })
-    .click();
-  const dialog = page.getByRole("dialog", {
-    name: label("desktop.profile.censo.title"),
+  const region = band(page);
+  const pull = region.getByRole("button", {
+    name: label("desktop.profile.censo.pull"),
     exact: true,
   });
-  await dialog
+  await pull.click();
+  await expect(region).toContainText(label("desktop.profile.censo.unknown"));
+  await region
     .getByRole("button", {
-      name: label("desktop.profile.censo.pull"),
+      name: label("desktop.profile.refresh"),
       exact: true,
     })
     .click();
-  await expect(dialog).toContainText(label("desktop.profile.unknown"));
-  await expect(
-    dialog.getByRole("button", {
-      name: label("desktop.profile.censo.pull"),
-      exact: true,
-    }),
-  ).toBeDisabled();
+  await expect(pull).toBeDisabled();
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
 });
 
@@ -583,30 +678,23 @@ test("saved Cl@ve setup asks specifically for the NIE support number", async ({
   page,
 }) => {
   await open(page, "censo-nie");
-  await page
-    .getByRole("button", {
-      name: label("desktop.profile.censo.title"),
-      exact: true,
-    })
-    .click();
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toContainText(
+  const region = band(page);
+  await expect(region).toContainText(
     label("auth.sync.requirement.nie_support_required"),
   );
-  await expect(dialog).not.toContainText(
+  await expect(region).not.toContainText(
     label("auth.sync.requirement.profile_tax_id_required"),
   );
-  await expect(dialog).not.toContainText(
+  await expect(region).not.toContainText(
     label("auth.sync.requirement.auth_method_required"),
   );
-  await dialog
+  await region
     .getByRole("button", {
       name: label("desktop.profile.censo.setup"),
       exact: true,
     })
     .click();
   // Setting up AEAT access is the workspace's own page, for this profile.
-  await expect(dialog).toHaveCount(0);
   await expect
     .poll(() => page.evaluate(() => window.__scenarioHostCalls ?? []))
     .toContain("presentDestination aeat_auth presented");
@@ -617,26 +705,23 @@ test("discarding Censo changes does not write profile data", async ({
   page,
 }) => {
   await open(page, "censo-ready");
-  await page
-    .getByRole("button", {
-      name: label("desktop.profile.censo.title"),
-      exact: true,
-    })
-    .click();
-  const dialog = page.getByRole("dialog");
-  await dialog
+  const region = band(page);
+  await region
     .getByRole("button", {
       name: label("desktop.profile.censo.pull"),
       exact: true,
     })
     .click();
-  await dialog
+  await region
     .getByRole("button", {
       name: label("desktop.profile.censo.reject"),
       exact: true,
     })
     .click();
-  await expect(dialog).toContainText(label("desktop.profile.censo.stopped"));
+  await expect(region).toContainText(label("desktop.profile.censo.stopped"));
+  await expect(page.locator(".user-profile-page")).not.toContainText(
+    "Calle Nueva 1",
+  );
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(0);
 });
 
@@ -644,20 +729,16 @@ test("Censo progress notifications coalesce without starting another pull", asyn
   page,
 }) => {
   await open(page, "censo-ready");
-  await page
-    .getByRole("button", {
-      name: label("desktop.profile.censo.title"),
-      exact: true,
-    })
-    .click();
-  const dialog = page.getByRole("dialog");
-  await dialog
+  const region = band(page);
+  await region
     .getByRole("button", {
       name: label("desktop.profile.censo.pull"),
       exact: true,
     })
     .click();
-  await expect(dialog).toContainText("Calle Nueva 1");
+  await expect(page.locator(".user-profile-page")).toContainText(
+    "Calle Nueva 1",
+  );
   await expect
     .poll(() => page.evaluate(() => window.__scenarioCenso!.statuses()))
     .toBeGreaterThan(0);
@@ -668,30 +749,99 @@ test("Censo progress notifications coalesce without starting another pull", asyn
     .toBe(before + 2);
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
   await expect(
-    dialog.getByRole("button", {
+    region.getByRole("button", {
       name: label("desktop.profile.censo.apply"),
       exact: true,
     }),
   ).toBeEnabled();
 });
 
-test("a failed pending profile read leaves loading and allows a retry", async ({
+test("the password changes only with the current one, and an unconfirmed change is not retried", async ({
   page,
 }) => {
   await open(page);
-  const profile = page.locator(".user-profile-page");
-  const refresh = profile.getByRole("button", {
-    name: label("desktop.profile.refresh"),
+  await profileAction(page, "desktop.profile.password.title");
+  const dialog = page.getByRole("dialog", {
+    name: label("desktop.profile.password.title"),
     exact: true,
   });
+  const fill = async (current: string, next: string, again = next) => {
+    await dialog
+      .getByLabel(label("desktop.profile.password.current"), { exact: true })
+      .fill(current);
+    await dialog
+      .getByLabel(label("desktop.profile.password.new"), { exact: true })
+      .fill(next);
+    await dialog
+      .getByLabel(label("desktop.profile.password.again"), { exact: true })
+      .fill(again);
+    await dialog
+      .getByRole("button", {
+        name: label("desktop.profile.password.title"),
+        exact: true,
+      })
+      .click();
+  };
+  const changes = () =>
+    page.evaluate(() => window.__scenarioPassword!.changes());
+  await fill(SCENARIO_PASSWORD, "a new password", "another password");
+  await expect(dialog.getByRole("alert")).toHaveText(
+    label("desktop.account.create.mismatch"),
+  );
+  await fill(SCENARIO_PASSWORD, "short");
+  await expect(dialog.getByRole("alert")).toHaveText(
+    label("desktop.account.create.password_short", { min: 8 }),
+  );
+  expect(await changes()).toBe(0);
+  await fill("not the password", "a new password");
+  await expect(dialog.getByRole("alert")).toHaveText(
+    label("desktop.profile.password.rejected"),
+  );
+  // Nothing typed is kept once it has been sent.
+  await expect(
+    dialog.getByLabel(label("desktop.profile.password.current"), {
+      exact: true,
+    }),
+  ).toHaveValue("");
+  await fill(SCENARIO_PASSWORD, "a new password");
+  await expect(dialog).toHaveCount(0);
+  await expect(
+    page
+      .getByRole("status")
+      .getByText(label("desktop.profile.password.changed")),
+  ).toBeVisible();
+  expect(await changes()).toBe(2);
+  await page.evaluate(() => window.__scenarioPassword!.uncertain());
+  await profileAction(page, "desktop.profile.password.title");
+  await fill(SCENARIO_PASSWORD, "a newer password");
+  await expect(dialog.getByRole("alert")).toHaveText(
+    label("desktop.profile.password.unknown"),
+  );
+  await expect(
+    dialog.getByRole("button", {
+      name: label("desktop.profile.password.title"),
+      exact: true,
+    }),
+  ).toBeDisabled();
+  expect(await changes()).toBe(3);
+});
+
+test("a failed pending profile read leaves loading and allows a retry", async ({
+  page,
+}) => {
+  const profile = await open(page);
   await page.evaluate(() => window.__scenarioProfile!.deferRead());
-  await refresh.click();
+  await profileAction(page, "desktop.profile.action.refresh");
   await expect(profile).toContainText(label("desktop.profile.loading"));
   await page.evaluate(() => window.__scenarioProfile!.rejectRead());
   await expect(profile.getByRole("alert")).toContainText(
     label("desktop.profile.unavailable"),
   );
   await expect(profile).not.toContainText(label("desktop.profile.loading"));
+  const refresh = profile.getByRole("button", {
+    name: label("desktop.profile.refresh"),
+    exact: true,
+  });
   await expect(refresh).toBeEnabled();
   await refresh.click();
   await expect(profile).toContainText("Soler Vidal");

@@ -875,20 +875,29 @@ desktop:
     resize: Canvia la mida del panell inferior
     show: Mostra el panell inferior
   profile:
+    action:
+      about: Informació sobre {field}
+      aeat_access: Configuració d’accés a l’AEAT
+      clear: Esborra {field}
+      collapse: Plega totes les seccions del perfil
+      copy: Copia {field}
+      edit_entry: Edita el registre
+      expand: Desplega totes les seccions del perfil
+      go_to: 'Ves a la secció del perfil: {section}'
+      menu: Accions del perfil
+      refresh: Actualitza el perfil
     add: Afegeix un registre
-    all_fields: Totes les dades
-    all_sections: Totes les seccions
     cancel: Cancel·la
     censo:
       absent: L’AEAT no ha proporcionat aquesta dada. Sense canvis.
       adopt: Utilitza la dada de l’AEAT en desar.
       apply: Desa els canvis revisats
+      band: Cens de l’AEAT
+      blocked: 'Cal abans de sincronitzar:'
       cancel: Atura la sincronització
-      close: Tanca
-      current: Desat
+      checking: S’està comprovant què necessita la sincronització…
       device: Aprova la sol·licitud d’accés a l’aplicació Cl@ve.
       done: Sincronització completada. Revisa les dades que encara falten al perfil.
-      field: Dada del perfil
       identity: Afegeix el NIF o NIE
       incoming: AEAT
       preserve: Conserva la resposta desada.
@@ -897,11 +906,13 @@ desktop:
       ready: L’accés a l’AEAT està configurat. Podràs revisar les dades obtingudes
         abans de desar-les.
       reject: Descarta els canvis
-      return: Torna al perfil
-      review: Revisa les dades de l’AEAT.
+      review_count: 'Valors de l’AEAT per revisar: {count}'
+      review_hint: Els canvis es mostren a sota, al seu lloc. No es desa res fins
+        que confirmis.
       scope: Importa el domicili fiscal, el codi postal i la referència cadastral
         del Cens. La resta de dades del perfil requereixen les teves respostes.
       setup: Configura l’accés a l’AEAT
+      source: Desat des del cens de l’AEAT
       stopped: Sincronització aturada. No s’han desat canvis al perfil.
       title: Sincronitza amb l’AEAT
       unavailable: No s’ha pogut comprovar la sincronització. Prova d’actualitzar.
@@ -910,21 +921,51 @@ desktop:
       unsupported: Aquest accés requereix una interacció disponible al terminal. Cancel·la
         aquest intent i sincronitza el Cens des del terminal.
     close: Tanca el perfil
-    collapse_all: Plega-ho tot
+    close_dialog: Tanca
+    compact: Vista compacta
     complete: Finalitza la configuració del perfil
     conflict: El teu perfil ha canviat en una altra pantalla. Tanca aquest editor,
       revisa les dades actualitzades i torna a obrir el camp. No s’ha desat l’esborrany.
-    edit: Edita
+    dismiss: Descarta l’avís
     edit_field: Edita {field}
     empty: Cap dada coincideix amb aquests filtres. Prova una altra cerca o secció.
-    expand_all: Desplega-ho tot
+    entries_count: 'Registres: {count}'
+    entries_none: Encara no hi ha registres
+    entry_required: '* obligatori a cada registre'
     field_help: Sobre aquest camp
-    filter: Mostra els camps
+    keys:
+      actions: Obre la paleta amb les accions del perfil
+      clear: Esborra la cerca
+      copy: Copia el valor seleccionat
+      edit: Edita la dada seleccionada
+      first_last: Primera o darrera dada
+      full: Pantalla completa o vista compacta
+      help: Mostra aquestes dreceres
+      lead: Tecles que funcionen mentre la pàgina del perfil té el focus.
+      menu: Obre el menú de la dada
+      move: Mou-te entre dades
+      search: Cerca dades
+      section: Secció anterior o següent
+      title: Dreceres de teclat del perfil
+      toggle: Plega o desplega una secció
     loading: S’està carregant el teu perfil…
     maximize: Pantalla completa
-    missing_count: En falten {count}
-    missing_filter: Dades pendents
+    missing: Falta
     not_set: Sense completar
+    password:
+      again: Repeteix la contrasenya nova
+      changed: Contrasenya canviada
+      changing: S’està canviant la contrasenya…
+      current: Contrasenya actual
+      lead: A partir d’ara entraràs en aquest perfil amb la contrasenya nova.
+      new: Contrasenya nova
+      refused: No s’ha canviat la contrasenya.
+      rejected: Aquesta no és la contrasenya actual d’aquest perfil. No s’ha canviat
+        res.
+      title: Canvia la contrasenya
+      unknown: No hem pogut confirmar si la contrasenya ha canviat. La propera vegada
+        entra amb la contrasenya nova i, si no funciona, amb l’anterior.
+    progress: '{filled} de {total} dades emplenades'
     refresh: Actualitza
     refused: No s’han pogut desar aquests canvis. Revisa les indicacions dels camps
       i actualitza el perfil abans de tornar-ho a provar.
@@ -932,21 +973,41 @@ desktop:
     remove_help: Vols eliminar aquest registre del teu perfil? Se n’eliminaran tots
       els camps.
     required: Obligatori
-    required_filter: Obligatoris pendents
+    required_done: Totes les dades obligatòries estan emplenades
+    required_missing: 'Obligatòries sense emplenar: {count}'
     save: Desa els canvis
-    saved_filter: Dades desades
     saved_notice: Desat
     saved_unread: S’han desat els canvis, però no s’ha pogut carregar el perfil actualitzat.
       Actualitza per comprovar-los.
     saving: S’està desant…
     search: Cerca dades del perfil
-    sections: Secció del perfil
+    sections: Seccions
     signed_out: Inicia sessió per veure i editar el teu perfil.
     title: El teu perfil
     unavailable: No s’ha pogut carregar el teu perfil. Actualitza per tornar-ho a
       provar.
     unknown: No hem pogut confirmar si s’han desat els canvis. Actualitza i comprova
       els valors desats abans de tornar-ho a provar.
+    unnamed: Perfil sense nom
+    view:
+      group: Agrupa
+      group_none: Cap
+      group_section: Secció
+      group_status: Estat
+      options: Opcions de visualització
+      results: 'Dades mostrades: {count}'
+      show: Mostra
+      show_all: Totes
+      show_filled: Emplenades
+      show_required: Obligatòries
+      show_unset: Sense completar
+      sort: Ordena
+      sort_alpha: A–Z
+      sort_form: Ordre del formulari
+      sort_missing: Primer les que falten
+      status_filled: Emplenades
+      status_required: Obligatòries sense emplenar
+      status_unset: Sense completar
   rail:
     aeat: Seu de l'AEAT
     console: Consola

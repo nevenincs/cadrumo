@@ -1,6 +1,7 @@
 import * as React from "react";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import { cn } from "@/components/ui/cn";
+import { Icon } from "@/components/ui/icon";
 
 function DropdownMenu(
   props: React.ComponentProps<typeof DropdownMenuPrimitive.Root>,
@@ -102,10 +103,78 @@ function DropdownMenuShortcut({
   );
 }
 
+/** A titled set of items, or of choices. */
+function DropdownMenuGroup({
+  label,
+  children,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Group> & {
+  label?: React.ReactNode;
+}) {
+  return (
+    <DropdownMenuPrimitive.Group data-slot="dropdown-menu-group" {...props}>
+      {label !== undefined && (
+        <DropdownMenuPrimitive.Label className="px-2.5 pt-1.5 pb-1 text-xs font-medium text-faint">
+          {label}
+        </DropdownMenuPrimitive.Label>
+      )}
+      {children}
+    </DropdownMenuPrimitive.Group>
+  );
+}
+
+function DropdownMenuRadioGroup(
+  props: React.ComponentProps<typeof DropdownMenuPrimitive.RadioGroup>,
+) {
+  return (
+    <DropdownMenuPrimitive.RadioGroup
+      data-slot="dropdown-menu-radio-group"
+      {...props}
+    />
+  );
+}
+
+/** One choice of a radio group. Choosing it keeps the menu open, so several
+ * choices can be made in one visit. */
+function DropdownMenuRadioItem({
+  className,
+  children,
+  onSelect,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem>) {
+  return (
+    <DropdownMenuPrimitive.RadioItem
+      data-slot="dropdown-menu-radio-item"
+      onSelect={(event) => {
+        event.preventDefault();
+        onSelect?.(event);
+      }}
+      className={cn(
+        "relative flex min-h-control-sm cursor-pointer items-center gap-2 rounded-sm px-2.5 text-base outline-none select-none",
+        "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "data-[highlighted]:bg-selected data-[highlighted]:text-accent-foreground",
+        "forced-colors:data-[highlighted]:bg-[Highlight] forced-colors:data-[highlighted]:text-[HighlightText]",
+        className,
+      )}
+      {...props}
+    >
+      <span className="flex size-icon-sm items-center justify-center">
+        <DropdownMenuPrimitive.ItemIndicator>
+          <Icon name="tick" />
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+      {children}
+    </DropdownMenuPrimitive.RadioItem>
+  );
+}
+
 export {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,

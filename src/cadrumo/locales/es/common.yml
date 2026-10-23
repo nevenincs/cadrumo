@@ -882,20 +882,29 @@ desktop:
     resize: Cambiar el tamaño del panel inferior
     show: Mostrar el panel inferior
   profile:
+    action:
+      about: Información sobre {field}
+      aeat_access: Ajustes de acceso a la AEAT
+      clear: Borrar {field}
+      collapse: Plegar todas las secciones del perfil
+      copy: Copiar {field}
+      edit_entry: Editar registro
+      expand: Desplegar todas las secciones del perfil
+      go_to: 'Ir a la sección del perfil: {section}'
+      menu: Acciones del perfil
+      refresh: Actualizar el perfil
     add: Añadir registro
-    all_fields: Todos los datos
-    all_sections: Todas las secciones
     cancel: Cancelar
     censo:
       absent: La AEAT no ha proporcionado este dato. Sin cambios.
       adopt: Usar el dato de la AEAT al guardar.
       apply: Guardar cambios revisados
+      band: Censo de la AEAT
+      blocked: 'Necesario antes de sincronizar:'
       cancel: Detener sincronización
-      close: Cerrar
-      current: Guardado
+      checking: Comprobando qué necesita la sincronización…
       device: Aprueba la solicitud de acceso en tu aplicación Cl@ve.
       done: Sincronización completada. Revisa los datos que aún faltan en tu perfil.
-      field: Dato del perfil
       identity: Añadir NIF o NIE
       incoming: AEAT
       preserve: Conservar tu respuesta guardada.
@@ -904,11 +913,13 @@ desktop:
       ready: El acceso a la AEAT está configurado. Podrás revisar los datos obtenidos
         antes de guardarlos.
       reject: Descartar cambios
-      return: Volver al perfil
-      review: Revisa los datos de la AEAT.
+      review_count: 'Valores de la AEAT por revisar: {count}'
+      review_hint: Los cambios se muestran abajo, en su sitio. No se guarda nada hasta
+        que confirmes.
       scope: Importa tu domicilio fiscal, código postal y referencia catastral del
         Censo. Los demás datos del perfil requieren tus respuestas.
       setup: Configurar acceso a la AEAT
+      source: Guardado desde el censo de la AEAT
       stopped: Sincronización detenida. No se han guardado cambios en el perfil.
       title: Sincronizar con la AEAT
       unavailable: No se ha podido comprobar la sincronización. Prueba a actualizar.
@@ -916,21 +927,50 @@ desktop:
       unsupported: Este acceso requiere una interacción disponible en el terminal.
         Cancela este intento y sincroniza el Censo desde el terminal.
     close: Cerrar perfil
-    collapse_all: Contraer todo
+    close_dialog: Cerrar
+    compact: Vista compacta
     complete: Finalizar la configuración del perfil
     conflict: Tu perfil ha cambiado en otra pantalla. Cierra este editor, revisa los
       datos actualizados y vuelve a abrir el campo. Tu borrador no se ha guardado.
-    edit: Editar
+    dismiss: Descartar el aviso
     edit_field: Editar {field}
     empty: Ningún dato coincide con estos filtros. Prueba otra búsqueda o sección.
-    expand_all: Expandir todo
+    entries_count: 'Registros: {count}'
+    entries_none: Aún no hay registros
+    entry_required: '* obligatorio en cada registro'
     field_help: Sobre este campo
-    filter: Mostrar campos
+    keys:
+      actions: Abrir la paleta con las acciones del perfil
+      clear: Borrar la búsqueda
+      copy: Copiar el valor seleccionado
+      edit: Editar el dato seleccionado
+      first_last: Primer o último dato
+      full: Pantalla completa o vista compacta
+      help: Mostrar estos atajos
+      lead: Teclas que funcionan mientras la página del perfil tiene el foco.
+      menu: Abrir el menú del dato
+      move: Moverte entre datos
+      search: Buscar datos
+      section: Sección anterior o siguiente
+      title: Atajos de teclado del perfil
+      toggle: Plegar o desplegar una sección
     loading: Cargando tu perfil…
     maximize: Pantalla completa
-    missing_count: Faltan {count}
-    missing_filter: Datos sin completar
+    missing: Falta
     not_set: Sin completar
+    password:
+      again: Repite la nueva contraseña
+      changed: Contraseña cambiada
+      changing: Cambiando la contraseña…
+      current: Contraseña actual
+      lead: A partir de ahora entrarás en este perfil con la nueva contraseña.
+      new: Nueva contraseña
+      refused: No se ha cambiado la contraseña.
+      rejected: Esa no es la contraseña actual de este perfil. No se ha cambiado nada.
+      title: Cambiar contraseña
+      unknown: No hemos podido confirmar si la contraseña ha cambiado. La próxima
+        vez entra con la nueva contraseña y, si no funciona, con la anterior.
+    progress: '{filled} de {total} datos rellenados'
     refresh: Actualizar
     refused: No se han podido guardar estos cambios. Revisa las indicaciones de los
       campos y actualiza el perfil antes de volver a intentarlo.
@@ -938,20 +978,40 @@ desktop:
     remove_help: ¿Quieres eliminar este registro de tu perfil? Se eliminarán todos
       sus campos.
     required: Obligatorio
-    required_filter: Obligatorios pendientes
+    required_done: Todos los datos obligatorios están rellenados
+    required_missing: 'Obligatorios sin rellenar: {count}'
     save: Guardar cambios
-    saved_filter: Datos guardados
     saved_notice: Guardado
     saved_unread: Tus cambios se han guardado, pero no se ha podido cargar el perfil
       actualizado. Actualiza para comprobarlos.
     saving: Guardando…
     search: Buscar datos del perfil
-    sections: Sección del perfil
+    sections: Secciones
     signed_out: Inicia sesión para ver y editar tu perfil.
     title: Tu perfil
     unavailable: No se ha podido cargar tu perfil. Actualiza para volver a intentarlo.
     unknown: No hemos podido confirmar si se guardaron los cambios. Actualiza y comprueba
       los valores guardados antes de volver a intentarlo.
+    unnamed: Perfil sin nombre
+    view:
+      group: Agrupar
+      group_none: Ninguno
+      group_section: Sección
+      group_status: Estado
+      options: Opciones de vista
+      results: 'Datos mostrados: {count}'
+      show: Mostrar
+      show_all: Todos
+      show_filled: Rellenados
+      show_required: Obligatorios
+      show_unset: Sin completar
+      sort: Ordenar
+      sort_alpha: A–Z
+      sort_form: Orden del formulario
+      sort_missing: Primero los que faltan
+      status_filled: Rellenados
+      status_required: Obligatorios sin rellenar
+      status_unset: Sin completar
   rail:
     aeat: Sede de la AEAT
     console: Consola

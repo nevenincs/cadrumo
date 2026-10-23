@@ -26,7 +26,10 @@ declare global {
  * Regenerate with dev.desktop_profile_fixture; never invent fields here. */
 export function userProfileFixture(
   censoSetup?: "ready" | "nie" | "uncertain",
-): UserProfilePort {
+): UserProfilePort & {
+  /** A saved value, as the fixture's other ports read it: not a page read. */
+  peek(path: string): string | null;
+} {
   const data = structuredClone(fixtures.en) as UserProfile;
   if (censoSetup) {
     const values: Record<string, string> = {
@@ -100,6 +103,10 @@ export function userProfileFixture(
     },
   };
   return {
+    peek: (path) =>
+      data.sections
+        .flatMap((section) => section.fields)
+        .find((field) => field.path === path)?.value ?? null,
     async read(language) {
       window.__scenarioProfile = controls;
       reads++;

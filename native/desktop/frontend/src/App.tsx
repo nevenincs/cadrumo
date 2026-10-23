@@ -102,6 +102,7 @@ import {
   type Maximized,
   type PanelTab,
   type Prefs,
+  type ProfileView,
 } from "./shell/layout";
 import { useMetric, useTerminalFontSize } from "./shell/metrics";
 import { AEAT_SEDE } from "./shell/links";
@@ -257,6 +258,13 @@ export function App({ host }: { host: Host }) {
     tui: { phase: "starting" },
   });
   const [paletteOpen, setPaletteOpen] = useState(false);
+  // What the shown page offers the palette besides the window's own actions,
+  // read as the palette opens and listed before them.
+  const contributed = useRef<(() => Action[]) | null>(null);
+  const [paletteExtra, setPaletteExtra] = useState<Action[]>([]);
+  const contribute = useCallback((actions: (() => Action[]) | null) => {
+    contributed.current = actions;
+  }, []);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const about = useAbout(host);
@@ -1145,7 +1153,10 @@ export function App({ host }: { host: Host }) {
           { mod: true, code: "KeyK", key: "K", scope: "app" },
           { mod: true, shift: true, code: "KeyK", key: "K", scope: "global" },
         ],
-        run: () => setPaletteOpen((open) => !open),
+        run: () => {
+          setPaletteExtra(contributed.current?.() ?? []);
+          setPaletteOpen((open) => !open);
+        },
       },
       {
         id: "docs.search",
@@ -1632,6 +1643,18 @@ export function App({ host }: { host: Host }) {
         run: () => setup.signInGoogle(),
       },
       {
+        id: "account.manageProfiles",
+        label: t("desktop.account.manage.title"),
+        group: "account",
+        icon: "users",
+        keywords: "delete remove profiles accounts",
+        enabled: () => host.profiles !== undefined,
+        run: () => {
+          setSignInDismissed(true);
+          setManagingProfiles(true);
+        },
+      },
+      {
         id: "account.switchProfile",
         label: t("desktop.account.switch_profile"),
         group: "account",
@@ -1743,6 +1766,31 @@ export function App({ host }: { host: Host }) {
   const actionsRef = useRef(actions);
   actionsRef.current = actions;
   const byId = (id: string) => actions.find((action) => action.id === id);
+  // The profile page is large: what it is given stays the same object from
+  // one render of the window to the next, so it draws only when it changes.
+  const profileAccountActions = useCallback(
+    () =>
+      ["account.switchProfile", "account.manageProfiles", "account.signOut"]
+        .map((id) => actionsRef.current.find((action) => action.id === id))
+        .filter((action) => action !== undefined),
+    [],
+  );
+  const toggleProfileMaximized = useCallback(
+    () => toggleMaximize("docs"),
+    [toggleMaximize],
+  );
+  const changeProfileView = useCallback(
+    (update: (current: ProfileView) => ProfileView) =>
+      setLayout((current) => ({
+        ...current,
+        profileView: update(current.profileView),
+      })),
+    [setLayout],
+  );
+  const openAeatSetup = useCallback(
+    (profile: string) => void presentPage(profile, "aeat_auth"),
+    [presentPage],
+  );
   const runAction = useCallback(
     (id: string) =>
       actionsRef.current.find((action) => action.id === id)?.run(),
@@ -2401,20 +2449,21 @@ export function App({ host }: { host: Host }) {
         (reader !== null ? (
           <UserProfilePage
             maximized={maximized === "docs"}
+            onToggleMaximize={toggleProfileMaximized}
+            contribute={contribute}
+            openMenu={openMenu}
+            accountActions={profileAccountActions}
+            onCopy={copy}
+            onNotice={say}
             view={layout.profileView}
-            onViewChange={(update) =>
-              setLayout((current) => ({
-                ...current,
-                profileView: update(current.profileView),
-              }))
-            }
+            onViewChange={changeProfileView}
             page={profilePage}
             key={reader}
             host={host}
             reader={reader}
             language={locale}
             shown={firstPaneShown}
-            onAeatSetup={(profile) => void presentPage(profile, "aeat_auth")}
+            onAeatSetup={openAeatSetup}
           />
         ) : (
           <SignedOut
@@ -2986,7 +3035,7 @@ export function App({ host }: { host: Host }) {
             />
             {paletteOpen && (
               <CommandPalette
-                actions={actions}
+                actions={[...paletteExtra, ...actions]}
                 language={languageControl}
                 searchDocs={searchDocs}
                 openDoc={openDoc}

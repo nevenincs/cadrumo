@@ -38,48 +38,88 @@ test("fresh windows show one profile title and no workspace terminal", async ({
   await expect(page.locator("section.panel")).toBeHidden();
 });
 
-test("profile filters, sections and maximization survive reload without saving search text", async ({
+test("profile view choices and maximization survive reload without saving search text", async ({
   page,
 }) => {
   await open(page);
   const profile = page.locator(".user-profile-page");
   await expect(profile).toContainText("Soler Vidal");
   await profile
-    .getByLabel(label("desktop.profile.sections"), { exact: true })
-    .selectOption("contact");
-  await profile
-    .getByLabel(label("desktop.profile.filter"), { exact: true })
-    .selectOption("saved");
+    .getByRole("button", { name: label("desktop.profile.view.options") })
+    .click();
+  for (const key of [
+    "desktop.profile.view.show_filled",
+    "desktop.profile.view.group_status",
+    "desktop.profile.view.sort_alpha",
+  ])
+    await page
+      .getByRole("menuitemradio", { name: label(key), exact: true })
+      .click();
+  await page.keyboard.press("Escape");
   await page
     .getByRole("button", {
       name: label("desktop.profile.maximize"),
       exact: true,
     })
     .click();
-  await expect(profile.getByRole("navigation")).toBeVisible();
   await expect(
-    profile.getByRole("combobox", {
+    profile.getByRole("navigation", {
       name: label("desktop.profile.sections"),
-      exact: true,
     }),
-  ).toBeHidden();
+  ).toBeVisible();
   await profile.getByRole("searchbox").fill("private search");
   await page.reload();
   await expect(profile).toBeVisible();
   await expect(profile.getByRole("searchbox")).toHaveValue("");
   await expect(
-    profile.getByLabel(label("desktop.profile.filter"), { exact: true }),
-  ).toHaveValue("saved");
+    profile.getByRole("radio", {
+      name: label("desktop.profile.view.show_filled"),
+      exact: true,
+    }),
+  ).toBeChecked();
   await expect(
-    profile.getByRole("navigation").locator('[aria-current="page"]'),
-  ).toHaveText("Contact and fiscal address");
+    profile.getByRole("button", { name: label("desktop.profile.view.group") }),
+  ).toContainText(label("desktop.profile.view.group_status"));
   await expect(page.locator(".pane-agent")).toBeHidden();
   expect(await saved(page)).toMatchObject({
     page: "profile",
     maximized: "docs",
-    profileView: { section: "contact", filter: "saved" },
+    profileView: { show: "filled", group: "status", sort: "alpha" },
   });
   expect(JSON.stringify(await saved(page))).not.toContain("private search");
+});
+
+test("a filter saved before the show choice is read as its equivalent", async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      "cadrumo-shell-layout",
+      JSON.stringify({
+        layout: {
+          page: "profile",
+          profileView: {
+            section: "contact",
+            filter: "saved",
+            expanded: ["identity"],
+            collapsed: [],
+          },
+        },
+      }),
+    ),
+  );
+  await open(page);
+  const profile = page.locator(".user-profile-page");
+  await expect(profile).toContainText("Soler Vidal");
+  await profile
+    .getByRole("button", { name: label("desktop.profile.view.options") })
+    .click();
+  await expect(
+    page.getByRole("menuitemradio", {
+      name: label("desktop.profile.view.show_filled"),
+      exact: true,
+    }),
+  ).toBeChecked();
 });
 
 for (const level of ["0", "2", "4"]) {

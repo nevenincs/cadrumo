@@ -139,7 +139,10 @@ export function CommandPalette({
   const matched = useMemo(() => {
     const ranked = actions
       .filter(
-        (action) => !action.hidden && (!action.enabled || action.enabled()),
+        (action) =>
+          !action.hidden &&
+          (!action.quiet || trimmed) &&
+          (!action.enabled || action.enabled()),
       )
       .map((action) => [action, scoreAction(action, query)] as const)
       .filter(([, score]) => score > 0)

@@ -19,6 +19,7 @@ import type {
   SignInStatus,
 } from "../ipc/contract";
 import { censoFixture } from "./censoFixture";
+import { SCENARIO_PASSWORD } from "./fixtures/password";
 import { userProfileFixture } from "./userProfileFixture";
 import type { Host } from "../shell/host";
 import type { AgentServiceStatus } from "../shell/agentSession";
@@ -132,6 +133,8 @@ declare global {
     __scenarioProviderSignIn?: ProviderSignInFixtureControls;
     /** Publishes the fixture agent's status, as its service does when ready. */
     __scenarioAgentPublishStatus?: (status?: AgentServiceStatus) => void;
+    /** The next password change is answered as unconfirmed. */
+    __scenarioPassword?: { uncertain(): void; changes(): number };
   }
 }
 
@@ -149,6 +152,17 @@ const PROFILE_ID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 /** The id of the profile the profile fixture reads. */
 const FIXTURE_PROFILE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+
+// One set of password-change controls per page, whichever host instance
+// answers: a scenario may build its host more than once.
+let passwordChanges = 0;
+let passwordUncertain = false;
+window.__scenarioPassword = {
+  uncertain() {
+    passwordUncertain = true;
+  },
+  changes: () => passwordChanges,
+};
 
 export function scenarioHost(
   scenario: Scenario,
@@ -213,6 +227,32 @@ export function scenarioHost(
     : {};
 
   const profiles: ProfileAccounts = {
+    async changePassword(passwords) {
+      say("changePassword");
+      await wait(options.latencyMs);
+      passwordChanges += 1;
+      if (presence !== "present")
+        return {
+          kind: "refused",
+          code: "not_signed_in",
+          retryAfterSeconds: null,
+        };
+      if (passwordUncertain) {
+        passwordUncertain = false;
+        return { kind: "unknown" };
+      }
+      const sent = JSON.parse(new TextDecoder().decode(passwords)) as Record<
+        string,
+        string
+      >;
+      return sent.current_passphrase === SCENARIO_PASSWORD
+        ? { kind: "changed" }
+        : {
+            kind: "refused",
+            code: "CREDENTIAL_REJECTED",
+            retryAfterSeconds: null,
+          };
+    },
     async reviewDelete(name) {
       say("reviewProfileDelete");
       await wait(options.latencyMs);

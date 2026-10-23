@@ -56,7 +56,7 @@ export function tauriHost(): Host {
   // as a header, and so does the label of the profile it names,
   // percent-encoded, since a header carries no other text.
   const submit = <Result>(
-    command: "sign_in_submit" | "profile_create",
+    command: "sign_in_submit" | "profile_create" | "profile_password_change",
     password: Uint8Array,
     profile?: string,
   ): Promise<Result> =>
@@ -276,6 +276,8 @@ export function tauriHost(): Host {
         call("profile_delete", { review, confirmation, acknowledged }).then(
           () => undefined,
         ),
+      changePassword: (passwords) =>
+        submit("profile_password_change", passwords),
     },
     openTerminal: (kind, size, listener) =>
       token

@@ -41,6 +41,9 @@ export type Action = {
   chords?: readonly Chord[];
   /** Kept out of the palette (shortcut-only actions such as terminal copy). */
   hidden?: boolean;
+  /** Listed in the palette only for a query that matches it: one of many
+   * alike, such as a way to each profile section. */
+  quiet?: boolean;
   enabled?: () => boolean;
   run: () => void;
   /** What choosing it by name does, where that differs from its chord: a
@@ -149,5 +152,6 @@ export function scoreAction(action: Action, query: string): number {
     else if (haystack.includes(part)) score += 1;
     else return 0;
   }
-  return score;
+  // Of equal matches, the one named by what was typed comes first.
+  return action.label.toLowerCase().startsWith(q) ? score + 1 : score;
 }

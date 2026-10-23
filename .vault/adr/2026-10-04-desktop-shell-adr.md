@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-22'
+modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:f596b3475f90054b5daffb2b01fdc9816e1f4860ea5ff3206f7abd07a94a4ebb'
+body_hash: 'sha256:55c22caa722b1716b6419df1740fd756252748d56c99fbbdc392458a1fc9d4ee'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -366,3 +366,14 @@ No link is silent. A malformed link, a link for another profile, a signed-out wi
 Evidence: `native/desktop/frontend/src/components/agent/cadrumoLink.ts`, `native/desktop/frontend/src/App.tsx`, `native/desktop/src-tauri/src/shell/presentation.rs`, `native/desktop/src-tauri/src/agent/person.rs` (`presented_reply`), `native/desktop/src-tauri/src/shell/window_controls.rs`, and `native/desktop/frontend/tests/scenarios/agent-page-links.spec.ts`.
 
 Amended 2026-10-22 under `2026-10-04-application-sign-in-adr` as amended that day: the sign-in host command signs the selected profile in through the window's person hold child instead of the canonical CLI login, which remains for a sign-in naming another profile.
+
+### Amendment 2026-10-23: profile page actions, inline Censo and password change
+
+Accepted by the user on 2026-10-23, who approved the profile page mockup with its change-password action and asked for it to be implemented. This refines the 2026-10-21 saved-views amendment for the profile page and adds one host exception.
+
+- **Profile actions.** The profile page's actions are entries of the one action registry, so the palette, the page's actions button and its context menu offer the same list. Field actions (edit, copy, clear, about) follow the focused detail. The context menu and the actions button open through the shell's menu path, drawn by the operating system where the host can.
+- **Saved profile view.** The layout store keeps the profile's show filter (all, unset, required, filled), grouping (section, status, none), sort (form order, missing first, alphabetical) and collapsed sections. It no longer keeps a selected section. The section selector is a section index while the page is full screen and wide enough, and a sections menu otherwise. A stored filter from before this amendment is read as the equivalent show filter.
+- **Censo.** Synchronization is a band of the profile page, not a dialog. It uses the existing `profile_censo_*` commands unchanged. The incoming values of a review are shown on the details they would change, and the review is still answered as a whole, apply or reject, with its digest. The band shows no last-synchronized time, because no product read reports one.
+- **Password change.** The host gains `profile_password_change`, a closed, token-checked command. It runs the canonical runtime CLI `config passphrase change --secrets-stdin` for the active profile. The current password, the new password and its confirmation travel in the command's raw body and the helper's standard input only. They are wiped on drop, and never appear in arguments, logs, diagnostics or the window's storage. The command line first proves the current password, then rotates the password without replacing the profile's data key. The window receives only a success or a refusal code. Nothing is retried, and an unconfirmed outcome is shown as unconfirmed. The shell still holds no session, receipt, credential, token or DEK.
+
+Evidence: `native/desktop/frontend/src/components/profile/UserProfilePage.tsx`, `native/desktop/frontend/src/shell/layout.ts`, `native/desktop/frontend/src/App.tsx`, `native/desktop/src-tauri/src/shell/sign_in/password.rs`, and `native/desktop/frontend/tests/scenarios/user-profile.spec.ts`.

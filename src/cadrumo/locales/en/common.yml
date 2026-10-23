@@ -847,20 +847,29 @@ desktop:
     resize: Resize the bottom panel
     show: Show the bottom panel
   profile:
+    action:
+      about: About {field}
+      aeat_access: AEAT sign-in settings
+      clear: Clear {field}
+      collapse: Collapse all profile sections
+      copy: Copy {field}
+      edit_entry: Edit entry
+      expand: Expand all profile sections
+      go_to: 'Go to profile section: {section}'
+      menu: Profile actions
+      refresh: Refresh profile
     add: Add entry
-    all_fields: All details
-    all_sections: All sections
     cancel: Cancel
     censo:
       absent: AEAT did not supply this value. No change.
       adopt: Use the AEAT value when you save.
       apply: Save reviewed changes
+      band: AEAT Censo
+      blocked: 'Needed before you can sync:'
       cancel: Stop synchronization
-      close: Close
-      current: Saved
+      checking: Checking what synchronization needs…
       device: Approve the sign-in request in your Cl@ve app.
       done: Synchronization complete. Review any remaining gaps in your profile.
-      field: Profile detail
       identity: Add tax ID
       incoming: AEAT
       preserve: Keep your saved answer.
@@ -869,11 +878,12 @@ desktop:
       ready: AEAT sign-in is set up. You can review the retrieved information before
         saving.
       reject: Discard changes
-      return: Back to profile
-      review: Review the information from AEAT.
+      review_count: 'AEAT values to review: {count}'
+      review_hint: Changes are shown in place below. Nothing is saved until you confirm.
       scope: Import your fiscal address, postcode and cadastral reference from Censo.
         Other profile details still need your answers.
       setup: Set up AEAT sign-in
+      source: Saved from AEAT Censo
       stopped: Synchronization stopped. No profile changes were saved.
       title: Sync from AEAT
       unavailable: Could not check synchronization. Try refreshing.
@@ -881,41 +891,90 @@ desktop:
       unsupported: This sign-in needs an interaction available in the terminal. Cancel
         this attempt and use Censo sync in the terminal.
     close: Close profile
-    collapse_all: Collapse all
+    close_dialog: Close
+    compact: Compact view
     complete: Finish profile setup
     conflict: Your profile changed elsewhere. Close this editor, review the updated
       details, and open the field again. Your draft has not been saved.
-    edit: Edit
+    dismiss: Dismiss
     edit_field: Edit {field}
     empty: No details match these filters. Try another search or section.
-    expand_all: Expand all
+    entries_count: 'Entries: {count}'
+    entries_none: No entries yet
+    entry_required: '* required in each entry'
     field_help: About this field
-    filter: Show fields
+    keys:
+      actions: Open the palette with the profile actions
+      clear: Clear the search
+      copy: Copy the selected value
+      edit: Edit the selected detail
+      first_last: First or last detail
+      full: Full screen or compact view
+      help: Show these shortcuts
+      lead: Keys that work while the profile page has focus.
+      menu: Open the detail's menu
+      move: Move between details
+      search: Search details
+      section: Previous or next section
+      title: Profile keyboard shortcuts
+      toggle: Collapse or expand a section
     loading: Loading your profile…
     maximize: Full screen
-    missing_count: '{count} missing'
-    missing_filter: Missing details
+    missing: Missing
     not_set: Not filled in
+    password:
+      again: Repeat the new password
+      changed: Password changed
+      changing: Changing password…
+      current: Current password
+      lead: From now on you sign in to this profile with the new password.
+      new: New password
+      refused: Your password was not changed.
+      rejected: That is not this profile's current password. Nothing was changed.
+      title: Change password
+      unknown: We could not confirm whether the password changed. Next time, sign
+        in with the new password and, if that fails, with the old one.
+    progress: '{filled} of {total} details filled'
     refresh: Refresh
     refused: These changes could not be saved. Check the field guidance and refresh
       your profile before trying again.
     remove: Remove entry
     remove_help: Remove this entry from your profile? This includes all its fields.
     required: Required
-    required_filter: Required and missing
+    required_done: All required details filled
+    required_missing: 'Required missing: {count}'
     save: Save changes
-    saved_filter: Saved details
     saved_notice: Saved
     saved_unread: Your changes were saved, but the updated profile could not be loaded.
       Refresh to check them.
     saving: Saving…
     search: Search profile details
-    sections: Profile section
+    sections: Sections
     signed_out: Sign in to view and edit your profile.
     title: Your profile
     unavailable: Your profile could not be loaded. Refresh to try again.
     unknown: We could not confirm whether the changes were saved. Refresh and check
       the saved values before trying again.
+    unnamed: Unnamed profile
+    view:
+      group: Group
+      group_none: None
+      group_section: Section
+      group_status: Status
+      options: View options
+      results: 'Details shown: {count}'
+      show: Show
+      show_all: All
+      show_filled: Filled
+      show_required: Required
+      show_unset: Unset
+      sort: Sort
+      sort_alpha: A–Z
+      sort_form: Form order
+      sort_missing: Missing first
+      status_filled: Filled
+      status_required: Required and missing
+      status_unset: Not set
   rail:
     aeat: AEAT website
     console: Console

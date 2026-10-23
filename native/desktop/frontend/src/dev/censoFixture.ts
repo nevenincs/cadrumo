@@ -15,7 +15,7 @@ declare global {
 }
 /** Browser-only Censo outcomes. Never contacts AEAT. */
 export function censoFixture(
-  profile: UserProfilePort,
+  profile: UserProfilePort & { peek(path: string): string | null },
   mode?: "ready" | "nie" | "uncertain",
 ): CensoPort {
   let ready = mode === "ready" || mode === "uncertain",
@@ -48,10 +48,7 @@ export function censoFixture(
     },
     async readiness() {
       window.__scenarioCenso = controls;
-      const data = await profile.read("en");
-      const taxId = data.sections
-        .flatMap((s) => s.fields)
-        .find((f) => f.path === "identity.tax_id")?.value;
+      const taxId = profile.peek("identity.tax_id");
       const requirements = [
         {
           field: "identity.tax_id",

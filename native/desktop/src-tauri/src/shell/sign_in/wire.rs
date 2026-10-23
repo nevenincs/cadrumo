@@ -447,6 +447,54 @@ pub fn created(outcome: Outcome) -> Result<ProfileCreateResult> {
     }
 }
 
+/// What a password change came to, as far as the window may know it.
+#[derive(Debug, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
+pub enum PasswordChangeResult {
+    Changed,
+    Refused {
+        #[serde(flatten)]
+        refusal: Refusal,
+    },
+    /// The change was submitted and its outcome was not observed: the old
+    /// password may or may not still sign in.
+    Unknown,
+}
+
+pub fn password_changed(output: &Output) -> Result<PasswordChangeResult> {
+    if !output.success {
+        // A failure that names the submitted operation did not prove that
+        // nothing changed, unless it observed no effect.
+        let envelope = error_envelope(&output.stderr)?;
+        let submitted = envelope
+            .error
+            .as_ref()
+            .and_then(|error| error.context.as_ref())
+            .is_some_and(|context| {
+                context.contains_key("operation_id")
+                    && context.get("effect").map(String::as_str) != Some("none")
+            });
+        if submitted {
+            return Ok(PasswordChangeResult::Unknown);
+        }
+    }
+    match decode("passphrase.change", output)? {
+        Outcome::Refused { refusal } => Ok(PasswordChangeResult::Refused { refusal }),
+        Outcome::Success { result, .. } => {
+            #[derive(Deserialize)]
+            struct Changed {
+                changed: bool,
+            }
+            let result: Changed =
+                serde_json::from_value(result).map_err(|_| failure(ErrorCode::ReadFailed))?;
+            if !result.changed {
+                return Err(failure(ErrorCode::ReadFailed));
+            }
+            Ok(PasswordChangeResult::Changed)
+        }
+    }
+}
+
 #[cfg(test)]
 #[path = "wire_contract_tests.rs"]
 mod contract_tests;
