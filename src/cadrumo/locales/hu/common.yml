@@ -2727,15 +2727,15 @@ tui:
         column:
           amount: Összeg
           date: Dátum
-        done: '%{applied} tétel besorolva · %{skipped} kihagyva · %{failed} elutasítva.'
+        done: '%{applied} tétel besorolva · %{skipped} már egyezett, változatlan maradt
+          · %{failed} elutasítva.'
         empty: Egyetlen tétel sem felel meg ezeknek a szűrőknek.
         failure: '%{row}. sor (%{entry}): %{reason}'
         filter_heading: Mely tételek
-        nothing_changes: Ezen az oldalon minden tétel már így van besorolva; semmi
-          sem változna.
         period: Időszak (1T–4T, 0A vagy 01–12; adóév is kell hozzá)
         prompt: Olvass be egy oldalnyi tételt az alábbi szűrőkkel, válassz besorolást,
-          és megerősítés előtt nézd át a változó tételeket.
+          és megerősítés előtt nézd át az oldalt. Az oldal minden tételét elküldjük;
+          az eredmény megmutatja, hány változott és hány egyezett már.
         read: Tételek beolvasása
         refused: 'Semmi sem lett besorolva: %{messages}'
         review: Változások áttekintése

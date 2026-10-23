@@ -2674,15 +2674,15 @@ tui:
         column:
           amount: Amount
           date: Date
-        done: Classified %{applied} entries · %{skipped} skipped · %{failed} refused.
+        done: Classified %{applied} entries · %{skipped} already matched and left
+          unchanged · %{failed} refused.
         empty: No entries match these filters.
         failure: 'Row %{row} (%{entry}): %{reason}'
         filter_heading: Which entries
-        nothing_changes: Every entry on this page already has that classification;
-          nothing would change.
         period: Period (1T to 4T, 0A or 01 to 12; needs the year)
         prompt: Read a page of entries with the filters below, choose a classification,
-          and review the rows that will change before you confirm.
+          and review the page before you confirm. Every entry on the page is sent;
+          the result says how many changed and how many already matched.
         read: Read entries
         refused: 'Nothing was classified: %{messages}'
         review: Review changes

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:612b6a5281c3e4b007920e41e4af44fcc5de70d9525aff4dec5736bc8b4b5332'
+body_hash: 'sha256:9b199c3da9c56011b2e0e74a7f9e33461ea8e688a01c3a378894e559cf608088'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -339,6 +339,14 @@ related:
 - `S07` `M` `dev/tui/harness/ledger_evidence_files_fixtures.py`
 - `S07` `verify:` `uv run --no-sync python -m dev.tui render (66 domain surfaces, all viewports, both themes; 660 frames)` -> `pass`
 - `S07` `verify:` `uv run --no-sync pytest -q -n 8 dev/tui/tests dev/tui/harness/tests` -> `pass`
+- `S23` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_bulk.py`
+- `S23` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_bulk.py`
+- `S23` `M` `src/cadrumo/locales/en/common.yml`
+- `S23` `M` `src/cadrumo/locales/es/common.yml`
+- `S23` `M` `src/cadrumo/locales/ca/common.yml`
+- `S23` `M` `src/cadrumo/locales/hu/common.yml`
+- `S23` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider -m '' src/cadrumo/entrypoints/tui/ledger/tests -k categoris` -> `pass`
+- `S23` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -365,3 +373,4 @@ related:
 - `S19` The IVA admission gate calls `validate_cash_accounting_axis` from `domain/transactions/cash_accounting_validation.py,` which P04.S17 owns; a rename there must update this caller.
 - `S17` full src/cadrumo run left 3 failures outside S17: docstring core-struct links on S15 ledger modules, and one `archive_fetch` test that did not reproduce; both routed to root-cause work
 - `S07` 23 frames crashed in one earlier loaded render; the cause was not recovered because a re-render overwrote that run's manifest. Forty-six harness processes in a row failed and then recovered, which points to a machine-wide event, not these states; it did not reproduce in 120 opens under load. The timed fixture settling, which could silently leave a frame in the wrong state, was replaced by deterministic waits. The settling and fixture files were committed inside another session's checkpoint 47d4a24167.
+- `S23` ledger.classify.bulk reports skips as a count only; a row is skipped when it already holds exactly the submitted values. The table id categorisation-bulk-changing is kept because the shared geometry test names it.

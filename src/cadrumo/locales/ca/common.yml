@@ -2747,15 +2747,15 @@ tui:
         column:
           amount: Import
           date: Data
-        done: '%{applied} apunts classificats · %{skipped} omesos · %{failed} rebutjats.'
+        done: '%{applied} apunts classificats · %{skipped} ja coincidien i no han
+          canviat · %{failed} rebutjats.'
         empty: Cap apunt no coincideix amb aquests filtres.
         failure: 'Fila %{row} (%{entry}): %{reason}'
         filter_heading: Quins apunts
-        nothing_changes: Tots els apunts d'aquesta pàgina ja tenen aquesta classificació;
-          no canviaria res.
         period: Període (1T a 4T, 0A o 01 a 12; requereix l'exercici)
         prompt: Llegeix una pàgina d'apunts amb els filtres de sota, tria una classificació
-          i revisa les files que canviaran abans de confirmar.
+          i revisa la pàgina abans de confirmar. S'envien tots els apunts de la pàgina;
+          el resultat indica quants han canviat i quants ja coincidien.
         read: Llegeix apunts
         refused: 'No s''ha classificat res: %{messages}'
         review: Revisa els canvis

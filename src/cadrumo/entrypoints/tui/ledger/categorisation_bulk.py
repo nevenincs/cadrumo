@@ -1,11 +1,12 @@
-"""Classify a filtered page of entries at once, after reviewing exactly the rows that will change.
+"""Classify a filtered page of entries at once, after reviewing exactly the rows that will be sent.
 
 The entries are read one page at a time through the list operation's own
 filters, sort and paging. The operator chooses one classification; the review
-lists only the rows on the page whose classification differs from it, and
-only those rows go into the classification table the bulk operation receives.
-A batch is not atomic: the result reports the rows applied, skipped and
-refused, each refusal with its own reason.
+lists every row of the page, and every one of them goes into the
+classification table the bulk operation receives. The operation, not the
+screen, decides which rows already hold those values: a batch is not atomic,
+and its result reports the rows applied, the rows left unchanged because they
+already matched, and the rows refused, each refusal with its own reason.
 """
 
 from __future__ import annotations
@@ -109,7 +110,7 @@ def bulk_result_text(projection: LedgerBulkClassifyProjection) -> str:
 
 
 class LedgerBulkClassifyScreen(CategorisationScreen):
-    """Classify the entries of one filtered page that differ from the chosen classification."""
+    """Classify every entry of one filtered page with the chosen classification."""
 
     @override
     def banner(self) -> Static:
@@ -134,7 +135,8 @@ class LedgerBulkClassifyScreen(CategorisationScreen):
         self.total = 0
         self.page_offset = 0
         self.filters: tuple[str, ...] = ()
-        self.changing: tuple[LedgerTransactionReviewProjection, ...] = ()
+        self.reviewed: tuple[LedgerTransactionReviewProjection, ...] = ()
+        """The rows the staged batch sends: the whole page that was on screen when it was reviewed."""
 
     @override
     def compose_body(self) -> Iterator[Widget]:
@@ -194,8 +196,8 @@ class LedgerBulkClassifyScreen(CategorisationScreen):
     @override
     def paint_tables(self) -> None:
         entries = cast("DataTable[str]", self.query_one("#categorisation-bulk-entries", DataTable))
-        changing = cast("DataTable[str]", self.query_one("#categorisation-bulk-changing", DataTable))
-        for table in (entries, changing):
+        reviewed = cast("DataTable[str]", self.query_one("#categorisation-bulk-changing", DataTable))
+        for table in (entries, reviewed):
             if not table.columns:
                 table.add_columns(
                     tr("tui.ledger.categorisation.column.entry"),
@@ -204,7 +206,7 @@ class LedgerBulkClassifyScreen(CategorisationScreen):
                     tr("tui.ledger.categorisation.column.description"),
                     tr("tui.ledger.categorisation.column.classification"),
                 )
-        for table, rows in ((entries, self.rows), (changing, self.changing)):
+        for table, rows in ((entries, self.rows), (reviewed, self.reviewed)):
             table.clear()
             for row in rows:
                 transaction = row.transaction
@@ -250,7 +252,7 @@ class LedgerBulkClassifyScreen(CategorisationScreen):
         self.rows = result.rows
         self.total = result.total
         self.page_offset = result.offset
-        self.changing = ()
+        self.reviewed = ()
         self.query_one("#categorisation-bulk-changing", DataTable).display = False
         self.paint_tables()
         if not self.rows:
@@ -290,16 +292,16 @@ class LedgerBulkClassifyScreen(CategorisationScreen):
         if (classification is BusinessClassification.MIXED) != (business_pct is not None):
             raise ValueError(tr("tui.ledger.categorisation.bulk.share_mixed_only"))
         category_id = blank_to_none(self.query_one("#categorisation-bulk-category", Input).value)
-        changing = tuple(row for row in self.rows if row.transaction.business_classification != classification.value)
-        if not changing:
-            raise ValueError(tr("tui.ledger.categorisation.bulk.nothing_changes"))
+        reviewed = self.rows
+        if not reviewed:
+            raise ValueError(tr("tui.ledger.categorisation.bulk.empty"))
         language = output_language()
         request = LedgerBulkClassifyRequest(
             profile_id=self.bulk_door.profile_id,
-            csv_text=bulk_csv(changing, classification, business_pct=business_pct, category_id=category_id),
+            csv_text=bulk_csv(reviewed, classification, business_pct=business_pct, category_id=category_id),
             output_language=OutputLanguage(language) if language in set(OutputLanguage) else OutputLanguage.ES,
         )
-        self.changing = changing
+        self.reviewed = reviewed
         self.paint_tables()
         self.query_one("#categorisation-bulk-changing", DataTable).display = True
         offset = self.page_offset
@@ -312,7 +314,7 @@ class LedgerBulkClassifyScreen(CategorisationScreen):
             self.show_outcome(lambda: bulk_result_text(projection))
             return outcome is not None and outcome.applied > 0
 
-        count = len(changing)
+        count = len(reviewed)
         return StagedChangeV1(
             summary=lambda: tr(
                 "tui.ledger.categorisation.bulk.stage",
@@ -327,8 +329,8 @@ class LedgerBulkClassifyScreen(CategorisationScreen):
     @override
     def unstage(self) -> None:
         super().unstage()
-        if self.changing:
-            self.changing = ()
+        if self.reviewed:
+            self.reviewed = ()
             self.query_one("#categorisation-bulk-changing", DataTable).display = False
             self.paint_tables()
 

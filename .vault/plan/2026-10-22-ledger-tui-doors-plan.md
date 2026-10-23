@@ -11,7 +11,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
 modified: '2026-10-23'
 body_schema: body-v2
-body_hash: 'sha256:101fb143fe4481220c196105d3cc4a59c7906cf9b7a6280dac881680c47f411a'
+body_hash: 'sha256:38b28a7f6bd96d436a69848e66b52828c5f87922323161059b4d1d63aa817640'
 ---
 
 # `ledger-tui-doors` plan
@@ -77,7 +77,7 @@ The orchestrator applies locales, registers visual surfaces, runs every gate and
 - [ ] `P03.S20` - move every blocking session check in the categorisation review and invoice import runtime doors off the event loop, with thread-recording tests for each door outside run_operation; `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_categorisation.py and runtime_ledger_invoices.py`.
 - [ ] `P03.S21` - make the Records workspace refuse area and tool changes while its body has a write in flight, tested per write flow; `src/cadrumo/entrypoints/tui/ledger/controller.py`.
 - [ ] `P03.S22` - report a submitted write that times out or settles with an unknown or partial effect as a typed outcome-unknown refusal carrying the operation id, shown as unknown on every write screen; `src/cadrumo_runtime/host/frontend/tui/runtime_profile_session.py`.
-- [ ] `P03.S23` - send every reviewed row of a bulk-classify page and show the operation's applied and skipped counts; `src/cadrumo/entrypoints/tui/ledger/categorisation_bulk.py`.
+- [x] `P03.S23` - send every reviewed row of a bulk-classify page and show the operation's applied and skipped counts; `src/cadrumo/entrypoints/tui/ledger/categorisation_bulk.py`.
 
 ## Parallelization
 

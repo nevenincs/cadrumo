@@ -2758,15 +2758,15 @@ tui:
         column:
           amount: Importe
           date: Fecha
-        done: '%{applied} apuntes clasificados · %{skipped} omitidos · %{failed} rechazados.'
+        done: '%{applied} apuntes clasificados · %{skipped} ya coincidían y no han
+          cambiado · %{failed} rechazados.'
         empty: Ningún apunte coincide con estos filtros.
         failure: 'Fila %{row} (%{entry}): %{reason}'
         filter_heading: Qué apuntes
-        nothing_changes: Todos los apuntes de esta página ya tienen esa clasificación;
-          no cambiaría nada.
         period: Periodo (1T a 4T, 0A o 01 a 12; requiere el ejercicio)
         prompt: Lee una página de apuntes con los filtros de abajo, elige una clasificación
-          y revisa las filas que cambiarán antes de confirmar.
+          y revisa la página antes de confirmar. Se envían todos los apuntes de la
+          página; el resultado indica cuántos han cambiado y cuántos ya coincidían.
         read: Leer apuntes
         refused: 'No se ha clasificado nada: %{messages}'
         review: Revisar cambios
