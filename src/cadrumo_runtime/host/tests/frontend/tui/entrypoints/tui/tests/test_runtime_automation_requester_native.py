@@ -71,6 +71,7 @@ from .......frontend.tui.secret.automation_requester import RuntimeAutomationReq
 from .......frontend.tui.secret.automation_requester_contracts import AutomationRequestOutcome
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+from ....settled_click import click_when_laid_out
 
 pytestmark = [
     pytest.mark.integration,
@@ -242,8 +243,7 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
                         lambda: login._worker is not None and login._worker.is_finished and not request_access.disabled,
                     )
                     request_access.scroll_visible(animate=False)
-                    await pilot.pause()
-                    assert await pilot.click("#runtime-login-request-access"), (
+                    assert await click_when_laid_out(pilot, request_access), (
                         f"request button not reached: button={request_access.region}, screen={login.region}"
                     )
                     await _until(pilot, lambda: isinstance(pilot.app.screen, RuntimeAutomationRequesterScreen))

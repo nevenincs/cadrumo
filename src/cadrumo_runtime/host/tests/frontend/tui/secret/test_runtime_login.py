@@ -39,6 +39,7 @@ from .....frontend.tui.secret.runtime_login_contracts import (
     RuntimeLoginHandoff,
     RuntimeLoginMethod,
 )
+from ..settled_click import click_when_laid_out
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -86,9 +87,8 @@ async def test_recovery_keeps_selected_profile_without_automatic_receipt_admissi
         assert attempts == 0
         assert screen.query_one("#runtime-login-profile", Select).value == choices[0].profile_id
         screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.RECEIPT
-        await pilot.pause()
-        await pilot.click("#runtime-login-submit")
-        await pilot.pause()
+        assert await click_when_laid_out(pilot, screen.query_one("#runtime-login-submit", Button))
+        await _until(pilot, lambda: screen._worker is not None and screen._worker.is_finished)
         assert attempts == 1
         assert screen.is_mounted and pilot.app.is_running
 
