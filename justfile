@@ -669,6 +669,16 @@ test-native-package CONFIGURATION="Release": (_native-configure CONFIGURATION)
 test-native-release CONFIGURATION="Release": (_native-configure CONFIGURATION)
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target verify-release
 
+# The Rust crates under native/ are gated by CTest tests labelled rust_quality: rustfmt,
+# clippy with warnings denied, and cargo-deny against native/deny.toml. The generated
+# contract and metadata they compile against are built first; the ordinary native
+# verification (test-native-bundle) already selects these tests too.
+[doc('Run the native Rust fmt, clippy and cargo-deny CTest gates; read-only apart from build outputs, network required for advisories.')]
+[group('check')]
+check-rust CONFIGURATION="Debug": (_native-configure CONFIGURATION)
+    cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target native_contract native_metadata
+    ctest --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} -L rust_quality --no-tests=error
+
 # Drives only the package's own programs on a disposable root: profile, sign-in,
 # CLI and MCP reads, stdin-closed stop, and an unchanged installed default root.
 # Stored sign-ins need a logon whose native credential store works.

@@ -249,10 +249,7 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
             .file
             .take(16 * 1024 * 1024 + 1)
             .read_to_end(&mut bytes)?;
-        if bytes.len() > 16 * 1024 * 1024
-            || Sha256Digest::new(format!("{:x}", Sha256::digest(&bytes)))?
-                != product.manifest_sha256
-        {
+        if bytes.len() > 16 * 1024 * 1024 || Sha256Digest::of(&bytes) != product.manifest_sha256 {
             return Err(Error::Integrity("removal package bytes differ".into()));
         }
         let manifest: cadrumo_application::package::PackageManifest =

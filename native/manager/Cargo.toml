@@ -17,7 +17,7 @@ cadrumo-application = { path = "../application" }
 cadrumo-platform = { path = "../platform" }
 serde = "1"
 serde_json = "1"
-sha2 = "0.10"
+sha2 = "0.11"
 base64 = "0.23"
 tokio = { version = "1", features = ["rt", "time", "process"] }
 
@@ -30,13 +30,13 @@ cadrumo-installer = { path = "../installer" }
 windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Services", "Win32_System_RemoteDesktop", "Win32_System_Threading", "Win32_System_Environment", "Win32_System_JobObjects", "Win32_System_Diagnostics_ToolHelp", "Win32_Security", "Win32_Security_Authorization", "Win32_System_Memory"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-objc2 = { version = "0.6.4", default-features = false, features = ["std"] }
+objc2 = { version = "0.6.5", default-features = false, features = ["std"] }
 objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSApplication", "NSResponder", "NSWorkspace", "NSMenu", "NSMenuItem", "NSStatusBar", "NSStatusItem", "NSStatusBarButton", "NSButton", "NSCell", "NSControl", "NSView", "objc2-core-foundation"] }
 objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "NSObject", "NSNotification", "NSString", "NSRunLoop", "NSTimer"] }
 tokio = { version = "1", features = ["signal"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-zbus = "5.19"
+zbus = "6.1"
 
 [[bin]]
 name = "cadrumo-manager"

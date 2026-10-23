@@ -1,6 +1,8 @@
 # Installer-only DLL: never included in application images or immutable runtime payloads.
 include_guard(GLOBAL)
 if(NOT WIN32)
+  # Nothing builds the crate here, but its manifest and lockfile still follow the policy.
+  cadrumo_rust_quality(installer MANIFEST "${PROJECT_SOURCE_DIR}/native/installer/Cargo.toml")
   return()
 endif()
 set(installer_manifest "${PROJECT_SOURCE_DIR}/native/installer/Cargo.toml")
@@ -48,4 +50,7 @@ if(BUILD_TESTING)
       --target-dir "${CADRUMO_INSTALLER_TARGET_DIR}"
       --target "${CADRUMO_PIN_rust_target}" --profile "${installer_profile}")
   set_tests_properties(installer.rust PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 0)
+  cadrumo_rust_quality(installer MANIFEST "${installer_manifest}"
+    CLIPPY_CARGO installer_cargo CLIPPY_ARGS --target-dir "${CADRUMO_INSTALLER_TARGET_DIR}"
+      --profile "${installer_profile}")
 endif()

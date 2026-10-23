@@ -1,5 +1,6 @@
 use crate::error::Error;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::{
     fmt,
     path::{Path, PathBuf},
@@ -80,9 +81,24 @@ impl Sha256Digest {
         }
         Ok(Self(value.to_ascii_lowercase()))
     }
+    /// The digest of `bytes`.
+    pub fn of(bytes: impl AsRef<[u8]>) -> Self {
+        Self(hex(&Sha256::digest(bytes)))
+    }
+    /// Renders a finished SHA-256 hash; any other length is refused.
+    pub fn from_hash(hash: impl AsRef<[u8]>) -> Result<Self, Error> {
+        let hash = hash.as_ref();
+        if hash.len() != 32 {
+            return Err(Error::Invalid("expected a 32-byte SHA256 hash".into()));
+        }
+        Ok(Self(hex(hash)))
+    }
     pub fn as_str(&self) -> &str {
         &self.0
     }
+}
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 impl TryFrom<String> for Sha256Digest {
     type Error = Error;

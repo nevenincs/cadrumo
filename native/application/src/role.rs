@@ -143,7 +143,14 @@ mod tests {
             select(&arguments(&["--role"])).unwrap().unwrap_err(),
             RoleRefusal::Missing
         );
-        for name in ["", "Runtime", "desktop", "Python", "interpreter", "runtime "] {
+        for name in [
+            "",
+            "Runtime",
+            "desktop",
+            "Python",
+            "interpreter",
+            "runtime ",
+        ] {
             assert_eq!(
                 select(&arguments(&["--role", name])).unwrap().unwrap_err(),
                 RoleRefusal::Unknown,

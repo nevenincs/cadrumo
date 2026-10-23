@@ -78,6 +78,27 @@ impl Root {
             .take_while(|index| self.0.join(format!("fixture-launch-{index}")).exists())
             .count()
     }
+
+    /// Heartbeats the fixture has answered so far; zero before the first.
+    fn answered_pings(&self) -> u64 {
+        fs::read_to_string(self.0.join("fixture-pings"))
+            .ok()
+            .and_then(|count| count.parse().ok())
+            .unwrap_or(0)
+    }
+
+    /// Wait, bounded by `CASE_LIMIT`, until the fixture has answered `count` heartbeats.
+    fn await_answered_pings(&self, count: u64) {
+        let deadline = Instant::now() + CASE_LIMIT / 2;
+        while self.answered_pings() < count {
+            assert!(
+                Instant::now() < deadline,
+                "the runtime answered {} of {count} heartbeats",
+                self.answered_pings()
+            );
+            thread::sleep(Duration::from_millis(5));
+        }
+    }
 }
 
 impl Drop for Root {
@@ -132,8 +153,55 @@ struct Case {
     activity: Option<Box<dyn SessionActivity>>,
 }
 
+/// Holds a restart at its launch recheck until the observer has finished with the state the
+/// backoff leaves behind, so the observer need not win a race against the backoff timer.
+struct HoldRelaunch {
+    assessments: AtomicUsize,
+    released: mpsc::Receiver<()>,
+}
+
+/// The activity to install, and the sender that lets the held launch go ahead.
+fn hold_relaunch() -> (Box<dyn SessionActivity>, mpsc::Sender<()>) {
+    let (release, released) = mpsc::channel();
+    let hold = HoldRelaunch {
+        assessments: AtomicUsize::new(0),
+        released,
+    };
+    (Box::new(hold), release)
+}
+
+impl SessionActivity for HoldRelaunch {
+    fn is_active(&self) -> bool {
+        // Ownership checks activity before and under its restart claim; the third check is
+        // the recheck that precedes the relaunch.
+        if self.assessments.fetch_add(1, Ordering::SeqCst) == 2 {
+            self.released
+                .recv_timeout(CASE_LIMIT)
+                .expect("the observer released the relaunch");
+        }
+        true
+    }
+}
+
 impl Default for Case {
+    /// Bounds that a healthy fixture meets however loaded the machine is: a case that is not
+    /// about a time bound must not depend on a process being scheduled within one. Cases about
+    /// hang detection or forced containment use `Case::bounded` instead.
     fn default() -> Self {
+        let mut case = Self::bounded();
+        let production = SupervisorConfig::default();
+        case.config.heartbeat_staleness = production.heartbeat_staleness;
+        case.config.drain_bound = production.drain_bound;
+        case.config.session_end_bound = production.session_end_bound;
+        case
+    }
+}
+
+impl Case {
+    /// Bounds short enough for a hung fixture to be found and contained within a case's
+    /// patience. A loaded machine can delay even a healthy fixture past them, which the
+    /// supervisor then rightly reports as a hang, so use them only where that is the subject.
+    fn bounded() -> Self {
         Self {
             config: SupervisorConfig {
                 readiness_ceiling: Duration::from_secs(20),
@@ -361,7 +429,7 @@ fn session_end_during_backoff_keeps_unknown_effects_and_releases_claim() {
 #[test]
 fn session_end_upgrades_a_hang_stop_without_restart_or_false_settlement() {
     let root = Root::new(&["serve hang_after=1 hang=hard", "serve"]);
-    let (seen, outcome) = Case::default().run(&root, |event, handle| {
+    let (seen, outcome) = Case::bounded().run(&root, |event, handle| {
         if matches!(
             event,
             Event::StopRequested {
@@ -498,7 +566,10 @@ fn the_runtime_gets_the_supervised_arguments_and_canonical_strict_environment() 
         .expect("fixed package digests");
     assert_eq!(fixed.len(), LAUNCH_PACKAGE_FIXED.len());
     for (name, value) in LAUNCH_PACKAGE_FIXED {
-        let expected = format!("{:x}", Sha256::digest(value.as_bytes()));
+        let expected: String = Sha256::digest(value.as_bytes())
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect();
         assert_eq!(
             fixed.get(*name).and_then(Value::as_str),
             Some(expected.as_str()),
@@ -537,7 +608,7 @@ fn stop_if_idle_leaves_a_busy_runtime_serving() {
         }
         Event::Busy { .. } => {
             // Keep supervising through several heartbeats before the real stop.
-            thread::sleep(Duration::from_millis(200));
+            root.await_answered_pings(root.answered_pings() + 3);
             handle.request(Request::Stop);
         }
         _ => {}
@@ -588,14 +659,20 @@ fn a_crash_restarts_with_backoff_and_leaves_effects_unknown() {
 #[test]
 fn restart_holds_the_claim_through_backoff_and_releases_it_at_readiness() {
     let root = Root::new(&["exit code=3221225477 after_ready", "serve"]);
+    let mut case = Case::default();
+    // The observer sees the scheduled restart when it is scheduled to, not when the backoff
+    // ends, so the relaunch waits for its check of the claim.
+    let (hold, release) = hold_relaunch();
+    case.activity = Some(hold);
     let mut ready = 0;
-    let (seen, outcome) = Case::default().run(&root, |event, handle| match event {
+    let (seen, outcome) = case.run(&root, |event, handle| match event {
         Event::RestartScheduled { .. } => {
             assert!(
                 StartClaim::take(root.path(), Duration::ZERO)
                     .unwrap()
                     .is_none()
             );
+            release.send(()).unwrap();
         }
         Event::Ready { .. } => {
             ready += 1;
@@ -633,30 +710,12 @@ fn a_contended_restart_claim_never_launches_again() {
 
 #[test]
 fn quit_during_backoff_suppresses_the_restart_and_releases_the_claim() {
-    struct QuitBeforeRecheck {
-        assessments: AtomicUsize,
-        written: mpsc::Receiver<()>,
-    }
-    impl SessionActivity for QuitBeforeRecheck {
-        fn is_active(&self) -> bool {
-            // Ownership checks activity before and under its restart claim.
-            // Gate its later pre-launch recheck until the observer publishes
-            // Quit, even when the test observer is scheduled after backoff.
-            if self.assessments.fetch_add(1, Ordering::SeqCst) == 2 {
-                self.written
-                    .recv_timeout(Duration::from_secs(10))
-                    .expect("Quit published before launch recheck");
-            }
-            true
-        }
-    }
     let root = Root::new(&["exit code=3221225477 after_ready", "serve"]);
     let mut case = Case::default();
-    let (published, written) = mpsc::channel();
-    case.activity = Some(Box::new(QuitBeforeRecheck {
-        assessments: AtomicUsize::new(0),
-        written,
-    }));
+    // Quit must be published before the relaunch recheck, even when the observer is
+    // scheduled after the backoff has ended.
+    let (hold, published) = hold_relaunch();
+    case.activity = Some(hold);
     case.config.restart.initial_backoff = Duration::from_millis(500);
     case.config.restart.maximum_backoff = Duration::from_millis(500);
     let (_, outcome) = case.run(&root, |event, _| {
@@ -743,7 +802,7 @@ fn an_initial_permit_survives_a_pre_ready_failure_without_self_contention() {
 #[test]
 fn a_stale_heartbeat_escalates_to_termination_and_restarts() {
     let root = Root::new(&["serve hang_after=3 hang=hard", "serve"]);
-    let (seen, outcome) = Case::default().run(&root, stop_on_ready(2));
+    let (seen, outcome) = Case::bounded().run(&root, stop_on_ready(2));
     assert_eq!(outcome, SETTLED);
     let restarted = seen
         .iter()
@@ -806,7 +865,7 @@ fn a_stale_heartbeat_escalates_to_termination_and_restarts() {
 #[test]
 fn a_hung_runtime_that_still_drains_is_not_terminated() {
     let root = Root::new(&["serve hang_after=2 hang=drain", "serve"]);
-    let (seen, outcome) = Case::default().run(&root, stop_on_ready(2));
+    let (seen, outcome) = Case::bounded().run(&root, stop_on_ready(2));
     assert_eq!(outcome, SETTLED);
     assert_eq!(
         count(&seen, |event| matches!(event, Event::Terminated { .. })),
@@ -826,49 +885,69 @@ fn a_hung_runtime_that_still_drains_is_not_terminated() {
 #[test]
 fn an_accept_loop_that_stopped_turning_counts_as_a_hang() {
     let root = Root::new(&["serve tick_age_ms=60000", "serve"]);
-    let (seen, outcome) = Case::default().run(&root, stop_on_ready(2));
+    let (seen, outcome) = Case::bounded().run(&root, stop_on_ready(2));
     assert_eq!(outcome, SETTLED);
     assert_eq!(restarts(&seen), [RestartClass::Hang]);
 }
 
 #[test]
 fn an_idle_runtime_is_pinged_at_the_idle_interval_and_any_other_at_the_heartbeat_interval() {
-    // The idle case's interval leaves its first reply ample time to land before a second
-    // ping would be due.
-    for (plan, interval, idle) in [
-        ("serve", Duration::from_millis(100), true),
-        ("serve busy", Duration::from_millis(30), false),
-        ("serve unknown_in_flight", Duration::from_millis(30), false),
-    ] {
+    // Work in flight, or a count the runtime could not give, is never idleness.
+    for plan in ["serve busy", "serve unknown_in_flight"] {
         let mut case = Case::default();
-        case.config.heartbeat_interval = interval;
         case.config.idle_heartbeat_interval = Duration::from_secs(30);
         let root = Root::new(&[plan]);
         let (_seen, outcome) = case.run(&root, |event, handle| {
             if matches!(event, Event::Ready { .. }) {
-                // Several heartbeat intervals pass before the stop.
-                thread::sleep(Duration::from_millis(600));
+                // Pings recur at the heartbeat interval however long each takes to arrive.
+                root.await_answered_pings(5);
                 handle.request(Request::Stop);
             }
         });
-        assert_eq!(outcome, SETTLED);
-        let answered: u64 = fs::read_to_string(root.path().join("fixture-pings"))
-            .expect("the answered pings")
-            .parse()
-            .expect("a ping count");
-        if idle {
-            // The first reply reported no work, so the next ping was due 30 s later.
-            assert_eq!(answered, 1, "{plan}");
-        } else {
-            // Work in flight, or a count the runtime could not give, is never idleness.
-            assert!(answered >= 5, "{plan}: {answered} pings");
-        }
+        assert_eq!(outcome, SETTLED, "{plan}");
     }
+
+    // An idle runtime's first reply moves its next ping an idle interval out. Replies that
+    // arrive late leave pings already sent, so the heartbeats answered cannot be counted
+    // against a fixed number. The runtime declines every idle-only stop, and its refusal
+    // follows its first reply on the same stream: the supervisor has taken that reply by
+    // the first refusal, and a second ask queued behind it divides the pings sent before
+    // the idle verdict from any sent after.
+    let mut case = Case::default();
+    case.config.idle_heartbeat_interval = Duration::from_secs(3600);
+    let root = Root::new(&["serve decline_idle_stop"]);
+    let mut refusals = 0;
+    let mut before_second_ask = 0;
+    let (_seen, outcome) = case.run(&root, |event, handle| match event {
+        Event::Ready { .. } => {
+            handle.request(Request::StopIfIdle);
+        }
+        Event::Busy { .. } => {
+            refusals += 1;
+            if refusals == 1 {
+                handle.request(Request::StopIfIdle);
+            } else {
+                before_second_ask = root.answered_pings();
+                // Many heartbeat intervals pass, in which a runtime still pinged at that
+                // interval would be asked again.
+                thread::sleep(Duration::from_millis(600));
+                handle.request(Request::Stop);
+            }
+        }
+        _ => {}
+    });
+    assert_eq!(outcome, SETTLED);
+    assert_ne!(before_second_ask, 0);
+    assert_eq!(
+        root.answered_pings(),
+        before_second_ask,
+        "an idle runtime was pinged after its idle reply"
+    );
 }
 
 #[test]
 fn a_hang_after_an_idle_heartbeat_is_found_after_the_idle_ping_goes_unanswered() {
-    let mut case = Case::default();
+    let mut case = Case::bounded();
     case.config.idle_heartbeat_interval = Duration::from_secs(1);
     let root = Root::new(&["serve hang_after=1 hang=hard", "serve"]);
     let (seen, outcome) = case.run(&root, stop_on_ready(2));
@@ -890,7 +969,7 @@ fn a_hang_after_an_idle_heartbeat_is_found_after_the_idle_ping_goes_unanswered()
 fn a_runtime_busy_again_after_a_late_idle_reply_is_pinged_before_its_hang_bound() {
     // The first reply reports no work but arrives after three more pings were sent; their
     // replies report work. Each must bring the next ping back from the idle interval.
-    let mut case = Case::default();
+    let mut case = Case::bounded();
     case.config.idle_heartbeat_interval = Duration::from_secs(30);
     let root = Root::new(&["serve first_reply_delay_ms=100 busy_after=1"]);
     let (seen, outcome) = case.run(&root, |event, handle| {
@@ -910,17 +989,51 @@ fn a_runtime_busy_again_after_a_late_idle_reply_is_pinged_before_its_hang_bound(
 
 #[test]
 fn no_readiness_within_the_ceiling_is_a_hang() {
-    let root = Root::new(&["silent", "serve"]);
-    let mut case = Case::default();
+    // Every launch is silent, so each one misses the ceiling however slowly the machine
+    // starts processes; a later healthy launch would race the same short ceiling.
+    let root = Root::new(&["silent"]);
+    let mut case = Case::bounded();
     case.config.readiness_ceiling = Duration::from_millis(500);
-    let (seen, outcome) = case.run(&root, stop_on_ready(1));
-    assert_eq!(outcome, SETTLED);
-    assert!(
-        seen.iter()
-            .any(|seen| matches!(seen.event, Event::HangDetected { ready: false, .. }))
+    case.config.restart.crash_loop_limit = 2;
+    let (seen, outcome) = case.run(&root, |_, _| {});
+    assert_eq!(
+        outcome,
+        Outcome::Failed {
+            last: RestartClass::Hang
+        }
     );
-    assert_eq!(exits(&seen)[0], RuntimeExit::Terminated);
-    assert_eq!(restarts(&seen), [RestartClass::Hang]);
+    // A launch record exists only once the fixture got to run, which a loaded machine can
+    // outlast the ceiling, so the launches are counted as the supervisor reports them.
+    assert_eq!(
+        count(&seen, |event| matches!(event, Event::Launched { .. })),
+        3
+    );
+    assert_eq!(
+        count(&seen, |event| matches!(
+            event,
+            Event::HangDetected { ready: false, .. }
+        )),
+        3
+    );
+    assert_eq!(
+        count(&seen, |event| matches!(event, Event::HangDetected { .. })),
+        3
+    );
+    assert_eq!(exits(&seen), [RuntimeExit::Terminated; 3]);
+    assert_eq!(restarts(&seen), [RestartClass::Hang; 2]);
+}
+
+#[test]
+fn readiness_within_the_ceiling_is_not_a_hang() {
+    let root = Root::new(&["serve"]);
+    let (seen, outcome) = Case::default().run(&root, stop_on_ready(1));
+    assert_eq!(outcome, SETTLED);
+    assert_eq!(
+        count(&seen, |event| matches!(event, Event::HangDetected { .. })),
+        0
+    );
+    assert!(restarts(&seen).is_empty());
+    assert_eq!(root.launches(), 1);
 }
 
 #[test]

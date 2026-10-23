@@ -175,7 +175,10 @@ mod fixture {
                     env::var(name).ok().map(|value| {
                         (
                             (*name).to_owned(),
-                            format!("{:x}", Sha256::digest(value.as_bytes())),
+                            Sha256::digest(value.as_bytes())
+                                .iter()
+                                .map(|byte| format!("{byte:02x}"))
+                                .collect::<String>(),
                         )
                     })
                 })
@@ -376,6 +379,9 @@ mod fixture {
         let hang_after = number("hang_after");
         let hard_hang = options.get("hang").is_some_and(|hang| hang == "hard");
         let busy = options.contains_key("busy");
+        // Answers an idle-only stop with `busy` while its heartbeats still report no work, so
+        // a case can ask repeatedly without the runtime ending.
+        let declines_idle_stop = options.contains_key("decline_idle_stop");
         let busy_after = number("busy_after");
         let unknown_in_flight = options.contains_key("unknown_in_flight");
         let first_reply_delay = number("first_reply_delay_ms");
@@ -448,7 +454,9 @@ mod fixture {
                     exit(DRAIN_WATCHDOG)
                 }
                 Some("stop") => announcer.stopping(SUPERVISOR_STOP),
-                Some("stop-if-idle") if busy => announcer.line("{\"type\":\"busy\"}"),
+                Some("stop-if-idle") if busy || declines_idle_stop => {
+                    announcer.line("{\"type\":\"busy\"}");
+                }
                 Some("stop-if-idle") => announcer.stopping(SUPERVISOR_STOP),
                 Some("session-end") if hung && hard_hang => {}
                 Some("session-end") => announcer.stopping(SESSION_END_SETTLE),

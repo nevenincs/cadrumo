@@ -62,4 +62,9 @@ if(BUILD_TESTING)
       --features live-package-tests --test live_package -- --nocapture)
   set_tests_properties(application.package PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     TIMEOUT 900 RESOURCE_LOCK package_inventory)
+  # The second lint enables every feature, so the platform and live-test code is linted as well.
+  cadrumo_rust_quality(application MANIFEST "${application_manifest}"
+    CLIPPY_CARGO application_cargo CLIPPY_ARGS --profile "${application_profile}")
+  cadrumo_rust_clippy(application.features MANIFEST "${application_manifest}" CARGO application_cargo
+    ARGS --profile "${application_profile}" --all-features)
 endif()

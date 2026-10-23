@@ -2,6 +2,8 @@
 name = "cadrumo-platform"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.96"
+publish = false
 
 [lib]
 # CMake selects staticlib/cdylib explicitly; binary and Rust consumers need only the rlib.
@@ -28,3 +30,9 @@ windows-core = { version = "0.62", optional = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 libc = "0.2"
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+all = "deny"

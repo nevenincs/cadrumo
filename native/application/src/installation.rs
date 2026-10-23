@@ -11,7 +11,6 @@ use crate::{
     value::{RelativePath, Sha256Digest},
 };
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -109,7 +108,7 @@ impl CandidateFailure {
         };
         let member_sha256 = member
             .and_then(|member| RelativePath::new(member).ok())
-            .map(|member| format!("{:x}", Sha256::digest(member.as_str().as_bytes())));
+            .map(|member| Sha256Digest::of(member.as_str().as_bytes()).to_string());
         Self {
             error: Error::Integrity("incomplete installed version".into()),
             rejection: CandidateRejection {
@@ -128,7 +127,7 @@ mod candidate_diagnostic_tests {
     #[test]
     fn readiness_rejection_retains_only_the_relative_member_digest() {
         let member = "cadrumo/private-member.json";
-        let checksum = format!("{:x}", Sha256::digest(member.as_bytes()));
+        let checksum = Sha256Digest::of(member.as_bytes()).to_string();
         for (readiness, kind) in [
             (Readiness::Missing(member.into()), "missing"),
             (Readiness::Incompatible(member.into()), "incompatible"),

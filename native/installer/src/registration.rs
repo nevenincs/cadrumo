@@ -233,7 +233,7 @@ pub(crate) fn file_digest(file: &mut std::fs::File) -> Result<Sha256Digest, Refu
         }
         hash.update(&bytes[..count]);
     }
-    Sha256Digest::new(format!("{:x}", hash.finalize())).map_err(|_| Refusal::InvalidRequest)
+    Sha256Digest::from_hash(hash.finalize()).map_err(|_| Refusal::InvalidRequest)
 }
 
 fn wide(value: &str) -> Result<Vec<u16>, Refusal> {

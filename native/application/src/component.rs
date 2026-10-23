@@ -294,7 +294,7 @@ impl ComponentStore {
         file.sync_all()?;
         drop(file);
         if count != artifact.archive_bytes
-            || format!("{:x}", hash.finalize()) != artifact.sha256.as_str()
+            || Sha256Digest::from_hash(hash.finalize())? != artifact.sha256
         {
             return Err(Error::Integrity("component archive".into()));
         }
@@ -400,11 +400,11 @@ fn extract(
     for index in 0..zip.len() {
         cancellation.check()?;
         let mut member = zip.by_index(index)?;
-        let name = member.name();
+        let name = member.name()?;
         let relative = RelativePath::new(if member.is_dir() {
             name.trim_end_matches('/')
         } else {
-            name
+            &name
         })?;
         if !seen.insert(relative.as_str().to_lowercase()) {
             return Err(Error::Invalid("duplicate archive member".into()));
@@ -457,10 +457,7 @@ fn extract(
         }
         out.sync_all()?;
         filesystem::archive_permissions(&path, member.unix_mode())?;
-        files.insert(
-            relative,
-            Sha256Digest::new(format!("{:x}", hash.finalize()))?,
-        );
+        files.insert(relative, Sha256Digest::from_hash(hash.finalize())?);
     }
     Ok((files, zip.len()))
 }

@@ -97,8 +97,9 @@ pub fn require_current() -> io::Result<super::login::Session> {
 /// A bounded query to the real system bus. Ignore environment bus addresses and
 /// bind the property read to the root-owned logind unique bus owner.
 pub fn shutdown_requested() -> io::Result<bool> {
-    use std::{os::fd::AsRawFd, os::unix::net::UnixStream, time::Duration};
-    use zbus::blocking::{Proxy, connection::Builder};
+    use std::{num::NonZeroUsize, os::fd::AsRawFd, os::unix::net::UnixStream, time::Duration};
+    use zbus::{Proxy, block_on, connection::Builder};
+    const QUEUED_MESSAGES: NonZeroUsize = NonZeroUsize::new(16).unwrap();
     let stream = UnixStream::connect("/run/dbus/system_bus_socket")?;
     // SAFETY: credential storage is writable for exactly the requested byte count.
     let mut credentials: libc::ucred = unsafe { std::mem::zeroed() };
@@ -121,44 +122,53 @@ pub fn shutdown_requested() -> io::Result<bool> {
     }
     stream.set_read_timeout(Some(Duration::from_secs(1)))?;
     stream.set_write_timeout(Some(Duration::from_secs(1)))?;
-    let connection = Builder::async_io_unix_stream(stream)
-        .method_timeout(Duration::from_secs(1))
-        .max_queued(16)
-        .build()
+    block_on(async {
+        let connection = Builder::unix_stream(stream)
+            .method_timeout(Duration::from_secs(1))
+            .max_queued(QUEUED_MESSAGES)
+            .build()
+            .await
+            .map_err(io::Error::other)?;
+        let bus = Proxy::new(
+            &connection,
+            "org.freedesktop.DBus",
+            "/org/freedesktop/DBus",
+            "org.freedesktop.DBus",
+        )
+        .await
         .map_err(io::Error::other)?;
-    let bus = Proxy::new(
-        &connection,
-        "org.freedesktop.DBus",
-        "/org/freedesktop/DBus",
-        "org.freedesktop.DBus",
-    )
-    .map_err(io::Error::other)?;
-    let owner: String = bus
-        .call("GetNameOwner", &("org.freedesktop.login1",))
+        let owner: String = bus
+            .call("GetNameOwner", &("org.freedesktop.login1",))
+            .await
+            .map_err(io::Error::other)?;
+        let uid: u32 = bus
+            .call("GetConnectionUnixUser", &(&owner,))
+            .await
+            .map_err(io::Error::other)?;
+        if uid != 0 {
+            return Err(io::ErrorKind::PermissionDenied.into());
+        }
+        let login = Proxy::new(
+            &connection,
+            owner.as_str(),
+            "/org/freedesktop/login1",
+            "org.freedesktop.login1.Manager",
+        )
+        .await
         .map_err(io::Error::other)?;
-    let uid: u32 = bus
-        .call("GetConnectionUnixUser", &(&owner,))
-        .map_err(io::Error::other)?;
-    if uid != 0 {
-        return Err(io::ErrorKind::PermissionDenied.into());
-    }
-    let login = Proxy::new(
-        &connection,
-        owner.as_str(),
-        "/org/freedesktop/login1",
-        "org.freedesktop.login1.Manager",
-    )
-    .map_err(io::Error::other)?;
-    let preparing: bool = login
-        .get_property("PreparingForShutdown")
-        .map_err(io::Error::other)?;
-    let after: String = bus
-        .call("GetNameOwner", &("org.freedesktop.login1",))
-        .map_err(io::Error::other)?;
-    if after != owner {
-        return Err(io::ErrorKind::PermissionDenied.into());
-    }
-    Ok(preparing)
+        let preparing: bool = login
+            .get_property("PreparingForShutdown")
+            .await
+            .map_err(io::Error::other)?;
+        let after: String = bus
+            .call("GetNameOwner", &("org.freedesktop.login1",))
+            .await
+            .map_err(io::Error::other)?;
+        if after != owner {
+            return Err(io::ErrorKind::PermissionDenied.into());
+        }
+        Ok(preparing)
+    })
 }
 
 #[cfg(test)]

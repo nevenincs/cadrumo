@@ -179,7 +179,7 @@ fn digest(file: &mut std::fs::File) -> Result<Sha256Digest, Refusal> {
         }
         digest.update(&buffer[..size]);
     }
-    Sha256Digest::new(format!("{:x}", digest.finalize())).map_err(|_| Refusal::NativeFailure)
+    Sha256Digest::from_hash(digest.finalize()).map_err(|_| Refusal::NativeFailure)
 }
 
 fn verified_peer(

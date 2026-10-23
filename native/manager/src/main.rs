@@ -33,8 +33,6 @@ const BUILD_SEQUENCE: &str = env!(
     "CADRUMO_MANAGER_BUILD_SEQUENCE",
     "CADRUMO_MANAGER_BUILD_SEQUENCE must come from the manager component's build identity"
 );
-/// `debug` or `release`, from the Cargo profile that compiled this image.
-const BUILD_TYPE: &str = env!("CADRUMO_BUILD_TYPE");
 /// `{VERSION}+{BUILD_ID}`, with a `.debug` suffix for a debug build.
 const DISPLAY_VERSION: &str = env!("CADRUMO_DISPLAY_VERSION");
 const _: () = assert!(
@@ -279,6 +277,9 @@ fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// `debug` or `release`, from the Cargo profile that compiled this image.
+    const BUILD_TYPE: &str = env!("CADRUMO_BUILD_TYPE");
 
     #[test]
     fn display_version_names_the_build_and_its_type() {

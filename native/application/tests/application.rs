@@ -6,7 +6,6 @@ use cadrumo_application::{
     package::{PackageManifest, Readiness},
     value::{RelativePath, Sha256Digest},
 };
-use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeMap,
     ffi::OsString,
@@ -38,7 +37,7 @@ fn artifact(bytes: &[u8], revision: &str) -> Artifact {
         id: "chromium".into(),
         revision: revision.into(),
         target: "fixture-target".into(),
-        sha256: Sha256Digest::new(format!("{:x}", Sha256::digest(bytes))).unwrap(),
+        sha256: Sha256Digest::of(bytes),
         archive_bytes: bytes.len() as u64,
         max_unpacked_bytes: 100_000,
         max_entries: 100,
@@ -100,7 +99,7 @@ fn manifest_inspection_detects_missing_corrupt_extra_and_incompatible_files() {
 }
 
 fn sha256_hex(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
+    Sha256Digest::of(bytes).to_string()
 }
 
 /// Writes a package whose `docs/user` subtree is inventoried by its own hashed manifest.

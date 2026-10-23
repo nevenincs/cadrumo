@@ -174,9 +174,8 @@ thread_local! {
 #[cfg(all(test, target_arch = "x86_64"))]
 mod tests {
     use super::*;
-    use cadrumo_application::diagnostics::lifecycle::InspectionRefusal;
+    use cadrumo_application::{diagnostics::lifecycle::InspectionRefusal, value::Sha256Digest};
     use serde_json::{Value, json};
-    use sha2::{Digest, Sha256};
     use std::{
         fs,
         path::PathBuf,
@@ -247,8 +246,8 @@ mod tests {
                     "layout": {"abi": contract.layout.abi, "platform": contract.layout.platform},
                     "python": "fixture", "distributions": {},
                     "files": {
-                        (member.as_str()): format!("{:x}", Sha256::digest(bytes)),
-                        "fixture-dependency.bin": format!("{:x}", Sha256::digest(dependency)),
+                        (member.as_str()): Sha256Digest::of(bytes).to_string(),
+                        "fixture-dependency.bin": Sha256Digest::of(dependency).to_string(),
                     },
                     "user_docs": {"directory": "docs/user", "bundled": false},
                     "startup_files": [member.as_str(), "fixture-dependency.bin"],

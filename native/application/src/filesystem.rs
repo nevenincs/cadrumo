@@ -80,7 +80,7 @@ pub(crate) fn digest_reader(
         }
         hash.update(&buffer[..n]);
     }
-    Sha256Digest::new(format!("{:x}", hash.finalize()))
+    Sha256Digest::from_hash(hash.finalize())
 }
 
 pub(crate) const JSON_BYTES_LIMIT: u64 = 16 * 1024 * 1024;
@@ -220,7 +220,7 @@ mod cancellation_tests {
         let bytes = vec![11u8; 131_073];
         assert_eq!(
             digest_reader(&mut Cursor::new(&bytes), &Cancellation::default()).unwrap(),
-            Sha256Digest::new(format!("{:x}", Sha256::digest(&bytes))).unwrap()
+            Sha256Digest::of(&bytes)
         );
     }
 }

@@ -33,7 +33,7 @@ impl Fixture {
             PathBuf::from(std::env::var_os("SystemRoot").unwrap()).join("System32/where.exe");
         fs::copy(image, manager.under(&package)).unwrap();
         fs::write(package.join("payload.bin"), b"owned version payload").unwrap();
-        let digest = |path: &Path| format!("{:x}", Sha256::digest(fs::read(path).unwrap()));
+        let digest = |path: &Path| Sha256Digest::of(fs::read(path).unwrap()).to_string();
         let manifest_path = package.join("data/package-manifest.json");
         fs::write(&manifest_path, serde_json::to_vec(&json!({
             "build":{"application_id":"test.discovery","channel":"stable","version":"1.0.0","target":"windows-x86-64"},

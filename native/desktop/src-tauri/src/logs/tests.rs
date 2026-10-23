@@ -1526,7 +1526,11 @@ for index in range(total):
         let log = reported_log(reported.as_bytes(), &scratch.0);
         let mut holding = String::new();
         holder_out.read_line(&mut holding).unwrap();
-        assert_eq!(holding.trim(), "holding", "foreign writer never held the log");
+        assert_eq!(
+            holding.trim(),
+            "holding",
+            "foreign writer never held the log"
+        );
         let deadline = Instant::now() + Duration::from_secs(30);
         while !fs::read_to_string(&log).is_ok_and(|text| text.contains("holder-start")) {
             assert!(Instant::now() < deadline, "holder never logged");

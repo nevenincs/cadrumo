@@ -3,6 +3,7 @@ use crate::{identity, strings::Strings};
 use std::{
     collections::HashMap,
     io,
+    num::NonZeroUsize,
     sync::{
         Arc, Mutex,
         mpsc::{self, Receiver, SyncSender},
@@ -10,9 +11,10 @@ use std::{
     time::Duration,
 };
 use zbus::{
-    blocking::{Connection, Proxy, connection::Builder},
-    zvariant::{OwnedObjectPath, OwnedValue, Value},
+    Connection, OwnedObjectPath, OwnedVariant, Proxy, Str, Variant, block_on, connection::Builder,
 };
+
+const QUEUED_MESSAGES: NonZeroUsize = NonZeroUsize::new(32).unwrap();
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Action {
@@ -77,8 +79,8 @@ impl Item {
     fn scroll(&self, _delta: i32, _orientation: &str) {}
 }
 
-type Properties = HashMap<String, OwnedValue>;
-type Layout = (i32, Properties, Vec<Value<'static>>);
+type Properties = HashMap<String, OwnedVariant>;
+type Layout = (i32, Properties, Vec<Variant<'static>>);
 struct Menu {
     state: Arc<Mutex<State>>,
     strings: Strings,
@@ -86,30 +88,30 @@ struct Menu {
 }
 
 impl Menu {
-    fn row(&self, id: i32, label: &str, enabled: bool, children: Vec<Value<'static>>) -> Layout {
+    fn row(&self, id: i32, label: &str, enabled: bool, children: Vec<Variant<'static>>) -> Layout {
         let mut properties = HashMap::from([
             (
                 "label".into(),
-                OwnedValue::from(zbus::zvariant::Str::from(label.to_owned())),
+                OwnedVariant::from(Str::from(label.to_owned())),
             ),
-            ("enabled".into(), OwnedValue::from(enabled)),
-            ("visible".into(), OwnedValue::from(true)),
+            ("enabled".into(), OwnedVariant::from(enabled)),
+            ("visible".into(), OwnedVariant::from(true)),
         ]);
         if matches!(id, 0 | 4 | 5) {
             properties.insert(
                 "children-display".into(),
-                OwnedValue::from(zbus::zvariant::Str::from("submenu")),
+                OwnedVariant::from(Str::from("submenu")),
             );
         }
         if id == 3 {
             properties.insert(
                 "toggle-type".into(),
-                OwnedValue::from(zbus::zvariant::Str::from("checkmark")),
+                OwnedVariant::from(Str::from("checkmark")),
             );
             let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
             properties.insert(
                 "toggle-state".into(),
-                OwnedValue::from(i32::from(state.sign_in)),
+                OwnedVariant::from(i32::from(state.sign_in)),
             );
         }
         (id, properties, children)
@@ -150,7 +152,7 @@ impl Menu {
                 .filter_map(|id| {
                     self.layout_depth(id, if depth < 0 { -1 } else { depth - 1 }, names)
                 })
-                .map(Value::new)
+                .map(Variant::new)
                 .collect()
         };
         let (id, mut properties, children) = self.row(id, label, enabled, children);
@@ -206,7 +208,7 @@ impl Menu {
             })
             .collect()
     }
-    fn get_property(&self, id: i32, name: &str) -> zbus::fdo::Result<OwnedValue> {
+    fn get_property(&self, id: i32, name: &str) -> zbus::fdo::Result<OwnedVariant> {
         self.layout(id)
             .and_then(|(_, mut properties, _)| properties.remove(name))
             .ok_or_else(|| zbus::fdo::Error::InvalidArgs("unknown menu property".into()))
@@ -219,7 +221,7 @@ impl Menu {
             .take(32)
             .partition(|id| self.layout(*id).is_some())
     }
-    fn event(&self, id: i32, event_id: &str, _data: Value<'_>, _timestamp: u32) {
+    fn event(&self, id: i32, event_id: &str, _data: Variant<'_>, _timestamp: u32) {
         if event_id != "clicked" {
             return;
         }
@@ -234,7 +236,7 @@ impl Menu {
         };
         let _ = self.actions.try_send(action);
     }
-    fn event_group(&self, events: Vec<(i32, String, OwnedValue, u32)>) -> Vec<i32> {
+    fn event_group(&self, events: Vec<(i32, String, OwnedVariant, u32)>) -> Vec<i32> {
         let mut errors = Vec::new();
         for (id, event, data, timestamp) in events.into_iter().take(32) {
             if self.layout(id).is_none() {
@@ -261,29 +263,28 @@ impl Tray {
             sign_in,
         }));
         let (send, actions) = mpsc::sync_channel(16);
-        let connection = Builder::session()
-            .map_err(io::Error::other)?
-            .method_timeout(Duration::from_secs(1))
-            .max_queued(32)
-            .serve_at(
-                "/StatusNotifierItem",
-                Item {
-                    state: state.clone(),
-                    actions: send.clone(),
-                },
-            )
-            .map_err(io::Error::other)?
-            .serve_at(
-                "/MenuBar",
-                Menu {
-                    state: state.clone(),
-                    strings: Strings::current()?,
-                    actions: send,
-                },
-            )
-            .map_err(io::Error::other)?
-            .build()
-            .map_err(io::Error::other)?;
+        let connection = block_on(
+            Builder::session()
+                .method_timeout(Duration::from_secs(1))
+                .max_queued(QUEUED_MESSAGES)
+                .serve_at(
+                    "/StatusNotifierItem",
+                    Item {
+                        state: state.clone(),
+                        actions: send.clone(),
+                    },
+                )
+                .serve_at(
+                    "/MenuBar",
+                    Menu {
+                        state: state.clone(),
+                        strings: Strings::current()?,
+                        actions: send,
+                    },
+                )
+                .build(),
+        )
+        .map_err(io::Error::other)?;
         Ok(Self {
             connection,
             state,
@@ -294,41 +295,48 @@ impl Tray {
 
     /// Missing hosts are ordinary: retain the item and retry without changing lifecycle.
     pub fn poll_host(&mut self) -> io::Result<bool> {
-        let bus = Proxy::new(
-            &self.connection,
-            "org.freedesktop.DBus",
-            "/org/freedesktop/DBus",
-            "org.freedesktop.DBus",
-        )
-        .map_err(io::Error::other)?;
-        let owner: String = match bus.call("GetNameOwner", &("org.kde.StatusNotifierWatcher",)) {
-            Ok(owner) => owner,
-            Err(_) => {
-                self.watcher = None;
-                return Ok(false);
-            }
-        };
-        let watcher = Proxy::new(
-            &self.connection,
-            owner.as_str(),
-            "/StatusNotifierWatcher",
-            "org.kde.StatusNotifierWatcher",
-        )
-        .map_err(io::Error::other)?;
-        let hosted: bool = watcher
-            .get_property("IsStatusNotifierHostRegistered")
+        let connection = &self.connection;
+        let known = self.watcher.as_deref();
+        let (hosted, watcher) = block_on(async {
+            let bus = Proxy::new(
+                connection,
+                "org.freedesktop.DBus",
+                "/org/freedesktop/DBus",
+                "org.freedesktop.DBus",
+            )
+            .await
             .map_err(io::Error::other)?;
-        if !hosted {
-            self.watcher = None;
-            return Ok(false);
-        }
-        if self.watcher.as_ref() != Some(&owner) {
-            watcher
-                .call::<_, _, ()>("RegisterStatusNotifierItem", &("/StatusNotifierItem",))
+            let Ok(owner) = bus
+                .call::<_, _, String>("GetNameOwner", &("org.kde.StatusNotifierWatcher",))
+                .await
+            else {
+                return Ok::<_, io::Error>((false, None));
+            };
+            let watcher = Proxy::new(
+                connection,
+                owner.as_str(),
+                "/StatusNotifierWatcher",
+                "org.kde.StatusNotifierWatcher",
+            )
+            .await
+            .map_err(io::Error::other)?;
+            let hosted: bool = watcher
+                .get_property("IsStatusNotifierHostRegistered")
+                .await
                 .map_err(io::Error::other)?;
-            self.watcher = Some(owner.clone());
-        }
-        Ok(true)
+            if !hosted {
+                return Ok((false, None));
+            }
+            if known != Some(owner.as_str()) {
+                watcher
+                    .call::<_, _, ()>("RegisterStatusNotifierItem", &("/StatusNotifierItem",))
+                    .await
+                    .map_err(io::Error::other)?;
+            }
+            Ok((true, Some(owner)))
+        })?;
+        self.watcher = watcher;
+        Ok(hosted)
     }
 
     pub fn update(&self, unavailable: bool, sign_in: bool) -> io::Result<()> {
@@ -342,26 +350,29 @@ impl Tray {
         state.status = status.into();
         state.sign_in = sign_in;
         drop(state);
-        if changed {
+        block_on(async {
+            if changed {
+                self.connection
+                    .emit_signal(
+                        None::<&str>,
+                        "/StatusNotifierItem",
+                        "org.kde.StatusNotifierItem",
+                        "NewStatus",
+                        &(status,),
+                    )
+                    .await?;
+            }
             self.connection
                 .emit_signal(
                     None::<&str>,
-                    "/StatusNotifierItem",
-                    "org.kde.StatusNotifierItem",
-                    "NewStatus",
-                    &(status,),
+                    "/MenuBar",
+                    "com.canonical.dbusmenu",
+                    "LayoutUpdated",
+                    &(1u32, 0i32),
                 )
-                .map_err(io::Error::other)?;
-        }
-        self.connection
-            .emit_signal(
-                None::<&str>,
-                "/MenuBar",
-                "com.canonical.dbusmenu",
-                "LayoutUpdated",
-                &(1u32, 0i32),
-            )
-            .map_err(io::Error::other)
+                .await
+        })
+        .map_err(io::Error::other)
     }
 }
 
@@ -381,12 +392,12 @@ mod tests {
             actions: send,
         };
         for id in [4, 5, 40, 50] {
-            menu.event(id, "clicked", Value::from(0i32), 0);
+            menu.event(id, "clicked", Variant::from(0i32), 0);
         }
         assert!(receive.try_recv().is_err());
-        menu.event(41, "clicked", Value::from(0i32), 0);
+        menu.event(41, "clicked", Variant::from(0i32), 0);
         assert_eq!(receive.try_recv().unwrap(), Action::Restart);
-        menu.event(51, "clicked", Value::from(0i32), 0);
+        menu.event(51, "clicked", Variant::from(0i32), 0);
         assert_eq!(receive.try_recv().unwrap(), Action::Quit);
         assert_eq!(menu.layout(4).unwrap().2.len(), 2);
         assert!(menu.layout(99).is_none());
@@ -395,7 +406,7 @@ mod tests {
         assert_eq!(properties.len(), 1);
         assert!(properties.contains_key("label"));
         assert!(menu.get_layout(0, -2, vec![]).is_err());
-        menu.event(6, "clicked", Value::from(0i32), 0);
+        menu.event(6, "clicked", Variant::from(0i32), 0);
         assert_eq!(receive.try_recv().unwrap(), Action::Retry);
     }
 }

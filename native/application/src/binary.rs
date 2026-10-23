@@ -1,7 +1,6 @@
 //! Header and digest checks for a caller-selected executable, without executing it.
 use crate::{error::Error, filesystem, value::Sha256Digest};
 use object::{Object, read::macho::FatArch};
-use sha2::{Digest, Sha256};
 use std::{fs::File, io::Read, path::Path};
 
 pub use object::{Architecture, BinaryFormat};
@@ -57,7 +56,7 @@ pub fn verify(
     if bytes.len() as u64 > LIMIT {
         return Err(Error::LimitExceeded);
     }
-    if Sha256Digest::new(format!("{:x}", Sha256::digest(&bytes)))? != *digest {
+    if Sha256Digest::of(&bytes) != *digest {
         return Err(Error::Integrity("executable digest differs".into()));
     }
     verify_header(&bytes, expected)

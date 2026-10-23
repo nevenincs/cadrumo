@@ -82,6 +82,7 @@ set(CADRUMO_HELPER "${CADRUMO_HELPER}" PARENT_SCOPE)
 set(CADRUMO_BUILD_HELPER "${CADRUMO_BUILD_HELPER}" PARENT_SCOPE)
 set(CADRUMO_BUILD_IDENTITY_DIR "${CADRUMO_BUILD_IDENTITY_DIR}" PARENT_SCOPE)
 include("${PROJECT_SOURCE_DIR}/native/cmake/Rust.cmake")
+include("${PROJECT_SOURCE_DIR}/native/cmake/RustQuality.cmake")
 set(metadata_inputs ${contract_inputs}
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/metadata.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_stamp.py"
@@ -104,11 +105,38 @@ if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET rust_platform DEPENDS rust_platform_static rust_platform_shared)
   cadrumo_register_clean(TARGET rust_platform_consumer PATHS "${platform_consumer}")
 endif()
+# The webview2 feature is the desktop's view of the platform crate and exists only on Windows.
+set(platform_manifest "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml")
+set(platform_clippy_arguments --profile "$<IF:$<CONFIG:Debug>,dev,release>")
+cadrumo_rust_quality(platform MANIFEST "${platform_manifest}"
+  CLIPPY_CARGO platform_cargo CLIPPY_ARGS ${platform_clippy_arguments})
+if(WIN32)
+  cadrumo_rust_clippy(platform.webview2 MANIFEST "${platform_manifest}" CARGO platform_cargo
+    ARGS ${platform_clippy_arguments} --features webview2)
+endif()
 add_subdirectory(application)
 include("${PROJECT_SOURCE_DIR}/native/cmake/LaunchGuard.cmake")
 # Defines rust_manager and CADRUMO_MANAGER_EXECUTABLE in this directory scope for Packaging.cmake.
 include("${PROJECT_SOURCE_DIR}/native/cmake/Manager.cmake")
 include("${PROJECT_SOURCE_DIR}/native/cmake/Installer.cmake")
+# The interpreter host crate is built only inside the desktop image: its build.rs compiles the
+# Windows host with the desktop's identity, so it is linted with that identity and in a target
+# directory no build shares. Elsewhere its build script compiles nothing.
+set(interpreter_host_identity)
+if(WIN32)
+  set(interpreter_host_identity --build-identity desktop)
+endif()
+cadrumo_cargo_command(interpreter_host_cargo ${interpreter_host_identity}
+  --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs"
+  --env "CADRUMO_NATIVE_CONTRACT=${CONTRACT_DIR}/contract.json"
+  --env "CADRUMO_ID_VERSION=${CADRUMO_ID_VERSION}")
+cadrumo_rust_quality(interpreter_host MANIFEST "${CMAKE_CURRENT_SOURCE_DIR}/interpreter_host/Cargo.toml"
+  CLIPPY_CARGO interpreter_host_cargo
+  CLIPPY_ARGS --target-dir "${CADRUMO_PATH_CARGO}/interpreter-host"
+    --profile "$<IF:$<CONFIG:Debug>,dev,release>")
+# The desktop's fmt and deny gates need only Cargo; its clippy gate drives the desktop build
+# targets and is registered with them, so a native-only configure (no payload) has no clippy for it.
+cadrumo_rust_quality(desktop MANIFEST "${CMAKE_CURRENT_SOURCE_DIR}/desktop/src-tauri/Cargo.toml")
 # Every Cargo command receives this target and environment; each component fingerprint hashes it
 # as the effective Rust build settings (dev/packaging/native/build_fingerprint.py).
 set(rust_environment "{}")

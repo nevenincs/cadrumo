@@ -40,4 +40,6 @@ if(BUILD_TESTING)
       --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>")
   set_tests_properties(launch_guard.rust PROPERTIES
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 0)
+  cadrumo_rust_quality(launch_guard MANIFEST "${launch_guard_source}/Cargo.toml"
+    CLIPPY_CARGO launch_guard_cargo CLIPPY_ARGS --profile "$<IF:$<CONFIG:Debug>,dev,release>")
 endif()

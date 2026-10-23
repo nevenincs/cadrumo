@@ -300,6 +300,15 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
   add_dependencies(desktop-host-${action} ${desktop_host_contracts})
 endforeach()
+# The backend-only lint needs the frontend packages but not a frontend build or staged
+# documentation. CTest drives the existing target, so its identity, fixture and environment
+# steps stay in one place; desktop.fmt and desktop.deny are registered with the other crates.
+if(BUILD_TESTING)
+  add_test(NAME desktop.clippy
+    COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --config "$<CONFIG>" --target desktop-host-unit-clippy)
+  set_tests_properties(desktop.clippy PROPERTIES
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" LABELS rust_quality TIMEOUT 1800)
+endif()
 
 cadrumo_build_step(step_comment desktop-run GROUP desktop
   SUMMARY "run the desktop application against the package root")

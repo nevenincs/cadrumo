@@ -158,7 +158,7 @@ fn runner_digest() -> Result<Sha256Digest, Error> {
         }
         digest.update(&buffer[..size]);
     }
-    Sha256Digest::new(format!("{:x}", digest.finalize()))
+    Sha256Digest::from_hash(digest.finalize())
 }
 
 fn existing_native_registration(
@@ -365,7 +365,7 @@ fn artifact(
         }
         digest.update(&buffer[..size]);
     }
-    if Sha256Digest::new(format!("{:x}", digest.finalize()))? != artifact.sha256 {
+    if Sha256Digest::from_hash(digest.finalize())? != artifact.sha256 {
         return Err(Error::Integrity("native MSI artifact hash changed".into()));
     }
     let definition =

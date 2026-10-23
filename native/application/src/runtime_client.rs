@@ -19,6 +19,7 @@
 //! refused and the connection closed, as the runtime's Python clients do.
 //! Nothing here starts, stops or supervises a runtime.
 
+use crate::value::Sha256Digest;
 use cadrumo_platform::runtime_pipe::{self, ConnectRefusal, Pipe};
 use serde_json::{Map, Value, json};
 use sha2::{Digest, Sha256};
@@ -219,7 +220,7 @@ pub enum Event {
 }
 
 fn sha256_hex(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
+    Sha256Digest::of(bytes).to_string()
 }
 
 fn is_uuid(text: &str) -> bool {

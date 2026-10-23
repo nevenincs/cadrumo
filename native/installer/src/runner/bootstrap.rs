@@ -85,19 +85,17 @@ fn read_kit(path: &Path) -> Result<(Kit, FileCustody), Failure> {
     let kit: Kit = serde_json::from_slice(&bytes).map_err(|_| Failure::KitRefused)?;
     let release =
         kit.schema == 2 && kit.artifacts.len() == 1 && kit.artifacts.contains_key("application");
-    if (!release && kit.schema != 1)
-        || (!release && kit.artifacts.len() != 4)
-        || !kit.maintenance.desktop_present
-        || (!release
-            && [
-                "user-version",
-                "user-registration",
-                "machine-version",
-                "machine-registration",
-            ]
-            .iter()
-            .any(|name| !kit.artifacts.contains_key(*name)))
-    {
+    let legacy_shape_refused = kit.schema != 1
+        || kit.artifacts.len() != 4
+        || [
+            "user-version",
+            "user-registration",
+            "machine-version",
+            "machine-registration",
+        ]
+        .iter()
+        .any(|name| !kit.artifacts.contains_key(*name));
+    if !kit.maintenance.desktop_present || (!release && legacy_shape_refused) {
         return Err(Failure::KitRefused);
     }
     Ok((kit, custody))

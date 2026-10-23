@@ -7,7 +7,6 @@ use cadrumo_application::{
     python::{self, BrowserQuery, BrowserState, PythonExpectation},
     value::Sha256Digest,
 };
-use sha2::{Digest, Sha256};
 use std::{collections::BTreeMap, path::PathBuf, time::Duration};
 
 #[tokio::test]
@@ -41,11 +40,7 @@ async fn live_interpreter_and_canonical_browser_probe() {
         ChildConfiguration::new(executable.clone(), directory.path().to_owned(), environment)
             .unwrap();
     let mut expected = PythonExpectation {
-        executable_sha256: Sha256Digest::new(format!(
-            "{:x}",
-            Sha256::digest(std::fs::read(&executable).unwrap())
-        ))
-        .unwrap(),
+        executable_sha256: Sha256Digest::of(std::fs::read(&executable).unwrap()),
         version,
         distributions: BTreeMap::new(),
     };

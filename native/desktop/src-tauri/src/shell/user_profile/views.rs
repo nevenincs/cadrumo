@@ -218,7 +218,8 @@ fn notifications_summary(latest: Value, shown: Option<Value>) -> Result<Notifica
             unread: 0,
         });
     };
-    let shown: Shown = serde_json::from_value(shown.ok_or_else(protocol)?).map_err(|_| protocol())?;
+    let shown: Shown =
+        serde_json::from_value(shown.ok_or_else(protocol)?).map_err(|_| protocol())?;
     if shown.snapshot_id != snapshot_id
         || Some(&shown.captured_at) != latest.captured_at.as_ref()
         || Some(shown.row_count) != latest.row_count
@@ -230,11 +231,20 @@ fn notifications_summary(latest: Value, shown: Option<Value>) -> Result<Notifica
         captured_at: Some(shown.captured_at),
         row_count: shown.row_count,
         // A row whose read mark was not captured is not counted as unread.
-        unread: shown.rows.iter().filter(|row| row.leida == Some(false)).count() as u64,
+        unread: shown
+            .rows
+            .iter()
+            .filter(|row| row.leida == Some(false))
+            .count() as u64,
     })
 }
 
-fn filing_calendar(projection: Value, profile: &str, from: &str, to: &str) -> Result<FilingCalendar> {
+fn filing_calendar(
+    projection: Value,
+    profile: &str,
+    from: &str,
+    to: &str,
+) -> Result<FilingCalendar> {
     let projection: Projection = serde_json::from_value(projection).map_err(|_| protocol())?;
     let snapshot = match projection.payload {
         CalendarRead {
@@ -303,7 +313,11 @@ impl ProfileHost {
             .to_owned())
     }
     /// Rejects an answer read while the window's account changed underneath.
-    async fn still_held(&self, person: &crate::agent::person::HeldPerson, profile: &str) -> Result<()> {
+    async fn still_held(
+        &self,
+        person: &crate::agent::person::HeldPerson,
+        profile: &str,
+    ) -> Result<()> {
         let current = self.person(Some(profile)).await?;
         if Self::identity(&current).await? != Self::identity(person).await? {
             return Err(Failure::new("not_signed_in"));
@@ -316,7 +330,12 @@ impl ProfileHost {
             let person = self.person(None).await?;
             let profile = Self::profile_of(&person).await?;
             let latest = self
-                .run(&person, "live.notifications.latest", json!({"profile_id":profile}), false)
+                .run(
+                    &person,
+                    "live.notifications.latest",
+                    json!({"profile_id":profile}),
+                    false,
+                )
                 .await?;
             let shown = match latest["snapshot_id"].as_str() {
                 Some(snapshot_id) => Some(
@@ -421,8 +440,14 @@ mod tests {
         assert_eq!(entry["aeat_submission_state"], "not_observed");
         assert_eq!(entry["days_overdue"], 2);
         assert!(entry.get("status").is_none());
-        assert_eq!(shown["warnings"][0]["message"], "Tu perfil no indica el régimen");
-        assert_eq!(shown["coverage"]["advised"][0]["reason"], "applicable_window_missing");
+        assert_eq!(
+            shown["warnings"][0]["message"],
+            "Tu perfil no indica el régimen"
+        );
+        assert_eq!(
+            shown["coverage"]["advised"][0]["reason"],
+            "applicable_window_missing"
+        );
         assert!(shown["events"][0].get("source_url").is_none());
     }
 
@@ -431,7 +456,10 @@ mod tests {
         let calendar =
             filing_calendar(projection(false), PROFILE, "2026-07-01", "2027-06-30").unwrap();
         assert_eq!(calendar.warnings[0].code, "taxpayer_model_undeclared");
-        assert_eq!(calendar.warnings[0].message, "Falta el modelo del contribuyente");
+        assert_eq!(
+            calendar.warnings[0].message,
+            "Falta el modelo del contribuyente"
+        );
     }
 
     #[test]
@@ -467,7 +495,8 @@ mod tests {
     fn notifications_reach_the_window_as_counts_only() {
         let latest = json!({"bucket_id":PROFILE, "snapshot_id":"ab", "captured_at":"2026-10-20T09:00:00Z",
             "source_url":"https://example.invalid", "row_count":3});
-        let row = |leida: Value| json!({"titular_nif":"00000000T","titular_nombre":"Name","leida":leida});
+        let row =
+            |leida: Value| json!({"titular_nif":"00000000T","titular_nombre":"Name","leida":leida});
         let shown = json!({"bucket_id":PROFILE, "snapshot_id":"ab", "captured_at":"2026-10-20T09:00:00Z",
             "source_url":"https://example.invalid", "row_count":3,
             "rows":[row(json!(false)), row(json!(true)), row(Value::Null)]});

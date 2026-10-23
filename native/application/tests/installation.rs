@@ -3,9 +3,9 @@ use cadrumo_application::{
     component::Cancellation,
     error::Error,
     installation::{DiscoveryContract, RegistrationHints},
+    value::Sha256Digest,
 };
 use serde_json::json;
-use sha2::{Digest, Sha256};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -89,8 +89,8 @@ impl Fixture {
             "build": {"application_id": "test.discovery", "channel": "stable", "version": version,
                 "target": if cfg!(windows) {"windows-x86-64"} else {"fixture"}},
             "layout": {"abi": 1, "platform": self.contract.layout.platform}, "python": "fixture", "distributions": {},
-            "files": {(member.as_str()): format!("{:x}", Sha256::digest(fs::read(&self.source).unwrap())),
-                "python.zip": format!("{:x}", Sha256::digest(b"inventoried fixture dependency"))},
+            "files": {(member.as_str()): Sha256Digest::of(fs::read(&self.source).unwrap()).to_string(),
+                "python.zip": Sha256Digest::of(b"inventoried fixture dependency").to_string()},
             "user_docs": {"directory": "docs/user", "bundled": false},
             "startup_files": [member.as_str(), "python.zip"]
         })).unwrap()).unwrap();
@@ -111,7 +111,7 @@ impl Fixture {
         bytes.extend_from_slice(b"distinct fixture manager overlay");
         fs::write(member.under(&package), &bytes).unwrap();
         self.amend(&package, |value| {
-            value["files"][member.as_str()] = json!(format!("{:x}", Sha256::digest(&bytes)));
+            value["files"][member.as_str()] = json!(Sha256Digest::of(&bytes).to_string());
         });
         package
     }
@@ -143,7 +143,6 @@ impl Fixture {
 
 #[test]
 fn native_publication_refuses_missing_pending_changed_and_removing_versions() {
-    use cadrumo_application::value::Sha256Digest;
     let mut fixture = Fixture::new();
     let prefix = fixture.prefix("native");
     let package = fixture.version(&prefix, "1.0.0");
@@ -155,11 +154,7 @@ fn native_publication_refuses_missing_pending_changed_and_removing_versions() {
             .is_err()
     );
     store.initialize().unwrap();
-    let manifest = Sha256Digest::new(format!(
-        "{:x}",
-        Sha256::digest(fs::read(package.join("data/package-manifest.json")).unwrap())
-    ))
-    .unwrap();
+    let manifest = Sha256Digest::of(fs::read(package.join("data/package-manifest.json")).unwrap());
     use cadrumo_application::installation::maintenance::{NativeContext, NativeOwner};
     let product = NativeOwner::new(
         "12345678-1234-1234-1234-123456789abc".to_owned(),
@@ -260,11 +255,8 @@ fn single_product_features_keep_independent_registration_absence_and_anchors() {
 }
 
 fn verify_independent_registration_absence(single_product: bool) {
-    use cadrumo_application::{
-        installation::maintenance::{
-            NativeContext, NativeFeature, NativeOwner, NativeProductInventory, RegistrationPhase,
-        },
-        value::Sha256Digest,
+    use cadrumo_application::installation::maintenance::{
+        NativeContext, NativeFeature, NativeOwner, NativeProductInventory, RegistrationPhase,
     };
     struct Inventory(bool);
     impl NativeProductInventory for Inventory {
@@ -278,11 +270,7 @@ fn verify_independent_registration_absence(single_product: bool) {
     let store = fixture.native(&prefix);
     store.initialize().unwrap();
     assert!(store.snapshot().unwrap().registration().is_none());
-    let manifest = Sha256Digest::new(format!(
-        "{:x}",
-        Sha256::digest(fs::read(package.join("data/package-manifest.json")).unwrap())
-    ))
-    .unwrap();
+    let manifest = Sha256Digest::of(fs::read(package.join("data/package-manifest.json")).unwrap());
     let owner = NativeOwner::new(
         "12345678-1234-1234-1234-123456789abc".into(),
         NativeContext::Machine,
@@ -415,9 +403,8 @@ fn verify_independent_registration_absence(single_product: bool) {
 
 #[test]
 fn native_repair_fences_discovery_and_removal_recovery_rechecks_native_and_file_ownership() {
-    use cadrumo_application::{
-        installation::maintenance::{NativeContext, NativeOwner, NativeProductInventory},
-        value::Sha256Digest,
+    use cadrumo_application::installation::maintenance::{
+        NativeContext, NativeOwner, NativeProductInventory,
     };
     struct Inventory(Result<Option<NativeOwner>, &'static str>);
     impl NativeProductInventory for Inventory {
@@ -432,11 +419,7 @@ fn native_repair_fences_discovery_and_removal_recovery_rechecks_native_and_file_
     let package = fixture.version(&prefix, "1.0.0");
     let store = fixture.native(&prefix);
     store.initialize().unwrap();
-    let manifest = Sha256Digest::new(format!(
-        "{:x}",
-        Sha256::digest(fs::read(package.join("data/package-manifest.json")).unwrap())
-    ))
-    .unwrap();
+    let manifest = Sha256Digest::of(fs::read(package.join("data/package-manifest.json")).unwrap());
     let owner = NativeOwner::new(
         "12345678-1234-1234-1234-123456789abc".into(),
         NativeContext::Machine,
@@ -549,11 +532,8 @@ fn native_repair_fences_discovery_and_removal_recovery_rechecks_native_and_file_
 
 #[test]
 fn install_rollback_restores_only_prior_verified_ready_state_and_forgets_proved_absence() {
-    use cadrumo_application::{
-        installation::maintenance::{
-            NativeContext, NativeOwner, NativeProductInventory, RollbackPublication,
-        },
-        value::Sha256Digest,
+    use cadrumo_application::installation::maintenance::{
+        NativeContext, NativeOwner, NativeProductInventory, RollbackPublication,
     };
     struct Inventory(bool);
     impl NativeProductInventory for Inventory {
@@ -566,11 +546,7 @@ fn install_rollback_restores_only_prior_verified_ready_state_and_forgets_proved_
     let package = fixture.version(&prefix, "1.0.0");
     let store = fixture.native(&prefix);
     store.initialize().unwrap();
-    let manifest = Sha256Digest::new(format!(
-        "{:x}",
-        Sha256::digest(fs::read(package.join("data/package-manifest.json")).unwrap())
-    ))
-    .unwrap();
+    let manifest = Sha256Digest::of(fs::read(package.join("data/package-manifest.json")).unwrap());
     let owner = NativeOwner::new(
         "12345678-1234-1234-1234-123456789abc".into(),
         NativeContext::Machine,
@@ -632,10 +608,7 @@ fn install_rollback_restores_only_prior_verified_ready_state_and_forgets_proved_
 
 #[test]
 fn native_publication_rejects_foreign_paths_contexts_and_legacy_unscoped_state() {
-    use cadrumo_application::{
-        installation::maintenance::{NativeContext, NativeOwner},
-        value::Sha256Digest,
-    };
+    use cadrumo_application::installation::maintenance::{NativeContext, NativeOwner};
     let mut fixture = Fixture::new();
     let prefix = fixture.prefix("owner");
     let package = fixture.version(&prefix, "1.0.0");
@@ -643,11 +616,7 @@ fn native_publication_rejects_foreign_paths_contexts_and_legacy_unscoped_state()
     let foreign_package = fixture.version(&other, "1.0.0");
     let store = fixture.native(&prefix);
     store.initialize().unwrap();
-    let manifest = Sha256Digest::new(format!(
-        "{:x}",
-        Sha256::digest(fs::read(package.join("data/package-manifest.json")).unwrap())
-    ))
-    .unwrap();
+    let manifest = Sha256Digest::of(fs::read(package.join("data/package-manifest.json")).unwrap());
     let owner = NativeOwner::new(
         "12345678-1234-1234-1234-123456789abc".into(),
         NativeContext::Machine,
