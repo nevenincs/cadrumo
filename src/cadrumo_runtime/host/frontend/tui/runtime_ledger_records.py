@@ -10,6 +10,7 @@ re-read and the write is not detected here.
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Final, Literal
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -78,6 +79,12 @@ from .operations.runtime_profile_session import RuntimeProfileSession
 
 _STALE_RECORD_KEY = "tui.ledger.records.stale"
 """The refusal shown when a record changed after the operator opened it."""
+
+_LINK_REFUSAL_KEYS: Final[dict[Literal["missing_invoice", "cross_bucket_invoice"], str]] = {
+    "missing_invoice": "tui.ledger.link.refused.missing_invoice",
+    "cross_bucket_invoice": "tui.ledger.link.refused.cross_bucket_invoice",
+}
+"""The refusal shown for each reason ``ledger.link`` declares."""
 
 _INVOICE_PATCH_ECHOED = ("payment_status", "operation_type", "operation_date")
 """Typed patch fields the committed snapshot must carry exactly as sent; text fields may be normalised."""
@@ -355,9 +362,7 @@ class RuntimeLedgerLinkSubmitterV1:
             if result.outcome == "refused":
                 if not _refused_with(condition, terminal, LEDGER_LINK_VALIDATION_REFUSAL_CODE) or result.reason is None:
                     raise _invalid()
-                raise LedgerLinkValidationRefusedError(
-                    translated_message=f"tui.ledger.link.refused.{result.reason}", context={}
-                )
+                raise LedgerLinkValidationRefusedError(translated_message=_LINK_REFUSAL_KEYS[result.reason], context={})
             projection = result.projection
             if (
                 not _succeeded(condition, terminal, OperationEffect.UPDATED)

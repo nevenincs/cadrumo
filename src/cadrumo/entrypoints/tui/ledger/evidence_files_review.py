@@ -37,7 +37,19 @@ _KIND_LOCALE_KEYS: Final[dict[InvoiceKind, str]] = {
     InvoiceKind.ISSUED: "tui.ledger.invoice.kind.issued",
 }
 _REASON_LOCALE_KEYS: Final[dict[ConfirmationBlockReason, str]] = {
-    reason: f"tui.ledger.evidence_files.review.reason.{reason.value}" for reason in ConfirmationBlockReason
+    ConfirmationBlockReason.CLOSURE_DISCREPANCY: "tui.ledger.evidence_files.review.reason.closure_discrepancy",
+    ConfirmationBlockReason.AMBIGUOUS_IDENTITY: "tui.ledger.evidence_files.review.reason.ambiguous_identity",
+    ConfirmationBlockReason.UNRESOLVED_DIRECTION: "tui.ledger.evidence_files.review.reason.unresolved_direction",
+    ConfirmationBlockReason.CONTRADICTED_REGIME: "tui.ledger.evidence_files.review.reason.contradicted_regime",
+    ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT: (
+        "tui.ledger.evidence_files.review.reason.undetermined_establishment"
+    ),
+    ConfirmationBlockReason.UNMODELLED_INVOICE_CLASS: (
+        "tui.ledger.evidence_files.review.reason.unmodelled_invoice_class"
+    ),
+    ConfirmationBlockReason.CONTRADICTED_INVOICE_CLASS: (
+        "tui.ledger.evidence_files.review.reason.contradicted_invoice_class"
+    ),
 }
 
 

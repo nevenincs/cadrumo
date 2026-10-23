@@ -6,7 +6,7 @@ bytes nor where the attachment was fetched from.
 
 from __future__ import annotations
 
-from typing import cast, override
+from typing import Final, cast, override
 
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
@@ -17,6 +17,7 @@ from ....application.ledger.evidence_followup_contracts import (
     LedgerEvidenceAttachmentViewRequest,
 )
 from ....core.i18n.render import tr
+from ....domain.attachments.enums import AttachmentSource
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
 from .controller import LedgerWorkspaceController
@@ -29,6 +30,14 @@ from .evidence_files_common import (
 )
 from .evidence_files_doors import LedgerEvidenceFilesDoorsV1
 from .workspace_presentation import ledger_workspace_page
+
+_SOURCE_LOCALE_KEYS: Final[dict[AttachmentSource, str]] = {
+    AttachmentSource.LOCAL_FILE: "tui.ledger.evidence_files.source.local_file",
+    AttachmentSource.GMAIL: "tui.ledger.evidence_files.source.gmail",
+    AttachmentSource.GOOGLE_DRIVE: "tui.ledger.evidence_files.source.google_drive",
+    AttachmentSource.URL: "tui.ledger.evidence_files.source.url",
+    AttachmentSource.INLINE: "tui.ledger.evidence_files.source.inline",
+}
 
 
 def attachment_detail_lines(item: AttachmentReviewItem) -> tuple[str, ...]:
@@ -46,7 +55,7 @@ def attachment_detail_lines(item: AttachmentReviewItem) -> tuple[str, ...]:
             "tui.ledger.evidence_files.queue.detail.file",
             type=item.mime_type,
             size=item.bytes_size,
-            source=tr(f"tui.ledger.evidence_files.source.{item.source.value.lower()}"),
+            source=tr(_SOURCE_LOCALE_KEYS[item.source]),
         ),
         tr(
             "tui.ledger.evidence_files.queue.detail.state",
