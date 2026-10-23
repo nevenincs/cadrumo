@@ -8,9 +8,9 @@ related:
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
   - '[[2026-07-05-ledger-latency-budget-adr]]'
   - '[[2026-10-22-ledger-tui-doors-authenticated-stored-reads-adr]]'
-modified: '2026-10-22'
+modified: '2026-10-23'
 body_schema: body-v2
-body_hash: 'sha256:5cbca28d2525839921e19048873372649afdeb1119e0c3c32577d8a11927081e'
+body_hash: 'sha256:77a5cb7cd4c60166530bc0faefc3e2e81bb3abe6bb9c6ae4498a59c65b30d096'
 ---
 
 # `ledger-tui-doors` plan
@@ -69,7 +69,7 @@ Dedicated agents make the ledger reads behind the Records screens meet the 30,00
 
 The orchestrator applies locales, registers visual surfaces, runs every gate and reviews the integrated Records workspace.
 
-- [ ] `P03.S07` - apply the domain locale manifests and register the domain harness surfaces; `src/cadrumo/locales and dev/tui/harness/surfaces.py`.
+- [x] `P03.S07` - apply the domain locale manifests and register the domain harness surfaces; `src/cadrumo/locales and dev/tui/harness/surfaces.py`.
 - [ ] `P03.S08` - run gates B1 to B8 over the integrated workspace and review it against the base brief; `src/cadrumo/entrypoints/tui/ledger and src/cadrumo_runtime/host/frontend/tui`.
 
 ## Parallelization

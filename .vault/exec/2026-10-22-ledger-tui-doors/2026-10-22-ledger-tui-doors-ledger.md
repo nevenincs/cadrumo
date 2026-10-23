@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#ledger-tui-doors'
 date: '2026-10-22'
-modified: '2026-10-22'
+modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:f7470857ccc9d50ffb9317badaec9d4dc71b19a2fa182ba49ef7f98f22c8c4b6'
+body_hash: 'sha256:612b6a5281c3e4b007920e41e4af44fcc5de70d9525aff4dec5736bc8b4b5332'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -330,6 +330,15 @@ related:
 - `S17` `M` `src/cadrumo/entrypoints/tests/test_ledger_read_operation_parity.py`
 - `S17` `verify:` `uv run --no-sync pytest src/cadrumo/domain/transactions/tests src/cadrumo/adapters/persistence/profile/tests src/cadrumo/application/ledger/tests` -> `pass`
 - `S17` `by:` `vaultspec-high-executor`
+- `S07` `M` `dev/tui/harness/surfaces.py`
+- `S07` `A` `dev/tui/harness/settling.py`
+- `S07` `M` `dev/tui/harness/ledger_entries_fixtures.py`
+- `S07` `M` `dev/tui/harness/ledger_invoices_fixtures.py`
+- `S07` `M` `dev/tui/harness/ledger_registers_fixtures.py`
+- `S07` `M` `dev/tui/harness/ledger_categorisation_fixtures.py`
+- `S07` `M` `dev/tui/harness/ledger_evidence_files_fixtures.py`
+- `S07` `verify:` `uv run --no-sync python -m dev.tui render (66 domain surfaces, all viewports, both themes; 660 frames)` -> `pass`
+- `S07` `verify:` `uv run --no-sync pytest -q -n 8 dev/tui/tests dev/tui/harness/tests` -> `pass`
 
 ## Notes
 
@@ -355,3 +364,4 @@ related:
 - `S19` The ledger preflight counterparty screen still compares an identification state only with the Spanish token; only the calculation refuses an undeclared one.
 - `S19` The IVA admission gate calls `validate_cash_accounting_axis` from `domain/transactions/cash_accounting_validation.py,` which P04.S17 owns; a rename there must update this caller.
 - `S17` full src/cadrumo run left 3 failures outside S17: docstring core-struct links on S15 ledger modules, and one `archive_fetch` test that did not reproduce; both routed to root-cause work
+- `S07` 23 frames crashed in one earlier loaded render; the cause was not recovered because a re-render overwrote that run's manifest. Forty-six harness processes in a row failed and then recovered, which points to a machine-wide event, not these states; it did not reproduce in 120 opens under load. The timed fixture settling, which could silently leave a frame in the wrong state, was replaced by deterministic waits. The settling and fixture files were committed inside another session's checkpoint 47d4a24167.
