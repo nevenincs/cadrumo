@@ -13,6 +13,7 @@ from ...core.filing_year import FilingYear
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
+from ...domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.contribuyente.inventory.closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
@@ -214,7 +215,7 @@ class InventoryClosingAuthorityDecisionRequest(BaseModel):
     physical_observation_id: str | None = Field(default=None, min_length=1, max_length=128)
     physical_observation_fingerprint: ContentDigest | None = None
     reason: str = Field(min_length=1, max_length=512)
-    actor: str = Field(min_length=1, max_length=64)
+    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
     source_command: str = Field(min_length=1, max_length=128)
     decided_at: datetime
     evidence: tuple[InventoryClosingDecisionEvidence, ...] = Field(min_length=1)

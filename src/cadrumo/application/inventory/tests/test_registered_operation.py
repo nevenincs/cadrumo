@@ -51,6 +51,7 @@ from ..registered_requests import (
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
     INVENTORY_VALIDATION_REFUSAL_CODE,
     InventoryAcquisitionCostRequest,
+    InventoryClosingAuthorityDecisionRequest,
     InventoryClosingAuthorityRecordInput,
     InventoryCreateRequest,
 )
@@ -127,6 +128,33 @@ def test_closing_authority_request_round_trips_the_existing_canonical_record() -
     request = build_inventory_conformance_closing_authority_record("inventory-closing-seed")
 
     assert InventoryClosingAuthorityRecordInput.from_domain(request.to_domain()) == request
+
+
+@pytest.mark.parametrize(
+    "actor",
+    [
+        "automation:installed-service.attended.5aa00000-0000-4000-8000-0000000000cc",
+        "a" * 128,
+    ],
+    ids=["automation-session-label", "at-bound"],
+)
+def test_closing_authority_request_round_trips_a_stored_actor_longer_than_64(actor: str) -> None:
+    stored = build_inventory_conformance_closing_authority_record("inventory-closing-seed").to_domain(actor=actor)
+
+    request = InventoryClosingAuthorityRecordInput.from_domain(stored)
+
+    assert len(actor) > 64
+    assert request.decision.actor == actor
+    assert request.to_domain() == stored
+
+
+def test_closing_authority_request_refuses_an_actor_over_128() -> None:
+    decision = build_inventory_conformance_closing_authority_record("inventory-closing-seed").decision
+
+    with pytest.raises(ValidationError) as refused:
+        InventoryClosingAuthorityDecisionRequest.model_validate({**dict(decision), "actor": "a" * 129})
+
+    assert [(error["loc"], error["type"]) for error in refused.value.errors()] == [(("actor",), "string_too_long")]
 
 
 def _receipt(
