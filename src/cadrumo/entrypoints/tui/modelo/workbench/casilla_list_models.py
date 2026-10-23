@@ -37,9 +37,12 @@ from dataclasses import dataclass
 from typing import Literal
 
 from .....application.modelo.work_form_models import (
+    ASKS_FOR_A_VALUE,
+    NEEDS_ATTENTION,
     ModeloFormField,
     ModeloFormOrigin,
     address_key,
+    field_needs_filer,
 )
 from .grid import (
     CasillaListRecords,
@@ -47,13 +50,10 @@ from .grid import (
     TableGeometry,
 )
 from .vocabulary import (
-    ASKS_FOR_A_VALUE,
-    NEEDS_ATTENTION,
     ORIGIN_ROLES,
     Attention,
     ColourRole,
     WorkbenchMark,
-    field_needs_filer,
     origin_glyph,
     origin_words,
 )

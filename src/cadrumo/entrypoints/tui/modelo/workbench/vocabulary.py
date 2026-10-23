@@ -44,11 +44,15 @@ from .....application.modelo.edit_models import ModeloEditNonWritableReason
 from .....application.modelo.source_policy import SourceFamily
 from .....application.modelo.work_form_models import (
     ABSENT_FROM_ADMISSION,
+    ASKS_FOR_A_VALUE,
+    ORIGIN_STANDINGS,
     ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
     ModeloFormScalar,
+    ModeloFormStanding,
     ModeloWorkForm,
+    field_needs_filer,
 )
 from .....core.aggregation import BindingSourceKind
 from .....core.external_constants import OutputLanguage
@@ -204,66 +208,12 @@ def require_one_meaning_per_glyph(marks: Iterable[WorkbenchMark]) -> None:
         raise ValueError(f"a workbench meaning is drawn with more than one glyph: {split}")
 
 
-class Standing(StrEnum):
-    """Where one box stands on the filing journey, as every surface that counts boxes classes it."""
-
-    #: The filer has something to do about it: give a value, confirm one, or resolve why it failed.
-    NEEDS_YOU = "needs_you"
-    #: It waits on a step the filer runs, an import or a calculation, not on anything typed into it.
-    WAITING = "waiting"
-    #: Nothing is left to do about it.
-    DONE = "done"
-
-
-ORIGIN_STANDINGS: Final[Mapping[ModeloFormOrigin, Standing]] = MappingProxyType(
-    {
-        ModeloFormOrigin.NEEDS_INPUT: Standing.NEEDS_YOU,
-        ModeloFormOrigin.DEFAULT_TO_CONFIRM: Standing.NEEDS_YOU,
-        ModeloFormOrigin.CALCULATION_FAILED: Standing.NEEDS_YOU,
-        ModeloFormOrigin.NOT_IMPORTED_YET: Standing.WAITING,
-        ModeloFormOrigin.NOT_CALCULATED_YET: Standing.WAITING,
-        ModeloFormOrigin.NOT_APPLICABLE: Standing.DONE,
-        ModeloFormOrigin.OVERRIDES_SOURCE: Standing.DONE,
-        ModeloFormOrigin.CALCULATED: Standing.DONE,
-        ModeloFormOrigin.INFORMATIONAL: Standing.DONE,
-        ModeloFormOrigin.IMPORTED: Standing.DONE,
-        ModeloFormOrigin.OPTIONAL_EMPTY: Standing.DONE,
-        ModeloFormOrigin.CLEARED: Standing.DONE,
-        ModeloFormOrigin.ENTERED: Standing.DONE,
-    }
-)
-"""The one classing of every origin that the navigator, the list headings, a grid row and ``n`` share."""
-
-#: Origins that ask the filer to act before the declaration is ready.
-NEEDS_ATTENTION: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    origin for origin, standing in ORIGIN_STANDINGS.items() if standing is Standing.NEEDS_YOU
-)
-#: Origins that ask the filer for a value, which neither a filed declaration nor a page that does not apply does.
-ASKS_FOR_A_VALUE: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
-)
 #: A box the calculation could not produce, wherever it is counted.
 FAILED_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.CALCULATION_FAILED]
 #: A box waiting on an import, wherever it is counted.
 NOT_IMPORTED_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.NOT_IMPORTED_YET]
 #: A box waiting on a calculation, wherever it is counted.
 NOT_CALCULATED_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.NOT_CALCULATED_YET]
-
-
-def field_needs_filer(field: ModeloFormField, *, recorded: bool = False, applies: bool = True) -> bool:
-    """Whether the filer can act on a box now: a blocker, a value to give or confirm, or a failure to resolve.
-
-    A box waiting on an import or a calculation is not one: running that step
-    fills it, not anything the filer types into it. Nothing on a declaration
-    recorded as filed is one, and a page that does not apply asks for no value.
-    """
-    if recorded:
-        return False
-    if field.blockers:
-        return True
-    if not applies and field.origin in ASKS_FOR_A_VALUE:
-        return False
-    return ORIGIN_STANDINGS[field.origin] is Standing.NEEDS_YOU
 
 
 _DIMMED: Final[str] = "dim"
@@ -698,7 +648,9 @@ def _require_source_words() -> None:
 def _require_attention_counts() -> None:
     if set(ORIGIN_STANDINGS) != set(ModeloFormOrigin):
         raise ValueError("every origin needs exactly one standing")
-    expected_tallies = {origin for origin, standing in ORIGIN_STANDINGS.items() if standing is not Standing.DONE}
+    expected_tallies = {
+        origin for origin, standing in ORIGIN_STANDINGS.items() if standing is not ModeloFormStanding.DONE
+    }
     if set(_ORIGIN_TALLIES) != expected_tallies:
         raise ValueError("every origin that is not done needs a level to count at, and only those")
 
@@ -722,7 +674,6 @@ _require_closed_and_distinct()
 
 
 __all__ = [
-    "ASKS_FOR_A_VALUE",
     "ATTENTION_GLYPHS",
     "ATTENTION_MARKS",
     "ATTENTION_ROLES",
@@ -739,14 +690,12 @@ __all__ = [
     "HERE_MARK",
     "INFO_MARK",
     "MISSING_MARK",
-    "NEEDS_ATTENTION",
     "NOT_CALCULATED_MARK",
     "NOT_IMPORTED_MARK",
     "NOT_WRITABLE_REASONS",
     "ORIGIN_GLYPHS",
     "ORIGIN_MARKS",
     "ORIGIN_ROLES",
-    "ORIGIN_STANDINGS",
     "SOURCE_WORDED_ORIGINS",
     "STALE_MARK",
     "TYPED_EDITABILITIES",
@@ -754,13 +703,11 @@ __all__ = [
     "Attention",
     "AttentionCounts",
     "ColourRole",
-    "Standing",
     "WorkbenchMark",
     "aeat_imported_on",
     "attention_words_key",
     "editability_text",
     "field_counts",
-    "field_needs_filer",
     "holds_nothing",
     "holds_zero",
     "no_earlier_filing",

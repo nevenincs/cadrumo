@@ -45,6 +45,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormTextDisclosure,
     ModeloWorkForm,
     address_key,
+    field_needs_filer,
     section_fields,
 )
 from .....core.external_constants import OutputLanguage
@@ -65,7 +66,6 @@ from .vocabulary import (
     AttentionCounts,
     WorkbenchMark,
     field_counts,
-    field_needs_filer,
     holds_nothing,
     holds_zero,
 )

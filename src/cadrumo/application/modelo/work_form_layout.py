@@ -32,6 +32,7 @@ from .work_form_errors import ModeloWorkFormLayoutError
 from .work_form_field_projection import project_binding_field, project_casilla_field
 from .work_form_localization import localized_heading, localized_text
 from .work_form_models import (
+    ASKS_FOR_A_VALUE,
     ModeloFormBindingInputsBlock,
     ModeloFormBlock,
     ModeloFormContextFieldBlock,
@@ -46,6 +47,7 @@ from .work_form_models import (
     ModeloFormPage,
     ModeloFormRepeatingBlock,
     ModeloFormSection,
+    ModeloFormStanding,
     ModeloFormText,
     ModeloFormTextDisclosure,
     section_fields,
@@ -122,12 +124,15 @@ class LayoutWalker:
         """Project one declared page and derive applicability from its fields and saved rows."""
         language = self.context.language
         sections = tuple(self.section(page.id, section) for section in page.sections)
+        applies = page_applies_for_values(page, self.context, sections)
+        if applies is False:
+            sections = tuple(_asking_nothing(section) for section in sections)
         return ModeloFormPage(
             id=page.id,
             heading=localized_heading(page.heading_key, page.official_heading, page.official_ref or page.id, language),
             official_ref=page.official_ref,
             condition=page.condition,
-            applies=page_applies_for_values(page, self.context, sections),
+            applies=applies,
             sections=sections,
             counts=count_work_form_fields(
                 (field for section in sections for field in section_fields(section)), filed=self.context.filed
@@ -307,3 +312,38 @@ class LayoutWalker:
         casilla = self.context.casillas.get(column.casilla_id)
         label = None if casilla is None else localized_text(casilla.localization_keys, language)
         return heading if label is None else label
+
+
+def _asking_no_value(field: ModeloFormField) -> ModeloFormField:
+    """The field as a page that does not apply shows it: a value it asked for is no longer asked."""
+    if field.standing is not ModeloFormStanding.NEEDS_YOU or field.blockers or field.origin not in ASKS_FOR_A_VALUE:
+        return field
+    return field.model_copy(update={"standing": ModeloFormStanding.DONE})
+
+
+def _asking_nothing(section: ModeloFormSection) -> ModeloFormSection:
+    """A section of a page that does not apply: its boxes ask the filer for no value."""
+    blocks: list[ModeloFormBlock] = []
+    for block in section.blocks:
+        if isinstance(block, ModeloFormFieldBlock):
+            blocks.append(block.model_copy(update={"field": _asking_no_value(block.field)}))
+        elif isinstance(block, ModeloFormGridBlock):
+            rows = tuple(
+                row.model_copy(
+                    update={
+                        "cells": tuple(
+                            cell
+                            if cell.field is None
+                            else cell.model_copy(update={"field": _asking_no_value(cell.field)})
+                            for cell in row.cells
+                        )
+                    }
+                )
+                for row in block.rows
+            )
+            blocks.append(block.model_copy(update={"rows": rows}))
+        elif isinstance(block, ModeloFormBindingInputsBlock):
+            blocks.append(block.model_copy(update={"fields": tuple(_asking_no_value(f) for f in block.fields)}))
+        else:
+            blocks.append(block)
+    return section.model_copy(update={"blocks": tuple(blocks)})

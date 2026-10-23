@@ -44,6 +44,7 @@ from .work_form_models import (
     ModeloFormOrigin,
     ModeloFormScalar,
     ModeloFormText,
+    field_standing,
 )
 from .work_form_rates import parse_form_number
 from .work_form_sources import bound_value_source
@@ -66,6 +67,7 @@ def project_casilla_field(
     if casilla_id in context.unworked and origin not in {ModeloFormOrigin.ENTERED, ModeloFormOrigin.OVERRIDES_SOURCE}:
         # The calculation said this box could not be worked out: whatever it holds is not a figure.
         origin, value = ModeloFormOrigin.CALCULATION_FAILED, None
+    blockers = tuple(ModeloFormBlocker(code=blocker.native_code) for blocker in row.blocked_by)
     return ModeloFormField(
         address=ModeloFormCasillaAddressV1(casilla_id=row.casilla_id),
         box=printed_box_number(casilla, placement),
@@ -89,10 +91,11 @@ def project_casilla_field(
         ),
         formula_id=row.formula_id,
         formula_operands=() if row.concrete_formula is None else row.concrete_formula.operand_refs,
-        blockers=tuple(ModeloFormBlocker(code=blocker.native_code) for blocker in row.blocked_by),
+        blockers=blockers,
         constraints=row.constraints,
         legal_refs=row.legal_refs,
         also_appears_on=also_appears_on,
+        standing=field_standing(origin, blockers, recorded=context.filed),
     )
 
 
@@ -231,6 +234,7 @@ def project_binding_field(binding_id: str, context: WorkFormContext) -> ModeloFo
             target=context.review.period,
         ),
         legal_refs=tuple(binding.legal_refs),
+        standing=field_standing(origin, recorded=context.filed),
     )
 
 

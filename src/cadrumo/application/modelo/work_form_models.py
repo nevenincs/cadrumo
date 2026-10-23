@@ -149,6 +149,76 @@ ABSENT_FROM_ADMISSION: Final[str] = "absent_from_admission"
 """The not-writable reason of a field the edit admission does not name at all."""
 
 
+class ModeloFormStanding(StrEnum):
+    """Where one box stands on the filing journey, as every frontend that counts boxes classes it."""
+
+    #: The filer has something to do about it: give a value, confirm one, or resolve why it failed.
+    NEEDS_YOU = "needs_you"
+    #: It waits on a step the filer runs, an import or a calculation, not on anything typed into it.
+    WAITING = "waiting"
+    #: Nothing is left to do about it.
+    DONE = "done"
+
+
+ORIGIN_STANDINGS: Final[Mapping[ModeloFormOrigin, ModeloFormStanding]] = MappingProxyType(
+    {
+        ModeloFormOrigin.NEEDS_INPUT: ModeloFormStanding.NEEDS_YOU,
+        ModeloFormOrigin.DEFAULT_TO_CONFIRM: ModeloFormStanding.NEEDS_YOU,
+        ModeloFormOrigin.CALCULATION_FAILED: ModeloFormStanding.NEEDS_YOU,
+        ModeloFormOrigin.NOT_IMPORTED_YET: ModeloFormStanding.WAITING,
+        ModeloFormOrigin.NOT_CALCULATED_YET: ModeloFormStanding.WAITING,
+        ModeloFormOrigin.NOT_APPLICABLE: ModeloFormStanding.DONE,
+        ModeloFormOrigin.OVERRIDES_SOURCE: ModeloFormStanding.DONE,
+        ModeloFormOrigin.CALCULATED: ModeloFormStanding.DONE,
+        ModeloFormOrigin.INFORMATIONAL: ModeloFormStanding.DONE,
+        ModeloFormOrigin.IMPORTED: ModeloFormStanding.DONE,
+        ModeloFormOrigin.OPTIONAL_EMPTY: ModeloFormStanding.DONE,
+        ModeloFormOrigin.CLEARED: ModeloFormStanding.DONE,
+        ModeloFormOrigin.ENTERED: ModeloFormStanding.DONE,
+    }
+)
+"""The one classing of every origin that every count, heading, row and next-box move shares."""
+
+#: Origins that ask the filer to act before the declaration is ready.
+NEEDS_ATTENTION: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    origin for origin, standing in ORIGIN_STANDINGS.items() if standing is ModeloFormStanding.NEEDS_YOU
+)
+#: Origins that ask the filer for a value, which neither a filed declaration nor a page that does not apply does.
+ASKS_FOR_A_VALUE: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
+)
+
+
+def field_standing(
+    origin: ModeloFormOrigin,
+    blockers: tuple[ModeloFormBlocker, ...] | list[ModeloFormBlocker] = (),
+    *,
+    recorded: bool = False,
+    applies: bool = True,
+) -> ModeloFormStanding:
+    """Where a box stands for the filer, on its declaration and page.
+
+    On a declaration recorded as filed nothing is left to do, a blocker always
+    needs the filer, and a page that does not apply asks for no value. A box
+    waiting on an import or a calculation waits: running that step fills it,
+    not anything the filer types into it.
+    """
+    if recorded:
+        return ModeloFormStanding.DONE
+    if blockers:
+        return ModeloFormStanding.NEEDS_YOU
+    if not applies and origin in ASKS_FOR_A_VALUE:
+        return ModeloFormStanding.DONE
+    return ORIGIN_STANDINGS[origin]
+
+
+def _default_standing(data: dict[str, Any]) -> ModeloFormStanding:
+    origin = data.get("origin")
+    if not isinstance(origin, ModeloFormOrigin):
+        raise ValueError("a field's standing is derived from its origin")
+    return field_standing(origin, data.get("blockers", ()))
+
+
 class ModeloFormEditability(StrEnum):
     """What may be done about one field's value; exactly one per field."""
 
@@ -321,6 +391,9 @@ class ModeloFormField(_FormModel):
     constraints: CasillaConstraints | None = None
     legal_refs: tuple[LegalRefId, ...] = ()
     also_appears_on: tuple[str, ...] = ()
+    #: Where the box stands for the filer, on the declaration and page it is shown on; derived from
+    #: its own origin and blockers when the builder has no declaration or page to say otherwise.
+    standing: ModeloFormStanding = Field(default_factory=_default_standing)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -328,6 +401,13 @@ class ModeloFormField(_FormModel):
         if (self.editability is ModeloFormEditability.NOT_WRITABLE) != (self.not_writable_reason is not None):
             raise ValueError("a not-writable reason belongs to, and only to, a not-writable field")
         return self
+
+
+def field_needs_filer(field: ModeloFormField, *, recorded: bool = False, applies: bool = True) -> bool:
+    """Whether the filer can act on a box now: a blocker, a value to give or confirm, or a failure to resolve."""
+    return (
+        field_standing(field.origin, field.blockers, recorded=recorded, applies=applies) is ModeloFormStanding.NEEDS_YOU
+    )
 
 
 _OVERRIDE_EDITABILITIES = frozenset({ModeloFormEditability.OVERRIDABLE_SOURCE, ModeloFormEditability.EDITABLE_OVERRIDE})
@@ -1004,9 +1084,12 @@ def section_fields(section: ModeloFormSection) -> tuple[ModeloFormField, ...]:
 
 __all__ = [
     "ABSENT_FROM_ADMISSION",
+    "ASKS_FOR_A_VALUE",
     "EXPLANATORY_FINDING_MESSAGE_KEYS",
     "FINDING_KIND_ACTION_LOCALE_KEYS",
     "FINDING_MESSAGE_ACTION_LOCALE_KEYS",
+    "NEEDS_ATTENTION",
+    "ORIGIN_STANDINGS",
     "ModeloFormAddressV1",
     "ModeloFormAeatData",
     "ModeloFormAttention",
@@ -1045,6 +1128,7 @@ __all__ = [
     "ModeloFormResultDirection",
     "ModeloFormScalar",
     "ModeloFormSection",
+    "ModeloFormStanding",
     "ModeloFormText",
     "ModeloFormTextDisclosure",
     "ModeloFormUnplacedField",
@@ -1053,6 +1137,8 @@ __all__ = [
     "address_key",
     "confirmable",
     "edit_address",
+    "field_needs_filer",
+    "field_standing",
     "finding_action_locale_key",
     "finding_attention",
     "section_fields",

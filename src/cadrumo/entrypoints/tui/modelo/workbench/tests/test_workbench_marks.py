@@ -14,6 +14,7 @@ import pytest
 from textual.app import App, ComposeResult
 
 from ......application.modelo.work_form_models import (
+    ORIGIN_STANDINGS,
     ModeloFormBlocker,
     ModeloFormCounts,
     ModeloFormField,
@@ -25,6 +26,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormOrigin,
     ModeloFormPage,
     ModeloFormSection,
+    ModeloFormStanding,
     ModeloFormText,
     ModeloFormTextDisclosure,
     ModeloWorkForm,
@@ -55,9 +57,7 @@ from ..vocabulary import (
     HERE_MARK,
     MISSING_MARK,
     ORIGIN_MARKS,
-    ORIGIN_STANDINGS,
     WORKBENCH_MARKS,
-    Standing,
     WorkbenchMark,
     origin_words,
     require_one_meaning_per_glyph,
@@ -283,10 +283,10 @@ async def test_the_navigator_the_list_a_grid_row_n_and_the_header_class_every_or
         assert row_line[1] == (" " if expected == DONE_MARK.glyph else expected), origin
         # "Needs your input" is only ever a missing value, and done never sits over a value not imported or calculated.
         assert (expected == MISSING_MARK.glyph) is (origin is ModeloFormOrigin.NEEDS_INPUT)
-        assert (expected == DONE_MARK.glyph) is (ORIGIN_STANDINGS[origin] is Standing.DONE)
+        assert (expected == DONE_MARK.glyph) is (ORIGIN_STANDINGS[origin] is ModeloFormStanding.DONE)
         # Only what the filer can act on counts as to do in the heading, and is where n goes.
         needs_you = origin in _ACTIONABLE
-        assert (ORIGIN_STANDINGS[origin] is Standing.NEEDS_YOU) is needs_you, origin
+        assert (ORIGIN_STANDINGS[origin] is ModeloFormStanding.NEEDS_YOU) is needs_you, origin
         assert entries[origin].needs_filer is needs_you, origin
         assert ("to do: 1" in heading.text) is needs_you, heading.text
     # The page reads as not done, and the header counts exactly what the list and the navigator call missing and assumed.

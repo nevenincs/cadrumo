@@ -20,6 +20,8 @@ from textual.widgets import Static
 
 from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_models import (
+    NEEDS_ATTENTION,
+    ORIGIN_STANDINGS,
     ModeloFormBlocker,
     ModeloFormEditability,
     ModeloFormField,
@@ -30,6 +32,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormRepeatingBlock,
     ModeloFormRepeatingRow,
     ModeloFormScalar,
+    ModeloFormStanding,
     ModeloWorkForm,
     address_key,
 )
@@ -70,12 +73,9 @@ from ..vocabulary import (
     ATTENTION_GLYPHS,
     BLOCKS_MARK,
     MISSING_MARK,
-    NEEDS_ATTENTION,
     NOT_CALCULATED_MARK,
     NOT_IMPORTED_MARK,
-    ORIGIN_STANDINGS,
     Attention,
-    Standing,
 )
 from .workbench_fixture import FakeReader, form_field, synthetic_form
 
@@ -422,7 +422,7 @@ async def test_n_walks_the_boxes_needing_the_filer_row_by_row(operation: PinnedA
         cell.field.box
         for row in grid.rows
         for cell in row.cells
-        if cell.field is not None and ORIGIN_STANDINGS[cell.field.origin] is Standing.WAITING
+        if cell.field is not None and ORIGIN_STANDINGS[cell.field.origin] is ModeloFormStanding.WAITING
     }
     visited = await _walk(page_items(page, staged={}), 120, ("n",) * (len(expected) + 1))
 

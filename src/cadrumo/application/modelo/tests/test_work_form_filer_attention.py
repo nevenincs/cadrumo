@@ -8,7 +8,8 @@ from the builder:
   and waits for the filer, only in a box verification requires or when it is
   not zero; an optional box holding zero is optional and empty, yet still
   counted as unattributed, because a recalculation returns it to source;
-* a declaration recorded as filed has nothing left to enter or confirm;
+* a declaration recorded as filed has nothing left to enter or confirm, and
+  every box on it stands done; a page that does not apply asks for no value;
 * each finding carries the catalogue key of one sentence saying what to do,
   chosen by its message and then by its kind;
 * a Modelo 303 rate box carries the one rate its row's base binding declares,
@@ -66,7 +67,9 @@ from ..work_form_models import (
     ModeloFormIssue,
     ModeloFormOrigin,
     ModeloFormRateUnit,
+    ModeloFormStanding,
     ModeloWorkForm,
+    field_needs_filer,
     finding_action_locale_key,
     section_fields,
 )
@@ -261,6 +264,82 @@ def test_a_declaration_recorded_as_filed_counts_nothing_to_do(operation: PinnedA
         assert counts.default_to_confirm == 0
     assert filed.counts.total == draft.counts.total
     assert filed.counts.imported == draft.counts.imported
+
+
+# -- where each box stands for the filer --------------------------------------
+
+_ASKS = {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
+_NEEDS_YOU = _ASKS | {ModeloFormOrigin.CALCULATION_FAILED}
+_WAITING = {ModeloFormOrigin.NOT_IMPORTED_YET, ModeloFormOrigin.NOT_CALCULATED_YET}
+
+
+def _expected_standing(field: ModeloFormField, *, applies: bool) -> ModeloFormStanding:
+    if field.blockers:
+        return ModeloFormStanding.NEEDS_YOU
+    if field.origin in _NEEDS_YOU and (applies or field.origin not in _ASKS):
+        return ModeloFormStanding.NEEDS_YOU
+    if field.origin in _WAITING:
+        return ModeloFormStanding.WAITING
+    return ModeloFormStanding.DONE
+
+
+def _page_fields(form: ModeloWorkForm) -> Iterator[tuple[ModeloFormField, bool]]:
+    for page in form.pages:
+        for section in page.sections:
+            for field in section_fields(section):
+                yield field, page.applies is not False
+    for field in form.working_figures:
+        yield field, True
+    for item in form.unplaced:
+        yield item.field, True
+
+
+def test_every_box_stands_where_its_origin_and_page_put_it(operation: PinnedAuthorityOperation) -> None:
+    """A draft Modelo 210 with a required box empty and an optional amount nobody entered."""
+    form = _form(operation, "210", 2025, "0A", held={_optional_money_box(operation): Decimal("35.00")})
+
+    standings = [(field.standing, _expected_standing(field, applies=applies)) for field, applies in _page_fields(form)]
+    assert standings
+    assert all(actual is expected for actual, expected in standings)
+    assert {actual for actual, _ in standings} >= {ModeloFormStanding.NEEDS_YOU, ModeloFormStanding.DONE}
+    asked = [field for field, _ in _page_fields(form) if field.standing is ModeloFormStanding.NEEDS_YOU]
+    assert len(asked) == form.counts.needs_input + form.counts.default_to_confirm + form.counts.blocked
+
+
+def test_a_page_that_does_not_apply_asks_for_no_value(operation: PinnedAuthorityOperation) -> None:
+    """Modelo 303's annual page applies only in the fourth quarter and the twelfth month.
+
+    The same typed box, holding an amount nobody entered, is assumed in both
+    quarters; it asks the filer only where its page applies.
+    """
+    annual = next(page for page in _form(operation, "303", 2026, "4T").pages if page.id == "dp30304")
+    page_box = next(
+        str(field.address.casilla_id)
+        for section in annual.sections
+        for field in section_fields(section)
+        if isinstance(field.address, ModeloFormCasillaAddressV1)
+        and field.origin is ModeloFormOrigin.OPTIONAL_EMPTY
+        and field.data_type == "money"
+    )
+    held = {page_box: Decimal("125.00")}
+    first = _form(operation, "303", 2026, "1T", held=held)
+    fourth = _form(operation, "303", 2026, "4T", held=held)
+
+    assert next(page for page in first.pages if page.id == "dp30304").applies is False
+    assert next(page for page in fourth.pages if page.id == "dp30304").applies is True
+    assert _casilla(first, page_box).origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
+    assert _casilla(fourth, page_box).origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
+    assert _casilla(first, page_box).standing is ModeloFormStanding.DONE
+    assert _casilla(fourth, page_box).standing is ModeloFormStanding.NEEDS_YOU
+    assert not field_needs_filer(_casilla(first, page_box), applies=False)
+    assert field_needs_filer(_casilla(fourth, page_box))
+
+
+def test_on_a_declaration_recorded_as_filed_every_box_is_done(operation: PinnedAuthorityOperation) -> None:
+    held = {_optional_money_box(operation): Decimal("35.00")}
+    filed = _form(operation, "210", 2025, "0A", held=held, lifecycle=CalculationRevisionState.PRESENTADO)
+
+    assert {field.standing for field, _ in _page_fields(filed)} == {ModeloFormStanding.DONE}
 
 
 # -- what to do about each finding -------------------------------------------

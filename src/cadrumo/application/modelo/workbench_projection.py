@@ -66,6 +66,7 @@ from .work_form_models import (
     ModeloFormOrigin,
     ModeloFormRateUnit,
     ModeloFormResultDirection,
+    ModeloFormStanding,
     ModeloFormText,
 )
 from .work_form_service import ModeloWorkFormLoadV1
@@ -154,6 +155,7 @@ class PublicModeloFormField(BaseModel):
     constraints: PublicCasillaConstraints | None
     legal_refs: tuple[str, ...]
     also_appears_on: tuple[str, ...]
+    standing: ModeloFormStanding
 
 
 class PublicModeloFormFieldBlock(BaseModel):
