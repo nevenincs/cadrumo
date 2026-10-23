@@ -13,6 +13,7 @@ from ...core.operations import OperationEffect, OperationLifecycle, OperationTer
 from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
 from ._supervisor_host import SupervisorHost
+from ._supervisor_snapshot import SnapshotAdvance
 from .authorization import invoke_authorized
 from .errors import OperationDeclarationError
 from .interactions import OperationConsumedInteraction, OperationPendingInteraction
@@ -414,9 +415,7 @@ class SupervisorReconciliationMixin(SupervisorHost):
             )
         return await self._advance(
             snapshot,
-            lifecycle=snapshot.lifecycle,
-            events=(event,),
-            pending=pending,
+            SnapshotAdvance(lifecycle=snapshot.lifecycle, events=(event,), pending=pending),
         )
 
     async def _interrupt_reconciliation(

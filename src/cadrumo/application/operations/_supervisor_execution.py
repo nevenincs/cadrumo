@@ -39,7 +39,6 @@ from .financial_operand_contract import OperationFinancialOperandRefusalCode, Op
 from .interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
-    OperationPendingInteraction,
     OperationRejectResponse,
 )
 from .model_runs import operation_model_run_port, run_with_model_runs
@@ -51,7 +50,6 @@ from .models import (
 )
 from .operation_definition import OperationDefinition
 from .persistence.events import (
-    OperationEvent,
     OperationInteractionEvent,
     OperationNoticeEvent,
 )
@@ -191,10 +189,12 @@ class SupervisorExecutionMixin(SupervisorHost):
         )
         running = await self._advance(
             snapshot,
-            lifecycle=OperationLifecycle.RUNNING,
-            events=(started,),
-            execution_deadline=execution_deadline,
-            executor_entered_at=now,
+            _supervisor_snapshot.SnapshotAdvance(
+                lifecycle=OperationLifecycle.RUNNING,
+                events=(started,),
+                execution_deadline=execution_deadline,
+                executor_entered_at=now,
+            ),
         )
         context = self._build_context(running)
         executor_context = _supervisor_context.SupervisorExecutorContext(
@@ -666,43 +666,20 @@ class SupervisorExecutionMixin(SupervisorHost):
     async def _advance(
         self: SupervisorHost,
         snapshot: OperationPersistedSnapshot,
+        advance: _supervisor_snapshot.SnapshotAdvance,
         *,
-        lifecycle: OperationLifecycle,
-        events: tuple[OperationEvent, ...] = (),
-        pending: OperationPendingInteraction | None = None,
-        consumed: tuple[OperationConsumedInteraction, ...] | None = None,
-        effect: OperationEffect | None = None,
-        execution_deadline: datetime | None = None,
-        cleanup_deadline: datetime | None = None,
-        cancellation_requested_at: datetime | None = None,
-        cancellation_acknowledged_at: datetime | None = None,
-        cancellation_deferred: bool | None = None,
-        executor_entered_at: datetime | None = None,
         discard_ephemeral_secret: bool = False,
     ) -> OperationPersistedSnapshot:
-        if lifecycle is OperationLifecycle.TERMINAL:
+        if advance.lifecycle is OperationLifecycle.TERMINAL:
             raise InternalInvariantError("a terminal transition is committed only by settlement with its receipt")
         self._require_pinned_definition(snapshot)
         now = self._clock()
         async with self._lease_lock(snapshot.identity.operation_id):
             lease = await self._require_owned_lease_unlocked(snapshot.identity, now)
             revision = snapshot.revision + 1
-            emitted = _supervisor_snapshot.advance_events(snapshot, events, revision, now)
+            emitted = _supervisor_snapshot.advance_events(snapshot, advance.events, revision, now)
             successor = _supervisor_snapshot.advanced_snapshot(
-                snapshot,
-                revision=revision,
-                lifecycle=lifecycle,
-                now=now,
-                emitted=emitted,
-                pending=pending,
-                consumed=consumed,
-                effect=effect,
-                execution_deadline=execution_deadline,
-                cleanup_deadline=cleanup_deadline,
-                cancellation_requested_at=cancellation_requested_at,
-                cancellation_acknowledged_at=cancellation_acknowledged_at,
-                cancellation_deferred=cancellation_deferred,
-                executor_entered_at=executor_entered_at,
+                snapshot, advance, revision=revision, now=now, emitted=emitted
             )
             await self._journal.commit(successor, expected_revision=snapshot.revision, lease=lease)
             if discard_ephemeral_secret:
@@ -733,9 +710,11 @@ class SupervisorExecutionMixin(SupervisorHost):
         )
         successor = await self._advance(
             snapshot,
-            lifecycle=OperationLifecycle.RUNNING,
-            events=(event,),
-            consumed=(*snapshot.consumed_interactions, consumed),
+            _supervisor_snapshot.SnapshotAdvance(
+                lifecycle=OperationLifecycle.RUNNING,
+                events=(event,),
+                consumed=(*snapshot.consumed_interactions, consumed),
+            ),
         )
         definition = self._require_pinned_definition(snapshot)
         if definition.reconciliation_policy is OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT:

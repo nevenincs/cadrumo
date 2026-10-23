@@ -16,6 +16,7 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.logging import get_logger
 from ...core.operations import OperationEffect, OperationLifecycle
 from ...core.operator_progress import OperatorDisplayCode
+from ._supervisor_snapshot import SnapshotAdvance
 from .authorization import OperationExecutionAuthority
 from .capabilities import OperationOwnedResource
 from .errors import OperationDeclarationError
@@ -142,7 +143,7 @@ class DefinitionBoundContext:
         operands: OperationSecureReferenceStore | None,
         clock: Callable[[], datetime],
         resources: dict[OperationId, list[AsyncCloseable]],
-        advance: Callable[..., Awaitable[OperationPersistedSnapshot]],
+        advance: Callable[[OperationPersistedSnapshot, SnapshotAdvance], Awaitable[OperationPersistedSnapshot]],
         acknowledge_cancellation: Callable[[OperationPersistedSnapshot], Awaitable[OperationPersistedSnapshot]],
         set_cancellation_deferred: Callable[[OperationPersistedSnapshot, bool], Awaitable[OperationPersistedSnapshot]],
         execution_authority: OperationExecutionAuthority | None = None,
@@ -175,10 +176,7 @@ class DefinitionBoundContext:
     ) -> None:
         self.snapshot = await self.advance_transition(
             self.snapshot,
-            lifecycle=lifecycle,
-            events=events,
-            pending=pending,
-            effect=effect,
+            SnapshotAdvance(lifecycle=lifecycle, events=events, pending=pending, effect=effect),
         )
 
 

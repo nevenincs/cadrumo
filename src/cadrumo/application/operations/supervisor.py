@@ -28,6 +28,7 @@ from ._supervisor_execution import SupervisorExecutionMixin
 from ._supervisor_lease import OperationSupervisorLeaseMixin
 from ._supervisor_reconciliation import SupervisorReconciliationMixin
 from ._supervisor_settlement import SupervisorSettlementMixin
+from ._supervisor_snapshot import SnapshotAdvance
 from ._supervisor_submission import SupervisorSubmissionMixin
 from .authorization import OperationExecutionAuthority
 from .event_replay import OperationEventCursor
@@ -657,11 +658,13 @@ class OperationSupervisor(
         )
         acknowledged = await self._advance(
             snapshot,
-            lifecycle=OperationLifecycle.SETTLING,
-            events=(event,),
-            cleanup_deadline=requested_at + self._lease_duration,
-            cancellation_requested_at=requested_at,
-            cancellation_acknowledged_at=requested_at,
+            SnapshotAdvance(
+                lifecycle=OperationLifecycle.SETTLING,
+                events=(event,),
+                cleanup_deadline=requested_at + self._lease_duration,
+                cancellation_requested_at=requested_at,
+                cancellation_acknowledged_at=requested_at,
+            ),
             discard_ephemeral_secret=True,
         )
         return await self._settle_pre_entry_secret_wait(acknowledged, OperationTerminalCondition.CANCELLED)

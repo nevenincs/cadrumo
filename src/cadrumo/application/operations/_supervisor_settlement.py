@@ -16,6 +16,7 @@ from ...core.operations import (
     OperationTerminalCondition,
 )
 from ._supervisor_host import SupervisorHost
+from ._supervisor_snapshot import SnapshotAdvance
 from .errors import OperationDeclarationError
 from .models import OperationId, OperationTerminalReceipt
 from .persistence.events import (
@@ -59,9 +60,11 @@ class SupervisorSettlementMixin(SupervisorHost):
         requested_at = self._clock()
         successor = await self._advance(
             snapshot,
-            lifecycle=OperationLifecycle.CANCELLATION_REQUESTED,
-            cleanup_deadline=requested_at + cleanup_timeout,
-            cancellation_requested_at=requested_at,
+            SnapshotAdvance(
+                lifecycle=OperationLifecycle.CANCELLATION_REQUESTED,
+                cleanup_deadline=requested_at + cleanup_timeout,
+                cancellation_requested_at=requested_at,
+            ),
         )
         context = self._contexts.get(operation_id)
         if context is not None:
@@ -118,8 +121,7 @@ class SupervisorSettlementMixin(SupervisorHost):
             raise ValueError("cancellation acknowledgement requires requested or settling lifecycle")
         return await self._advance(
             snapshot,
-            lifecycle=OperationLifecycle.SETTLING,
-            cancellation_acknowledged_at=self._clock(),
+            SnapshotAdvance(lifecycle=OperationLifecycle.SETTLING, cancellation_acknowledged_at=self._clock()),
         )
 
     @override
@@ -140,8 +142,7 @@ class SupervisorSettlementMixin(SupervisorHost):
             try:
                 return await self._advance(
                     current,
-                    lifecycle=current.lifecycle,
-                    cancellation_deferred=deferred,
+                    SnapshotAdvance(lifecycle=current.lifecycle, cancellation_deferred=deferred),
                 )
             except Exception:
                 latest = await self.inspect(current.identity.operation_id)
@@ -158,7 +159,7 @@ class SupervisorSettlementMixin(SupervisorHost):
             raise ValueError("cleanup escalation requires a durable cancellation deadline")
         if snapshot.lifecycle is OperationLifecycle.SETTLING:
             return snapshot
-        return await self._advance(snapshot, lifecycle=OperationLifecycle.SETTLING)
+        return await self._advance(snapshot, SnapshotAdvance(lifecycle=OperationLifecycle.SETTLING))
 
     def _validate_settlement_request(
         self,

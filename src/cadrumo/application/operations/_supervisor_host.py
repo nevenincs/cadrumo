@@ -22,12 +22,11 @@ if TYPE_CHECKING:
         OperationCancellation,
         OperationDeadline,
         OperationDurability,
-        OperationEffect,
-        OperationLifecycle,
         OperationTerminalCondition,
     )
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ._execution_context import DefinitionBoundContext
+    from ._supervisor_snapshot import SnapshotAdvance
     from .authorization import OperationExecutionAuthority
     from .capabilities import OperationRequestStoragePolicy
     from .drain import OperationDrainResult
@@ -44,7 +43,6 @@ if TYPE_CHECKING:
         OperationTerminalReceipt,
     )
     from .operation_definition import OperationDefinition
-    from .persistence.events import OperationEvent
     from .persistence.idempotency import OperationIdempotencyClaim
     from .persistence.journal import (
         OperationJournal,
@@ -299,18 +297,8 @@ class SupervisorHost:
         async def _advance(
             self,
             snapshot: OperationPersistedSnapshot,
+            advance: SnapshotAdvance,
             *,
-            lifecycle: OperationLifecycle,
-            events: tuple[OperationEvent, ...] = (),
-            pending: OperationPendingInteraction | None = None,
-            consumed: tuple[OperationConsumedInteraction, ...] | None = None,
-            effect: OperationEffect | None = None,
-            execution_deadline: datetime | None = None,
-            cleanup_deadline: datetime | None = None,
-            cancellation_requested_at: datetime | None = None,
-            cancellation_acknowledged_at: datetime | None = None,
-            cancellation_deferred: bool | None = None,
-            executor_entered_at: datetime | None = None,
             discard_ephemeral_secret: bool = False,
         ) -> OperationPersistedSnapshot: ...
 

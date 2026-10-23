@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 
 from ...core.operations import OperationEffect, OperationLifecycle
@@ -10,6 +11,27 @@ from .persistence.events import OperationEvent, OperationPhaseEvent
 from .persistence.journal import OperationPersistedSnapshot
 
 _SUSPENDED_LIFECYCLES = frozenset({OperationLifecycle.WAITING_FOR_INTERACTION, OperationLifecycle.WAITING_FOR_EXTERNAL})
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SnapshotAdvance:
+    """One non-terminal transition: its lifecycle, emitted events and requested field changes.
+
+    ``pending`` replaces the pending interaction, so ``None`` clears it. Every
+    other ``None`` keeps the snapshot's current value.
+    """
+
+    lifecycle: OperationLifecycle
+    events: tuple[OperationEvent, ...] = ()
+    pending: OperationPendingInteraction | None = None
+    consumed: tuple[OperationConsumedInteraction, ...] | None = None
+    effect: OperationEffect | None = None
+    execution_deadline: datetime | None = None
+    cleanup_deadline: datetime | None = None
+    cancellation_requested_at: datetime | None = None
+    cancellation_acknowledged_at: datetime | None = None
+    cancellation_deferred: bool | None = None
+    executor_entered_at: datetime | None = None
 
 
 def advance_events(
@@ -35,44 +57,35 @@ def _advance_value[T](current: T, requested: T | None) -> T:
 
 def advanced_snapshot(
     snapshot: OperationPersistedSnapshot,
+    advance: SnapshotAdvance,
     *,
     revision: int,
-    lifecycle: OperationLifecycle,
     now: datetime,
     emitted: tuple[OperationEvent, ...],
-    pending: OperationPendingInteraction | None,
-    consumed: tuple[OperationConsumedInteraction, ...] | None,
-    effect: OperationEffect | None,
-    execution_deadline: datetime | None,
-    cleanup_deadline: datetime | None,
-    cancellation_requested_at: datetime | None,
-    cancellation_acknowledged_at: datetime | None,
-    cancellation_deferred: bool | None,
-    executor_entered_at: datetime | None,
 ) -> OperationPersistedSnapshot:
     return snapshot.model_copy(
         update={
             "revision": revision,
-            "lifecycle": lifecycle,
+            "lifecycle": advance.lifecycle,
             "updated_at": now,
             "event_cursor": snapshot.event_cursor + len(emitted),
             "events": emitted,
             "phase_code": _advance_phase_code(snapshot, emitted),
-            "pending_interaction": pending,
-            "consumed_interactions": _advance_value(snapshot.consumed_interactions, consumed),
-            "effect": _advance_value(snapshot.effect, effect),
-            "execution_deadline": _advance_value(snapshot.execution_deadline, execution_deadline),
-            "cleanup_deadline": _advance_value(snapshot.cleanup_deadline, cleanup_deadline),
+            "pending_interaction": advance.pending,
+            "consumed_interactions": _advance_value(snapshot.consumed_interactions, advance.consumed),
+            "effect": _advance_value(snapshot.effect, advance.effect),
+            "execution_deadline": _advance_value(snapshot.execution_deadline, advance.execution_deadline),
+            "cleanup_deadline": _advance_value(snapshot.cleanup_deadline, advance.cleanup_deadline),
             "cancellation_requested_at": _advance_value(
                 snapshot.cancellation_requested_at,
-                cancellation_requested_at,
+                advance.cancellation_requested_at,
             ),
             "cancellation_acknowledged_at": _advance_value(
                 snapshot.cancellation_acknowledged_at,
-                cancellation_acknowledged_at,
+                advance.cancellation_acknowledged_at,
             ),
-            "cancellation_deferred": _advance_value(snapshot.cancellation_deferred, cancellation_deferred),
-            "executor_entered_at": _advance_value(snapshot.executor_entered_at, executor_entered_at),
+            "cancellation_deferred": _advance_value(snapshot.cancellation_deferred, advance.cancellation_deferred),
+            "executor_entered_at": _advance_value(snapshot.executor_entered_at, advance.executor_entered_at),
         }
     )
 
