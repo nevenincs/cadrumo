@@ -36,6 +36,7 @@ from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_client.transport.windows_channel import WindowsChannel
+from cadrumo_client.transport.windows_process import WindowsOwnedProcess, WindowsProcessScope
 from cadrumo_runtime.contracts.profile_worker import (
     ProfileWorkerControlRequest,
     ProfileWorkerHumanOutcome,
@@ -47,7 +48,6 @@ from cadrumo_runtime.contracts.profile_worker import (
 
 from .. import profile_worker, profile_worker_human_admission, profile_worker_lifetime, profile_worker_transport
 from ..profile_worker import ProfileWorkerProcess
-from ..windows_process import WindowsOwnedProcess, WindowsProcessScope
 from ..worker_authorization import WorkerAuthorizationServer
 from ..worker_lease_transfer import read_worker_lease
 

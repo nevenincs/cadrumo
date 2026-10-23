@@ -23,7 +23,6 @@ from typing import Any, override
 
 import pytest
 from textual.app import App, ComposeResult
-from textual.pilot import Pilot
 from textual.widgets import Static
 
 from ......application.modelo.source_policy import SourceFamily
@@ -61,6 +60,7 @@ from ......domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import (
     CasillaList,
 )
@@ -75,7 +75,7 @@ from ..casilla_list_values import (
     stated_value_text,
     value_text,
 )
-from ..editor import CasillaEditorPanel, CasillaEditorScreen, EditorOutcome, read_only_reason
+from ..editor import CasillaEditorPanel, CasillaEditorScreen, read_only_reason
 from ..editor_explanations import where_from_text
 from ..grid import CasillaListRecords
 from ..page_items import StagedDisplay, WorkbenchFilter, WorkbenchPage, page_items, page_of, workbench_pages
@@ -191,11 +191,6 @@ def _with_fields(form: ModeloWorkForm, replacements: dict[str, ModeloFormField])
     return form.model_copy(update={"pages": pages})
 
 
-async def _settle(pilot: Pilot[EditorOutcome | None]) -> None:
-    for _ in range(3):
-        await pilot.pause()
-
-
 def _text(screen: CasillaEditorScreen, widget_id: str) -> str:
     return str(screen.query_one(widget_id, Static).render())
 
@@ -213,7 +208,7 @@ class _RowHarness(App[None]):
 async def _rows(*fields: ModeloFormField) -> list[str]:
     app = _RowHarness(tuple(CasillaListEntry(field) for field in fields))
     async with app.run_test(size=(140, 10)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         widget = app.query_one(CasillaList)
         return [widget.render_line(y).text for y in range(widget.size.height)]
 
@@ -264,7 +259,7 @@ async def test_every_surface_shows_a_held_zero_and_no_figure_for_an_empty_box() 
                 CasillaEditorPanel(field, parse=FakeActions().parse, language=OutputLanguage.EN)
             )
             async with ScreenHostApp(panel).run_test(size=(140, 40)) as pilot:
-                await _settle(pilot)
+                await settle(pilot)
                 panels[field.box] = _text(panel, "#editor-now-text")
     assert panels["152"] == f"{_ZERO} · ○ Optional, left at 0"
     assert panels["150"] == "○ Optional, empty"
@@ -316,7 +311,7 @@ async def test_a_box_no_entry_can_reach_names_no_source_and_says_it_is_empty_onc
             CasillaEditorPanel(field, parse=FakeActions().parse, language=OutputLanguage.EN, read_only_reason=reason)
         )
         async with ScreenHostApp(panel).run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             now = _text(panel, "#editor-now-text")
             has_where = bool(panel.query("#editor-where"))
     assert not has_where
@@ -372,7 +367,7 @@ async def test_a_value_from_aeat_data_names_the_day_it_was_imported_on_every_sur
             )
         )
         async with ScreenHostApp(panel).run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             now = _text(panel, "#editor-now-text")
             where = _text(panel, "#editor-where-text")
     assert now.endswith(dated)
@@ -392,7 +387,7 @@ async def test_the_panel_says_what_a_box_affects_before_the_new_value_and_a_file
             CasillaEditorPanel(field, parse=FakeActions().parse, language=OutputLanguage.EN, affects="[07]")
         )
         async with ScreenHostApp(panel).run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             affects = panel.query_one("#editor-affects").region
             entry = panel.query_one("#editor-entry").region
         filed = CasillaEditorScreen(
@@ -405,7 +400,7 @@ async def test_the_panel_says_what_a_box_affects_before_the_new_value_and_a_file
             )
         )
         async with ScreenHostApp(filed).run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             can_change = _text(filed, "#editor-can-change-text")
         correction = tr("tui.modelo.workbench.editor.can_change.recorded")
     assert affects.bottom <= entry.y
@@ -631,18 +626,14 @@ async def test_enter_on_a_finding_about_the_operator_records_lands_on_the_operat
         unknown = tr("tui.modelo.workbench.grid.records_unknown")
         screen = ModeloWorkbenchScreen(FakeReader(form=form))
         async with ScreenHostApp(screen).run_test(size=(120, 36)) as pilot:
-            for _ in range(3):
-                await pilot.pause()
+            await settle(pilot)
             casilla_list = screen.query_one(CasillaList)
             await pilot.press("]", "]", "]")
-            for _ in range(2):
-                await pilot.pause()
+            await settle(pilot)
             await pilot.press("i")
-            for _ in range(3):
-                await pilot.pause()
+            await settle(pilot)
             await pilot.press("enter")
-            for _ in range(4):
-                await pilot.pause()
+            await settle(pilot)
             shown = [casilla_list.render_line(y).text for y in range(casilla_list.size.height)]
             listed = casilla_list.items
     # The list now shows the page holding the table whose column the finding names, and the table is in view.

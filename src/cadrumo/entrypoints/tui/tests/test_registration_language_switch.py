@@ -43,6 +43,7 @@ from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ..components.host import ScreenHostApp
 from ..secret.registration import RecoveryCodeScreen, RecoveryOfferScreen, RegistrationScreen
 from .fixture import recovery_enrollment_attempt, registration_attempt
+from .settling import SettleTimeoutError, settle, settle_until
 
 pytestmark = [
     pytest.mark.integration,
@@ -92,12 +93,14 @@ async def _wait_for_screen(pilot, screen_type: type, *, composed: str, deadline_
     def _ready() -> bool:
         return isinstance(pilot.app.screen, screen_type) and bool(pilot.app.screen.query(composed))
 
-    deadline = time.monotonic() + deadline_seconds
-    while time.monotonic() < deadline:
+    try:
+        await settle_until(
+            pilot, _ready, f"{screen_type.__name__} with {composed} composed", workers=False, timeout=deadline_seconds
+        )
+    except SettleTimeoutError:
         if _ready():
             return True
-        await pilot.pause(0.1)
-    if _ready():
+    else:
         return True
     # Below the per-test timeout on purpose: an expiring wait reports what every
     # thread was doing instead of the timeout killing the worker silently.
@@ -118,7 +121,7 @@ async def _click_when_laid_out(pilot, selector: str, *, deadline_seconds: float 
         matches = pilot.app.screen.query(selector)
         if matches and matches.first().region.area > 0 and await pilot.click(selector):
             return
-        await pilot.pause(0.1)
+        await settle(pilot, workers=False)
     raise AssertionError(f"{selector} never became clickable within {deadline_seconds:g}s")
 
 
@@ -170,8 +173,7 @@ def _chooser_rows(app: RegistrationScreen) -> list[str]:
 async def _choose(pilot, language: str) -> None:
     """Take the language chooser, as an operator does."""
     pilot.app.screen.query_one("#field-output-language", Select).value = language
-    await pilot.pause()
-    await pilot.pause()
+    await settle(pilot)
 
 
 @pytest.mark.asyncio
@@ -186,7 +188,7 @@ async def test_choosing_a_language_rewords_the_first_screen(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
 
             started = _expected_copy(_STARTING_LANGUAGE)
             target = _expected_copy(_TARGET_LANGUAGE)
@@ -229,13 +231,13 @@ async def test_the_language_switch_keeps_what_has_already_been_typed(tmp_path) -
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _choose(pilot, _STARTING_LANGUAGE)
 
             app.query_one("#field-username", Input).value = "Half Filled"
             app.query_one("#field-password", Input).value = _CREDENTIAL_INPUT
             app.query_one("#field-confirm", Input).value = _CREDENTIAL_INPUT
-            await pilot.pause()
+            await settle(pilot)
             assert app.query_one("#strength-line", Static).has_class("strength-strong")
 
             await _choose(pilot, _TARGET_LANGUAGE)
@@ -266,13 +268,13 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _choose(pilot, _TARGET_LANGUAGE)
 
             app.query_one("#field-username", Input).value = "Language Subject"
             app.query_one("#field-password", Input).value = _CREDENTIAL_INPUT
             app.query_one("#field-confirm", Input).value = _CREDENTIAL_INPUT
-            await pilot.pause()
+            await settle(pilot)
             await _click_when_laid_out(pilot, "#btn-create")
 
             # The offer that follows creation is still the first surface, so
@@ -337,11 +339,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
             assert code, "the code must be on screen before it can be typed back"
             verification.value = code
             await _click_when_laid_out(pilot, "#btn-confirm-code")
-            await pilot.app.workers.wait_for_complete()
-            for _ in range(300):
-                if app.outcome is not None:
-                    break
-                await pilot.pause(0.1)
+            await settle_until(pilot, lambda: app.outcome is not None, "the profile to be created", workers=False)
 
         assert app.error is None
         assert app.outcome is not None, "the screen must still create the profile"
@@ -398,7 +396,7 @@ async def test_the_chosen_language_does_not_outlive_the_screen(tmp_path) -> None
 
         app = _screen()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _choose(pilot, _TARGET_LANGUAGE)
             assert app.title == tr("flows.registration.title", locale=_TARGET_LANGUAGE), (
                 "the explicit locale must be live inside the screen, or the assertion below is vacuous"

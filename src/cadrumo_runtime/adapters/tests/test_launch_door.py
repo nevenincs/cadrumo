@@ -13,12 +13,12 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from cadrumo.tests.process_support import launch_fixture, runtime_namespace_base
 from cadrumo_client.contracts.contracts import ByteChannel, ChannelWake, ClientHello, Peer, RefusalCode, RefusalError
 from cadrumo_client.transport.posix_endpoint import PosixEndpoint
 from cadrumo_client.transport.startup import LaunchDoor
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
 from cadrumo_client.transport.windows import WindowsEndpoint
-from cadrumo_runtime.adapters.tests.process_support import launch_fixture, runtime_namespace_base
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
 

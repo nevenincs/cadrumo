@@ -27,6 +27,7 @@ from cadrumo_client.contracts.model_runs import ModelRunOutcome
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
 from cadrumo_client.transport.windows_channel import WindowsChannel
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationAcknowledgement,
@@ -38,7 +39,6 @@ from cadrumo_runtime.contracts.worker_authorization import (
 )
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 
-from ..windows_process import WindowsProcessScope
 from ..worker_authorization import WorkerAuthorizationServer
 from ..worker_authorization_connections import WorkerAuthorizationConnections
 from .profile_worker_support import owner_id

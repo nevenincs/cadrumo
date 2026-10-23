@@ -76,7 +76,7 @@ export function QuestionsPrompt({
   return (
     <section
       aria-labelledby={titleId}
-      className="agent-questions grid max-h-[60dvh] gap-3 overflow-y-auto rounded-xl border border-border-strong bg-card p-3.5 text-card-foreground shadow-raised"
+      className="agent-questions grid max-h-[60dvh] gap-3 overflow-y-auto rounded-xl bg-card p-3.5 text-card-foreground shadow-raised"
     >
       <div className="flex items-start gap-2">
         <Icon name="agent" size="md" className="mt-0.5 text-muted-foreground" />

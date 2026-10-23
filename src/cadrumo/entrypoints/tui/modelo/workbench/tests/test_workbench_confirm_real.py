@@ -33,6 +33,7 @@ from ......core.external_constants import OutputLanguage
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import RecordedSubmissions, application_workbench
+from ....tests.settling import settle
 from ..editor import CasillaEditorPanel, CasillaEditorScreen, EditorDecision, EditorOutcome
 from ..factory import InstalledModeloWorkbench
 from ..header import StatusLine, status_line
@@ -80,12 +81,10 @@ async def _keep_in_panel(
     )
     app = ScreenHostApp(editor)
     async with app.run_test(size=(80, 24)) as pilot:
-        for _ in range(3):
-            await pilot.pause()
+        await settle(pilot)
         shown = str(editor.query_one("#editor-status", Static).render())
         await pilot.press("enter")
-        for _ in range(3):
-            await pilot.pause()
+        await settle(pilot)
     return app.return_value, shown
 
 

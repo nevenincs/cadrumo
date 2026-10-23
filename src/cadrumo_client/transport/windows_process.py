@@ -15,8 +15,9 @@ from threading import Lock
 from typing import BinaryIO, cast
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.transport.windows_native_io import NativeWindowsHandle, native_windows_call, owned_windows_handle
+
+from ..contracts.contracts import RefusalCode, RefusalError
+from .windows_native_io import NativeWindowsHandle, native_windows_call, owned_windows_handle
 
 if sys.platform == "win32":
     from ctypes import wintypes
@@ -473,20 +474,6 @@ class WindowsProcessScope:
                 raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
             validated = cast("tuple[int, ...]", values)
             return tuple(int(pid) for pid in validated)
-
-    def limit_flags(self) -> int:
-        """Read this job's basic limit flags back from the kernel, as they hold now."""
-        if sys.platform != "win32":
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-        import win32job
-
-        with self._lock:
-            if self._job is None:
-                raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-            query_job = cast("Callable[[int, int], object]", win32job.QueryInformationJobObject)
-            information = cast("dict[str, object]", query_job(self._job, win32job.JobObjectExtendedLimitInformation))
-        limits = cast("dict[str, object]", information["BasicLimitInformation"])
-        return int(cast("int", limits["LimitFlags"]))
 
     def work_done(self) -> tuple[int, ...] | None:
         """The job's accumulated processor time, page faults, processes and I/O, or ``None`` once it is released.

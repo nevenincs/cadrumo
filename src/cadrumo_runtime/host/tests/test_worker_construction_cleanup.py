@@ -29,11 +29,11 @@ from cadrumo_client.contracts.contracts import ChannelWake, Peer, RefusalCode, R
 from cadrumo_client.contracts.profile_access import AccessRefusal, HumanProof, ProfileLogin
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
+from cadrumo_client.transport.tests.test_windows_process_cleanup import native  # noqa: F401
+from cadrumo_client.transport.windows_process import unreturned_windows_process_scope
 
 from ...adapters import profile_worker
 from ...adapters.profile_worker import ProfileWorkerProcess
-from ...adapters.tests.test_windows_process_cleanup import native  # noqa: F401
-from ...adapters.windows_process import unreturned_windows_process_scope
 from ...application.session_authority_contracts import SessionAuthorityFacts
 from .. import session_owner
 from ..profile_connections import RuntimeProfileConnections

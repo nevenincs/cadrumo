@@ -21,6 +21,7 @@ from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_re
 from cadrumo.core.config import override_settings
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
+from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
@@ -57,7 +58,7 @@ async def test_unavailable_login_shows_manager_remedy_without_retrying() -> None
     screen = RuntimeLoginScreen(choices=_choices(), open_client=open_client, accept_handoff=owner.accept)
     with override_settings(cadrumo_output_language="en"):
         async with _Host(screen).run_test(size=(120, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot, workers=False)
             screen._status_refused(RefusalCode.UNAVAILABLE.value)
             status = screen.query_one("#runtime-login-status", PinnedStatusBar)
             assert "manager" in status.message and "runtime_unavailable" in status.message
@@ -83,12 +84,17 @@ async def test_recovery_keeps_selected_profile_without_automatic_receipt_admissi
         accept_handoff=owner.accept,
     )
     async with _Host(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert attempts == 0
         assert screen.query_one("#runtime-login-profile", Select).value == choices[0].profile_id
         screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.RECEIPT
         assert await click_when_laid_out(pilot, screen.query_one("#runtime-login-submit", Button))
-        await _until(pilot, lambda: screen._worker is not None and screen._worker.is_finished)
+        await settle_until(
+            pilot,
+            lambda: screen._worker is not None and screen._worker.is_finished,
+            "screen._worker is not None and screen._worker.is_finished",
+            workers=False,
+        )
         assert attempts == 1
         assert screen.is_mounted and pilot.app.is_running
 
@@ -125,7 +131,7 @@ class _Client(FrontendClient):
         self.proof_buffer = proof
         self.proof_before_wipe = bytes(proof)
         self.started.set()
-        if not self.release.wait(5):
+        if not self.release.wait(SETTLE_TIMEOUT_SECONDS):
             raise TimeoutError("test login release was not signalled")
         if self.refuse:
             raise FrontendRefusedError("credential_rejected")
@@ -183,7 +189,7 @@ class _Client(FrontendClient):
         self.receipt_calls += 1
         self.receipt_thread = get_ident()
         self.started.set()
-        if not self.release.wait(5):
+        if not self.release.wait(SETTLE_TIMEOUT_SECONDS):
             raise TimeoutError("test receipt release was not signalled")
         if self.receipt_refusal is not None:
             raise ProfileReceiptRefusedError(self.receipt_refusal)
@@ -236,7 +242,7 @@ class _RecoveryClient(_Client):
         self.proof_before_wipe = bytes(password)
         self.proof_buffer = password
         self.started.set()
-        if not self.release.wait(5):
+        if not self.release.wait(SETTLE_TIMEOUT_SECONDS):
             raise TimeoutError("test recovery release was not signalled")
         if self.recovery_failure is not None:
             raise self.recovery_failure
@@ -326,9 +332,7 @@ class _RejectedDismissalScreen(RuntimeLoginScreen):
 
 
 async def _until(pilot: Pilot[None], predicate: Callable[[], bool]) -> None:
-    async with asyncio.timeout(6):
-        while not predicate():
-            await pilot.pause(0.02)
+    await settle_until(pilot, lambda: bool(predicate()), "not not predicate()", workers=False)
 
 
 def _choices() -> tuple[ProfileLoginChoice, ProfileLoginChoice]:
@@ -363,9 +367,9 @@ async def test_password_default_transfers_only_exact_selected_verified_client() 
     )
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-profile", Select).value = choices[1].profile_id
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert screen.query_one("#runtime-login-method", Select).value is RuntimeLoginMethod.PASSWORD
         assert screen.query_one("#runtime-login-persist", Checkbox).value is False
         field = screen.query_one("#runtime-login-credential", Input)
@@ -373,7 +377,7 @@ async def test_password_default_transfers_only_exact_selected_verified_client() 
         field.value = "synthetic-password-proof"
         screen.action_submit()
         assert field.value == ""
-        await _until(pilot, lambda: host.handoff is not None)
+        await settle_until(pilot, lambda: host.handoff is not None, "host.handoff is not None", workers=False)
         assert host.handoff is not None
         assert host.handoff.profile_id == selected
         assert host.handoff.profile_label == choices[1].label
@@ -407,14 +411,16 @@ async def test_api_key_is_explicit_and_refusal_never_falls_back_to_password() ->
     screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         field = screen.query_one("#runtime-login-credential", Input)
         field.value = "old-password-candidate"
         screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.API_KEY
-        await _until(pilot, lambda: field.value == "")
+        await settle_until(pilot, lambda: field.value == "", "field.value == ''", workers=False)
         field.value = "synthetic-api-key-proof"
         screen.action_submit()
-        await _until(pilot, lambda: first.closed and not screen._busy)
+        await settle_until(
+            pilot, lambda: first.closed and not screen._busy, "first.closed and not screen._busy", workers=False
+        )
         assert first.api_calls == 1 and first.password_calls == 0
         assert first.proof_buffer is not None and not any(first.proof_buffer)
         assert host.handoff is None
@@ -422,7 +428,7 @@ async def test_api_key_is_explicit_and_refusal_never_falls_back_to_password() ->
         assert screen.query_one("#runtime-login-method", Select).value is RuntimeLoginMethod.API_KEY
         field.value = "fresh-api-key-proof"
         screen.action_submit()
-        await _until(pilot, lambda: host.handoff is not None)
+        await settle_until(pilot, lambda: host.handoff is not None, "host.handoff is not None", workers=False)
         assert second.api_calls == 1 and second.password_calls == 0
         assert host.handoff is not None and host.handoff.client is second
         assert owner.accepted is host.handoff
@@ -456,14 +462,19 @@ async def test_stored_api_reference_uses_only_its_separate_opener_and_restricted
     )
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         method = screen.query_one("#runtime-login-method", Select)
         proof_field = screen.query_one("#runtime-login-credential", Input)
         reference_field = screen.query_one("#runtime-login-reference", Input)
         assert not reference_field.display and proof_field.password
         proof_field.value = "discarded-password"
         method.value = RuntimeLoginMethod.API_REFERENCE
-        await _until(pilot, lambda: reference_field.display and proof_field.value == "")
+        await settle_until(
+            pilot,
+            lambda: reference_field.display and proof_field.value == "",
+            "reference_field.display and proof_field.value == ''",
+            workers=False,
+        )
         assert not reference_field.password and not proof_field.display
         reference_field.value = "not-a-uuid"
         screen.action_submit()
@@ -471,7 +482,7 @@ async def test_stored_api_reference_uses_only_its_separate_opener_and_restricted
         reference_field.value = str(reference)
         screen.action_submit()
         assert reference_field.value == ""
-        await _until(pilot, lambda: host.handoff is not None)
+        await settle_until(pilot, lambda: host.handoff is not None, "host.handoff is not None", workers=False)
         assert opened == [(selected, reference)]
         assert host.handoff is owner.accepted
         assert host.handoff is not None and host.handoff.method is RuntimeLoginMethod.API_REFERENCE
@@ -506,12 +517,22 @@ async def test_stored_reference_refusal_does_not_open_other_proof_method() -> No
     )
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.API_REFERENCE
-        await _until(pilot, lambda: screen.query_one("#runtime-login-reference", Input).display)
+        await settle_until(
+            pilot,
+            lambda: screen.query_one("#runtime-login-reference", Input).display,
+            "screen.query_one('#runtime-login-reference', Input).display",
+            workers=False,
+        )
         screen.query_one("#runtime-login-reference", Input).value = str(uuid4())
         screen.action_submit()
-        await _until(pilot, lambda: len(attempted) == 1 and not screen._busy)
+        await settle_until(
+            pilot,
+            lambda: len(attempted) == 1 and not screen._busy,
+            "len(attempted) == 1 and not screen._busy",
+            workers=False,
+        )
         assert attempted == [selected]
         assert host.handoff is None and owner.accepted is None
         assert screen.is_mounted
@@ -542,17 +563,22 @@ async def test_unmount_during_stored_reference_open_closes_after_open_settles() 
     )
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.API_REFERENCE
-        await _until(pilot, lambda: screen.query_one("#runtime-login-reference", Input).display)
+        await settle_until(
+            pilot,
+            lambda: screen.query_one("#runtime-login-reference", Input).display,
+            "screen.query_one('#runtime-login-reference', Input).display",
+            workers=False,
+        )
         screen.query_one("#runtime-login-reference", Input).value = str(uuid4())
         screen.action_submit()
-        await asyncio.wait_for(started.wait(), 2)
+        await asyncio.wait_for(started.wait(), SETTLE_TIMEOUT_SECONDS)
         host.pop_screen()
-        await asyncio.wait_for(screen.unmounting.wait(), 2)
+        await asyncio.wait_for(screen.unmounting.wait(), SETTLE_TIMEOUT_SECONDS)
         assert not client.closed and host.handoff is None
         release.set()
-        await _until(pilot, lambda: client.closed)
+        await settle_until(pilot, lambda: client.closed, "client.closed", workers=False)
         assert owner.accepted is None and client.status_calls == 0
 
 
@@ -571,17 +597,22 @@ async def test_explicit_receipt_resume_uses_no_supplied_proof_and_transfers_exac
     host = _Host(screen)
     ui_thread = get_ident()
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         field = screen.query_one("#runtime-login-credential", Input)
         field.value = "old-password-must-be-discarded"
         screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.RECEIPT
-        await _until(pilot, lambda: field.value == "" and not field.display)
+        await settle_until(
+            pilot,
+            lambda: field.value == "" and not field.display,
+            "field.value == '' and not field.display",
+            workers=False,
+        )
         assert field.disabled
         field.value = "injected-value-must-not-be-read"
 
         screen.action_submit()
         assert field.value == ""
-        await _until(pilot, lambda: host.handoff is not None)
+        await settle_until(pilot, lambda: host.handoff is not None, "host.handoff is not None", workers=False)
 
         assert host.handoff is owner.accepted
         assert host.handoff is not None
@@ -617,23 +648,25 @@ async def test_receipt_refusal_keeps_manual_password_available(
     screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         method = screen.query_one("#runtime-login-method", Select)
         field = screen.query_one("#runtime-login-credential", Input)
         method.value = RuntimeLoginMethod.RECEIPT
-        await _until(pilot, lambda: not field.display)
+        await settle_until(pilot, lambda: not field.display, "not field.display", workers=False)
         screen.action_submit()
-        await _until(pilot, lambda: first.closed)
+        await settle_until(pilot, lambda: first.closed, "first.closed", workers=False)
         assert first.receipt_calls == 1 and first.password_calls == first.api_calls == 0
         assert first.proof_buffer is None
         assert host.handoff is None and screen.is_mounted
         assert method.value is RuntimeLoginMethod.RECEIPT
 
         method.value = RuntimeLoginMethod.PASSWORD
-        await _until(pilot, lambda: field.display and not field.disabled)
+        await settle_until(
+            pilot, lambda: field.display and not field.disabled, "field.display and not field.disabled", workers=False
+        )
         field.value = "fresh-password-after-receipt-refusal"
         screen.action_submit()
-        await _until(pilot, lambda: host.handoff is not None)
+        await settle_until(pilot, lambda: host.handoff is not None, "host.handoff is not None", workers=False)
         assert host.handoff is owner.accepted
         assert host.handoff is not None and host.handoff.method is RuntimeLoginMethod.PASSWORD
         assert second.password_calls == 1 and second.receipt_calls == second.api_calls == 0
@@ -655,16 +688,21 @@ async def test_unmount_during_blocked_receipt_resume_owns_call_until_close() -> 
     screen = _UnmountNotifiedScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.RECEIPT
-        await _until(pilot, lambda: not screen.query_one("#runtime-login-credential", Input).display)
+        await settle_until(
+            pilot,
+            lambda: not screen.query_one("#runtime-login-credential", Input).display,
+            "not screen.query_one('#runtime-login-credential', Input).display",
+            workers=False,
+        )
         screen.action_submit()
-        await _until(pilot, client.started.is_set)
+        await settle_until(pilot, client.started.is_set, "client.started.is_set", workers=False)
         host.pop_screen()
-        await asyncio.wait_for(screen.unmounting.wait(), 2)
+        await asyncio.wait_for(screen.unmounting.wait(), SETTLE_TIMEOUT_SECONDS)
         assert not client.closed and owner.accepted is None
         client.release.set()
-        await _until(pilot, lambda: client.closed)
+        await settle_until(pilot, lambda: client.closed, "client.closed", workers=False)
         assert client.receipt_calls == 1 and client.password_calls == client.api_calls == 0
         assert client.proof_buffer is None and screen._pending_proof is None
         assert host.handoff is None
@@ -683,18 +721,18 @@ async def test_unmount_during_blocking_login_closes_only_after_call_settles() ->
     screen = _UnmountNotifiedScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         field = screen.query_one("#runtime-login-credential", Input)
         field.value = "bounded-proof"
         screen.action_submit()
-        await _until(pilot, client.started.is_set)
+        await settle_until(pilot, client.started.is_set, "client.started.is_set", workers=False)
         host.pop_screen()
-        await asyncio.wait_for(screen.unmounting.wait(), 2)
+        await asyncio.wait_for(screen.unmounting.wait(), SETTLE_TIMEOUT_SECONDS)
         assert not client.closed
         assert host.handoff is None
         assert owner.accepted is None
         client.release.set()
-        await _until(pilot, lambda: client.closed)
+        await settle_until(pilot, lambda: client.closed, "client.closed", workers=False)
         assert client.proof_buffer is not None and not any(client.proof_buffer)
         assert host.handoff is None
 
@@ -715,15 +753,15 @@ async def test_unmount_during_open_closes_late_acquired_client_without_proof() -
     screen = _UnmountNotifiedScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-credential", Input).value = "unread-proof"
         screen.action_submit()
-        await _until(pilot, opening.is_set)
+        await settle_until(pilot, opening.is_set, "opening.is_set", workers=False)
         host.pop_screen()
-        await asyncio.wait_for(screen.unmounting.wait(), 2)
+        await asyncio.wait_for(screen.unmounting.wait(), SETTLE_TIMEOUT_SECONDS)
         assert not client.closed
         release.set()
-        await _until(pilot, lambda: client.closed)
+        await settle_until(pilot, lambda: client.closed, "client.closed", workers=False)
         assert client.password_calls == 0 and client.api_calls == 0
         assert host.handoff is None
         assert owner.accepted is None
@@ -741,11 +779,11 @@ async def test_wrong_profile_opener_is_closed_before_any_proof_delivery() -> Non
     screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         field = screen.query_one("#runtime-login-credential", Input)
         field.value = "private-candidate"
         screen.action_submit()
-        await _until(pilot, lambda: foreign.closed)
+        await settle_until(pilot, lambda: foreign.closed, "foreign.closed", workers=False)
         assert field.value == ""
         assert foreign.password_calls == 0 and foreign.api_calls == 0
         assert host.handoff is None
@@ -765,10 +803,10 @@ async def test_accepted_handoff_survives_failed_screen_dismissal() -> None:
     screen = _RejectedDismissalScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-credential", Input).value = "one-shot-proof"
         screen.action_submit()
-        await _until(pilot, lambda: owner.accepted is not None)
+        await settle_until(pilot, lambda: owner.accepted is not None, "owner.accepted is not None", workers=False)
         assert host.handoff is None
         assert screen.is_mounted
         assert client.password_calls == 1
@@ -789,11 +827,11 @@ async def test_real_screen_stack_without_accepting_owner_closes_client() -> None
     screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     host = _NoReceiverHost(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert host.screen is screen
         screen.query_one("#runtime-login-credential", Input).value = "abandoned-proof"
         screen.action_submit()
-        await _until(pilot, lambda: client.closed)
+        await settle_until(pilot, lambda: client.closed, "client.closed", workers=False)
         assert owner.accepted is None
         assert client.proof_buffer is not None and not any(client.proof_buffer)
         assert host.screen is screen
@@ -831,12 +869,19 @@ async def test_reference_refusal_retains_failed_owner_without_closing_later_hand
     )
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.API_REFERENCE
-        await _until(pilot, lambda: screen.query_one("#runtime-login-reference", Input).display)
+        await settle_until(
+            pilot,
+            lambda: screen.query_one("#runtime-login-reference", Input).display,
+            "screen.query_one('#runtime-login-reference', Input).display",
+            workers=False,
+        )
         screen.query_one("#runtime-login-reference", Input).value = str(uuid4())
         screen.action_submit()
-        await _until(pilot, lambda: attempts == 1 and not screen._busy)
+        await settle_until(
+            pilot, lambda: attempts == 1 and not screen._busy, "attempts == 1 and not screen._busy", workers=False
+        )
         assert screen.is_mounted and host.handoff is None
         status = screen.query_one("#runtime-login-status", PinnedStatusBar)
         assert "credential_rejected" in status.message
@@ -845,7 +890,12 @@ async def test_reference_refusal_retains_failed_owner_without_closing_later_hand
         assert failed.close_calls == 1 and not failed.closed
         screen.query_one("#runtime-login-reference", Input).value = str(uuid4())
         screen.action_submit()
-        await _until(pilot, lambda: host.handoff is not None and failed.closed)
+        await settle_until(
+            pilot,
+            lambda: host.handoff is not None and failed.closed,
+            "host.handoff is not None and failed.closed",
+            workers=False,
+        )
         assert host.handoff is owner.accepted
         assert host.handoff is not None and host.handoff.client is admitted
         assert failed.close_calls == 2
@@ -883,11 +933,11 @@ async def test_repeated_cancellation_of_failed_reference_open_preserves_cleanup_
     )
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         task = asyncio.create_task(
             screen._attempt(profile_id, choices[0].label, RuntimeLoginMethod.API_REFERENCE, None, uuid4())
         )
-        await asyncio.wait_for(started.wait(), 2)
+        await asyncio.wait_for(started.wait(), SETTLE_TIMEOUT_SECONDS)
         task.cancel()
         task.cancel()
         assert not task.done()
@@ -929,17 +979,22 @@ async def test_unmount_during_failed_reference_open_drains_then_retries_cleanup(
     )
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.API_REFERENCE
-        await _until(pilot, lambda: screen.query_one("#runtime-login-reference", Input).display)
+        await settle_until(
+            pilot,
+            lambda: screen.query_one("#runtime-login-reference", Input).display,
+            "screen.query_one('#runtime-login-reference', Input).display",
+            workers=False,
+        )
         screen.query_one("#runtime-login-reference", Input).value = str(uuid4())
         screen.action_submit()
-        await asyncio.wait_for(started.wait(), 2)
+        await asyncio.wait_for(started.wait(), SETTLE_TIMEOUT_SECONDS)
         host.pop_screen()
-        await asyncio.wait_for(screen.unmounting.wait(), 2)
+        await asyncio.wait_for(screen.unmounting.wait(), SETTLE_TIMEOUT_SECONDS)
         assert failed.close_calls == 0
         release.set()
-        await _until(pilot, lambda: failed.closed)
+        await settle_until(pilot, lambda: failed.closed, "failed.closed", workers=False)
         assert isinstance(refusal.__dict__.get("async_cleanup_error"), AsyncResourceCleanupError)
         assert host.handoff is None and owner.accepted is None
     assert failed.close_calls == 2
@@ -975,12 +1030,22 @@ async def test_returned_reference_status_refusal_keeps_primary_and_retries_faile
         accept_handoff=owner.accept,
     )
     async with _Host(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.API_REFERENCE
-        await _until(pilot, lambda: screen.query_one("#runtime-login-reference", Input).display)
+        await settle_until(
+            pilot,
+            lambda: screen.query_one("#runtime-login-reference", Input).display,
+            "screen.query_one('#runtime-login-reference', Input).display",
+            workers=False,
+        )
         screen.query_one("#runtime-login-reference", Input).value = str(uuid4())
         screen.action_submit()
-        await _until(pilot, lambda: client.close_calls == 1 and not screen._busy)
+        await settle_until(
+            pilot,
+            lambda: client.close_calls == 1 and not screen._busy,
+            "client.close_calls == 1 and not screen._busy",
+            workers=False,
+        )
         assert isinstance(refusal.__dict__.get("async_cleanup_error"), AsyncResourceCleanupError)
         assert "credential_rejected" in screen.query_one("#runtime-login-status", PinnedStatusBar).message
         assert client.status_calls == 1 and not client.closed
@@ -1002,7 +1067,7 @@ async def test_denied_handoff_failed_close_remains_owned_until_unmount_retry() -
     screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     proof = bytearray(b"private-denied-handoff-proof")
     async with _NoReceiverHost(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         with pytest.raises(AsyncResourceCleanupError):
             await screen._attempt(client.profile_id, choices[0].label, RuntimeLoginMethod.PASSWORD, proof, None)
         assert not any(proof)
@@ -1029,11 +1094,11 @@ async def test_cancelled_returned_candidate_failed_close_preserves_cancellation_
     screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     proof = bytearray(b"private-cancelled-candidate-proof")
     async with _Host(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         task = asyncio.create_task(
             screen._attempt(client.profile_id, choices[0].label, RuntimeLoginMethod.PASSWORD, proof, None)
         )
-        await _until(pilot, client.started.is_set)
+        await settle_until(pilot, client.started.is_set, "client.started.is_set", workers=False)
         task.cancel()
         task.cancel()
         assert not task.done() and client.close_calls == 0
@@ -1066,15 +1131,17 @@ async def test_cold_profile_resume_stays_unadmitted_and_next_login_uses_fresh_cl
     host = _Host(screen)
     ui_thread = get_ident()
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-profile", Select).value = choices[1].profile_id
-        await pilot.pause()
+        await settle(pilot, workers=False)
         password = screen.query_one("#runtime-login-resume-password", Input)
         assert password.password
         password.value = "synthetic-recovery-proof"
         screen.query_one("#runtime-login-resume-grants", Input).value = ", ".join(map(str, selected))
         screen.query_one("#runtime-login-resume", Button).press()
-        await _until(pilot, lambda: recovery.closed and not screen._busy)
+        await settle_until(
+            pilot, lambda: recovery.closed and not screen._busy, "recovery.closed and not screen._busy", workers=False
+        )
         assert password.value == ""
         assert recovery.resume_calls == 1 and recovery.grants_seen == selected
         assert recovery._session_id is None
@@ -1086,7 +1153,7 @@ async def test_cold_profile_resume_stays_unadmitted_and_next_login_uses_fresh_cl
         assert "synthetic-recovery-proof" not in screen.query_one("#runtime-login-status", PinnedStatusBar).message
         screen.query_one("#runtime-login-credential", Input).value = "separate-login-proof"
         screen.action_submit()
-        await _until(pilot, lambda: host.handoff is not None)
+        await settle_until(pilot, lambda: host.handoff is not None, "host.handoff is not None", workers=False)
         assert opened == [profile_id, profile_id]
         assert recovery.close_calls == 1 and login.close_calls == 0
         assert login.password_calls == 1 and login.proof_before_wipe == b"separate-login-proof"
@@ -1116,7 +1183,7 @@ async def test_invalid_resume_grants_clear_proof_before_any_native_connection(se
         else selection
     )
     async with _Host(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-resume-password", Input).value = "private-invalid-consent-proof"
         screen.query_one("#runtime-login-resume-grants", Input).value = raw
         screen.action_resume()
@@ -1142,10 +1209,15 @@ async def test_resume_typed_refusal_preserves_failed_close_for_unmount_retry(cod
     owner = _HandoffOwner()
     screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     async with _Host(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-resume-password", Input).value = "private-refused-recovery-proof"
         screen.action_resume()
-        await _until(pilot, lambda: recovery.close_calls == 1 and not screen._busy)
+        await settle_until(
+            pilot,
+            lambda: recovery.close_calls == 1 and not screen._busy,
+            "recovery.close_calls == 1 and not screen._busy",
+            workers=False,
+        )
         assert recovery.resume_calls == 1 and not recovery.closed
         assert isinstance(refusal.__dict__.get("async_cleanup_error"), AsyncResourceCleanupError)
         status = screen.query_one("#runtime-login-status", PinnedStatusBar)
@@ -1175,10 +1247,12 @@ async def test_resume_timeout_fences_mutation_replay_while_separate_login_remain
     owner = _HandoffOwner()
     screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     async with _Host(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-resume-password", Input).value = "private-timeout-proof"
         screen.action_resume()
-        await _until(pilot, lambda: recovery.closed and not screen._busy)
+        await settle_until(
+            pilot, lambda: recovery.closed and not screen._busy, "recovery.closed and not screen._busy", workers=False
+        )
         assert "runtime_deadline_exceeded" in screen.query_one("#runtime-login-status", PinnedStatusBar).message
         assert screen.query_one("#runtime-login-resume", Button).disabled
         assert not screen.query_one("#runtime-login-submit", Button).disabled
@@ -1202,10 +1276,15 @@ async def test_successful_resume_failed_close_keeps_outcome_and_retries_only_cle
     owner = _HandoffOwner()
     screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     async with _Host(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-resume-password", Input).value = "synthetic-completed-recovery-proof"
         screen.action_resume()
-        await _until(pilot, lambda: recovery.close_calls == 1 and not screen._busy)
+        await settle_until(
+            pilot,
+            lambda: recovery.close_calls == 1 and not screen._busy,
+            "recovery.close_calls == 1 and not screen._busy",
+            workers=False,
+        )
         status = screen.query_one("#runtime-login-status", PinnedStatusBar)
         assert status.tone == "warning" and "runtime_unavailable" in status.message
         assert "private-reference-close-canary" not in status.message
@@ -1230,9 +1309,9 @@ async def test_cancelled_resume_keeps_body_refusal_and_failed_close_until_unmoun
     screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     proof = bytearray(b"private-cancelled-recovery-proof")
     async with _Host(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         task = asyncio.create_task(screen._resume_attempt(recovery.profile_id, proof, frozenset()))
-        await _until(pilot, recovery.started.is_set)
+        await settle_until(pilot, recovery.started.is_set, "recovery.started.is_set", workers=False)
         task.cancel()
         task.cancel()
         assert not task.done() and recovery.close_calls == 0
@@ -1260,15 +1339,15 @@ async def test_unmount_during_resume_drains_native_call_before_failed_close_retr
     screen = _UnmountNotifiedScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         screen.query_one("#runtime-login-resume-password", Input).value = "private-unmount-recovery-proof"
         screen.action_resume()
-        await _until(pilot, recovery.started.is_set)
+        await settle_until(pilot, recovery.started.is_set, "recovery.started.is_set", workers=False)
         host.pop_screen()
-        await asyncio.wait_for(screen.unmounting.wait(), 2)
+        await asyncio.wait_for(screen.unmounting.wait(), SETTLE_TIMEOUT_SECONDS)
         assert recovery.close_calls == 0
         recovery.release.set()
-        await _until(pilot, lambda: recovery.closed)
+        await settle_until(pilot, lambda: recovery.closed, "recovery.closed", workers=False)
         assert recovery.proof_buffer is not None and not any(recovery.proof_buffer)
         assert owner.accepted is None
     assert recovery.close_calls == 2 and recovery.resume_calls == 1
@@ -1288,7 +1367,7 @@ async def test_password_persistence_is_explicit_and_frozen_at_submission(persist
     screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         checkbox = screen.query_one("#runtime-login-persist", Checkbox)
         assert checkbox.display and not checkbox.disabled and not checkbox.value
         checkbox.value = persist
@@ -1296,7 +1375,7 @@ async def test_password_persistence_is_explicit_and_frozen_at_submission(persist
         screen.action_submit()
         assert checkbox.disabled
         checkbox.value = not persist  # A programmatic UI change cannot alter the captured request.
-        await _until(pilot, lambda: host.handoff is not None)
+        await settle_until(pilot, lambda: host.handoff is not None, "host.handoff is not None", workers=False)
         assert client.persistence_requests == [persist]
         assert client.api_calls == client.receipt_calls == 0
         assert host.handoff is owner.accepted
@@ -1316,26 +1395,26 @@ async def test_persistence_choice_is_cleared_on_profile_and_proof_changes() -> N
     screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         checkbox = screen.query_one("#runtime-login-persist", Checkbox)
         checkbox.value = True
         screen.query_one("#runtime-login-profile", Select).value = choices[1].profile_id
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert not checkbox.value
         method = screen.query_one("#runtime-login-method", Select)
         for target in (RuntimeLoginMethod.RECEIPT, RuntimeLoginMethod.API_KEY):
             checkbox.value = True
             method.value = target
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert not checkbox.value and not checkbox.display and checkbox.disabled
             method.value = RuntimeLoginMethod.PASSWORD
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert not checkbox.value and checkbox.display and not checkbox.disabled
         method.value = RuntimeLoginMethod.API_KEY
-        await pilot.pause()
+        await settle(pilot, workers=False)
         checkbox.value = True  # Hidden controls cannot request password persistence for an API grant.
         screen.query_one("#runtime-login-credential", Input).value = "synthetic-api-proof"
         screen.action_submit()
-        await _until(pilot, lambda: host.handoff is not None)
+        await settle_until(pilot, lambda: host.handoff is not None, "host.handoff is not None", workers=False)
         assert client.api_calls == 1 and client.persistence_requests == []
     client.close()

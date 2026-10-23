@@ -7,7 +7,6 @@ runtime doors do after their re-read.
 
 from __future__ import annotations
 
-import asyncio
 from typing import cast, override
 
 import pytest
@@ -30,14 +29,14 @@ from .....domain.transactions.errors import TransactionValidationError
 from ...components.host import ScreenHostApp
 from ...operations.outcome import OperationOutcomeUnknownError, SessionExpiredOutcomeUnknownError
 from ...tests.frame import geometry_band
+from ...tests.settling import settle, settle_until
 from ..controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from ..models import LedgerRecordDoorsV1
 from ..record_views import INVOICE_PAGE_SIZE, LedgerInvoiceCatalogueScreen, LedgerInvoiceDetailScreen
 from ..transaction_views import LedgerTransactionDetailScreen
 from ..workspace_injection import LedgerWorkspaceInjection
 from .invoices_fixtures import STALE_KEY, MemoryRecordDoors, invoice_snapshot, transaction_projection
-from .test_ledger_selection_journey import _WorkspaceHostApp
-from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -70,15 +69,9 @@ def _keys(screen: LedgerWorkspaceScreen) -> list[str]:
     return [str(row.key.value) for row in table.ordered_rows]
 
 
-async def _settle(pilot: Pilot[None]) -> None:
-    await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
-
-
 async def _press(pilot: Pilot[None], screen: LedgerWorkspaceScreen, button_id: str) -> None:
     screen.query_one(f"#{button_id}", Button).press()
-    await _settle(pilot)
+    await settle(pilot)
 
 
 @pytest.mark.asyncio
@@ -86,14 +79,14 @@ async def test_invoice_catalogue_opens_canonical_detail_and_saves_reviewed_notes
     doors = MemoryRecordDoors((invoice_snapshot(notes="before"),))
     screen = _catalogue(doors)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(110, 55)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(110, 55)) as pilot:
+            await settle(pilot)
             table = screen.query_one("#ledger-invoice-catalogue", DataTable)
             assert table.row_count == 1
             table.focus()
             table.move_cursor(row=0)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             detail = pilot.app.screen
             assert isinstance(detail, LedgerInvoiceDetailScreen)
             rendered = _text(detail, "#ledger-record-detail")
@@ -141,7 +134,7 @@ async def test_an_unchanged_form_is_not_staged() -> None:
     doors = MemoryRecordDoors((invoice_snapshot(),))
     detail = _detail(doors, invoice_snapshot().invoice_id)
     async with ScreenHostApp[None](detail).run_test(size=(110, 55)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await _press(pilot, detail, "ledger-invoice-edit-review")
         assert detail.staged is None
         assert _text(detail, "#ledger-refusal") == tr("tui.ledger.records.no_change")
@@ -152,7 +145,7 @@ async def test_a_correction_against_a_changed_invoice_is_refused_with_a_reload_h
     doors = MemoryRecordDoors((invoice_snapshot(notes="seen"),))
     detail = _detail(doors, invoice_snapshot().invoice_id)
     async with ScreenHostApp[None](detail).run_test(size=(110, 55)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         detail.query_one("#ledger-invoice-notes", Input).value = "mine"
         await _press(pilot, detail, "ledger-invoice-edit-review")
         # Another session corrects the invoice after this screen read it.
@@ -170,7 +163,7 @@ async def test_correcting_several_fields_sends_only_the_changed_ones() -> None:
     doors = MemoryRecordDoors((invoice_snapshot(),))
     detail = _detail(doors, invoice_snapshot().invoice_id)
     async with ScreenHostApp[None](detail).run_test(size=(110, 55)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         detail.query_one("#ledger-invoice-series", Input).value = "B"
         detail.query_one("#ledger-invoice-retention-rate", Input).value = "15"
         cast("Select[str]", detail.query_one("#ledger-invoice-payment-status", Select)).value = "PAID"
@@ -189,8 +182,8 @@ async def test_removing_an_invoice_asks_first_and_returns_to_the_catalogue() -> 
     doors = MemoryRecordDoors((kept, removed))
     detail = _detail(doors, removed.invoice_id)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(detail).run_test(size=(110, 55)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(detail).run_test(size=(110, 55)) as pilot:
+            await settle(pilot)
             await _press(pilot, detail, "ledger-invoice-remove")
             assert doors.writes == []
             dialog_message = str(pilot.app.screen.query_one("#confirm-message", Static).render())
@@ -201,8 +194,8 @@ async def test_removing_an_invoice_asks_first_and_returns_to_the_catalogue() -> 
                 total="121.00 EUR",
             )
             pilot.app.screen.query_one("#btn-confirm-accept", Button).press()
-            await _settle(pilot)
-            await _settle(pilot)
+            await settle(pilot)
+            await settle(pilot)
             assert doors.writes == [("remove", removed.invoice_id)]
             catalogue = pilot.app.screen
             assert isinstance(catalogue, LedgerInvoiceCatalogueScreen)
@@ -217,10 +210,10 @@ async def test_cancelling_a_removal_writes_nothing() -> None:
     doors = MemoryRecordDoors((invoice_snapshot(),))
     detail = _detail(doors, invoice_snapshot().invoice_id)
     async with ScreenHostApp[None](detail).run_test(size=(110, 55)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await _press(pilot, detail, "ledger-invoice-remove")
         pilot.app.screen.query_one("#btn-confirm-cancel", Button).press()
-        await _settle(pilot)
+        await settle(pilot)
         assert pilot.app.screen is detail
         assert doors.writes == []
         assert invoice_snapshot().invoice_id in doors.catalogue
@@ -237,10 +230,10 @@ async def test_a_refused_removal_is_shown_and_the_invoice_stays() -> None:
     )
     detail = _detail(doors, linked.invoice_id)
     async with ScreenHostApp[None](detail).run_test(size=(110, 55)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await _press(pilot, detail, "ledger-invoice-remove")
         pilot.app.screen.query_one("#btn-confirm-accept", Button).press()
-        await _settle(pilot)
+        await settle(pilot)
         assert pilot.app.screen is detail
         assert doors.writes == []
         assert _text(detail, "#ledger-refusal") == tr(
@@ -258,7 +251,7 @@ async def test_the_catalogue_renders_one_page_of_a_large_catalogue_and_pages_bot
     doors = MemoryRecordDoors(invoices)
     screen = _catalogue(doors)
     async with ScreenHostApp[None](screen).run_test(size=(120, 40)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         assert _keys(screen) == [row.invoice_id for row in invoices[:INVOICE_PAGE_SIZE]]
         assert screen.query_one("#ledger-invoice-previous", Button).disabled
         for _ in range(10):
@@ -276,11 +269,11 @@ async def test_back_from_an_invoice_lands_on_its_row_by_identity() -> None:
     chosen = invoices[INVOICE_PAGE_SIZE + 1]
     doors = MemoryRecordDoors(invoices)
     detail = _detail(doors, chosen.invoice_id)
-    async with _WorkspaceHostApp(detail).run_test(size=(120, 40)) as pilot:
-        await _settle(pilot)
+    async with WorkspaceHostApp(detail).run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
         await pilot.press("escape")
-        await _settle(pilot)
-        await _settle(pilot)
+        await settle(pilot)
+        await settle(pilot)
         catalogue = pilot.app.screen
         assert isinstance(catalogue, LedgerInvoiceCatalogueScreen)
         assert catalogue.page == 1
@@ -295,10 +288,10 @@ async def test_the_kind_filter_keeps_only_that_kind() -> None:
     doors = MemoryRecordDoors((issued, received))
     screen = _catalogue(doors)
     async with ScreenHostApp[None](screen).run_test(size=(120, 40)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         assert _keys(screen) == [issued.invoice_id, received.invoice_id]
         cast("Select[str]", screen.query_one("#ledger-invoice-kind-filter", Select)).value = InvoiceKind.ISSUED.value
-        await _settle(pilot)
+        await settle(pilot)
         assert _keys(screen) == [issued.invoice_id]
 
 
@@ -306,7 +299,7 @@ async def test_the_kind_filter_keeps_only_that_kind() -> None:
 async def test_an_empty_catalogue_says_so_and_a_refused_read_is_shown() -> None:
     empty = _catalogue(MemoryRecordDoors())
     async with ScreenHostApp[None](empty).run_test(size=(120, 40)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         assert _keys(empty) == []
         assert _text(empty, "#ledger-flow-status") == tr("tui.ledger.records.no_invoices")
         assert empty.query_one("#ledger-invoice-next", Button).disabled
@@ -315,7 +308,7 @@ async def test_an_empty_catalogue_says_so_and_a_refused_read_is_shown() -> None:
     doors.read_refusal = InvoiceValidationError(translated_message="tui.ledger.records.failed", context={})
     refused = _catalogue(doors)
     async with ScreenHostApp[None](refused).run_test(size=(120, 40)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         assert _text(refused, "#ledger-refusal") == tr("tui.ledger.records.failed")
 
 
@@ -324,7 +317,7 @@ async def test_imported_invoice_detail_shows_stored_filename_and_row() -> None:
     invoice = invoice_snapshot(source_filename="march-invoices.xlsx")
     detail = _detail(MemoryRecordDoors((invoice,)), invoice.invoice_id)
     async with ScreenHostApp[None](detail).run_test(size=(110, 55)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         assert "march-invoices.xlsx:7" in _text(detail, "#ledger-record-detail")
 
 
@@ -340,12 +333,11 @@ def _session_lost_with_unknown_outcome() -> SessionExpiredOutcomeUnknownError:
 
 async def _until_unknown(pilot: Pilot[None], screen: LedgerWorkspaceScreen) -> None:
     """Wait for the write to be worded as unknown, then for every worker it started to finish."""
-    loop = asyncio.get_running_loop()
-    deadline = loop.time() + 10
-    while _text(screen, "#ledger-flow-status") != tr("tui.ledger.flow.outcome_unknown"):
-        assert loop.time() < deadline, _text(screen, "#ledger-flow-status")
-        await pilot.pause()
-    await _settle(pilot)
+    await settle_until(
+        pilot,
+        lambda: _text(screen, "#ledger-flow-status") == tr("tui.ledger.flow.outcome_unknown"),
+        "the write to be worded as unknown",
+    )
 
 
 @pytest.mark.asyncio
@@ -356,7 +348,7 @@ async def test_an_invoice_correction_lost_with_its_session_and_outcome_unknown_i
     detail = _detail(doors, invoice_snapshot().invoice_id)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](detail).run_test(size=(110, 55)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             detail.query_one("#ledger-invoice-notes", Input).value = "after"
             await _press(pilot, detail, "ledger-invoice-edit-review")
             detail.query_one("#ledger-invoice-edit-save", Button).press()
@@ -377,7 +369,7 @@ async def test_an_invoice_removal_lost_with_its_session_and_outcome_unknown_is_n
     detail = _detail(doors, invoice.invoice_id)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](detail).run_test(size=(110, 55)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await _press(pilot, detail, "ledger-invoice-remove")
             pilot.app.screen.query_one("#btn-confirm-accept", Button).press()
             await _until_unknown(pilot, detail)
@@ -396,7 +388,7 @@ async def test_a_transaction_correction_lost_with_its_session_and_outcome_unknow
     screen = _transaction_screen(doors, transaction.transaction_id)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(110, 55)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             screen.query_one("#ledger-transaction-description", Input).value = "changed description"
             await _press(pilot, screen, "ledger-transaction-edit-review")
             screen.query_one("#ledger-transaction-edit-save", Button).press()
@@ -413,7 +405,7 @@ async def test_transaction_detail_stages_and_saves_only_the_changed_fields() -> 
     doors = MemoryRecordDoors(transactions=(transaction,))
     screen = _transaction_screen(doors, transaction.transaction_id)
     async with ScreenHostApp[None](screen).run_test(size=(110, 55)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         screen.query_one("#ledger-transaction-description", Input).value = "changed description"
         screen.query_one("#ledger-transaction-taxable-base", Input).value = "100.00"
         cast("Select[str]", screen.query_one("#ledger-transaction-direction", Select)).value = "INCOMING"
@@ -446,7 +438,7 @@ async def test_linked_transaction_detail_shows_refusal_without_claiming_a_save()
     )
     screen = _transaction_screen(doors, transaction.transaction_id)
     async with ScreenHostApp[None](screen).run_test(size=(110, 55)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         screen.query_one("#ledger-transaction-description", Input).value = "changed description"
         await _press(pilot, screen, "ledger-transaction-edit-review")
         await _press(pilot, screen, "ledger-transaction-edit-save")
@@ -462,7 +454,7 @@ async def test_a_transaction_correction_against_a_changed_record_is_refused_with
     doors = MemoryRecordDoors(transactions=(transaction,))
     screen = _transaction_screen(doors, transaction.transaction_id)
     async with ScreenHostApp[None](screen).run_test(size=(110, 55)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         screen.query_one("#ledger-transaction-notes", Input).value = "mine"
         await _press(pilot, screen, "ledger-transaction-edit-review")
         doors.transactions[transaction.transaction_id] = transaction_projection(description="changed elsewhere")
@@ -529,19 +521,19 @@ async def test_every_record_door_runs_in_a_worker_off_the_input_handlers() -> No
     doors = _WorkerOnlyDoors()
     catalogue = _catalogue(doors)
     async with ScreenHostApp[None](catalogue).run_test(size=(110, 55)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
     detail = _detail(doors, invoice_snapshot().invoice_id)
     async with ScreenHostApp[None](detail).run_test(size=(110, 55)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         detail.query_one("#ledger-invoice-notes", Input).value = "after"
         await _press(pilot, detail, "ledger-invoice-edit-review")
         await _press(pilot, detail, "ledger-invoice-edit-save")
         await _press(pilot, detail, "ledger-invoice-remove")
         pilot.app.screen.query_one("#btn-confirm-accept", Button).press()
-        await _settle(pilot)
+        await settle(pilot)
     transaction = _transaction_screen(doors, transaction_projection().transaction_id)
     async with ScreenHostApp[None](transaction).run_test(size=(110, 55)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         transaction.query_one("#ledger-transaction-description", Input).value = "changed"
         await _press(pilot, transaction, "ledger-transaction-edit-review")
         await _press(pilot, transaction, "ledger-transaction-edit-save")
@@ -580,7 +572,7 @@ async def test_record_screens_fit_every_supported_terminal(theme: str, size: tup
         with override_settings(cadrumo_output_language="en"):
             async with app.run_test(size=size) as pilot:
                 app.theme = theme
-                await _settle(pilot)
+                await settle(pilot)
                 _assert_geometry(app, screen, size[0])
 
 
@@ -588,7 +580,7 @@ async def test_record_screens_fit_every_supported_terminal(theme: str, size: tup
 async def test_a_refused_record_read_is_shown_and_nothing_can_be_staged() -> None:
     missing_invoice = _detail(MemoryRecordDoors(), invoice_snapshot().invoice_id)
     async with ScreenHostApp[None](missing_invoice).run_test(size=(110, 55)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         assert _text(missing_invoice, "#ledger-refusal") == tr(
             "application.invoices.lifecycle.errors.invoice_not_found", invoice_id=invoice_snapshot().invoice_id
         )
@@ -597,6 +589,6 @@ async def test_a_refused_record_read_is_shown_and_nothing_can_be_staged() -> Non
 
     missing_transaction = _transaction_screen(MemoryRecordDoors(), transaction_projection().transaction_id)
     async with ScreenHostApp[None](missing_transaction).run_test(size=(110, 55)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         assert _text(missing_transaction, "#ledger-refusal") == tr(STALE_KEY)
         assert missing_transaction.query_one("#ledger-transaction-edit-review", Button).disabled

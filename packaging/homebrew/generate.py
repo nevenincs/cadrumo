@@ -22,7 +22,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 def _load_packaging_helpers():
     """Load repository tooling after direct-script path bootstrapping."""
-    from dev.packaging._distribution_names import normalise_distribution_name
+    from dev.packaging.distribution_names import normalise_distribution_name
     from dev.packaging.hashing import sha256_path
     from dev.packaging.python_cohort import load_python_cohort
 

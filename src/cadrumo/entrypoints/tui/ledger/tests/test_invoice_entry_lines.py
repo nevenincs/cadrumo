@@ -7,8 +7,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from textual.pilot import Pilot
-from textual.widget import Widget
 from textual.widgets import Button, Input, Select, Static
 
 from .....core.aggregation import IntracomOperationType
@@ -16,6 +14,7 @@ from .....core.config import override_settings
 from .....core.i18n.render import lookup_translation
 from .....domain.iva.schema import InvoiceKind
 from ...components.host import ScreenHostApp
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..invoice_entry import LedgerInvoiceEntryScreen
 from ..models import (
@@ -115,42 +114,19 @@ def _text(screen: LedgerInvoiceEntryScreen, selector: str) -> str:
     return str(screen.query_one(selector, Static).render())
 
 
-_SETTLE_BARRIER_LIMIT = 400
-"""Bounds a screen that never settles; a loaded machine settles in a handful of pauses."""
-
-
-async def _settle(pilot: Pilot[None]) -> None:
-    """Return once every message a press posted is handled and every worker it started has finished.
-
-    ``Button.press`` only posts ``Pressed``, which bubbles from parent to
-    parent and can reach the screen after the screen has answered a pause.
-    Neither one pause nor joining the workers straight after the press waits
-    for the handler, or for the write it starts.
-    """
-    for _ in range(_SETTLE_BARRIER_LIMIT):
-        await pilot.pause()
-        screen = pilot.app.screen
-        pumps = (pilot.app, screen, *screen.walk_children(Widget))
-        if all(pump.message_queue_size == 0 for pump in pumps) and all(
-            worker.is_finished for worker in pilot.app.workers
-        ):
-            return
-    raise AssertionError("the invoice entry never settled")
-
-
 @pytest.mark.asyncio
 async def test_mixed_rate_lines_and_invoice_facts_reach_the_add_door_as_typed() -> None:
     door = _RecordingDoor()
     screen = _entry_screen(door)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(110, 200)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _header(screen)
             _fill(screen, operation_date="2026-03-14", recargo_amount="0.77", rectifies_invoice_number="LINES-000")
             screen.query_one("#ledger-invoice-operation-type", Select).value = IntracomOperationType.A.value
             for line in _LINES:
                 _type_line(screen, line)
-                await _settle(pilot)
+                await settle(pilot)
             listing = _text(screen, "#ledger-invoice-lines")
             assert "1. Printer paper" in listing
             assert "2. Reference book" in listing
@@ -158,7 +134,7 @@ async def test_mixed_rate_lines_and_invoice_facts_reach_the_add_door_as_typed() 
             assert not screen.query_one("#ledger-invoice-line-remove", Button).disabled
 
             screen.query_one("#ledger-invoice-review", Button).press()
-            await _settle(pilot)
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.CONFIRMING, _text(screen, "#ledger-refusal")
             summary = _text(screen, "#ledger-invoice-summary")
             assert "Printer paper" in summary
@@ -170,7 +146,7 @@ async def test_mixed_rate_lines_and_invoice_facts_reach_the_add_door_as_typed() 
             assert not door.entries
 
             screen.query_one("#ledger-invoice-confirm", Button).press()
-            await _settle(pilot)
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.SUCCEEDED, _text(screen, "#ledger-refusal")
 
     assert len(door.entries) == 1
@@ -190,9 +166,9 @@ async def test_a_line_that_cannot_be_read_is_not_added_and_names_every_field() -
     screen = _entry_screen(door)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(110, 200)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _type_line(screen, {**_LINES[0], "quantity": "one", "iva_amount": ""})
-            await pilot.pause()
+            await settle(pilot)
             refusal = _text(screen, "#ledger-refusal")
             assert "Quantity must be a number" in refusal
             amount_label = lookup_translation("tui.ledger.invoice.line.field.iva_amount", locale="en")
@@ -210,22 +186,22 @@ async def test_an_invoice_is_entered_by_lines_or_by_one_base_never_both_and_neve
     screen = _entry_screen(door)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(110, 200)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _header(screen)
             _type_line(screen, _LINES[0])
-            await pilot.pause()
+            await settle(pilot)
             _fill(screen, taxable_base="10.00", iva_rate="21")
             screen.query_one("#ledger-invoice-review", Button).press()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.EDITING
             assert "either as lines or as one taxable base" in _text(screen, "#ledger-refusal")
 
             screen.query_one("#ledger-invoice-line-remove", Button).press()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.lines == []
             _fill(screen, taxable_base="", iva_rate="")
             screen.query_one("#ledger-invoice-review", Button).press()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.EDITING
             assert "Enter a taxable base, or add at least one invoice line." in _text(screen, "#ledger-refusal")
     assert not door.entries
@@ -243,18 +219,18 @@ async def test_invoice_amounts_and_dates_refuse_every_shape_the_command_line_ref
     refused_amounts = ("1e3", "+5", "1_000", "NaN", "Infinity", "1.234", "10.005")
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(110, 200)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _header(screen)
             for raw in refused_dates:
                 _fill(screen, invoice_date=raw, taxable_base="10.00", iva_rate="21")
                 screen.query_one("#ledger-invoice-review", Button).press()
-                await pilot.pause()
+                await settle(pilot)
                 assert screen.flow_state is LedgerFlowState.EDITING, raw
                 assert f"{date_label} must be a date written YYYY-MM-DD." in _text(screen, "#ledger-refusal"), raw
             for raw in refused_amounts:
                 _fill(screen, invoice_date="2026-03-15", taxable_base=raw, iva_rate="21")
                 screen.query_one("#ledger-invoice-review", Button).press()
-                await pilot.pause()
+                await settle(pilot)
                 assert screen.flow_state is LedgerFlowState.EDITING, raw
                 assert f"{base_label} must be a number" in _text(screen, "#ledger-refusal"), raw
     assert not door.entries
@@ -266,16 +242,16 @@ async def test_a_line_number_outside_the_canonical_grammar_is_refused_but_sub_ce
     screen = _entry_screen(door)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(110, 200)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             for raw in ("1e3", "+5", "1_000", "NaN", "-Infinity"):
                 _type_line(screen, {**_LINES[0], "quantity": raw})
-                await pilot.pause()
+                await settle(pilot)
                 assert "Quantity must be a number" in _text(screen, "#ledger-refusal"), raw
                 assert screen.lines == [], raw
             _type_line(screen, {**_LINES[0], "quantity": "8", "unit_price": "1.25", "subtotal": "10.00"})
-            await pilot.pause()
+            await settle(pilot)
             _type_line(screen, {**_LINES[1], "quantity": "40", "unit_price": "0.125", "subtotal": "5.00"})
-            await pilot.pause()
+            await settle(pilot)
             assert [line.unit_price for line in screen.lines] == [Decimal("1.25"), Decimal("0.125")]
     assert not door.entries
 
@@ -287,24 +263,23 @@ async def test_an_issued_business_premises_lease_reaches_the_add_door_with_its_p
     screen = _entry_screen(door)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(110, 220)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _header(screen)
             screen.query_one("#ledger-invoice-kind", Select).value = InvoiceKind.ISSUED.value
             screen.query_one("#ledger-invoice-lease", Select).value = str(True)
             screen.query_one("#ledger-invoice-situacion-inmueble", Select).value = "1"
             _fill(screen, referencia_catastral="9872023VH5797S0001WX")
             _type_line(screen, _LINES[0])
-            await pilot.pause()
+            await settle(pilot)
 
             screen.query_one("#ledger-invoice-review", Button).press()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.CONFIRMING, _text(screen, "#ledger-refusal")
             assert "Business premises lease · situación 1 · referencia catastral 9872023VH5797S0001WX" in _text(
                 screen, "#ledger-invoice-summary"
             )
             screen.query_one("#ledger-invoice-confirm", Button).press()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
 
     (entry,) = door.entries
     assert entry.kind is InvoiceKind.ISSUED
@@ -319,16 +294,15 @@ async def test_an_invoice_entered_without_the_lease_choice_states_no_lease() -> 
     screen = _entry_screen(door)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(110, 220)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _header(screen)
             _type_line(screen, _LINES[0])
-            await pilot.pause()
+            await settle(pilot)
             screen.query_one("#ledger-invoice-review", Button).press()
-            await pilot.pause()
+            await settle(pilot)
             assert "Business premises lease" not in _text(screen, "#ledger-invoice-summary")
             screen.query_one("#ledger-invoice-confirm", Button).press()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
 
     (entry,) = door.entries
     assert entry.arrendamiento_local_negocio is False

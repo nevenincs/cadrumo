@@ -102,10 +102,10 @@ export function CalendarMonth({
           </Button>
         )}
       </div>
-      <div className="overflow-hidden rounded-lg border bg-card">
+      <div className="overflow-hidden rounded-lg bg-card">
         <div
           aria-hidden="true"
-          className="grid grid-cols-7 border-b bg-chrome py-0.5 text-center text-2xs font-medium text-muted-foreground"
+          className="grid grid-cols-7 bg-chrome py-0.5 text-center text-2xs font-medium text-muted-foreground"
         >
           {weekdays.map((letter, column) => (
             <span key={column}>{letter}</span>
@@ -114,7 +114,7 @@ export function CalendarMonth({
         {month.weeks.map((week, row) => (
           <div
             key={row}
-            className="grid min-h-9 grid-cols-7 content-start gap-y-1 border-b pb-1 last:border-b-0"
+            className="grid min-h-9 grid-cols-7 content-start gap-y-1 pb-1"
           >
             {week.days.map((cell, column) => (
               <div

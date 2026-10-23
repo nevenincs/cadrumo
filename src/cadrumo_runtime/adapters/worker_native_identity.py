@@ -7,10 +7,10 @@ from uuid import UUID, uuid5
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.posix_channel import PosixChannel
 from cadrumo_client.transport.windows_channel import WindowsChannel
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 
 from .linux_worker_process import LinuxProcessScope
 from .macos_worker_process import MacosProcessScope
-from .windows_process import WindowsProcessScope
 from .worker_transport import WorkerChannel
 
 

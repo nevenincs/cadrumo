@@ -24,6 +24,7 @@ from ......core.i18n.render import tr
 from ......core.period import Period
 from ......domain.modelos.verification_report import VerificationCompletenessStatus
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry
 from ..casilla_list_values import row_value_text
@@ -70,7 +71,7 @@ async def test_the_named_recovery_key_leads_to_the_source_box_and_keeps_the_stag
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             assert screen._session.stage_value(answer, Decimal(42), "42") is None
             screen._refresh_after_staging()
             screen._apply_prerequisite = WorkbenchApplyPrerequisite(
@@ -79,12 +80,12 @@ async def test_the_named_recovery_key_leads_to_the_source_box_and_keeps_the_stag
                 source_boxes=("1391",),
             )
             assert screen._state_apply_prerequisite()
-            await pilot.pause()
+            await settle(pilot)
             assert str(screen.query_one("#wb-next", Static).render()).endswith("[i]")
             assert screen.active_bindings["i"].binding.show
             assert "[01]" in str(screen.query_one("#wb-notice", Static).render())
             await pilot.press("i")
-            await pilot.pause()
+            await settle(pilot)
             issues = app.screen
             assert isinstance(issues, WorkbenchIssuesScreen)
             diagnostic = issues._lines[0]
@@ -94,19 +95,19 @@ async def test_the_named_recovery_key_leads_to_the_source_box_and_keeps_the_stag
             assert diagnostic.action == tr("tui.modelo.workbench.apply_prerequisite.action")
             assert diagnostic.action_targets_box
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             listing = screen.query_one(CasillaList)
             assert listing.highlighted is not None and listing.highlighted.field.address == source.address
             painted = "\n".join(listing.render_line(y).text for y in range(listing.scrollable_content_region.height))
             assert "[01]" in painted
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             panel = open_panel(app.screen)
             assert panel is not None and not panel.read_only
             assert panel.field.value == Decimal(0) and panel.field.origin is ModeloFormOrigin.IMPORTED
             assert len(screen.staged_changes) == 1 and screen.staged_changes[0].value == Decimal(42)
             await pilot.press("escape")
-            await pilot.pause()
+            await settle(pilot)
             screen._session.discard()
             screen._refresh_after_staging()
             assert screen._active_apply_prerequisite() is None
@@ -168,19 +169,19 @@ async def test_reentering_a_staged_value_shows_and_prefills_the_draft_in_both_ed
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, height)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             assert value is not None
             display = format_casilla_value(value, data_type=answer.data_type, language=language)
             assert screen._session.stage_value(answer, value, display) is None
             screen._refresh_after_staging()
             screen._go_to(address_key(answer.address))
-            await pilot.pause()
+            await settle(pilot)
             listing = screen.query_one(CasillaList)
             assert listing.highlighted is not None
             assert tr("tui.modelo.workbench.attention.staged") in screen._state_line(listing.highlighted)
             assert "○" not in screen._state_line(listing.highlighted)
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             panel = open_panel(app.screen)
             assert panel is not None and not panel.read_only
             now = str(panel.query_one("#editor-now-text", Static).render())
@@ -233,15 +234,15 @@ async def test_reentering_clear_and_restore_displays_the_intent_separately_from_
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, height)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             method = screen._session.stage_clear if intent == "clear" else screen._session.stage_restore
             assert method(answer) is None
             staged = screen.staged_changes[0]
             screen._refresh_after_staging()
             screen._go_to(address_key(answer.address))
-            await pilot.pause()
+            await settle(pilot)
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             panel = open_panel(app.screen)
             assert panel is not None
             assert staged.text in str(panel.query_one("#editor-now-text", Static).render())

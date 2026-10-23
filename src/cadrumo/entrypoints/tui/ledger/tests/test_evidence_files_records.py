@@ -14,6 +14,7 @@ from .....application.ledger.evidence_read_operation import LedgerEvidenceQueryR
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from ...components.dialogs import ConfirmScreen
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..evidence_files_doors import LEDGER_EVIDENCE_FILES_PAGE_SIZE
 from ..evidence_files_records import LedgerEvidenceFilesRecordsScreen
@@ -24,12 +25,10 @@ from .evidence_files_fixtures import (
     EVIDENCE_FILES_REFUSAL_KEY,
     MemoryEvidenceFilesStore,
     press,
-    settle,
     synthetic_evidence_id,
     text_of,
 )
-from .test_ledger_selection_journey import _WorkspaceHostApp
-from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -66,7 +65,7 @@ async def test_a_correction_is_reviewed_confirmed_and_returns_to_the_same_record
     store = MemoryEvidenceFilesStore()
     store.seed_records(3)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             assert _keys(pilot) == [synthetic_evidence_id(index) for index in (1, 2, 3)]
             await _select(pilot, 1)
@@ -119,7 +118,7 @@ async def test_a_removal_cancelled_at_its_dialog_writes_nothing_and_a_confirmed_
     store = MemoryEvidenceFilesStore()
     store.seed_records(2)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             await _select(pilot, 0)
             await press(pilot, "evidence-files-review-remove")
@@ -156,7 +155,7 @@ async def test_cancelling_a_staged_correction_returns_to_the_list_without_writin
     store = MemoryEvidenceFilesStore()
     store.seed_records(1)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             await _select(pilot, 0)
             _type(pilot, "#evidence-files-field-notes", "Revisar con la gestoría")
@@ -172,7 +171,7 @@ async def test_a_refused_correction_is_shown_on_the_write_step() -> None:
     store.seed_records(1)
     store.refusing.add("update")
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             await _select(pilot, 0)
             _type(pilot, "#evidence-files-field-invoice-number", "F-2026-0099")
@@ -190,7 +189,7 @@ async def test_an_unchanged_or_malformed_correction_is_refused_before_review() -
     store = MemoryEvidenceFilesStore()
     store.seed_records(1)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             await _select(pilot, 0)
             await press(pilot, "evidence-files-review-update")
@@ -211,7 +210,7 @@ async def test_without_a_selection_nothing_can_be_staged() -> None:
     store = MemoryEvidenceFilesStore()
     store.seed_records(1)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             screen = pilot.app.screen
             assert screen.query_one("#evidence-files-review-update", Button).disabled
@@ -223,7 +222,7 @@ async def test_without_a_selection_nothing_can_be_staged() -> None:
 async def test_an_empty_list_says_so_and_a_typed_refusal_is_shown() -> None:
     store = MemoryEvidenceFilesStore()
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             assert _records(pilot).row_count == 0
             assert text_of(pilot.app.screen, "#ledger-flow-status") == tr("tui.ledger.evidence_files.records.empty")
@@ -238,7 +237,7 @@ async def test_the_identity_filter_is_the_query_s_own_and_a_miss_says_none_match
     store = MemoryEvidenceFilesStore()
     store.seed_records(3)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             _type(pilot, "#evidence-files-filter", synthetic_evidence_id(3))
             await press(pilot, "evidence-files-search")
@@ -258,7 +257,7 @@ async def test_a_thousand_records_render_one_page_and_page_forward_and_back() ->
     store = MemoryEvidenceFilesStore()
     store.seed_records(1_050)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             screen = pilot.app.screen
             assert _records(pilot).row_count == LEDGER_EVIDENCE_FILES_PAGE_SIZE
@@ -284,7 +283,7 @@ async def test_a_record_removed_elsewhere_and_a_lost_session_both_clear_the_view
     store = MemoryEvidenceFilesStore()
     store.seed_records(2)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             del store.records[synthetic_evidence_id(1)]
             await _select(pilot, 0)

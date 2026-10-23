@@ -183,6 +183,17 @@ def _write_bounded_reply(
             payload_digest=sha256_hex(payload),
         )
         write_document(channel, header, deadline=deadline)
+    except (ValueError, TypeError) as failure:
+        raise _invalid_transfer(channel, failure) from None
+    except BaseException as error:
+        close_transport_after_failure(channel, error)
+        raise
+    write_document_transfer(channel, payload, deadline=deadline)
+
+
+def write_document_transfer(channel: ByteChannel, payload: bytes, *, deadline: float) -> None:
+    """Write one canonical document as ordered bounded chunks after the header announcing it."""
+    try:
         for offset in range(0, len(payload), SUBMISSION_PAYLOAD_CHUNK_BYTES):
             write_document(
                 channel,
@@ -193,15 +204,45 @@ def _write_bounded_reply(
                 deadline=deadline,
             )
     except (ValueError, TypeError) as failure:
-        error = RefusalError(RefusalCode.INVALID_FRAME)
-        for name in ("_transport_cleanup", "async_cleanup_error"):
-            if name in failure.__dict__:
-                error.__dict__[name] = failure.__dict__[name]
-        close_transport_after_failure(channel, error)
-        raise error from None
+        raise _invalid_transfer(channel, failure) from None
     except BaseException as error:
         close_transport_after_failure(channel, error)
         raise
+
+
+def read_document_transfer[Model: BaseModel](
+    channel: ByteChannel, descriptor: SubmissionPayloadDescriptor, model: type[Model], *, deadline: float
+) -> Model:
+    """Release one strictly decoded document only once its chunks reproduce the announced bytes.
+
+    A missing, reordered or resized chunk, a digest mismatch or an invalid
+    document refuses as an invalid frame and closes the transport.
+    """
+    buffer = SubmissionPayloadBuffer(descriptor)
+    try:
+        for _ in range(0, descriptor.byte_count, SUBMISSION_PAYLOAD_CHUNK_BYTES):
+            buffer.append(read_document(channel, SubmissionPayloadChunk, deadline=deadline))
+        document = json.loads(
+            buffer.finish(), object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant
+        )
+        return model.model_validate_json(canonical_json_bytes(document))
+    except (ValueError, TypeError, RecursionError) as failure:
+        raise _invalid_transfer(channel, failure) from None
+    except BaseException as error:
+        close_transport_after_failure(channel, error)
+        raise
+    finally:
+        buffer.close()
+
+
+def _invalid_transfer(channel: ByteChannel, failure: BaseException) -> RefusalError:
+    """Close the transport for a refused transfer, keeping any cleanup failure it carried."""
+    error = RefusalError(RefusalCode.INVALID_FRAME)
+    for name in ("_transport_cleanup", "async_cleanup_error"):
+        if name in failure.__dict__:
+            error.__dict__[name] = failure.__dict__[name]
+    close_transport_after_failure(channel, error)
+    return error
 
 
 def read_profile_status(channel: ByteChannel, header: ProfileStatusTransfer, *, deadline: float) -> ProfileStatus:
@@ -227,35 +268,21 @@ def _read_bounded_reply[Reply: ProfileStatus | SessionInventoryReply](
     *,
     deadline: float,
 ) -> Reply:
-    buffer = SubmissionPayloadBuffer(
-        SubmissionPayloadDescriptor(byte_count=header.byte_count, payload_digest=header.payload_digest)
+    reply = read_document_transfer(
+        channel,
+        SubmissionPayloadDescriptor(byte_count=header.byte_count, payload_digest=header.payload_digest),
+        reply_type,
+        deadline=deadline,
     )
-    try:
-        for _ in range(0, header.byte_count, SUBMISSION_PAYLOAD_CHUNK_BYTES):
-            buffer.append(read_document(channel, SubmissionPayloadChunk, deadline=deadline))
-        document = json.loads(
-            buffer.finish(), object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant
-        )
-        reply = reply_type.model_validate_json(canonical_json_bytes(document))
-        if (reply.request_id, reply.runtime_boot_id, reply.connection_id) != (
-            header.request_id,
-            header.runtime_boot_id,
-            header.connection_id,
-        ):
-            raise ValueError("runtime reply transfer identity mismatch")
-        return reply
-    except (ValueError, TypeError, RecursionError) as failure:
+    if (reply.request_id, reply.runtime_boot_id, reply.connection_id) != (
+        header.request_id,
+        header.runtime_boot_id,
+        header.connection_id,
+    ):
         error = RefusalError(RefusalCode.INVALID_FRAME)
-        for name in ("_transport_cleanup", "async_cleanup_error"):
-            if name in failure.__dict__:
-                error.__dict__[name] = failure.__dict__[name]
         close_transport_after_failure(channel, error)
-        raise error from None
-    except BaseException as error:
-        close_transport_after_failure(channel, error)
-        raise
-    finally:
-        buffer.close()
+        raise error
+    return reply
 
 
 def write_secret(channel: ByteChannel, secret: bytearray, *, deadline: float) -> None:

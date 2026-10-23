@@ -614,12 +614,36 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         self._refreshes_returned = 0
         """The number of the last re-read that returned the workspace, or ``0`` before any did."""
         self._after_refresh: Callable[[], object] | None = None
+        """The operator's next step once the running re-read lands; a later request replaces it."""
+        self._kept_after_refresh: list[Callable[[], object]] = []
+        """Continuations every landing re-read runs, in the order they were asked for; none is replaced."""
         self.refresh_seconds: list[float] = []
         """How long each completed re-read took, newest last."""
         self.back_area: LedgerWorkspaceArea | None = None
         """The area Back returns to when this body was opened as one of its tools."""
-        self.write_outcome_unknown = False
+        self._write_outcome_unknown = False
+        self._unknown_after_refresh = 0
+        """How many re-reads had started when the last unknown outcome arrived; only a later one can show it."""
+
+    @property
+    def write_outcome_unknown(self) -> bool:
         """Whether a write this body submitted ended without a known outcome, so the workspace must be re-read."""
+        return self._write_outcome_unknown
+
+    @write_outcome_unknown.setter
+    def write_outcome_unknown(self, unknown: bool) -> None:
+        self._write_outcome_unknown = unknown
+        self._unknown_after_refresh = self._refreshes_started
+
+    @property
+    def unknown_outcome_unread(self) -> bool:
+        """Whether a write's outcome is unknown and no workspace re-read started after it has returned.
+
+        Such a re-read shows whether the write landed, so a later failed
+        re-read, after a write that was saved, is worded as saved. A re-read
+        that started before the outcome arrived shows nothing about it.
+        """
+        return self._write_outcome_unknown and self._refreshes_returned <= self._unknown_after_refresh
 
     @property
     def in_flight(self) -> bool:
@@ -664,19 +688,27 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
             self.write_outcome_unknown = True
         return tr("tui.ledger.flow.outcome_unknown")
 
-    def refresh_then(self, then: Callable[[], object]) -> None:
+    def refresh_then(self, then: Callable[[], object], *, kept: bool = False) -> None:
         """Re-read the workspace off the event loop, then continue with ``then``.
 
         A capture reads every catalogue the workspace projects, which takes
-        seconds on a real ledger; on the loop that froze every key. A request
-        made while one is already running does not start a second read: it
-        replaces what happens when the running one lands, so the operator's
-        last intent wins and the store is read once.
+        seconds on a real ledger; on the loop that froze every key. Only one
+        read runs at a time: a request made while one is running joins it.
+
+        ``then`` is the operator's next step by default. One step is held, and
+        a later request replaces it, so the operator's last intent wins: Back
+        pressed twice leaves once. A ``kept`` continuation is bookkeeping that
+        must run whatever the operator asks for next. Each one is run, in the
+        order it was asked for, when the read lands, and before the operator's
+        step, which may leave this body.
         """
         if not self.controller.can_refresh():
             then()
             return
-        self._after_refresh = then
+        if kept:
+            self._kept_after_refresh.append(then)
+        else:
+            self._after_refresh = then
         if self.refreshing:
             return
         self.refreshing = True
@@ -689,7 +721,9 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         Unlike :meth:`refresh_then`, a re-read already running does not count:
         it may have started before the change the workspace must now show, so
         once it lands another one is started. ``then`` is told ``False`` when
-        the re-read failed or the workspace cannot be re-read at all.
+        the re-read failed or the workspace cannot be re-read at all. It is a
+        kept continuation, so a step the operator asks for meanwhile, a saved
+        write's own re-read included, cannot drop it.
         """
         if not self.controller.can_refresh():
             then(False)
@@ -698,11 +732,11 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
 
         def landed() -> None:
             if self._refreshes_finished <= after:
-                self.refresh_then(landed)
+                self.refresh_then(landed, kept=True)
                 return
             then(self._refreshes_returned > after)
 
-        self.refresh_then(landed)
+        self.refresh_then(landed, kept=True)
 
     async def _refresh(self) -> None:
         started = asyncio.get_running_loop().time()
@@ -711,10 +745,11 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         try:
             self.controller = await asyncio.to_thread(self.controller.refreshed)
         except CadrumoError:
-            # After an unknown outcome the change is not known to be saved, so the failure must not say it was.
+            # After an unknown outcome not yet read back the change is not known to be saved, so the failure
+            # must not say it was.
             failed = (
                 "tui.ledger.flow.refresh_failed_unknown"
-                if self.write_outcome_unknown
+                if self.unknown_outcome_unread
                 else "tui.ledger.flow.refresh_failed"
             )
             self._status_line().update(tr(failed))
@@ -725,7 +760,10 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
             self._refreshes_finished = number
             self.refreshing = False
             self.refresh_seconds.append(asyncio.get_running_loop().time() - started)
+        kept, self._kept_after_refresh = self._kept_after_refresh, []
         then, self._after_refresh = self._after_refresh, None
+        for each in kept:
+            each()
         if then is not None:
             then()
 

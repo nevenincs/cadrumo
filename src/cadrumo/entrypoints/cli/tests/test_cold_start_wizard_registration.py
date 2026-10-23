@@ -38,7 +38,6 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-import textwrap
 from collections.abc import Generator
 from pathlib import Path
 
@@ -56,11 +55,16 @@ from cadrumo.tests.inventory import REPO_ROOT
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
+def _aeat_executable() -> Path:
+    """Return the installed ``aeat`` console script, the operator's door to the CLI."""
+    scripts = Path(sys.prefix) / ("Scripts" if sys.platform == "win32" else "bin")
+    return scripts / ("aeat.exe" if sys.platform == "win32" else "aeat")
+
+
 @pytest.fixture(autouse=True)
 def _owned_cold_runtime(tmp_path: Path, *, installed_process_world: InstalledProcessWorld) -> Generator[None]:
     """Serve the cold processes from their real runtime without importing their CLI."""
-    scripts = Path(sys.prefix) / ("Scripts" if sys.platform == "win32" else "bin")
-    executable = scripts / ("aeat.exe" if sys.platform == "win32" else "aeat")
+    executable = _aeat_executable()
     tmp_path.mkdir(parents=True, exist_ok=True)
     environment = installed_process_world.environment(
         storage_root=tmp_path, authority_root=bundled_authority_descriptor_path().parent
@@ -107,7 +111,7 @@ def _workspace_secret_store_fingerprint() -> dict[str, tuple[int, int] | None]:
 def _run_cli_cold(
     storage_root: Path, argv: list[str], *, authenticate: bool = False, installed_process_world: InstalledProcessWorld
 ) -> subprocess.CompletedProcess[str]:
-    """Invoke the ``cadrumo`` CLI in a fresh interpreter against ``storage_root``.
+    """Invoke the installed ``aeat`` CLI in a fresh process against ``storage_root``.
 
     A new process guarantees an empty ``sys.modules``: the only path that can
     register the wizard catalogue is the root callback exercised by ``argv``.
@@ -115,22 +119,11 @@ def _run_cli_cold(
 
     if authenticate:
         argv = ["--profile-secrets-stdin", *argv]
-    code = f"""
-        import sys
-
-        sys.argv = ["aeat", *{argv!r}]
-        from cadrumo_runtime.host.frontend.cli.bootstrap import main
-
-        try:
-            main()
-        except SystemExit as exit_:
-            raise SystemExit(exit_.code)
-        """
     env = installed_process_world.environment(
         storage_root=storage_root, authority_root=bundled_authority_descriptor_path().parent
     )
     return subprocess.run(
-        [sys.executable, "-c", textwrap.dedent(code)],
+        [str(_aeat_executable()), *argv],
         input=(
             json.dumps({"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()})
             if authenticate

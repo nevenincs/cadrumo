@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import math
-from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
 from functools import lru_cache
@@ -16,7 +15,6 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 from textual.app import App
-from textual.pilot import Pilot
 from textual.widgets import Button, Link, Static
 
 from cadrumo_client.contracts.contracts import RefusalError
@@ -60,6 +58,7 @@ from ...operation_composition import build_production_operation_registry
 from ...review_publication_labels import GoogleReviewLabels
 from ..google_saved_review import GoogleSavedReviewModal, GoogleSavedReviewScreen, validate_saved_google_review
 from ..operations.interactions import OperationModalReviewInteractionV1
+from .settling import settle, settle_until
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -280,13 +279,6 @@ class _Controller:
         )
 
 
-async def _until(pilot: Pilot[None], predicate: Callable[[], bool]) -> None:
-    async with asyncio.timeout(10):
-        while not predicate():
-            await pilot.pause(0.02)
-    await pilot.pause()
-
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "defect", ["none", "receipt", "session", "review", "review-operation", "review-revision", "reject", "click"]
@@ -315,16 +307,23 @@ async def test_installed_screen_requires_exact_human_review_before_showing_regis
     app: App[None] = App()
     async with app.run_test(size=(120, 45)) as pilot:
         app.push_screen(screen)
-        await _until(pilot, lambda: isinstance(app.screen, GoogleSavedReviewModal))
+        await settle_until(
+            pilot,
+            lambda: isinstance(app.screen, GoogleSavedReviewModal),
+            "the saved review modal to open",
+            workers=False,
+        )
         modal = app.screen
         assert isinstance(modal, GoogleSavedReviewModal)
-        await _until(
+        await settle_until(
             pilot,
             lambda: bool(
                 modal.query_one(
                     "#operation-modal-status" if defect.startswith("review") else "#operation-modal-review", Static
                 ).content
             ),
+            "the review or its refusal to show",
+            workers=False,
         )
         controller = controllers[0]
         assert controller.request.calculation_revision_id == "c" * 64
@@ -345,14 +344,19 @@ async def test_installed_screen_requires_exact_human_review_before_showing_regis
                 interaction, projection=controller.review.model_copy(update={"root_folder_id": "substituted-root"})
             )
             await pilot.click("#btn-operation-apply")
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert controller.applies == controller.reads == 0
             assert modal.query_one("#btn-operation-apply", Button).disabled
             assert not screen.query_one(Link).url
             return
         await pilot.click("#btn-operation-reject" if defect == "reject" else "#btn-operation-apply")
-        await _until(pilot, lambda: app.screen is screen)
-        await _until(pilot, lambda: bool(screen.query_one("#saved-google-review-notice", Static).content))
+        await settle_until(pilot, lambda: app.screen is screen, "the saved review screen to return", workers=False)
+        await settle_until(
+            pilot,
+            lambda: bool(screen.query_one("#saved-google-review-notice", Static).content),
+            "the saved review notice to show",
+            workers=False,
+        )
         link = screen.query_one(Link)
         assert link.disabled is (defect != "none")
         if defect == "none":
@@ -398,7 +402,7 @@ async def test_delayed_first_observation_does_not_offer_an_unverified_response()
     app: App[None] = App()
     async with app.run_test() as pilot:
         app.push_screen(modal)
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert modal.query_one("#btn-operation-apply", Button).disabled
         assert modal.query_one("#btn-operation-reject", Button).disabled
         assert not modal.query_one("#btn-operation-close", Button).disabled
@@ -406,7 +410,12 @@ async def test_delayed_first_observation_does_not_offer_an_unverified_response()
         await pilot.click("#btn-operation-apply")
         assert controller.applies == 0
         first_read.set()
-        await _until(pilot, lambda: not modal.query_one("#btn-operation-apply", Button).disabled)
+        await settle_until(
+            pilot,
+            lambda: not modal.query_one("#btn-operation-apply", Button).disabled,
+            "the apply button to enable",
+            workers=False,
+        )
         assert modal.query_one("#operation-modal-review", Static).content
         assert str(modal.query_one("#btn-operation-apply", Button).label) == GoogleReviewLabels(
             OutputLanguage(output_language())
@@ -434,9 +443,19 @@ async def test_prepublication_cleanup_rejects_only_original_untouched_review(
     app: App[None] = App()
     async with app.run_test() as pilot:
         app.push_screen(screen)
-        await _until(pilot, lambda: isinstance(app.screen, GoogleSavedReviewModal))
+        await settle_until(
+            pilot,
+            lambda: isinstance(app.screen, GoogleSavedReviewModal),
+            "the saved review modal to open",
+            workers=False,
+        )
         modal = app.screen
-        await _until(pilot, lambda: bool(modal.query_one("#operation-modal-review", Static).content))
+        await settle_until(
+            pilot,
+            lambda: bool(modal.query_one("#operation-modal-review", Static).content),
+            "the review text to show",
+            workers=False,
+        )
         controller = controllers[0]
         if defect == "session":
             client.session_id = UUID(int=99)

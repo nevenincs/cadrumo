@@ -15,7 +15,7 @@ from pydantic import JsonValue
 
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_runtime.adapters.windows_process import (
+from cadrumo_client.transport.windows_process import (
     WindowsOwnedProcess,
     WindowsProcessScope,
     unreturned_windows_process_scope,

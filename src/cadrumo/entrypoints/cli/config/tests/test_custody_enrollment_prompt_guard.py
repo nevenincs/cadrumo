@@ -69,7 +69,7 @@ verdict = {}
 try:
     from cadrumo.core import config as config_module
     from cadrumo.core.config import Settings
-    from cadrumo_client.commands.secure_input import _stdin_is_a_real_console
+    from cadrumo_client.commands.secure_input import terminal_can_prompt_for_secrets
 
     settings = Settings(
         _env_file=None,
@@ -80,7 +80,7 @@ try:
     )
     verdict["passphrase_configured"] = settings.cadrumo_secret_passphrase is not None
     verdict["isatty"] = sys.stdin.isatty()
-    verdict["real_console"] = _stdin_is_a_real_console()
+    verdict["prompt_admitted"] = terminal_can_prompt_for_secrets()
 
     token = config_module.settings_override.set(settings)
     try:
@@ -228,7 +228,9 @@ def test_login_refuses_on_a_console_less_host_instead_of_blocking(tmp_path: path
     if verdict["isatty"] is True:
         # The Windows trap this gate exists for: the verb's cheap interactive
         # pre-check sees a TTY and admits the channel, so the refusal can only
-        # have come from the real-console precondition deeper in the path.
-        assert verdict["real_console"] is False, (
+        # have come from the real-console precondition deeper in the path. With
+        # a TTY admitted, the hardened prompt's own predicate refuses only for
+        # want of a real console.
+        assert verdict["prompt_admitted"] is False, (
             f"the probe obtained a real console, so it did not construct the trap: {verdict!r}"
         )

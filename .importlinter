@@ -33,7 +33,7 @@ type = layers
 name = Every MCP service source package has a declared lane
 containers = cadrumo_mcp
 layers =
-    access : mcp
+    mcp
 exhaustive = True
 
 [importlinter:contract:closed-client-classification]
@@ -104,6 +104,31 @@ forbidden_modules =
 allow_indirect_imports = False
 
 # ---------------------------------------------------------------------------
+# Consumer-only trees (read by the import gate; Import Linter ignores them)
+# ---------------------------------------------------------------------------
+# Every repository-root directory or module holding Python is a root above,
+# an entry here, or an [import-gate:excluded-trees] entry; the gate refuses
+# anything else.  Each entry is one repository-root path and its reason.
+# Consumer trees import first-party roots but are not importable packages
+# (``packaging`` would shadow the PyPI distribution and ``src-tauri`` is not a
+# module name), so Import Linter cannot graph them.  The gate parses every
+# file below them as a consumer: its static and dynamic first-party targets
+# must exist, be public, and name their canonical defining module.
+
+[import-gate:consumer-trees]
+conftest.py = Repository pytest root configuration, loaded by pytest from the checkout rather than imported as a package.
+native = Native build, installer and desktop scripts: embedded interpreter bootstrap and probes, desktop fixture generators and packaged smoke tests run by CMake, Cargo and the bundled interpreter.
+packaging = Distribution build hooks and Homebrew and Scoop manifest generators, run by the build backend and release tooling from the checkout.
+
+# Consumer paths shipped inside installed artifacts are held to the forbidden
+# modules of the shipped-code contract, as the shipped roots are.
+
+[import-gate:consumer-contract:shipped-code-never-reaches-repository-only]
+native/application/src = Probe and runtime-identity scripts embedded with include_str in the installed native application.
+native/desktop/src-tauri/src/python = Desktop CLI entrypoint and manager dispatch scripts embedded with include_str in the installed desktop shell.
+native/interpreter = Interpreter bootstrap copied into every installed runtime by the packaging assembly.
+
+# ---------------------------------------------------------------------------
 # Inward dependency direction
 # ---------------------------------------------------------------------------
 
@@ -116,6 +141,16 @@ source_modules =
 forbidden_modules =
     cadrumo_agent_service
     cadrumo_mcp
+allow_indirect_imports = False
+
+[importlinter:contract:client-and-mcp-do-not-know-the-agent-service]
+type = forbidden
+name = Shared client and MCP service do not know the agent service
+source_modules =
+    cadrumo_client
+    cadrumo_mcp
+forbidden_modules =
+    cadrumo_agent_service
 allow_indirect_imports = False
 
 [importlinter:contract:core-is-innermost]
@@ -234,6 +269,19 @@ source_modules =
     cadrumo_mcp
 forbidden_modules =
     cadrumo_runtime
+allow_indirect_imports = False
+
+# The agent service is admitted as a runtime client and holds no login, session
+# or custody authority.  Its generic Windows Job Object launcher lives in
+# cadrumo_client.transport, so the service reaches no cadrumo_runtime module.
+[importlinter:contract:service-never-reaches-runtime-authority]
+type = forbidden
+name = The agent service is a runtime client and cannot import runtime authority or tax composition
+source_modules =
+    cadrumo_agent_service
+forbidden_modules =
+    cadrumo_runtime
+    cadrumo.entrypoints
 allow_indirect_imports = False
 
 [importlinter:contract:person-bridge-knows-no-product-setup]

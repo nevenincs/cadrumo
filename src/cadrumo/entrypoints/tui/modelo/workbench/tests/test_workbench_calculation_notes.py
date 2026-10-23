@@ -17,7 +17,6 @@ from collections.abc import Mapping
 from typing import Final, get_args
 
 import pytest
-from textual.pilot import Pilot
 from textual.widgets import OptionList
 
 from ......application.aggregation.source_mesh import CalculationSourceDiagnosticReason
@@ -41,6 +40,7 @@ from ......domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..issue_projection import issue_lines
 from ..issue_scale import IssueLevel
 from ..issues import WorkbenchIssuesScreen
@@ -55,11 +55,6 @@ _TOKENS: Final[Mapping[str, re.Pattern[str]]] = {
     "snake-case identifier": re.compile(r"\b[a-z]+_[a-z0-9_]+\b"),
     "placeholder": re.compile(r"%\{|\{[a-z_]+\}"),
 }
-
-
-async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _notes_form(*, box: str | None, casilla_id: str | None) -> ModeloWorkForm:
@@ -178,7 +173,7 @@ async def _list_text(form: ModeloWorkForm) -> str:
         screen = WorkbenchIssuesScreen(form)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             options = screen.query_one("#issues-list", OptionList)
             text = "\n".join(options.render_line(y).text.rstrip() for y in range(options.size.height))
             app.exit(None)

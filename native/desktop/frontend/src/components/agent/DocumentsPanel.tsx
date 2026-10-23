@@ -70,7 +70,7 @@ function DocumentMark({ document }: { document: ConversationDocument }) {
       <img
         src={document.thumbnailUrl}
         alt=""
-        className="size-control-md shrink-0 rounded-md border object-cover"
+        className="size-control-md shrink-0 rounded-md object-cover"
       />
     );
   return (
@@ -237,7 +237,7 @@ export function DocumentsPanel({
       aria-labelledby={titleId}
       className="flex min-h-0 flex-1 flex-col bg-background"
     >
-      <div className="flex h-control-lg shrink-0 items-center gap-2 border-b bg-chrome pr-1.5 pl-3">
+      <div className="flex h-control-lg shrink-0 items-center gap-2 bg-chrome pr-1.5 pl-3">
         <h2 id={titleId} className="min-w-0 flex-1 truncate font-semibold">
           {t("desktop.agent.documents")}
         </h2>
@@ -269,7 +269,7 @@ export function DocumentsPanel({
               </span>
             )}
           </p>
-          <ul className="min-h-0 flex-1 overflow-y-auto border-t">
+          <ul className="min-h-0 flex-1 overflow-y-auto">
             {documents.map((document) => (
               <DocumentRow
                 key={document.id}

@@ -25,7 +25,7 @@ flowchart TD
   AS --> AG[cadrumo-agent]
   AS --> IPC
   DESK --> IPC
-  A[Scoped agent client] --> MCP[Separate MCP harness]
+  A[Scoped agent client] --> MCP[Separate deterministic MCP service]
   CLI --> IPC[Native local IPC]
   TUI --> IPC
   MCP --> IPC
@@ -43,7 +43,8 @@ flowchart TD
 
 The [architecture rule](references/00-architecture.md) uses:
 
-- Import linting: `uv run --no-sync lint-imports --config .importlinter --no-cache`.
+- Import quality: `just check-import-boundaries`, the only contributor-facing import verdict. It preflights the closed classification in `.importlinter`, runs Import Linter (`uv run --no-sync lint-imports --config .importlinter --no-cache` alone is a quick contract check), imports every governed non-test module in isolation and runs the subordinate source checker for relative syntax, canonical defining modules, privacy and static, string and dynamic imports. It also governs `native/`, `packaging/` and the root `conftest.py` as consumer trees. Run `just generate-import-load-targets` after adding, moving or removing non-test modules, and run the gate on a quiet tree because it fails while governed files change under it.
+- Dependency, reachability and write-path censuses: `just check-dependency-declarations`, `check-module-reachability`, `check-symbol-usage`, `check-export-consumption`, `check-secure-store-write-paths` and `check-persistence-write-paths`; `just check-code` runs them with the static checks.
 - Ruff lint and formatting checks: `just check-style` and `just check-format`.
 - Type checking: `ty` across `src`, through `just check-types`.
 - Strict type checking: `pyrefly` and `basedpyright` over the configured production subset, through the same type runner.
@@ -60,7 +61,7 @@ flowchart TD
   J[just recipes] --> CM[CMake presets, one binary directory per preset]
   J --> UV[uv build: wheels and sdists]
   CM --> PY[Python build actions: dev.packaging.native]
-  CM --> RS[Cargo crates: platform, application, manager, installer, launch guard]
+  CM --> RS[Cargo crates: platform, application, manager, installer, launch guard, interpreter host]
   CM --> IH[C interpreter hosts and CPython bridge]
   CM --> DK[Desktop project: native/desktop]
   DK --> FE[Frontend: npm, Vite, React]
@@ -80,7 +81,7 @@ Build entry points:
 
 - Environment: `just setup` converges the uv environment; `just init` also installs browsers and search and publishes the registry authority.
 - Native package: configure needs the cache variable `CADRUMO_PACKAGE_AGENT_SOURCE_DIR` naming a local cadrumo-agent project folder (the environment is not read). `just build-native [Release|Debug] [TARGET]` (default target `bundle`), `just test-native-bundle`, `just build-native-package`, `just test-native-package`, `just test-native-release`. Each maps the host to a root preset and builds in `build/<preset>`; other binary directory names are refused.
-- Rust: no `just` recipe runs cargo, clippy or rustfmt. Build one crate target through CMake, for example `just build-native Release rust_manager`. Crates include generated contract sources, so a bare `cargo` invocation does not compile them.
+- Rust: `just check-rust` builds the native tree and runs the CTest label `rust_quality` (rustfmt, clippy and cargo-deny per crate; the gate set is still being extended). Build one crate target through CMake, for example `just build-native Release rust_manager`. Crates include generated contract sources, so a bare `cargo` invocation does not compile them.
 - Desktop shell: it builds inside the repository build, never a tree of its own. Configure `cmake --preset windows-x64` at the repository root, then build targets such as `desktop-host-build`, `desktop-host-test`, `desktop-host-clippy`, `desktop-frontend-test` and `desktop-run` with `cmake --build --preset debug --target <name>`. Packaged-window tests need an interactive desktop session.
 - Frontend: `just dev` republishes the registry authority when stale, then serves the frontend in a browser on fixed ports and compiles no Rust. In `native/desktop/frontend`, `npm run check` then `npm test`.
 - Python distributions and docs: `just build-distributions`, `just test-packaging-preflight`, `just docs-build`, `just docs-check`.
@@ -98,7 +99,7 @@ Minimum tool versions are declared in [native/toolchain.json](../../../native/to
 | Packaging the separate agent service and cadrumo-agent; verified desktop/service admission, hosting frame, provider credentials, encrypted stores and separate MCP adapter | [agent-integration](references/agent-integration.md) |
 | Process environment: `native/application-environment.toml`, launch profiles and invocations, storage-root precedence, build and development variables | [environment-contract](references/environment-contract.md) |
 
-`src/cadrumo` implements the deterministic tax/profile product; `src/cadrumo_runtime` owns generic login/custody/session authority and `src/cadrumo_client` owns neutral client contracts and transport. The sibling `src/cadrumo_agent_service` owns provider catalog consumption, credential interpretation, agent process/store lifecycle and conversation policy, supervises the separately implemented cadrumo-agent, and receives exact-profile opaque custody through verified runtime admission. Native desktop supervises this service. `src/cadrumo_mcp` owns `cadrumo-mcp`, its protocol and packaged personas/rules/skills. Runtime exports no DEK, contains no agent orchestration and grants no authority from declared IDs or JSON PIDs. Tax-domain model extraction remains under its existing consent policy.
+`src/cadrumo` implements the deterministic tax/profile product; `src/cadrumo_runtime` owns generic login/custody/session authority and `src/cadrumo_client` owns neutral client contracts and transport. The sibling `src/cadrumo_agent_service` owns provider catalog consumption, credential interpretation, agent process/store lifecycle and conversation policy, supervises the separately implemented cadrumo-agent, and receives exact-profile opaque custody through verified runtime admission. Native desktop supervises this service. `src/cadrumo_mcp` owns the deterministic `cadrumo-mcp` service and its protocol; it carries no persona, rule or skill content, which belongs to cadrumo-agent. The Textual TUI is `cadrumo.entrypoints.tui` in the tax product, and `cadrumo_runtime` only launches it. Import contracts keep the service a runtime client: `cadrumo_agent_service` imports neither `cadrumo_runtime` nor `cadrumo.entrypoints`, `cadrumo_client` and `cadrumo_mcp` do not import it, and the Windows Job Object launcher they share is `cadrumo_client.transport.windows_process`. Runtime exports no DEK, contains no agent orchestration and grants no authority from declared IDs or JSON PIDs. Tax-domain model extraction remains under its existing consent policy.
 
 The build references are orientation written from static reading of the build sources. They mirror no numbered rule and add no rule authority; where one disagrees with the contract, a CMake refusal or a test, the repository is right. When a build file moves or changes shape, refresh the matching reference and its line anchors.
 

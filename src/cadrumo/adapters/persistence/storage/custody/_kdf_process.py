@@ -7,6 +7,7 @@ import signal
 import subprocess
 import sys
 from contextlib import suppress
+from enum import Enum
 from pathlib import Path
 from typing import Any, Final, cast
 
@@ -24,11 +25,31 @@ from ._kdf_worker_limits import (
 WINDOWS_ABOVE_NORMAL_PRIORITY_CLASS: Final = 0x00008000
 
 
+class KdfWorkerInvocation(Enum):
+    """Which worker argv a launch sends.
+
+    ``NEAR_MISS`` appends options the worker's own parser accepts but that are
+    not the fixed invocation a native host recognises, so the host must give
+    that child its ordinary interpreter environment and the unchanged ready
+    attestation must refuse it. It exists only to prove that refusal.
+    """
+
+    CANONICAL = "canonical"
+    NEAR_MISS = "near-miss"
+
+
+# Parser-valid on each platform yet absent from that platform's fixed worker argv.
+_NEAR_MISS_ARGUMENTS: Final = (
+    ("--descriptor-bound", "16") if sys.platform == "win32" else ("--request-handle", "0", "--result-handle", "0")
+)
+
+
 def launch_worker(
     *,
     neutral_root: Path,
     request_read: int,
     result_write: int,
+    invocation: KdfWorkerInvocation = KdfWorkerInvocation.CANONICAL,
 ) -> tuple[subprocess.Popen[bytes], _WindowsJob | None, frozenset[str]]:
     """Launch one contained worker; also name the environment it was given, for its attestation."""
     command, launch_kwargs = worker_command(
@@ -36,6 +57,8 @@ def launch_worker(
         request_read=request_read,
         result_write=result_write,
     )
+    if invocation is KdfWorkerInvocation.NEAR_MISS:
+        command.extend(_NEAR_MISS_ARGUMENTS)
     environment_keys = _environment_keys(launch_kwargs)
     if sys.platform == "win32":
         job = _WindowsJob.create()
@@ -220,6 +243,7 @@ def terminate_process_tree(process: subprocess.Popen[bytes], job: _WindowsJob | 
 
 __all__ = [
     "WINDOWS_ABOVE_NORMAL_PRIORITY_CLASS",
+    "KdfWorkerInvocation",
     "apply_posix_worker_limits",
     "clear_worker_handle_inheritance",
     "launch_worker",

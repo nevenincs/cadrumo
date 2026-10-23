@@ -23,13 +23,14 @@ from textual.worker import NoActiveWorker, get_current_worker
 
 from .....application.ledger.rule_contracts import LedgerRuleListRequest
 from .....core.config import override_settings
+from ...tests.settling import settle
 from ...tests.test_doors_run_off_the_event_loop import TransportBoundary
 from ..categorisation_doors import LedgerCategorisationDoorsV1
 from ..categorisation_tools import ENTRY_LIST_TOOL_KEYS, categorisation_tools
 from .categorisation_fixtures import MemoryDoor
-from .categorisation_memory_doors import LEDGER_TX_A, MemoryCategorisationProfile, categorisation_controller
-from .categorisation_pilot import press, settle, type_into
-from .test_ledger_selection_journey import _WorkspaceHostApp
+from .categorisation_memory_doors import MemoryCategorisationProfile, categorisation_controller
+from .categorisation_pilot import press, type_into
+from .workspace_fixtures import LEDGER_TX_A, WorkspaceHostApp
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -198,7 +199,7 @@ async def test_each_tool_enters_its_doors_off_the_loop_and_from_a_worker(key: st
     screen = tool.build(categorisation_controller(selected=None if key in ENTRY_LIST_TOOL_KEYS else LEDGER_TX_A))
     drive, expected = _DRIVES[key]
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             await drive(pilot, screen)
             await settle(pilot)

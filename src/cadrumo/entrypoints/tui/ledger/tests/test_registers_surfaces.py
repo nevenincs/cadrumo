@@ -19,6 +19,7 @@ from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from ...components.host import ScreenHostApp
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..overview import LedgerOverviewScreen
 from ..registers_capital_goods import LedgerCapitalGoodsDoorV1, LedgerCapitalGoodsScreen, capital_goods_tool
@@ -41,8 +42,7 @@ from .registers_fixtures import (
     synthetic_inventory_row,
     synthetic_prorrata_entry,
 )
-from .test_ledger_selection_journey import _WorkspaceHostApp
-from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -92,9 +92,7 @@ async def test_each_register_fits_every_size_with_one_scroll_owner(
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=size) as pilot:
             app.theme = theme
-            await pilot.pause()
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert all(table.row_count for table in screen.query(DataTable) if table.id != "ledger-navigation")
             assert geometry_band(app, size[0]) == []
             assert all(table.max_scroll_x == 0 for table in screen.query(DataTable))
@@ -144,15 +142,13 @@ async def test_every_register_door_call_runs_in_a_worker() -> None:
     app = ScreenHostApp[None](screen)
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(120, 60)) as pilot:
-            await app.workers.wait_for_complete()
+            await settle(pilot)
             cast("Select[str]", screen.query_one("#prorrata-action", Select)).value = "seed"
-            await pilot.pause()
+            await settle(pilot)
             screen.query_one("#prorrata-ejercicio", Input).value = "2026"
             for button_id in ("register-review", "register-confirm"):
                 screen.query_one(f"#{button_id}", Button).press()
-                await pilot.pause()
-                await app.workers.wait_for_complete()
-                await pilot.pause()
+                await settle(pilot)
     assert boundary.entries == [("read_register", True), ("apply", True), ("read_register", True)]
 
     inventory_boundary = _WorkerBoundary()
@@ -168,8 +164,7 @@ async def test_every_register_door_call_runs_in_a_worker() -> None:
         LedgerCapitalGoodsScreen(_controller(), cast(LedgerCapitalGoodsDoorV1, capital)),
     ):
         async with ScreenHostApp[None](register).run_test(size=(120, 60)) as pilot:
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
     assert inventory_boundary.entries == [("read_register", True)]
     assert capital_boundary.entries == [("read_register", True)]
 
@@ -192,26 +187,22 @@ async def test_the_overview_lists_the_three_registers_and_opens_one_in_place() -
     )
     controller = _controller(tools=tools)
     assert controller.tools_for(LedgerWorkspaceArea.OVERVIEW) == tools
-    app = _WorkspaceHostApp(LedgerOverviewScreen(controller))
+    app = WorkspaceHostApp(LedgerOverviewScreen(controller))
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(120, 40)) as pilot:
-            await pilot.pause()
-            await pilot.pause()
+            await settle(pilot)
             table = app.screen.query_one("#ledger-tools", DataTable)
             assert [str(row.key.value) for row in table.ordered_rows] == [tool.key for tool in tools]
             assert str(table.get_row_at(0)[0]) == tr("tui.ledger.registers.prorrata.tool")
             table.focus()
             table.move_cursor(row=0)
             await pilot.press("enter")
-            await pilot.pause()
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             opened = app.screen
             assert isinstance(opened, LedgerProrrataRegisterScreen)
             assert opened.back_area is LedgerWorkspaceArea.OVERVIEW
             await pilot.press("escape")
-            await pilot.pause()
-            await pilot.pause()
+            await settle(pilot)
             assert isinstance(app.screen, LedgerOverviewScreen)
     assert tools[0].key == PRORRATA_TOOL_KEY
 
@@ -224,19 +215,17 @@ async def test_a_language_change_rewords_the_register_in_place_and_keeps_the_cho
         adopt_profile_output_language(OutputLanguage.EN)
         try:
             async with ScreenHostApp[None](screen).run_test(size=(120, 60)) as pilot:
-                await pilot.app.workers.wait_for_complete()
-                await pilot.pause()
+                await settle(pilot)
                 table = screen.query_one("#inventory-list", DataTable)
                 table.focus()
                 table.move_cursor(row=1)
                 await pilot.press("enter")
-                await pilot.pause()
+                await settle(pilot)
                 cast("Select[str]", screen.query_one("#inventory-action", Select)).value = "valuation_preview"
-                await pilot.pause()
+                await settle(pilot)
                 adopt_profile_output_language(OutputLanguage.ES)
                 await screen.refresh_language()
-                await pilot.pause()
-                await pilot.pause()
+                await settle(pilot)
                 action = cast("Select[str]", screen.query_one("#inventory-action", Select))
                 header = str(table.columns[next(iter(table.columns))].label)
                 expected_header = tr("tui.ledger.registers.inventory.column.actividad")

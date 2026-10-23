@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 from threading import Timer
 
-from .process_support import fixture_arguments, fixture_environment, native_python
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
 
 
 async def _tree(record: Path, *, exit_parent: bool) -> None:
@@ -170,7 +170,7 @@ def main() -> None:
             scope.launch(
                 executable=native_python(),
                 arguments=fixture_arguments(
-                    "cadrumo_runtime.adapters.tests.job_fixture",
+                    "cadrumo_client.transport.tests.job_fixture",
                     "browser" if mode == "browser-owner" else "tree",
                     filename,
                 ),

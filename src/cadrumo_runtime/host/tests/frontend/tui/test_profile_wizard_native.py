@@ -31,6 +31,7 @@ from cadrumo.entrypoints.tui.secret.registration import (
     build_profile_recovery_enrollment_attempt,
     build_profile_registration_attempt,
 )
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -78,31 +79,27 @@ async def register_profile_through_installed_tui(*, profile_label: str, passphra
         enroll_recovery=build_profile_recovery_enrollment_attempt,
     )
     async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen.query_one("#field-username", Input).value = profile_label
         screen.query_one("#field-password", Input).value = passphrase
         screen.query_one("#field-confirm", Input).value = passphrase
         await _click(pilot, "#btn-create")
-        await pilot.app.workers.wait_for_complete()
+        await settle(pilot)
         await _until(pilot, lambda: bool(pilot.app.screen.query("#btn-skip-recovery")), "registration recovery choice")
         await _click(pilot, "#btn-skip-recovery")
-        await pilot.pause()
+        await settle(pilot)
     assert screen.outcome is not None
 
 
 async def _until[Result](pilot: Pilot[Result], condition: Callable[[], bool], stage: str) -> None:
     print(f"Wizard step: {stage}", flush=True)
-    deadline = time.monotonic() + 90
-    while not condition():
-        if time.monotonic() >= deadline:
-            raise AssertionError(f"Wizard did not finish step: {stage}")
-        await pilot.pause(0.05)
+    await settle_until(pilot, condition, f"wizard step: {stage}", workers=False)
 
 
 async def _click[Result](pilot: Pilot[Result], selector: str) -> None:
     button = pilot.app.screen.query_one(selector, Button)
     button.scroll_visible(immediate=True)
-    await pilot.pause()
+    await settle(pilot, workers=False)
     assert await pilot.click(button), f"Wizard control could not be clicked: {selector}"
 
 
@@ -162,7 +159,7 @@ async def _walk(client: FrontendClient, label: str) -> None:
         assert reopened.query_one("#aeat-auth-method", Select).value == "clave_movil"
         assert reopened.query_one("#aeat-auth-route", Select).value == "app_request"
         reopened.query_one("#aeat-auth-method", Select).value = "clave_permanente"
-        await pilot.pause()
+        await settle(pilot, workers=False)
         reopened.query_one("#aeat-auth-secret", Input).value = "synthetic-wizard-password"
         await _click(pilot, "#aeat-auth-save")
         await _until(pilot, lambda: not reopened._busy, "save changed method and protected password")
@@ -202,7 +199,6 @@ async def _walk(client: FrontendClient, label: str) -> None:
                 ),
                 "next required answer",
             )
-            await pilot.pause()
             if not isinstance(pilot.app.screen, FieldEditScreen):
                 break
             dialog = pilot.app.screen
@@ -216,7 +212,7 @@ async def _walk(client: FrontendClient, label: str) -> None:
             else:
                 dialog.query_one("#edit-input", Input).value = answer
             await _click(pilot, "#btn-edit-save")
-            await pilot.pause()
+            await settle(pilot, workers=False)
         assert not screen.overview.missing_required, screen.overview.missing_required
         await _until(pilot, lambda: screen._setup_stage is ProfileSetupStage.REVIEW, "review")
         assert screen.overview.setup_state is ProfileSetupState.INCOMPLETE

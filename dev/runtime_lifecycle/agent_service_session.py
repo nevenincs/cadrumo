@@ -34,7 +34,7 @@ from cadrumo_agent_service.host.store_lifecycle import StoreOutcome, StoreStep
 from cadrumo_agent_service.installed_client import SERVICE_ID
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.service_access import ServiceConnected
-from cadrumo_runtime.adapters.windows_process import WindowsProcessScope, unreturned_windows_process_scope
+from cadrumo_client.transport.windows_process import WindowsProcessScope, unreturned_windows_process_scope
 from cadrumo_runtime.application.development_root import mark_development_root
 
 from .caller_owned_root import (

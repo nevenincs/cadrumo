@@ -304,8 +304,6 @@ Cadrumo owns, and carries no copy of anything above:
 - An MCP surface that serves no skill, rule or persona content: no `harness_load` tool, no
   `cadrumo://skill/*` or `cadrumo://rule/*` resources, no workspace materialisation flag.
   Tool descriptions do not instruct a client to load skills or rules.
-- The agent-key grant scope (`access/automation_key`: which operations an automation key
-  may be granted) as Cadrumo runtime authority, moving with the MCP package.
 - `src/cadrumo_agent_service`: the host and supervisor that launches the bundled
   cadrumo-agent as a contained process, delivers credentials by frame, brokers runtime
   authority, and declares Cadrumo's MCP tool server to cadrumo-agent through

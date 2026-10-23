@@ -14,12 +14,13 @@ from .....domain.transactions.classification_rule import LedgerClassificationRul
 from .....domain.transactions.enums import BusinessClassification
 from ...components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..categorisation_common import CategorisationScreen
-from ..categorisation_tools import CATEGORISATION_TOOL_KEYS, ENTRY_LIST_TOOL_KEYS, categorisation_tools
+from ..categorisation_tools import ENTRY_LIST_TOOL_KEYS, categorisation_tools
 from .categorisation_entry_fixtures import synthetic_participation
-from .categorisation_memory_doors import LEDGER_TX_A, MemoryCategorisationProfile, categorisation_controller
-from .categorisation_pilot import press, settle
-from .test_ledger_selection_journey import _WorkspaceHostApp
+from .categorisation_memory_doors import MemoryCategorisationProfile, categorisation_controller
+from .categorisation_pilot import press
+from .workspace_fixtures import LEDGER_TX_A, WorkspaceHostApp
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -47,6 +48,9 @@ def _seeded_profile() -> MemoryCategorisationProfile:
     return profile
 
 
+_TOOL_KEYS = tuple(tool.key for tool in categorisation_tools(MemoryCategorisationProfile().doors().bundle()))
+"""Every categorisation tool the workspace is given, so a new tool is measured without being listed here."""
+
 _REVIEWS = {
     "ledger.tool.categorisation.bulk": ("categorisation-bulk-review", "#categorisation-bulk-changing"),
     "ledger.tool.categorisation.rules": ("categorisation-rule-preview", "#categorisation-rule-matches"),
@@ -54,7 +58,7 @@ _REVIEWS = {
 """Tools whose review shows a further table, and the button that shows it."""
 
 
-async def _assert_fits(pilot: Pilot[None], app: _WorkspaceHostApp, screen: CategorisationScreen, key: str) -> None:
+async def _assert_fits(pilot: Pilot[None], app: WorkspaceHostApp, screen: CategorisationScreen, key: str) -> None:
     for width, height in _SIZES:
         await pilot.resize_terminal(width, height)
         await settle(pilot)
@@ -72,14 +76,14 @@ async def _assert_fits(pilot: Pilot[None], app: _WorkspaceHostApp, screen: Categ
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("theme", [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME])
-@pytest.mark.parametrize("key", CATEGORISATION_TOOL_KEYS)
+@pytest.mark.parametrize("key", _TOOL_KEYS)
 async def test_each_tool_fits_every_terminal_size_in_both_themes(key: str, theme: str) -> None:
     tool = next(item for item in categorisation_tools(_seeded_profile().doors().bundle()) if item.key == key)
     # Whole-ledger tools open from Entries, where no entry need be selected.
     selected = None if key in ENTRY_LIST_TOOL_KEYS else LEDGER_TX_A
     screen = tool.build(categorisation_controller(selected=selected))
     assert isinstance(screen, CategorisationScreen)
-    app = _WorkspaceHostApp(screen)
+    app = WorkspaceHostApp(screen)
     with override_settings(cadrumo_output_language="es"):
         async with app.run_test(size=_SIZES[0]) as pilot:
             app.theme = theme

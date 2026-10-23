@@ -17,6 +17,7 @@ from .....core.i18n.render import tr
 from .....domain.user_profile.values import ProfileSetupState
 from ...components.host import ScreenHostApp
 from ...components.widgets import DisclosureGroup
+from ...tests.settling import settle, settle_until
 from ..aeat_auth_setup import AeatAuthSetupScreen, readiness_text
 from ..auth_fields import AeatAuthFieldSaveError
 from ..overview import ProfileManagerScreen
@@ -112,9 +113,10 @@ async def test_editor_processes_input_while_native_snapshot_is_pending() -> None
 
     screen = AeatAuthSetupScreen(PendingDoor())
     async with ScreenHostApp(screen).run_test(size=(100, 55)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert screen.query_one("#aeat-auth-save", Button).disabled
         assert await pilot.press("escape") is None
+        await settle(pilot, workers=False)
         assert pilot.app.screen is not screen
         loaded.set()
 
@@ -127,14 +129,14 @@ async def test_method_specific_editor_saves_then_reopens_stored_fields_and_hides
     door = AeatAuthSetupDoor()
     screen = AeatAuthSetupScreen(door)
     async with ScreenHostApp(screen).run_test(size=(100, 55)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         methods = screen.query_one("#aeat-auth-method", Select)
         assert (tr(f"auth.catalogue.{provider.value}_label"), provider.value) in methods._options
         routes = screen.query_one("#aeat-auth-route", Select)
         assert (tr("flows.manager.action.auth_clave_movil_route_qr"), "qr") in routes._options
         assert (tr("flows.manager.action.auth_clave_movil_route_app_request"), "app_request") in routes._options
         screen.query_one("#aeat-auth-method", Select).value = provider.value
-        await pilot.pause()
+        await settle(pilot)
         screen.query_one("#aeat-auth-field-0", Input).value = "12345678Z"
         secret = screen.query_one("#aeat-auth-secret", Input)
         assert secret.password
@@ -145,9 +147,9 @@ async def test_method_specific_editor_saves_then_reopens_stored_fields_and_hides
             secret.value = "private-password-sentinel"
         save = screen.query_one("#aeat-auth-save", Button)
         save.scroll_visible(immediate=True)
-        await pilot.pause()
+        await settle(pilot)
         assert await pilot.click(save)
-        await pilot.pause()
+        await settle(pilot)
         assert door.calls[-1][0] is provider
         assert door.calls[-1][2]["identity.tax_id"] == "12345678Z"
         assert secret.value == ""
@@ -155,7 +157,7 @@ async def test_method_specific_editor_saves_then_reopens_stored_fields_and_hides
         assert "private-password-sentinel" not in " ".join(str(widget.render()) for widget in screen.query(Static))
     reopened = AeatAuthSetupScreen(door)
     async with ScreenHostApp(reopened).run_test(size=(100, 55)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert reopened.query_one("#aeat-auth-field-0", Input).value == "12345678Z"
         assert reopened.query_one("#aeat-auth-method", Select).value == provider.value
         assert reopened.query_one("#aeat-auth-secret", Input).value == ""
@@ -173,25 +175,25 @@ async def test_profile_acquisition_stays_blocked_until_editor_saved_and_readback
         door.overview, persist=lambda *_args: door.overview, launch_source=launch, aeat_auth_setup=door
     )
     async with ScreenHostApp(screen).run_test(size=(110, 65)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen.query_one("#manager-sources-fold", DisclosureGroup).collapsed = False
-        await pilot.pause()
+        await settle(pilot)
         source = screen.query_one("#source-censal_review Button", Button)
         assert source.disabled
         assert tr("tui.aeat_auth.blocked") in str(screen.query_one("#manager-auth-readiness", Static).render())
         assert door.snapshot_calls == 0
         edit = screen.query_one("#manager-auth-edit", Button)
         edit.scroll_visible(immediate=True)
-        await pilot.pause()
+        await settle(pilot)
         assert await pilot.click(edit)
-        await pilot.pause()
+        await settle(pilot)
         assert isinstance(screen.app.screen, AeatAuthSetupScreen)
         editor = screen.app.screen
         editor.query_one("#aeat-auth-method", Select).value = "clave_movil"
         editor.query_one("#aeat-auth-field-0", Input).value = "12345678Z"
         await editor._save()
         editor.action_close()
-        await pilot.pause()
+        await settle(pilot)
         assert door.snapshot_calls == 2  # editor load and saved readback only
         assert not screen.query_one("#source-censal_review Button", Button).disabled
         assert not launched
@@ -207,7 +209,7 @@ async def test_returned_editor_projection_cannot_replace_a_newer_or_different_pr
     current = door.overview.model_copy(update={"record_revision": 5})
     screen = ProfileManagerScreen(current, persist=lambda *_args: current, aeat_auth_setup=door)
     async with ScreenHostApp(screen).run_test(size=(110, 65)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         await screen._reload_auth(
             (
                 current.model_copy(update={"record_revision": 2}),
@@ -247,7 +249,7 @@ async def test_invalid_field_reports_which_field_failed_without_disclosing_rejec
 
     screen = AeatAuthSetupScreen(RefusingDoor())
     async with ScreenHostApp(screen).run_test(size=(100, 55)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen.query_one("#aeat-auth-method", Select).value = "clave_movil"
         await screen._save()
         message = str(screen.query_one("#aeat-auth-message", Static).render())
@@ -262,11 +264,12 @@ async def test_a_profile_page_opened_for_aeat_access_opens_its_editor_once_the_p
     screen = ProfileManagerScreen(door.overview, persist=lambda *_args: door.overview, aeat_auth_setup=door)
     screen.request_aeat_auth_editor()
     async with ScreenHostApp(screen).run_test(size=(110, 65)) as pilot:
-        await pilot.pause()
-        await pilot.pause()
+        await settle_until(
+            pilot, lambda: isinstance(screen.app.screen, AeatAuthSetupScreen), "the editor to open over the page"
+        )
         assert isinstance(screen.app.screen, AeatAuthSetupScreen)
         screen.app.screen.action_close()
-        await pilot.pause()
+        await settle_until(pilot, lambda: screen.app.screen is screen, "the page to return after the editor closes")
         # Asked once: returning to the page does not open the editor again.
         assert screen.app.screen is screen
 
@@ -277,6 +280,5 @@ async def test_a_page_without_an_aeat_door_ignores_the_request() -> None:
     screen = ProfileManagerScreen(door.overview, persist=lambda *_args: door.overview)
     screen.request_aeat_auth_editor()
     async with ScreenHostApp(screen).run_test(size=(110, 65)) as pilot:
-        await pilot.pause()
-        await pilot.pause()
+        await settle(pilot)
         assert screen.app.screen is screen

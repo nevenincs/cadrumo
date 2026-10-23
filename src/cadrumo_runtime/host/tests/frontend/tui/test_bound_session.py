@@ -15,6 +15,7 @@ from textual.app import App
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.time.clock import now
+from cadrumo.entrypoints.tui.tests.settling import settle
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.profile_access import ProfileStatus
@@ -156,10 +157,10 @@ async def test_a_watch_checks_at_the_known_expiry_and_on_a_pushed_retirement_but
     async with app.run_test() as pilot:
         stop = binding.watch(app, lambda: checks.append(now().timestamp()))
         await asyncio.sleep(0.3)
-        await pilot.pause()
+        await settle(pilot)
         assert checks == [], "the watch checked before anything could have ended"
         await asyncio.sleep(0.6)
-        await pilot.pause()
+        await settle(pilot)
         assert len(checks) == 1, "the known expiry was not checked once it passed"
 
         retirement = client.retirement
@@ -168,7 +169,7 @@ async def test_a_watch_checks_at_the_known_expiry_and_on_a_pushed_retirement_but
         pushing = threading.Thread(target=retirement)
         pushing.start()
         pushing.join()
-        await pilot.pause()
+        await settle(pilot)
         assert len(checks) == 2, "a pushed retirement did not reach the owner's loop"
 
         with pytest.raises(InternalInvariantError):
@@ -178,5 +179,5 @@ async def test_a_watch_checks_at_the_known_expiry_and_on_a_pushed_retirement_but
         assert client.retirement is None
         binding.known_expires_at = now() + timedelta(milliseconds=100)
         await asyncio.sleep(0.3)
-        await pilot.pause()
+        await settle(pilot)
         assert len(checks) == 2, "a stopped watch still checked"

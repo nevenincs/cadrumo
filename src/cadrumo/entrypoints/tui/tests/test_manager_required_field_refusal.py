@@ -32,6 +32,7 @@ from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
 from ..profile.overview import ProfileFieldPersist, ProfileManagerScreen
 from .manager_pilot import wait_until_settled
+from .settling import settle
 
 pytestmark = [
     pytest.mark.integration,
@@ -115,10 +116,10 @@ async def _submit(app, pilot, path: str, value: str) -> None:
 
     field = app._field_by_key[path]
     app.app.push_screen(FieldEditScreen(field), app._apply_edit_for(field))
-    await pilot.pause()
+    await settle(pilot)
     app.app.screen.query_one("#edit-input", Input).value = value
     await pilot.click("#btn-edit-save")
-    await pilot.pause()
+    await settle(pilot)
 
 
 @pytest.mark.asyncio
@@ -139,7 +140,7 @@ async def test_a_blank_submission_on_a_required_field_does_not_clear_it(tmp_path
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _submit(app, pilot, _REQUIRED_PATH, "")
             assert str(app.app.screen.query_one("#edit-refusal", Static).content)
             assert app.app.screen is not app, "the question stays open for correction"
@@ -165,7 +166,7 @@ async def test_a_whitespace_only_submission_on_a_required_field_does_not_clear_i
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _submit(app, pilot, _REQUIRED_PATH, "   ")
             pilot.app.exit(None)
 
@@ -195,7 +196,7 @@ async def test_a_blank_submission_on_an_optional_field_still_clears_it(tmp_path)
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _submit(app, pilot, _OPTIONAL_PATH, "")
             await wait_until_settled(app, pilot)
             pilot.app.exit(None)
@@ -227,7 +228,7 @@ async def test_a_write_door_refusal_is_reported_rather_than_taking_the_screen_do
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             app._persist(
                 _MALFORMED_PATH,
                 "not-a-date",

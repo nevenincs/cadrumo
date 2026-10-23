@@ -35,6 +35,7 @@ from ..components.status import PinnedStatusBar
 from ..components.widgets import DisclosureGroup
 from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
+from .settling import settle
 
 pytestmark = [
     pytest.mark.integration,
@@ -138,7 +139,7 @@ async def test_the_page_shows_every_declared_field_including_the_empty_ones(tmp_
 
         app = ProfileManagerScreen(overview, persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             rendered = _rows(app)
             assert len(rendered) == overview.total_count
             assert overview.total_count > overview.present_count, (
@@ -166,7 +167,7 @@ async def test_profile_context_names_missing_requirements_but_has_no_healthy_pla
 
         app = ProfileManagerScreen(overview, persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             requirements = str(app.query_one("#manager-requirements", Static).content)
             assert requirements == tr(
                 "cli.diagnostics.summary.profile_missing_fields",
@@ -177,7 +178,7 @@ async def test_profile_context_names_missing_requirements_but_has_no_healthy_pla
 
             app.overview = overview.model_copy(update={"missing_required": (), "missing_required_fields": ()})
             await app._render_profile_context()
-            await pilot.pause()
+            await settle(pilot)
             with pytest.raises(NoMatches):
                 app.query_one("#manager-requirements")
             pilot.app.exit(None)
@@ -212,11 +213,11 @@ async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> 
 
         app = ProfileManagerScreen(overview, persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             rendered = str(app.query_one("#manager-notice-band #notice-0", Static).content)
             assert "SCHEMA-ENVELOPE-ADVISORY" in rendered
             await app._render_profile_context()
-            await pilot.pause()
+            await settle(pilot)
             assert len(app.query("#manager-notice-band")) == 1, (
                 "repainting profile context must replace the notice band before mounting its successor"
             )
@@ -252,10 +253,10 @@ async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) ->
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             field = app._field_by_key[_EDITED_PATH]
             pilot.app.push_screen(_edit_screen(field), app._apply_edit_for(field))
-            await pilot.pause()
+            await settle(pilot)
             app.app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
@@ -295,7 +296,7 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             before = _rows(app)
             assert before[_EDITED_PATH][2] == "", "the fixture must start blank, or the glyph cannot flip"
             tables = list(app.query(DataTable))
@@ -304,7 +305,7 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
 
             field = app._field_by_key[_EDITED_PATH]
             pilot.app.push_screen(_edit_screen(field), app._apply_edit_for(field))
-            await pilot.pause()
+            await settle(pilot)
             app.app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
             await pilot.click("#btn-edit-save")
             # The write runs on a worker thread now, so the assertions wait
@@ -363,20 +364,20 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
 
         app = ProfileManagerScreen(_live_overview(), persist=_gated)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             field = app._field_by_key[_EDITED_PATH]
             pilot.app.push_screen(_edit_screen(field), app._apply_edit_for(field))
-            await pilot.pause()
+            await settle(pilot)
             app.app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
             await pilot.click("#btn-edit-save")
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert app._pending_write is not None, "the first write must still be in flight to prove anything"
 
             settled = len(app.app.screen_stack)
             table = next(candidate for candidate in app.query(DataTable) if candidate.row_count)
             row_key = next(iter(table.rows))
             app.on_data_table_row_selected(DataTable.RowSelected(table, 0, row_key))
-            await pilot.pause()
+            await settle(pilot, workers=False)
 
             assert len(app.app.screen_stack) == settled, (
                 "no edit box may open while a write is in flight; opening one is how typed input gets discarded"
@@ -430,7 +431,7 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
         app = ProfileManagerScreen(_live_overview("Masked Subject"), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             pilot.app.push_screen(FieldEditScreen(masked))
-            await pilot.pause()
+            await settle(pilot)
             assert app.app.screen.query_one("#edit-input", Input).value == ""
             pilot.app.exit(None)
 
@@ -466,10 +467,10 @@ async def test_a_write_failing_wordlessly_is_named_rather_than_shown_blank(tmp_p
         expected = tr("flows.manager.edit.write_failed")
 
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             field = app._field_by_key[_EDITED_PATH]
             pilot.app.push_screen(_edit_screen(field), app._apply_edit_for(field))
-            await pilot.pause()
+            await settle(pilot)
             app.app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
@@ -498,7 +499,7 @@ async def test_a_page_with_no_actions_renders_no_action_bar(tmp_path) -> None:
             )
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             with pytest.raises(NoMatches):
                 app.query_one("#manager-actions")
             pilot.app.exit(None)
@@ -547,7 +548,7 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
 
         app = ProfileManagerScreen(written, persist=_persist)
         async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             # The IRPF section sits well below the fold on an 80x24
             # terminal; scroll the page (and, transitively, the section's
             # own table) to the edited row so what is checked is "does the
@@ -555,10 +556,10 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
             # "is the row above or below the fold" -- a separate, already
             # -covered question the vertical ContentScroll host answers.
             app.query_one("#fold-irpf", DisclosureGroup).collapsed = False
-            await pilot.pause()
+            await settle(pilot)
             table = app._table_by_section["irpf"]
             table.scroll_visible(animate=False)
-            await pilot.pause()
+            await settle(pilot)
             rendered = pilot.app.export_screenshot()
             assert "12345.67" in rendered, (
                 "the long IRPF field-name label pushed the value column out of the 80-column viewport"

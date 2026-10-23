@@ -12,6 +12,7 @@ from .....application.ledger.evidence_followup_contracts import (
 )
 from .....core.config import override_settings
 from .....core.i18n.render import tr
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..evidence_files_consent import LedgerEvidenceFilesConsentScreen
 from ..evidence_files_doors import LEDGER_EVIDENCE_FILES_PAGE_SIZE
@@ -22,14 +23,12 @@ from .evidence_files_fixtures import (
     EVIDENCE_FILES_REFUSAL_KEY,
     MemoryEvidenceFilesStore,
     press,
-    settle,
     synthetic_attachment,
     synthetic_evidence_id,
     synthetic_review,
     text_of,
 )
-from .test_ledger_selection_journey import _WorkspaceHostApp
-from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -61,7 +60,7 @@ async def test_the_attachment_queue_lists_pending_attachments_and_shows_one_mani
     store = MemoryEvidenceFilesStore()
     store.seed_attachments(3)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(LedgerEvidenceFilesQueueScreen(_controller(), store.doors())).run_test(
+        async with WorkspaceHostApp(LedgerEvidenceFilesQueueScreen(_controller(), store.doors())).run_test(
             size=(120, 50)
         ) as pilot:
             await settle(pilot)
@@ -79,7 +78,7 @@ async def test_the_attachment_queue_lists_pending_attachments_and_shows_one_mani
 async def test_an_empty_queue_says_so_and_a_refused_read_is_shown() -> None:
     store = MemoryEvidenceFilesStore()
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(LedgerEvidenceFilesQueueScreen(_controller(), store.doors())).run_test(
+        async with WorkspaceHostApp(LedgerEvidenceFilesQueueScreen(_controller(), store.doors())).run_test(
             size=(120, 50)
         ) as pilot:
             await settle(pilot)
@@ -87,7 +86,7 @@ async def test_an_empty_queue_says_so_and_a_refused_read_is_shown() -> None:
     refused = MemoryEvidenceFilesStore()
     refused.refusing.add("attachment_queue")
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(LedgerEvidenceFilesQueueScreen(_controller(), refused.doors())).run_test(
+        async with WorkspaceHostApp(LedgerEvidenceFilesQueueScreen(_controller(), refused.doors())).run_test(
             size=(120, 50)
         ) as pilot:
             await settle(pilot)
@@ -100,7 +99,7 @@ async def test_a_thousand_queued_attachments_render_one_page_at_a_time() -> None
     store.seed_attachments(1_000)
     ordered = sorted(store.attachments)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(LedgerEvidenceFilesQueueScreen(_controller(), store.doors())).run_test(
+        async with WorkspaceHostApp(LedgerEvidenceFilesQueueScreen(_controller(), store.doors())).run_test(
             size=(120, 50)
         ) as pilot:
             await settle(pilot)
@@ -122,7 +121,7 @@ async def test_the_review_reads_a_summary_and_the_full_review_of_one_reference()
     store.drafts[reference] = synthetic_review(reference)
     with override_settings(cadrumo_output_language="en"):
         screen = LedgerEvidenceFilesReviewScreen(_controller(), store.doors(), reference=reference)
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             [request] = store.requests_of(LedgerEvidenceReviewViewRequest)
             assert request.evidence_reference == reference
@@ -143,7 +142,7 @@ async def test_the_review_needs_a_reference_and_shows_a_typed_refusal() -> None:
     store.refusing.add("review_summary")
     with override_settings(cadrumo_output_language="en"):
         screen = LedgerEvidenceFilesReviewScreen(_controller(), store.doors())
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             await press(pilot, "evidence-files-summary")
             assert text_of(screen, "#ledger-refusal") == tr("tui.ledger.evidence_files.review.reference_required")
@@ -160,7 +159,7 @@ async def test_consent_history_lists_the_synthetic_events_read_only() -> None:
     store.seed_consent(2)
     with override_settings(cadrumo_output_language="en"):
         screen = LedgerEvidenceFilesConsentScreen(_controller(), store.doors())
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             dispatches = _table(pilot, "evidence-files-dispatches")
             assert dispatches.row_count == 2
@@ -190,7 +189,7 @@ async def test_an_empty_consent_history_says_nothing_was_sent_and_a_refusal_is_s
     store = MemoryEvidenceFilesStore()
     with override_settings(cadrumo_output_language="en"):
         screen = LedgerEvidenceFilesConsentScreen(_controller(), store.doors())
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             statement = text_of(screen, "#evidence-files-consent-statement")
             assert tr("tui.ledger.evidence_files.consent.no_dispatches") in statement
@@ -199,7 +198,7 @@ async def test_an_empty_consent_history_says_nothing_was_sent_and_a_refusal_is_s
     refused.refusing.add("consent_list")
     with override_settings(cadrumo_output_language="en"):
         screen = LedgerEvidenceFilesConsentScreen(_controller(), refused.doors())
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             assert text_of(screen, "#ledger-refusal") == tr(EVIDENCE_FILES_REFUSAL_KEY)
             assert text_of(screen, "#evidence-files-consent-statement") == ""
@@ -211,7 +210,7 @@ async def test_a_thousand_consent_events_render_one_page_at_a_time() -> None:
     store.seed_consent(1_000)
     with override_settings(cadrumo_output_language="en"):
         screen = LedgerEvidenceFilesConsentScreen(_controller(), store.doors())
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             assert _table(pilot, "evidence-files-dispatches").row_count == LEDGER_EVIDENCE_FILES_PAGE_SIZE
             assert _table(pilot, "evidence-files-artefacts").row_count == LEDGER_EVIDENCE_FILES_PAGE_SIZE

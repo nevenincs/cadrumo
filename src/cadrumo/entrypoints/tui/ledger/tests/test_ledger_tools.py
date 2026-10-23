@@ -13,6 +13,7 @@ from .....application.user_profile.language_resolver import adopt_profile_output
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from ..entries import LedgerEntriesScreen
 from ..overview import LedgerOverviewScreen
@@ -20,8 +21,7 @@ from ..routes import resolve_ledger_screen
 from ..tools import LedgerToolV1
 from ..workspace_injection import LedgerWorkspaceInjection
 from ..workspace_presentation import ledger_workspace_page
-from .test_ledger_selection_journey import _WorkspaceHostApp
-from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -94,9 +94,8 @@ async def test_an_area_lists_only_its_own_tools_beneath_the_navigation() -> None
         _tool(LedgerWorkspaceArea.OVERVIEW, "second"),
     )
     screen = LedgerOverviewScreen(controller)
-    async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
-        await pilot.pause()
+    async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
         rows = _rows(screen)
         page = screen.query_one("#ledger-page")
         order = [child.id for child in page.children]
@@ -110,8 +109,8 @@ async def test_an_area_lists_only_its_own_tools_beneath_the_navigation() -> None
 @pytest.mark.asyncio
 async def test_an_area_without_tools_lists_none() -> None:
     screen = LedgerOverviewScreen(_controller(_tool(LedgerWorkspaceArea.ENTRIES, "elsewhere")))
-    async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+    async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
         assert not screen.query("#ledger-tools")
         assert not screen.query("#ledger-tools-heading")
 
@@ -121,23 +120,20 @@ async def test_a_chosen_tool_opens_in_place_and_back_returns_to_its_own_area() -
     controller = _controller(_tool(LedgerWorkspaceArea.ENTRIES, "rules"))
     entries = resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.ENTRIES))
     assert isinstance(entries, LedgerEntriesScreen)
-    app = _WorkspaceHostApp(entries)
+    app = WorkspaceHostApp(entries)
     async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
-        await pilot.pause()
+        await settle(pilot)
         tools = entries.query_one("#ledger-tools", DataTable)
         tools.focus()
         await pilot.press("enter")
-        await pilot.pause()
-        await pilot.pause()
+        await settle(pilot)
         opened = app.screen
         assert isinstance(opened, _ToolScreen)
         assert opened.tool_name == "rules"
         # Entries reads its own rows as transactions; the tool row must not reach it as one.
         assert opened.controller.restored_transaction_id() is None
         await pilot.press("escape")
-        await pilot.pause()
-        await pilot.pause()
+        await settle(pilot)
         assert isinstance(app.screen, LedgerEntriesScreen)
 
 
@@ -151,14 +147,12 @@ async def test_the_tool_list_rewords_in_place_when_the_profile_language_changes(
         register_language_resolver()
         adopt_profile_output_language(OutputLanguage.EN)
         try:
-            async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-                await pilot.pause()
-                await pilot.pause()
+            async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+                await settle(pilot)
                 english = str(cast("DataTable[str]", screen.query_one("#ledger-tools", DataTable)).get_row_at(0)[0])
                 adopt_profile_output_language(OutputLanguage.ES)
                 await screen.refresh_language()
-                await pilot.pause()
-                await pilot.pause()
+                await settle(pilot)
                 spanish = str(cast("DataTable[str]", screen.query_one("#ledger-tools", DataTable)).get_row_at(0)[0])
                 expected = tr("tui.ledger.area.entries")
         finally:

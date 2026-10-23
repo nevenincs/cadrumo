@@ -68,6 +68,10 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         except CadrumoError as error:
             # Said where the records would be, so an unknown addition's message above stays visible.
             self.query_one("#ledger-evidence-record-detail", Static).update(door_refusal_text(error))
+            if self.add_awaits_reread and load > self.add_reread_after:
+                # The records that would show whether the addition landed were not read; Add reads them again.
+                self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.refresh_failed_unknown"))
+                self.query_one("#ledger-evidence-add", Button).disabled = False
         else:
             self._render_records(loaded, load)
 
@@ -263,6 +267,10 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         self.refresh_then(lambda: self._after_reread(message))
 
     def _add(self) -> None:
+        if self.add_awaits_reread:
+            # Offered only after the records failed to load: read them again rather than add over them.
+            self._reread_after_unknown_add()
+            return
         raw = self.query_one("#ledger-evidence-path", Input).value.strip()
         notice = self.query_one("#ledger-refusal", Static)
         if not raw:
@@ -290,7 +298,7 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
                 self.reading = False
                 self.add_awaits_reread = True
                 self.add_reread_after = self.records_loads
-                self.refresh_then(lambda: self._after_reread(outcome))
+                self.reread_then(lambda _returned: self._after_reread(outcome))
                 return
         else:
             self.query_one("#ledger-evidence-path", Input).value = ""
@@ -299,6 +307,15 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         finally:
             self.reading = False
         self.query_one("#ledger-evidence-add", Button).disabled = False
+
+    def _reread_after_unknown_add(self) -> None:
+        """Read the workspace and the records again; Add returns once records read from now on show."""
+        if self.reading:
+            return
+        self.query_one("#ledger-evidence-add", Button).disabled = True
+        # Blanked so the line the re-read leaves, or the unknown outcome, is what shows.
+        self.query_one("#ledger-flow-status", Static).update("")
+        self.reread_then(lambda _returned: self._after_reread(tr("tui.ledger.flow.outcome_unknown")))
 
     def _after_reread(self, added: str) -> None:
         """Show the re-read area counts beside the document just added."""

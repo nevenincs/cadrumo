@@ -6,6 +6,8 @@ import re
 import time
 from typing import TYPE_CHECKING, Any
 
+from cadrumo.entrypoints.tui.tests.settling import settle
+
 from .tui_checkbox import _tick
 from .tui_contracts import TuiJourneyError, TuiOperationBinding
 from .tui_readback import _query_visible_tui_control, _rendered_text, _stack_text, workbench_notice
@@ -59,7 +61,7 @@ async def wait_for_workbench(pilot: Pilot[Any], *, seconds: float = 300.0) -> Mo
                 loading = ""
             if loading == read_failed:
                 raise TuiJourneyError("the declaration's workbench could not read its form")
-        await pilot.pause(0.2)
+        await settle(pilot, workers=False)
     raise TuiJourneyError(
         f"the declaration's workbench did not read its form within {seconds:.0f}s "
         f"(top screen {type(pilot.app.screen).__name__})"
@@ -84,7 +86,7 @@ async def open_workbench_export(pilot: Pilot[Any], *, output_path: str, maximum_
             notice = _stack_text(pilot, WORKBENCH_NOTICE)
             if notice:
                 raise TuiJourneyError(f"the workbench did not open its export dialog: {notice[:240]}") from None
-            await pilot.pause()
+            await settle(pilot, workers=False)
             continue
         destination.value = output_path
         return
@@ -99,14 +101,14 @@ async def acknowledge_export_result(pilot: Pilot[Any], *, maximum_polls: int = 6
         try:
             close = pilot.app.screen.query_one(_EXPORT_RESULT_CLOSE)
         except NoMatches:
-            await pilot.pause()
+            await settle(pilot, workers=False)
             continue
         close.focus()
         await pilot.press("enter")
         for _ in range(maximum_polls):
             if not pilot.app.screen.query(_EXPORT_RESULT_CLOSE):
                 return
-            await pilot.pause()
+            await settle(pilot, workers=False)
         raise TuiJourneyError("the export statement did not close")
     raise TuiJourneyError("the finished export did not show its statement")
 
@@ -136,7 +138,7 @@ async def open_review_ready_to_apply(pilot: Pilot[Any], *, seconds: float = 300.
                 raise TuiJourneyError(
                     f"the workbench opened no review of its changes (notice {workbench_notice(pilot)[:200]!r})"
                 ) from None
-            await pilot.pause()
+            await settle(pilot, workers=False)
             continue
         break
     review = pilot.app.screen
@@ -147,7 +149,7 @@ async def open_review_ready_to_apply(pilot: Pilot[Any], *, seconds: float = 300.
         if time.monotonic() > deadline:
             findings = _stack_text(pilot, _REVIEW_FINDINGS)
             raise TuiJourneyError(f"the review never allowed applying the changes (findings {findings[:300]!r})")
-        await pilot.pause()
+        await settle(pilot, workers=False)
 
 
 async def wait_for_tui_refresh(
@@ -175,16 +177,16 @@ async def wait_for_tui_refresh(
         else:
             close.focus()
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot, workers=False)
             continue
         try:
             pilot.app.screen.query_one(binding.refresh_result_id)
         except NoMatches:
-            await pilot.pause()
+            await settle(pilot, workers=False)
             continue
         if all(worker.is_finished for worker in pilot.app.workers):
             return
-        await pilot.pause()
+        await settle(pilot, workers=False)
     raise TuiJourneyError(f"{binding.operation_id} did not reach its refreshed TUI destination")
 
 
@@ -251,5 +253,5 @@ async def _wait_for_visible_tui_control(pilot: Pilot[Any], selector: str, *, max
         try:
             return _query_visible_tui_control(pilot, selector)
         except NoMatches:
-            await pilot.pause()
+            await settle(pilot, workers=False)
     raise TuiJourneyError(f"installed TUI did not show {selector}")

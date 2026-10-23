@@ -1,14 +1,15 @@
 # Rust native crates and their build
 
-There is no Cargo workspace. `native/application`, `manager`, `installer`, `launch_guard`, `platform` and the Tauri crate in `native/desktop/src-tauri` each have their own manifest and `Cargo.lock`.
+There is no Cargo workspace. `native/application`, `interpreter_host`, `manager`, `installer`, `launch_guard`, `platform` and the Tauri crate in `native/desktop/src-tauri` each have their own manifest and `Cargo.lock`.
 
 - **`cadrumo-application`** is a library with no binary: package verification, version discovery, publication state and child processes. Its `platform` feature pulls in `cadrumo-platform`.
-- **`cadrumo-platform`** is the sole owner of storage-root, launch-profile and child-environment policy. It exposes a fixed-width C ABI: an `rlib` from Cargo, and a `staticlib` and `cdylib` built by CMake.
+- **`cadrumo-platform`** is the sole owner of storage-root, launch-profile and child-environment policy. It exposes a fixed-width C ABI: an `rlib` from Cargo, and a `staticlib` and `cdylib` built by CMake, with a `webview2` feature and a `platform-consumer` binary.
 - **`cadrumo-manager`** is the per-user runtime manager binary.
 - **`cadrumo-installer`** is a `cdylib`/`rlib` of MSI custom-action exports plus the `cadrumo-msi-maintenance` runner. Its manifest is not platform-gated; `lib.rs` gates the MSI modules to Windows and CMake builds the target only on Windows.
 - **`cadrumo-launch-guard`** is a C-ABI `staticlib`.
 - **Interpreter hosts:** the hosts in `native/interpreter` (`posix/host.c`, `windows/host.c`, bridge `python.c`) are C and link the platform and launch-guard static libraries.
-- **Desktop crate:** consumes application, platform and installer, and on Windows also `cadrumo-manager`.
+- **`cadrumo-interpreter-host`** (`native/interpreter_host`) is the Windows in-process library whose `build.rs` compiles `native/interpreter/windows/host.c`.
+- **Desktop crate:** consumes `cadrumo-application` and `cadrumo-platform`, and on Windows also the installer, manager and interpreter-host crates and the platform `webview2` feature.
 
 [manager](../../../../native/manager/Cargo.toml#L16), [platform](../../../../native/platform/Cargo.toml#L8), [desktop](../../../../native/desktop/src-tauri/Cargo.toml#L23), [installer gates](../../../../native/installer/src/lib.rs#L3).
 
@@ -19,16 +20,17 @@ CMake owns every Rust build, and Cargo owns dependency freshness.
 - **Cargo wrapper:** `cadrumo_cargo_command` wraps each call with `RUSTC`, `RUSTDOC`, `CARGO_TARGET_DIR` and linker settings. `CARGO_TARGET_DIR` is `cargo/native` in the binary directory; the installer uses `cargo/installer`. Targets run `cargo build --locked --target <triple> --profile dev|release`.
 - **Windows toolchain environment:** adds `RUSTFLAGS=-C target-feature=+crt-static`, `LIB` and `INCLUDE`, and passes `CMAKE_LINKER` straight to Cargo. POSIX goes through linker admission.
 - **Targets:** `rust_application` and `rust_manager` build with ALL; `rust_platform`, `rust_launch_guard` and `rust_installer` build on request, the installer only on Windows.
-- **Generated contract:** `native_contract` generates `contract.rs`, `.h` and `.json`. Platform and manager read it through `CADRUMO_CONTRACT_RS` with `include!(env!(...))`, so a bare `cargo` invocation fails to compile. The launch guard's `build.rs` reads `CADRUMO_NATIVE_CONTRACT`.
+- **Generated contract:** `native_contract` generates `contract.rs`, `.h` and `.json`. Platform and manager read it through `CADRUMO_CONTRACT_RS` with `include!(env!(...))`, so a bare `cargo` invocation fails to compile. The `build.rs` files of the launch guard, the desktop crate and the interpreter host also read `CADRUMO_NATIVE_CONTRACT`; the launch guard only copies `contract.json` to `OUT_DIR`. The generator also writes `rust-environment.json` and `build-freeze.json`.
 - **CTest cases:**
-  - `application.rust` and `application.package` (900 s, `RESOURCE_LOCK package_inventory`);
+  - `application.rust` (600 s) and `application.package` (900 s, `RESOURCE_LOCK package_inventory`);
   - `manager.rust` and `manager.supervision` (`--test-threads=1`);
   - `installer.rust` (Windows);
   - `launch_guard.rust` and `launch_guard.<host>`;
   - `platform.resolver` on both families, plus `platform.linker_contract` and `platform.invocation` on POSIX, and `platform.static`, `platform.dll` and `platform.rust` on Windows.
-- **Recipes and clippy:** no `just` recipe runs cargo, clippy or rustfmt. Reach a single target with `just build-native <Config> <target>`. Clippy runs as the CMake targets `check_manager_lifecycle`, `check_installer` (warnings denied) and the desktop project's `desktop-host-clippy`.
+- **Lints and audit:** every manifest has a `[lints]` table (unsafe code forbidden or denied, clippy `all` denied) and `native/deny.toml` configures cargo-deny (floor 0.19.0); there is no `rustfmt.toml`, `clippy.toml` or `rust-toolchain`. `RustQuality.cmake` registers per-crate `.fmt`, `.deny` and `.clippy` CTest gates under the label `rust_quality`, including `application.features`, `manager.fixture.clippy`, `platform.webview2.clippy`, `interpreter_host.*`, `desktop.fmt`, `desktop.deny` and `desktop.clippy`. This gate work and the lockfiles were still being changed when this reference was checked.
+- **Recipes and clippy:** `just check-rust` builds the native tree and runs `ctest -L rust_quality` (rustfmt, clippy with warnings denied, cargo-deny). Reach a single target with `just build-native <Config> <target>`. Clippy also runs as the CMake targets `check_manager_lifecycle`, `check_installer`, `desktop-host-clippy` and `desktop-host-unit-clippy`.
 
-[toolchain](../../../../native/toolchain.json#L2), [resolution](../../../../native/cmake/RustToolchain.cmake#L1), [Rust.cmake](../../../../native/cmake/Rust.cmake#L3), [Windows env](../../../../native/cmake/platforms/Windows.cmake#L58), [manager targets](../../../../native/cmake/Manager.cmake#L48), [installer targets](../../../../native/cmake/Installer.cmake#L21), [application tests](../../../../native/application/CMakeLists.txt#L49), [platform tests](../../../../native/cmake/platforms/Windows.cmake#L202), [recipe](../../../../justfile#L683).
+[toolchain](../../../../native/toolchain.json#L2), [resolution](../../../../native/cmake/RustToolchain.cmake#L1), [Rust.cmake](../../../../native/cmake/Rust.cmake#L3), [Windows env](../../../../native/cmake/platforms/Windows.cmake#L71), [manager targets](../../../../native/cmake/Manager.cmake#L48), [installer targets](../../../../native/cmake/Installer.cmake#L21), [application tests](../../../../native/application/CMakeLists.txt#L49), [platform tests](../../../../native/cmake/platforms/Windows.cmake#L230), [quality gates](../../../../native/cmake/RustQuality.cmake), [recipe](../../../../justfile#L676).
 
 The platform crate composes every packaged image's process environment from the generated contract. That contract is compiled from `native/application-environment.toml`.
 
@@ -37,7 +39,7 @@ The platform crate composes every packaged image's process environment from the 
 - `prepared_environment` returns that environment and creates its pinned directories without starting Python or changing the calling process. The desktop shell calls it to launch packaged children.
 - The declaration, its profiles and the conformance checks are covered in [the environment contract reference](environment-contract.md).
 
-[select](../../../../native/platform/src/launch.rs#L213), [define](../../../../native/platform/src/launch.rs#L332), [filter](../../../../native/platform/src/launch.rs#L430), [prepared](../../../../native/platform/src/lib.rs#L177), [desktop caller](../../../../native/desktop/src-tauri/src/environment.rs#L248), [cleared names](../../../../native/platform/src/storage.rs#L600).
+[select](../../../../native/platform/src/launch.rs#L232), [define](../../../../native/platform/src/launch.rs#L409), [filter](../../../../native/platform/src/launch.rs#L288), [prepared](../../../../native/platform/src/lib.rs#L180), [desktop caller](../../../../native/desktop/src-tauri/src/environment.rs#L272), [cleared names](../../../../native/platform/src/storage.rs#L600).
 
 The manager supervises the packaged runtime host. It starts `bin/cadrumo-runtime` with `--storage-root`, `--storage-identity`, `--expected-version` and `--supervised`.
 
@@ -49,7 +51,7 @@ The manager supervises the packaged runtime host. It starts `bin/cadrumo-runtime
 - **No launch-context refusal on start:** elevation, Session 0 and a missing desktop do not stop the manager. The tray and the startup-failure dialog appear only when a desktop is available. Recovery follows the process lifetime rather than the session's connection state.
 - **Platforms:** only Windows has a run path. Elsewhere `main` writes `manager_platform_unavailable` and exits with the startup-failure code. These are source-level controls; containment and race behaviour need OS-level testing.
 
-[launch](../../../../native/manager/src/supervision/launch.rs#L141), [non-Windows exit](../../../../native/manager/src/main.rs#L59), [supervisor](../../../../native/manager/src/supervision/supervisor.rs#L39), [restart policy](../../../../native/manager/src/supervision/restart.rs#L38), [ownership](../../../../native/CONTRACT.md#L1674), [startup contract](../../../../native/CONTRACT.md#L1731), [peer check](../../../../native/manager/src/ipc/windows.rs#L246).
+[launch](../../../../native/manager/src/supervision/launch.rs), [non-Windows exit](../../../../native/manager/src/main.rs#L78), [supervisor](../../../../native/manager/src/supervision/supervisor.rs#L40), [restart policy](../../../../native/manager/src/supervision/restart.rs#L38), [ownership](../../../../native/CONTRACT.md#L1925), [startup contract](../../../../native/CONTRACT.md#L1983), [peer check](../../../../native/manager/src/ipc/windows.rs#L172).
 
 The installer runner reads a verified plan and drives an MSI transaction.
 
@@ -62,7 +64,7 @@ The launch guard takes the package's removal lease before CPython loads, and gra
 
 The C hosts refuse `LD_*`/`DYLD_*` on POSIX and restrict DLL search on Windows. They load the pinned CPython and the bridge, then call `cadrumo_python_main`. That function refuses any CPython other than the generated pin before an isolated start and Python bootstrap.
 
-[runner](../../../../native/installer/src/runner.rs#L31), [Restart Manager](../../../../native/installer/src/windows.rs#L1), [launch guard](../../../../native/launch_guard/src/lib.rs#L14), [POSIX host](../../../../native/interpreter/posix/host.c#L52), [Windows host](../../../../native/interpreter/windows/host.c#L87), [bridge](../../../../native/interpreter/python.c#L33).
+[runner](../../../../native/installer/src/runner.rs), [Restart Manager](../../../../native/installer/src/windows.rs#L1564), [launch guard](../../../../native/launch_guard/src/lib.rs#L14), [POSIX host](../../../../native/interpreter/posix/host.c#L52), [Windows host](../../../../native/interpreter/windows/host.c#L123), [bridge](../../../../native/interpreter/python.c#L33).
 
 Scoped observations needing a check against current code:
 
@@ -71,11 +73,11 @@ Scoped observations needing a check against current code:
 - **Exit code 1:** the exit classifier counts code 1 as a launch failure, while the Windows supervision module names 1 as the forced-termination code.
 - **Abort profiles:** the platform manifest's `panic = "abort"` profiles apply only when it is the root package.
 
-[adoption](../../../../native/manager/src/supervision/adoption.rs#L47), [stand-down](../../../../native/manager/src/supervision/supervisor.rs#L360), [clear](../../../../native/manager/src/custody/posix.rs#L193), [exit codes](../../../../native/manager/src/supervision/exit.rs#L15), [termination code](../../../../native/manager/src/supervision/windows.rs#L42), [profiles](../../../../native/platform/Cargo.toml#L10).
+[adoption](../../../../native/manager/src/supervision/adoption.rs#L47), [stand-down](../../../../native/manager/src/supervision/supervisor.rs), [clear](../../../../native/manager/src/custody/posix.rs#L193), [exit codes](../../../../native/manager/src/supervision/exit.rs#L15), [termination code](../../../../native/manager/src/supervision/windows.rs#L42), [profiles](../../../../native/platform/Cargo.toml#L12).
 
 ## Working notes
 
-- Path, storage-root, launch-profile and environment policy lives only in `native/platform`, driven by `native/application-environment.toml`. The `contract.*` files are generated, never hand-authored. [declaration](../../../../native/CONTRACT.md#L114), [generated](../../../../native/CONTRACT.md#L240)
+- Path, storage-root, launch-profile and environment policy lives only in `native/platform`, driven by `native/application-environment.toml`. The `contract.*` files are generated, never hand-authored. [declaration](../../../../native/CONTRACT.md#L116), [generated](../../../../native/CONTRACT.md)
 - The application `.rlib` is not a runtime file. `fixture-test-mode` is refused in release builds. [statement](../../../../native/CONTRACT.md#L149), [guard](../../../../native/manager/src/lib.rs#L5)
 - Gated tests:
   - `supervision.rs` is Windows-only.
@@ -84,5 +86,5 @@ Scoped observations needing a check against current code:
   - Window smoke needs an interactive logon.
   - `live-package-tests` runs as `application.package`, while `live-python-tests` has no CMake wiring.
 
-  [supervision](../../../../native/manager/tests/supervision.rs#L6), [custody](../../../../native/manager/tests/custody_conformance.rs#L118), [package test](../../../../native/application/CMakeLists.txt#L59), [smoke](../../../../native/CONTRACT.md#L1556)
-- Login start: MSI authoring writes a per-scope `Run` value that launches the manager with `--sign-in`. Linux and macOS packaging add no services or automatic launch. [Run](../../../../dev/packaging/native/windows_msi.py#L252), [no services](../../../../native/CONTRACT.md#L2027)
+  [supervision](../../../../native/manager/tests/supervision.rs#L6), [custody](../../../../native/manager/tests/custody_conformance.rs#L118), [package test](../../../../native/application/CMakeLists.txt#L59), [smoke](../../../../native/CONTRACT.md#L1809)
+- Login start: MSI authoring writes a per-scope `Run` value that launches the manager with `--sign-in`. Linux and macOS packaging add no services or automatic launch. [Run](../../../../dev/packaging/native/windows_msi.py#L228), [no services](../../../../native/CONTRACT.md#L2300)

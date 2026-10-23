@@ -84,6 +84,7 @@ from ...destination_alias import closed_destination_ids
 from ...navigation import TuiScreenContextV1
 from ...operations.controller_port import OperationControllerPort
 from ...operations.modal import OperationModal, OperationModalSettledOutcomeV1
+from ...tests.settling import settle
 from ..controller import AeatSyncWorkspaceController
 from ..models import (
     AeatSyncDestinationIdV1,
@@ -133,7 +134,7 @@ async def test_stored_notifications_remain_readable_without_aeat_credentials(
     screen = AeatSyncOverviewScreen(controller)
     monkeypatch.setattr(screen, "_show_operation_modal", lambda _controller: None)
     async with ScreenHostApp(screen).run_test(size=(120, 65)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         button = screen.query_one(".aeat-sync-operation", Button)
         assert not button.disabled
         screen._set_operation_buttons_disabled(True)
@@ -141,9 +142,9 @@ async def test_stored_notifications_remain_readable_without_aeat_credentials(
         screen._set_operation_buttons_disabled(False)
         assert not button.disabled
         button.scroll_visible(immediate=True)
-        await pilot.pause()
+        await settle(pilot)
         assert await pilot.click(button)
-        await pilot.pause()
+        await settle(pilot)
         assert [request.operation for request in requests] == [NOTIFICATIONS_LIST_DEFINITION_ID]
         assert button.disabled
 
@@ -164,12 +165,12 @@ async def test_sync_screen_exposes_same_auth_editor_and_reloads_saved_readiness(
     controller.aeat_auth_setup = door
     screen = AeatSyncOverviewScreen(controller)
     async with ScreenHostApp(screen).run_test(size=(120, 65)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         buttons = tuple(screen.query(".aeat-sync-operation"))
         assert buttons and all(button.disabled for button in buttons)
         assert tr("tui.aeat_auth.blocked") in str(screen.query_one("#aeat-sync-auth-readiness", Static).render())
         assert await pilot.click("#aeat-sync-auth-edit")
-        await pilot.pause()
+        await settle(pilot)
         assert isinstance(screen.app.screen, AeatAuthSetupScreen)
         editor = screen.app.screen
         from textual.widgets import Input, Select
@@ -178,7 +179,7 @@ async def test_sync_screen_exposes_same_auth_editor_and_reloads_saved_readiness(
         editor.query_one("#aeat-auth-field-0", Input).value = "12345678Z"
         await editor._save()
         editor.action_close()
-        await pilot.pause()
+        await settle(pilot)
         assert controller.auth_readiness is not None and controller.auth_readiness.ready
         assert all(not button.disabled for button in screen.query(".aeat-sync-operation"))
         assert not requests
@@ -694,7 +695,7 @@ async def test_all_six_routes_mount_without_firing_a_host_handoff_or_leaking_sco
     for zone in AeatSyncWorkspaceZone:
         screen = resolve_aeat_sync_screen(controller, controller.target(zone))
         async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             assert screen.query_one("#aeat-sync-navigation", DataTable).row_count == 6
             assert screen.query_one("#aeat-sync-rows", DataTable).row_count == 1
             rendered = "\n".join(str(widget.render()) for widget in screen.query(Static))
@@ -720,9 +721,9 @@ async def test_explicit_overview_operation_invokes_host_once_and_missing_host_re
     presented: list[OperationControllerPort] = []
     monkeypatch.setattr(screen, "_show_operation_modal", presented.append)
     async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         await pilot.click("#aeat-sync-operation-0")
-        await pilot.pause()
+        await settle(pilot)
         # The one-shot guard is the disabled control itself; nothing can hand off twice.
         assert screen.query_one("#aeat-sync-operation-0", Button).disabled
     assert calls == [
@@ -734,7 +735,7 @@ async def test_explicit_overview_operation_invokes_host_once_and_missing_host_re
     assert presented == controllers
     refused = AeatSyncOverviewScreen(_controller())
     async with ScreenHostApp[None](refused).run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         # Without a host door no control is offered; the refusal is stated instead.
         assert not refused.query("#aeat-sync-operation-0")
         assert tr("tui.aeat_sync.refusal.operation_handoff") in str(
@@ -761,10 +762,10 @@ async def test_started_filed_pull_handoff_pushes_the_canonical_operation_modal(
     )
     presented: list[tuple[OperationModal, object]] = []
     async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         monkeypatch.setattr(screen.app, "push_screen", lambda modal, callback: presented.append((modal, callback)))
         await pilot.click("#aeat-sync-operation-0")
-        await pilot.pause()
+        await settle(pilot)
 
     assert len(presented) == 1
     assert isinstance(presented[0][0], OperationModal)
@@ -781,7 +782,7 @@ async def test_missing_session_contract_is_visible_refusal_and_unread_notificati
         )
     )
     async with ScreenHostApp[None](unknown).run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert not tuple(unknown.query(Button).results())
         assert str(unknown.query_one("#aeat-sync-status", Static).render())
 
@@ -798,7 +799,7 @@ async def test_missing_session_contract_is_visible_refusal_and_unread_notificati
     )
     screen = AeatSyncNotificationsScreen(controller)
     async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#aeat-sync-rows", DataTable)
         table.focus()
         await pilot.press("enter")
@@ -875,14 +876,14 @@ async def test_successful_operation_refreshes_aeat_sync_off_ui_loop_and_rearms_b
         view_model=SimpleNamespace(projection=SimpleNamespace(terminal_condition=OperationTerminalCondition.REFUSED))
     )
     async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen._consumed_request_ids.add("aeat-sync-operation-0")
         ui_thread = get_ident()
         screen._on_operation_settled(refused)
-        await pilot.pause()
+        await settle(pilot)
         assert reads == []
         screen._on_operation_settled(succeeded)
-        await pilot.pause()
+        await settle(pilot)
         assert reads and reads[0] != ui_thread
         assert controller.projection is refreshed
         assert screen._consumed_request_ids == set()
@@ -941,9 +942,9 @@ async def test_successful_notification_list_projects_capture_times_and_row_count
     screen._active_operation_controller = cast(OperationControllerPort, result_reader)
 
     async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen._on_operation_settled(settled)
-        await pilot.pause()
+        await settle(pilot)
         status = str(screen.query_one("#aeat-sync-status", Static).render())
 
     assert projected == [operation_projection]
@@ -980,29 +981,30 @@ async def test_notification_focus_restores_by_projected_identity_across_refresh_
     )
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 18)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#aeat-sync-rows", DataTable)
         table.focus()
         table.move_cursor(row=1)
-        await pilot.pause()
+        await settle(pilot)
         chosen = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value
         assert chosen == first.notifications[1].selection_key
 
         screen.refresh_projection(reordered)
-        await pilot.pause()
+        await settle(pilot)
         assert app.focused is table
         assert table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value == chosen
         assert table.scroll_y <= table.cursor_row < table.scroll_y + table.size.height
 
         await pilot.resize_terminal(100, 22)
+        await settle(pilot)
         assert table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value == chosen
         assert table.scroll_y <= table.cursor_row < table.scroll_y + table.size.height
 
         child = Screen[None]()
         app.push_screen(child)
-        await pilot.pause()
+        await settle(pilot)
         child.dismiss(None)
-        await pilot.pause()
+        await settle(pilot)
         assert app.focused is table
         assert table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value == chosen
 
@@ -1043,7 +1045,7 @@ async def test_every_aeat_sync_screen_is_localized_and_keeps_route_and_row_ident
         with override_settings(cadrumo_output_language=locale):
             screen = screen_type(_controller())
             async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
-                await pilot.pause()
+                await settle(pilot)
                 rendered = "\n".join(str(widget.render()) for widget in screen.query(Static))
                 assert headings[locale] in rendered
                 assert headings[locale] == tr(heading_key, locale=locale)
@@ -1113,9 +1115,9 @@ async def test_operation_failure_and_refusal_copy_is_localized(
         with override_settings(cadrumo_output_language=locale):
             failed = AeatSyncOverviewScreen(_controller(operation_handoff=fail))
             async with ScreenHostApp[None](failed).run_test(size=(100, 30)) as pilot:
-                await pilot.pause()
+                await settle(pilot)
                 await pilot.click("#aeat-sync-operation-0")
-                await pilot.pause()
+                await settle(pilot)
                 rendered = str(failed.query_one("#aeat-sync-status", Static).render())
                 assert failure_copy in rendered
                 assert "protected" not in rendered
@@ -1123,7 +1125,7 @@ async def test_operation_failure_and_refusal_copy_is_localized(
 
             refused = AeatSyncOverviewScreen(_controller())
             async with ScreenHostApp[None](refused).run_test(size=(100, 30)) as pilot:
-                await pilot.pause()
+                await settle(pilot)
                 assert not refused.query("#aeat-sync-operation-0")
                 assert refusal_copy in str(refused.query_one("#aeat-sync-status", Static).render())
     finally:
@@ -1148,7 +1150,7 @@ async def test_every_zone_renders_truthful_empty_or_unobservable_source_state(
     for screen_factory, _heading, _translations, _keys in _SCREEN_CASES:
         screen = screen_factory(controller)
         async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             state = controller.state_for(screen.zone)
             assert state.item_count == expected_count
             assert screen.query_one("#aeat-sync-rows", DataTable).row_count == 0
@@ -1167,7 +1169,7 @@ async def test_all_routes_have_one_scroll_owner_no_horizontal_overflow_and_reach
     for screen_factory, _heading, _translations, _keys in _SCREEN_CASES:
         screen = screen_factory(_controller())
         async with ScreenHostApp[None](screen).run_test(size=(width, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             overflowing = tuple(
                 (table.id, table.max_scroll_x, table.virtual_size, table.container_size)
                 for table in screen.query(DataTable)
@@ -1183,6 +1185,7 @@ async def test_all_routes_have_one_scroll_owner_no_horizontal_overflow_and_reach
                 reached = False
                 for _ in range(8):
                     await pilot.press("tab")
+                    await settle(pilot)
                     if screen.app.focused is button:
                         reached = True
                         break
@@ -1204,7 +1207,7 @@ async def test_census_adoption_is_local_wording_and_no_remote_push_control(local
         )
         census = AeatSyncCensusScreen(controller)
         async with ScreenHostApp[None](census).run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             visible = _table_text(census.query_one("#aeat-sync-rows", DataTable))
             assert tr("tui.aeat_sync.census_status.adopted", locale=locale) in visible
             assert not tuple(census.query(Button))
@@ -1235,13 +1238,13 @@ async def test_filed_pull_all_uses_action_specific_copy_and_exact_one_shot_hando
             for screen in (AeatSyncOverviewScreen(controller), AeatSyncFiledDeclarationsScreen(controller)):
                 monkeypatch.setattr(screen, "_show_operation_modal", lambda _controller: None)
                 async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
-                    await pilot.pause()
+                    await settle(pilot)
                     button = screen.query_one("#aeat-sync-operation-0", Button)
                     expected = tr("tui.aeat_sync.action.pull_filed_all", locale=locale)
                     assert expected != "tui.aeat_sync.action.pull_filed_all"
                     assert str(button.label) == expected
                     await pilot.click("#aeat-sync-operation-0")
-                    await pilot.pause()
+                    await settle(pilot)
                     assert button.disabled
     finally:
         I18N_STRICT_MISSING_KEYS.reset(token)
@@ -1266,7 +1269,7 @@ async def test_overview_actions_use_distinct_localized_census_and_notification_c
         with override_settings(cadrumo_output_language=locale):
             census = AeatSyncOverviewScreen(_controller(operation_handoff=handoff))
             async with ScreenHostApp[None](census).run_test(size=(80, 24)) as pilot:
-                await pilot.pause()
+                await settle(pilot)
                 label = str(census.query_one("#aeat-sync-operation-0", Button).label)
                 assert label == tr("tui.aeat_sync.action.review_census", locale=locale)
                 assert label != tr("tui.aeat_sync.action.pull_filed_all", locale=locale)
@@ -1280,7 +1283,7 @@ async def test_overview_actions_use_distinct_localized_census_and_notification_c
                 )
             )
             async with ScreenHostApp[None](notifications).run_test(size=(80, 24)) as pilot:
-                await pilot.pause()
+                await settle(pilot)
                 label = str(notifications.query_one("#aeat-sync-operation-0", Button).label)
                 assert label == tr("tui.search.action.list_notifications", locale=locale)
     finally:
@@ -1363,7 +1366,7 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
     # one-shot controls from the modal's independent polling lifecycle.
     monkeypatch.setattr(screen, "_show_operation_modal", mounted_controllers.append)
     async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         first = screen.query_one("#aeat-sync-operation-0", Button)
         second = screen.query_one("#aeat-sync-operation-1", Button)
         # Scrolled into view before clicking, because `pilot.click` targets
@@ -1374,13 +1377,13 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
         # measured at y=16 of 24 once scrolled, and off-screen before that --
         # so this is what an operator does to reach them, not a workaround.
         first.scroll_visible(animate=False)
-        await pilot.pause()
+        await settle(pilot)
         await pilot.click(first)
         # A click POSTS a message; the handler that disables the button runs on
         # the next pump. Asserting straight after the click races that handler,
         # which is why this passed only when earlier tests had shifted the
         # timing and failed whenever it ran alone.
-        await pilot.pause()
+        await settle(pilot)
         assert first.disabled
         assert not second.disabled
         if first_fails:
@@ -1389,9 +1392,9 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
             assert "protected" not in status
             assert "12345678Z" not in status
         second.scroll_visible(animate=False)
-        await pilot.pause()
+        await settle(pilot)
         await pilot.click(second)
-        await pilot.pause()
+        await settle(pilot)
     assert tuple(call.action.action_id for call in calls) == (
         "operator.profile.edit",
         "operator.live.filed.pull_all",
@@ -1422,7 +1425,7 @@ async def test_the_census_comparison_shows_both_values_or_neither(width: int) ->
     screen = AeatSyncCensusScreen(controller)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(width, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = cast("DataTable[str]", screen.query_one("#aeat-sync-rows", DataTable))
         keys = {str(column.key.value) for column in table.columns.values()}
         app.exit(None)
@@ -1450,7 +1453,7 @@ async def test_every_comparison_surface_shows_both_values_or_neither(screen_type
     screen = screen_type(controller)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(width, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = cast("DataTable[str]", screen.query_one("#aeat-sync-rows", DataTable))
         keys = {str(column.key.value) for column in table.columns.values()}
         app.exit(None)
@@ -1509,13 +1512,13 @@ async def test_complete_census_evidence_survives_reopen_and_selected_value_is_re
             )
         )
         async with ScreenHostApp[None](screen).run_test(size=(width, 30)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             table = screen.query_one("#aeat-sync-census-evidence", DataTable)
             assert table.row_count > 1
             table.focus()
             table.move_cursor(row=table.row_count - 1)
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             detail = str(screen.query_one("#aeat-sync-census-value", Static).render())
             assert long_value in detail
             assert "Nueva columna AEAT" in detail
@@ -1586,15 +1589,15 @@ async def test_reader_projected_filed_history_door_renders_and_hands_off_before_
     for screen in (AeatSyncOverviewScreen(controller), AeatSyncFiledDeclarationsScreen(controller)):
         monkeypatch.setattr(screen, "_show_operation_modal", lambda _controller: None)
         async with ScreenHostApp[None](screen).run_test(size=(100, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             doors = [button for button in screen.query(Button) if str(button.label) == pull_label]
             assert len(doors) == 1
             status = str(screen.query_one("#aeat-sync-status", Static).render())
             assert tr("tui.aeat_sync.refusal.operation_handoff") not in status
             doors[0].scroll_visible(animate=False)
-            await pilot.pause()
+            await settle(pilot)
             await pilot.click(doors[0])
-            await pilot.pause()
+            await settle(pilot)
             assert doors[0].disabled
 
     expected = AeatSyncOperationRequestV1(
@@ -1632,11 +1635,11 @@ async def test_persisted_drift_renders_each_diff_values_and_grounding_without_ov
     screen = AeatSyncReconciliationScreen(controller)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(width, 35)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             table = screen.query_one("#aeat-sync-rows", DataTable)
             assert table.row_count == 2
             table.move_cursor(row=1)
-            await pilot.pause()
+            await settle(pilot)
             detail = str(screen.query_one("#aeat-sync-reconciliation-detail", Static).render())
             assert all(
                 value in detail
@@ -1669,7 +1672,7 @@ async def test_stored_match_with_advisories_shows_incomplete_comparison() -> Non
     screen = AeatSyncReconciliationScreen(controller)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 35)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             table = screen.query_one("#aeat-sync-rows", DataTable)
             assert "Not fully compared" in table.get_row_at(0)
             detail = str(screen.query_one("#aeat-sync-reconciliation-detail", Static).render())
@@ -1702,13 +1705,13 @@ async def test_distinct_comparisons_at_same_address_have_unique_rows_and_histori
     screen = AeatSyncReconciliationScreen(controller)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 35)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             table = screen.query_one("#aeat-sync-rows", DataTable)
             assert table.row_count == 2
             assert len(set(table.rows)) == 2
             for index in range(2):
                 table.move_cursor(row=index)
-                await pilot.pause()
+                await settle(pilot)
                 detail = str(screen.query_one("#aeat-sync-reconciliation-detail", Static).render())
                 assert "Stored comparison; current calculation has not been rechecked." in detail
                 assert first.work_unit_id in detail

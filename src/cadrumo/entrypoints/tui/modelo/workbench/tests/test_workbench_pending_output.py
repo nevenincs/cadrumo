@@ -11,6 +11,7 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..export import WorkbenchExportScreen
 from ..screen import ModeloWorkbenchScreen
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
@@ -43,19 +44,19 @@ async def test_verified_saved_values_cannot_bypass_pending_intent_at_either_outp
         )
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             assert screen._load is not None
             saved_progress = screen._progress(screen._load)
             assert not saved_progress.filing_withheld and screen._load.verified
             _stage(screen, intent)
             staged = screen.staged_changes
             await pilot.press("e")
-            await pilot.pause()
+            await settle(pilot)
             assert app.screen is screen and screen.staged_changes == staged
             assert "[R]" in str(screen.query_one("#wb-notice", Static).render())
             assert screen.active_bindings["R"].binding.show
             screen._confirm_file(actions.file)
-            await pilot.pause()
+            await settle(pilot)
             assert app.screen is screen and screen.staged_changes == staged
             assert actions.exports == [] and actions.requested == []
             assert screen.form is not None
@@ -73,16 +74,16 @@ async def test_output_dialog_submission_rechecks_new_pending_intent(boundary: st
         )
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             if boundary == "export":
                 await pilot.press("e")
-                await pilot.pause()
+                await settle(pilot)
                 assert isinstance(app.screen, WorkbenchExportScreen)
                 path = app.screen.query_one("#export-path", Input)
                 path.value = "pending-output-test.boe"
             else:
                 screen._confirm_file(actions.file)
-                await pilot.pause()
+                await settle(pilot)
                 assert isinstance(app.screen, ConfirmScreen)
             _stage(screen, "false", refresh=False)
             staged = screen.staged_changes
@@ -90,8 +91,7 @@ async def test_output_dialog_submission_rechecks_new_pending_intent(boundary: st
                 await pilot.click("#export-submit")
             else:
                 await pilot.click("#btn-confirm-accept")
-            await pilot.pause()
-            await pilot.pause()
+            await settle(pilot)
             assert app.screen is screen and screen.staged_changes == staged
             assert actions.exports == [] and actions.requested == []
             assert "[R]" in str(screen.query_one("#wb-notice", Static).render())

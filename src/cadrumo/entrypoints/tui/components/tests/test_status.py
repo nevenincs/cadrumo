@@ -9,6 +9,7 @@ from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll
 from textual.widgets import Static
 
+from ...tests.settling import settle
 from ..status import PinnedStatusBar
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -41,7 +42,7 @@ async def test_status_bar_stays_pinned_and_preserves_plain_multiline_diagnostics
 
         diagnostic = "Open Cl@ve verification\nCode: [bold]834-221[/bold]\nReturn here after approval"
         bar.show_progress(diagnostic)
-        await pilot.pause()
+        await settle(pilot)
 
         assert bar.tone == "progress"
         assert bar.message == diagnostic
@@ -53,7 +54,7 @@ async def test_status_bar_stays_pinned_and_preserves_plain_multiline_diagnostics
 
         body = app.query_one("#body", VerticalScroll)
         body.scroll_end(animate=False)
-        await pilot.pause()
+        await settle(pilot)
 
         assert body.scroll_y > 0
         assert bar.region.y == initial_y, "scrolling the content body must not move the status channel"
@@ -72,13 +73,13 @@ async def test_status_bar_exposes_each_closed_tone_and_keeps_a_supplied_summary(
             ("error", bar.show_error),
         ):
             render(f"{tone} message")
-            await pilot.pause()
+            await settle(pilot)
             assert bar.tone == tone
             assert bar.message == f"{tone} message"
             assert bar.has_class(f"tone-{tone}")
 
         bar.clear_message()
-        await pilot.pause()
+        await settle(pilot)
         assert bar.tone == "idle"
         assert bar.message == ""
         assert bar.region.height >= height
@@ -92,7 +93,7 @@ async def test_status_bar_renders_progress_text_exactly_as_supplied() -> None:
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         bar = app.query_one("#status", PinnedStatusBar)
         bar.show_progress(supplied)
-        await pilot.pause()
+        await settle(pilot)
 
         assert bar.tone == "progress"
         assert bar.message == supplied
@@ -114,10 +115,10 @@ async def test_status_bar_without_a_summary_collapses_when_idle() -> None:
         assert not bar.display
 
         bar.show_progress("Working")
-        await pilot.pause()
+        await settle(pilot)
         assert bar.display
         assert bar.region.height > 0
 
         bar.clear_message()
-        await pilot.pause()
+        await settle(pilot)
         assert not bar.display

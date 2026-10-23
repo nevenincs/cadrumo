@@ -11,7 +11,6 @@ defaulted.
 from __future__ import annotations
 
 import pytest
-from textual.pilot import Pilot
 from textual.screen import Screen
 from textual.widgets import Button, Input, Select, Static
 
@@ -22,6 +21,7 @@ from ......core.payment_election import PaymentElection
 from ......core.prior_domiciliation_election import PriorDomiciliationElection
 from ......core.refund_election import RefundElection
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ...lifecycle import ModeloLifecycleActionUnavailableError
 from ...m303_evidence import OrdinaryM303FilingEvidenceScreen
 from ..export import WorkbenchExportScreen
@@ -31,11 +31,6 @@ from .declaration_states import with_findings
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-
-async def _settle(pilot: Pilot[None], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _notice(screen: ModeloWorkbenchScreen) -> str:
@@ -49,12 +44,12 @@ async def test_a_303_calculation_asks_its_answers_and_cancelling_calculates_noth
         screen = ModeloWorkbenchScreen(FakeReader(), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("c")
-            await _settle(pilot)
+            await settle(pilot)
             asked = isinstance(app.screen, OrdinaryM303FilingEvidenceScreen)
             await pilot.press("escape")
-            await _settle(pilot)
+            await settle(pilot)
             notice = _notice(screen)
 
     assert asked
@@ -69,13 +64,13 @@ async def test_staged_changes_are_applied_before_a_recalculation() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*"10", "enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("c")
-            await _settle(pilot)
+            await settle(pilot)
             notice = _notice(screen)
 
     assert actions.requested == []
@@ -91,9 +86,9 @@ async def test_a_registered_refusal_is_shown_in_its_own_words() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("c")
-            await _settle(pilot, 6)
+            await settle(pilot)
             notice = _notice(screen)
 
     assert actions.requested == ["calculate"]
@@ -107,9 +102,9 @@ async def test_an_export_waits_for_verification() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(verified=False), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("e")
-            await _settle(pilot)
+            await settle(pilot)
             still_workbench = app.screen is screen
             notice = _notice(screen)
 
@@ -127,18 +122,20 @@ async def test_an_export_submits_the_elections_it_asked_and_defaults_the_rest() 
             screen = ModeloWorkbenchScreen(FakeReader(verified=True), actions=actions)
             app = ScreenHostApp(screen)
             async with app.run_test(size=(140, 48)) as pilot:
-                await _settle(pilot)
+                await settle(pilot)
                 await pilot.press("e")
-                await _settle(pilot)
+                await settle(pilot)
                 dialog = app.screen
                 assert isinstance(dialog, WorkbenchExportScreen)
                 elections = len(dialog.query(Select)) - 1
                 if actions is asking:
                     dialog.query_one("#export-payment-election", Select).value = PaymentElection.DOMICILIACION.value
+                    await settle(pilot)
                 await pilot.press(*"salida.txt")
                 dialog.query_one("#export-path", Input).focus()
+                await settle(pilot)
                 await pilot.press("enter")
-                await _settle(pilot, 6)
+                await settle(pilot)
                 assert (elections == 3) is (actions is asking)
 
     (asked,) = asking.exports
@@ -161,9 +158,9 @@ async def test_review_reports_are_accessible_while_only_filing_ready_work_offers
     screen = ModeloWorkbenchScreen(FakeReader(form=form, verified=True), actions=actions)
     app = ScreenHostApp(screen)
     async with app.run_test(size=(140, 48)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await pilot.press("e")
-        await _settle(pilot)
+        await settle(pilot)
         dialog = app.screen
         assert isinstance(dialog, WorkbenchExportScreen)
         artefact = dialog.query_one("#export-artefact", Select)
@@ -175,8 +172,9 @@ async def test_review_reports_are_accessible_while_only_filing_ready_work_offers
         artefact.value = ModeloExportArtefact.CALCULATION_REPORT_CSV.value
         dialog.query_one("#export-path", Input).value = "review.csv"
         dialog.query_one("#export-path", Input).focus()
+        await settle(pilot)
         await pilot.press("enter")
-        await _settle(pilot, 6)
+        await settle(pilot)
     assert len(actions.exports) == 1
     assert actions.exports[0].artefact is ModeloExportArtefact.CALCULATION_REPORT_CSV
 
@@ -188,9 +186,9 @@ async def test_review_export_requires_a_saved_calculation() -> None:
     screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=actions)
     app = ScreenHostApp(screen)
     async with app.run_test(size=(140, 40)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await pilot.press("e")
-        await _settle(pilot)
+        await settle(pilot)
         assert app.screen is screen
     assert actions.exports == []
 
@@ -201,17 +199,18 @@ async def test_a_saved_draft_offers_and_submits_only_the_immutable_review_workbo
     screen = ModeloWorkbenchScreen(FakeReader(form=synthetic_form(needs_input=False)), actions=actions)
     app = ScreenHostApp(screen)
     async with app.run_test(size=(140, 48)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await pilot.press("e")
-        await _settle(pilot)
+        await settle(pilot)
         dialog = app.screen
         assert isinstance(dialog, WorkbenchExportScreen)
         assert dialog.query_one("#export-artefact", Select).value == ModeloExportArtefact.CALCULATION_REVIEW_XLSX.value
         assert not dialog.query("#export-payment-election")
         dialog.query_one("#export-path", Input).value = "draft-review.xlsx"
         dialog.query_one("#export-path", Input).focus()
+        await settle(pilot)
         await pilot.press("enter")
-        await _settle(pilot, 6)
+        await settle(pilot)
     assert len(actions.exports) == 1
     assert actions.exports[0].artefact is ModeloExportArtefact.CALCULATION_REVIEW_XLSX
 
@@ -231,8 +230,8 @@ async def test_native_google_review_button_uses_the_viewed_saved_calculation(sav
     screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions(), native_review=native_review)
     app = ScreenHostApp(screen)
     async with app.run_test(size=(140, 48)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         screen.query_one("#wb-google-review", Button).press()
-        await _settle(pilot)
+        await settle(pilot)
         assert revisions == ([form.calculation_revision_id] if saved else [])
         assert (app.screen is screen) is (not saved)

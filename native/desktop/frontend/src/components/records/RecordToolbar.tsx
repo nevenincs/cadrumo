@@ -71,7 +71,7 @@ export function RecordToolbar({
     filters.hiddenSources.length > 0 ||
     filters.minLevel !== defaultFilters.minLevel;
   return (
-    <div className="log-toolbar flex shrink-0 flex-wrap items-center gap-1 border-b bg-chrome py-1 pr-1.5 pl-3">
+    <div className="log-toolbar flex shrink-0 flex-wrap items-center gap-1 bg-chrome py-1 pr-1.5 pl-3">
       <div
         data-log-group="filters"
         className="flex min-w-40 flex-1 basis-field items-center gap-1 panel-short:basis-0"

@@ -323,6 +323,10 @@ class CategorisationScreen(LedgerWorkspaceScreen):
             self.status("tui.ledger.flow.in_flight_refusal")
         return self.busy
 
+    def refuse_write(self) -> bool:
+        """Say why no reviewed change can be written now and return ``True``, or return ``False`` when one can."""
+        return self.refuse_while_busy()
+
     async def _run(self, request: Callable[[], Awaitable[bool | None]], *, writing: bool, refreshes: bool) -> None:
         self.refuse("")
         self.status("tui.ledger.categorisation.saving" if writing else "tui.ledger.categorisation.loading")
@@ -393,17 +397,17 @@ class CategorisationScreen(LedgerWorkspaceScreen):
 
     def _confirm(self) -> None:
         staged = self.staged
-        if staged is None or self.refuse_while_busy():
+        if staged is None or self.refuse_write():
             return
         if not staged.destructive:
             self._write(staged)
             return
 
         def decided(confirmed: bool | None) -> None:
-            if confirmed is True and self.staged is staged:
-                self._write(staged)
-            else:
+            if confirmed is not True or self.staged is not staged:
                 self.status("tui.ledger.categorisation.not_done")
+            elif not self.refuse_write():
+                self._write(staged)
 
         self.app.push_screen(
             ConfirmScreen(

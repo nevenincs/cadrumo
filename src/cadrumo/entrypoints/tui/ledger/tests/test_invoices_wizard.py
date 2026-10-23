@@ -19,6 +19,7 @@ from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.iva.schema import InvoiceKind
 from ...components.host import ScreenHostApp
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..invoices_wizard import LedgerInvoiceWizardScreen
 from ..models import LedgerFlowState
@@ -56,15 +57,9 @@ def _visible_step(screen: LedgerInvoiceWizardScreen) -> list[str]:
     return [str(step.id) for step in screen.query(".ledger-invoices-step").results(Vertical) if step.display]
 
 
-async def _settle(pilot: Pilot[None]) -> None:
-    await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
-
-
 async def _press(pilot: Pilot[None], screen: LedgerInvoiceWizardScreen, button_id: str) -> None:
     screen.query_one(f"#{button_id}", Button).press()
-    await _settle(pilot)
+    await settle(pilot)
 
 
 async def _fill_and_review(pilot: Pilot[None], screen: LedgerInvoiceWizardScreen) -> None:
@@ -82,7 +77,7 @@ async def test_the_wizard_moves_step_by_step_and_records_exactly_the_reviewed_re
     door = MemoryInvoiceWizardDoor()
     screen = _screen(door)
     async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         assert _visible_step(screen) == ["ledger-invoices-wizard-step-counterparty"]
         assert screen.query_one("#ledger-invoices-wizard-previous", Button).disabled
         assert not screen.query_one("#ledger-invoices-wizard-review", Button).display
@@ -128,7 +123,7 @@ async def test_field_refusals_are_listed_and_correcting_reopens_at_the_first_ref
     screen = _screen(door)
     screen.back_area = LedgerWorkspaceArea.OVERVIEW
     async with ReplacingHostApp(screen).run_test(size=(120, 50)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await _fill_and_review(pilot, screen)
         await _press(pilot, screen, "ledger-invoices-wizard-confirm")
         assert screen.flow_state is LedgerFlowState.FAILED
@@ -137,7 +132,7 @@ async def test_field_refusals_are_listed_and_correcting_reopens_at_the_first_ref
         assert f"{tr('tui.ledger.invoice.field.taxable_base')}: must be a number" in refusal
         assert f"{tr('tui.ledger.invoice.field.invoice_date')}: must be a date" in refusal
         await _press(pilot, screen, "ledger-invoices-wizard-again")
-        await _settle(pilot)
+        await settle(pilot)
         fresh = pilot.app.screen
         assert isinstance(fresh, LedgerInvoiceWizardScreen)
         assert fresh is not screen
@@ -154,7 +149,7 @@ async def test_a_typed_door_refusal_is_shown_and_cancelling_writes_nothing() -> 
     door.refusal = refusal
     screen = _screen(door)
     async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await _fill_and_review(pilot, screen)
         await _press(pilot, screen, "ledger-invoices-wizard-confirm")
         assert screen.flow_state is LedgerFlowState.FAILED
@@ -163,7 +158,7 @@ async def test_a_typed_door_refusal_is_shown_and_cancelling_writes_nothing() -> 
     cancelled_door = MemoryInvoiceWizardDoor()
     cancelled = _screen(cancelled_door)
     async with ScreenHostApp[None](cancelled).run_test(size=(120, 50)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await _fill_and_review(pilot, cancelled)
         await _press(pilot, cancelled, "ledger-invoices-wizard-cancel")
         assert cancelled.flow_state is LedgerFlowState.CANCELLED
@@ -192,7 +187,7 @@ async def test_the_wizard_door_runs_only_in_a_worker() -> None:
     door = _WorkerOnlyWizardDoor()
     screen = _screen(door)
     async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await _fill_and_review(pilot, screen)
         await _press(pilot, screen, "ledger-invoices-wizard-confirm")
     assert door.in_worker == [True]
@@ -208,7 +203,7 @@ async def test_every_wizard_step_fits_every_supported_terminal(theme: str, size:
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=size) as pilot:
             app.theme = theme
-            await _settle(pilot)
+            await settle(pilot)
             for step in range(4):
                 if step:
                     await _press(pilot, screen, "ledger-invoices-wizard-next")

@@ -32,7 +32,7 @@ export function ConsentPrompt({
   return (
     <section
       aria-labelledby={titleId}
-      className="grid gap-3 rounded-xl border border-border-strong bg-card p-3.5 text-card-foreground shadow-raised"
+      className="grid gap-3 rounded-xl bg-card p-3.5 text-card-foreground shadow-raised"
     >
       <div className="flex items-start gap-2">
         <Icon name="lock" size="md" className="mt-0.5 text-muted-foreground" />

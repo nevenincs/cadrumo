@@ -66,6 +66,16 @@ _FACTS = {
 _DOCUMENT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
 
+def _aeat_executable() -> Path:
+    """Return the installed ``aeat`` console script of this environment.
+
+    The tax product names its operator command, not the runtime module that
+    implements it: the installed script is how an operator reaches the CLI.
+    """
+    scripts = Path(sys.prefix) / ("Scripts" if sys.platform == "win32" else "bin")
+    return scripts / ("aeat.exe" if sys.platform == "win32" else "aeat")
+
+
 def _run_cli_cold(
     storage_root: Path,
     argv: list[str],
@@ -73,17 +83,12 @@ def _run_cli_cold(
     stdin_payload: str | None = None,
     installed_process_world: InstalledProcessWorld,
 ) -> subprocess.CompletedProcess[str]:
-    """Run the real runtime frontend in a new interpreter without ambient custody."""
+    """Run the installed CLI in a new process without ambient custody."""
     environment = installed_process_world.environment(
         storage_root=storage_root, authority_root=bundled_authority_descriptor_path().parent
     )
-    return subprocess.run(  # noqa: S603 -- Exact interpreter and test-authored CLI arguments; no shell.
-        [
-            sys.executable,
-            "-c",
-            "from cadrumo_runtime.host.frontend.cli.bootstrap import main; main()",
-            *argv,
-        ],
+    return subprocess.run(  # noqa: S603 -- Exact installed console script and test-authored CLI arguments; no shell.
+        [str(_aeat_executable()), *argv],
         input=stdin_payload,
         capture_output=True,
         text=True,
@@ -96,8 +101,7 @@ def _run_cli_cold(
 def cold_profile(tmp_path: Path, *, installed_process_world: InstalledProcessWorld) -> Generator[tuple[Path, str]]:
     """Keep a real runtime and native credential-store receipt across CLI processes."""
     require_os_credential_store()
-    scripts = Path(sys.prefix) / ("Scripts" if sys.platform == "win32" else "bin")
-    executable = scripts / ("aeat.exe" if sys.platform == "win32" else "aeat")
+    executable = _aeat_executable()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         environment = installed_process_world.environment(
             storage_root=root, authority_root=bundled_authority_descriptor_path().parent

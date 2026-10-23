@@ -75,18 +75,20 @@ entrypoint_smoke["verify_entrypoints"](
     manifest["layout"]["entrypoint_suffix"],
 )
 native_manifest = json.loads((root / manifest["layout"]["files"]["native_manifest"]).read_text(encoding="utf-8"))
-for module in sorted(native_manifest["modules"]):
-    try:
-        for prerequisite in manifest["layout"].get("native_smoke_prerequisites", {}).get(module, []):
-            importlib.import_module(prerequisite)
-        importlib.import_module(module)
-    except Exception as error:
-        raise RuntimeError(f"Bundled native import failed: {module}") from error
-for distribution, modules in manifest["smoke_modules"].items():
+import_smoke = runpy.run_path(str(Path(__file__).with_name("import_smoke.py")))
+import_smoke["import_bundled"](
+    import_smoke["with_prerequisites"](
+        sorted(native_manifest["modules"]), manifest["layout"].get("native_smoke_prerequisites", {})
+    ),
+    "Bundled native import failed",
+)
+for distribution in manifest["smoke_modules"]:
     require(importlib.metadata.version(distribution) == manifest["distributions"][distribution], distribution)
-    for module in modules:
-        importlib.import_module(module)
-for module in (
+import_smoke["import_bundled"](
+    [module for modules in manifest["smoke_modules"].values() for module in modules],
+    "Bundled distribution import failed",
+)
+for extension_module in (
     "ssl",
     "sqlite3",
     "bz2",
@@ -104,7 +106,7 @@ for module in (
     "yaml._yaml",
     "rpds.rpds",
 ):
-    importlib.import_module(module)
+    importlib.import_module(extension_module)
 with zipfile.ZipFile(root / manifest["layout"]["paths"]["stdlib"]) as library:
     require("encodings/__init__.pyc" in library.namelist(), "Standard library is not bytecode ZIP")
     require(

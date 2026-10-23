@@ -46,6 +46,7 @@ from ..components.theme import (
     tokenised,
 )
 from ..secret.registration import RegistrationAttempt, RegistrationScreen
+from .settling import settle
 
 pytestmark = [
     pytest.mark.unit,
@@ -241,7 +242,7 @@ async def test_the_content_column_consumes_the_available_terminal(
     surface = build()
     app = ScreenHostApp(surface) if isinstance(surface, Screen) else surface
     async with app.run_test(size=(width, height)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         left, right = _gutters(pilot.app.screen)
         assert left == 0, f"left gutter at {width}x{height}: {left}"
         assert 0 <= right <= 1, f"unused width at {width}x{height}: left={left} right={right}"
@@ -260,7 +261,7 @@ async def test_the_outer_scrollbar_does_not_reserve_permanent_side_gutters() -> 
     """
     app = ScreenHostApp(_registration_screen())
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         scroll = pilot.app.screen.query_one(".cadrumo-scroll")
         assert scroll.styles.scrollbar_size_vertical == 1
         assert scroll.styles.scrollbar_gutter != "stable", "a stable gutter reserves the cell even with no overflow"
@@ -298,7 +299,7 @@ async def test_monochrome_buttons_are_line_boxes_with_focus_on_the_label(
     monkeypatch.setenv("NO_COLOR", "1")
     app = ScreenHostApp(_ActionRow())
     async with app.run_test(size=(40, 8)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         strips = pilot.app.screen._compositor.render_strips()
         cells = [segment for strip in strips for segment in strip]
         assert not _SLAB_GLYPHS & set("".join(segment.text for segment in cells))
@@ -322,16 +323,16 @@ async def _button_states(theme_name: str | None) -> dict[str, tuple[Color, Color
     async with app.run_test(size=(40, 8)) as pilot:
         if theme_name is not None:
             pilot.app.theme = theme_name
-        await pilot.pause()
+        await settle(pilot)
         previous = pilot.app.screen.query_one("#previous", Button)
         start = pilot.app.screen.query_one("#start", Button)
         record("focus", start)
         record("rest", previous)
         await pilot.hover("#previous")
-        await pilot.pause()
+        await settle(pilot)
         record("hover", previous)
         pilot.app.set_focus(previous)
-        await pilot.pause()
+        await settle(pilot)
         record("primary", start)
         pilot.app.exit(None)
     return states

@@ -136,7 +136,7 @@ function PlanDetail({
         <li
           key={entry.item}
           data-setup-plan={entry.item}
-          className="grid gap-0.5 rounded-lg border bg-card p-3 text-sm"
+          className="grid gap-0.5 rounded-lg bg-accent p-3 text-sm"
         >
           <div className="flex flex-wrap items-baseline justify-between gap-x-2">
             <span className="font-medium text-foreground">{entry.name}</span>
@@ -202,7 +202,7 @@ function ItemProgress({
   return (
     <li
       data-setup-progress={progress.item}
-      className="grid gap-1.5 rounded-lg border bg-card p-3 text-sm"
+      className="grid gap-1.5 rounded-lg bg-accent p-3 text-sm"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-2">
         <span className="font-medium text-foreground">{progress.name}</span>

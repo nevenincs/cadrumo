@@ -69,7 +69,7 @@ export function Titlebar({
         aria-label={identity.name}
         onMouseDown={dragging}
       >
-        <Logo size="sm" tone="mono" />
+        <Logo size="sm" />
       </h1>
       <div
         className="titlebar-drag-space"

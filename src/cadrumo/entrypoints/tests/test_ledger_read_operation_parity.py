@@ -62,6 +62,7 @@ from ...application.ledger.participation_operation import (
     LedgerParticipationExecutor,
     LedgerParticipationRequest,
 )
+from ...application.ledger.preflight import preflight_ledger_tax_readiness
 from ...application.ledger.preflight_operation import (
     LEDGER_PREFLIGHT_OPERATION_DEFINITION_ID,
     LedgerPreflightExecutor,
@@ -70,7 +71,7 @@ from ...application.ledger.preflight_operation import (
 )
 from ...application.ledger.protocols import TransactionCatalogueCoCommitWriterProtocol
 from ...application.ledger.read_ports import LedgerReadPorts, LedgerReadPortsFactory
-from ...application.ledger.readiness_query import read_ledger_readiness
+from ...application.ledger.readiness_query import ledger_readiness_issues
 from ...application.ledger.stale_filing_query import read_stale_ledger_filings
 from ...application.ledger.status_operation import (
     LEDGER_STATUS_OPERATION_DEFINITION_ID,
@@ -621,14 +622,18 @@ def _full_scan_status(period: Period | None, operation: PinnedAuthorityOperation
     report = summarize_manual_transactions(
         bucket_id=_BUCKET, period=period, ports=ports, catalogue=ports.transaction_repository.load()
     )
+    readiness_catalogue = ports.transaction_repository.load()
     readiness = (
-        read_ledger_readiness(
-            bucket_id=_BUCKET,
-            period=period,
-            transaction_repository=ports.transaction_repository,
-            usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
-            operation=operation,
-            catalogue=ports.transaction_repository.load(),
+        ledger_readiness_issues(
+            preflight_ledger_tax_readiness(
+                bucket_id=_BUCKET,
+                period=period,
+                transaction_repository=ports.transaction_repository,
+                usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+                operation=operation,
+                catalogue=readiness_catalogue,
+            ),
+            readiness_catalogue,
         )
         if period is not None
         else ()

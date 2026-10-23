@@ -199,8 +199,7 @@ def test_verify_corpus_bundle_raises_file_not_found_for_missing_path(tmp_path: P
 def test_build_corpus_bundle_overwrites_existing_output_atomically(tmp_path: Path) -> None:
     """A pre-existing file at the output path is replaced only on a
     successful build, never partially overwritten -- proving the
-    temp-file-then-rename write is exercised for the bundle path too,
-    matching :func:`build_corpus_manifest`'s atomicity guarantee."""
+    temp-file-then-rename write is exercised for the bundle path."""
     output_path = tmp_path / "bundle.zip"
     output_path.write_bytes(b"stale placeholder bytes from a previous run")
 

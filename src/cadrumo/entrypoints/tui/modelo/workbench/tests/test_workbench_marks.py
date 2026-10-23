@@ -34,6 +34,7 @@ from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind, FormPageCondition
 from ....components.theme import install_cadrumo_themes
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry, CasillaListHeading, CasillaListItem
 from ..header import ChipLevel, attention_chips
@@ -262,7 +263,7 @@ async def test_the_navigator_the_list_a_grid_row_n_and_the_header_class_every_or
         chips = {chip.level: chip.count for chip in attention_chips(form, recorded=False)}
         app = _GridHarness(page_items(grid_page, staged={}))
         async with app.run_test(size=(120, 60)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             widget = app.query_one(CasillaList)
             drawn = [widget.render_line(y).text for y in range(widget.size.height)]
 

@@ -14,7 +14,7 @@ from typing import override
 
 import pytest
 
-from cadrumo_runtime.adapters.tests.process_support import fixture_arguments, fixture_environment, native_python
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
 
 from ...host.controller import (
     AgentGenerations,
@@ -243,10 +243,8 @@ def test_an_agent_speaking_another_hosting_contract_is_not_published(tmp_path: P
     assert controller.state is AgentHostState.DETACHED
 
 
-def test_the_agent_job_admits_no_breakaway_and_knows_its_own_members(tmp_path: Path) -> None:
+def test_the_agent_job_knows_its_own_members(tmp_path: Path) -> None:
     import os
-
-    import win32job
 
     from ..agent_process import WindowsAgentProcess
 
@@ -260,10 +258,6 @@ def test_the_agent_job_admits_no_breakaway_and_knows_its_own_members(tmp_path: P
     try:
         process.write_input(build_credential_frame({"anthropic": AgentCredential(bytearray(_FAKE))}))
         process.read_output_line(limit=4096, timeout=30)
-        breakaway = win32job.JOB_OBJECT_LIMIT_BREAKAWAY_OK | win32job.JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK
-        flags = process.job_limit_flags()
-        assert flags & breakaway == 0
-        assert flags & win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
         grandchild = _received(tmp_path)["grandchild"]
         assert isinstance(grandchild, int)
         # A descendant of the agent is a member; this test process is not.

@@ -205,15 +205,11 @@ class CommandRegistrationMetadata:
 
     command: str
     schema_name: str
-    schema_owner: str
-    schema_source_sha256: str
     cli_path: tuple[str, ...] | None
     parameters_by_language: tuple[tuple[str, tuple[CommandParameterMetadata, ...] | None], ...]
     help_by_language: tuple[tuple[str, str], ...]
     hidden: bool | None
     policy: CommandPolicyMetadata | None
-    handler_owner: str | None
-    source_sha256: str | None
     machine_secret_payloads: tuple[MachineSecretPayloadMetadata, ...] = ()
     profile_authentication: ProfileAuthenticationPostureValue = ProfileAuthenticationPosture.NOT_APPLICABLE
 

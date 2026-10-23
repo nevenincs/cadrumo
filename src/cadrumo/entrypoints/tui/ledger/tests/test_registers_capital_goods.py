@@ -15,6 +15,7 @@ from .....application.bienes_inversion.registered_requests import (
 from .....application.operations.public_scalar import PublicDecimal
 from .....core.config import override_settings
 from .....core.i18n.render import tr
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..registers_capital_goods import (
     CAPITAL_GOODS_TOOL_KEY,
@@ -25,8 +26,7 @@ from ..registers_capital_goods import (
 from ..registers_presentation import REGISTER_PAGE_SIZE
 from ..workspace_injection import LedgerWorkspaceInjection
 from .registers_fixtures import REGISTERS_PROFILE_ID, MemoryCapitalGoodsDoor, synthetic_capital_good
-from .test_ledger_selection_journey import _WorkspaceHostApp
-from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -38,15 +38,9 @@ def _screen(door: MemoryCapitalGoodsDoor) -> LedgerCapitalGoodsScreen:
     return LedgerCapitalGoodsScreen(controller, cast(LedgerCapitalGoodsDoorV1, door))
 
 
-async def _settle(pilot: Pilot[None]) -> None:
-    await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
-
-
 async def _press(pilot: Pilot[None], screen: LedgerCapitalGoodsScreen, button_id: str) -> None:
     screen.query_one(f"#{button_id}", Button).press()
-    await _settle(pilot)
+    await settle(pilot)
 
 
 def _text(screen: LedgerCapitalGoodsScreen, selector: str) -> str:
@@ -75,8 +69,8 @@ async def test_a_declared_capital_good_round_trips_into_the_listed_register() ->
     door = MemoryCapitalGoodsDoor(records=(synthetic_capital_good("BI-01"),), deduction="3360.00")
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             assert door.requests == [BienesInversionListRequest(profile_id=REGISTERS_PROFILE_ID)]
             assert _keys(screen) == ["BI-01"]
 
@@ -113,8 +107,8 @@ async def test_a_duplicate_identifier_shows_the_registered_refusal() -> None:
     door = MemoryCapitalGoodsDoor(records=(synthetic_capital_good("BI-01"),))
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             _fill(screen, identifier="BI-01")
             await _press(pilot, screen, "register-review")
             await _press(pilot, screen, "register-confirm")
@@ -130,8 +124,8 @@ async def test_an_out_of_range_year_is_refused_by_the_request_model_before_anyth
     door = MemoryCapitalGoodsDoor()
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             assert _text(screen, "#ledger-flow-status") == tr("tui.ledger.registers.capital_goods.empty")
             _fill(screen, year="2100")
             await _press(pilot, screen, "register-review")
@@ -146,13 +140,13 @@ async def test_choosing_a_good_shows_its_reported_detail() -> None:
     door = MemoryCapitalGoodsDoor(records=(record,))
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             table = screen.query_one("#capital-goods", DataTable)
             table.focus()
             table.move_cursor(row=0)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             assert screen.selected_key == "BI-01"
             assert _text(screen, "#register-detail") == tr(
                 "tui.ledger.registers.capital_goods.detail",
@@ -173,8 +167,8 @@ async def test_the_register_holds_one_page_of_a_thousand_goods_and_pages_both_wa
     door = MemoryCapitalGoodsDoor(records=tuple(synthetic_capital_good(f"BI-{index:04d}") for index in range(1001)))
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             table = screen.query_one("#capital-goods", DataTable)
             assert table.row_count == REGISTER_PAGE_SIZE
             await _press(pilot, screen, "capital-goods-next")

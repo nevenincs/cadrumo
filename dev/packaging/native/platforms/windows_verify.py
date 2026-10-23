@@ -78,55 +78,23 @@ print(json.dumps({'pid': os.getpid(), 'executable': sys.executable, 'version': s
 """
 
 KDF_READY_PROBE = r"""
-import json, sys, time
-from pathlib import Path
-from cadrumo.adapters.persistence.storage.custody import _kdf_process
-from cadrumo.adapters.persistence.storage.custody._kdf_worker_supervision import _SupervisedKdfWorker
+import json, sys
+from cadrumo.adapters.persistence.storage.custody.kdf_supervision import attest_profile_kdf_worker_readiness
 
-# No request (and therefore no password) is sent: enter proves the genuine ready
-# frame, neutral cwd, exact environment and assigned Windows Job before cleanup.
-with _SupervisedKdfWorker(deadline=time.monotonic() + 30) as worker:
-    payload = worker._ready_payload
-    neutral = worker._neutral_directory
-    assert payload is not None and neutral is not None
-    fixed = sys.cadrumo_build['fixed_environment_names']
-    assert isinstance(fixed, tuple) and all(isinstance(name, str) for name in fixed)
-    expected = sorted(set(_kdf_process.worker_environment(neutral_root=Path(neutral.name))) | set(fixed))
-    assert payload['environment_keys'] == expected
-    process = worker._process
-    assert process is not None
-assert process.poll() is not None
-assert not Path(neutral.name).exists()
-
-# This extra option is valid to the real worker parser on Windows, but is not
-# part of its parent's fixed invocation. It must keep ordinary host projection
-# and fail the unchanged attestation instead of acquiring the exception.
-original = _kdf_process.worker_command
-original_launch = _kdf_process._launch_worker_process
-launched = []
-neutral_directories = []
-def record_launch(command, options):
-    process = original_launch(command, options)
-    launched.append(process)
-    return process
-def extended_command(**kwargs):
-    command, options = original(**kwargs)
-    neutral_directories.append(Path(options['cwd']))
-    return [*command, '--descriptor-bound', '16'], options
-_kdf_process.worker_command = extended_command
-_kdf_process._launch_worker_process = record_launch
-try:
-    with _SupervisedKdfWorker(deadline=time.monotonic() + 30):
-        raise AssertionError('noncanonical invocation passed KDF readiness')
-except ValueError as error:
-    assert str(error) == 'profile KDF worker environment is not allowlisted'
-else:
-    raise AssertionError('noncanonical invocation was not refused')
-finally:
-    _kdf_process.worker_command = original
-    _kdf_process._launch_worker_process = original_launch
-assert len(launched) == 1 and launched[0].poll() is not None
-assert len(neutral_directories) == 1 and not neutral_directories[0].exists()
+fixed = sys.cadrumo_build['fixed_environment_names']
+assert isinstance(fixed, tuple) and all(isinstance(name, str) for name in fixed)
+# No request (and therefore no password) is sent. The canonical child must pass
+# the genuine ready attestation (neutral cwd, exact environment, assigned Windows
+# Job) and be released; the near-miss child carries an option the worker parser
+# accepts but the host's fixed invocation does not, so it must keep ordinary host
+# projection and fail the unchanged attestation instead of acquiring the exception.
+readiness = attest_profile_kdf_worker_readiness(timeout_seconds=30)
+expected = list(readiness.declared_environment_keys)
+assert set(fixed) <= set(expected)
+assert list(readiness.ready_environment_keys) == expected
+assert readiness.worker_joined and readiness.neutral_directory_removed
+assert readiness.noncanonical_invocation_refused, 'noncanonical invocation was not refused'
+assert readiness.noncanonical_worker_joined and readiness.noncanonical_neutral_directory_removed
 print(json.dumps({'ready_environment_keys': expected, 'worker_joined': True,
                   'neutral_directory_removed': True, 'noncanonical_invocation_refused': True,
                   'refused_worker_joined': True,
@@ -142,7 +110,7 @@ from pathlib import Path
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
-from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 
 runtime = Path(sys.argv[1]).resolve(strict=True)

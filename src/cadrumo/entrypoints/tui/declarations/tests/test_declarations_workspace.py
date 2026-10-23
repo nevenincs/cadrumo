@@ -60,6 +60,7 @@ from ...components.host import ScreenHostApp
 from ...modelo.lifecycle import ModeloLifecycleActionUnavailableError
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
+from ...tests.settling import settle, settle_until
 from ..controller import NEW_DECLARATION_FOCUS_KEY, SEARCH_DECLARATIONS_FOCUS_KEY, DeclarationsWorkspaceController
 from ..filing_history import DeclarationsFilingHistoryScreen
 from ..models import (
@@ -327,27 +328,31 @@ def _controller(
 
 
 async def _select_creation(pilot: Pilot[None], modelo: str, period: Period) -> None:
-    """Choose both registry-backed steps with explicit keyboard confirmation."""
+    """Choose both registry-backed steps with explicit keyboard confirmation.
+
+    The confirming key only starts the creation; the caller waits for it, or
+    holds it.
+    """
     await pilot.press("plus")
-    await pilot.pause()
+    await settle(pilot)
     picker = pilot.app.screen
     assert isinstance(picker, NewDeclarationPicker)
     picker.query_one("#declaration-picker-all", Button).press()
-    await pilot.pause()
+    await settle(pilot)
     table = picker.query_one("#declaration-picker-table", DataTable)
     table.move_cursor(row=next(i for i, row in enumerate(table.ordered_rows) if row.key.value == modelo))
     table.focus()
     await pilot.press("enter")
-    await pilot.pause()
+    await settle(pilot)
     assert picker.modelo == modelo
     assert picker.query_one("#declaration-picker-create", Button).disabled
     table.move_cursor(row=next(i for i, target in enumerate(picker.visible_targets) if target.period == period))
     await pilot.press("enter")
-    await pilot.pause()
+    await settle(pilot)
     assert picker.selected == DeclarationTarget(modelo, period)
     assert pilot.app.focused is picker.query_one("#declaration-picker-create", Button)
     await pilot.press("enter")
-    await pilot.pause()
+    await settle(pilot, workers=False)
 
 
 @pytest.mark.asyncio
@@ -367,11 +372,10 @@ async def test_overview_opened_for_a_new_declaration_goes_straight_to_the_picker
         )
     )
     async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
-        await pilot.pause()
-        await pilot.pause()
+        await settle(pilot)
         assert isinstance(pilot.app.screen, NewDeclarationPicker)
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot)
         assert pilot.app.screen is screen
 
 
@@ -387,8 +391,7 @@ async def test_overview_opened_for_search_is_ready_for_typing() -> None:
     screen = DeclarationsOverviewScreen(controller)
     app = ScreenHostApp(screen)
     async with app.run_test(size=(100, 42)) as pilot:
-        await pilot.pause()
-        await pilot.pause()
+        await settle(pilot)
         assert app.focused is screen.query_one("#declarations-search", Input)
 
 
@@ -419,21 +422,20 @@ async def test_declarations_create_selects_only_supported_targets_and_reopens_ex
         )
     )
     async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         await pilot.press("plus")
-        await pilot.pause()
+        await settle(pilot)
         picker = pilot.app.screen
         assert isinstance(picker, NewDeclarationPicker)
         assert tuple(row.key.value for row in picker.query_one(DataTable).ordered_rows) == ("130",)
         assert picker.query_one("#declaration-picker-create", Button).disabled
         assert not picker.query(Input)
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot)
         assert calls == []
         for _ in range(2):
             await _select_creation(pilot, target.modelo, target.period)
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
         assert calls == [("111", 2025, target.period)] * 2
         notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
         assert "Modelo 111" in notice
@@ -461,19 +463,20 @@ async def test_declarations_create_keeps_the_submitted_address_and_refuses_a_sec
         )
     )
     async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         try:
             await _select_creation(pilot, "111", Period.from_year_and_code(2025, "2T"))
+            await settle_until(pilot, lambda: bool(calls), "the creation to reach its door", workers=False)
             assert len(calls) == 1
             await pilot.press("plus")
+            await settle(pilot, workers=False)
             screen.query_one("#declarations-new", Button).press()
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert pilot.app.screen is screen
             assert len(calls) == 1
         finally:
             release.set()
-        await pilot.app.workers.wait_for_complete()
-        await pilot.pause()
+        await settle(pilot)
         notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
     assert calls == [("111", 2025, Period.from_year_and_code(2025, "2T"))]
     assert "Modelo 111" in notice
@@ -498,10 +501,9 @@ async def test_declarations_create_shows_the_application_refusal_as_itself(
         )
     )
     async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         await _select_creation(pilot, "200", Period.from_year_and_code(2025, "0A"))
-        await pilot.app.workers.wait_for_complete()
-        await pilot.pause()
+        await settle(pilot)
         notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
     assert notice == tr("tui.declarations.work_create.refusal.not_applicable", modelo="200", reason="synthetic-reason")
     assert "--allow-not-applicable" not in notice
@@ -559,7 +561,7 @@ async def test_each_screen_has_four_targets_one_outer_scroll_and_no_overflow(
     screen = screen_type(_controller(_projection(authority_operation)))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         if isinstance(screen, DeclarationsOverviewScreen):
             assert {button.id for button in screen.query(Button)} == {
                 "declarations-new",
@@ -585,11 +587,11 @@ async def test_semantic_selection_uses_exact_projected_identity_and_typed_callba
     screen = DeclarationsRevisionsScreen(_controller(projection, revision_handoff=selected.append))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-revisions", DataTable)
         table.focus()
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert len(selected) == 1
         assert selected[0] is screen.controller.projection.calculation_revisions[0]
         assert screen.selected_calculation_revision_id == projection.calculation_revisions[0].calculation_revision_id
@@ -617,7 +619,7 @@ async def test_focus_restores_by_calculation_revision_identity_not_registry_revi
     screen = DeclarationsRevisionsScreen(_controller(projection, context))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-revisions", DataTable)
         assert app.focused is table
         assert table.ordered_rows[table.cursor_row].key.value == revision_id
@@ -635,15 +637,16 @@ async def test_unavailable_is_refusal_empty_is_measured_and_missing_handoff_refu
     empty = DeclarationsOverviewScreen(_controller(_projection(authority_operation, empty=True)))
     app = ScreenHostApp[None](empty)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert tr("tui.declarations.list.empty") in _copy(empty)
     screen = DeclarationsOverviewScreen(_controller(_projection(authority_operation)))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-list", DataTable)
         _select_declaration(table, screen.controller.projection.declarations[0].work_unit_id)
         await pilot.press("enter")
+        await settle(pilot)
         assert tr("tui.declarations.refusal.handoff") in _copy(screen)
 
 
@@ -672,15 +675,15 @@ async def test_modelo_workspace_route_opens_exact_selected_factory_child_and_res
     root = _Root()
     async with root.run_test(size=(80, 24)) as pilot:
         await root.push_screen(launcher)
-        await pilot.pause()
+        await settle(pilot)
         table = launcher.query_one("#declarations-list", DataTable)
         _select_declaration(table, projection.declarations[0].work_unit_id)
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert calls == [projection.declarations[0]]
         assert root.screen is child
         child.dismiss(None)
-        await pilot.pause()
+        await settle(pilot)
         assert root.screen is launcher
         assert root.focused is table
         assert table.ordered_rows[table.cursor_row].key.value == projection.declarations[0].work_unit_id
@@ -694,7 +697,7 @@ async def test_history_renders_filing_and_sanitized_lifecycle_in_chronological_s
     screen = DeclarationsFilingHistoryScreen(_controller(projection))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-filings", DataTable)
         history_state = next(
             state for state in projection.zones if state.zone is DeclarationsWorkspaceZone.FILING_HISTORY
@@ -711,6 +714,7 @@ async def test_history_renders_filing_and_sanitized_lifecycle_in_chronological_s
         table.move_cursor(row=keys.index("lifecycle:event-filed"))
         table.focus()
         await pilot.press("enter")
+        await settle(pilot)
         assert screen.selected_lifecycle_fact_id == "event-filed"
         rendered = _copy(screen)
         assert "event-filed" not in rendered
@@ -726,7 +730,7 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
     revisions = DeclarationsRevisionsScreen(_controller(projection, revision_handoff=selected.append))
     revision_app = ScreenHostApp[None](revisions)
     async with revision_app.run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = revisions.query_one("#declarations-revisions", DataTable)
         assert table.row_count == 3
         rows = tuple(tuple(str(cell) for cell in table.get_row_at(index)) for index in range(3))
@@ -749,13 +753,13 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
         table.move_cursor(row=selected_index)
         table.focus()
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert selected == [selected_revision]
         assert revisions.selected_calculation_revision_id == selected_revision.calculation_revision_id
     filings = DeclarationsFilingHistoryScreen(_controller(projection))
     filing_app = ScreenHostApp[None](filings)
     async with filing_app.run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = filings.query_one("#declarations-filings", DataTable)
         filing_key = f"filing:{projection.filings[0].filing_record_id}"
         row = tuple(str(cell) for cell in table.get_row(filing_key))
@@ -783,7 +787,7 @@ async def test_real_locales_change_copy_without_changing_semantic_rows(
         for screen, expected in zip(screens, _EXPECTED[locale][:3], strict=True):
             app = ScreenHostApp[None](screen)
             async with app.run_test(size=(80, 24)) as pilot:
-                await pilot.pause()
+                await settle(pilot)
                 rendered = _copy(screen)
                 assert expected in rendered
                 assert "tui.declarations." not in rendered
@@ -832,7 +836,7 @@ async def test_initial_grouped_controls_remain_visible_above_the_scrolling_atten
         app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:
             app.theme = theme
-            await pilot.pause()
+            await settle(pilot)
             search = screen.query_one("#declarations-search", Input)
             context = screen.query_one("#declarations-list-context", Static)
             page = screen.query_one("#declarations-page", VerticalScroll)
@@ -851,13 +855,13 @@ async def test_initial_grouped_controls_remain_visible_above_the_scrolling_atten
             assert tr("tui.declarations.list.sort.deadline") in str(context.render())
             assert page.max_scroll_y > 0
             page.scroll_end(animate=False)
-            await pilot.pause()
+            await settle(pilot)
             assert page.scroll_y > 0
             assert (search.region, context.region) == initial_regions
             assert screen.region.contains_region(search.region)
             assert screen.region.contains_region(context.region)
             await pilot.press("/")
-            await pilot.pause()
+            await settle(pilot)
             assert app.focused is search
             assert (search.region, context.region) == initial_regions
             assert geometry_band(app, size[0]) == []
@@ -904,7 +908,7 @@ async def test_grouped_keyboard_filter_search_sort_and_fold_preserve_declaration
         screen = DeclarationsOverviewScreen(_controller(projection))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             table = screen.query_one("#declarations-list", DataTable)
 
             def local_keys() -> tuple[str, ...]:
@@ -913,27 +917,37 @@ async def test_grouped_keyboard_filter_search_sort_and_fold_preserve_declaration
                 )
 
             assert local_keys() == ("c" * 64, "b" * 64, "a" * 64)
-            await pilot.press("s", "s")
+            await pilot.press("s")
+            await settle(pilot)
+            await pilot.press("s")
+            await settle(pilot)
             assert local_keys() == ("b" * 64, "a" * 64, "c" * 64)
             assert "0,00" in _copy(screen) or "0.00" in _copy(screen)
             assert "100,00" in _copy(screen) or "100.00" in _copy(screen)
             assert not any(identity in _copy(screen) for identity in local_keys())
             _select_declaration(table, "group:in_progress")
             await pilot.press("enter")
+            await settle(pilot)
             assert local_keys() == ()
             _select_declaration(table, "group:in_progress")
             await pilot.press("enter")
+            await settle(pilot)
             assert local_keys() == ("b" * 64, "a" * 64, "c" * 64)
             await pilot.press("f")
+            await settle(pilot)
             assert local_keys() == ()
             assert tr("tui.declarations.list.filter.attention") in _copy(screen)
             for _ in range(4):
                 await pilot.press("f")
+                await settle(pilot)
+            await settle(pilot)
             assert local_keys() == ("b" * 64, "a" * 64, "c" * 64)
             await pilot.press("/")
+            await settle(pilot)
             search = screen.query_one("#declarations-search", Input)
             assert app.focused is search
             await pilot.press("1", "3", "0")
+            await settle(pilot)
             assert local_keys() == ("b" * 64,)
             name_term = {
                 OutputLanguage.ES: "estimacion",
@@ -942,11 +956,13 @@ async def test_grouped_keyboard_filter_search_sort_and_fold_preserve_declaration
                 OutputLanguage.HU: "kozvetlen",
             }[locale]
             await pilot.press("space", *tuple(name_term), "space", "2", "0", "2", "6")
+            await settle(pilot)
             assert local_keys() == ("b" * 64,)
             await pilot.press("backspace", "5")
+            await settle(pilot)
             assert local_keys() == ()
             await pilot.press("end", "ctrl+u")
-            await pilot.pause()
+            await settle(pilot)
             assert len(local_keys()) == 3
             table.focus()
             assert geometry_band(app, 80) == []
@@ -994,14 +1010,13 @@ async def test_creation_result_opens_the_exact_new_declaration_and_refreshes_sem
     root = _Root()
     async with root.run_test(size=(80, 24)) as pilot:
         await root.push_screen(screen)
-        await pilot.pause()
+        await settle(pilot)
         await _select_creation(pilot, "130", created.period)
-        await root.workers.wait_for_complete()
-        await pilot.pause()
+        await settle(pilot)
         assert calls == [created]
         assert root.screen is child
         child.dismiss(None)
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-list", DataTable)
         assert root.focused is table
         assert table.ordered_rows[table.cursor_row].key.value == created.work_unit_id
@@ -1015,9 +1030,9 @@ async def test_escape_dismisses_only_child_and_returns_to_generic_root(
     screen = DeclarationsOverviewScreen(_controller(_projection(authority_operation)))
     async with root.run_test(size=(80, 24)) as pilot:
         await root.push_screen(screen)
-        await pilot.pause()
+        await settle(pilot)
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot)
         assert root.is_running
         assert root.query_one("#root", Static).display
 

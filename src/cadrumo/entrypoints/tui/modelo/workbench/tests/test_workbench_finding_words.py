@@ -62,6 +62,7 @@ from ......domain.modelos.verification_report import (
 )
 from ....components.host import ScreenHostApp
 from ....components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
+from ....tests.settling import settle
 from ..casilla_list_models import CasillaListHeading
 from ..header import missing_count
 from ..issue_projection import issue_lines
@@ -581,8 +582,7 @@ async def test_every_blocking_mark_in_the_findings_list_is_drawn_in_the_error_co
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
             app.theme = theme
-            for _ in range(4):
-                await pilot.pause()
+            await settle(pilot)
             error = Color.parse(app.theme_variables["error"])
             title = _glyph_colours(screen.query_one("#issues-title", Static), BLOCKS_MARK.glyph)
             heading = _glyph_colours(screen.query_one("#issues-list", OptionList), BLOCKS_MARK.glyph)

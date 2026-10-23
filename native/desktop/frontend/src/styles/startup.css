@@ -46,14 +46,18 @@ h1 {
   gap: calc(var(--spacing) * 3);
   min-width: 0;
   margin: 0;
-  font-family: var(--font-stack--headings);
-  font-size: var(--text-lg);
-  line-height: var(--text-lg--line-height);
-  font-weight: 400;
+  /* The lockup as src/components/Logo.tsx draws it: the name in the text
+     face, in capitals, semibold and tracked. */
+  font-family: var(--font-stack);
+  font-size: var(--text-md);
+  line-height: var(--text-md--line-height);
+  font-weight: 600;
+  letter-spacing: var(--tracking-brand);
+  text-transform: uppercase;
 }
 #logo {
-  width: var(--startup-logo-size);
-  height: var(--startup-logo-size);
+  width: var(--spacing-mark-lg);
+  height: var(--spacing-mark-lg);
   flex: none;
   user-select: none;
 }

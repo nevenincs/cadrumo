@@ -7,13 +7,13 @@ carry -- are joined on here. Choosing WHICH facts accompany an issue is a
 diagnostic decision, not formatting, and it had been made inside the CLI status
 verb where no second surface could reach it.
 
-The join can miss. The preflight and the join read one catalogue here, but a
-caller may join a report against rows it holds, and a period-level issue names
-no row at all. The adapter dropped such issues silently, which makes the issues
-an operator sees fewer than the count reported beside them with nothing saying
-so. Here the issue survives with ``transaction_present`` false and its facts
-absent, because a readiness problem whose row has vanished is a stronger
-signal than one whose row is merely incomplete -- not a reason to say nothing.
+The join can miss. A caller joins a report against the rows it holds, and a
+period-level issue names no row at all. The adapter dropped such issues
+silently, which makes the issues an operator sees fewer than the count reported
+beside them with nothing saying so. Here the issue survives with
+``transaction_present`` false and its facts absent, because a readiness problem
+whose row has vanished is a stronger signal than one whose row is merely
+incomplete -- not a reason to say nothing.
 """
 
 from __future__ import annotations
@@ -24,15 +24,10 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from .preflight import LedgerPreflightReport, load_period_preflight_catalogue, preflight_ledger_tax_readiness
 
 if TYPE_CHECKING:
-    from ...core.period import Period
-    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.transactions.models import TransactionCatalogue
-
-from .protocols import TransactionCatalogueCoCommitWriterProtocol
-from .usage_ratio_repository import UsageRatioProfileLoader
+    from .preflight import LedgerPreflightReport
 
 
 class LedgerReadinessIssueV1(BaseModel):
@@ -54,50 +49,6 @@ class LedgerReadinessIssueV1(BaseModel):
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
     iva_amount: Decimal | None = None
-
-
-def read_ledger_readiness(
-    *,
-    bucket_id: str,
-    period: Period,
-    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
-    usage_ratio_profile_loader: UsageRatioProfileLoader,
-    operation: PinnedAuthorityOperation,
-    catalogue: TransactionCatalogue | None = None,
-) -> tuple[LedgerReadinessIssueV1, ...]:
-    """Report this period's readiness issues with their explaining facts.
-
-    One read serves both the preflight and the join: the period's rows when
-    the caller holds none, so the explaining facts come from the same rows the
-    preflight inspected.
-
-    Args:
-        bucket_id: The owning profile bucket.
-        period: The filing period to assess.
-        transaction_repository: Explicit bucket-scoped catalogue port.
-        usage_ratio_profile_loader: Profile-scoped declared ratio reader.
-        operation: Caller-owned authority pin shared with the ledger workflow.
-        catalogue: The bucket's rows as a :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`
-            when the caller already holds them,
-            either the whole catalogue or any superset of the period's rows.
-
-    Returns:
-        Every issue the preflight raised, in report order, each carrying the
-        row's facts when the row is still present.
-    """
-    from .actions_common import resolve_transaction_repository
-
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    transactions = catalogue if catalogue is not None else load_period_preflight_catalogue(repository, period)
-    report = preflight_ledger_tax_readiness(
-        bucket_id=bucket_id,
-        period=period,
-        transaction_repository=repository,
-        usage_ratio_profile_loader=usage_ratio_profile_loader,
-        operation=operation,
-        catalogue=transactions,
-    )
-    return ledger_readiness_issues(report, transactions)
 
 
 def ledger_readiness_issues(
@@ -140,4 +91,4 @@ def ledger_readiness_issues(
     return tuple(issues)
 
 
-__all__ = ["LedgerReadinessIssueV1", "ledger_readiness_issues", "read_ledger_readiness"]
+__all__ = ["LedgerReadinessIssueV1", "ledger_readiness_issues"]

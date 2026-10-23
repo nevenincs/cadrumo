@@ -16,8 +16,6 @@
       },
       "targets": [
         "cadrumo_mcp",
-        "cadrumo_mcp.access",
-        "cadrumo_mcp.access.automation_key",
         "cadrumo_mcp.mcp",
         "cadrumo_mcp.mcp.access_scope",
         "cadrumo_mcp.mcp.admitted_operations",

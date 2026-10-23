@@ -29,7 +29,7 @@ from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, Refusal
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
-from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 
 
 def emit(record: dict[str, str | int | None]) -> None:

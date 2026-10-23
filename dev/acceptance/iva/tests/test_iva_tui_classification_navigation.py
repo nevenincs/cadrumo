@@ -11,14 +11,16 @@ from textual.widgets import DataTable
 
 from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
 from cadrumo.entrypoints.tui.ledger.overview import LedgerOverviewScreen
-from cadrumo.entrypoints.tui.ledger.tests.test_ledger_flows import _ClassificationDoor, _classify_action
-from cadrumo.entrypoints.tui.ledger.tests.test_ledger_selection_journey import _WorkspaceHostApp
 from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
+    ClassificationDoor,
+    WorkspaceHostApp,
+    ledger_classify_action,
     ledger_context,
     ledger_projection,
     ledger_review_action,
 )
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshV1
+from cadrumo.entrypoints.tui.tests.settling import settle
 
 from .. import iva_tui_import
 from ..iva_tui_scenario import _synthetic_rows
@@ -34,7 +36,7 @@ async def test_classification_waits_for_public_overview_after_refresh_replaces_i
     projection = ledger_projection()
     release = Event()
     refresh_started = Event()
-    door = _ClassificationDoor()
+    door = ClassificationDoor()
 
     def refresh() -> LedgerWorkspaceRefreshV1:
         refresh_started.set()
@@ -50,14 +52,14 @@ async def test_classification_waits_for_public_overview_after_refresh_replaces_i
         projection,
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
-            classify_action=_classify_action(),
+            classify_action=ledger_classify_action(),
             classification_submitter=door,
             refresh=refresh,
         ),
     )
-    app = _WorkspaceHostApp(LedgerOverviewScreen(controller))
+    app = WorkspaceHostApp(LedgerOverviewScreen(controller))
     async with app.run_test(size=(160, 60)) as pilot:
-        await pilot.pause()
+        await settle(pilot, workers=False)
 
         async def finish_refresh() -> None:
             assert await asyncio.to_thread(refresh_started.wait, 10)

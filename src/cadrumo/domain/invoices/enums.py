@@ -417,24 +417,6 @@ def _pinned_iva_rate_operation() -> PinnedAuthorityOperation:
     return operation
 
 
-def resolve_iva_rate_slot_fact(rate: IvaRate, on_date: date):
-    """Resolve a numeric slot's exact authority fact with its provenance.
-
-    Zero is a permanent semantic slot whose IVA facade accepts the fraction on
-    every date but which no flat rate fact can fully model; it consequently has
-    no single rate-fact variant to return.  Registry-declared nonnumeric slots
-    likewise have no rate-fact variant.
-    """
-    declarations = _iva_rate_slot_registry_declarations(rate, on_date)
-    if declarations["numeric"] != "true":
-        return None
-    operation = _pinned_iva_rate_operation()
-    kind = _iva_rate_slot_kind(declarations, on_date)
-    if kind == resolve_iva_rate_kind_catalogue(effective_date=on_date, authority=operation).zero_token:
-        return None
-    return _resolve_numeric_iva_rate_slot_fact(rate, on_date, declarations, kind, operation)
-
-
 def _resolve_numeric_iva_rate_slot_fact(
     rate: IvaRate,
     on_date: date,
@@ -631,6 +613,5 @@ __all__ = [
     "require_invoice_operation_date_role",
     "resolve_invoice_legal_mention",
     "resolve_iva_rate_slot",
-    "resolve_iva_rate_slot_fact",
     "resolve_iva_rate_token",
 ]

@@ -17,6 +17,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
 from cadrumo.core.diagnostic_log import DiagnosticFormatter
 from cadrumo.core.logging import LOG_FILE_FORMAT, get_logger
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.session_events import LifecycleNotice
@@ -125,13 +126,15 @@ async def test_login_failure_is_correlated_and_keeps_private_text_out_of_logs(ca
     app = App[None]()
     async with app.run_test(size=(140, 60)) as pilot:
         await app.push_screen(screen)
-        await pilot.pause()
+        await settle(pilot)
         screen.query_one("#runtime-login-credential", Input).value = _PRIVATE_CANARY
         screen.query_one("#runtime-login-submit", Button).press()
-        for _ in range(100):
-            await pilot.pause(0.01)
-            if any(event == "tui_login_finished" for event, _ in capture.events):
-                break
+        await settle_until(
+            pilot,
+            lambda: any(event == "tui_login_finished" for event, _ in capture.events),
+            "the login to log its finish",
+            workers=False,
+        )
 
     assert any(event == "tui_login_started" for event, _ in capture.events)
     refusal = next(fields for event, fields in capture.events if event in {"tui_login_refused", "tui_login_failed"})

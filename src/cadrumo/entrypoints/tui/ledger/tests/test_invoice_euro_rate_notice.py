@@ -9,6 +9,7 @@ from textual.widgets import Button, Input, Static
 
 from .....core.config import override_settings
 from ...components.host import ScreenHostApp
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..invoice_entry import LedgerInvoiceEntryScreen
 from ..models import LedgerFlowState, LedgerInvoiceAddResultV1, LedgerInvoiceEntryV1
@@ -42,7 +43,7 @@ async def test_the_entry_screen_shows_the_missing_rate_after_recording() -> None
     )
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(110, 200)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             for name, value in {
                 "counterparty_name": "Proveedor Exterior SL",
                 "invoice_number": "FX-USD",
@@ -53,10 +54,9 @@ async def test_the_entry_screen_shows_the_missing_rate_after_recording() -> None
             }.items():
                 screen.query_one(f"#ledger-invoice-{name.replace('_', '-')}", Input).value = value
             screen.query_one("#ledger-invoice-review", Button).press()
-            await pilot.pause()
+            await settle(pilot)
             screen.query_one("#ledger-invoice-confirm", Button).press()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.SUCCEEDED
             status = str(screen.query_one("#ledger-flow-status", Static).render())
     assert "No euro exchange rate for USD" in status

@@ -22,6 +22,7 @@ from .....application.operations.public_scalar import PublicDecimal
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....domain.contribuyente.inventory.records import MovementKind
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..registers_inventory import INVENTORY_TOOL_KEY, LedgerInventoryDoorV1, LedgerInventoryScreen, inventory_tool
 from ..registers_presentation import REGISTER_PAGE_SIZE
@@ -35,8 +36,7 @@ from .registers_fixtures import (
     synthetic_closing_authority,
     synthetic_inventory_row,
 )
-from .test_ledger_selection_journey import _WorkspaceHostApp
-from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -48,15 +48,9 @@ def _screen(door: MemoryInventoryDoor) -> LedgerInventoryScreen:
     return LedgerInventoryScreen(controller, cast(LedgerInventoryDoorV1, door))
 
 
-async def _settle(pilot: Pilot[None]) -> None:
-    await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
-
-
 async def _press(pilot: Pilot[None], screen: LedgerInventoryScreen, button_id: str) -> None:
     screen.query_one(f"#{button_id}", Button).press()
-    await _settle(pilot)
+    await settle(pilot)
 
 
 def _text(screen: LedgerInventoryScreen, selector: str) -> str:
@@ -69,7 +63,7 @@ def _keys(screen: LedgerInventoryScreen) -> list[str]:
 
 async def _choose(pilot: Pilot[None], screen: LedgerInventoryScreen, select_id: str, value: str) -> None:
     cast("Select[str]", screen.query_one(f"#{select_id}", Select)).value = value
-    await pilot.pause()
+    await settle(pilot)
 
 
 def _fill(screen: LedgerInventoryScreen, **values: str) -> None:
@@ -88,8 +82,8 @@ async def test_create_add_a_movement_preview_and_record_a_closing_authority_each
     door = MemoryInventoryDoor(closing_value="155.00", cogs="45.00")
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             assert _text(screen, "#ledger-flow-status") == tr("tui.ledger.registers.inventory.empty")
 
             await _choose(pilot, screen, "inventory-action", "create")
@@ -173,8 +167,8 @@ async def test_a_movement_for_an_absent_inventory_shows_the_registered_refusal()
     door = MemoryInventoryDoor()
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             await _choose(pilot, screen, "inventory-action", "movement_add")
             await _choose(pilot, screen, "inventory-movement-kind", "count")
             _fill(
@@ -192,13 +186,13 @@ async def test_a_second_inventory_for_the_same_activity_and_year_is_refused() ->
     door = MemoryInventoryDoor(rows=(synthetic_inventory_row("act-01"),))
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             table = screen.query_one("#inventory-list", DataTable)
             table.focus()
             table.move_cursor(row=0)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             assert screen.query_one("#inventory-actividad", Input).value == "act-01"
             assert screen.query_one("#inventory-year", Input).value == "2026"
             await _review_and_confirm(pilot, screen)
@@ -211,8 +205,8 @@ async def test_an_unreadable_source_file_is_refused_before_anything_is_sent() ->
     door = MemoryInventoryDoor(rows=(synthetic_inventory_row("act-01"),))
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             await _choose(pilot, screen, "inventory-action", "closing_authority")
             _fill(screen, actividad="act-01", year="2026", authority_path="missing.json")
             await _press(pilot, screen, "register-review")
@@ -231,8 +225,8 @@ async def test_an_impossible_movement_date_is_refused_before_anything_is_sent() 
     door = MemoryInventoryDoor(rows=(synthetic_inventory_row("act-01"),))
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             await _choose(pilot, screen, "inventory-action", "movement_add")
             _fill(
                 screen, actividad="act-01", year="2026", movement_id="mv-01", movement_date="2026-02-30", quantity="1"
@@ -250,8 +244,8 @@ async def test_the_inventory_list_holds_one_page_of_a_thousand_rows_and_pages_bo
     door = MemoryInventoryDoor(rows=tuple(synthetic_inventory_row(f"act-{index:04d}") for index in range(1200)))
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             table = screen.query_one("#inventory-list", DataTable)
             assert table.row_count == REGISTER_PAGE_SIZE
             await _press(pilot, screen, "inventory-list-next")

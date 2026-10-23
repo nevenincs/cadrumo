@@ -29,6 +29,7 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ....components.theme import install_cadrumo_themes
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry, CasillaListHeading, CasillaListItem, CasillaListNote
 from ..vocabulary import origin_words
@@ -124,17 +125,17 @@ async def test_replacing_a_short_list_reveals_the_target_after_scrollbar_wrappin
     )
     app = _ListHarness(_ITEMS[:2], OutputLanguage.HU)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         listing = app.query_one(CasillaList)
         assert not listing.show_vertical_scrollbar
         listing.set_items(items, language=OutputLanguage.HU)
         assert listing.focus_address(items[90].key)
-        await pilot.pause()
+        await settle(pilot)
         assert listing.show_vertical_scrollbar
         assert listing.highlighted is not None and listing.highlighted.key == items[90].key
         assert "[90]" in "\n".join(_screen_lines(listing))
         listing.scroll_to(y=0, animate=False)
-        await pilot.pause()
+        await settle(pilot)
         assert listing.scroll_y == 0
         assert "[90]" not in "\n".join(_screen_lines(listing))
         app.exit(None)
@@ -145,7 +146,7 @@ async def test_values_read_in_the_filers_language_and_absence_is_spoken() -> Non
     with override_settings(cadrumo_output_language="es"):
         app = _ListHarness(_ITEMS, OutputLanguage.ES)
         async with app.run_test(size=(120, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             text = "\n".join(_screen_lines(app.query_one(CasillaList)))
 
     assert "12.345,67\u00a0\u20ac" in text
@@ -162,12 +163,13 @@ async def test_the_cursor_moves_between_fields_and_skips_headings() -> None:
     app = _ListHarness(_ITEMS, OutputLanguage.EN)
     async with app.run_test(size=(80, 24)) as pilot:
         widget = app.query_one(CasillaList)
-        await pilot.pause()
+        await settle(pilot)
         first = widget.highlighted
         await pilot.press("down", "down")
+        await settle(pilot)
         third = widget.highlighted
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
 
     assert first is not None and first.key == ("casilla", "01")
     assert third is not None and third.key == ("casilla", "06")
@@ -179,11 +181,12 @@ async def test_the_attention_key_lands_on_what_needs_the_filer() -> None:
     app = _ListHarness(_ITEMS, OutputLanguage.EN)
     async with app.run_test(size=(80, 24)) as pilot:
         widget = app.query_one(CasillaList)
-        await pilot.pause()
+        await settle(pilot)
         await pilot.press("n")
+        await settle(pilot)
         landed = widget.highlighted
         await pilot.press("x")
-        await pilot.pause()
+        await settle(pilot)
 
     assert landed is not None and landed.key == ("casilla", "06")
     assert app.messages == ["clear:06"]
@@ -194,13 +197,13 @@ async def test_replacing_the_items_keeps_the_same_address_under_the_cursor() -> 
     app = _ListHarness(_ITEMS, OutputLanguage.EN)
     async with app.run_test(size=(80, 24)) as pilot:
         widget = app.query_one(CasillaList)
-        await pilot.pause()
+        await settle(pilot)
         assert widget.focus_address(("casilla", "16"))
         staged = CasillaListEntry(
             _field("06", "Retenciones", ModeloFormOrigin.NEEDS_INPUT), staged_text="100,00 \u20ac"
         )
         widget.set_items((*_ITEMS[:4], staged, *_ITEMS[5:]))
-        await pilot.pause()
+        await settle(pilot)
         kept = widget.highlighted
         lines = _screen_lines(widget)
 
@@ -216,7 +219,7 @@ async def test_compact_density_puts_every_field_on_one_line() -> None:
     async with app.run_test(size=(80, 24)) as pilot:
         widget = app.query_one(CasillaList)
         widget.set_density("compact")
-        await pilot.pause()
+        await settle(pilot)
         lines = [line for line in _screen_lines(widget) if line.strip()]
 
     assert len(lines) == len(_ITEMS)
@@ -233,7 +236,7 @@ async def test_headings_and_notes_keep_their_own_style_when_rendered() -> None:
     app = _ListHarness(items, OutputLanguage.EN)
     async with app.run_test(size=(80, 24)) as pilot:
         widget = app.query_one(CasillaList)
-        await pilot.pause()
+        await settle(pilot)
         plain = widget.rich_style
         heading_style = widget.get_component_rich_style("casilla-list--heading")
         muted_style = widget.get_component_rich_style("casilla-list--muted")
@@ -271,7 +274,7 @@ async def test_on_the_widest_list_the_source_follows_the_origin_words_after_the_
     with override_settings(cadrumo_output_language="en"):
         app = _ListHarness((CasillaListEntry(sourced),), OutputLanguage.EN)
         async with app.run_test(size=(200, 10)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             line = next(row for row in _screen_lines(app.query_one(CasillaList)) if "[01]" in row)
         words = origin_words(sourced)
         source = tr(source_policy(BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION).label_key)

@@ -27,7 +27,7 @@ export function SetupRowItem({
       data-setup-row={row.item}
       data-setup-tone={tone}
       aria-labelledby={headingId}
-      className="grid gap-1 rounded-lg border bg-card p-3"
+      className="grid gap-1 rounded-lg bg-accent p-3"
     >
       <h4
         id={headingId}

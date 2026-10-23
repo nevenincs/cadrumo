@@ -26,9 +26,9 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from cadrumo.core.logging import get_logger
+from cadrumo.tests.process_support import fixture_environment, native_python
 from cadrumo_client.contracts.contracts import ExitReason
 
-from ...adapters.tests.process_support import fixture_environment, native_python
 from .. import main as runtime_main
 from ..arguments import parse_runtime_arguments
 from ..shutdown import RuntimeStop

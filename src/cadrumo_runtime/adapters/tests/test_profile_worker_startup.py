@@ -11,9 +11,9 @@ import pytest
 from cadrumo_client.contracts.contracts import ChannelWake, RefusalCode, RefusalError
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_client.transport.windows_channel import WindowsChannel
+from cadrumo_client.transport.windows_process import WindowsOwnedProcess
 
 from ..profile_worker import ProfileWorkerProcess
-from ..windows_process import WindowsOwnedProcess
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

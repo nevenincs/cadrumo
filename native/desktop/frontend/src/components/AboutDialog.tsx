@@ -72,7 +72,7 @@ function Listing({
         />
         {title}
       </summary>
-      <ul className="grid max-h-60 gap-0.5 overflow-y-auto rounded-md border p-2 text-sm">
+      <ul className="grid max-h-60 gap-0.5 overflow-y-auto rounded-md bg-accent p-2 text-sm">
         {items.map((item) => (
           <li
             key={item.name}

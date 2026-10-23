@@ -33,6 +33,7 @@ from ..components.theme import (
 from ..modelo.workbench.factory import InstalledModeloWorkbench
 from ..modelo.workbench.screen import ModeloWorkbenchScreen
 from .modelo_workbench_session import real_workbench
+from .settling import settle, settle_until
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -73,20 +74,16 @@ async def _observe(
         # under that theme rather than re-applying CSS to one mounted under the
         # default appearance -- which would make both observations identical.
         app.theme = theme
-        await pilot.pause()
+        await settle(pilot)
         screen = ModeloWorkbenchScreen(workbench, actions=workbench)
         await app.push_screen(screen)
-        for _ in range(200):
-            await pilot.pause()
-            if screen.form is not None:
-                break
+        await settle_until(pilot, lambda: screen.form is not None, "the workbench to read its declaration")
         assert screen.form is not None
         if keys:
             await pilot.press(*keys)
-        await app.workers.wait_for_complete()
+        await settle(pilot)
         await pilot.wait_for_scheduled_animations()
-        await pilot.pause()
-        await pilot.pause()
+        await settle(pilot)
         glyphs = tuple(str(match.group(1)) for match in _TEXT_NODE.finditer(app.export_screenshot()))
         focus_ids: list[str | None] = []
         for widget in app.screen.focus_chain:

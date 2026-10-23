@@ -109,6 +109,7 @@ def unavailable_import_health(reason: str) -> dict[str, object]:
             "contracts_total": 0,
             "dependencies": 0,
             "files": 0,
+            "consumer_files_scanned_by_subordinate": 0,
             "files_scanned_by_subordinate": 0,
             "supplemental_direct_occurrences_for_kept_contracts": {},
             "operational_reasons": [reason],

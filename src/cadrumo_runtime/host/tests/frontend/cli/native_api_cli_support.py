@@ -41,11 +41,11 @@ from cadrumo_client.transport import credentials
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.posix_endpoint import PosixEndpoint
 from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_runtime.adapters.linux_worker_process import LinuxProcessScope
 from cadrumo_runtime.adapters.login_policy import compose_runtime_login_policy
 from cadrumo_runtime.adapters.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
-from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     RuntimeFailureObservation,

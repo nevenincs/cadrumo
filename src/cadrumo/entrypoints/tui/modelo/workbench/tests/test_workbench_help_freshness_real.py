@@ -28,6 +28,7 @@ from ......core.external_constants import OutputLanguage
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import application_workbench
+from ....tests.settling import settle, settle_until
 from ..casilla_list_models import CasillaListEntry
 from ..editor import CasillaEditorPanel
 from ..factory import InstalledModeloWorkbench
@@ -67,19 +68,20 @@ async def _set_retention(work: SeededOperatorWork, value: str) -> None:
 async def _explanation(app: ScreenHostApp[None], pilot: Pilot[None]) -> str:
     screen = app._hosted_screen
     assert isinstance(screen, ModeloWorkbenchScreen)
-    for _ in range(100):
-        await pilot.pause()
-        if screen.form is not None:
-            break
-    await pilot.press("g", "0", "7", "enter")
-    await pilot.pause()
+    await settle_until(pilot, lambda: screen.form is not None, "the workbench to read its declaration")
+    await pilot.press("g")
+    await settle(pilot)
+    await pilot.press("0", "7", "enter")
+    await settle(pilot)
     await pilot.press("enter")
-    for _ in range(100):
-        await pilot.pause()
+
+    def _opened_panel() -> bool:
         panels = list(app.screen.query(CasillaEditorPanel))
-        if panels and panels[0].query("#editor-calculation-text"):
-            return str(panels[0].query_one("#editor-calculation-text", Static).render())
-    raise AssertionError("the calculated box's explanation did not open")
+        return bool(panels and panels[0].query("#editor-calculation-text"))
+
+    await settle_until(pilot, _opened_panel, "the calculated box's explanation to open")
+    panel = next(iter(app.screen.query(CasillaEditorPanel)))
+    return str(panel.query_one("#editor-calculation-text", Static).render())
 
 
 @pytest.mark.asyncio
@@ -95,7 +97,7 @@ async def test_reopening_help_uses_the_values_saved_by_apply_and_recalculation(
             before = await _explanation(app, pilot)
             assert "100.00" in before
             await pilot.press("escape")
-            await pilot.pause()
+            await settle(pilot)
             assert screen.form is not None
             before_head = screen.form.calculation_revision_id
             await _set_retention(work, "300")
@@ -104,7 +106,7 @@ async def test_reopening_help_uses_the_values_saved_by_apply_and_recalculation(
             assert screen.form.calculation_revision_id != before_head
             assert "300.00" in after_apply and "100.00" not in after_apply
             await pilot.press("escape")
-            await pilot.pause()
+            await settle(pilot)
             await _set_retention(work, "500")
             recalculated = await asyncio.to_thread(work.recalculate)
             assert recalculated.calculation_revision_id != screen.form.calculation_revision_id
@@ -134,10 +136,7 @@ async def test_a_help_fetch_from_the_previous_head_cannot_repopulate_the_fresh_c
         screen = ModeloWorkbenchScreen(installed, actions=installed)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 40)) as pilot:
-            for _ in range(100):
-                await pilot.pause()
-                if screen.form is not None:
-                    break
+            await settle_until(pilot, lambda: screen.form is not None, "the workbench to read its declaration")
             assert screen.form is not None
             entry = next(
                 item
@@ -154,7 +153,7 @@ async def test_a_help_fetch_from_the_previous_head_cannot_repopulate_the_fresh_c
             finally:
                 release.set()
             await pending
-            await pilot.pause()
+            await settle(pilot)
             assert not app.screen.query(CasillaEditorPanel), "an old editor must not reopen after a fresh read"
             shown = await _explanation(app, pilot)
             assert "300.00" in shown and "100.00" not in shown

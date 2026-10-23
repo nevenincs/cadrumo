@@ -46,6 +46,7 @@ from .....domain.filing.software_identity import AeatSoftwareIdentityGrade
 from .....domain.transactions.own_accounts import OwnAccountRole
 from ....adapter_composition import build_modelo_export_ports
 from ...components.widgets import ContentDataTable
+from ...tests.settling import settle
 from ..export_result import (
     EXPORT_ARTEFACT_LOCALE_KEYS,
     EXPORT_COMPLETENESS_LOCALE_KEYS,
@@ -166,7 +167,7 @@ async def test_an_export_whose_completeness_is_unverified_says_so_in_its_facts_a
 
     async with app.run_test() as pilot:
         await app.push_screen(ModeloExportResultScreen(result), closed.append)
-        await pilot.pause()
+        await settle(pilot)
 
         assert _table_values(app) == {
             "artefact": tr("tui.modelo.export.artefact.fichero_boe"),
@@ -185,7 +186,7 @@ async def test_an_export_whose_completeness_is_unverified_says_so_in_its_facts_a
         assert tr("tui.modelo.export.result.warning.development_software_identity") not in warnings
 
         app.screen.query_one("#modelo-export-result-close", Button).press()
-        await pilot.pause()
+        await settle(pilot)
 
     assert closed == [None]
 
@@ -205,7 +206,7 @@ async def test_an_unverified_cutoff_is_warned_and_the_account_is_named_by_role_a
     app = App[None]()
     async with app.run_test() as pilot:
         await app.push_screen(ModeloExportResultScreen(result))
-        await pilot.pause()
+        await settle(pilot)
         assert tr("tui.modelo.export.result.warning.cutoff_unverified") in _warnings(app)
         assert _table_values(app)["selected_account"] == "acc-01"
 
@@ -226,7 +227,7 @@ async def test_a_development_identity_is_warned_and_a_verified_file_raises_no_co
 
     async with app.run_test() as pilot:
         await app.push_screen(ModeloExportResultScreen(result))
-        await pilot.pause()
+        await settle(pilot)
 
         values = _table_values(app)
         assert values["software_identity_grade"] == tr(
@@ -238,7 +239,7 @@ async def test_a_development_identity_is_warned_and_a_verified_file_raises_no_co
         assert tr("tui.modelo.export.result.warning.completeness_unverified") not in warnings
 
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot)
         assert not isinstance(app.screen, ModeloExportResultScreen)
 
 
@@ -254,7 +255,7 @@ async def test_a_calculation_report_claims_no_completeness_and_names_the_filing_
 
     async with app.run_test() as pilot:
         await app.push_screen(ModeloExportResultScreen(result))
-        await pilot.pause()
+        await settle(pilot)
 
         values = _table_values(app)
         assert values["export_format"] == "csv"
@@ -279,7 +280,7 @@ async def test_a_calculation_summary_pdf_is_named_as_that_artefact_and_claims_wh
 
     async with app.run_test() as pilot:
         await app.push_screen(ModeloExportResultScreen(result))
-        await pilot.pause()
+        await settle(pilot)
 
         assert _table_values(app) == {
             "artefact": tr("tui.modelo.export.artefact.calculation_report_pdf"),
@@ -307,7 +308,7 @@ async def test_an_unreadable_result_is_stated_rather_than_shown_as_an_empty_tabl
 
     async with app.run_test() as pilot:
         await app.push_screen(ModeloExportResultScreen(None))
-        await pilot.pause()
+        await settle(pilot)
 
         assert not app.screen.query("#modelo-export-result-table")
         warnings = [str(item.content) for item in app.screen.query_one("#modelo-export-result-warnings").query(Static)]
@@ -317,6 +318,7 @@ async def test_an_unreadable_result_is_stated_rather_than_shown_as_an_empty_tabl
             "tui.modelo.export.result.title"
         )
         await pilot.press("t")
+        await settle(pilot)
         assert not app.screen.query("#modelo-export-result-table")
 
 
@@ -336,20 +338,20 @@ async def test_export_identifiers_are_revealed_only_by_deliberate_technical_deta
         app = App[None]()
         async with app.run_test() as pilot:
             await app.push_screen(ModeloExportResultScreen(result))
-            await pilot.pause()
+            await settle(pilot)
             ordinary = _table_values(app)
             assert "calculation_revision_id" not in ordinary and "file_sha256" not in ordinary
             assert _REVISION_ID not in ordinary.values() and _FILE_SHA256 not in ordinary.values()
             assert ordinary["output_path"] == result.output_path
             assert ordinary["completeness"] == tr(EXPORT_COMPLETENESS_LOCALE_KEYS[result.completeness])
             await pilot.press("t")
-            await pilot.pause()
+            await settle(pilot)
             detailed = _table_values(app)
             assert detailed["calculation_revision_id"] == _REVISION_ID
             assert detailed["file_sha256"] == _FILE_SHA256
             assert {key: detailed[key] for key in ordinary} == ordinary
             app.screen.query_one("#modelo-export-result-technical", Button).press()
-            await pilot.pause()
+            await settle(pilot)
             assert _table_values(app) == ordinary
 
 

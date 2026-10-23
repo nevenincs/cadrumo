@@ -116,7 +116,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.attachments.models import AttachmentSource
+from cadrumo.domain.attachments.enums import AttachmentSource
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.ledger.evidence_files_doors import LedgerEvidenceFilesDoorsV1

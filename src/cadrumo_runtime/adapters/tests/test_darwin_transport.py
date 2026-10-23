@@ -11,10 +11,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import darwin_transport
+from cadrumo.tests.process_support import runtime_namespace_base
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.transport import posix_endpoint
-
-from .process_support import runtime_namespace_base
 
 pytestmark = [
     pytest.mark.integration,

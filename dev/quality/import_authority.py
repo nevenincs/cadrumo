@@ -5,17 +5,41 @@ from __future__ import annotations
 import configparser
 import re
 from collections.abc import Mapping, Sequence
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Final
 
 from dev._paths import UTF_8
+from dev.source_tree import repository_files
 
-from .import_check_models import Authority, AuthorityRead, ForbiddenContract, RootPackage
+from .import_check_models import (
+    Authority,
+    AuthorityRead,
+    ConsumerContractScope,
+    ConsumerTree,
+    ForbiddenContract,
+    RootPackage,
+)
 
 _DOTTED_NAME: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*$")
 
 
 _LAYER_NAME: Final[re.Pattern[str]] = re.compile(r"^(?:\(([A-Za-z_]\w*)\)|([A-Za-z_]\w*))$")
+
+#: Sections of the authority file that belong to the import gate rather than to
+#: Import Linter, which reads only ``importlinter`` and ``importlinter:*``.
+_GATE_SECTION_PREFIX: Final[str] = "import-gate:"
+#: Repository-root directories or modules whose Python consumes first-party
+#: roots without being importable packages; the checker governs their imports.
+_CONSUMER_TREES_SECTION: Final[str] = "import-gate:consumer-trees"
+#: Repository-root directories or modules holding Python that is deliberately
+#: outside the gate.  This section is the only place such an exclusion exists.
+_EXCLUDED_TREES_SECTION: Final[str] = "import-gate:excluded-trees"
+#: ``import-gate:consumer-contract:<forbidden contract key>`` holds consumer
+#: paths to that Import Linter contract's forbidden modules.
+_CONSUMER_CONTRACT_PREFIX: Final[str] = "import-gate:consumer-contract:"
+#: The directory holding source-layout roots; its contents are inspected as roots.
+_SOURCE_CONTAINER: Final[str] = "src"
+_PYTHON_SUFFIX: Final[str] = ".py"
 
 
 def _validate_root_declarations(
@@ -44,7 +68,6 @@ def _locate_declared_roots(repository: Path, root_packages: tuple[str, ...], fin
             roots.append(RootPackage(package, located))
 
     _check_root_overlaps(roots, findings)
-    _check_undeclared_top_level_roots(repository, root_packages, findings)
     return roots
 
 
@@ -94,6 +117,11 @@ def read_authority(repository: Path, config_path: Path | None = None) -> Authori
 
     _check_root_classification(root_packages, classified_containers, findings)
 
+    consumer_trees, excluded_trees = _read_tree_declarations(repository, parser, roots, findings)
+    consumer_contracts = _read_consumer_contracts(parser, consumer_trees, forbidden_contracts, repository, findings)
+    declared_trees = frozenset(tree.path for tree in (*consumer_trees, *excluded_trees))
+    _check_undeclared_top_level_roots(repository, root_packages, roots, declared_trees, findings)
+
     for container in sorted(classified_containers):
         _check_container_coverage(container, roots, classifications, findings)
 
@@ -108,6 +136,8 @@ def read_authority(repository: Path, config_path: Path | None = None) -> Authori
         roots=tuple(roots),
         classifications=tuple(sorted(classifications)),
         forbidden_contracts=tuple(sorted(forbidden_contracts, key=lambda item: item.key)),
+        consumer_trees=consumer_trees,
+        consumer_contracts=consumer_contracts,
     )
     return AuthorityRead(authority, tuple(findings))
 
@@ -189,18 +219,157 @@ def _check_root_overlaps(roots: Sequence[RootPackage], findings: list[str]) -> N
             findings.append(f"[AUTHORITY_CONFIG] configured roots {left.name!r} and {right.name!r} overlap")
 
 
-def _check_undeclared_top_level_roots(repository: Path, root_packages: Sequence[str], findings: list[str]) -> None:
-    """Find regular or namespace-like Python roots omitted from the authority."""
+def _check_undeclared_top_level_roots(
+    repository: Path,
+    root_packages: Sequence[str],
+    roots: Sequence[RootPackage],
+    declared_trees: frozenset[str],
+    findings: list[str],
+) -> None:
+    """Find Python roots and repository trees omitted from the authority.
+
+    A package-shaped directory is a root candidate wherever it sits.  Beyond
+    that, every repository-root directory or module that holds Python under
+    the repository's own inclusion policy must be a declared root, a declared
+    consumer tree or a declared exclusion; the inclusion policy keeps ignored
+    scratch, build and environment directories out of the census.
+    """
     declared = {package.split(".", 1)[0] for package in root_packages}
     candidates: set[str] = set()
     source_modules: set[str] = set()
-    for base in (repository / "src", repository):
+    for base in (repository / _SOURCE_CONTAINER, repository):
         _inspect_root_base(base, repository, candidates, source_modules, findings)
+    candidates -= declared_trees
     for candidate in sorted(candidates | source_modules):
         if candidate not in declared:
             findings.append(f"[UNCLASSIFIED_ROOT] Python root {candidate!r} is absent from root_packages")
     for candidate in sorted(source_modules & declared):
         findings.append(f"[AUTHORITY_CONFIG] source module {candidate!r} collides with a declared root")
+    covered = frozenset({*_root_owned_entries(repository, roots), *declared_trees, *candidates})
+    for name in _repository_python_entries(repository, covered, findings):
+        findings.append(
+            f"[UNCLASSIFIED_ROOT] repository tree {name!r} holds Python but is not a declared root, "
+            f"an [{_CONSUMER_TREES_SECTION}] entry or an [{_EXCLUDED_TREES_SECTION}] entry"
+        )
+
+
+def _root_owned_entries(repository: Path, roots: Sequence[RootPackage]) -> frozenset[str]:
+    """Return the repository-root entries whose Python the declared roots already classify."""
+    owned = {_SOURCE_CONTAINER}
+    for root in roots:
+        try:
+            owned.add(root.path.relative_to(repository).parts[0])
+        except (ValueError, IndexError):
+            continue
+    return frozenset(owned)
+
+
+def _repository_python_entries(repository: Path, covered: frozenset[str], findings: list[str]) -> tuple[str, ...]:
+    """Return uncovered repository-root directories and modules holding policy-included Python."""
+    try:
+        entries = sorted(repository.iterdir(), key=lambda item: item.name)
+    except OSError as exc:
+        findings.append(f"[AUTHORITY_CONFIG] cannot inspect repository root {repository}: {exc}")
+        return ()
+    names: list[str] = []
+    for entry in entries:
+        if entry.name == ".git" or entry.name in covered:
+            continue
+        if not entry.is_dir() and entry.suffix != _PYTHON_SUFFIX:
+            continue
+        if holds_repository_python(repository, entry.name):
+            names.append(entry.name)
+    return tuple(names)
+
+
+def holds_repository_python(repository: Path, relative: str) -> bool:
+    """Return whether ``relative`` is or contains Python the inclusion policy admits."""
+    return bool(repository_python_files(repository, relative))
+
+
+def repository_python_files(repository: Path, relative: str) -> tuple[str, ...]:
+    """Return the policy-included Python files at or below one repository-relative path."""
+    return tuple(path for path in repository_files(repository, under=(relative,)) if path.endswith(_PYTHON_SUFFIX))
+
+
+def _read_tree_declarations(
+    repository: Path, parser: configparser.ConfigParser, roots: Sequence[RootPackage], findings: list[str]
+) -> tuple[tuple[ConsumerTree, ...], tuple[ConsumerTree, ...]]:
+    """Read the consumer and excluded repository trees, each with its stated reason."""
+    known_sections = {_CONSUMER_TREES_SECTION, _EXCLUDED_TREES_SECTION}
+    for name in parser.sections():
+        if (
+            name.startswith(_GATE_SECTION_PREFIX)
+            and name not in known_sections
+            and not name.startswith(_CONSUMER_CONTRACT_PREFIX)
+        ):
+            findings.append(f"[AUTHORITY_CONFIG] unknown import-gate section {name!r}")
+    owned = _root_owned_entries(repository, roots)
+    consumers = _read_tree_section(repository, parser, _CONSUMER_TREES_SECTION, owned, findings)
+    excluded = _read_tree_section(repository, parser, _EXCLUDED_TREES_SECTION, owned, findings)
+    for path in sorted({tree.path for tree in consumers} & {tree.path for tree in excluded}):
+        findings.append(f"[AUTHORITY_CONFIG] repository tree {path!r} is declared both a consumer and an exclusion")
+    return consumers, excluded
+
+
+def _read_tree_section(
+    repository: Path, parser: configparser.ConfigParser, section: str, owned: frozenset[str], findings: list[str]
+) -> tuple[ConsumerTree, ...]:
+    """Read one ``path = reason`` section naming repository-root directories or modules."""
+    if section not in parser:
+        return ()
+    trees: list[ConsumerTree] = []
+    for raw_path, raw_reason in parser.items(section):
+        path = raw_path.strip()
+        reason = " ".join(raw_reason.split())
+        if not reason:
+            findings.append(f"[AUTHORITY_CONFIG] [{section}] entry {path!r} states no reason")
+        if not path or path in {".", ".."} or "/" in path or "\\" in path:
+            findings.append(f"[AUTHORITY_CONFIG] [{section}] entry {path!r} is not one repository-root entry")
+            continue
+        if path in owned:
+            findings.append(f"[AUTHORITY_CONFIG] [{section}] entry {path!r} is already owned by a declared root")
+            continue
+        if not holds_repository_python(repository, path):
+            findings.append(f"[AUTHORITY_CONFIG] [{section}] entry {path!r} holds no repository Python")
+            continue
+        trees.append(ConsumerTree(path, reason))
+    return tuple(sorted(trees, key=lambda tree: tree.path))
+
+
+def _read_consumer_contracts(
+    parser: configparser.ConfigParser,
+    consumer_trees: Sequence[ConsumerTree],
+    forbidden_contracts: Sequence[ForbiddenContract],
+    repository: Path,
+    findings: list[str],
+) -> tuple[ConsumerContractScope, ...]:
+    """Bind consumer paths to the forbidden contracts that govern them."""
+    scopes: list[ConsumerContractScope] = []
+    tree_paths = tuple(tree.path for tree in consumer_trees)
+    contracts = {contract.key: contract for contract in forbidden_contracts}
+    for name in parser.sections():
+        if not name.startswith(_CONSUMER_CONTRACT_PREFIX):
+            continue
+        contract = contracts.get(name.removeprefix(_CONSUMER_CONTRACT_PREFIX))
+        if contract is None:
+            findings.append(f"[AUTHORITY_CONFIG] section {name!r} names no forbidden Import Linter contract")
+            continue
+        paths: list[str] = []
+        for raw_path, raw_reason in parser.items(name):
+            path = PurePosixPath(raw_path.strip().replace("\\", "/")).as_posix()
+            if not " ".join(raw_reason.split()):
+                findings.append(f"[AUTHORITY_CONFIG] [{name}] entry {path!r} states no reason")
+            if not any(path == tree or path.startswith(f"{tree}/") for tree in tree_paths):
+                findings.append(f"[AUTHORITY_CONFIG] [{name}] entry {path!r} lies outside every consumer tree")
+            elif not holds_repository_python(repository, path):
+                findings.append(f"[AUTHORITY_CONFIG] [{name}] entry {path!r} holds no repository Python")
+            else:
+                paths.append(path)
+        if not paths:
+            findings.append(f"[AUTHORITY_CONFIG] section {name!r} binds no consumer path")
+        scopes.append(ConsumerContractScope(contract, tuple(sorted(paths))))
+    return tuple(sorted(scopes, key=lambda scope: scope.contract.key))
 
 
 def _truthy(value: str) -> bool:

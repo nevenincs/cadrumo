@@ -41,6 +41,7 @@ from ......domain.calculations.registry.ids import BindingId
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import RecordedSubmissions, application_workbench
+from ....tests.settling import settle, settle_until
 from ..bulk_confirm import BulkConfirmScreen
 from ..factory import InstalledModeloWorkbench
 from ..ports import WorkbenchChangeKind
@@ -81,17 +82,8 @@ def _bench(tmp_path: Path, *, modelo: str) -> Generator[_Bench]:
         yield _Bench(work=work, installed=installed, submissions=submissions)
 
 
-async def _settle(pilot: Pilot[None], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
-
-
 async def _opened(pilot: Pilot[None], screen: ModeloWorkbenchScreen) -> None:
-    for _ in range(200):
-        await pilot.pause()
-        if screen.form is not None:
-            return
-    raise AssertionError("the workbench never finished reading its declaration")
+    await settle_until(pilot, lambda: screen.form is not None, "the workbench to finish reading its declaration")
 
 
 @dataclass
@@ -109,7 +101,7 @@ async def _confirm_with_f8(installed: InstalledModeloWorkbench) -> _Confirmed:
     async with app.run_test(size=(160, 48)) as pilot:
         await _opened(pilot, screen)
         await pilot.press("f8")
-        await _settle(pilot)
+        await settle(pilot)
         dialog = app.screen
         assert isinstance(dialog, BulkConfirmScreen), f"F8 opened {type(dialog).__name__}, not the confirm list"
         listed = dialog.fields
@@ -117,9 +109,9 @@ async def _confirm_with_f8(installed: InstalledModeloWorkbench) -> _Confirmed:
         tick_offered = not tick.disabled
         notes = len(dialog.query("#bulk-left-out"))
         tick.value = True
-        await _settle(pilot)
+        await settle(pilot)
         await pilot.click("#bulk-confirm")
-        await _settle(pilot)
+        await settle(pilot)
         staged = tuple((change.change.address, change.kind, change.value) for change in screen.staged_changes)
         app.exit(None)
     return _Confirmed(listed=listed, tick_offered=tick_offered, notes=notes, staged=staged)

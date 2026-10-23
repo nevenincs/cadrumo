@@ -36,7 +36,7 @@ from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.ledger.invoices_import import LedgerInvoiceImportScreen
 from cadrumo.entrypoints.tui.ledger.invoices_wizard import LedgerInvoiceWizardScreen
-from cadrumo.entrypoints.tui.ledger.tests.invoices_fixtures import import_outcome, invoice_snapshot
+from cadrumo.entrypoints.tui.ledger.tests.invoices_fixtures import INVOICES_PROFILE_ID, import_outcome, invoice_snapshot
 from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import ledger_controller, ledger_projection
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -50,7 +50,6 @@ from ....frontend.tui.runtime_ledger_invoices import (
 from .ledger_invoices_runtime_harness import (
     LAPSED_SESSION_ID,
     OTHER_PROFILE_ID,
-    PROFILE_ID,
     PROFILE_LABEL,
     Boundary,
     Settled,
@@ -87,7 +86,7 @@ def _book(tmp_path: Path) -> Path:
 
 def _import_request(path: Path, digest: str | None = None) -> InvoiceImportRequest:
     return InvoiceImportRequest(
-        profile_id=PROFILE_ID,
+        profile_id=INVOICES_PROFILE_ID,
         kind=InvoiceKind.RECEIVED,
         source_path=str(path),
         source_sha256=hashlib.sha256(_BOOK).hexdigest() if digest is None else digest,
@@ -96,7 +95,7 @@ def _import_request(path: Path, digest: str | None = None) -> InvoiceImportReque
 
 
 def _outcome(
-    *, created: int = 2, refused: int = 1, profile: UUID = PROFILE_ID, digest: str | None = None
+    *, created: int = 2, refused: int = 1, profile: UUID = INVOICES_PROFILE_ID, digest: str | None = None
 ) -> InvoiceImportProjection:
     base = import_outcome(created=created, skipped=1, refused=refused)
     return base.model_copy(update={"profile_id": profile, "source_sha256": digest or hashlib.sha256(_BOOK).hexdigest()})
@@ -280,7 +279,7 @@ def test_apply_submits_nothing_once_the_session_lapsed(monkeypatch: pytest.Monke
 
 def _wizard_request(kind: InvoiceKind = InvoiceKind.ISSUED) -> InvoiceWizardRequest:
     return InvoiceWizardRequest(
-        profile_id=PROFILE_ID,
+        profile_id=INVOICES_PROFILE_ID,
         kind=kind,
         counterparty_nif="B00000000",
         counterparty_name="Synthetic customer",
@@ -294,7 +293,7 @@ def _wizard_request(kind: InvoiceKind = InvoiceKind.ISSUED) -> InvoiceWizardRequ
 
 
 def _recorded(
-    *, already_existed: bool = False, kind: InvoiceKind = InvoiceKind.ISSUED, profile: UUID = PROFILE_ID
+    *, already_existed: bool = False, kind: InvoiceKind = InvoiceKind.ISSUED, profile: UUID = INVOICES_PROFILE_ID
 ) -> InvoiceWizardOutcome:
     invoice = invoice_snapshot(kind=kind).model_copy(update={"bucket_id": str(profile)})
     return InvoiceWizardOutcome(
@@ -308,10 +307,10 @@ def _recorded(
 
 def _field_refusal() -> InvoiceWizardOutcome:
     return InvoiceWizardOutcome(
-        profile_id=PROFILE_ID,
+        profile_id=INVOICES_PROFILE_ID,
         outcome="refused",
         refusal=InvoiceWizardValidationRefusalProjection(
-            profile_id=PROFILE_ID,
+            profile_id=INVOICES_PROFILE_ID,
             field_errors=(InvoiceWizardFieldFailure(field="invoice_date", reason="must be a date"),),
         ),
     )
@@ -417,6 +416,6 @@ def test_the_overview_offers_the_import_and_wizard_tools_over_the_pinned_session
     importer, wizard = (tool.build(controller) for tool in tools)
     assert isinstance(importer, LedgerInvoiceImportScreen)
     assert isinstance(wizard, LedgerInvoiceWizardScreen)
-    assert importer.door.profile_id == PROFILE_ID
-    assert wizard.door.profile_id == PROFILE_ID
+    assert importer.door.profile_id == INVOICES_PROFILE_ID
+    assert wizard.door.profile_id == INVOICES_PROFILE_ID
     assert boundary.submissions == []

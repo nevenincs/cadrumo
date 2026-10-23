@@ -11,7 +11,7 @@ from threading import Lock, Thread
 from typing import BinaryIO, Final
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_runtime.adapters.windows_process import WindowsOwnedProcess, WindowsProcessScope
+from cadrumo_client.transport.windows_process import WindowsOwnedProcess, WindowsProcessScope
 
 from ..host.controller import AgentHostError, AgentHostRefusal, AgentProcess
 from ..host.native_refusal import STANDARD_ERROR_TAIL_BYTES
@@ -212,10 +212,6 @@ class WindowsAgentProcess:
     def work_done(self) -> tuple[int, ...] | None:
         """What the whole tree has done so far, as its job accounts it; ``None`` once the job is released."""
         return self._scope.work_done()
-
-    def job_limit_flags(self) -> int:
-        """The agent job's limit flags as the kernel holds them; it never admits breakaway."""
-        return self._scope.limit_flags()
 
     def contains_process_id(self, process_id: int) -> bool:
         """Whether the live process with this identifier is a member of the agent's job.

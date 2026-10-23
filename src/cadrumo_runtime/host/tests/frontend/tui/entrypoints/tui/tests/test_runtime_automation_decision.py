@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import sys
 import time
-from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import ExitStack
 from importlib.metadata import version
@@ -29,6 +28,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.operations import OperationEffect
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
@@ -97,13 +97,6 @@ def _requester(
     return connection, NativeEnrollmentClient(connection=connection, prepared=prepared, secrets_store=native_store)
 
 
-async def _until(pilot: Pilot[object], predicate: Callable[[], bool], *, timeout: float = 90) -> None:
-    """Advance the headless app until one real UI transition is observable."""
-    async with asyncio.timeout(timeout):
-        while not predicate():
-            await pilot.pause(0.05)
-
-
 def _request_row(table: DataTable[str], request_id: UUID) -> int:
     for index in range(table.row_count):
         if str(table.get_row_at(index)[0]) == str(request_id):
@@ -167,14 +160,16 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
                             screen = pilot.app.screen
                             assert isinstance(screen, RuntimeLoginScreen)
                             submit = screen.query_one("#runtime-login-submit", Button)
-                            await _until(
+                            await settle_until(
                                 pilot,
                                 lambda: (
                                     screen._worker is not None and screen._worker.is_finished and not submit.disabled
                                 ),
+                                "( screen._worker is not None and screen._worker.is_finished and not...",
+                                workers=False,
                             )
                             screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.PASSWORD
-                            await pilot.pause()
+                            await settle(pilot)
                             credential = screen.query_one("#runtime-login-credential", Input)
                             assert credential.password
                             credential.value = PROFILE_INPUT
@@ -188,21 +183,33 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
                         # The session is published before the first destination
                         # is swapped in; Access is offered once that swap can no
                         # longer remove it.
-                        await _until(pilot, lambda: app.account_action_available(AccountActionV1.ACCESS))
+                        await settle_until(
+                            pilot,
+                            lambda: app.account_action_available(AccountActionV1.ACCESS),
+                            "app.account_action_available(AccountActionV1.ACCESS)",
+                            workers=False,
+                        )
                         assert app.account_session is not None
                         assert app.account_session.profile_label == "Enrollment tests"
                         app.run_account_action(AccountActionV1.ACCESS)
-                        await _until(pilot, lambda: isinstance(app.screen, RuntimeAccessManagementScreen))
+                        await settle_until(
+                            pilot,
+                            lambda: isinstance(app.screen, RuntimeAccessManagementScreen),
+                            "isinstance(app.screen, RuntimeAccessManagementScreen)",
+                            workers=False,
+                        )
                         access = app.screen
                         assert isinstance(access, RuntimeAccessManagementScreen)
-                        for _ in range(100):
-                            if (
+                        await settle_until(
+                            pilot,
+                            lambda: (
                                 access._admin_available
                                 and not access._busy
                                 and not access.query_one("#runtime-access-view-automation", Button).disabled
-                            ):
-                                break
-                            await pilot.pause(0.05)
+                            ),
+                            "the access screen to offer the automation inventory",
+                            workers=False,
+                        )
                         assert access._admin_available and not access._busy, (
                             type(app.screen).__name__,
                             access._screen_live,
@@ -214,10 +221,12 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
                             app.return_value,
                         )
                         access.query_one("#runtime-access-view-automation", Button).press()
-                        for _ in range(100):
-                            if isinstance(app.screen, RuntimeAutomationInventoryScreen):
-                                break
-                            await pilot.pause(0.05)
+                        await settle_until(
+                            pilot,
+                            lambda: isinstance(app.screen, RuntimeAutomationInventoryScreen),
+                            "the automation inventory screen to open",
+                            workers=False,
+                        )
                         assert isinstance(app.screen, RuntimeAutomationInventoryScreen), (
                             type(app.screen).__name__,
                             access._busy,
@@ -229,22 +238,31 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
                         inventory = app.screen
                         assert isinstance(inventory, RuntimeAutomationInventoryScreen)
                         table = inventory.query_one("#automation-inventory-requests", DataTable)
-                        await _until(pilot, lambda: table.row_count == 2)
+                        await settle_until(pilot, lambda: table.row_count == 2, "table.row_count == 2", workers=False)
                         table.focus()
                         table.move_cursor(row=_request_row(table, first.request_id))
-                        await _until(
+                        await settle_until(
                             pilot,
                             lambda: (
                                 inventory._selected_review is not None
                                 and inventory._selected_review.receipt.request_id == first.request_id
                             ),
-                            timeout=5,
+                            "( inventory._selected_review is not None and inventory._selected_re...",
+                            workers=False,
                         )
-                        await _until(
-                            pilot, lambda: not inventory.query_one("#automation-inventory-approve", Button).disabled
+                        await settle_until(
+                            pilot,
+                            lambda: not inventory.query_one("#automation-inventory-approve", Button).disabled,
+                            "not inventory.query_one('#automation-inventory-approve', Button).di...",
+                            workers=False,
                         )
                         inventory.query_one("#automation-inventory-approve", Button).press()
-                        await _until(pilot, lambda: isinstance(app.screen, RuntimeAutomationDecisionScreen))
+                        await settle_until(
+                            pilot,
+                            lambda: isinstance(app.screen, RuntimeAutomationDecisionScreen),
+                            "isinstance(app.screen, RuntimeAutomationDecisionScreen)",
+                            workers=False,
+                        )
                         approval = app.screen
                         assert isinstance(approval, RuntimeAutomationDecisionScreen)
                         consent = str(approval.query_one("#automation-decision-review", Static).content)
@@ -255,10 +273,12 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
                         field.value = PROFILE_INPUT
                         polling = pool.submit(poll_requester, enrollment)
                         approval.query_one("#automation-decision-confirm", Button).press()
-                        await _until(pilot, lambda: field.value == "", timeout=5)
-                        await _until(
+                        await settle_until(pilot, lambda: field.value == "", "field.value == ''", workers=False)
+                        await settle_until(
                             pilot,
                             lambda: approval._outcome is not None and not approval._busy,
+                            "approval._outcome is not None and not approval._busy",
+                            workers=False,
                         )
                         assert approval._outcome is not None and approval._outcome.completed, approval._outcome
                         assert approval._outcome.effect is OperationEffect.UPDATED
@@ -268,7 +288,9 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
                             approval.query_one("#automation-decision-status", Static).content
                         )
                         approval.action_close()
-                        await _until(pilot, lambda: app.screen is inventory)
+                        await settle_until(
+                            pilot, lambda: app.screen is inventory, "app.screen is inventory", workers=False
+                        )
                         assert approval._outcome is not None and approval._outcome.operation_id is not None
                         stages.append("approved")
                         done.set()
@@ -276,22 +298,31 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
                             await asyncio.to_thread(polling.result, 15)
 
                         inventory.query_one("#automation-inventory-refresh", Button).press()
-                        await _until(pilot, lambda: table.row_count == 2)
+                        await settle_until(pilot, lambda: table.row_count == 2, "table.row_count == 2", workers=False)
                         table.focus()
                         table.move_cursor(row=_request_row(table, second.request_id))
-                        await _until(
+                        await settle_until(
                             pilot,
                             lambda: (
                                 inventory._selected_review is not None
                                 and inventory._selected_review.receipt.request_id == second.request_id
                             ),
-                            timeout=5,
+                            "( inventory._selected_review is not None and inventory._selected_re...",
+                            workers=False,
                         )
-                        await _until(
-                            pilot, lambda: not inventory.query_one("#automation-inventory-decline", Button).disabled
+                        await settle_until(
+                            pilot,
+                            lambda: not inventory.query_one("#automation-inventory-decline", Button).disabled,
+                            "not inventory.query_one('#automation-inventory-decline', Button).di...",
+                            workers=False,
                         )
                         inventory.query_one("#automation-inventory-decline", Button).press()
-                        await _until(pilot, lambda: isinstance(app.screen, RuntimeAutomationDecisionScreen))
+                        await settle_until(
+                            pilot,
+                            lambda: isinstance(app.screen, RuntimeAutomationDecisionScreen),
+                            "isinstance(app.screen, RuntimeAutomationDecisionScreen)",
+                            workers=False,
+                        )
                         decline = app.screen
                         assert isinstance(decline, RuntimeAutomationDecisionScreen)
                         assert str(second.request_id) in str(
@@ -299,14 +330,18 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
                         )
                         assert not tuple(decline.query("#automation-decision-password"))
                         decline.query_one("#automation-decision-confirm", Button).press()
-                        await _until(
+                        await settle_until(
                             pilot,
                             lambda: decline._outcome is not None and not decline._busy,
+                            "decline._outcome is not None and not decline._busy",
+                            workers=False,
                         )
                         assert decline._outcome is not None and decline._outcome.completed, decline._outcome
                         assert decline._outcome.effect is OperationEffect.UPDATED
                         decline.action_close()
-                        await _until(pilot, lambda: app.screen is inventory)
+                        await settle_until(
+                            pilot, lambda: app.screen is inventory, "app.screen is inventory", workers=False
+                        )
                         stages.append("declined")
                         app.exit()
 

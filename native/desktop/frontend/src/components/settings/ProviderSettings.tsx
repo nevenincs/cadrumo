@@ -287,7 +287,7 @@ function WayRow({
     <li
       data-lane={provider.id}
       aria-labelledby={headingId}
-      className="way grid gap-2 rounded-lg border bg-card p-3"
+      className="way grid gap-2 rounded-lg bg-accent p-3"
     >
       <div className="flex min-w-0 items-center justify-between gap-2">
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
@@ -339,7 +339,7 @@ function WayRow({
         </p>
       )}
       {!off && (
-        <div className="grid gap-2 border-t pt-2">
+        <div className="grid gap-2 pt-1">
           {signInOnly ? (
             signInSupported ? (
               <div className="flex flex-wrap gap-2">
@@ -426,7 +426,7 @@ function ProviderGroupRow({
   renderLane: (lane: ProviderStatus) => ReactNode;
 }) {
   return (
-    <li data-provider={group.provider} className="rounded-lg border bg-card">
+    <li data-provider={group.provider} className="rounded-lg bg-card">
       <details className="group/provider">
         <summary className="flex min-h-control-lg cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-2 rounded-lg px-3 py-2.5 outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
           <span className="flex min-w-0 flex-1 items-center gap-2">
@@ -618,7 +618,7 @@ export function ProviderSettings({
       {visibleGroups.length === 0 && (
         <p
           role="status"
-          className="rounded-lg border p-3 text-sm text-muted-foreground"
+          className="rounded-lg bg-accent p-3 text-sm text-muted-foreground"
         >
           {t("desktop.providers.search_empty")}
         </p>

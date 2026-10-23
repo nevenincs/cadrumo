@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from textual.pilot import Pilot
 from textual.widgets import Button, Input, OptionList, Select, Static
 
 from .....application.ledger.own_account_operation import LedgerOwnAccountRequest
@@ -14,6 +13,7 @@ from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....domain.transactions.own_accounts import OwnAccountHolding
 from ...components.host import ScreenHostApp
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..import_flow import LedgerImportScreen
 from ..models import (
@@ -91,12 +91,6 @@ def _screen(import_door: _BindingImportDoor, accounts: MemoryOwnAccountDoor | No
     return LedgerImportScreen(controller)
 
 
-async def _settle(pilot: Pilot[None]) -> None:
-    await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
-
-
 @pytest.mark.asyncio
 async def test_import_binds_the_chosen_own_account_and_applies_the_previewed_digest(tmp_path: Path) -> None:
     import_door = _BindingImportDoor()
@@ -104,7 +98,7 @@ async def test_import_binds_the_chosen_own_account_and_applies_the_previewed_dig
     statement = tmp_path / "statement.csv"
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(110, 50)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             account = cast("Select[str]", screen.query_one("#ledger-import-account", Select))
             overlay = account.query_one(OptionList)
             labels = [str(overlay.get_option_at_index(index).prompt) for index in range(overlay.option_count)]
@@ -113,7 +107,7 @@ async def test_import_binds_the_chosen_own_account_and_applies_the_previewed_dig
             screen.query_one("#ledger-import-path", Input).value = str(statement)
             statement.write_text("synthetic", encoding="utf-8")
             screen.query_one("#ledger-import-preview-button", Button).press()
-            await _settle(pilot)
+            await settle(pilot)
 
             assert import_door.previews[0].own_account_id == "acc-02"
             assert import_door.previews[0].previewed_sources is None
@@ -123,7 +117,7 @@ async def test_import_binds_the_chosen_own_account_and_applies_the_previewed_dig
             assert screen.query_one("#ledger-import-account", Select).disabled
 
             screen.query_one("#ledger-import-confirm", Button).press()
-            await _settle(pilot)
+            await settle(pilot)
 
             assert screen.flow_state is LedgerFlowState.SUCCEEDED
             applied = import_door.applied[0]
@@ -139,12 +133,12 @@ async def test_import_without_an_account_register_offers_only_statement_binding(
     statement.write_text("synthetic", encoding="utf-8")
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(110, 50)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             account = cast("Select[str]", screen.query_one("#ledger-import-account", Select))
             assert account.query_one(OptionList).option_count == 1
             screen.query_one("#ledger-import-path", Input).value = str(statement)
             screen.query_one("#ledger-import-preview-button", Button).press()
-            await _settle(pilot)
+            await settle(pilot)
             assert import_door.previews[0].own_account_id is None
             preview = str(screen.query_one("#ledger-import-preview", Static).render())
             assert tr("tui.ledger.import.account_line_unbound") in preview

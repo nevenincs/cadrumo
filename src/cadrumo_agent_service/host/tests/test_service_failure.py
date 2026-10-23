@@ -49,3 +49,10 @@ def test_runtime_refusal_keeps_its_closed_reason_in_diagnostics(caplog: pytest.L
         result = service_failure(RefusalError(RefusalCode.DEADLINE_EXCEEDED))
     assert result == {"event": "refused", "code": "service_failed"}
     assert RefusalCode.DEADLINE_EXCEEDED.value in caplog.text
+
+
+def test_an_absent_runtime_is_reported_as_typed_unavailability(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.WARNING, logger="cadrumo_agent_service.service"):
+        result = service_failure(RefusalError(RefusalCode.UNAVAILABLE))
+    assert result == {"event": "refused", "code": "agent_runtime_unavailable"}
+    assert RefusalCode.UNAVAILABLE.value in caplog.text

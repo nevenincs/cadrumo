@@ -27,6 +27,7 @@ from cadrumo.entrypoints.tui.installation.destination import InstallationScreen
 from cadrumo.entrypoints.tui.operations.destination import OperationsCatalogueScreen
 from cadrumo.entrypoints.tui.reference.destination import ReferenceScreen
 from cadrumo.entrypoints.tui.reference.reads import ReferenceRead
+from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import (
     DISCLOSURE_PAGE_ENTRIES,
@@ -50,6 +51,7 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from ....frontend.tui.runtime_session import RuntimeRestrictedSessionApp
+from .settled_click import click_when_laid_out
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -65,7 +67,7 @@ async def test_upgrade_notice_renders_without_retiring_the_restricted_session(mo
         await _shown(app, pilot)
         assert client.notice_callback is not None
         client.notice_callback(LifecycleNotice(runtime_boot_id=uuid4(), connection_id=uuid4(), notice_id=uuid4()))
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert notices == [tr("common.manager.update_pending")]
         assert not app._cleared
         assert client.session_id == session
@@ -81,7 +83,7 @@ async def test_pushed_retirement_clears_private_view_without_waiting_for_status_
         reads = client.status_calls
         assert client.retirement_callback is not None
         client.retirement_callback()
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert app._cleared
         assert str(app.query_one("#restricted-profile", Static).render()) == ""
         assert client.status_calls == reads
@@ -211,10 +213,12 @@ class _Client(FrontendClient):
 
 
 async def _shown(app: RuntimeRestrictedSessionApp, pilot: Pilot[AccountRecomposeRequiredV1 | None]) -> None:
-    async with asyncio.timeout(5):
-        while not str(app.query_one("#restricted-profile", Static).render()).strip():
-            await pilot.pause()
-        await pilot.pause()
+    await settle_until(
+        pilot,
+        lambda: bool(str(app.query_one("#restricted-profile", Static).render()).strip()),
+        "the restricted shell to show the profile",
+        workers=False,
+    )
 
 
 def _disclosure_scope(client: _Client, *, delegation: bool = True) -> None:
@@ -255,10 +259,13 @@ async def test_status_renders_exact_disclosures_and_delegation_and_clears_on_clo
         assert str(app.query_one("#restricted-disclosures", Static).render()) == (
             f"{tr('tui.automation_inventory.disclosures')}: 2 (profile_values 1, tax_values 1)"
         )
-        assert await pilot.click("#restricted-disclosures-next")
-        async with asyncio.timeout(5):
-            while not str(app.query_one("#restricted-disclosure-page", Static).render()):
-                await pilot.pause()
+        assert await click_when_laid_out(pilot, app.query_one("#restricted-disclosures-next", Button))
+        await settle_until(
+            pilot,
+            lambda: bool(str(app.query_one("#restricted-disclosure-page", Static).render())),
+            "the disclosure page to render",
+            workers=False,
+        )
         assert str(app.query_one("#restricted-disclosure-page", Static).render()) == "\n".join(
             (
                 tr("tui.restricted.disclosure_page", first=1, last=2, total=2),
@@ -270,7 +277,8 @@ async def test_status_renders_exact_disclosures_and_delegation_and_clears_on_clo
             f"{tr('tui.automation_inventory.delegation')}: "
             f"{tr('tui.restricted.yes') if delegation else tr('tui.restricted.no')}"
         )
-        assert await pilot.click("#restricted-close")
+        assert await click_when_laid_out(pilot, app.query_one("#restricted-close", Button))
+        await settle(pilot)
         assert str(app.query_one("#restricted-disclosures", Static).render()) == ""
         assert str(app.query_one("#restricted-disclosure-page", Static).render()) == ""
         assert str(app.query_one("#restricted-delegation", Static).render()) == ""
@@ -288,7 +296,8 @@ async def test_status_shows_exact_allowlisted_scope_without_human_calls_or_clien
         assert "submit" in str(app.query_one("#restricted-scope-actions", Static).render())
         assert "2025 1T" in str(app.query_one("#restricted-periods", Static).render())
         assert client.human_calls == 0
-        assert await pilot.click("#restricted-close")
+        assert await click_when_laid_out(pilot, app.query_one("#restricted-close", Button))
+        await settle(pilot)
         assert app.return_value is None
         assert str(app.query_one("#restricted-scope-actions", Static).render()) == ""
     assert client.close_calls == 0 and client.lock_calls == 0
@@ -306,9 +315,7 @@ async def test_wrong_binding_or_expired_lease_clears_and_exits(invalid: str) -> 
     if invalid == "binding":
         client._session_id = uuid4()
     async with app.run_test() as pilot:
-        async with asyncio.timeout(5):
-            while app.return_value is None:
-                await pilot.pause(0.02)
+        await settle_until(pilot, lambda: app.return_value is not None, "app.return_value is not None", workers=False)
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
         assert str(app.query_one("#restricted-profile", Static).render()) == ""
     assert client.close_calls == 0 and client.human_calls == 0
@@ -326,9 +333,7 @@ async def test_periodic_status_detects_revoked_grant_and_wipes_previous_projecti
         assert str(app.query_one("#restricted-profile", Static).render())
         client.grant_valid = False
         app._start_status_read()
-        async with asyncio.timeout(5):
-            while app.return_value is None:
-                await pilot.pause(0.02)
+        await settle_until(pilot, lambda: app.return_value is not None, "app.return_value is not None", workers=False)
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
         assert str(app.query_one("#restricted-profile", Static).render()) == ""
         assert str(app.query_one("#restricted-disclosures", Static).render()) == ""
@@ -356,16 +361,20 @@ async def test_lock_clears_private_status_before_owned_native_completion(
         await _shown(app, pilot)
         assert "profile_values" in str(app.query_one("#restricted-disclosures", Static).render())
         assert tr("tui.restricted.yes") in str(app.query_one("#restricted-delegation", Static).render())
-        assert await pilot.click(button)
+        assert await click_when_laid_out(pilot, app.query_one(button, Button))
+        # The lock is held at its native completion, so only the messages are waited for.
+        await settle(pilot, workers=False)
         try:
             assert str(app.query_one("#restricted-profile", Static).render()) == ""
             assert str(app.query_one("#restricted-disclosures", Static).render()) == ""
             assert str(app.query_one("#restricted-delegation", Static).render()) == ""
-            await asyncio.wait_for(asyncio.to_thread(client.lock_started.wait, 5), 5)
+            await asyncio.wait_for(
+                asyncio.to_thread(client.lock_started.wait, SETTLE_TIMEOUT_SECONDS), SETTLE_TIMEOUT_SECONDS
+            )
             assert app.return_value is None
         finally:
             client.lock_release.set()
-        await asyncio.wait_for(app.workers.wait_for_complete(), 5)
+        await settle(pilot)
         assert app.return_value == AccountRecomposeRequiredV1(reason=reason)
     assert client.lock_calls == 1 and client.close_calls == 0 and client.human_calls == 0
 
@@ -379,10 +388,8 @@ async def test_missing_lock_acknowledgement_or_refusal_requires_fresh_admission(
     app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic API profile", operation_registry=_registry)
     async with app.run_test() as pilot:
         await _shown(app, pilot)
-        assert await pilot.click("#restricted-lock")
-        async with asyncio.timeout(5):
-            while app.return_value is None:
-                await pilot.pause(0.02)
+        assert await click_when_laid_out(pilot, app.query_one("#restricted-lock", Button))
+        await settle_until(pilot, lambda: app.return_value is not None, "app.return_value is not None", workers=False)
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
         assert str(app.query_one("#restricted-profile", Static).render()) == ""
     assert client.close_calls == 0
@@ -403,9 +410,7 @@ async def _in_front(
     pilot: Pilot[AccountRecomposeRequiredV1 | None],
     condition: Callable[[], bool],
 ) -> None:
-    async with asyncio.timeout(10):
-        while not condition():
-            await pilot.pause(0.02)
+    await settle_until(pilot, condition, "the restricted shell to reach the awaited state", workers=False)
 
 
 @pytest.mark.asyncio
@@ -476,9 +481,7 @@ async def test_a_session_retired_while_a_destination_is_open_still_clears_the_sh
         client.retirement_callback()
         await _in_front(app, pilot, lambda: app._cleared)
         assert str(shell.query_one("#restricted-profile", Static).render()) == ""
-        async with asyncio.timeout(5):
-            while app.return_value is None:
-                await pilot.pause()
+        await settle_until(pilot, lambda: app.return_value is not None, "app.return_value is not None", workers=False)
     assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
 
 
@@ -492,9 +495,7 @@ async def test_the_shell_reads_status_again_only_when_the_session_lapses() -> No
         await _shown(app, pilot)
         reads = client.status_calls
         await asyncio.sleep(1.0)
-        await pilot.pause()
+        await settle(pilot, workers=False)
         assert client.status_calls == reads, "the shell read status while nothing changed"
-        async with asyncio.timeout(5):
-            while not app._cleared:
-                await pilot.pause()
+        await settle_until(pilot, lambda: app._cleared, "the shell to clear after the lapse", workers=False)
         assert client.status_calls == reads + 1, "the lapse is found by one read at the deadline"

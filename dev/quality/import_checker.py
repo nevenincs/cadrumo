@@ -14,6 +14,7 @@ from dev.exit_codes import TOOL_BROKEN
 from dev.quality.import_authority import read_authority
 from dev.quality.import_binding_inventory import check_initializers, read_modules
 from dev.quality.import_check_models import Authority, CheckResult, Finding, ImportOccurrence
+from dev.quality.import_consumer_trees import check_consumer_contracts
 from dev.quality.import_dynamic_checks import check_dynamic_imports
 from dev.quality.import_occurrences import collect_import_occurrences
 from dev.quality.import_record_provenance import RecordTargetProvenance
@@ -37,22 +38,28 @@ def _write_component_result(
         if rendered:
             print(rendered)
     else:
-        print(f"import-checker: scanned {result.files_scanned} governed Python file(s)")
+        print(
+            f"import-checker: scanned {result.files_scanned} governed Python file(s) and "
+            f"{result.consumer_files_scanned} consumer-only file(s)"
+        )
 
 
 def check_authority(authority: Authority) -> CheckResult:
     """Run one complete syntax/canonical/dynamic traversal."""
     try:
         modules, findings = read_modules(authority)
-        if not modules:
+        consumer_files = sum(1 for module in modules.values() if module.consumer)
+        graphed_files = len(modules) - consumer_files
+        if not graphed_files:
             findings.append(Finding("ZERO_FILES", "no governed Python files were scanned", fatal=True))
-            return _result(findings, 0, authority.repository)
+            return _result(findings, 0, authority.repository, consumer_files_scanned=consumer_files)
         check_initializers(authority, modules, findings)
         check_static_imports(authority, modules, findings)
+        check_consumer_contracts(authority, modules, findings)
         record_provenance = RecordTargetProvenance(modules)
         check_dynamic_imports(authority, modules, findings, record_provenance)
         occurrences = collect_import_occurrences(authority, modules, record_provenance)
-        return _result(findings, len(modules), authority.repository, occurrences)
+        return _result(findings, graphed_files, authority.repository, occurrences, consumer_files)
     except Exception as exc:  # broad: the checker boundary must fail closed
         return CheckResult(
             (Finding("INTERNAL_CHECKER", f"subordinate checker aborted: {exc}", fatal=True),),
@@ -65,6 +72,7 @@ def _result(
     files_scanned: int,
     repository: Path,
     occurrences: Sequence[ImportOccurrence] = (),
+    consumer_files_scanned: int = 0,
 ) -> CheckResult:
     """Sort diagnostics before returning the component result."""
     ordered = sorted(
@@ -84,7 +92,7 @@ def _result(
             occurrence.lineno,
         ),
     )
-    return CheckResult(tuple(ordered), files_scanned, tuple(ordered_occurrences))
+    return CheckResult(tuple(ordered), files_scanned, tuple(ordered_occurrences), consumer_files_scanned)
 
 
 def main(argv: Sequence[str] | None = None) -> int:

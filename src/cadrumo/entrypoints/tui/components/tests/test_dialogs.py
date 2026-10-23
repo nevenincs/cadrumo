@@ -3,6 +3,7 @@
 import pytest
 from textual.app import App
 
+from ...tests.settling import settle
 from ..dialogs import ConfirmScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -14,17 +15,17 @@ async def test_confirmation_dialog_defaults_to_decline_and_requires_explicit_acc
     dismissed: list[bool | None] = []
 
     async with app.run_test(size=(140, 60)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         app.push_screen(
             ConfirmScreen(
                 title="Restart?", message="Answers will be cleared.", confirm_label="Restart", cancel_label="Keep"
             ),
             dismissed.append,
         )
-        await pilot.pause()
+        await settle(pilot)
 
         assert app.focused is app.screen.query_one("#btn-confirm-cancel")
         await pilot.press("y")
-        await pilot.pause()
+        await settle(pilot)
         assert dismissed == [True]
         app.exit(None)

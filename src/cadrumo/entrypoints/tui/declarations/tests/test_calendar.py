@@ -23,6 +23,7 @@ from .....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..calendar import DeclarationsCalendarScreen
 from ..controller import calendar_address_focus_key, calendar_focus_key
 from ..models import DeclarationsCalendarScopeV1
@@ -145,26 +146,28 @@ async def test_three_control_focus_chain_semantic_restore_callback_and_geometry(
     screen = DeclarationsCalendarScreen(calendar_controller(calendar_projection(), handoff=selected.append))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         search = screen.query_one("#declarations-calendar-search", Input)
         scope = screen.query_one("#declarations-calendar-scope", Select)
         table = screen.query_one("#declarations-calendar-agenda", DataTable)
         assert app.focused is search
         await pilot.press("tab")
+        await settle(pilot)
         assert app.focused is scope
         await pilot.press("tab")
+        await settle(pilot)
         assert app.focused is table
         table.move_cursor(row=1)
         chosen_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value
         search.value = "303"
-        await pilot.pause()
+        await settle(pilot)
         assert table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value == chosen_key
         search.value = ""
-        await pilot.pause()
+        await settle(pilot)
         assert table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value == chosen_key
         table.focus()
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert selected == [calendar_projection().entries[1]]
         assert geometry_band(app, 80) == []
         assert table.max_scroll_x == 0
@@ -182,14 +185,15 @@ async def test_missing_handoff_refuses_and_escape_dismisses_only_child() -> None
     screen = DeclarationsCalendarScreen(calendar_controller(calendar_projection()))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-calendar-agenda", DataTable)
         table.focus()
         await pilot.press("enter")
+        await settle(pilot)
         notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
         assert notice == tr("tui.declarations.refusal.handoff")
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot)
         assert app.return_value is None
 
 
@@ -213,38 +217,38 @@ async def test_recovery_row_requires_explicit_modal_confirmation_before_host_han
     )
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         rendered = _rendered(screen)
         assert "Crear o recuperar esta declaración" in rendered
         table = screen.query_one("#declarations-calendar-agenda", DataTable)
         table.focus()
         table.move_cursor(row=0)
-        await pilot.pause()
+        await settle(pilot)
         assert ordinary == []
         assert recovered == []
 
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert ordinary == []
         assert recovered == []
         assert app.screen.query_one("#confirm-title")
 
         await pilot.click("#btn-confirm-accept")
-        await pilot.pause()
+        await settle(pilot)
         assert ordinary == []
         assert recovered == [(recovery_row.recovery_action, recovery_row)]
 
         await pilot.press("y")
-        await pilot.pause()
+        await settle(pilot)
         assert recovered == [(recovery_row.recovery_action, recovery_row)]
 
     refused = DeclarationsCalendarScreen(calendar_controller(projection, handoff=ordinary.append))
     refused_app = ScreenHostApp[None](refused)
     async with refused_app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         refused.query_one("#declarations-calendar-agenda", DataTable).focus()
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert ordinary == []
         assert str(refused.query_one("#declarations-calendar-notice", Static).render())
 
@@ -264,12 +268,12 @@ async def test_recovery_confirmation_escape_cancels_without_dismissing_calendar_
     )
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen.query_one("#declarations-calendar-agenda", DataTable).focus()
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot)
         assert app.screen is screen
         assert recovered == []
 
@@ -292,10 +296,10 @@ async def test_recovery_handoff_failure_is_localized_without_exposing_host_error
         screen = DeclarationsCalendarScreen(calendar_controller(projection, recovery_handoff=fail_recovery))
         app = ScreenHostApp[None](screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             screen.query_one("#declarations-calendar-agenda", DataTable).focus()
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             modal = app.screen
             assert str(modal.query_one("#btn-confirm-accept", Button).label) == tr(
                 "tui.declarations.calendar.recovery.confirm"
@@ -304,7 +308,7 @@ async def test_recovery_handoff_failure_is_localized_without_exposing_host_error
                 "tui.declarations.calendar.recovery.cancel"
             )
             await pilot.click("#btn-confirm-accept")
-            await pilot.pause()
+            await settle(pilot)
             notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
             assert tr("tui.declarations.calendar.recovery.failure") in notice
             assert "host-secret" not in notice
@@ -320,7 +324,7 @@ async def test_available_without_timestamp_is_not_rendered_as_never_observed() -
     screen = DeclarationsCalendarScreen(calendar_controller(base.model_copy(update={"sources": sources})))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         rendered = _rendered(screen)
         assert "Actual y disponible; hora de observación no registrada" in rendered
         assert "Nunca observado" not in rendered
@@ -340,23 +344,23 @@ async def test_context_focus_hidden_filter_reorder_resize_and_child_return_resto
     screen = DeclarationsCalendarScreen(calendar_controller(projection, context=context))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 18)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-calendar-agenda", DataTable)
         assert app.focused is table
         target_key = "303|2026|2T"
         assert table.ordered_rows[table.cursor_row].key.value == target_key
 
         screen.query_one("#declarations-calendar-search", Input).value = "111"
-        await pilot.pause()
+        await settle(pilot)
         assert table.ordered_rows[table.cursor_row].key.value == "111|2026|3T"
         screen.query_one("#declarations-calendar-search", Input).value = ""
-        await pilot.pause()
+        await settle(pilot)
         assert table.ordered_rows[table.cursor_row].key.value == target_key
 
         reordered = projection.model_copy(update={"entries": tuple(reversed(projection.entries))})
         screen.replace_projection(reordered)
         await pilot.resize_terminal(100, 22)
-        await pilot.pause()
+        await settle(pilot)
         assert app.focused is table
         assert table.ordered_rows[table.cursor_row].key.value == target_key
         assert table.scroll_offset.y <= table.cursor_row
@@ -365,7 +369,7 @@ async def test_context_focus_hidden_filter_reorder_resize_and_child_return_resto
         child = Screen[None]()
         await app.push_screen(child)
         child.dismiss(None)
-        await pilot.pause()
+        await settle(pilot)
         assert app.screen is screen
         assert app.focused is table
         assert table.ordered_rows[table.cursor_row].key.value == target_key
@@ -378,7 +382,7 @@ async def test_real_locales_change_copy_but_not_natural_semantics(locale: Output
         screen = DeclarationsCalendarScreen(calendar_controller(calendar_projection()))
         app = ScreenHostApp[None](screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             rendered = _rendered(screen)
             for expected in _EXPECTED[locale]:
                 assert expected in rendered
@@ -416,7 +420,7 @@ async def test_unavailable_holiday_calendar_is_visible_in_words_not_tokens() -> 
     )
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         detail = str(screen.query_one("#declarations-calendar-detail", Static).render())
 
     assert "Ajuste: Calendario no disponible" in detail

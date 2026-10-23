@@ -18,6 +18,7 @@ _INSTALLED_FRAMEWORK_MODULES: Final = (
     "click.core",
     "ctypes",
     "enum",
+    "http.server",
     "logging",
     "logging.handlers",
     "pydantic",
@@ -31,6 +32,7 @@ _INSTALLED_FRAMEWORK_MODULES: Final = (
     "textual.command",
     "textual.containers",
     "textual.dom",
+    "textual.filter",
     "textual.message",
     "textual.message_pump",
     "textual.screen",
@@ -45,11 +47,12 @@ _INSTALLED_FRAMEWORK_MODULES: Final = (
 
 @dataclass(frozen=True)
 class FrameworkContract:
-    """Members declared by installed bases, and Textual's dispatch convention."""
+    """Members declared by installed bases, and the dispatch conventions Textual, pydantic and ``http.server`` apply."""
 
     members: frozenset[str] = frozenset()
     textual: bool = False
     pydantic: bool = False
+    http_handler: bool = False
 
 
 def _expression_name(node: ast.expr) -> str:
@@ -98,6 +101,7 @@ def _installed_contract(target: str) -> FrameworkContract:
         "pydantic_settings",
         "ctypes",
         "enum",
+        "http",
         "logging",
         "click",
         "typer",
@@ -123,7 +127,11 @@ def _installed_contract(target: str) -> FrameworkContract:
     pydantic = any(
         ancestor.__module__ == "pydantic.main" and ancestor.__name__ == "BaseModel" for ancestor in base.__mro__
     )
-    return FrameworkContract(frozenset(members), textual, pydantic)
+    http_handler = any(
+        ancestor.__module__ == "http.server" and ancestor.__name__ == "BaseHTTPRequestHandler"
+        for ancestor in base.__mro__
+    )
+    return FrameworkContract(frozenset(members), textual, pydantic, http_handler)
 
 
 def framework_contracts(modules: Mapping[str, ShippedModule]) -> dict[str, dict[str, FrameworkContract]]:
@@ -148,6 +156,7 @@ def framework_contracts(modules: Mapping[str, ShippedModule]) -> dict[str, dict[
         members: set[str] = set()
         textual = False
         pydantic = False
+        http_handler = False
         for base in node.bases:
             target = _expression_name(base)
             head, separator, tail = target.partition(".")
@@ -172,7 +181,8 @@ def framework_contracts(modules: Mapping[str, ShippedModule]) -> dict[str, dict[
             members.update(contract.members)
             textual |= contract.textual
             pydantic |= contract.pydantic
-        result = FrameworkContract(frozenset(members), textual, pydantic)
+            http_handler |= contract.http_handler
+        result = FrameworkContract(frozenset(members), textual, pydantic, http_handler)
         resolved[key] = result
         return result
 
@@ -188,6 +198,7 @@ def framework_contracts(modules: Mapping[str, ShippedModule]) -> dict[str, dict[
                 inherited.members | contract.members,
                 inherited.textual or contract.textual,
                 inherited.pydantic or contract.pydantic,
+                inherited.http_handler or contract.http_handler,
             )
             if merged != inherited:
                 resolved[parent] = merged

@@ -73,7 +73,7 @@ export function AttachmentWell({
   return (
     <section
       aria-label={t("desktop.agent.attachments")}
-      className="grid gap-2 border-t px-2 pt-2 pb-2"
+      className="grid gap-2 px-2 pt-2 pb-2"
     >
       <ul
         ref={list}

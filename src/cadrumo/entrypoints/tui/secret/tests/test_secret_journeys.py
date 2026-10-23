@@ -37,6 +37,7 @@ from .....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TER
 from ...components.host import ScreenHostApp
 from ...components.status import PinnedStatusBar
 from ...components.widgets import ContentScroll
+from ...tests.settling import settle
 from ..credentials import CredentialScreen
 from ..passphrase import PassphraseChangeAttempt, PassphraseChangeRefusal, PassphraseScreen
 from ..registration import RegistrationScreen, build_profile_registration_attempt
@@ -108,7 +109,7 @@ async def _assert_credential_shell[OutcomeT](
 ) -> None:
     """Mount one journey and prove its shared shell preserves its own form."""
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         panel = screen.query_one(f"#{panel_id}", Vertical)
         column = panel.parent
 
@@ -150,14 +151,13 @@ async def test_a_wrong_current_passphrase_refuses_and_never_rotates(tmp_path: Pa
         profile_id = _enroll()
         app = _app(profile_id)
         async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             app.query_one("#field-current", Input).value = "not-the-real-passphrase"
             app.query_one("#field-new", Input).value = _NEW_CREDENTIAL_INPUT
             app.query_one("#field-confirm", Input).value = _NEW_CREDENTIAL_INPUT
-            await pilot.pause()
+            await settle(pilot)
             await pilot.click("#btn-change")
-            await app.workers.wait_for_complete()
-            await pilot.pause(0.1)
+            await settle(pilot)
 
         assert app.error is None
         assert app.outcome is None
@@ -178,13 +178,13 @@ async def test_a_confirmation_mismatch_refuses_locally_before_any_attempt(tmp_pa
         profile_id = _enroll()
         app = _app(profile_id)
         async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             app.query_one("#field-current", Input).value = _CURRENT_CREDENTIAL_INPUT
             app.query_one("#field-new", Input).value = _NEW_CREDENTIAL_INPUT
             app.query_one("#field-confirm", Input).value = "a-different-confirmation"
-            await pilot.pause()
+            await settle(pilot)
             await pilot.click("#btn-change")
-            await pilot.pause()
+            await settle(pilot)
 
             assert not app.attempt_in_flight, "a local mismatch must never start the worker attempt"
 
@@ -198,21 +198,21 @@ async def test_passphrase_strength_line_matches_registration_feedback(tmp_path: 
         profile_id = _enroll()
         app = _app(profile_id)
         async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             field = app.query_one("#field-new", Input)
             line = app.query_one("#strength-line", Static)
 
             field.value = "abc"
-            await pilot.pause()
+            await settle(pilot)
             assert line.has_class("strength-refused")
 
             field.value = "correct horse battery staple"
-            await pilot.pause()
+            await settle(pilot)
             assert line.has_class("strength-strong")
             assert not line.has_class("strength-refused")
 
             field.value = ""
-            await pilot.pause()
+            await settle(pilot)
             assert not any(
                 line.has_class(name)
                 for name in ("strength-refused", "strength-weak", "strength-fair", "strength-strong")
@@ -226,14 +226,13 @@ async def test_a_completed_rotation_opens_under_the_new_passphrase_only(tmp_path
         profile_id = _enroll()
         app = _app(profile_id)
         async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             app.query_one("#field-current", Input).value = _CURRENT_CREDENTIAL_INPUT
             app.query_one("#field-new", Input).value = _NEW_CREDENTIAL_INPUT
             app.query_one("#field-confirm", Input).value = _NEW_CREDENTIAL_INPUT
-            await pilot.pause()
+            await settle(pilot)
             await pilot.click("#btn-change")
-            await app.workers.wait_for_complete()
-            await pilot.pause(0.1)
+            await settle(pilot)
 
         assert app.error is None
         assert app.outcome is not None
@@ -270,17 +269,16 @@ async def test_a_second_change_click_while_one_is_in_flight_is_a_single_use_no_o
 
         app = PassphraseScreen(assess=assess_profile_password, rotate=_counting_rotate)
         async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             app.query_one("#field-current", Input).value = _CURRENT_CREDENTIAL_INPUT
             app.query_one("#field-new", Input).value = _NEW_CREDENTIAL_INPUT
             app.query_one("#field-confirm", Input).value = _NEW_CREDENTIAL_INPUT
-            await pilot.pause()
+            await settle(pilot)
             await pilot.click("#btn-change")
             # A second click before the worker settles must be swallowed by the
             # attempt_in_flight guard, not queued as a second rotation.
             await pilot.click("#btn-change")
-            await app.workers.wait_for_complete()
-            await pilot.pause(0.1)
+            await settle(pilot)
 
         assert len(started) == 1, "a second click while an attempt is in flight must never start a second worker"
 
@@ -291,13 +289,13 @@ async def test_abandoning_the_screen_leaves_no_outcome_and_never_touches_storage
         profile_id = _enroll()
         app = _app(profile_id)
         async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             app.query_one("#field-current", Input).value = _CURRENT_CREDENTIAL_INPUT
             app.query_one("#field-new", Input).value = _NEW_CREDENTIAL_INPUT
             app.query_one("#field-confirm", Input).value = _NEW_CREDENTIAL_INPUT
-            await pilot.pause()
+            await settle(pilot)
             await pilot.click("#btn-cancel")
-            await pilot.pause()
+            await settle(pilot)
 
         assert app.outcome is None
 
@@ -327,14 +325,13 @@ async def test_a_refused_attempt_retains_no_plaintext_credential_on_the_app_or_i
         current = "not-the-real-passphrase-canary"
         app = _app(profile_id)
         async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             app.query_one("#field-current", Input).value = current
             app.query_one("#field-new", Input).value = _NEW_CREDENTIAL_INPUT
             app.query_one("#field-confirm", Input).value = _NEW_CREDENTIAL_INPUT
-            await pilot.pause()
+            await settle(pilot)
             await pilot.click("#btn-change")
-            await app.workers.wait_for_complete()
-            await pilot.pause(0.1)
+            await settle(pilot)
 
             assert not app.attempt_in_flight
             assert not app.query_one("#btn-change", Button).disabled, "the screen must accept a fresh attempt"
@@ -371,7 +368,7 @@ async def test_every_field_and_action_is_actually_reachable_not_only_present(
         app = _app(profile_id)
         width, height = size
         async with ScreenHostApp(app).run_test(size=size) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             selectors = (
                 ("#field-current", Input),
                 ("#field-new", Input),
@@ -390,7 +387,7 @@ async def test_every_field_and_action_is_actually_reachable_not_only_present(
             for selector, widget_type in selectors:
                 control = app.query_one(selector, widget_type)
                 control.scroll_visible(animate=False, force=True)
-                await pilot.pause()
+                await settle(pilot)
                 region = control.region
                 assert region.height > 0, f"{control.id} lost its area after being scrolled to at {size}"
                 assert region.y >= 0 and region.y + region.height <= height, (
@@ -423,7 +420,7 @@ async def test_the_narrow_terminal_reaches_the_actions_only_by_scrolling(tmp_pat
         profile_id = _enroll()
         app = _app(profile_id)
         async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             scroll = app.query_one(ContentScroll)
             change = app.query_one("#btn-change", Button)
 
@@ -435,7 +432,7 @@ async def test_the_narrow_terminal_reaches_the_actions_only_by_scrolling(tmp_pat
             )
 
             change.scroll_visible(animate=False, force=True)
-            await pilot.pause()
+            await settle(pilot)
             assert scroll.scroll_offset.y > 0, "reaching the primary action did not move the scroll host"
             assert change.region.y >= 0 and change.region.y + change.region.height <= 24, (
                 f"the primary action is unreachable even after scrolling: {change.region}"
@@ -456,7 +453,7 @@ async def test_the_action_row_costs_one_row_of_buttons_not_two(tmp_path: Path) -
         profile_id = _enroll()
         app = _app(profile_id)
         async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             cancel = app.query_one("#btn-cancel", Button)
             change = app.query_one("#btn-change", Button)
             assert cancel.region.y == change.region.y, (

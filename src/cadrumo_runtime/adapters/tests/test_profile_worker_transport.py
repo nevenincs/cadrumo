@@ -21,11 +21,11 @@ from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIM
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import document_frame
 from cadrumo_client.transport.windows_channel import WindowsChannel
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerRefusal
 
 from .. import profile_worker_transport as transport
 from ..profile_worker import ProfileWorkerProcess
-from ..windows_process import WindowsProcessScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

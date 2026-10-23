@@ -21,6 +21,7 @@ import pytest
 from cadrumo.application.modelo.review_package import ReviewPackageIntegrityError
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.tests.env_scope import derived_storage_settings
 from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
@@ -45,6 +46,7 @@ from cadrumo_client.transport.installation_client import open_installed_installa
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
+from .. import installation_profiles
 from ..installation_composition import InstallationActRegistry, production_installation_acts
 from ..installation_door import InstallationActExchange
 from .installation_registered_runtime import serving_installed_composition
@@ -71,6 +73,19 @@ def test_the_census_detects_an_act_the_registry_does_not_serve() -> None:
 
     assert partial.served_acts == {InstallationAct.STORAGE_CHECK}
     assert partial.served_acts != frozenset(INSTALLATION_ACT_CONTRACTS)
+
+
+@pytest.mark.unit
+def test_the_installed_composition_refuses_a_family_that_leaves_its_acts_unserved(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def register_nothing(registry: InstallationActRegistry) -> None:
+        del registry
+
+    monkeypatch.setattr(installation_profiles, "register_profile_acts", register_nothing)
+
+    with pytest.raises(InternalInvariantError):
+        production_installation_acts()
 
 
 @contextmanager

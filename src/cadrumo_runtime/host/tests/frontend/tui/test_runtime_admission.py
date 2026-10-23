@@ -31,6 +31,7 @@ from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBin
 from cadrumo.entrypoints import operation_composition
 from cadrumo.entrypoints.tui.components.quiet_app import QuietApp
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -159,7 +160,7 @@ async def test_login_scope_keeps_one_exact_client_until_frontend_finishes(root_f
 
     async def sign_in(pilot: Pilot[object]) -> None:
         await pilot.resize_terminal(140, 60)
-        await pilot.pause()
+        await settle(pilot, workers=False)
         pilot.app.screen.query_one("#runtime-login-credential", Input).value = "synthetic-proof"
         assert await click_when_laid_out(pilot, pilot.app.screen.query_one("#runtime-login-submit", Button))
 
@@ -229,14 +230,6 @@ class _RefusedResumeClient(_OwnedClient):
         raise self.refusal
 
 
-async def _settled(pilot: Pilot[object], condition: Callable[[], bool]) -> None:
-    for _ in range(200):
-        await pilot.pause()
-        if condition():
-            return
-    raise AssertionError("the sign-in screen did not settle")
-
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "reason", [ProfileSessionRefusalReason.ABSENT, ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING]
@@ -263,8 +256,13 @@ async def test_no_saved_sign_in_falls_back_to_the_password_without_a_refusal(
         assert isinstance(screen, RuntimeLoginScreen)
         status = screen.query_one("#runtime-login-status", PinnedStatusBar)
         credential = screen.query_one("#runtime-login-credential", Input)
-        await _settled(pilot, lambda: resumed.closed == 1 and not screen._busy and credential.has_focus)
-        await _settled(pilot, lambda: presentations == ["ready"])
+        await settle_until(
+            pilot,
+            lambda: resumed.closed == 1 and not screen._busy and credential.has_focus,
+            "resumed.closed == 1 and not screen._busy and credential.has_focus",
+            workers=False,
+        )
+        await settle_until(pilot, lambda: presentations == ["ready"], "presentations == ['ready']", workers=False)
         seen.append((status.message, credential.has_focus))
         credential.value = "synthetic-proof"
         assert await click_when_laid_out(pilot, pilot.app.screen.query_one("#runtime-login-submit", Button))
@@ -318,7 +316,12 @@ async def test_a_refused_saved_sign_in_says_why_before_the_password(
     async def observe(pilot: Pilot[object]) -> None:
         screen = pilot.app.screen
         assert isinstance(screen, RuntimeLoginScreen)
-        await _settled(pilot, lambda: resumed.closed == 1 and not screen._busy)
+        await settle_until(
+            pilot,
+            lambda: resumed.closed == 1 and not screen._busy,
+            "resumed.closed == 1 and not screen._busy",
+            workers=False,
+        )
         seen.append(screen.query_one("#runtime-login-status", PinnedStatusBar).message)
         await pilot.press("escape")
 
@@ -342,7 +345,7 @@ async def test_cancelled_login_does_not_create_or_transfer_a_client() -> None:
         raise AssertionError("abandoning the form must not open a connection")
 
     async def abandon(pilot: Pilot[object]) -> None:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         await pilot.press("escape")
 
     async with runtime_login_session(
@@ -373,9 +376,9 @@ async def test_stored_reference_handoff_stays_owned_through_restricted_session_s
 
     async def sign_in(pilot: Pilot[object]) -> None:
         await pilot.resize_terminal(140, 60)
-        await pilot.pause()
+        await settle(pilot, workers=False)
         pilot.app.screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.API_REFERENCE
-        await pilot.pause()
+        await settle(pilot, workers=False)
         pilot.app.screen.query_one("#runtime-login-reference", Input).value = str(reference)
         assert await click_when_laid_out(pilot, pilot.app.screen.query_one("#runtime-login-submit", Button))
 
@@ -426,7 +429,7 @@ async def test_accepted_handoff_failed_close_retains_owner_and_exact_body(body: 
         return client
 
     async def sign_in(pilot: Pilot[object]) -> None:
-        await pilot.pause()
+        await settle(pilot, workers=False)
         await pilot.resize_terminal(140, 60)
         pilot.app.screen.query_one("#runtime-login-credential", Input).value = "synthetic-proof"
         assert await click_when_laid_out(pilot, pilot.app.screen.query_one("#runtime-login-submit", Button))

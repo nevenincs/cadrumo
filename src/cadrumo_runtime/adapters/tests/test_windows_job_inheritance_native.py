@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.async_cleanup import close_async_resources
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment, launch_fixture, native_python
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 
-from ..windows_process import WindowsProcessScope
-from .process_support import fixture_arguments, fixture_environment, launch_fixture, native_python
 from .windows_inheritance_fixture import WindowsHandleProbe, WindowsJobSnapshot, WindowsProcessIncarnation
 
 pytestmark = [

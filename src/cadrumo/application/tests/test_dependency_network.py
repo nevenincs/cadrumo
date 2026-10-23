@@ -30,7 +30,6 @@ from ..dependency_network import (
     check_dependency_host,
     dependency_host_reachability,
     dependency_hosts,
-    dependency_proxy_environment,
     dependency_proxy_from_settings,
     preflight_dependency_hosts,
 )
@@ -265,7 +264,7 @@ def test_an_unreachable_proxy_never_claims_the_computer_is_offline() -> None:
     asyncio.run(scenario())
 
 
-def test_proxy_settings_reach_child_processes_without_showing_the_password() -> None:
+def test_proxy_settings_build_a_credentialed_url_without_showing_the_password() -> None:
     settings = Settings(
         cadrumo_proxy_url="http://proxy.example.net:3128",
         cadrumo_proxy_username="ana maria",
@@ -278,18 +277,15 @@ def test_proxy_settings_reach_child_processes_without_showing_the_password() -> 
     assert proxy.bypasses("files.corp.example") is True
     assert proxy.bypasses("corp.example.org") is False
     assert "p@ss" not in repr(proxy)
-    environment = dependency_proxy_environment(proxy)
-    assert environment["HTTPS_PROXY"] == "http://ana%20maria:p%40ss%3Aword@proxy.example.net:3128"
-    assert environment["https_proxy"] == environment["HTTPS_PROXY"]
-    assert environment["NO_PROXY"] == "intranet.example,.corp.example"
-    assert dependency_proxy_environment(None) == {}
+    assert proxy.url(with_credentials=True) == "http://ana%20maria:p%40ss%3Aword@proxy.example.net:3128"
+    assert proxy.url(with_credentials=False) == "http://proxy.example.net:3128"
     in_address = dependency_proxy_from_settings(
         Settings(cadrumo_proxy_url="http://ana%20maria:p%40ss@proxy.example:3128")
     )
     assert in_address is not None
     assert (in_address.username, in_address.password) == ("ana maria", "p@ss")
     assert "p@ss" not in repr(in_address)
-    assert dependency_proxy_environment(in_address)["HTTPS_PROXY"] == "http://ana%20maria:p%40ss@proxy.example:3128"
+    assert in_address.url(with_credentials=True) == "http://ana%20maria:p%40ss@proxy.example:3128"
     assert dependency_proxy_from_settings(Settings(cadrumo_proxy_url="")) is None
     with pytest.raises(DependencyProxyConfigurationError):
         dependency_proxy_from_settings(Settings(cadrumo_proxy_url="socks5://proxy.example.net:1080"))

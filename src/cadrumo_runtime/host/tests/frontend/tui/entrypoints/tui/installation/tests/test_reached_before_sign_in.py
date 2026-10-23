@@ -28,7 +28,7 @@ from cadrumo.entrypoints.tui.installation.area_factory import InstallationAreaFa
 from cadrumo.entrypoints.tui.installation.destination import InstallationScreen
 from cadrumo.entrypoints.tui.installation.door import InstallationClientOpener
 from cadrumo.entrypoints.tui.secret.registration import RegistrationAttempt, RegistrationScreen
-from cadrumo.tests.async_condition import until
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.installation_requests import InstallationAct
 from cadrumo_client.transport.frontend_client import FrontendClient
 
@@ -90,27 +90,38 @@ def _never_registers(label: str, candidate: str, language: str) -> RegistrationA
 
 async def _area(pilot: Pilot[None], entry: str) -> InstallationScreen:
     """Press the entry on the screen in front and return the composed installation area."""
-    await until(pilot, lambda: bool(pilot.app.screen.query(entry)))
+    await settle_until(
+        pilot, lambda: bool(pilot.app.screen.query(entry)), "bool(pilot.app.screen.query(entry))", workers=False
+    )
     pilot.app.screen.query_one(entry, Button).press()
-    await until(
+    await settle_until(
         pilot,
         lambda: isinstance(pilot.app.screen, InstallationScreen) and bool(pilot.app.screen.query("#installation-hint")),
+        "isinstance(pilot.app.screen, InstallationScreen) and bool(pilot.app...",
+        workers=False,
     )
     area = pilot.app.screen
     assert isinstance(area, InstallationScreen)
     listed = area.query_one("#installation-acts", DataTable)
-    await until(pilot, lambda: len(listed.columns) == 3 and listed.row_count == len(area.offered_acts))
+    await settle_until(
+        pilot,
+        lambda: len(listed.columns) == 3 and listed.row_count == len(area.offered_acts),
+        "len(listed.columns) == 3 and listed.row_count == len(area.offered_a...",
+        workers=False,
+    )
     return area
 
 
 async def _act(pilot: Pilot[None], area: InstallationScreen, act: InstallationAct) -> InstallationActScreen:
     area.open_act(act)
-    await until(
+    await settle_until(
         pilot,
         lambda: (
             isinstance(pilot.app.screen, InstallationActScreen)
             and bool(pilot.app.screen.query("#installation-act-result"))
         ),
+        "( isinstance(pilot.app.screen, InstallationActScreen) and bool(pilo...",
+        workers=False,
     )
     screen = pilot.app.screen
     assert isinstance(screen, InstallationActScreen)
@@ -122,7 +133,7 @@ async def _settled(pilot: Pilot[None], screen: InstallationActScreen) -> None:
         worker = screen._act_worker
         return worker is not None and worker.is_finished and not screen._busy
 
-    await until(pilot, done)
+    await settle_until(pilot, done, "done", workers=False)
 
 
 async def _clear_the_active_profile_setting(pilot: Pilot[None], area: InstallationScreen) -> None:
@@ -130,14 +141,16 @@ async def _clear_the_active_profile_setting(pilot: Pilot[None], area: Installati
     repair = await _act(pilot, area, InstallationAct.REPAIR_PROFILE)
     repair.query_one("#installation-field-clear_active", Checkbox).value = True
     repair.query_one("#installation-act-run", Button).press()
-    await until(
+    await settle_until(
         pilot,
         lambda: isinstance(pilot.app.screen, ConfirmScreen) and bool(pilot.app.screen.query("#btn-confirm-accept")),
+        "isinstance(pilot.app.screen, ConfirmScreen) and bool(pilot.app.scre...",
+        workers=False,
     )
     pilot.app.screen.query_one("#btn-confirm-accept", Button).press()
     await _settled(pilot, repair)
     repair.action_close()
-    await until(pilot, lambda: pilot.app.screen is area)
+    await settle_until(pilot, lambda: pilot.app.screen is area, "pilot.app.screen is area", workers=False)
 
 
 @pytest.mark.asyncio
@@ -157,10 +170,10 @@ async def test_the_sign_in_screen_opens_the_area_with_no_session_and_stays_when_
             assert served.root.name in str(check.query_one("#installation-act-result", Static).content)
 
             check.action_close()
-            await until(pilot, lambda: owner.screen is area)
+            await settle_until(pilot, lambda: owner.screen is area, "owner.screen is area", workers=False)
             area.action_close()
-            await until(pilot, lambda: owner.screen is login)
-            await pilot.pause()
+            await settle_until(pilot, lambda: owner.screen is login, "owner.screen is login", workers=False)
+            await settle(pilot)
 
             # A read changed nothing, so the profile list on screen is still the installation's.
             assert login.is_mounted and owner.dismissals == []
@@ -181,7 +194,7 @@ async def test_the_sign_in_screen_closes_for_a_fresh_profile_list_after_an_act_c
             assert owner.dismissals == []
 
             area.action_close()
-            await until(pilot, lambda: owner.dismissals == [None])
+            await settle_until(pilot, lambda: owner.dismissals == [None], "owner.dismissals == [None]", workers=False)
         assert served.acts.repairs[-1] == (None, True, True)
     assert open_profile.opened == []
 
@@ -200,14 +213,16 @@ async def test_first_registration_opens_the_same_area_and_closes_once_the_profil
         async with owner.run_test(size=_SIZE) as pilot:
             area = await _area(pilot, "#btn-installation")
             area.action_close()
-            await until(pilot, lambda: owner.screen is registration)
-            await pilot.pause()
+            await settle_until(
+                pilot, lambda: owner.screen is registration, "owner.screen is registration", workers=False
+            )
+            await settle(pilot)
             assert registration.is_mounted and owner.dismissals == []
 
             area = await _area(pilot, "#btn-installation")
             await _clear_the_active_profile_setting(pilot, area)
             area.action_close()
-            await until(pilot, lambda: owner.dismissals == [None])
+            await settle_until(pilot, lambda: owner.dismissals == [None], "owner.dismissals == [None]", workers=False)
 
 
 @pytest.mark.asyncio
@@ -225,10 +240,20 @@ async def test_the_area_opened_from_registration_is_worded_in_the_language_chose
         )
         owner = _Owner(registration)
         async with owner.run_test(size=_SIZE) as pilot:
-            await until(pilot, lambda: bool(registration.query("#btn-installation")))
+            await settle_until(
+                pilot,
+                lambda: bool(registration.query("#btn-installation")),
+                "bool(registration.query('#btn-installation'))",
+                workers=False,
+            )
             entry = registration.query_one("#btn-installation", Button)
             registration.query_one("#field-output-language", Select).value = chosen
-            await until(pilot, lambda: str(entry.label) == tr("tui.installation.title", locale=chosen))
+            await settle_until(
+                pilot,
+                lambda: str(entry.label) == tr("tui.installation.title", locale=chosen),
+                "str(entry.label) == tr('tui.installation.title', locale=chosen)",
+                workers=False,
+            )
 
             area = await _area(pilot, "#btn-installation")
             assert area.query_one(".cadrumo-banner", Static).content == tr("tui.installation.title", locale=chosen)
@@ -263,5 +288,10 @@ async def test_screens_given_no_area_offer_no_entry() -> None:
     )
     owner = _Owner(login)
     async with owner.run_test(size=_SIZE) as pilot:
-        await until(pilot, lambda: bool(login.query("#runtime-login-submit")))
+        await settle_until(
+            pilot,
+            lambda: bool(login.query("#runtime-login-submit")),
+            "bool(login.query('#runtime-login-submit'))",
+            workers=False,
+        )
         assert not login.query("#runtime-login-installation")

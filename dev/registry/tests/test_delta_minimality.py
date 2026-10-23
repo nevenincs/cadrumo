@@ -37,6 +37,7 @@ from ..analysis.delta_minimality import (
     MinimalityVerdict,
     RowJudgement,
     definition_findings,
+    definitions_census,
     edition_predecessors,
     inheritable_value,
     judge_definition,
@@ -45,6 +46,7 @@ from ..analysis.delta_minimality import (
     restating_modelos,
     screen_authority,
     stated_casillas,
+    storage_reused_casillas,
 )
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.casilla_identity import LINEAGE_CLAIM_FIELDS
@@ -441,6 +443,17 @@ def test_every_unlineaged_successor_row_in_the_corpus_is_reported_unchecked(
     assert census.verdicts[MinimalityVerdict.UNCHECKED_NO_LINEAGE] == expected
     assert census.rows_in_root_editions > 0
     assert census.root_editions > 0
+    # The corpus compacts editions through storage baselines, and no row is
+    # counted twice or dropped from the four row counts.
+    assert census.rows_storage_reused > 0
+    loaded = sum(
+        len(revision.casillas)
+        for modelo_id in modelo_ids
+        for revision in authority.modelo(modelo_id).revisions.values()
+    )
+    assert loaded == (
+        census.rows_in_root_editions + census.rows_storage_reused + census.rows_inherited + census.rows_judged
+    )
 
 
 def test_an_ambiguous_chain_in_the_predecessor_is_unchecked(inheritance: _Inheritance) -> None:
@@ -504,3 +517,176 @@ def test_editions_declaring_no_predecessor_are_roots_and_are_not_judged(
     definition = authority.modelo("369")
     assert {edition.basis for edition in edition_predecessors(definition)} == {"declared_none"}
     assert judge_definition(definition, modelo_id="369") == ()
+
+
+#: A real modelo whose middle edition names no predecessor and hydrates every
+#: casilla from its storage baseline, followed by an edition that inherits from
+#: it by lineage. The storage edition authors no casilla of its own on disk.
+_STORAGE_MODELO = "038"
+_STORAGE_BASELINE = "2022-hasta-2024-05"
+_STORAGE_EDITION = "2024-desde-06"
+_LINEAGE_EDITION = "2025-y-siguientes"
+_REUSED_ROW = "decl.ejercicio"
+_OVERRIDDEN_ROW = "decl.tipo-declaracion"
+_AUTHORED_ROW = "decl.planted-sin-continuidad"
+
+
+def _storage_tree(destination: Path, *, overridden_section: str) -> Path:
+    """Copy modelo 038 and make its storage edition author one row and override another.
+
+    The override sets ``section`` on a baseline row, to the baseline's own value
+    or to a different one; the authored row carries no ``continuidad_id``.
+    Every other row the edition holds stays storage-reused.
+    """
+    bundled_root = Path(bundled_path("registry", "aeat"))
+    registry_root = destination / "aeat"
+    for catalogue in ("facts", "legal"):
+        shutil.copytree(bundled_root / catalogue, registry_root / catalogue)
+    modelo_dir = registry_root / "modelos" / _STORAGE_MODELO
+    shutil.copytree(bundled_root / "modelos" / _STORAGE_MODELO, modelo_dir)
+    edition_dir = modelo_dir / "revisions" / _STORAGE_EDITION
+    manifest = edition_dir / "revision.toml"
+    authored = manifest.read_text(encoding="utf-8")
+    assert f'casilla_storage_baseline = "{_STORAGE_BASELINE}"' in authored, "the edition no longer reuses storage"
+    assert "casilla_overrides" not in authored, "the storage edition now overrides casillas"
+    assert not (edition_dir / "casillas").exists(), "the storage edition now authors casillas on disk"
+    override = (
+        f'\n[[revisions."{_STORAGE_EDITION}".casilla_overrides]]\n'
+        f'selector = {{ revision = "{_STORAGE_BASELINE}", id = "{_OVERRIDDEN_ROW}" }}\n'
+        f'fields = {{ section = ["{overridden_section}"] }}\n'
+        "removed_fields = []\n"
+    )
+    manifest.write_text(authored + override, encoding="utf-8", newline="\n")
+    (edition_dir / "casillas").mkdir()
+    (edition_dir / "casillas" / "0001-declarations.toml").write_text(
+        f'[[revisions."{_STORAGE_EDITION}".casillas]]\n'
+        f'id = "{_AUTHORED_ROW}"\n'
+        'number = "planted"\n'
+        'section = ["declarante"]\n'
+        'data_type = "text"\n'
+        'input_kind = "informational"\n'
+        'legal_refs = ["orden-hac-66-2002:art-1", "ley-58-2003:art-93"]\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    return modelo_dir
+
+
+@dataclass(frozen=True, slots=True)
+class _StorageReuse:
+    """Modelo 038 as the loader materialises it with an authored row and an override on its storage edition.
+
+    ``restating`` overrides the baseline row with the value it already has;
+    ``changing`` overrides it with a different one.
+    """
+
+    restating: ModeloDefinition
+    changing: ModeloDefinition
+
+
+@pytest.fixture(scope="module")
+def storage_reuse(tmp_path_factory: pytest.TempPathFactory) -> _StorageReuse:
+    return _StorageReuse(
+        restating=load_modelo_directory(
+            _storage_tree(tmp_path_factory.mktemp("same"), overridden_section="declarante")
+        ),
+        changing=load_modelo_directory(_storage_tree(tmp_path_factory.mktemp("changed"), overridden_section="planted")),
+    )
+
+
+def _storage_edition_judgements(definition: ModeloDefinition) -> dict[str, RowJudgement]:
+    return {
+        item.casilla: item
+        for item in judge_definition(definition, modelo_id=_STORAGE_MODELO)
+        if item.revision == _STORAGE_EDITION
+    }
+
+
+def test_the_storage_edition_is_paired_with_its_baseline_by_validity_order(storage_reuse: _StorageReuse) -> None:
+    """The edition names no predecessor, so the screen pairs it with the adjacent earlier edition."""
+    definition = storage_reuse.restating
+    revision = definition.revisions[_STORAGE_EDITION]
+    assert not isinstance(revision.predecessor, DeclaredPredecessor)
+    assert str(revision.casilla_storage_baseline) == _STORAGE_BASELINE
+    assert [(item.revision, item.predecessor, item.basis) for item in edition_predecessors(definition)] == [
+        (_STORAGE_BASELINE, None, "first_in_order"),
+        (_STORAGE_EDITION, _STORAGE_BASELINE, "adjacent_in_order"),
+        (_LINEAGE_EDITION, _STORAGE_EDITION, "declared"),
+    ]
+
+
+def test_a_storage_reused_row_is_never_judged_and_is_counted_as_storage_reused(storage_reuse: _StorageReuse) -> None:
+    """A baseline row the edition neither authors nor overrides is carried, not stated."""
+    definition = storage_reuse.restating
+    revision = definition.revisions[_STORAGE_EDITION]
+    reused = _row_of(definition, _STORAGE_EDITION, _REUSED_ROW)
+    assert reused.inherited_from == _STORAGE_BASELINE
+    assert [str(item.id) for item in storage_reused_casillas(revision)] == [_REUSED_ROW]
+    assert _REUSED_ROW not in {str(item.id) for item in stated_casillas(revision)}
+    assert _REUSED_ROW not in _storage_edition_judgements(definition)
+
+
+def test_a_row_the_storage_edition_authors_is_judged_and_unlineaged_is_unchecked(
+    storage_reuse: _StorageReuse,
+) -> None:
+    """Storage reuse spares only what the edition carries; a row it writes itself is judged."""
+    definition = storage_reuse.restating
+    authored = _row_of(definition, _STORAGE_EDITION, _AUTHORED_ROW)
+    assert authored.inherited_from is None
+    assert authored.continuidad_id is None
+    judgement = _storage_edition_judgements(definition)[_AUTHORED_ROW]
+    assert judgement.kind == "unchecked_no_lineage"
+    assert judgement in definition_findings(definition, modelo_id=_STORAGE_MODELO)
+
+
+def test_an_override_on_top_of_the_storage_baseline_is_judged_as_a_stated_row(storage_reuse: _StorageReuse) -> None:
+    """The loader treats a patched baseline row as stated, so the screen judges it.
+
+    Overriding a field with the value the baseline row already has states
+    nothing new, and is named; overriding it with a different value is a
+    legitimate statement.
+    """
+    for definition in (storage_reuse.restating, storage_reuse.changing):
+        overridden = _row_of(definition, _STORAGE_EDITION, _OVERRIDDEN_ROW)
+        assert overridden.inherited_from is None
+        assert _OVERRIDDEN_ROW not in {
+            str(item.id) for item in storage_reused_casillas(definition.revisions[_STORAGE_EDITION])
+        }
+
+    restated = _storage_edition_judgements(storage_reuse.restating)[_OVERRIDDEN_ROW]
+    assert restated.kind == "restated_unchanged"
+    assert restating_modelos(definition_findings(storage_reuse.restating, modelo_id=_STORAGE_MODELO)) == (
+        _STORAGE_MODELO,
+    )
+
+    changed = _storage_edition_judgements(storage_reuse.changing)[_OVERRIDDEN_ROW]
+    assert changed.kind == "stated_difference"
+    assert changed.detail == "differs in section"
+
+
+def test_the_census_counts_storage_reused_rows_apart_from_inherited_and_judged_rows(
+    storage_reuse: _StorageReuse,
+) -> None:
+    """Every loaded row lands in exactly one count, and storage reuse is not lineage inheritance.
+
+    The expected counts follow from the tree as built: the root edition's two
+    rows; the storage edition's one carried row, its override and its authored
+    row; and the lineage edition carrying all three of those down its declared
+    predecessor.
+    """
+    definition = storage_reuse.restating
+    census = definitions_census({_STORAGE_MODELO: definition})
+    assert storage_reused_casillas(definition.revisions[_LINEAGE_EDITION]) == ()
+    assert (census.editions, census.root_editions, census.declared_predecessor_editions) == (3, 1, 1)
+    assert census.rows_in_root_editions == 2
+    assert census.rows_storage_reused == 1
+    assert census.rows_judged == 2
+    assert census.rows_inherited == 3
+    assert census.verdicts == {
+        MinimalityVerdict.RESTATED_UNCHANGED: 1,
+        MinimalityVerdict.UNCHECKED_NO_LINEAGE: 1,
+    }
+    loaded = sum(len(revision.casillas) for revision in definition.revisions.values())
+    assert loaded == (
+        census.rows_in_root_editions + census.rows_storage_reused + census.rows_inherited + census.rows_judged
+    )

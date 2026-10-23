@@ -10,6 +10,8 @@ from textual.pilot import Pilot
 from textual.screen import Screen
 from textual.widget import Widget
 
+from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle
+
 type _Geometry = tuple[tuple[Region, Size, Offset], ...]
 
 
@@ -31,7 +33,9 @@ def _uncovered(screen: Screen[object], widget: Widget, region: Region) -> bool:
     return found is widget
 
 
-async def click_when_laid_out[ResultT](pilot: Pilot[ResultT], widget: Widget, *, timeout: float = 30) -> bool:
+async def click_when_laid_out[ResultT](
+    pilot: Pilot[ResultT], widget: Widget, *, timeout: float = SETTLE_TIMEOUT_SECONDS
+) -> bool:
     """Click the widget's centre once a full refresh leaves the screen's layout unchanged.
 
     ``Pilot.click`` reads the target position from the last composited frame and
@@ -45,7 +49,7 @@ async def click_when_laid_out[ResultT](pilot: Pilot[ResultT], widget: Widget, *,
     async with asyncio.timeout(timeout):
         while True:
             before = _geometry(screen)
-            await pilot.pause()
+            await settle(pilot, workers=False)
             region = widget.region
             if _geometry(screen) == before and _uncovered(screen, widget, region):
                 break

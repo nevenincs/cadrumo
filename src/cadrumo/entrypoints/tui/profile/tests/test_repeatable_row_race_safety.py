@@ -30,6 +30,7 @@ from .....domain.user_profile.values import ProfileSetupState
 from ...components.host import ScreenHostApp
 from ...components.status import PinnedStatusBar
 from ...tests.manager_pilot import wait_until_settled
+from ...tests.settling import settle
 from ..edit_screens import RepeatableRowAddScreen, RepeatableRowRemoveScreen
 from ..overview import ProfileManagerScreen
 
@@ -205,7 +206,7 @@ async def test_repeatable_edit_captures_stable_row_and_baseline_then_refuses_a_s
 
     screen = _screen(opened, stale_update)
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen._apply_edit_for(screen._field_by_key[_EDITED_PATH])("Corrected activity")
         await wait_until_settled(screen, pilot)
 
@@ -236,7 +237,7 @@ async def test_a_row_removed_before_save_is_not_retargeted_or_recreated() -> Non
 
     screen = _screen(opened, removed_update)
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen._apply_edit_for(screen._field_by_key[_EDITED_PATH])("Must not recreate")
         await wait_until_settled(screen, pilot)
 
@@ -274,14 +275,14 @@ async def test_repeated_repeatable_save_starts_one_mutation_and_refreshes_from_i
     screen = _screen(opened, delayed_update)
     try:
         async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot, workers=False)
             apply = screen._apply_edit_for(screen._field_by_key[_EDITED_PATH])
             apply("Saved once")
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert screen._pending_write is not None, "the delayed first save must be in flight"
 
             apply("Saved twice")
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert _notice(screen) == tr("flows.manager.edit.write_in_flight")
 
             release.set()
@@ -306,9 +307,9 @@ async def test_cancel_before_a_repeatable_submission_calls_no_mutation_door() ->
 
     screen = _screen(opened, unexpected_update)
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen._apply_edit_for(screen._field_by_key[_EDITED_PATH])(None)
-        await pilot.pause()
+        await settle(pilot)
 
         assert calls == []
         assert screen._pending_write is None
@@ -341,9 +342,9 @@ async def test_navigation_during_a_landing_row_write_does_not_claim_a_rollback()
     screen = _screen(opened, delayed_update)
     try:
         async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot, workers=False)
             screen._apply_edit_for(screen._field_by_key[_EDITED_PATH])("Landed despite navigation")
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert screen._pending_write is not None
 
             await screen.action_quit()
@@ -398,9 +399,9 @@ async def test_delayed_profile_a_result_cannot_replace_the_visible_profile_b() -
     screen = _screen(opened_a, delayed_a_update)
     try:
         async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot, workers=False)
             screen._apply_edit_for(screen._field_by_key[_EDITED_PATH])("A late result")
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert screen._pending_write is not None
 
             await screen.apply_overview(visible_b)
@@ -441,7 +442,7 @@ async def test_blank_repeatable_edit_is_an_explicit_clear_and_refreshes_from_sto
 
     screen = _screen(opened, clear_update)
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen._apply_edit_for(screen._field_by_key[_EDITED_PATH])("")
         await wait_until_settled(screen, pilot)
 
@@ -484,9 +485,9 @@ async def test_late_older_result_for_the_same_profile_is_discarded_with_an_hones
     screen = _screen(opened, delayed_update)
     try:
         async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot, workers=False)
             screen._apply_edit_for(screen._field_by_key[_EDITED_PATH])("Late worker result")
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert screen._pending_write is not None
 
             await screen.apply_overview(visible_newer)
@@ -527,15 +528,15 @@ async def test_empty_repeatable_section_opens_an_add_modal_and_refreshes_after_s
 
     screen = _screen(opened, add=add)
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen._open_add_row(_SECTION)
-        await pilot.pause()
+        await settle(pilot)
 
         dialog = pilot.app.screen
         assert isinstance(dialog, RepeatableRowAddScreen)
         dialog.query_one("#row-input-0", Input).value = "First activity"
         dialog.query_one("#btn-row-save", Button).press()
-        await pilot.pause()
+        await settle(pilot)
         await wait_until_settled(screen, pilot)
 
         assert calls == [(_SECTION, {"description": "First activity"}, 7, _digest("a"))]
@@ -597,9 +598,9 @@ async def test_empty_row_add_uses_choice_lists_and_submits_their_stored_tokens()
 
     screen = _screen(opened, add=add)
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen._open_add_row(_SECTION)
-        await pilot.pause()
+        await settle(pilot)
 
         dialog = pilot.app.screen
         assert isinstance(dialog, RepeatableRowAddScreen)
@@ -613,7 +614,7 @@ async def test_empty_row_add_uses_choice_lists_and_submits_their_stored_tokens()
         enabled.highlighted = 1
         classification.highlighted = 0
         dialog.query_one("#btn-row-save", Button).press()
-        await pilot.pause()
+        await settle(pilot)
         await wait_until_settled(screen, pilot)
 
         assert calls == [
@@ -645,11 +646,11 @@ async def test_confirmed_remove_keeps_the_selected_stable_row_identity_and_refre
 
     screen = _screen(opened, remove=remove)
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen._table_by_section[_SECTION]
         table.move_cursor(row=table.get_row_index(_EDITED_PATH))
         screen._open_remove_selected_row(_SECTION)
-        await pilot.pause()
+        await settle(pilot)
 
         dialog = pilot.app.screen
         assert isinstance(dialog, RepeatableRowRemoveScreen)
@@ -657,7 +658,7 @@ async def test_confirmed_remove_keeps_the_selected_stable_row_identity_and_refre
         assert _SECTION in confirmation
         assert _EDITED_ROW in confirmation
         dialog.query_one("#btn-row-remove", Button).press()
-        await pilot.pause()
+        await settle(pilot)
         await wait_until_settled(screen, pilot)
 
         assert calls == [(_SECTION, _EDITED_ROW, 7, _digest("a"))]
@@ -685,14 +686,14 @@ async def test_add_validation_refusal_never_reports_a_success_or_refreshes_the_p
 
     screen = _screen(opened, add=refused_add)
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen._open_add_row(_SECTION)
-        await pilot.pause()
+        await settle(pilot)
         dialog = pilot.app.screen
         assert isinstance(dialog, RepeatableRowAddScreen)
         dialog.query_one("#row-input-0", Input).value = "Rejected activity"
         dialog.query_one("#btn-row-save", Button).press()
-        await pilot.pause()
+        await settle(pilot)
         await wait_until_settled(screen, pilot)
 
         assert calls == [(_SECTION, {"description": "Rejected activity"}, 7, _digest("a"))]
@@ -716,15 +717,15 @@ async def test_remove_persistence_failure_never_reports_a_success_or_refreshes_t
 
     screen = _screen(opened, remove=failed_remove)
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen._table_by_section[_SECTION]
         table.move_cursor(row=table.get_row_index(_EDITED_PATH))
         screen._open_remove_selected_row(_SECTION)
-        await pilot.pause()
+        await settle(pilot)
         dialog = pilot.app.screen
         assert isinstance(dialog, RepeatableRowRemoveScreen)
         dialog.query_one("#btn-row-remove", Button).press()
-        await pilot.pause()
+        await settle(pilot)
         await wait_until_settled(screen, pilot)
 
         assert calls == [(_SECTION, _EDITED_ROW, 7, _digest("a"))]

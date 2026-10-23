@@ -13,7 +13,6 @@ import asyncio
 import json
 import sys
 import time
-from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 from importlib.metadata import version
@@ -49,6 +48,7 @@ from cadrumo.entrypoints.tui.operations.run_screen import OperationRunScreen
 from cadrumo.entrypoints.tui.reference.destination import ReferenceScreen
 from cadrumo.entrypoints.tui.reference.read_screen import ReferenceReadScreen
 from cadrumo.entrypoints.tui.reference.reads import ReferenceQuery, ReferenceRead, read_reference
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
@@ -156,12 +156,6 @@ def _issue_scoped_key(subject: AdministrationSubject, registry: OperationRegistr
     return credential.get_secret_value()
 
 
-async def _until(pilot: _Pilot, predicate: Callable[[], bool], *, seconds: float = 40) -> None:
-    async with asyncio.timeout(seconds):
-        while not predicate():
-            await pilot.pause(0.05)
-
-
 def _text(widget: Static) -> str:
     return str(widget.content)
 
@@ -170,9 +164,11 @@ async def _open_operation(pilot: _Pilot, listing: OperationsCatalogueScreen, def
     listed = listing.query_one("#operations-list", OptionList)
     listed.highlighted = listed.get_option_index(definition_id)
     listed.action_select()
-    await _until(
+    await settle_until(
         pilot,
         lambda: isinstance(pilot.app.screen, OperationRunScreen) and bool(pilot.app.screen.query("#operation-run")),
+        "isinstance(pilot.app.screen, OperationRunScreen) and bool(pilot.app...",
+        workers=False,
     )
     run = pilot.app.screen
     assert isinstance(run, OperationRunScreen)
@@ -184,15 +180,23 @@ async def _journey(client: FrontendClient, registry: OperationRegistry, storage_
     registered = sorted(contract.definition_id for contract in registry.public_contract_set.definitions)
     app = RuntimeRestrictedSessionApp(client, profile_label="Enrollment tests", operation_registry=lambda: registry)
     async with app.run_test(size=_SIZE) as pilot:
-        await _until(pilot, lambda: str(client.profile_id) in _text(app.query_one("#restricted-profile", Static)))
+        await settle_until(
+            pilot,
+            lambda: str(client.profile_id) in _text(app.query_one("#restricted-profile", Static)),
+            "str(client.profile_id) in _text(app.query_one('#restricted-profile'...",
+            workers=False,
+        )
         shell = app.screen
         assert _ADMITTED in _text(app.query_one("#restricted-operations", Static))
         assert _OUT_OF_SCOPE not in _text(app.query_one("#restricted-operations", Static))
 
         # Operations: every registered operation is listed, whatever the key's scope says.
         app.query_one("#restricted-open-operations", Button).press()
-        await _until(
-            pilot, lambda: isinstance(app.screen, OperationsCatalogueScreen) and app.screen._catalogue is not None
+        await settle_until(
+            pilot,
+            lambda: isinstance(app.screen, OperationsCatalogueScreen) and app.screen._catalogue is not None,
+            "isinstance(app.screen, OperationsCatalogueScreen) and app.screen._c...",
+            workers=False,
         )
         listing = app.screen
         assert isinstance(listing, OperationsCatalogueScreen)
@@ -207,20 +211,21 @@ async def _journey(client: FrontendClient, registry: OperationRegistry, storage_
         run = await _open_operation(pilot, listing, _ADMITTED)
         page_kind = f"#operation-field-{[field.name for field in run._fields].index('page_kind')}"
         run.query_one(page_kind, Select).value = "status"
-        await pilot.pause()
+        await settle(pilot, workers=False)
         run.query_one("#operation-run", Button).press()
         receipt = run.query_one("#operation-result-receipt", Static)
-        await _until(
+        await settle_until(
             pilot,
             lambda: app.screen is run and bool(_text(receipt)) and all(worker.is_finished for worker in run.workers),
-            seconds=_SETTLE_SECONDS,
+            "app.screen is run and bool(_text(receipt)) and all(worker.is_finish...",
+            workers=False,
         )
         assert tr("operation.modal.terminal.succeeded") in _text(receipt)
         assert run._pages, _text(run.query_one("#operation-run-notice", Static))
         viewed = json.loads("\n".join(run._pages))
         assert viewed["profile_id"] == str(client.profile_id) and viewed["page_kind"] == "status"
         run.action_close()
-        await _until(pilot, lambda: app.screen is listing)
+        await settle_until(pilot, lambda: app.screen is listing, "app.screen is listing", workers=False)
 
         # An operation outside the scope is offered all the same, and the runtime refuses it in its own words.
         with pytest.raises(CadrumoError) as refused_directly:
@@ -230,57 +235,77 @@ async def _journey(client: FrontendClient, registry: OperationRegistry, storage_
         denied = await _open_operation(pilot, listing, _OUT_OF_SCOPE)
         notice = denied.query_one("#operation-run-notice", Static)
         denied.query_one("#operation-run", Button).press()
-        await _until(pilot, lambda: bool(_text(notice)) and all(worker.is_finished for worker in denied.workers))
+        await settle_until(
+            pilot,
+            lambda: bool(_text(notice)) and all(worker.is_finished for worker in denied.workers),
+            "bool(_text(notice)) and all(worker.is_finished for worker in denied...",
+            workers=False,
+        )
         assert _text(notice) == runtime_words
         assert not _text(denied.query_one("#operation-result-receipt", Static))
         denied.action_close()
-        await _until(pilot, lambda: app.screen is listing)
+        await settle_until(pilot, lambda: app.screen is listing, "app.screen is listing", workers=False)
         listing.action_back()
-        await _until(pilot, lambda: app.screen is shell)
+        await settle_until(pilot, lambda: app.screen is shell, "app.screen is shell", workers=False)
 
         # Installation: a read act answers on its own sessionless connection.
         app.query_one("#restricted-open-installation", Button).press()
-        await _until(
-            pilot, lambda: isinstance(app.screen, InstallationScreen) and bool(app.screen.query("#installation-hint"))
+        await settle_until(
+            pilot,
+            lambda: isinstance(app.screen, InstallationScreen) and bool(app.screen.query("#installation-hint")),
+            "isinstance(app.screen, InstallationScreen) and bool(app.screen.quer...",
+            workers=False,
         )
         installation = app.screen
         assert isinstance(installation, InstallationScreen)
         installation.open_act(InstallationAct.STORAGE_CHECK)
-        await _until(
+        await settle_until(
             pilot,
             lambda: (
                 isinstance(app.screen, InstallationActScreen) and bool(app.screen.query("#installation-act-result"))
             ),
+            "( isinstance(app.screen, InstallationActScreen) and bool(app.screen...",
+            workers=False,
         )
         check = app.screen
         assert isinstance(check, InstallationActScreen)
         status = check.query_one("#installation-act-status", PinnedStatusBar)
-        await _until(pilot, lambda: status.tone in {"success", "error"})
+        await settle_until(
+            pilot, lambda: status.tone in {"success", "error"}, "status.tone in {'success', 'error'}", workers=False
+        )
         assert status.tone == "success", status.message
         assert str(storage_root) in _text(check.query_one("#installation-act-result", Static))
         check.action_close()
-        await _until(pilot, lambda: app.screen is installation)
+        await settle_until(pilot, lambda: app.screen is installation, "app.screen is installation", workers=False)
         installation.action_close()
-        await _until(pilot, lambda: app.screen is shell)
+        await settle_until(pilot, lambda: app.screen is shell, "app.screen is shell", workers=False)
 
         # Reference: a read answers from the published authority, with no session involved.
         app.query_one("#restricted-open-reference", Button).press()
-        await _until(
-            pilot, lambda: isinstance(app.screen, ReferenceScreen) and bool(app.screen.query("#reference-hint"))
+        await settle_until(
+            pilot,
+            lambda: isinstance(app.screen, ReferenceScreen) and bool(app.screen.query("#reference-hint")),
+            "isinstance(app.screen, ReferenceScreen) and bool(app.screen.query('...",
+            workers=False,
         )
         reference = app.screen
         assert isinstance(reference, ReferenceScreen)
         reference.open_read(ReferenceRead.AUTH_PROVIDERS)
-        await _until(pilot, lambda: isinstance(app.screen, ReferenceReadScreen) and app.screen.result is not None)
+        await settle_until(
+            pilot,
+            lambda: isinstance(app.screen, ReferenceReadScreen) and app.screen.result is not None,
+            "isinstance(app.screen, ReferenceReadScreen) and app.screen.result i...",
+            workers=False,
+        )
         providers = app.screen
         assert isinstance(providers, ReferenceReadScreen) and providers.result is not None
         assert providers.result.model_dump(mode="json") == read_reference(
             ReferenceQuery(ReferenceRead.AUTH_PROVIDERS)
         ).model_dump(mode="json")
         providers.action_close()
-        await _until(pilot, lambda: app.screen is reference)
+        await settle_until(pilot, lambda: app.screen is reference, "app.screen is reference", workers=False)
         reference.action_close()
-        await _until(pilot, lambda: app.screen is shell)
+        await settle_until(pilot, lambda: app.screen is shell, "app.screen is shell", workers=False)
 
         # The shell is still the admitted API session it was.
         assert not app._cleared and app.return_value is None

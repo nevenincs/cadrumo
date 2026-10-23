@@ -254,7 +254,7 @@ def _observe_startup_functions(patch: pytest.MonkeyPatch, recorder: RuntimeBench
     _patch_function_aliases(patch, cadrumo_click_command, recorder.wrap(cadrumo_click_command, "cli.cached_command"))
     if sys.platform == "win32":
         from cadrumo_client.transport.windows import WindowsEndpoint
-        from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+        from cadrumo_client.transport.windows_process import WindowsProcessScope
 
         patch.setattr(
             WindowsProcessScope, "launch", recorder.wrap(WindowsProcessScope.launch, "startup.native_process_launch")

@@ -56,7 +56,7 @@ def _end(lane: Any, code: int) -> None:
 
 
 def test_a_grandchild_ends_with_the_lane_which_keeps_its_exit_code() -> None:
-    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+    from cadrumo_client.transport.windows_process import WindowsProcessScope
 
     scope = WindowsProcessScope()
     try:
@@ -71,7 +71,7 @@ def test_a_grandchild_ends_with_the_lane_which_keeps_its_exit_code() -> None:
 
 
 def test_without_the_job_the_same_grandchild_survives_its_lane() -> None:
-    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+    from cadrumo_client.transport.windows_process import WindowsProcessScope
 
     scope = WindowsProcessScope()
     try:

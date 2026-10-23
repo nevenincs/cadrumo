@@ -11,14 +11,14 @@ from typing import override
 from dev._paths import UTF_8
 
 from .import_check_models import Authority, ImportOccurrence, SourceModule
-from .import_dynamic_aliases import dynamic_aliases
+from .import_dynamic_aliases import DYNAMIC_TARGET_KEYWORDS, DynamicLoaderKind, dynamic_aliases
+from .import_dynamic_strings import carries_interpreter_payload, string_payload_imports
 from .import_dynamic_targets import dynamic_target, metadata_target_set_targets
 from .import_module_syntax import (
     is_first_party,
     is_package,
     is_type_checking_guard,
     matches_any_module,
-    qualified_name,
     resolve_from,
 )
 from .import_record_provenance import RecordTargetProvenance
@@ -67,7 +67,7 @@ class _OccurrenceVisitor(ast.NodeVisitor):
         self.record_provenance = record_provenance
         self.occurrences = occurrences
         self.context: TargetEvaluationContext | None = None
-        self.import_module_names, self.importlib_names, self.raw_import_names = dynamic_aliases(module)
+        self.aliases = dynamic_aliases(module)
         self.scopes: list[str] = []
         self.type_checking_depth = 0
 
@@ -97,6 +97,22 @@ class _OccurrenceVisitor(ast.NodeVisitor):
         self._visit_scope(node)
 
     def _visit_scope(self, node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) -> None:
+        # Decorators, defaults, annotations, bases and class keywords run in the
+        # enclosing scope when the definition executes, so they are visited
+        # there; only the body belongs to the new lexical scope.
+        for decorator in node.decorator_list:
+            self.visit(decorator)
+        for type_param in node.type_params:
+            self.visit(type_param)
+        if isinstance(node, ast.ClassDef):
+            for base in node.bases:
+                self.visit(base)
+            for keyword in node.keywords:
+                self.visit(keyword)
+        else:
+            self.visit(node.args)
+            if node.returns is not None:
+                self.visit(node.returns)
         self.scopes.append(node.name)
         for statement in node.body:
             self.visit(statement)
@@ -126,17 +142,40 @@ class _OccurrenceVisitor(ast.NodeVisitor):
 
     @override
     def visit_Call(self, node: ast.Call) -> None:
-        qualified = qualified_name(node.func)
-        is_import_module = qualified in self.import_module_names or (
-            isinstance(node.func, ast.Attribute)
-            and node.func.attr == "import_module"
-            and isinstance(node.func.value, ast.Name)
-            and node.func.value.id in self.importlib_names
-        )
-        is_raw_import = qualified in self.raw_import_names or qualified in {"__import__", "builtins.__import__"}
-        if is_import_module or is_raw_import:
-            _record_dynamic_call(self, node)
+        kind = self.aliases.loader_kind(node)
+        if kind is not None:
+            _record_dynamic_call(self, node, kind)
+        self._record_string_payloads(node)
         self.generic_visit(node)
+
+    @override
+    def visit_List(self, node: ast.List) -> None:
+        self._record_string_payloads(node)
+        self.generic_visit(node)
+
+    @override
+    def visit_Tuple(self, node: ast.Tuple) -> None:
+        self._record_string_payloads(node)
+        self.generic_visit(node)
+
+    def _record_string_payloads(self, node: ast.Call | ast.List | ast.Tuple) -> None:
+        """Record the first-party imports an interpreter payload names at *node*."""
+        if not carries_interpreter_payload(node):
+            return
+        for item in string_payload_imports(node, self._evaluation_context()):
+            if not is_first_party(item.target, self.authority.root_names):
+                continue
+            for symbol in item.symbols or ("",):
+                child = f"{item.target}.{symbol}"
+                if symbol and is_package(item.target, self.modules, self.authority.root_names) and child in self.known:
+                    self.record(child, (), item.lineno, "string")
+                else:
+                    self.record(item.target, (symbol,) if symbol else (), item.lineno, "string")
+
+    def _evaluation_context(self) -> TargetEvaluationContext:
+        if self.context is None:
+            self.context = TargetEvaluationContext(self.module.tree, self.module.name)
+        return self.context
 
     def _static_form(self) -> str:
         if self.type_checking_depth:
@@ -230,17 +269,18 @@ def import_occurrence_fingerprint(
     return hashlib.sha256(json.dumps(identity, sort_keys=True, separators=(",", ":")).encode(UTF_8)).hexdigest()
 
 
-def _record_dynamic_call(self: _OccurrenceVisitor, node: ast.Call) -> None:
+def _record_dynamic_call(self: _OccurrenceVisitor, node: ast.Call, kind: DynamicLoaderKind) -> None:
     """Record dynamic call."""
-    context = self.context
-    if context is None:
-        context = self.context = TargetEvaluationContext(self.module.tree, self.module.name)
+    context = self._evaluation_context()
+    keyword_name = DYNAMIC_TARGET_KEYWORDS[kind]
     target_node = (
-        node.args[0] if node.args else next((keyword.value for keyword in node.keywords if keyword.arg == "name"), None)
+        node.args[0]
+        if node.args
+        else next((keyword.value for keyword in node.keywords if keyword.arg == keyword_name), None)
     )
     if target_node is not None:
         targets, exhaustive_census = _occurrence_dynamic_targets(self, target_node, node, context)
-        _record_dynamic_targets(self, node, context, targets, exhaustive_census)
+        _record_dynamic_targets(self, node, kind, context, targets, exhaustive_census)
 
 
 def _occurrence_dynamic_targets(
@@ -265,12 +305,15 @@ def _occurrence_dynamic_targets(
 def _record_dynamic_targets(
     self: _OccurrenceVisitor,
     node: ast.Call,
+    kind: DynamicLoaderKind,
     context: TargetEvaluationContext,
     targets: frozenset[str] | None,
     exhaustive_census: bool,
 ) -> None:
     """Record dynamic targets."""
     for target in sorted(() if exhaustive_census else targets or ()):
+        if kind == "run_module" and target.startswith("."):
+            continue
         resolved = dynamic_target(self.module, target, node, context, record_provenance=self.record_provenance)
         if (
             (resolved is not None and resolved)

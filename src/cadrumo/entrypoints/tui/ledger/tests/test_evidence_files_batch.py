@@ -13,14 +13,14 @@ from .....application.ledger.evidence_ingestion_contracts import LedgerEvidenceB
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....domain.iva.schema import InvoiceKind
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..evidence_files_batch import LedgerEvidenceFilesBatchScreen
 from ..evidence_files_write import LedgerEvidenceFilesWriteScreen
 from ..models import LedgerFlowState
 from ..workspace_injection import LedgerWorkspaceInjection
-from .evidence_files_fixtures import EVIDENCE_FILES_REFUSAL_KEY, MemoryEvidenceFilesStore, press, settle, text_of
-from .test_ledger_selection_journey import _WorkspaceHostApp
-from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+from .evidence_files_fixtures import EVIDENCE_FILES_REFUSAL_KEY, MemoryEvidenceFilesStore, press, text_of
+from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -50,7 +50,7 @@ async def test_a_partial_batch_reports_each_document_and_says_it_was_partial(tmp
     store.batch_documents = (("factura-a.pdf", "ingested"), ("factura-b.pdf", "refused"))
     store.batch_unreadable = ("factura-c.pdf",)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             await _stage(pilot, str(tmp_path), InvoiceKind.ISSUED)
             write = pilot.app.screen
@@ -90,7 +90,7 @@ async def test_a_complete_batch_is_not_called_partial(tmp_path: Path) -> None:
     store = MemoryEvidenceFilesStore()
     store.batch_documents = (("factura-a.pdf", "ingested"), ("factura-b.pdf", "no_op"))
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             await _stage(pilot, str(tmp_path))
             await press(pilot, "evidence-files-confirm")
@@ -105,7 +105,7 @@ async def test_a_complete_batch_is_not_called_partial(tmp_path: Path) -> None:
 async def test_a_relative_or_blank_folder_is_refused_before_anything_is_sent() -> None:
     store = MemoryEvidenceFilesStore()
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             await press(pilot, "evidence-files-batch-review")
             screen = pilot.app.screen
@@ -122,7 +122,7 @@ async def test_a_refused_batch_is_shown_on_the_write_step(tmp_path: Path) -> Non
     store = MemoryEvidenceFilesStore()
     store.refusing.add("batch")
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             await _stage(pilot, str(tmp_path))
             await press(pilot, "evidence-files-confirm")

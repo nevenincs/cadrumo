@@ -44,6 +44,7 @@ from .....tests.profile_persistence.verification_repository_support import (
 )
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import application_workbench
+from ....tests.settling import settle_until
 from ..factory import InstalledModeloWorkbench
 from ..progress import NextAction, WorkbenchProgress, next_action_text, workbench_progress
 from ..screen import ModeloWorkbenchScreen
@@ -105,19 +106,12 @@ async def _press_f8(installed: InstalledModeloWorkbench, actions: FakeActions) -
     async with app.run_test(size=(160, 48)) as pilot:
         await _opened(pilot, screen)
         await pilot.press("f8")
-        for _ in range(50):
-            await pilot.pause()
-            if actions.requested:
-                break
+        await settle_until(pilot, lambda: bool(actions.requested), "the check to be requested")
         app.exit(None)
 
 
 async def _opened(pilot: Pilot[None], screen: ModeloWorkbenchScreen) -> None:
-    for _ in range(200):
-        await pilot.pause()
-        if screen.form is not None:
-            return
-    raise AssertionError("the workbench never finished reading its declaration")
+    await settle_until(pilot, lambda: screen.form is not None, "the workbench to finish reading its declaration")
 
 
 def test_an_attested_empty_detail_sends_the_filer_to_the_check_and_then_no_longer_blocks(tmp_path: Path) -> None:

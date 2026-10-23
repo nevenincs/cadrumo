@@ -54,7 +54,7 @@ The owner, 2026-10-12: "I'm concerned that you set up a non-reproducible adhoc t
 - Yes, the runtime manages API access. `2026-09-26-mcp-purpose-authentication-profile-access-adr` binds each key to a durable grant. The grant is bound to profile, installation, OS owner, client, scopes, data projections, validity and custody generations. The server retains only a verifier and protected grant state. A key admits a fresh, bounded session of at most five minutes, and revocation fences admission, data release and commit. The same record excludes runtime start and stop management from that scope. In code:
   - The runtime's profile host resolves a presented key to its grant and scope before the access authority admits a lease (`src/cadrumo_runtime/host/profile_connection_sessions.py:128-147`).
   - The runtime serves the grant inventory (`src/cadrumo_runtime/host/operation_authority.py:235`).
-  - The person issues, approves, denies, locks and resumes keys through `config automation` (`src/cadrumo/entrypoints/cli/config/runtime_access_management_specs.py:52-317`).
+  - The person issues, approves, denies, locks and resumes keys through `config profile automation`, `config profile lock` and `config profile resume` (`src/cadrumo_runtime/commands/access_management_specs.py:67-370`).
   - `cadrumo-mcp` takes `--profile-id` and `--credential-reference` to run on an enrolled key (`src/cadrumo_mcp/mcp/main.py:43-52`; locators as observed 2026-10-12, package renamed from `cadrumo_harness` on 2026-10-21).
   - Enrollment, revocation and lock are already proved with scripted clients (`dev/mcp_eval/tests/test_installed_mcp_first_enrollment.py`, `test_mcp_revocation_runtime.py`, `test_runtime_automation_grant_lock_parity.py`). None of them is proved with a live agent.
 - The package the owner means is the CMake `bundle` target: `build/<preset>/stage/<Config>/app`. It holds the interpreter, the locked dependencies, `bin/aeat.exe`, `bin/cadrumo-mcp.exe`, `bin/cadrumo-runtime.exe`, `cadrumo-manager.exe` and the bundled authority. Its own `data/package-manifest.json` hashes every file, and `dev/packaging/native/installation.py:51-57` already checks a payload against that manifest. `dev/packaging/native/platforms/windows_verify.py:270-320` already copies a package and runs it on a temporary storage root.
@@ -87,7 +87,7 @@ The agent driver:
 - **An agent client over the package's `cadrumo-mcp`, using whichever supported provider credential is configured.** Chosen, as the owner ruled. Which providers and models exist is not this record's to rule.
 
 The sign-in:
-- **The harness plays the person.** Chosen. The harness signs in through the product's command line on the protected secret channel, and the MCP server resumes that shared sign-in. In the API-key scenarios, the harness also issues and approves a key through `config automation` and starts the MCP server with `--profile-id` and `--credential-reference`. The agent never holds a password or a key.
+- **The harness plays the person.** Chosen. The harness signs in through the product's command line on the protected secret channel, and the MCP server resumes that shared sign-in. In the API-key scenarios, the harness also issues and approves a key through `config profile automation` and starts the MCP server with `--profile-id` and `--credential-reference`. The agent never holds a password or a key.
 - **A password in the prompt, scrubbed from the transcript.** Rejected by the secrets ruling. The password still reaches the model and the model provider.
 - **The agent signing in by a reference named in its own tool call.** Rejected. The agent never authenticates.
 
@@ -146,9 +146,9 @@ Each run carries the 2026-10-12 test into the project as follows:
 - **Capture.** Scrub in the stream before anything is written. Exact values are replaced: the run's password, the provider credential, the profile's Cadrumo API key, and every host variable value outside the allow-list. A fail-closed residual scan follows, modelled on `dev/packaging/evidence_scrub.py:194`. Write the scrubbed trajectory, the receipt and the score to `.logs/agent-eval/`. Raw streams are never kept.
 - **Scoring.** Use `score_live_trajectory`, with the live-write leaves derived from the registered operations' effect declarations rather than a hand list.
 - **Access scenarios.** Drive the person's side through `cadrumo-runtime config` using the existing auth suffixes, not tax agent/provider/attendance commands:
-  - `config automation create` and `approve`, with the password on the protected channel
-  - `deny` for revocation
-  - `lock` for a locked profile
+  - `config profile automation create` and `approve`, with the password on the protected channel
+  - `config profile automation deny` for revocation
+  - `config profile lock` for a locked profile
   - `config logout` for no sign-in
   - a lease left to lapse for an expired session
 

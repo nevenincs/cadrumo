@@ -28,6 +28,7 @@ from .....application.operations.persistence.replay import OperationReplayStatus
 from .....application.operations.registry import OperationPublicContractSetV1
 from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....operation_composition import build_production_operation_registry
+from ...tests.settling import settle_until
 from ..controller_port import OperationChangeSourcePort, OperationResponseControlPort
 from ..modal import OperationModal, OperationModalSettledOutcomeV1
 
@@ -170,9 +171,12 @@ async def test_each_cue_reads_the_operation_again_until_it_settles() -> None:
     controller = _Controller(running, running, _observation(terminal=True), cue=True)
     host = _Host(controller)
     async with host.run_test(size=(100, 40)) as pilot:
-        async with asyncio.timeout(10):
-            while not isinstance(host.outcome, OperationModalSettledOutcomeV1):
-                await pilot.pause(0.02)
+        await settle_until(
+            pilot,
+            lambda: isinstance(host.outcome, OperationModalSettledOutcomeV1),
+            "the modal to settle on the terminal read",
+            workers=False,
+        )
     # The first read subscribes; the second, armed, is cued; the third is terminal.
     assert controller.observe_calls == 3
     assert controller.waiter.closed
@@ -184,9 +188,9 @@ async def test_without_a_cue_a_running_operation_is_not_read_again() -> None:
     controller = _Controller(running, running, running, cue=False)
     host = _Host(controller)
     async with host.run_test(size=(100, 40)) as pilot:
-        async with asyncio.timeout(10):
-            while controller.observe_calls < 2:
-                await pilot.pause(0.02)
+        await settle_until(
+            pilot, lambda: controller.observe_calls >= 2, "the first reads of the operation", workers=False
+        )
         await pilot.pause(1.0)
         assert controller.observe_calls == 2
 
@@ -237,9 +241,9 @@ async def test_a_controller_without_cues_is_read_once_and_never_on_a_timer() -> 
     assert not isinstance(controller, OperationChangeSourcePort)
     host = _Host(controller)
     async with host.run_test(size=(100, 40)) as pilot:
-        async with asyncio.timeout(10):
-            while controller.observe_calls < 1:
-                await pilot.pause(0.02)
+        await settle_until(
+            pilot, lambda: controller.observe_calls >= 1, "the first reads of the operation", workers=False
+        )
         # Long enough for several of the former 200 ms polls.
         await pilot.pause(1.0)
         assert controller.observe_calls == 1

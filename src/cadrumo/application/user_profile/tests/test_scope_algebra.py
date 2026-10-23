@@ -93,6 +93,11 @@ class Draws:
         return items[:count]
 
 
+def oracle_discloses(scope: AccessScope, permission: DisclosurePermission) -> bool:
+    """Ask one scope about one permission: consent is a listed permission or a category grant covering it."""
+    return permission in scope.disclosures or any(grant.covers(permission) for grant in scope.disclosure_categories)
+
+
 def oracle_intersection(scopes: tuple[AccessScope, ...]) -> AccessScope:
     """Ask every scope about every listed item, as the vocabulary defines consent."""
     if not scopes:
@@ -115,9 +120,9 @@ def oracle_intersection(scopes: tuple[AccessScope, ...]) -> AccessScope:
     listed = [item for scope in scopes for item in scope.disclosures]
     named = [item for scope in scopes for item in scope.operations]
     return AccessScope(
-        operations=frozenset(item for item in named if all(scope.permits(item) for scope in scopes)),
+        operations=frozenset(item for item in named if all(item in scope.operations for scope in scopes)),
         actions=actions,
-        disclosures=frozenset(item for item in listed if all(scope.discloses(item) for scope in scopes)),
+        disclosures=frozenset(item for item in listed if all(oracle_discloses(scope, item) for scope in scopes)),
         periods=periods,
         allow_period_independent=all(scope.allow_period_independent for scope in scopes),
         allow_delegation=all(scope.allow_delegation for scope in scopes),
@@ -130,9 +135,9 @@ def oracle_intersection(scopes: tuple[AccessScope, ...]) -> AccessScope:
 def oracle_subset(child: AccessScope, parent: AccessScope) -> bool:
     """Ask the parent about every item the child holds."""
     return (
-        all(parent.permits(item) for item in child.operations)
+        all(item in parent.operations for item in child.operations)
         and all(item in parent.actions for item in child.actions)
-        and all(parent.discloses(item) for item in child.disclosures)
+        and all(oracle_discloses(parent, item) for item in child.disclosures)
         and all(item in parent.disclosure_categories for item in child.disclosure_categories)
         and (parent.periods is None or (child.periods is not None and all(p in parent.periods for p in child.periods)))
         and (parent.allow_period_independent or not child.allow_period_independent)
@@ -178,7 +183,7 @@ def random_scope(rng: Draws) -> AccessScope:
 
 def narrowed(rng: Draws, parent: AccessScope) -> AccessScope:
     """A scope inside ``parent``: listed items it holds plus some its category grants cover."""
-    covered = tuple(item for item in PERMISSIONS if parent.discloses(item))
+    covered = tuple(item for item in PERMISSIONS if oracle_discloses(parent, item))
     return AccessScope(
         operations=some(rng, tuple(parent.operations)),
         actions=some(rng, tuple(parent.actions)),

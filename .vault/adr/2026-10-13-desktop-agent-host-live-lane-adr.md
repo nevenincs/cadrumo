@@ -138,7 +138,7 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 >
 > **Processes**
 > - The Rust host owns the launcher through a new supervised runner, distinct from the short-call runner (`native/desktop/src-tauri/src/shell/sign_in/process.rs:23-27`). It places the launcher in a kill-on-close Job Object.
-> - The launcher starts the agent tree inside `WindowsProcessScope` (`src/cadrumo_runtime/adapters/windows_process.py:189-232`), so the gateway, the worker and `cadrumo-mcp` end when it ends, however it ends.
+> - The launcher starts the agent tree inside `WindowsProcessScope` (`src/cadrumo_client/transport/windows_process.py:189-232`), so the gateway, the worker and `cadrumo-mcp` end when it ends, however it ends.
 > - Every stop trigger also stops the launcher: sign-out, lock, idle or absolute expiry, a key change, a profile switch, the runtime becoming unavailable, and window close.
 > - The gateway and worker take ephemeral loopback ports, reported in `agent_ready`.
 >

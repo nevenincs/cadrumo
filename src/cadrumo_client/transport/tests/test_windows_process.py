@@ -15,10 +15,10 @@ import pytest
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from cadrumo.core.async_cleanup import close_async_resources
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment, launch_fixture, native_python
 
+from ...contracts.contracts import RefusalCode, RefusalError
 from ..windows_process import WindowsProcessScope
-from .process_support import fixture_arguments, fixture_environment, launch_fixture, native_python
 
 pytestmark = [
     pytest.mark.integration,
@@ -27,7 +27,7 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native creation-time Windows Job assignment"),
 ]
 
-_FIXTURE = "cadrumo_runtime.adapters.tests.job_fixture"
+_FIXTURE = "cadrumo_client.transport.tests.job_fixture"
 
 
 class _ProcessFacts(BaseModel):

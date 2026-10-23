@@ -7,6 +7,7 @@ import json
 import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
+from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -58,6 +59,7 @@ from cadrumo_client.transport.automation_inventory import read_automation_invent
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError, frontend_failure_code
 from dev.packaging.command_execution import run_command
 
+from . import agent_key_proposal
 from .harness import Connection, LifecycleHarness, Profile
 from .proof_support import ProcessIdentity, verified_relay
 from .session_holder import AsyncRuntimeSessionHolder
@@ -99,8 +101,9 @@ except KeyringUnavailableError as error:
     sys.exit(2)
 """
 
+# The packaged interpreter loads the probe-owned proposal builder by path.
 _KEY_REQUEST = """
-import asyncio, json, sys
+import asyncio, importlib.util, json, sys
 from pathlib import Path
 from uuid import UUID
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
@@ -111,14 +114,16 @@ from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
 from cadrumo_client.transport.automation_requester import AutomationRequesterJourney
 from cadrumo_client.transport.installed_client import open_installed_client
-from cadrumo_mcp.access.automation_key import agent_key_proposal, agent_key_scope
+spec = importlib.util.spec_from_file_location('lifecycle_agent_key_proposal', sys.argv[3])
+builder = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(builder)
 async def request():
     client = await open_installed_client(profile_id=UUID(sys.argv[1]), frontend=OperationFrontendProjection.CLI)
     try:
         enrollment = client.prepare_enrollment(installed_automation_secret_store())
         contracts = build_manifest_operation_registry().public_contract_set
-        proposal: EnrollmentProposal = agent_key_proposal(
-            agent_key_scope(contracts), destination_id=enrollment.prepared.destination_id, now=now()
+        proposal: EnrollmentProposal = builder.agent_key_proposal(
+            contracts, destination_id=enrollment.prepared.destination_id, now=now()
         )
         journey = AutomationRequesterJourney(enrollment, timeout=120)
         submitted = journey.submit(proposal)
@@ -577,6 +582,7 @@ def issue_key(harness: LifecycleHarness, profile: Profile) -> UUID:
                 _KEY_REQUEST,
                 str(profile.profile_id),
                 str(request_control),
+                str(Path(agent_key_proposal.__file__).resolve(strict=True)),
             ],
             cwd=harness.root,
             environment=child_environment(ChildEnvironmentProfile.STRICT, harness.root),

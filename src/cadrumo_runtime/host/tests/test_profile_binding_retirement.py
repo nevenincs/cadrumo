@@ -36,10 +36,10 @@ from cadrumo_client.contracts.enrollment_access import EnrollmentPrepared
 from cadrumo_client.contracts.installation import Installation
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
+from cadrumo_client.transport.windows_process import WindowsOwnedProcess
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerDrained
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, lease, worker_profiles
-from ...adapters.windows_process import WindowsOwnedProcess
 from .. import profile_connection_admission
 from ..enrollment_offer import RuntimeEnrollmentOffer
 from ..profile_connections import RuntimeProfileConnections

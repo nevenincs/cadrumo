@@ -10,23 +10,18 @@ names a filter that hides something and an order other than the form's.
 from __future__ import annotations
 
 import pytest
-from textual.pilot import Pilot
 from textual.widgets import Static
 
 from ......core.config import override_settings
 from ......core.i18n.render import tr
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..page_items import WorkbenchFilter
 from ..screen import ModeloWorkbenchScreen
 from ..sorting import SORT_LOCALE_KEYS
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-
-async def _settle(pilot: Pilot[None], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _filter_words(item: WorkbenchFilter) -> str:
@@ -39,11 +34,11 @@ async def test_f_steps_through_every_filter_naming_each_on_the_page_line() -> No
         screen = ModeloWorkbenchScreen(FakeReader(form=synthetic_form(needs_input=False)), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             lines = [str(screen.query_one("#wb-page", Static).render())]
             for _ in WorkbenchFilter:
                 await pilot.press("f")
-                await _settle(pilot)
+                await settle(pilot)
                 lines.append(str(screen.query_one("#wb-page", Static).render()))
             app.exit(None)
 
@@ -58,13 +53,13 @@ async def test_a_page_the_filter_empties_says_so_and_names_the_next_page_with_so
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             # It opens on the result page, which holds nothing the filer typed; the first page holds box 07.
             await pilot.press("f", "f")
-            await _settle(pilot)
+            await settle(pilot)
             empty = str(screen.query_one("#wb-page", Static).render())
             await pilot.press("left_square_bracket")
-            await _settle(pilot)
+            await settle(pilot)
             listed = str(screen.query_one("#wb-page", Static).render())
             app.exit(None)
 
@@ -80,13 +75,13 @@ async def test_below_110_columns_the_crumb_names_a_filter_that_hides_something_a
         screen = ModeloWorkbenchScreen(FakeReader(form=synthetic_form(needs_input=False)), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(90, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             default = str(screen.query_one("#wb-crumb", Static).render())
             await pilot.press("f", "f")
-            await _settle(pilot)
+            await settle(pilot)
             filtered = str(screen.query_one("#wb-crumb", Static).render())
             await pilot.press("o")
-            await _settle(pilot)
+            await settle(pilot)
             sorted_crumb = str(screen.query_one("#wb-crumb", Static).render())
             order = screen._sort
             app.exit(None)

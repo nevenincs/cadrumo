@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b36e175d7645a0d5fa30e86b11ea9ac1e2eccd3062bf2f5a62e203cc01b8c3e'
+body_hash: 'sha256:080f67fb06c12c468c86abda1b11e5bb75401390ba38a0dd452266d5b2d32d49'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -502,6 +502,19 @@ related:
 - `S26` `verify:` `lint-imports` -> `pass`
 - `S26` `verify:` `old-code mutation run of the 12 new test cases` -> `fail`
 - `S26` `by:` `vaultspec-high-executor`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_common.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_review.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_records.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/own_accounts.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_review.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_own_accounts.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_lost_session_outcome_is_unknown.py`
+- `S27` `verify:` `pytest test_categorisation_review test_own_accounts test_lost_session_outcome_is_unknown test_writes_hold_the_workspace test_evidence_files_records 95 tests` -> `pass`
+- `S27` `verify:` `ruff check and format on touched files` -> `pass`
+- `S27` `verify:` `lint-imports 30 contracts` -> `pass`
+- `S27` `verify:` `HEAD modules via old-code plugin fail 7 of 8 new cases` -> `pass`
+- `S27` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -539,3 +552,4 @@ related:
 - `S22` Re-review fix: every failure after acceptance judged once; unknown unless a NONE receipt was observed or the contract permits no UPDATED/PARTIAL; lost connection keeps expired vs unavailable; review and evidence add re-read on unknown. The old-code run is the expected detection proof (21 new runtime cases, 65 changed cases, 2 screen tests fail on HEAD code). Doors outside RuntimeProfileSession (auth, modelo create/lifecycle, `aeat_sync` handoff) are out of plan scope
 - `S22` Second re-review fix: activity-asset correlation inside settle, writes withheld until a re-read; session-lost unknown outcomes worded unknown on every write screen via `unknown_outcome_of;` categorisation result read judged inside the shared check; evidence add waits for a successful re-read; `_confirm` always clears reading. Start-denial recommendation dropped on evidence (see audit correction). The old-code run is the expected detection proof
 - `S26` Third re-review fixes: own-account write unstaged and worded saved before a separate re-read; categorisation modal None after Apply is unknown with the operation id until a re-read started after it lands; record and transaction edits use `unknown_outcome_of;` evidence Add released only by a load started after the unknown outcome; asset hold bound to its asset; refused records load shown; a failed re-read after an unknown outcome no longer says saved (new key `tui.ledger.flow.refresh_failed_unknown,` 4 locales). Not-found release of the asset hold deferred: needs a typed inspect refusal. The old-code run is the expected detection proof
+- `S27` `write_outcome_unknown` stays set as a record; `unknown_outcome_unread` derives the wording from re-read counters, because `test_writes_hold_the_workspace` asserts the flag survives a re-read

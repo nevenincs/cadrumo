@@ -14,11 +14,10 @@ from pydantic import BaseModel
 
 from cadrumo.core.async_cleanup import close_async_resources
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.windows import WindowsEndpoint
-
-from ..windows_process import WindowsOwnedProcess, WindowsProcessScope
-from .process_support import fixture_arguments, fixture_environment, native_python
+from cadrumo_client.transport.windows_process import WindowsOwnedProcess, WindowsProcessScope
 
 _MODULE = "cadrumo_runtime.adapters.tests.windows_inheritance_fixture"
 

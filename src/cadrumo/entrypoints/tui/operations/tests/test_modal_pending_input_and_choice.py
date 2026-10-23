@@ -8,7 +8,6 @@ leaves the person the two controls that still act on it: cancel and detach.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from datetime import UTC, datetime
 from functools import lru_cache
 from typing import Literal
@@ -16,7 +15,6 @@ from typing import Literal
 import pytest
 from pydantic import BaseModel
 from textual.app import App
-from textual.pilot import Pilot
 from textual.widgets import Button, Static
 
 from .....application.operations.frontend_contracts import (
@@ -39,6 +37,7 @@ from .....application.operations.registry import OperationPublicContractSetV1
 from .....core.i18n.render import tr
 from .....core.operations import OperationEffect, OperationInteractionKind, OperationLifecycle
 from ....operation_composition import build_production_operation_registry
+from ...tests.settling import settle_until
 from ..controller_port import OperationResponseControlPort
 from ..interactions import (
     OperationModalUnsupportedInteractionV1,
@@ -175,12 +174,6 @@ class _Host(App[None]):
         self.run_worker(self._present())
 
 
-async def _until(pilot: Pilot[None], predicate: Callable[[], bool]) -> None:
-    async with asyncio.timeout(10):
-        while not predicate():
-            await pilot.pause(0.02)
-
-
 @pytest.mark.parametrize(
     ("kind", "kind_key"),
     [
@@ -222,7 +215,12 @@ def test_the_modal_shows_a_pending_input_and_offers_only_the_controls_that_act_o
         controller = _WaitingController()
         host = _Host(controller)
         async with host.run_test(size=(100, 40)) as pilot:
-            await _until(pilot, lambda: isinstance(host.screen, OperationModal) and host.screen._view_model is not None)
+            await settle_until(
+                pilot,
+                lambda: isinstance(host.screen, OperationModal) and host.screen._view_model is not None,
+                "the modal to show the operation",
+                workers=False,
+            )
             modal = host.screen
             assert isinstance(modal, OperationModal)
             shown = str(modal.query_one("#operation-modal-review", Static).content)
@@ -236,7 +234,7 @@ def test_the_modal_shows_a_pending_input_and_offers_only_the_controls_that_act_o
             assert controller.review_reads == 0
             assert controller.control_bindings == 0
             await pilot.click("#btn-operation-detach")
-            await _until(pilot, host.closed.is_set)
+            await settle_until(pilot, host.closed.is_set, "the modal to close", workers=False)
         assert controller.detached_at == 4
         assert host.outcome == OperationModalDetachedOutcomeV1(operation_id=_OPERATION_ID, revision=4)
 

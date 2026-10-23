@@ -79,6 +79,7 @@ from cadrumo.entrypoints.tui.modelo.workbench.factory import InstalledModeloWork
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1, TuiScreenContextV1
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo.entrypoints.workbench_generation_composition import compose_secure_workbench_generation_provider
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
@@ -692,9 +693,12 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
 
                     async def inspect_root(pilot: Pilot[object]) -> None:
                         app = _require_runtime_app(pilot.app)
-                        async with asyncio.timeout(90):
-                            while app.account_session is None:
-                                await pilot.pause(0.05)
+                        await settle_until(
+                            pilot,
+                            lambda: app.account_session is not None,
+                            "the account session to be published",
+                            workers=False,
+                        )
                         assert app.account_session.profile_label == "Enrollment tests"
                         assert (
                             app.destination_catalogue.resolve("workbench.profile").admission.state
@@ -839,14 +843,16 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
             assert current_active_bucket_session() is None
             if isinstance(app, CadrumoTuiApp):
                 root_app = _require_runtime_app(pilot.app)
+
+                def session_published() -> bool:
+                    assert root_app._home_refresh_refusal_code is None, (
+                        f"root_refusal={root_app._home_refresh_refusal_code}, reads={reads!r}"
+                    )
+                    return root_app.account_session is not None
+
                 try:
-                    async with asyncio.timeout(90):
-                        while root_app.account_session is None:
-                            assert root_app._home_refresh_refusal_code is None, (
-                                f"root_refusal={root_app._home_refresh_refusal_code}, reads={reads!r}"
-                            )
-                            await pilot.pause(0.05)
-                except TimeoutError as error:
+                    await settle_until(pilot, session_published, "the account session to be published", workers=False)
+                except AssertionError as error:
                     error.add_note(f"Initial root reads: {reads!r}")
                     raise
                 assert root_app.account_session.profile_label == "Enrollment tests"
@@ -855,9 +861,12 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
                     is WorkbenchDestinationAdmissionState.AVAILABLE
                 )
                 assert not hasattr(root_app, "services")
-                async with asyncio.timeout(30):
-                    while not isinstance(root_app.screen, ProfileManagerScreen):
-                        await pilot.pause(0.05)
+                await settle_until(
+                    pilot,
+                    lambda: isinstance(root_app.screen, ProfileManagerScreen),
+                    "the profile manager to open",
+                    workers=False,
+                )
                 assert not any(read["phase"] == "generation" for read in reads)
                 await launched_session(kind=SessionKind.HUMAN)
                 if "root-change-user" not in stages:
@@ -865,17 +874,20 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
                     root_app.run_account_action(AccountActionV1.CHANGE_USER)
                 else:
                     root_app.screen.dismiss()
-                    async with asyncio.timeout(90):
-                        while not isinstance(root_app.screen, HomeScreen):
-                            await pilot.pause(0.05)
+                    await settle_until(
+                        pilot, lambda: isinstance(root_app.screen, HomeScreen), "the home screen to open", workers=False
+                    )
                     assert any(read["phase"] == "generation" and read["state"] == "completed" for read in reads)
                     stages.append("root-close")
                     root_app.exit()
                 return
             if isinstance(app, RuntimeRestrictedSessionApp):
-                async with asyncio.timeout(30):
-                    while str(profile_id) not in str(app.query_one("#restricted-profile", Static).render()):
-                        await pilot.pause(0.05)
+                await settle_until(
+                    pilot,
+                    lambda: str(profile_id) in str(app.query_one("#restricted-profile", Static).render()),
+                    "the restricted session to show the profile",
+                    workers=False,
+                )
                 assert not hasattr(app, "services")
                 await launched_session(kind=SessionKind.API_KEY)
                 stages.append("restricted-change-user")
@@ -887,13 +899,18 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
             screen = pilot.app.screen
             assert isinstance(screen, RuntimeLoginScreen)
             submit = screen.query_one("#runtime-login-submit", Button)
-            async with asyncio.timeout(90):
-                while (
-                    (screen._resume_preselected is not None and screen._worker is None)
-                    or (screen._worker is not None and not screen._worker.is_finished)
-                    or submit.disabled
-                ):
-                    await pilot.pause(0.05)
+            await settle_until(
+                pilot,
+                lambda: (
+                    not (
+                        (screen._resume_preselected is not None and screen._worker is None)
+                        or (screen._worker is not None and not screen._worker.is_finished)
+                        or submit.disabled
+                    )
+                ),
+                "the sign-in screen to finish loading and enable submit",
+                workers=False,
+            )
             method = (
                 RuntimeLoginMethod.API_KEY
                 if "root-change-user" in stages and "restricted-change-user" not in stages
@@ -902,7 +919,7 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
             stages.append(f"login-{method.value}")
             selected = cast("Select[RuntimeLoginMethod]", screen.query_one("#runtime-login-method", Select))
             selected.value = method
-            await pilot.pause()
+            await settle(pilot, workers=False)
             credential = screen.query_one("#runtime-login-credential", Input)
             assert credential.password
             credential.value = (

@@ -26,6 +26,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext, SessionKind
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.credentials import open_installed_credential_client
@@ -127,7 +128,7 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
             assert isinstance(screen, RuntimeLoginScreen)
             selected = cast("Select[RuntimeLoginMethod]", screen.query_one("#runtime-login-method", Select))
             selected.value = RuntimeLoginMethod.API_REFERENCE
-            await pilot.pause()
+            await settle(pilot)
             credential = screen.query_one("#runtime-login-credential", Input)
             reference = screen.query_one("#runtime-login-reference", Input)
             assert credential.password and credential.value == "" and not credential.display
@@ -139,9 +140,12 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
         async def drive_restricted(pilot: Pilot[object]) -> None:
             app = pilot.app
             assert isinstance(app, RuntimeRestrictedSessionApp)
-            async with asyncio.timeout(15):
-                while str(profile_id) not in str(app.query_one("#restricted-profile", Static).render()):
-                    await pilot.pause(0.05)
+            await settle_until(
+                pilot,
+                lambda: str(profile_id) in str(app.query_one("#restricted-profile", Static).render()),
+                "the restricted session to show the profile",
+                workers=False,
+            )
             assert not hasattr(app, "services")
             close = app.query_one("#restricted-close", Button)
             close.scroll_visible(animate=False)
@@ -152,7 +156,7 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
             assert isinstance(screen, RuntimeLoginScreen)
             selected = cast("Select[RuntimeLoginMethod]", screen.query_one("#runtime-login-method", Select))
             selected.value = RuntimeLoginMethod.API_REFERENCE
-            await pilot.pause()
+            await settle(pilot)
             reference = screen.query_one("#runtime-login-reference", Input)
             credential = screen.query_one("#runtime-login-credential", Input)
             reference.value = "not-a-uuid"
@@ -164,9 +168,7 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
                 reference.value = str(approved.credential_reference)
                 screen.action_submit()
                 assert reference.value == ""
-                async with asyncio.timeout(15):
-                    while screen._busy:
-                        await pilot.pause(0.05)
+                await settle_until(pilot, lambda: not screen._busy, "the reference login to finish", workers=False)
                 assert reference.value == "" and credential.value == ""
                 assert opened_references == [
                     (profile_id, approved.credential_reference),

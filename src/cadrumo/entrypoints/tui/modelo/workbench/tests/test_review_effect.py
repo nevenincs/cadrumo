@@ -27,6 +27,7 @@ from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
 from ......core.period import Period
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..review import REVIEW_EFFECTS, EditReviewScreen, ReviewDecision, change_line
 from ..session import StagedChange, WorkbenchEditSession
 from .workbench_fixture import status_line_of
@@ -112,7 +113,7 @@ def test_no_effect_calls_a_value_imported(language: OutputLanguage) -> None:
 async def _review_lines(screen: EditReviewScreen) -> list[str]:
     app: ScreenHostApp[ReviewDecision] = ScreenHostApp(screen)
     async with app.run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         return [str(item.render()) for item in screen.query(Static) if item.id is not None]
 
 

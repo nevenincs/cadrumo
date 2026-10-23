@@ -4,7 +4,6 @@
     align-items: center;
     flex: 0 0 var(--titlebar-height);
     min-width: 0;
-    border-bottom: var(--hairline) solid var(--border);
     background: var(--chrome);
     user-select: none;
   }
@@ -122,7 +121,7 @@
   }
   .window-controls .window-control {
     width: var(--titlebar-height);
-    height: calc(var(--titlebar-height) - var(--hairline));
+    height: var(--titlebar-height);
     border-radius: 0;
     color: var(--foreground);
   }

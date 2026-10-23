@@ -15,7 +15,6 @@ import re
 import pytest
 from rich.console import Console
 from rich.text import Text
-from textual.pilot import Pilot
 from textual.widgets import Static
 
 from ......application.modelo.work_form import build_modelo_work_form
@@ -35,6 +34,7 @@ from ......domain.calculations.registry.authority import PinnedAuthorityOperatio
 from ......domain.modelos.codes import ModeloCode
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..review import UnattributedBoxes, unattributed_words
 from ..screen import ModeloWorkbenchScreen
 from ..sources import BOX_LIST_LINES
@@ -43,11 +43,6 @@ from .workbench_fixture import FakeActions, FakeReader
 
 _CONSOLE = Console(width=200)
 _SECTION_COUNT = re.compile(r"\((\d+)\)")
-
-
-async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _boxes(count: int, sections: tuple[str, ...] = ("Section",)) -> UnattributedBoxes:
@@ -132,9 +127,9 @@ async def test_a_modelo_100_whose_values_nobody_typed_names_sections_with_counts
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot, 8)
+            await settle(pilot)
             await pilot.press("c")
-            await _settle(pilot)
+            await settle(pilot)
             dialog = app.screen
             message = (
                 str(dialog.query_one("#confirm-message", Static).render()) if isinstance(dialog, ConfirmScreen) else ""

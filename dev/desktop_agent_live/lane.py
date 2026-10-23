@@ -785,7 +785,7 @@ def playwright(entry: str, endpoint: str, results: Path, language: str, argument
 @contextmanager
 def lane_desktop(executable: Path, environment: Mapping[str, str], directory: Path, port: int) -> Generator[Any]:
     """Run the desktop in a kill-on-close Job for the block; the Job is reaped however the block ends."""
-    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+    from cadrumo_client.transport.windows_process import WindowsProcessScope
 
     scope = WindowsProcessScope()
     try:

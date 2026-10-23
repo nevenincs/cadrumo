@@ -2,198 +2,38 @@
 
 from __future__ import annotations
 
-import asyncio
 import re
 from datetime import date
-from decimal import Decimal
 from threading import Event
 
 import pytest
 from textual.widgets import Button, Input, Static
 
-from .....application.actividad_asset.history import ActivityAssetHistoryClaimResult
-from .....application.actividad_asset.operations import ActivityAssetFilingHandoff
 from .....application.calculations.actividad_asset_schedule import vehicle_affectation_verdict
 from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
 from .....core.operations import OperationEffect
-from .....domain.renta.actividad_asset.claims import ClaimProjection
-from .....domain.renta.actividad_asset.election import (
-    AcquiredCondition,
-    ActivityAssetAmortizationElection,
-    AmortizationMethod,
-    DirectEstimationRegime,
-)
 from .....domain.renta.actividad_asset.errors import (
     ActividadAssetIncompleteError,
     ActividadAssetValidationError,
     VehicleAffectationRecovery,
 )
-from .....domain.renta.actividad_asset.lifecycle import (
-    AcquisitionLineageReference,
-    AcquisitionShape,
-    ActivityAssetBasis,
-    ActivityAssetRevision,
-    AssetBasisStage,
-    AssetKind,
-    OpeningAmortizationHistory,
-    OpeningHistoryStatus,
-)
-from .....domain.renta.actividad_asset.schedule import (
-    AssetScheduleHistory,
-    ScheduleAuthority,
-    ScheduledAmortizationCharge,
-    schedule_charge,
-)
+from .....domain.renta.actividad_asset.schedule import AssetScheduleHistory
 from ...account import AccountSessionExpiredError
 from ...components.host import ScreenHostApp
 from ...operations.outcome import OperationOutcomeUnknownError, SessionExpiredOutcomeUnknownError
+from ...tests.settling import SettleTimeoutError, settle, settle_until
 from ..actividad_asset import ActivityAssetScreen
 from ..controller import LedgerWorkspaceController
-from ..models_actividad_asset import (
-    ActivityAssetClaimRequestV1,
-    ActivityAssetCorrectionRequestV1,
-    ActivityAssetCreationRequestV1,
-    ActivityAssetFilingRequestV1,
-    ActivityAssetForecastRequestV1,
-    ActivityAssetInspectionV1,
-)
+from ..models_actividad_asset import ActivityAssetCreationRequestV1, ActivityAssetForecastRequestV1
 from ..workspace_injection import LedgerWorkspaceInjection
+from .actividad_asset_fixtures import ActivityAssetActionStub, activity_asset_forecast, activity_asset_revision
 from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def _revision(asset_id: str) -> ActivityAssetRevision:
-    return ActivityAssetRevision(
-        asset_id=asset_id,
-        revision_number=1,
-        acquisition=AcquisitionLineageReference(
-            observed_transaction_id="1" * 64,
-            invoice_evidence_id=f"invoice-{asset_id}",
-            evidence_fingerprint="2" * 64,
-        ),
-        acquisition_shape=AcquisitionShape.PRIMARY_PURCHASE,
-        asset_kind=AssetKind.MATERIAL,
-        basis=ActivityAssetBasis(
-            stage=AssetBasisStage.BUSINESS_ALLOCATED,
-            basis_amount=Decimal("2000"),
-            prior_allocation_provenance="ledger allocation source",
-        ),
-        in_service_date=date(2025, 1, 1),
-        opening_history=OpeningAmortizationHistory(status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("0")),
-        acquired_condition=AcquiredCondition.NEW,
-        amortization=ActivityAssetAmortizationElection(
-            regime=DirectEstimationRegime.SIMPLIFIED,
-            method=AmortizationMethod.LINEAR,
-            authority_class_key="equipo-informacion-software",
-        ),
-    )
-
-
-def _forecast(
-    revision: ActivityAssetRevision,
-    *,
-    covered_from: date,
-    covered_until: date,
-    history: AssetScheduleHistory,
-    requested_free_amount: Decimal | None,
-) -> ScheduledAmortizationCharge:
-    return schedule_charge(
-        revision,
-        ScheduleAuthority(
-            tax_year=covered_from.year,
-            asset_kind=revision.asset_kind,
-            method=revision.amortization.method,
-            election_fingerprint=revision.amortization.fingerprint,
-            annual_rate=Decimal("0.26"),
-            authority_generation="tui-screen-fixture-v1",
-            source_reference="TUI screen fixture only",
-        ),
-        covered_from=covered_from,
-        covered_until=covered_until,
-        history=history,
-        requested_free_amount=requested_free_amount,
-    )
-
-
-class _ActionStub:
-    """Supply typed screen responses without reopening profile services."""
-
-    def __init__(
-        self,
-        revision: ActivityAssetRevision,
-        *,
-        forecast_error: Exception | None = None,
-        create_started: Event | None = None,
-        create_release: Event | None = None,
-        create_error: Exception | None = None,
-        inspect_error: Exception | None = None,
-    ) -> None:
-        self.revision = revision
-        self.forecast_error = forecast_error
-        self.inspect_error = inspect_error
-        self.create_started = create_started
-        self.create_release = create_release
-        self.create_error = create_error
-        self.requests: list[tuple[str, object]] = []
-
-    def create(self, request: ActivityAssetCreationRequestV1) -> ActivityAssetInspectionV1:
-        self.requests.append(("create", request))
-        if self.create_started is not None:
-            self.create_started.set()
-        if self.create_release is not None and not self.create_release.wait(timeout=2.0):
-            raise RuntimeError("test action was not released")
-        if self.create_error is not None:
-            raise self.create_error
-        return ActivityAssetInspectionV1(asset_id=request.revision.asset_id, revisions=(request.revision,))
-
-    def inspect(self, asset_id: str) -> ActivityAssetInspectionV1:
-        self.requests.append(("inspect", asset_id))
-        if self.inspect_error is not None:
-            raise self.inspect_error
-        return ActivityAssetInspectionV1(asset_id=asset_id, revisions=(self.revision,))
-
-    def correct(self, request: ActivityAssetCorrectionRequestV1) -> ActivityAssetInspectionV1:
-        self.requests.append(("correct", request))
-        return ActivityAssetInspectionV1(asset_id=request.revision.asset_id, revisions=(request.revision,))
-
-    def forecast(self, request: ActivityAssetForecastRequestV1) -> ScheduledAmortizationCharge:
-        self.requests.append(("forecast", request))
-        if self.forecast_error is not None:
-            raise self.forecast_error
-        history = AssetScheduleHistory()
-        return _forecast(
-            self.revision,
-            covered_from=request.covered_from,
-            covered_until=request.covered_until,
-            history=history,
-            requested_free_amount=request.requested_free_amount,
-        )
-
-    def record_claim(self, request: ActivityAssetClaimRequestV1) -> ActivityAssetHistoryClaimResult:
-        self.requests.append(("record_claim", request))
-        raise AssertionError("this screen test does not exercise claim execution")
-
-    def filing_handoff(self, request: ActivityAssetFilingRequestV1) -> ActivityAssetFilingHandoff:
-        self.requests.append(("filing_handoff", request))
-        return ActivityAssetFilingHandoff(
-            material_m100=ClaimProjection(
-                target_casilla_id="0113", tax_year=request.tax_year, claim_ids=(), amount=Decimal("0.00")
-            ),
-            intangible_m100=ClaimProjection(
-                target_casilla_id="0114", tax_year=request.tax_year, claim_ids=(), amount=Decimal("0.00")
-            ),
-            material_m130=ClaimProjection(
-                target_casilla_id="0120", tax_year=request.tax_year, claim_ids=(), amount=Decimal("0.00")
-            ),
-            intangible_m130=ClaimProjection(
-                target_casilla_id="0121", tax_year=request.tax_year, claim_ids=(), amount=Decimal("0.00")
-            ),
-        )
-
-
-def _screen(actions: _ActionStub) -> ActivityAssetScreen:
+def _screen(actions: ActivityAssetActionStub) -> ActivityAssetScreen:
     controller = LedgerWorkspaceController(
         ledger_context(),
         ledger_projection(),
@@ -205,36 +45,50 @@ def _screen(actions: _ActionStub) -> ActivityAssetScreen:
 async def _wait_for_screen_result(*, pilot, screen: ActivityAssetScreen, expected_prefix: str) -> str:
     """Wait for one public worker result from the screen."""
     rendered = ""
-    for _ in range(180):
+
+    def published() -> bool:
+        nonlocal rendered
         rendered = str(screen.query_one("#asset-result", Static).render()).strip()
-        if rendered.startswith(expected_prefix):
-            return rendered
-        await pilot.pause()
-    raise AssertionError(f"activity-asset TUI did not publish {expected_prefix!r}; last result: {rendered!r}")
+        return rendered.startswith(expected_prefix)
+
+    try:
+        await settle_until(pilot, published, f"the activity-asset result {expected_prefix!r}")
+    except SettleTimeoutError as late:
+        raise AssertionError(
+            f"activity-asset TUI did not publish {expected_prefix!r}; last result: {rendered!r}"
+        ) from late
+    return rendered
 
 
 async def _wait_for_current_revision_id(*, pilot, screen: ActivityAssetScreen) -> str:
     """Read the screen's public immutable revision identity."""
-    for _ in range(180):
+    match: re.Match[str] | None = None
+
+    def exposed() -> bool:
+        nonlocal match
         rendered = str(screen.query_one("#asset-current-revision-id", Static).render()).strip()
         match = re.fullmatch(r"current_revision_id\t([0-9a-f]{64})", rendered)
-        if match is not None:
-            return str(match.group(1))
-        await pilot.pause()
-    raise AssertionError("activity-asset TUI did not expose the immutable revision identity")
+        return match is not None
+
+    try:
+        await settle_until(pilot, exposed, "the activity-asset revision identity")
+    except SettleTimeoutError as late:
+        raise AssertionError("activity-asset TUI did not expose the immutable revision identity") from late
+    assert match is not None
+    return str(match.group(1))
 
 
 async def _activate(*, pilot, screen: ActivityAssetScreen, selector: str) -> None:
     button = screen.query_one(selector, Button)
     button.focus()
     await pilot.press("enter")
-    await pilot.pause()
+    await settle(pilot)
 
 
 @pytest.mark.asyncio
 async def test_activity_asset_screen_dispatches_typed_requests_and_renders_worker_projection() -> None:
-    revision = _revision("tui-runtime-screen")
-    actions = _ActionStub(revision)
+    revision = activity_asset_revision("tui-runtime-screen")
+    actions = ActivityAssetActionStub(revision)
     screen = _screen(actions)
     app = ScreenHostApp[None](screen)
 
@@ -258,8 +112,8 @@ async def test_activity_asset_screen_dispatches_typed_requests_and_renders_worke
 
 @pytest.mark.asyncio
 async def test_activity_asset_screen_clears_private_facts_when_the_session_is_lost() -> None:
-    revision = _revision("expired-screen")
-    actions = _ActionStub(revision, create_error=AccountSessionExpiredError())
+    revision = activity_asset_revision("expired-screen")
+    actions = ActivityAssetActionStub(revision, create_error=AccountSessionExpiredError())
     screen = _screen(actions)
     app = ScreenHostApp[None](screen)
 
@@ -277,7 +131,7 @@ async def test_activity_asset_screen_clears_private_facts_when_the_session_is_lo
         ):
             screen.query_one(selector, Input).value = "private fixture"
         screen.query_one("#asset-current-revision-id", Static).update(f"current_revision_id\t{revision.revision_id}")
-        screen._last_forecast = _forecast(
+        screen._last_forecast = activity_asset_forecast(
             revision,
             covered_from=date(2025, 1, 1),
             covered_until=date(2026, 1, 1),
@@ -308,9 +162,9 @@ async def test_activity_asset_screen_clears_private_facts_when_the_session_is_lo
 
 @pytest.mark.asyncio
 async def test_an_activity_asset_write_whose_outcome_is_unknown_is_not_reported_as_refused() -> None:
-    revision = _revision("unknown-outcome")
+    revision = activity_asset_revision("unknown-outcome")
     unknown = OperationOutcomeUnknownError(operation_id="f" * 64, effect=OperationEffect.UNKNOWN)
-    actions = _ActionStub(revision, create_error=unknown)
+    actions = ActivityAssetActionStub(revision, create_error=unknown)
     screen = _screen(actions)
     app = ScreenHostApp[None](screen)
 
@@ -325,7 +179,7 @@ async def test_an_activity_asset_write_whose_outcome_is_unknown_is_not_reported_
 
 @pytest.mark.asyncio
 async def test_activity_asset_refusal_retains_the_registered_recovery_presentation() -> None:
-    revision = _revision("undeclared-van")
+    revision = activity_asset_revision("undeclared-van")
     recovery = VehicleAffectationRecovery(
         asset_id=revision.asset_id,
         revision_id=revision.revision_id,
@@ -336,7 +190,7 @@ async def test_activity_asset_refusal_retains_the_registered_recovery_presentati
         precondition_verdict=vehicle_affectation_verdict(recovery),
         vehicle_affectation_recovery=recovery,
     )
-    actions = _ActionStub(revision, forecast_error=refusal)
+    actions = ActivityAssetActionStub(revision, forecast_error=refusal)
     screen = _screen(actions)
     app = ScreenHostApp[None](screen)
 
@@ -356,10 +210,10 @@ async def test_activity_asset_refusal_retains_the_registered_recovery_presentati
 
 @pytest.mark.asyncio
 async def test_activity_asset_screen_clears_old_result_while_action_runs() -> None:
-    revision = _revision("pending-public-result")
+    revision = activity_asset_revision("pending-public-result")
     worker_entered = Event()
     release_worker = Event()
-    actions = _ActionStub(revision, create_started=worker_entered, create_release=release_worker)
+    actions = ActivityAssetActionStub(revision, create_started=worker_entered, create_release=release_worker)
     screen = _screen(actions)
     app = ScreenHostApp[None](screen)
 
@@ -369,19 +223,18 @@ async def test_activity_asset_screen_clears_old_result_while_action_runs() -> No
         button = screen.query_one("#asset-create", Button)
         button.press()
         try:
-            assert await asyncio.to_thread(worker_entered.wait, 1.0)
+            await settle_until(pilot, worker_entered.is_set, "the creation to reach its action", workers=False)
             # The action runs in a worker, so the screen keeps answering while it is out.
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert str(screen.query_one("#asset-result", Static).render()).strip() == "pending\tasset-create"
             assert screen.in_flight
             # A second press while one action is out does not queue another behind it.
             button.press()
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert [name for name, _request in actions.requests] == ["create"]
         finally:
             release_worker.set()
-        await app.workers.wait_for_complete()
-        await pilot.pause()
+        await settle(pilot)
         assert not screen.in_flight
         assert str(screen.query_one("#asset-result", Static).render()).strip() == (
             "created\tpending-public-result\trevisions=1"
@@ -403,8 +256,8 @@ async def test_activity_asset_screen_clears_old_result_while_action_runs() -> No
 async def test_activity_asset_forecast_refuses_the_shapes_the_command_line_refuses(
     covered_from: str, free_amount: str
 ) -> None:
-    revision = _revision("tui-runtime-shape")
-    actions = _ActionStub(revision)
+    revision = activity_asset_revision("tui-runtime-shape")
+    actions = ActivityAssetActionStub(revision)
     screen = _screen(actions)
     app = ScreenHostApp[None](screen)
 
@@ -428,9 +281,9 @@ def _writes_disabled(screen: ActivityAssetScreen) -> list[bool]:
 
 @pytest.mark.asyncio
 async def test_an_activity_asset_write_whose_outcome_is_unknown_is_offered_again_only_over_a_reread_asset() -> None:
-    revision = _revision("unknown-then-reread")
+    revision = activity_asset_revision("unknown-then-reread")
     unknown = OperationOutcomeUnknownError(operation_id="f" * 64, effect=OperationEffect.UPDATED)
-    actions = _ActionStub(revision, create_error=unknown)
+    actions = ActivityAssetActionStub(revision, create_error=unknown)
     screen = _screen(actions)
     app = ScreenHostApp[None](screen)
 
@@ -443,7 +296,6 @@ async def test_an_activity_asset_write_whose_outcome_is_unknown_is_offered_again
         # The asset may already be created: no write is offered over the asset as last read.
         assert _writes_disabled(screen) == [True, True, True]
         await _activate(pilot=pilot, screen=screen, selector="#asset-create")
-        await app.workers.wait_for_complete()
         assert [name for name, _request in actions.requests] == ["create"]
 
         await _activate(pilot=pilot, screen=screen, selector="#asset-inspect")
@@ -459,9 +311,9 @@ async def test_an_activity_asset_write_whose_outcome_is_unknown_is_offered_again
 
 @pytest.mark.asyncio
 async def test_an_activity_asset_write_whose_outcome_is_unknown_is_released_only_by_reading_that_asset() -> None:
-    revision = _revision("held-asset")
+    revision = activity_asset_revision("held-asset")
     unknown = OperationOutcomeUnknownError(operation_id="f" * 64, effect=OperationEffect.UNKNOWN)
-    actions = _ActionStub(revision, create_error=unknown)
+    actions = ActivityAssetActionStub(revision, create_error=unknown)
     screen = _screen(actions)
     app = ScreenHostApp[None](screen)
 
@@ -488,9 +340,9 @@ async def test_an_activity_asset_write_whose_outcome_is_unknown_is_released_only
 
 @pytest.mark.asyncio
 async def test_an_activity_asset_write_whose_outcome_is_unknown_stays_withheld_when_the_reread_is_refused() -> None:
-    revision = _revision("unknown-reread-refused")
+    revision = activity_asset_revision("unknown-reread-refused")
     unknown = OperationOutcomeUnknownError(operation_id="f" * 64, effect=OperationEffect.UNKNOWN)
-    actions = _ActionStub(
+    actions = ActivityAssetActionStub(
         revision,
         create_error=unknown,
         inspect_error=ActividadAssetValidationError("activity asset could not be read"),
@@ -513,11 +365,11 @@ async def test_an_activity_asset_write_whose_outcome_is_unknown_stays_withheld_w
 async def test_an_activity_asset_write_whose_session_is_lost_with_its_outcome_unknown_is_not_reported_as_refused() -> (
     None
 ):
-    revision = _revision("lost-unknown")
+    revision = activity_asset_revision("lost-unknown")
     lost = SessionExpiredOutcomeUnknownError(
         OperationOutcomeUnknownError(operation_id="e" * 64, effect=OperationEffect.UPDATED)
     )
-    actions = _ActionStub(revision, create_error=lost)
+    actions = ActivityAssetActionStub(revision, create_error=lost)
     screen = _screen(actions)
     app = ScreenHostApp[None](screen)
 

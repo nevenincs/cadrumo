@@ -263,7 +263,7 @@ export function Composer({
 
   return (
     <ComposerSuggestions state={suggestions}>
-      <div className="rounded-xl border bg-card text-card-foreground shadow-raised has-[textarea:focus-visible]:outline-(length:--focus-ring) has-[textarea:focus-visible]:outline-offset-(length:--focus-ring) has-[textarea:focus-visible]:outline-solid">
+      <div className="rounded-xl bg-card text-card-foreground shadow-raised has-[textarea:focus-visible]:outline-(length:--focus-ring) has-[textarea:focus-visible]:outline-offset-(length:--focus-ring) has-[textarea:focus-visible]:outline-solid">
         <textarea
           ref={field}
           rows={1}

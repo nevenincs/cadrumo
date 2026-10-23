@@ -8,6 +8,7 @@ import pytest
 from textual.app import App, ComposeResult
 from textual.widgets import LoadingIndicator
 
+from ...tests.settling import settle
 from ..status import PinnedStatusBar
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -30,19 +31,19 @@ async def test_status_bar_spinner_is_visible_only_while_the_tone_is_progress() -
         assert not spinner.display, "an idle bar must not show a spinner"
 
         bar.show_progress("Working")
-        await pilot.pause()
+        await settle(pilot)
         assert spinner.display, "the progress tone must reveal the spinner"
 
         bar.show_success("Done")
-        await pilot.pause()
+        await settle(pilot)
         assert not spinner.display, "a final outcome tone must hide the spinner"
 
         bar.show_warning("Careful")
-        await pilot.pause()
+        await settle(pilot)
         assert not spinner.display
 
         bar.show_error("Failed")
-        await pilot.pause()
+        await settle(pilot)
         assert not spinner.display
 
 
@@ -53,13 +54,13 @@ async def test_status_bar_spinner_refreshes_only_while_the_tone_is_progress() ->
     async with app.run_test(size=(80, 24)) as pilot:
         bar = app.query_one("#status", PinnedStatusBar)
         spinner = bar.query_one(LoadingIndicator)
-        await pilot.pause()
+        await settle(pilot)
         assert spinner.auto_refresh is None, "an idle bar must schedule no spinner frames"
 
         bar.show_progress("Working")
-        await pilot.pause()
+        await settle(pilot)
         assert spinner.auto_refresh is not None, "progress must animate the spinner"
 
         bar.show_success("Done")
-        await pilot.pause()
+        await settle(pilot)
         assert spinner.auto_refresh is None, "an outcome must stop the spinner's frames"

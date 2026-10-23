@@ -26,6 +26,7 @@ from .....application.prorrata_register.projection_contracts import (
 )
 from .....core.config import override_settings
 from .....core.i18n.render import tr
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..registers_presentation import REGISTER_PAGE_SIZE
 from ..registers_prorrata import (
@@ -38,8 +39,7 @@ from ..registers_prorrata import (
 )
 from ..workspace_injection import LedgerWorkspaceInjection
 from .registers_fixtures import REGISTERS_PROFILE_ID, MemoryProrrataRegisterDoor, synthetic_prorrata_entry
-from .test_ledger_selection_journey import _WorkspaceHostApp
-from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -51,15 +51,9 @@ def _screen(door: MemoryProrrataRegisterDoor) -> LedgerProrrataRegisterScreen:
     return LedgerProrrataRegisterScreen(controller, cast(LedgerProrrataRegisterDoorV1, door))
 
 
-async def _settle(pilot: Pilot[None]) -> None:
-    await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
-
-
 async def _press(pilot: Pilot[None], screen: LedgerProrrataRegisterScreen, button_id: str) -> None:
     screen.query_one(f"#{button_id}", Button).press()
-    await _settle(pilot)
+    await settle(pilot)
 
 
 def _text(screen: LedgerProrrataRegisterScreen, selector: str) -> str:
@@ -73,7 +67,7 @@ def _keys(screen: LedgerProrrataRegisterScreen, table_id: str) -> list[str]:
 
 async def _choose_action(pilot: Pilot[None], screen: LedgerProrrataRegisterScreen, action: str) -> None:
     cast("Select[str]", screen.query_one("#prorrata-action", Select)).value = action
-    await pilot.pause()
+    await settle(pilot)
 
 
 def _fill(screen: LedgerProrrataRegisterScreen, **values: str) -> None:
@@ -89,8 +83,8 @@ async def test_the_register_lists_entries_and_a_confirmed_election_shows_in_the_
     )
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             assert door.requests == [ProrrataListRequest(profile_id=REGISTERS_PROFILE_ID)]
             assert _keys(screen, "prorrata-entries") == ["2024|", "2025|S1"]
             assert _keys(screen, "prorrata-sectors") == ["S1"]
@@ -135,8 +129,8 @@ async def test_an_election_the_register_refuses_shows_its_registered_refusal_and
     )
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             await _choose_action(pilot, screen, "elect_especial")
             _fill(screen, ejercicio="2026", percentage="60")
             await _press(pilot, screen, "register-review")
@@ -164,8 +158,8 @@ async def test_seed_findings_and_source_are_shown_as_the_operation_reported_them
     door = MemoryProrrataRegisterDoor()
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             assert _text(screen, "#ledger-flow-status") == tr("tui.ledger.registers.prorrata.empty")
             assert _keys(screen, "prorrata-entries") == []
             await _choose_action(pilot, screen, "seed")
@@ -227,8 +221,8 @@ async def test_each_change_submits_its_own_typed_request(action: str, values: di
     door = MemoryProrrataRegisterDoor(settled_definitive="75")
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             await _choose_action(pilot, screen, action)
             _fill(screen, **values)
             await _press(pilot, screen, "register-review")
@@ -272,8 +266,8 @@ async def test_an_incomplete_or_ambiguous_form_is_refused_before_anything_is_sen
     screen = _screen(door)
     key, field, value = message
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             await _choose_action(pilot, screen, action)
             _fill(screen, **values)
             await _press(pilot, screen, "register-review")
@@ -289,13 +283,13 @@ async def test_choosing_an_entry_prefills_the_election_from_it() -> None:
     door = MemoryProrrataRegisterDoor(entries=(entry,))
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             table = screen.query_one("#prorrata-entries", DataTable)
             table.focus()
             table.move_cursor(row=0)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             assert screen.selected_key == prorrata_entry_key(2025, "S1")
             assert screen.query_one("#prorrata-ejercicio", Input).value == "2025"
             assert screen.query_one("#prorrata-sector", Input).value == "S1"
@@ -316,8 +310,8 @@ async def test_the_register_holds_one_page_of_a_thousand_entries_and_pages_both_
     door = MemoryProrrataRegisterDoor(entries=entries)
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             table = screen.query_one("#prorrata-entries", DataTable)
             assert REGISTER_PAGE_SIZE <= 200
             assert table.row_count == REGISTER_PAGE_SIZE
@@ -344,8 +338,8 @@ async def test_the_screen_discards_register_facts_when_the_session_is_lost() -> 
     door = MemoryProrrataRegisterDoor(entries=(synthetic_prorrata_entry(2025),))
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             _fill(screen, ejercicio="2026", percentage="80")
             await _press(pilot, screen, "register-review")
             door.expired = True

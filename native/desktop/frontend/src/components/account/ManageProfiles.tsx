@@ -261,7 +261,7 @@ export function ManageProfiles({
                 {list.profiles.map((profile) => (
                   <li
                     key={profile.name}
-                    className="flex min-w-0 items-center justify-between gap-3 rounded-md border p-3"
+                    className="flex min-w-0 items-center justify-between gap-3 rounded-md bg-accent p-3"
                   >
                     <span className="min-w-0 flex-1 wrap-anywhere">
                       {profile.name}

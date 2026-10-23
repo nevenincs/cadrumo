@@ -15,6 +15,7 @@ from textual.widgets import Input
 from textual.worker import WorkerFailed
 
 from .....core.errors.error_codes import ErrorCategory, build_error_envelope, get_registered_error_code
+from ...tests.settling import settle
 from ..host import ScreenHostApp
 from ..quiet_app import QuietApp, TuiRunFailedError
 from ..status import ProgressLine
@@ -44,13 +45,13 @@ async def test_a_focused_input_in_a_cadrumo_app_does_not_repaint_while_idle() ->
     async with app.run_test(size=(40, 5)) as pilot:
         field = app.query_one("#search", _CountedInput)
         field.focus()
-        await pilot.pause()
+        await settle(pilot)
         assert app.focused is field
         assert field.cursor_blink is False
         settled = field.renders
         # Well past two half-second blink periods.
         await asyncio.sleep(1.3)
-        await pilot.pause()
+        await settle(pilot)
         assert field.renders == settled, "a focused cursor kept repainting the idle screen"
 
 
@@ -75,14 +76,14 @@ async def test_a_progress_line_repaints_only_when_its_progress_changes() -> None
     async with app.run_test(size=(40, 3)) as pilot:
         line = app.query_one("#progress", _CountedLine)
         line.update(total=4, progress=1)
-        await pilot.pause()
+        await settle(pilot)
         settled = line.renders
         # Past the one-second interval Textual's ProgressBar re-renders on.
         await asyncio.sleep(1.3)
-        await pilot.pause()
+        await settle(pilot)
         assert line.renders == settled, "an unchanged progress line repainted while idle"
         line.update(total=4, progress=2)
-        await pilot.pause()
+        await settle(pilot)
         assert line.renders > settled
         assert (line.progress, line.total) == (2, 4)
 
@@ -100,14 +101,14 @@ async def test_a_screen_run_as_its_own_process_is_as_quiet_as_the_workbench() ->
     if sys.platform == "win32":
         assert host.driver_class.__name__ == "QuietWindowsDriver"
     async with host.run_test(size=(40, 5)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         field = host.screen.query_one("#field", _CountedInput)
         field.focus()
-        await pilot.pause()
+        await settle(pilot)
         assert field.cursor_blink is False
         settled = field.renders
         await asyncio.sleep(1.3)
-        await pilot.pause()
+        await settle(pilot)
         assert field.renders == settled, "a hosted screen's cursor kept repainting the idle screen"
 
 

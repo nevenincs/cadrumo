@@ -415,11 +415,11 @@ set shell := ["sh", "-c"]
 
 [group('check')]
 check-a:
-    @uv run --no-sync python -m dev.quality.a --strict
+    @uv run --no-sync python -m fixture_gates.check_a --strict
 
 [group('audit')]
 audit-b *ARGS:
-    @uv run --no-sync python -m dev.audit.b {{ARGS}}
+    @uv run --no-sync python -m fixture_gates.audit_b {{ARGS}}
 """
 
 _FIXTURE_DASHBOARD: Final[str] = """\
@@ -520,6 +520,6 @@ def test_the_recipe_comparison_catches_a_drifted_argument(tmp_path: Path) -> Non
     """Detector teeth for the suite-versus-recipe comparison: one extra recipe flag is drift."""
     recipes = _recipe_commands(_fixture_justfile(tmp_path))
 
-    assert recipes == {"check-a": ["dev.quality.a", "--strict"]}
-    assert _drifted_rows((("check-a", (sys.executable, "-m", "dev.quality.a")),), recipes) == ["check-a"]
-    assert _drifted_rows((("check-a", (sys.executable, "-m", "dev.quality.a", "--strict")),), recipes) == []
+    assert recipes == {"check-a": ["fixture_gates.check_a", "--strict"]}
+    assert _drifted_rows((("check-a", (sys.executable, "-m", "fixture_gates.check_a")),), recipes) == ["check-a"]
+    assert _drifted_rows((("check-a", (sys.executable, "-m", "fixture_gates.check_a", "--strict")),), recipes) == []

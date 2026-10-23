@@ -73,9 +73,6 @@ class LiveNodeRegistrationMetadata:
 
     path: tuple[str, ...]
     kind: CommandNodeKind
-    loader_owner: str | None
-    handler_owner: str
-    source_sha256: str | None
     policy: CommandPolicyMetadata | None
 
 
@@ -200,22 +197,14 @@ def command_registration_projection(
     return _command_registration_projection(output_language(), graph)
 
 
-def _handler_owner(spec: CommandSpec) -> str | None:
-    """Return the authored handler identity when a node has executable ownership."""
-    if spec.handler is None or spec.handler.target is None:
-        return None
-    return spec.handler.target.identity
-
-
 def _live_node_registration_metadata(
     node: CommandSpecNode,
     *,
     path: tuple[str, ...],
     policy: CommandPolicyMetadata,
-    owner: str | None,
 ) -> LiveNodeRegistrationMetadata:
     """Project one graph node into the live-node registration inventory."""
-    return LiveNodeRegistrationMetadata(path, node.spec.kind, None, owner or "<metadata>", None, policy)
+    return LiveNodeRegistrationMetadata(path, node.spec.kind, policy)
 
 
 def _target_command_registration_metadata(
@@ -224,7 +213,6 @@ def _target_command_registration_metadata(
     language: str,
     path: tuple[str, ...],
     policy: CommandPolicyMetadata,
-    owner: str | None,
     resolver: TargetResolver,
 ) -> CommandRegistrationMetadata | None:
     """Project a target result schema into :class:`CommandRegistrationMetadata`, if exposed."""
@@ -238,15 +226,11 @@ def _target_command_registration_metadata(
     return CommandRegistrationMetadata(
         schema.identity,
         schema.target.qualname,
-        schema.target.identity,
-        "",
         path,
         ((language, parameters),),
         ((language, tr(spec.help_key.value)),),
         spec.invocation.hidden,
         policy,
-        owner,
-        None,
         machine_secret_payload_metadata(spec),
         profile_authentication_posture(node),
     )
@@ -296,22 +280,13 @@ def _command_registration_projection(
     for node in graph.nodes():
         spec = node.spec
         path = _operator_path(node.path, root_segment=root_segment)
-        owner = _handler_owner(spec)
         policy = _policy(spec)
-        nodes.append(
-            _live_node_registration_metadata(
-                node,
-                path=path,
-                policy=policy,
-                owner=owner,
-            )
-        )
+        nodes.append(_live_node_registration_metadata(node, path=path, policy=policy))
         command = _target_command_registration_metadata(
             node,
             language=language,
             path=path,
             policy=policy,
-            owner=owner,
             resolver=graph.resolver,
         )
         if command is not None:
@@ -341,7 +316,6 @@ def command_registration_for_node(
         language=output_language(),
         path=_operator_path(node.path, root_segment=graph.root().token),
         policy=_policy(spec),
-        owner=_handler_owner(spec),
         resolver=graph.resolver,
     )
 

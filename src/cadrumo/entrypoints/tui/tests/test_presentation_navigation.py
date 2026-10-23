@@ -28,7 +28,8 @@ from ..navigation import (
 )
 from ..presentation import PROFILE_AEAT_AUTH_FOCUS, opens_aeat_auth, presentation_target
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
-from .test_app import _account_factories, _settle
+from .settling import settle
+from .test_app import _account_factories
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -119,11 +120,11 @@ async def test_a_requested_page_opens_with_its_focus_and_releases_the_subscripti
     subscription = _Subscription()
     app = _app(contexts, subscription)
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         assert isinstance(app.screen, HomeScreen)
 
         await subscription.deliver("declarations")
-        await _settle(app, pilot)
+        await settle(pilot)
         assert isinstance(app.screen, _Destination)
         assert app.screen.context.destination == "workbench.declarations"
         assert app.screen.context.focus is not None
@@ -131,14 +132,14 @@ async def test_a_requested_page_opens_with_its_focus_and_releases_the_subscripti
 
         # A second request replaces the page the first one opened.
         await subscription.deliver("aeat_auth")
-        await _settle(app, pilot)
+        await settle(pilot)
         assert isinstance(app.screen, _Destination)
         assert app.screen.context.destination == "workbench.profile"
         assert opens_aeat_auth(app.screen.context)
         assert len(app.screen_stack) == 2
 
         await subscription.deliver("home")
-        await _settle(app, pilot)
+        await settle(pilot)
         assert isinstance(app.screen, HomeScreen)
     assert subscription.released
 
@@ -149,9 +150,9 @@ async def test_a_page_the_session_cannot_open_is_refused_visibly() -> None:
     subscription = _Subscription()
     app = _app(contexts, subscription, ledger_state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED)
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         await subscription.deliver("ledger")
-        await _settle(app, pilot)
+        await settle(pilot)
         assert isinstance(app.screen, HomeScreen)
         assert not any(context.destination == "workbench.ledger" for context in contexts)
         refusal = app.query_one("#root-navigation-refusal", Static)
@@ -165,21 +166,21 @@ async def test_over_an_open_form_the_request_stands_down_and_keeps_the_form() ->
     app = _app(contexts, subscription)
     form: ModalScreen[None] = ModalScreen()
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         await app.push_screen(form)
-        await pilot.pause()
+        await settle(pilot)
 
         await subscription.deliver("ledger")
-        await _settle(app, pilot)
+        await settle(pilot)
         assert app.screen is form
         assert contexts == []
         refusal = app.query_one("#root-navigation-refusal", Static)
         assert str(refusal.render()) == tr("tui.root.navigation.busy")
 
         form.dismiss(None)
-        await pilot.pause()
+        await settle(pilot)
         await subscription.deliver("ledger")
-        await _settle(app, pilot)
+        await settle(pilot)
         assert isinstance(app.screen, _Destination)
         assert app.screen.context.destination == "workbench.ledger"
         assert str(app.query_one("#root-navigation-refusal", Static).render()) == ""

@@ -18,7 +18,6 @@ from decimal import Decimal
 
 import pytest
 from textual.color import Color
-from textual.pilot import Pilot
 from textual.widgets import Button, Checkbox, Static
 
 from ......application.modelo.work_form_models import (
@@ -32,6 +31,7 @@ from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..bulk_confirm import BulkConfirmScreen
 from ..ports import WorkbenchChangeKind
 from ..session import Displacement, StageRefusal, WorkbenchEditSession
@@ -141,11 +141,6 @@ def test_keeping_an_assumed_value_unchanged_in_the_editor_stages_a_confirmation(
     assert change.value == field.value
 
 
-async def _settle(pilot: Pilot[tuple[ModeloFormField, ...] | None], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
-
-
 @pytest.mark.asyncio
 async def test_bulk_confirm_lists_every_box_and_confirms_nothing_until_ticked() -> None:
     fields = (_assumed("06", "0.00"), _assumed("08", "21.00"))
@@ -153,7 +148,7 @@ async def test_bulk_confirm_lists_every_box_and_confirms_nothing_until_ticked() 
         dialog = BulkConfirmScreen(fields)
         app = ScreenHostApp(dialog)
         async with app.run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             table = dialog.query_one("#bulk-table", Static)
             listed = "\n".join(line.text for line in table.render_lines(table.region.reset_offset))
             count = str(dialog.query_one("#bulk-count", Static).render())
@@ -161,11 +156,11 @@ async def test_bulk_confirm_lists_every_box_and_confirms_nothing_until_ticked() 
             locked = confirm.disabled
             left_out = dialog.query("#bulk-left-out")
             dialog.query_one("#bulk-tick", Checkbox).value = True
-            await _settle(pilot)
+            await settle(pilot)
             unlocked = not confirm.disabled
             regions = [button.region for button in dialog.query(Button)]
             await pilot.click("#bulk-confirm")
-            await _settle(pilot)
+            await settle(pilot)
 
     assert "[06]" in listed
     assert "[08]" in listed
@@ -189,11 +184,11 @@ async def test_bulk_confirm_lists_a_typed_value_and_counts_what_it_leaves_out_by
         dialog = BulkConfirmScreen(fields)
         app = ScreenHostApp(dialog)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             listed = dialog.fields
             note = str(dialog.query_one("#bulk-left-out", Static).render())
             await pilot.press("escape")
-            await _settle(pilot)
+            await settle(pilot)
 
     assert [field.address for field in listed] == [fields[0].address, fields[1].address]
     assert note.splitlines() == [
@@ -209,7 +204,7 @@ async def test_bulk_confirm_says_nothing_is_left_out_that_is_not() -> None:
         dialog = BulkConfirmScreen((_unwritable_assumed(),))
         app = ScreenHostApp(dialog)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             note = str(dialog.query_one("#bulk-left-out", Static).render())
             sourced = "source" in note
             tick_disabled = dialog.query_one("#bulk-tick", Checkbox).disabled
@@ -230,7 +225,7 @@ async def test_bulk_confirm_repeats_the_header_result_line_first_and_titles_in_t
         dialog = BulkConfirmScreen((_assumed(),), status_line=status_line_of(status_line))
         app = ScreenHostApp(dialog)
         async with app.run_test(size=size) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             panel = dialog.query_one("#bulk-panel")
             status_widget = dialog.query_one("#bulk-status", Static)
             shown = str(status_widget.render())
@@ -262,7 +257,7 @@ async def test_bulk_confirm_without_a_result_line_starts_at_its_title() -> None:
         dialog = BulkConfirmScreen((_assumed(),))
         app = ScreenHostApp(dialog)
         async with app.run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             status = dialog.query("#bulk-status")
 
     assert not status

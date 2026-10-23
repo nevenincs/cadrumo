@@ -28,7 +28,7 @@ from cadrumo.entrypoints.tui.installation.destination import InstallationScreen
 from cadrumo.entrypoints.tui.installation.door import InstallationClientOpener
 from cadrumo.entrypoints.tui.installation.texts import act_label, yes_no
 from cadrumo.entrypoints.tui.tests.frame import screen_text
-from cadrumo.tests.async_condition import until
+from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
@@ -82,12 +82,14 @@ def _logged(caplog: pytest.LogCaptureFixture) -> str:
 async def _open(pilot: Pilot[None], area: InstallationScreen, act: InstallationAct) -> InstallationActScreen:
     area.open_act(act)
     # The screen is on the stack before it has composed; wait for its last control.
-    await until(
+    await settle_until(
         pilot,
         lambda: (
             isinstance(pilot.app.screen, InstallationActScreen)
             and bool(pilot.app.screen.query("#installation-act-result"))
         ),
+        "( isinstance(pilot.app.screen, InstallationActScreen) and bool(pilo...",
+        workers=False,
     )
     screen = pilot.app.screen
     assert isinstance(screen, InstallationActScreen)
@@ -96,9 +98,11 @@ async def _open(pilot: Pilot[None], area: InstallationScreen, act: InstallationA
 
 async def _asked(pilot: Pilot[None]) -> ConfirmScreen:
     """Wait for the one confirmation question and return its composed dialog."""
-    await until(
+    await settle_until(
         pilot,
         lambda: isinstance(pilot.app.screen, ConfirmScreen) and bool(pilot.app.screen.query("#btn-confirm-accept")),
+        "isinstance(pilot.app.screen, ConfirmScreen) and bool(pilot.app.scre...",
+        workers=False,
     )
     dialog = pilot.app.screen
     assert isinstance(dialog, ConfirmScreen)
@@ -126,7 +130,9 @@ async def _run(pilot: Pilot[None], screen: InstallationActScreen) -> None:
     """Press Run and wait until that press, and no earlier one, has started an act."""
     before = screen._act_worker
     screen.query_one("#installation-act-run", Button).press()
-    await until(pilot, lambda: screen._act_worker is not before)
+    await settle_until(
+        pilot, lambda: screen._act_worker is not before, "screen._act_worker is not before", workers=False
+    )
 
 
 async def _settled(pilot: Pilot[None], screen: InstallationActScreen) -> None:
@@ -136,7 +142,7 @@ async def _settled(pilot: Pilot[None], screen: InstallationActScreen) -> None:
         worker = screen._act_worker
         return worker is not None and worker.is_finished and not screen._busy
 
-    await until(pilot, done)
+    await settle_until(pilot, done, "done", workers=False)
 
 
 class _GatedOpener:
@@ -160,7 +166,7 @@ async def test_the_area_lists_every_act_of_the_runtime_table_and_opens_the_one_c
     area = InstallationScreen(open_client=_GatedOpener(None))
     app = ScreenHostApp(area)
     async with app.run_test(size=_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = area.query_one("#installation-acts", DataTable)
         listed = {str(row.key.value) for row in table.ordered_rows}
 
@@ -171,10 +177,20 @@ async def test_the_area_lists_every_act_of_the_runtime_table_and_opens_the_one_c
             assert act_label(act) in painted
 
         await pilot.press("enter")
-        await until(pilot, lambda: isinstance(app.screen, InstallationActScreen))
+        await settle_until(
+            pilot,
+            lambda: isinstance(app.screen, InstallationActScreen),
+            "isinstance(app.screen, InstallationActScreen)",
+            workers=False,
+        )
         opened = app.screen
         assert isinstance(opened, InstallationActScreen)
-        await until(pilot, lambda: act_label(area.offered_acts[0]) in screen_text(app, *_SIZE))
+        await settle_until(
+            pilot,
+            lambda: act_label(area.offered_acts[0]) in screen_text(app, *_SIZE),
+            "act_label(area.offered_acts[0]) in screen_text(app, *_SIZE)",
+            workers=False,
+        )
 
 
 @pytest.mark.asyncio
@@ -196,7 +212,7 @@ async def test_a_read_act_runs_at_once_and_shows_its_typed_reply(tmp_path: Path)
             assert "request_id" not in result and "connection_id" not in result
 
             check.action_close()
-            await until(pilot, lambda: app.screen is area)
+            await settle_until(pilot, lambda: app.screen is area, "app.screen is area", workers=False)
             inventory = await _open(pilot, area, InstallationAct.STORAGE_INVENTORY)
             await _settled(pilot, inventory)
             # Its one member is optional, so the read answers as its command does with no argument.
@@ -310,14 +326,16 @@ async def test_archive_import_reads_the_source_first_and_its_passphrase_travels_
             masked.value = _TYPED
             await _run(pilot, importing)
 
-            await asyncio.wait_for(opener.reached.wait(), 10)
+            await asyncio.wait_for(opener.reached.wait(), SETTLE_TIMEOUT_SECONDS)
             held = importing._pending_passphrase
             assert held is not None and bytes(held) == _TYPED.encode()
             assert masked.value == ""
             assert _TYPED not in _shown(app)
             opener.release.set()
 
-            await until(pilot, served.acts.import_reached.is_set)
+            await settle_until(
+                pilot, served.acts.import_reached.is_set, "served.acts.import_reached.is_set", workers=False
+            )
             # The secret frame has been sent, so the buffer it was built from is already empty.
             assert not any(held)
             assert _TYPED not in _shown(app)
@@ -351,7 +369,7 @@ async def test_a_passphrase_is_wiped_when_the_runtime_cannot_be_reached_and_the_
         enrolling.query_one("#installation-passphrase", Input).value = _TYPED
         await _run(pilot, enrolling)
 
-        await asyncio.wait_for(opener.reached.wait(), 10)
+        await asyncio.wait_for(opener.reached.wait(), SETTLE_TIMEOUT_SECONDS)
         held = enrolling._pending_passphrase
         assert held is not None and bytes(held) == _TYPED.encode()
         opener.release.set()
@@ -383,10 +401,12 @@ async def test_an_incomplete_form_names_its_fields_and_sends_nothing(tmp_path: P
             assert served.acts.reclaims == []
 
             reclaim.action_close()
-            await until(pilot, lambda: app.screen is area)
+            await settle_until(pilot, lambda: app.screen is area, "app.screen is area", workers=False)
             importing = await _open(pilot, area, InstallationAct.ARCHIVE_IMPORT)
             importing.query_one("#installation-act-run", Button).press()
-            await until(pilot, lambda: _status(importing).tone == "error")
+            await settle_until(
+                pilot, lambda: _status(importing).tone == "error", "_status(importing).tone == 'error'", workers=False
+            )
             # Without a passphrase nothing is started at all, not even the read of the source.
             assert _status(importing).message == tr("tui.installation.passphrase.required")
             assert importing._act_worker is None
@@ -416,7 +436,7 @@ async def test_a_fault_and_an_unserved_act_are_shown_with_the_runtime_code_and_n
             assert changed == [True]
 
             creating.action_close()
-            await until(pilot, lambda: app.screen is area)
+            await settle_until(pilot, lambda: app.screen is area, "app.screen is area", workers=False)
             report = await _open(pilot, area, InstallationAct.REPAIR_REPORT)
             await _settled(pilot, report)
             assert _status(report).tone == "error"
@@ -493,13 +513,15 @@ async def test_an_act_whose_answer_never_arrived_is_shown_as_unknown_and_its_out
             )
 
             offer.press()
-            await until(
+            await settle_until(
                 pilot,
                 lambda: (
                     isinstance(app.screen, InstallationActScreen)
                     and app.screen is not reset
                     and bool(app.screen.query("#installation-act-result"))
                 ),
+                "( isinstance(app.screen, InstallationActScreen) and app.screen is n...",
+                workers=False,
             )
             status = app.screen
             assert isinstance(status, InstallationActScreen)
@@ -527,7 +549,7 @@ async def test_the_installed_opener_reaches_the_running_runtime_with_no_profile_
                     assert _fact(_result(check), "storage_root") == str(root)
 
                     check.action_close()
-                    await until(pilot, lambda: app.screen is area)
+                    await settle_until(pilot, lambda: app.screen is area, "app.screen is area", workers=False)
                     reclaim = await _open(pilot, area, InstallationAct.STORAGE_RECLAIM)
                     reclaim.query_one("#installation-field-area", Select).value = "logs"
                     await _run(pilot, reclaim)
@@ -544,7 +566,9 @@ async def test_the_installed_opener_reaches_the_running_runtime_with_no_profile_
         app = ScreenHostApp(absent)
         async with app.run_test(size=_SIZE) as pilot:
             check = await _open(pilot, absent, InstallationAct.STORAGE_CHECK)
-            await until(pilot, lambda: _status(check).tone == "error", seconds=40)
+            await settle_until(
+                pilot, lambda: _status(check).tone == "error", "_status(check).tone == 'error'", workers=False
+            )
             assert any(
                 code.value in _status(check).message
                 for code in (RefusalCode.UNAVAILABLE, RefusalCode.DEADLINE_EXCEEDED)

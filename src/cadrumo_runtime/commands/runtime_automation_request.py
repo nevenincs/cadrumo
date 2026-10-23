@@ -28,6 +28,7 @@ from cadrumo_client.commands.secure_input import (
     read_machine_secret_payload,
     select_machine_secret_channel,
 )
+from cadrumo_client.contracts.access_vocabulary import DisclosureCategoryGrant, DisclosurePermission
 from cadrumo_client.contracts.deadline_budget import remaining_budget
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.transport.automation_requester import AutomationRequesterJourney
@@ -116,7 +117,32 @@ def _create_proposal(selection: MachineSecretSelection | None) -> _CreateProposa
     payload = read_machine_secret_payload(AutomationCreateInput, selection=selection)
     supplied = payload.proposal
     del payload
-    return lambda _destination_id: supplied
+    return lambda destination_id: _bound_to_destination(supplied, destination_id)
+
+
+def _bound_to_destination(proposal: EnrollmentProposal, destination_id: UUID) -> EnrollmentProposal:
+    """Name the runtime-minted destination in every disclosure, keeping none the person wrote.
+
+    The runtime mints the destination for the requesting connection, so no
+    person can know it while writing the proposal, and the runtime refuses a
+    disclosure that names any other destination.
+    """
+    scope = proposal.scope
+    bound = scope.model_copy(
+        update={
+            "disclosures": frozenset(
+                DisclosurePermission(
+                    destination_id=destination_id, projection_id=item.projection_id, category=item.category
+                )
+                for item in scope.disclosures
+            ),
+            "disclosure_categories": frozenset(
+                DisclosureCategoryGrant(destination_id=destination_id, category=item.category)
+                for item in scope.disclosure_categories
+            ),
+        }
+    )
+    return proposal.model_copy(update={"scope": bound})
 
 
 def automation_create(

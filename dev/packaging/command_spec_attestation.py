@@ -282,7 +282,12 @@ print(json.dumps({
 """
 
 
-def _projection_digest(value: object) -> str:
+def projection_digest(value: object) -> str:
+    """Return the SHA-256 of ``value`` rendered as canonical sorted, compact JSON.
+
+    Attestation envelopes and their field projections are sealed with this
+    digest, so a consumer re-sealing an edited envelope must use it too.
+    """
     payload = json.dumps(value, sort_keys=True, separators=(",", ":"))
     return sha256_text(payload)
 
@@ -381,7 +386,7 @@ def _validate_attestation_digests(value: dict[str, Any]) -> None:
         raise SystemExit("Python cohort CommandSpec attestation source digest is invalid")
     _validate_attestation_field_digests(value)
     envelope = {key: item for key, item in value.items() if key != "envelope_sha256"}
-    if value["envelope_sha256"] != _projection_digest(envelope):
+    if value["envelope_sha256"] != projection_digest(envelope):
         raise SystemExit("Python cohort CommandSpec attestation envelope digest is invalid")
 
 
@@ -609,14 +614,14 @@ def _command_spec_attestation(
         "root_wheel_sha256": root_wheel_sha256,
         "root_sdist_sha256": root_sdist_sha256,
         "source_archive_sha256": source_archive_sha256,
-        "artifact_members_sha256": _projection_digest(artifact_projection),
+        "artifact_members_sha256": projection_digest(artifact_projection),
         "forbidden_artifacts_absent": not _forbidden_command_artifacts(artifact_projection),
         **{
-            f"{field}_sha256": _projection_digest(projection[field])
+            f"{field}_sha256": projection_digest(projection[field])
             for field in ("identities", "locales", "policies", "schemas", "import_budgets", "origins")
         },
     }
-    attestation["envelope_sha256"] = _projection_digest(attestation)
+    attestation["envelope_sha256"] = projection_digest(attestation)
     return _validate_command_spec_attestation(
         attestation,
         expected_source_digest=source_digest,

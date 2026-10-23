@@ -25,6 +25,7 @@ from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
+from ....tests.settling import settle, settle_until
 from ..editor import CasillaEditorPanel, CasillaEditorScreen
 from ..factory import InstalledModeloWorkbench
 from ..screen import ModeloWorkbenchScreen
@@ -52,24 +53,27 @@ def iva(tmp_path_factory: pytest.TempPathFactory) -> Iterator[InstalledModeloWor
 
 
 async def _opened(pilot: Pilot[None], screen: ModeloWorkbenchScreen) -> ModeloWorkForm:
-    for _ in range(200):
-        await pilot.pause()
-        if screen.form is not None:
-            return screen.form
-    raise AssertionError("the workbench never finished reading its declaration")
+    await settle_until(pilot, lambda: screen.form is not None, "the workbench to finish reading its declaration")
+    assert screen.form is not None
+    return screen.form
 
 
 async def _affects(pilot: Pilot[None], box: str) -> str:
     """Open the panel on ``box`` and read its "Affects" answer, once the box's help has been read."""
-    await pilot.press("g", *box, "enter")
-    await pilot.pause()
+    await pilot.press("g")
+    await settle(pilot)
+    await pilot.press(*box, "enter")
+    await settle(pilot)
     await pilot.press("enter")
-    for _ in range(200):
-        await pilot.pause()
+
+    def _said() -> bool:
         panels = list(pilot.app.screen.query(CasillaEditorPanel))
-        if panels and panels[0].query("#editor-affects-text"):
-            return str(panels[0].query_one("#editor-affects-text", Static).render())
-    raise AssertionError(f"the panel on [{box}] never said what it affects")
+        return bool(panels) and bool(panels[0].query("#editor-affects-text"))
+
+    await settle_until(pilot, _said, f"the panel on [{box}] to say what it affects")
+    return str(
+        next(iter(pilot.app.screen.query(CasillaEditorPanel))).query_one("#editor-affects-text", Static).render()
+    )
 
 
 def _label(form: ModeloWorkForm, box: str) -> str:
@@ -124,7 +128,7 @@ async def test_a_303_box_reaches_the_result_and_an_informative_one_says_it_does_
             form = await _opened(pilot, screen)
             general = await _affects(pilot, "66")
             await pilot.press("escape")
-            await pilot.pause()
+            await settle(pilot)
             informative = await _affects(pilot, "59")
             not_result = tr("tui.modelo.workbench.editor.affects.not_result")
             app.exit(None)

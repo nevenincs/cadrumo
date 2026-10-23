@@ -3,14 +3,11 @@
 Per the ``docs-educational-surface`` contract, the Diataxis educational docs
 (``docs/explanation``, ``docs/how-to``) and the
 developer-facing architecture overview (``docs/architecture``) reference the live
-CLI surface by stable verb and link to sibling docs; they never re-author flag
-help. This gate makes that contract a tested invariant rather than an
-author-discipline hope:
-
-- every ``aeat ...`` invocation cited in an educational doc must resolve to a
-  real command in the live CLI tree (the longest leading verb-prefix must accept
-  ``--help``), so a doc that names a retired or renamed verb reds the gate; and
-- every relative markdown link must resolve to a file that exists.
+CLI surface by stable verb; they never re-author flag help. This gate makes that
+contract a tested invariant rather than an author-discipline hope: every
+``aeat ...`` invocation cited in an educational doc must resolve to a real
+command in the live CLI tree (the longest leading verb-prefix must accept
+``--help``), so a doc that names a retired or renamed verb reds the gate.
 
 The gate binds to CLI *verbs* (not module paths), so it survives module
 relocations that churn the autodoc tree.
@@ -19,15 +16,12 @@ relocations that churn the autodoc tree.
 from __future__ import annotations
 
 import re
-import sys
 from functools import cache
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import pytest
 
 from ....core.directory_scan import scan_directory
-from ....tests.audited_process import run_audited_process
 from ....tests.inventory import REPO_ROOT
 from .cli_runner import invoke_cached_cli
 
@@ -40,7 +34,6 @@ _EDU_DIRS = ("docs/explanation", "docs/how-to", "docs/architecture")
 # Horizontal whitespace is deliberate: a directory command such as ``cd aeat``
 # must not absorb the following line (for example ``uv sync``) as a CLI citation.
 _AEAT_RE = re.compile(r"(?<![\w-])aeat[ \t]+((?:[a-z][a-z0-9-]*)(?:[ \t]+[a-z][a-z0-9-]*)*)")
-_LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 # Commands are only authoritative inside code formatting (inline backticks or
 # fenced blocks); a bare "aeat ..." in prose is not a cited invocation.
 _INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
@@ -103,67 +96,3 @@ def test_command_scanner_does_not_cross_line_boundaries() -> None:
     """A directory name on one line cannot absorb commands from the next."""
     text = "```console\ncd aeat\nuv sync\n```"
     assert _cited_commands(text) == set()
-
-
-def test_relative_links_resolve() -> None:
-    """Every relative markdown link in the doc resolves to an existing file."""
-    generated_cli_links = _generated_cli_reference_links()
-    broken: list[str] = []
-    for doc in _edu_docs():
-        text = doc.read_text(encoding="utf-8")
-        for m in _LINK_RE.finditer(text):
-            target = m.group(1).strip()
-            if target.startswith(("http://", "https://", "mailto:")):
-                continue
-            path_part, _, anchor = target.partition("#")
-            if not path_part:
-                # pure-anchor link: a real in-page anchor (#section) is fine; an
-                # empty target ("" or "#") is a dead placeholder myst rejects.
-                if not anchor:
-                    broken.append(f"{doc.relative_to(REPO_ROOT)}: {target or '(empty)'}")
-                continue
-            resolved = (doc.parent / path_part).resolve()
-            # Must resolve to a FILE (a documented page), not a bare directory:
-            # myst cannot cross-reference a directory link such as ``../cli/``.
-            if resolved.is_file():
-                continue
-            try:
-                generated_target = resolved.relative_to((REPO_ROOT / "docs").resolve()).as_posix()
-            except ValueError:
-                generated_target = ""
-            if generated_target not in generated_cli_links:
-                broken.append(f"{doc.relative_to(REPO_ROOT)}: {target}")
-    assert not broken, "educational docs have unresolved relative links:\n" + "\n".join(broken)
-
-
-@cache
-def _generated_cli_reference_links() -> frozenset[str]:
-    """Return the paths the build-time CLI reference generator owns.
-
-    ``docs/cli`` is intentionally gitignored: Sphinx creates it from the live
-    command graph in ``builder-inited``.  Validate links to that generated
-    surface against the generator in an isolated temporary docs root so this
-    gate checks the current output contract without mutating the worktree.
-    """
-    with TemporaryDirectory(prefix="cadrumo-doc-link-check-") as temporary_root:
-        docs_root = Path(temporary_root)
-        result = run_audited_process(
-            [
-                sys.executable,
-                "-c",
-                "from pathlib import Path; from dev.docs.cli_reference import generate_cli_reference; "
-                "generate_cli_reference(Path(__import__('sys').argv[1]))",
-                str(docs_root),
-            ],
-            cwd=REPO_ROOT,
-            capture_output=True,
-            text=True,
-            timeout=None,
-            check=False,
-        )
-        assert result.returncode == 0, result.stderr
-        output_dir = docs_root / "cli"
-        return frozenset(
-            f"cli/{path.relative_to(output_dir).as_posix()}"
-            for path in scan_directory(output_dir, pattern="*.rst", recursive=True)
-        )

@@ -11,8 +11,8 @@ flow by the workspace-hold tests.
 
 from __future__ import annotations
 
-import importlib
 import pkgutil
+import sys
 from collections.abc import Callable, Iterator
 from typing import Final, cast
 
@@ -23,6 +23,7 @@ from textual.widgets import DataTable
 from .....application.ledger.workspace import LedgerWorkspaceArea
 from .....core.config import override_settings
 from ... import ledger as ledger_package
+from ...tests.settling import settle
 from ..actividad_asset import ActivityAssetScreen
 from ..categorisation_common import CategorisationScreen
 from ..categorisation_review import ReviewingCategorisationScreen
@@ -61,7 +62,7 @@ from ..workspace_injection import LedgerWorkspaceInjection
 from ..workspace_presentation import LedgerConfirmationFlowScreen
 from .categorisation_memory_doors import MemoryCategorisationProfile, categorisation_controller
 from .entries_door_fixtures import MemoryEntriesLedger, entries_controller, entry_id
-from .evidence_files_fixtures import MemoryEvidenceFilesStore, settle
+from .evidence_files_fixtures import MemoryEvidenceFilesStore
 from .invoices_fixtures import (
     MemoryInvoiceImportDoor,
     MemoryInvoiceWizardDoor,
@@ -73,10 +74,12 @@ from .invoices_fixtures import transaction_projection as synthetic_transaction
 from .own_account_fixtures import MemoryOwnAccountDoor
 from .registers_fixtures import MemoryCapitalGoodsDoor, MemoryInventoryDoor, MemoryProrrataRegisterDoor
 from .review_door_fixtures import MemoryEvidenceReviewListDoor
-from .test_ledger_flows import _ClassificationDoor, _classify_action, _ImportDoor
+from .test_ledger_flows import _ImportDoor
 from .test_ledger_ingestion_surfaces import _InvoiceDoor
 from .workspace_fixtures import (
     LEDGER_TX_A,
+    ClassificationDoor,
+    ledger_classify_action,
     ledger_controller,
     ledger_evidence_action,
     ledger_focused_context,
@@ -104,11 +107,17 @@ type _Build = Callable[[], LedgerWorkspaceScreen]
 
 
 def _concrete_bodies() -> set[type[LedgerWorkspaceScreen]]:
-    # Recursive, so a body in a future subpackage is walked too; only the tests package is left out.
+    # Subclass discovery sees only loaded modules. Recursive, so a module in a future subpackage is
+    # required too; only the tests package is left out. This file's imports load every module.
     tests_package = f"{ledger_package.__name__}.tests"
-    for module in pkgutil.walk_packages(ledger_package.__path__, prefix=f"{ledger_package.__name__}."):
-        if module.name != tests_package and not module.name.startswith(f"{tests_package}."):
-            importlib.import_module(module.name)
+    unloaded = sorted(
+        module.name
+        for module in pkgutil.walk_packages(ledger_package.__path__, prefix=f"{ledger_package.__name__}.")
+        if module.name != tests_package
+        and not module.name.startswith(f"{tests_package}.")
+        and module.name not in sys.modules
+    )
+    assert not unloaded, f"Records modules this walk never loads, so their bodies escape discovery: {unloaded}"
 
     def walk(cls: type[LedgerWorkspaceScreen]) -> Iterator[type[LedgerWorkspaceScreen]]:
         for subclass in cls.__subclasses__():
@@ -210,8 +219,8 @@ def _builders() -> dict[type[LedgerWorkspaceScreen], _Build]:
             _area_controller(
                 LedgerWorkspaceInjection(
                     review_action=ledger_review_action(),
-                    classify_action=_classify_action(),
-                    classification_submitter=_ClassificationDoor(),
+                    classify_action=ledger_classify_action(),
+                    classification_submitter=ClassificationDoor(),
                 )
             )
         ),

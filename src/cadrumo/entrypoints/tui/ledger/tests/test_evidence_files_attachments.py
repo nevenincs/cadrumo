@@ -12,15 +12,16 @@ from .....application.ledger.attachment_mutation_operation import LedgerAttachRe
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from ...components.dialogs import ConfirmScreen
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..evidence_files_attachments import LedgerEvidenceFilesAttachmentsScreen, parse_identities
 from ..evidence_files_write import LedgerEvidenceFilesWriteScreen
 from ..models import LedgerFlowState
 from ..workspace_injection import LedgerWorkspaceInjection
-from .evidence_files_fixtures import EVIDENCE_FILES_REFUSAL_KEY, MemoryEvidenceFilesStore, press, settle, text_of
-from .test_ledger_selection_journey import _WorkspaceHostApp
+from .evidence_files_fixtures import EVIDENCE_FILES_REFUSAL_KEY, MemoryEvidenceFilesStore, press, text_of
 from .workspace_fixtures import (
     LEDGER_TX_A,
+    WorkspaceHostApp,
     ledger_context,
     ledger_focused_context,
     ledger_projection,
@@ -52,7 +53,7 @@ async def test_with_no_entry_selected_the_tool_says_how_to_choose_one_and_offers
     store = MemoryEvidenceFilesStore()
     store.seed_attachments(1)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store, focused=False)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store, focused=False)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             screen = pilot.app.screen
             assert text_of(screen, "#evidence-files-attachments-entry") == tr(
@@ -70,7 +71,7 @@ async def test_evidence_is_attached_to_and_detached_from_the_selected_entry() ->
     store.seed_attachments(2)
     chosen = sorted(store.attachments)[0]
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             screen = pilot.app.screen
             assert isinstance(screen, LedgerEvidenceFilesAttachmentsScreen)
@@ -126,7 +127,7 @@ async def test_a_detach_cancelled_at_its_dialog_writes_nothing() -> None:
     chosen = next(iter(store.attachments))
     store.transactions[LEDGER_TX_A] = (chosen,)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             pilot.app.screen.query_one("#evidence-files-detach-ids", Input).value = chosen
             await press(pilot, "evidence-files-review-detach")
@@ -145,7 +146,7 @@ async def test_a_detach_cancelled_at_its_dialog_writes_nothing() -> None:
 async def test_the_operation_s_own_validation_refusal_is_shown_and_nothing_is_linked() -> None:
     store = MemoryEvidenceFilesStore()
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             await press(pilot, "evidence-files-review-attach")
             assert text_of(pilot.app.screen, "#ledger-refusal") == tr(
@@ -167,7 +168,7 @@ async def test_a_typed_refusal_of_the_pending_queue_is_shown() -> None:
     store = MemoryEvidenceFilesStore()
     store.refusing.add("attachment_queue")
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(_screen(store)).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             assert text_of(pilot.app.screen, "#ledger-refusal") == tr(EVIDENCE_FILES_REFUSAL_KEY)
 

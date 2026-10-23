@@ -12,25 +12,40 @@ from textual.widgets import DataTable
 from .....application.ledger.workspace import LedgerWorkspaceArea
 from .....core.config import override_settings
 from .....core.i18n.render import tr
+from ...tests.settling import settle
 from ..categorisation_common import CategorisationScreen
-from ..categorisation_tools import CATEGORISATION_TOOL_KEYS, ENTRY_LIST_TOOL_KEYS, categorisation_tools
+from ..categorisation_tools import ENTRY_LIST_TOOL_KEYS, categorisation_tools
 from ..classification import LedgerClassificationScreen
 from ..controller import LedgerWorkspaceScreen
 from ..entries import LedgerEntriesScreen
 from .categorisation_memory_doors import MemoryCategorisationProfile, categorisation_controller
-from .categorisation_pilot import keys, settle, text
-from .test_ledger_selection_journey import _WorkspaceHostApp
+from .categorisation_pilot import keys, text
+from .workspace_fixtures import WorkspaceHostApp
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
-_ENTRY_LIST = tuple(key for key in CATEGORISATION_TOOL_KEYS if key in ENTRY_LIST_TOOL_KEYS)
-_SELECTED_ENTRY = tuple(key for key in CATEGORISATION_TOOL_KEYS if key not in ENTRY_LIST_TOOL_KEYS)
+_TOOL_KEYS = (
+    "ledger.tool.categorisation.bulk",
+    "ledger.tool.categorisation.iva",
+    "ledger.tool.categorisation.review",
+    "ledger.tool.categorisation.rules",
+    "ledger.tool.categorisation.counterparties",
+    "ledger.tool.categorisation.split",
+    "ledger.tool.categorisation.allocate",
+    "ledger.tool.categorisation.participation",
+    "ledger.tool.categorisation.ratios",
+    "ledger.tool.categorisation.diagnostics",
+)
+"""Every categorisation tool, in the order the tools are given to the workspace."""
+
+_ENTRY_LIST = tuple(key for key in _TOOL_KEYS if key in ENTRY_LIST_TOOL_KEYS)
+_SELECTED_ENTRY = tuple(key for key in _TOOL_KEYS if key not in ENTRY_LIST_TOOL_KEYS)
 
 
 def test_whole_ledger_tools_are_listed_by_entries_and_entry_tools_by_classification() -> None:
     tools = categorisation_tools(MemoryCategorisationProfile().doors().bundle())
 
-    assert tuple(tool.key for tool in tools) == CATEGORISATION_TOOL_KEYS
+    assert tuple(tool.key for tool in tools) == _TOOL_KEYS
     assert _ENTRY_LIST == (
         "ledger.tool.categorisation.bulk",
         "ledger.tool.categorisation.rules",
@@ -55,7 +70,7 @@ def test_whole_ledger_tools_are_listed_by_entries_and_entry_tools_by_classificat
 async def _open_and_return(
     area_screen: LedgerWorkspaceScreen, key: str, listed: tuple[str, ...], area: LedgerWorkspaceArea
 ) -> None:
-    app = _WorkspaceHostApp(area_screen)
+    app = WorkspaceHostApp(area_screen)
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(120, 50)) as pilot:
             await settle(pilot)
@@ -101,7 +116,7 @@ async def test_an_entry_tool_without_a_selected_entry_says_how_to_choose_one(key
     tool = next(item for item in categorisation_tools(profile.doors().bundle()) if item.key == key)
     screen = tool.build(categorisation_controller(selected=None))
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(100, 30)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(100, 30)) as pilot:
             await settle(pilot)
             assert text(screen, "#categorisation-choose-entry") == tr("tui.ledger.categorisation.choose_entry")
             assert not screen.query("Input")

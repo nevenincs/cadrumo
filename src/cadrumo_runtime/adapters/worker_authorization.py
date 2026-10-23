@@ -18,26 +18,27 @@ from pydantic import SecretBytes
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
-from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.logging import get_logger
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, OperationResponseScopeAllowed
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.operation_ids import (
     DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID,
     LOCAL_READER_OPERATION_DEFINITION_ID,
 )
 from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
-from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES, read_document, read_secret, write_document
+from cadrumo_client.transport.frame_io import read_document, read_secret, write_document, write_document_transfer
 from cadrumo_client.transport.model_run_frames import read_secret_chunks, write_secret_chunks
 from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.product_version import installed_product_version
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
 from cadrumo_runtime.contracts.worker_authorization import (
     WORKER_AUTOMATION_INVENTORY_MAX_BYTES,
+    WORKER_AUTOMATION_INVENTORY_PERMIT_MAX_BYTES,
     WorkerAuthorityCheck,
     WorkerAuthorityChecked,
     WorkerAuthorityEnvelope,
@@ -52,6 +53,7 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAutomationInventoryAllowed,
     WorkerAutomationInventoryPermit,
     WorkerAutomationInventoryRequest,
+    WorkerAutomationInventoryTransfer,
     WorkerModelRun,
     WorkerModelRunResult,
     WorkerOperationsAdvanced,
@@ -290,7 +292,7 @@ class WorkerAuthorizationServer:
             allowed = fence.enter_context(guard)
             permit = self._held_permit(request, allowed, permit_id)
             replied[0] = True
-            write_document(channel, permit, deadline=time.monotonic() + 5)
+            _write_permit(channel, permit, deadline=time.monotonic() + 5)
             if not hold_fence:
                 fence.close()
             try:
@@ -546,7 +548,7 @@ class WorkerAuthorizationServer:
                 expires_at=expires,
                 inventory=allowed.inventory,
             )
-            if len(canonical_json_bytes(permit.model_dump(mode="json"))) > MAXIMUM_FRAME_BYTES:
+            if len(canonical_json_bytes(permit.model_dump(mode="json"))) > WORKER_AUTOMATION_INVENTORY_PERMIT_MAX_BYTES:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         elif isinstance(request, WorkerResponseScopeRequest):
             permit = WorkerResponseScopePermit(
@@ -634,6 +636,31 @@ class WorkerAuthorizationServer:
                 published=transition.published if transition is not None else False,
             )
         return reply
+
+
+def _write_permit(
+    channel: ByteChannel,
+    permit: WorkerAuthorizationPermit | WorkerResponseScopePermit | WorkerAutomationInventoryPermit,
+    *,
+    deadline: float,
+) -> None:
+    """Write a permit; an inventory permit follows its transfer header as bounded chunks."""
+    if not isinstance(permit, WorkerAutomationInventoryPermit):
+        write_document(channel, permit, deadline=deadline)
+        return
+    payload = canonical_json_bytes(permit.model_dump(mode="json"))
+    write_document(
+        channel,
+        WorkerAutomationInventoryTransfer(
+            request_id=permit.request_id,
+            runtime_boot_id=permit.runtime_boot_id,
+            permit_id=permit.permit_id,
+            byte_count=len(payload),
+            payload_digest=sha256_hex(payload),
+        ),
+        deadline=deadline,
+    )
+    write_document_transfer(channel, payload, deadline=deadline)
 
 
 def _require_allowed_request_family(

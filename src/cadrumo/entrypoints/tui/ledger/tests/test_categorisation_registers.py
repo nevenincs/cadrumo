@@ -7,14 +7,15 @@ from textual.widgets import Button, DataTable, Input
 
 from .....core.config import override_settings
 from .....core.i18n.render import tr
+from ...tests.settling import settle
 from ..categorisation_counterparties import LedgerCounterpartiesScreen
 from ..categorisation_diagnostics import LedgerDiagnosticsScreen
 from ..categorisation_ratios import LedgerRatiosScreen
 from .categorisation_fixtures import CATEGORISATION_REFUSAL_KEY, MemoryDoor
 from .categorisation_memory_doors import MemoryCategorisationProfile, categorisation_controller
-from .categorisation_pilot import keys, press, review_and_confirm, settle, text, type_into
+from .categorisation_pilot import keys, press, review_and_confirm, text, type_into
 from .categorisation_register_fixtures import SYNTHETIC_RATIO_CATEGORIES, SYNTHETIC_TAX_ID, diagnostics_report
-from .test_ledger_selection_journey import _WorkspaceHostApp
+from .workspace_fixtures import WorkspaceHostApp
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -38,7 +39,7 @@ async def test_counterparty_confirm_view_and_withdraw_after_a_cancelled_confirma
     door = doors.counterparty
     screen = LedgerCounterpartiesScreen(categorisation_controller(selected=None), door=doors.counterparty)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             await press(pilot, screen, "categorisation-counterparty-view")
             assert text(screen, "#ledger-refusal") == tr("tui.ledger.categorisation.counterparty.identifier_required")
@@ -91,7 +92,7 @@ async def test_a_confirmation_without_an_answered_axis_is_refused_and_a_door_ref
     door = doors.counterparty
     screen = LedgerCounterpartiesScreen(categorisation_controller(selected=None), door=doors.counterparty)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             type_into(screen, "#categorisation-counterparty-identifier", SYNTHETIC_TAX_ID)
             type_into(screen, "#categorisation-counterparty-asserted", "Operator")
@@ -108,7 +109,7 @@ async def test_usage_ratios_set_list_and_unset_round_trip() -> None:
     profile = MemoryCategorisationProfile()
     screen = _ratios_screen(profile)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             year = int(screen.query_one("#categorisation-ratios-year", Input).value)
             assert keys(screen, "#categorisation-ratios-overrides") == []
@@ -156,7 +157,7 @@ async def test_ratios_refuse_an_out_of_range_ratio_and_say_a_census_mismatch() -
     profile.ratios.censo_mismatch = True
     screen = _ratios_screen(profile)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             year = int(screen.query_one("#categorisation-ratios-year", Input).value)
             assert text(screen, "#categorisation-outcome") == tr(
@@ -177,7 +178,7 @@ async def test_removing_a_ratio_that_is_not_set_writes_nothing() -> None:
     profile = MemoryCategorisationProfile()
     screen = _ratios_screen(profile)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             type_into(screen, "#categorisation-ratios-category", "vehiculo")
             await press(pilot, screen, "categorisation-ratios-unset")
@@ -197,7 +198,7 @@ async def test_diagnostics_read_the_report_for_the_typed_range() -> None:
     door = doors.llm_diagnostics
     screen = LedgerDiagnosticsScreen(categorisation_controller(selected=None), door=doors.llm_diagnostics)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             assert keys(screen, "#categorisation-diagnostics-usage") == ["lector-local"]
             assert keys(screen, "#categorisation-diagnostics-confidence") == ["lector-local"]
@@ -230,7 +231,7 @@ async def test_diagnostics_say_an_empty_report_and_a_refusal() -> None:
     empty = MemoryDoor(lambda request: diagnostics_report(request, with_data=False))
     screen = LedgerDiagnosticsScreen(categorisation_controller(selected=None), door=empty)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             assert text(screen, "#categorisation-outcome") == tr("tui.ledger.categorisation.diagnostics.empty")
             empty.refusing = True

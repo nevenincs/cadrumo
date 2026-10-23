@@ -48,6 +48,7 @@ from ......domain.modelos.verification_report import (
 )
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..issue_projection import issue_lines
 from ..issues import WorkbenchIssuesScreen
@@ -64,11 +65,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _SIZE = (140, 40)
 _TYPED = "300,50"
-
-
-async def _settle(pilot: Pilot[None], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _unattributed_form() -> ModeloWorkForm:
@@ -127,13 +123,13 @@ async def _stage_on_withholding(pilot: Pilot[None], screen: ModeloWorkbenchScree
     target = address_key(ModeloFormCasillaAddressV1(casilla_id="06"))
     if not screen.query_one(CasillaList).focus_address(target):
         await pilot.press("right_square_bracket")
-        await _settle(pilot)
+        await settle(pilot)
         assert screen.query_one(CasillaList).focus_address(target)
-    await _settle(pilot)
+    await settle(pilot)
     await pilot.press("enter")
-    await _settle(pilot)
+    await settle(pilot)
     await pilot.press(*_TYPED, "enter")
-    await _settle(pilot)
+    await settle(pilot)
 
 
 @pytest.mark.asyncio
@@ -151,16 +147,16 @@ async def test_a_blocking_finding_is_listed_and_keeps_apply_unavailable() -> Non
         screen = ModeloWorkbenchScreen(FakeReader(), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await _stage_on_withholding(pilot, screen)
             await pilot.press("R")
-            await _settle(pilot)
+            await settle(pilot)
             review = app.screen
             assert isinstance(review, EditReviewScreen)
             findings = str(review.query_one("#review-findings", Static).render())
             apply_disabled = review.query_one("#review-apply", Button).disabled
             await pilot.press("a")
-            await _settle(pilot)
+            await settle(pilot)
             still_reviewing = app.screen is review
 
     assert len(actions.checked) == 1
@@ -177,16 +173,16 @@ async def test_an_unattributed_declaration_names_what_applying_returns_to_source
         screen = ModeloWorkbenchScreen(FakeReader(form=_unattributed_form()), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await _stage_on_withholding(pilot, screen)
             await pilot.press("R")
-            await _settle(pilot)
+            await settle(pilot)
             review = app.screen
             assert isinstance(review, EditReviewScreen)
             warning = str(review.query_one("#review-at-risk", Static).render())
             before_acknowledging = review.query_one("#review-apply", Button).disabled
             review.query_one("#review-acknowledge", Checkbox).value = True
-            await _settle(pilot)
+            await settle(pilot)
             after_acknowledging = review.query_one("#review-apply", Button).disabled
             one_box = UnattributedBoxes(boxes=("[07]",), sections=("",))
             expected_warning = at_risk_text(one_box, console=app.console, width=_SIZE[0])
@@ -204,20 +200,20 @@ async def test_recalculating_an_unattributed_declaration_asks_first_and_can_be_d
         screen = ModeloWorkbenchScreen(FakeReader(form=_unattributed_form()), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("c")
-            await _settle(pilot)
+            await settle(pilot)
             asked = app.screen
             assert isinstance(asked, ConfirmScreen)
             message = str(asked.query_one("#confirm-message", Static).render())
             await pilot.click("#btn-confirm-cancel")
-            await _settle(pilot)
+            await settle(pilot)
             after_declining = list(actions.requested)
             notice = str(screen.query_one("#wb-notice", Static).render())
             await pilot.press("c")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.click("#btn-confirm-accept")
-            await _settle(pilot)
+            await settle(pilot)
 
     assert "[07]" in message
     assert after_declining == []
@@ -236,9 +232,9 @@ async def test_recalculating_names_an_optional_zero_nobody_entered_though_it_is_
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("c")
-            await _settle(pilot)
+            await settle(pilot)
             asked = app.screen
             assert isinstance(asked, ConfirmScreen)
             message = str(asked.query_one("#confirm-message", Static).render())
@@ -253,9 +249,9 @@ async def test_a_declaration_with_recorded_entries_recalculates_without_asking()
         screen = ModeloWorkbenchScreen(FakeReader(), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("c")
-            await _settle(pilot)
+            await settle(pilot)
             asked = isinstance(app.screen, ConfirmScreen)
 
     assert not asked
@@ -322,10 +318,10 @@ async def test_a_moved_declaration_is_read_again_and_its_changed_boxes_are_marke
         screen = ModeloWorkbenchScreen(reader, actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await _stage_on_withholding(pilot, screen)
             await pilot.press("R")
-            await _settle(pilot, times=8)
+            await settle(pilot)
             review = app.screen
             assert isinstance(review, EditReviewScreen)
             marked = str(review.query_one("#review-rebased", Static).render())
@@ -450,13 +446,13 @@ async def test_an_unresolved_verification_sends_the_filer_to_its_findings_and_fr
         screen = ModeloWorkbenchScreen(FakeReader(form=_verified_with_findings()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             next_line = str(screen.query_one("#wb-next", Static).render())
             await pilot.press("f8")
-            await _settle(pilot)
+            await settle(pilot)
             listed = isinstance(app.screen, WorkbenchIssuesScreen)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             highlighted = screen.query_one(CasillaList).highlighted
 
     assert "Resolve what blocks filing (to do: 1) [i]" in next_line
@@ -519,10 +515,10 @@ async def test_on_a_small_terminal_the_review_keeps_its_acknowledgement_and_butt
         screen = ModeloWorkbenchScreen(FakeReader(form=_unattributed_form()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await _stage_on_withholding(pilot, screen)
             await pilot.press("R")
-            await _settle(pilot)
+            await settle(pilot)
             review = app.screen
             assert isinstance(review, EditReviewScreen)
             visible = {

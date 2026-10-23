@@ -13,7 +13,6 @@ navigator's width a breadcrumb keeps the page, the section and its counts.
 from __future__ import annotations
 
 import pytest
-from textual.pilot import Pilot
 from textual.widgets import Input, OptionList, Static
 
 from ......application.modelo.work_form_models import (
@@ -24,6 +23,7 @@ from ......application.modelo.work_form_models import (
 )
 from ......core.config import override_settings
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry
 from ..navigator import looks_like_identifier, presented_form, section_title
@@ -35,11 +35,6 @@ from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _WIDE = (140, 40)
-
-
-async def _settle(pilot: Pilot[None], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _boxes(screen: ModeloWorkbenchScreen) -> list[str | None]:
@@ -151,16 +146,16 @@ async def test_a_finished_page_starts_closed_and_opens_and_closes_on_request() -
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_WIDE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             opened_at_start = _navigator(screen)
             navigator = screen.query_one("#wb-sections", OptionList)
             navigator.focus()
             navigator.highlighted = 0
             await pilot.press("right")
-            await _settle(pilot)
+            await settle(pilot)
             after_open = _navigator(screen)
             await pilot.press("left")
-            await _settle(pilot)
+            await settle(pilot)
             after_close = _navigator(screen)
             app.exit(None)
 
@@ -180,23 +175,23 @@ async def test_search_finds_a_box_by_number_or_by_words_on_any_page_and_goes_the
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_WIDE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("slash")
-            await _settle(pilot)
+            await settle(pilot)
             panel = screen.query_one(WorkbenchSearchPanel)
             header_shown = screen.query_one("#wb-result", Static).display
             await pilot.press(*"liquidacion")
-            await _settle(pilot)
+            await settle(pilot)
             by_words = [hit.box for hit in panel.hits]
             status = str(panel.query_one("#wb-search-status", Static).render())
             screen.query_one("#wb-search-input", Input).value = "2"
-            await _settle(pilot)
+            await settle(pilot)
             by_number = [hit.box for hit in panel.hits]
             first_line = panel.hits[0].text()
             screen.query_one("#wb-search-input", Input).value = "retencion"
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             searching = screen.has_class("-searching")
             landed = _cursor(screen)
             app.exit(None)
@@ -216,13 +211,15 @@ async def test_go_to_box_lands_on_the_number_or_says_the_form_has_none() -> None
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_WIDE) as pilot:
-            await _settle(pilot)
-            await pilot.press("g", *"555", "enter")
-            await _settle(pilot)
+            await settle(pilot)
+            await pilot.press("g")
+            await settle(pilot)
+            await pilot.press(*"555", "enter")
+            await settle(pilot)
             refusal = str(screen.query_one("#wb-search-status", Static).render())
             screen.query_one("#wb-search-input", Input).value = "7"
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             landed = _cursor(screen)
             page = str(screen.query_one("#wb-page", Static).render())
             app.exit(None)
@@ -240,17 +237,17 @@ async def test_sorting_lays_the_whole_declaration_out_by_box_by_amount_and_by_at
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_WIDE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             for _ in range(3):
                 await pilot.press("o")
-                await _settle(pilot)
+                await settle(pilot)
                 orders[screen._sort] = _boxes(screen)
                 titles[screen._sort] = str(screen.query_one("#wb-page", Static).render())
             labelled = next(
                 item for item in screen.query_one(CasillaList).items if isinstance(item, CasillaListEntry)
             ).label
             await pilot.press("o")
-            await _settle(pilot)
+            await settle(pilot)
             back = (screen._sort, _boxes(screen))
             app.exit(None)
 
@@ -268,15 +265,15 @@ async def test_next_to_do_carries_on_to_the_next_page_and_says_when_nothing_is_l
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_WIDE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("left_square_bracket")
-            await _settle(pilot)
+            await settle(pilot)
             start = _cursor(screen)
             await pilot.press("n")
-            await _settle(pilot)
+            await settle(pilot)
             crossed = (_cursor(screen), str(screen.query_one("#wb-page", Static).render()))
             await pilot.press("n")
-            await _settle(pilot)
+            await settle(pilot)
             notice = str(screen.query_one("#wb-notice", Static).render())
             app.exit(None)
 
@@ -292,7 +289,7 @@ async def test_a_narrow_terminal_keeps_the_page_section_and_counts_in_a_breadcru
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             crumb = screen.query_one("#wb-crumb", Static)
             text = str(crumb.render())
             shown = crumb.display
@@ -308,13 +305,17 @@ async def test_a_sorted_jump_names_the_targets_page_without_changing_the_remembe
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("right_square_bracket")
-            await _settle(pilot)
+            await settle(pilot)
             remembered = screen._page_index
             assert remembered > 0
-            await pilot.press("o", "g", "0", "7", "enter")
-            await _settle(pilot)
+            await pilot.press("o")
+            await settle(pilot)
+            await pilot.press("g")
+            await settle(pilot)
+            await pilot.press("0", "7", "enter")
+            await settle(pilot)
             crumb = str(screen.query_one("#wb-crumb", Static).render())
             assert _cursor(screen) == "07"
             assert screen._sort is SortOrder.BOX and screen._page_index == remembered

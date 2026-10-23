@@ -30,6 +30,7 @@ from ...account import AccountSessionExpiredError
 from ...components.host import ScreenHostApp
 from ...components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..evidence import LedgerEvidenceScreen
 from ..models import LedgerRecordDoorsV1
@@ -37,7 +38,7 @@ from ..review import REVIEW_PAGE_SIZE, LedgerReviewScreen
 from ..transaction_views import LedgerTransactionDetailScreen
 from ..workspace_injection import LedgerWorkspaceInjection
 from ..workspace_presentation import door_refusal_text
-from .evidence_files_fixtures import EVIDENCE_FILES_REFUSAL_CODE, EVIDENCE_FILES_REFUSAL_KEY, settle, text_of
+from .evidence_files_fixtures import EVIDENCE_FILES_REFUSAL_CODE, EVIDENCE_FILES_REFUSAL_KEY, text_of
 from .invoices_fixtures import MemoryRecordDoors, ReplacingHostApp
 from .invoices_fixtures import transaction_projection as synthetic_transaction
 from .review_door_fixtures import (

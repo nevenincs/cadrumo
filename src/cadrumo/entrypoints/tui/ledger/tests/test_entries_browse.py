@@ -21,6 +21,7 @@ from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...components.dialogs import ConfirmScreen
+from ...tests.settling import settle
 from ..entries_browse import BROWSE_PAGE_SIZE, LedgerBrowseStateV1, LedgerEntriesBrowseScreen
 from ..entries_common import entry_label, joined
 from ..entries_trace import LedgerEntryTraceScreen
@@ -32,7 +33,7 @@ from .entries_door_fixtures import (
     entry_id,
     lifecycle_requests,
 )
-from .test_ledger_selection_journey import _WorkspaceHostApp
+from .workspace_fixtures import WorkspaceHostApp
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -41,15 +42,9 @@ def _screen(ledger: MemoryEntriesLedger, state: LedgerBrowseStateV1 | None = Non
     return LedgerEntriesBrowseScreen(entries_controller(), ledger.doors(), state=state)
 
 
-async def _settle(pilot: Pilot[None]) -> None:
-    await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
-
-
 async def _press(pilot: Pilot[None], screen: LedgerEntriesBrowseScreen, button_id: str) -> None:
     screen.query_one(f"#{button_id}", Button).press()
-    await _settle(pilot)
+    await settle(pilot)
 
 
 async def _choose(pilot: Pilot[None], screen: LedgerEntriesBrowseScreen, row: int) -> None:
@@ -57,7 +52,7 @@ async def _choose(pilot: Pilot[None], screen: LedgerEntriesBrowseScreen, row: in
     table.focus()
     table.move_cursor(row=row)
     await pilot.press("enter")
-    await _settle(pilot)
+    await settle(pilot)
 
 
 async def _answer(pilot: Pilot[None], *, accept: bool) -> str:
@@ -65,7 +60,7 @@ async def _answer(pilot: Pilot[None], *, accept: bool) -> str:
     assert isinstance(dialog, ConfirmScreen)
     message = str(dialog.query_one("#confirm-message", Static).render())
     dialog.query_one("#btn-confirm-accept" if accept else "#btn-confirm-cancel", Button).press()
-    await _settle(pilot)
+    await settle(pilot)
     return message
 
 
@@ -87,8 +82,8 @@ async def test_a_thousand_entries_show_one_page_and_page_forward_and_back() -> N
     ledger = MemoryEntriesLedger.with_entries(1000)
     screen = _screen(ledger)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             assert screen.page is not None
             assert len(screen.page.rows) == BROWSE_PAGE_SIZE
             assert _keys(screen) == [entry_id(index) for index in range(BROWSE_PAGE_SIZE)]
@@ -118,8 +113,8 @@ async def test_the_last_page_holds_the_remainder_and_offers_no_next_page() -> No
         ),
     )
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             assert _keys(screen)[-1] == entry_id(999)
             assert screen.query_one("#entries-browse-next", Button).disabled
             assert not screen.query_one("#entries-browse-previous", Button).disabled
@@ -130,8 +125,8 @@ async def test_an_empty_ledger_says_so_and_offers_no_action() -> None:
     ledger = MemoryEntriesLedger()
     screen = _screen(ledger)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             assert _keys(screen) == []
             assert _text(screen, "#ledger-flow-status") == tr("tui.ledger.entry_tools.browse.empty")
             assert screen.query_one("#entries-browse-archive", Button).disabled
@@ -143,8 +138,8 @@ async def test_archive_is_confirmed_by_name_and_the_selection_survives_the_rerea
     ledger = MemoryEntriesLedger.with_entries(1000)
     screen = _screen(ledger)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             await _choose(pilot, screen, 5)
             assert screen.selected_id == entry_id(5)
             screen.query_one("#entries-browse-reason", Input).value = "duplicate import"
@@ -175,8 +170,8 @@ async def test_a_declined_confirmation_writes_nothing() -> None:
     ledger = MemoryEntriesLedger.with_entries(3)
     screen = _screen(ledger)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             await _choose(pilot, screen, 1)
             for button_id in ("entries-browse-archive", "entries-browse-stash", "entries-browse-exclude"):
                 await _press(pilot, screen, button_id)
@@ -190,8 +185,8 @@ async def test_restore_and_exclude_submit_through_their_own_operations() -> None
     ledger = MemoryEntriesLedger.with_entries(3)
     screen = _screen(ledger)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             await _choose(pilot, screen, 0)
             await _press(pilot, screen, "entries-browse-stash")
             await _answer(pilot, accept=True)
@@ -214,8 +209,8 @@ async def test_a_lifecycle_validation_refusal_is_shown_and_writes_nothing() -> N
     ledger.validation_refusals.add("ledger.archive")
     screen = _screen(ledger)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             await _choose(pilot, screen, 0)
             await _press(pilot, screen, "entries-browse-archive")
             await _answer(pilot, accept=True)
@@ -233,8 +228,8 @@ async def test_a_refused_page_read_shows_the_registered_refusal() -> None:
     ledger.refuse_with_registered_error("list")
     screen = _screen(ledger)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             assert _text(screen, "#ledger-refusal") == tr(ENTRIES_REFUSAL_KEY)
             assert _keys(screen) == []
 
@@ -244,8 +239,8 @@ async def test_removal_is_previewed_by_a_dry_run_before_the_confirmed_run() -> N
     ledger = MemoryEntriesLedger.with_entries(3)
     screen = _screen(ledger)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             await _choose(pilot, screen, 2)
             assert screen.page is not None
             label = entry_label(screen.page.rows[2].transaction)
@@ -266,8 +261,8 @@ async def test_a_declined_removal_runs_only_its_dry_run() -> None:
     ledger = MemoryEntriesLedger.with_entries(3)
     screen = _screen(ledger)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             await _choose(pilot, screen, 2)
             await _press(pilot, screen, "entries-browse-remove")
             await _answer(pilot, accept=False)
@@ -280,8 +275,8 @@ async def test_merge_submits_every_marked_entry_and_chooses_the_merged_one() -> 
     ledger = MemoryEntriesLedger.with_entries(4)
     screen = _screen(ledger)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             assert screen.query_one("#entries-browse-merge", Button).disabled
             for row in (1, 3):
                 await _choose(pilot, screen, row)
@@ -304,8 +299,8 @@ async def test_the_filters_build_the_operations_own_request() -> None:
     ledger = MemoryEntriesLedger.with_entries(3)
     screen = _screen(ledger)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             cast("Select[str]", screen.query_one("#entries-browse-status", Select)).value = "pending"
             cast("Select[str]", screen.query_one("#entries-browse-direction", Select)).value = "outgoing"
             cast("Select[str]", screen.query_one("#entries-browse-period", Select)).value = "2T"
@@ -336,8 +331,8 @@ async def test_a_period_without_a_year_is_refused_before_any_read() -> None:
     ledger = MemoryEntriesLedger.with_entries(3)
     screen = _screen(ledger)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             cast("Select[str]", screen.query_one("#entries-browse-period", Select)).value = "1T"
             await _press(pilot, screen, "entries-browse-apply")
             assert _text(screen, "#ledger-refusal") == tr("tui.ledger.entry_tools.period.pair")
@@ -348,13 +343,13 @@ async def test_a_period_without_a_year_is_refused_before_any_read() -> None:
 async def test_history_and_lineage_open_for_the_chosen_entry_and_back_returns_to_it() -> None:
     ledger = MemoryEntriesLedger.with_entries(3)
     screen = _screen(ledger)
-    app = _WorkspaceHostApp(screen)
+    app = WorkspaceHostApp(screen)
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await _choose(pilot, screen, 1)
             await _press(pilot, screen, "entries-browse-trace")
-            await _settle(pilot)
+            await settle(pilot)
             trace = app.screen
             assert isinstance(trace, LedgerEntryTraceScreen)
             assert tr("tui.ledger.entry_tools.trace.manual") in str(
@@ -368,11 +363,11 @@ async def test_history_and_lineage_open_for_the_chosen_entry_and_back_returns_to
             assert "quoted from the document" not in str(history.get_row_at(1))
 
             trace.query_one("#entries-trace-full", Button).press()
-            await _settle(pilot)
+            await settle(pilot)
             assert "quoted from the document" in str(history.get_row_at(1))
 
             await pilot.press("escape")
-            await _settle(pilot)
+            await settle(pilot)
             back = app.screen
             assert isinstance(back, LedgerEntriesBrowseScreen)
             assert back.selected_id == entry_id(1)
@@ -387,8 +382,8 @@ async def test_a_lost_session_discards_every_entry_on_screen() -> None:
     ledger = MemoryEntriesLedger.with_entries(3)
     screen = _screen(ledger)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             await _choose(pilot, screen, 0)
             ledger.expire("ledger.archive")
             await _press(pilot, screen, "entries-browse-archive")

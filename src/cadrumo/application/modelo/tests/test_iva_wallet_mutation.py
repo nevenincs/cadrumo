@@ -2,21 +2,29 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from types import SimpleNamespace
 from typing import cast
 from uuid import uuid4
 
 import pytest
+from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ....core.hashing import canonical_json_bytes
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations.models import OperationIdentity, OperationTerminalReceipt
+from ...operations.owner import OperationExecutorContext
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..iva_wallet_mutation import (
+    IVA_WALLET_MUTATION_RESULT_MAX_BYTES,
     bind_iva_wallet_profile_ports,
+    iva_wallet_result_exceeds_limit,
+    put_iva_wallet_mutation_report,
     require_iva_wallet_write_receipt,
     validate_iva_wallet_amount,
 )
@@ -121,3 +129,45 @@ def test_profile_ports_are_returned_only_when_every_repository_is_the_profiles()
         with pytest.raises(ProfileAccessRefusedError) as refused:
             bind_iva_wallet_profile_ports(foreign, profile_id=profile, operation=operation)
         assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+class _Report(BaseModel):
+    text: str
+
+
+def _report_of_encoded_size(size: int) -> _Report:
+    overhead = len(canonical_json_bytes(_Report(text="").model_dump(mode="json")))
+    report = _Report(text="a" * (size - overhead))
+    assert len(canonical_json_bytes(report.model_dump(mode="json"))) == size
+    return report
+
+
+def test_a_result_is_over_the_limit_only_beyond_the_ceiling() -> None:
+    assert not iva_wallet_result_exceeds_limit(_report_of_encoded_size(IVA_WALLET_MUTATION_RESULT_MAX_BYTES))
+    assert iva_wallet_result_exceeds_limit(_report_of_encoded_size(IVA_WALLET_MUTATION_RESULT_MAX_BYTES + 1))
+
+
+class _Operands:
+    def __init__(self) -> None:
+        self.stored: list[BaseModel] = []
+
+    async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
+        assert written_at.tzinfo is not None
+        self.stored.append(operand)
+        return "r" * 64
+
+
+def test_a_bounded_report_is_stored_and_an_oversized_one_is_refused_unwritten() -> None:
+    operands = _Operands()
+    context = cast(OperationExecutorContext, SimpleNamespace(operands=operands))
+    bounded = _report_of_encoded_size(IVA_WALLET_MUTATION_RESULT_MAX_BYTES)
+
+    assert asyncio.run(put_iva_wallet_mutation_report(context, bounded)) == "r" * 64
+    assert operands.stored == [bounded]
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        asyncio.run(
+            put_iva_wallet_mutation_report(context, _report_of_encoded_size(IVA_WALLET_MUTATION_RESULT_MAX_BYTES + 1))
+        )
+    assert refused.value.reason is AccessDenialCode.OPERATION_DENIED
+    assert operands.stored == [bounded]

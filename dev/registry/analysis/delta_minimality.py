@@ -26,10 +26,25 @@ one declaring an explicit no-predecessor, or the first of an undeclaring modelo
 by validity order - inherits nothing, so its rows are not applicable rather than
 clean, and the census counts them apart.
 
-Which rows are judged. Only the rows an edition states. A delta edition's loaded
-casillas also hold the rows it inherits, each marked by the loader with
-``inherited_from``; those are counted apart and never judged, since an inherited
-row is the minimal form by definition.
+Which rows are judged. Only the rows an edition states. An edition's loaded
+casillas also hold every row it carries unchanged from the edition it is
+materialised against, each marked by the loader with ``inherited_from``; those
+are never judged, since a carried row is the minimal form by definition. The
+census counts them in two groups, by how the edition reaches the rows:
+
+- inherited - the edition names a ``predecessor``, and the loader carries the
+  rows down that lineage;
+- storage-reused - the edition names no predecessor but a
+  ``casilla_storage_baseline``, and the loader hydrates the rows from that
+  baseline's storage. Storage reuse makes no continuity claim, so these rows
+  are not inherited in the lineage sense; they are counted apart all the same
+  because the edition does not author them.
+
+A row the edition authors, and a baseline row it patches through a
+``casilla_overrides`` entry, carries no marker: the loader treats the patched
+row as stated. Both are judged like any other stated row: an override of a row
+without lineage is ``unchecked_no_lineage``, and an override leaving the row
+equal to the predecessor's row on its chain is ``restated_unchanged``.
 
 What "identical" compares. A stated row is compared with what inheriting the
 predecessor's row would give, both as loaded ``CasillaDefinition`` values, never
@@ -76,6 +91,17 @@ Where it stops:
 - Stated rows are the loaded rows whose ``inherited_from`` is unset. The marker
   is the loader's; a definition built outside the loader carries whatever
   markers it was given, and a row wrongly marked inherited escapes judgement.
+- Whether a marked row is inherited or storage-reused is read from its
+  edition, not from the row: the loader materialises an edition's casillas
+  against its declared ``predecessor`` when it names one and against its
+  ``casilla_storage_baseline`` otherwise, so a marked row of an edition naming
+  a predecessor is inherited and any other marked row is storage-reused.
+- An override is judged as the whole row it produces, not as the fields it
+  patches, and against the predecessor this screen pairs the edition with,
+  which need not be the edition's storage baseline.
+- A root edition's rows are counted as root rows whatever their marker, so a
+  root that reuses another edition's storage adds nothing to the inherited or
+  storage-reused counts.
 - The comparison is of loaded values, which do not show whether the
   predecessor's row states its ``source_refs`` in full or as additions. Where it
   states them in full, inheriting would carry the predecessor's design citation
@@ -126,6 +152,7 @@ __all__ = [
     "PredecessorBasis",
     "RowJudgement",
     "definition_findings",
+    "definitions_census",
     "edition_predecessors",
     "inheritable_value",
     "judge_definition",
@@ -135,6 +162,7 @@ __all__ = [
     "screen_authority",
     "stated_casillas",
     "stated_value",
+    "storage_reused_casillas",
 ]
 
 
@@ -211,13 +239,19 @@ class RowJudgement:
 
 @dataclass(frozen=True, slots=True)
 class MinimalityCensus:
-    """Corpus-wide counts reported beside the findings, so no denominator is implied."""
+    """Corpus-wide counts reported beside the findings, so no denominator is implied.
+
+    Every loaded casilla row falls in exactly one of the four row counts: a
+    root edition's rows in ``rows_in_root_editions``, and a non-root edition's
+    rows in ``rows_judged``, ``rows_inherited`` or ``rows_storage_reused``.
+    """
 
     editions: int
     root_editions: int
     declared_predecessor_editions: int
     rows_judged: int
     rows_inherited: int
+    rows_storage_reused: int
     rows_in_root_editions: int
     verdicts: Mapping[MinimalityVerdict, int]
 
@@ -381,6 +415,19 @@ def stated_casillas(revision: ModeloRevision) -> tuple[CasillaDefinition, ...]:
     return tuple(casilla for casilla in revision.casillas if casilla.inherited_from is None)
 
 
+def storage_reused_casillas(revision: ModeloRevision) -> tuple[CasillaDefinition, ...]:
+    """Return the rows the edition carries unchanged from its storage baseline rather than down a lineage.
+
+    The loader marks every carried row with ``inherited_from`` and materialises
+    an edition against its declared predecessor in preference to its
+    ``casilla_storage_baseline``, so the marked rows of an edition naming no
+    predecessor are storage-reused. An edition naming a predecessor has none.
+    """
+    if isinstance(revision.predecessor, DeclaredPredecessor) or revision.casilla_storage_baseline is None:
+        return ()
+    return tuple(casilla for casilla in revision.casillas if casilla.inherited_from is not None)
+
+
 def judge_definition(definition: ModeloDefinition, *, modelo_id: str) -> tuple[RowJudgement, ...]:
     """Return a verdict for every stated casilla row of every non-root edition; inherited rows get none.
 
@@ -530,19 +577,27 @@ def restating_modelos(findings: tuple[RowJudgement, ...]) -> tuple[str, ...]:
 
 def minimality_census(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> MinimalityCensus:
     """Return corpus-wide edition and row counts, every verdict counted apart."""
-    editions = roots = declared = root_rows = inherited_rows = 0
+    return definitions_census({modelo_id: authority.modelo(modelo_id) for modelo_id in modelo_ids})
+
+
+def definitions_census(definitions: Mapping[str, ModeloDefinition]) -> MinimalityCensus:
+    """Return the edition and row counts of the given modelo definitions, keyed by modelo id."""
+    editions = roots = declared = root_rows = inherited_rows = storage_rows = 0
     verdicts: collections.Counter[MinimalityVerdict] = collections.Counter()
-    for modelo_id in modelo_ids:
-        definition = authority.modelo(modelo_id)
+    for modelo_id, definition in definitions.items():
         for edition in edition_predecessors(definition):
             editions += 1
             revision = definition.revisions[edition.revision]
-            inherited_rows += len(revision.casillas) - len(stated_casillas(revision))
             if edition.basis == PredecessorBasis.DECLARED:
                 declared += 1
             if edition.predecessor is None:
                 roots += 1
                 root_rows += len(revision.casillas)
+                continue
+            carried = len(revision.casillas) - len(stated_casillas(revision))
+            reused = len(storage_reused_casillas(revision))
+            storage_rows += reused
+            inherited_rows += carried - reused
         verdicts.update(item.kind for item in judge_definition(definition, modelo_id=modelo_id))
     return MinimalityCensus(
         editions=editions,
@@ -550,6 +605,7 @@ def minimality_census(authority: ValidatedRegistryAuthority, modelo_ids: tuple[s
         declared_predecessor_editions=declared,
         rows_judged=sum(verdicts.values()),
         rows_inherited=inherited_rows,
+        rows_storage_reused=storage_rows,
         rows_in_root_editions=root_rows,
         verdicts=dict(sorted(verdicts.items())),
     )
@@ -570,7 +626,7 @@ def main() -> int:
     sys.stdout.write(
         f"summary findings={len(findings)} editions={census.editions} root_editions={census.root_editions} "
         f"declared_predecessor_editions={census.declared_predecessor_editions} rows_judged={census.rows_judged} "
-        f"rows_inherited={census.rows_inherited} "
+        f"rows_inherited={census.rows_inherited} rows_storage_reused={census.rows_storage_reused} "
         f"rows_in_root_editions={census.rows_in_root_editions} restating_modelos={len(restating_modelos(findings))} "
         f"{verdicts}\n"
     )

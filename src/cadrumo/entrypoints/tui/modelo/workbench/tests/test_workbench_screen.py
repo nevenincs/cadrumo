@@ -15,6 +15,7 @@ from textual.widgets import Static
 
 from ......core.config import override_settings
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..screen import ModeloWorkbenchScreen
 from .workbench_fixture import FakeReader, synthetic_form
@@ -37,8 +38,7 @@ async def test_the_workbench_opens_on_the_first_box_that_needs_the_filer() -> No
     with override_settings(cadrumo_output_language="es"):
         screen = ModeloWorkbenchScreen(reader)
         async with ScreenHostApp(screen).run_test(size=(140, 40)) as pilot:
-            await pilot.pause()
-            await pilot.pause()
+            await settle(pilot)
             highlighted = screen.query_one(CasillaList).highlighted
             header = _text(screen, "#wb-header")
             result = _text(screen, "#wb-result")
@@ -63,10 +63,9 @@ async def test_official_grids_and_design_constants_read_as_the_printed_row() -> 
     with override_settings(cadrumo_output_language="es"):
         screen = ModeloWorkbenchScreen(FakeReader())
         async with ScreenHostApp(screen).run_test(size=(140, 40)) as pilot:
-            await pilot.pause()
-            await pilot.pause()
+            await settle(pilot)
             await pilot.press("left_square_bracket")
-            await pilot.pause()
+            await settle(pilot)
             listing = _list_text(screen)
 
     # The grid is drawn as its table: the column headings across, the row down the side.
@@ -85,10 +84,9 @@ async def test_the_attention_filter_leaves_only_what_needs_the_filer() -> None:
     with override_settings(cadrumo_output_language="en"):
         screen = ModeloWorkbenchScreen(FakeReader())
         async with ScreenHostApp(screen).run_test(size=(140, 40)) as pilot:
-            await pilot.pause()
-            await pilot.pause()
+            await settle(pilot)
             await pilot.press("f")
-            await pilot.pause()
+            await settle(pilot)
             listing = _list_text(screen)
             page = _text(screen, "#wb-page")
 
@@ -103,11 +101,9 @@ async def test_the_help_band_explains_the_box_and_adds_its_formula_once_fetched(
     with override_settings(cadrumo_output_language="en"):
         screen = ModeloWorkbenchScreen(reader)
         async with ScreenHostApp(screen).run_test(size=(140, 40)) as pilot:
-            await pilot.pause()
-            await pilot.pause()
+            await settle(pilot)
             await pilot.press("down")
-            for _ in range(5):
-                await pilot.pause()
+            await settle(pilot)
             band = _text(screen, "#wb-help")
 
     assert "[19] Resultado de la autoliquidación" in band
@@ -122,8 +118,7 @@ async def test_a_narrow_terminal_folds_the_navigator_away() -> None:
     with override_settings(cadrumo_output_language="en"):
         screen = ModeloWorkbenchScreen(FakeReader())
         async with ScreenHostApp(screen).run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
-            await pilot.pause()
+            await settle(pilot)
             narrow = screen.has_class("-narrow")
             navigator_shown = screen.query_one("#wb-sections").display
 
@@ -137,8 +132,7 @@ async def test_a_complete_declaration_offers_the_next_lifecycle_step() -> None:
     with override_settings(cadrumo_output_language="en"):
         screen = ModeloWorkbenchScreen(reader)
         async with ScreenHostApp(screen).run_test(size=(140, 40)) as pilot:
-            await pilot.pause()
-            await pilot.pause()
+            await settle(pilot)
             stepper = _text(screen, "#wb-stepper")
             next_line = _text(screen, "#wb-next")
 
@@ -154,9 +148,9 @@ async def test_leaving_dismisses_the_workbench() -> None:
         screen = ModeloWorkbenchScreen(FakeReader())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 30)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await pilot.press("escape")
-            await pilot.pause()
+            await settle(pilot)
             gone = app.screen is not screen
 
     assert gone

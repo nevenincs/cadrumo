@@ -14,6 +14,7 @@ from .....domain.user_profile.values import ProfileSetupState
 from ...components.host import ScreenHostApp
 from ...components.status import PinnedStatusBar
 from ...tests.manager_pilot import wait_until_settled
+from ...tests.settling import settle
 from ..overview import ProfileManagerScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -70,10 +71,10 @@ async def test_cached_wizard_and_remote_conflict_allow_a_fresh_explicit_edit() -
         refresh_overview_language=lambda: current,
     )
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert screen.overview.record_revision == 2
         screen._open_field_editor(screen.overview.sections[0].fields[0])
-        await pilot.pause()
+        await settle(pilot)
         assert pilot.app.screen.query_one("#edit-input", Input).value == "Current name"
         current = _overview(3, "Another frontend")
         pilot.app.screen.query_one("#edit-input", Input).value = "Refused draft"
@@ -84,7 +85,7 @@ async def test_cached_wizard_and_remote_conflict_allow_a_fresh_explicit_edit() -
         assert len(calls) == 1
         assert current.sections[0].fields[0].value == "Another frontend"
         screen._open_field_editor(screen.overview.sections[0].fields[0])
-        await pilot.pause()
+        await settle(pilot)
         pilot.app.screen.query_one("#edit-input", Input).value = "Explicit new edit"
         await pilot.click("#btn-edit-save")
         await wait_until_settled(screen, pilot)

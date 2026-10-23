@@ -12,7 +12,7 @@ from typing import Final
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
-from .command_spec_attestation import _artifact_command_projection, _projection_digest
+from .command_spec_attestation import _artifact_command_projection, projection_digest
 from .hashing import sha256_path
 
 
@@ -108,7 +108,7 @@ def make_test_command_spec_attestation(
     root_sdist = directory / artifacts["cadrumo-sdist"]
     source_archive = directory / artifacts["source-archive"]
     if not artifacts_are_unreadable:
-        member_digest = _projection_digest(_artifact_command_projection(root_wheel, root_sdist, source_archive))
+        member_digest = projection_digest(_artifact_command_projection(root_wheel, root_sdist, source_archive))
     else:
         try:
             _artifact_command_projection(root_wheel, root_sdist, source_archive)
@@ -135,7 +135,7 @@ def make_test_command_spec_attestation(
         "schemas_sha256": "e" * 64,
         "import_budgets_sha256": "f" * 64,
     }
-    value["envelope_sha256"] = _projection_digest(value)
+    value["envelope_sha256"] = projection_digest(value)
     return value
 
 

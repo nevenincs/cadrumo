@@ -147,6 +147,7 @@
         "cadrumo_client.transport.posix",
         "cadrumo_client.transport.posix_channel",
         "cadrumo_client.transport.posix_endpoint",
+        "cadrumo_client.transport.product_version",
         "cadrumo_client.transport.profile_language",
         "cadrumo_client.transport.profile_mutations",
         "cadrumo_client.transport.profile_password_rotation",
@@ -160,6 +161,7 @@
         "cadrumo_client.transport.windows_channel",
         "cadrumo_client.transport.windows_desktop_logon",
         "cadrumo_client.transport.windows_native_io",
+        "cadrumo_client.transport.windows_process",
         "cadrumo_client.transport.workbench_generation"
       ]
     }

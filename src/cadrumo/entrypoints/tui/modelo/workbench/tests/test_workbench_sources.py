@@ -18,7 +18,6 @@ from decimal import Decimal
 
 import pytest
 from rich.console import Console
-from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
 from ......application.modelo.source_policy import SourceFamily, SourceSurface, source_policy
@@ -38,6 +37,7 @@ from ......core.period import Period
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ....navigation import TuiNavigationTargetV1, declared_destination_ids
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry
 from ..screen import ModeloWorkbenchScreen
@@ -61,11 +61,6 @@ from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, stat
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _SIZE = (140, 40)
-
-
-async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _lines(widget: CasillaList) -> list[str]:
@@ -302,9 +297,9 @@ async def test_the_map_opens_on_the_group_of_the_box_under_the_cursor_and_enter_
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("s")
-            await _settle(pilot)
+            await settle(pilot)
             sources = app.screen
             assert isinstance(sources, WorkbenchSourcesScreen)
             title = str(sources.query_one("#sources-title", Static).render())
@@ -313,13 +308,17 @@ async def test_the_map_opens_on_the_group_of_the_box_under_the_cursor_and_enter_
             opened_on = sources.query_one(CasillaList).highlighted
             first_listing = _lines(sources.query_one(CasillaList))
             first_groups = _group_lines(groups)
-            await pilot.press("shift+tab", "home", "enter")
-            await _settle(pilot)
+            await pilot.press("shift+tab")
+            await settle(pilot)
+            await pilot.press("home")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             records_listing = _lines(sources.query_one(CasillaList))
             records_groups = _group_lines(groups)
             focused_list = sources.focused is sources.query_one(CasillaList)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             back = app.screen is screen
             landed_on = screen.query_one(CasillaList).highlighted
 
@@ -346,22 +345,22 @@ async def test_opening_a_source_shows_staged_changes_and_asks_before_leaving_the
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions(), navigate=navigated.append)
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*"10", "enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("s")
-            await _settle(pilot)
+            await settle(pilot)
             staged_line = next(
                 line for line in _lines(app.screen.query_one(CasillaList)) if "Retenciones e ingresos" in line
             )
             await pilot.press("o")
-            await _settle(pilot)
+            await settle(pilot)
             asked = isinstance(app.screen, ConfirmScreen)
             navigated_before_answer = list(navigated)
             await pilot.press("y")
-            await _settle(pilot)
+            await settle(pilot)
 
     assert "Δ" in staged_line
     assert asked
@@ -375,14 +374,18 @@ async def test_a_box_no_other_area_fills_says_so_instead_of_opening_anything() -
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("s")
-            await _settle(pilot)
+            await settle(pilot)
             sources = app.screen
-            await pilot.press("shift+tab", "end", "enter")
-            await _settle(pilot)
+            await pilot.press("shift+tab")
+            await settle(pilot)
+            await pilot.press("end")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             await pilot.press("o")
-            await _settle(pilot)
+            await settle(pilot)
             still_open = app.screen is sources
             notice = str(sources.query_one("#sources-notice", Static).render())
 
@@ -396,11 +399,11 @@ async def test_without_a_way_to_open_other_areas_the_workbench_says_where_to_fin
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("s")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("o")
-            await _settle(pilot)
+            await settle(pilot)
             back = app.screen is screen
             notice = str(screen.query_one("#wb-notice", Static).render())
 
@@ -414,14 +417,14 @@ async def test_choosing_a_box_the_filer_may_change_opens_its_editor_in_the_workb
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("s")
-            await _settle(pilot)
+            await settle(pilot)
             sources = app.screen
             assert isinstance(sources, WorkbenchSourcesScreen)
             chosen = sources.query_one(CasillaList).highlighted
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             on_top = app.screen
             editor = open_panel(on_top)
             landed_on = screen.query_one(CasillaList).highlighted
@@ -444,7 +447,7 @@ async def test_the_declarations_status_line_leads_the_map_and_the_title_is_stron
         )
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             children = list(screen.query_one("#sources-panel").children)
             shown = str(children[0].render()) if isinstance(children[0], Static) else ""
             title = screen.query_one("#sources-title", Static).rich_style
@@ -453,7 +456,7 @@ async def test_the_declarations_status_line_leads_the_map_and_the_title_is_stron
         plain = WorkbenchSourcesScreen(synthetic_form(), language=OutputLanguage.EN, staged={})
         plain_app = ScreenHostApp(plain)
         async with plain_app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             without = [child.id for child in plain.query_one("#sources-panel").children]
             plain_app.exit(None)
 

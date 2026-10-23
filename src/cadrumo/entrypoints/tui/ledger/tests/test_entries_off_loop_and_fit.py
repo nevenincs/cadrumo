@@ -20,6 +20,7 @@ from textual.widgets import Button, Collapsible, DataTable, Input, Select
 from .....core.config import override_settings
 from ...components.dialogs import ConfirmScreen
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from ..entries_add import LedgerEntryAddScreen
 from ..entries_browse import LedgerEntriesBrowseScreen
@@ -33,7 +34,7 @@ from .entries_door_fixtures import (
     entry_id,
     synthetic_entry,
 )
-from .test_ledger_selection_journey import _WorkspaceHostApp
+from .workspace_fixtures import WorkspaceHostApp
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -76,22 +77,16 @@ class _Reached(MemoryEntriesLedger):
         return set(self.entered)
 
 
-async def _settle(pilot: Pilot[None]) -> None:
-    await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
-
-
 async def _press(pilot: Pilot[None], screen: Screen[None], button_id: str) -> None:
     screen.query_one(f"#{button_id}", Button).press()
-    await _settle(pilot)
+    await settle(pilot)
 
 
 async def _accept(pilot: Pilot[None]) -> None:
     dialog = pilot.app.screen
     assert isinstance(dialog, ConfirmScreen)
     dialog.query_one("#btn-confirm-accept", Button).press()
-    await _settle(pilot)
+    await settle(pilot)
 
 
 async def _choose(pilot: Pilot[None], screen: LedgerEntriesBrowseScreen, row: int) -> None:
@@ -99,14 +94,14 @@ async def _choose(pilot: Pilot[None], screen: LedgerEntriesBrowseScreen, row: in
     table.focus()
     table.move_cursor(row=row)
     await pilot.press("enter")
-    await _settle(pilot)
+    await settle(pilot)
 
 
 async def _drive_browse(ledger: _Reached) -> None:
     screen = LedgerEntriesBrowseScreen(entries_controller(), ledger.doors())
-    app = _WorkspaceHostApp(screen)
+    app = WorkspaceHostApp(screen)
     async with app.run_test(size=(120, 40)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await _choose(pilot, screen, 0)
         for button_id in ("entries-browse-stash", "entries-browse-restore", "entries-browse-archive"):
             await _press(pilot, screen, button_id)
@@ -123,7 +118,7 @@ async def _drive_browse(ledger: _Reached) -> None:
         await _accept(pilot)
         await _choose(pilot, screen, 0)
         await _press(pilot, screen, "entries-browse-trace")
-        await _settle(pilot)
+        await settle(pilot)
         trace = app.screen
         assert isinstance(trace, LedgerEntryTraceScreen)
         await _press(pilot, trace, "entries-trace-full")
@@ -132,28 +127,28 @@ async def _drive_browse(ledger: _Reached) -> None:
 async def _drive_forms(ledger: _Reached, export_path: str) -> None:
     doors = ledger.doors()
     add = LedgerEntryAddScreen(entries_controller(), doors)
-    async with _WorkspaceHostApp(add).run_test(size=(120, 40)) as pilot:
-        await _settle(pilot)
+    async with WorkspaceHostApp(add).run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
         add.query_one("#entries-add-booked-date", Input).value = "2026-03-14"
         add.query_one("#entries-add-amount", Input).value = "10.00"
         add.query_one("#entries-add-description", Input).value = "Synthetic"
         await _press(pilot, add, "entries-add-review")
         await _press(pilot, add, "entries-add-confirm")
     export = LedgerEntriesExportScreen(entries_controller(), doors)
-    async with _WorkspaceHostApp(export).run_test(size=(120, 40)) as pilot:
-        await _settle(pilot)
+    async with WorkspaceHostApp(export).run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
         export.query_one("#entries-export-path", Input).value = export_path
         await _press(pilot, export, "entries-export-review")
         await _press(pilot, export, "entries-export-confirm")
     health = LedgerHealthScreen(entries_controller(), doors)
-    async with _WorkspaceHostApp(health).run_test(size=(120, 40)) as pilot:
-        await _settle(pilot)
+    async with WorkspaceHostApp(health).run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
         health.query_one("#entries-health-year", Input).value = "2026"
         cast("Select[str]", health.query_one("#entries-health-period", Select)).value = "1T"
         await _press(pilot, health, "entries-health-read")
     reset = LedgerResetScreen(entries_controller(), doors)
-    async with _WorkspaceHostApp(reset).run_test(size=(120, 40)) as pilot:
-        await _settle(pilot)
+    async with WorkspaceHostApp(reset).run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
         reset.query_one("#entries-reset-reason", Input).value = "synthetic"
         await _press(pilot, reset, "entries-reset-preview-button")
         await _press(pilot, reset, "entries-reset-run")
@@ -217,7 +212,7 @@ async def _fill(pilot: Pilot[None], screen: LedgerWorkspaceScreen) -> None:
         await _press(pilot, screen, "entries-reset-preview-button")
     elif isinstance(screen, LedgerEntryTraceScreen):
         await _press(pilot, screen, "entries-trace-full")
-    await _settle(pilot)
+    await settle(pilot)
 
 
 @pytest.mark.asyncio
@@ -231,11 +226,11 @@ async def test_every_entry_screen_fits_every_supported_terminal(
 ) -> None:
     ledger = MemoryEntriesLedger.with_entries(1000)
     screen = build(entries_controller(), ledger)
-    app = _WorkspaceHostApp(screen)
+    app = WorkspaceHostApp(screen)
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=size) as pilot:
             app.theme = theme
-            await _settle(pilot)
+            await settle(pilot)
             await _fill(pilot, screen)
             assert geometry_band(app, size[0]) == []
             assert all(table.max_scroll_x == 0 for table in screen.query(DataTable))

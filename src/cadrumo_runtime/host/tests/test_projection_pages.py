@@ -336,18 +336,17 @@ def test_native_paged_inventory_refuses_continuation_after_global_lock(tmp_path:
                 )
             }
         )
-        # Fill the raw budget rather than fixing a count: a request's size follows its proposal's scope.
+        # Add requests until the raw inventory alone exceeds one page rather than fixing a count:
+        # a request's size follows its proposal's scope.
         bounded = uuid4()
         subject.service.request(bounded, bounded_proposal)
         requested = {bounded}
         size = len(canonical_json_bytes(subject.service.inventory().model_dump(mode="json")))
-        step = 0
-        while size + step <= WORKER_AUTOMATION_INVENTORY_MAX_BYTES:
+        while size <= PROJECTION_PAGE_BYTES:
             identity = uuid4()
             subject.service.request(identity, subject.proposal)
             requested.add(identity)
-            previous, size = size, len(canonical_json_bytes(subject.service.inventory().model_dump(mode="json")))
-            step = size - previous
+            size = len(canonical_json_bytes(subject.service.inventory().model_dump(mode="json")))
         assert size <= WORKER_AUTOMATION_INVENTORY_MAX_BYTES
         profile_id = subject.store.binding.profile_id
         close_active_bucket_session()

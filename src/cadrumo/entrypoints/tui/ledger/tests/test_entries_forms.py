@@ -22,6 +22,7 @@ from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....core.operations import OperationEffect
 from ...components.dialogs import ConfirmScreen
+from ...tests.settling import settle
 from ..entries_add import LedgerEntryAddScreen
 from ..entries_browse import LedgerEntriesBrowseScreen
 from ..entries_export import LedgerEntriesExportScreen
@@ -29,20 +30,14 @@ from ..entries_health import LedgerHealthScreen
 from ..entries_reset import LedgerResetScreen
 from ..models import LedgerFlowState
 from .entries_door_fixtures import REFUSED_ADD_AMOUNT, MemoryEntriesLedger, entries_controller
-from .test_ledger_selection_journey import _WorkspaceHostApp
+from .workspace_fixtures import WorkspaceHostApp
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-async def _settle(pilot: Pilot[None]) -> None:
-    await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
-
-
 async def _press(pilot: Pilot[None], screen: Screen[None], button_id: str) -> None:
     screen.query_one(f"#{button_id}", Button).press()
-    await _settle(pilot)
+    await settle(pilot)
 
 
 def _text(screen: Screen[None], selector: str) -> str:
@@ -65,10 +60,10 @@ _REQUIRED = {
 async def test_an_entry_with_only_the_required_facts_is_reviewed_then_added() -> None:
     ledger = MemoryEntriesLedger.with_entries(2)
     screen = LedgerEntryAddScreen(entries_controller(), ledger.doors())
-    app = _WorkspaceHostApp(screen)
+    app = WorkspaceHostApp(screen)
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             _type(screen, _REQUIRED)
             await _press(pilot, screen, "entries-add-review")
             assert screen.flow_state is LedgerFlowState.CONFIRMING
@@ -79,7 +74,7 @@ async def test_an_entry_with_only_the_required_facts_is_reviewed_then_added() ->
             assert screen.query_one("#entries-add-open", Button).has_class("-open")
 
             await _press(pilot, screen, "entries-add-open")
-            await _settle(pilot)
+            await settle(pilot)
             browse = app.screen
             assert isinstance(browse, LedgerEntriesBrowseScreen)
             assert browse.selected_id is not None
@@ -101,8 +96,8 @@ async def test_a_negative_amount_is_refused_by_the_request_before_review() -> No
     ledger = MemoryEntriesLedger()
     screen = LedgerEntryAddScreen(entries_controller(), ledger.doors())
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             _type(screen, {**_REQUIRED, "#entries-add-amount": "-120.50"})
             await _press(pilot, screen, "entries-add-review")
             assert screen.flow_state is LedgerFlowState.EDITING
@@ -114,10 +109,10 @@ async def test_a_negative_amount_is_refused_by_the_request_before_review() -> No
 async def test_the_workers_refusal_is_shown_and_the_entry_can_be_edited_again() -> None:
     ledger = MemoryEntriesLedger()
     screen = LedgerEntryAddScreen(entries_controller(), ledger.doors())
-    app = _WorkspaceHostApp(screen)
+    app = WorkspaceHostApp(screen)
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             _type(screen, {**_REQUIRED, "#entries-add-amount": REFUSED_ADD_AMOUNT})
             await _press(pilot, screen, "entries-add-review")
             await _press(pilot, screen, "entries-add-confirm")
@@ -128,7 +123,7 @@ async def test_the_workers_refusal_is_shown_and_the_entry_can_be_edited_again() 
             assert ledger.entries == []
 
             await _press(pilot, screen, "entries-add-again")
-            await _settle(pilot)
+            await settle(pilot)
             again = app.screen
             assert isinstance(again, LedgerEntryAddScreen)
             assert again.query_one("#entries-add-amount", Input).value == REFUSED_ADD_AMOUNT
@@ -140,8 +135,8 @@ async def test_a_cancelled_entry_writes_nothing() -> None:
     ledger = MemoryEntriesLedger()
     screen = LedgerEntryAddScreen(entries_controller(), ledger.doors())
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             _type(screen, _REQUIRED)
             await _press(pilot, screen, "entries-add-review")
             await _press(pilot, screen, "entries-add-cancel")
@@ -154,8 +149,8 @@ async def test_optional_tax_facts_reach_the_request_only_when_typed() -> None:
     ledger = MemoryEntriesLedger()
     screen = LedgerEntryAddScreen(entries_controller(), ledger.doors())
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             _type(
                 screen,
                 {**_REQUIRED, "#entries-add-taxable-base": "100.00", "#entries-add-iva-rate": "0.21"},
@@ -178,8 +173,8 @@ async def test_export_to_a_typed_path_reports_what_was_written(tmp_path: Path) -
     ledger = MemoryEntriesLedger.with_entries(2)
     screen = LedgerEntriesExportScreen(entries_controller(), ledger.doors())
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             _type(screen, {"#entries-export-path": _export_path(tmp_path), "#entries-export-year": "2026"})
             cast("Select[str]", screen.query_one("#entries-export-period", Select)).value = "1T"
             screen.query_one("#entries-export-inactive", Checkbox).value = True
@@ -203,8 +198,8 @@ async def test_a_partial_export_says_partial(tmp_path: Path) -> None:
     ledger.export_effect = OperationEffect.PARTIAL
     screen = LedgerEntriesExportScreen(entries_controller(), ledger.doors())
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             _type(screen, {"#entries-export-path": _export_path(tmp_path)})
             await _press(pilot, screen, "entries-export-review")
             await _press(pilot, screen, "entries-export-confirm")
@@ -218,8 +213,8 @@ async def test_a_relative_export_path_is_refused_before_review() -> None:
     ledger = MemoryEntriesLedger.with_entries(2)
     screen = LedgerEntriesExportScreen(entries_controller(), ledger.doors())
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             _type(screen, {"#entries-export-path": "ledger.csv"})
             await _press(pilot, screen, "entries-export-review")
             assert screen.flow_state is LedgerFlowState.EDITING
@@ -233,8 +228,8 @@ async def test_a_refused_export_is_shown_with_its_registered_refusal(tmp_path: P
     ledger.refuse_with_registered_error("export")
     screen = LedgerEntriesExportScreen(entries_controller(), ledger.doors())
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             _type(screen, {"#entries-export-path": _export_path(tmp_path)})
             await _press(pilot, screen, "entries-export-review")
             await _press(pilot, screen, "entries-export-confirm")
@@ -247,8 +242,8 @@ async def test_status_and_checks_read_a_chosen_period_in_words() -> None:
     ledger = MemoryEntriesLedger.with_entries(4)
     screen = LedgerHealthScreen(entries_controller(), ledger.doors())
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             _type(screen, {"#entries-health-year": "2026"})
             cast("Select[str]", screen.query_one("#entries-health-period", Select)).value = "1T"
             await _press(pilot, screen, "entries-health-read")
@@ -268,8 +263,8 @@ async def test_without_a_period_readiness_is_not_measured_and_preflight_is_not_r
     ledger = MemoryEntriesLedger.with_entries(4)
     screen = LedgerHealthScreen(entries_controller(), ledger.doors())
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             await _press(pilot, screen, "entries-health-read")
             assert tr("tui.ledger.entry_tools.health.not_measured") in _text(screen, "#entries-health-status")
             assert _text(screen, "#entries-health-preflight") == tr(
@@ -284,8 +279,8 @@ async def test_a_refused_status_read_is_shown() -> None:
     ledger.refuse_with_registered_error("status")
     screen = LedgerHealthScreen(entries_controller(), ledger.doors())
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             await _press(pilot, screen, "entries-health-read")
             assert _text(screen, "#ledger-refusal") == tr("errors.refused.refused_cli_validation_boundary")
             assert _text(screen, "#entries-health-status") == ""
@@ -300,10 +295,10 @@ async def _preview_reset(pilot: Pilot[None], screen: LedgerResetScreen) -> None:
 async def test_reset_runs_a_dry_run_first_and_a_declined_confirmation_writes_nothing() -> None:
     ledger = MemoryEntriesLedger.with_entries(5)
     screen = LedgerResetScreen(entries_controller(), ledger.doors())
-    app = _WorkspaceHostApp(screen)
+    app = WorkspaceHostApp(screen)
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await _preview_reset(pilot, screen)
             assert tr("tui.ledger.entry_tools.reset.would_remove", count=5) in _text(screen, "#entries-reset-preview")
             await _press(pilot, screen, "entries-reset-run")
@@ -313,7 +308,7 @@ async def test_reset_runs_a_dry_run_first_and_a_declined_confirmation_writes_not
                 "tui.ledger.entry_tools.reset.confirm_message", count=5
             )
             dialog.query_one("#btn-confirm-cancel", Button).press()
-            await _settle(pilot)
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.CANCELLED
             assert _text(screen, "#ledger-flow-status") == tr("tui.ledger.entry_tools.reset.cancelled")
     assert [cast(LedgerResetRequest, request).dry_run for request in ledger.requested("reset")] == [True]
@@ -324,14 +319,14 @@ async def test_reset_runs_a_dry_run_first_and_a_declined_confirmation_writes_not
 async def test_a_confirmed_reset_runs_exactly_the_previewed_request() -> None:
     ledger = MemoryEntriesLedger.with_entries(5)
     screen = LedgerResetScreen(entries_controller(), ledger.doors())
-    app = _WorkspaceHostApp(screen)
+    app = WorkspaceHostApp(screen)
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await _preview_reset(pilot, screen)
             await _press(pilot, screen, "entries-reset-run")
             app.screen.query_one("#btn-confirm-accept", Button).press()
-            await _settle(pilot)
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.SUCCEEDED
             assert _text(screen, "#ledger-flow-status") == tr("tui.ledger.entry_tools.reset.done", count=5)
     requests = [cast(LedgerResetRequest, request) for request in ledger.requested("reset")]
@@ -347,8 +342,8 @@ async def test_reset_needs_a_reason_before_its_preview() -> None:
     ledger = MemoryEntriesLedger.with_entries(1)
     screen = LedgerResetScreen(entries_controller(), ledger.doors())
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
             await _press(pilot, screen, "entries-reset-preview-button")
             assert _text(screen, "#ledger-refusal") == tr("tui.ledger.entry_tools.reset.reason_required")
             assert screen.query_one("#entries-reset-run", Button).disabled

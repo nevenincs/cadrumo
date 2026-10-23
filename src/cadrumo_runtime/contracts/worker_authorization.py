@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, RootModel, SecretBytes, m
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
+from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo_client.contracts.access_refusals import AccessAllowed, OperationResponseScopeAllowed
@@ -27,8 +28,11 @@ from .worker_enrollment import (
     WorkerApprovalRequest,
 )
 
-WORKER_AUTOMATION_INVENTORY_MAX_BYTES = 32 * 1024
-"""Conservative complete-inventory IPC limit, below the native 64 KiB frame."""
+WORKER_AUTOMATION_INVENTORY_MAX_BYTES = 1024 * 1024
+"""Largest complete inventory the runtime releases; its permit travels in bounded chunks."""
+
+WORKER_AUTOMATION_INVENTORY_PERMIT_MAX_BYTES = WORKER_AUTOMATION_INVENTORY_MAX_BYTES + 1024
+"""Largest inventory permit: the inventory plus its fixed permit fields."""
 
 
 class WorkerAuthorizationRequest(BaseModel):
@@ -188,6 +192,22 @@ class WorkerAutomationInventoryPermit(BaseModel):
     inventory: AutomationInventory
 
 
+class WorkerAutomationInventoryTransfer(BaseModel):
+    """Announce one inventory permit, which follows as ordered chunks of its canonical JSON.
+
+    The worker accepts the permit only when the chunks reproduce this byte
+    count and digest and the permit names this request, boot and permit.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["automation_inventory_transfer"] = "automation_inventory_transfer"
+    request_id: UUID
+    runtime_boot_id: UUID
+    permit_id: UUID
+    byte_count: Annotated[int, Field(ge=2, le=WORKER_AUTOMATION_INVENTORY_PERMIT_MAX_BYTES)]
+    payload_digest: ContentDigest
+
+
 @dataclass(frozen=True, slots=True)
 class WorkerAutomationInventoryAllowed:
     """Trusted parent result, scoped to one connection's live human authority."""
@@ -301,7 +321,7 @@ class WorkerAuthorizationReply(
         Annotated[
             WorkerAuthorizationPermit
             | WorkerResponseScopePermit
-            | WorkerAutomationInventoryPermit
+            | WorkerAutomationInventoryTransfer
             | WorkerAuthorityChecked
             | WorkerAuthorizationReleased
             | WorkerApprovalReady

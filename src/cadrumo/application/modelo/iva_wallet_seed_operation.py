@@ -13,36 +13,33 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.hashing import canonical_json_bytes
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationEffect,
 )
 from ...core.period import Period
-from ...core.time.clock import now
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.iva_compensation.errors import IvaCompensationSeedConflictError
-from ..ledger.read_access import resolve_ledger_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
+from ..operations.profile_guard import require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
 )
-from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .iva_wallet_mutation import (
-    IVA_WALLET_MUTATION_RESULT_MAX_BYTES,
     IvaWalletCanonicalAmount,
     IvaWalletTaxpayerNif,
     bind_iva_wallet_profile_ports,
+    build_iva_wallet_mutation_definition,
+    iva_wallet_result_exceeds_limit,
+    put_iva_wallet_mutation_report,
     require_iva_wallet_write_receipt,
+    resolve_iva_wallet_mutation_access,
     validate_iva_wallet_amount,
 )
 from .iva_wallet_seed import ModeloIvaWalletSeedError, seed_iva_compensation_period_for_bucket
@@ -121,7 +118,7 @@ def project_modelo_iva_wallet_seed_result(
         profile_id=projection.profile_id,
         message="IVA wallet seed result contradicts its terminal receipt",
     )
-    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > IVA_WALLET_MUTATION_RESULT_MAX_BYTES:
+    if iva_wallet_result_exceeds_limit(projection):
         raise ValueError("IVA wallet seed result exceeds its projection limit")
     return projection
 
@@ -221,29 +218,20 @@ class ModeloIvaWalletSeedExecutor:
                 )
                 await context.events.phase(_RESULT_PHASE)
                 report = ModeloIvaWalletSeedReport(projection=projection, local_write_performed=True)
-                if len(canonical_json_bytes(report.model_dump(mode="json"))) > IVA_WALLET_MUTATION_RESULT_MAX_BYTES:
-                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-                return await context.operands.put(report, written_at=now())
+                return await put_iva_wallet_mutation_report(context, report)
 
         return await await_cancellation_complete(commit_and_publish(), task_name="modelo-iva-wallet-seed")
 
 
 def build_modelo_iva_wallet_seed_definition(factory: ModeloIvaWalletSeedPortsFactory) -> OperationDefinition:
     """Declare a durable, confidential, profile-bound local mutation."""
-    return OperationDefinition(
+    return build_iva_wallet_mutation_definition(
         definition_id=MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
         request_type=ModeloIvaWalletSeedRequest,
-        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloIvaWalletSeedReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloIvaWalletSeedRequest,
-            executor_type=ModeloIvaWalletSeedExecutor,
-            build=lambda: ModeloIvaWalletSeedExecutor(factory),
-        ),
+        executor_type=ModeloIvaWalletSeedExecutor,
+        build=lambda: ModeloIvaWalletSeedExecutor(factory),
         phase_codes=_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
     )
 
 
@@ -253,17 +241,11 @@ def resolve_modelo_iva_wallet_seed_access(
     /,
 ) -> ResolvedOperationAccess:
     """Require exact profile/period access and fresh COMMIT permission."""
-    payload = require_access_request_profile_payload(
-        request,
-        definition_id=MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
-        payload_type=ModeloIvaWalletSeedRequest,
-        access_profile_id=context.profile_id,
-    )
-    return resolve_ledger_commit_access(
+    return resolve_iva_wallet_mutation_access(
         request,
         context,
-        profile_id=payload.profile_id,
-        periods=frozenset({payload.period.to_period()}),
+        definition_id=MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
+        payload_type=ModeloIvaWalletSeedRequest,
     )
 
 

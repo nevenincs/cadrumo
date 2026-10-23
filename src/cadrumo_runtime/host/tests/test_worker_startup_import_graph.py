@@ -152,6 +152,15 @@ def test_binding_an_operation_excludes_the_workbench_graph() -> None:
     )
 
 
+# While it waits for a first operation, the worker imports what that operation composes.
+_WARMED: tuple[str, ...] = (
+    "cadrumo.entrypoints.operation_composition",
+    "cadrumo.application.operations.composition",
+    "cadrumo.application.operations.supervisor",
+    "cadrumo.application.user_profile.operations",
+)
+
+
 def test_every_forbidden_target_still_resolves() -> None:
     """A renamed module is absent from every graph, which would retire its entry silently."""
     unresolvable: list[str] = []
@@ -165,15 +174,6 @@ def test_every_forbidden_target_still_resolves() -> None:
         f"these forbidden import targets no longer resolve: {unresolvable}. Re-point each "
         "at the module that now owns the subsystem, or drop it deliberately."
     )
-
-
-# While it waits for a first operation, the worker imports what that operation composes.
-_WARMED: tuple[str, ...] = (
-    "cadrumo.entrypoints.operation_composition",
-    "cadrumo.application.operations.composition",
-    "cadrumo.application.operations.supervisor",
-    "cadrumo.application.user_profile.operations",
-)
 
 
 def test_an_idle_worker_imports_the_first_composition_after_readiness() -> None:

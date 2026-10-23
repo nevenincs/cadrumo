@@ -5,6 +5,8 @@ from __future__ import annotations
 from contextlib import suppress
 from typing import TYPE_CHECKING, Any
 
+from cadrumo.entrypoints.tui.tests.settling import settle
+
 from .scenario import AcceptanceOutcome
 from .tui_contracts import TerminalCondition, TuiJourneyError, TuiOperationBinding, TuiTerminalEvidence, _TuiScreen
 from .tui_readback import _rendered_text, _stack_text
@@ -132,7 +134,7 @@ async def _observe_operation_terminal(
         # lifecycle once.
         if not review_applied:
             review_applied = await _apply_visible_operation_review(pilot, modal, binding)
-        await pilot.pause()
+        await settle(pilot, workers=False)
     try:
         apply = modal.query_one("#btn-operation-apply")
         phase = _rendered_text(modal.query_one("#operation-modal-phase"))
@@ -153,7 +155,7 @@ async def _close_operation_result_statement(pilot: Pilot[Any]) -> None:
         close = pilot.app.screen.query_one(_RESULT_STATEMENT_CLOSE)
         close.focus()
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot, workers=False)
 
 
 def _settled_terminal(

@@ -25,8 +25,8 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_client.transport.windows_channel import WindowsChannel
 from cadrumo_client.transport.windows_native_io import owned_windows_handle
+from cadrumo_client.transport.windows_process import WindowsOwnedProcess, WindowsProcessScope
 from cadrumo_runtime.adapters.boot_record import RuntimeBootRecord, read_runtime_boot_record
-from cadrumo_runtime.adapters.windows_process import WindowsOwnedProcess, WindowsProcessScope
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 from dev.packaging.command_execution import run_command
 

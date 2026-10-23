@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#import-centralization'
 date: '2026-07-01'
-modified: '2026-10-21'
-body_hash: 'sha256:00274c286992ba3a864f734c53b45e6cef603fe6b86b3a220f4fa49c9698f320'
+modified: '2026-10-23'
+body_hash: 'sha256:7abd493a2d05bc035dfb6514a8d0a5285c88ac9c33b2ecf13e10cd94a840d095'
 related:
   - '[[2026-07-01-import-centralization-research]]'
   - '[[2026-07-02-import-centralization-audit]]'
@@ -31,9 +31,9 @@ This amendment replaces facade promotion with direct defining-module ownership. 
 8. The import-hygiene gate resolves definitions and rejects package imports used for symbols, re-exports, aliases, forwarding wrappers, private cross-package reaches, multi-sourced symbols, dangling imports, and orphaned bridge modules. It inventories canonical defining modules and symbols rather than package export sets.
 9. Every relocation is atomic: move the definition and its owning tests, update every production/test/tooling consumer and dynamic target, update manifests and receipts, delete the former module and every export surface, and prove clean collection in one explicit-path commit. No temporary alias, shim, fallback, or re-export may bridge the move.
 
-### Accepted ownership correction - 2026-10-15
+### Frontend and runtime ownership
 
-The user explicitly corrected the 2026-10-14 runtime-host TUI amendment: TUI belongs inside cadrumo as cadrumo.entrypoints.tui; cadrumo_runtime remains a separate owner of generic login, custody, session and runtime authority. This correction supersedes the conflicting TUI placement and launcher claims in that amendment; the earlier amendment is preserved as history.
+The TUI belongs inside cadrumo as `cadrumo.entrypoints.tui`; `cadrumo_runtime` remains a separate owner of generic login, custody, session and runtime authority.
 
 CLI and TUI are tax-product entrypoints that consume public neutral client contracts and transport. Calling a runtime projection does not transfer frontend ownership or authorize importing runtime authority. A runtime command may invoke the TUI as an opaque process target without hosting its implementation.
 
@@ -85,8 +85,7 @@ The closed `cadrumo` lanes are:
 - `cadrumo.entrypoints` direct modules: shared composition-root code; `cadrumo.entrypoints.cli` and `cadrumo.entrypoints.tui`: sibling outermost entrypoints.
 - `cadrumo._data`, `cadrumo.locales`, and generated `cadrumo_data` artifacts: passive resource/data surfaces reached through an inward resource boundary.
 - `cadrumo.tests`: neutral core-only test support. Tests below another package inherit that nearest owner's lane.
-- `cadrumo.llm`: migration-only; it is merged into `cadrumo.adapters.outbound.llm` and has no independent final-state lane.
-- `cadrumo_mcp`: the separately shipped deterministic MCP service. `cadrumo` never imports it. It may consume canonical inward product modules but not `cadrumo.entrypoints` or repository-only roots. It carries no authored persona, skill or rule content and imports nothing from cadrumo-agent. Its tests inherit the same restriction. (Renamed from `cadrumo_harness` and narrowed on 2026-10-21, drift repair toward cadrumo-agent `2026-10-15-agent-harness-adr`, authorized by the user in session TUI-REFACTOR; before that it was classified as a separately shipped outer stub pending retirement or completion.)
+- `cadrumo_mcp`: the separately shipped deterministic MCP service. `cadrumo` never imports it. It may consume canonical inward product modules but not `cadrumo.entrypoints`, `cadrumo_runtime` or repository-only roots. It carries no authored persona, skill or rule content and imports nothing from cadrumo-agent. Its tests inherit the same restriction.
 
 Any new source root or package without an explicit classification is a gate error.
 
@@ -104,16 +103,21 @@ Literal dynamic targets and statically enumerable target sets obey the same lane
 
 ### Sole enforcement authority
 
-`just check-imports` is the only contributor-facing import-quality verdict. `.importlinter` owns the complete package classification and dependency graph. It is exhaustive over governed roots and includes local and type-only edges. One subordinate parser may run behind the command for relative syntax, canonical defining modules, privacy, inert initializers, forwarding/re-export shapes, and supported dynamic imports that Import Linter cannot express. That parser does not contain a second lane matrix or emit an independent policy verdict.
+`just check-import-boundaries` is the only contributor-facing import-quality verdict. `.importlinter` owns the complete package classification and dependency graph. It is exhaustive over governed roots and includes local and type-only edges. One subordinate parser may run behind the command for relative syntax, canonical defining modules, privacy, inert initializers, forwarding/re-export shapes, and supported dynamic imports that Import Linter cannot express. That parser does not contain a second lane matrix or emit an independent policy verdict.
 
-Every component fails closed. A broken contract, unclassified package, parser failure, unreadable source, missing executable, unresolved first-party dynamic target, unsupported import form, or architectural warning makes `just check-imports` non-zero. Development reports consume that process result; they do not reparse Import Linter grammar or reinterpret an unavailable gate as advisory evidence.
+Every component fails closed. A broken contract, unclassified package, parser failure, unreadable source, missing executable, unresolved first-party dynamic target, unsupported import form, or architectural warning makes `just check-import-boundaries` non-zero. Development reports consume that process result; they do not reparse Import Linter grammar or reinterpret an unavailable gate as advisory evidence.
 
-Duplicate pytest predicates and development scanners are removed only after the exact predicate is represented by the authoritative driver and a planted defect demonstrates that the driver fails. Distinct runtime behavior, artifact packaging, third-party dependency declaration, and governance tests remain. The planted-defect suite covers every lane direction and syntax/dynamic family through `just check-imports` itself.
+Duplicate pytest predicates and development scanners are removed only after the exact predicate is represented by the authoritative driver and a planted defect demonstrates that the driver fails. Distinct runtime behavior, artifact packaging, third-party dependency declaration, and governance tests remain. The planted-defect suite covers every lane direction and syntax/dynamic family through `just check-import-boundaries` itself.
 
 ### Migration discipline
 
 No current violation is grandfathered. No count becomes a baseline, no wildcard test carve-out survives, no warning is accepted as an architectural result, and no broad `ignore_imports` entry remains. Migration proceeds from source-boundary leaks through inward-layer inversions, application-to-adapter edges, adapter-sibling coupling, entrypoint crossings, test relocation and support splitting, the LLM merge and harness disposition, then canonical static and dynamic import cleanup. The gate may remain red on an implementation branch while the violations are removed; it becomes the repository verdict only with zero violations and proven teeth.
 
-### Amendment 2026-10-14: runtime-host TUI ownership
+### Amendment 2026-10-23: consumer trees, executable strings and the agent-service boundary
 
-The installed Textual frontend now has its production root at `src/cadrumo_runtime/host/frontend/tui/` (`cadrumo_runtime.host.frontend.tui`) and is launched through `cadrumo-runtime tui`. It belongs to the runtime host; `cadrumo` tax modules do not import `cadrumo_runtime`. The earlier sibling-placement language above records the prior decision and is superseded only for current source ownership and dependency direction; the import-authority rules in this ADR otherwise remain unchanged.
+Closing the gate's coverage gaps changes four rules above; the rest of this ADR is unchanged.
+
+- **Python outside the declared roots is governed.** `native/`, `packaging/` and the repository-root `conftest.py` hold Python that imports first-party code but is not an importable package (`packaging` would shadow the PyPI distribution and `src-tauri` is not a module name), so they cannot be `root_packages`. `.importlinter` declares them in `[import-gate:*]` sections, which Import Linter ignores and the gate reads: `[import-gate:consumer-trees]` lists each tree with its reason, an `[import-gate:excluded-trees]` section is the only place a tree may be left outside the gate (none is declared today), and `[import-gate:consumer-contract:shipped-code-never-reaches-repository-only]` names the consumer paths that ship inside installed artifacts (`native/application/src`, `native/desktop/src-tauri/src/python`, `native/interpreter`), which may not import `dev` or `docs`. Each file in a consumer tree is checked as a consumer module: its static, local, `TYPE_CHECKING` and dynamic first-party targets must exist, be public and name their canonical defining module. A repository-root directory or module holding Python that is neither a declared root, a consumer tree nor a declared exclusion is a gate error. Discovery follows the filesystem inclusion policy and never calls Git.
+- **Executable strings are imports.** Python passed to a subprocess as `-c` code or `-m` module, and `runpy.run_module` targets, are parsed and their first-party imports are ordinary occurrences, so lane, privacy and source-boundary rules apply to them. The statement that process-invocation strings are not imports applies to command lines that name an installed executable, not to Python source embedded in a string. Each dynamic call is classified on its own, so a raw `__import__` of a first-party target is reported wherever it appears in a module.
+- **No grandfathered debt.** The import-boundary ratchet holds no entries; a retired entry for a module that no longer exists is removed rather than kept.
+- **The agent service is a runtime client.** `cadrumo_agent_service` imports neither `cadrumo_runtime` nor `cadrumo.entrypoints`, directly or indirectly, and `cadrumo_client` and `cadrumo_mcp` do not import it. Generic OS process containment shared by the runtime and the service, such as the Windows Job Object launcher, is defined in `cadrumo_client.transport`.

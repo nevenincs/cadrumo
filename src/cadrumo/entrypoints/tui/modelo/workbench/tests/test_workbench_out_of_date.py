@@ -13,7 +13,6 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from textual.pilot import Pilot
 from textual.widgets import Static
 
 from ......application.modelo.work_form_models import ModeloFormIssue, ModeloFormResultDirection, ModeloWorkForm
@@ -26,17 +25,13 @@ from ......domain.modelos.verification_report import (
     VerificationCompletenessStatus,
 )
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..screen import ModeloWorkbenchScreen
 from ..vocabulary import DONE_MARK, STALE_MARK
 from .declaration_states import with_result
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-
-async def _settle(pilot: Pilot[None], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _records_changed(form: ModeloWorkForm) -> ModeloWorkForm:
@@ -75,13 +70,13 @@ async def test_records_changed_after_the_calculation_mark_it_out_of_date_and_lea
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(160, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             stale = str(screen.query_one("#wb-stale", Static).render())
             dimmed = screen.query_one("#wb-result", Static).has_class("-stale")
             stepper = str(screen.query_one("#wb-stepper", Static).render())
             next_line = str(screen.query_one("#wb-next", Static).render())
             await pilot.press("f8")
-            await _settle(pilot, 6)
+            await settle(pilot)
             app.exit(None)
 
     done = f"{DONE_MARK.glyph} {calculate}"

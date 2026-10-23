@@ -14,7 +14,6 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from textual.pilot import Pilot
 from textual.widgets import Static
 
 from ......application.modelo.source_policy import SourceFamily
@@ -30,6 +29,7 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..screen import ModeloWorkbenchScreen
 from ..search import WorkbenchSearchPanel
@@ -43,11 +43,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _IMPORTED_AT = datetime(2026, 4, 2, 10, 30, tzinfo=UTC)
 _INCOME = "01"
-
-
-async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _from_aeat_data() -> ModeloWorkForm:
@@ -68,18 +63,20 @@ async def test_the_help_band_the_panel_and_search_say_the_day_the_aeat_data_was_
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             screen.query_one(CasillaList).focus_address(address_key(ModeloFormCasillaAddressV1(casilla_id=_INCOME)))
-            await _settle(pilot)
+            await settle(pilot)
             band = str(screen.query_one("#wb-help", Static).render())
             await pilot.press("enter")
-            await _settle(pilot, 6)
+            await settle(pilot)
             panel = open_panel(app.screen)
             panel_text = "" if panel is None else "\n".join(str(widget.render()) for widget in panel.query(Static))
             await pilot.press("escape")
-            await _settle(pilot)
-            await pilot.press("slash", *_INCOME)
-            await _settle(pilot)
+            await settle(pilot)
+            await pilot.press("slash")
+            await settle(pilot)
+            await pilot.press(*_INCOME)
+            await settle(pilot)
             hits = screen.query_one(WorkbenchSearchPanel).hits
             app.exit(None)
 
@@ -99,9 +96,9 @@ async def test_the_help_band_says_why_a_carry_with_no_earlier_declaration_holds_
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             screen.query_one(CasillaList).focus_address(address_key(ModeloFormCasillaAddressV1(casilla_id=_INCOME)))
-            await _settle(pilot)
+            await settle(pilot)
             band = str(screen.query_one("#wb-help", Static).render())
             app.exit(None)
 

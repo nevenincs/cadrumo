@@ -19,6 +19,7 @@ from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..home import HomeLinkSelected, HomeLinkV1, HomeScreen
 from .frame import geometry_band, screen_text
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+from .settling import settle
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -46,9 +47,9 @@ async def test_home_renders_the_selected_due_driven_projection_without_overflow(
     screen = HomeScreen(projection)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=size) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         app.theme = theme
-        await pilot.pause()
+        await settle(pilot)
         assert geometry_band(app, size[0]) == []
         assert not screen.show_vertical_scrollbar
         assert all(cast("DataTable[str]", table).max_scroll_x == 0 for table in screen.query(DataTable))
@@ -113,7 +114,7 @@ async def test_home_agenda_rows_carry_one_filing_status_each(
     screen = HomeScreen(build_home_projection_fixture(scenario))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = cast("DataTable[str]", screen.query_one("#home-agenda", DataTable))
         rows = tuple(str(table.get_row_at(index)[0]) for index in range(table.row_count))
         evidence = screen.query_one("#home-evidence", Static)
@@ -130,7 +131,7 @@ async def test_home_names_an_unread_aeat_source_under_the_agenda() -> None:
     screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario.NEVER_CAPTURED))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         evidence = screen.query_one("#home-evidence", Static)
         assert evidence.display
         assert str(evidence.render()).startswith("AEAT data: Not read yet")
@@ -141,12 +142,12 @@ async def test_home_selection_and_escape_are_host_requests_not_business_calls() 
     screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario.READY))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert screen.selected_target == screen.highlighted_target
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot)
     assert screen.back_requested
 
 
@@ -155,7 +156,7 @@ async def test_home_keeps_unknown_ledger_and_messages_as_unknown_not_zero() -> N
     screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario.LOCKED))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         text = "\n".join(str(widget.render()) for widget in screen.query(Static))
     assert "Records readiness\nLocked" in text
     assert "Messages\nLocked" in text
@@ -184,7 +185,7 @@ async def test_home_lists_every_page_and_account_door_with_the_key_that_opens_it
     screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario.READY))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=size) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         links = _link_rows(screen, "#home-links")
         account = _link_rows(screen, "#home-account-links")
         keys = screen.query_one("#home-link-keys", Static)
@@ -230,7 +231,7 @@ async def test_home_keeps_a_closed_page_listed_with_its_reason_and_promises_no_k
     )
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         links = _link_rows(screen, "#home-links")
         account = _link_rows(screen, "#home-account-links")
         keys_text = str(screen.query_one("#home-link-keys", Static).render())
@@ -258,9 +259,9 @@ async def test_each_home_key_asks_the_host_for_its_link(key: str, expected: Home
     screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario.READY))
     app = _LinkRecordingHost(screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         await pilot.press(key)
-        await pilot.pause()
+        await settle(pilot)
     assert app.links == [expected]
     assert screen.selected_target is None
 
@@ -270,15 +271,15 @@ async def test_choosing_a_link_row_asks_for_it_without_moving_the_remembered_hom
     screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario.READY))
     app = _LinkRecordingHost(screen)
     async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         remembered = screen.highlighted_target
         assert remembered is not None
         links = screen.query_one("#home-account-links", DataTable)
         links.focus()
         links.move_cursor(row=1)
-        await pilot.pause()
+        await settle(pilot)
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert screen.highlighted_target == remembered
     assert app.links == [HomeLinkV1.SIGN_OUT]
 
@@ -288,8 +289,7 @@ async def test_an_empty_home_lands_on_its_links_so_the_keyboard_has_somewhere_to
     screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario.EMPTY))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
-        await pilot.pause()
+        await settle(pilot)
         assert app.focused is not None and app.focused.id == "home-links"
         assert screen.query_one("#home-page", VerticalScroll).scroll_y == 0
 

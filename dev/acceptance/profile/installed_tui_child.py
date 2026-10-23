@@ -18,6 +18,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Literal, cast
 
+from cadrumo.entrypoints.tui.tests.settling import settle
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
     admitted_session_autopilot,
@@ -261,7 +262,7 @@ async def _add_activity_row(*, pilot: Any, scenario: ProfileRowLifecycleScenario
         input_widget = query_public_selector(pilot, f"#row-input-{index}", Input)
         input_widget.value = value
     await pilot.click("#btn-row-save")
-    await pilot.app.workers.wait_for_complete()
+    await settle(pilot)
     await wait_for_public_selector(pilot, "#manager-status")
     row_key = _find_numeric_activity_row(pilot=pilot, scenario=scenario)
     if row_key is None:
@@ -279,7 +280,7 @@ async def _edit_clearable_field(*, pilot: Any, row_key: str, scenario: ProfileRo
     input_widget = query_public_selector(pilot, "#edit-input", Input)
     input_widget.value = scenario.amended_cnae
     await pilot.click("#btn-edit-save")
-    await pilot.app.workers.wait_for_complete()
+    await settle(pilot)
     if not _field_is_present(pilot=pilot, path=path):
         raise ProfileTuiChildAcceptanceError("edited_field_not_visible")
 
@@ -294,7 +295,7 @@ async def _clear_clearable_field(*, pilot: Any, row_key: str, scenario: ProfileR
     input_widget = query_public_selector(pilot, "#edit-input", Input)
     input_widget.value = ""
     await pilot.click("#btn-edit-save")
-    await pilot.app.workers.wait_for_complete()
+    await settle(pilot)
 
 
 async def _submit_visible_no_op(*, pilot: Any, row_key: str, scenario: ProfileRowLifecycleScenario) -> bool:
@@ -317,8 +318,7 @@ async def _submit_visible_no_op(*, pilot: Any, row_key: str, scenario: ProfileRo
     if input_widget.value != scenario.amended_cnae:
         raise ProfileTuiChildAcceptanceError("visible_no_op_value_mismatch")
     await pilot.click("#btn-edit-save")
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
+    await settle(pilot)
     status = query_public_selector(pilot, "#manager-status", PinnedStatusBar)
     if not _is_exact_visible_no_op_outcome(
         status_tone=status.tone,
@@ -351,7 +351,7 @@ async def _remove_activity_row(*, pilot: Any, row_key: str, scenario: ProfileRow
     await _click_visible(pilot, f"#manager-remove-row-{scenario.section}")
     await wait_for_public_selector(pilot, "#btn-row-remove")
     await pilot.click("#btn-row-remove")
-    await pilot.app.workers.wait_for_complete()
+    await settle(pilot)
     await wait_for_public_selector(pilot, "#manager-status")
 
 
@@ -361,7 +361,7 @@ async def _click_visible(pilot: Any, selector: str) -> None:
 
     widget = query_public_selector(pilot, selector, Widget)
     widget.focus()
-    await pilot.pause()
+    await settle(pilot)
     await pilot.press("enter")
 
 
@@ -375,7 +375,7 @@ async def _focus_visible_profile_field(*, pilot: Any, path: str) -> None:
                 continue
             table.focus()
             table.move_cursor(row=table.get_row_index(candidate))
-            await pilot.pause()
+            await settle(pilot)
             return
     raise ProfileTuiChildAcceptanceError("target_row_not_visible")
 

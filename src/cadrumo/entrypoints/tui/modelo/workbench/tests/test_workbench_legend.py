@@ -12,12 +12,12 @@ footer keeps help and the next step in reach at 80, 120 and 200 columns.
 from __future__ import annotations
 
 import pytest
-from textual.pilot import Pilot
 from textual.widgets import Footer, OptionList, Static
 
 from ......core.config import override_settings
 from ......domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..legend import LEGEND_LOCALE_KEYS
 from ..screen import ModeloWorkbenchScreen
@@ -32,11 +32,6 @@ _SEPARATOR = " · "
 # Glyphs that are also ordinary letters or punctuation in the words around them,
 # so their presence in rendered text proves nothing; the fixture draws none.
 _AMBIGUOUS = frozenset({"i", "-"})
-
-
-async def _settle(pilot: Pilot[None], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _screen_text(screen: ModeloWorkbenchScreen) -> str:
@@ -75,13 +70,13 @@ async def test_the_first_question_mark_names_exactly_the_symbols_on_screen() -> 
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_WIDE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*"300,5", "enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("question_mark")
-            await _settle(pilot)
+            await settle(pilot)
             band = str(screen.query_one("#wb-help", Static).render()).splitlines()
             expanded = screen.query_one("#wb-help", Static).has_class("-expanded")
             on_screen = _screen_text(screen)
@@ -126,9 +121,9 @@ async def test_expanded_help_shows_holiday_coverage_when_nominal_and_effective_d
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_WIDE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("question_mark")
-            await _settle(pilot)
+            await settle(pilot)
             band = str(screen.query_one("#wb-help", Static).render())
             expanded = screen.query_one("#wb-help", Static).has_class("-expanded")
             app.exit(None)
@@ -143,9 +138,11 @@ async def test_the_second_opens_every_symbol_under_the_header_and_escape_or_a_th
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_WIDE) as pilot:
-            await _settle(pilot)
-            await pilot.press("question_mark", "question_mark")
-            await _settle(pilot)
+            await settle(pilot)
+            await pilot.press("question_mark")
+            await settle(pilot)
+            await pilot.press("question_mark")
+            await settle(pilot)
             panel = str(screen.query_one("#wb-legend-text", Static).render())
             open_state = (
                 screen.query_one("#wb-legend").display,
@@ -153,10 +150,14 @@ async def test_the_second_opens_every_symbol_under_the_header_and_escape_or_a_th
                 screen.query_one("#wb-result", Static).display,
             )
             await pilot.press("escape")
-            await _settle(pilot)
+            await settle(pilot)
             after_escape = (screen.query_one("#wb-legend").display, app.screen is screen)
-            await pilot.press("question_mark", "question_mark", "question_mark")
-            await _settle(pilot)
+            await pilot.press("question_mark")
+            await settle(pilot)
+            await pilot.press("question_mark")
+            await settle(pilot)
+            await pilot.press("question_mark")
+            await settle(pilot)
             after_third = (screen.query_one("#wb-legend").display, screen.query_one("#wb-body").display)
             app.exit(None)
 
@@ -176,14 +177,14 @@ async def test_the_first_open_notice_is_said_once_and_goes_at_the_first_key() ->
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=_WIDE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             first = str(screen.query_one("#wb-notice", Static).render())
             await pilot.press("down")
-            await _settle(pilot)
+            await settle(pilot)
             after_key = str(screen.query_one("#wb-notice", Static).render())
             again = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
             await app.push_screen(again)
-            await _settle(pilot)
+            await settle(pilot)
             second = str(again.query_one("#wb-notice", Static).render())
             app.exit(None)
 
@@ -199,7 +200,7 @@ async def test_the_footer_keeps_help_and_the_next_step_in_reach(width: int) -> N
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             footer = screen.query_one(Footer)
             keys = " ".join(str(child.render()) for child in footer.query("*"))
             edge = max(child.region.right for child in footer.query("*"))
@@ -220,7 +221,7 @@ async def test_on_a_short_terminal_the_greeting_and_an_empty_result_line_give_th
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             notice = screen.query_one("#wb-notice", Static)
             notice_shown, notice_height = notice.display, notice.region.height
             outcome = screen.query_one("#wb-outcome")

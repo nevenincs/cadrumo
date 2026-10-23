@@ -21,12 +21,12 @@ from pathlib import Path
 
 import pytest
 
-from .._distribution_names import normalise_distribution_name
 from ..constraint_effect import (
     ConstraintDriftError,
     assert_installed_matches_constraints,
     parse_constraint_lines,
 )
+from ..distribution_names import normalise_distribution_name
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

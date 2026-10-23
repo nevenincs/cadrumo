@@ -43,6 +43,7 @@ from ......domain.modelos.verification_report import (
 from ....components.cell_text import wrap_words
 from ....components.host import ScreenHostApp
 from ....navigation import TuiNavigationTargetV1
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..editor import CasillaEditorScreen
 from ..grid import CasillaListRecords
@@ -79,14 +80,11 @@ class _SourcedReader(FakeReader):
         return card.model_copy(update={"origins": origins})
 
 
-async def _settle(pilot: Pilot[None], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
-
-
 async def _band_on(pilot: Pilot[None], screen: ModeloWorkbenchScreen, box: str) -> list[str]:
-    await pilot.press("g", *box, "enter")
-    await _settle(pilot, 6)
+    await pilot.press("g")
+    await settle(pilot)
+    await pilot.press(*box, "enter")
+    await settle(pilot)
     entry = screen.query_one(CasillaList).highlighted
     assert entry is not None and entry.field.box == box
     return str(screen.query_one("#wb-help", Static).render()).splitlines()
@@ -99,7 +97,7 @@ async def test_the_help_band_uses_the_rows_words_and_says_a_source_only_once() -
         screen = ModeloWorkbenchScreen(reader, actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             band = await _band_on(pilot, screen, "01")
             app.exit(None)
 
@@ -116,7 +114,7 @@ async def test_a_source_the_origin_words_do_not_name_is_still_said() -> None:
         screen = ModeloWorkbenchScreen(reader, actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             band = await _band_on(pilot, screen, "06")
             app.exit(None)
 
@@ -152,7 +150,7 @@ async def test_a_filed_declaration_says_so_for_every_box_and_offers_no_change(wi
         screen = ModeloWorkbenchScreen(reader, actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             assumed = await _band_on(pilot, screen, "05")
             sourced = await _band_on(pilot, screen, "01")
             chips = str(screen.query_one("#wb-chips", Static).render())
@@ -177,7 +175,7 @@ async def test_the_footer_keeps_the_next_step_clear_of_the_palette_key(width: in
         screen = ModeloWorkbenchScreen(FakeReader(form=sectioned_form()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             keys, palette = _footer(screen)
             app.exit(None)
 
@@ -193,7 +191,7 @@ async def test_the_next_step_never_takes_more_than_one_line(width: int) -> None:
         screen = ModeloWorkbenchScreen(FakeReader(form=sectioned_form()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             next_step = screen.query_one("#wb-next", Static)
             stepper = screen.query_one("#wb-stepper", Static)
             text = str(next_step.render())
@@ -254,7 +252,7 @@ async def test_the_help_band_says_why_a_rows_rate_box_shows_no_rate() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(form=_with_unrated_row()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             rate = await _band_on(pilot, screen, "08")
             other = await _band_on(pilot, screen, "07")
             app.exit(None)
@@ -273,17 +271,19 @@ async def test_the_editor_repeats_the_result_line_and_can_send_the_filer_to_the_
         app = ScreenHostApp(screen)
         # The dialog, which opens below thirty rows of height, covers the header and so repeats its result line.
         async with app.run_test(size=(100, 29)) as pilot:
-            await _settle(pilot)
-            await pilot.press("g", *"01", "enter")
-            await _settle(pilot)
+            await settle(pilot)
+            await pilot.press("g")
+            await settle(pilot)
+            await pilot.press(*"01", "enter")
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             editor = app.screen
             assert isinstance(editor, CasillaEditorScreen)
             status = str(editor.query_one("#editor-status", Static).render())
             header = str(screen.query_one("#wb-result", Static).render())
             editor.dismiss(OpenSourceSurface(surface=SourceSurface.LEDGER))
-            await _settle(pilot)
+            await settle(pilot)
             app.exit(None)
 
     assert header and status.startswith(header)
@@ -297,10 +297,10 @@ async def test_a_filed_declarations_symbols_line_names_nothing_left_to_do() -> N
         screen = ModeloWorkbenchScreen(reader, actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             landed = screen.query_one(CasillaList).highlighted
             await pilot.press("question_mark")
-            await _settle(pilot)
+            await settle(pilot)
             symbols = str(screen.query_one("#wb-help", Static).render()).splitlines()[0]
             app.exit(None)
 
@@ -330,11 +330,11 @@ async def test_the_editor_names_the_boxes_a_box_affects_even_before_its_help_was
         screen = ModeloWorkbenchScreen(reader, actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             reader.ready.set()
-            await _settle(pilot, 8)
+            await settle(pilot)
             editor = open_panel(app.screen)
             assert editor is not None
             shown = " ".join(str(widget.render()) for widget in editor.query(Static))
@@ -349,14 +349,14 @@ async def test_the_findings_list_marks_its_selection_with_a_quiet_surface_not_th
         screen = ModeloWorkbenchScreen(FakeReader(form=sectioned_form()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
+            await settle(pilot)
             findings = app.screen
             assert isinstance(findings, WorkbenchIssuesScreen)
             listed = findings.query_one("#issues-list", OptionList)
             listed.focus()
-            await _settle(pilot)
+            await settle(pilot)
             style = listed.get_component_rich_style("option-list--option-highlighted")
             theme = app.theme_variables
             app.exit(None)
@@ -387,7 +387,7 @@ async def test_the_footer_always_keeps_the_key_the_next_step_names_and_issues_wh
         screen = ModeloWorkbenchScreen(FakeReader(form=_out_of_date_and_blocked()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             next_line = str(screen.query_one("#wb-next", Static).render())
             keys, palette = _footer(screen)
             app.exit(None)
@@ -411,7 +411,7 @@ async def test_record_only_content_names_scroll_without_promising_field_actions(
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             listing = screen.query_one(CasillaList)
             listing.set_items(
                 (
@@ -426,7 +426,7 @@ async def test_record_only_content_names_scroll_without_promising_field_actions(
                     ),
                 )
             )
-            await _settle(pilot)
+            await settle(pilot)
             assert listing.highlighted is None
             visible = {key for key, active in screen.active_bindings.items() if active.binding.show}
             assert {"enter", "s"}.isdisjoint(visible)
@@ -444,14 +444,18 @@ async def test_record_only_content_names_scroll_without_promising_field_actions(
             assert tr("tui.modelo.workbench.grid.records_read_only") in str(
                 screen.query_one("#wb-help", Static).render()
             )
-            await pilot.press("home", "down")
-            await _settle(pilot)
+            await pilot.press("home")
+            await settle(pilot)
+            await pilot.press("down")
+            await settle(pilot)
             assert listing.scroll_y == min(1, listing.max_scroll_y)
-            await pilot.press("enter", "s")
-            await _settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
+            await pilot.press("s")
+            await settle(pilot)
             assert app.screen is screen
             await pilot.press("question_mark")
-            await _settle(pilot)
+            await settle(pilot)
             expanded = str(screen.query_one("#wb-help", Static).render())
             assert tr("tui.modelo.workbench.key.scroll") in expanded
             assert screen._key_label("enter", "tui.modelo.workbench.key.edit") not in expanded
@@ -464,19 +468,21 @@ async def test_filtered_out_fields_drop_actions_and_restore_them_on_a_selectable
         screen = ModeloWorkbenchScreen(FakeReader(form=synthetic_form()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(200, 30)) as pilot:
-            await _settle(pilot)
-            await pilot.press("f", "f")
-            await _settle(pilot)
+            await settle(pilot)
+            await pilot.press("f")
+            await settle(pilot)
+            await pilot.press("f")
+            await settle(pilot)
             assert screen.query_one(CasillaList).highlighted is None
             visible = {key for key, active in screen.active_bindings.items() if active.binding.show}
             assert {"enter", "s"}.isdisjoint(visible)
             await pilot.press("left_square_bracket")
-            await _settle(pilot)
+            await settle(pilot)
             entry = screen.query_one(CasillaList).highlighted
             assert entry is not None and entry.field.box == "07"
             visible = {key for key, active in screen.active_bindings.items() if active.binding.show}
             assert {"enter", "s"} <= visible and "up" not in visible
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             assert app.screen is not screen or screen._docked is not None
             app.exit(None)

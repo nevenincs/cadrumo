@@ -44,6 +44,7 @@ from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.operations.controller_port import OperationControllerPort
 from cadrumo.entrypoints.tui.profile.client_errors import ProfileManagerCompletedViewUnavailableError
+from cadrumo.entrypoints.tui.tests.settling import settle
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError, ProfileViewCollection
@@ -202,15 +203,15 @@ async def test_onboarding_source_buttons_reach_the_runtime_handoff(
     )
     screen = composition.compose()
     async with ScreenHostApp(screen).run_test(size=(120, 45)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         await pilot.click("#setup-stage-get_data")
-        await pilot.pause()
+        await settle(pilot)
         button = screen.query_one(f"#source-{source} Button", Button)
         button.scroll_visible(immediate=True)
-        await pilot.pause()
+        await settle(pilot)
         assert button.display and not button.disabled
         await pilot.click(button)
-        await pilot.pause()
+        await settle(pilot)
         assert [str(request.operation) for request in requests] == [definition]
         assert not screen.disabled
         # Settings read the active-profile pointer from disk; the acquisition never reads them on the loop.
@@ -353,7 +354,7 @@ async def test_completed_operation_without_refresh_reports_truthful_status(effec
     assert registered.message_key == "flows.manager.edit.completed_refresh_unavailable"
     assert registered.retryable is False
     async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen._refuse_worker(error, message_key="flows.manager.edit.write_failed")
         assert screen.query_one("#manager-status", PinnedStatusBar).message == tr(
             "flows.manager.edit.completed_refresh_unavailable"

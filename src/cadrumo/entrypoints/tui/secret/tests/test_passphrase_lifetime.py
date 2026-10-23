@@ -12,6 +12,7 @@ from textual.widgets import Input
 from .....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from .....core.credentials import assess_profile_password
 from ...components.host import ScreenHostApp
+from ...tests.settling import SETTLE_TIMEOUT_SECONDS, settle
 from ..passphrase import PassphraseChangeAttempt, PassphraseScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -44,13 +45,13 @@ async def test_unmount_waits_for_one_blocking_attempt_without_publishing_late_su
     screen = PassphraseScreen(assess=assess_profile_password, rotate=rotate)
     app = ScreenHostApp(screen)
     async with app.run_test(size=(100, 36)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen.query_one("#field-current", Input).value = _CURRENT
         screen.query_one("#field-new", Input).value = _NEW
         screen.query_one("#field-confirm", Input).value = _NEW
         await pilot.click("#btn-change")
         assert all(field.value == "" for field in screen.query(Input))
-        assert await asyncio.to_thread(started.wait, 5)
+        assert await asyncio.to_thread(started.wait, SETTLE_TIMEOUT_SECONDS)
 
         screen.action_change()
         assert calls == [(_CURRENT, _NEW, _NEW)]
@@ -62,8 +63,8 @@ async def test_unmount_waits_for_one_blocking_attempt_without_publishing_late_su
             assert screen.outcome is None
         finally:
             release.set()
-        await asyncio.wait_for(unmounting, 5)
-        await pilot.pause()
+        await asyncio.wait_for(unmounting, SETTLE_TIMEOUT_SECONDS)
+        await settle(pilot)
         assert finished.is_set()
         assert screen.outcome is None
         assert app.return_value is None
@@ -84,12 +85,12 @@ async def test_completed_attempt_clears_masked_fields_and_returns_only_typed_out
     )
     app = ScreenHostApp(screen)
     async with app.run_test(size=(100, 36)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         screen.query_one("#field-current", Input).value = _CURRENT
         screen.query_one("#field-new", Input).value = _NEW
         screen.query_one("#field-confirm", Input).value = _NEW
         await pilot.click("#btn-change")
         assert all(field.value == "" for field in screen.query(Input))
-        await asyncio.wait_for(screen.workers.wait_for_complete(), 5)
+        await settle(pilot)
         assert screen.outcome == outcome
         assert app.return_value == outcome

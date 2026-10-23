@@ -23,6 +23,7 @@ from ......application.modelo.work_form_models import ModeloWorkForm, address_ke
 from ......core.config import override_settings
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
+from ....tests.settling import settle, settle_until
 from ..factory import InstalledModeloWorkbench
 from ..navigator import looks_like_identifier
 from ..screen import ModeloWorkbenchScreen
@@ -47,11 +48,10 @@ def workbench(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathF
 
 
 async def _opened(pilot: Pilot[None], screen: ModeloWorkbenchScreen) -> ModeloWorkForm:
-    for _ in range(200):
-        await pilot.pause()
-        if screen.form is not None:
-            return screen.form
-    raise AssertionError("the workbench never finished reading its declaration")
+    await settle_until(pilot, lambda: screen.form is not None, "the workbench to read its declaration")
+    form = screen.form
+    assert form is not None
+    return form
 
 
 def _tokens(form: ModeloWorkForm) -> set[str]:
@@ -85,20 +85,31 @@ async def test_a_real_declaration_names_itself_its_result_and_its_sections_in_wo
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 40)) as pilot:
             form = await _opened(pilot, screen)
-            await pilot.pause()
+            await settle(pilot)
             header = {selector: str(screen.query_one(selector, Static).render()) for selector in _HEADER}
             screens = {"workbench": _drawn(screen)}
             await pilot.press("o")
-            await pilot.pause()
+            await settle(pilot)
             screens["sorted"] = _drawn(screen)
-            await pilot.press("o", "o", "o", "slash", "1")
-            await pilot.pause()
-            await pilot.pause()
+            await pilot.press("o")
+            await settle(pilot)
+            await pilot.press("o")
+            await settle(pilot)
+            await pilot.press("o")
+            await settle(pilot)
+            await pilot.press("slash")
+            await settle(pilot)
+            await pilot.press("1")
+            await settle(pilot)
             hits = [hit.text() for hit in screen.query_one(WorkbenchSearchPanel).hits]
             screens["search"] = "\n".join(hits)
             screen.query_one("#wb-search-input", Input).value = ""
-            await pilot.press("escape", "question_mark", "question_mark")
-            await pilot.pause()
+            await pilot.press("escape")
+            await settle(pilot)
+            await pilot.press("question_mark")
+            await settle(pilot)
+            await pilot.press("question_mark")
+            await settle(pilot)
             screens["legend"] = str(screen.query_one("#wb-legend-text", Static).render())
             app.exit(None)
 

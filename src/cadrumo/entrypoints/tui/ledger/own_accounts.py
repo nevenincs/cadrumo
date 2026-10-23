@@ -416,6 +416,13 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
 
     async def _submit(self, request: LedgerOwnAccountRequest) -> None:
         """Run one request through the door, then re-read the register after a change."""
+        # Cleared on every exit, an unexpected failure included: a body left in flight refuses Back and quitting.
+        try:
+            await self._send(request)
+        finally:
+            self._busy = False
+
+    async def _send(self, request: LedgerOwnAccountRequest) -> None:
         status = self.query_one("#ledger-flow-status", Static)
         refusal = self.query_one("#ledger-refusal", Static)
         reading = request.action == "list"
@@ -423,7 +430,6 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
         try:
             result = await self.door(request)
         except AccountSessionExpiredError as error:
-            self._busy = False
             self._clear_private_view()
             refusal.update(door_refusal_text(error))
             status.update(
@@ -433,20 +439,24 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
             )
             return
         except CadrumoError as error:
-            self._busy = False
-            refusal.update(door_refusal_text(error))
+            unknown_refusal = door_refusal_text(error)
+            refusal.update(unknown_refusal)
             if reading:
                 status.update(tr("tui.ledger.records.failed"))
-            else:
-                status.update(self.failed_write_status(error, "tui.ledger.records.failed"))
-            if isinstance(error, OperationOutcomeUnknownError):
-                # The change may be saved; offering the same confirmation again could apply it twice.
-                self._unstage()
-            else:
+                return
+            outcome = self.failed_write_status(error, "tui.ledger.records.failed")
+            status.update(outcome)
+            if not isinstance(error, OperationOutcomeUnknownError):
                 self._set_staged_controls(staged=self.staged is not None)
+                return
+            # The change may be saved: drop it and its account numbers, and offer the form again only over
+            # the register as it now stands, so nothing is resent against the one read before it.
+            self._clear_secrets()
+            self._unstage()
+            if await self._reread_register(unknown_refusal=unknown_refusal):
+                status.update(outcome)
             return
         if reading:
-            self._busy = False
             self._show_register(result)
             status.update("" if self.accounts else tr("tui.ledger.own_accounts.empty"))
             return
@@ -454,31 +464,33 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
         self._clear_secrets()
         self._unstage()
         status.update(tr("tui.ledger.records.saved"))
-        await self._reread_after_write()
+        await self._reread_register(unknown_refusal=None)
 
-    async def _reread_after_write(self) -> None:
-        """Read the register again after a saved change; a failed read says only that it failed."""
+    async def _reread_register(self, *, unknown_refusal: str | None) -> bool:
+        """Read the register again after a change and report whether it was read.
+
+        A failed read says only that it failed. After a saved change that is
+        all it says; after one whose outcome is unknown, ``unknown_refusal``,
+        which names the operation, stays beside the read's own refusal.
+        """
         status = self.query_one("#ledger-flow-status", Static)
         refusal = self.query_one("#ledger-refusal", Static)
+        failed = (
+            "tui.ledger.flow.refresh_failed" if unknown_refusal is None else "tui.ledger.flow.refresh_failed_unknown"
+        )
         try:
             result = await self.door(self._request(action="list"))
-        except AccountSessionExpiredError as error:
-            self._busy = False
-            self._clear_private_view()
-            refusal.update(door_refusal_text(error))
-            status.update(tr("tui.ledger.flow.refresh_failed"))
-            return
         except CadrumoError as error:
-            self._busy = False
-            refusal.update(door_refusal_text(error))
-            status.update(tr("tui.ledger.flow.refresh_failed"))
-            return
+            if isinstance(error, AccountSessionExpiredError):
+                self._clear_private_view()
+            read_refusal = door_refusal_text(error)
+            refusal.update(read_refusal if unknown_refusal is None else "\n".join((unknown_refusal, read_refusal)))
+            status.update(tr(failed))
+            return False
         self._show_register(result)
-        if self.selected_id is None:
-            self._busy = False
-            return
-        # The detail read clears the busy flag once it lands.
-        await self._show_detail(self.selected_id)
+        if self.selected_id is not None:
+            await self._show_detail(self.selected_id)
+        return True
 
     def _show_register(self, result: LedgerOwnAccountResult) -> None:
         """Render the masked register projection the operation returned."""

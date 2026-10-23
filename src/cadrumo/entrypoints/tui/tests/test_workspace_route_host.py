@@ -55,6 +55,7 @@ from ..navigation import (
     build_destination_catalogue,
 )
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+from .settling import settle, settle_until
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -138,7 +139,7 @@ async def test_enter_on_a_navigation_row_reaches_the_named_area() -> None:
     app = _app()
     async with app.run_test() as pilot:
         app.navigate_to(_LEDGER_TARGET)
-        await pilot.pause()
+        await settle(pilot)
         assert isinstance(app.screen, LedgerOverviewScreen)
 
         table = cast("DataTable[str]", app.screen.query_one("#ledger-navigation", DataTable))
@@ -148,7 +149,7 @@ async def test_enter_on_a_navigation_row_reaches_the_named_area() -> None:
         # test honest about what the operator does.
         await pilot.press("down")
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
 
         assert isinstance(app.screen, LedgerEntriesScreen), (
             "Enter on the Entries row left the operator on "
@@ -167,24 +168,23 @@ async def test_selecting_a_review_row_opens_the_entry_or_says_why_not() -> None:
     app = _app()
     async with app.run_test() as pilot:
         app.navigate_to(_LEDGER_TARGET)
-        await pilot.pause()
+        await settle(pilot)
         table = cast("DataTable[str]", app.screen.query_one("#ledger-navigation", DataTable))
         table.focus()
         # Overview, Entries, then Review in canonical area order.
         await pilot.press("down")
         await pilot.press("down")
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         review = app.screen
         assert isinstance(review, LedgerReviewScreen)
-        await app.workers.wait_for_complete()
-        await pilot.pause()
+        await settle(pilot)
 
         rows = cast("DataTable[str]", review.query_one("#ledger-review", DataTable))
         assert rows.row_count == 1
         rows.focus()
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
 
         notice = str(review.query_one("#ledger-refusal", Static).render())
         assert notice, "selecting a review row produced no visible outcome at all"
@@ -200,28 +200,28 @@ async def test_escape_from_an_internal_area_returns_to_home() -> None:
     app = _app()
     async with app.run_test() as pilot:
         app.navigate_to(_LEDGER_TARGET)
-        await pilot.pause()
+        await settle(pilot)
         table = cast("DataTable[str]", app.screen.query_one("#ledger-navigation", DataTable))
         table.focus()
         await pilot.press("down")
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert isinstance(app.screen, LedgerEntriesScreen)
 
         # Each return crosses several pumps (the binding posts, the body is
         # swapped or dismissed, the root's deferred callback pushes), so this
         # waits for the end state rather than the first observable step.
         await pilot.press("escape")
-        for _ in range(4):
-            await pilot.pause()
+        await settle_until(
+            pilot, lambda: isinstance(app.screen, LedgerOverviewScreen), "Escape to return to the Ledger overview"
+        )
         assert isinstance(app.screen, LedgerOverviewScreen), (
             f"Escape from an internal Ledger area left the operator on {type(app.screen).__name__}"
         )
         assert len(app.screen_stack) == 2
 
         await pilot.press("escape")
-        for _ in range(4):
-            await pilot.pause()
+        await settle_until(pilot, lambda: isinstance(app.screen, HomeScreen), "Escape to return to Home")
         assert isinstance(app.screen, HomeScreen), (
             f"Escape from the Ledger overview left the operator on {type(app.screen).__name__}"
         )

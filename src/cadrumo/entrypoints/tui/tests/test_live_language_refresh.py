@@ -48,6 +48,7 @@ from ..profile.edit_screens import FieldEditScreen
 from ..reference.destination import ReferenceScreen
 from ..secret.passphrase import PassphraseScreen
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+from .settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -88,7 +89,7 @@ async def test_hidden_home_and_open_modal_reword_without_replacing_input_or_sele
         app = CadrumoTuiApp(account_factories=factories)
         async with app.run_test(size=(140, 45)) as pilot:
             await app.push_screen(home)
-            await pilot.pause()
+            await settle(pilot)
             table = home.query_one("#home-actions", DataTable)
             table.move_cursor(row=1)
             selected = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value
@@ -101,19 +102,22 @@ async def test_hidden_home_and_open_modal_reword_without_replacing_input_or_sele
             )
             modal = FieldEditScreen(field)
             await app.push_screen(modal)
-            await pilot.pause()
+            await settle(pilot)
             control = modal.query_one("#edit-input", Input)
             control.value = "Unfinished name"
             control.cursor_position = 5
             focus = app.focused
             assert len(callbacks) == 1
             callbacks[0]()
-            for _ in range(30):
-                await pilot.pause(0.1)
-                if attempts >= 2 and str(modal.query_one("#btn-edit-save", Button).label) == tr(
-                    "flows.manager.edit.save", locale="es"
-                ):
-                    break
+            await settle_until(
+                pilot,
+                lambda: (
+                    attempts >= 2
+                    and str(modal.query_one("#btn-edit-save", Button).label)
+                    == tr("flows.manager.edit.save", locale="es")
+                ),
+                "the retried language refresh to relabel the open dialog",
+            )
             assert attempts == 2
             assert output_language() == "es"
             assert str(modal.query_one("#btn-edit-save", Button).label) == tr("flows.manager.edit.save", locale="es")
@@ -135,8 +139,7 @@ async def test_workbench_language_keeps_staged_typed_value_and_box_cursor() -> N
     with override_settings(cadrumo_output_language="en"):
         screen = ModeloWorkbenchScreen(reader, actions=FakeActions())
         async with ScreenHostApp(screen).run_test(size=(140, 45)) as pilot:
-            await pilot.pause()
-            await pilot.pause()
+            await settle(pilot)
             listing = screen.query_one(CasillaList)
             entry = listing.highlighted
             assert entry is not None
@@ -145,7 +148,7 @@ async def test_workbench_language_keeps_staged_typed_value_and_box_cursor() -> N
             loads = reader.loads
             with override_settings(cadrumo_output_language="es"):
                 await screen.refresh_language()
-                await pilot.pause()
+                await settle(pilot)
                 after = screen.staged_changes[0]
                 assert after.change == before.change
                 assert after.before_changed == before.before_changed
@@ -168,7 +171,7 @@ async def test_copy_metadata_keeps_interpolation_and_leaves_newer_status_alone()
             status.update("ongoing operation detail")
             with override_settings(cadrumo_output_language="ca"):
                 refresh_localized_widgets(home)
-                await pilot.pause()
+                await settle(pilot)
                 assert copy.content == tr("tui.home.messages_summary", count=7)
                 assert status.content == "ongoing operation detail"
 
@@ -189,10 +192,10 @@ async def test_open_amount_draft_keeps_its_original_parse_locale_after_rewording
         panel = CasillaEditorPanel(field, parse=parse, language=OutputLanguage.EN)
         screen = CasillaEditorScreen(panel)
         async with ScreenHostApp(screen).run_test(size=(100, 35)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             control = panel.query_one("#editor-input", Input)
             control.value = "1,234"
-            await pilot.pause()
+            await settle(pilot)
             assert panel._parsed is not None and panel._parsed.value == Decimal("1234")
             before = panel._parsed
             with override_settings(cadrumo_output_language="es"):
@@ -202,7 +205,7 @@ async def test_open_amount_draft_keeps_its_original_parse_locale_after_rewording
                 assert control.value == "1,234"
                 control.focus()
                 await pilot.press("end", "backspace", "4")
-                await pilot.pause()
+                await settle(pilot)
                 assert control.value == "1,234"
                 assert panel._parsed is not None and panel._parsed.value == Decimal("1234")
                 assert seen and set(seen) == {OutputLanguage.EN}
@@ -213,14 +216,14 @@ async def test_reference_list_rewords_rows_without_replacing_selection() -> None
     with override_settings(cadrumo_output_language="en"):
         screen = ReferenceScreen()
         async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             table = screen.query_one("#reference-reads", DataTable)
             table.move_cursor(row=2)
             identity = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value
             before = tuple(tuple(table.get_row_at(index)) for index in range(table.row_count))
             with override_settings(cadrumo_output_language="es"):
                 await screen.refresh_language()
-                await pilot.pause()
+                await settle(pilot)
                 assert screen.query_one("#reference-reads", DataTable) is table
                 assert table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value == identity
                 assert tuple(tuple(table.get_row_at(index)) for index in range(table.row_count)) != before
@@ -240,12 +243,12 @@ async def test_confirmation_resolves_canonical_copy_and_retains_pending_choice()
         install_cadrumo_themes(app)
         async with app.run_test(size=(100, 35)) as pilot:
             await app.push_screen(screen)
-            await pilot.pause()
+            await settle(pilot)
             focused = screen.focused
             cancel = screen.query_one("#btn-confirm-cancel", Button)
             with override_settings(cadrumo_output_language="es"):
                 await screen.refresh_language()
-                await pilot.pause()
+                await settle(pilot)
                 assert screen.query_one("#confirm-message", Static).content == tr(
                     "tui.modelo.workbench.leave.message", count=7, locale="es"
                 )
@@ -262,18 +265,18 @@ async def test_password_reword_does_not_repopulate_or_clear_secret_controls() ->
     with override_settings(cadrumo_output_language="en"):
         screen = PassphraseScreen(assess=assess_profile_password, rotate=rotate)
         async with ScreenHostApp(screen).run_test(size=(120, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             controls = tuple(
                 screen.query_one(selector, Input) for selector in ("#field-current", "#field-new", "#field-confirm")
             )
             for index, control in enumerate(controls):
                 control.value = f"synthetic-in-progress-{index}"
                 control.cursor_position = 3
-            await pilot.pause()
+            await settle(pilot)
             focused = screen.focused
             with override_settings(cadrumo_output_language="es"):
                 await screen.refresh_language()
-                await pilot.pause()
+                await settle(pilot)
                 assert screen.query_one("#label-current", Label).content == tr(
                     "flows.passphrase.current_label", locale="es"
                 )
@@ -311,7 +314,7 @@ async def test_catalogue_language_refresh_keeps_held_catalogue_and_semantic_sele
                 cast(FrontendClient, object()), OperationCatalogueSourceV1(lambda: registry)
             )
         async with ScreenHostApp(screen).run_test(size=(130, 45)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             if isinstance(screen, InstallationScreen):
                 table = screen.query_one("#installation-acts", DataTable)
                 table.move_cursor(row=2)
@@ -319,7 +322,7 @@ async def test_catalogue_language_refresh_keeps_held_catalogue_and_semantic_sele
                 offered = screen._offered
                 with override_settings(cadrumo_output_language="es"):
                     await screen.refresh_language()
-                    await pilot.pause()
+                    await settle(pilot)
                     assert screen.query_one("#installation-acts", DataTable) is table
                     assert table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value == identity
                     assert screen._offered is offered
@@ -327,19 +330,18 @@ async def test_catalogue_language_refresh_keeps_held_catalogue_and_semantic_sele
                         "tui.installation.title", locale="es"
                     )
             else:
-                await screen.workers.wait_for_complete()
-                await pilot.pause()
+                await settle(pilot)
                 assert screen._catalogue is not None
                 catalogue = screen._catalogue
                 chosen = catalogue.entries[0].definition_id
                 query = screen.query_one("#operations-search", Input)
                 query.value = chosen
-                await pilot.pause()
+                await settle(pilot)
                 listed = screen.query_one("#operations-list", OptionList)
                 listed.highlighted = listed.get_option_index(chosen)
                 with override_settings(cadrumo_output_language="es"):
                     await screen.refresh_language()
-                    await pilot.pause()
+                    await settle(pilot)
                     assert screen.query_one("#operations-list", OptionList) is listed
                     assert query.value == chosen
                     assert listed.highlighted is not None
@@ -384,7 +386,7 @@ async def test_home_factory_replacement_cannot_strand_inflight_language_refresh(
         app = CadrumoTuiApp(account_factories=factories)
         async with app.run_test(size=(130, 45)) as pilot:
             app.post_message(ProfileLanguageInvalidated())
-            await asyncio.wait_for(entered.wait(), 5)
+            await asyncio.wait_for(entered.wait(), SETTLE_TIMEOUT_SECONDS)
             assert app._language_refreshing
             # Exercise the actual Home presentation handoff, which replaces
             # account doors while the old canonical read still awaits.
@@ -406,11 +408,10 @@ async def test_home_factory_replacement_cannot_strand_inflight_language_refresh(
                 ),
                 None,
             )
-            await pilot.pause()
+            await settle(pilot, workers=False)
             release.set()
-            await asyncio.wait_for(adopted.wait(), 5)
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await asyncio.wait_for(adopted.wait(), SETTLE_TIMEOUT_SECONDS)
+            await settle(pilot)
             assert calls == ["old", "new"]
             assert app._account_factories is replacement
             assert not app._language_refreshing

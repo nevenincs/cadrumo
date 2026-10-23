@@ -40,6 +40,7 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import installation
@@ -166,17 +167,20 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
                         )
                         app = _RestoredLoginApp(screen)
                         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-                            await pilot.pause()
+                            await settle(pilot)
                             submit = screen.query_one("#runtime-login-submit", Button)
-                            async with asyncio.timeout(30):
-                                while submit.disabled:
-                                    await pilot.pause(0.05)
+                            await settle_until(
+                                pilot,
+                                lambda: not submit.disabled,
+                                "the sign-in submit control to enable",
+                                workers=False,
+                            )
                             credential = screen.query_one("#runtime-login-credential", Input)
                             assert credential.password
                             credential.value = _CREDENTIAL_INPUT
                             submit.scroll_visible(animate=False)
                             assert await click_when_laid_out(pilot, submit)
-                            async with asyncio.timeout(30):
+                            async with asyncio.timeout(SETTLE_TIMEOUT_SECONDS):
                                 await app.handoff_received.wait()
                             # The preselected profile first attempts receipt
                             # admission, then opens a fresh password connection.

@@ -31,7 +31,8 @@ from cadrumo.application.ledger.actions_manual import (
 )
 from cadrumo.application.ledger.history_query import LEDGER_HISTORY_EVENT_TYPES
 from cadrumo.application.ledger.models import LedgerStatusReport
-from cadrumo.application.ledger.readiness_query import read_ledger_readiness
+from cadrumo.application.ledger.preflight import preflight_ledger_tax_readiness
+from cadrumo.application.ledger.readiness_query import ledger_readiness_issues
 from cadrumo.application.ledger.stale_filing_query import read_stale_ledger_filings
 from cadrumo.application.ledger.status_operation import LEDGER_STATUS_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
@@ -234,12 +235,16 @@ def test_native_human_cli_reads_encrypted_ledger_status_history_view_and_track(
             period_report = summarize_manual_transactions(
                 bucket_id=bucket_id, period=period, ports=ports, catalogue=catalogue
             )
-            readiness = read_ledger_readiness(
-                bucket_id=bucket_id,
-                period=period,
-                transaction_repository=ports.transaction_repository,
-                usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
-                operation=authority_operation,
+            readiness = ledger_readiness_issues(
+                preflight_ledger_tax_readiness(
+                    bucket_id=bucket_id,
+                    period=period,
+                    transaction_repository=ports.transaction_repository,
+                    usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+                    operation=authority_operation,
+                    catalogue=catalogue,
+                ),
+                catalogue,
             )
             stale = read_stale_ledger_filings(
                 bucket_id=bucket_id,

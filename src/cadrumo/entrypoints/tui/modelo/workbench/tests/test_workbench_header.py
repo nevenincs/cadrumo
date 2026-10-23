@@ -18,7 +18,6 @@ from decimal import Decimal
 
 import pytest
 from rich.cells import cell_len
-from textual.pilot import Pilot
 from textual.widgets import Static
 
 from ......application.modelo.work_form_models import ModeloFormOrigin, ModeloFormResultDirection, ModeloWorkForm
@@ -27,6 +26,7 @@ from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ......core.result_disposition import ResultDisposition
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..header import (
     ChipLevel,
     DeadlineTone,
@@ -48,11 +48,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _EN = OutputLanguage.EN
 _NBSP = "\u00a0"
 _OWN = "Cadrumo's calculation. AEAT has not seen it."
-
-
-async def _settle(pilot: Pilot[None], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _view(form: ModeloWorkForm, *, staged: int = 0, recorded: bool = False) -> tuple[str, tuple[str, ...]]:
@@ -269,11 +264,11 @@ async def test_the_header_fits_every_width_and_keeps_the_result(width: int) -> N
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*"5", "enter")
-            await _settle(pilot)
+            await settle(pilot)
             parts = _header(screen)
             deadline = screen.query_one("#wb-deadline", Static)
             soon = deadline.has_class("-soon")
@@ -313,7 +308,7 @@ async def test_complete_identity_and_deadline_remain_painted(language: OutputLan
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 24)) as pilot:
             app.theme = "cadrumo-" + theme
-            await _settle(pilot)
+            await settle(pilot)
             header = screen.query_one("#wb-header", Static)
             deadline = screen.query_one("#wb-deadline", Static)
             painted = "\n".join(header.render_line(row).text for row in range(header.size.height))
@@ -356,11 +351,11 @@ async def test_a_choice_still_to_make_keeps_every_header_part_inside_the_screen(
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*"5", "enter")
-            await _settle(pilot)
+            await settle(pilot)
             placed = {
                 selector: (widget.region, str(widget.render()))
                 for selector in _HEADER_WIDGETS
@@ -383,12 +378,12 @@ async def test_the_header_is_refreshed_the_moment_a_change_is_staged() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             before = _header(screen)["#wb-stale"]
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*"300,50", "enter")
-            await _settle(pilot)
+            await settle(pilot)
             after = _header(screen)["#wb-stale"]
             app.exit(None)
 
@@ -419,7 +414,7 @@ async def test_the_result_carries_the_emphasis_and_the_title_bar_is_a_neutral_su
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             theme = app.theme_variables
             result = _colour(screen, "#wb-result")
             identity = _colour(screen, "#wb-identity", background=True)

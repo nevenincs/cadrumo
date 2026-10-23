@@ -20,8 +20,8 @@ from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, Refusal
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_client.transport.windows_native_io import owned_windows_handle
+from cadrumo_client.transport.windows_process import WindowsOwnedProcess, WindowsProcessScope
 from cadrumo_runtime.adapters.boot_record import RuntimeBootRecord, read_runtime_boot_record
-from cadrumo_runtime.adapters.windows_process import WindowsOwnedProcess, WindowsProcessScope
 
 from ..command_execution import run_command
 from .build_directory import require_enrolled_build, require_enrolled_output

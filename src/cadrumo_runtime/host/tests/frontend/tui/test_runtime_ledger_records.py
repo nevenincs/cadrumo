@@ -71,12 +71,19 @@ from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
 from cadrumo.entrypoints.tui.ledger.models import LedgerFlowState, LedgerLinkResultV1, LedgerLinkSubmissionV1
 from cadrumo.entrypoints.tui.ledger.reconciliation import LedgerReconciliationScreen
-from cadrumo.entrypoints.tui.ledger.tests.invoices_fixtures import invoice_snapshot, transaction_projection
-from cadrumo.entrypoints.tui.ledger.tests.test_ledger_slice3 import _INVOICE as _SUGGESTED_INVOICE
-from cadrumo.entrypoints.tui.ledger.tests.test_ledger_slice3 import _reconciled_projection
-from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import ledger_review_action
+from cadrumo.entrypoints.tui.ledger.tests.invoices_fixtures import (
+    INVOICES_PROFILE_ID,
+    invoice_snapshot,
+    transaction_projection,
+)
+from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
+    LEDGER_SUGGESTED_INVOICE,
+    ledger_reconciled_projection,
+    ledger_review_action,
+)
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
+from cadrumo.entrypoints.tui.tests.settling import settle
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
@@ -88,7 +95,6 @@ from ....frontend.tui.runtime_ledger_records import (
 from .ledger_invoices_runtime_harness import (
     LAPSED_SESSION_ID,
     OTHER_PROFILE_ID,
-    PROFILE_ID,
     PROFILE_LABEL,
     Boundary,
     Settled,
@@ -123,29 +129,29 @@ def _unscoped(snapshot: CatalogueInvoiceSnapshot) -> CatalogueInvoiceSnapshot:
     return snapshot.model_copy(update={"bucket_id": None})
 
 
-def _list(profile: UUID = PROFILE_ID) -> InvoiceListProjection:
-    invoices = (_INVOICE,) if profile == PROFILE_ID else (_unscoped(_INVOICE),)
+def _list(profile: UUID = INVOICES_PROFILE_ID) -> InvoiceListProjection:
+    invoices = (_INVOICE,) if profile == INVOICES_PROFILE_ID else (_unscoped(_INVOICE),)
     return InvoiceListProjection(profile_id=profile, kind=None, invoices=invoices)
 
 
-def _view(snapshot: CatalogueInvoiceSnapshot = _INVOICE, profile: UUID = PROFILE_ID) -> InvoiceViewProjection:
+def _view(snapshot: CatalogueInvoiceSnapshot = _INVOICE, profile: UUID = INVOICES_PROFILE_ID) -> InvoiceViewProjection:
     return InvoiceViewProjection(
         profile_id=profile, invoice_id=snapshot.invoice_id, outcome=InvoiceViewSuccess(invoice=snapshot)
     )
 
 
-def _updated(snapshot: CatalogueInvoiceSnapshot, profile: UUID = PROFILE_ID) -> InvoiceUpdateResult:
+def _updated(snapshot: CatalogueInvoiceSnapshot, profile: UUID = INVOICES_PROFILE_ID) -> InvoiceUpdateResult:
     return InvoiceUpdateResult(
         profile_id=profile, invoice_id=snapshot.invoice_id, invoice=snapshot, bucket_event_ids=("e1",)
     )
 
 
-def _removed(snapshot: CatalogueInvoiceSnapshot = _INVOICE, profile: UUID = PROFILE_ID) -> InvoiceRemoveResult:
+def _removed(snapshot: CatalogueInvoiceSnapshot = _INVOICE, profile: UUID = INVOICES_PROFILE_ID) -> InvoiceRemoveResult:
     return InvoiceRemoveResult(profile_id=profile, invoice_id=snapshot.invoice_id, invoice=snapshot)
 
 
 def _ledger_view(
-    transaction: LedgerTransactionProjection = _TRANSACTION, profile: UUID = PROFILE_ID
+    transaction: LedgerTransactionProjection = _TRANSACTION, profile: UUID = INVOICES_PROFILE_ID
 ) -> LedgerViewProjection:
     return LedgerViewProjection(
         profile_id=profile,
@@ -157,7 +163,7 @@ def _ledger_view(
 
 
 def _ledger_updated(
-    transaction: LedgerTransactionProjection, profile: UUID = PROFILE_ID
+    transaction: LedgerTransactionProjection, profile: UUID = INVOICES_PROFILE_ID
 ) -> LedgerUpdateOperationResult:
     return LedgerUpdateOperationResult(
         outcome="updated",
@@ -169,7 +175,7 @@ def _ledger_updated(
     )
 
 
-def _linked(profile: UUID = PROFILE_ID, invoice_id: str = _INVOICE_ID) -> LedgerLinkOperationResult:
+def _linked(profile: UUID = INVOICES_PROFILE_ID, invoice_id: str = _INVOICE_ID) -> LedgerLinkOperationResult:
     linked = transaction_projection(invoice_id=invoice_id)
     return LedgerLinkOperationResult(
         profile_id=profile,
@@ -258,18 +264,18 @@ def _run(call: _Call, boundary: Boundary) -> object:
 def test_invoices_lists_the_catalogue_for_the_pinned_profile(monkeypatch: pytest.MonkeyPatch) -> None:
     boundary = install(monkeypatch, Settled(INVOICE_LIST_OPERATION_DEFINITION_ID, _list()))
     assert asyncio.run(_doors(boundary).invoices()) == (_INVOICE,)
-    assert boundary.payloads == [InvoiceListRequest(profile_id=PROFILE_ID)]
+    assert boundary.payloads == [InvoiceListRequest(profile_id=INVOICES_PROFILE_ID)]
     assert boundary.reads == [(InvoiceListProjection, False)]
 
 
 def test_invoice_reads_one_snapshot_and_raises_a_lookup_refusal(monkeypatch: pytest.MonkeyPatch) -> None:
     boundary = install(monkeypatch, Settled(INVOICE_VIEW_OPERATION_DEFINITION_ID, _view()))
     assert asyncio.run(_doors(boundary).invoice(_INVOICE_ID)) == _INVOICE
-    assert boundary.payloads == [InvoiceViewRequest(profile_id=PROFILE_ID, invoice_id=_INVOICE_ID)]
+    assert boundary.payloads == [InvoiceViewRequest(profile_id=INVOICES_PROFILE_ID, invoice_id=_INVOICE_ID)]
     assert boundary.reads == [(InvoiceViewProjection, True)]
 
     missing = InvoiceViewProjection(
-        profile_id=PROFILE_ID,
+        profile_id=INVOICES_PROFILE_ID,
         invoice_id=_INVOICE_ID,
         outcome=InvoiceViewRefusal(reason=InvoiceLookupRefusalReason.NOT_FOUND),
     )
@@ -299,7 +305,7 @@ def test_update_invoice_rereads_the_baseline_then_sends_only_the_patched_fields(
     assert asyncio.run(_doors(boundary).update_invoice(_INVOICE, _NOTES)) == corrected
     assert boundary.definitions == [INVOICE_VIEW_OPERATION_DEFINITION_ID, INVOICE_UPDATE_OPERATION_DEFINITION_ID]
     assert boundary.payloads[1] == InvoiceUpdateRequest(
-        profile_id=PROFILE_ID, invoice_id=_INVOICE_ID, patch=InvoiceUpdatePatch.from_patch(_NOTES)
+        profile_id=INVOICES_PROFILE_ID, invoice_id=_INVOICE_ID, patch=InvoiceUpdatePatch.from_patch(_NOTES)
     )
 
 
@@ -310,7 +316,7 @@ def test_remove_invoice_rereads_the_baseline_then_removes_it(monkeypatch: pytest
         Settled(INVOICE_REMOVE_OPERATION_DEFINITION_ID, _removed(), effect=OperationEffect.UPDATED),
     )
     assert asyncio.run(_doors(boundary).remove_invoice(_INVOICE)) == _INVOICE
-    assert boundary.payloads[1] == InvoiceRemoveRequest(profile_id=PROFILE_ID, invoice_id=_INVOICE_ID)
+    assert boundary.payloads[1] == InvoiceRemoveRequest(profile_id=INVOICES_PROFILE_ID, invoice_id=_INVOICE_ID)
 
 
 def test_transaction_reads_and_update_transaction_corrects_the_seen_projection(
@@ -326,16 +332,19 @@ def test_transaction_reads_and_update_transaction_corrects_the_seen_projection(
     doors = _doors(boundary)
     assert asyncio.run(doors.transaction(_TRANSACTION_ID)) == _TRANSACTION
     assert asyncio.run(doors.update_transaction(_TRANSACTION, _DESCRIPTION, ("description",))) == corrected
-    assert boundary.payloads[0] == LedgerViewRequest(profile_id=PROFILE_ID, transaction_prefix=_TRANSACTION_ID)
+    assert boundary.payloads[0] == LedgerViewRequest(profile_id=INVOICES_PROFILE_ID, transaction_prefix=_TRANSACTION_ID)
     assert boundary.payloads[2] == LedgerUpdateRequest(
-        profile_id=PROFILE_ID, transaction_id=_TRANSACTION_ID, patch=_DESCRIPTION, patch_fields=("description",)
+        profile_id=INVOICES_PROFILE_ID,
+        transaction_id=_TRANSACTION_ID,
+        patch=_DESCRIPTION,
+        patch_fields=("description",),
     )
     assert boundary.reads[2] == (LedgerUpdateOperationResult, True)
 
 
 def test_a_transaction_validation_refusal_is_raised_with_its_messages(monkeypatch: pytest.MonkeyPatch) -> None:
     refused = LedgerUpdateOperationResult(
-        outcome="validation_error", profile_id=PROFILE_ID, validation_messages=("amount: must be positive",)
+        outcome="validation_error", profile_id=INVOICES_PROFILE_ID, validation_messages=("amount: must be positive",)
     )
     boundary = install(
         monkeypatch,
@@ -361,12 +370,12 @@ def test_link_submits_the_admitted_pair_and_raises_a_missing_invoice(monkeypatch
         transaction_id=_TRANSACTION_ID, invoice_id=_INVOICE_ID
     )
     assert boundary.payloads == [
-        LedgerLinkRequest(profile_id=PROFILE_ID, transaction_id=_TRANSACTION_ID, invoice_id=_INVOICE_ID)
+        LedgerLinkRequest(profile_id=INVOICES_PROFILE_ID, transaction_id=_TRANSACTION_ID, invoice_id=_INVOICE_ID)
     ]
     assert boundary.reads == [(LedgerLinkOperationResult, True)]
 
     missing = LedgerLinkOperationResult(
-        profile_id=PROFILE_ID,
+        profile_id=INVOICES_PROFILE_ID,
         transaction_id=_TRANSACTION_ID,
         invoice_id=_INVOICE_ID,
         outcome="refused",
@@ -638,13 +647,13 @@ async def test_the_reconciliation_area_links_a_suggestion_through_the_runtime_su
         monkeypatch,
         Settled(
             LEDGER_LINK_OPERATION_DEFINITION_ID,
-            _linked(invoice_id=_SUGGESTED_INVOICE),
+            _linked(invoice_id=LEDGER_SUGGESTED_INVOICE),
             effect=OperationEffect.UPDATED,
         ),
     )
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
-        _reconciled_projection(),
+        ledger_reconciled_projection(),
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
             link_action=ActionReference(action_id=lookup_action("operator.ledger.link").action_id),
@@ -654,10 +663,14 @@ async def test_the_reconciliation_area_links_a_suggestion_through_the_runtime_su
     screen = LedgerReconciliationScreen(controller)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(100, 30)) as pilot:
-        await pilot.pause()
-        await pilot.press("enter", "enter")
-        await app.workers.wait_for_complete()
+        await settle(pilot)
+        await pilot.press("enter")
+        await settle(pilot)
+        await pilot.press("enter")
+        await settle(pilot)
         assert screen.flow_state is LedgerFlowState.SUCCEEDED
     assert boundary.payloads == [
-        LedgerLinkRequest(profile_id=PROFILE_ID, transaction_id=_TRANSACTION_ID, invoice_id=_SUGGESTED_INVOICE)
+        LedgerLinkRequest(
+            profile_id=INVOICES_PROFILE_ID, transaction_id=_TRANSACTION_ID, invoice_id=LEDGER_SUGGESTED_INVOICE
+        )
     ]

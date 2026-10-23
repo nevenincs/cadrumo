@@ -26,7 +26,6 @@ from dev.packaging.google_oauth import build_client_json, stage_build_client
 from dev.source_tree import member_content_digest, repository_files, snapshot
 
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
-from ._distribution_names import normalise_distribution_name
 from .authority_staging import stage_published_authority
 from .build_scratch_reclaim import (
     COHORT_BUILD_TREE_FAMILY,
@@ -39,10 +38,11 @@ from .build_storage import build_storage
 from .command_spec_attestation import (
     _cached_artifact_command_projection,
     _forbidden_command_artifacts,
-    _projection_digest,
     _validate_command_spec_attestation,
     attest_command_specs,
+    projection_digest,
 )
+from .distribution_names import normalise_distribution_name
 from .hashing import sha256_path
 from .proof_ledger import record_proof
 from .runtime_wheelhouse import build_runtime_wheelhouse
@@ -721,7 +721,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         resolved["source-archive"],
         digests=(root_wheel_digest, root_sdist_digest, source_archive_digest),
     )
-    if command_spec_attestation["artifact_members_sha256"] != _projection_digest(projection):
+    if command_spec_attestation["artifact_members_sha256"] != projection_digest(projection):
         raise SystemExit("Python cohort CommandSpec attestation artifact member projection drifted")
     forbidden_members = _forbidden_command_artifacts(projection)
     if forbidden_members:

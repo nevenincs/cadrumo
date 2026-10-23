@@ -86,9 +86,10 @@ from .....application.review.filter import LedgerReviewStatus
 from .....core.confirmation_gate import ConfirmationBlockReason
 from .....core.errors.hierarchy import CadrumoError, RecordedRegisteredError
 from .....core.operations import OperationEffect
-from .....domain.attachments.models import AttachmentSource
+from .....domain.attachments.enums import AttachmentSource
 from .....domain.iva.schema import InvoiceKind
 from ...account import AccountSessionExpiredError
+from ...tests.settling import settle
 from ..evidence_files_doors import LedgerEvidenceFilesDoorsV1
 from .workspace_fixtures import LEDGER_TX_A, LEDGER_TX_B
 
@@ -502,14 +503,6 @@ class MemoryEvidenceFilesDoor[RequestT: BaseModel, ResultT: BaseModel]:
         return self._apply(request)
 
 
-async def settle(pilot: Pilot[None]) -> None:
-    """Let posted messages land and every worker they started finish."""
-    for _ in range(3):
-        await pilot.pause()
-        await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
-
-
 async def press(pilot: Pilot[None], button_id: str) -> None:
     """Press one button on the screen shown now, then settle."""
     pilot.app.screen.query_one(f"#{button_id}", Button).press()
@@ -528,7 +521,6 @@ __all__ = [
     "MemoryEvidenceFilesDoor",
     "MemoryEvidenceFilesStore",
     "press",
-    "settle",
     "synthetic_attachment",
     "synthetic_digest",
     "synthetic_dispatch",

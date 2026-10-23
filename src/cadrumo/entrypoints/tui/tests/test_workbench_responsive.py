@@ -25,6 +25,7 @@ from ....tests.terminal_sizes import (
 from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..home import HomeScreen
+from .settling import settle
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -55,7 +56,7 @@ async def test_home_keeps_a_gutter_between_its_two_columns(scenario: str, size: 
     screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario(scenario)))
     app = ScreenHostApp(screen)
     async with app.run_test(size=(width, height)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         sidebar = app.screen.query("#home-sidebar")
         assert sidebar, f"Home is not in its two-column layout at {size}"
         boundary = sidebar.first().region.x
@@ -90,7 +91,7 @@ async def test_no_table_header_is_clipped_while_the_row_has_width_to_spare(surfa
     width, height = TERMINAL_ORDINARY
     app = resolve_workbench_fixture(surface).build()
     async with app.run_test(size=(width, height)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         declared: list[str] = []
         for table in app.screen.query(DataTable):
             declared.extend(str(column.label).strip() for column in table.columns.values())
@@ -148,7 +149,7 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
     width, height = size
     app = resolve_workbench_fixture(surface).build()
     async with app.run_test(size=(width, height)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         headings = [
             (str(node.render()).strip(), node.region, node.has_class("cadrumo-heading-lead"))
             for node in app.screen.query(".cadrumo-heading")
@@ -261,7 +262,7 @@ async def test_no_cell_is_truncated_while_its_row_still_has_room(surface: str) -
     width, height = TERMINAL_ORDINARY
     app = resolve_workbench_fixture(surface).build()
     async with app.run_test(size=(width, height)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         painted = screen_text(app, width, height).splitlines()
         app.exit(None)
 
@@ -301,7 +302,7 @@ async def test_a_heading_shares_its_left_edge_with_the_rows_it_owns(surface: str
     width, height = TERMINAL_ORDINARY
     app = resolve_workbench_fixture(surface).build()
     async with app.run_test(size=(width, height)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         headings = [
             (str(node.render()).strip(), node.region)
             for node in app.screen.query(".cadrumo-heading")
@@ -370,14 +371,14 @@ async def test_every_control_can_be_brought_into_view(surface: str) -> None:
     unreachable: list[str] = []
     below_the_fold = 0
     async with app.run_test(size=(width, height)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         for button in app.screen.query(Button):
             if not button.display:
                 continue
             if button.region.y + button.region.height > height:
                 below_the_fold += 1
             button.scroll_visible(animate=False)
-            await pilot.pause()
+            await settle(pilot)
             region = button.region
             if region.y < 0 or region.y + region.height > height or region.width <= 0:
                 unreachable.append(f"{button.id or button.__class__.__name__} at {region}")

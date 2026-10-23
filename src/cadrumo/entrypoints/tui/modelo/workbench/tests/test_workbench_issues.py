@@ -21,7 +21,6 @@ import pytest
 from rich.cells import cell_len
 from rich.console import Console
 from textual.content import Content
-from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
 from ......application.modelo.work_form_models import (
@@ -51,6 +50,7 @@ from ......domain.modelos.verification_report import (
     VerificationCompletenessStatus,
 )
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..header import ChipLevel, attention_chips, status_line
 from ..issue_projection import issue_lines
@@ -77,11 +77,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _MESSAGE_KEY = "application.modelo.findings.oss_evidence_missing"
 _EXPLANATION_KEY = "application.modelo.findings.cross_period_modelo_not_applicable.message"
 _LEGAL_REF = "ley-37-1992:art-99"
-
-
-async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _finding(
@@ -249,19 +244,23 @@ async def test_the_list_groups_by_level_wraps_every_word_and_keeps_codes_and_fac
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 100)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
+            await settle(pilot)
             issues = app.screen
             assert isinstance(issues, WorkbenchIssuesScreen)
             title = str(issues.query_one("#issues-title", Static).render())
             verdict = str(issues.query_one("#issues-verdict", Static).render())
             before = _list_text(issues)
             await pilot.press("t")
-            await _settle(pilot)
+            await settle(pilot)
             technical = _list_text(issues)
-            await pilot.press("t", "end", "t")
-            await _settle(pilot)
+            await pilot.press("t")
+            await settle(pilot)
+            await pilot.press("end")
+            await settle(pilot)
+            await pilot.press("t")
+            await settle(pilot)
             explained = _list_text(issues)
             app.exit(None)
 
@@ -289,20 +288,28 @@ async def test_enter_goes_to_a_box_opens_a_detail_or_says_the_box_is_not_on_the_
         screen = ModeloWorkbenchScreen(FakeReader(form=_checked()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 100)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
+            await settle(pilot)
             issues = app.screen
             assert isinstance(issues, WorkbenchIssuesScreen)
-            await pilot.press("end", "up", "enter")
-            await _settle(pilot)
+            await pilot.press("end")
+            await settle(pilot)
+            await pilot.press("up")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             opened = _list_text(issues)
             still_open = app.screen is issues
-            await pilot.press("down", "enter")
-            await _settle(pilot)
+            await pilot.press("down")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             not_on_form = _list_text(issues)
-            await pilot.press("home", "enter")
-            await _settle(pilot)
+            await pilot.press("home")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             back = app.screen is screen
             landed_on = screen.query_one(CasillaList).highlighted
             app.exit(None)
@@ -321,11 +328,13 @@ async def test_enter_on_the_assumed_values_goes_to_the_first_of_their_boxes() ->
         screen = ModeloWorkbenchScreen(FakeReader(form=_checked()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
-            await pilot.press("down", "enter")
-            await _settle(pilot)
+            await settle(pilot)
+            await pilot.press("down")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             back = app.screen is screen
             landed_on = screen.query_one(CasillaList).highlighted
             app.exit(None)
@@ -360,9 +369,9 @@ async def test_the_assumed_boxes_are_listed_in_two_lines_then_counted() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(60, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
+            await settle(pilot)
             issues = app.screen
             assert isinstance(issues, WorkbenchIssuesScreen)
             listed = [
@@ -384,14 +393,16 @@ async def test_past_twenty_assumed_boxes_the_list_names_their_sections_and_enter
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
+            await settle(pilot)
             issues = app.screen
             assert isinstance(issues, WorkbenchIssuesScreen)
             listed = _list_text(issues)
-            await pilot.press("down", "enter")
-            await _settle(pilot)
+            await pilot.press("down")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             back = app.screen is screen
             landed_on = screen.query_one(CasillaList).highlighted
             app.exit(None)
@@ -419,7 +430,7 @@ async def test_a_declaration_recorded_as_filed_lists_no_assumed_values_and_count
         screen = WorkbenchIssuesScreen(form)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             title = str(screen.query_one("#issues-title", Static).render())
             listed = _list_text(screen)
             app.exit(None)
@@ -452,7 +463,7 @@ async def test_the_declarations_status_line_leads_the_dialog_and_the_title_is_st
         screen = WorkbenchIssuesScreen(_checked(), status_line=status_line_of(status))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             panel = screen.query_one("#issues-panel")
             first = panel.children[0]
             shown = str(first.render()) if isinstance(first, Static) else ""
@@ -463,7 +474,7 @@ async def test_the_declarations_status_line_leads_the_dialog_and_the_title_is_st
         plain = WorkbenchIssuesScreen(_checked())
         plain_app = ScreenHostApp(plain)
         async with plain_app.run_test(size=(100, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             without = [child.id for child in plain.query_one("#issues-panel").children]
             plain_app.exit(None)
 
@@ -514,14 +525,16 @@ async def test_the_missing_boxes_the_header_counts_are_listed_at_their_own_level
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
+            await settle(pilot)
             issues = app.screen
             assert isinstance(issues, WorkbenchIssuesScreen)
             listed = _list_text(issues)
-            await pilot.press("down", "enter")
-            await _settle(pilot)
+            await pilot.press("down")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             landed_on = screen.query_one(CasillaList).highlighted
             app.exit(None)
 
@@ -573,7 +586,7 @@ async def test_on_the_smallest_terminal_the_status_keeps_one_line_the_list_opens
         screen = WorkbenchIssuesScreen(form, status_line=status)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             bar = screen.query_one("#issues-status", Static)
             bar_height, bar_text = bar.region.height, str(bar.render())
             listed = screen.query_one("#issues-list", OptionList)
@@ -638,12 +651,12 @@ async def test_a_stale_calculation_names_c_beside_what_to_do_and_c_calculates_ag
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
+            await settle(pilot)
             listed = _list_text(app.screen) if isinstance(app.screen, WorkbenchIssuesScreen) else ""
             await pilot.press("c")
-            await _settle(pilot)
+            await settle(pilot)
             app.exit(None)
 
     stale_line = next(line for line in lines if line.recalculates)

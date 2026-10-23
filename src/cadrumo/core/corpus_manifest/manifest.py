@@ -12,8 +12,7 @@ the manifest is the integrity gate, not the secrecy gate). Per-record
 fields are validated against path-traversal at construction.
 
 There is no human CLI for corpus verification. Consumers import manifest and
-bundle operations directly from this defining module. The same API owns
-manifest regeneration after an intentional corpus update.
+bundle operations directly from this defining module.
 
 This module also builds and verifies distributable corpus *bundles*: a
 single ``.zip`` archive carrying every corpus file plus an embedded
@@ -26,13 +25,12 @@ from __future__ import annotations
 
 import io
 import zipfile
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path, PurePosixPath
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ..directory_scan import scan_directory
 from ..errors.hierarchy import (
     CoreValidationError as _CoreValidationError,
 )
@@ -40,7 +38,6 @@ from ..errors.hierarchy import (
     pydantic_validation_boundary as _pydantic_validation_boundary,
 )
 from ..hashing import canonical_json_bytes as _canonical_json_bytes
-from ..hashing import hash_file as _hash_file
 from ..hashing import sha256_hex as _sha256_hex
 from ..hex import Hex64Str
 from ..logging import get_logger as _get_logger
@@ -60,9 +57,6 @@ _BUNDLE_MANIFEST_MEMBER = "corpus.manifest.json"
 
 _MANIFEST_VERSION = 1
 """Wire-format version of the on-disk manifest schema."""
-
-_MANIFEST_FILENAME = "corpus.manifest.json"
-"""Canonical filename for the manifest sidecar inside each corpus root."""
 
 
 class CorpusEntry(BaseModel):
@@ -175,35 +169,6 @@ class _TamperedManifestPayloadError(_ManifestPayloadValidationError):
     """Raw payload's recorded self-digest differs from its canonical body."""
 
 
-def _iter_corpus_files(corpus_root: Path) -> Iterator[Path]:
-    """Yield every regular file under ``corpus_root`` excluding the manifest.
-
-    Hidden files / dirs (leading ``.``) are skipped — they are typically
-    git internals or editor cruft that should not be tracked. The
-    manifest sidecar at the root is excluded so the manifest does not
-    cover itself recursively.
-
-    Symlinks are skipped: a hostile actor with corpus-tree write access
-    could plant a symlink pointing to a file outside the corpus and
-    cause the manifest to attest to content the corpus does not own.
-    The substrate's classification policy maps the corpus class to
-    integrity-tracked-only, but the manifest must reflect the literal
-    on-disk corpus contents — symlinks defeat that contract.
-    """
-    for path in scan_directory(corpus_root, recursive=True):
-        # ``is_symlink()`` is checked first because ``is_file()`` follows
-        # the symlink target on most filesystems and would mask the link.
-        if path.is_symlink():
-            continue
-        if not path.is_file():
-            continue
-        if any(part.startswith(".") for part in path.relative_to(corpus_root).parts):
-            continue
-        if path.name == _MANIFEST_FILENAME and path.parent == corpus_root:
-            continue
-        yield path
-
-
 def _canonical_manifest_body(
     *,
     manifest_version: int,
@@ -261,52 +226,6 @@ def _validate_raw_manifest_payload(raw: str | bytes) -> CorpusManifest:
     return manifest
 
 
-def build_corpus_manifest(
-    corpus_root: Path,
-    *,
-    corpus_root_name: str,
-    generated_at: datetime | None = None,
-) -> CorpusManifest:
-    """Walk ``corpus_root`` and build a freshly self-signed manifest.
-
-    Args:
-        corpus_root: The corpus directory to walk.
-        corpus_root_name: Stable identifier for this corpus (logged in
-            the manifest body so an operator can grep for it).
-        generated_at: Optional override for the timestamp. When ``None``
-            the canonical clock :func:`core.time.clock.now` is consulted, so
-            the deterministic-output seam (:func:`core.time.clock.frozen_clock`)
-            pins it under replay; an explicit value still overrides.
-
-    Returns:
-        A :class:`CorpusManifest` covering every regular file under
-        ``corpus_root``.
-
-    Raises:
-        FileNotFoundError: If ``corpus_root`` does not exist.
-        NotADirectoryError: If ``corpus_root`` is not a directory.
-    """
-    if not corpus_root.exists():
-        raise FileNotFoundError(corpus_root)
-    if not corpus_root.is_dir():
-        raise NotADirectoryError(corpus_root)
-    if generated_at is None:
-        generated_at = _clock_now()
-    raw_entries: list[CorpusEntry] = []
-    for path in _iter_corpus_files(corpus_root):
-        sha256_hex, length = _hash_file(path)
-        relative = PurePosixPath(*path.relative_to(corpus_root).parts).as_posix()
-        raw_entries.append(
-            CorpusEntry(
-                relative_path=relative,
-                sha256=sha256_hex,
-                content_length=length,
-            ),
-        )
-    _logger.debug("build_corpus_manifest: hashed %d files under %s", len(raw_entries), corpus_root)
-    return _self_signed_manifest(raw_entries, corpus_root_name=corpus_root_name, generated_at=generated_at)
-
-
 def _self_signed_manifest(
     raw_entries: list[CorpusEntry],
     *,
@@ -324,7 +243,7 @@ def _self_signed_manifest(
     )
     manifest_sha256 = _sha256_hex(body)
     _logger.debug(
-        "build_corpus_manifest: built manifest for %r with %d entries (sha256=%s)",
+        "_self_signed_manifest: built manifest for %r with %d entries (sha256=%s)",
         corpus_root_name,
         len(entries),
         manifest_sha256[:12],
@@ -386,12 +305,14 @@ def build_corpus_bundle(
     Args:
         members: Archive path to member bytes.
         corpus_root_name: Stable identifier recorded in the manifest
-            (mirrors :func:`build_corpus_manifest`).
+            (``"manuals"``, ``"legal"``, etc.).
         output_path: Destination ``.zip`` path. Parent directories are
             created as needed; an existing file at this path is
             overwritten.
-        generated_at: Optional override for the manifest timestamp;
-            see :func:`build_corpus_manifest`.
+        generated_at: Optional override for the manifest timestamp. When
+            ``None`` the canonical clock :func:`core.time.clock.now` is
+            consulted, so the deterministic-output seam
+            (:func:`core.time.clock.frozen_clock`) pins it under replay.
 
     Returns:
         The :class:`CorpusManifest` embedded in the written bundle.

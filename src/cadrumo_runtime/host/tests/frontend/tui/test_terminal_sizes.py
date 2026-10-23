@@ -36,6 +36,7 @@ from cadrumo.core.bucket_pointer import require_active_bucket_id
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
+from cadrumo.entrypoints.tui.tests.settling import settle
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ....frontend.tui.secret.runtime_login import RuntimeLoginScreen
@@ -128,8 +129,7 @@ async def test_the_profile_surface_fits_every_terminal_width(tmp_path: Path, siz
 
         app = ProfileManagerScreen(overview, persist=_refuse_write)
         async with ScreenHostApp(app).run_test(size=size) as pilot:
-            await pilot.pause()
-            await pilot.pause()
+            await settle(pilot)
             _assert_horizontally_contained(app.app, size, "profile manager")
             pilot.app.exit(None)
 
@@ -149,7 +149,6 @@ async def test_the_secret_surface_fits_every_terminal_width(size: tuple[int, int
     )
     app = ScreenHostApp(screen)
     async with app.run_test(size=size) as pilot:
-        await pilot.pause()
-        await pilot.pause()
+        await settle(pilot)
         _assert_horizontally_contained(app, size, "runtime login screen")
         app.exit(None)

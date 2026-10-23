@@ -1,8 +1,8 @@
 """The handlers the installation door serves, keyed by the request each one takes.
 
-A handler is registered for the request type of exactly one act. An act with
-no registered handler is answered as unavailable, so the door can be served
-before every act has a handler.
+A handler is registered for the request type of exactly one act. The door
+answers an act with no registered handler as unavailable. The installed
+composition serves every act of the table, and refuses to compose otherwise.
 """
 
 from __future__ import annotations
@@ -62,7 +62,12 @@ class InstallationActRegistry:
 
 
 def production_installation_acts() -> InstallationActRegistry:
-    """Compose the handlers the installed runtime serves: every act of the table, one family at a time."""
+    """Compose the handlers the installed runtime serves: every act of the table, one family at a time.
+
+    Raises:
+        InternalInvariantError: The families leave an act of the table without
+            a handler.
+    """
     # Each family registers on the registry this module defines, so a family
     # loads only once the registry exists.
     from .installation_artefacts import register_artefact_acts
@@ -77,4 +82,6 @@ def production_installation_acts() -> InstallationActRegistry:
     register_repair_acts(registry)
     register_profile_acts(registry)
     register_artefact_acts(registry)
+    if registry.served_acts != frozenset(INSTALLATION_ACT_CONTRACTS):
+        raise InternalInvariantError("the installed runtime serves every installation act")
     return registry

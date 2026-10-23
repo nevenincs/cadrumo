@@ -37,12 +37,12 @@ if __name__ == "__main__" and len(sys.argv) == 3 and sys.argv[1] == "host-browse
 
     from cadrumo.core.async_cleanup import close_async_resources
     from cadrumo.core.config import load_settings
-    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+    from cadrumo_client.transport.windows_process import WindowsProcessScope
     from cadrumo_runtime.host.worker import installed_profile_worker_composition, run
 else:
     from cadrumo.core.async_cleanup import close_async_resources
     from cadrumo.core.config import load_settings
-    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+    from cadrumo_client.transport.windows_process import WindowsProcessScope
     from cadrumo_runtime.host.worker import installed_profile_worker_composition, run
 
 

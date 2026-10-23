@@ -43,6 +43,7 @@ from ..modelo.workbench.review import EditReviewScreen
 from ..modelo.workbench.screen import ModeloWorkbenchScreen
 from ..modelo.workbench.sources import WorkbenchSourcesScreen
 from .modelo_workbench_session import real_workbench
+from .settling import SettleTimeoutError, settle, settle_until
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -65,16 +66,15 @@ def workbench(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathF
 
 async def _panel_opened(pilot: Pilot[None]) -> bool:
     """Wait for the box panel Enter opens, docked or in the dialog, once the box's full help has been read."""
-    for _ in range(200):
-        if pilot.app.screen.query(CasillaEditorPanel):
-            return True
-        await pilot.pause()
-    return False
+    try:
+        await settle_until(pilot, lambda: bool(pilot.app.screen.query(CasillaEditorPanel)), "the box panel Enter opens")
+    except SettleTimeoutError:
+        return False
+    return True
 
 
 async def _opened(pilot: Pilot[None], screen: ModeloWorkbenchScreen) -> ModeloWorkForm:
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
+    await settle(pilot)
     form = screen.form
     assert form is not None, "the workbench never finished reading its declaration"
     return form
@@ -135,8 +135,7 @@ async def test_no_transport_token_reaches_what_the_filer_reads(
             form = await _opened(pilot, screen)
             if keys:
                 await pilot.press(*keys)
-                await pilot.pause()
-                await pilot.pause()
+                await settle(pilot)
             if keys == ("s",):
                 assert isinstance(app.screen, WorkbenchSourcesScreen), "the sources view did not open"
             elif keys == ("f1",):
@@ -166,7 +165,7 @@ async def test_every_dialog_returns_the_focus_to_the_box_it_was_opened_from(
             form = await _opened(pilot, screen)
             casilla_list = screen.query_one(CasillaList)
             casilla_list.focus_address(address_key(_editable(form).address))
-            await pilot.pause()
+            await settle(pilot)
             origin = casilla_list.highlighted
             assert origin is not None
             returns: dict[str, bool] = {}
@@ -175,11 +174,10 @@ async def test_every_dialog_returns_the_focus_to_the_box_it_was_opened_from(
                 ("sources", ("s",), ("escape",)),
             ):
                 await pilot.press(*opening)
-                await pilot.pause()
+                await settle(pilot)
                 assert app.screen is not screen or await _panel_opened(pilot), f"{name} did not open"
                 await pilot.press(*closing)
-                await pilot.pause()
-                await pilot.pause()
+                await settle(pilot)
                 highlighted = casilla_list.highlighted
                 returns[name] = (
                     app.screen is screen
@@ -217,23 +215,21 @@ async def test_a_typed_value_is_kept_nowhere_once_abandoned(
             await pilot.press("enter")
             assert await _panel_opened(pilot)
             await pilot.press(*typed, "escape")
-            await pilot.pause()
+            await settle(pilot)
             after_cancel = [change.text for change in screen.staged_changes]
             await pilot.press("enter")
             assert await _panel_opened(pilot)
             # Keep and stay, so the panel closes on this box rather than refilling for the next.
             await pilot.press(*typed, "ctrl+enter")
-            await pilot.pause()
+            await settle(pilot)
             staged = len(screen.staged_changes)
             assert staged == 1
             await pilot.press("R")
             # Review checks the staged changes in a worker before opening its dialog.
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert isinstance(app.screen, EditReviewScreen)
             await pilot.click("#review-discard")
-            await pilot.pause()
-            await pilot.pause()
+            await settle(pilot)
             after_discard = len(screen.staged_changes)
             app.exit(None)
         stored = installed.load(language).form

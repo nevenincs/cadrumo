@@ -37,6 +37,8 @@ class Authority:
     roots: tuple[RootPackage, ...]
     classifications: tuple[tuple[str, tuple[str, ...]], ...]
     forbidden_contracts: tuple[ForbiddenContract, ...] = ()
+    consumer_trees: tuple[ConsumerTree, ...] = ()
+    consumer_contracts: tuple[ConsumerContractScope, ...] = ()
 
     @property
     def root_names(self) -> frozenset[str]:
@@ -72,6 +74,27 @@ class ForbiddenContract:
     name: str
     source_modules: tuple[str, ...]
     forbidden_modules: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class ConsumerTree:
+    """One repository-root directory or module whose Python only consumes first-party roots.
+
+    Such Python is not an importable package, so Import Linter cannot graph
+    it; the subordinate checker parses it as consumer-only modules whose
+    outgoing imports are governed.
+    """
+
+    path: str
+    reason: str
+
+
+@dataclass(frozen=True)
+class ConsumerContractScope:
+    """Consumer paths held to the forbidden modules of one forbidden contract."""
+
+    contract: ForbiddenContract
+    paths: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -141,6 +164,7 @@ class CheckResult:
     findings: tuple[Finding, ...]
     files_scanned: int
     occurrences: tuple[ImportOccurrence, ...] = ()
+    consumer_files_scanned: int = 0
 
     @property
     def returncode(self) -> int:
@@ -156,6 +180,7 @@ class CheckResult:
     def as_dict(self, repository: Path) -> dict[str, object]:
         """Return complete machine-readable checker evidence."""
         return {
+            "consumer_files_scanned": self.consumer_files_scanned,
             "files_scanned": self.files_scanned,
             "findings": [
                 {
@@ -175,7 +200,7 @@ class CheckResult:
                 for finding in self.findings
             ],
             "occurrences": [occurrence.as_dict(repository) for occurrence in self.occurrences],
-            "schema_version": 2,
+            "schema_version": 3,
         }
 
 
@@ -200,3 +225,4 @@ class SourceModule:
     imported_count: int = 0
     local_definitions: int = 0
     has_imports: bool = False
+    consumer: bool = False

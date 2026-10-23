@@ -8,7 +8,6 @@ from typing import ClassVar
 
 import pytest
 from textual.binding import Binding
-from textual.pilot import Pilot
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
@@ -44,6 +43,7 @@ from ..navigation import (
     build_destination_catalogue,
 )
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+from .settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -60,13 +60,6 @@ class MarkerScreen(Screen[None]):
     def action_close(self) -> None:
         """Dismiss through Textual's real child-screen return protocol."""
         self.dismiss(None)
-
-
-async def _settle(app: CadrumoTuiApp, pilot: Pilot[AccountRecomposeRequiredV1 | None]) -> None:
-    """Let Home's off-loop rebuild land and the screen it pushes lay out."""
-    await app.workers.wait_for_complete()
-    await pilot.pause()
-    await pilot.pause()
 
 
 def _catalogue(
@@ -123,14 +116,14 @@ async def test_mouse_click_home_filing_opens_matching_calendar_row(period: str) 
         refresh_home=lambda: home,
     )
     async with app.run_test(size=(160, 50)) as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         assert await pilot.click("#home-agenda", offset=(2, 0))
-        await pilot.pause()
+        await settle(pilot)
         assert isinstance(app.screen, DeclarationsCalendarScreen)
         table = app.screen.query_one("#declarations-calendar-agenda", DataTable)
         assert table.ordered_rows[table.cursor_row].key.value == f"360|2025|{period}"
         await pilot.press("escape")
-        await _settle(app, pilot)
+        await settle(pilot)
         assert isinstance(app.screen, HomeScreen)
         assert app.screen.highlighted_target is not None
         assert app.screen.highlighted_target.identity == f"agenda:360:2025:{period}"
@@ -157,12 +150,12 @@ async def test_navigate_to_refuses_unavailable_destination_without_replacing_hom
 
     async with app.run_test() as pilot:
         # Home is pushed after startup; capture it only once it is mounted.
-        await pilot.pause()
+        await settle(pilot)
         home = app.screen
         assert home.id == "home-screen"
 
         app.navigate_to(target)
-        await pilot.pause()
+        await settle(pilot)
 
         assert app.screen is home
         assert len(app.screen_stack) == 2
@@ -199,12 +192,12 @@ async def test_navigate_to_refuses_a_factory_invocation_failure_without_leaving_
 
     async with app.run_test() as pilot:
         # Home is pushed after startup; capture it only once it is mounted.
-        await pilot.pause()
+        await settle(pilot)
         home = app.screen
         assert home.id == "home-screen"
 
         app.navigate_to(target)
-        await _settle(app, pilot)
+        await settle(pilot)
 
         assert seen == [TuiScreenContextV1(destination="workbench.ledger", focus=target.focus)]
         if failure_type is TypeError:
@@ -247,7 +240,7 @@ async def test_child_dismissal_refreshes_home_and_restores_its_semantic_focus() 
     )
 
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         initial_home = app.screen
         assert isinstance(initial_home, HomeScreen)
         assert len(app.screen_stack) == 2
@@ -255,11 +248,11 @@ async def test_child_dismissal_refreshes_home_and_restores_its_semantic_focus() 
         assert selected is not None
 
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert initial_home.selected_target == selected
 
         app.navigate_to(target)
-        await pilot.pause()
+        await settle(pilot)
 
         assert isinstance(app.screen, MarkerScreen)
         assert app.screen.context == TuiScreenContextV1(destination="workbench.ledger", focus=target.focus)
@@ -267,7 +260,7 @@ async def test_child_dismissal_refreshes_home_and_restores_its_semantic_focus() 
         assert len(app.screen_stack) == 2
 
         await pilot.press("escape")
-        await _settle(app, pilot)
+        await settle(pilot)
 
         returned_home = app.screen
         assert isinstance(returned_home, HomeScreen)
@@ -300,11 +293,11 @@ async def test_expired_child_return_tears_down_profile_bound_doors_and_recompose
                 focus=TuiFocusIdentityV1(destination="workbench.declarations", semantic_key="declaration.case"),
             )
         )
-        await pilot.pause()
+        await settle(pilot)
         assert isinstance(app.screen, MarkerScreen)
 
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot)
 
         # Expiry severs private presentation together with its read doors.
         assert app.account_session is None
@@ -327,7 +320,7 @@ async def test_expired_custody_refresh_recomposes_without_rendering_a_stale_root
     )
 
     async with app.run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
 
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
         assert app._account_factories is None
@@ -363,11 +356,11 @@ async def test_a_refused_home_refresh_keeps_the_session_and_reports_a_code() -> 
     )
 
     async with app.run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert app._home_refresh_refusal_code is None
 
         app._show_home(None)
-        await pilot.pause()
+        await settle(pilot)
 
         assert app._home_refresh_refusal_code == "workbench.home.refresh_unavailable"
         assert app.return_value is None
@@ -391,7 +384,7 @@ async def test_a_refused_refresh_never_reports_an_expiry_it_did_not_observe() ->
     )
 
     async with app.run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
 
         assert app.return_value is None
         assert app._home_refresh_refusal_code == "workbench.home.refresh_unavailable"
@@ -471,8 +464,9 @@ async def test_with_pushed_retirement_the_session_is_read_only_at_its_expiry() -
         app._arm_session_lapse()
         await asyncio.sleep(0.3)
         assert reads == []
-        while app.return_value is None and loop.time() - started < 10:
-            await pilot.pause(0.05)
+        await settle_until(
+            pilot, lambda: app.return_value is not None, "the lapsed session to return its recompose request"
+        )
         assert app.return_value is not None and app.return_value.reason is AccountRecomposeReasonV1.EXPIRED
         assert len(reads) == 2
         assert reads[0] - started >= 0.5
@@ -488,14 +482,14 @@ async def test_an_unfinished_profile_opens_on_setup_once_then_returns_home() -> 
         account_factories=_account_factories(onboarding_pending=True),
     )
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
-        await _settle(app, pilot)
+        await settle(pilot)
+        await settle(pilot)
         assert isinstance(app.screen, MarkerScreen)
         assert [context.destination for context in contexts] == ["workbench.profile"]
 
         await pilot.press("escape")
-        await _settle(app, pilot)
-        await _settle(app, pilot)
+        await settle(pilot)
+        await settle(pilot)
         assert isinstance(app.screen, HomeScreen)
         assert [context.destination for context in contexts] == ["workbench.profile"]
         app.exit(None)
@@ -521,11 +515,9 @@ async def test_change_user_requests_fresh_selection_and_revokes_old_profile_root
     )
 
     async with app.run_test(size=(80, 24)) as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         await pilot.press("f5")
-        async with asyncio.timeout(5):
-            while app.return_value is None:
-                await pilot.pause(0.02)
+        await settle_until(pilot, lambda: app.return_value is not None, "the app to return its recompose request")
 
         assert app.return_value == AccountRecomposeRequiredV1(
             reason=AccountRecomposeReasonV1.CHANGE_USER,
@@ -556,10 +548,10 @@ async def test_password_rotation_recomposes_before_the_old_session_root_can_be_r
 
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.press("f6")
-        await pilot.pause()
+        await settle(pilot)
         assert app.screen is password
         password.dismiss(outcome)
-        await pilot.pause()
+        await settle(pilot)
 
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED)
         assert app._account_factories is None
@@ -592,13 +584,13 @@ async def test_home_link_keys_open_their_page_through_the_admitted_catalogue(
         account_factories=_account_factories(),
     )
     async with app.run_test(size=(120, 40)) as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         await pilot.press(key)
-        await pilot.pause()
+        await settle(pilot)
         assert isinstance(app.screen, MarkerScreen)
         context = app.screen.context
         await pilot.press("escape")
-        await _settle(app, pilot)
+        await settle(pilot)
         assert isinstance(app.screen, HomeScreen)
     assert context.destination == destination
     assert context.focus is not None and context.focus.semantic_key == semantic_key
@@ -613,12 +605,12 @@ async def test_home_lists_a_closed_page_with_its_reason_and_refuses_to_open_it()
         account_factories=_account_factories(),
     )
     async with app.run_test(size=(120, 40)) as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         links = app.screen.query_one("#home-links", DataTable)
         rows = tuple(str(links.get_row_at(index)[0]) for index in range(links.row_count))
         assert f"r   {tr('tui.destination.ledger')}\n    {tr('tui.home.link_state.never_captured')}" in rows
         await pilot.press("r")
-        await pilot.pause()
+        await settle(pilot)
         assert isinstance(app.screen, HomeScreen)
         assert str(app.query_one("#root-navigation-refusal", Static).render()) == tr("tui.root.navigation.unavailable")
     assert contexts == []
@@ -635,16 +627,14 @@ async def test_home_sign_out_link_signs_out_through_the_account_door() -> None:
         account_factories=_account_factories(sign_out=AccountDirectSessionActionV1(complete=complete)),
     )
     async with app.run_test(size=(120, 40)) as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         links = app.screen.query_one("#home-account-links", DataTable)
         # The first click moves the cursor onto the row, the second chooses it.
         assert await pilot.click("#home-account-links", offset=(2, 1))
-        await pilot.pause()
+        await settle(pilot)
         assert links.ordered_rows[links.cursor_row].key.value == "link:sign_out"
         assert await pilot.click("#home-account-links", offset=(2, 1))
-        async with asyncio.timeout(5):
-            while app.return_value is None:
-                await pilot.pause(0.02)
+        await settle_until(pilot, lambda: app.return_value is not None, "the app to return its recompose request")
     assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.SIGNED_OUT)
 
 
@@ -655,7 +645,7 @@ async def test_home_without_account_doors_marks_its_account_links_unavailable() 
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
     )
     async with app.run_test(size=(120, 40)) as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         links = app.screen.query_one("#home-account-links", DataTable)
         rows = tuple(str(links.get_row_at(index)[0]) for index in range(links.row_count))
     unavailable = tr("tui.home.link_state.unavailable")
@@ -687,11 +677,9 @@ async def test_sign_out_direct_action_recomposes_success_or_requires_fresh_admis
     )
 
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         await pilot.press("f10")
-        async with asyncio.timeout(5):
-            while app.return_value is None:
-                await pilot.pause(0.02)
+        await settle_until(pilot, lambda: app.return_value is not None, "the app to return its recompose request")
         assert app.return_value == AccountRecomposeRequiredV1(
             reason=(
                 AccountRecomposeReasonV1.SIGNED_OUT if completion == "success" else AccountRecomposeReasonV1.UNAVAILABLE
@@ -715,7 +703,7 @@ async def test_account_header_is_keyboard_reachable_without_horizontal_overflow(
     )
 
     async with app.run_test(size=(width, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         actions = {active.binding.action for active in app.active_bindings.values()}
         bound = {action for action in actions if action.startswith("account(") or action == "toggle_appearance"}
         assert bound == {
@@ -753,7 +741,7 @@ async def test_direct_account_action_severs_private_root_before_completion(
         assert app._workbench_search_service is None
         assert len(app.screen_stack) == 1
         started.set()
-        await asyncio.wait_for(release.wait(), 5)
+        await asyncio.wait_for(release.wait(), SETTLE_TIMEOUT_SECONDS)
         return desired
 
     direct = AccountDirectSessionActionV1(complete=complete)
@@ -768,21 +756,19 @@ async def test_direct_account_action_severs_private_root_before_completion(
         account_factories=factories,
     )
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         child = AccountChromeScreen()
         app._replace_destination(child, return_to_home=True)
-        await pilot.pause()
+        await settle(pilot)
         assert app.screen is child
         app.run_account_action(action)
         assert app._account_factories is None
         assert app._destination_catalogue is None
         assert not child.display
-        await asyncio.wait_for(started.wait(), 5)
+        await asyncio.wait_for(started.wait(), SETTLE_TIMEOUT_SECONDS)
         assert app.return_value is None
         release.set()
-        async with asyncio.timeout(5):
-            while app.return_value is None:
-                await pilot.pause(0.02)
+        await settle_until(pilot, lambda: app.return_value is not None, "the app to return its recompose request")
         assert app.return_value == desired
 
 
@@ -798,14 +784,12 @@ async def test_failed_direct_action_exits_to_fresh_admission_and_hides_unavailab
         account_factories=factories,
     )
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         assert not app.account_action_available(AccountActionV1.PASSWORD)
         assert not bool(app.check_action("account", ("password",)))
         assert "account('password')" not in {active.binding.action for active in app.active_bindings.values()}
         app.run_account_action(AccountActionV1.CHANGE_USER)
-        async with asyncio.timeout(5):
-            while app.return_value is None:
-                await pilot.pause(0.02)
+        await settle_until(pilot, lambda: app.return_value is not None, "the app to return its recompose request")
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.UNAVAILABLE)
 
 
@@ -827,20 +811,20 @@ async def test_cancelled_direct_action_retains_completion_until_runtime_effect_s
         account_factories=_account_factories(sign_out=AccountDirectSessionActionV1(complete=complete)),
     )
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         app.run_account_action(AccountActionV1.SIGN_OUT)
         try:
-            await asyncio.wait_for(started.wait(), 5)
+            await asyncio.wait_for(started.wait(), SETTLE_TIMEOUT_SECONDS)
             worker = next(worker for worker in app.workers if worker.name == "account-direct-action")
             worker.cancel()
             worker.cancel()
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert not completed.is_set()
             assert app.return_value is None
         finally:
             release.set()
-        await asyncio.wait_for(completed.wait(), 5)
-        await pilot.pause()
+        await asyncio.wait_for(completed.wait(), SETTLE_TIMEOUT_SECONDS)
+        await settle(pilot)
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.UNAVAILABLE)
 
 
@@ -856,7 +840,7 @@ async def test_access_dismissal_with_lost_admission_exits_before_old_root_can_re
     )
     lost_screen = LostAccessScreen()
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         assert app.account_action_available(AccountActionV1.ACCESS)
         private_screen = app.screen
         app._on_access_dismissed(lost_screen)
@@ -886,7 +870,7 @@ async def test_captured_home_bundle_replaces_matching_catalogue_account_and_clea
         account_factories=old_factories,
     )
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         assert isinstance(app.screen, HomeScreen)
         assert app.destination_catalogue is new_catalogue
         assert app._account_factories is new_factories
@@ -900,11 +884,11 @@ async def test_captured_home_bundle_replaces_matching_catalogue_account_and_clea
                 focus=TuiFocusIdentityV1(destination="workbench.profile", semantic_key="profile.overview"),
             )
         )
-        await pilot.pause()
+        await settle(pilot)
         child = app.screen
         assert isinstance(child, MarkerScreen)
         child.dismiss(None)
-        await _settle(app, pilot)
+        await settle(pilot)
         assert app.destination_catalogue is new_catalogue
         assert app.workbench_search_refusal_code == "workbench.search.unavailable"
         app.exit(None)
@@ -932,11 +916,11 @@ async def test_authoritative_child_return_rebuilds_the_injected_search_snapshot_
                 focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.entry"),
             )
         )
-        await pilot.pause()
+        await settle(pilot)
         assert app.workbench_search_service is initial_search
 
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot)
 
     assert refreshes == [refreshed_search]
     assert app.workbench_search_service is refreshed_search
@@ -967,9 +951,9 @@ async def test_failed_search_refresh_retains_last_good_and_sanitizes_refusal(
                 focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.entry"),
             )
         )
-        await pilot.pause()
+        await settle(pilot)
         await pilot.press("escape")
-        await pilot.pause()
+        await settle(pilot)
 
     assert app.workbench_search_refusal_code == "workbench.search.refresh_unavailable"
     assert app.workbench_search_service is initial_search
@@ -1011,17 +995,14 @@ async def test_the_return_to_home_rereads_off_the_event_loop_and_shows_that_it_i
                 focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.entry"),
             )
         )
-        await pilot.pause()
+        await settle(pilot)
         await pilot.press("escape")
-        for _ in range(5):
-            await pilot.pause()
+        await settle(pilot, workers=False)
         # The loop keeps turning while the capture is out, and says why the page is empty.
         assert app.query_one("#root-updating", Static).display
         assert app.workbench_search_service is not refreshed_search
         release.set()
-        await app.workers.wait_for_complete()
-        for _ in range(4):
-            await pilot.pause()
+        await settle(pilot)
         assert not app.query_one("#root-updating", Static).display
         assert isinstance(app.screen, HomeScreen)
 

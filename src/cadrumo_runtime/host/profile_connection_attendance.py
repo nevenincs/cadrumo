@@ -18,7 +18,6 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from cadrumo.application.operations.person_acts import is_persons_frontend
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.time.utc import UtcInstant
@@ -93,9 +92,7 @@ class ProfileConnectionAttendanceMixin:
             return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
         if request.action == "attendance_status":
             return self._attendance_status(context, host, request)
-        connection = self._attendance_connection(
-            context, channel, request, request.scope, persons_frontend=is_persons_frontend(request.frontend)
-        )
+        connection = self._attendance_connection(context, channel, request, request.scope)
         with host.guard:
             if not self._admitting():
                 raise RefusalError(RefusalCode.DRAINING)
@@ -169,8 +166,6 @@ class ProfileConnectionAttendanceMixin:
         channel: ByteChannel,
         request: AttendanceAsk,
         scope: AccessScope,
-        *,
-        persons_frontend: bool,
     ) -> ProfileConnection:
         """Register the asking connection with its kernel-observed login; a reused one must match exactly."""
         with self._guard:

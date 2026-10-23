@@ -15,6 +15,7 @@ from textual.widgets import Static
 
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.entrypoints.tui.tests.settling import settle
 
 from ..authority import IncomeTaxAuthorityResolution, resolve_income_tax_authority
 from ..scenario import AcceptanceOutcome
@@ -146,7 +147,7 @@ def test_the_lifecycle_contract_drives_controls_the_real_workbench_and_its_dialo
         workbench = ModeloWorkbenchScreen(cast("Any", _UnreadableDeclaration()))
         app = ScreenHostApp(workbench)
         async with app.run_test(size=(140, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             assert {"c", "f8", "e"} <= set(workbench.active_bindings)
             for selector in (
                 contract.calculate.refusal_notice_id,
@@ -158,14 +159,14 @@ def test_the_lifecycle_contract_drives_controls_the_real_workbench_and_its_dialo
             with pytest.raises(TuiJourneyError, match="could not read its form"):
                 await wait_for_workbench(pilot, seconds=10)
             app.push_screen(ConfirmScreen(title="t", message="m", confirm_label="a", cancel_label="c"))
-            await pilot.pause()
+            await settle(pilot)
             for selector in (contract.local_file.confirmation_id, contract.calculate.at_risk_proceed_id):
                 assert selector is not None
                 app.screen.query_one(selector, Button)
             app.pop_screen()
             offer = WorkbenchExportOffer(artefacts=(ModeloExportArtefact.FICHERO_BOE,), asks_elections=False)
             app.push_screen(WorkbenchExportScreen(offer))
-            await pilot.pause()
+            await settle(pilot)
             assert contract.export.activation_id is not None
             app.screen.query_one(contract.export.activation_id, Button)
             app.screen.query_one("#export-path", Input)
@@ -232,7 +233,7 @@ def test_the_refresh_wait_closes_the_statement_of_what_a_recalculation_changed()
         async with app.run_test() as pilot:
             statement = WorkbenchResultScreen(())
             app.push_screen(statement)
-            await pilot.pause()
+            await settle(pilot)
             assert app.screen is statement
             await wait_for_tui_refresh(pilot, binding=installed_lifecycle_contract().calculate, maximum_polls=50)
             assert app.screen is not statement
@@ -576,7 +577,7 @@ def test_a_result_statement_does_not_replace_the_dismissed_operations_terminal(
         async with app.run_test() as pilot:
             modal = PublicOperationModal()
             app.push_screen(modal)
-            await pilot.pause()
+            await settle(pilot)
             statement = WorkbenchResultScreen(())
 
             class SettlementPilot(Pilot[None]):

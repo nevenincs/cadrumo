@@ -20,9 +20,9 @@ from dev.product_environment import clean_product_env
 from dev.source_tree import repository_files, snapshot
 
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
-from ._distribution_names import normalise_distribution_name
 from .authority_staging import stage_published_authority
 from .command_execution import CommandResult, run_command
+from .distribution_names import normalise_distribution_name
 from .evidence import PackagingSmokeManifest
 from .google_oauth import build_client_json, stage_build_client
 from .proof_ledger import (

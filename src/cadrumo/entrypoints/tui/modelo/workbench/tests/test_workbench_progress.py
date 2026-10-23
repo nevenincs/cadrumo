@@ -34,6 +34,7 @@ from ......domain.modelos.verification_report import (
     VerificationCompletenessStatus,
 )
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..header import attention_chips, missing_count
 from ..issues import WorkbenchIssuesScreen
 from ..progress import (
@@ -251,12 +252,10 @@ async def test_f8_on_values_only_findings_name_opens_the_findings_list_the_next_
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            for _ in range(8):
-                await pilot.pause()
+            await settle(pilot)
             next_line = str(screen.query_one("#wb-next", Static).render())
             await pilot.press("f8")
-            for _ in range(8):
-                await pilot.pause()
+            await settle(pilot)
             opened = app.screen
 
     assert next_line.endswith("[i]")

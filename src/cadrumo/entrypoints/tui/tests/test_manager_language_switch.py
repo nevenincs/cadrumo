@@ -42,6 +42,7 @@ from ....tests.env_scope import output_language_scope
 from ..components.host import ScreenHostApp
 from ..profile.overview import ProfileFieldPersist, ProfileManagerScreen
 from .manager_pilot import wait_until_settled
+from .settling import settle, settle_until
 
 pytestmark = [
     pytest.mark.integration,
@@ -72,26 +73,6 @@ def _page_language_follows_the_profile() -> Iterator[None]:
     with output_language_scope(None):
         yield
 
-
-_FOOTER_DRAIN_LIMIT = 20
-"""How many barriers the footer gets to settle within before the test gives up.
-
-A cap, not a wait: exhausting it fails and names what the footer last
-showed, because a footer that cannot reach a settled state is a finding
-about the page rather than a slow machine.
-"""
-
-_MINIMUM_FOOTER_DRAINS = 2
-"""Barriers that must pass before an unchanged footer counts as settled.
-
-A barrier covers the widgets that exist when it is posted, so the first
-one can be queued ahead of a rebuild the render had only just scheduled,
-and the reads either side of it would agree while that rebuild was still
-pending. A second barrier is necessarily queued behind the rebuild, and a
-widget processes its messages in order, so it cannot overtake it. The
-bound comes from the queue's ordering, not from a frame count chosen by
-eye.
-"""
 
 _COLUMN_KEYS = (
     "flows.manager.column.state",
@@ -184,47 +165,33 @@ def _column_headings(app: ProfileManagerScreen) -> list[str]:
 
 
 async def _drained_footer(app: ProfileManagerScreen, pilot) -> dict[str, str]:
-    """Drain the page's pending messages until the footer settles, then report it.
+    """Wait for the footer to reach a fixed point, then report it.
 
-    ``pilot.pause()`` is a barrier, not a sleep: it posts a callback to the
-    application and to every widget in the screen tree *as that tree stands
-    when it runs*, and returns once all of them have answered. That walk is
-    what bounds it — a widget mounted after the callbacks went out is not
-    among them, so nothing waits for it — and the footer answers a bindings
-    change by rebuilding its children. The entries read here are therefore
-    mounted *by* the work the barrier is waiting on, which is why passing
-    one barrier is no evidence that they exist yet.
-
-    Hence a fixed point rather than a count of frames or a wait for an
-    expected wording. Draining until two consecutive reads agree waits on
-    the page reaching quiescence, which is a property of its message queue
-    rather than of the machine's speed, and it never waits for a particular
-    string — so the wait cannot decide the answer. Whatever the footer
-    settled on is what comes back, a footer that never named the key
-    included.
+    The footer answers a bindings change by rebuilding its children, so the
+    entries read here are mounted by work a single barrier does not cover.
+    The wait therefore settles the app and requires two consecutive readings
+    to agree on a non-empty footer, rather than waiting for an expected
+    wording: whatever the footer settled on is what comes back, a footer that
+    never named the key included.
 
     Kept here rather than folded into the shared
     :func:`~cadrumo.entrypoints.tui.tests.manager_pilot.wait_until_settled`, which waits on the page
-    holding no unfinished background work. That is a different question
-    with a different answer: the footer carries no such flag, and a
-    recompose is not work anything is waiting on, so there is nothing to
-    watch but the reading itself. A wait for quiescence of a *value* and a
-    wait for a *state* only look alike from far enough away.
+    holding no unfinished background work. The footer carries no such flag,
+    so there is nothing to watch but the reading itself.
     """
     previous: dict[str, str] | None = None
-    for drained in range(1, _FOOTER_DRAIN_LIMIT + 1):
-        await pilot.pause()
+
+    def unchanged() -> bool:
+        nonlocal previous
         current = _footer_entries(app)
         # An empty footer has not composed at all, which is not a settled
         # state for a page that mounts one.
-        if current and current == previous and drained >= _MINIMUM_FOOTER_DRAINS:
-            return current
+        agrees = bool(current) and current == previous
         previous = current
-    message = (
-        f"the footer never settled: still changing after {_FOOTER_DRAIN_LIMIT} "
-        f"drained message queues, last showing {previous}"
-    )
-    raise AssertionError(message)
+        return agrees
+
+    await settle_until(pilot, unchanged, "the footer to stop changing")
+    return _footer_entries(app)
 
 
 @pytest.mark.asyncio
@@ -240,7 +207,7 @@ async def test_the_language_is_named_in_the_footer_not_hidden_in_the_table(tmp_p
         _register_in(_STARTING_LANGUAGE)
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
 
             settled = await _drained_footer(app, pilot)
             language_key = _language_key(settled, locale=_STARTING_LANGUAGE)
@@ -249,7 +216,7 @@ async def test_the_language_is_named_in_the_footer_not_hidden_in_the_table(tmp_p
             )
 
             await pilot.press(language_key)
-            await pilot.pause()
+            await settle(pilot)
 
             options = app.app.screen.query_one("#edit-options", OptionList)
             rendered = [str(options.get_option_at_index(index).prompt) for index in range(options.option_count)]
@@ -281,7 +248,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
         _register_in(_STARTING_LANGUAGE)
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
 
             started_in = tr(_COLUMN_KEYS[0], locale=_STARTING_LANGUAGE)
             assert started_in != tr(_COLUMN_KEYS[0], locale=_TARGET_LANGUAGE), (
@@ -293,7 +260,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
 
             language_key = _language_key(await _drained_footer(app, pilot), locale=_STARTING_LANGUAGE)
             await pilot.press(language_key)
-            await pilot.pause()
+            await settle(pilot)
             options = app.app.screen.query_one("#edit-options", OptionList)
             options.highlighted = _language_tokens(app).index(_TARGET_LANGUAGE)
             await pilot.click("#btn-edit-save")

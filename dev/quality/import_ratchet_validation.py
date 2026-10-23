@@ -72,7 +72,7 @@ def validate_ratchet_entry(entry: dict[str, object]) -> str | RatchetEntry:
     if not isinstance(multiplicity, int) or multiplicity <= 0:
         return "multiplicity must be a positive integer"
     import_form = text_fields["import_form"]
-    if import_form not in {"static", "local", "type_checking", "dynamic"}:
+    if import_form not in {"static", "local", "type_checking", "dynamic", "string"}:
         return "unknown import_form"
     status = text_fields["status"]
     if status not in {"active", "retired"}:

@@ -13,7 +13,6 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from textual.pilot import Pilot
 
 from ......application.modelo.source_policy import SourceSurface
 from ......application.modelo.work_form_models import (
@@ -31,6 +30,7 @@ from ......domain.modelos.verification_report import (
 )
 from ....components.host import ScreenHostApp
 from ....navigation import TuiNavigationTargetV1
+from ....tests.settling import settle
 from ..bulk_confirm import BulkConfirmScreen
 from ..screen import ModeloWorkbenchScreen
 from ..sources import surface_target
@@ -41,11 +41,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _ASSUMED = "07"
 _OTHER_ASSUMED = "03"
-
-
-async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _finding_on(box: str) -> ModeloFormIssue:
@@ -84,11 +79,13 @@ async def test_opening_the_owning_area_from_the_findings_leaves_for_that_area() 
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions(), navigate=opened.append)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
-            await pilot.press("end", "a")
-            await _settle(pilot)
+            await settle(pilot)
+            await pilot.press("end")
+            await settle(pilot)
+            await pilot.press("a")
+            await settle(pilot)
             app.exit(None)
 
     target = surface_target(SourceSurface.LEDGER)
@@ -102,12 +99,14 @@ async def test_b_on_a_finding_confirms_only_the_assumed_values_of_its_section() 
         screen = ModeloWorkbenchScreen(FakeReader(form=_assumed_in_two_sections()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("i")
-            await _settle(pilot)
+            await settle(pilot)
             # The finding worth checking is the list's last entry, below the assumed values.
-            await pilot.press("end", "b")
-            await _settle(pilot)
+            await pilot.press("end")
+            await settle(pilot)
+            await pilot.press("b")
+            await settle(pilot)
             dialog = app.screen
             listed = [field.address for field in dialog.fields] if isinstance(dialog, BulkConfirmScreen) else []
             app.exit(None)

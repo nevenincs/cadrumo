@@ -42,6 +42,7 @@ from ..ledger.tests.workspace_fixtures import (
 )
 from ..ledger.workspace_injection import LedgerWorkspaceInjection
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+from .settling import settle
 from .test_app import _account_factories, _catalogue
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -101,16 +102,12 @@ async def test_the_root_opens_and_returns_home_without_reading_on_the_loop() -> 
 
     app = CadrumoTuiApp(load_root=load_root)
     async with app.run_test() as pilot:
-        await app.workers.wait_for_complete()
-        for _ in range(4):
-            await pilot.pause()
+        await settle(pilot)
         assert isinstance(app.screen, HomeScreen)
         app._show_home(None)
-        await app.workers.wait_for_complete()
+        await settle(pilot)
         app._on_destination_dismissed(None)
-        await app.workers.wait_for_complete()
-        for _ in range(4):
-            await pilot.pause()
+        await settle(pilot)
 
     assert boundary.names == {"load_root", "refresh_home", "refresh_search", "refresh_catalogue"}
     assert boundary.on_loop == []
@@ -159,8 +156,7 @@ async def test_the_evidence_area_reads_records_and_the_reader_off_the_loop() -> 
     boundary = TransportBoundary()
     screen = _evidence_screen(boundary)
     async with ScreenHostApp[None](screen).run_test(size=(100, 40)) as pilot:
-        await pilot.app.workers.wait_for_complete()
-        await pilot.pause()
+        await settle(pilot)
 
     assert boundary.names == {"list_records", "reader_readiness"}
     assert boundary.on_loop == []
@@ -180,15 +176,14 @@ async def test_the_calendar_creates_a_declaration_off_the_loop() -> None:
         calendar_controller(projection, recovery_handoff=lambda action, row: boundary.enter("create_declaration"))
     )
     async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-calendar-agenda", DataTable)
         table.focus()
         table.move_cursor(row=0)
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         pilot.app.screen.query_one("#btn-confirm-accept", Button).press()
-        await pilot.app.workers.wait_for_complete()
-        await pilot.pause()
+        await settle(pilot)
 
     assert boundary.names == {"create_declaration"}
     assert boundary.on_loop == []
@@ -214,7 +209,7 @@ async def test_the_gate_catches_a_door_entered_on_the_loop() -> None:
     """Detector teeth: the same boundary flags a screen that reads while mounting."""
     boundary = TransportBoundary()
     async with ScreenHostApp[None](_BlockingScreen(boundary)).run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
     assert boundary.on_loop == ["read_on_mount"]
 
     moved = TransportBoundary()

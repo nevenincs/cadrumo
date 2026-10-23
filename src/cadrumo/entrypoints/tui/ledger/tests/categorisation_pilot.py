@@ -8,15 +8,8 @@ from textual.pilot import Pilot
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Input, Static
 
+from ...tests.settling import settle
 from ..categorisation_common import CategorisationScreen
-
-
-async def settle(pilot: Pilot[None]) -> None:
-    """Let posted messages land and every door call they started finish."""
-    for _ in range(3):
-        await pilot.pause()
-        await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
 
 
 async def press(pilot: Pilot[None], screen: Screen[None], button_id: str) -> None:
@@ -55,4 +48,4 @@ async def review_and_confirm(pilot: Pilot[None], screen: CategorisationScreen, b
     await press(pilot, screen, "categorisation-confirm")
 
 
-__all__ = ["keys", "press", "review_and_confirm", "rows", "settle", "text", "type_into"]
+__all__ = ["keys", "press", "review_and_confirm", "rows", "text", "type_into"]

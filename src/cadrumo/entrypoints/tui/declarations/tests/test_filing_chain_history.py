@@ -46,6 +46,7 @@ from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...components.host import ScreenHostApp
 from ...navigation import TuiScreenContextV1
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..controller import DeclarationsWorkspaceController
 from ..filing_history import DeclarationsFilingHistoryScreen
 from ..models import DeclarationsWorkspaceWiringV1
@@ -239,7 +240,7 @@ async def test_history_shows_chain_columns_and_reconciliation_and_override_event
     amendment = by_kind[FilingDeclarationKind.COMPLEMENTARIA]
     screen = DeclarationsFilingHistoryScreen(_controller(projection))
     async with ScreenHostApp[None](screen).run_test(size=(80, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-filings", DataTable)
 
         detail = screen.query_one("#declarations-filing-chain", Static)
@@ -255,7 +256,7 @@ async def test_history_shows_chain_columns_and_reconciliation_and_override_event
                 tr(f"tui.declarations.{evidence}"),
             )
             table.move_cursor(row=table.get_row_index(row_key))
-            await pilot.pause()
+            await settle(pilot)
             assert str(detail.render()) == tr(
                 "tui.declarations.filing_history.chain_detail",
                 origin=tr(f"tui.declarations.origin.{origin}"),
@@ -280,7 +281,7 @@ async def test_history_shows_chain_columns_and_reconciliation_and_override_event
         ]
         assert all("tui.declarations." not in label for label in event_labels)
         table.move_cursor(row=table.get_row_index("lifecycle:event-reconciled"))
-        await pilot.pause()
+        await settle(pilot)
         assert str(detail.render()) == ""
         assert geometry_band(screen.app, 80) == []
 
@@ -305,15 +306,15 @@ async def test_history_export_buttons_dispatch_the_exact_selected_filing(
     controller.reconciliation_export_factory = factory
     screen = DeclarationsFilingHistoryScreen(controller)
     async with ScreenHostApp[None](screen).run_test(size=(100, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-filings", DataTable)
         button = screen.query_one(f"#{button_id}", Button)
         assert button.disabled
         historical = next(row for row in projection.filings if row.declaration_kind is FilingDeclarationKind.ORIGINAL)
         table.move_cursor(row=table.get_row_index(f"filing:{historical.filing_record_id}"))
-        await pilot.pause()
+        await settle(pilot)
         assert not button.disabled
         button.press()
-        await pilot.pause()
+        await settle(pilot)
         assert selected == [historical]
         assert selected[0].calculation_revision_id == historical.calculation_revision_id

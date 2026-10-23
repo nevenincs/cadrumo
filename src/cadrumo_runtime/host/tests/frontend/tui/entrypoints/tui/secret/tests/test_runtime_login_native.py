@@ -23,6 +23,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
 from cadrumo.core.config import override_settings
+from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle
 from cadrumo_client.contracts.access_vocabulary import AuthorityState
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import SessionRequest
@@ -98,7 +99,7 @@ async def _cold_tui_recovery(
     )
     app = _ColdRecoveryApp(screen)
     async with app.run_test(size=(120, 50)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         password = screen.query_one("#runtime-login-resume-password", Input)
         grants = screen.query_one("#runtime-login-resume-grants", Input)
         assert password.password
@@ -106,7 +107,7 @@ async def _cold_tui_recovery(
         screen.action_resume()
         worker = screen._worker
         assert worker is not None
-        async with asyncio.timeout(30):
+        async with asyncio.timeout(SETTLE_TIMEOUT_SECONDS):
             await worker.wait()
         assert password.value == grants.value == ""
         assert app.screen is screen and not screen._busy
@@ -131,9 +132,9 @@ async def _cold_tui_recovery(
         screen.action_submit()
         # Successful dismissal unmounts the screen and can cancel its worker.
         # The app's receipt proves the actual accepted native handoff instead.
-        async with asyncio.timeout(30):
+        async with asyncio.timeout(SETTLE_TIMEOUT_SECONDS):
             await app.handoff_received.wait()
-        await pilot.pause()
+        await settle(pilot)
         assert len(opened) == 2 and len(accepted) == 1
         handoff = accepted[0]
         assert app.handoff is handoff and handoff.client is opened[1]

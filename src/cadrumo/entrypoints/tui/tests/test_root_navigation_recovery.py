@@ -17,7 +17,8 @@ from ..components.account_chrome import AccountActionV1, AccountChromeScreen
 from ..home import HomeScreen
 from ..navigation import TuiFocusIdentityV1, TuiNavigationTargetV1, TuiScreenContextV1
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
-from .test_app import MarkerScreen, _account_factories, _catalogue, _settle
+from .settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
+from .test_app import MarkerScreen, _account_factories, _catalogue
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -50,10 +51,10 @@ async def test_failed_initial_root_can_be_retried_with_the_mouse() -> None:
 
     app = CadrumoTuiApp(load_root=load)
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         assert app.query_one("#root-retry", Button).display
         assert await pilot.click("#root-retry")
-        await _settle(app, pilot)
+        await settle(pilot)
         assert isinstance(app.screen, HomeScreen)
         assert calls == 2
         assert not app.query_one("#root-retry", Button).display
@@ -74,17 +75,17 @@ async def test_failed_return_home_offers_keyboard_retry_instead_of_stranding_ope
         destination_catalogue=_catalogue([]), refresh_home=refresh, account_factories=_account_factories()
     )
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         app.navigate_to(_target())
-        await pilot.pause()
+        await settle(pilot)
         assert isinstance(app.screen, MarkerScreen)
         await pilot.press("escape")
-        await _settle(app, pilot)
+        await settle(pilot)
         retry = app.query_one("#root-retry", Button)
         assert retry.display and not retry.disabled
         assert app.focused is retry
         await pilot.press("enter")
-        await _settle(app, pilot)
+        await settle(pilot)
         assert isinstance(app.screen, HomeScreen)
         assert calls == 3
         assert app._home_refresh_refusal_code is None
@@ -99,7 +100,7 @@ async def test_delayed_catalogue_cannot_replace_newer_navigation_or_retired_prof
 
     def refresh_catalogue():
         started.set()
-        assert release.wait(5)
+        assert release.wait(SETTLE_TIMEOUT_SECONDS)
         return obsolete
 
     app = CadrumoTuiApp(
@@ -108,21 +109,21 @@ async def test_delayed_catalogue_cannot_replace_newer_navigation_or_retired_prof
         refresh_destination_catalogue=refresh_catalogue,
     )
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         app.navigate_to(_target())
-        await pilot.pause()
+        await settle(pilot, workers=False)
         await pilot.press("escape")
         try:
-            assert await asyncio.to_thread(started.wait, 3)
+            assert await asyncio.to_thread(started.wait, SETTLE_TIMEOUT_SECONDS)
             if retire:
                 app._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
             else:
                 app.navigate_to(_target())
-                await pilot.pause()
+                await settle(pilot, workers=False)
         finally:
             release.set()
         if not retire:
-            await _settle(app, pilot)
+            await settle(pilot)
             assert app.destination_catalogue is original
             assert isinstance(app.screen, MarkerScreen)
             assert not app.query_one("#root-updating", Static).display
@@ -144,29 +145,25 @@ async def test_delayed_failed_home_read_cannot_change_a_newer_destination() -> N
         calls += 1
         if calls > 1:
             started.set()
-            assert release.wait(5)
+            assert release.wait(SETTLE_TIMEOUT_SECONDS)
             raise RuntimeError("synthetic obsolete read failure")
         return build_home_projection_fixture(HomeFixtureScenario.READY)
 
     app = CadrumoTuiApp(destination_catalogue=_catalogue([]), refresh_home=refresh)
     async with app.run_test() as pilot:
-        await _settle(app, pilot)
+        await settle(pilot)
         app._show_home(None)
         try:
-            assert await asyncio.to_thread(started.wait, 3)
+            assert await asyncio.to_thread(started.wait, SETTLE_TIMEOUT_SECONDS)
             app.navigate_to(_target())
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert isinstance(app.screen, MarkerScreen)
         finally:
             release.set()
-        await _settle(app, pilot)
+        await settle(pilot)
         assert isinstance(app.screen, MarkerScreen)
         assert app._active_target == _target()
         assert app._home_refresh_refusal_code is None
-
-
-_STARTUP_BARRIER_LIMIT = 400
-"""Bounds a startup that never shows its destination; a loaded machine settles in a handful."""
 
 
 class _Destination(AccountChromeScreen):
@@ -218,12 +215,14 @@ async def test_access_requested_while_the_first_destination_opens_is_not_discard
 
     app = CadrumoTuiApp(load_root=load)
     async with app.run_test() as pilot:
-        for _ in range(_STARTUP_BARRIER_LIMIT):
-            await pilot.pause()
-            if all(worker.is_finished for worker in app.workers) and any(
-                isinstance(screen, _Destination) for screen in app.screen_stack
-            ):
-                break
+        await settle_until(
+            pilot,
+            lambda: (
+                all(worker.is_finished for worker in app.workers)
+                and any(isinstance(screen, _Destination) for screen in app.screen_stack)
+            ),
+            "the startup swap to land on the destination",
+        )
         assert any(isinstance(screen, _Destination) for screen in app.screen_stack)
         assert all(screen in app.screen_stack for screen in opened), "the startup swap removed an open Access form"
         # Refused where it can be read, rather than opened and then lost.

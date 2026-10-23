@@ -42,6 +42,7 @@ from dev.exit_codes import FAILED, TOOL_BROKEN, TOOL_MISSING
 
 from .import_authority import read_authority
 from .import_check_models import Authority, CheckResult, Finding, ImportOccurrence
+from .import_consumer_trees import consumer_source_files
 from .import_diagnostics import has_architectural_warning
 from .import_health import build_import_health
 from .import_health_rendering import render_import_health, unavailable_import_health
@@ -551,7 +552,7 @@ def _read_checker_report(path: Path, authority: Authority) -> CheckResult:
     """Load the complete child evidence or fail closed when it is unusable."""
     try:
         payload = json.loads(path.read_text(encoding=UTF_8))
-        if payload.get("schema_version") != 2:
+        if payload.get("schema_version") != 3:
             raise ValueError("unsupported checker report schema")
         findings = tuple(
             Finding(
@@ -579,12 +580,13 @@ def _read_checker_report(path: Path, authority: Authority) -> CheckResult:
             for item in payload.get("occurrences", ())
         )
         files_scanned = int(payload["files_scanned"])
+        consumer_files_scanned = int(payload["consumer_files_scanned"])
     except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
         return CheckResult(
             (Finding("INTERNAL_CHECKER", f"checker evidence report is unusable: {exc}", fatal=True),),
             0,
         )
-    return CheckResult(findings, files_scanned, occurrences)
+    return CheckResult(findings, files_scanned, occurrences, consumer_files_scanned)
 
 
 def run_import_gate(
@@ -698,6 +700,7 @@ def _source_snapshot(authority: Authority) -> _SourceSnapshot:
     paths: set[Path] = {authority.config_path}
     for root in authority.roots:
         paths.update(root.path.rglob("*.py"))
+    paths.update(authority.repository / relative for relative in consumer_source_files(authority))
     ratchet = authority.repository / "dev" / "quality" / "metadata" / "import_boundary_ratchet.json"
     if ratchet.is_file():
         paths.add(ratchet)

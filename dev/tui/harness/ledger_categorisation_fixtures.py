@@ -23,10 +23,10 @@ from cadrumo.entrypoints.tui.ledger.categorisation_common import CategorisationS
 from cadrumo.entrypoints.tui.ledger.categorisation_tools import ENTRY_LIST_TOOL_KEYS, categorisation_tools
 from cadrumo.entrypoints.tui.ledger.tests.categorisation_entry_fixtures import synthetic_participation
 from cadrumo.entrypoints.tui.ledger.tests.categorisation_memory_doors import (
-    LEDGER_TX_A,
     MemoryCategorisationProfile,
     categorisation_controller,
 )
+from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import LEDGER_TX_A
 
 from .settling import press_when_enabled, settle
 

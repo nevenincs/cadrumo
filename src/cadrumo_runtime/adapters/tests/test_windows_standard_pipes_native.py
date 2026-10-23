@@ -8,8 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from ..windows_process import WindowsProcessScope
-from .process_support import fixture_arguments, fixture_environment, native_python
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
+from cadrumo_client.transport.windows_process import WindowsProcessScope
+
 from .windows_inheritance_fixture import WindowsHandleProbe
 
 pytestmark = [

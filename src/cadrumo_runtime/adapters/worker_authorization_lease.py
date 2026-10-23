@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import sys
 import time
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
 from cadrumo.application.user_profile.automation_operations import (
@@ -16,12 +16,13 @@ from cadrumo.core.diagnostic_log import diagnostic_timing_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_vocabulary import AccessAction
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.model_runs import ModelRunHeader, ModelRunOutcome
 from cadrumo_client.contracts.profile_access import AccessRefusal
+from cadrumo_client.contracts.submission_payload import SubmissionPayloadDescriptor
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
-from cadrumo_client.transport.frame_io import read_document, write_document
+from cadrumo_client.transport.frame_io import read_document, read_document_transfer, write_document
 from cadrumo_client.transport.model_run_frames import read_secret_chunks, write_secret_chunks
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityChecked,
@@ -34,6 +35,7 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorizationRequest,
     WorkerAutomationInventoryPermit,
     WorkerAutomationInventoryRequest,
+    WorkerAutomationInventoryTransfer,
     WorkerModelRun,
     WorkerModelRunResult,
     WorkerResponseScopePermit,
@@ -117,8 +119,15 @@ class WorkerAuthorizationLease:
                 )
                 clean = True
                 raise_worker_access_refusal(reply)
-            reply = _validated_authority_permit(reply, self.request, self.identity)
-            self._permit, self._channel = reply, channel
+            received = (
+                _read_inventory_permit(
+                    channel, reply, self.request, runtime_boot_id=self.identity.runtime_boot_id, deadline=deadline
+                )
+                if isinstance(reply, WorkerAutomationInventoryTransfer)
+                else reply
+            )
+            permit = _validated_authority_permit(received, self.request, self.identity)
+            self._permit, self._channel = permit, channel
             channel = None
             self._commit_phase("permit_validated")
         finally:
@@ -341,6 +350,36 @@ def _publication_definition(phase: WorkerApprovalPublicationPhase) -> str:
     return (
         AUTOMATION_DECLINE_OPERATION_DEFINITION_ID if phase == "decline" else AUTOMATION_APPROVE_OPERATION_DEFINITION_ID
     )
+
+
+def _read_inventory_permit(
+    channel: ByteChannel,
+    header: WorkerAutomationInventoryTransfer,
+    request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest,
+    *,
+    runtime_boot_id: UUID,
+    deadline: float,
+) -> WorkerAutomationInventoryPermit:
+    """Assemble the announced inventory permit, only for the inventory request it names."""
+    if (
+        not isinstance(request, WorkerAutomationInventoryRequest)
+        or header.request_id != request.request_id
+        or header.runtime_boot_id != runtime_boot_id
+    ):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    permit = read_document_transfer(
+        channel,
+        SubmissionPayloadDescriptor(byte_count=header.byte_count, payload_digest=header.payload_digest),
+        WorkerAutomationInventoryPermit,
+        deadline=deadline,
+    )
+    if (permit.request_id, permit.runtime_boot_id, permit.permit_id) != (
+        header.request_id,
+        header.runtime_boot_id,
+        header.permit_id,
+    ):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    return permit
 
 
 def _validated_authority_permit(

@@ -22,10 +22,10 @@ from cadrumo_client.contracts.login import LoginInventory
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SessionRequest
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_client.transport.windows_process import WindowsOwnedProcess
 
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
-from ...adapters.windows_process import WindowsOwnedProcess
 from .. import main
 from ..arguments import parse_runtime_arguments
 from ..profile_connections import RuntimeProfileConnections

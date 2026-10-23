@@ -25,6 +25,7 @@ from ....ledger.tests.own_account_fixtures import (
     SYNTHETIC_ES_IBAN_2,
     MemoryOwnAccountDoor,
 )
+from ....tests.settling import settle
 from ..export import DESIGNATED_ACCOUNT, WorkbenchExportScreen
 from ..ports import WorkbenchExportOffer, WorkbenchExportRequest
 
@@ -58,10 +59,7 @@ def _register(*, refund_scope: str | None) -> MemoryOwnAccountDoor:
 async def _open(
     pilot: Pilot[WorkbenchExportRequest | None],
 ) -> WorkbenchExportScreen:
-    for _ in range(3):
-        await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
+    await settle(pilot)
     screen = pilot.app.screen
     assert isinstance(screen, WorkbenchExportScreen)
     return screen
@@ -98,7 +96,7 @@ async def test_export_prefills_each_role_from_its_designation_and_submits_the_ch
             refund.value = "acc-01"
             screen.query_one("#export-path", Input).value = "salida.txt"
             screen.query_one("#export-submit", Button).press()
-            await pilot.pause()
+            await settle(pilot)
     request = app.return_value
     assert isinstance(request, WorkbenchExportRequest)
     assert request.charge_account_id == "acc-01"
@@ -115,7 +113,7 @@ async def test_a_designation_scoped_to_another_modelo_leaves_the_role_to_the_des
             assert cast("Select[str]", screen.query_one("#export-refund-account", Select)).value == DESIGNATED_ACCOUNT
             screen.query_one("#export-path", Input).value = "salida.txt"
             screen.query_one("#export-submit", Button).press()
-            await pilot.pause()
+            await settle(pilot)
     request = app.return_value
     assert isinstance(request, WorkbenchExportRequest)
     assert request.charge_account_id == "acc-01"

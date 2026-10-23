@@ -58,7 +58,7 @@ Keep integration authority and evidentiary grade separate: AEAT browser reads ca
 
 ## Code discipline
 
-This rule uses import linting, Ruff lint and formatting checks, type checking, and strict type checking. Use `uv run --no-sync lint-imports --config .importlinter --no-cache`, `just check-style`, `just check-format` and `just check-types` for their configured scopes. The type runner uses `ty` across `src` and `pyrefly`/`basedpyright` for the configured strict production subset; do not weaken those scopes to make a change pass.
+This rule uses import linting, Ruff lint and formatting checks, type checking, and strict type checking. Use `just check-import-boundaries` (Import Linter, an isolated load of every governed module and the subordinate source checker; `uv run --no-sync lint-imports --config .importlinter --no-cache` is its quick contract check), `just check-style`, `just check-format` and `just check-types` for their configured scopes. The type runner uses `ty` across `src` and `pyrefly`/`basedpyright` for the configured strict production subset; do not weaken those scopes to make a change pass.
 
 Use relative imports within the actual module/package boundaries, importing from the defining module. Relative syntax must not escape configured package roots or bypass dependency contracts. All rules must be respected when working.
 

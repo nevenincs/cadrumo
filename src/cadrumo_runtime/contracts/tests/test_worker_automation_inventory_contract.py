@@ -11,7 +11,7 @@ from pydantic import TypeAdapter, ValidationError
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
-from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -21,6 +21,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 
 from ..worker_authorization import (
+    WORKER_AUTOMATION_INVENTORY_PERMIT_MAX_BYTES,
     WorkerAuthorityEnvelope,
     WorkerAuthorityRequest,
     WorkerAuthorizationPermit,
@@ -28,6 +29,7 @@ from ..worker_authorization import (
     WorkerAuthorizationRequest,
     WorkerAutomationInventoryPermit,
     WorkerAutomationInventoryRequest,
+    WorkerAutomationInventoryTransfer,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -102,7 +104,7 @@ def test_inventory_request_refuses_wrong_action_and_definition() -> None:
         WorkerAuthorityEnvelope.model_validate_json(canonical_json_bytes(document))
 
 
-def test_inventory_reply_cannot_be_parsed_as_an_ordinary_permit() -> None:
+def test_inventory_reply_is_a_transfer_announcement_never_an_ordinary_permit() -> None:
     request = _request()
     permit = WorkerAutomationInventoryPermit(
         request_id=request.request_id,
@@ -111,14 +113,36 @@ def test_inventory_reply_cannot_be_parsed_as_an_ordinary_permit() -> None:
         expires_at=now() + timedelta(seconds=20),
         inventory=AutomationInventory(grants=(), keys=(), requests=()),
     )
-    encoded = permit.model_dump_json()
+    payload = canonical_json_bytes(permit.model_dump(mode="json"))
+    transfer = WorkerAutomationInventoryTransfer(
+        request_id=permit.request_id,
+        runtime_boot_id=permit.runtime_boot_id,
+        permit_id=permit.permit_id,
+        byte_count=len(payload),
+        payload_digest=sha256_hex(payload),
+    )
+    encoded = transfer.model_dump_json()
     parsed = WorkerAuthorizationReply.model_validate_json(encoded).root
-    assert isinstance(parsed, WorkerAutomationInventoryPermit)
-    assert parsed == permit
+    assert isinstance(parsed, WorkerAutomationInventoryTransfer)
+    assert parsed == transfer
     with pytest.raises(ValidationError):
         WorkerAuthorizationPermit.model_validate_json(encoded)
+    # The permit itself only travels as the announced chunks, never as a reply frame.
+    with pytest.raises(ValidationError):
+        WorkerAuthorizationReply.model_validate_json(permit.model_dump_json())
 
-    disguised = permit.model_dump(mode="json")
+    disguised = transfer.model_dump(mode="json")
     disguised["kind"] = "authorized"
     with pytest.raises(ValidationError):
         WorkerAuthorizationReply.model_validate_json(canonical_json_bytes(disguised))
+
+
+def test_inventory_transfer_refuses_a_permit_past_its_budget() -> None:
+    with pytest.raises(ValidationError):
+        WorkerAutomationInventoryTransfer(
+            request_id=uuid4(),
+            runtime_boot_id=uuid4(),
+            permit_id=uuid4(),
+            byte_count=WORKER_AUTOMATION_INVENTORY_PERMIT_MAX_BYTES + 1,
+            payload_digest="c" * 64,
+        )

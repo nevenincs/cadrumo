@@ -19,6 +19,7 @@ from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.iva.schema import InvoiceKind
 from ...components.host import ScreenHostApp
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..invoices_import import LedgerInvoiceImportScreen, LedgerInvoiceImportSourceV1
 from ..models import LedgerFlowState
@@ -49,15 +50,9 @@ def _text(screen: LedgerInvoiceImportScreen, selector: str) -> str:
     return str(screen.query_one(selector, Static).render())
 
 
-async def _settle(pilot: Pilot[None]) -> None:
-    await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
-
-
 async def _press(pilot: Pilot[None], screen: LedgerInvoiceImportScreen, button_id: str) -> None:
     screen.query_one(f"#{button_id}", Button).press()
-    await _settle(pilot)
+    await settle(pilot)
 
 
 async def _review(pilot: Pilot[None], screen: LedgerInvoiceImportScreen, path: str = SYNTHETIC_SOURCE_PATH) -> None:
@@ -72,7 +67,7 @@ async def test_the_import_is_bound_to_the_reviewed_digest_and_reports_a_partial_
     door = MemoryInvoiceImportDoor()
     screen = _screen(door)
     async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await _review(pilot, screen)
         assert screen.flow_state is LedgerFlowState.CONFIRMING
         assert door.requests == []
@@ -113,7 +108,7 @@ async def test_a_whole_or_empty_import_is_named_as_such(outcome: InvoiceImportPr
     door = MemoryInvoiceImportDoor(outcome)
     screen = _screen(door)
     async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await _review(pilot, screen)
         await _press(pilot, screen, "ledger-invoices-import-confirm")
         assert _text(screen, "#ledger-flow-status") == tr(headline)
@@ -128,7 +123,7 @@ async def test_a_file_that_changed_after_review_is_refused_on_screen() -> None:
     door.apply_refusal = refusal
     screen = _screen(door)
     async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await _review(pilot, screen)
         await _press(pilot, screen, "ledger-invoices-import-confirm")
         assert screen.flow_state is LedgerFlowState.FAILED
@@ -142,7 +137,7 @@ async def test_an_unreadable_path_is_refused_before_review_and_a_blank_one_is_as
     door = MemoryInvoiceImportDoor()
     screen = _screen(door)
     async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await _press(pilot, screen, "ledger-invoices-import-review")
         assert _text(screen, "#ledger-refusal") == tr("tui.ledger.invoices.import.path_required")
         assert door.previews == []
@@ -162,14 +157,14 @@ async def test_cancelling_the_reviewed_import_writes_nothing_and_starting_again_
     screen = _screen(door)
     screen.back_area = LedgerWorkspaceArea.OVERVIEW
     async with ReplacingHostApp(screen).run_test(size=(120, 50)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await _review(pilot, screen)
         await _press(pilot, screen, "ledger-invoices-import-cancel")
         assert screen.flow_state is LedgerFlowState.CANCELLED
         assert door.requests == []
         assert _text(screen, "#ledger-flow-status") == tr("tui.ledger.invoices.import.cancelled")
         await _press(pilot, screen, "ledger-invoices-import-again")
-        await _settle(pilot)
+        await settle(pilot)
         fresh = pilot.app.screen
         assert isinstance(fresh, LedgerInvoiceImportScreen)
         assert fresh is not screen
@@ -207,7 +202,7 @@ async def test_the_import_door_runs_only_in_workers() -> None:
     door = _WorkerOnlyImportDoor()
     screen = _screen(door)
     async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
-        await _settle(pilot)
+        await settle(pilot)
         await _review(pilot, screen)
         await _press(pilot, screen, "ledger-invoices-import-confirm")
     assert door.calls == [("preview", True), ("apply", True)]
@@ -223,7 +218,7 @@ async def test_the_import_screen_fits_every_supported_terminal(theme: str, size:
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=size) as pilot:
             app.theme = theme
-            await _settle(pilot)
+            await settle(pilot)
             await _review(pilot, screen)
             await _press(pilot, screen, "ledger-invoices-import-confirm")
             assert geometry_band(app, size[0]) == []

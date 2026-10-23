@@ -49,6 +49,7 @@ from ..components.status import PinnedStatusBar
 from ..secret.credentials import assessment_refusal
 from ..secret.registration import RecoveryCodeScreen, RecoveryOfferScreen, RegistrationScreen
 from .fixture import recovery_enrollment_attempt, registration_attempt
+from .settling import SettleTimeoutError, settle, settle_until
 
 pytestmark = [
     pytest.mark.integration,
@@ -72,19 +73,20 @@ def _recovery_envelopes(storage_root: Path) -> tuple[Path, ...]:
     return tuple(sorted(storage_root.rglob(PROFILE_CUSTODY_RECOVERY_FILENAME)))
 
 
-async def _wait_until(pilot, condition: Callable[[], bool], *, polls: int = 300, interval: float = 0.1) -> bool:
-    """Pause the pilot until ``condition`` holds or the poll budget is spent.
+async def _wait_until(pilot, condition: Callable[[], bool]) -> bool:
+    """Settle the pilot until ``condition`` holds; False if it never does before the settle deadline.
 
     Creation and enrolment both run real key derivation on a worker thread,
     so the screens they push arrive after an amount of time this test does
-    not own; the budget is generous and the return value is asserted by the
-    caller so a stalled path reads as a failure rather than a hang.
+    not own. Workers are not awaited: the enrolment worker waits on the
+    operator by design. The return value is asserted by the caller so a
+    stalled path reads as a failure rather than a hang.
     """
-    for _ in range(polls):
-        if condition():
-            return True
-        await pilot.pause(interval)
-    return condition()
+    try:
+        await settle_until(pilot, condition, "the awaited screen state", workers=False)
+    except SettleTimeoutError:
+        return condition()
+    return True
 
 
 async def _wait_for_screen(pilot, screen_type: type, *, composed: str) -> bool:
@@ -160,7 +162,7 @@ async def test_live_submission_refusals_stay_typed_secret_free_and_create_nothin
             live_rendered = str(app.query_one("#strength-line", Static).render())
             assert live_rendered == exact_message
             await pilot.click("#btn-create")
-            await pilot.pause()
+            await settle(pilot)
 
             status = app.query_one("#credential-status", PinnedStatusBar)
             assert app.outcome is None
@@ -194,12 +196,12 @@ async def _fill(screen: RegistrationScreen, pilot, *, username: str, password: s
     Addressed against the screen, not the host: the host's own default
     screen carries none of these fields.
     """
-    await pilot.pause()
+    await settle(pilot)
     app = screen
     app.query_one("#field-username", Input).value = username
     app.query_one("#field-password", Input).value = password
     app.query_one("#field-confirm", Input).value = confirm
-    await pilot.pause()
+    await settle(pilot)
 
 
 @pytest.mark.asyncio
@@ -226,7 +228,7 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(app, pilot, username="Screen Subject", password=candidate, confirm=candidate)
             await pilot.click("#btn-create")
-            await pilot.app.workers.wait_for_complete()
+            await settle(pilot)
             # Without an enrolment door there is nothing to offer: the screen
             # leaves the moment the profile exists, and no offer was pushed.
             assert await _host_received(pilot), "the screen must leave as soon as the profile exists"
@@ -273,7 +275,7 @@ async def test_mismatched_confirmation_refuses_and_creates_nothing(tmp_path) -> 
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(app, pilot, username="Mismatch", password=_TYPED_INPUT, confirm="something-else-entirely")
             await pilot.click("#btn-create")
-            await pilot.pause()
+            await settle(pilot)
 
             assert app.outcome is None, "a mismatch must not create a profile"
             # Emptiness, not wording: that the refusal zone was populated is
@@ -302,7 +304,7 @@ async def test_seven_scalar_failure_is_typed_without_internal_diagnostics(tmp_pa
             assert "INTERNAL" not in live_rendered.upper()
             assert "profile password must contain 8 to 256 Unicode scalars" not in live_rendered
             await pilot.click("#btn-create")
-            await pilot.pause()
+            await settle(pilot)
 
             assert app.outcome is None
             assert app.error is None
@@ -331,8 +333,7 @@ async def test_unkeyed_unexpected_registration_failure_keeps_internal_classifica
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(app, pilot, username="Unexpected", password=_TYPED_INPUT, confirm=_TYPED_INPUT)
             await pilot.click("#btn-create")
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
 
             assert app.error is fault
             status = app.query_one("#credential-status", PinnedStatusBar)
@@ -349,7 +350,7 @@ async def test_blank_username_refuses_and_focuses_the_field(tmp_path) -> None:
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(app, pilot, username="   ", password=_TYPED_INPUT, confirm=_TYPED_INPUT)
             await pilot.click("#btn-create")
-            await pilot.pause()
+            await settle(pilot)
 
             assert app.outcome is None
             assert app.focused is app.query_one("#field-username", Input)
@@ -370,16 +371,16 @@ async def test_the_strength_line_tracks_the_password_field(tmp_path) -> None:
             line = app.query_one("#strength-line", Static)
 
             field.value = "abc"
-            await pilot.pause()
+            await settle(pilot)
             assert line.has_class("strength-refused")
 
             field.value = "correct horse battery staple"
-            await pilot.pause()
+            await settle(pilot)
             assert line.has_class("strength-strong")
             assert not line.has_class("strength-refused")
 
             field.value = ""
-            await pilot.pause()
+            await settle(pilot)
             assert not any(
                 line.has_class(name)
                 for name in ("strength-refused", "strength-weak", "strength-fair", "strength-strong")
@@ -400,7 +401,7 @@ async def test_the_password_fields_are_masked(tmp_path) -> None:
             assert app.query_one("#field-password", Input).password is True
             assert app.query_one("#field-confirm", Input).password is True
             assert app.query_one("#field-username", Input).password is False
-            await pilot.pause()
+            await settle(pilot)
             pilot.app.exit(None)
 
 
@@ -415,7 +416,7 @@ def _screen_with_recovery() -> RegistrationScreen:
 async def _create_and_reach_the_offer(app: RegistrationScreen, pilot, *, username: str) -> None:
     await _fill(app, pilot, username=username, password=_TYPED_INPUT, confirm=_TYPED_INPUT)
     await pilot.click("#btn-create")
-    await pilot.app.workers.wait_for_complete()
+    await settle(pilot)
     assert await _wait_for_screen(pilot, RecoveryOfferScreen, composed="#btn-skip-recovery"), (
         "creation must be followed by the recovery offer; "
         f"screen={type(pilot.app.screen).__name__}, error={type(app.error).__name__}, "
@@ -440,7 +441,7 @@ async def test_skipping_the_recovery_offer_leaves_with_the_profile_and_installs_
             offer = pilot.app.screen
             assert offer.focused is offer.query_one("#btn-skip-recovery", Button), "declining must be the default"
             await pilot.click("#btn-skip-recovery")
-            await pilot.app.workers.wait_for_complete()
+            await settle(pilot)
             assert await _host_received(pilot), "skipping must leave with the created profile"
 
         assert app.error is None
@@ -475,7 +476,7 @@ async def test_confirming_the_displayed_code_installs_the_recovery_wrapper(tmp_p
             pilot.app.screen.query_one("#field-recovery-verification", Input).value = code.replace("-", "").lower()
             status = app.query_one("#credential-status", PinnedStatusBar)
             await pilot.click("#btn-confirm-code")
-            await pilot.app.workers.wait_for_complete()
+            await settle(pilot)
             assert await _host_received(pilot), "a confirmed code must leave with the created profile"
             assert status.tone != "error", f"enrolment was refused: {status.message}"
 
@@ -506,7 +507,8 @@ async def test_a_wrong_code_is_refused_in_place_without_installing(tmp_path) -> 
             field = pilot.app.screen.query_one("#field-recovery-verification", Input)
             field.value = wrong
             await pilot.click("#btn-confirm-code")
-            await pilot.pause()
+            # The enrolment's worker holds the shown code until it is confirmed or cancelled.
+            await settle(pilot, workers=False)
 
             assert isinstance(pilot.app.screen, RecoveryCodeScreen), "a mismatch keeps the operator on the code"
             assert field.value == "", "the mistyped proof is cleared, not kept for editing"
@@ -514,7 +516,7 @@ async def test_a_wrong_code_is_refused_in_place_without_installing(tmp_path) -> 
             assert _recovery_envelopes(storage_root) == ()
 
             await pilot.click("#btn-cancel-code")
-            await pilot.app.workers.wait_for_complete()
+            await settle(pilot)
             assert await _host_received(pilot), "cancelling must still leave with the created profile"
 
         assert app.outcome is not None
@@ -536,7 +538,7 @@ async def test_cancelling_on_the_code_screen_installs_nothing_and_still_leaves_w
             )
             await _displayed_recovery_code(pilot)
             await pilot.click("#btn-cancel-code")
-            await pilot.app.workers.wait_for_complete()
+            await settle(pilot)
             assert await _host_received(pilot), "cancelling must still leave with the created profile"
             assert status.tone != "error", "a deliberate cancel is not a refusal"
 

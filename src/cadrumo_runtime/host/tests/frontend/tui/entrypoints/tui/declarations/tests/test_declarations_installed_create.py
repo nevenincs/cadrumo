@@ -42,6 +42,7 @@ from cadrumo.entrypoints.tui.declarations.overview import DeclarationsOverviewSc
 from cadrumo.entrypoints.tui.declarations.picker import NewDeclarationPicker
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.framing import VerifiedConnection
@@ -94,23 +95,17 @@ def _declarations(client: FrontendClient) -> tuple[DeclarationsWorkspaceDeclarat
     return projection.projection.declarations
 
 
-async def _settle(app: ScreenHostApp[None], pilot: Any, rounds: int = 4) -> None:
-    for _ in range(rounds):
-        await app.workers.wait_for_complete()
-        await pilot.pause()
-
-
 async def _pick(app: ScreenHostApp[None], pilot: Any) -> NewDeclarationPicker:
     """Open the picker and move to the target period of Modelo 130."""
     await pilot.press("plus")
-    await pilot.pause()
+    await settle(pilot)
     picker = app.screen
     assert isinstance(picker, NewDeclarationPicker)
     table = picker.query_one("#declaration-picker-table", DataTable)
     table.move_cursor(row=next(i for i, row in enumerate(table.ordered_rows) if row.key.value == "130"))
     table.focus()
     await pilot.press("enter")
-    await pilot.pause()
+    await settle(pilot)
     table.move_cursor(row=next(i for i, item in enumerate(picker.visible_targets) if item.period == _TARGET))
     return picker
 
@@ -122,14 +117,15 @@ def _shown_form(screen: object) -> ModeloWorkForm | None:
 
 async def _opened_on(app: ScreenHostApp[None], pilot: Any, work_unit_id: str) -> None:
     """Wait until the workbench has read the expected declaration through the worker."""
-    for _ in range(600):
-        await pilot.pause(0.05)
-        form = _shown_form(app.screen)
-        if form is not None:
-            assert form.work_unit_id == work_unit_id
-            assert form.period == _TARGET
-            return
-    raise AssertionError("the created declaration's workbench never finished reading through the runtime")
+    await settle_until(
+        pilot,
+        lambda: _shown_form(app.screen) is not None,
+        "the created declaration's workbench to finish reading through the runtime",
+    )
+    form = _shown_form(app.screen)
+    assert form is not None
+    assert form.work_unit_id == work_unit_id
+    assert form.period == _TARGET
 
 
 def _drive(
@@ -158,13 +154,13 @@ def _drive(
         assert not any(item.period == _TARGET for item in before)
         app = ScreenHostApp[None](screen)
         async with app.run_test(size=(100, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             picker = await _pick(app, pilot)
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             assert app.focused is picker.query_one("#declaration-picker-create", Button)
             await pilot.press("enter")
-            await _settle(app, pilot)
+            await settle(pilot)
             created_rows = tuple(
                 item for item in reader.submit(_declarations, human).result(timeout=120) if item.period == _TARGET
             )
@@ -174,7 +170,7 @@ def _drive(
             await _opened_on(app, pilot, created.work_unit_id)
             assert isinstance(app.screen, ModeloWorkbenchScreen)
             app.screen.dismiss(None)
-            await _settle(app, pilot)
+            await settle(pilot)
             assert app.screen is screen
             table = screen.query_one("#declarations-list", DataTable)
             assert app.focused is table
@@ -184,17 +180,19 @@ def _drive(
             assert len(after_create) == len(before) + 1
             for confirm in (False, True):
                 await _pick(app, pilot)
-                await pilot.press("enter", "enter")
-                await pilot.pause()
+                await pilot.press("enter")
+                await settle(pilot)
+                await pilot.press("enter")
+                await settle(pilot)
                 assert isinstance(app.screen, ConfirmScreen)
                 assert app.focused is app.screen.query_one("#btn-confirm-cancel", Button)
                 await pilot.press("y" if confirm else "escape")
-                await _settle(app, pilot)
+                await settle(pilot)
                 if confirm:
                     await _opened_on(app, pilot, created.work_unit_id)
                     assert isinstance(app.screen, ModeloWorkbenchScreen)
                     app.screen.dismiss(None)
-                    await _settle(app, pilot)
+                    await settle(pilot)
                 assert app.screen is screen
                 # Reopening an existing period, confirmed or not, creates nothing.
                 assert reader.submit(_declarations, human).result(timeout=120) == after_create

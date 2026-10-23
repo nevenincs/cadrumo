@@ -16,7 +16,6 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from textual.pilot import Pilot
 from textual.widgets import Footer, Input, Static
 
 from ......application.modelo.work_form_models import (
@@ -32,6 +31,7 @@ from ......application.modelo.work_form_models import (
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..header import result_view
 from ..legend import on_screen_text
@@ -47,11 +47,6 @@ from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_fo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _NBSP = "\u00a0"
-
-
-async def _settle(pilot: Pilot[None], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _numbered_form(boxes: tuple[str, ...]) -> ModeloWorkForm:
@@ -93,16 +88,18 @@ async def test_while_the_symbols_panel_is_open_the_footer_offers_only_its_own_ke
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 30)) as pilot:
-            await _settle(pilot)
-            await pilot.press("question_mark", "question_mark")
-            await _settle(pilot)
+            await settle(pilot)
+            await pilot.press("question_mark")
+            await settle(pilot)
+            await pilot.press("question_mark")
+            await settle(pilot)
             open_keys = [
                 str(key.render())
                 for key in screen.query_one(Footer).query("FooterKey")
                 if not key.has_class("-command-palette")
             ]
             await pilot.press("escape")
-            await _settle(pilot)
+            await settle(pilot)
             closed_keys = [str(key.render()) for key in screen.query_one(Footer).query("FooterKey")]
             app.exit(None)
 
@@ -146,11 +143,11 @@ async def test_the_first_hit_is_selected_and_the_help_band_explains_it() -> None
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("slash")
-            await _settle(pilot)
+            await settle(pilot)
             screen.query_one("#wb-search-input", Input).value = "retencion"
-            await _settle(pilot)
+            await settle(pilot)
             band = str(screen.query_one("#wb-help", Static).render()).splitlines()
             app.exit(None)
 
@@ -177,13 +174,13 @@ async def test_an_80_by_24_terminal_shows_ten_boxes_or_more() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(form=_many_boxes()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             casilla_list = screen.query_one(CasillaList)
             rows = [casilla_list.render_line(y).text for y in range(casilla_list.size.height)]
             help_rows = screen.query_one("#wb-help", Static).size.height
             page_title = screen.query_one("#wb-page", Static).display
             await pilot.press("question_mark")
-            await _settle(pilot)
+            await settle(pilot)
             expanded_rows = screen.query_one("#wb-help", Static).size.height
             app.exit(None)
 

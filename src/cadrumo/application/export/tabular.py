@@ -337,19 +337,11 @@ def spreadsheet_literal(value: str) -> str:
     A value whose first character -- or first non-whitespace character -- could
     start a formula gains one leading apostrophe, the spreadsheet convention for
     literal text. A value that already starts with an apostrophe gains one more
-    when its remainder would itself be encoded, which keeps the encoding a
-    bijection: :func:`restore_spreadsheet_literal` recovers the original exactly.
-    Plain signed decimals are left untouched.
+    when its remainder would itself be encoded, which keeps the encoding
+    reversible. Plain signed decimals are left untouched.
     """
     if _needs_spreadsheet_literal_prefix(value):
         return _SPREADSHEET_LITERAL_PREFIX + value
-    return value
-
-
-def restore_spreadsheet_literal(value: str) -> str:
-    """Invert :func:`spreadsheet_literal`, removing the one prefix it added."""
-    if value.startswith(_SPREADSHEET_LITERAL_PREFIX) and _needs_spreadsheet_literal_prefix(value[1:]):
-        return value[1:]
     return value
 
 

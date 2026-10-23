@@ -8,9 +8,13 @@ reaching into another suite's module internals.
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
+from .....application.ledger.models import ManualLedgerTransactionResult
 from .....application.ledger.workspace import (
+    LedgerAffectedDeclarationRefV1,
+    LedgerInvoiceReconciliationRefV1,
+    LedgerLinkInconsistencyRefV1,
     LedgerWorkspaceArea,
     LedgerWorkspaceAreaStateV1,
     LedgerWorkspaceAvailability,
@@ -22,14 +26,23 @@ from .....application.ledger.workspace import (
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.identity.transaction_ids import TransactionId
+from .....core.period import Period
+from .....domain.transactions.models import BucketTransactionRef
+from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ..controller import LedgerWorkspaceController
+from ..models import LedgerClassificationSubmissionV1
 from ..workspace_injection import LedgerWorkspaceInjection
 from .review_door_fixtures import MemoryLedgerReviewDoor, projection_review_rows
+
+if TYPE_CHECKING:
+    from textual.screen import Screen
 
 #: The two synthetic transactions every ledger fixture projection carries.
 LEDGER_TX_A = cast("TransactionId", "a" * 64)
 LEDGER_TX_B = cast("TransactionId", "b" * 64)
+#: The invoice the reconciled fixture projection suggests for ``LEDGER_TX_A``.
+LEDGER_SUGGESTED_INVOICE = "c" * 64
 
 
 def ledger_projection(*, unavailable: LedgerWorkspaceArea | None = None) -> LedgerWorkspaceProjectionV1:
@@ -143,3 +156,78 @@ def ledger_controller(
         projection,
         LedgerWorkspaceInjection(review_action=ledger_review_action(), review_door=ledger_review_door(projection)),
     )
+
+
+def ledger_reconciled_projection() -> LedgerWorkspaceProjectionV1:
+    """The fixture projection with one link suggestion, one inconsistency and one affected declaration."""
+    return ledger_projection().model_copy(
+        update={
+            "invoice_reconciliations": (
+                LedgerInvoiceReconciliationRefV1(
+                    invoice_id=LEDGER_SUGGESTED_INVOICE,
+                    transaction_id=LEDGER_TX_A,
+                    amount_match=True,
+                    counterparty_match=True,
+                    score="1.0",
+                    invoice_total="1250.00",
+                    transaction_amount="1250.00",
+                    invoice_counterparty="Suministros Delta SL",
+                    transaction_counterparty="Suministros Delta SL",
+                ),
+            ),
+            "link_inconsistencies": (
+                LedgerLinkInconsistencyRefV1(invoice_id="f" * 64, transaction_id=LEDGER_TX_A, direction="invoice-only"),
+            ),
+            "affected_declarations": (
+                LedgerAffectedDeclarationRefV1(
+                    modelo="303",
+                    filing_year=2026,
+                    period=Period.from_year_and_code(2026, "2T"),
+                    calculation_revision_id="b" * 64,
+                    changed_count=2,
+                    removed_count=1,
+                ),
+            ),
+        }
+    )
+
+
+def ledger_classify_action() -> ActionReference:
+    """The canonical ledger classification action reference."""
+    return ActionReference(action_id=lookup_action("operator.ledger.classify").action_id)
+
+
+class ClassificationDoor:
+    """A classification writer that records every submission and answers it as written."""
+
+    def __init__(self) -> None:
+        self.calls: list[LedgerClassificationSubmissionV1] = []
+
+    async def __call__(self, submission: LedgerClassificationSubmissionV1) -> ManualLedgerTransactionResult:
+        self.calls.append(submission)
+        return ManualLedgerTransactionResult.model_construct(
+            ref=BucketTransactionRef.model_construct(transaction_id=submission.transaction_id),
+        )
+
+
+class WorkspaceHostApp(ScreenHostApp[None]):
+    """A host that replaces a workspace body the way the production root does.
+
+    The deferral is the point.  Textual dispatches a screen's result callback
+    through whichever message pump was active when that screen was pushed, so
+    pushing a replacement from inside the outgoing screen's own handler
+    registers the return journey against a pump that is about to stop.  The
+    root defers the swap onto its own pump for exactly that reason, and a host
+    that pushed directly would pass a journey test while production stranded
+    the operator.  Mirroring the deferral keeps the proof honest.
+    """
+
+    def replace_workspace_body(self, screen: Screen[None], /) -> None:
+        """Defer the swap onto this host's pump, as the root shell does."""
+        self.call_next(self._replace_workspace_body, screen)
+
+    def _replace_workspace_body(self, screen: Screen[None]) -> None:
+        """Discard the outgoing body before mounting exactly one replacement."""
+        while len(self.screen_stack) > 1:
+            self.pop_screen()
+        self.push_screen(screen, self.exit)

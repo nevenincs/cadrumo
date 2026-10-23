@@ -27,6 +27,7 @@ from .....core.config import override_settings
 from ...components.host import ScreenHostApp
 from ...components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..entries import LedgerEntriesScreen
 from ..evidence import LedgerEvidenceScreen
@@ -40,11 +41,11 @@ from ..evidence_files_tools import evidence_files_tools
 from ..evidence_files_write import LedgerEvidenceFilesWriteScreen
 from ..routes import resolve_ledger_screen
 from ..workspace_injection import LedgerWorkspaceInjection
-from .evidence_files_fixtures import MemoryEvidenceFilesStore, press, settle, synthetic_evidence_id, synthetic_review
-from .test_ledger_selection_journey import _WorkspaceHostApp
+from .evidence_files_fixtures import MemoryEvidenceFilesStore, press, synthetic_evidence_id, synthetic_review
 from .workspace_fixtures import (
     LEDGER_TX_A,
     LEDGER_TX_B,
+    WorkspaceHostApp,
     ledger_context,
     ledger_evidence_action,
     ledger_focused_context,
@@ -114,7 +115,7 @@ async def test_the_evidence_area_lists_its_tools_opens_one_and_back_returns_to_t
     store = MemoryEvidenceFilesStore()
     store.seed_records(2)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(LedgerEvidenceScreen(_controller(store))).run_test(size=(120, 50)) as pilot:
+        async with WorkspaceHostApp(LedgerEvidenceScreen(_controller(store))).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             assert _tool_keys(pilot.app.screen) == [
                 "ledger.tool.evidence_files.records",
@@ -140,7 +141,7 @@ async def test_attachments_open_from_entries_for_the_entry_just_selected() -> No
     entries = resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.ENTRIES))
     assert isinstance(entries, LedgerEntriesScreen)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(entries).run_test(size=(120, 50)) as pilot:
+        async with WorkspaceHostApp(entries).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             assert _tool_keys(entries) == ["ledger.tool.evidence_files.attachments"]
             table = cast("DataTable[str]", entries.query_one("#ledger-entries", DataTable))
@@ -271,7 +272,7 @@ async def test_each_door_is_called_from_a_worker_and_crosses_off_the_event_loop(
     screen_name, drive = _DRIVES[door]
     screen = _SCREENS[screen_name](_controller(store, focused=True), store)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await drive(pilot, store)
     assert door in {name for name, _in_worker in store.calls}
     assert [name for name, in_worker in store.calls if not in_worker] == []
@@ -301,7 +302,7 @@ async def test_the_gate_catches_a_door_called_outside_a_worker() -> None:
     store = MemoryEvidenceFilesStore()
     screen = _InlineCallScreen(store)
     async with ScreenHostApp[None](screen).run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert screen.pending_call is not None
         await screen.pending_call
     assert store.calls == [("query", False)]
@@ -340,7 +341,7 @@ async def test_every_evidence_screen_fits_without_sideways_or_nested_scrolling(
     screen_name, drive = _GEOMETRY[surface]
     screen = _SCREENS[screen_name](_controller(store, focused=True), store)
     with override_settings(cadrumo_output_language="en"):
-        app = _WorkspaceHostApp(screen)
+        app = WorkspaceHostApp(screen)
         async with app.run_test(size=size) as pilot:
             app.theme = theme
             await drive(pilot, store)

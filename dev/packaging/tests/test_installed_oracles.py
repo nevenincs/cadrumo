@@ -33,8 +33,8 @@ from dev._paths import REPO_ROOT
 from dev.product_environment import ambient_product_settings_removed, clean_product_env
 from dev.source_tree import repository_files, snapshot
 
-from .._distribution_names import normalise_distribution_name
 from ..authority_staging import AUTHORITY_ROOT_ENV, authoring_authority_root
+from ..distribution_names import normalise_distribution_name
 from ..google_oauth import build_client_json, stage_build_client
 from ..hashing import sha256_path
 from ..installed_runtime import run_installed_tax_oracle_with_runtime
@@ -1120,8 +1120,8 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
     from cadrumo_client.transport.framing import VerifiedConnection
     from cadrumo_client.transport.installation import installation
     from cadrumo_client.transport.windows import WindowsEndpoint
+    from cadrumo_client.transport.windows_process import WindowsProcessScope
     from cadrumo_mcp.mcp.protocol_contract import SIGN_IN_REMEDY
-    from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 
     mcp_executable = Path(sysconfig.get_path("scripts")) / "cadrumo-mcp.exe"
     runtime_executable = Path(sysconfig.get_path("scripts")) / "cadrumo-runtime.exe"

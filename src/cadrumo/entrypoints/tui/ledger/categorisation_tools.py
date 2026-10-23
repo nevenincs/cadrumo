@@ -23,20 +23,6 @@ from .categorisation_rules import LedgerRulesScreen
 from .categorisation_split import LedgerSplitScreen
 from .tools import LedgerToolV1
 
-CATEGORISATION_TOOL_KEYS: Final[tuple[str, ...]] = (
-    "ledger.tool.categorisation.bulk",
-    "ledger.tool.categorisation.iva",
-    "ledger.tool.categorisation.review",
-    "ledger.tool.categorisation.rules",
-    "ledger.tool.categorisation.counterparties",
-    "ledger.tool.categorisation.split",
-    "ledger.tool.categorisation.allocate",
-    "ledger.tool.categorisation.participation",
-    "ledger.tool.categorisation.ratios",
-    "ledger.tool.categorisation.diagnostics",
-)
-"""Every categorisation tool, in the order the tools are given to the workspace."""
-
 ENTRY_LIST_TOOL_KEYS: Final[frozenset[str]] = frozenset(
     {
         "ledger.tool.categorisation.bulk",
@@ -132,4 +118,4 @@ def categorisation_tools(doors: LedgerCategorisationDoorsV1) -> tuple[LedgerTool
     )
 
 
-__all__ = ["CATEGORISATION_TOOL_KEYS", "ENTRY_LIST_TOOL_KEYS", "categorisation_tools"]
+__all__ = ["ENTRY_LIST_TOOL_KEYS", "categorisation_tools"]

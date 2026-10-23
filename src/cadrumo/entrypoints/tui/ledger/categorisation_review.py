@@ -8,7 +8,7 @@ the settled outcome afterwards and says what, if anything, changed.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Awaitable, Callable, Iterator
 from functools import partial
 from typing import Final, Literal, cast, override
 
@@ -33,6 +33,7 @@ from ..operations.outcome import OperationOutcomeUnknownError
 from ..operations.refusal_explanation import public_refusal_explanation
 from .categorisation_common import (
     CategorisationScreen,
+    Wording,
     action,
     action_row,
     blank_to_none,
@@ -133,15 +134,62 @@ class ReviewingCategorisationScreen(CategorisationScreen):
         """Bind the workspace whose entry the reviews act on."""
         super().__init__(controller, id=id)
         self.review_awaits_reread = False
-        """Whether a review ended with an unknown outcome, so none is offered until the workspace is read again."""
+        """Whether a review ended with an unknown outcome, so nothing is written until the workspace is read again."""
+        self._review_hold = 0
+        """Numbers each unknown review outcome; a re-read answers only the latest one."""
+        self._review_reread_pending = False
+        """Whether a workspace re-read for the latest unknown review is out."""
+        self._unknown_review_text: str | None = None
+        """The unknown review's message, its operation named, kept on screen while the hold lasts."""
+
+    @override
+    def refuse(self, text: str) -> None:
+        """Say why the last request was not done, keeping an unknown review's message in view while it holds."""
+        held = self._unknown_review_text if self.review_awaits_reread else None
+        if held is None or text == held:
+            super().refuse(text)
+        else:
+            super().refuse("\n".join((held, text)) if text else held)
+
+    @override
+    def refuse_write(self) -> bool:
+        return super().refuse_write() or self.refuse_while_awaiting_reread()
+
+    @override
+    def stage(
+        self,
+        summary: Wording,
+        write: Callable[[], Awaitable[bool]],
+        *,
+        destructive: bool = False,
+        refreshes_workspace: bool = False,
+    ) -> None:
+        """Hold one change for review, unless an unknown review must first be read back."""
+        if self.refuse_while_awaiting_reread():
+            return
+        super().stage(summary, write, destructive=destructive, refreshes_workspace=refreshes_workspace)
+
+    def refuse_while_awaiting_reread(self) -> bool:
+        """Refuse any review or write while an unknown review is not yet read back, and report whether it refused.
+
+        The last review may have been applied: another review could apply a
+        second suggestion over it, and a manual split could split an entry
+        that is already split. When the last re-read failed, this request
+        starts another one rather than leaving the operator with no way on.
+        """
+        if not self.review_awaits_reread:
+            return False
+        if self._review_reread_pending:
+            self.status("tui.ledger.flow.outcome_unknown")
+            return True
+        self._reread_for_unknown_review()
+        if self._review_reread_pending:
+            self.status("tui.ledger.flow.refreshing")
+        return True
 
     def ask_for_review(self, door: LedgerSuggestionReviewDoorV1, request: LedgerLlmReviewRequest) -> None:
         """Submit one review off the event loop and let the modal take the decision."""
-        if self.refuse_while_busy():
-            return
-        if self.review_awaits_reread:
-            # The last review may have been applied; asking again could apply a second suggestion over it.
-            self.status("tui.ledger.flow.outcome_unknown")
+        if self.refuse_while_busy() or self.refuse_while_awaiting_reread():
             return
         self.busy = True
         self.run_worker(self._open_review(door, request), exclusive=True, group="categorisation")
@@ -162,13 +210,14 @@ class ReviewingCategorisationScreen(CategorisationScreen):
             return
         except CadrumoError as error:
             self.busy = False
-            self.refuse(door_refusal_text(error))
+            refusal = door_refusal_text(error)
+            self.refuse(refusal)
             # A review the runtime accepted but was not seen to start may be running: it is unknown, not refused.
             self.query_one("#ledger-flow-status", Static).update(
                 self.failed_write_status(error, "tui.ledger.categorisation.failed")
             )
             if isinstance(error, OperationOutcomeUnknownError):
-                self._withhold_reviews_until_reread()
+                self._withhold_reviews_until_reread(refusal)
             return
         self.status("tui.ledger.categorisation.review.waiting")
         self.app.push_screen(
@@ -216,19 +265,43 @@ class ReviewingCategorisationScreen(CategorisationScreen):
         self.write_outcome_unknown = True
         self.show_outcome(None)
         unknown = door_refusal_text(OperationOutcomeUnknownError(operation_id=operation_id, effect=effect))
-        self.refuse(unknown if explanation is None else "\n".join((explanation, unknown)))
+        refusal = unknown if explanation is None else "\n".join((explanation, unknown))
+        self.refuse(refusal)
         self.status("tui.ledger.flow.outcome_unknown")
-        self._withhold_reviews_until_reread()
+        self._withhold_reviews_until_reread(refusal)
 
-    def _withhold_reviews_until_reread(self) -> None:
-        """Offer no review until a workspace read started after an unknown outcome returns."""
+    def _withhold_reviews_until_reread(self, unknown: str) -> None:
+        """Write nothing, and keep ``unknown`` in view, until a workspace read started after the outcome returns."""
         self.review_awaits_reread = True
-        self.reread_then(self._reread_after_unknown_review)
+        self._unknown_review_text = unknown
+        self._review_hold += 1
+        if self.staged is not None:
+            # Reviewed over the workspace before the unknown review; it may no longer describe the entry.
+            self.unstage()
+        self._reread_for_unknown_review()
 
-    def _reread_after_unknown_review(self, returned: bool) -> None:
-        """Offer reviews again only over a workspace read after the review whose outcome is unknown."""
-        if returned:
-            self.review_awaits_reread = False
+    def _reread_for_unknown_review(self) -> None:
+        hold = self._review_hold
+        self._review_reread_pending = True
+        self.reread_then(partial(self._reread_after_unknown_review, hold))
+
+    def _reread_after_unknown_review(self, hold: int, returned: bool) -> None:
+        """Offer reviews and writes again only over a workspace read after the review whose outcome is unknown."""
+        if hold != self._review_hold:
+            # A later unknown review waits for its own re-read.
+            return
+        self._review_reread_pending = False
+        if not returned:
+            # Nothing was read after the review; the next request reads again. A workspace with no re-read
+            # at all failed no read, so it only says the outcome is unknown.
+            self.status(
+                "tui.ledger.flow.refresh_failed_unknown"
+                if self.controller.can_refresh()
+                else "tui.ledger.flow.outcome_unknown"
+            )
+            return
+        self.review_awaits_reread = False
+        self._unknown_review_text = None
         # The re-read's own line would call the change saved; it is still unknown.
         self.status("tui.ledger.flow.outcome_unknown")
 
@@ -248,12 +321,13 @@ class ReviewingCategorisationScreen(CategorisationScreen):
             )
             return
         except CadrumoError as error:
-            self.refuse(door_refusal_text(error))
+            refusal = door_refusal_text(error)
+            self.refuse(refusal)
             self.query_one("#ledger-flow-status", Static).update(
                 self.failed_write_status(error, "tui.ledger.categorisation.failed")
             )
             if isinstance(error, OperationOutcomeUnknownError):
-                self._withhold_reviews_until_reread()
+                self._withhold_reviews_until_reread(refusal)
             return
         finally:
             self.busy = False

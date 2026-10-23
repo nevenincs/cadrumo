@@ -270,8 +270,11 @@ async def test_retained_pipe_peer_verifier_accepts_exact_process_and_refuses_oth
 
     from cadrumo.core.async_cleanup import AsyncCloseable, async_cleanup_failures, close_async_resources
     from cadrumo_client.transport.transport_cleanup import TransportCleanup
-
-    from ..windows_process import WindowsOwnedProcess, WindowsProcessScope, unreturned_windows_process_scope
+    from cadrumo_client.transport.windows_process import (
+        WindowsOwnedProcess,
+        WindowsProcessScope,
+        unreturned_windows_process_scope,
+    )
 
     endpoint = WindowsEndpoint(storage_root=tmp_path)
     owners = [TransportCleanup(endpoint)]

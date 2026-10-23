@@ -22,7 +22,6 @@ from pathlib import Path
 
 import pytest
 from textual.color import Color
-from textual.pilot import Pilot
 from textual.widgets import Static
 
 from ......adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
@@ -46,6 +45,7 @@ from ......domain.modelos.work_unit import WorkUnitCatalogue
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import application_workbench
+from ....tests.settling import settle
 from ..export import WorkbenchExportScreen
 from ..screen import ModeloWorkbenchScreen
 from ..wording import day_text
@@ -55,11 +55,6 @@ __all__ = ["isolated_backend"]
 
 _EXPORTED_AT = datetime(2026, 4, 2, 9, 30, tzinfo=UTC)
 _EN = OutputLanguage.EN
-
-
-async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _exported(*, current: bool) -> ModeloWorkForm:
@@ -88,7 +83,7 @@ async def test_each_file_state_reads_in_the_header_and_leads_f8_to_its_one_step(
         screen = ModeloWorkbenchScreen(FakeReader(form=form, verified=True), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(160, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             file_widget = screen.query_one("#wb-file", Static)
             shown = file_widget.display
             file_text = _text(screen, "#wb-file")
@@ -97,11 +92,11 @@ async def test_each_file_state_reads_in_the_header_and_leads_f8_to_its_one_step(
             warning = Color.parse(app.theme_variables["warning"])
             next_line = _text(screen, "#wb-next")
             await pilot.press("f8")
-            await _settle(pilot)
+            await settle(pilot)
             after_f8 = app.screen
             if isinstance(after_f8, ConfirmScreen):
                 await pilot.click("#btn-confirm-accept")
-                await _settle(pilot, 6)
+                await settle(pilot)
             notice = _text(screen, "#wb-notice")
             app.exit(None)
 
@@ -195,7 +190,7 @@ def test_a_file_exported_for_real_reaches_the_header_through_the_installed_workb
             screen = ModeloWorkbenchScreen(installed)
             app = ScreenHostApp(screen)
             async with app.run_test(size=(160, 40)) as pilot:
-                await _settle(pilot, 10)
+                await settle(pilot)
                 shown = _text(screen, "#wb-file")
                 app.exit(None)
             return shown

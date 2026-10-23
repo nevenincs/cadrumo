@@ -17,6 +17,8 @@ from ._kdf_windows_job import _WindowsJob
 # whatever environment its parent supplies.
 _DARWIN_INJECTED_ENVIRONMENT = frozenset({"__CF_USER_TEXT_ENCODING"})
 
+KDF_WORKER_ENVIRONMENT_REFUSAL = "profile KDF worker environment is not allowlisted"
+
 
 def verify_ready_worker(
     payload: dict[str, object],
@@ -54,12 +56,12 @@ def _validate_environment(
         raise ValueError("profile KDF worker cwd is not neutral")
     reported = payload["environment_keys"]
     if not isinstance(reported, list):
-        raise ValueError("profile KDF worker environment is not allowlisted")
+        raise ValueError(KDF_WORKER_ENVIRONMENT_REFUSAL)
     keys = [key for key in cast("list[object]", reported) if isinstance(key, str)]
     given = set(environment_keys)
     injected = _DARWIN_INJECTED_ENVIRONMENT if sys.platform == "darwin" else frozenset[str]()
     if keys != reported or keys != sorted(set(keys)) or not given <= set(keys) <= given | injected:
-        raise ValueError("profile KDF worker environment is not allowlisted")
+        raise ValueError(KDF_WORKER_ENVIRONMENT_REFUSAL)
 
 
 def _validate_descriptors(
@@ -97,4 +99,4 @@ def _expected_windows_limits() -> dict[str, int]:
     }
 
 
-__all__ = ["verify_ready_worker"]
+__all__ = ["KDF_WORKER_ENVIRONMENT_REFUSAL", "verify_ready_worker"]

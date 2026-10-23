@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
+from cadrumo.entrypoints.tui.tests.settling import settle
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
     public_surface_diagnostic,
@@ -100,7 +101,7 @@ async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str,
                 notice = ""
             if notice:
                 break
-        await pilot.pause(0.2)
+        await settle(pilot, workers=False)
     if not notice:
         # Which screen held which notice, and whether the modal was ever seen,
         # separates "the operation never started" from "its notice landed on a

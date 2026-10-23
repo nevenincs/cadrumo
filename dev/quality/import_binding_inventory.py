@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import ast
 from collections.abc import Iterable, Mapping
+from pathlib import Path
 
 from dev._paths import UTF_8
 
 from .import_check_models import Authority, Finding, ImportBinding, SourceModule
+from .import_consumer_trees import consumer_source_files
 from .import_module_syntax import assigned_names, is_first_party, is_import_alias, module_name, resolve_from
 
 
@@ -31,17 +33,8 @@ def read_modules(authority: Authority) -> tuple[dict[str, SourceModule], list[Fi
                 )
             )
         for path in paths:
-            try:
-                source = path.read_text(encoding=UTF_8)
-            except (OSError, UnicodeError) as exc:
-                findings.append(Finding("READ_FAILURE", f"cannot read governed file: {exc}", path, fatal=True))
-                continue
-            try:
-                tree = ast.parse(source, filename=str(path))
-            except SyntaxError as exc:
-                findings.append(
-                    Finding("PARSE_FAILURE", f"cannot parse governed file: {exc.msg}", path, exc.lineno, True)
-                )
+            tree = _parse_governed(path, findings)
+            if tree is None:
                 continue
             name = module_name(path, root)
             if name in modules:
@@ -49,9 +42,50 @@ def read_modules(authority: Authority) -> tuple[dict[str, SourceModule], list[Fi
                 continue
             modules[name] = SourceModule(name, path, tree, path.name == "__init__.py")
 
+    _read_consumer_modules(authority, modules, findings)
     for module in modules.values():
         _collect_bindings(module, authority.root_names)
     return modules, findings
+
+
+def _read_consumer_modules(authority: Authority, modules: dict[str, SourceModule], findings: list[Finding]) -> None:
+    """Parse the declared consumer trees as consumer-only modules named by their paths."""
+    try:
+        relatives = consumer_source_files(authority)
+    except OSError as exc:
+        findings.append(Finding("READ_FAILURE", f"cannot enumerate consumer trees: {exc}", fatal=True))
+        return
+    for tree_declaration in authority.consumer_trees:
+        prefix = f"{tree_declaration.path}/"
+        if not any(relative == tree_declaration.path or relative.startswith(prefix) for relative in relatives):
+            findings.append(
+                Finding(
+                    "ZERO_FILES",
+                    f"consumer tree {tree_declaration.path!r} contains no governed Python files",
+                    authority.repository / tree_declaration.path,
+                    fatal=True,
+                )
+            )
+    for relative in relatives:
+        path = authority.repository / relative
+        tree = _parse_governed(path, findings)
+        if tree is None:
+            continue
+        modules[relative] = SourceModule(relative, path, tree, is_package=False, consumer=True)
+
+
+def _parse_governed(path: Path, findings: list[Finding]) -> ast.Module | None:
+    """Read and parse one governed file, reporting why it cannot be scanned."""
+    try:
+        source = path.read_text(encoding=UTF_8)
+    except (OSError, UnicodeError) as exc:
+        findings.append(Finding("READ_FAILURE", f"cannot read governed file: {exc}", path, fatal=True))
+        return None
+    try:
+        return ast.parse(source, filename=str(path))
+    except SyntaxError as exc:
+        findings.append(Finding("PARSE_FAILURE", f"cannot parse governed file: {exc.msg}", path, exc.lineno, True))
+        return None
 
 
 def _collect_bindings(module: SourceModule, root_names: frozenset[str]) -> None:

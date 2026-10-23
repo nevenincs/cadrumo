@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import date
 from decimal import Decimal
 from typing import cast, override
@@ -26,6 +25,7 @@ from .....domain.transactions.models import BucketTransactionRef
 from ...account import AccountSessionExpiredError
 from ...components.host import ScreenHostApp
 from ...navigation import TuiScreenContextV1
+from ...tests.settling import settle, settle_until
 from ..controller import LedgerWorkspaceController
 from ..evidence import LedgerEvidenceScreen
 from ..invoice_entry import LedgerInvoiceEntryScreen
@@ -45,8 +45,9 @@ from ..models import (
 from ..review import LedgerReviewScreen
 from ..routes import ledger_screen_factory
 from ..workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshV1
-from .test_ledger_flows import _ClassificationDoor, _classify_action
 from .workspace_fixtures import (
+    ClassificationDoor,
+    ledger_classify_action,
     ledger_context,
     ledger_evidence_action,
     ledger_projection,
@@ -105,10 +106,10 @@ async def test_invoice_entry_names_every_unreadable_field_and_writes_nothing() -
     screen = _invoice_screen(door)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 80)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _fill(screen, invoice_date="27/03/2026", taxable_base="twelve")
             screen.query_one("#ledger-invoice-review", Button).press()
-            await pilot.pause()
+            await settle(pilot)
             notice = str(screen.query_one("#ledger-refusal", Static).render())
             assert "Counterparty name is required." in notice
             assert "YYYY-MM-DD" in notice
@@ -123,7 +124,7 @@ async def test_invoice_entry_records_only_the_reviewed_entry() -> None:
     screen = _invoice_screen(door)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 80)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _fill(
                 screen,
                 counterparty_name="Hardware Profesional Sur SL",
@@ -134,14 +135,13 @@ async def test_invoice_entry_records_only_the_reviewed_entry() -> None:
                 iva_rate="21",
             )
             screen.query_one("#ledger-invoice-review", Button).press()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.CONFIRMING
             assert screen.query_one("#ledger-invoice-invoice-number", Input).disabled
             assert "A-0003" in str(screen.query_one("#ledger-invoice-summary", Static).render())
             assert not door.entries
             screen.query_one("#ledger-invoice-confirm", Button).press()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.SUCCEEDED
             assert "total 1452.00 EUR" in str(screen.query_one("#ledger-flow-status", Static).render())
     assert door.entries == [
@@ -166,7 +166,7 @@ async def test_invoice_entry_preserves_explicit_iva_treatment_for_linked_income(
     screen = _invoice_screen(door)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 80)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _fill(
                 screen,
                 counterparty_name="Synthetic client",
@@ -181,14 +181,12 @@ async def test_invoice_entry_preserves_explicit_iva_treatment_for_linked_income(
             )
             screen.query_one("#ledger-invoice-kind", Select).value = "issued"
             screen.query_one("#ledger-invoice-review", Button).press()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.CONFIRMING, str(
                 screen.query_one("#ledger-refusal", Static).render()
             )
             screen.query_one("#ledger-invoice-confirm", Button).press()
-            await pilot.pause()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.SUCCEEDED
     assert len(door.entries) == 1
     category = door.entries[0].iva_category
@@ -201,13 +199,12 @@ async def test_invoice_writer_refusal_is_shown_as_the_application_says_it() -> N
     screen = _invoice_screen(_InvoiceDoor(refuse=True))
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 80)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _fill(screen, counterparty_name="X SL", invoice_number="1", invoice_date="2026-01-01", taxable_base="10")
             screen.query_one("#ledger-invoice-review", Button).press()
-            await pilot.pause()
+            await settle(pilot)
             screen.query_one("#ledger-invoice-confirm", Button).press()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.flow_state is LedgerFlowState.FAILED
             refusal = str(screen.query_one("#ledger-refusal", Static).render())
             assert refusal
@@ -306,9 +303,6 @@ def _evidence_screen(door: _EvidenceDoor, refreshes: list[int]) -> LedgerEvidenc
     )
 
 
-_ROW_REFRESH_PAUSES = 200
-
-
 @pytest.mark.asyncio
 async def test_evidence_is_added_listed_and_reader_readiness_is_informational() -> None:
     door = _EvidenceDoor(ready=False)
@@ -316,36 +310,28 @@ async def test_evidence_is_added_listed_and_reader_readiness_is_informational() 
     screen = _evidence_screen(door, refreshes)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 60)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             assert "provisioning.runtime.reachable" in str(screen.query_one("#ledger-evidence-reader", Static).render())
             screen.query_one("#ledger-evidence-path", Input).value = "notes.txt"
             screen.query_one("#ledger-evidence-add", Button).press()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert str(screen.query_one("#ledger-refusal", Static).render())
             assert not refreshes
             screen.query_one("#ledger-evidence-path", Input).value = "C:/synthetic/invoice_A-0003.pdf"
             screen.query_one("#ledger-evidence-add", Button).press()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert door.added[-1] == "C:/synthetic/invoice_A-0003.pdf"
             assert refreshes == [1]
             records = screen.query_one("#ledger-evidence-records", DataTable)
-            # The refreshed rows arrive through the message loop after the add
-            # worker completes, so a loaded host may need more than one pause.
-            for _ in range(_ROW_REFRESH_PAUSES):
-                if records.ordered_rows:
-                    break
-                await pilot.pause(0.05)
+            await settle_until(pilot, lambda: bool(records.ordered_rows), "the refreshed evidence rows")
             assert tuple(row.key.value for row in records.ordered_rows) == ("8747cbf318cf0adb",)
             records.focus()
             records.move_cursor(row=0)
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             assert screen.query_one("#ledger-evidence-confirm", Button).disabled
             screen.query_one("#ledger-evidence-extract", Button).press()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert door.extracted == ["8747cbf318cf0adb"]
             draft = str(screen.query_one("#ledger-evidence-draft", Static).render())
             # An amount the reader could not ground reads as unread, never as zero.
@@ -353,8 +339,7 @@ async def test_evidence_is_added_listed_and_reader_readiness_is_informational() 
             assert "0.00" not in draft
             assert screen.query_one("#ledger-evidence-counterparty", Input).value == "Hardware Profesional Sur SL"
             screen.query_one("#ledger-evidence-confirm", Button).press()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert door.confirmed == [
                 LedgerEvidenceConfirmationV1(
                     evidence_id="8747cbf318cf0adb",
@@ -383,13 +368,9 @@ async def test_a_refused_records_load_is_said_on_the_screen() -> None:
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 60)) as pilot:
             detail = screen.query_one("#ledger-evidence-record-detail", Static)
-            loop = asyncio.get_running_loop()
-            deadline = loop.time() + 10
-            while str(detail.render()) != resolve_error_message(refusal):
-                assert loop.time() < deadline, f"the refused load was not said: {detail.render()}"
-                await pilot.pause()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle_until(
+                pilot, lambda: str(detail.render()) == resolve_error_message(refusal), "the refused load to be said"
+            )
             assert pilot.app.screen is screen
             assert screen.query_one("#ledger-evidence-records", DataTable).row_count == 0
 
@@ -415,33 +396,29 @@ async def test_confirm_eligibility_is_limited_to_the_currently_reviewed_record()
     screen = _evidence_screen(door, [])
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 60)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             records = screen.query_one("#ledger-evidence-records", DataTable)
-            for _ in range(_ROW_REFRESH_PAUSES):
-                if len(records.ordered_rows) == 2:
-                    break
-                await pilot.pause(0.05)
+            await settle_until(pilot, lambda: len(records.ordered_rows) == 2, "both evidence rows")
             assert len(records.ordered_rows) == 2
             records.focus()
             records.move_cursor(row=0)
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             confirm = screen.query_one("#ledger-evidence-confirm", Button)
             assert confirm.disabled
 
             screen.query_one("#ledger-evidence-extract", Button).press()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert not confirm.disabled
             assert screen.draft is not None and screen.draft.evidence_id == first.evidence_id
 
             records.move_cursor(row=1)
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             assert confirm.disabled
             assert screen.draft is None
             confirm.press()
-            await pilot.pause()
+            await settle(pilot)
             assert not door.confirmed
 
 
@@ -463,26 +440,21 @@ async def test_session_expiry_clears_full_draft_and_record_rows() -> None:
     screen = _evidence_screen(door, [])
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 60)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             records = screen.query_one("#ledger-evidence-records", DataTable)
-            for _ in range(_ROW_REFRESH_PAUSES):
-                if records.ordered_rows:
-                    break
-                await pilot.pause(0.05)
+            await settle_until(pilot, lambda: bool(records.ordered_rows), "the evidence rows")
             records.focus()
             records.move_cursor(row=0)
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
 
             screen.query_one("#ledger-evidence-extract", Button).press()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.draft is not None and screen.draft.full_projection is not None
             assert "private full evidence draft" in str(screen.query_one("#ledger-evidence-draft", Static).render())
 
             screen.query_one("#ledger-evidence-confirm", Button).press()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.draft is None
             assert str(screen.query_one("#ledger-evidence-draft", Static).render()) == ""
             assert not records.ordered_rows
@@ -507,7 +479,7 @@ async def test_runtime_evidence_route_needs_no_attachment_review_inventory() -> 
     assert screen.controller.refusal_for(LedgerWorkspaceArea.EVIDENCE) is None
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 60)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             assert isinstance(screen.query_one("#ledger-evidence-records", DataTable), DataTable)
             assert not tuple(screen.query("#ledger-evidence"))
 
@@ -539,8 +511,8 @@ async def test_exclude_names_the_entry_withdraws_on_escape_and_writes_once_on_co
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
             review_door=ledger_review_door(projection),
-            classify_action=_classify_action(),
-            classification_submitter=_ClassificationDoor(),
+            classify_action=ledger_classify_action(),
+            classification_submitter=ClassificationDoor(),
             exclusion_submitter=door,
             refresh=refresh,
         ),
@@ -549,28 +521,27 @@ async def test_exclude_names_the_entry_withdraws_on_escape_and_writes_once_on_co
     first = projection.review_transaction_ids[0]
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             assert not screen.query_one("#ledger-exclusion-confirm", Button).display
             review = screen.query_one("#ledger-review", DataTable)
             review.focus()
             review.move_cursor(row=0)
             await pilot.press("x")
-            await pilot.pause()
+            await settle(pilot)
             question = str(screen.query_one("#ledger-exclusion-question", Static).render())
             assert controller.entry_label(first) in question
             assert screen.query_one("#ledger-exclusion-confirm", Button).display
             await pilot.press("escape")
-            await pilot.pause()
+            await settle(pilot)
             assert screen.pending_exclusion is None
             assert not screen.back_requested
             assert not door.calls
             await pilot.press("x")
-            await pilot.pause()
+            await settle(pilot)
             screen.query_one("#ledger-exclusion-confirm", Button).press()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
     assert [call.transaction_id for call in door.calls] == [first]
-    assert door.calls[0].action == _classify_action()
+    assert door.calls[0].action == ledger_classify_action()
     assert refreshes == [1]
 
 
@@ -590,8 +561,8 @@ def _exclusion_controller(door: _IdentityExclusionDoor) -> LedgerWorkspaceContro
         ledger_projection(),
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
-            classify_action=_classify_action(),
-            classification_submitter=_ClassificationDoor(),
+            classify_action=ledger_classify_action(),
+            classification_submitter=ClassificationDoor(),
             exclusion_submitter=door,
         ),
     )
@@ -625,8 +596,8 @@ async def test_an_exclusion_of_an_entry_the_review_queue_does_not_list_is_refuse
         projection,
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
-            classify_action=_classify_action(),
-            classification_submitter=_ClassificationDoor(),
+            classify_action=ledger_classify_action(),
+            classification_submitter=ClassificationDoor(),
             exclusion_submitter=door,
         ),
     )

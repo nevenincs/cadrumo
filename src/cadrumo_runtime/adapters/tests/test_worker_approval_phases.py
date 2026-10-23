@@ -29,6 +29,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.model_runs import ModelRunOutcome, ModelRunRefusalCode
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
@@ -40,7 +41,6 @@ from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublicatio
 
 from ...application.approval_binding import RuntimeApprovalBinding
 from .. import worker_authorization
-from ..windows_process import WindowsProcessScope
 from ..worker_authorization import WorkerAuthorizationServer
 from .profile_worker_support import owner_id
 from .worker_approval_phase_fixture import PhaseSeed

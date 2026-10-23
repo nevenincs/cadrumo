@@ -677,7 +677,14 @@ extend-exclude = [
   ".vault",
   ".vaultspec",
   ".agents",
+  # npm owns these strict-JSON manifests and lockfiles. Ruff formats an
+  # explicitly named file as Python regardless of extension, which rewrites
+  # JSON with trailing commas and breaks every JSON parser (the audit gate
+  # included). `force-exclude` makes the exclusion apply to named paths too.
+  "package.json",
+  "package-lock.json",
 ]
+force-exclude = true
 
 [tool.ruff.lint]
 select = [

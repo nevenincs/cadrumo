@@ -8,11 +8,10 @@ from typing import Literal
 
 import pytest
 
-from cadrumo.tests.audited_process import run_audited_process
+from ......core.type_guards import is_object_mapping
+from ......tests.audited_process import run_audited_process
 
-from ...type_guards import is_object_mapping
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _PROBE = """
 import json, sys

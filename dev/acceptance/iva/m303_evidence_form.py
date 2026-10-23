@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, Final, cast
 
+from cadrumo.entrypoints.tui.tests.settling import settle
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
     public_surface_diagnostic,
@@ -47,7 +48,7 @@ async def _open_evidence_form(pilot: Any, *, work_unit_id: str) -> None:
         else:
             proceed.focus()
             await pilot.press("enter")
-        await pilot.pause(0.2)
+        await settle(pilot, workers=False)
     raise InstalledTuiChildError(
         f"installed workbench did not ask the Modelo 303 filing evidence: {_visible_refusal(pilot)}",
         diagnostic=public_surface_diagnostic(pilot),
@@ -98,7 +99,7 @@ async def _form_refusals(pilot: Any, *, work_unit_id: str, observed_at: str) -> 
     _fill_evidence_form(pilot, answer=False, observed_at=observed_at)
     query_public_selector(pilot, _EVIDENCE_SUBMIT_ID, Button).focus()
     await pilot.press("enter")
-    await pilot.pause()
+    await settle(pilot, workers=False)
     await _await_selector(pilot, _EVIDENCE_SUBMIT_ID)
     outcomes.append(
         TuiOutcome(
@@ -110,7 +111,7 @@ async def _form_refusals(pilot: Any, *, work_unit_id: str, observed_at: str) -> 
     query_public_selector(pilot, "#m303-evidence-cancel", Button).focus()
     await pilot.press("enter")
     await _await_selector(pilot, WORKBENCH_NOTICE)
-    await pilot.pause()
+    await settle(pilot, workers=False)
     outcomes.append(
         TuiOutcome(
             step="cancelled",

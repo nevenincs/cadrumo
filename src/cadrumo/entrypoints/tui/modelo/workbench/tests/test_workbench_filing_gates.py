@@ -20,7 +20,6 @@ from decimal import Decimal
 import pytest
 from rich.cells import cell_len
 from textual.color import Color
-from textual.pilot import Pilot
 from textual.widgets import Static
 
 from ......application.modelo.calculation_notes import CALCULATION_NOTE_ATTENTION
@@ -38,6 +37,7 @@ from ......core.i18n.render import tr
 from ......domain.modelos.verification_report import VerificationCompletenessStatus
 from ....components.host import ScreenHostApp
 from ....components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
+from ....tests.settling import settle
 from ..bulk_confirm import BulkConfirmScreen, TickBox
 from ..export import WorkbenchExportScreen
 from ..header import attention_chips, blocking_count
@@ -56,11 +56,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _SIZE = (140, 40)
 _WITHHOLDING = "06"
-
-
-async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _notice(screen: ModeloWorkbenchScreen) -> str:
@@ -113,17 +108,17 @@ async def test_the_file_and_the_recording_are_withheld_by_each_cause_and_say_whi
         screen = ModeloWorkbenchScreen(FakeReader(form=_cause(cause), verified=True), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("e")
-            await _settle(pilot)
+            await settle(pilot)
             after_export = app.screen
             export_notice = _notice(screen)
             offered = after_export.fields if isinstance(after_export, BulkConfirmScreen) else ()
             await pilot.press("escape")
-            await _settle(pilot)
+            await settle(pilot)
             # F8 runs the one action the next-action line names, and never passes what withholds the filing.
             await pilot.press("f8")
-            await _settle(pilot)
+            await settle(pilot)
             after_f8 = app.screen
             app.exit(None)
 
@@ -202,7 +197,7 @@ async def test_every_blocker_mark_the_header_and_stepper_draw_is_in_the_error_co
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
             app.theme = theme
-            await _settle(pilot)
+            await settle(pilot)
             error = Color.parse(app.theme_variables["error"])
             foreground = Color.parse(app.theme_variables["foreground"])
             chips = _glyph_colours(screen.query_one("#wb-chips", Static), BLOCKS_MARK.glyph)
@@ -210,7 +205,7 @@ async def test_every_blocker_mark_the_header_and_stepper_draw_is_in_the_error_co
             check = _glyph_colours(screen.query_one("#wb-chips", Static), CHECK_MARK.glyph)
             # The larger help band names the symbols on screen, the blocker's among them.
             await pilot.press("question_mark")
-            await _settle(pilot)
+            await settle(pilot)
             named = _glyph_colours(screen.query_one("#wb-help", Static), BLOCKS_MARK.glyph)
             app.exit(None)
 
@@ -230,7 +225,7 @@ async def test_a_review_finding_that_blocks_is_marked_from_the_registry_in_the_e
         review = EditReviewScreen((), notes=notes)
         app = ScreenHostApp(review)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             findings = review.query_one("#review-findings", Static)
             text = str(findings.render())
             error = Color.parse(app.theme_variables["error"])
@@ -252,7 +247,7 @@ async def test_with_no_result_the_chips_start_where_the_other_header_lines_start
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             chips = screen.query_one("#wb-chips", Static)
             chips_x = chips.content_region.x
             stepper_x = screen.query_one("#wb-stepper", Static).content_region.x
@@ -273,11 +268,11 @@ async def test_the_bulk_confirm_tick_reads_unticked_until_the_filer_ticks_it() -
         dialog = BulkConfirmScreen(fields)
         app = ScreenHostApp(dialog)
         async with app.run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             tick = dialog.query_one("#bulk-tick", TickBox)
             unticked = str(tick.render())
             await pilot.click("#bulk-tick")
-            await _settle(pilot)
+            await settle(pilot)
             ticked = str(tick.render())
             value = tick.value
             app.exit(None)

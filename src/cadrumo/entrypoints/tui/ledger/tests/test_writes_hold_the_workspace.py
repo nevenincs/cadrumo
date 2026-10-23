@@ -56,6 +56,7 @@ from .....domain.transactions.enums import BusinessClassification
 from ...components.dialogs import ConfirmScreen
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...operations.outcome import OperationOutcomeUnknownError
+from ...tests.settling import settle
 from ..categorisation_doors import LedgerRuleAddDoorV1, LedgerRuleApplyDoorV1, LedgerRuleListDoorV1
 from ..categorisation_review import LedgerSuggestionReviewScreen
 from ..categorisation_rules import LedgerRulesScreen
@@ -114,15 +115,18 @@ from .test_categorisation_review import _ask as ask_for_review
 from .test_categorisation_review import _decide as decide_review
 from .test_invoices_import import _review as review_invoice_import
 from .test_invoices_wizard import _fill_and_review as review_invoice_wizard
-from .test_ledger_flows import _ClassificationDoor, _classify_action, _ImportDoor, _preview
+from .test_ledger_flows import _ImportDoor, _preview
 from .test_ledger_ingestion_surfaces import _EvidenceDoor, _ExclusionDoor, _InvoiceDoor
-from .test_ledger_slice3 import _TX, _link_action, _LinkDoor, _reconciled_projection
+from .test_ledger_slice3 import _TX, _link_action, _LinkDoor
 from .test_ledger_tools import _tool
 from .workspace_fixtures import (
+    ClassificationDoor,
+    ledger_classify_action,
     ledger_context,
     ledger_evidence_action,
     ledger_focused_context,
     ledger_projection,
+    ledger_reconciled_projection,
     ledger_review_action,
     ledger_review_door,
 )
@@ -193,23 +197,23 @@ class _Flow:
     """Whether the body is still shown once the write is saved, so leaving it can be tried."""
 
 
-async def _settle(pilot: Pilot[None]) -> None:
-    await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
+async def _press(pilot: Pilot[None], body: LedgerWorkspaceScreen, button_id: str) -> None:
+    """Press a button whose work is not held, and wait for it to finish."""
+    body.query_one(f"#{button_id}", Button).press()
+    await settle(pilot)
 
 
 async def _click(pilot: Pilot[None], body: LedgerWorkspaceScreen, button_id: str) -> None:
-    """Press a button without waiting for the workers it starts."""
+    """Press a button and wait for the messages it posts, without waiting for the workers it starts."""
     body.query_one(f"#{button_id}", Button).press()
-    await pilot.pause()
+    await settle(pilot, workers=False)
 
 
 async def _accept(pilot: Pilot[None]) -> None:
     dialog = pilot.app.screen
     assert isinstance(dialog, ConfirmScreen)
     dialog.query_one("#btn-confirm-accept", Button).press()
-    await pilot.pause()
+    await settle(pilot, workers=False)
 
 
 def _text(body: LedgerWorkspaceScreen, selector: str) -> str:
@@ -230,8 +234,7 @@ async def _choose_overview(pilot: Pilot[None], body: LedgerWorkspaceScreen) -> N
     navigation.focus()
     navigation.move_cursor(row=_OVERVIEW_ROW)
     await pilot.press("enter")
-    for _ in range(3):
-        await pilot.pause()
+    await settle(pilot, workers=False)
 
 
 async def _cannot_leave(pilot: Pilot[None], body: LedgerWorkspaceScreen) -> None:
@@ -248,14 +251,12 @@ async def _cannot_leave(pilot: Pilot[None], body: LedgerWorkspaceScreen) -> None
         tools.focus()
         tools.move_cursor(row=0)
         await pilot.press("enter")
-        for _ in range(3):
-            await pilot.pause()
+        await settle(pilot, workers=False)
         assert pilot.app.screen is body
         assert _status(body) == refusal
     _status_line(body).update("")
     await pilot.press("escape")
-    for _ in range(3):
-        await pilot.pause()
+    await settle(pilot, workers=False)
     assert pilot.app.screen is body
     assert not body.back_requested
     assert _status(body) == refusal
@@ -273,7 +274,7 @@ def _tools(area: LedgerWorkspaceArea) -> tuple[LedgerToolV1, ...]:
 # -- Area bodies -----------------------------------------------------------------
 
 
-class _HeldClassificationDoor(_ClassificationDoor):
+class _HeldClassificationDoor(ClassificationDoor):
     def __init__(self, gate: _Gate) -> None:
         super().__init__()
         self._gate = gate
@@ -292,7 +293,7 @@ def _classification(gate: _Gate, _tmp_path: Path) -> _Flow:
         projection,
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
-            classify_action=_classify_action(),
+            classify_action=ledger_classify_action(),
             classification_submitter=door,
             tools=_tools(LedgerWorkspaceArea.CLASSIFICATION),
         ),
@@ -301,7 +302,10 @@ def _classification(gate: _Gate, _tmp_path: Path) -> _Flow:
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         body.query_one("#ledger-classifications", DataTable).focus()
-        await pilot.press("enter", "enter")
+        await pilot.press("enter")
+        await settle(pilot)
+        await pilot.press("enter")
+        await settle(pilot, workers=False)
         return body
 
     def saved(_pilot: Pilot[None], shown: LedgerWorkspaceScreen) -> None:
@@ -367,7 +371,7 @@ def _reconciliation(gate: _Gate, _tmp_path: Path) -> _Flow:
     )
     controller = LedgerWorkspaceController(
         context,
-        _reconciled_projection(),
+        ledger_reconciled_projection(),
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
             link_action=_link_action(),
@@ -379,7 +383,10 @@ def _reconciliation(gate: _Gate, _tmp_path: Path) -> _Flow:
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         body.query_one("#ledger-suggestions", DataTable).focus()
-        await pilot.press("enter", "enter")
+        await pilot.press("enter")
+        await settle(pilot)
+        await pilot.press("enter")
+        await settle(pilot, workers=False)
         return body
 
     def saved(_pilot: Pilot[None], shown: LedgerWorkspaceScreen) -> None:
@@ -410,8 +417,8 @@ def _review_exclusion(gate: _Gate, _tmp_path: Path) -> _Flow:
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
             review_door=ledger_review_door(projection),
-            classify_action=_classify_action(),
-            classification_submitter=_ClassificationDoor(),
+            classify_action=ledger_classify_action(),
+            classification_submitter=ClassificationDoor(),
             exclusion_submitter=door,
             tools=_tools(LedgerWorkspaceArea.REVIEW),
         ),
@@ -423,7 +430,7 @@ def _review_exclusion(gate: _Gate, _tmp_path: Path) -> _Flow:
         review.focus()
         review.move_cursor(row=0)
         await pilot.press("x")
-        await pilot.pause()
+        await settle(pilot)
         await _click(pilot, body, "ledger-exclusion-confirm")
         return body
 
@@ -489,7 +496,7 @@ def _entry_add(gate: _Gate, _tmp_path: Path) -> _Flow:
         body.query_one("#entries-add-booked-date", Input).value = "2026-03-14"
         body.query_one("#entries-add-amount", Input).value = "120.50"
         body.query_one("#entries-add-description", Input).value = "Material de oficina"
-        await _click(pilot, body, "entries-add-review")
+        await _press(pilot, body, "entries-add-review")
         await _click(pilot, body, "entries-add-confirm")
         return body
 
@@ -509,7 +516,7 @@ def _entry_export(gate: _Gate, tmp_path: Path) -> _Flow:
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         body.query_one("#entries-export-path", Input).value = path
-        await _click(pilot, body, "entries-export-review")
+        await _press(pilot, body, "entries-export-review")
         await _click(pilot, body, "entries-export-confirm")
         return body
 
@@ -533,8 +540,7 @@ def _entry_reset(gate: _Gate, _tmp_path: Path) -> _Flow:
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         body.query_one("#entries-reset-reason", Input).value = "start over with a clean import"
-        await _click(pilot, body, "entries-reset-preview-button")
-        await _settle(pilot)
+        await _press(pilot, body, "entries-reset-preview-button")
         await _click(pilot, body, "entries-reset-run")
         await _accept(pilot)
         return body
@@ -557,9 +563,9 @@ def _entry_removal(gate: _Gate, _tmp_path: Path) -> _Flow:
         table.focus()
         table.move_cursor(row=2)
         await pilot.press("enter")
-        await _settle(pilot)
+        await settle(pilot)
         await _click(pilot, body, "entries-browse-remove")
-        await _settle(pilot)
+        await settle(pilot)
         await _accept(pilot)
         return body
 
@@ -585,10 +591,10 @@ def _own_account(gate: _Gate, _tmp_path: Path) -> _Flow:
     body = LedgerOwnAccountsScreen(controller, cast(LedgerOwnAccountDoorV1, door))
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
-        await _click(pilot, body, "own-account-new")
+        await _press(pilot, body, "own-account-new")
         body.query_one("#own-account-label", Input).value = "main"
         body.query_one("#own-account-iban", Input).value = SYNTHETIC_ES_IBAN
-        await _click(pilot, body, "own-account-review")
+        await _press(pilot, body, "own-account-review")
         assert body.staged is not None, _text(body, "#ledger-refusal")
         await _click(pilot, body, "own-account-confirm")
         return body
@@ -643,7 +649,7 @@ def _invoice_correction(gate: _Gate, _tmp_path: Path) -> _Flow:
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         body.query_one("#ledger-invoice-notes", Input).value = "after"
-        await _click(pilot, body, "ledger-invoice-edit-review")
+        await _press(pilot, body, "ledger-invoice-edit-review")
         await _click(pilot, body, "ledger-invoice-edit-save")
         return body
 
@@ -663,7 +669,7 @@ def _transaction_correction(gate: _Gate, _tmp_path: Path) -> _Flow:
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         body.query_one("#ledger-transaction-description", Input).value = "changed description"
-        await _click(pilot, body, "ledger-transaction-edit-review")
+        await _press(pilot, body, "ledger-transaction-edit-review")
         await _click(pilot, body, "ledger-transaction-edit-save")
         return body
 
@@ -703,8 +709,7 @@ def _capital_good(gate: _Gate, _tmp_path: Path) -> _Flow:
             ("#capital-kind", "synthetic_kind"),
         ):
             body.query_one(selector, Input).value = value
-        await _click(pilot, body, "register-review")
-        await _settle(pilot)
+        await _press(pilot, body, "register-review")
         assert body.staged is not None, _text(body, "#ledger-refusal")
         await _click(pilot, body, "register-confirm")
         return body
@@ -810,7 +815,7 @@ def _invoice_entry(gate: _Gate, _tmp_path: Path) -> _Flow:
             ("iva-rate", "21"),
         ):
             body.query_one(f"#ledger-invoice-{name}", Input).value = value
-        await _click(pilot, body, "ledger-invoice-review")
+        await _press(pilot, body, "ledger-invoice-review")
         await _click(pilot, body, "ledger-invoice-confirm")
         return body
 
@@ -841,7 +846,7 @@ def _classification_rule(gate: _Gate, _tmp_path: Path) -> _Flow:
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         body.query_one("#categorisation-rule-pattern", Input).value = "papelería"
-        await _click(pilot, body, "categorisation-rule-review-add")
+        await _press(pilot, body, "categorisation-rule-review-add")
         assert body.staged is not None
         await _click(pilot, body, "categorisation-confirm")
         return body
@@ -873,10 +878,9 @@ def _evidence_record_correction(gate: _Gate, _tmp_path: Path) -> _Flow:
         table.focus()
         table.move_cursor(row=1)
         await pilot.press("enter")
-        await _settle(pilot)
+        await settle(pilot)
         body.query_one("#evidence-files-field-supplier", Input).value = "Suministros Gamma SL"
-        await _click(pilot, body, "evidence-files-review-update")
-        await _settle(pilot)
+        await _press(pilot, body, "evidence-files-review-update")
         write = pilot.app.screen
         assert isinstance(write, LedgerEvidenceFilesWriteScreen)
         await _click(pilot, write, "evidence-files-confirm")
@@ -919,20 +923,20 @@ async def test_a_write_in_flight_keeps_its_body_until_its_outcome_renders(name: 
     with override_settings(cadrumo_output_language="en"):
         flow = _FLOWS[name](gate, tmp_path)
         async with ReplacingHostApp(flow.body).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             body = await flow.submit(pilot)
             await asyncio.wait_for(gate.started.wait(), timeout=10)
             assert body.in_flight
             await _cannot_leave(pilot, body)
 
             gate.release.set()
-            await _settle(pilot)
+            await settle(pilot)
             assert not body.in_flight
             flow.saved(pilot, body)
             if flow.leaves_after_saving:
                 # The same Back that was refused while the write was out now leaves the body.
                 await pilot.press("escape")
-                await _settle(pilot)
+                await settle(pilot)
                 assert pilot.app.screen is not body
 
 
@@ -944,9 +948,9 @@ async def test_a_write_whose_outcome_is_unknown_is_said_to_be_unknown(name: str,
     with override_settings(cadrumo_output_language="en"):
         flow = _FLOWS[name](gate, tmp_path)
         async with ReplacingHostApp(flow.body).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             body = await flow.submit(pilot)
-            await _settle(pilot)
+            await settle(pilot)
             assert pilot.app.screen is body
             assert not body.in_flight
             rendered = _rendered(body)
@@ -992,7 +996,7 @@ async def test_a_review_that_settles_failed_with_an_effect_is_said_to_be_unknown
     screen = LedgerSuggestionReviewScreen(categorisation_controller(), door=door)
     with override_settings(cadrumo_output_language="en"):
         async with ReplacingHostApp(screen).run_test(size=(120, 50)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await ask_for_review(pilot, screen, "categorisation-review-ask")
             await decide_review(pilot, "btn-operation-apply")
             assert _status(screen) == tr("tui.ledger.flow.outcome_unknown")
@@ -1049,8 +1053,8 @@ async def test_an_exclusion_whose_outcome_is_unknown_is_offered_again_only_over_
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
             review_door=held_queue,
-            classify_action=_classify_action(),
-            classification_submitter=_ClassificationDoor(),
+            classify_action=ledger_classify_action(),
+            classification_submitter=ClassificationDoor(),
             exclusion_submitter=_HeldExclusionDoor(write),
             tools=_tools(LedgerWorkspaceArea.REVIEW),
         ),
@@ -1058,14 +1062,14 @@ async def test_an_exclusion_whose_outcome_is_unknown_is_offered_again_only_over_
     body = LedgerReviewScreen(controller)
     with override_settings(cadrumo_output_language="en"):
         async with ReplacingHostApp(body).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             listed = body.rows
             assert listed
             review = body.query_one("#ledger-review", DataTable)
             review.focus()
             review.move_cursor(row=0)
             await pilot.press("x")
-            await pilot.pause()
+            await settle(pilot)
             await _click(pilot, body, "ledger-exclusion-confirm")
             await asyncio.wait_for(reread.started.wait(), timeout=10)
 
@@ -1073,12 +1077,12 @@ async def test_an_exclusion_whose_outcome_is_unknown_is_offered_again_only_over_
             assert body.rows == ()
             assert body.pending_exclusion is None
             await pilot.press("x")
-            await pilot.pause()
+            await settle(pilot, workers=False)
             assert body.pending_exclusion is None
             assert write.calls == 1
 
             reread.release.set()
-            await _settle(pilot)
+            await settle(pilot)
             assert len(queue.requests) == 2
             assert body.rows == listed
             assert _status(body) == tr("tui.ledger.flow.outcome_unknown")
@@ -1117,11 +1121,11 @@ async def test_an_evidence_addition_whose_outcome_is_unknown_is_offered_again_on
     body = LedgerEvidenceScreen(controller)
     with override_settings(cadrumo_output_language="en"):
         async with ReplacingHostApp(body).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             body.query_one("#ledger-evidence-path", Input).value = _EVIDENCE_PATH
             await _click(pilot, body, "ledger-evidence-add")
             assert await asyncio.to_thread(refreshing.wait, 10)
-            await pilot.pause()
+            await settle(pilot, workers=False)
 
             # The document may already be added: until the records are read again, the addition is not offered.
             add = body.query_one("#ledger-evidence-add", Button)
@@ -1130,7 +1134,7 @@ async def test_an_evidence_addition_whose_outcome_is_unknown_is_offered_again_on
             assert write.calls == 1
 
             refreshed.set()
-            await _settle(pilot)
+            await settle(pilot)
             assert refreshes == [1]
             assert not add.disabled
             assert _status(body) == tr("tui.ledger.flow.outcome_unknown")

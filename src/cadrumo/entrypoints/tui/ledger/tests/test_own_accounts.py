@@ -12,6 +12,7 @@ import asyncio
 from typing import cast, override
 
 import pytest
+from pydantic import ValidationError
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Select, Static
 
@@ -22,7 +23,10 @@ from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
+from .....core.operations import OperationEffect
 from ...account import AccountSessionExpiredError
+from ...operations.outcome import OperationOutcomeUnknownError
+from ...tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from ..controller import LedgerWorkspaceController
 from ..overview import LedgerOverviewScreen
 from ..own_accounts import LedgerOwnAccountDoorV1, LedgerOwnAccountsScreen
@@ -33,8 +37,7 @@ from .own_account_fixtures import (
     SYNTHETIC_ES_IBAN_2,
     MemoryOwnAccountDoor,
 )
-from .test_ledger_selection_journey import _WorkspaceHostApp
-from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -69,9 +72,7 @@ def _assert_masked(screen: LedgerOwnAccountsScreen) -> None:
 
 async def _press(pilot: Pilot[None], screen: LedgerOwnAccountsScreen, button_id: str) -> None:
     screen.query_one(f"#{button_id}", Button).press()
-    await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
+    await settle(pilot)
 
 
 async def _review_and_confirm(pilot: Pilot[None], screen: LedgerOwnAccountsScreen, review_id: str) -> None:
@@ -86,8 +87,7 @@ async def _select_row(pilot: Pilot[None], screen: LedgerOwnAccountsScreen, row: 
     table.focus()
     table.move_cursor(row=row)
     await pilot.press("enter")
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
+    await settle(pilot)
 
 
 async def _add(pilot: Pilot[None], screen: LedgerOwnAccountsScreen, label: str, iban: str) -> None:
@@ -102,9 +102,8 @@ async def test_own_account_setup_adds_edits_designates_and_closes_masked() -> No
     door = MemoryOwnAccountDoor()
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             table = screen.query_one("#ledger-own-accounts", DataTable)
             assert table.row_count == 0
             assert str(screen.query_one("#ledger-flow-status", Static).render()) == tr("tui.ledger.own_accounts.empty")
@@ -165,8 +164,8 @@ async def test_own_account_review_refuses_an_invalid_iban_before_anything_is_sen
     door = MemoryOwnAccountDoor()
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await pilot.app.workers.wait_for_complete()
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             screen.query_one("#own-account-label", Input).value = "broken"
             screen.query_one("#own-account-iban", Input).value = SYNTHETIC_ES_IBAN[:-1] + "3"
             await _press(pilot, screen, "own-account-review")
@@ -183,8 +182,8 @@ async def test_own_account_removal_shows_the_typed_refusal_and_keeps_the_account
     door = MemoryOwnAccountDoor()
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await pilot.app.workers.wait_for_complete()
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             await _add(pilot, screen, "main", SYNTHETIC_ES_IBAN)
             await _select_row(pilot, screen, 0)
             await _review_and_confirm(pilot, screen, "own-account-review-remove")
@@ -202,8 +201,8 @@ async def test_own_account_screen_discards_account_facts_when_the_session_is_los
     door = MemoryOwnAccountDoor()
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await pilot.app.workers.wait_for_complete()
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             await _add(pilot, screen, "main", SYNTHETIC_ES_IBAN)
             await _select_row(pilot, screen, 0)
             door.expired = True
@@ -244,15 +243,12 @@ async def test_a_saved_change_whose_register_reread_fails_is_said_to_be_saved(re
     door = _RereadRefusedDoor(reread_error)
     screen = _screen(door)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             await _add(pilot, screen, "main", SYNTHETIC_ES_IBAN)
-            loop = asyncio.get_running_loop()
-            deadline = loop.time() + 10
-            while len(door.requests) < 3 or screen.in_flight:
-                assert loop.time() < deadline, "the add and the read after it never settled"
-                await pilot.pause()
+            await settle_until(
+                pilot, lambda: len(door.requests) >= 3 and not screen.in_flight, "the add and the read after it"
+            )
 
             assert [request.action for request in door.requests] == ["list", "add", "list"]
             assert len(door.repository.register.accounts) == 1
@@ -268,6 +264,101 @@ async def test_a_saved_change_whose_register_reread_fails_is_said_to_be_saved(re
             _assert_masked(screen)
 
 
+_UNKNOWN = OperationOutcomeUnknownError(operation_id="e" * 64, effect=OperationEffect.UNKNOWN)
+
+
+class _UnknownWriteDoor(MemoryOwnAccountDoor):
+    """Applies each write but loses its outcome, then holds the register read that follows until released."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.written = False
+        self.reread_started = asyncio.Event()
+        self.reread_release = asyncio.Event()
+
+    @override
+    async def __call__(self, request: LedgerOwnAccountRequest) -> LedgerOwnAccountResult:
+        if request.action == "list" and self.written:
+            self.reread_started.set()
+            await self.reread_release.wait()
+        result = await super().__call__(request)
+        if request.action != "list":
+            self.written = True
+            raise _UNKNOWN
+        return result
+
+
+@pytest.mark.asyncio
+async def test_an_own_account_write_with_an_unknown_outcome_drops_its_secrets_and_rereads_the_register() -> None:
+    door = _UnknownWriteDoor()
+    screen = _screen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
+            await _press(pilot, screen, "own-account-new")
+            screen.query_one("#own-account-label", Input).value = "main"
+            screen.query_one("#own-account-iban", Input).value = SYNTHETIC_ES_IBAN
+            await _press(pilot, screen, "own-account-review")
+            assert screen.staged is not None
+            screen.query_one("#own-account-confirm", Button).press()
+            await asyncio.wait_for(door.reread_started.wait(), SETTLE_TIMEOUT_SECONDS)
+
+            # The add may have landed: its account number is gone, and nothing is offered over the old register.
+            assert screen.query_one("#own-account-iban", Input).value == ""
+            assert screen.staged is None
+            assert screen.in_flight
+            assert screen.accounts == ()
+            screen.query_one("#own-account-review", Button).press()
+            await settle(pilot, workers=False)
+            assert screen.staged is None
+            assert str(screen.query_one("#ledger-flow-status", Static).render()) == tr(
+                "tui.ledger.flow.in_flight_refusal"
+            )
+
+            door.reread_release.set()
+            await settle(pilot)
+            assert [request.action for request in door.requests] == ["list", "add", "list"]
+            assert len(screen.accounts) == 1
+            assert not screen.in_flight
+            assert str(screen.query_one("#ledger-flow-status", Static).render()) == tr(
+                "tui.ledger.flow.outcome_unknown"
+            )
+            assert str(screen.query_one("#ledger-refusal", Static).render()) == resolve_error_message(_UNKNOWN)
+            assert not screen.query_one("#own-account-decision").display
+            _assert_masked(screen)
+
+
+class _ContractBreakingDoor(MemoryOwnAccountDoor):
+    """Answers every write with a result that breaks the operation's own contract."""
+
+    @override
+    async def __call__(self, request: LedgerOwnAccountRequest) -> LedgerOwnAccountResult:
+        if request.action == "list":
+            return await super().__call__(request)
+        self.requests.append(request)
+        return LedgerOwnAccountResult.model_validate({})
+
+
+@pytest.mark.asyncio
+async def test_an_own_account_write_that_fails_unexpectedly_does_not_stay_in_flight() -> None:
+    door = _ContractBreakingDoor()
+    screen = _screen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
+            await _press(pilot, screen, "own-account-new")
+            screen.query_one("#own-account-label", Input).value = "main"
+            screen.query_one("#own-account-iban", Input).value = SYNTHETIC_ES_IBAN
+            await _press(pilot, screen, "own-account-review")
+            staged = screen.staged
+            assert staged is not None
+            # The worker the confirm button starts, run here so its failure is observed rather than ending the app.
+            screen._busy = True
+            with pytest.raises(ValidationError):
+                await screen._submit(staged)
+            assert not screen.in_flight
+
+
 @pytest.mark.asyncio
 async def test_ledger_overview_opens_own_account_setup_when_its_door_is_injected() -> None:
     door = MemoryOwnAccountDoor()
@@ -280,11 +371,9 @@ async def test_ledger_overview_opens_own_account_setup_when_its_door_is_injected
         ),
     )
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(LedgerOverviewScreen(controller)).run_test(size=(120, 60)) as pilot:
-            await pilot.pause()
+        async with WorkspaceHostApp(LedgerOverviewScreen(controller)).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             pilot.app.screen.query_one("#ledger-own-accounts-open", Button).press()
-            await pilot.pause()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert isinstance(pilot.app.screen, LedgerOwnAccountsScreen)
             assert door.requests[0].action == "list"

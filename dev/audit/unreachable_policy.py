@@ -43,6 +43,10 @@ _HOOK_METHOD_PREFIXES: Final[tuple[str, ...]] = (
 )
 
 
+# ``http.server`` request handlers name a verb handler by the request method: ``do_GET``.
+_HTTP_VERB_METHOD_PREFIX: Final[str] = "do_"
+
+
 _ENUM_BASE_SUFFIXES: Final[tuple[str, ...]] = ("Enum", "Flag")
 
 

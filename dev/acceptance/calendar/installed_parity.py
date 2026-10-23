@@ -28,6 +28,7 @@ from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
 from cadrumo.core.hashing import sha256_file
+from cadrumo.entrypoints.tui.tests.settling import settle
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
     assert_installed_product_origin,
@@ -277,7 +278,7 @@ async def _open_declarations(pilot: Any) -> tuple[str, ...]:
     label = tr("tui.search.destination.declarations")
     await pilot.press("ctrl+p")
     for _ in range(180):
-        await pilot.pause()
+        await settle(pilot)
         try:
             search = pilot.app.screen.query_one(Input)
             options = pilot.app.screen.query_one(OptionList)
@@ -297,7 +298,7 @@ async def _open_declarations(pilot: Any) -> tuple[str, ...]:
     from textual.widgets import DataTable
 
     await wait_for_public_selector(pilot, "#declarations-list", polls=240)
-    await pilot.pause()
+    await settle(pilot)
     table = query_public_selector(pilot, "#declarations-list", DataTable)
     return tuple(str(row_key.value) for row_key in table.rows)
 
@@ -314,7 +315,7 @@ async def _open_calendar(pilot: Any) -> tuple[str, ...]:
     )
     await wait_for_public_selector(pilot, "#declarations-calendar-agenda", polls=240)
     query_public_selector(pilot, "#declarations-calendar-scope", Select).value = "all"
-    await pilot.pause()
+    await settle(pilot)
     return work_units
 
 
@@ -327,7 +328,7 @@ async def _read_visible_rows(pilot: Any) -> dict[str, dict[str, str]]:
     for row_key in list(table.rows):
         table.focus()
         table.move_cursor(row=table.get_row_index(row_key))
-        await pilot.pause()
+        await settle(pilot)
         rendered = str(query_public_selector(pilot, "#declarations-calendar-detail", Static).render())
         rows[str(row_key.value)] = {"rendered": rendered, **parse_tui_detail(rendered)}
     if not rows:
@@ -342,7 +343,7 @@ async def _create_work_from_calendar(pilot: Any, row_key: str) -> None:
     await select_public_data_table_row(pilot=pilot, table_selector="#declarations-calendar-agenda", row_key=row_key)
     await wait_for_public_selector(pilot, "#btn-confirm-accept", polls=180)
     await pilot.click("#btn-confirm-accept")
-    await pilot.app.workers.wait_for_complete()
+    await settle(pilot)
     notice = str(query_public_selector(pilot, "#declarations-calendar-notice", Static).render()).strip()
     if not notice.startswith("Created "):
         raise CalendarParityError("installed TUI calendar did not report the created work")
@@ -363,7 +364,7 @@ async def _wait_for_refreshed_workbench(pilot: Any, *, polls: int = 180) -> None
         else:
             if not updating.display:
                 return
-        await pilot.pause()
+        await settle(pilot)
     raise CalendarParityError("installed TUI did not finish refreshing the workbench after the calendar write")
 
 

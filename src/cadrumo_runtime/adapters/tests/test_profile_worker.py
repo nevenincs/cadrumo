@@ -37,6 +37,7 @@ from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.model_runs import ModelRunOutcome, ModelRunRefusalCode
@@ -51,7 +52,6 @@ from cadrumo_runtime.contracts.worker_authorization import (
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 
 from ..profile_worker import ProfileWorkerProcess
-from .process_support import fixture_arguments, fixture_environment
 from .profile_worker_support import PROFILE_INPUT, changed, lease, worker_profiles
 
 pytestmark = [

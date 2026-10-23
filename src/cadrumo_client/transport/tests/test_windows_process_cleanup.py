@@ -13,8 +13,8 @@ from types import ModuleType, SimpleNamespace
 import pytest
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
+from ...contracts.contracts import RefusalCode, RefusalError
 from .. import windows_process
 from ..windows_process import WindowsOwnedProcess, WindowsProcessScope, unreturned_windows_process_scope
 

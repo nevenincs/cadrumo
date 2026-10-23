@@ -29,6 +29,7 @@ from ..components.host import ScreenHostApp
 from ..modelo.workbench.factory import InstalledModeloWorkbench
 from ..modelo.workbench.screen import ModeloWorkbenchScreen
 from .modelo_workbench_session import real_workbench
+from .settling import settle_until
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -98,10 +99,7 @@ async def test_the_workbench_mounts_the_same_controls_in_every_language(workbenc
             screen = ModeloWorkbenchScreen(workbench, actions=workbench)
             app = ScreenHostApp(screen)
             async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
-                for _ in range(200):
-                    await pilot.pause()
-                    if screen.form is not None:
-                        break
+                await settle_until(pilot, lambda loaded=screen: loaded.form is not None, "the workbench form to load")
                 assert screen.form is not None
                 chains[language] = tuple(widget.id for widget in app.screen.focus_chain)
                 mounted[language] = tuple(

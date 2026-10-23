@@ -19,6 +19,7 @@ from .....tests.terminal_sizes import TERMINAL_WIDE
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..entries import LedgerEntriesScreen
 from ..overview import LedgerOverviewScreen
 from ..review import LedgerReviewScreen
@@ -113,7 +114,7 @@ async def test_screens_show_seven_destinations_have_one_scroll_owner_and_no_hori
     screen = screen_type(ledger_controller(ledger_projection()))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         navigation = screen.query_one("#ledger-navigation", DataTable)
         assert navigation.row_count == 7
         assert geometry_band(app, 80) == []
@@ -129,18 +130,18 @@ async def test_navigation_refusal_and_review_selection_preserve_semantic_identit
     screen = LedgerReviewScreen(ledger_controller(projection))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         navigation = screen.query_one("#ledger-navigation", DataTable)
         navigation.move_cursor(row=1)
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert screen.refusal is not None
         assert screen.refusal.target.area is LedgerWorkspaceArea.ENTRIES
         assert "ledger.locked" not in _all_copy(screen)
         review = screen.query_one("#ledger-review", DataTable)
         review.focus()
         await pilot.press("down", "enter")
-        await pilot.pause()
+        await settle(pilot)
         assert screen.requested_transaction_id == LEDGER_TX_B
         await pilot.press("escape")
         assert screen.back_requested
@@ -168,7 +169,7 @@ async def test_entry_rows_show_the_operator_their_own_facts_and_tables_are_each_
     # the right edge. Full disclosure is therefore asserted where every column
     # fits, and the sibling overflow gates own the narrow sizes.
     async with app.run_test(size=TERMINAL_WIDE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert tuple(widget.id for widget in screen.focus_chain) == ("ledger-navigation", "ledger-entries")
         copy = _all_copy(screen)
         for field in (
@@ -192,7 +193,7 @@ async def test_unmeasured_areas_never_render_a_numeric_zero_and_review_discloses
         review_screen = LedgerReviewScreen(ledger_controller(ledger_projection()))
         app = ScreenHostApp[None](review_screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             navigation = review_screen.query_one("#ledger-navigation", DataTable)
             import_row = tuple(str(cell) for cell in navigation.get_row("import"))
             evidence_row = tuple(str(cell) for cell in navigation.get_row("evidence"))
@@ -208,7 +209,7 @@ async def test_unmeasured_areas_never_render_a_numeric_zero_and_review_discloses
         overview_screen = LedgerOverviewScreen(ledger_controller(ledger_projection()))
         overview_app = ScreenHostApp[None](overview_screen)
         async with overview_app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             quality = overview_screen.query_one("#ledger-quality", DataTable)
             evidence_row = tuple(str(cell) for cell in quality.get_row("evidence"))
             assert evidence_row == ("Supporting documents", "Not measured", "Not measured")
@@ -230,12 +231,12 @@ async def test_transaction_focus_restores_by_identity_after_row_reordering() -> 
     screen = LedgerEntriesScreen(ledger_controller(reordered, context))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#ledger-entries", DataTable)
         assert app.focused is table
         assert table.ordered_rows[table.cursor_row].key.value == LEDGER_TX_A
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert screen.selected_transaction_id == LEDGER_TX_A
 
 
@@ -248,7 +249,7 @@ async def test_every_locale_uses_catalogue_calls_without_raw_internal_vocabulary
         overview = LedgerOverviewScreen(ledger_controller(ledger_projection()))
         overview_app = ScreenHostApp[None](overview)
         async with overview_app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             rendered = _all_copy(overview)
             assert _LOCALE_EXPECTED[locale][0] in rendered
             assert "tui.ledger." not in rendered
@@ -261,7 +262,7 @@ async def test_every_locale_uses_catalogue_calls_without_raw_internal_vocabulary
         review = LedgerReviewScreen(ledger_controller(ledger_projection()))
         review_app = ScreenHostApp[None](review)
         async with review_app.run_test(size=(80, 24)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             rendered = _all_copy(review)
             assert _LOCALE_EXPECTED[locale][1] in rendered
             assert _LOCALE_EXPECTED[locale][2] in rendered

@@ -16,7 +16,7 @@ from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.hashing import reject_duplicate_json_members
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES
-from cadrumo_runtime.adapters.windows_process import (
+from cadrumo_client.transport.windows_process import (
     WindowsOwnedProcess,
     WindowsProcessScope,
     unreturned_windows_process_scope,

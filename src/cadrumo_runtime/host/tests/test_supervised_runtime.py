@@ -23,6 +23,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import TypeAdapter
 
+from cadrumo.tests.process_support import fixture_arguments, launch_fixture, native_python
 from cadrumo_client.contracts.contracts import ClientHello, ExitReason
 from cadrumo_client.contracts.profile_access import SessionRequest
 from cadrumo_client.contracts.protocol_line import ProtocolLineRefusal
@@ -36,7 +37,6 @@ from ...adapters.boot_record import (
     RuntimeBootRecordUnavailable,
     read_runtime_boot_record,
 )
-from ...adapters.tests.process_support import fixture_arguments, launch_fixture, native_python
 from ..supervised_protocol import (
     MAX_LINE_BYTES,
     RuntimeAnnouncement,

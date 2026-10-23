@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from cadrumo.core.hashing import sha256_file
+from cadrumo.entrypoints.tui.tests.settling import settle
 from dev.acceptance.income_tax.installed_tui_child import (
     SETUP_WALK_SURFACE,
     InstalledTuiChildError,
@@ -282,25 +283,25 @@ async def _import_through_tui(pilot: Any, entry: Mapping[str, Any]) -> None:
     await wait_for_public_selector(pilot, "#ledger-import-path", polls=180)
     if entry["record"] == "transaction":
         query_public_selector(pilot, "#ledger-import-kind", Select).value = "bank_statement"
-        await pilot.pause()
+        await settle(pilot)
         query_public_selector(pilot, "#ledger-import-provider", Select).value = entry["provider"]
     else:
         query_public_selector(pilot, "#ledger-import-kind", Select).value = _TUI_IMPORT_KINDS[entry["invoice_kind"]]
-        await pilot.pause()
+        await settle(pilot)
         query_public_selector(pilot, "#ledger-import-country", Input).value = "ES"
     query_public_selector(pilot, "#ledger-import-path", Input).value = entry["path"]
     await _activate_button(pilot, "#ledger-import-preview-button")
-    await pilot.app.workers.wait_for_complete()
+    await settle(pilot)
     await wait_for_public_selector(pilot, "#ledger-import-confirm", polls=180)
     refusal = str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip()
     if refusal or query_public_selector(pilot, "#ledger-import-confirm", Button).disabled:
         raise LedgerInstalledTuiError(f"{case_id} TUI import did not reach public confirmation")
     await _activate_button(pilot, "#ledger-import-confirm")
-    await pilot.app.workers.wait_for_complete()
+    await settle(pilot)
     if str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip():
         raise LedgerInstalledTuiError(f"{case_id} TUI import visibly refused persistence")
     await _activate_button(pilot, "#ledger-import-again")
-    await pilot.app.workers.wait_for_complete()
+    await settle(pilot)
     await wait_for_public_selector(pilot, "#ledger-import-preview-button", polls=180)
 
 
@@ -342,7 +343,7 @@ async def _opened_record_detail(pilot: Any, entry: Mapping[str, Any], *, stage: 
             return rendered
         if loop.time() >= deadline:
             raise LedgerInstalledTuiError(f"{stage} never showed the requested record")
-        await pilot.pause(0.2)
+        await settle(pilot)
 
 
 async def _wait_with_deadline(
@@ -363,7 +364,7 @@ async def _wait_with_deadline(
         if loop.time() >= deadline:
             # The shared helper raises with the sanitized public-surface diagnostic.
             return await wait_for_any_public_selector(pilot, selectors, polls=1)
-        await pilot.pause(0.5)
+        await settle(pilot)
 
 
 async def _admit_installed_session(pilot: Any, *, passphrase: str) -> bool:

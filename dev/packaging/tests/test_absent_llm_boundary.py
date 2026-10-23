@@ -27,8 +27,8 @@ import pytest
 from cadrumo.core.toml import load_toml
 from dev._paths import REPO_ROOT
 
-from .._distribution_names import normalise_distribution_name
 from ..dependency_contract import optional_extra_registry
+from ..distribution_names import normalise_distribution_name
 from ..smoke_absent_llm import _EXPECTED_EXTRA, _INFERENCE_SURFACES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

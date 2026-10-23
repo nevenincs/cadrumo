@@ -40,8 +40,8 @@ from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import is_test_source
 from dev.product_environment import clean_product_env
 
-from ._distribution_names import normalise_distribution_name
 from .dependency_contract import assert_wheel_metadata_matches_pyproject, optional_extra_registry, wheel_metadata
+from .distribution_names import normalise_distribution_name
 from .lane_verification_core import (
     assert_cadrumo_version_output,
     create_pip_venv,

@@ -48,6 +48,7 @@ from .....tests.profile_persistence.verification_repository_support import (
 from ....components.host import ScreenHostApp
 from ....components.theme import install_cadrumo_themes
 from ....tests.modelo_workbench_session import application_workbench
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry
 from ..factory import InstalledModeloWorkbench
@@ -184,10 +185,9 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
         app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:
             install_cadrumo_themes(app, appearance=appearance)
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             await pilot.press("]")
-            await pilot.pause()
+            await settle(pilot)
             listing = screen.query_one(CasillaList)
             records = [item for item in listing.items if isinstance(item, CasillaListRecords)]
             assert len(records) == 1 and len(records[0].rows) == 3
@@ -215,10 +215,10 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
             assert not listing.show_horizontal_scrollbar
             assert app.focused is listing
             await pilot.press("home", "down")
-            await pilot.pause()
+            await settle(pilot)
             assert listing.scroll_y == min(1, listing.max_scroll_y)
             await pilot.press("up")
-            await pilot.pause()
+            await settle(pilot)
             assert listing.scroll_y == 0
             drawn: dict[int, str] = {}
             for _ in range(listing.virtual_size.height + 1):
@@ -228,7 +228,7 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
                     break
                 before_scroll = listing.scroll_y
                 await pilot.press("pagedown")
-                await pilot.pause()
+                await settle(pilot)
                 assert listing.scroll_y > before_scroll
             assert listing.scroll_y == listing.max_scroll_y
             rendered_rows = "\n".join(line for _, line in sorted(drawn.items()))
@@ -242,18 +242,18 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
                 assert " ".join(shown.split()) in " ".join(rendered_rows.split())
             end_scroll = listing.scroll_y
             await pilot.press("pageup")
-            await pilot.pause()
+            await settle(pilot)
             assert listing.scroll_y == max(end_scroll - max(listing.scrollable_content_region.height - 2, 1), 0)
             await pilot.press("home")
-            await pilot.pause()
+            await settle(pilot)
             assert listing.scroll_y == 0
             assert listing.focus_address(("casilla", "op.base-imponible"))
             assert listing.highlighted is None
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             assert app.screen is screen
             await pilot.press("end")
-            await pilot.pause()
+            await settle(pilot)
             assert listing.scroll_y == listing.max_scroll_y
             assert screen.form is not None and screen.form.calculation_revision_id == calculated.calculation_revision_id
 
@@ -296,15 +296,14 @@ async def test_installed_known_empty_records_keep_source_guidance_and_column_fin
         app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:
             install_cadrumo_themes(app, appearance=appearance)
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await settle(pilot)
             assert screen.form is not None
             pages = workbench_pages(screen.form)
             target = page_of(pages, key)
             assert target is not None
             for _ in range((target - screen._page_index) % len(pages)):
                 await pilot.press("]")
-            await pilot.pause()
+            await settle(pilot)
             listing = screen.query_one(CasillaList)
             records = [item for item in listing.items if isinstance(item, CasillaListRecords)]
             assert len(records) == 1 and not records[0].rows and column in records[0].column_casilla_ids
@@ -333,14 +332,14 @@ async def test_installed_known_empty_records_keep_source_guidance_and_column_fin
             assert not listing.show_horizontal_scrollbar
             assert listing.region.right <= size[0] and listing.region.bottom <= size[1]
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             assert app.screen is screen
 
             # A real persisted check's column finding must return here from a different page.
             lines = issue_lines(screen.form)
             line_index = next(index for index, line in enumerate(lines) if line.in_records and line.key == key)
             await pilot.press("]", "i")
-            await pilot.pause()
+            await settle(pilot)
             assert isinstance(app.screen, WorkbenchIssuesScreen)
             options = app.screen.query_one(OptionList)
             option_index = options.get_option_index(f"issue-{line_index}")
@@ -351,7 +350,7 @@ async def test_installed_known_empty_records_keep_source_guidance_and_column_fin
                 await pilot.press("down")
             assert options.highlighted == option_index
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             assert app.screen is screen and app.focused is listing
             assert screen._page_index == target and listing.highlighted is None
             assert listing.focus_address(key)

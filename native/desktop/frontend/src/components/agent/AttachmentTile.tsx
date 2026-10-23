@@ -106,8 +106,8 @@ export function AttachmentTile({
       data-state={state}
       title={refused ? `${name} · ${reason}` : `${name} · ${size}`}
       className={cn(
-        "group/tile relative flex aspect-square min-w-0 flex-col overflow-hidden rounded-lg border bg-card",
-        refused && "border-destructive bg-destructive/5",
+        "group/tile relative flex aspect-square min-w-0 flex-col overflow-hidden rounded-lg bg-accent",
+        refused && "bg-destructive/5 ring-1 ring-destructive ring-inset",
       )}
     >
       {preview ? (

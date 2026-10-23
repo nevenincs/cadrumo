@@ -17,6 +17,7 @@ from textual.app import App, ComposeResult
 from textual.color import Color
 from textual.widgets import DataTable, Static
 
+from ...tests.settling import settle
 from ..quiet_app import QuietApp
 from ..terminal_controls import TerminalControlFilter
 
@@ -48,7 +49,7 @@ class _PlainHarness(App[None]):
 
 async def _terminal_sequence(app: App[None]) -> str:
     async with app.run_test(size=(80, 10)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         update = app.screen._compositor.render_update(full=True)
         assert isinstance(update, CompositorUpdate)
         return update.render_segments(app.console)

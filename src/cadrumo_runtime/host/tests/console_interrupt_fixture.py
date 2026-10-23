@@ -26,11 +26,10 @@ from importlib.metadata import version
 from pathlib import Path
 from typing import IO
 
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
 from cadrumo_client.contracts.contracts import ClientHello, RefusalError
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.windows import WindowsEndpoint
-
-from ...adapters.tests.process_support import fixture_arguments, fixture_environment, native_python
 
 _STARTUP_SECONDS = 90
 _UNSEEN_SECONDS = 5

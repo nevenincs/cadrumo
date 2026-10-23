@@ -45,9 +45,9 @@ from .....application.operations.frontend_projection import OperationPublicProje
 from .....application.operations.models import OperationIdentity
 from .....core.config import override_settings
 from .....core.storage_taxonomy import StorageCategory
-from .....tests.async_condition import until
 from ...components.host import ScreenHostApp
 from ...operations.controller_port import OperationControllerPort
+from ...tests.settling import settle, settle_until
 from ..screen import SetupScreen, setup_review_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -109,7 +109,9 @@ class _Door:
 
 
 async def _settled(pilot: Pilot[object], screen: SetupScreen) -> None:
-    await until(pilot, lambda: not screen.query_one("#btn-setup-check", Button).disabled)
+    await settle_until(
+        pilot, lambda: not screen.query_one("#btn-setup-check", Button).disabled, "the setup check to be offered again"
+    )
 
 
 @pytest.mark.asyncio
@@ -148,7 +150,7 @@ async def test_the_rows_are_software_only_and_the_local_ai_is_one_row() -> None:
             assert names == ["Browser for the tax agency website", "Local AI"]
             assert all("Google" not in name for name in names)
             screen.act_on("google")
-            await pilot.pause()
+            await settle(pilot)
             assert [name for name, _ in door.calls] == ["status"]
 
 
@@ -160,7 +162,7 @@ async def test_an_absent_item_row_starts_setup_for_that_item_only() -> None:
         async with ScreenHostApp(screen).run_test(size=_SIZE) as pilot:
             await _settled(pilot, screen)
             screen.act_on("browser")
-            await pilot.pause()
+            await settle(pilot)
             await _settled(pilot, screen)
 
             assert ("setup", ("browser",)) in door.calls

@@ -22,6 +22,7 @@ from ......application.modelo.work_form_models import (
 )
 from ......core.config import override_settings
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..bulk_confirm import BulkConfirmScreen
 from ..casilla_list import CasillaList
 from ..screen import ModeloWorkbenchScreen
@@ -34,19 +35,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _NONE_IN_SECTION = "There are no assumed values to confirm in this section."
 
 
-async def _settle(pilot: Pilot[None], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
-
-
 def _offered(app: ScreenHostApp[None]) -> list[str | None] | None:
     dialog = app.screen
     return [field.box for field in dialog.fields] if isinstance(dialog, BulkConfirmScreen) else None
 
 
 async def _go_to(pilot: Pilot[None], box: str) -> None:
-    await pilot.press("g", *box, "enter")
-    await _settle(pilot)
+    await pilot.press("g")
+    await settle(pilot)
+    await pilot.press(*box, "enter")
+    await settle(pilot)
 
 
 @pytest.mark.asyncio
@@ -56,10 +54,10 @@ async def test_confirming_offers_only_the_section_under_the_cursor(key: str) -> 
         screen = ModeloWorkbenchScreen(FakeReader(form=sectioned_form()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             landed = screen.query_one(CasillaList).highlighted
             await pilot.press(key)
-            await _settle(pilot)
+            await settle(pilot)
             offered = _offered(app)
             status = (
                 str(app.screen.query_one("#bulk-status", Static).render())
@@ -79,11 +77,11 @@ async def test_b_in_a_section_with_nothing_assumed_says_so_and_offers_nothing() 
         screen = ModeloWorkbenchScreen(FakeReader(form=sectioned_form()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await _go_to(pilot, "08")
             cursor = screen.query_one(CasillaList).highlighted
             await pilot.press("b")
-            await _settle(pilot)
+            await settle(pilot)
             offered = _offered(app)
             notice = str(screen.query_one("#wb-notice", Static).render())
             app.exit(None)
@@ -99,16 +97,16 @@ async def test_f8_goes_on_to_the_next_part_with_something_assumed_and_offers_onl
         screen = ModeloWorkbenchScreen(FakeReader(form=sectioned_form()), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await _go_to(pilot, "08")
             await pilot.press("f8")
-            await _settle(pilot)
+            await settle(pilot)
             first = _offered(app)
             await pilot.press("escape")
-            await _settle(pilot)
+            await settle(pilot)
             await _go_to(pilot, "80")
             await pilot.press("f8")
-            await _settle(pilot)
+            await settle(pilot)
             second = _offered(app)
             app.exit(None)
 
@@ -161,10 +159,10 @@ async def test_with_nothing_here_confirmable_from_a_list_the_first_assumed_box_o
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             landed = screen.query_one(CasillaList).highlighted
             await pilot.press(key)
-            await _settle(pilot, 8)
+            await settle(pilot)
             on_top = app.screen
             opened = open_panel(on_top)
             title = "" if opened is None else str(opened.query_one("#editor-title", Static).render())

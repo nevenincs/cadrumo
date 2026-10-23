@@ -64,7 +64,7 @@ def _precondition_action(
     return resolve_cli_precondition_action(verdict)
 
 
-def _dependency_payload(status: DependencyStatus) -> CheckDependencyPayload:
+def dependency_payload(status: DependencyStatus) -> CheckDependencyPayload:
     """Project one canonical dependency row through the existing CLI action resolver."""
     return CheckDependencyPayload(
         service=status.service,
@@ -85,7 +85,7 @@ def _preflight_payload(status: PreflightCheck) -> CheckPreflightPayload:
     )
 
 
-def _dependency_text_lines(payload: CheckDependencyPayload) -> tuple[str, ...]:
+def dependency_text_lines(payload: CheckDependencyPayload) -> tuple[str, ...]:
     """Render one dependency DTO from its facts and resolved outcome."""
     mark = tr("cli.config.check.available" if payload.available else "cli.config.check.missing")
     lines = [f"{tr('cli.config.check.dependency_label')}\t{payload.service}\t{mark}"]
@@ -115,7 +115,7 @@ def _check_text_lines(
         )
         lines.append(f"{capability_label}\t{cap.capability}\t{state}\t{cap.source}")
     for dependency in dependencies:
-        lines.extend(_dependency_text_lines(dependency))
+        lines.extend(dependency_text_lines(dependency))
     for row in preflight:
         lines.append(f"{preflight_label}\t{row.check}\t{row.severity}")
         if row.precondition_action is not None:
@@ -171,7 +171,7 @@ def _present_report(
         )
         for row in report.capabilities
     ]
-    dependencies = tuple(_dependency_payload(row) for row in report.dependencies)
+    dependencies = tuple(dependency_payload(row) for row in report.dependencies)
     setup = dependency_preflight_checks(setup_rows or ())
     preflight = [_preflight_payload(row) for row in (*report.preflight, *setup)]
     issues = list(report.issues)
@@ -206,4 +206,4 @@ def config_check(ctx: typer.Context) -> None:
         raise typer.Exit(code=2)
 
 
-__all__ = ["config_check", "read_setup_rows"]
+__all__ = ["config_check", "dependency_payload", "dependency_text_lines", "read_setup_rows"]

@@ -530,6 +530,46 @@ def test_timing_observations_are_bounded_and_keep_only_scalar_diagnostic_context
     assert len(context) <= 32
 
 
+def test_event_fields_reach_the_written_line_only_as_scrubbed_allowed_scalars() -> None:
+    # Isolated from the root handlers, which carry their own scrubbing filter:
+    # this pins the project logger's filter, the layer that also covers records
+    # written before any host configured logging.
+    iban = "ES9121000418450200051332"
+    logger = get_logger("cadrumo.tests.event_fields")
+    stream = StringIO()
+    handler = logging.StreamHandler(stream)
+    handler.setFormatter(DiagnosticFormatter(LOG_FILE_FORMAT))
+    logger.addHandler(handler)
+    previous_level, previous_propagate = logger.level, logger.propagate
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False
+    try:
+        diagnostic_event(
+            logger,
+            "synthetic_dispatch_slow",
+            fields={
+                "budget_seconds": 1.5,
+                "password": _PRIVATE_INPUT_CANARY,
+                "reason": f"account {iban}",
+                "outcome": "refused",
+            },
+            level=logging.WARNING,
+        )
+    finally:
+        logger.removeHandler(handler)
+        logger.setLevel(previous_level)
+        logger.propagate = previous_propagate
+    line = stream.getvalue()
+    context: object = json.loads(line.split(" | ", 1)[1])
+    assert isinstance(context, dict)
+
+    assert context["budget_seconds"] == 1.5
+    assert str(context["reason"]).startswith("account sha256:")
+    assert "password" not in context
+    assert _PRIVATE_INPUT_CANARY not in line
+    assert iban not in line
+
+
 @pytest.mark.parametrize("failure_site", ("clock", "log"))
 def test_ordinary_timing_failure_never_changes_success_or_the_business_primary(
     monkeypatch: pytest.MonkeyPatch, failure_site: str

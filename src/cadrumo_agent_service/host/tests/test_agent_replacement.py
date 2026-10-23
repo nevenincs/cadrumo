@@ -19,8 +19,8 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
 from cadrumo_client.transport.service_client import InstalledServiceClient
-from cadrumo_runtime.adapters.tests.process_support import fixture_arguments, fixture_environment, native_python
 
 from ...adapters.agent_process import WindowsAgentProcessLauncher
 from ...adapters.agent_programs import PACKAGE_AGENT_VARIABLE

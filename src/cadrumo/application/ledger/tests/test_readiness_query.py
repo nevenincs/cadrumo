@@ -37,8 +37,9 @@ from ....domain.transactions.models import (
 )
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
+from ..preflight import preflight_ledger_tax_readiness
 from ..protocols import TransactionCatalogueCoCommitWriterProtocol
-from ..readiness_query import LedgerReadinessIssueV1, read_ledger_readiness
+from ..readiness_query import LedgerReadinessIssueV1, ledger_readiness_issues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -193,6 +194,23 @@ def _empty_usage_ratio_profile(*, bucket_id: str, operation: PinnedAuthorityOper
     return UsageRatioProfile()
 
 
+def _readiness(
+    repository: TransactionCatalogueCoCommitWriterProtocol,
+    operation: PinnedAuthorityOperation,
+) -> tuple[LedgerReadinessIssueV1, ...]:
+    """Run the preflight over the repository's rows and join its issues to those rows."""
+    catalogue = repository.load()
+    report = preflight_ledger_tax_readiness(
+        bucket_id=_BUCKET,
+        period=_PERIOD,
+        transaction_repository=repository,
+        usage_ratio_profile_loader=_empty_usage_ratio_profile,
+        operation=operation,
+        catalogue=catalogue,
+    )
+    return ledger_readiness_issues(report, catalogue)
+
+
 def test_a_deductible_row_missing_its_tax_facts_reports_them_as_absent(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -203,13 +221,7 @@ def test_a_deductible_row_missing_its_tax_facts_reports_them_as_absent(
     as unread.
     """
     with _stored(_transaction(provider_id="a")) as repository:
-        issues = read_ledger_readiness(
-            bucket_id=_BUCKET,
-            period=_PERIOD,
-            transaction_repository=repository,
-            usage_ratio_profile_loader=_empty_usage_ratio_profile,
-            operation=authority_operation,
-        )
+        issues = _readiness(repository, authority_operation)
 
     assert issues, "a deductible row with no tax facts must raise readiness issues"
     first = issues[0]
@@ -226,13 +238,7 @@ def test_a_deductible_row_missing_its_tax_facts_reports_them_as_absent(
 def test_every_issue_names_a_reason_and_a_detail(authority_operation: PinnedAuthorityOperation) -> None:
     """A reason without a detail cannot be acted on."""
     with _stored(_transaction(provider_id="a")) as repository:
-        issues = read_ledger_readiness(
-            bucket_id=_BUCKET,
-            period=_PERIOD,
-            transaction_repository=repository,
-            usage_ratio_profile_loader=_empty_usage_ratio_profile,
-            operation=authority_operation,
-        )
+        issues = _readiness(repository, authority_operation)
 
     assert all(issue.reason and issue.detail for issue in issues)
 
@@ -240,15 +246,32 @@ def test_every_issue_names_a_reason_and_a_detail(authority_operation: PinnedAuth
 def test_a_ready_ledger_reports_no_issues(authority_operation: PinnedAuthorityOperation) -> None:
     """A personal row is not deductible, so it raises nothing to fix."""
     with _stored(_transaction(provider_id="a", classification=BusinessClassification.PERSONAL)) as repository:
-        issues = read_ledger_readiness(
+        issues = _readiness(repository, authority_operation)
+
+    assert issues == ()
+
+
+def test_an_issue_whose_row_left_the_catalogue_is_joined_with_its_facts_unset(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """A report joined against rows that no longer hold its transaction keeps the issue."""
+    with _stored(_transaction(provider_id="a")) as repository:
+        catalogue = repository.load()
+        report = preflight_ledger_tax_readiness(
             bucket_id=_BUCKET,
             period=_PERIOD,
             transaction_repository=repository,
             usage_ratio_profile_loader=_empty_usage_ratio_profile,
             operation=authority_operation,
+            catalogue=catalogue,
         )
 
-    assert issues == ()
+    assert report.issues
+    issues = ledger_readiness_issues(report, TransactionCatalogue.from_transactions(()))
+
+    assert [issue.transaction_id for issue in issues] == [issue.transaction_id for issue in report.issues]
+    assert all(not issue.transaction_present for issue in issues)
+    assert all(issue.business_classification is None and issue.category_id is None for issue in issues)
 
 
 def test_an_issue_whose_row_is_absent_survives_with_its_facts_unset() -> None:

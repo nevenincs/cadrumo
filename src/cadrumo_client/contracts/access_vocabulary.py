@@ -97,14 +97,6 @@ class AccessScope(BaseModel):
     allow_changes_records: bool = True
     allow_network: bool = True
 
-    def permits(self, operation: str) -> bool:
-        """Whether this exact operation is explicitly permitted."""
-        return operation in self.operations
-
-    def discloses(self, permission: DisclosurePermission) -> bool:
-        """Whether this scope consents to one explicit permission, listed or by its category."""
-        return permission in self.disclosures or any(item.covers(permission) for item in self.disclosure_categories)
-
 
 DISCLOSURE_PAGE_ENTRIES = 100
 """The most disclosure entries one page read releases; a frame holds them with room to spare."""

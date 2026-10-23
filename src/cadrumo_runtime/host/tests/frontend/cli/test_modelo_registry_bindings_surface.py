@@ -555,14 +555,17 @@ def test_bindings_resolve_rejects_malformed_override_syntax() -> None:
 def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
     """Declarative bindings leaves admit no parallel imperative Typer registration."""
 
-    from cadrumo.entrypoints.cli._modelo_nonwork_bindings_command_specs import MODELO_NONWORK_BINDINGS_COMMAND_SPECS
+    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
     from cadrumo.entrypoints.cli.modelo_discovery_commands import bindings_list, bindings_resolve
     from cadrumo.tests.inventory import REPO_ROOT
 
     cli_root = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
     expected_handlers = {"list": bindings_list, "resolve": bindings_resolve}
-    assert {spec.token for spec in MODELO_NONWORK_BINDINGS_COMMAND_SPECS} == set(expected_handlers)
-    for spec in MODELO_NONWORK_BINDINGS_COMMAND_SPECS:
+    bindings_leaves = COMMAND_GRAPH.children(
+        COMMAND_GRAPH.resolve_path((COMMAND_GRAPH.root().token, "app", "modelo", "bindings")).key
+    )
+    assert {spec.token for spec in bindings_leaves} == set(expected_handlers)
+    for spec in bindings_leaves:
         assert spec.handler is not None and spec.handler.target is not None
         handler = expected_handlers[spec.token]
         assert spec.handler.target.identity == f"{handler.__module__}:{handler.__qualname__}"

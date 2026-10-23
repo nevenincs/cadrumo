@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -31,6 +30,7 @@ from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
 from cadrumo.entrypoints.tui.secret.passphrase import PassphraseScreen
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello, RefusalError
 from cadrumo_client.transport.framing import VerifiedConnection
@@ -128,12 +128,15 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
                 screen = pilot.app.screen
                 assert isinstance(screen, RuntimeLoginScreen)
                 submit = screen.query_one("#runtime-login-submit", Button)
-                async with asyncio.timeout(90):
-                    while (screen._worker is not None and not screen._worker.is_finished) or submit.disabled:
-                        await pilot.pause(0.05)
+                await settle_until(
+                    pilot,
+                    lambda: (screen._worker is None or screen._worker.is_finished) and not submit.disabled,
+                    "the sign-in worker to finish and the submit control to enable",
+                    workers=False,
+                )
                 method = screen.query_one("#runtime-login-method", Select)
                 method.value = RuntimeLoginMethod.PASSWORD
-                await pilot.pause()
+                await settle(pilot, workers=False)
                 credential = screen.query_one("#runtime-login-credential", Input)
                 assert credential.password
                 credential.value = PROFILE_INPUT if not stages else _REPLACEMENT
@@ -144,19 +147,21 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
                 return
 
             root_app = _require_runtime_app(pilot.app)
-            async with asyncio.timeout(90):
-                while root_app.account_session is None:
-                    await pilot.pause(0.05)
+            await settle_until(
+                pilot,
+                lambda: root_app.account_session is not None,
+                "the account session to be published",
+                workers=False,
+            )
             assert root_app.account_session.profile_label == "Enrollment tests"
-            async with asyncio.timeout(90):
-                while True:
-                    current_screen = root_app.screen
-                    if not isinstance(current_screen, ProfileManagerScreen):
-                        await pilot.pause(0.05)
-                        continue
-                    if current_screen.query("#manager-search"):
-                        break
-                    await pilot.pause(0.05)
+            await settle_until(
+                pilot,
+                lambda: (
+                    isinstance(root_app.screen, ProfileManagerScreen) and bool(root_app.screen.query("#manager-search"))
+                ),
+                "the profile manager to show its search control",
+                workers=False,
+            )
             if "password-changed" in stages:
                 stages.append("fresh-root")
                 root_app.exit()
@@ -164,10 +169,12 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
 
             assert stages == ["login-original"]
             root_app.run_account_action(AccountActionV1.PASSWORD)
-            async with asyncio.timeout(90):
-                while not isinstance(root_app.screen, PassphraseScreen):
-                    await pilot.pause(0.05)
-            await pilot.pause()
+            await settle_until(
+                pilot,
+                lambda: isinstance(root_app.screen, PassphraseScreen),
+                "the passphrase screen to open",
+                workers=False,
+            )
             screen = root_app.screen
             assert isinstance(screen, PassphraseScreen)
             fields = tuple(screen.query(Input))
@@ -178,9 +185,12 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
             screen.action_change()
             assert all(field.value == "" for field in fields)
             root_app._watch_account_session()
-            async with asyncio.timeout(90):
-                while root_app.return_value is None:
-                    await pilot.pause(0.05)
+            await settle_until(
+                pilot,
+                lambda: root_app.return_value is not None,
+                "the app to return the recompose request",
+                workers=False,
+            )
             assert root_app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED)
             stages.append("password-changed")
 

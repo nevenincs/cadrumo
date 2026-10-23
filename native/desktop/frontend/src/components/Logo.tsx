@@ -1,44 +1,46 @@
 import { identity } from "virtual:desktop-content";
 import { cn } from "@/components/ui/cn";
-import colorMark from "../../../../../docs/_static/cadrumo-icon.svg";
-import monoMark from "../../../../../docs/_static/cadrumo-favicon.svg";
+import mark from "../../../../../docs/_static/cadrumo-icon.svg";
 
 const SIZES = {
-  sm: { mark: "size-control-xs", name: "text-base" },
-  md: { mark: "size-control-lg", name: "text-lg" },
+  sm: { mark: "size-mark-sm", name: "text-base", gap: "gap-2" },
+  md: { mark: "size-mark-md", name: "text-md", gap: "gap-3" },
 } as const;
 
-const MARKS = { color: colorMark, mono: monoMark } as const;
-
 /**
- * The application's mark and name. The mark is the documentation's own
- * artwork and the name is the product identity the build was configured with,
- * so neither is drawn or spelled a second time here. Where the brand is
- * secondary to the surface around it, the mono mark keeps it quiet.
+ * The application's lockup: its mark and its name. The mark is the
+ * documentation's own artwork and the name is the product identity the build
+ * was configured with, so neither is drawn or spelled a second time here.
+ *
+ * The mark is always the coloured tile. It is the one place colour belongs
+ * to the brand, and at the size of a title bar the tile reads where a muted
+ * copy sinks into the chrome. The name is set in the text face, in capitals,
+ * semibold and tracked, as the documentation's wordmark is set in capitals.
+ * The documentation's display serif is not used here: it is a display cut,
+ * and at the sizes a window has for a name its hairlines fall below a device
+ * pixel and the name goes faint.
  */
 export function Logo({
   size = "md",
-  tone = "color",
   className,
 }: {
   size?: keyof typeof SIZES;
-  tone?: keyof typeof MARKS;
   className?: string;
 }) {
   return (
     <span
       data-slot="logo"
-      className={cn("inline-flex items-center gap-2.5", className)}
+      className={cn("inline-flex items-center", SIZES[size].gap, className)}
     >
       <img
-        src={MARKS[tone]}
+        src={mark}
         alt=""
         draggable={false}
         className={cn("shrink-0 select-none", SIZES[size].mark)}
       />
       <span
         className={cn(
-          "font-serif leading-none tracking-wide text-foreground",
+          "font-sans leading-none font-semibold tracking-brand text-foreground uppercase",
           SIZES[size].name,
         )}
       >

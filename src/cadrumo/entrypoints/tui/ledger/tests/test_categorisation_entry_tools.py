@@ -8,15 +8,16 @@ from textual.widgets import Button
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....domain.transactions.enums import BusinessClassification
+from ...tests.settling import settle
 from ..categorisation_allocate import LedgerAllocateScreen
 from ..categorisation_iva import LedgerIvaDeriveScreen
 from ..categorisation_participation import LedgerParticipationScreen
 from ..categorisation_split import LedgerSplitScreen
 from .categorisation_entry_fixtures import synthetic_participation
 from .categorisation_fixtures import CATEGORISATION_REFUSAL_KEY
-from .categorisation_memory_doors import LEDGER_TX_A, MemoryCategorisationProfile, categorisation_controller
-from .categorisation_pilot import keys, press, review_and_confirm, settle, text, type_into
-from .test_ledger_selection_journey import _WorkspaceHostApp
+from .categorisation_memory_doors import MemoryCategorisationProfile, categorisation_controller
+from .categorisation_pilot import keys, press, review_and_confirm, text, type_into
+from .workspace_fixtures import LEDGER_TX_A, WorkspaceHostApp
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -28,7 +29,7 @@ async def test_iva_derivation_reviews_the_category_then_shows_what_it_derived() 
     door = doors.operator_iva
     screen = LedgerIvaDeriveScreen(categorisation_controller(), door=doors.operator_iva)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             type_into(screen, "#categorisation-iva-category", "GENERAL")
             await press(pilot, screen, "categorisation-iva-review")
@@ -56,7 +57,7 @@ async def test_iva_derivation_says_the_operations_refusal_and_writes_nothing() -
     doors = profile.doors()
     screen = LedgerIvaDeriveScreen(categorisation_controller(), door=doors.operator_iva)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             await press(pilot, screen, "categorisation-iva-review")
             assert text(screen, "#ledger-refusal") == tr("tui.ledger.categorisation.iva.category_required")
@@ -81,7 +82,7 @@ async def test_allocation_writes_the_reviewed_share_and_refuses_one_outside_the_
     door = doors.allocate
     screen = LedgerAllocateScreen(categorisation_controller(), door=doors.allocate)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             type_into(screen, "#categorisation-allocate-pct", "1.5")
             await press(pilot, screen, "categorisation-allocate-review")
@@ -111,7 +112,7 @@ async def test_a_split_whose_children_do_not_add_up_is_refused_before_anything_i
     door = doors.split
     screen = LedgerSplitScreen(categorisation_controller(), split_door=doors.split, review_door=doors.split_review)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             for amount, description in (("1000", "Ordenador"), ("200", "Monitor")):
                 type_into(screen, "#categorisation-split-amount", amount)
@@ -145,7 +146,7 @@ async def test_a_split_needs_two_children_and_positive_amounts() -> None:
     doors = MemoryCategorisationProfile().doors()
     screen = LedgerSplitScreen(categorisation_controller(), split_door=doors.split, review_door=doors.split_review)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             type_into(screen, "#categorisation-split-amount", "-5")
             type_into(screen, "#categorisation-split-description", "Negativo")
@@ -169,7 +170,7 @@ async def test_participation_lists_declarations_and_a_cancelled_rebuild_writes_n
         categorisation_controller(), read_door=doors.participation, rebuild_door=doors.participation_rebuild
     )
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             assert keys(screen, "#categorisation-participations") == [f"{1:064x}", f"{2:064x}"]
             await press(pilot, screen, "categorisation-participation-rebuild")
@@ -201,7 +202,7 @@ async def test_an_entry_in_no_declaration_and_a_refused_read_are_said() -> None:
         categorisation_controller(), read_door=doors.participation, rebuild_door=doors.participation_rebuild
     )
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             assert keys(screen, "#categorisation-participations") == []
             assert text(screen, "#categorisation-outcome") == tr("tui.ledger.categorisation.participation.empty")
@@ -214,6 +215,6 @@ async def test_an_entry_in_no_declaration_and_a_refused_read_are_said() -> None:
         rebuild_door=refused_doors.participation_rebuild,
     )
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
+        async with WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
             assert text(screen, "#ledger-refusal") == tr(CATEGORISATION_REFUSAL_KEY)

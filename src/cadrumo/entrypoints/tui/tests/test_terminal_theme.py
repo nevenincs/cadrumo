@@ -11,6 +11,7 @@ from textual.widgets import Button, Input
 
 from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_TERMINAL, install_cadrumo_themes, toggle_appearance
+from .settling import settle
 from .terminal_theme_sample import ThemeSample, render_sample
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.asyncio]
@@ -26,7 +27,7 @@ async def test_embedded_widgets_emit_palette_colors_and_preserve_editing(monkeyp
     assert not re.search(r"\x1b\[[\d;]*(?:38|48);[25];", output)
     app = ScreenHostApp(ThemeSample())
     async with app.run_test() as pilot:
-        await pilot.pause(0.2)
+        await settle(pilot)
         assert app.theme == CADRUMO_TERMINAL.name
         assert app.native_ansi_color
         assert app.screen.query_one(Button).styles.color.ansi == 0

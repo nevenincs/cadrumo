@@ -15,10 +15,10 @@ from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
+from cadrumo_client.transport.windows_process import WindowsOwnedProcess, WindowsProcessScope
 
 from .linux_worker_process import LinuxOwnedProcess, LinuxProcessScope
 from .macos_worker_process import MacosOwnedProcess, MacosProcessScope
-from .windows_process import WindowsOwnedProcess, WindowsProcessScope
 from .worker_authorization import WorkerAuthorizationServer
 from .worker_native_identity import verify_worker_native_pid
 from .worker_resource_cleanup import WorkerResourceCleanup, release_worker_resources

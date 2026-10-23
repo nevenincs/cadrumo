@@ -38,7 +38,7 @@ function DeleteConfirmation({
     <div
       role="group"
       aria-labelledby={textId}
-      className="grid gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-2"
+      className="grid gap-2 rounded-md bg-destructive/5 p-2"
       onKeyDown={(event) => {
         if (event.key === "Escape" && !event.nativeEvent.isComposing) {
           event.stopPropagation();

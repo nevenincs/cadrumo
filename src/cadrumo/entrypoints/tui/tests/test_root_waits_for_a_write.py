@@ -49,7 +49,7 @@ from ..ledger.models_actividad_asset import ActivityAssetCreationRequestV1, Acti
 from ..ledger.overview import LedgerOverviewScreen
 from ..ledger.review import LedgerReviewScreen
 from ..ledger.routes import ledger_screen_factory
-from ..ledger.tests.test_actividad_asset_parity import _ActionStub, _revision
+from ..ledger.tests.actividad_asset_fixtures import ActivityAssetActionStub, activity_asset_revision
 from ..ledger.tests.workspace_fixtures import ledger_projection, ledger_review_action, ledger_review_door
 from ..navigation import (
     TUI_DESTINATION_CATALOGUE,
@@ -63,6 +63,7 @@ from ..navigation import (
 )
 from ..presentation import PagePresentationRequested
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+from .settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -185,38 +186,33 @@ def _app(
     )
 
 
-async def _settle(pilot: _AppPilot) -> None:
-    for _ in range(3):
-        await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    for _ in range(3):
-        await pilot.pause()
-
-
 async def _open_review(pilot: _AppPilot, app: CadrumoTuiApp) -> LedgerReviewScreen:
     """Open Records, then its Review area, by the keys the operator presses."""
     app.navigate_to(_LEDGER_TARGET)
-    await _settle(pilot)
+    await settle(pilot)
     navigation = app.screen.query_one("#ledger-navigation", DataTable)
     navigation.focus()
     # Overview, Entries, then Review in canonical area order.
     await pilot.press("down", "down", "enter")
-    await _settle(pilot)
+    await settle(pilot)
     review = app.screen
     assert isinstance(review, LedgerReviewScreen)
     return review
 
 
 async def _start_exclusion(pilot: _AppPilot, review: LedgerReviewScreen, door: _HeldExclusionDoor) -> None:
-    """Exclude the first queued entry and confirm, leaving the write held at its door."""
+    """Exclude the first queued entry and confirm, leaving the write held at its door.
+
+    A Home read may be held while this runs, so only the messages are waited for.
+    """
     rows = review.query_one("#ledger-review", DataTable)
     rows.focus()
     rows.move_cursor(row=0)
     await pilot.press("x")
-    await pilot.pause()
+    await settle(pilot, workers=False)
     review.query_one("#ledger-exclusion-confirm", Button).press()
-    await asyncio.wait_for(door.started.wait(), timeout=10)
-    await pilot.pause()
+    await asyncio.wait_for(door.started.wait(), timeout=SETTLE_TIMEOUT_SECONDS)
+    await settle(pilot, workers=False)
     assert review.in_flight
 
 
@@ -227,35 +223,34 @@ def _status(review: LedgerReviewScreen) -> str:
 async def _choose_in_palette(pilot: _AppPilot, text: str) -> None:
     """Open Ctrl+P, type ``text`` and choose the best match, as the operator does."""
     await pilot.press("ctrl+p")
-    await pilot.pause()
+    await settle(pilot, workers=False)
     palette = pilot.app.screen
     assert isinstance(palette, CommandPalette)
     await pilot.press(*text)
-    async with asyncio.timeout(10):
-        while not palette.query("CommandList").first().option_count:
-            await pilot.pause(0.02)
+    await settle_until(
+        pilot,
+        lambda: bool(palette.query("CommandList").first().option_count),
+        "the palette to list a match",
+        workers=False,
+    )
     await pilot.press("enter")
-    for _ in range(3):
-        await pilot.pause()
+    await settle(pilot, workers=False)
 
 
 async def _post_desktop_request(pilot: _AppPilot, destination: PresentationDestination) -> None:
     """Deliver a page request from the desktop exactly as the presentation subscription posts it."""
     pilot.app.post_message(PagePresentationRequested(destination))
-    for _ in range(3):
-        await pilot.pause()
+    await settle(pilot, workers=False)
 
 
 async def _press(pilot: _AppPilot, key: str) -> None:
+    """Press a key and wait for the messages it posts; a write the page holds stays out."""
     await pilot.press(key)
-    for _ in range(3):
-        await pilot.pause()
+    await settle(pilot, workers=False)
 
 
 async def _ended(pilot: _AppPilot) -> None:
-    async with asyncio.timeout(10):
-        while pilot.app.is_running:
-            await pilot.pause(0.02)
+    await settle_until(pilot, lambda: not pilot.app.is_running, "the app to end", workers=False)
 
 
 def _opened(destination: str) -> Callable[[CadrumoTuiApp, _Account], None]:
@@ -323,7 +318,7 @@ async def test_the_root_keeps_a_page_with_a_write_out_until_the_write_settles(wa
     with override_settings(cadrumo_output_language="en"):
         app = _app(door, account)
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             review = await _open_review(pilot, app)
             await _start_exclusion(pilot, review, door)
 
@@ -340,7 +335,7 @@ async def test_the_root_keeps_a_page_with_a_write_out_until_the_write_settles(wa
             # Kept by reference: the page re-reads its queue into a new body once the write is saved.
             status_line = review.query_one("#ledger-flow-status", Static)
             door.release.set()
-            await _settle(pilot)
+            await settle(pilot)
             # The held door call was not cancelled: the write went through, its
             # outcome was said on the page, and the page re-read its queue.
             assert len(door.written) == 1
@@ -356,7 +351,7 @@ async def test_the_root_keeps_a_page_with_a_write_out_until_the_write_settles(wa
             if leave.ends_session:
                 await _ended(pilot)
             else:
-                await _settle(pilot)
+                await settle(pilot)
             leave.left(app, account)
 
 
@@ -386,37 +381,34 @@ async def test_a_home_read_that_lands_while_a_write_is_out_does_not_remove_the_p
     with override_settings(cadrumo_output_language="en"):
         app = _app(door, account, refresh_home)
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             review = await _open_review(pilot, app)
 
             app.navigate_to(_HOME_TARGET)
-            assert await asyncio.to_thread(held.wait, 10)
+            assert await asyncio.to_thread(held.wait, SETTLE_TIMEOUT_SECONDS)
             await _start_exclusion(pilot, review, door)
             hold.set()
-            async with asyncio.timeout(10):
-                while app._home_rebuilding:
-                    await pilot.pause(0.02)
-            for _ in range(3):
-                await pilot.pause()
+            await settle_until(pilot, lambda: not app._home_rebuilding, "the Home rebuild to finish", workers=False)
+            await settle(pilot, workers=False)
 
             assert app.screen is review, "Home replaced the page while its write was out"
             assert _status(review) == tr("tui.ledger.flow.in_flight_refusal")
 
             door.release.set()
-            await _settle(pilot)
+            await settle(pilot)
             assert len(door.written) == 1
             assert isinstance(app.screen, LedgerReviewScreen)
 
             app.navigate_to(_HOME_TARGET)
-            await _settle(pilot)
+            await settle(pilot)
             assert isinstance(app.screen, HomeScreen)
 
 
-class _HeldAssetActions(_ActionStub):
+class _HeldAssetActions(ActivityAssetActionStub):
     """Activity-asset actions whose creation is held on its worker thread until released."""
 
     def __init__(self) -> None:
-        super().__init__(_revision("held-asset"))
+        super().__init__(activity_asset_revision("held-asset"))
         self.started = threading.Event()
         self.release = threading.Event()
 
@@ -437,13 +429,13 @@ async def test_the_root_keeps_an_activity_asset_action_until_it_settles() -> Non
     with override_settings(cadrumo_output_language="en"):
         app = _app(door, account, activity_asset_actions=actions)
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             app.navigate_to(_LEDGER_TARGET)
-            await _settle(pilot)
+            await settle(pilot)
             overview = app.screen
             assert isinstance(overview, LedgerOverviewScreen)
             overview.query_one("#ledger-activity-assets", Button).press()
-            await _settle(pilot)
+            await settle(pilot)
             assets = app.screen
             assert isinstance(assets, ActivityAssetScreen)
             assets.query_one("#asset-revision-json", Input).value = actions.revision.model_dump_json()
@@ -464,11 +456,9 @@ async def test_the_root_keeps_an_activity_asset_action_until_it_settles() -> Non
                 status_line.update("")
 
             actions.release.set()
-            async with asyncio.timeout(10):
-                while assets.in_flight:
-                    await pilot.pause(0.02)
+            await settle_until(pilot, lambda: not assets.in_flight, "the asset action to finish", workers=False)
             assert str(assets.query_one("#asset-result", Static).render()).startswith("created\theld-asset")
 
             await _press(pilot, "f4")
-            await _settle(pilot)
+            await settle(pilot)
             _opened("workbench.profile")(app, account)

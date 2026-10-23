@@ -18,6 +18,7 @@ from ...components.host import ScreenHostApp
 from ...modelo.lifecycle import ModeloLifecycleActionUnavailableError
 from ...navigation import TuiScreenContextV1
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..controller import DeclarationsWorkspaceController
 from ..models import DeclarationsWorkspaceWiringV1, ModeloWorkCreateResultV1
 from ..overview import DeclarationsOverviewScreen
@@ -64,7 +65,7 @@ async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_se
         app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:
             app.theme = theme
-            await pilot.pause()
+            await settle(pilot)
             table = screen.query_one("#declarations-list", DataTable)
             guidance = screen.query_one("#declarations-keys", Static)
             page = screen.query_one("#declarations-page", VerticalScroll)
@@ -76,7 +77,7 @@ async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_se
             assert guidance.region.bottom <= page.region.y
             original_region = guidance.region
             page.scroll_end(animate=False)
-            await pilot.pause()
+            await settle(pilot)
             assert guidance.region == original_region and screen.region.contains_region(guidance.region)
             assert geometry_band(app, size[0]) == []
             assert table.max_scroll_y == 0, (
@@ -87,11 +88,14 @@ async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_se
                 table.styles.css,
             )
 
-            await pilot.press("down", "ctrl+home")
-            await pilot.pause()
+            await pilot.press("down")
+            await settle(pilot)
+            await pilot.press("ctrl+home")
+            await settle(pilot)
             assert table.cursor_row == 0
-            await pilot.press("down", "down", "down", "down")
-            await pilot.pause()
+            for _ in range(4):
+                await pilot.press("down")
+                await settle(pilot)
             assert table.cursor_row == 4
             assert table.max_scroll_y == 0
 
@@ -109,7 +113,7 @@ async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_se
             selected_row_is_visible()
             for key in ("ctrl+end", "up", "home", "end", "ctrl+home"):
                 await pilot.press(key)
-                await pilot.pause()
+                await settle(pilot)
                 selected_row_is_visible()
 
             def select(key: str) -> None:
@@ -117,42 +121,44 @@ async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_se
                 table.move_cursor(row=index)
 
             select(str(draft.work_unit_id))
-            await pilot.pause()
+            await settle(pilot)
             assert "Enter " + tr("tui.declarations.list.next.open_local_draft") in str(guidance.render())
             assert tr("tui.modelo.workbench.origin.not_calculated_yet") in str(table.get_row_at(table.cursor_row)[1])
             external = next(row for row in screen.rows if row.state == "aeat_unlinked")
             select(external.key)
-            await pilot.pause()
+            await settle(pilot)
             assert "Enter " + tr("tui.declarations.calendar.action.open") in str(guidance.render())
             select("group:aeat_unlinked")
-            await pilot.pause()
+            await settle(pilot)
             selected_row_is_visible()
             assert tr("tui.declarations.list.state.aeat_unlinked") in str(
                 table.get_row_at(table.cursor_row)[0]
             ).replace("\n", " ")
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             selected_row_is_visible()
             assert external.key not in {row.key.value for row in table.ordered_rows}
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             selected_row_is_visible()
             assert external.key in {row.key.value for row in table.ordered_rows}
             due = next(row for row in screen.rows if row.state == "not_started")
             select(due.key)
-            await pilot.pause()
+            await settle(pilot)
             assert "Enter " + tr("tui.declarations.list.next.start") in str(guidance.render())
 
-            await pilot.press("f", "f", "f")
+            for _ in range(3):
+                await pilot.press("f")
+                await settle(pilot)
             keys = {row.key.value for row in table.ordered_rows if not str(row.key.value).startswith("group:")}
             assert keys == {"d" * 64}
             assert external.key not in keys
             await pilot.press("/")
-            await pilot.pause()
+            await settle(pilot)
             assert app.focused is screen.query_one("#declarations-search", Input)
             assert "Enter" not in str(guidance.render())
             await pilot.press("tab")
-            await pilot.pause()
+            await settle(pilot)
             assert table.has_focus
             selected_row_is_visible()
             controller.modelo_workspace_factory = None
@@ -160,7 +166,7 @@ async def test_group_and_row_guidance_stays_visible_and_local_recording_stays_se
             screen.filter_index = 0
             screen._populate()
             select(str(draft.work_unit_id))
-            await pilot.pause()
+            await settle(pilot)
             assert "Enter" not in str(guidance.render())
             assert "+ " not in str(guidance.render())
             assert geometry_band(app, size[0]) == [] and table.max_scroll_x == 0, (

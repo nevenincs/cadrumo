@@ -48,9 +48,8 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-
-from ..windows_process import WindowsProcessScope
-from .process_support import fixture_arguments, fixture_environment, native_python
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 
 pytestmark = [
     pytest.mark.integration,
@@ -97,7 +96,7 @@ class _ProcessExecutor:
         record = self.root / "process-facts.json"
         scope.launch(
             executable=native_python(),
-            arguments=fixture_arguments("cadrumo_runtime.adapters.tests.job_fixture", "tree", str(record)),
+            arguments=fixture_arguments("cadrumo_client.transport.tests.job_fixture", "tree", str(record)),
             directory=self.root,
             environment=fixture_environment(),
         )

@@ -77,7 +77,7 @@ def test_a_valid_document_parses_into_typed_lanes() -> None:
     catalog = parse_provider_catalog(_document(_key_lane(), _cli_lane(), gateway, defaulted))
 
     assert catalog.provider_ids == ("example_api", "example_cli", "sample_cli", "plain_api")
-    assert catalog.credential_lane_ids == ("example_api", "sample_cli", "plain_api")
+    assert [entry.agent_credential_id for entry in catalog.providers] == ["example", None, "sample", "plain"]
     api = catalog.providers[0]
     assert (api.transport, api.auth_kind, api.agent_credential_id, api.cli_programs) == (
         ProviderTransport.API,
@@ -111,7 +111,7 @@ def test_version_three_retains_presentation_metadata_without_affecting_authentic
     assert catalog.providers[0].icon == icon
     assert catalog.providers[0].models[0]["effort"] == effort
     assert catalog.icon_attribution == document["icon_attribution"]
-    assert catalog.credential_lane_ids == ()
+    assert catalog.providers[0].agent_credential_id is None
     assert catalog.providers[0].auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY
 
 

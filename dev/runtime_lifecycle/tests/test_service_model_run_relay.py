@@ -16,6 +16,7 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo_agent_service.host.model_run_relay import ModelRunRelay
 from cadrumo_client.contracts.model_runs import (
     ModelRunBody,
     ModelRunHeader,
@@ -30,8 +31,6 @@ from cadrumo_client.contracts.service_access import ServiceConnected
 from cadrumo_client.transport.service_client import InstalledServiceClient
 from cadrumo_runtime.contracts.worker_authorization import WorkerModelRun
 from cadrumo_runtime.host.tests.test_service_records import ServiceRecordRuntime, service_record_runtime
-
-from ..model_run_relay import ModelRunRelay
 
 pytestmark = [
     pytest.mark.integration,

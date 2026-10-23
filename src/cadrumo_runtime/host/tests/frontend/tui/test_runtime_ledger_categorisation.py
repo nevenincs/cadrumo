@@ -158,7 +158,6 @@ from cadrumo.domain.transactions.classification_rule import LedgerClassification
 from cadrumo.domain.transactions.enums import BusinessClassification
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.ledger.categorisation_doors import LedgerCategorisationDoorsV1
-from cadrumo.entrypoints.tui.ledger.categorisation_tools import CATEGORISATION_TOOL_KEYS
 from cadrumo.entrypoints.tui.operations.outcome import (
     OperationOutcomeUnknownError,
     SessionExpiredOutcomeUnknownError,
@@ -730,7 +729,18 @@ def test_the_composer_builds_every_tool_on_one_pinned_session(monkeypatch: pytes
 
     tools = compose_categorisation_tools(cast(FrontendClient, client), "Fixture profile")
 
-    assert tuple(tool.key for tool in tools) == CATEGORISATION_TOOL_KEYS
+    assert tuple(tool.key for tool in tools) == (
+        "ledger.tool.categorisation.bulk",
+        "ledger.tool.categorisation.iva",
+        "ledger.tool.categorisation.review",
+        "ledger.tool.categorisation.rules",
+        "ledger.tool.categorisation.counterparties",
+        "ledger.tool.categorisation.split",
+        "ledger.tool.categorisation.allocate",
+        "ledger.tool.categorisation.participation",
+        "ledger.tool.categorisation.ratios",
+        "ledger.tool.categorisation.diagnostics",
+    )
     assert reads == [_SESSION_ID]
 
 

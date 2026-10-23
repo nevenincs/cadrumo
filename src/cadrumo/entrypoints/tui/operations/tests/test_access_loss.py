@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from datetime import UTC, datetime
 from functools import lru_cache
 from typing import cast
@@ -11,7 +10,6 @@ from typing import cast
 import pytest
 from pydantic import BaseModel
 from textual.app import App
-from textual.pilot import Pilot
 from textual.widgets import Button, Static
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -42,6 +40,7 @@ from .....application.operations.persistence.replay import OperationReplayStatus
 from .....application.operations.registry import OperationPublicContractSetV1
 from .....core.operations import OperationEffect, OperationLifecycle
 from ....operation_composition import build_production_operation_registry
+from ...tests.settling import settle, settle_until
 from ..controller_port import OperationResponseControlPort
 from ..interactions import OperationModalReviewInteractionV1, resolve_modal_interaction_state
 from ..modal import OperationModal
@@ -258,19 +257,18 @@ class _Host(App[None]):
         self.run_worker(self._present())
 
 
-async def _until(pilot: Pilot[None], predicate: Callable[[], bool]) -> None:
-    async with asyncio.timeout(10):
-        while not predicate():
-            await pilot.pause(0.02)
-
-
 @pytest.mark.parametrize("failing_action", ["observe", "transport", "cancel", "detach", "apply", "reject"])
 def test_runtime_loss_erases_rendered_private_state_and_leaves_only_close(failing_action: str) -> None:
     async def run() -> None:
         controller = _Controller(failing_action=failing_action)
         host = _Host(controller)
         async with host.run_test(size=(100, 40)) as pilot:
-            await _until(pilot, lambda: isinstance(host.screen, OperationModal) and host.screen._view_model is not None)
+            await settle_until(
+                pilot,
+                lambda: isinstance(host.screen, OperationModal) and host.screen._view_model is not None,
+                "the modal to show the operation",
+                workers=False,
+            )
             modal = host.screen
             assert isinstance(modal, OperationModal)
             assert "review.private" in str(modal.query_one("#operation-modal-review", Static).content)
@@ -280,9 +278,9 @@ def test_runtime_loss_erases_rendered_private_state_and_leaves_only_close(failin
                 controller.release_second_observe.set()
             else:
                 await pilot.click(f"#btn-operation-{failing_action}")
-            await _until(pilot, lambda: modal._view_model is None)
+            await settle_until(pilot, lambda: modal._view_model is None, "the modal to erase its view", workers=False)
             controller.release_second_observe.set()
-            await pilot.pause(0.05)
+            await settle(pilot, workers=False)
             assert modal._interaction is None
             assert modal._log_view.rows == ()
             for suffix in ("phase", "deadlines", "diagnostic", "receipt", "review", "log"):
@@ -291,7 +289,7 @@ def test_runtime_loss_erases_rendered_private_state_and_leaves_only_close(failin
                 assert modal.query_one(f"#btn-operation-{action}", Button).disabled
             assert not modal.query_one("#btn-operation-close", Button).disabled
             await pilot.click("#btn-operation-close")
-            await _until(pilot, host.closed.is_set)
+            await settle_until(pilot, host.closed.is_set, "the modal to close", workers=False)
             assert host.outcome is None
 
     asyncio.run(run())

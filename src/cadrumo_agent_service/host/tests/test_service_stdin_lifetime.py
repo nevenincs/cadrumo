@@ -15,6 +15,23 @@ from ...main import _MAX_STARTUP_FRAME_BYTES, _read_startup_frame
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+# Bounds the service's reaction to an ending, from the ending to its final
+# "stopped" event. Interpreter start, imports and teardown fall outside it:
+# they measure the host, not the lifetime contract.
+_STOP_SECONDS = 10
+
+
+async def _read_through_event(stdout: asyncio.StreamReader, event: bytes) -> bytes:
+    """Return the published lines up to and including the first one carrying ``event``."""
+    published = bytearray()
+    while True:
+        line = await stdout.readline()
+        if not line:
+            pytest.fail(f"service exited before publishing {event!r}: {bytes(published)!r}")
+        published.extend(line)
+        if event in line:
+            return bytes(published)
+
 
 def test_startup_frame_reader_leaves_bytes_after_its_newline_for_lifetime_monitor() -> None:
     reader, writer = os.pipe()
@@ -117,10 +134,12 @@ async def open_client(**_kwargs):
     return client
 
 class FakeService:
-    def __init__(self, **_kwargs):
-        pass
+    def __init__(self, *, emit, **_kwargs):
+        self.emit = emit
 
     def start(self):
+        # Published after the first claim, so the parent can observe an idle, admitted loop.
+        self.emit({"event": "test_agent_started"})
         return {"event": "agent_ready"}
 
     def observe(self):
@@ -155,7 +174,8 @@ service_main.AgentService = FakeService
 service_main.AdminServer = FakeAdminServer
 service_main.effective_storage_root = lambda: Path(".")
 sys.argv = ["cadrumo-agent-service", "serve", "--profile-id", str(profile_id)]
-service_main._serve()
+# The real entrypoint configures logging at the process boundary, before the startup frame.
+service_main.main()
 print(f"claims={client.claims}", file=sys.stderr)
 """.replace("WITHDRAW_LEASE", repr(ending == "runtime_revocation"))
     process = await asyncio.create_subprocess_exec(
@@ -175,17 +195,26 @@ print(f"claims={client.claims}", file=sys.stderr)
         startup = json.dumps({"bearer": "A" * 32, "gateway_bearer": "B" * 32}).encode("ascii") + b"\n"
         process.stdin.write(startup + (b"unexpected" if ending == "extra_input" else b""))
         await process.stdin.drain()
-        if ending == "idle_then_eof":
-            # Long enough for a timed loop to have claimed several times.
-            await asyncio.sleep(1.5)
-        if ending in {"eof", "idle_then_eof"}:
+        if ending == "eof":
+            # EOF may arrive before the lifetime watcher exists; the service must still observe it.
             process.stdin.close()
+        if ending == "idle_then_eof":
+            published = await _read_through_event(process.stdout, b'"event":"test_agent_started"')
+            # Measured from the first claim: long enough for a timed loop to have claimed several times.
+            await asyncio.sleep(1.5)
+            process.stdin.close()
+        else:
+            published = await _read_through_event(process.stdout, b'"event":"service_ready"')
         try:
-            exit_code = await asyncio.wait_for(process.wait(), timeout=10)
+            published += await asyncio.wait_for(
+                _read_through_event(process.stdout, b'"event":"stopped"'), timeout=_STOP_SECONDS
+            )
         except TimeoutError:
             process.kill()
             await process.wait()
-            pytest.fail("service did not stop after runtime revocation")
+            unread, errors = await asyncio.gather(process.stdout.read(), process.stderr.read())
+            pytest.fail(f"service did not stop after its parent lifetime ended: {published + unread!r} {errors!r}")
+        exit_code = await process.wait()
     finally:
         if process.returncode is None:
             process.kill()
@@ -193,7 +222,8 @@ print(f"claims={client.claims}", file=sys.stderr)
         if not process.stdin.is_closing():
             process.stdin.close()
 
-    output, errors = await asyncio.wait_for(asyncio.gather(process.stdout.read(), process.stderr.read()), timeout=5)
+    remaining, errors = await asyncio.wait_for(asyncio.gather(process.stdout.read(), process.stderr.read()), timeout=5)
+    output = published + remaining
     assert exit_code == 0, (output, errors)
     assert b'"event":"stopped"' in output
     assert b"Fatal Python error" not in errors
@@ -308,7 +338,8 @@ service_main.AgentService = FakeService
 service_main.AdminServer = FakeAdminServer
 service_main.effective_storage_root = lambda: Path(".")
 sys.argv = ["cadrumo-agent-service", "serve", "--profile-id", str(profile_id)]
-service_main._serve()
+# The real entrypoint configures logging at the process boundary, before the startup frame.
+service_main.main()
 print(f"claims={client.claims} observes={FakeService.observes} stops={FakeService.stops}", file=sys.stderr)
 """.replace("CONNECTION_CLOSED", repr(connection_closed))
     process = await asyncio.create_subprocess_exec(
@@ -328,12 +359,17 @@ print(f"claims={client.claims} observes={FakeService.observes} stops={FakeServic
         startup = json.dumps({"bearer": "A" * 32, "gateway_bearer": "B" * 32}).encode("ascii") + b"\n"
         process.stdin.write(startup)
         await process.stdin.drain()
+        published = await _read_through_event(process.stdout, b'"event":"service_ready"')
         try:
-            exit_code = await asyncio.wait_for(process.wait(), timeout=10)
+            published += await asyncio.wait_for(
+                _read_through_event(process.stdout, b'"event":"stopped"'), timeout=_STOP_SECONDS
+            )
         except TimeoutError:
             process.kill()
             await process.wait()
-            pytest.fail("service did not end once its lease was withdrawn")
+            unread, errors = await asyncio.gather(process.stdout.read(), process.stderr.read())
+            pytest.fail(f"service did not end once its lease was withdrawn: {published + unread!r} {errors!r}")
+        exit_code = await process.wait()
     finally:
         if process.returncode is None:
             process.kill()
@@ -341,7 +377,8 @@ print(f"claims={client.claims} observes={FakeService.observes} stops={FakeServic
         if not process.stdin.is_closing():
             process.stdin.close()
 
-    output, errors = await asyncio.wait_for(asyncio.gather(process.stdout.read(), process.stderr.read()), timeout=5)
+    remaining, errors = await asyncio.wait_for(asyncio.gather(process.stdout.read(), process.stderr.read()), timeout=5)
+    output = published + remaining
     assert exit_code == 0, (output, errors)
     assert b'"event":"stopped"' in output
     if connection_closed:

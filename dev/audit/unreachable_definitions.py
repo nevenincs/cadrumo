@@ -13,6 +13,7 @@ from .unreachable_policy import (
     _ENUM_COLLECTION_ATTRS,
     _HOOK_METHOD_NAMES,
     _HOOK_METHOD_PREFIXES,
+    _HTTP_VERB_METHOD_PREFIX,
 )
 
 
@@ -77,6 +78,11 @@ def _is_framework_bound(
     if _is_dunder(name) or name in contract.members:
         return True
     if contract.textual and (name in _HOOK_METHOD_NAMES or name.startswith(_HOOK_METHOD_PREFIXES)):
+        return True
+    # ``BaseHTTPRequestHandler`` dispatches ``getattr(self, "do_" + command)``, so a verb
+    # handler is named by the request line and never by a reference in source.
+    verb = name.removeprefix(_HTTP_VERB_METHOD_PREFIX)
+    if contract.http_handler and verb != name and verb.isupper():
         return True
     return _is_registered(function, registrations)
 

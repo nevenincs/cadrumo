@@ -49,6 +49,7 @@ from ......domain.calculations.registry.schema_form_layouts import FormCellKind
 from ......domain.modelos.codes import ModeloCode
 from ....components.host import ScreenHostApp
 from ....components.theme import install_cadrumo_themes
+from ....tests.settling import settle
 from ..casilla_list import (
     CasillaList,
 )
@@ -197,7 +198,7 @@ async def _drawn(items: tuple[CasillaListItem, ...], width: int) -> list[str]:
     with override_settings(cadrumo_output_language="en"):
         app = _ListHarness(items)
         async with app.run_test(size=(width, 300)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             widget = app.query_one(CasillaList)
             return [widget.render_line(y).text for y in range(widget.size.height)]
 
@@ -208,7 +209,7 @@ async def _walk(items: tuple[CasillaListItem, ...], width: int, keys: tuple[str,
     with override_settings(cadrumo_output_language="en"):
         app = _ListHarness(items)
         async with app.run_test(size=(width, 300)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             widget = app.query_one(CasillaList)
             first = next(
                 item
@@ -219,6 +220,7 @@ async def _walk(items: tuple[CasillaListItem, ...], width: int, keys: tuple[str,
             assert widget.focus_address(address_key(first.field.address))
             for key in keys:
                 await pilot.press(key)
+                await settle(pilot)
                 entry = widget.highlighted
                 visited.append(None if entry is None else entry.field.box)
     return visited
@@ -377,16 +379,19 @@ async def test_past_the_last_row_the_cursor_leaves_the_table_and_side_arrows_are
     with override_settings(cadrumo_output_language="en"):
         app = _ListHarness(items)
         async with app.run_test(size=(120, 300)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             widget = app.query_one(CasillaList)
             assert widget.focus_address(("casilla", "26"))
             on_grid = widget.on_grid_row
             await pilot.press("down")
+            await settle(pilot)
             after = widget.highlighted
             left_taken = widget.check_action("cell", (-1,))
             await pilot.press("left")
+            await settle(pilot)
             still = widget.highlighted
             await pilot.press("up")
+            await settle(pilot)
             back = widget.highlighted
 
     assert on_grid
@@ -433,19 +438,22 @@ async def test_a_side_arrow_moves_between_cells_in_the_workbench_and_folds_elsew
     with override_settings(cadrumo_output_language="es"):
         screen = ModeloWorkbenchScreen(FakeReader())
         async with ScreenHostApp(screen).run_test(size=(140, 40)) as pilot:
-            for _ in range(3):
-                await pilot.pause()
+            await settle(pilot)
             casilla_list = screen.query_one(CasillaList)
-            await pilot.press("g", *"07", "enter")
-            for _ in range(4):
-                await pilot.pause()
+            await pilot.press("g")
+            await settle(pilot)
+            await pilot.press(*"07", "enter")
+            await settle(pilot)
             on_grid = casilla_list.on_grid_row
             await pilot.press("right")
+            await settle(pilot)
             moved = casilla_list.highlighted
-            await pilot.press("g", *"01", "enter")
-            for _ in range(4):
-                await pilot.pause()
+            await pilot.press("g")
+            await settle(pilot)
+            await pilot.press(*"01", "enter")
+            await settle(pilot)
             await pilot.press("left")
+            await settle(pilot)
             kept = casilla_list.highlighted
             off_grid = casilla_list.on_grid_row
 
@@ -507,7 +515,7 @@ async def test_section_headings_take_the_colour_of_their_most_severe_level(opera
     with override_settings(cadrumo_output_language="en"):
         app = _ListHarness(items)
         async with app.run_test(size=(120, 300)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             widget = app.query_one(CasillaList)
             styles: dict[str, Style | None] = {}
             for y in range(widget.size.height):
@@ -670,10 +678,9 @@ async def test_an_unknown_record_source_is_visible_content_in_the_screen_header_
 ) -> None:
     screen = ModeloWorkbenchScreen(FakeReader(form=_form(operation, "349", 2026, "1T")))
     async with ScreenHostApp(screen).run_test(size=(80, 24)) as pilot:
-        for _ in range(3):
-            await pilot.pause()
+        await settle(pilot)
         await pilot.press("]")
-        await pilot.pause()
+        await settle(pilot)
         help_text = str(screen.query_one("#wb-help", Static).render())
         heading = str(screen.query_one("#wb-page", Static).render())
         unknown = lookup_translation("tui.modelo.workbench.grid.records_unknown", locale="en")

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from cadrumo.entrypoints.tui.tests.settling import settle
+
 from .financial_contracts import _SYNTHETIC_COUNTERPARTY_NIF
 from .financial_navigation import _activate_button, _open_destination
 from .installed_tui_child import (
@@ -52,7 +54,7 @@ async def _capture_invoice(pilot: Any, *, item: IssuedInvoice | ExpenseInvoice) 
     await _activate_button(pilot, "#ledger-invoice-review")
     await wait_for_public_selector(pilot, "#ledger-invoice-confirm")
     await _activate_button(pilot, "#ledger-invoice-confirm")
-    await pilot.app.workers.wait_for_complete()
+    await settle(pilot)
     await wait_for_public_selector(pilot, "#ledger-invoice-again")
     from textual.widgets import Static
 
@@ -60,7 +62,7 @@ async def _capture_invoice(pilot: Any, *, item: IssuedInvoice | ExpenseInvoice) 
     if refusal:
         raise InstalledTuiChildError("installed invoice form reported a visible persistence refusal")
     await _activate_button(pilot, "#ledger-invoice-again")
-    await pilot.app.workers.wait_for_complete()
+    await settle(pilot)
     await wait_for_public_selector(pilot, "#ledger-invoice-review")
 
 
@@ -87,7 +89,7 @@ async def _reconcile_invoice(pilot: Any, *, transaction_id: str, invoice_id: str
     await pilot.press("enter")
     await wait_for_public_selector(pilot, "#ledger-reconciliation-confirm")
     await _activate_button(pilot, "#ledger-reconciliation-confirm")
-    await pilot.app.workers.wait_for_complete()
+    await settle(pilot)
     status = str(query_public_selector(pilot, "#ledger-flow-status", Static).render()).strip()
     if status != tr("tui.ledger.reconciliation.success"):
         raise InstalledTuiChildError("installed reconciliation did not confirm a persisted link")

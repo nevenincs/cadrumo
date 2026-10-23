@@ -20,13 +20,13 @@ from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....domain.transactions.classification_rule import LedgerClassificationRule
 from .....domain.transactions.enums import BusinessClassification
+from ...tests.settling import settle
 from ..categorisation_doors import LedgerRuleAddDoorV1, LedgerRuleApplyDoorV1, LedgerRuleListDoorV1
 from ..categorisation_rules import RULES_PAGE_SIZE, LedgerRulesScreen
 from ..controller import LedgerWorkspaceController
 from ..workspace_injection import LedgerWorkspaceInjection
 from .categorisation_fixtures import CATEGORISATION_REFUSAL_KEY, MemoryDoor, MemoryRuleBook, synthetic_id
-from .test_ledger_selection_journey import _WorkspaceHostApp
-from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
+from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -54,15 +54,9 @@ def _screen(doors: _Doors) -> LedgerRulesScreen:
     )
 
 
-async def _settle(pilot: Pilot[None]) -> None:
-    await pilot.pause()
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
-
-
 async def _press(pilot: Pilot[None], screen: LedgerRulesScreen, button_id: str) -> None:
     screen.query_one(f"#{button_id}", Button).press()
-    await _settle(pilot)
+    await settle(pilot)
 
 
 def _text(screen: LedgerRulesScreen, selector: str) -> str:
@@ -86,8 +80,8 @@ async def test_rules_are_added_listed_and_applied_only_after_a_dry_run() -> None
     list_door, add_door, apply_door = doors
     screen = _screen(doors)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             assert _keys(screen, "#categorisation-rules") == []
             assert _text(screen, "#categorisation-outcome") == tr("tui.ledger.categorisation.rules.empty")
 
@@ -129,8 +123,8 @@ async def test_a_refused_rule_list_is_said_on_the_screen() -> None:
     doors[0].refusing = True
     screen = _screen(doors)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             assert _text(screen, "#ledger-refusal") == tr(CATEGORISATION_REFUSAL_KEY)
             assert _text(screen, "#ledger-flow-status") == tr("tui.ledger.categorisation.failed")
 
@@ -140,8 +134,8 @@ async def test_an_empty_pattern_is_refused_with_the_operations_own_finding() -> 
     doors = _doors(MemoryRuleBook())
     screen = _screen(doors)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             screen.query_one("#categorisation-rule-pattern", Input).value = "   "
             await _press(pilot, screen, "categorisation-rule-review-add")
             await _press(pilot, screen, "categorisation-confirm")
@@ -160,8 +154,8 @@ async def test_a_preview_with_no_match_stages_nothing() -> None:
     doors = _doors(book)
     screen = _screen(doors)
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             await _press(pilot, screen, "categorisation-rule-preview")
             assert screen.staged is None
             assert _text(screen, "#categorisation-outcome") == tr("tui.ledger.categorisation.rules.nothing_matches")
@@ -184,8 +178,8 @@ async def test_a_thousand_rules_render_one_page_at_a_time() -> None:
     )
     screen = _screen(_doors(book))
     with override_settings(cadrumo_output_language="en"):
-        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
-            await _settle(pilot)
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
             assert RULES_PAGE_SIZE <= 200
             assert len(_keys(screen, "#categorisation-rules")) == RULES_PAGE_SIZE
             assert _text(screen, "#categorisation-rules-page") == tr(

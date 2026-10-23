@@ -19,11 +19,11 @@ import pytest
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.diagnostic_log import DiagnosticFormatter, diagnostic_process
 from cadrumo.core.logging import LOG_FILE_FORMAT
+from cadrumo.tests.process_support import fixture_environment, native_python
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ExitReason, RefusalCode
 from cadrumo_client.contracts.login import LoginInventory
 
-from ...adapters.tests.process_support import fixture_environment, native_python
 from .. import profile_connections
 from ..arguments import parse_runtime_arguments
 from ..main import run

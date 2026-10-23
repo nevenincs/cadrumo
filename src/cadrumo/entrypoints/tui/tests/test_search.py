@@ -47,6 +47,7 @@ from ..search import (
     _result_text,
     workbench_action_label,
 )
+from .settling import settle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -187,7 +188,7 @@ async def test_search_provider_preserves_application_stable_identity_and_admitte
         assert hit.help == _destination_text("workbench.declarations")
         assert stable_id not in hit.help
         hit.command()
-        await pilot.pause()
+        await settle(pilot)
 
     assert len(app.targets) == 1
     target = app.targets[0]
@@ -244,7 +245,7 @@ async def test_command_provider_discovers_admitted_destinations_and_action_ident
             hit.help is not None and "workbench." not in hit.help and "operator." not in hit.help for hit in discovery
         )
         action_hit.command()
-        await pilot.pause()
+        await settle(pilot)
 
     assert app.targets == [
         TuiNavigationTargetV1(
@@ -364,7 +365,7 @@ async def test_a_refused_search_reports_why_instead_of_raising() -> None:
         refusal_code="workbench.search.unavailable",
     )
     async with app.run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
         hits = [hit async for hit in WorkbenchSearchProviderV1(app.screen).search("mod")]
         app.exit(None)
 
@@ -383,7 +384,7 @@ async def test_an_unrecognised_refusal_code_is_never_shown_raw() -> None:
         refusal_code="workbench.search.some_future_code",
     )
     async with app.run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
         hits = [hit async for hit in WorkbenchSearchProviderV1(app.screen).search("mod")]
         app.exit(None)
 

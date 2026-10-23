@@ -13,6 +13,7 @@ from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from ...components.host import ScreenHostApp
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..picker import NewDeclarationPicker
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -39,7 +40,7 @@ async def test_picker_requires_modelo_period_and_confirmation_in_every_locale_an
         app = ScreenHostApp(picker)
         async with app.run_test(size=size) as pilot:
             app.theme = theme
-            await pilot.pause()
+            await settle(pilot)
             table = picker.query_one("#declaration-picker-table", DataTable)
             create = picker.query_one("#declaration-picker-create", Button)
             assert app.focused is table
@@ -53,14 +54,16 @@ async def test_picker_requires_modelo_period_and_confirmation_in_every_locale_an
             assert not picker.query(Input)
             assert geometry_band(app, size[0]) == []
             assert table.max_scroll_x == 0
-            await pilot.press("tab", "enter")
-            await pilot.pause()
+            await pilot.press("tab")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             assert tuple(row.key.value for row in table.ordered_rows) == ("111", "130")
             assert app.focused is table
             assert geometry_band(app, size[0]) == []
             assert table.max_scroll_x == 0
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             assert picker.modelo == "111"
             assert table.row_count == 2
             assert create.disabled and picker.selected is None
@@ -71,12 +74,16 @@ async def test_picker_requires_modelo_period_and_confirmation_in_every_locale_an
             assert "2025" in str(table.get_row_at(0)[0])
             assert "2025" in str(table.get_row_at(1)[0])
             await pilot.press("escape")
-            await pilot.pause()
+            await settle(pilot)
             assert picker.modelo is None and picker.selected is None
             assert create.disabled
             assert not create.display
-            await pilot.press("enter", "down", "enter")
-            await pilot.pause()
+            await pilot.press("enter")
+            await settle(pilot)
+            await pilot.press("down")
+            await settle(pilot)
+            await pilot.press("enter")
+            await settle(pilot)
             assert picker.selected == selected
             assert app.focused is create
             assert not create.disabled
@@ -96,9 +103,11 @@ async def test_cancel_and_escape_never_create_an_unselected_declaration() -> Non
     picker = NewDeclarationPicker((target,), frozenset({"130"}))
     app = ScreenHostApp(picker)
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
-        await pilot.press("enter", "escape")
-        await pilot.pause()
+        await settle(pilot)
+        await pilot.press("enter")
+        await settle(pilot)
+        await pilot.press("escape")
+        await settle(pilot)
         assert picker.modelo is None and picker.selected is None
         await pilot.press("escape")
     assert app.return_value is None

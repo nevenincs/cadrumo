@@ -30,6 +30,11 @@ consumed in the body:
   (:mod:`cadrumo_runtime.host.linux_worker_guardian`), which mirrors
   ``select.poll().register(fd, eventmask)``; the guardian passes the real
   ``select.poll()`` object. The stub body is ``...``.
+* ``background`` — the second parameter of ``apply`` on
+  ``TerminalControlFilter`` (:mod:`cadrumo.entrypoints.tui.components.terminal_controls`),
+  an override of Textual's ``LineFilter.apply(segments, background)``. The
+  renderer calls it with both arguments, so the signature cannot drop the name;
+  the control-stripping body has no use for the background colour.
 
 Vulture marks a name "used" when it appears in a whitelist file. Referencing
 each name once here clears all findings with that name across the scan,
@@ -75,3 +80,8 @@ def _installation_area_factory_call(report_change: object) -> object:
 def _parent_poll_register(eventmask: object) -> object:
     """Mirror ``_ParentPoll.register`` structural signature."""
     return eventmask
+
+
+def _line_filter_apply(background: object) -> object:
+    """Mirror ``textual.filter.LineFilter.apply`` override signature."""
+    return background

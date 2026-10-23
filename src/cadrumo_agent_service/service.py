@@ -65,7 +65,7 @@ from .host.launch_environment import (
     auth_browser_executable,
     system_environment,
 )
-from .host.launcher_protocol import launcher_refusal_for
+from .host.launcher_protocol import launcher_refusal_for, runtime_launcher_refusal_for
 from .host.store_lifecycle import AgentStoreLifecycle
 from .providers.application.agent_credentials import ProviderSettingsAgentCredentialSource
 from .providers.application.contracts import ProviderSettingsRefusal
@@ -103,7 +103,8 @@ def service_failure(error: Exception) -> dict[str, Any]:
         code = error.code.value
         _LOGGER.warning("agent program unavailable code=%s", code)
     elif isinstance(error, RefusalError):
-        code = "service_failed"
+        unavailable = runtime_launcher_refusal_for(error)
+        code = "service_failed" if unavailable is None else unavailable.value
         _LOGGER.warning("agent runtime refused reason=%s", error.reason.value)
     else:
         code = "service_failed"

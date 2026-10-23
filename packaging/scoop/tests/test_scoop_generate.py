@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 from dev.packaging.cohort_attestation import add_test_runtime_wheelhouse, add_test_source_archive
-from dev.packaging.command_spec_attestation import _projection_digest, attest_command_specs
+from dev.packaging.command_spec_attestation import attest_command_specs, projection_digest
 from dev.packaging.hashing import sha256_path
 from dev.packaging.lane_verification_core import (
     build_companion_wheels,
@@ -397,7 +397,7 @@ def test_generator_rejects_conditional_companion_pin(
     payload["sha256"]["cadrumo"] = root_digest
     payload["command_spec_attestation"]["root_wheel_sha256"] = root_digest
     attestation = payload["command_spec_attestation"]
-    attestation["envelope_sha256"] = _projection_digest(
+    attestation["envelope_sha256"] = projection_digest(
         {key: value for key, value in attestation.items() if key != "envelope_sha256"}
     )
     manifest.write_text(json.dumps(payload), encoding="utf-8")

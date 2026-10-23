@@ -3,8 +3,7 @@
 from pathlib import Path
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-
-from ..windows_process import WindowsOwnedProcess
+from cadrumo_client.transport.windows_process import WindowsOwnedProcess
 
 
 def wait_process(process: WindowsOwnedProcess) -> int:

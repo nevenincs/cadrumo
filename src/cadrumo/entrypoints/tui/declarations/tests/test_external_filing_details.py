@@ -20,6 +20,7 @@ from .....core.i18n.render import tr
 from ...components.host import ScreenHostApp
 from ...navigation import TuiScreenContextV1
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..controller import DeclarationsWorkspaceController
 from ..external_details import ExternalFilingDetailsScreen
 from ..models import DeclarationsWorkspaceWiringV1
@@ -73,7 +74,7 @@ async def test_external_details_never_borrows_the_local_amount_and_returns_to_th
         app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:
             app.theme = theme
-            await pilot.pause()
+            await settle(pilot)
             table = screen.query_one("#declarations-list", DataTable)
             external = next(row for row in screen.rows if row.state == "aeat_unlinked")
             local = next(row for row in screen.rows if row.declaration is not None and row.modelo == "303")
@@ -85,7 +86,7 @@ async def test_external_details_never_borrows_the_local_amount_and_returns_to_th
             table.move_cursor(row=next(i for i, row in enumerate(table.ordered_rows) if row.key.value == external.key))
             table.focus()
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             modal = app.screen
             assert isinstance(modal, ExternalFilingDetailsScreen)
             assert app.focused is modal.query_one("#external-filing-close", Button)
@@ -101,12 +102,14 @@ async def test_external_details_never_borrows_the_local_amount_and_returns_to_th
             assert "tui." not in text
             assert geometry_band(app, size[0]) == []
             await pilot.press("t")
+            await settle(pilot)
             assert detail.display
             assert str(detail.render()) == external.calendar.aeat_reference_id
             await pilot.press("t")
+            await settle(pilot)
             assert not detail.display
             await pilot.press("escape")
-            await pilot.pause()
+            await settle(pilot)
             assert app.screen is screen and app.focused is table
             assert table.ordered_rows[table.cursor_row].key.value == external.key
             assert calls == []
@@ -119,7 +122,7 @@ async def test_mounted_external_details_reword_preserves_row_disclosure_and_focu
     with override_settings(cadrumo_output_language="en"):
         modal = ExternalFilingDetailsScreen(row)
         async with ScreenHostApp(modal).run_test(size=(120, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             modal.action_technical()
             detail = modal.query_one("#external-filing-technical", Static)
             summary = modal.query_one("#external-filing-summary", Static)
@@ -129,7 +132,7 @@ async def test_mounted_external_details_reword_preserves_row_disclosure_and_focu
             focused = modal.focused
             with override_settings(cadrumo_output_language="es"):
                 await modal.refresh_language()
-                await pilot.pause()
+                await settle(pilot)
                 assert modal.row is row
                 assert modal.query_one("#external-filing-summary", Static) is summary
                 assert modal.query_one("#external-filing-technical", Static) is detail

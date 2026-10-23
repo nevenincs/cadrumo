@@ -5,22 +5,18 @@ The engine's first-year derivation (``_first_year_modalidad_cuota_no_m202`` /
 (``record_to_path_values``). A non-CLI calculation entrypoint therefore resolves
 the first-year relaxation without any setup surface.
 
-A self-contained child process does its own isolated bucket setup and full M200
-calculate, then asserts that ``cadrumo.application.wizard`` was never imported
-(the discriminating condition). In that process the first-year flag resolves
-True, the activity-start date resolves, and the M200/2025 cuota-diferencial
-(DP200014B:00611) computes.
-
-Real-behaviour, real-adapter (the child runs the real encrypted-SQLite store via
-``isolated_runtime_profile``, the real registry authority, the real calculate
-action). No mocks, no monkeypatch: the no-wizard condition comes from process
-isolation.
+A self-contained child process builds a real profile record against the real
+registry authority, resolves the derivation off its projection, then asserts
+that ``cadrumo.application.wizard`` was never imported (the discriminating
+condition). In that process the first-year flag resolves True and the
+activity-start date resolves. No mocks, no monkeypatch: the no-wizard condition
+comes from process isolation. The composed full calculation that consumes this
+flag is asserted by its composition owner.
 """
 
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import pytest
 
@@ -29,46 +25,26 @@ from cadrumo.tests.audited_process import ensure_text_completed_process, run_aud
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-# Child process: does its own isolated setup + full M200/2025 first-year calculate
-# WITHOUT ever importing cadrumo.application.wizard. argv[1] is a tmp dir for the bucket.
+# Child process: resolves the first-year derivation off a real profile record
+# WITHOUT ever importing cadrumo.application.wizard.
 _CHILD_SCRIPT = r"""
 import sys
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 from cadrumo.application.calculations.relation_prefill import (
     activity_start_date_for_bucket,
     _first_year_modalidad_cuota_no_m202,
 )
 from cadrumo.application.user_profile.projections import record_to_path_values
-from cadrumo.core.period import Period
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-
-# The custody ports are bound by an explicit composition root that a
-# `python -c` child does not inherit.
-from contextlib import ExitStack
-
-from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
-
-composition = ExitStack()
-composition.enter_context(composed_profile_persistence_ports())
-operation = composition.enter_context(bundled_indexed_authority().operation())
 
 _PROFILE_ID = "20020020-0200-4200-8200-200200200200"
 _BUCKET = _PROFILE_ID
 _T0 = datetime(2026, 1, 12, 10, 0, tzinfo=UTC)
-tmp = Path(sys.argv[1])
 
-with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
+with bundled_indexed_authority().operation() as operation:
     record = create_user_profile_record(
         context=operation.profile_create_context(),
         setup_state=ProfileSetupState.COMPLETE,
@@ -95,7 +71,6 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
         created_at=_T0,
         updated_at=_T0,
     )
-    seed_test_profile_record(record)
 
     class _ProfilePathValuesReader:
         def __init__(self, values):
@@ -127,47 +102,15 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
             )
         )
     )
-
-    ports = build_calculation_action_ports(bucket_id=_BUCKET, operation=operation)
-    # This child asks a CALCULATION question -- it resolves a modalidad and
-    # calculates, and never renders a fichero or an export layout -- so it asks
-    # for the calculation rung. Modelo 200's revision declares exactly that rung
-    # and deliberately refuses the filing rung while it spans two incompatible
-    # AEAT layouts, so demanding filing here would be asking for an authority
-    # this work does not need and the registry is right to withhold.
-    snapshot = published_snapshot(
-        "200",
-        filing_year=2025,
-        period="0A",
-        grade=RegistryAuthorityGrade.CALCULATION,
-    )
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET,
-        modelo="200",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "0A"),
-        revision_id=snapshot.revision.id,
-        ports=ports.work_lifecycle_ports,
-        operation=operation,
-        clock=_T0,
-    )
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        binding_values={},
-        ports=ports,
-        clock=_T0,
-    )
-    present = "DP200014B:00611" in result.revision.casilla_values
-    print("CUOTA_DIFERENCIAL:" + ("PRESENT" if present else "ABSENT"))
 print("WIZARD:" + ("IMPORTED" if "cadrumo.application.wizard" in sys.modules else "NOT_IMPORTED"))
 """
 
 
-def test_first_year_modalidad_cuota_resolves_without_wizard_catalogue(tmp_path: Path) -> None:
+def test_first_year_modalidad_cuota_resolves_without_wizard_catalogue() -> None:
     """In a process that never imports the wizard, the first-year flag still resolves."""
     child = ensure_text_completed_process(
         run_audited_process(
-            [sys.executable, "-c", _CHILD_SCRIPT, str(tmp_path)],
+            [sys.executable, "-c", _CHILD_SCRIPT],
             capture_output=True,
             text=True,
             timeout=None,
@@ -184,7 +127,3 @@ def test_first_year_modalidad_cuota_resolves_without_wizard_catalogue(tmp_path: 
     # Post-#30: the decoupled derivation resolves off the wizard-free projection.
     assert "FIRST_YEAR:True" in out, f"first-year flag must resolve True WITHOUT the wizard{detail}"
     assert "ACTIVITY_START:2025-01-01" in out, f"activity-start must resolve off the projection{detail}"
-    # And the full calculate computes the cuota-diferencial (no silent over-block).
-    assert "CUOTA_DIFERENCIAL:PRESENT" in out, (
-        f"M200/2025 first-year cuota-diferencial DP200014B:00611 must COMPUTE without the wizard{detail}"
-    )

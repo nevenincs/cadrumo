@@ -691,18 +691,6 @@ class FrontendClient(ProfileViewFrontend):
             ActiveProfileReply,
         )
 
-    def watch_active_profile(
-        self, receive: Callable[[], None], *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
-    ) -> ActiveProfileReply:
-        """Read the selection, then cue ``receive`` whenever a sign-in or the selection may have changed.
-
-        A cue is only a reason to ask again; it carries no state.
-        """
-        self._observe_events()
-        with self._event_guard:
-            self._sign_in_receivers.append(receive)
-        return self.active_profile(timeout=timeout, watch=True)
-
     def watch_sign_in(
         self, receive: Callable[[], None], *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
     ) -> SignInStatusReply:

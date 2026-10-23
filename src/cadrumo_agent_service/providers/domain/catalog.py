@@ -207,11 +207,6 @@ class ProviderCatalog(BaseModel):
         """Return every lane id in catalog order."""
         return tuple(entry.id for entry in self.providers)
 
-    @property
-    def credential_lane_ids(self) -> tuple[str, ...]:
-        """Return the lane ids whose credential the agent's hosting frame carries, in catalog order."""
-        return tuple(entry.id for entry in self.providers if entry.agent_credential_id is not None)
-
     def entry(self, provider_id: str) -> ProviderCatalogEntry | None:
         """Return the lane ``provider_id`` names, or ``None`` when the agent did not report it."""
         if not _PROVIDER_ID.fullmatch(provider_id):

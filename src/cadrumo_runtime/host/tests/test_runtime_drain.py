@@ -29,10 +29,10 @@ from cadrumo_client.contracts.access_refusals import AccessAllowed
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.contracts import ExitReason, RefusalError
 from cadrumo_client.contracts.profile_access import HumanProof
+from cadrumo_client.transport.windows_process import WindowsOwnedProcess
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
 from ...adapters.tests.profile_worker_support import lease, worker_profiles
-from ...adapters.windows_process import WindowsOwnedProcess
 from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import RuntimeProfileHost
 from ..session_owner import ProfileWorkerSessionOwner

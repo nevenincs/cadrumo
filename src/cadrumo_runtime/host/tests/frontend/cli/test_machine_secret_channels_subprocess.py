@@ -34,8 +34,8 @@ from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.tests.audited_process import WindowsStartupInfo, run_audited_process
 from cadrumo.tests.inventory import SRC_CADRUMO
+from cadrumo.tests.process_support import fixture_arguments, native_python
 from cadrumo.tests.subprocess_cli import as_text_completed_process, subprocess_cli_env
-from cadrumo_runtime.adapters.tests.process_support import fixture_arguments, native_python
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import (
     COMPLETE_NATURAL_PERSON_FLAGS,
     native_profile_view_server,

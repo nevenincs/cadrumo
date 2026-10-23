@@ -48,6 +48,7 @@ from ......domain.filing.schema import ModeloValueKind
 from ......domain.modelos.calculation_revision import CalculationRevisionState
 from ......domain.modelos.codes import ModeloCode
 from ....components.theme import install_cadrumo_themes
+from ....tests.settling import settle
 from ..casilla_list import (
     CasillaList,
 )
@@ -312,7 +313,7 @@ async def _drawn(items: tuple[CasillaListItem, ...]) -> list[str]:
     with override_settings(cadrumo_output_language="en"):
         app = _ListHarness(items)
         async with app.run_test(size=(160, 400)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             widget = app.query_one(CasillaList)
             return [widget.render_line(y).text for y in range(widget.size.height)]
 

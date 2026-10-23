@@ -886,7 +886,7 @@ export function AgentColumn({
         // Said for as long as the lane is in use, whatever the agent's state.
         <p
           role="note"
-          className="agent-lane flex shrink-0 items-start gap-2 border-b bg-accent px-3 py-2 text-xs text-foreground"
+          className="agent-lane flex shrink-0 items-start gap-2 bg-accent px-3 py-2 text-xs text-foreground"
         >
           <Icon name="alert" size="xs" className="mt-0.5 shrink-0" />
           <span>{t("desktop.agent.lane_notice")}</span>

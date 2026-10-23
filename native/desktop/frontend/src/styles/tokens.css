@@ -63,6 +63,15 @@
   --spacing-icon-md: 1.125rem;
   --spacing-icon-lg: 1.25rem;
 
+  /* ── The brand mark beside the name: sm in the title bar, md at the head
+     of a dialog, lg on the loading page. A mark is artwork, not a control,
+     so it does not grow under a coarse pointer. ───────────────────────── */
+  --spacing-mark-sm: 1.5rem;
+  --spacing-mark-md: 2.25rem;
+  --spacing-mark-lg: 4rem;
+  /* The name is set in capitals; this is the air between them. */
+  --tracking-brand: 0.06em;
+
   /* ── Widths of the fixed surfaces. ───────────────────────────────── */
   --spacing-rail: 3rem;
   --spacing-palette: 40rem;
@@ -114,7 +123,6 @@
   /* The calendar page at this height keeps its whole head in view while it
      scrolls; shorter, only its controls. */
   --calendar-tall: 22rem;
-  --startup-logo-size: 4rem;
   /* Where a top-placed dialog sits: the same gap is kept below it. */
   --overlay-top: 12vh;
   --overlay-gutter: calc(var(--spacing) * 8);

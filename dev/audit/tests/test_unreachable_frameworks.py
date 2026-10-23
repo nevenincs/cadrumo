@@ -304,6 +304,56 @@ class Plain:
     }
 
 
+def test_http_server_overrides_and_verb_handlers_are_reached_but_ordinary_members_are_auditable() -> None:
+    module = _module(
+        "pkg.archive",
+        """
+from http.server import BaseHTTPRequestHandler as Handler, ThreadingHTTPServer as Server
+class Host(Server):
+    daemon_threads = True
+    unused_flag = True
+    def unused(self): pass
+class Requests(Handler):
+    def do_GET(self): pass
+    def do_get(self): pass
+    def do_(self): pass
+    def log_message(self, format, *args): pass
+    def unused(self): pass
+class Plain:
+    daemon_threads = True
+    def do_GET(self): pass
+    def log_message(self, format, *args): pass
+""",
+    )
+    contracts = framework_contracts({module.name: module})
+    definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
+
+    assert definitions == {
+        "Host",
+        "Host.unused_flag",
+        "Host.unused",
+        "Requests",
+        "Requests.do_get",
+        "Requests.do_",
+        "Requests.unused",
+        "Plain",
+        "Plain.daemon_threads",
+        "Plain.do_GET",
+        "Plain.log_message",
+    }
+
+
+def test_live_archive_server_overrides_use_the_installed_http_contract() -> None:
+    path = REPO_ROOT / "src/cadrumo/adapters/outbound/browser_runtime/archive_server.py"
+    tree = ast.parse(path.read_bytes())
+    module = ShippedModule("cadrumo.adapters.outbound.browser_runtime.archive_server", path, False, tree)
+    contracts = framework_contracts({module.name: module})
+    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
+
+    assert {"_Server.daemon_threads", "_Handler.do_GET", "_Handler.log_message"}.isdisjoint(definitions)
+    assert "_Handler._send_verified" in definitions
+
+
 def test_click_dispatch_overrides_are_reached_but_ordinary_methods_are_auditable() -> None:
     module = _module(
         "pkg.commands",

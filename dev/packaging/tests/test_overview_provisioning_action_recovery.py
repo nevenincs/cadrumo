@@ -128,18 +128,18 @@ def _run_provisioning_matrix(*, work_dir: Path, python: Path, state_name: str) -
         from cadrumo.core.optional_extras import LLM_EXTRA, optional_extra_available
         from cadrumo.core.config import load_settings, override_settings
         from cadrumo.core.json_contract import validate_registered_result
-        from cadrumo.entrypoints.cli.config.check_cli import _dependency_payload, _dependency_text_lines
+        from cadrumo.entrypoints.cli.config.check_cli import dependency_payload, dependency_text_lines
         from cadrumo.entrypoints.cli.config.check_payloads import ConfigCheckResult
 
         def project(status):
-            payload = _dependency_payload(status)
+            payload = dependency_payload(status)
             result = ConfigCheckResult(ok=status.available, dependencies=[payload])
             registered = validate_registered_result("config.check", result)
             return {{
                 "status": status.model_dump(mode="json"),
                 "payload": payload.model_dump(mode="json"),
                 "registered_result": registered.model_dump(mode="json"),
-                "text": list(_dependency_text_lines(payload)),
+                "text": list(dependency_text_lines(payload)),
             }}
 
         matrix = {{}}

@@ -29,9 +29,9 @@ from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.posix import posix_owner_uid
 from cadrumo_client.transport.posix_endpoint import PosixEndpoint
 from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_client.transport.windows_process import WindowsOwnedProcess, WindowsProcessScope
 
 from ...adapters.boot_record import RuntimeBootRecordUnavailable, read_runtime_boot_record
-from ...adapters.windows_process import WindowsOwnedProcess, WindowsProcessScope
 
 pytestmark = [
     pytest.mark.integration,

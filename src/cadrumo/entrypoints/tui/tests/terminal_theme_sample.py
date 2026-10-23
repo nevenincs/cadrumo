@@ -12,6 +12,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Input, Label, Static
 
 from ..components.host import ScreenHostApp
+from .settling import settle
 
 
 class ThemeSample(Screen[None]):
@@ -33,7 +34,7 @@ async def render_sample() -> str:
     """Capture ANSI bytes from Textual's real styled strips."""
     app = ScreenHostApp(ThemeSample())
     async with app.run_test(size=(60, 20)) as pilot:
-        await pilot.pause(0.2)
+        await settle(pilot)
         lines = app.screen._compositor.render_strips()
         return "\x1b[2J\x1b[H" + "".join(
             f"\x1b[{row + 1};1H"

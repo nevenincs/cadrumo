@@ -19,13 +19,17 @@ from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
+from cadrumo_client.transport.windows_process import (
+    WindowsOwnedProcess,
+    WindowsProcessScope,
+    unreturned_windows_process_scope,
+)
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorizationOwner
 
 from .linux_worker_process import LinuxOwnedProcess, LinuxProcessScope
 from .macos_worker_process import MacosOwnedProcess, MacosProcessScope
 from .profile_worker_human_admission import ProfileWorkerHumanAdmission
-from .windows_process import WindowsOwnedProcess, WindowsProcessScope, unreturned_windows_process_scope
 from .worker_authorization import WorkerAuthorizationServer
 from .worker_native_identity import worker_operation_namespace
 from .worker_resource_cleanup import WorkerResourceCleanup, release_worker_resources

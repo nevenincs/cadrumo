@@ -116,13 +116,6 @@ _COLUMNS: Final[tuple[tuple[str, str, int], ...]] = (
     ("classification", "tui.ledger.column.classification", 12),
     ("direction", "tui.ledger.column.direction", 10),
 )
-_TEXT_FILTERS: Final[tuple[str, ...]] = (
-    "#entries-browse-year",
-    "#entries-browse-text",
-    "#entries-browse-import",
-    "#entries-browse-account",
-    "#entries-browse-group",
-)
 _ACTION_BUTTONS: Final[tuple[str, ...]] = (
     "entries-browse-open",
     "entries-browse-trace",

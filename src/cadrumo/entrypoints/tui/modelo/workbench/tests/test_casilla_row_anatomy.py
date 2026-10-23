@@ -32,6 +32,7 @@ from ......core.period import Period
 from ......domain.calculations.registry.schema_surfaces import CasillaConstraints
 from ......tests.locales_root_fixture import locales_root_scope
 from ....components.theme import install_cadrumo_themes
+from ....tests.settling import settle
 from ..casilla_list import (
     CasillaList,
 )
@@ -116,7 +117,7 @@ async def _render(
     with override_settings(cadrumo_output_language=language.value):
         app = _ListHarness(items, language, density)
         async with app.run_test(size=(width, 40)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             widget = app.query_one(CasillaList)
             lines = [widget.render_line(y).text for y in range(widget.size.height)]
     return [line.rstrip() for line in lines if line.strip()]

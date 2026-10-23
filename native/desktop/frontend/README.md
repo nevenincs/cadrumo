@@ -227,6 +227,24 @@ with rounded ends only where the window begins or ends. Colour, type and
 spacing come from the shared palette roles and tokens. Keyboard focus and
 selection keep their shared indicators.
 
+Lines are few. Where the chrome meets content, the change of surface is the
+edge: a pane header, the rail, the title bar and a toolbar draw no hairline.
+A raised or floating surface is edged once, by its elevation shadow, never by
+a border as well. A box that only groups or quotes, such as a plan entry, a
+package listing or a keycap, is a wash of ink (`bg-accent`) with no drawn
+rectangle. A border is kept for the edge of a control (a field, an outline
+button, a switch), for a state that must be told apart (a refused file, the
+chosen option, today), for rows in a scrolling list, and for the rules a
+document's own tables and quotes carry. A splitter rests in the divider
+colour and takes the focus colour only under the hand.
+
+The brand is one lockup, `Logo`: the documentation's coloured mark beside the
+configured product name set in the text face, in capitals, semibold and
+tracked. The mark's sizes are the `mark` tokens; the loading page draws the
+same lockup stacked. The documentation's display serif is not used for the
+name in the window: it is a display cut whose hairlines go faint at the sizes
+a title bar has.
+
 Public shell components use PascalCase filenames under `src/components/`.
 Feature internals live in `calendar/`, `account/` and `records/`, with a descriptive
 component per module. Generic primitives keep shadcn's kebab-case filenames

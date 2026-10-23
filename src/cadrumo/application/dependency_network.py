@@ -17,9 +17,9 @@ The preflight runs on request only -- at the start of a setup and in a full
 check -- never on a timer. It sends no taxpayer data.
 
 The ``CADRUMO_PROXY_*`` settings apply to traffic Cadrumo itself starts: this
-preflight, the browser installer child and a model program Cadrumo starts. The
-child processes receive them through the standard proxy environment variables
-from :func:`dependency_proxy_environment`.
+preflight, the browser installer's archive downloads and a model program
+Cadrumo starts. The browser installer child is given no proxy; Cadrumo fetches
+its archives itself through :class:`DependencyProxy`.
 """
 
 from __future__ import annotations
@@ -54,7 +54,6 @@ __all__ = [
     "check_dependency_host",
     "dependency_host_reachability",
     "dependency_hosts",
-    "dependency_proxy_environment",
     "dependency_proxy_from_settings",
     "preflight_dependency_hosts",
 ]
@@ -152,7 +151,7 @@ class DependencyProxy:
     """An HTTP proxy reached with ``CONNECT``, its optional credentials and its bypass list.
 
     The password is held only to build the ``Proxy-Authorization`` header and
-    the child-process environment; :meth:`__repr__` never shows it.
+    the credentialed proxy URL; :meth:`__repr__` never shows it.
     """
 
     host: str
@@ -214,24 +213,6 @@ def dependency_proxy_from_settings(settings: Settings) -> DependencyProxy | None
         password=password or unquote(parts.password or ""),
         bypass=bypass,
     )
-
-
-def dependency_proxy_environment(proxy: DependencyProxy | None) -> dict[str, str]:
-    """Return the proxy environment a setup child process needs, empty when no proxy is set.
-
-    Both spellings are set because the browser installer and the model program
-    read different ones. The caller merges the result over a copy of its own
-    environment for that child only; the result carries the proxy password and
-    must never be logged.
-    """
-    if proxy is None:
-        return {}
-    url = proxy.url(with_credentials=True)
-    no_proxy = ",".join(proxy.bypass)
-    environment = {"HTTPS_PROXY": url, "HTTP_PROXY": url, "https_proxy": url, "http_proxy": url}
-    if no_proxy:
-        environment |= {"NO_PROXY": no_proxy, "no_proxy": no_proxy}
-    return environment
 
 
 async def dependency_host_reachability(hosts: tuple[str, ...]) -> DependencyFailureCategory | None:

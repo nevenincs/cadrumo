@@ -14,6 +14,8 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Final
 
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from .controller import AgentHostError, AgentHostRefusal
 
 
@@ -32,6 +34,12 @@ class AgentLauncherRefusal(StrEnum):
 # contract the service offered; every other agent refusal is a failure to serve.
 _INCOMPATIBLE_AGENT_CODES: Final = frozenset({"frame_malformed", "frame_too_large", "provider_unsupported"})
 
+# Runtime transport refusals that mean no runtime is there to serve the service yet;
+# every other runtime refusal, including an untrusted endpoint or peer, is a failure.
+_RUNTIME_UNAVAILABLE_CODES: Final = frozenset(
+    {RefusalCode.UNAVAILABLE, RefusalCode.ENDPOINT_NOT_READY, RefusalCode.DRAINING}
+)
+
 
 def launcher_refusal_for(error: AgentHostError) -> AgentLauncherRefusal:
     """Map a hosting-protocol refusal onto the launcher protocol's closed codes."""
@@ -46,3 +54,8 @@ def launcher_refusal_for(error: AgentHostError) -> AgentLauncherRefusal:
         return AgentLauncherRefusal.SERVICE_INCOMPATIBLE
     # Includes the native host's launch-profile refusal and every store step that did not reach current stores.
     return AgentLauncherRefusal.SERVICE_FAILED
+
+
+def runtime_launcher_refusal_for(error: RefusalError) -> AgentLauncherRefusal | None:
+    """Return ``RUNTIME_UNAVAILABLE`` when the runtime is absent, not ready or draining, else ``None``."""
+    return AgentLauncherRefusal.RUNTIME_UNAVAILABLE if error.reason in _RUNTIME_UNAVAILABLE_CODES else None

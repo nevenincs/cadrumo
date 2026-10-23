@@ -45,6 +45,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode
@@ -94,12 +95,6 @@ class _LoginObservation:
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
-
-
-async def _until(pilot: Pilot[object], predicate, *, timeout: float = 90) -> None:
-    async with asyncio.timeout(timeout):
-        while not predicate():
-            await asyncio.sleep(0.05)
 
 
 def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_approval(
@@ -238,15 +233,22 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
                     login = pilot.app.screen
                     assert isinstance(login, RuntimeLoginScreen)
                     request_access = login.query_one("#runtime-login-request-access", Button)
-                    await _until(
+                    await settle_until(
                         pilot,
                         lambda: login._worker is not None and login._worker.is_finished and not request_access.disabled,
+                        "login._worker is not None and login._worker.is_finished and not req...",
+                        workers=False,
                     )
                     request_access.scroll_visible(animate=False)
                     assert await click_when_laid_out(pilot, request_access), (
                         f"request button not reached: button={request_access.region}, screen={login.region}"
                     )
-                    await _until(pilot, lambda: isinstance(pilot.app.screen, RuntimeAutomationRequesterScreen))
+                    await settle_until(
+                        pilot,
+                        lambda: isinstance(pilot.app.screen, RuntimeAutomationRequesterScreen),
+                        "isinstance(pilot.app.screen, RuntimeAutomationRequesterScreen)",
+                        workers=False,
+                    )
                     request = pilot.app.screen
                     assert isinstance(request, RuntimeAutomationRequesterScreen)
                     assert request._client is None
@@ -263,13 +265,20 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
                         "#automation-request-key-expiry", Input
                     ).value = subject.proposal.key_expires_at.isoformat()
                     request.query_one("#automation-request-submit", Button).press()
-                    await _until(pilot, lambda: request._submitted is not None)
+                    await settle_until(
+                        pilot, lambda: request._submitted is not None, "request._submitted is not None", workers=False
+                    )
                     submitted = request._submitted
                     assert submitted is not None and submitted.stage is EnrollmentStage.REQUESTED
                     assert submitted.profile_id == profile_id
                     approval = pool.submit(copy_context().run, approve, submitted.request_id)
                     runtime_owner.auxiliary.append(approval)
-                    await _until(pilot, lambda: request._outcome is not None or approval.done(), timeout=30)
+                    await settle_until(
+                        pilot,
+                        lambda: request._outcome is not None or approval.done(),
+                        "request._outcome is not None or approval.done()",
+                        workers=False,
+                    )
                     if approval.done():
                         approval_error = await await_cancellation_complete(
                             asyncio.to_thread(approval.exception, timeout=0), task_name="tui-approval-result"
@@ -278,7 +287,9 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
                             annotate_approval_error(approval_error, request._outcome)
                             raise approval_error
                     if request._outcome is None:
-                        await _until(pilot, lambda: request._outcome is not None, timeout=30)
+                        await settle_until(
+                            pilot, lambda: request._outcome is not None, "request._outcome is not None", workers=False
+                        )
                     try:
                         approval_error = await await_cancellation_complete(
                             asyncio.to_thread(approval.exception, timeout=10), task_name="tui-approval-result"
@@ -301,7 +312,9 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
                     assert outcome.request_id == submitted.request_id
                     assert outcome.credential_reference is not None
                     request.action_close()
-                    await _until(pilot, lambda: pilot.app.screen is login)
+                    await settle_until(
+                        pilot, lambda: pilot.app.screen is login, "pilot.app.screen is login", workers=False
+                    )
                     login.action_abandon()
 
                 assert main(headless=True, auto_pilot=drive) == 0
@@ -477,31 +490,34 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                                     login.action_abandon()
                                     return
                                 submit = login.query_one("#runtime-login-submit", Button)
-                                await _until(
+                                await settle_until(
                                     pilot,
                                     lambda: (
                                         login._worker is not None and login._worker.is_finished and not submit.disabled
                                     ),
+                                    "( login._worker is not None and login._worker.is_finished and not s...",
+                                    workers=False,
                                 )
                                 selection = login.query_one("#runtime-login-method", Select)
                                 selection.value = RuntimeLoginMethod.API_REFERENCE
-                                await pilot.pause()
+                                await settle(pilot, workers=False)
                                 credential = login.query_one("#runtime-login-credential", Input)
                                 assert credential.password and credential.value == "" and not credential.display
                                 login.query_one("#runtime-login-reference", Input).value = str(selected_reference)
                                 submit.scroll_visible(animate=False)
                                 assert await click_when_laid_out(pilot, submit)
-                                await _until(pilot, lambda: not login._busy, timeout=20)
+                                await settle_until(pilot, lambda: not login._busy, "not login._busy", workers=False)
                                 if not login._transferred:
                                     status = login.query_one("#runtime-login-status", PinnedStatusBar)
                                     raise AssertionError(f"API reference login did not hand off: {status.message}")
                                 return
                             app = pilot.app
                             assert isinstance(app, RuntimeRestrictedSessionApp)
-                            await _until(
+                            await settle_until(
                                 pilot,
                                 lambda: str(profile_id) in str(app.query_one("#restricted-profile", Static).render()),
-                                timeout=20,
+                                "str(profile_id) in str(app.query_one('#restricted-profile', Static)...",
+                                workers=False,
                             )
                             request_button = app.query_one("#restricted-request-access", Button)
                             # Status rows fill in after the profile line and can push the actions below the fold.
@@ -513,8 +529,11 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                                     f"disabled={request_button.disabled}, cleared={app._cleared}, locking={app._locking}"
                                 )
                             try:
-                                await _until(
-                                    pilot, lambda: isinstance(app.screen, RuntimeAutomationRequesterScreen), timeout=10
+                                await settle_until(
+                                    pilot,
+                                    lambda: isinstance(app.screen, RuntimeAutomationRequesterScreen),
+                                    "isinstance(app.screen, RuntimeAutomationRequesterScreen)",
+                                    workers=False,
                                 )
                             except TimeoutError as error:
                                 availability = app.query_one("#restricted-availability", Static)
@@ -531,7 +550,7 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                             assert request._client.profile_id == profile_id
                             assert request._client.frontend is OperationFrontendProjection.TUI
                             request.query_one("#automation-request-kind", Select).value = selected_kind
-                            await asyncio.sleep(0.05)
+                            await settle(pilot, workers=False)
                             operation = "user-profile.field-mutation"
                             request.query_one("#automation-request-operations", SelectionList).select(operation)
                             chosen_actions = (
@@ -568,14 +587,15 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                                 assert typed.expires_at > selected_grant.expires_at
                             assert draft.credential_reference == selected_reference
                             request.query_one("#automation-request-submit", Button).press()
-                            await asyncio.sleep(0.1)
+                            await settle(pilot, workers=False)
                             if not request._busy and request._submitted is None:
                                 status = request.query_one("#automation-request-status", Static)
                                 raise AssertionError(f"request refused before submit: {status.render()}")
-                            await _until(
+                            await settle_until(
                                 pilot,
                                 lambda: request._submitted is not None or request._outcome is not None,
-                                timeout=20,
+                                "request._submitted is not None or request._outcome is not None",
+                                workers=False,
                             )
                             if request._submitted is None:
                                 status = request.query_one("#automation-request-status", Static)
@@ -588,7 +608,12 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                             assert submitted is not None and submitted.stage is EnrollmentStage.REQUESTED
                             approval = pool.submit(copy_context().run, approve, submitted.request_id)
                             runtime_owner.auxiliary.append(approval)
-                            await _until(pilot, lambda: request._outcome is not None or approval.done(), timeout=45)
+                            await settle_until(
+                                pilot,
+                                lambda: request._outcome is not None or approval.done(),
+                                "request._outcome is not None or approval.done()",
+                                workers=False,
+                            )
                             if approval.done():
                                 approval_error = await await_cancellation_complete(
                                     asyncio.to_thread(approval.exception, timeout=0), task_name="tui-approval-result"
@@ -596,7 +621,12 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                                 if approval_error is not None:
                                     raise approval_error
                             if request._outcome is None:
-                                await _until(pilot, lambda: request._outcome is not None, timeout=45)
+                                await settle_until(
+                                    pilot,
+                                    lambda: request._outcome is not None,
+                                    "request._outcome is not None",
+                                    workers=False,
+                                )
                             approval_error = await await_cancellation_complete(
                                 asyncio.to_thread(approval.exception, timeout=10), task_name="tui-approval-result"
                             )
@@ -618,7 +648,12 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                             outcomes.append(outcome)
                             request.action_close()
                             if app.is_running:
-                                await _until(pilot, lambda: app.screen is app or not app.is_running, timeout=5)
+                                await settle_until(
+                                    pilot,
+                                    lambda: app.screen is app or not app.is_running,
+                                    "app.screen is app or not app.is_running",
+                                    workers=False,
+                                )
                                 if app.is_running:
                                     app.action_leave()
 

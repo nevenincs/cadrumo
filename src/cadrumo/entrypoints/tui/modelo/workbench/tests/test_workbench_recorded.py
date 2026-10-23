@@ -12,7 +12,6 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from textual.pilot import Pilot
 from textual.widgets import Input, OptionList, Static
 
 from ......application.modelo.work_form_localization import same_work_form_facts
@@ -21,6 +20,7 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation, tr
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry
 from ..screen import ModeloWorkbenchScreen
@@ -36,11 +36,6 @@ _READ_ONLY = (
 )
 
 
-async def _settle(pilot: Pilot[None], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
-
-
 @pytest.mark.asyncio
 async def test_a_recorded_declaration_is_read_only_and_asks_for_nothing() -> None:
     blocked = replace_fields(synthetic_form(), {"06": {"blockers": (ModeloFormBlocker(code="missing_required"),)}})
@@ -50,7 +45,7 @@ async def test_a_recorded_declaration_is_read_only_and_asks_for_nothing() -> Non
         screen = ModeloWorkbenchScreen(FakeReader(form=form, verified=True, filed=True), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             next_line = str(screen.query_one("#wb-next", Static).render())
             stepper = str(screen.query_one("#wb-stepper", Static).render())
             deadline_shown = screen.query_one("#wb-deadline", Static).display
@@ -61,22 +56,22 @@ async def test_a_recorded_declaration_is_read_only_and_asks_for_nothing() -> Non
                 item.attention for item in screen.query_one(CasillaList).items if isinstance(item, CasillaListEntry)
             ]
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             panel = open_panel(app.screen)
             assert panel is not None
             panel_state = (panel.read_only, len(panel.query(Input)))
             reason = str(panel.query_one("#editor-can-change-text", Static).render())
             await pilot.press("escape")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("f8")
-            await _settle(pilot)
+            await settle(pilot)
             after_f8 = (app.screen is screen, str(screen.query_one("#wb-notice", Static).render()))
             await pilot.press("b")
-            await _settle(pilot)
+            await settle(pilot)
             after_b = (app.screen is screen, str(screen.query_one("#wb-notice", Static).render()))
             screen.query_one("#wb-notice", Static).update("")
             await pilot.press("c")
-            await _settle(pilot)
+            await settle(pilot)
             after_c = str(screen.query_one("#wb-notice", Static).render())
             app.exit(None)
 
@@ -101,7 +96,7 @@ async def test_a_small_terminal_says_recorded_as_filed_once() -> None:
         screen = ModeloWorkbenchScreen(FakeReader(form=form, verified=True, filed=True), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             # The notice surfaces: the header and the journey line, and whatever else states the declaration.
             notices = "\n".join(
                 str(widget.render())
@@ -134,12 +129,12 @@ async def test_the_help_and_the_legend_of_a_recorded_declaration_name_no_key_tha
         screen = ModeloWorkbenchScreen(FakeReader(form=form, verified=True, filed=True), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(160, 48)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("question_mark")
-            await _settle(pilot)
+            await settle(pilot)
             band = str(screen.query_one("#wb-help", Static).render())
             await pilot.press("question_mark")
-            await _settle(pilot)
+            await settle(pilot)
             legend = str(screen.query_one("#wb-legend-text", Static).render())
             app.exit(None)
 
@@ -164,7 +159,7 @@ async def test_on_a_recorded_declaration_enter_is_named_for_opening_the_box_not_
         draft = ModeloWorkbenchScreen(FakeReader(form=synthetic_form()), actions=FakeActions())
         draft_app = ScreenHostApp(draft)
         async with draft_app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             draft_enter = draft.query_one(CasillaList).binding_for("enter")
             draft_app.exit(None)
         filed = ModeloWorkbenchScreen(
@@ -172,7 +167,7 @@ async def test_on_a_recorded_declaration_enter_is_named_for_opening_the_box_not_
         )
         filed_app = ScreenHostApp(filed)
         async with filed_app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             filed_enter = filed.query_one(CasillaList).binding_for("enter")
             filed_app.exit(None)
 

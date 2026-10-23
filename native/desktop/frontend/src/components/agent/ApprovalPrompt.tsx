@@ -130,7 +130,7 @@ export function ApprovalPrompt({
   return (
     <section
       aria-labelledby={headingId}
-      className="agent-approval grid max-h-[60dvh] gap-3 overflow-y-auto rounded-xl border border-border-strong bg-card p-3.5 text-card-foreground shadow-raised"
+      className="agent-approval grid max-h-[60dvh] gap-3 overflow-y-auto rounded-xl bg-card p-3.5 text-card-foreground shadow-raised"
     >
       <div className="flex items-start gap-2">
         <Icon

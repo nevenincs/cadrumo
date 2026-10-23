@@ -47,6 +47,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ..components.host import ScreenHostApp
 from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
+from .settling import settle
 
 pytestmark = [
     pytest.mark.integration,
@@ -179,9 +180,9 @@ async def test_saving_a_masked_field_without_typing_does_not_clear_it(tmp_path) 
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _open(app, app._field_by_key[_MASKED_PATH])
-            await pilot.pause()
+            await settle(pilot)
             assert app.app.screen.query_one("#edit-input", Input).value == "", (
                 "the dialog must still open empty, or this is not the gesture under test"
             )
@@ -214,9 +215,9 @@ async def test_pressing_enter_in_an_untouched_masked_box_does_not_clear_it(tmp_p
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _open(app, app._field_by_key[_MASKED_PATH])
-            await pilot.pause()
+            await settle(pilot)
             await pilot.press("enter")
             await wait_until_settled(app, pilot)
             pilot.app.exit(None)
@@ -241,9 +242,9 @@ async def test_whitespace_typed_into_a_masked_box_does_not_clear_it(tmp_path) ->
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _open(app, app._field_by_key[_MASKED_PATH])
-            await pilot.pause()
+            await settle(pilot)
             app.app.screen.query_one("#edit-input", Input).value = "   "
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
@@ -275,9 +276,9 @@ async def test_a_masked_field_can_still_be_deliberately_cleared(tmp_path) -> Non
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _open(app, app._field_by_key[_MASKED_PATH])
-            await pilot.pause()
+            await settle(pilot)
             await pilot.click("#btn-edit-clear")
             await wait_until_settled(app, pilot)
             pilot.app.exit(None)
@@ -309,18 +310,18 @@ async def test_the_clear_gesture_is_offered_only_where_the_box_cannot_express_it
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
 
             _open(app, app._field_by_key[_PLAIN_PATH])
-            await pilot.pause()
+            await settle(pilot)
             assert not app.app.screen.query("#btn-edit-clear"), (
                 "an unmasked field's own box already says 'delete this' by being emptied"
             )
             app.app.screen.dismiss(None)
-            await pilot.pause()
+            await settle(pilot)
 
             _open(app, app._field_by_key[_MASKED_PATH])
-            await pilot.pause()
+            await settle(pilot)
             assert not app.app.screen.query("#btn-edit-clear"), (
                 "a masked field holding nothing has nothing to offer to clear"
             )
@@ -350,9 +351,9 @@ async def test_an_unmasked_field_is_still_cleared_by_emptying_its_box(tmp_path) 
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _open(app, app._field_by_key[_PLAIN_PATH])
-            await pilot.pause()
+            await settle(pilot)
             app.app.screen.query_one("#edit-input", Input).value = ""
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
@@ -383,9 +384,9 @@ async def test_the_clear_button_is_not_the_one_enter_reaches(tmp_path) -> None:
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             _open(app, app._field_by_key[_MASKED_PATH])
-            await pilot.pause()
+            await settle(pilot)
             assert app.app.screen.focused is app.app.screen.query_one("#edit-input", Input), (
                 "the box must hold focus, so enter submits rather than pressing a button"
             )
@@ -420,13 +421,13 @@ async def test_an_enum_dialog_pre_selects_nothing_it_cannot_confirm_is_current(t
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             field = app._field_by_key[_ENUM_PATH]
             assert field.choices, f"{_ENUM_PATH} must offer a closed answer set for this to test anything"
             assert not field.present, "the field must start unanswered, or the dialog would rightly pre-select"
 
             _open(app, field)
-            await pilot.pause()
+            await settle(pilot)
             assert app.app.screen.query_one("#edit-options", OptionList).highlighted is None, (
                 "no token may be pre-selected when none of them is what the field holds"
             )
@@ -459,10 +460,10 @@ async def test_an_enum_dialog_still_pre_selects_the_token_the_field_holds(tmp_pa
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             field = app._field_by_key[_ENUM_PATH]
             _open(app, field)
-            await pilot.pause()
+            await settle(pilot)
             highlighted = app.app.screen.query_one("#edit-options", OptionList).highlighted
             assert highlighted is not None, "an answered enum must show which answer it holds"
             assert field.choices[highlighted].value == "M"
@@ -509,13 +510,13 @@ async def test_a_masked_enum_pre_selects_nothing_so_enter_cannot_overwrite_it(tm
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             dismissed: list[str | None] = []
             pilot.app.push_screen(FieldEditScreen(masked_enum), dismissed.append)
-            await pilot.pause()
+            await settle(pilot)
             assert app.app.screen.query_one("#edit-options", OptionList).highlighted is None
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             assert not dismissed, f"enter must not have chosen anything, but dismissed {dismissed!r}"
             assert isinstance(app.app.screen, FieldEditScreen), (
                 "the dialog must stay open so the operator can choose, rather than closing on nothing"
@@ -529,18 +530,18 @@ async def test_a_masked_enum_pre_selects_nothing_so_enter_cannot_overwrite_it(tm
             # None or one of its own declared tokens, and neither reaches
             # the write door as a clear.
             await pilot.click("#btn-edit-save")
-            await pilot.pause()
+            await settle(pilot)
             assert dismissed == [None], f"save with nothing chosen must be a no-change, but gave {dismissed!r}"
 
             # The operator is not stranded: one arrow key reaches the first
             # token, which is where focus alone used to leave them.
             chosen: list[str | None] = []
             pilot.app.push_screen(FieldEditScreen(masked_enum), chosen.append)
-            await pilot.pause()
+            await settle(pilot)
             await pilot.press("down")
-            await pilot.pause()
+            await settle(pilot)
             assert app.app.screen.query_one("#edit-options", OptionList).highlighted == 0
             await pilot.press("enter")
-            await pilot.pause()
+            await settle(pilot)
             assert chosen == ["casilla"], f"a chosen token must still be written, but got {chosen!r}"
             pilot.app.exit(None)

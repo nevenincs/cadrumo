@@ -69,7 +69,6 @@ from cadrumo.entrypoints.tui.ledger.tests.invoices_fixtures import INVOICES_PROF
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_controller import OperationController
 
-PROFILE_ID = INVOICES_PROFILE_ID
 OTHER_PROFILE_ID = UUID("4ee00000-0000-4000-8000-0000000000ee")
 SESSION_ID = UUID("6dd00000-0000-4000-8000-0000000000dd")
 LAPSED_SESSION_ID = UUID("7dd00000-0000-4000-8000-0000000000dd")
@@ -137,7 +136,7 @@ class Settled:
         state = OperationPublicProjectionV1(
             operation_id=_OPERATION_ID,
             definition_id=self.definition_id,
-            subject_ref=profile_operation_subject(str(PROFILE_ID)),
+            subject_ref=profile_operation_subject(str(INVOICES_PROFILE_ID)),
             revision=1,
             anchor_cursor=0,
             definition_contract=contract,
@@ -182,7 +181,7 @@ class FakeClient:
     frontend = OperationFrontendProjection.TUI
 
     def __init__(self) -> None:
-        self.profile_id = PROFILE_ID
+        self.profile_id = INVOICES_PROFILE_ID
         self.session_id = SESSION_ID
 
 
@@ -278,7 +277,6 @@ def client_of(boundary: Boundary) -> FrontendClient:
 __all__ = [
     "LAPSED_SESSION_ID",
     "OTHER_PROFILE_ID",
-    "PROFILE_ID",
     "PROFILE_LABEL",
     "REGISTRY",
     "SESSION_ID",

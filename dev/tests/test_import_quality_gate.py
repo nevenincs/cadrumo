@@ -36,6 +36,7 @@ from dev.quality.import_gate import (
     run_import_linter,
     run_subordinate,
     run_within_budget,
+    step_budget_for,
 )
 from dev.quality.import_health import build_import_health
 from dev.quality.import_health_rendering import render_import_health
@@ -89,6 +90,14 @@ def _write_module(root: Path, dotted: str, source: str) -> None:
     path.write_text(source, encoding=UTF_8, newline="\n")
 
 
+def _write_consumer(root: Path, declared: str, source: str) -> Path:
+    """Write a consumer-only file at a declared module path, or inside a declared directory."""
+    path = root / declared if declared.endswith(".py") else root / declared / "consumer.py"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(source, encoding=UTF_8, newline="\n")
+    return path
+
+
 def _layer_names(value: str) -> tuple[str, ...]:
     return tuple(token.strip().strip("()") for token in value.replace("\n", " ").split(":") if token.strip())
 
@@ -131,6 +140,14 @@ def _fixture_root(tmp_path: Path) -> Path:
                 prefix = expression.rstrip(".*")
                 if prefix and prefix.replace("_", "a").replace(".", "a").isalnum():
                     _write_package(tmp_path, prefix)
+
+    # Declared consumer trees and the consumer paths bound to contracts must
+    # hold Python; materialise one empty consumer file for each.
+    for name in config.sections():
+        if name != "import-gate:consumer-trees" and not name.startswith("import-gate:consumer-contract:"):
+            continue
+        for declared in config[name]:
+            _write_consumer(tmp_path, declared, "")
 
     # The loadability worker reads its finite target set through the audited
     # tree's own inventory loader, as the live repository provides it.
@@ -364,6 +381,30 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
             "cadrumo_mcp.mcp.bad",
             "import cadrumo.entrypoints.module\n",
             ("cadrumo.entrypoints.module",),
+        ),
+        (
+            "agent-service-to-runtime-host",
+            "cadrumo_agent_service.host.bad",
+            "from cadrumo_runtime.host.module import VALUE\n",
+            ("cadrumo_runtime.host.module",),
+        ),
+        (
+            "agent-service-to-runtime-adapter",
+            "cadrumo_agent_service.adapters.bad",
+            "from cadrumo_runtime.adapters.module import VALUE\n",
+            ("cadrumo_runtime.adapters.module",),
+        ),
+        (
+            "agent-service-to-tax-entrypoint-function-local",
+            "cadrumo_agent_service.adapters.bad",
+            "def load():\n    import cadrumo.entrypoints.module\n\n    return cadrumo.entrypoints.module\n",
+            ("cadrumo.entrypoints.module",),
+        ),
+        (
+            "mcp-to-agent-service",
+            "cadrumo_mcp.mcp.bad",
+            "from cadrumo_agent_service.host.module import VALUE\n",
+            ("cadrumo_agent_service.host.module",),
         ),
         (
             "domain-to-application",
@@ -611,6 +652,34 @@ def test_invalid_authority_config_fails_closed(tmp_path: Path) -> None:
             "__import__('cadrumo.domain.module')\n",
             "cadrumo.domain.module",
             "RAW_FIRST_PARTY_IMPORT",
+        ),
+        (
+            "raw-first-party-import-followed-by-another-call",
+            "dev.quality.consumer",
+            "value = __import__('cadrumo.domain.module')\nprint(value)\n",
+            "cadrumo.domain.module",
+            "RAW_FIRST_PARTY_IMPORT",
+        ),
+        (
+            "interpreter-code-payload-private-target",
+            "dev.quality.consumer",
+            "import subprocess, sys\nsubprocess.run([sys.executable, '-c', 'import cadrumo.domain._private'])\n",
+            "cadrumo.domain._private",
+            "PRIVATE_CROSS_PACKAGE",
+        ),
+        (
+            "interpreter-module-payload-missing-target",
+            "dev.quality.consumer",
+            "import subprocess, sys\nsubprocess.run([sys.executable, '-m', 'cadrumo.domain.missing'])\n",
+            "",
+            "STATIC_TARGET_UNRESOLVED",
+        ),
+        (
+            "run-module-private-target",
+            "dev.quality.consumer",
+            "import runpy\nrunpy.run_module('cadrumo.domain._private')\n",
+            "cadrumo.domain._private",
+            "PRIVATE_CROSS_PACKAGE",
         ),
         (
             "literal-dynamic-first-party-target-missing",
@@ -1453,3 +1522,272 @@ def test_a_dynamic_shipped_import_of_a_repository_only_root_fails_the_verdict(tm
     root_boundary = counts["root_boundary"]
     assert isinstance(root_boundary, int) and root_boundary >= 1, output
     assert "src/cadrumo/domain/tests/test_dynamic_reach.py:3 imports dev.exit_codes" in output
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "import subprocess, sys\n\nsubprocess.run([sys.executable, '-c', 'from dev.exit_codes import FAILED'])\n",
+        "import subprocess, sys\n\nsubprocess.run([sys.executable, '-m', 'dev.exit_codes'])\n",
+        "import runpy\n\nrunpy.run_module('dev.exit_codes')\n",
+        "import importlib\n\ndef probe(module=importlib.import_module('dev.exit_codes')):\n    return module\n",
+    ],
+    ids=["interpreter-code", "interpreter-module", "run-module", "definition-default"],
+)
+def test_a_hidden_shipped_import_of_a_repository_only_root_fails_the_verdict(tmp_path: Path, source: str) -> None:
+    """A string payload, ``runpy`` or definition header does not change the dependency."""
+    root = _fixture_root(tmp_path)
+    _write_module(root, "dev.exit_codes", "FAILED = 1\n")
+    _write_module(root, "cadrumo.domain.tests.test_hidden_reach", source)
+
+    exit_status, output = _health_verdict(root)
+
+    assert exit_status == 1, output
+    counts, _ = _ratchet_report(output)
+    root_boundary = counts["root_boundary"]
+    assert isinstance(root_boundary, int) and root_boundary >= 1, output
+    assert "src/cadrumo/domain/tests/test_hidden_reach.py:3 imports dev.exit_codes" in output
+
+
+def _append_authority(root: Path, text: str) -> None:
+    """Merge gate section entries into the fixture's copy of the live authority."""
+    config = configparser.ConfigParser(interpolation=None)
+    config.read(root / ".importlinter", encoding=UTF_8)
+    addition = configparser.ConfigParser(interpolation=None)
+    addition.read_string(text)
+    for name in addition.sections():
+        if not config.has_section(name):
+            config.add_section(name)
+        for key, value in addition.items(name):
+            config[name][key] = value
+    with (root / ".importlinter").open("w", encoding=UTF_8, newline="\n") as stream:
+        config.write(stream)
+
+
+def _authority_findings(root: Path) -> tuple[str, ...]:
+    read = read_authority(root)
+    assert read.authority is not None, read.findings
+    return read.findings
+
+
+@pytest.mark.parametrize(
+    ("relative", "label"),
+    (
+        ("tools/script.py", "tools"),
+        ("tools/nested/deep/probe.py", "tools"),
+        ("stray_root.py", "stray_root.py"),
+    ),
+)
+def test_a_repository_tree_holding_python_outside_every_declaration_is_unclassified(
+    tmp_path: Path, relative: str, label: str
+) -> None:
+    root = _fixture_root(tmp_path)
+    assert _authority_findings(root) == ()
+    path = root / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
+
+    findings = _authority_findings(root)
+
+    assert any(f"[UNCLASSIFIED_ROOT] repository tree {label!r} holds Python" in item for item in findings), findings
+
+
+def test_an_undeclared_repository_tree_fails_authority_preflight_through_real_gate(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    (root / "tools").mkdir()
+    (root / "tools" / "script.py").write_text("import cadrumo\n", encoding=UTF_8, newline="\n")
+    _assert_authority_refusal(root, "UNCLASSIFIED_ROOT")
+
+
+def test_ignored_and_non_python_repository_trees_stay_outside_the_census(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    (root / ".gitignore").write_text("scratch/\n*.log\n", encoding=UTF_8, newline="\n")
+    (root / "scratch" / "probe").mkdir(parents=True)
+    (root / "scratch" / "probe" / "run.py").write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
+    (root / "notes").mkdir()
+    (root / "notes" / "readme.md").write_text("# notes\n", encoding=UTF_8, newline="\n")
+
+    assert _authority_findings(root) == ()
+
+
+def test_a_documented_exclusion_is_the_only_way_to_leave_a_tree_outside_the_gate(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    (root / "tools").mkdir()
+    (root / "tools" / "script.py").write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
+    assert any("'tools' holds Python" in item for item in _authority_findings(root))
+
+    _append_authority(root, "[import-gate:excluded-trees]\ntools = Vendored generator kept identical to upstream.\n")
+
+    assert _authority_findings(root) == ()
+
+
+@pytest.mark.parametrize(
+    ("section", "expected"),
+    (
+        ("[import-gate:excluded-trees]\ntools =\n", "'tools' states no reason"),
+        ("[import-gate:consumer-trees]\nempty = A tree that holds no Python.\n", "'empty' holds no repository Python"),
+        ("[import-gate:consumer-trees]\ntools/script.py = Nested.\n", "is not one repository-root entry"),
+        ("[import-gate:consumer-trees]\nsrc = Source container.\n", "'src' is already owned by a declared root"),
+        (
+            "[import-gate:consumer-trees]\ntools = Scripts.\n[import-gate:excluded-trees]\ntools = Scripts.\n",
+            "declared both a consumer and an exclusion",
+        ),
+        ("[import-gate:consumer-tree]\ntools = Misspelt section.\n", "unknown import-gate section"),
+        ("[import-gate:consumer-contract:no-such-contract]\ntools = Scripts.\n", "names no forbidden Import Linter"),
+        (
+            "[import-gate:consumer-contract:shipped-code-never-reaches-repository-only]\ntools = Not a consumer.\n",
+            "'tools' lies outside every consumer tree",
+        ),
+    ),
+)
+def test_a_malformed_tree_declaration_fails_authority_preflight(tmp_path: Path, section: str, expected: str) -> None:
+    root = _fixture_root(tmp_path)
+    (root / "tools").mkdir()
+    (root / "tools" / "script.py").write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
+    (root / "empty").mkdir()
+    (root / "empty" / "notes.md").write_text("# empty\n", encoding=UTF_8, newline="\n")
+    _append_authority(root, section)
+
+    findings = _authority_findings(root)
+
+    assert any(item.startswith("[AUTHORITY_CONFIG]") and expected in item for item in findings), findings
+
+
+def _declared_consumer_paths(root: Path) -> tuple[str, str]:
+    """Return a consumer path held to the shipped contract and one that is not."""
+    read = read_authority(root)
+    assert read.authority is not None and read.findings == (), read.findings
+    shipped = next(
+        scope.paths[0]
+        for scope in read.authority.consumer_contracts
+        if scope.contract.key == "shipped-code-never-reaches-repository-only"
+    )
+    repository_only = next(
+        tree.path
+        for tree in read.authority.consumer_trees
+        if not tree.path.endswith(".py") and not shipped.startswith(f"{tree.path}/")
+    )
+    return shipped, repository_only
+
+
+def _consumer_findings(root: Path, declared: str, source: str) -> tuple[list[str], int, int]:
+    """Plant one consumer file and run the real subordinate checker over the fixture."""
+    path = _write_consumer(root, declared, source)
+    read = read_authority(root)
+    assert read.authority is not None and read.findings == (), read.findings
+    result = check_authority(read.authority)
+    relative = path.relative_to(root).as_posix()
+    rendered = [finding.render(root) for finding in result.findings if not finding.advisory]
+    return [item for item in rendered if relative in item], result.files_scanned, result.consumer_files_scanned
+
+
+@pytest.mark.parametrize(
+    ("name", "source", "category"),
+    (
+        ("private-module", "from dev.quality._private import VALUE\n", "PRIVATE_CROSS_PACKAGE"),
+        ("private-symbol", "from dev.quality.module import _HIDDEN\n", "PRIVATE_CROSS_PACKAGE"),
+        ("missing-target", "import cadrumo.domain.missing\n", "STATIC_TARGET_UNRESOLVED"),
+        ("package-facade", "from dev.quality import VALUE\n", "PACKAGE_FACADE"),
+        ("reexport", "from dev.quality.reexport import VALUE\n", "REEXPORT_OR_ALIAS"),
+        (
+            "function-local-private-module",
+            "def load():\n    from dev.quality._private import VALUE\n    return VALUE\n",
+            "PRIVATE_CROSS_PACKAGE",
+        ),
+        (
+            "dynamic-missing-target",
+            "import importlib\nimportlib.import_module('cadrumo.tests.missing_hook')\n",
+            "DYNAMIC_TARGET_UNRESOLVED",
+        ),
+        (
+            "dynamic-private-target",
+            "from importlib import import_module\nimport_module('dev.quality._private')\n",
+            "PRIVATE_CROSS_PACKAGE",
+        ),
+        (
+            "dynamic-unresolved-target",
+            "import importlib\nimport os\nimportlib.import_module(os.environ['MODULE'])\n",
+            "UNRESOLVED_DYNAMIC_TARGET",
+        ),
+    ),
+)
+def test_consumer_only_python_is_held_to_the_import_rules(
+    tmp_path: Path, name: str, source: str, category: str
+) -> None:
+    del name
+    root = _fixture_root(tmp_path)
+    _write_module(root, "dev.quality._private", "VALUE = 1\n")
+    _write_module(root, "dev.quality.module", "VALUE = 1\n_HIDDEN = 2\n")
+    _write_module(root, "dev.quality.reexport", "from .module import VALUE\n\ndef local():\n    return VALUE\n")
+    _, repository_only = _declared_consumer_paths(root)
+
+    for declared in (repository_only, "conftest.py"):
+        findings, _, _ = _consumer_findings(root, declared, source)
+        assert any(f"[{category}]" in item for item in findings), (declared, findings)
+
+
+def test_a_clean_consumer_is_scanned_without_findings_and_counted_apart_from_the_graph(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(root, "dev.quality.module", "VALUE = 1\n")
+    _write_module(root, "cadrumo.core.module", "VALUE = 1\n")
+    read = read_authority(root)
+    assert read.authority is not None
+    graphed_before = check_authority(read.authority).files_scanned
+    shipped, repository_only = _declared_consumer_paths(root)
+    _write_consumer(root, shipped, "from cadrumo.core.module import VALUE\n")
+    findings, graphed, consumers = _consumer_findings(
+        root,
+        repository_only,
+        (
+            "import importlib\n"
+            "from packaging.requirements import Requirement\n"
+            "from dev.quality.module import VALUE\n"
+            "importlib.import_module('cadrumo.core.module')\n"
+        ),
+    )
+
+    assert findings == []
+    assert graphed == graphed_before
+    declared_trees = len(read.authority.consumer_trees)
+    assert consumers >= declared_trees
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        "import dev.quality.module\n",
+        "def load():\n    from dev.quality.module import VALUE\n    return VALUE\n",
+        "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from docs.conf.module import VALUE\n",
+        "import importlib\nimportlib.import_module('dev.quality.module')\n",
+    ),
+)
+def test_a_shipped_consumer_never_reaches_a_repository_only_root(tmp_path: Path, source: str) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(root, "dev.quality.module", "VALUE = 1\n")
+    _write_module(root, "docs.conf.module", "VALUE = 1\n")
+    shipped, repository_only = _declared_consumer_paths(root)
+
+    shipped_findings, _, _ = _consumer_findings(root, shipped, source)
+    repository_findings, _, _ = _consumer_findings(root, repository_only, source)
+
+    assert any("[CONSUMER_CONTRACT]" in item for item in shipped_findings), shipped_findings
+    assert not any("[CONSUMER_CONTRACT]" in item for item in repository_findings), repository_findings
+
+
+def test_consumer_sources_are_part_of_the_governed_work_measure(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    read = read_authority(root)
+    assert read.authority is not None
+    before = step_budget_for(read.authority).cpu_seconds
+    _, repository_only = _declared_consumer_paths(root)
+    _write_consumer(root, repository_only, "VALUE = 1\n" + "# padding\n" * 200_000)
+
+    assert step_budget_for(read.authority).cpu_seconds > before
+
+
+def test_a_consumer_private_reach_fails_through_real_gate(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(root, "dev.quality._private", "VALUE = 1\n")
+    _, repository_only = _declared_consumer_paths(root)
+    _write_consumer(root, repository_only, "from dev.quality._private import VALUE\n")
+    _assert_subordinate_detection(root, "PRIVATE_CROSS_PACKAGE")

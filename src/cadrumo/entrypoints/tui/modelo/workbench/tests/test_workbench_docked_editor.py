@@ -18,12 +18,12 @@ from decimal import Decimal
 
 import pytest
 from textual import events
-from textual.pilot import Pilot
 from textual.widgets import Button, Input, Static
 
 from ......core.config import override_settings
 from ....components.host import ScreenHostApp
 from ....navigation import TuiNavigationTargetV1
+from ....tests.settling import settle, settle_until
 from ..casilla_list import CasillaList
 from ..editor import CasillaEditorPanel, CasillaEditorScreen
 from ..screen import ModeloWorkbenchScreen
@@ -36,15 +36,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _DOCKED = (120, 36)
 _SHORT = (80, 24)
-
-
-_SHOWING_WAIT = 200
-"""The most pauses a test waits for the screen to show what it expects before it reads what is there."""
-
-
-async def _settle(pilot: Pilot[None], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _workbench(navigate: list[TuiNavigationTargetV1] | None = None) -> ModeloWorkbenchScreen:
@@ -75,9 +66,9 @@ async def test_enter_docks_the_panel_under_the_list_with_the_row_still_highlight
         screen = _workbench()
         app = ScreenHostApp(screen)
         async with app.run_test(size=_DOCKED) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             on_top = app.screen
             panel = open_panel(screen)
             assert panel is not None
@@ -111,13 +102,13 @@ async def test_keep_and_go_to_next_moves_the_highlight_and_refills_the_panel_for
         screen = _workbench()
         app = ScreenHostApp(screen)
         async with app.run_test(size=_DOCKED) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             first = open_panel(screen)
             assert first is not None
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             refilled = open_panel(screen)
             assert refilled is not None
             title = _title(refilled)
@@ -143,20 +134,25 @@ async def test_on_the_shortest_docking_terminal_the_box_being_edited_shows_with_
         screen = ModeloWorkbenchScreen(FakeReader(form=long_section_form(16)), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             for _ in range(10):
                 await pilot.press("enter")
-                await _settle(pilot)
-            # Wait on what the filer would see, within a bound, rather than on a fixed number of pauses.
-            for _ in range(_SHOWING_WAIT):
+                await settle(pilot)
+
+            def _showing() -> bool:
                 panel = open_panel(screen)
-                title = "" if panel is None else _title(panel)
-                lines = _list_lines(screen)
-                if title.startswith("[40]") and any("[41]" in line for line in lines):
-                    break
-                await pilot.pause()
+                return (
+                    panel is not None
+                    and _title(panel).startswith("[40]")
+                    and any("[41]" in line for line in _list_lines(screen))
+                )
+
+            await settle_until(pilot, _showing, "the panel on [40] and the row after it to be in view")
+            panel = open_panel(screen)
+            title = "" if panel is None else _title(panel)
+            lines = _list_lines(screen)
             scrolled = screen.query_one(CasillaList).scroll_offset.y
 
     assert title.startswith("[40]")
@@ -171,12 +167,12 @@ async def test_escape_closes_the_docked_panel_gives_the_help_band_back_and_the_c
         screen = _workbench()
         app = ScreenHostApp(screen)
         async with app.run_test(size=_DOCKED) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*"42")
             await pilot.press("escape")
-            await _settle(pilot)
+            await settle(pilot)
             on_top = app.screen
             panel = open_panel(screen)
             focused = app.focused
@@ -202,19 +198,19 @@ async def test_the_arrow_keys_in_the_panel_never_move_the_list_and_the_workbench
         screen = _workbench()
         app = ScreenHostApp(screen)
         async with app.run_test(size=_DOCKED) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             page_before = str(screen.query_one("#wb-page", Static).render())
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("down", "down", "up", "down")
-            await _settle(pilot)
+            await settle(pilot)
             after_arrows = (_highlighted_box(screen), app.focused)
             panel = open_panel(screen)
             assert panel is not None
             panel.query_one("#editor-cancel", Button).focus()
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("right_square_bracket", "f", "o", "q")
-            await _settle(pilot)
+            await settle(pilot)
             on_top = app.screen
             still_docked = open_panel(screen) is panel
             page_after = str(screen.query_one("#wb-page", Static).render())
@@ -233,14 +229,14 @@ async def test_the_list_stays_scrollable_with_the_mouse_while_the_panel_is_docke
         screen = ModeloWorkbenchScreen(FakeReader(form=long_section_form(16)), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             docked = open_panel(screen) is not None
             listed = screen.query_one(CasillaList)
             assert listed.max_scroll_y > 0, "the list must be taller than its view for scrolling to show"
             listed.scroll_to(y=0, animate=False)
-            await _settle(pilot)
+            await settle(pilot)
             x, y = listed.region.x + 4, listed.region.y + 1
             under_mouse, _ = app.get_widget_at(x, y)
             for _ in range(3):
@@ -259,7 +255,7 @@ async def test_the_list_stays_scrollable_with_the_mouse_while_the_panel_is_docke
                         screen_y=y,
                     )
                 )
-            await _settle(pilot)
+            await settle(pilot)
             scrolled = listed.scroll_offset.y
             still_docked = open_panel(screen) is not None
 
@@ -276,9 +272,9 @@ async def test_below_thirty_rows_the_same_panel_opens_as_the_centred_dialog(size
         screen = _workbench()
         app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             dialog = app.screen
             docked = open_panel(screen)
             assert isinstance(dialog, CasillaEditorScreen)
@@ -287,7 +283,7 @@ async def test_below_thirty_rows_the_same_panel_opens_as_the_centred_dialog(size
             status = str(panel.query_one("#editor-status", Static).render())
             help_shown = screen.query_one("#wb-help").display
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             closed = app.screen is screen
             highlighted = _highlighted_box(screen)
 
@@ -305,22 +301,22 @@ async def test_a_docked_panel_keeps_what_was_typed_when_the_terminal_shrinks_bel
         screen = _workbench()
         app = ScreenHostApp(screen)
         async with app.run_test(size=_DOCKED) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             panel = open_panel(screen)
             assert panel is not None
             field_input = panel.query_one("#editor-input", Input)
             field_input.value = ""
             await pilot.press(*"250,5")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.resize_terminal(*_SHORT)
-            await _settle(pilot)
+            await settle(pilot)
             kept = open_panel(screen) is panel
             typed = panel.query_one("#editor-input", Input).value
             readback = str(panel.query_one("#editor-readback", Static).render())
             await pilot.press("ctrl+enter")
-            await _settle(pilot)
+            await settle(pilot)
             staged = [(change.field.box, change.value) for change in screen.staged_changes]
             closed = open_panel(screen) is None
 
@@ -337,20 +333,20 @@ async def test_the_dialog_keeps_what_was_typed_when_the_terminal_grows_past_thir
         screen = _workbench()
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SHORT) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             dialog = app.screen
             assert isinstance(dialog, CasillaEditorScreen)
             dialog.panel.query_one("#editor-input", Input).value = ""
             await pilot.press(*"75")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.resize_terminal(*_DOCKED)
-            await _settle(pilot)
+            await settle(pilot)
             still_open = app.screen is dialog
             typed = dialog.panel.query_one("#editor-input", Input).value
             await pilot.press("ctrl+enter")
-            await _settle(pilot)
+            await settle(pilot)
             staged = [(change.field.box, change.value) for change in screen.staged_changes]
             docked = open_panel(screen)
 
@@ -367,11 +363,11 @@ async def test_a_docked_read_only_box_explains_itself_and_opens_the_area_that_ow
         screen = _workbench(navigated)
         app = ScreenHostApp(screen)
         async with app.run_test(size=_DOCKED) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("up")
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             panel = open_panel(screen)
             assert panel is not None
             read_only = panel.read_only
@@ -379,7 +375,7 @@ async def test_a_docked_read_only_box_explains_itself_and_opens_the_area_that_ow
             area = panel.open_area
             focused = app.focused
             await pilot.press("a")
-            await _settle(pilot)
+            await settle(pilot)
             closed = open_panel(screen) is None
 
     assert read_only

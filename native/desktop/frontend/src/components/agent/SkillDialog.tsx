@@ -117,7 +117,7 @@ function Review({
         <pre
           tabIndex={0}
           aria-label="SKILL.md"
-          className="max-h-96 overflow-auto rounded-md border bg-muted p-3 font-mono text-sm whitespace-pre-wrap"
+          className="max-h-96 overflow-auto rounded-md bg-accent p-3 font-mono text-sm whitespace-pre-wrap"
         >
           {skill.content}
         </pre>
@@ -143,7 +143,7 @@ function Verification({ result }: { result: AgentSkillVerification }) {
           className="grid gap-2"
         >
           {result.findings.map((finding, index) => (
-            <li key={index} className="grid gap-0.5 rounded-md border p-2.5">
+            <li key={index} className="grid gap-0.5 rounded-md bg-accent p-2.5">
               <span className="flex flex-wrap items-center gap-2">
                 <Badge
                   variant={finding.severity === "error" ? "danger" : "warning"}
