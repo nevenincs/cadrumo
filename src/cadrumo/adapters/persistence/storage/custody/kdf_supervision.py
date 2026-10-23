@@ -34,8 +34,6 @@ from ._kdf_codec import (
 from ._kdf_codec import (
     windows_available_memory_bytes as _windows_available_memory_bytes,
 )
-from ._kdf_process import KdfWorkerInvocation, worker_environment
-from ._kdf_process import _environment_keys as _launched_environment_keys
 from ._kdf_records import (
     PROFILE_CUSTODY_KDF_ITERATIONS,
     PROFILE_CUSTODY_KDF_MEMORY_MIB,
@@ -43,7 +41,6 @@ from ._kdf_records import (
 )
 from ._kdf_refusals import resource_refusal as _resource_refusal
 from ._kdf_refusals import supervision_refusal as _supervision_refusal
-from ._kdf_worker_identity import KDF_WORKER_ENVIRONMENT_REFUSAL
 from ._kdf_worker_limits import PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES
 from ._kdf_worker_supervision import _SupervisedKdfWorker, kdf_worker_never_attested
 from ._profile_password_codec import encode_profile_password
@@ -125,24 +122,6 @@ class ProfileCustodyUnlock:
     envelope_digest: str
     kdf: ProfileCustodyKdfParameters
     dek: bytes
-
-
-@dataclass(frozen=True, slots=True)
-class ProfileKdfWorkerReadiness:
-    """What two pre-secret worker launches showed; it carries names and outcomes, never a secret.
-
-    ``ready_environment_keys`` is what the attested canonical child reported;
-    ``declared_environment_keys`` is recomputed from the worker's declared
-    environment plus any package-fixed names, independently of that launch.
-    """
-
-    ready_environment_keys: tuple[str, ...]
-    declared_environment_keys: tuple[str, ...]
-    worker_joined: bool
-    neutral_directory_removed: bool
-    noncanonical_invocation_refused: bool
-    noncanonical_worker_joined: bool
-    noncanonical_neutral_directory_removed: bool
 
 
 class _CalibrationDeadlineElapsedError(CadrumoError):
@@ -637,63 +616,6 @@ class ProfileKdfPrewarm:
             spare.__exit__(None, None, None)
 
 
-def attest_profile_kdf_worker_readiness(
-    *,
-    settings: Settings | None = None,
-    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
-) -> ProfileKdfWorkerReadiness:
-    """Launch the real supervised KDF child twice without a request, and report what readiness admitted.
-
-    No request, and therefore no password, salt or key, reaches either child.
-    The canonical launch must pass the same ready attestation every wrap and
-    unwrap requires (neutral cwd, exact environment names, containment) and is
-    then released. The near-miss launch differs only by parser-valid options a
-    native host does not recognise as the worker invocation; on such a host the
-    unchanged attestation refuses it, which the result reports rather than
-    asserts, because an unpackaged interpreter makes no such distinction.
-    Any other launch or attestation failure propagates as the supervision or
-    resource refusal a real operation would raise.
-    """
-    if timeout_seconds <= 0:
-        raise ValueError("profile KDF timeout must be positive")
-    resolved = settings or load_settings()
-    canonical = _SupervisedKdfWorker(deadline=time.monotonic() + timeout_seconds, settings=resolved)
-    try:
-        with canonical:
-            reported = canonical.ready_environment_keys
-            neutral_root = canonical.launched_neutral_root
-            if neutral_root is None:
-                raise _supervision_refusal()
-            declared = tuple(sorted(_launched_environment_keys({"env": worker_environment(neutral_root=neutral_root)})))
-    except TimeoutError as error:
-        raise _timeout_refusal(error) from None
-    near_miss = _SupervisedKdfWorker(
-        deadline=time.monotonic() + timeout_seconds,
-        settings=resolved,
-        invocation=KdfWorkerInvocation.NEAR_MISS,
-    )
-    refused = False
-    try:
-        with near_miss:
-            pass
-    except ValueError as error:
-        if str(error) != KDF_WORKER_ENVIRONMENT_REFUSAL:
-            raise
-        refused = True
-    except TimeoutError as error:
-        raise _timeout_refusal(error) from None
-    near_miss_root = near_miss.launched_neutral_root
-    return ProfileKdfWorkerReadiness(
-        ready_environment_keys=reported,
-        declared_environment_keys=declared,
-        worker_joined=canonical.launched_process_exited(),
-        neutral_directory_removed=not neutral_root.exists(),
-        noncanonical_invocation_refused=refused,
-        noncanonical_worker_joined=near_miss.launched_process_exited(),
-        noncanonical_neutral_directory_removed=near_miss_root is not None and not near_miss_root.exists(),
-    )
-
-
 @contextmanager
 def _supervised_kdf_worker(*, deadline: float, settings: Settings | None) -> Generator[_SupervisedKdfWorker]:
     """Run one operation in the bound prewarmed child when one is ready, else in a fresh one."""
@@ -837,8 +759,6 @@ __all__ = [
     "ProfileCustodyKdfResources",
     "ProfileCustodyUnlock",
     "ProfileKdfPrewarm",
-    "ProfileKdfWorkerReadiness",
-    "attest_profile_kdf_worker_readiness",
     "calibrate_profile_kdf",
     "fixed_profile_kdf_fallback",
     "profile_kdf_grid",

@@ -46,7 +46,6 @@ from ._kdf_codec import (
     read_kdf_frame_to_queue as _read_kdf_frame_to_queue,
 )
 from ._kdf_operations import KdfOperation
-from ._kdf_process import KdfWorkerInvocation
 from ._kdf_process import (
     launch_worker as _launch_worker,
 )
@@ -101,15 +100,9 @@ class _SupervisedKdfWorker:
         *,
         deadline: float,
         settings: Settings | None = None,
-        invocation: KdfWorkerInvocation = KdfWorkerInvocation.CANONICAL,
     ) -> None:
         self._deadline = deadline
         self._temporary_root = (settings or load_settings()).cadrumo_temp_dir
-        self._invocation = invocation
-        # Cleanup clears the live handles below; these keep what was launched so
-        # its release can still be observed afterwards.
-        self._launched_process: subprocess.Popen[bytes] | None = None
-        self._launched_neutral_root: Path | None = None
         self._process: subprocess.Popen[bytes] | None = None
         self._request_fd: int | None = None
         self._result_fd: int | None = None
@@ -139,8 +132,6 @@ class _SupervisedKdfWorker:
         self._launch_attempted = False
         self._result_refused = False
         self._diagnostic_emitted = False
-        self._launched_process = None
-        self._launched_neutral_root = None
         try:
             launch_started = time.monotonic()
             with self._phase("start"):
@@ -184,25 +175,6 @@ class _SupervisedKdfWorker:
         self._deadline = deadline
         self._adopted_ns = time.monotonic_ns()
         return True
-
-    @property
-    def ready_environment_keys(self) -> tuple[str, ...]:
-        """The environment names the attested child reported; refused before attestation."""
-        payload = self._ready_payload
-        reported = payload.get("environment_keys") if payload is not None else None
-        if not isinstance(reported, list):
-            raise _supervision_refusal()
-        return tuple(key for key in cast("list[object]", reported) if isinstance(key, str))
-
-    @property
-    def launched_neutral_root(self) -> Path | None:
-        """The neutral directory created for the launched child, kept after its cleanup."""
-        return self._launched_neutral_root
-
-    def launched_process_exited(self) -> bool:
-        """Whether the child this supervisor launched has been reaped."""
-        process = self._launched_process
-        return process is not None and process.poll() is not None
 
     def __exit__(self, exc_type: object, exc_value: object, _traceback: object) -> None:
         primary = exc_value if isinstance(exc_value, BaseException) else None
@@ -441,18 +413,15 @@ class _SupervisedKdfWorker:
                 prefix="cadrumo-profile-kdf-",
                 dir=self._temporary_root,
             )
-            self._launched_neutral_root = Path(self._neutral_directory.name)
             try:
                 self._launch_attempted = True
                 self._process, self._job, self._environment_keys = _launch_worker(
-                    neutral_root=self._launched_neutral_root,
+                    neutral_root=Path(self._neutral_directory.name),
                     request_read=request_read,
                     result_write=result_write,
-                    invocation=self._invocation,
                 )
             except (OSError, subprocess.SubprocessError, ValueError):
                 raise _supervision_refusal() from None
-            self._launched_process = self._process
 
     def _write_request(self, payload: dict[str, object]) -> None:
         if self._request_fd is None:
