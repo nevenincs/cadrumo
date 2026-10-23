@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:75ebcf499de89d814c09ef0cb34a7377e146d37f98c8888b3668f30f49359f33'
+body_hash: 'sha256:37126ec457e9c7acca0718fa9a3d2305850bc0a245eef672861468f6f2b83012'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -119,6 +119,34 @@ The session-lost outcome errors subclass the session errors, so catch order is s
 
 The second re-review's start-denial finding rests on a wrong premise. The runtime runs `worker.start` (`operation_projection.py:116`), which makes RUNNING durable and creates the settlement task, before `host.authorize(release)` (`profile_connection_operations.py:320`) can raise a typed `ProfileAccessRefusedError`. A typed denial in reply to `operation_start` can therefore sit on top of a running write, so reporting it as unknown is correct. `OperationController.start` also never sees an `AccessRefusal`: `frontend_operation_client.py:81-99` converts it first. No change is made.
 
+### settlement | medium | Third re-review: a saved own-account write whose follow-up read fails is worded as not saved
+
+`own_accounts.py:423-447` sends the write and the register re-read in one `try`. A re-read refused while the session is live shows "The change was refused or could not be saved." and re-enables Confirm with the request staged; a probe confirmed it (`list`, `add`, `list`). Register uniqueness refused the repeat, so nothing was duplicated. `registers_presentation.py:461-464` shows the right shape: unstage and word the write once it returns, then re-read separately.
+
+### settlement | medium | Third re-review: a categorisation review whose modal loses observation after Apply closes silently
+
+`categorisation_review.py:166-174` with `operations/modal.py:315-327,432-442`. When observation is refused or access is lost after Apply, the modal dismisses with `None` and `_review_settled` clears the status, so a started and possibly applied review shows nothing and can be reviewed again. This path bypasses `failure_after_submission`.
+
+### settlement | medium | Third re-review: recomposing on session loss can wipe the unknown-outcome message
+
+`app_navigation.py:375-399`, `app.py:378,440-443`. A closed transport or the lapse timer recomposes without asking the destination, and `AccountRecomposeRequiredV1` carries no operation id, so the session-lost unknown wording may only flash before bootstrap. Signing in re-reads the records, so there is no double write; what is lost is which operation was unknown. Not reproduced.
+
+### settlement | low | Third re-review: record and transaction edits check the exact unknown type
+
+`record_views.py:568-581,589-592` and `transaction_views.py:262-269` use `isinstance(error, OperationOutcomeUnknownError)`, so a session-lost unknown outcome leaves Save, Cancel or Remove enabled over the old baseline.
+
+### frontend-behaviour | low | Third re-review: an older records load can re-enable evidence Add over stale rows
+
+`evidence_records.py:53-56,81-84,263`. A records load started before an unknown Add that lands afterwards releases Add over rows read before the write.
+
+### frontend-behaviour | low | Third re-review: the asset write hold is released by inspecting any asset
+
+`actividad_asset.py:190-191`. Any successful inspection releases the hold, and a typed not-found for the held asset does not.
+
+### quality | low | Third re-review: the evidence records load fails the app on an ordinary refusal
+
+`evidence_records.py:58-64` catches only `AccountSessionExpiredError`; a `RefusalError` from `list_records` (`runtime_evidence.py:157-158`) fails the worker with `exit_on_error` on.
+
 ## Recommendations
 
 - Event loop: move every blocking session check in a runtime door off the loop, and add thread-recording tests for each door that does not go through `run_operation`.
@@ -130,3 +158,4 @@ The second re-review's start-denial finding rests on a wrong premise. The runtim
 - Paging: `invoice.list`, the register lists, `evidence.query`, `rule.list` and `consent.list` take no paging fields. Paging them needs a decision on those request contracts.
 - The P03.S20 to S22 re-review findings reopen those Steps. Every path after start, and every way of leaving a body, must go through one shared check rather than through per-scenario fixes.
 - The second re-review passes S20 and S21 and reopens S22: activity-asset correlation must move into `settle`, session-lost unknown outcomes must read as unknown on every write screen, and the categorisation result read must be judged inside the shared check.
+- The third re-review passes S22. The own-accounts follow-up read, the modal `None` dismissal and the four lows are in-scope corrections for P03.S26. Whether the recompose outcome carries pending unknown operations is a follow-on decision on the recompose contract.

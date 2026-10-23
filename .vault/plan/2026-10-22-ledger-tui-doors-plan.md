@@ -11,7 +11,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
 modified: '2026-10-23'
 body_schema: body-v2
-body_hash: 'sha256:13b693668e93a90ceccdb81b428de20b940b14c92849fba4748b1b2b89b99cd3'
+body_hash: 'sha256:907dadc73a6b39da7d81f75eda97fc07b23aa2c239d5c18158970694b2a64f08'
 ---
 
 # `ledger-tui-doors` plan
@@ -32,7 +32,7 @@ P04 added 2026-10-22 on the user's instruction. The D1 CPU gate measured a perio
 
 P04.S17 and P04.S18 implement the authenticated-stored-reads ADR, accepted on the user's instruction. P04.S19 was added 2026-10-22 when the user answered "Yes, harden": the filing consumers that default an unaccepted registry value instead of refusing it (income concept, Art. 104.tres tag, cash-accounting treatment, counterparty identification state, and the untyped input-classification failure) must refuse at use against the operation's pinned authority, with typed refusals. It changes no registry data or request contract, and any later widening of the authenticated read's skip set remains a separate decision.
 
-P03.S20 to P03.S23 were added 2026-10-23 as in-scope corrections from the integrated review (`2026-10-23-ledger-tui-doors-integrated-review-audit`). Its three high findings require them: blocking session checks on the event loop, writes abandoned by navigation, and ambiguous write outcomes reported as refusals. Its medium finding on bulk classify adds the fourth. P04.S13 is also governed by the secure-storage performance hardening ADR, which is now linked.
+P03.S20 to P03.S23 were added 2026-10-23 as in-scope corrections from the integrated review (`2026-10-23-ledger-tui-doors-integrated-review-audit`). Its three high findings require them: blocking session checks on the event loop, writes abandoned by navigation, and ambiguous write outcomes reported as refusals. Its medium finding on bulk classify adds the fourth. P04.S13 is also governed by the secure-storage performance hardening ADR, which is now linked. P03.S26 was added 2026-10-23 as an in-scope correction from the third re-review in the same audit: write-outcome wording on the remaining write screens, under S22's requirement that an unknown outcome is shown as unknown on every write screen.
 
 ## Steps
 
@@ -80,6 +80,7 @@ The orchestrator applies locales, registers visual surfaces, runs every gate and
 - [x] `P03.S23` - send every reviewed row of a bulk-classify page and show the operation's applied and skipped counts; `src/cadrumo/entrypoints/tui/ledger/categorisation_bulk.py`.
 - [x] `P03.S24` - give ledger.review and ledger.evidence.review.list dedicated Records doors so no ledger operation is reachable only through Ctrl+P, and name the eight remaining ledger locale key families in full; `src/cadrumo/entrypoints/tui/ledger/review.py, evidence.py and runtime_ledger_*.py`.
 - [x] `P03.S25` - make every Records body answer an area choice, so entries add, export and reset, the import flow, invoice entry and the categorisation tools no longer show a navigation table that does nothing; `src/cadrumo/entrypoints/tui/ledger/controller.py and the bodies that bypass handle_navigation_selection`.
+- [ ] `P03.S26` - word a saved own-account write as saved when its re-read fails, treat a categorisation modal closed after Apply without an outcome as unknown, and fix the third re-review lows; `src/cadrumo/entrypoints/tui/ledger/own_accounts.py, categorisation_review.py, record_views.py, transaction_views.py, evidence_records.py and actividad_asset.py`.
 
 ## Parallelization
 
