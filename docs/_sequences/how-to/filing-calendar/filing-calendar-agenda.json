@@ -134,8 +134,7 @@
           "completeness": {
             "computable_modelos": [
               "130",
-              "303",
-              "360"
+              "303"
             ],
             "defaulted_keys": [
               "art109_activity_income_withholding_ge_70pct",
