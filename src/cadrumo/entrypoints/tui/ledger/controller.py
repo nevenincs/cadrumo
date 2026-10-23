@@ -607,6 +607,12 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         self.back_requested = False
         self.refreshing = False
         """Whether a re-read of the workspace is running off the event loop."""
+        self._refreshes_started = 0
+        """How many re-reads have started; each is numbered by this count when it starts."""
+        self._refreshes_finished = 0
+        """The number of the re-read that finished last."""
+        self._refreshes_returned = 0
+        """The number of the last re-read that returned the workspace, or ``0`` before any did."""
         self._after_refresh: Callable[[], object] | None = None
         self.refresh_seconds: list[float] = []
         """How long each completed re-read took, newest last."""
@@ -677,15 +683,46 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         self._status_line().update(tr("tui.ledger.flow.refreshing"))
         self.run_worker(self._refresh(), group="ledger-refresh")
 
+    def reread_then(self, then: Callable[[bool], object]) -> None:
+        """Re-read the workspace with a read started from now on, then continue with whether it returned.
+
+        Unlike :meth:`refresh_then`, a re-read already running does not count:
+        it may have started before the change the workspace must now show, so
+        once it lands another one is started. ``then`` is told ``False`` when
+        the re-read failed or the workspace cannot be re-read at all.
+        """
+        if not self.controller.can_refresh():
+            then(False)
+            return
+        after = self._refreshes_started
+
+        def landed() -> None:
+            if self._refreshes_finished <= after:
+                self.refresh_then(landed)
+                return
+            then(self._refreshes_returned > after)
+
+        self.refresh_then(landed)
+
     async def _refresh(self) -> None:
         started = asyncio.get_running_loop().time()
+        self._refreshes_started += 1
+        number = self._refreshes_started
         try:
             self.controller = await asyncio.to_thread(self.controller.refreshed)
         except CadrumoError:
-            self._status_line().update(tr("tui.ledger.flow.refresh_failed"))
+            # After an unknown outcome the change is not known to be saved, so the failure must not say it was.
+            failed = (
+                "tui.ledger.flow.refresh_failed_unknown"
+                if self.write_outcome_unknown
+                else "tui.ledger.flow.refresh_failed"
+            )
+            self._status_line().update(tr(failed))
         else:
+            self._refreshes_returned = number
             self._status_line().update("")
         finally:
+            self._refreshes_finished = number
             self.refreshing = False
             self.refresh_seconds.append(asyncio.get_running_loop().time() - started)
         then, self._after_refresh = self._after_refresh, None

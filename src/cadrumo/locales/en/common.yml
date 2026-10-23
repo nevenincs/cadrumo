@@ -3615,6 +3615,8 @@ tui:
       outcome_unknown: 'Outcome unknown: the change may or may not have been saved.'
       refresh_failed: Your change was saved, but this view could not be re-read. Return
         to Home to refresh it.
+      refresh_failed_unknown: The change may or may not have been saved, and this
+        view could not be re-read. Return to Home to refresh it before you try again.
       refreshing: Updating…
     import:
       account_label: Own bank account the statement belongs to

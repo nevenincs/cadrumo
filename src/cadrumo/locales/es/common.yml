@@ -3725,6 +3725,9 @@ tui:
         o no.'
       refresh_failed: El cambio se ha guardado, pero esta vista no se ha podido volver
         a leer. Vuelve al Inicio para actualizarla.
+      refresh_failed_unknown: Puede que el cambio se haya guardado o no, y esta vista
+        no se ha podido volver a leer. Vuelve al Inicio para actualizarla antes de
+        intentarlo de nuevo.
       refreshing: Actualizando…
     import:
       account_label: Cuenta bancaria propia del extracto

@@ -3683,6 +3683,9 @@ tui:
       outcome_unknown: 'Ismeretlen eredmény: a módosítás vagy mentődött, vagy nem.'
       refresh_failed: A módosítás mentésre került, de ezt a nézetet nem sikerült újraolvasni.
         Térj vissza a Kezdőlapra a frissítéshez.
+      refresh_failed_unknown: A módosítás vagy mentődött, vagy nem, és ezt a nézetet
+        nem sikerült újraolvasni. Mielőtt újra próbálkozol, térj vissza a Kezdőlapra
+        a frissítéshez.
       refreshing: Frissítés…
     import:
       account_label: A kivonathoz tartozó saját bankszámla

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:37126ec457e9c7acca0718fa9a3d2305850bc0a245eef672861468f6f2b83012'
+body_hash: 'sha256:131459b63d85c4cbef4d97b24a222e4f35847b0bc7a27195f7c3b3ff2f6b0d49'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -146,6 +146,14 @@ The second re-review's start-denial finding rests on a wrong premise. The runtim
 ### quality | low | Third re-review: the evidence records load fails the app on an ordinary refusal
 
 `evidence_records.py:58-64` catches only `AccountSessionExpiredError`; a `RefusalError` from `list_records` (`runtime_evidence.py:157-158`) fails the worker with `exit_on_error` on.
+
+### settlement | low | S26 follow-on: no typed not-found for an activity asset
+
+The asset write hold is now bound to the asset each action names and released only by a successful inspect of that asset. Releasing it on a not-found for that asset would prove a held create did not land, but `inspect` raises a plain `ActividadAssetValidationError` (`application/actividad_asset/operations.py:85`), rebuilt without its text at `activity_asset_contracts.py:170`. Releasing on it would mean matching message text, so an unknown create that did not land stays held until the operator leaves the screen. A typed not-found refusal is a change to the inspect contract.
+
+### settlement | low | S26 follow-on: operation modal callers outside Records ignore a dismissal without an outcome
+
+`aeat_sync/screens.py:510`, `modelo/workbench/screen_operation.py:210`, `operations/settled_submission.py:51` and `profile/manager_client.py:440` (runtime) treat a `None` dismissal as nothing, and `setup/screen.py:283` re-reads without saying the outcome is unknown. `operations/run_screen.py:485` already words it as unobserved with the operation id. These are outside the Records plan.
 
 ## Recommendations
 

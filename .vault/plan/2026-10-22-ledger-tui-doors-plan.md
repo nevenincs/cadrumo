@@ -11,7 +11,7 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
 modified: '2026-10-23'
 body_schema: body-v2
-body_hash: 'sha256:907dadc73a6b39da7d81f75eda97fc07b23aa2c239d5c18158970694b2a64f08'
+body_hash: 'sha256:689bc33371481f9c1e1a85619d1c5d2882df5aa68642a93c17362062cb3fc090'
 ---
 
 # `ledger-tui-doors` plan
@@ -80,7 +80,7 @@ The orchestrator applies locales, registers visual surfaces, runs every gate and
 - [x] `P03.S23` - send every reviewed row of a bulk-classify page and show the operation's applied and skipped counts; `src/cadrumo/entrypoints/tui/ledger/categorisation_bulk.py`.
 - [x] `P03.S24` - give ledger.review and ledger.evidence.review.list dedicated Records doors so no ledger operation is reachable only through Ctrl+P, and name the eight remaining ledger locale key families in full; `src/cadrumo/entrypoints/tui/ledger/review.py, evidence.py and runtime_ledger_*.py`.
 - [x] `P03.S25` - make every Records body answer an area choice, so entries add, export and reset, the import flow, invoice entry and the categorisation tools no longer show a navigation table that does nothing; `src/cadrumo/entrypoints/tui/ledger/controller.py and the bodies that bypass handle_navigation_selection`.
-- [ ] `P03.S26` - word a saved own-account write as saved when its re-read fails, treat a categorisation modal closed after Apply without an outcome as unknown, and fix the third re-review lows; `src/cadrumo/entrypoints/tui/ledger/own_accounts.py, categorisation_review.py, record_views.py, transaction_views.py, evidence_records.py and actividad_asset.py`.
+- [x] `P03.S26` - word a saved own-account write as saved when its re-read fails, treat a categorisation modal closed after Apply without an outcome as unknown, and fix the third re-review lows; `src/cadrumo/entrypoints/tui/ledger/own_accounts.py, categorisation_review.py, record_views.py, transaction_views.py, evidence_records.py and actividad_asset.py`.
 
 ## Parallelization
 

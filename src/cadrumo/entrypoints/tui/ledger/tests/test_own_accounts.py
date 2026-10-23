@@ -8,14 +8,21 @@ operation publishes. Account numbers are synthetic published examples.
 
 from __future__ import annotations
 
-from typing import cast
+import asyncio
+from typing import cast, override
 
 import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Select, Static
 
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
+from .....application.ledger.own_account_operation import LedgerOwnAccountRequest, LedgerOwnAccountResult
 from .....core.config import override_settings
+from .....core.errors.error_codes import resolve_error_message
+from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
+from ...account import AccountSessionExpiredError
 from ..controller import LedgerWorkspaceController
 from ..overview import LedgerOverviewScreen
 from ..own_accounts import LedgerOwnAccountDoorV1, LedgerOwnAccountsScreen
@@ -207,6 +214,58 @@ async def test_own_account_screen_discards_account_facts_when_the_session_is_los
             assert screen.query_one("#ledger-own-accounts", DataTable).row_count == 0
             assert screen.query_one("#own-account-iban", Input).value == ""
             assert str(screen.query_one("#own-account-detail", Static).render()) == ""
+
+
+class _RereadRefusedDoor(MemoryOwnAccountDoor):
+    """Applies every write, then refuses the register reads that follow it."""
+
+    def __init__(self, reread_error: CadrumoError) -> None:
+        super().__init__()
+        self.reread_error = reread_error
+        self.written = False
+
+    @override
+    async def __call__(self, request: LedgerOwnAccountRequest) -> LedgerOwnAccountResult:
+        if request.action == "list" and self.written:
+            self.requests.append(request)
+            raise self.reread_error
+        result = await super().__call__(request)
+        self.written = self.written or request.action != "list"
+        return result
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "reread_error",
+    [RefusalError(RefusalCode.DRAINING), AccountSessionExpiredError()],
+    ids=["refused", "session-lost"],
+)
+async def test_a_saved_change_whose_register_reread_fails_is_said_to_be_saved(reread_error: CadrumoError) -> None:
+    door = _RereadRefusedDoor(reread_error)
+    screen = _screen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with _WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+            await _add(pilot, screen, "main", SYNTHETIC_ES_IBAN)
+            loop = asyncio.get_running_loop()
+            deadline = loop.time() + 10
+            while len(door.requests) < 3 or screen.in_flight:
+                assert loop.time() < deadline, "the add and the read after it never settled"
+                await pilot.pause()
+
+            assert [request.action for request in door.requests] == ["list", "add", "list"]
+            assert len(door.repository.register.accounts) == 1
+            # The add returned, so it is saved; only the read after it failed.
+            assert str(screen.query_one("#ledger-flow-status", Static).render()) == tr("tui.ledger.flow.refresh_failed")
+            assert str(screen.query_one("#ledger-refusal", Static).render()) == resolve_error_message(reread_error)
+            assert tr("tui.ledger.records.failed") not in _rendered(screen)
+            # Nothing stays staged to be confirmed a second time.
+            assert screen.staged is None
+            assert screen.query_one("#own-account-confirm", Button).disabled
+            assert not screen.query_one("#own-account-decision").display
+            assert not screen.in_flight
+            _assert_masked(screen)
 
 
 @pytest.mark.asyncio

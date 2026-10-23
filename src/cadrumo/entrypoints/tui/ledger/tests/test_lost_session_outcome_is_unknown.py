@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import override
 
 import pytest
-from textual.widgets import Button, Input
+from textual.widgets import Button, Input, Static
 
 from .....application.ledger.workspace import LedgerWorkspaceArea
 from .....core.config import override_settings
@@ -197,6 +197,10 @@ async def test_an_evidence_addition_with_an_unknown_outcome_returns_only_once_th
             await _settle(pilot)
             assert not add.disabled
             assert resolve_error_message(_UNKNOWN) in _text(body, "#ledger-refusal")
+            # Whether or not the workspace was re-read, the status never claims the document was saved.
+            status = _text(body, "#ledger-flow-status")
+            assert "may or may not have been saved" in status
+            assert "was saved" not in status
 
 
 @pytest.mark.asyncio
@@ -218,6 +222,61 @@ async def test_an_evidence_addition_with_an_unknown_outcome_is_not_offered_when_
             assert door.read_started.is_set()
             assert body.query_one("#ledger-evidence-add", Button).disabled
             assert write.calls == 1
+
+
+@pytest.mark.asyncio
+async def test_a_records_load_started_before_an_unknown_addition_does_not_offer_add_again() -> None:
+    write = _CountingGate(error=_UNKNOWN)
+    write.release.set()
+    door = _RecordsHeldEvidenceDoor(write)
+    door.hold_reads = True
+    projection = ledger_projection()
+    refreshing = threading.Event()
+    refreshed = threading.Event()
+
+    def refresh() -> LedgerWorkspaceRefreshV1:
+        refreshing.set()
+        if not refreshed.wait(timeout=10):
+            raise AssertionError("the held workspace re-read was not released")
+        return LedgerWorkspaceRefreshV1(projection=projection, evidence_items=())
+
+    controller = LedgerWorkspaceController(
+        ledger_context(),
+        projection,
+        LedgerWorkspaceInjection(
+            review_action=ledger_review_action(),
+            evidence_action=ledger_evidence_action(),
+            evidence_items=(),
+            evidence_door=door,
+            refresh=refresh,
+            tools=_tools(LedgerWorkspaceArea.EVIDENCE),
+        ),
+    )
+    body = LedgerEvidenceScreen(controller)
+    with override_settings(cadrumo_output_language="en"):
+        async with ReplacingHostApp(body).run_test(size=(120, 60)) as pilot:
+            # The first records load is out, and still reading, when the addition is made.
+            assert await asyncio.to_thread(door.read_started.wait, 10)
+            body.query_one("#ledger-evidence-path", Input).value = _EVIDENCE_PATH
+            await _click(pilot, body, "ledger-evidence-add")
+            assert await asyncio.to_thread(refreshing.wait, 10)
+
+            door.read_release.set()
+            detail = body.query_one("#ledger-evidence-record-detail", Static)
+            loop = asyncio.get_running_loop()
+            deadline = loop.time() + 10
+            while str(detail.render()) != tr("tui.ledger.evidence.records_empty"):
+                assert loop.time() < deadline, "the first records load never rendered"
+                await pilot.pause()
+            # Those rows were read before the addition, so they cannot show whether it landed.
+            add = body.query_one("#ledger-evidence-add", Button)
+            assert add.disabled
+
+            refreshed.set()
+            await _settle(pilot)
+            assert not add.disabled
+            assert write.calls == 1
+            assert resolve_error_message(_UNKNOWN) in _text(body, "#ledger-refusal")
 
 
 _RECORD = LedgerEvidenceRecordRowV1(

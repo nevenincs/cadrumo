@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Protocol, override
 
 from textual.app import ComposeResult
@@ -43,6 +43,8 @@ class _ActivityAssetScreenResult:
 
     message: str
     current_revision_id: str | None = None
+    inspected_asset_id: str | None = None
+    """The asset an inspection read, when the action was one."""
 
 
 class ActivityAssetTuiActionsV1(Protocol):
@@ -87,6 +89,9 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         self._busy = False
         self.writes_held = False
         """Whether a write ended with an unknown outcome, so no write is offered until the asset is read again."""
+        self.held_asset_id: str | None = None
+        """The asset the held action named; only an inspection of that asset releases the writes."""
+        self._named_asset_id: str | None = None
 
     @property
     @override
@@ -157,6 +162,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         self.query_one("#asset-result", Static).update(f"pending\t{event.button.id or 'unknown'}")
         self.query_one("#asset-recovery", Static).update("")
         self._busy = True
+        self._named_asset_id = None
         # A worker rather than an await here: awaiting would hold this screen's
         # message queue for the whole action, so Back and the account keys
         # would wait behind it and act once it ended, instead of being refused.
@@ -171,13 +177,13 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                 self.query_one("#asset-result", Static).update(f"refused\t{exc}")
             else:
                 # Lost with the change perhaps saved: unknown, not refused. Signing in composes the screen again.
-                self._hold_writes()
+                self._hold_writes(self._named_asset_id)
                 self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(exc)}")
             return
         except OperationOutcomeUnknownError as exc:
             # The change may be saved, so it is never reported as refused, and no write is offered over the
-            # asset as last read: the writes return once an inspection reads it again.
-            self._hold_writes()
+            # asset as last read: the writes return once an inspection reads that asset again.
+            self._hold_writes(self._named_asset_id)
             self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(exc)}")
             return
         except (CadrumoError, ValueError) as exc:
@@ -187,7 +193,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         finally:
             # Cleared with no await before the outcome is on screen, so leaving never hides it.
             self._busy = False
-        if button_id == "asset-inspect":
+        if self._inspection_releases_writes(result.inspected_asset_id):
             self._release_writes()
         self.query_one("#asset-result", Static).update(result.message)
         if result.current_revision_id is not None:
@@ -195,15 +201,31 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                 f"current_revision_id\t{result.current_revision_id}"
             )
 
-    def _hold_writes(self) -> None:
-        """Withhold every write until an inspection reads the asset again."""
+    def _hold_writes(self, asset_id: str | None) -> None:
+        """Withhold every write until an inspection reads ``asset_id`` again, or any asset when none was named."""
+        if not self.writes_held:
+            self.held_asset_id = asset_id
         self.writes_held = True
         for selector in _WRITE_BUTTONS:
             self.query_one(selector, Button).disabled = True
 
+    def _inspection_releases_writes(self, inspected_asset_id: str | None) -> bool:
+        """Whether a successful inspection read the asset the held writes wait for.
+
+        A hold whose action named no asset waits for any inspection. A typed
+        refusal that the held asset does not exist would also prove a held
+        creation did not land, but the inspect operation reports a missing
+        asset only as a generic validation refusal, so a refusal never
+        releases the writes.
+        """
+        if not self.writes_held or inspected_asset_id is None:
+            return False
+        return self.held_asset_id is None or self.held_asset_id == inspected_asset_id
+
     def _release_writes(self) -> None:
         """Offer the writes again over the asset an inspection has just read."""
         self.writes_held = False
+        self.held_asset_id = None
         for selector in _WRITE_BUTTONS:
             self.query_one(selector, Button).disabled = False
 
@@ -244,20 +266,25 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         """Delegate one public action, retaining no screen-local tax arithmetic."""
         asset_id = self.query_one("#asset-id", Input).value
         revision_json = self.query_one("#asset-revision-json", Input).value
+        # Each action records the asset it names before it reaches the door, so an unknown outcome holds
+        # the writes for that asset.
         if button_id == "asset-create":
-            result = self._actions.create(
-                ActivityAssetCreationRequestV1(revision=ActivityAssetRevision.model_validate_json(revision_json)),
-            )
-            return self._inspection_result(prefix="created", result=result)
+            creation = ActivityAssetCreationRequestV1(revision=ActivityAssetRevision.model_validate_json(revision_json))
+            self._named_asset_id = creation.revision.asset_id
+            return self._inspection_result(prefix="created", result=self._actions.create(creation))
         if button_id == "asset-inspect":
+            self._named_asset_id = asset_id
             result = self._actions.inspect(asset_id)
-            return self._inspection_result(prefix="asset", result=result)
+            inspected = self._inspection_result(prefix="asset", result=result)
+            return replace(inspected, inspected_asset_id=result.asset_id)
         if button_id == "asset-correct":
-            result = self._actions.correct(
-                ActivityAssetCorrectionRequestV1(revision=ActivityAssetRevision.model_validate_json(revision_json)),
+            correction = ActivityAssetCorrectionRequestV1(
+                revision=ActivityAssetRevision.model_validate_json(revision_json)
             )
-            return self._inspection_result(prefix="corrected", result=result)
+            self._named_asset_id = correction.revision.asset_id
+            return self._inspection_result(prefix="corrected", result=self._actions.correct(correction))
         if button_id == "asset-forecast":
+            self._named_asset_id = asset_id
             supersedes_claim_id = self.query_one("#asset-supersedes-claim-id", Input).value.strip() or None
             self._last_forecast = self._actions.forecast(
                 ActivityAssetForecastRequestV1(
@@ -279,6 +306,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         if button_id == "asset-claim":
             if self._last_forecast is None:
                 raise ValueError("calculate a forecast before recording a claim")
+            self._named_asset_id = self._last_forecast.asset_id
             result = self._actions.record_claim(
                 ActivityAssetClaimRequestV1(
                     forecast=self._last_forecast,

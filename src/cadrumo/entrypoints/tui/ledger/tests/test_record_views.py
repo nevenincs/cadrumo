@@ -7,6 +7,7 @@ runtime doors do after their re-read.
 
 from __future__ import annotations
 
+import asyncio
 from typing import cast, override
 
 import pytest
@@ -20,11 +21,14 @@ from .....application.invoices.catalogue_read_projection import CatalogueInvoice
 from .....application.ledger.transaction_projection import LedgerTransactionProjection
 from .....application.ledger.update_contracts import LedgerUpdatePatch, LedgerUpdatePatchField
 from .....core.config import override_settings
+from .....core.errors.error_codes import resolve_error_message
 from .....core.i18n.render import lookup_translation, tr
+from .....core.operations import OperationEffect
 from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.iva.schema import InvoiceKind
 from .....domain.transactions.errors import TransactionValidationError
 from ...components.host import ScreenHostApp
+from ...operations.outcome import OperationOutcomeUnknownError, SessionExpiredOutcomeUnknownError
 from ...tests.frame import geometry_band
 from ..controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from ..models import LedgerRecordDoorsV1
@@ -326,6 +330,81 @@ async def test_imported_invoice_detail_shows_stored_filename_and_row() -> None:
 
 def _transaction_screen(doors: MemoryRecordDoors, transaction_id: str) -> LedgerTransactionDetailScreen:
     return LedgerTransactionDetailScreen(_controller(doors), cast(LedgerRecordDoorsV1, doors), transaction_id)
+
+
+def _session_lost_with_unknown_outcome() -> SessionExpiredOutcomeUnknownError:
+    return SessionExpiredOutcomeUnknownError(
+        OperationOutcomeUnknownError(operation_id="f" * 64, effect=OperationEffect.UNKNOWN)
+    )
+
+
+async def _until_unknown(pilot: Pilot[None], screen: LedgerWorkspaceScreen) -> None:
+    """Wait for the write to be worded as unknown, then for every worker it started to finish."""
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + 10
+    while _text(screen, "#ledger-flow-status") != tr("tui.ledger.flow.outcome_unknown"):
+        assert loop.time() < deadline, _text(screen, "#ledger-flow-status")
+        await pilot.pause()
+    await _settle(pilot)
+
+
+@pytest.mark.asyncio
+async def test_an_invoice_correction_lost_with_its_session_and_outcome_unknown_is_not_offered_again() -> None:
+    doors = MemoryRecordDoors((invoice_snapshot(notes="before"),))
+    lost = _session_lost_with_unknown_outcome()
+    doors.refusal = lost
+    detail = _detail(doors, invoice_snapshot().invoice_id)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](detail).run_test(size=(110, 55)) as pilot:
+            await _settle(pilot)
+            detail.query_one("#ledger-invoice-notes", Input).value = "after"
+            await _press(pilot, detail, "ledger-invoice-edit-review")
+            detail.query_one("#ledger-invoice-edit-save", Button).press()
+            await _until_unknown(pilot, detail)
+            assert _text(detail, "#ledger-refusal") == resolve_error_message(lost)
+            # The correction may be saved: neither it nor its cancellation is offered over the old baseline.
+            assert detail.staged is None
+            assert detail.query_one("#ledger-invoice-edit-save", Button).disabled
+            assert detail.query_one("#ledger-invoice-edit-cancel", Button).disabled
+
+
+@pytest.mark.asyncio
+async def test_an_invoice_removal_lost_with_its_session_and_outcome_unknown_is_not_offered_again() -> None:
+    invoice = invoice_snapshot()
+    doors = MemoryRecordDoors((invoice,))
+    lost = _session_lost_with_unknown_outcome()
+    doors.refusal = lost
+    detail = _detail(doors, invoice.invoice_id)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](detail).run_test(size=(110, 55)) as pilot:
+            await _settle(pilot)
+            await _press(pilot, detail, "ledger-invoice-remove")
+            pilot.app.screen.query_one("#btn-confirm-accept", Button).press()
+            await _until_unknown(pilot, detail)
+            assert pilot.app.screen is detail
+            assert _text(detail, "#ledger-refusal") == resolve_error_message(lost)
+            # The invoice may already be removed, so removing it again is not offered.
+            assert detail.query_one("#ledger-invoice-remove", Button).disabled
+
+
+@pytest.mark.asyncio
+async def test_a_transaction_correction_lost_with_its_session_and_outcome_unknown_is_not_offered_again() -> None:
+    transaction = transaction_projection()
+    doors = MemoryRecordDoors(transactions=(transaction,))
+    lost = _session_lost_with_unknown_outcome()
+    doors.refusal = lost
+    screen = _transaction_screen(doors, transaction.transaction_id)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(110, 55)) as pilot:
+            await _settle(pilot)
+            screen.query_one("#ledger-transaction-description", Input).value = "changed description"
+            await _press(pilot, screen, "ledger-transaction-edit-review")
+            screen.query_one("#ledger-transaction-edit-save", Button).press()
+            await _until_unknown(pilot, screen)
+            assert _text(screen, "#ledger-refusal") == resolve_error_message(lost)
+            assert screen.staged is None
+            assert screen.query_one("#ledger-transaction-edit-save", Button).disabled
+            assert screen.query_one("#ledger-transaction-edit-cancel", Button).disabled
 
 
 @pytest.mark.asyncio

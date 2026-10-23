@@ -43,6 +43,10 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
     reading: bool
     add_awaits_reread: bool
     """Whether an addition ended with an unknown outcome, so Add waits for the records to be read again."""
+    records_loads: int
+    """How many record loads this body has started; each load is tagged with its number."""
+    add_reread_after: int
+    """The last load started before the unknown addition; only a later load can release Add."""
 
     @property
     @override
@@ -53,17 +57,21 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
     def _show_records(self) -> None:
         """Read the records off the event loop; listing them decrypts the whole evidence catalogue."""
         self.query_one("#ledger-evidence-record-detail", Static).update(tr("tui.ledger.evidence.loading"))
-        self.run_worker(self._load_records(), group="ledger-evidence-records", exclusive=True)
+        self.records_loads += 1
+        self.run_worker(self._load_records(self.records_loads), group="ledger-evidence-records", exclusive=True)
 
-    async def _load_records(self) -> None:
+    async def _load_records(self, load: int) -> None:
         try:
             loaded = await asyncio.to_thread(self.controller.evidence_records)
         except AccountSessionExpiredError as error:
             self._handle_expired_session(error)
+        except CadrumoError as error:
+            # Said where the records would be, so an unknown addition's message above stays visible.
+            self.query_one("#ledger-evidence-record-detail", Static).update(door_refusal_text(error))
         else:
-            self._render_records(loaded)
+            self._render_records(loaded, load)
 
-    def _render_records(self, loaded: tuple[LedgerEvidenceRecordRowV1, ...] | None) -> None:
+    def _render_records(self, loaded: tuple[LedgerEvidenceRecordRowV1, ...] | None, load: int) -> None:
         records = cast("DataTable[str]", self.query_one("#ledger-evidence-records", DataTable))
         records.clear()
         self._records = loaded
@@ -78,8 +86,8 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
             )
         if not (self._records is not None and self._records):
             self.query_one("#ledger-evidence-record-detail", Static).update(tr("tui.ledger.evidence.records_empty"))
-        if self.add_awaits_reread:
-            # The records now show whether the addition whose outcome was unknown landed.
+        if self.add_awaits_reread and load > self.add_reread_after:
+            # Read after the addition whose outcome was unknown, the records now show whether it landed.
             self.add_awaits_reread = False
             self.query_one("#ledger-evidence-add", Button).disabled = False
 
@@ -281,6 +289,7 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
                 # The document may already be added: Add returns only once the records are read again.
                 self.reading = False
                 self.add_awaits_reread = True
+                self.add_reread_after = self.records_loads
                 self.refresh_then(lambda: self._after_reread(outcome))
                 return
         else:

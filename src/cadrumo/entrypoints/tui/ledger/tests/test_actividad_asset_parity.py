@@ -458,6 +458,35 @@ async def test_an_activity_asset_write_whose_outcome_is_unknown_is_offered_again
 
 
 @pytest.mark.asyncio
+async def test_an_activity_asset_write_whose_outcome_is_unknown_is_released_only_by_reading_that_asset() -> None:
+    revision = _revision("held-asset")
+    unknown = OperationOutcomeUnknownError(operation_id="f" * 64, effect=OperationEffect.UNKNOWN)
+    actions = _ActionStub(revision, create_error=unknown)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 35)) as pilot:
+        screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
+        await _activate(pilot=pilot, screen=screen, selector="#asset-create")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="unknown	")
+        assert _writes_disabled(screen) == [True, True, True]
+
+        # Reading another asset says nothing about whether the held creation landed.
+        screen.query_one("#asset-id", Input).value = "another-asset"
+        # Pressed directly: a key press on a button still showing its last press is ignored.
+        screen.query_one("#asset-inspect", Button).press()
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="asset	another-asset")
+        assert _writes_disabled(screen) == [True, True, True]
+
+        screen.query_one("#asset-id", Input).value = revision.asset_id
+        screen.query_one("#asset-inspect", Button).press()
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="asset	held-asset")
+        assert _writes_disabled(screen) == [False, False, False]
+
+    assert actions.requests[1:] == [("inspect", "another-asset"), ("inspect", "held-asset")]
+
+
+@pytest.mark.asyncio
 async def test_an_activity_asset_write_whose_outcome_is_unknown_stays_withheld_when_the_reread_is_refused() -> None:
     revision = _revision("unknown-reread-refused")
     unknown = OperationOutcomeUnknownError(operation_id="f" * 64, effect=OperationEffect.UNKNOWN)

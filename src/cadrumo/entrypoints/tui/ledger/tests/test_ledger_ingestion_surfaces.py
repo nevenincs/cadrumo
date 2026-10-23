@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import date
 from decimal import Decimal
-from typing import cast
+from typing import cast, override
 
 import pytest
 from textual.widgets import Button, DataTable, Input, Select, Static
+
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from .....application.ledger.attachment_review import AttachmentReviewItem
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -15,6 +18,7 @@ from .....application.ledger.invoice_evidence_operation_dtos import InvoiceDraft
 from .....application.ledger.models import ManualLedgerTransactionResult
 from .....application.ledger.workspace import LedgerWorkspaceArea
 from .....core.config import override_settings
+from .....core.errors.error_codes import resolve_error_message
 from .....core.identity.transaction_ids import TransactionId
 from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.iva.schema import InvoiceKind
@@ -360,6 +364,34 @@ async def test_evidence_is_added_listed_and_reader_readiness_is_informational() 
                 )
             ]
             assert refreshes == [1, 1]
+
+
+class _RefusedRecordsDoor(_EvidenceDoor):
+    def __init__(self, refusal: RefusalError) -> None:
+        super().__init__(ready=True)
+        self.refusal = refusal
+
+    @override
+    def list_records(self) -> tuple[LedgerEvidenceRecordRowV1, ...]:
+        raise self.refusal
+
+
+@pytest.mark.asyncio
+async def test_a_refused_records_load_is_said_on_the_screen() -> None:
+    refusal = RefusalError(RefusalCode.DRAINING)
+    screen = _evidence_screen(_RefusedRecordsDoor(refusal), [])
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 60)) as pilot:
+            detail = screen.query_one("#ledger-evidence-record-detail", Static)
+            loop = asyncio.get_running_loop()
+            deadline = loop.time() + 10
+            while str(detail.render()) != resolve_error_message(refusal):
+                assert loop.time() < deadline, f"the refused load was not said: {detail.render()}"
+                await pilot.pause()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+            assert pilot.app.screen is screen
+            assert screen.query_one("#ledger-evidence-records", DataTable).row_count == 0
 
 
 @pytest.mark.asyncio

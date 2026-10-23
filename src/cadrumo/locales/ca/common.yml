@@ -3702,6 +3702,9 @@ tui:
         no.'
       refresh_failed: El canvi s'ha desat, però aquesta vista no s'ha pogut tornar
         a llegir. Torna a l'Inici per actualitzar-la.
+      refresh_failed_unknown: Pot ser que el canvi s'hagi desat o no, i aquesta vista
+        no s'ha pogut tornar a llegir. Torna a l'Inici per actualitzar-la abans de
+        tornar-ho a provar.
       refreshing: S'està actualitzant…
     import:
       account_label: Compte bancari propi de l'extracte

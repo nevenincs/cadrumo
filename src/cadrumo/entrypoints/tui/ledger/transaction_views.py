@@ -24,7 +24,7 @@ from ....core.i18n.render import tr
 from ....domain.transactions.enums import TransactionDirection
 from ..components.language import localized
 from ..components.theme import tokenised
-from ..operations.outcome import OperationOutcomeUnknownError
+from ..operations.outcome import unknown_outcome_of
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .models import LedgerRecordDoorsV1
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
@@ -261,7 +261,7 @@ class LedgerTransactionDetailScreen(LedgerWorkspaceScreen):
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
             status.update(self.failed_write_status(error, "tui.ledger.records.failed"))
             self._busy = False
-            if isinstance(error, OperationOutcomeUnknownError):
+            if unknown_outcome_of(error) is not None:
                 # The correction may be saved; offering it again could apply it twice.
                 self._unstage()
                 return

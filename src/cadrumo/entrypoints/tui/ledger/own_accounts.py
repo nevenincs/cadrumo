@@ -422,10 +422,8 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
         status.update(tr("tui.ledger.records.loading" if reading else "tui.ledger.records.saving"))
         try:
             result = await self.door(request)
-            if not reading:
-                self._clear_secrets()
-                result = await self.door(self._request(action="list"))
         except AccountSessionExpiredError as error:
+            self._busy = False
             self._clear_private_view()
             refusal.update(door_refusal_text(error))
             status.update(
@@ -435,6 +433,7 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
             )
             return
         except CadrumoError as error:
+            self._busy = False
             refusal.update(door_refusal_text(error))
             if reading:
                 status.update(tr("tui.ledger.records.failed"))
@@ -446,16 +445,40 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
             else:
                 self._set_staged_controls(staged=self.staged is not None)
             return
-        finally:
+        if reading:
             self._busy = False
-        self._show_register(result)
-        if not reading:
-            self._unstage()
-            status.update(tr("tui.ledger.records.saved"))
-            if self.selected_id is not None:
-                await self._show_detail(self.selected_id)
-        else:
+            self._show_register(result)
             status.update("" if self.accounts else tr("tui.ledger.own_accounts.empty"))
+            return
+        # The write returned, so it is saved whatever the follow-up read says.
+        self._clear_secrets()
+        self._unstage()
+        status.update(tr("tui.ledger.records.saved"))
+        await self._reread_after_write()
+
+    async def _reread_after_write(self) -> None:
+        """Read the register again after a saved change; a failed read says only that it failed."""
+        status = self.query_one("#ledger-flow-status", Static)
+        refusal = self.query_one("#ledger-refusal", Static)
+        try:
+            result = await self.door(self._request(action="list"))
+        except AccountSessionExpiredError as error:
+            self._busy = False
+            self._clear_private_view()
+            refusal.update(door_refusal_text(error))
+            status.update(tr("tui.ledger.flow.refresh_failed"))
+            return
+        except CadrumoError as error:
+            self._busy = False
+            refusal.update(door_refusal_text(error))
+            status.update(tr("tui.ledger.flow.refresh_failed"))
+            return
+        self._show_register(result)
+        if self.selected_id is None:
+            self._busy = False
+            return
+        # The detail read clears the busy flag once it lands.
+        await self._show_detail(self.selected_id)
 
     def _show_register(self, result: LedgerOwnAccountResult) -> None:
         """Render the masked register projection the operation returned."""

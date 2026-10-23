@@ -129,9 +129,19 @@ def review_outcome_text(result: LedgerLlmOperationResult) -> str:
 class ReviewingCategorisationScreen(CategorisationScreen):
     """A tool that hands one review operation to the operation modal and reports its outcome."""
 
+    def __init__(self, controller: LedgerWorkspaceController, *, id: str) -> None:
+        """Bind the workspace whose entry the reviews act on."""
+        super().__init__(controller, id=id)
+        self.review_awaits_reread = False
+        """Whether a review ended with an unknown outcome, so none is offered until the workspace is read again."""
+
     def ask_for_review(self, door: LedgerSuggestionReviewDoorV1, request: LedgerLlmReviewRequest) -> None:
         """Submit one review off the event loop and let the modal take the decision."""
         if self.refuse_while_busy():
+            return
+        if self.review_awaits_reread:
+            # The last review may have been applied; asking again could apply a second suggestion over it.
+            self.status("tui.ledger.flow.outcome_unknown")
             return
         self.busy = True
         self.run_worker(self._open_review(door, request), exclusive=True, group="categorisation")
@@ -157,14 +167,21 @@ class ReviewingCategorisationScreen(CategorisationScreen):
             self.query_one("#ledger-flow-status", Static).update(
                 self.failed_write_status(error, "tui.ledger.categorisation.failed")
             )
+            if isinstance(error, OperationOutcomeUnknownError):
+                self._withhold_reviews_until_reread()
             return
         self.status("tui.ledger.categorisation.review.waiting")
         self.app.push_screen(
-            OperationModal(controller, review_text=suggestion_text), partial(self._review_settled, door, request)
+            OperationModal(controller, review_text=suggestion_text),
+            partial(self._review_settled, door, request, controller.operation_id),
         )
 
     def _review_settled(
-        self, door: LedgerSuggestionReviewDoorV1, request: LedgerLlmReviewRequest, outcome: object
+        self,
+        door: LedgerSuggestionReviewDoorV1,
+        request: LedgerLlmReviewRequest,
+        operation_id: str,
+        outcome: object,
     ) -> None:
         if isinstance(outcome, OperationModalDetachedOutcomeV1):
             self.busy = False
@@ -172,28 +189,48 @@ class ReviewingCategorisationScreen(CategorisationScreen):
             self.show_outcome(lambda: tr("tui.ledger.categorisation.review.detached"))
             return
         if not isinstance(outcome, OperationModalSettledOutcomeV1):
-            self.busy = False
-            self.status(None)
+            # The modal closed without seeing the review settle: observation was refused or access was lost,
+            # perhaps after Apply. The submitted review may have written, so its outcome is unknown.
+            self._review_outcome_unknown(operation_id, None, None)
             return
         view = outcome.view_model
         if view.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED:
             self.run_worker(self._read_review(door, request, view.projection), exclusive=True, group="categorisation")
             return
-        self.busy = False
         explanation = outcome.error_explanation or (
             public_refusal_explanation(view.receipt_ref) if view.receipt_kind == "refusal" else None
         )
         if view.projection.effect is not OperationEffect.NONE:
             # The review settled without succeeding yet changed something, so its outcome is unknown, not refused.
-            self.write_outcome_unknown = True
-            self.status("tui.ledger.flow.outcome_unknown")
-            unknown = door_refusal_text(
-                OperationOutcomeUnknownError(operation_id=view.projection.operation_id, effect=view.projection.effect)
-            )
-            self.refuse(unknown if explanation is None else "\n".join((explanation, unknown)))
+            self._review_outcome_unknown(view.projection.operation_id, view.projection.effect, explanation)
             return
+        self.busy = False
         self.status("tui.ledger.categorisation.failed")
         self.refuse(tr("tui.ledger.categorisation.not_done") if explanation is None else explanation)
+
+    def _review_outcome_unknown(
+        self, operation_id: str, effect: OperationEffect | None, explanation: str | None
+    ) -> None:
+        """Say that a review's outcome is unknown, and offer no review until the workspace is read again."""
+        self.busy = False
+        self.write_outcome_unknown = True
+        self.show_outcome(None)
+        unknown = door_refusal_text(OperationOutcomeUnknownError(operation_id=operation_id, effect=effect))
+        self.refuse(unknown if explanation is None else "\n".join((explanation, unknown)))
+        self.status("tui.ledger.flow.outcome_unknown")
+        self._withhold_reviews_until_reread()
+
+    def _withhold_reviews_until_reread(self) -> None:
+        """Offer no review until a workspace read started after an unknown outcome returns."""
+        self.review_awaits_reread = True
+        self.reread_then(self._reread_after_unknown_review)
+
+    def _reread_after_unknown_review(self, returned: bool) -> None:
+        """Offer reviews again only over a workspace read after the review whose outcome is unknown."""
+        if returned:
+            self.review_awaits_reread = False
+        # The re-read's own line would call the change saved; it is still unknown.
+        self.status("tui.ledger.flow.outcome_unknown")
 
     async def _read_review(
         self,
@@ -215,6 +252,8 @@ class ReviewingCategorisationScreen(CategorisationScreen):
             self.query_one("#ledger-flow-status", Static).update(
                 self.failed_write_status(error, "tui.ledger.categorisation.failed")
             )
+            if isinstance(error, OperationOutcomeUnknownError):
+                self._withhold_reviews_until_reread()
             return
         finally:
             self.busy = False

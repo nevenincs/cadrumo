@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:337ab758b44d160880677d2963d60a314e324f915f6c29a8216134d8f2cd1b5a'
+body_hash: 'sha256:6b36e175d7645a0d5fa30e86b11ea9ac1e2eccd3062bf2f5a62e203cc01b8c3e'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -478,6 +478,30 @@ related:
 - `S22` `verify:` `ruff format and check on 23 files` -> `pass`
 - `S22` `verify:` `lint-imports` -> `pass`
 - `S22` `verify:` `old-code mutation run of 32 new tests` -> `fail`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_review.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/evidence.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_records.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/own_accounts.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/record_views.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_actividad_asset_parity.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_review.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_ingestion_surfaces.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_lost_session_outcome_is_unknown.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_own_accounts.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_record_views.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/transaction_views.py`
+- `S26` `M` `src/cadrumo/locales/ca/common.yml`
+- `S26` `M` `src/cadrumo/locales/en/common.yml`
+- `S26` `M` `src/cadrumo/locales/es/common.yml`
+- `S26` `M` `src/cadrumo/locales/hu/common.yml`
+- `S26` `verify:` `pytest ledger, runtime tui and client transport suites, 1761 tests` -> `pass`
+- `S26` `verify:` `just test-tui, 3005 tests` -> `pass`
+- `S26` `verify:` `ruff format and check` -> `pass`
+- `S26` `verify:` `lint-imports` -> `pass`
+- `S26` `verify:` `old-code mutation run of the 12 new test cases` -> `fail`
+- `S26` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -514,3 +538,4 @@ related:
 - `S20` Re-review fix: evidence extract/confirm session checks, import preview folder listing, manager settings load and certificate path resolve moved off the loop; sweep of 39 runtime TUI door modules found no other blocking door
 - `S22` Re-review fix: every failure after acceptance judged once; unknown unless a NONE receipt was observed or the contract permits no UPDATED/PARTIAL; lost connection keeps expired vs unavailable; review and evidence add re-read on unknown. The old-code run is the expected detection proof (21 new runtime cases, 65 changed cases, 2 screen tests fail on HEAD code). Doors outside RuntimeProfileSession (auth, modelo create/lifecycle, `aeat_sync` handoff) are out of plan scope
 - `S22` Second re-review fix: activity-asset correlation inside settle, writes withheld until a re-read; session-lost unknown outcomes worded unknown on every write screen via `unknown_outcome_of;` categorisation result read judged inside the shared check; evidence add waits for a successful re-read; `_confirm` always clears reading. Start-denial recommendation dropped on evidence (see audit correction). The old-code run is the expected detection proof
+- `S26` Third re-review fixes: own-account write unstaged and worded saved before a separate re-read; categorisation modal None after Apply is unknown with the operation id until a re-read started after it lands; record and transaction edits use `unknown_outcome_of;` evidence Add released only by a load started after the unknown outcome; asset hold bound to its asset; refused records load shown; a failed re-read after an unknown outcome no longer says saved (new key `tui.ledger.flow.refresh_failed_unknown,` 4 locales). Not-found release of the asset hold deferred: needs a typed inspect refusal. The old-code run is the expected detection proof
