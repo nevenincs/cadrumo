@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:1d221afb646ae4627fca5826c9391502bf3204233aa2362f78d72cbc0d5bb391'
+body_hash: 'sha256:111249310fff4c0282255e998abd686e0a71ea556d6d7dbdfee6cf9413affb08'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -91,6 +91,30 @@ A failed exchange closes the transport (`operation_transport.py:70-72`). The rec
 
 `test_every_body_answers_an_area_choice.py:106-122` uses `pkgutil.iter_modules`. A body in a future `ledger/` subpackage would escape the walk.
 
+### settlement | high | Second re-review: activity-asset writes check their result after run_operation returns
+
+`runtime_actividad_asset.py:205-207,235-237,285-301,325-331`. `create`, `correct` and `record_claim` declare an UPDATED effect and raise a plain `INVALID_FRAME` refusal when the result lacks `history`, lacks the asset's revision, or names another claim. Those checks run after `_call` (`:139-147`) returns, so `failure_after_submission` never judges them. The screen shows `refused` (`actividad_asset.py:171-174`) with every button live, and a repeated `correct` appends a duplicate revision. The unknown branch (`actividad_asset.py:167-170`) also re-offers the write without re-reading.
+
+### settlement | medium | Second re-review: a session lost with an unknown outcome is still worded as not saved
+
+The session-lost outcome errors subclass the session errors, so catch order is safe and private views are dropped. But the session branches print a definite failure: `evidence_records.py:220,260`, `invoice_entry.py:602`, `entries_add.py:353`, `registers_presentation.py:442`, `categorisation_review.py:149,207`, `actividad_asset.py:165`. In `review.py:345-355` they fall to the generic branch, where `failed_write_status` (`controller.py:652`) recognises only `OperationOutcomeUnknownError`; queue rows and `pending_exclusion` are kept until the root recomposes. The pre-submit binding check blocks a same-session retry, so there is no double apply.
+
+### settlement | medium | Second re-review: the categorisation result read checks the session outside the shared judgement
+
+`runtime_ledger_categorisation.py:534-540`. `read_result` runs after a SUCCEEDED receipt that may be UPDATED, but its `require_binding()` and identity check sit before the `try` at `:544`. A session lost in that gap reads "Not done." (`categorisation_review.py:204-208`) for a saved change.
+
+### settlement | low | Second re-review: a typed runtime refusal at start is reported as unknown
+
+`OperationController.start` maps an `AccessRefusal` reply to `INVALID_FRAME` (`operation_controller.py:504-505`), so a typed denial looks like a malformed reply. The supervisor refuses before entering the executor (`_supervisor_execution.py:146-239`), so a typed denial proves nothing ran. Reporting unknown is the safe direction, only less precise.
+
+### frontend-behaviour | low | Second re-review: evidence add is offered again before the re-read lands, or when it fails
+
+`evidence_records.py:266-270,289-292`. `refresh_then` calls `then()` after a failed `_refresh` (`controller.py:680-689`), and `_reoffer_add` re-enables Add while `_show_records` is still reading.
+
+### navigation | low | Second re-review: a cleared review can leave the evidence body in flight
+
+`evidence_records.py:207-213`. If the review is cleared before the `_confirm` worker runs, `_confirm` returns without clearing `reading`, so `in_flight` stays true and, after S21, Back, the account keys and quit stay refused until the session lapses. Not reproduced.
+
 ## Recommendations
 
 - Event loop: move every blocking session check in a runtime door off the loop, and add thread-recording tests for each door that does not go through `run_operation`.
@@ -101,3 +125,4 @@ A failed exchange closes the transport (`operation_transport.py:70-72`). The rec
 - Stale records: a follow-on decision should settle whether `ledger.update`, `ledger.invoice.update`, `ledger.invoice.remove` and the reset preview carry revision or digest preconditions.
 - Paging: `invoice.list`, the register lists, `evidence.query`, `rule.list` and `consent.list` take no paging fields. Paging them needs a decision on those request contracts.
 - The P03.S20 to S22 re-review findings reopen those Steps. Every path after start, and every way of leaving a body, must go through one shared check rather than through per-scenario fixes.
+- The second re-review passes S20 and S21 and reopens S22: activity-asset correlation must move into `settle`, session-lost unknown outcomes must read as unknown on every write screen, and the categorisation result read must be judged inside the shared check.
