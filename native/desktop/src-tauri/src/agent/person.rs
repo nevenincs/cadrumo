@@ -23,6 +23,31 @@ const REPLY_LIMIT: Duration = Duration::from_secs(140);
 /// The longest request line the holder reads, before its newline.
 pub const REQUEST_LIMIT: usize = 16_383;
 
+/// The size of a value's compact JSON encoding, counted without keeping it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Encoded {
+    pub bytes: usize,
+    pub chars: usize,
+}
+impl Write for Encoded {
+    fn write(&mut self, buffer: &[u8]) -> std::io::Result<usize> {
+        self.bytes += buffer.len();
+        // Every character's encoding has exactly one byte that is not a
+        // continuation byte.
+        self.chars += buffer.iter().filter(|b| (**b & 0xc0) != 0x80).count();
+        Ok(buffer.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+pub fn encoded(value: &Value) -> Encoded {
+    let mut size = Encoded::default();
+    // Writing a JSON value to a counter cannot fail.
+    let _ = serde_json::to_writer(&mut size, value);
+    size
+}
+
 /// Whether `document` fits one request line once its request id is added.
 /// A request that does not is refused before it is written, and that refusal
 /// loses the bridge: check first.
@@ -30,12 +55,21 @@ pub fn request_fits(document: &Value) -> bool {
     let Some(fields) = document.as_object() else {
         return false;
     };
-    let mut fields = fields.clone();
-    fields.insert(
-        "request_id".into(),
-        json!("00000000-0000-4000-8000-000000000000"),
-    );
-    serde_json::to_vec(&fields).is_ok_and(|bytes| bytes.len() <= REQUEST_LIMIT)
+    // `"request_id":"` and `"` around a 36-character id, after a comma
+    // unless it is the only member.
+    let id = 14 + 36 + 1 + usize::from(!fields.is_empty());
+    encoded(document).bytes + id <= REQUEST_LIMIT
+}
+
+/// Overwrites every text in `value` in place, for a request that carried
+/// private input.
+pub fn wipe(value: &mut Value) {
+    match value {
+        Value::String(text) => zeroize::Zeroize::zeroize(text),
+        Value::Array(items) => items.iter_mut().for_each(wipe),
+        Value::Object(fields) => fields.values_mut().for_each(wipe),
+        _ => {}
+    }
 }
 
 fn failed(reason: &'static str) -> ApplicationError {
@@ -488,11 +522,24 @@ impl Person {
     }
 
     pub fn exchange(&mut self, mut document: Value) -> Result<Value> {
+        self.exchange_in(&mut document)
+    }
+
+    /// As [`Person::exchange`], for a request that carries private input:
+    /// its text is overwritten once the exchange ends, whether or not it was
+    /// sent.
+    pub fn exchange_wiping(&mut self, document: &mut Value) -> Result<Value> {
+        let reply = self.exchange_in(document);
+        wipe(document);
+        reply
+    }
+
+    fn exchange_in(&mut self, document: &mut Value) -> Result<Value> {
         if let Some(error) = self.failure.borrow().as_ref() {
             return Err(failed("person_bridge_closed").caused_by(error.clone()));
         }
         self.refused_in_step = false;
-        let reply = self.exchange_once(&mut document);
+        let reply = self.exchange_once(document);
         if let Err(error) = &reply
             && !self.refused_in_step
         {
@@ -510,11 +557,15 @@ impl Person {
     fn exchange_once(&mut self, document: &mut Value) -> Result<Value> {
         let id = request_id()?;
         document["request_id"] = json!(id);
-        let mut bytes = serde_json::to_vec(document)
-            .map_err(|error| failed("person_request_encode").caused_by(error))?;
-        if bytes.len() > REQUEST_LIMIT {
+        let length = encoded(document).bytes;
+        if length > REQUEST_LIMIT {
             return Err(failed("person_request_too_large"));
         }
+        // Sized up front, so the line is never reallocated and its one copy
+        // of the request is overwritten when it is dropped.
+        let mut bytes = zeroize::Zeroizing::new(Vec::with_capacity(length + 1));
+        serde_json::to_writer(&mut *bytes, document)
+            .map_err(|error| failed("person_request_encode").caused_by(error))?;
         bytes.push(b'\n');
         let stdin = self
             .stdin
@@ -719,6 +770,38 @@ fn language_reply(identity: &Value, reply: &Value) -> bool {
 #[cfg(test)]
 mod language_tests {
     use super::*;
+
+    #[test]
+    fn a_request_is_sized_as_the_line_it_is_written_as() {
+        for document in [
+            json!({}),
+            json!({"action":"operation_submit","payload":{"text":"\u{20ac}"}}),
+        ] {
+            let mut written = document.clone();
+            written["request_id"] = json!(request_id().unwrap());
+            let line = serde_json::to_vec(&written).unwrap().len();
+            // Each added `"pad":"..."` member costs nine bytes and its text.
+            let pad = REQUEST_LIMIT - line - r#","pad":"""#.len();
+            let mut filled = document.clone();
+            filled["pad"] = json!("a".repeat(pad));
+            assert!(request_fits(&filled), "{document}");
+            filled["pad"] = json!("a".repeat(pad + 1));
+            assert!(!request_fits(&filled), "{document}");
+        }
+        assert!(!request_fits(&json!(["not", "an", "object"])));
+        let size = encoded(&json!({"text":"\u{20ac}a"}));
+        assert_eq!((size.bytes, size.chars), (15, 13));
+    }
+
+    #[test]
+    fn a_wiped_request_keeps_no_text() {
+        let mut document = json!({"payload":{"iban":"ES0000","rows":["a", 1, null]}});
+        wipe(&mut document);
+        assert_eq!(
+            document,
+            json!({"payload":{"iban":"","rows":["", 1, null]}})
+        );
+    }
 
     #[test]
     fn pushed_lines_are_events_and_never_replies() {

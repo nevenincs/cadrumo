@@ -58,6 +58,29 @@ pub(crate) async fn call(person: &HeldPerson, request: Value) -> Result<Value> {
     Ok(super::blocking(move || lock(&person).exchange(request)).await?)
 }
 
+/// A request whose text is overwritten when it is dropped, sent or not. Its
+/// value can be borrowed but never moved out, so no unwiped copy outlives it.
+pub(crate) struct Wiped(pub(crate) Value);
+/// Says that a request is there, never what it holds.
+impl std::fmt::Debug for Wiped {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str("Wiped(..)")
+    }
+}
+impl Drop for Wiped {
+    fn drop(&mut self) {
+        crate::agent::person::wipe(&mut self.0);
+    }
+}
+pub(crate) async fn call_wiping(person: &HeldPerson, request: Wiped) -> Result<Value> {
+    let person = person.clone();
+    Ok(super::blocking(move || {
+        let mut request = request;
+        lock(&person).exchange_wiping(&mut request.0)
+    })
+    .await?)
+}
+
 /// One operation this host submitted, as the relay names it.
 pub(crate) struct Relayed<'a> {
     pub(crate) person: &'a HeldPerson,
@@ -80,14 +103,38 @@ pub(crate) async fn submit(
     payload: Value,
     mutation: bool,
 ) -> Result<String> {
-    let lost = || Failure::new(if mutation { "unknown" } else { "unavailable" });
     let submitted = call(
         person,
         json!({"action":"operation_submit", "definition_id":definition,
         "subject_ref":subject, "payload":payload}),
     )
-    .await
-    .map_err(|_| lost())?;
+    .await;
+    accepted(submitted, mutation)
+}
+
+/// The submission request for `payload`, which is moved into it, not copied.
+pub(crate) fn submission(definition: &str, subject: &str, payload: Value) -> Wiped {
+    let mut request = Wiped(
+        json!({"action":"operation_submit", "definition_id":definition,
+        "subject_ref":subject, "payload":null}),
+    );
+    request.0["payload"] = payload;
+    request
+}
+
+/// As [`submit`], for a request built by [`submission`]: its text is
+/// overwritten once it is sent.
+pub(crate) async fn submit_wiping(
+    person: &HeldPerson,
+    request: Wiped,
+    mutation: bool,
+) -> Result<String> {
+    accepted(call_wiping(person, request).await, mutation)
+}
+
+fn accepted(submitted: Result<Value>, mutation: bool) -> Result<String> {
+    let lost = || Failure::new(if mutation { "unknown" } else { "unavailable" });
+    let submitted = submitted.map_err(|_| lost())?;
     if submitted["kind"] == "operation_refused" {
         let mut refused = Failure::new("refused");
         refused.reason = submitted["code"].as_str().map(str::to_owned);

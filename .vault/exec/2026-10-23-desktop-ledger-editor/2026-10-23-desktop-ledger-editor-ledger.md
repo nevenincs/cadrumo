@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:df598366e98f2f420ec57e5066d0bb7cc9e2e715d8557f30d030156cfafd47f3'
+body_hash: 'sha256:cb531ae6ab10d9071c4068db653988197006b3224c96ce5bbb2fd1c90ce40887'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -60,3 +60,14 @@ related:
 - `S01` `verify:` `relay_contracts.py --check` -> `pass`
 - `S01` `verify:` `ruff check and format --check relay_contracts.py` -> `pass`
 - `S01` `by:` `vaultspec-high-executor`
+- `S02` `A` `native/desktop/src-tauri/src/shell/ledger/files.rs`
+- `S02` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S02` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S02` `M` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S02` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S02` `verify:` `tauri.mjs test-unit ledger` -> `pass`
+- `S02` `verify:` `tauri.mjs test-unit agent::` -> `pass`
+- `S02` `verify:` `tauri.mjs test-unit shell::user_profile` -> `pass`
+- `S02` `verify:` `tauri.mjs test-unit app::tests` -> `pass`
+- `S02` `verify:` `tauri.mjs clippy-backend` -> `pass`
+- `S02` `by:` `vaultspec-high-executor`

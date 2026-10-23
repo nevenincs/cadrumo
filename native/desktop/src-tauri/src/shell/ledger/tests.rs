@@ -8,24 +8,10 @@ fn object(value: Value) -> Map<String, Value> {
 }
 
 #[test]
-fn the_window_names_no_profile_directory_path_or_account_secret() {
+fn the_window_names_no_profile_directory_or_account_secret() {
     for (id, payload) in [
         ("ledger.list", json!({"profile_id":"another"})),
         ("ledger.evidence.add", json!({"source_directory":"C:\\"})),
-        (
-            "ledger.import",
-            json!({"files":["C:\\statement.csv"],"provider":"auto"}),
-        ),
-        ("ledger.import", json!({"verify_source":"C:\\x.csv"})),
-        ("ledger.export", json!({"output_path":"C:\\out.csv"})),
-        (
-            "ledger.invoice.import",
-            json!({"source_path":"C:\\book.xlsx","kind":"RECEIVED"}),
-        ),
-        (
-            "ledger.evidence.batch",
-            json!({"sources":["C:\\a.pdf"],"direction":"RECEIVED"}),
-        ),
         (
             "ledger.own_account",
             json!({"action":"update","own_account_id":"acc-01","iban":"ES00"}),
@@ -50,13 +36,236 @@ fn the_window_names_no_profile_directory_path_or_account_secret() {
             "ledger.own_account",
             json!({"action":"update","own_account_id":"acc-01","label":"Main"}),
         ),
-        // Only the definition that reads a path owns its path field.
-        (
-            "ledger.update",
-            json!({"transaction_id":"t","source_path":"kept for the contract"}),
-        ),
     ] {
         assert!(admit_fields(definition(id), &object(payload)).is_ok());
+    }
+}
+
+/// A scratch folder with one file of each kind the purposes read.
+fn scratch(name: &str) -> std::path::PathBuf {
+    let root = std::env::temp_dir().join(format!(
+        "cadrumo-ledger-tokens-{name}-{}",
+        std::process::id()
+    ));
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).unwrap();
+    for file in ["statement.csv", "book.xlsx", "receipt.pdf"] {
+        std::fs::write(root.join(file), b"x").unwrap();
+    }
+    root
+}
+fn token(files: &Files, identity: &Value, purpose: Purpose, path: std::path::PathBuf) -> Value {
+    let picks =
+        serde_json::to_value(files.issue_all(identity, purpose, vec![path]).unwrap()).unwrap();
+    picks["files"][0]["token"].clone()
+}
+
+#[test]
+fn file_tokens_become_paths_only_where_the_definition_reads_a_file() {
+    let root = scratch("substitute");
+    let files = Files::default();
+    let session = json!({"session_id":"one"});
+    let statement = token(
+        &files,
+        &session,
+        Purpose::BankStatements,
+        root.join("statement.csv"),
+    );
+    let book = token(
+        &files,
+        &session,
+        Purpose::InvoiceBooks,
+        root.join("book.xlsx"),
+    );
+    let receipt = token(
+        &files,
+        &session,
+        Purpose::Documents,
+        root.join("receipt.pdf"),
+    );
+    let text = |path: std::path::PathBuf| json!(path.to_str().unwrap());
+
+    let mut import = object(json!({"files":[statement],"provider":"auto","verify_source":null}));
+    substitute(&files, &session, definition("ledger.import"), &mut import).unwrap();
+    assert_eq!(import["files"], json!([text(root.join("statement.csv"))]));
+    assert_eq!(import["verify_source"], Value::Null);
+    assert!(!import.contains_key("source_directory"));
+
+    let mut add = object(json!({"source_path":receipt}));
+    substitute(
+        &files,
+        &session,
+        definition("ledger.evidence.add"),
+        &mut add,
+    )
+    .unwrap();
+    assert_eq!(add["source_path"], text(root.join("receipt.pdf")));
+    assert_eq!(add["source_directory"], text(root.clone()));
+
+    let mut book_import = object(json!({"source_path":book,"kind":"RECEIVED"}));
+    substitute(
+        &files,
+        &session,
+        definition("ledger.invoice.import"),
+        &mut book_import,
+    )
+    .unwrap();
+    assert_eq!(book_import["source_path"], text(root.join("book.xlsx")));
+
+    for (id, payload, code) in [
+        // A path, not a token.
+        (
+            "ledger.import",
+            json!({"files":[root.join("statement.csv").to_str().unwrap()]}),
+            "invalid",
+        ),
+        // A token picked for another purpose.
+        ("ledger.import", json!({"files":[book.clone()]}), "invalid"),
+        (
+            "ledger.evidence.add",
+            json!({"source_path":statement.clone()}),
+            "invalid",
+        ),
+        // No file at all, or not a list.
+        ("ledger.import", json!({"files":[]}), "invalid"),
+        (
+            "ledger.import",
+            json!({"files":statement.clone()}),
+            "invalid",
+        ),
+        (
+            "ledger.invoice.import",
+            json!({"source_path":null}),
+            "invalid",
+        ),
+        // A token this session never issued.
+        (
+            "ledger.import",
+            json!({"files":["file-0000"]}),
+            "file_unavailable",
+        ),
+    ] {
+        assert_eq!(
+            substitute(
+                &files,
+                &session,
+                definition(id),
+                &mut object(payload.clone())
+            )
+            .unwrap_err()
+            .code,
+            code,
+            "{id} {payload}"
+        );
+    }
+    // Only the fields a definition reads files from are substituted.
+    let mut update = object(json!({"transaction_id":"t","source_path":statement.clone()}));
+    substitute(&files, &session, definition("ledger.update"), &mut update).unwrap();
+    assert_eq!(update["source_path"], statement);
+    // Another session's window cannot use these tokens.
+    assert_eq!(
+        substitute(
+            &files,
+            &json!({"session_id":"two"}),
+            definition("ledger.invoice.import"),
+            &mut object(json!({"source_path":book})),
+        )
+        .unwrap_err()
+        .code,
+        "file_unavailable"
+    );
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn an_export_goes_only_where_the_person_saved_its_format() {
+    let files = Files::default();
+    let session = json!({"session_id":"one"});
+    let target = std::env::temp_dir().join("ledger-export.jsonl");
+    let saved =
+        serde_json::to_value(files.issue_save(&session, "jsonl", target.clone()).unwrap()).unwrap();
+    let saved = saved["files"][0]["token"].clone();
+    let mut export = object(json!({"output_path":saved,"export_format":"jsonl"}));
+    substitute(&files, &session, definition("ledger.export"), &mut export).unwrap();
+    assert_eq!(export["output_path"], json!(target.to_str().unwrap()));
+    for format in [json!("csv"), json!(1)] {
+        let mut mismatched = object(json!({"output_path":saved,"export_format":format}));
+        assert_eq!(
+            substitute(
+                &files,
+                &session,
+                definition("ledger.export"),
+                &mut mismatched
+            )
+            .unwrap_err()
+            .code,
+            "invalid"
+        );
+    }
+    let mut defaulted = object(json!({"output_path":saved}));
+    assert!(
+        substitute(
+            &files,
+            &session,
+            definition("ledger.export"),
+            &mut defaulted
+        )
+        .is_err(),
+        "an absent format is the contract's csv"
+    );
+}
+
+#[test]
+fn an_own_account_change_comes_only_as_a_raw_object_to_add_or_update() {
+    let raw = |text: &str| InvokeBody::Raw(text.as_bytes().to_vec());
+    let added = own_account_body(&raw(
+        r#" {"action":"add","label":"Main","holding":"own","iban":"ES9121000418450200051332"}"#,
+    ))
+    .unwrap();
+    assert_eq!(added.0["iban"], "ES9121000418450200051332");
+    assert!(
+        own_account_body(&raw(
+            r#"{"action":"update","own_account_id":"acc-01","bank_name":"B"}"#
+        ))
+        .is_ok()
+    );
+    for refused in [
+        r#"{"action":"list"}"#.to_owned(),
+        r#"{"action":"add","profile_id":"another","iban":"ES00"}"#.to_owned(),
+        r#"["add"]"#.to_owned(),
+        "not json".to_owned(),
+        format!(
+            r#"{{"action":"add","label":"{}"}}"#,
+            "a".repeat(SECRET_BODY_LIMIT)
+        ),
+    ] {
+        assert_eq!(
+            own_account_body(&raw(&refused)).unwrap_err().code,
+            "invalid"
+        );
+    }
+    assert_eq!(
+        own_account_body(&InvokeBody::Json(json!({"action":"add"})))
+            .unwrap_err()
+            .code,
+        "invalid",
+        "a JSON argument can be logged by the transport; only a raw body carries it"
+    );
+    // Dropping the request overwrites its text.
+    let mut kept = own_account_body(&raw(r#"{"action":"add","iban":"ES00"}"#)).unwrap();
+    crate::agent::person::wipe(&mut kept.0);
+    assert_eq!(kept.0["iban"], "");
+}
+
+#[test]
+fn dialog_words_are_bounded_and_a_suggested_name_names_no_folder() {
+    assert!(label_admitted("Extractos bancarios"));
+    assert!(!label_admitted(""));
+    assert!(!label_admitted(&"a".repeat(LABEL_LIMIT + 1)));
+    assert!(!label_admitted("line\nbreak"));
+    assert!(file_name_admitted("libro-2026.csv"));
+    for refused in ["..\\up.csv", "C:\\x.csv", "a/b.csv", ".hidden"] {
+        assert!(!file_name_admitted(refused), "{refused}");
     }
 }
 
@@ -331,9 +540,10 @@ mod relayed {
         let outcome = submit_on(
             &operations,
             &held.person,
+            held.identity.clone(),
             &mut events,
             definition("ledger.list"),
-            object(json!({"limit":200})),
+            Wiped(json!({"limit":200})),
         )
         .await
         .unwrap();
@@ -386,9 +596,10 @@ mod relayed {
         let outcome = submit_on(
             &operations,
             &held.person,
+            held.identity.clone(),
             &mut events,
             definition("ledger.update"),
-            object(json!({"transaction_id":"t1","patch":{}})),
+            Wiped(json!({"transaction_id":"t1","patch":{}})),
         )
         .await
         .unwrap();
@@ -400,6 +611,67 @@ mod relayed {
                 reason: Some("REFUSED_CLI_VALIDATION_BOUNDARY".into()),
                 detail: Some(detail),
             }
+        );
+    }
+
+    #[tokio::test]
+    async fn an_own_accounts_number_reaches_the_relay_only_in_its_request() {
+        let iban = "ES9121000418450200051332";
+        let held = holder(|_| {
+            vec![
+                step(
+                    "operation_submit",
+                    json!([
+                        ["definition_id", "ledger.own_account"],
+                        ["payload.action", "add"],
+                        ["payload.iban", iban],
+                        ["payload.profile_id", PROFILE]
+                    ]),
+                    json!({"kind":"operation_submitted","operation_id":OPERATION}),
+                    false,
+                ),
+                step(
+                    "operation_observe",
+                    json!([]),
+                    observed(
+                        "ledger.own_account",
+                        "terminal",
+                        json!({"terminal_condition":"succeeded","effect":"updated"}),
+                    ),
+                    false,
+                ),
+                step(
+                    "operation_result",
+                    json!([]),
+                    json!({"kind":"operation_result","operation_id":OPERATION,
+                        "definition_id":"ledger.own_account",
+                        "document":{"projection":{"own_account_id":"acc-01","masked_iban":"ES**1332"}}}),
+                    false,
+                ),
+            ]
+        });
+        let body = InvokeBody::Raw(
+            format!(r#"{{"action":"add","label":"Main","holding":"own","iban":"{iban}"}}"#)
+                .into_bytes(),
+        );
+        let operations = Operations::default();
+        let mut events = held.events.subscribe();
+        let outcome = submit_on(
+            &operations,
+            &held.person,
+            held.identity.clone(),
+            &mut events,
+            definition("ledger.own_account"),
+            own_account_body(&body).unwrap(),
+        )
+        .await
+        .unwrap();
+        let Outcome::Settled { result, .. } = outcome else {
+            panic!("the account was added");
+        };
+        assert!(
+            !result.to_string().contains(iban),
+            "only the masked view returns"
         );
     }
 
@@ -418,9 +690,10 @@ mod relayed {
         let refused = submit_on(
             &operations,
             &held.person,
+            held.identity.clone(),
             &mut events,
             definition("ledger.add"),
-            object(json!({})),
+            Wiped(json!({})),
         )
         .await
         .unwrap_err();
@@ -438,9 +711,10 @@ mod relayed {
         let refused = submit_on(
             &operations,
             &held.person,
+            held.identity.clone(),
             &mut events,
             definition("ledger.classify.bulk"),
-            object(json!({"csv_text":"a".repeat(PAYLOAD_LIMIT)})),
+            Wiped(json!({"csv_text":"a".repeat(PAYLOAD_LIMIT)})),
         )
         .await
         .unwrap_err();
@@ -515,9 +789,10 @@ mod relayed {
         let paused = submit_on(
             &operations,
             &held.person,
+            held.identity.clone(),
             &mut events,
             definition("ledger.classify.review"),
-            object(json!({"transaction_id":"t1","mode":"classification"})),
+            Wiped(json!({"transaction_id":"t1","mode":"classification"})),
         )
         .await
         .unwrap();
