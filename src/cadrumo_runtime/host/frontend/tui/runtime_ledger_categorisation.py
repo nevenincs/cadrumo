@@ -529,19 +529,21 @@ class RuntimeSuggestionReviewTuiDoorV1:
 
         A result that cannot be read, or that its receipt does not support, is
         judged against that receipt: one that saved something leaves the
-        outcome unknown rather than refused.
+        outcome unknown rather than refused. The session and the receipt's
+        identity are checked inside that judgement too: a session lost after a
+        receipt that saved something leaves the outcome unknown as well.
         """
-        await asyncio.to_thread(self._session.require_binding)
-        if (
-            projection.definition_id != self._definition_id
-            or projection.subject_ref != self._subject()
-            or projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        ):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        controller = OperationController(
-            client=self._client, operation_id=projection.operation_id, session_id=self._session.session_id
-        )
         try:
+            await asyncio.to_thread(self._session.require_binding)
+            if (
+                projection.definition_id != self._definition_id
+                or projection.subject_ref != self._subject()
+                or projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+            ):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            controller = OperationController(
+                client=self._client, operation_id=projection.operation_id, session_id=self._session.session_id
+            )
             result = await controller.read_settled_result(projection, LedgerLlmOperationResult, result_version=1)
             await asyncio.to_thread(self._session.require_binding)
             if not review_result_matches(result, request, projection):

@@ -22,7 +22,7 @@ from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, parse_requested_free_amount
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
-from ..operations.outcome import OperationOutcomeUnknownError
+from ..operations.outcome import OperationOutcomeUnknownError, unknown_outcome_of
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .models_actividad_asset import (
     ActivityAssetClaimRequestV1,
@@ -32,6 +32,9 @@ from .models_actividad_asset import (
     ActivityAssetForecastRequestV1,
     ActivityAssetInspectionV1,
 )
+
+#: The actions that change records; an unknown outcome withholds them until the asset is read again.
+_WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim")
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,6 +85,8 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         self._last_forecast: ScheduledAmortizationCharge | None = None
         self._last_forecast_supersedes: str | None = None
         self._busy = False
+        self.writes_held = False
+        """Whether a write ended with an unknown outcome, so no write is offered until the asset is read again."""
 
     @property
     @override
@@ -143,7 +148,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Dispatch every mutation through the injected shared operations, one action at a time."""
-        if self._busy:
+        if self._busy or (self.writes_held and f"#{event.button.id}" in _WRITE_BUTTONS):
             return
         # A visible neutral state prevents a following public action from being
         # mistaken for the previous result while its shared operation is still
@@ -162,10 +167,17 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             result = await asyncio.to_thread(self._dispatch, button_id)
         except AccountSessionExpiredError as exc:
             self._clear_private_view()
-            self.query_one("#asset-result", Static).update(f"refused\t{exc}")
+            if unknown_outcome_of(exc) is None:
+                self.query_one("#asset-result", Static).update(f"refused\t{exc}")
+            else:
+                # Lost with the change perhaps saved: unknown, not refused. Signing in composes the screen again.
+                self._hold_writes()
+                self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(exc)}")
             return
         except OperationOutcomeUnknownError as exc:
-            # The change may be saved, so it is never reported as refused: re-read before a retry.
+            # The change may be saved, so it is never reported as refused, and no write is offered over the
+            # asset as last read: the writes return once an inspection reads it again.
+            self._hold_writes()
             self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(exc)}")
             return
         except (CadrumoError, ValueError) as exc:
@@ -175,11 +187,25 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         finally:
             # Cleared with no await before the outcome is on screen, so leaving never hides it.
             self._busy = False
+        if button_id == "asset-inspect":
+            self._release_writes()
         self.query_one("#asset-result", Static).update(result.message)
         if result.current_revision_id is not None:
             self.query_one("#asset-current-revision-id", Static).update(
                 f"current_revision_id\t{result.current_revision_id}"
             )
+
+    def _hold_writes(self) -> None:
+        """Withhold every write until an inspection reads the asset again."""
+        self.writes_held = True
+        for selector in _WRITE_BUTTONS:
+            self.query_one(selector, Button).disabled = True
+
+    def _release_writes(self) -> None:
+        """Offer the writes again over the asset an inspection has just read."""
+        self.writes_held = False
+        for selector in _WRITE_BUTTONS:
+            self.query_one(selector, Button).disabled = False
 
     def _clear_private_view(self) -> None:
         """Discard screen-local financial facts when the retained session is lost."""

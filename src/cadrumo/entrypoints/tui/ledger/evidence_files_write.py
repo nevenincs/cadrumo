@@ -26,7 +26,7 @@ from ..components.dialogs import ConfirmScreen
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
-from ..operations.outcome import OperationOutcomeUnknownError
+from ..operations.outcome import OperationOutcomeUnknownError, unknown_outcome_of
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .evidence_files_common import EVIDENCE_FILES_CSS, EvidenceFilesPager, paging_controls, paint_paging
 from .models import LedgerFlowState
@@ -167,7 +167,7 @@ class LedgerEvidenceFilesWriteScreen(LedgerConfirmationFlowScreen):
         status_key = _STATUS_KEYS.get(self.flow_state)
         if self._failure is not None:
             refusal = door_refusal_text(self._failure)
-            if isinstance(self._failure, OperationOutcomeUnknownError):
+            if unknown_outcome_of(self._failure) is not None:
                 status_key = "tui.ledger.flow.outcome_unknown"
         elif outcome is not None and outcome.refused:
             refusal = "\n".join(outcome.lines)

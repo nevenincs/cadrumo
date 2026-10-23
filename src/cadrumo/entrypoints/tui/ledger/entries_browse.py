@@ -845,7 +845,10 @@ class LedgerEntriesBrowseScreen(LedgerWorkspaceScreen):
             self.marked.clear()
             self._reread(self.failed_write_status(error, "tui.ledger.records.failed"))
             return
-        self._settle_without_write()
+        self._set_busy(False)
+        self.query_one("#ledger-flow-status", Static).update(
+            self.failed_write_status(error, "tui.ledger.records.failed")
+        )
 
     def _clear_private_view(self) -> None:
         """Discard every entry fact the screen holds once the admitted session is lost."""

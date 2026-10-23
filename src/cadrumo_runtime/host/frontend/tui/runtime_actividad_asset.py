@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from decimal import Decimal
 from typing import NoReturn
 from uuid import UUID
@@ -104,15 +105,23 @@ class RuntimeActivityAssetTuiActionsV1:
         self._session = RuntimeProfileSession(client, profile_label=profile_label)
         self._profile_id = self._session.profile_id
 
-    def _call[ProjectionT: _ActivityAssetProjection](
+    def _call[ProjectionT: _ActivityAssetProjection, OutcomeT](
         self,
         request: BaseModel,
         *,
         definition_id: str,
         result_type: type[ProjectionT],
         success_effect: OperationEffect,
-    ) -> ProjectionT:
-        """Run one registered operation from the screen's background worker."""
+        correlate: Callable[[ProjectionT], OutcomeT],
+    ) -> OutcomeT:
+        """Run one registered operation from the screen's background worker.
+
+        ``correlate`` checks a successful result against its request and builds
+        what the screen is given. It runs inside the session's settlement, so a
+        result refused after a receipt that saved something reads as an
+        unknown outcome there rather than as a refusal.
+        """
+        outcomes: list[OutcomeT] = []
 
         def settle(
             projection: ProjectionT,
@@ -135,8 +144,9 @@ class RuntimeActivityAssetTuiActionsV1:
                     terminal_condition=condition,
                     effect=terminal.effect,
                 )
+            outcomes.append(correlate(projection))
 
-        return asyncio.run(
+        asyncio.run(
             self._session.run_operation(
                 request,
                 definition_id=definition_id,
@@ -145,6 +155,8 @@ class RuntimeActivityAssetTuiActionsV1:
                 allow_refusal_detail=True,
             )
         )
+        # The session returns only once its settlement accepted the result, so it was correlated exactly once.
+        return outcomes[0]
 
     @staticmethod
     def _validate_terminal_result(
@@ -193,7 +205,8 @@ class RuntimeActivityAssetTuiActionsV1:
 
     def create(self, request: ActivityAssetCreationRequestV1) -> ActivityAssetInspectionV1:
         """Create an asset and return its complete persisted revision chain."""
-        projection = self._call(
+        asset_id = request.revision.asset_id
+        return self._call(
             ActivityAssetCreateRequest(
                 profile_id=self._profile_id,
                 revision=ActivityAssetRevisionSnapshot.from_domain(request.revision),
@@ -201,29 +214,32 @@ class RuntimeActivityAssetTuiActionsV1:
             definition_id=ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetCreateProjection,
             success_effect=OperationEffect.UPDATED,
+            correlate=lambda projection: self._inspection_from_history(projection.history, asset_id),
         )
-        if projection.history is None:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        return self._inspection_from_history(projection.history, request.revision.asset_id)
 
     def inspect(self, asset_id: str) -> ActivityAssetInspectionV1:
         """Read one complete immutable revision chain through the runtime."""
-        projection = self._call(
+
+        def correlate(projection: ActivityAssetInspectProjection) -> ActivityAssetInspectionV1:
+            if projection.asset_id != asset_id or projection.revisions is None:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return ActivityAssetInspectionV1(
+                asset_id=asset_id,
+                revisions=tuple(item.revision.to_domain() for item in projection.revisions),
+            )
+
+        return self._call(
             ActivityAssetInspectRequest(profile_id=self._profile_id, asset_id=asset_id),
             definition_id=ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetInspectProjection,
             success_effect=OperationEffect.NONE,
-        )
-        if projection.asset_id != asset_id or projection.revisions is None:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        return ActivityAssetInspectionV1(
-            asset_id=asset_id,
-            revisions=tuple(item.revision.to_domain() for item in projection.revisions),
+            correlate=correlate,
         )
 
     def correct(self, request: ActivityAssetCorrectionRequestV1) -> ActivityAssetInspectionV1:
         """Append a correction and return the complete persisted revision chain."""
-        projection = self._call(
+        asset_id = request.revision.asset_id
+        return self._call(
             ActivityAssetCorrectRequest(
                 profile_id=self._profile_id,
                 revision=ActivityAssetRevisionSnapshot.from_domain(request.revision),
@@ -231,14 +247,28 @@ class RuntimeActivityAssetTuiActionsV1:
             definition_id=ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetCorrectProjection,
             success_effect=OperationEffect.UPDATED,
+            correlate=lambda projection: self._inspection_from_history(projection.history, asset_id),
         )
-        if projection.history is None:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        return self._inspection_from_history(projection.history, request.revision.asset_id)
 
     def forecast(self, request: ActivityAssetForecastRequestV1) -> ScheduledAmortizationCharge:
         """Return the full typed schedule produced by the pinned worker."""
-        projection = self._call(
+
+        def correlate(projection: ActivityAssetForecastProjection) -> ScheduledAmortizationCharge:
+            if projection.forecast is None:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            forecast = projection.forecast.to_domain()
+            # The charge covers the part of the requested interval the asset was in
+            # service, so it lies inside the request rather than equal to it.
+            if (
+                forecast.asset_id != request.asset_id
+                or forecast.covered_from < request.covered_from
+                or forecast.covered_until > request.covered_until
+                or forecast.covered_from > forecast.covered_until
+            ):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return forecast
+
+        return self._call(
             ActivityAssetForecastRequest(
                 profile_id=self._profile_id,
                 asset_id=request.asset_id,
@@ -254,24 +284,37 @@ class RuntimeActivityAssetTuiActionsV1:
             definition_id=ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetForecastProjection,
             success_effect=OperationEffect.NONE,
+            correlate=correlate,
         )
-        if projection.forecast is None:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        forecast = projection.forecast.to_domain()
-        # The charge covers the part of the requested interval the asset was in
-        # service, so it lies inside the request rather than equal to it.
-        if (
-            forecast.asset_id != request.asset_id
-            or forecast.covered_from < request.covered_from
-            or forecast.covered_until > request.covered_until
-            or forecast.covered_from > forecast.covered_until
-        ):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        return forecast
 
     def record_claim(self, request: ActivityAssetClaimRequestV1) -> ActivityAssetHistoryClaimResult:
         """Commit or replay the exact supplied forecast through the worker."""
-        projection = self._call(
+
+        def correlate(projection: ActivityAssetClaimProjection) -> ActivityAssetHistoryClaimResult:
+            if projection.claim_result is None or projection.claim_id is None:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            claim_result = projection.claim_result.to_domain()
+            revision = next(
+                (
+                    item
+                    for item in claim_result.history.revisions
+                    if item.revision_id == request.forecast.asset_revision_id
+                ),
+                None,
+            )
+            if revision is None:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            expected_claim = AmortizationClaim.from_schedule(
+                request.forecast,
+                asset_kind=revision.asset_kind,
+                creating_operation=request.creating_operation,
+                supersedes_claim_id=request.supersedes_claim_id,
+            )
+            if projection.claim_id != expected_claim.claim_id or claim_result.claim != expected_claim:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return claim_result
+
+        return self._call(
             ActivityAssetClaimRequest(
                 profile_id=self._profile_id,
                 forecast=ScheduledAmortizationChargeSnapshot.from_domain(request.forecast),
@@ -281,29 +324,22 @@ class RuntimeActivityAssetTuiActionsV1:
             definition_id=ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetClaimProjection,
             success_effect=OperationEffect.UPDATED,
+            correlate=correlate,
         )
-        if projection.claim_result is None or projection.claim_id is None:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        claim_result = projection.claim_result.to_domain()
-        revision = next(
-            (item for item in claim_result.history.revisions if item.revision_id == request.forecast.asset_revision_id),
-            None,
-        )
-        if revision is None:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        expected_claim = AmortizationClaim.from_schedule(
-            request.forecast,
-            asset_kind=revision.asset_kind,
-            creating_operation=request.creating_operation,
-            supersedes_claim_id=request.supersedes_claim_id,
-        )
-        if projection.claim_id != expected_claim.claim_id or claim_result.claim != expected_claim:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        return claim_result
 
     def filing_handoff(self, request: ActivityAssetFilingRequestV1) -> ActivityAssetFilingHandoff:
         """Return all four exact M100/M130 projections from the worker result."""
-        projection = self._call(
+
+        def correlate(projection: ActivityAssetFilingHandoffProjection) -> ActivityAssetFilingHandoff:
+            if (
+                projection.filing_handoff is None
+                or projection.tax_year != request.tax_year
+                or projection.m130_period != str(request.m130_period.code)
+            ):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return projection.filing_handoff.to_domain()
+
+        return self._call(
             ActivityAssetFilingHandoffRequest(
                 profile_id=self._profile_id,
                 tax_year=int(request.tax_year),
@@ -312,18 +348,16 @@ class RuntimeActivityAssetTuiActionsV1:
             definition_id=ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetFilingHandoffProjection,
             success_effect=OperationEffect.NONE,
+            correlate=correlate,
         )
-        if (
-            projection.filing_handoff is None
-            or projection.tax_year != request.tax_year
-            or projection.m130_period != str(request.m130_period.code)
-        ):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        return projection.filing_handoff.to_domain()
 
     @staticmethod
-    def _inspection_from_history(snapshot: ActivityAssetHistorySnapshot, asset_id: str) -> ActivityAssetInspectionV1:
+    def _inspection_from_history(
+        snapshot: ActivityAssetHistorySnapshot | None, asset_id: str
+    ) -> ActivityAssetInspectionV1:
         """Preserve the complete per-asset immutable history in the UI result."""
+        if snapshot is None:
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         history = snapshot.to_domain()
         revisions = tuple(item for item in history.revisions if item.asset_id == asset_id)
         if not revisions:

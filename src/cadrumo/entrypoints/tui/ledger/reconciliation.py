@@ -8,14 +8,14 @@ from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.workspace import LedgerInvoiceReconciliationRefV1, LedgerWorkspaceArea
-from ....core.errors.hierarchy import InternalInvariantError
+from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.invoice_link import LinkInconsistencyDirection
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
-from ..operations.outcome import OperationOutcomeUnknownError
+from ..operations.outcome import unknown_outcome_of
 from .controller import LedgerWorkspaceController
 from .models import LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
@@ -291,7 +291,8 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
         except Exception as error:
             self._transition(LedgerFlowState.FAILED)
             status.update(self.failed_write_status(error, "tui.ledger.reconciliation.failure"))
-            if isinstance(error, OperationOutcomeUnknownError):
+            if isinstance(error, CadrumoError) and unknown_outcome_of(error) is not None:
+                # A lost session's own message names the operation too, and asks for a sign-in first.
                 self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self._transition(LedgerFlowState.SUCCEEDED)

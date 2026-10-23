@@ -350,7 +350,7 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
         except AccountSessionExpiredError as error:
             self._clear_private_form()
             self._transition(LedgerFlowState.FAILED)
-            status.update(tr("tui.ledger.records.failed"))
+            status.update(self.failed_write_status(error, "tui.ledger.records.failed"))
             notice.update(door_refusal_text(error))
         except CadrumoError as error:
             self._transition(LedgerFlowState.FAILED)

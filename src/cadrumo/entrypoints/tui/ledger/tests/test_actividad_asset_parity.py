@@ -26,6 +26,7 @@ from .....domain.renta.actividad_asset.election import (
 )
 from .....domain.renta.actividad_asset.errors import (
     ActividadAssetIncompleteError,
+    ActividadAssetValidationError,
     VehicleAffectationRecovery,
 )
 from .....domain.renta.actividad_asset.lifecycle import (
@@ -46,7 +47,7 @@ from .....domain.renta.actividad_asset.schedule import (
 )
 from ...account import AccountSessionExpiredError
 from ...components.host import ScreenHostApp
-from ...operations.outcome import OperationOutcomeUnknownError
+from ...operations.outcome import OperationOutcomeUnknownError, SessionExpiredOutcomeUnknownError
 from ..actividad_asset import ActivityAssetScreen
 from ..controller import LedgerWorkspaceController
 from ..models_actividad_asset import (
@@ -127,9 +128,11 @@ class _ActionStub:
         create_started: Event | None = None,
         create_release: Event | None = None,
         create_error: Exception | None = None,
+        inspect_error: Exception | None = None,
     ) -> None:
         self.revision = revision
         self.forecast_error = forecast_error
+        self.inspect_error = inspect_error
         self.create_started = create_started
         self.create_release = create_release
         self.create_error = create_error
@@ -147,6 +150,8 @@ class _ActionStub:
 
     def inspect(self, asset_id: str) -> ActivityAssetInspectionV1:
         self.requests.append(("inspect", asset_id))
+        if self.inspect_error is not None:
+            raise self.inspect_error
         return ActivityAssetInspectionV1(asset_id=asset_id, revisions=(self.revision,))
 
     def correct(self, request: ActivityAssetCorrectionRequestV1) -> ActivityAssetInspectionV1:
@@ -412,3 +417,91 @@ async def test_activity_asset_forecast_refuses_the_shapes_the_command_line_refus
         assert await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused\t")
 
     assert actions.requests == []
+
+
+_WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim")
+
+
+def _writes_disabled(screen: ActivityAssetScreen) -> list[bool]:
+    return [screen.query_one(selector, Button).disabled for selector in _WRITE_BUTTONS]
+
+
+@pytest.mark.asyncio
+async def test_an_activity_asset_write_whose_outcome_is_unknown_is_offered_again_only_over_a_reread_asset() -> None:
+    revision = _revision("unknown-then-reread")
+    unknown = OperationOutcomeUnknownError(operation_id="f" * 64, effect=OperationEffect.UPDATED)
+    actions = _ActionStub(revision, create_error=unknown)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 35)) as pilot:
+        screen.query_one("#asset-id", Input).value = revision.asset_id
+        screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
+        await _activate(pilot=pilot, screen=screen, selector="#asset-create")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="unknown\t")
+
+        # The asset may already be created: no write is offered over the asset as last read.
+        assert _writes_disabled(screen) == [True, True, True]
+        await _activate(pilot=pilot, screen=screen, selector="#asset-create")
+        await app.workers.wait_for_complete()
+        assert [name for name, _request in actions.requests] == ["create"]
+
+        await _activate(pilot=pilot, screen=screen, selector="#asset-inspect")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="asset\tunknown-then-reread")
+        assert _writes_disabled(screen) == [False, False, False]
+
+        actions.create_error = None
+        await _activate(pilot=pilot, screen=screen, selector="#asset-create")
+        assert await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="created\t")
+
+    assert [name for name, _request in actions.requests] == ["create", "inspect", "create"]
+
+
+@pytest.mark.asyncio
+async def test_an_activity_asset_write_whose_outcome_is_unknown_stays_withheld_when_the_reread_is_refused() -> None:
+    revision = _revision("unknown-reread-refused")
+    unknown = OperationOutcomeUnknownError(operation_id="f" * 64, effect=OperationEffect.UNKNOWN)
+    actions = _ActionStub(
+        revision,
+        create_error=unknown,
+        inspect_error=ActividadAssetValidationError("activity asset could not be read"),
+    )
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 35)) as pilot:
+        screen.query_one("#asset-id", Input).value = revision.asset_id
+        screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
+        await _activate(pilot=pilot, screen=screen, selector="#asset-create")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="unknown\t")
+        await _activate(pilot=pilot, screen=screen, selector="#asset-inspect")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused\t")
+
+        assert _writes_disabled(screen) == [True, True, True]
+
+
+@pytest.mark.asyncio
+async def test_an_activity_asset_write_whose_session_is_lost_with_its_outcome_unknown_is_not_reported_as_refused() -> (
+    None
+):
+    revision = _revision("lost-unknown")
+    lost = SessionExpiredOutcomeUnknownError(
+        OperationOutcomeUnknownError(operation_id="e" * 64, effect=OperationEffect.UPDATED)
+    )
+    actions = _ActionStub(revision, create_error=lost)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    with override_settings(cadrumo_output_language="en"):
+        async with app.run_test(size=(100, 35)) as pilot:
+            screen.query_one("#asset-id", Input).value = revision.asset_id
+            screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
+            await _activate(pilot=pilot, screen=screen, selector="#asset-create")
+            rendered = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="unknown\t")
+
+            assert rendered == f"unknown\t{resolve_error_message(lost)}"
+            assert "e" * 64 in rendered
+            # The private facts still go with the lost session.
+            assert not screen.query_one("#asset-id", Input).value
+            assert not screen.query_one("#asset-revision-json", Input).value
+            assert _writes_disabled(screen) == [True, True, True]

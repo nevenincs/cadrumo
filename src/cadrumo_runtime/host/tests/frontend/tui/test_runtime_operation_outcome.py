@@ -14,7 +14,8 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
@@ -22,6 +23,32 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.application.actividad_asset.activity_asset_contracts import (
+    ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
+    ActivityAssetAuthorityProvenance,
+    ActivityAssetOperationPortsFactory,
+)
+from cadrumo.application.actividad_asset.activity_asset_projections import (
+    ActivityAssetClaimProjection,
+    ActivityAssetCorrectProjection,
+    ActivityAssetCreateProjection,
+)
+from cadrumo.application.actividad_asset.operation_dtos import (
+    ActivityAssetHistoryClaimResultSnapshot,
+    ActivityAssetHistorySnapshot,
+    ActivityAssetRevisionSnapshot,
+    AmortizationClaimSnapshot,
+)
+from cadrumo.application.actividad_asset.registered_operations import (
+    build_activity_asset_claim_definition,
+    build_activity_asset_claim_registration,
+    build_activity_asset_correct_definition,
+    build_activity_asset_correct_registration,
+    build_activity_asset_create_definition,
+    build_activity_asset_create_registration,
+)
 from cadrumo.application.ledger.action_ports import LedgerActionPortsFactory
 from cadrumo.application.ledger.own_account_operation import (
     LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID,
@@ -50,10 +77,12 @@ from cadrumo.application.operations.frontend_requests import (
     OperationObservationSuccessV1,
     OperationPublicEventPageV1,
 )
+from cadrumo.application.operations.operation_definition import OperationDefinition
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
+    OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
 from cadrumo.core.config import override_settings
@@ -65,8 +94,36 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
+from cadrumo.domain.renta.actividad_asset.election import (
+    AcquiredCondition,
+    ActivityAssetAmortizationElection,
+    AmortizationMethod,
+    DirectEstimationRegime,
+)
+from cadrumo.domain.renta.actividad_asset.lifecycle import (
+    AcquisitionLineageReference,
+    AcquisitionShape,
+    ActivityAssetBasis,
+    ActivityAssetRevision,
+    AssetBasisStage,
+    AssetKind,
+    OpeningAmortizationHistory,
+    OpeningHistoryStatus,
+)
+from cadrumo.domain.renta.actividad_asset.schedule import (
+    AssetScheduleHistory,
+    ScheduleAuthority,
+    ScheduledAmortizationCharge,
+    schedule_charge,
+)
 from cadrumo.domain.transactions.own_accounts import OwnAccountHolding
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError, AccountSessionUnavailableError
+from cadrumo.entrypoints.tui.ledger.models_actividad_asset import (
+    ActivityAssetClaimRequestV1,
+    ActivityAssetCorrectionRequestV1,
+    ActivityAssetCreationRequestV1,
+)
 from cadrumo.entrypoints.tui.operations.outcome import (
     OperationOutcomeUnknownError,
     SessionExpiredOutcomeUnknownError,
@@ -78,6 +135,7 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 from cadrumo_client.transport.operation_controller import OperationController
 
 from ....frontend.tui.operations.runtime_profile_session import RuntimeProfileSession
+from ....frontend.tui.runtime_actividad_asset import RuntimeActivityAssetTuiActionsV1
 from ....frontend.tui.runtime_ledger_review import RuntimeLedgerReviewTuiDoorV1
 from ....frontend.tui.runtime_own_accounts import RuntimeOwnAccountTuiDoorV1
 
@@ -102,14 +160,23 @@ class _Registered:
     contract: OperationPublicDefinitionContractV1
     contract_set_digest: str
     result_type: type[BaseModel]
+    allow_refusal_detail: bool = False
+    """Whether the door reads a declared refusal's result, as the activity-asset doors do."""
 
 
-def _registered(registry: OperationRegistry, definition_id: str, result_type: type[BaseModel]) -> _Registered:
+def _registered(
+    registry: OperationRegistry,
+    definition_id: str,
+    result_type: type[BaseModel],
+    *,
+    allow_refusal_detail: bool = False,
+) -> _Registered:
     return _Registered(
         definition_id=definition_id,
         contract=registry.lookup_public_contract(definition_id),
         contract_set_digest=registry.public_contract_set.contract_set_digest,
         result_type=result_type,
+        allow_refusal_detail=allow_refusal_detail,
     )
 
 
@@ -233,7 +300,11 @@ class _Controller:
         allow_refusal_detail: bool = False,
     ) -> BaseModel:
         assert projection.operation_id == self.operation_id
-        assert (result_type, result_version, allow_refusal_detail) == (self.registered.result_type, 1, False)
+        assert (result_type, result_version, allow_refusal_detail) == (
+            self.registered.result_type,
+            1,
+            self.registered.allow_refusal_detail,
+        )
         self.result_reads += 1
         if self.result_refusal is not None:
             raise self.result_refusal
@@ -720,3 +791,168 @@ def test_a_result_the_receipt_does_not_support_stays_an_invalid_frame(monkeypatc
         asyncio.run(_door(client)(_add_request()))
 
     assert raised.value.reason is RefusalCode.INVALID_FRAME
+
+
+# -- Activity-asset writes -----------------------------------------------------------
+
+_ASSET_ID = "outcome-asset"
+_ASSET_AUTHORITY = ActivityAssetAuthorityProvenance(logical_generation="b" * 64, reader_incarnation="c" * 64)
+
+
+def _asset_registered(
+    definition_id: str,
+    build_definition: Callable[[ActivityAssetOperationPortsFactory], OperationDefinition],
+    build_registration: Callable[[OperationDefinition], OperationPublicDefinitionRegistrationV1],
+    result_type: type[BaseModel],
+) -> _Registered:
+    """An activity-asset write as its real definition and registration declare it."""
+    definition = build_definition(cast(ActivityAssetOperationPortsFactory, cast(object, lambda **_kwargs: None)))
+    registry = OperationRegistry(definitions=(definition,), public_registrations=(build_registration(definition),))
+    return _registered(registry, definition_id, result_type, allow_refusal_detail=True)
+
+
+def _asset_revision(asset_id: str = _ASSET_ID) -> ActivityAssetRevision:
+    return ActivityAssetRevision(
+        asset_id=asset_id,
+        revision_number=1,
+        acquisition=AcquisitionLineageReference(
+            observed_transaction_id="1" * 64,
+            invoice_evidence_id=f"invoice-{asset_id}",
+            evidence_fingerprint="2" * 64,
+        ),
+        acquisition_shape=AcquisitionShape.PRIMARY_PURCHASE,
+        asset_kind=AssetKind.MATERIAL,
+        basis=ActivityAssetBasis(
+            stage=AssetBasisStage.BUSINESS_ALLOCATED,
+            basis_amount=Decimal("2000"),
+            prior_allocation_provenance="outcome fixture allocation",
+        ),
+        in_service_date=date(2025, 1, 1),
+        opening_history=OpeningAmortizationHistory(status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("0")),
+        acquired_condition=AcquiredCondition.NEW,
+        amortization=ActivityAssetAmortizationElection(
+            regime=DirectEstimationRegime.SIMPLIFIED,
+            method=AmortizationMethod.LINEAR,
+            authority_class_key="equipo-informacion-software",
+        ),
+    )
+
+
+def _asset_forecast(revision: ActivityAssetRevision) -> ScheduledAmortizationCharge:
+    return schedule_charge(
+        revision,
+        ScheduleAuthority(
+            tax_year=2025,
+            asset_kind=revision.asset_kind,
+            method=revision.amortization.method,
+            election_fingerprint=revision.amortization.fingerprint,
+            annual_rate=Decimal("0.26"),
+            authority_generation="outcome-fixture-v1",
+            source_reference="outcome fixture only",
+        ),
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
+        history=AssetScheduleHistory(),
+        requested_free_amount=None,
+    )
+
+
+def _another_assets_history() -> ActivityAssetHistorySnapshot:
+    """A persisted history that holds no revision of the asset the write named."""
+    return ActivityAssetHistorySnapshot(
+        revisions=(ActivityAssetRevisionSnapshot.from_domain(_asset_revision("other")),)
+    )
+
+
+def _asset_create(door: RuntimeActivityAssetTuiActionsV1) -> object:
+    return door.create(ActivityAssetCreationRequestV1(revision=_asset_revision()))
+
+
+def _asset_correct(door: RuntimeActivityAssetTuiActionsV1) -> object:
+    return door.correct(ActivityAssetCorrectionRequestV1(revision=_asset_revision()))
+
+
+def _asset_claim(door: RuntimeActivityAssetTuiActionsV1) -> object:
+    return door.record_claim(
+        ActivityAssetClaimRequestV1(forecast=_asset_forecast(_asset_revision()), creating_operation="asset.tui.claim")
+    )
+
+
+def _another_claim() -> ActivityAssetClaimProjection:
+    """A saved claim for the same forecast but another creating operation, so not the claim requested."""
+    revision = _asset_revision()
+    claim = AmortizationClaim.from_schedule(
+        _asset_forecast(revision), asset_kind=revision.asset_kind, creating_operation="asset.tui.other"
+    )
+    return ActivityAssetClaimProjection(
+        profile_id=_PROFILE_ID,
+        authority=_ASSET_AUTHORITY,
+        outcome="succeeded",
+        claim_result=ActivityAssetHistoryClaimResultSnapshot(
+            history=ActivityAssetHistorySnapshot(revisions=(ActivityAssetRevisionSnapshot.from_domain(revision),)),
+            claim=AmortizationClaimSnapshot.from_domain(claim),
+            reused_existing_claim=False,
+        ),
+        claim_id=claim.claim_id,
+    )
+
+
+_ASSET_WRITES: dict[str, tuple[_Registered, Callable[[RuntimeActivityAssetTuiActionsV1], object], BaseModel]] = {
+    "create": (
+        _asset_registered(
+            ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
+            build_activity_asset_create_definition,
+            build_activity_asset_create_registration,
+            ActivityAssetCreateProjection,
+        ),
+        _asset_create,
+        ActivityAssetCreateProjection(
+            profile_id=_PROFILE_ID, authority=_ASSET_AUTHORITY, outcome="succeeded", history=_another_assets_history()
+        ),
+    ),
+    "correct": (
+        _asset_registered(
+            ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
+            build_activity_asset_correct_definition,
+            build_activity_asset_correct_registration,
+            ActivityAssetCorrectProjection,
+        ),
+        _asset_correct,
+        ActivityAssetCorrectProjection(
+            profile_id=_PROFILE_ID, authority=_ASSET_AUTHORITY, outcome="succeeded", history=_another_assets_history()
+        ),
+    ),
+    "claim": (
+        _asset_registered(
+            ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
+            build_activity_asset_claim_definition,
+            build_activity_asset_claim_registration,
+            ActivityAssetClaimProjection,
+        ),
+        _asset_claim,
+        _another_claim(),
+    ),
+}
+
+
+@pytest.mark.parametrize("write", sorted(_ASSET_WRITES))
+def test_an_asset_write_whose_result_disagrees_with_an_updated_receipt_is_unknown(
+    monkeypatch: pytest.MonkeyPatch, write: str
+) -> None:
+    """The receipt reported the asset change saved; a result that does not account for the request leaves it unknown."""
+    registered, submit, result = _ASSET_WRITES[write]
+    client = _Client()
+    controller = _Controller(
+        registered, observation=_observation(registered, effect=OperationEffect.UPDATED), result=result
+    )
+    _install(monkeypatch, client, controller)
+    door = RuntimeActivityAssetTuiActionsV1(cast(FrontendClient, client), profile_label=_LABEL)
+
+    with pytest.raises(OperationOutcomeUnknownError) as raised:
+        submit(door)
+
+    assert raised.value.operation_id == _OPERATION_ID
+    assert raised.value.effect is OperationEffect.UPDATED
+    assert isinstance(raised.value.reason, RefusalError)
+    assert raised.value.reason.reason is RefusalCode.INVALID_FRAME
+    assert controller.result_reads == 1

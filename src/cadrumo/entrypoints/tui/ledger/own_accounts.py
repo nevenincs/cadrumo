@@ -428,7 +428,11 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
         except AccountSessionExpiredError as error:
             self._clear_private_view()
             refusal.update(door_refusal_text(error))
-            status.update(tr("tui.ledger.records.failed"))
+            status.update(
+                tr("tui.ledger.records.failed")
+                if reading
+                else self.failed_write_status(error, "tui.ledger.records.failed")
+            )
             return
         except CadrumoError as error:
             refusal.update(door_refusal_text(error))

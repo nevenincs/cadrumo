@@ -81,8 +81,22 @@ class SessionUnavailableOutcomeUnknownError(AccountSessionUnavailableError):
         self.outcome = outcome
 
 
+def unknown_outcome_of(error: BaseException) -> OperationOutcomeUnknownError | None:
+    """The unknown outcome ``error`` reports, whether it is that outcome or a lost session carrying it.
+
+    A screen words both as unknown rather than refused: the change may be
+    saved. ``None`` when the error says nothing was left unknown.
+    """
+    if isinstance(error, OperationOutcomeUnknownError):
+        return error
+    if isinstance(error, SessionExpiredOutcomeUnknownError | SessionUnavailableOutcomeUnknownError):
+        return error.outcome
+    return None
+
+
 __all__ = [
     "OperationOutcomeUnknownError",
     "SessionExpiredOutcomeUnknownError",
     "SessionUnavailableOutcomeUnknownError",
+    "unknown_outcome_of",
 ]

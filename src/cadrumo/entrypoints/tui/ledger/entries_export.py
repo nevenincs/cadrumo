@@ -266,7 +266,7 @@ class LedgerEntriesExportScreen(LedgerConfirmationFlowScreen):
             status.update(joined(export_outcome_lines(error, request)))
         except AccountSessionExpiredError as error:
             self._transition(LedgerFlowState.FAILED)
-            status.update(tr("tui.ledger.entry_tools.export.failed"))
+            status.update(self.failed_write_status(error, "tui.ledger.entry_tools.export.failed"))
             notice.update(door_refusal_text(error))
         except CadrumoError as error:
             self._transition(LedgerFlowState.FAILED)

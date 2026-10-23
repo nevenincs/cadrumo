@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:f4aaeeb6de3197f09cb2e3c13c3c75cdd63380c7aa0f9ad1d539fb2409333438'
+body_hash: 'sha256:337ab758b44d160880677d2963d60a314e324f915f6c29a8216134d8f2cd1b5a'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -458,6 +458,26 @@ related:
 - `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_evidence.py`
 - `S22` `verify:` `pytest ledger, runtime tui and client transport suites, 1718 tests` -> `pass`
 - `S22` `verify:` `old-code mutation run of the new and changed tests` -> `fail`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/evidence.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/invoice_entry.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/entries_add.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/entries_browse.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/entries_export.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/registers_presentation.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_common.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/own_accounts.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_write.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/classification.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/reconciliation.py`
+- `S22` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_actividad_asset.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_actividad_asset_parity.py`
+- `S22` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_lost_session_outcome_is_unknown.py`
+- `S22` `verify:` `pytest ledger, runtime tui and client transport suites, 1750 tests` -> `pass`
+- `S22` `verify:` `ruff format and check on 23 files` -> `pass`
+- `S22` `verify:` `lint-imports` -> `pass`
+- `S22` `verify:` `old-code mutation run of 32 new tests` -> `fail`
 
 ## Notes
 
@@ -493,3 +513,4 @@ related:
 - `S21` Re-review fix: root navigation, account actions and quit ask the destination's leave guard; asset screen runs actions in a worker; guard-disabled mutation fails 10 of 10
 - `S20` Re-review fix: evidence extract/confirm session checks, import preview folder listing, manager settings load and certificate path resolve moved off the loop; sweep of 39 runtime TUI door modules found no other blocking door
 - `S22` Re-review fix: every failure after acceptance judged once; unknown unless a NONE receipt was observed or the contract permits no UPDATED/PARTIAL; lost connection keeps expired vs unavailable; review and evidence add re-read on unknown. The old-code run is the expected detection proof (21 new runtime cases, 65 changed cases, 2 screen tests fail on HEAD code). Doors outside RuntimeProfileSession (auth, modelo create/lifecycle, `aeat_sync` handoff) are out of plan scope
+- `S22` Second re-review fix: activity-asset correlation inside settle, writes withheld until a re-read; session-lost unknown outcomes worded unknown on every write screen via `unknown_outcome_of;` categorisation result read judged inside the shared check; evidence add waits for a successful re-read; `_confirm` always clears reading. Start-denial recommendation dropped on evidence (see audit correction). The old-code run is the expected detection proof

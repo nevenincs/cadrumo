@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:111249310fff4c0282255e998abd686e0a71ea556d6d7dbdfee6cf9413affb08'
+body_hash: 'sha256:75ebcf499de89d814c09ef0cb34a7377e146d37f98c8888b3668f30f49359f33'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -114,6 +114,10 @@ The session-lost outcome errors subclass the session errors, so catch order is s
 ### navigation | low | Second re-review: a cleared review can leave the evidence body in flight
 
 `evidence_records.py:207-213`. If the review is cleared before the `_confirm` worker runs, `_confirm` returns without clearing `reading`, so `in_flight` stays true and, after S21, Back, the account keys and quit stay refused until the session lapses. Not reproduced.
+
+### settlement | low | Correction: a typed denial at start stays unknown
+
+The second re-review's start-denial finding rests on a wrong premise. The runtime runs `worker.start` (`operation_projection.py:116`), which makes RUNNING durable and creates the settlement task, before `host.authorize(release)` (`profile_connection_operations.py:320`) can raise a typed `ProfileAccessRefusedError`. A typed denial in reply to `operation_start` can therefore sit on top of a running write, so reporting it as unknown is correct. `OperationController.start` also never sees an `AccessRefusal`: `frontend_operation_client.py:81-99` converts it first. No change is made.
 
 ## Recommendations
 

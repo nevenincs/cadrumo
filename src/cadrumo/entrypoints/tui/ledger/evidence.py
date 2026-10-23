@@ -99,6 +99,7 @@ class LedgerEvidenceScreen(LedgerEvidenceRecordActions):
         self.draft: LedgerEvidenceDraftV1 | None = None
         self.reading = False
         """Whether a read, an addition or a confirmation is out; a second press waits for it."""
+        self.add_awaits_reread = False
         self.review_queue: EvidenceFilesPager[EvidenceReviewQueueRowProjection] = EvidenceFilesPager()
         """Every draft waiting for review the last read returned; only one page of it is rendered."""
         self.selected_draft: EvidenceReviewQueueRowProjection | None = None

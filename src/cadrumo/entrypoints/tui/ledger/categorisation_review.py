@@ -146,7 +146,9 @@ class ReviewingCategorisationScreen(CategorisationScreen):
             self.busy = False
             self.clear_private_view()
             self.refuse(door_refusal_text(error))
-            self.status("tui.ledger.categorisation.failed")
+            self.query_one("#ledger-flow-status", Static).update(
+                self.failed_write_status(error, "tui.ledger.categorisation.failed")
+            )
             return
         except CadrumoError as error:
             self.busy = False
@@ -204,7 +206,9 @@ class ReviewingCategorisationScreen(CategorisationScreen):
         except AccountSessionExpiredError as error:
             self.clear_private_view()
             self.refuse(door_refusal_text(error))
-            self.status("tui.ledger.categorisation.failed")
+            self.query_one("#ledger-flow-status", Static).update(
+                self.failed_write_status(error, "tui.ledger.categorisation.failed")
+            )
             return
         except CadrumoError as error:
             self.refuse(door_refusal_text(error))

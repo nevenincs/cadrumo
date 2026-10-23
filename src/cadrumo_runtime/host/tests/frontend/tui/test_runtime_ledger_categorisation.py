@@ -159,7 +159,10 @@ from cadrumo.domain.transactions.enums import BusinessClassification
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.ledger.categorisation_doors import LedgerCategorisationDoorsV1
 from cadrumo.entrypoints.tui.ledger.categorisation_tools import CATEGORISATION_TOOL_KEYS
-from cadrumo.entrypoints.tui.operations.outcome import OperationOutcomeUnknownError
+from cadrumo.entrypoints.tui.operations.outcome import (
+    OperationOutcomeUnknownError,
+    SessionExpiredOutcomeUnknownError,
+)
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -872,8 +875,20 @@ def test_the_review_door_reads_a_settled_outcome_only_when_its_receipt_agrees(
     with pytest.raises(RefusalError):
         read(good, _observation(case, effect=OperationEffect.NONE), _Client())
 
-    with pytest.raises(RefusalError):
-        read(good, _observation(case, condition=OperationTerminalCondition.REFUSED), _Client())
+    # A receipt that did not succeed is not this door's to read. One that committed nothing is a refusal;
+    # one that reports an effect may have saved the change, so its outcome is unknown.
+    with pytest.raises(RefusalError) as refused:
+        read(
+            good,
+            _observation(case, condition=OperationTerminalCondition.REFUSED, effect=OperationEffect.NONE),
+            _Client(),
+        )
+    assert not isinstance(refused.value, OperationOutcomeUnknownError)
+    refused_with_effect = _observation(case, condition=OperationTerminalCondition.REFUSED)
+    with raises_unsupported_result(
+        refused_with_effect.projection.effect, refused_with_effect.projection.definition_contract
+    ):
+        read(good, refused_with_effect, _Client())
 
     lapsed = _Client()
     _install_review(monkeypatch, lapsed, good)
@@ -971,3 +986,41 @@ def test_a_settled_review_whose_result_cannot_be_read_is_unknown(monkeypatch: py
 
     assert raised.value.effect is OperationEffect.UPDATED
     assert isinstance(raised.value.reason, FrontendRefusedError)
+
+
+def test_a_review_whose_session_lapses_before_its_saved_result_is_read_is_unknown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The receipt reported the classification applied; a session lost before the read does not unapply it."""
+    client = _Client()
+    case = _review_case(LEDGER_CLASSIFY_REVIEW_DEFINITION_ID)
+    _install_review(monkeypatch, client, case.result(_PROFILE_ID))
+    door = _doors(client).classify_review
+    client.session_id = UUID("7cc00000-0000-4000-8000-0000000000cc")
+    receipt = _observation(case, effect=OperationEffect.UPDATED)
+
+    with pytest.raises(SessionExpiredOutcomeUnknownError) as raised:
+        asyncio.run(door.read_result(cast(LedgerLlmReviewRequest, case.request), receipt.projection))
+
+    assert raised.value.outcome.operation_id == _OPERATION_ID
+    assert raised.value.outcome.effect is OperationEffect.UPDATED
+
+
+def test_a_review_whose_session_lapses_after_a_receipt_that_saved_nothing_reports_the_receipt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A receipt that committed nothing leaves nothing unknown: the lost session names that receipt."""
+    client = _Client()
+    case = _review_case(LEDGER_CLASSIFY_REVIEW_DEFINITION_ID)
+    _install_review(monkeypatch, client, case.result(_PROFILE_ID))
+    door = _doors(client).classify_review
+    client.session_id = UUID("7cc00000-0000-4000-8000-0000000000cc")
+    receipt = _observation(case, effect=OperationEffect.NONE)
+
+    with pytest.raises(AccountSessionExpiredError) as raised:
+        asyncio.run(door.read_result(cast(LedgerLlmReviewRequest, case.request), receipt.projection))
+
+    assert not isinstance(raised.value, SessionExpiredOutcomeUnknownError)
+    assert raised.value.context is not None
+    assert raised.value.context["operation_id"] == _OPERATION_ID
+    assert raised.value.context["effect"] == OperationEffect.NONE.value

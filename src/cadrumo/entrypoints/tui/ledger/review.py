@@ -342,6 +342,14 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         label = self._label(transaction_id)
         try:
             await self.controller.submit_exclusion(transaction_id, listed=listed)
+        except AccountSessionExpiredError as error:
+            # The queue was read for the lost session: it is dropped, and signing in reads it again.
+            self.excluding = False
+            self.query_one("#ledger-exclusion-confirm", Button).disabled = False
+            self._forget_rows()
+            status.update(self.failed_write_status(error, "tui.ledger.review.exclude_failed"))
+            self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
+            return
         except (CadrumoError, ValidationError) as error:
             self.excluding = False
             self.query_one("#ledger-exclusion-confirm", Button).disabled = False

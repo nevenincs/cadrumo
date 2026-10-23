@@ -22,7 +22,7 @@ from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.model_validation import validate_business_pct_coupling, validate_non_negative_decimal
 from ..components.language import localized
 from ..components.widgets import ContentDataTable
-from ..operations.outcome import OperationOutcomeUnknownError
+from ..operations.outcome import unknown_outcome_of
 from .controller import LedgerWorkspaceController
 from .models import LedgerClassificationPatchV1, LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
@@ -217,7 +217,8 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
         except Exception as error:
             self._transition(LedgerFlowState.FAILED)
             status.update(self.failed_write_status(error, "tui.ledger.classification.failure"))
-            if isinstance(error, OperationOutcomeUnknownError):
+            if isinstance(error, CadrumoError) and unknown_outcome_of(error) is not None:
+                # A lost session's own message names the operation too, and asks for a sign-in first.
                 self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self._transition(LedgerFlowState.SUCCEEDED)

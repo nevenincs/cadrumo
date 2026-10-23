@@ -37,7 +37,7 @@ from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
-from ..operations.outcome import OperationOutcomeUnknownError
+from ..operations.outcome import unknown_outcome_of
 from .models import (
     LEDGER_DESTINATION_BY_AREA,
     LedgerClassificationPatchV1,
@@ -647,12 +647,16 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
 
         A write whose outcome is unknown may have been saved, so it is never
         worded as refused, and the workspace is read again before it is offered
-        once more.
+        once more. A session lost with the outcome unknown is worded the same;
+        signing in composes the workspace again, so this body does not try to
+        re-read it over the lost session.
         """
-        if isinstance(error, OperationOutcomeUnknownError):
+        unknown = unknown_outcome_of(error)
+        if unknown is None:
+            return tr(failed_key)
+        if unknown is error:
             self.write_outcome_unknown = True
-            return tr("tui.ledger.flow.outcome_unknown")
-        return tr(failed_key)
+        return tr("tui.ledger.flow.outcome_unknown")
 
     def refresh_then(self, then: Callable[[], object]) -> None:
         """Re-read the workspace off the event loop, then continue with ``then``.

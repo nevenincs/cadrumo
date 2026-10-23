@@ -41,6 +41,8 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
     _records: tuple[LedgerEvidenceRecordRowV1, ...] | None
     draft: LedgerEvidenceDraftV1 | None
     reading: bool
+    add_awaits_reread: bool
+    """Whether an addition ended with an unknown outcome, so Add waits for the records to be read again."""
 
     @property
     @override
@@ -76,6 +78,10 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
             )
         if not (self._records is not None and self._records):
             self.query_one("#ledger-evidence-record-detail", Static).update(tr("tui.ledger.evidence.records_empty"))
+        if self.add_awaits_reread:
+            # The records now show whether the addition whose outcome was unknown landed.
+            self.add_awaits_reread = False
+            self.query_one("#ledger-evidence-add", Button).disabled = False
 
     async def _read_readiness(self) -> LedgerReaderReadinessV1 | None:
         """Ask the reader off the event loop: the probe looks for executables and calls the runtime."""
@@ -205,6 +211,14 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
             self.reading = False
 
     async def _confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> None:
+        # Cleared on every exit, a review withdrawn before this ran included: a body
+        # left in flight refuses Back, the account keys and quitting.
+        try:
+            await self._submit_confirmation(confirmation)
+        finally:
+            self.reading = False
+
+    async def _submit_confirmation(self, confirmation: LedgerEvidenceConfirmationV1) -> None:
         if (
             self._reviewed_evidence_id != confirmation.evidence_id
             or self.draft is None
@@ -217,7 +231,7 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
             confirmed = await self.controller.confirm_evidence(confirmation)
         except AccountSessionExpiredError as error:
             self.reading = False
-            status.update(tr("tui.ledger.evidence.confirm_failed"))
+            status.update(self.failed_write_status(error, "tui.ledger.evidence.confirm_failed"))
             self._handle_expired_session(error)
             return
         except (CadrumoError, ValidationError) as error:
@@ -257,16 +271,17 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         try:
             record = await self.controller.add_evidence(source_path)
         except AccountSessionExpiredError as error:
-            status.update(tr("tui.ledger.evidence.add_failed"))
+            status.update(self.failed_write_status(error, "tui.ledger.evidence.add_failed"))
             self._handle_expired_session(error)
         except (CadrumoError, ValidationError) as error:
             outcome = self.failed_write_status(error, "tui.ledger.evidence.add_failed")
             status.update(outcome)
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
             if isinstance(error, OperationOutcomeUnknownError):
-                # The document may already be added: read the records again before the addition is offered once more.
+                # The document may already be added: Add returns only once the records are read again.
                 self.reading = False
-                self.refresh_then(lambda: self._reoffer_add(outcome))
+                self.add_awaits_reread = True
+                self.refresh_then(lambda: self._after_reread(outcome))
                 return
         else:
             self.query_one("#ledger-evidence-path", Input).value = ""
@@ -285,11 +300,6 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         status = self.query_one("#ledger-flow-status", Static)
         if not str(status.render()):
             status.update(added)
-
-    def _reoffer_add(self, outcome: str) -> None:
-        """Offer the addition again only over records read after its unknown outcome."""
-        self._after_reread(outcome)
-        self.query_one("#ledger-evidence-add", Button).disabled = False
 
 
 __all__ = ["LedgerEvidenceRecordActions"]
