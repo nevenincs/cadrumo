@@ -101,8 +101,7 @@ def test_factory_refuses_undeclared_or_drifted_review_action_through_real_catalo
             review_action=ActionReference(action_id=classified.action_id),
         )
     review_action = ledger_review_action()
-    controller = ledger_controller(ledger_projection())
-    assert all(row.action == review_action for row in controller.review_rows())
+    assert ledger_controller(ledger_projection()).review_action == review_action
     assert lookup_action(review_action.action_id).target_command_key == "ledger.review"
 
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from dataclasses import replace
 from typing import ClassVar, Final, cast, override
 
@@ -58,7 +58,6 @@ from .models import (
     LedgerLinkResultV1,
     LedgerLinkSubmissionV1,
     LedgerReaderReadinessV1,
-    LedgerReviewRowV1,
     LedgerRouteRefusalV1,
     LedgerRouteTargetV1,
 )
@@ -151,6 +150,7 @@ class LedgerWorkspaceController:
         self.projection = projection
         self.injection = injection
         self.review_action = injection.review_action
+        self.review_door = injection.review_door
         self.classify_action = injection.classify_action
         self.classification_submitter = injection.classification_submitter
         self.import_door = injection.import_door
@@ -159,6 +159,7 @@ class LedgerWorkspaceController:
         self.evidence_door = injection.evidence_door
         self.evidence_action = injection.evidence_action
         self.evidence_items = injection.evidence_items
+        self.evidence_review_door = injection.evidence_review_door
         self.link_action = injection.link_action
         self.link_submitter = injection.link_submitter
         self.activity_asset_actions = injection.activity_asset_actions
@@ -256,14 +257,20 @@ class LedgerWorkspaceController:
         shape the wholly-wired-doors gate reads the launcher's obligations from.
         """
         return (
-            (
+            (area is LedgerWorkspaceArea.REVIEW and self.review_door is None)
+            or (
                 area is LedgerWorkspaceArea.CLASSIFICATION
                 and (self.classify_action is None or self.classification_submitter is None)
             )
             or (area is LedgerWorkspaceArea.IMPORT and self.import_door is None)
             or (
                 area is LedgerWorkspaceArea.EVIDENCE
-                and (self.evidence_action is None or (self.evidence_items is None and self.evidence_door is None))
+                and (
+                    self.evidence_action is None
+                    or (
+                        self.evidence_items is None and self.evidence_door is None and self.evidence_review_door is None
+                    )
+                )
             )
         )
 
@@ -352,24 +359,6 @@ class LedgerWorkspaceController:
         candidate = focus.restore_token
         return candidate if any(row.transaction_id == candidate for row in self.projection.entries) else None
 
-    def review_rows(self) -> tuple[LedgerReviewRowV1, ...]:
-        """Join review identities to safe entry references, refusing contradictions."""
-        by_id = {row.transaction_id: row for row in self.projection.entries}
-        rows: list[LedgerReviewRowV1] = []
-        for transaction_id in self.projection.review_transaction_ids:
-            source = by_id.get(transaction_id)
-            if source is None:
-                raise ValueError("Ledger review identity is absent from the projected entry catalogue")
-            rows.append(
-                LedgerReviewRowV1(
-                    transaction_id=transaction_id,
-                    review_status=source.review_status,
-                    action=self.review_action,
-                    source=source,
-                )
-            )
-        return tuple(rows)
-
     def build_classification_patch(self, values: dict[str, object]) -> LedgerClassificationPatchV1:
         """Use the injected request boundary or the existing direct application's patch."""
         builder = self.injection.classification_patch_builder
@@ -411,12 +400,12 @@ class LedgerWorkspaceController:
         return self.classify_action is not None and self.exclusion_submitter is not None
 
     async def submit_exclusion(
-        self, transaction_id: TransactionId
+        self, transaction_id: TransactionId, *, listed: Collection[TransactionId]
     ) -> ManualLedgerTransactionResult | LedgerExclusionResultV1:
-        """Exclude one entry the operator can see in the review list."""
+        """Exclude one entry the operator can see in the review queue, which lists ``listed``."""
         if self.classify_action is None or self.exclusion_submitter is None:
             raise InternalInvariantError("exclusion is unavailable")
-        if transaction_id not in self.projection.review_transaction_ids:
+        if transaction_id not in listed:
             raise ValueError("exclusion target is absent from the visible review list")
         result = await self.exclusion_submitter(
             LedgerExclusionSubmissionV1(action=self.classify_action, transaction_id=transaction_id)
@@ -550,16 +539,6 @@ class LedgerRouteRequested(Message):
         """Store the internal semantic target for the owning host."""
         super().__init__()
         self.target = target
-
-
-class LedgerReviewRequested(Message):
-    """Host-facing request naming a real application query and transaction focus."""
-
-    def __init__(self, *, transaction_id: TransactionId, action: ActionReference) -> None:
-        """Store the safe transaction identity and canonical query action."""
-        super().__init__()
-        self.transaction_id = transaction_id
-        self.action = action
 
 
 class LedgerEvidenceReviewRequested(Message):
@@ -777,27 +756,34 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
             table.add_row(area_label(area), availability_cell, item_count_label(state), key=area.value)
 
     def handle_navigation_selection(self, event: DataTable.RowSelected) -> bool:
-        """Handle the common navigation table and expose refusals as visible copy."""
-        event_table = cast("DataTable[str]", event.data_table)
-        if event_table.id == "ledger-tools":
-            # Answered by the tool handler; claimed here so a body never reads a tool as its own row.
-            return True
-        if event_table.id != "ledger-navigation":
-            return False
+        """Return whether ``event`` came from a table the shell answers itself: the areas or the tools.
+
+        A body calls this first in its own row handler so it never reads an
+        area or a tool as one of its own rows. The shell's handlers answer both
+        whether or not the body has a row handler at all.
+        """
+        return event.data_table.id in {"ledger-navigation", "ledger-tools"}
+
+    @on(DataTable.RowSelected, "#ledger-navigation")
+    def _choose_area(self, event: DataTable.RowSelected) -> None:
+        """Open the chosen area, or say on screen why it cannot open.
+
+        Answered here rather than by each body, so every body that shows the
+        area navigation answers it, and refuses it alike while a write is out.
+        """
         if self.refuse_leaving():
-            return True
+            return
         area = LedgerWorkspaceArea(str(event.row_key.value))
         refusal = self.controller.refusal_for(area)
         notice = self.query_one("#ledger-refusal", Static)
         if refusal is not None:
             self.refusal = refusal
             notice.update(tr(refusal.reason_key))
-            return True
+            return
         target = self.controller.route_target(area)
         self.requested_target = target
         notice.update("")
         self.post_message(LedgerRouteRequested(target))
-        return True
 
     def action_back(self) -> None:
         """Ask the host to return, unless a write is in flight; never terminate the application."""
@@ -890,23 +876,13 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
             return
         self.post_message(LedgerRouteRequested(self.controller.route_target(LedgerWorkspaceArea.OVERVIEW)))
 
-    def on_ledger_review_requested(self, _: LedgerReviewRequested) -> None:
-        """Say that the selection led nowhere, rather than appearing to work.
-
-        Selecting a review row names a real query action, but no production
-        consumer executes one yet. Answering with the pending-area copy is the
-        honest state: an unhandled message is indistinguishable from a dead
-        keypress, and that silence is precisely how the workspace navigation
-        defect stayed invisible through the whole surface's construction.
-        """
-        self._refuse_pending_destination()
-
     def on_ledger_evidence_review_requested(self, _: LedgerEvidenceReviewRequested) -> None:
-        """Report the same pending state for an evidence-row selection."""
-        self._refuse_pending_destination()
+        """Say that an attachment-row selection leads nowhere yet, rather than appearing to work.
 
-    def _refuse_pending_destination(self) -> None:
-        """Surface the canonical pending-area copy on this screen's notice."""
+        Selecting an attachment row names a real query action, but no consumer
+        executes it. Answering with the pending-area copy is the honest state:
+        an unhandled message is indistinguishable from a dead keypress.
+        """
         self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.refusal.destination_pending"))
 
 
@@ -916,7 +892,6 @@ __all__ = [
     "LedgerEvidenceReviewRequested",
     "LedgerInvoiceCatalogueRequested",
     "LedgerInvoiceEntryRequested",
-    "LedgerReviewRequested",
     "LedgerRouteRequested",
     "LedgerTransactionDetailRequested",
     "LedgerWorkspaceController",

@@ -114,10 +114,6 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
         # page taller than the terminal past its opening heading.
         self.query_one("#ledger-navigation", DataTable).focus(scroll_visible=False)
 
-    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Route an Enter press on the one-stop destination table."""
-        self.handle_navigation_selection(event)
-
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Open the invoice entry form."""
         if event.button.id == "ledger-add-invoice":

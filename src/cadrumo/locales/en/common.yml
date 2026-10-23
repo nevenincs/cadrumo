@@ -3378,6 +3378,26 @@ tui:
         unmeasured: Not measured
       records_empty: No invoice documents are registered yet.
       records_heading: Invoice documents on this machine
+      review_queue:
+        advisories: 'Points worth checking before you confirm it: {count}'
+        advisory:
+          country_code_unassigned: A country code on the document belongs to no country
+          country_code_uncatalogued: A country code on the document is not in the
+            country list yet
+          party_attribution: Nothing confirmed which party the addresses belong to
+        blocking: 'Questions that block confirming it: {count}'
+        column:
+          advisories: Advisories
+          blocking: Blocking
+          drafted: Read on
+          reference: Document
+        detail: Document {reference}, read by {extractor} on {date}.
+        empty: No read document is waiting for review.
+        failed: The drafts waiting for review could not be read.
+        heading: Drafts waiting for review
+        loading: Reading the drafts waiting for review…
+        prompt: Documents already read whose draft still waits for your review. Choose
+          one to see what it needs.
       reviewed: Reviewed
       safe_metadata: The source document remains protected and encrypted; fields recovered
         from it are shown for review.
@@ -4231,8 +4251,14 @@ tui:
         can be classified again later.
       excluded: '{entry} was excluded from filing.'
       excluding: Excluding the entry…
+      failed: The review queue could not be read.
       filter_all: 'Filter: all review statuses'
+      loading: Reading the review queue…
       open: Open review
+      page:
+        next: Next page
+        position: Entries {first} to {last} of {total}
+        previous: Previous page
       title: 'Records: review'
     review_status:
       excluded: Excluded

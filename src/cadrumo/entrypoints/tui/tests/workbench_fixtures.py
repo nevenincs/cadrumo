@@ -881,15 +881,21 @@ def _ledger_controller(scenario: WorkbenchFixtureScenario) -> LedgerWorkspaceCon
     from ..ledger.controller import LedgerWorkspaceController
     from ..ledger.own_accounts import LedgerOwnAccountDoorV1
     from ..ledger.tests.own_account_fixtures import MemoryOwnAccountDoor
+    from ..ledger.tests.review_door_fixtures import MemoryEvidenceReviewListDoor, synthetic_draft
+    from ..ledger.tests.workspace_fixtures import ledger_review_door
 
+    projection = _ledger_projection(scenario)
+    drafts = (synthetic_draft(1),) if projection.entries else ()
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
-        _ledger_projection(scenario),
+        projection,
         LedgerWorkspaceInjection(
             review_action=ActionReference(action_id=lookup_action("operator.ledger.review").action_id),
+            review_door=ledger_review_door(projection),
             classify_action=ActionReference(action_id=lookup_action("operator.ledger.classify").action_id),
             evidence_action=ActionReference(action_id=lookup_action("operator.ledger.evidence.review.list").action_id),
             evidence_items=(),
+            evidence_review_door=MemoryEvidenceReviewListDoor(drafts),
             link_action=ActionReference(action_id=lookup_action("operator.ledger.link").action_id),
             own_account_door=cast(LedgerOwnAccountDoorV1, MemoryOwnAccountDoor()),
         ),

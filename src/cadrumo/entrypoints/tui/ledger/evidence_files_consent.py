@@ -171,10 +171,6 @@ class LedgerEvidenceFilesConsentScreen(EvidenceFilesToolScreen):
         self._paint_statement()
         self.status("")
 
-    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Answer the area navigation; history rows are read-only."""
-        self.handle_navigation_selection(event)
-
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Page either history table."""
         match event.button.id:

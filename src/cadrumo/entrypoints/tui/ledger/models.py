@@ -136,23 +136,6 @@ class LedgerEntryRowV1(BaseModel):
         return self
 
 
-class LedgerReviewRowV1(BaseModel):
-    """A reviewable transaction plus the canonical read action naming its door."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    transaction_id: TransactionId
-    review_status: str
-    action: ActionReference
-    source: LedgerWorkspaceEntryRefV1
-
-    @model_validator(mode="after")
-    def _mirror_source(self) -> LedgerReviewRowV1:
-        if self.transaction_id != self.source.transaction_id or self.review_status != self.source.review_status:
-            raise ValueError("Ledger review row must mirror its application projection source")
-        return self
-
-
 class LedgerFlowState(StrEnum):
     """Explicit state of a command-backed Ledger interaction."""
 
@@ -659,7 +642,6 @@ __all__ = [
     "LedgerLinkSubmitterV1",
     "LedgerReaderReadinessV1",
     "LedgerRecordDoorsV1",
-    "LedgerReviewRowV1",
     "LedgerRouteRefusalV1",
     "LedgerRouteTargetV1",
 ]

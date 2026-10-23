@@ -3477,6 +3477,27 @@ tui:
         unmeasured: Sin medir
       records_empty: Aún no hay documentos de factura registrados.
       records_heading: Documentos de factura en este equipo
+      review_queue:
+        advisories: 'Puntos que conviene revisar antes de confirmarlo: {count}'
+        advisory:
+          country_code_unassigned: Un código de país del documento no corresponde
+            a ningún país
+          country_code_uncatalogued: Un código de país del documento aún no está en
+            la lista de países
+          party_attribution: Nada ha confirmado a qué parte pertenecen las direcciones
+        blocking: 'Preguntas que impiden confirmarlo: {count}'
+        column:
+          advisories: Avisos
+          blocking: Bloqueos
+          drafted: Leído el
+          reference: Documento
+        detail: Documento {reference}, leído por {extractor} el {date}.
+        empty: Ningún documento leído espera revisión.
+        failed: No se han podido leer los borradores pendientes de revisión.
+        heading: Borradores pendientes de revisión
+        loading: Leyendo los borradores pendientes de revisión…
+        prompt: Documentos ya leídos cuyo borrador aún espera tu revisión. Elige uno
+          para ver qué necesita.
       reviewed: Revisado
       safe_metadata: El documento de origen permanece protegido y cifrado; los campos
         obtenidos de él se muestran para tu revisión.
@@ -4346,8 +4367,14 @@ tui:
         y se puede volver a clasificar más adelante.
       excluded: '{entry} se ha excluido de la declaración.'
       excluding: Excluyendo el apunte…
+      failed: No se ha podido leer la cola de revisión.
       filter_all: 'Filtro: todos los estados de revisión'
+      loading: Leyendo la cola de revisión…
       open: Abrir revisión
+      page:
+        next: Página siguiente
+        position: Apuntes {first} a {last} de {total}
+        previous: Página anterior
       title: 'Registros: revisión'
     review_status:
       excluded: Excluido

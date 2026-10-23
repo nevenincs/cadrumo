@@ -64,6 +64,15 @@ _EDITABLE_FIELDS: Final[tuple[LedgerEvidenceUpdateField, ...]] = (
     "iva_amount",
     "notes",
 )
+_FIELD_LOCALE_KEYS: Final[dict[LedgerEvidenceUpdateField, str]] = {
+    "supplier": "tui.ledger.evidence_files.field.supplier",
+    "invoice_number": "tui.ledger.evidence_files.field.invoice_number",
+    "invoice_date": "tui.ledger.evidence_files.field.invoice_date",
+    "taxable_base": "tui.ledger.evidence_files.field.taxable_base",
+    "iva_rate": "tui.ledger.evidence_files.field.iva_rate",
+    "iva_amount": "tui.ledger.evidence_files.field.iva_amount",
+    "notes": "tui.ledger.evidence_files.field.notes",
+}
 _STAGE_BUTTONS: Final = ("evidence-files-review-update", "evidence-files-review-remove", "evidence-files-open-review")
 
 
@@ -72,7 +81,7 @@ def _input_id(field: LedgerEvidenceUpdateField) -> str:
 
 
 def _field_label(field: LedgerEvidenceUpdateField) -> str:
-    return tr(f"tui.ledger.evidence_files.field.{field}")
+    return tr(_FIELD_LOCALE_KEYS[field])
 
 
 def evidence_field_value(
@@ -154,7 +163,7 @@ class LedgerEvidenceFilesRecordsScreen(EvidenceFilesToolScreen):
                 "tui.ledger.evidence_files.records.edit_hint",
             )
             for field in _EDITABLE_FIELDS:
-                yield localized(Static(_field_label(field), markup=False), f"tui.ledger.evidence_files.field.{field}")
+                yield localized(Static(_field_label(field), markup=False), _FIELD_LOCALE_KEYS[field])
                 yield Input(id=_input_id(field))
             with Horizontal(classes="evidence-files-actions"):
                 yield localized(

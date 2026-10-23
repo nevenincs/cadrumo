@@ -45,6 +45,13 @@ _KIND_LOCALE_KEYS: Final = {
     InvoiceKind.ISSUED: "tui.ledger.invoice.kind.issued",
     InvoiceKind.RECEIVED: "tui.ledger.invoice.kind.received",
 }
+_PAYMENT_STATUS_LOCALE_KEYS: Final[dict[PaymentStatus, str]] = {
+    PaymentStatus.PAID: "tui.ledger.records.payment_status.paid",
+    PaymentStatus.PENDING: "tui.ledger.records.payment_status.pending",
+    PaymentStatus.PARTIALLY_PAID: "tui.ledger.records.payment_status.partially_paid",
+    PaymentStatus.OVERDUE: "tui.ledger.records.payment_status.overdue",
+    PaymentStatus.CANCELLED: "tui.ledger.records.payment_status.cancelled",
+}
 _TEXT_FIELDS: Final = (
     "counterparty_name",
     "counterparty_country",
@@ -80,7 +87,7 @@ def _kind_label(kind: InvoiceKind) -> str:
 
 
 def _payment_label(status: PaymentStatus) -> str:
-    return tr(f"tui.ledger.records.payment_status.{status.value.lower()}")
+    return tr(_PAYMENT_STATUS_LOCALE_KEYS[status])
 
 
 def _line_row(index: int, line: InvoiceLineSnapshot) -> str:
@@ -636,10 +643,6 @@ class LedgerInvoiceDetailScreen(LedgerWorkspaceScreen):
         catalogue = LedgerInvoiceCatalogueScreen(self.controller, self.doors, selected_id=self.invoice_id)
         if not replace_workspace_body(self.app, catalogue):
             super().action_back()
-
-    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Answer the area navigation, which is refused while a write is in flight."""
-        self.handle_navigation_selection(event)
 
 
 __all__ = ["INVOICE_PAGE_SIZE", "LedgerInvoiceCatalogueScreen", "LedgerInvoiceDetailScreen"]

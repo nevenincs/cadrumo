@@ -3457,6 +3457,27 @@ tui:
         unmeasured: Sense mesurar
       records_empty: Encara no hi ha documents de factura registrats.
       records_heading: Documents de factura en aquest equip
+      review_queue:
+        advisories: 'Punts que convé revisar abans de confirmar-lo: {count}'
+        advisory:
+          country_code_unassigned: Un codi de país del document no correspon a cap
+            país
+          country_code_uncatalogued: Un codi de país del document encara no és a la
+            llista de països
+          party_attribution: Res no ha confirmat a quina part pertanyen les adreces
+        blocking: 'Preguntes que impedeixen confirmar-lo: {count}'
+        column:
+          advisories: Avisos
+          blocking: Bloquejos
+          drafted: Llegit el
+          reference: Document
+        detail: Document {reference}, llegit per {extractor} el {date}.
+        empty: Cap document llegit no espera revisió.
+        failed: No s'han pogut llegir els esborranys pendents de revisió.
+        heading: Esborranys pendents de revisió
+        loading: S'estan llegint els esborranys pendents de revisió…
+        prompt: Documents ja llegits l'esborrany dels quals encara espera la teva
+          revisió. Tria'n un per veure què necessita.
       reviewed: Revisat
       safe_metadata: El document d’origen continua protegit i xifrat; els camps recuperats
         es mostren per revisar-los.
@@ -4322,8 +4343,14 @@ tui:
         i es pot tornar a classificar més endavant.
       excluded: '{entry} s''ha exclòs de la declaració.'
       excluding: S'està excloent l'apunt…
+      failed: No s'ha pogut llegir la cua de revisió.
       filter_all: 'Filtre: tots els estats de revisió'
+      loading: S'està llegint la cua de revisió…
       open: Obre la revisió
+      page:
+        next: Pàgina següent
+        position: Apunts {first} a {last} de {total}
+        previous: Pàgina anterior
       title: 'Registres: revisió'
     review_status:
       excluded: Exclòs

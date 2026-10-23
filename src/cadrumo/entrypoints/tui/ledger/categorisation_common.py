@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Iterator
 from dataclasses import dataclass
-from typing import ClassVar, override
+from typing import ClassVar, Final, override
 
 from pydantic import ValidationError
 from textual.app import ComposeResult
@@ -34,6 +34,17 @@ from ..components.theme import tokenised
 from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
+
+_CLASSIFICATION_LOCALE_KEYS: Final[dict[BusinessClassification, str]] = {
+    BusinessClassification.BUSINESS: "tui.ledger.categorisation.classification.business",
+    BusinessClassification.PERSONAL: "tui.ledger.categorisation.classification.personal",
+    BusinessClassification.MIXED: "tui.ledger.categorisation.classification.mixed",
+    BusinessClassification.NOT_YET_PROCESSED: "tui.ledger.categorisation.classification.not_yet_processed",
+    BusinessClassification.PROCESSED_UNCLASSIFIED: "tui.ledger.categorisation.classification.processed_unclassified",
+    BusinessClassification.SKIPPED_BY_RULE: "tui.ledger.categorisation.classification.skipped_by_rule",
+    BusinessClassification.FAILED_VALIDATION: "tui.ledger.categorisation.classification.failed_validation",
+    BusinessClassification.REVIEWED_EXCLUDED: "tui.ledger.categorisation.classification.reviewed_excluded",
+}
 
 ACTION_MIN_COLUMN_WIDTH = 16
 """Narrowest column an action row lays a button into, so a row wraps rather than overflows."""
@@ -73,7 +84,7 @@ def classification_label(value: str) -> str:
         member = BusinessClassification(value.upper())
     except ValueError:
         return value
-    return tr(f"tui.ledger.categorisation.classification.{member.value.lower()}")
+    return tr(_CLASSIFICATION_LOCALE_KEYS[member])
 
 
 def short_id(identifier: str) -> str:

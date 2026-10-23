@@ -11,7 +11,7 @@ from typing import ClassVar, Final, override
 
 from textual.app import ComposeResult
 from textual.containers import Horizontal
-from textual.widgets import Button, DataTable, Input, Select, Static
+from textual.widgets import Button, Input, Select, Static
 
 from ....application.ledger.check_operation import LedgerCheckProjection, LedgerCheckRequest
 from ....application.ledger.preflight_operation import LedgerPreflightProjection, LedgerPreflightRequest
@@ -181,10 +181,6 @@ class LedgerHealthScreen(LedgerWorkspaceScreen):
         """Reword the findings already read."""
         await super().refresh_language()
         self._paint()
-
-    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Route the area navigation."""
-        self.handle_navigation_selection(event)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Read the findings for the chosen period off the loop."""

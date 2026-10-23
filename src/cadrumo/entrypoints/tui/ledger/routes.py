@@ -20,7 +20,7 @@ from .actividad_asset import ActivityAssetTuiActionsV1
 from .classification import LedgerClassificationScreen
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .entries import LedgerEntriesScreen
-from .evidence import LedgerEvidenceScreen
+from .evidence import LedgerEvidenceReviewListDoorV1, LedgerEvidenceScreen
 from .import_flow import LedgerImportScreen
 from .models import (
     LEDGER_DESTINATION_BY_AREA,
@@ -39,7 +39,7 @@ from .models import (
 from .overview import LedgerOverviewScreen
 from .own_accounts import LedgerOwnAccountDoorV1
 from .reconciliation import LedgerReconciliationScreen
-from .review import LedgerReviewScreen
+from .review import LedgerReviewDoorV1, LedgerReviewScreen
 from .tools import LedgerToolV1
 from .workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshDoorV1
 from .workspace_presentation import ledger_workspace_page
@@ -82,10 +82,6 @@ class LedgerUnavailableScreen(LedgerWorkspaceScreen):
         """Keep the entire workspace vocabulary reachable beside the refusal."""
         self.populate_navigation()
         self.query_one("#ledger-navigation", DataTable).focus()
-
-    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Allow movement away from a placeholder while preserving refusals."""
-        self.handle_navigation_selection(event)
 
 
 @dataclass(frozen=True, slots=True)
@@ -155,12 +151,14 @@ def ledger_screen_factory(
     projection: LedgerWorkspaceProjectionV1,
     *,
     review_action: ActionReference,
+    review_door: LedgerReviewDoorV1 | None = None,
     classify_action: ActionReference | None = None,
     classification_submitter: LedgerClassificationSubmitterV1 | None = None,
     classification_patch_builder: LedgerClassificationPatchBuilderV1 | None = None,
     import_door: LedgerImportDoorV1 | None = None,
     evidence_action: ActionReference | None = None,
     evidence_items: tuple[AttachmentReviewItem, ...] | None = None,
+    evidence_review_door: LedgerEvidenceReviewListDoorV1 | None = None,
     link_action: ActionReference | None = None,
     link_submitter: LedgerLinkSubmitterV1 | None = None,
     invoice_add_door: LedgerInvoiceAddDoorV1 | None = None,
@@ -175,12 +173,14 @@ def ledger_screen_factory(
     """Bind an injected immutable projection to the outer navigation factory contract."""
     injection = LedgerWorkspaceInjection(
         review_action=review_action,
+        review_door=review_door,
         classify_action=classify_action,
         classification_submitter=classification_submitter,
         classification_patch_builder=classification_patch_builder,
         import_door=import_door,
         evidence_action=evidence_action,
         evidence_items=evidence_items,
+        evidence_review_door=evidence_review_door,
         link_action=link_action,
         link_submitter=link_submitter,
         invoice_add_door=invoice_add_door,

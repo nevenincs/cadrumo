@@ -14,7 +14,7 @@ from typing import Final, cast, override
 from pydantic import ValidationError
 from textual.app import ComposeResult
 from textual.containers import Horizontal
-from textual.widgets import Button, DataTable, Input, Select, Static
+from textual.widgets import Button, Input, Select, Static
 
 from ....application.ledger.batch_ingest import BatchItemStatus
 from ....application.ledger.evidence_ingestion_contracts import (
@@ -43,10 +43,17 @@ _KIND_LOCALE_KEYS: Final[dict[InvoiceKind, str]] = {
     InvoiceKind.ISSUED: "tui.ledger.invoice.kind.issued",
 }
 _STATUSES: Final[tuple[BatchItemStatus, ...]] = ("ingested", "no_op", "pending_review", "paused", "refused")
+_STATUS_LOCALE_KEYS: Final[dict[BatchItemStatus, str]] = {
+    "ingested": "tui.ledger.evidence_files.batch.status.ingested",
+    "no_op": "tui.ledger.evidence_files.batch.status.no_op",
+    "pending_review": "tui.ledger.evidence_files.batch.status.pending_review",
+    "paused": "tui.ledger.evidence_files.batch.status.paused",
+    "refused": "tui.ledger.evidence_files.batch.status.refused",
+}
 
 
 def _status_label(status: BatchItemStatus) -> str:
-    return tr(f"tui.ledger.evidence_files.batch.status.{status}")
+    return tr(_STATUS_LOCALE_KEYS[status])
 
 
 def batch_outcome(projection: LedgerEvidenceBatchProjection) -> EvidenceFilesOutcomeV1:
@@ -149,10 +156,6 @@ class LedgerEvidenceFilesBatchScreen(EvidenceFilesToolScreen):
         """Show the shell with the folder field ready for typing."""
         self.populate_navigation()
         self.query_one("#evidence-files-batch-directory", Input).focus()
-
-    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Answer the area navigation."""
-        self.handle_navigation_selection(event)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Stage the typed folder and direction for review."""

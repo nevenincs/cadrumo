@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd326ed5179c5c4d7ebeeb0459dcbe9a5cb9015584e895a9bbab4a4bef1550ae'
+body_hash: 'sha256:de6c2a6c1466a8a14775c73a50c42a938f186c4cc5d4662177f2c02809496711'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -376,6 +376,42 @@ related:
 - `S22` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider -m '' -n 8 src/cadrumo/entrypoints/tui/ledger/tests src/cadrumo_runtime/host/tests/frontend/tui` -> `pass`
 - `S22` `verify:` `just test-tui` -> `pass`
 - `S22` `by:` `vaultspec-high-executor`
+- `S24` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_review.py`
+- `S24` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_review.py`
+- `S24` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_workbench.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/review.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/evidence.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/workspace_injection.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/routes.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/models.py`
+- `S24` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_review_doors.py`
+- `S24` `A` `src/cadrumo/entrypoints/tui/ledger/tests/review_door_fixtures.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_common.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_batch.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_records.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/invoices_wizard.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/transaction_views.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/record_views.py`
+- `S24` `M` `src/cadrumo/locales/en/common.yml`
+- `S24` `M` `src/cadrumo/locales/es/common.yml`
+- `S24` `M` `src/cadrumo/locales/ca/common.yml`
+- `S24` `M` `src/cadrumo/locales/hu/common.yml`
+- `S24` `verify:` `python map_tui_ops.py (87 ledger operations wired, 0 Ctrl+P-only)` -> `pass`
+- `S24` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider -m '' -n 8 src/cadrumo/entrypoints/tui/ledger/tests src/cadrumo_runtime/host/tests/frontend/tui` -> `pass`
+- `S24` `verify:` `just test-tui` -> `pass`
+- `S24` `by:` `vaultspec-high-executor`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S25` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_every_body_answers_an_area_choice.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_writes_hold_the_workspace.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/overview.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/entries_health.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/entries_trace.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_consent.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_review.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_write.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/invoices_import.py`
+- `S25` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider -m '' src/cadrumo/entrypoints/tui/ledger/tests/test_every_body_answers_an_area_choice.py` -> `pass`
+- `S25` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -406,3 +442,5 @@ related:
 - `S20` Before the fix, the off-loop thread tests failed for exactly invoice import preview, classify.review and split.review. All five domains' screens await doors on the loop since d84d3a639a, so the guarantee is the runtime door's own off-loop work, now proved per door.
 - `S21` S21 and S22 share one commit because both rewrite the same write screens' busy and failure handling. Evidence add had no in-flight flag at all and now runs under the extract and confirm flag. Disabling the guard fails all 18 in-flight tests. Some bodies (entries add, export and reset, import flow, invoice entry, most categorisation tools) never answer an area choice even when idle; left open.
 - `S22` Scope path is `src/cadrumo_runtime/host/frontend/tui/operations/runtime_profile_session.py.` A failed receipt whose effect is anything but NONE, UPDATED included, is reported as unknown, never refused. The export-only workaround door is removed. In the full run, `test_runtime_automation_requester_native` failed once and passed alone; routed to root-cause work.
+- `S24` S24 and S25 share one commit because eight files serve both. ledger.review and ledger.evidence.review.list take no paging fields, so each area holds the answer and renders one page. Neither screen offers the request filters yet. Back from an entry opened in Review returns to the overview. `tui.ledger.own_accounts.*,` `classification.field.*` and `review_status.*` still build keys from values.
+- `S25` The walk test discovers 41 concrete Records bodies by subclass. With the shared row handler removed it fails 41 of 41.

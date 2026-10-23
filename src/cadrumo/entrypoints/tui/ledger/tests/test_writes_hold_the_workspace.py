@@ -122,6 +122,7 @@ from .workspace_fixtures import (
     ledger_focused_context,
     ledger_projection,
     ledger_review_action,
+    ledger_review_door,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
@@ -188,8 +189,6 @@ class _Flow:
     unknown_line: Callable[[], str] = lambda: tr("tui.ledger.flow.outcome_unknown")
     leaves_after_saving: bool = True
     """Whether the body is still shown once the write is saved, so leaving it can be tried."""
-    answers_navigation: bool = True
-    """Whether choosing an area on this body's navigation table opens it when no write is out."""
 
 
 async def _settle(pilot: Pilot[None]) -> None:
@@ -233,14 +232,13 @@ async def _choose_overview(pilot: Pilot[None], body: LedgerWorkspaceScreen) -> N
         await pilot.pause()
 
 
-async def _cannot_leave(pilot: Pilot[None], body: LedgerWorkspaceScreen, *, answers_navigation: bool) -> None:
+async def _cannot_leave(pilot: Pilot[None], body: LedgerWorkspaceScreen) -> None:
     """Try an area, a tool where the body lists one, and Back; each is refused on screen."""
     refusal = tr("tui.ledger.flow.in_flight_refusal")
     await _choose_overview(pilot, body)
     assert pilot.app.screen is body
     assert body.requested_target is None
-    if answers_navigation:
-        assert _status(body) == refusal
+    assert _status(body) == refusal
     if body.query("#ledger-tools"):
         _status_line(body).update("")
         tools = body.query_one("#ledger-tools", DataTable)
@@ -345,7 +343,7 @@ def _bank_import(gate: _Gate, tmp_path: Path) -> _Flow:
         assert body.flow_state is LedgerFlowState.SUCCEEDED
         assert len(door.applied) == 1
 
-    return _Flow(body, submit, saved, answers_navigation=False)
+    return _Flow(body, submit, saved)
 
 
 class _HeldLinkDoor(_LinkDoor):
@@ -403,11 +401,13 @@ class _HeldExclusionDoor(_ExclusionDoor):
 
 def _review_exclusion(gate: _Gate, _tmp_path: Path) -> _Flow:
     door = _HeldExclusionDoor(gate)
+    projection = ledger_projection()
     controller = LedgerWorkspaceController(
         ledger_context(),
-        ledger_projection(),
+        projection,
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
+            review_door=ledger_review_door(projection),
             classify_action=_classify_action(),
             classification_submitter=_ClassificationDoor(),
             exclusion_submitter=door,
@@ -495,7 +495,7 @@ def _entry_add(gate: _Gate, _tmp_path: Path) -> _Flow:
         assert body.flow_state is LedgerFlowState.SUCCEEDED
         assert len(ledger.entries) == 3
 
-    return _Flow(body, submit, saved, answers_navigation=False)
+    return _Flow(body, submit, saved)
 
 
 def _entry_export(gate: _Gate, tmp_path: Path) -> _Flow:
@@ -520,7 +520,6 @@ def _entry_export(gate: _Gate, tmp_path: Path) -> _Flow:
         submit,
         saved,
         lambda: tr("tui.ledger.entry_tools.export.unknown", path=path),
-        answers_navigation=False,
     )
 
 
@@ -542,7 +541,7 @@ def _entry_reset(gate: _Gate, _tmp_path: Path) -> _Flow:
         assert body.flow_state is LedgerFlowState.SUCCEEDED
         assert _status(shown) == tr("tui.ledger.entry_tools.reset.done", count=4)
 
-    return _Flow(body, submit, saved, answers_navigation=False)
+    return _Flow(body, submit, saved)
 
 
 def _entry_removal(gate: _Gate, _tmp_path: Path) -> _Flow:
@@ -817,7 +816,7 @@ def _invoice_entry(gate: _Gate, _tmp_path: Path) -> _Flow:
         assert body.flow_state is LedgerFlowState.SUCCEEDED
         assert [entry.taxable_base for entry in door.entries] == [Decimal("1200.00")]
 
-    return _Flow(body, submit, saved, answers_navigation=False)
+    return _Flow(body, submit, saved)
 
 
 # -- Categorisation and evidence files -------------------------------------------------
@@ -850,7 +849,7 @@ def _classification_rule(gate: _Gate, _tmp_path: Path) -> _Flow:
         assert body.staged is None
         assert _status(shown) == tr("tui.ledger.categorisation.saved")
 
-    return _Flow(body, submit, saved, answers_navigation=False)
+    return _Flow(body, submit, saved)
 
 
 def _evidence_record_correction(gate: _Gate, _tmp_path: Path) -> _Flow:
@@ -922,7 +921,7 @@ async def test_a_write_in_flight_keeps_its_body_until_its_outcome_renders(name: 
             body = await flow.submit(pilot)
             await asyncio.wait_for(gate.started.wait(), timeout=10)
             assert body.in_flight
-            await _cannot_leave(pilot, body, answers_navigation=flow.answers_navigation)
+            await _cannot_leave(pilot, body)
 
             gate.release.set()
             await _settle(pilot)

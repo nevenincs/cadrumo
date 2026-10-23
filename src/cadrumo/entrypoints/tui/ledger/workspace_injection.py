@@ -36,8 +36,10 @@ from .tools import require_unique_tool_keys
 
 if TYPE_CHECKING:
     from .actividad_asset import ActivityAssetTuiActionsV1
+    from .evidence import LedgerEvidenceReviewListDoorV1
     from .models import LedgerRecordDoorsV1
     from .own_accounts import LedgerOwnAccountDoorV1
+    from .review import LedgerReviewDoorV1
     from .tools import LedgerToolV1
 
 
@@ -62,6 +64,8 @@ class LedgerWorkspaceInjection:
     """
 
     review_action: ActionReference
+    review_door: LedgerReviewDoorV1 | None = None
+    """The registered review read the Review area lists its queue from; absent means the area is not offered."""
     classify_action: ActionReference | None = None
     classification_submitter: LedgerClassificationSubmitterV1 | None = None
     classification_patch_builder: LedgerClassificationPatchBuilderV1 | None = None
@@ -69,6 +73,8 @@ class LedgerWorkspaceInjection:
     import_door: LedgerImportDoorV1 | None = None
     evidence_action: ActionReference | None = None
     evidence_items: tuple[AttachmentReviewItem, ...] | None = None
+    evidence_review_door: LedgerEvidenceReviewListDoorV1 | None = None
+    """The registered read of drafts waiting for review, which the Evidence area lists."""
     link_action: ActionReference | None = None
     link_submitter: LedgerLinkSubmitterV1 | None = None
     invoice_add_door: LedgerInvoiceAddDoorV1 | None = None

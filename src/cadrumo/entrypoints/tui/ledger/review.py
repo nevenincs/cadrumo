@@ -1,37 +1,67 @@
-"""Ledger review queue over application-owned safe review identities, with exclusion."""
+"""Ledger review queue read through the registered review operation, with exclusion.
+
+The queue is the operation's own answer for the admitted profile, read off the
+event loop each time the area opens. The operation has no paging, so the whole
+answer is held and the table renders one page of it at a time.
+"""
 
 from __future__ import annotations
 
-from typing import ClassVar, cast, override
+from typing import ClassVar, Final, Protocol, cast, override
+from uuid import UUID
 
 from pydantic import ValidationError
 from textual.app import ComposeResult
 from textual.binding import Binding
+from textual.containers import Horizontal
 from textual.widgets import Button, DataTable, Static
 
+from ....application.ledger.review_operation import (
+    LedgerReviewProjection,
+    LedgerReviewRequest,
+    LedgerReviewRowProjection,
+)
 from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.identity.transaction_ids import TransactionId
+from ..account import AccountSessionExpiredError
 from ..components.language import localized, repaint_tables
+from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable
 from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import (
-    LedgerReviewRequested,
     LedgerRouteRequested,
+    LedgerTransactionDetailRequested,
     LedgerWorkspaceController,
     LedgerWorkspaceScreen,
     review_status_label,
 )
-from .workspace_presentation import door_refusal_text, ledger_workspace_page, restore_transaction_focus
+from .workspace_presentation import door_refusal_text, ledger_workspace_page
+
+REVIEW_PAGE_SIZE: Final = 200
+"""The most review rows the table renders at once."""
+
+
+class LedgerReviewDoorV1(Protocol):
+    """Injected door to ``ledger.review`` for one admitted profile."""
+
+    @property
+    def profile_id(self) -> UUID:
+        """The profile every request through this door must name."""
+        ...
+
+    async def __call__(self, request: LedgerReviewRequest) -> LedgerReviewProjection:
+        """Read the review queue the request selects, correlated with its terminal receipt."""
+        ...
 
 
 class LedgerReviewScreen(LedgerWorkspaceScreen):
-    """Filter disclosure and status rows with semantic transaction selection.
+    """The review queue, one page at a time, with semantic transaction selection.
 
-    ``x`` asks to exclude the highlighted entry. Nothing is written until the
-    operator confirms the sentence naming that entry; Escape or Cancel while
-    asking withdraws the request.
+    Choosing a row opens that entry's detail. ``x`` asks to exclude the
+    highlighted entry; nothing is written until the operator confirms the
+    sentence naming it, and Escape or Cancel while asking withdraws the request.
     """
 
     WORKSPACE_AREA: ClassVar[LedgerWorkspaceArea | None] = LedgerWorkspaceArea.REVIEW
@@ -40,10 +70,20 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         *LedgerWorkspaceScreen.BINDINGS,
         Binding("x", "exclude", "", show=False),
     ]
+    CSS = LedgerWorkspaceScreen.CSS + tokenised(
+        """
+        .ledger-review-paging { height: auto; }
+        .ledger-review-paging Button { margin-right: $cadrumo-space-1; }
+        """
+    )
 
     def __init__(self, controller: LedgerWorkspaceController) -> None:
         """Retain the controller and initialize semantic selection state."""
         super().__init__(controller, id="ledger-review-screen")
+        self.rows: tuple[LedgerReviewRowProjection, ...] = ()
+        """The whole queue the last read returned; only one page of it is rendered."""
+        self.page_offset = 0
+        self.loaded = False
         self.requested_transaction_id: TransactionId | None = None
         self.pending_exclusion: TransactionId | None = None
         self.excluding = False
@@ -68,11 +108,20 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
             )
             # The entry names itself with its date and description, and it is
             # the one cell here the operator cannot reconstruct from the
-            # others: the status is a state word and the next step is fixed
-            # copy. The spare width belongs to it, not to the last column.
+            # others. The spare width belongs to it, not to the last column.
             review_table = ContentDataTable[str](id="ledger-review", cursor_type="row", zebra_stripes=True)
             review_table.fill_column = 0
             yield review_table
+            with Horizontal(id="ledger-review-paging", classes="ledger-review-paging"):
+                yield localized(
+                    Button(tr("tui.ledger.review.page.previous"), id="ledger-review-previous", disabled=True),
+                    "tui.ledger.review.page.previous",
+                )
+                yield localized(
+                    Button(tr("tui.ledger.review.page.next"), id="ledger-review-next", disabled=True),
+                    "tui.ledger.review.page.next",
+                )
+            yield Static("", id="ledger-review-position", markup=False)
             yield Static(id="ledger-empty", classes="ledger-empty", markup=False)
             if self.controller.can_exclude():
                 yield localized(
@@ -88,36 +137,118 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
                     Button(tr("tui.ledger.review.exclude_cancel"), id="ledger-exclusion-cancel"),
                     "tui.ledger.review.exclude_cancel",
                 )
-                yield Static("", id="ledger-flow-status", markup=False)
+            yield Static("", id="ledger-flow-status", markup=False)
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
     def on_mount(self) -> None:
-        """Populate the initial review."""
+        """Show the shell, then read the queue off the event loop."""
         self._populate_view()
+        self._show_exclusion_controls(open_=False)
+        self.query_one("#ledger-navigation", DataTable).focus()
+        door = self.controller.review_door
+        if door is None:
+            self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.refusal.submission_unavailable"))
+            return
+        self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.review.loading"))
+        self.run_worker(self._load(door), group="ledger-review-read", exclusive=True)
+
+    async def _load(self, door: LedgerReviewDoorV1) -> None:
+        status = self.query_one("#ledger-flow-status", Static)
+        refusal = self.query_one("#ledger-refusal", Static)
+        try:
+            result = await door(LedgerReviewRequest(profile_id=door.profile_id))
+        except AccountSessionExpiredError as error:
+            self._forget_rows()
+            status.update(tr("tui.ledger.review.failed"))
+            refusal.update(door_refusal_text(error))
+            return
+        except (CadrumoError, ValidationError) as error:
+            status.update(tr("tui.ledger.review.failed"))
+            refusal.update(door_refusal_text(error))
+            return
+        self.rows = result.rows
+        self.loaded = True
+        self._open_page_holding(self.controller.restored_transaction_id())
+        status.update("")
+        self._populate_view()
+        self._restore_focus()
+
+    def _open_page_holding(self, transaction_id: TransactionId | None) -> None:
+        """Open the page that holds ``transaction_id``, or the first page when it is not listed."""
+        index = next((index for index, row in enumerate(self.rows) if row.id == transaction_id), 0)
+        self.page_offset = index - index % REVIEW_PAGE_SIZE
+
+    def _page(self) -> tuple[LedgerReviewRowProjection, ...]:
+        return self.rows[self.page_offset : self.page_offset + REVIEW_PAGE_SIZE]
+
+    @staticmethod
+    def _row_label(row: LedgerReviewRowProjection) -> str:
+        """Name an entry the way the operator recorded it: its date and description."""
+        return tr("tui.ledger.entry_label", date=row.date, description=row.description)
+
+    def _label(self, transaction_id: TransactionId) -> str:
+        """Name a listed entry by its identity, or by its short identifier when the queue no longer lists it."""
+        row = next((row for row in self.rows if row.id == transaction_id), None)
+        return str(transaction_id)[:12] if row is None else self._row_label(row)
 
     def _populate_view(self) -> None:
-        """Populate the filter disclosure and canonical review rows."""
-        self.populate_navigation()
+        """Populate the navigation and the current page of review rows."""
+        navigation = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
+        if not navigation.columns:
+            self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#ledger-review", DataTable))
+        table.clear(columns=True)
         table.add_column(tr("tui.ledger.column.entry"), key="entry")
+        table.add_column(tr("tui.ledger.column.amount"), key="amount")
         table.add_column(tr("tui.ledger.column.review_status"), key="review_status")
         table.add_column(tr("tui.ledger.column.next"), key="next")
-        for row in self.controller.review_rows():
+        for row in self._page():
             table.add_row(
-                self.controller.entry_label(row.transaction_id),
-                review_status_label(row.review_status),
+                self._row_label(row),
+                row.amount,
+                review_status_label(row.status.value),
                 tr("tui.ledger.review.open"),
-                key=row.transaction_id,
+                key=row.id,
             )
-        if not table.row_count:
-            self.query_one("#ledger-empty", Static).update(tr("tui.ledger.review.empty"))
-        self._show_exclusion_controls(open_=False)
-        navigation = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
-        restore_transaction_focus(
-            navigation=navigation,
-            table=table,
-            transaction_id=self.controller.restored_transaction_id(),
+        empty = tr("tui.ledger.review.empty") if self.loaded and not self.rows else ""
+        self.query_one("#ledger-empty", Static).update(empty)
+        self._paint_paging()
+
+    def _paint_paging(self) -> None:
+        self.query_one("#ledger-review-previous", Button).disabled = self.page_offset == 0
+        self.query_one("#ledger-review-next", Button).disabled = self.page_offset + REVIEW_PAGE_SIZE >= len(self.rows)
+        page = self._page()
+        self.query_one("#ledger-review-position", Static).update(
+            tr(
+                "tui.ledger.review.page.position",
+                first=self.page_offset + 1,
+                last=self.page_offset + len(page),
+                total=len(self.rows),
+            )
+            if page
+            else ""
         )
+
+    def _restore_focus(self) -> None:
+        """Focus the chosen entry by identity when this page lists it, otherwise the navigation."""
+        navigation = self.query_one("#ledger-navigation", DataTable)
+        table = cast("DataTable[str]", self.query_one("#ledger-review", DataTable))
+        chosen = self.controller.restored_transaction_id()
+        index = next((index for index, row in enumerate(table.ordered_rows) if row.key.value == chosen), None)
+        if chosen is None or index is None:
+            navigation.focus()
+            return
+        table.move_cursor(row=index)
+        table.focus()
+
+    def _forget_rows(self) -> None:
+        """Discard the queue once the admitted session is lost."""
+        self.rows = ()
+        self.loaded = False
+        self.page_offset = 0
+        self.pending_exclusion = None
+        self._populate_view()
+        self._show_exclusion_controls(open_=False)
 
     @override
     async def refresh_language(self) -> None:
@@ -138,18 +269,14 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
             self.query_one(selector).display = open_
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Route navigation rows or emit the canonical review query request."""
+        """Open the chosen entry's detail by its transaction identity."""
         if self.handle_navigation_selection(event):
             return
-        event_table = cast("DataTable[str]", event.data_table)
-        if event_table.id != "ledger-review":
+        if event.data_table.id != "ledger-review" or event.row_key.value is None:
             return
         transaction_id = event.row_key.value
-        if transaction_id is None:
-            return
-        row = next(item for item in self.controller.review_rows() if item.transaction_id == transaction_id)
         self.requested_transaction_id = transaction_id
-        self.post_message(LedgerReviewRequested(transaction_id=transaction_id, action=row.action))
+        self.post_message(LedgerTransactionDetailRequested(transaction_id))
 
     def action_exclude(self) -> None:
         """Ask to exclude the highlighted entry, naming it, before anything is written."""
@@ -169,7 +296,7 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         self.pending_exclusion = key
         notice.update("")
         self.query_one("#ledger-exclusion-question", Static).update(
-            tr("tui.ledger.review.exclude_question", entry=self.controller.entry_label(key))
+            tr("tui.ledger.review.exclude_question", entry=self._label(self.pending_exclusion))
         )
         self._show_exclusion_controls(open_=True)
         self.query_one("#ledger-exclusion-confirm", Button).focus()
@@ -190,22 +317,30 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         self.query_one("#ledger-review", DataTable).focus()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Confirm or withdraw the open exclusion question."""
-        if self.excluding:
-            return
-        if event.button.id == "ledger-exclusion-cancel":
-            self._withdraw()
-        elif event.button.id == "ledger-exclusion-confirm" and self.pending_exclusion is not None:
-            self.excluding = True
-            event.button.disabled = True
-            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.review.excluding"))
-            self.run_worker(self._exclude(self.pending_exclusion), exclusive=True)
+        """Page the queue, or confirm or withdraw the open exclusion question."""
+        match event.button.id:
+            case "ledger-review-previous":
+                self.page_offset = max(0, self.page_offset - REVIEW_PAGE_SIZE)
+                self._populate_view()
+            case "ledger-review-next" if self.page_offset + REVIEW_PAGE_SIZE < len(self.rows):
+                self.page_offset += REVIEW_PAGE_SIZE
+                self._populate_view()
+            case "ledger-exclusion-cancel" if not self.excluding:
+                self._withdraw()
+            case "ledger-exclusion-confirm" if not self.excluding and self.pending_exclusion is not None:
+                self.excluding = True
+                event.button.disabled = True
+                self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.review.excluding"))
+                listed = frozenset(row.id for row in self.rows)
+                self.run_worker(self._exclude(self.pending_exclusion, listed), exclusive=True)
+            case _:
+                return
 
-    async def _exclude(self, transaction_id: TransactionId) -> None:
+    async def _exclude(self, transaction_id: TransactionId, listed: frozenset[TransactionId]) -> None:
         status = self.query_one("#ledger-flow-status", Static)
-        label = self.controller.entry_label(transaction_id)
+        label = self._label(transaction_id)
         try:
-            await self.controller.submit_exclusion(transaction_id)
+            await self.controller.submit_exclusion(transaction_id, listed=listed)
         except (CadrumoError, ValidationError) as error:
             self.excluding = False
             self.query_one("#ledger-exclusion-confirm", Button).disabled = False
@@ -223,8 +358,8 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         self.refresh_then(self._reopen)
 
     def _reopen(self) -> None:
-        """Show the re-read review list, staying on the area the operator is working in."""
+        """Show the re-read review queue, staying on the area the operator is working in."""
         self.post_message(LedgerRouteRequested(self.controller.route_target(LedgerWorkspaceArea.REVIEW)))
 
 
-__all__ = ["LedgerReviewScreen"]
+__all__ = ["REVIEW_PAGE_SIZE", "LedgerReviewDoorV1", "LedgerReviewScreen"]

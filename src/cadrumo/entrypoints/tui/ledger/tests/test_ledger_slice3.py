@@ -33,8 +33,9 @@ from ..models import LedgerFlowState, LedgerLinkResultV1, LedgerLinkSubmissionV1
 from ..reconciliation import LedgerReconciliationScreen
 from ..routes import LedgerUnavailableScreen, resolve_ledger_screen
 from ..workspace_injection import LedgerWorkspaceInjection
+from .review_door_fixtures import MemoryEvidenceReviewListDoor, synthetic_draft
 from .test_ledger_flows import _ClassificationDoor, _classify_action, _ImportDoor
-from .workspace_fixtures import ledger_evidence_action, ledger_projection, ledger_review_action
+from .workspace_fixtures import ledger_evidence_action, ledger_projection, ledger_review_action, ledger_review_door
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -407,11 +408,13 @@ def _all_routes_controller() -> LedgerWorkspaceController:
         projection,
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
+            review_door=ledger_review_door(projection),
             classify_action=_classify_action(),
             classification_submitter=_ClassificationDoor(),
             import_door=_ImportDoor(),
             evidence_action=ledger_evidence_action(),
             evidence_items=(_evidence_item(),),
+            evidence_review_door=MemoryEvidenceReviewListDoor((synthetic_draft(1),)),
             link_action=_link_action(),
             link_submitter=_LinkDoor(),
         ),

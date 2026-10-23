@@ -74,6 +74,7 @@ from .runtime_ledger_classification import (
 from .runtime_ledger_entries import compose_runtime_ledger_exclusion_submitter
 from .runtime_ledger_import import compose_runtime_ledger_import_door
 from .runtime_ledger_records import compose_runtime_ledger_link_submitter, compose_runtime_ledger_record_doors
+from .runtime_ledger_review import compose_runtime_ledger_review_doors
 from .runtime_ledger_tools import compose_runtime_ledger_tools
 from .runtime_own_accounts import compose_runtime_own_account_door
 from .runtime_profile_language import RuntimeProfileLanguage
@@ -402,6 +403,7 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
         record_doors = compose_runtime_ledger_record_doors(self._client, profile_label=self._label)
         link_submitter = compose_runtime_ledger_link_submitter(self._client, profile_label=self._label)
         exclusion = compose_runtime_ledger_exclusion_submitter(self._client, profile_label=self._label)
+        reviews = compose_runtime_ledger_review_doors(self._client, profile_label=self._label)
 
         def refresh_ledger() -> LedgerWorkspaceRefreshV1:
             nonlocal current, current_epoch
@@ -430,11 +432,13 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
             return ledger_screen_factory(
                 projection,
                 review_action=_action("operator.ledger.review"),
+                review_door=reviews.review,
                 classify_action=_action("operator.ledger.classify"),
                 classification_submitter=classification,
                 classification_patch_builder=build_runtime_ledger_classification_patch,
                 refresh=refresh_ledger,
                 evidence_action=_action("operator.ledger.evidence.review.list"),
+                evidence_review_door=reviews.evidence_review,
                 activity_asset_actions=assets,
                 invoice_add_door=invoice_add,
                 evidence_door=evidence,

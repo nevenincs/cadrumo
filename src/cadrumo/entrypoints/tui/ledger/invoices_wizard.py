@@ -15,7 +15,7 @@ from uuid import UUID
 from pydantic import ValidationError
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Button, DataTable, Input, Select, Static
+from textual.widgets import Button, Input, Select, Static
 
 from ....application.invoices.catalogue_intake_contracts import InvoiceWizardOutcome, InvoiceWizardRequest
 from ....core.aggregation import IntracomOperationType
@@ -64,6 +64,33 @@ _KIND_LOCALE_KEYS: Final = {
     InvoiceKind.RECEIVED: "tui.ledger.invoice.kind.received",
     InvoiceKind.ISSUED: "tui.ledger.invoice.kind.issued",
 }
+_FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
+    "counterparty_name": "tui.ledger.invoice.field.counterparty_name",
+    "counterparty_nif": "tui.ledger.invoice.field.counterparty_nif",
+    "country_code": "tui.ledger.invoice.field.country_code",
+    "invoice_number": "tui.ledger.invoice.field.invoice_number",
+    "series": "tui.ledger.invoice.field.series",
+    "invoice_date": "tui.ledger.invoice.field.invoice_date",
+    "operation_date": "tui.ledger.invoice.field.operation_date",
+    "invoice_class": "tui.ledger.invoice.field.invoice_class",
+    "rectifies_invoice_number": "tui.ledger.invoice.field.rectifies_invoice_number",
+    "taxable_base": "tui.ledger.invoice.field.taxable_base",
+    "iva_rate": "tui.ledger.invoice.field.iva_rate",
+    "currency": "tui.ledger.invoice.field.currency",
+    "iva_category": "tui.ledger.invoice.field.iva_category",
+    "retention_rate": "tui.ledger.invoice.field.retention_rate",
+    "retention_amount": "tui.ledger.invoice.field.retention_amount",
+    "recargo_amount": "tui.ledger.invoice.field.recargo_amount",
+    "notes": "tui.ledger.invoice.field.notes",
+    "operation_type": "tui.ledger.invoice.field.operation_type",
+}
+"""Each wizard field's label key: every text field of the steps, and the intra-EU operation type."""
+_STEP_NAME_LOCALE_KEYS: Final[dict[str, str]] = {
+    "counterparty": "tui.ledger.invoices.wizard.step_name.counterparty",
+    "invoice": "tui.ledger.invoices.wizard.step_name.invoice",
+    "amounts": "tui.ledger.invoices.wizard.step_name.amounts",
+    "notes": "tui.ledger.invoices.wizard.step_name.notes",
+}
 _DEFAULTS: Final = {"currency": "EUR"}
 _TEXT_FIELD_NAMES: Final = tuple(name for _step, fields in _STEPS for name, _required in fields)
 _STEP_OF_FIELD: Final = {name: index for index, (_step, fields) in enumerate(_STEPS) for name, _required in fields}
@@ -83,11 +110,13 @@ class LedgerInvoiceWizardDoorV1(Protocol):
 
 
 def _field_label(name: str) -> str:
-    return tr(f"tui.ledger.invoice.field.{name}")
+    """Name a wizard field; a field the owner names that the form does not show keeps its own name."""
+    key = _FIELD_LOCALE_KEYS.get(name)
+    return name if key is None else tr(key)
 
 
 def _label_widget(name: str, *, required: bool) -> Static:
-    key = f"tui.ledger.invoice.field.{name}"
+    key = _FIELD_LOCALE_KEYS[name]
     if required:
         return localized(Static(tr(key), markup=False), key)
     label = tr(key)
@@ -222,7 +251,7 @@ class LedgerInvoiceWizardScreen(LedgerConfirmationFlowScreen):
                 "tui.ledger.invoices.wizard.step",
                 index=str(self.step + 1),
                 total=str(len(_STEPS)),
-                name=tr(f"tui.ledger.invoices.wizard.step_name.{name}"),
+                name=tr(_STEP_NAME_LOCALE_KEYS[name]),
             )
         )
         self.query_one("#ledger-invoices-wizard-steps", Horizontal).display = editing
@@ -402,10 +431,6 @@ class LedgerInvoiceWizardScreen(LedgerConfirmationFlowScreen):
             replace_workspace_body(self.app, screen)
 
         self.refresh_after_write(reopen)
-
-    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Answer the area navigation, which is refused while the invoice is being recorded."""
-        self.handle_navigation_selection(event)
 
 
 __all__ = ["LedgerInvoiceWizardDoorV1", "LedgerInvoiceWizardScreen"]

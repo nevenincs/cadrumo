@@ -13,7 +13,7 @@ from typing import Final, cast, get_args, override
 from pydantic import ValidationError
 from textual.app import ComposeResult
 from textual.containers import Horizontal
-from textual.widgets import Button, DataTable, Input, Select, Static
+from textual.widgets import Button, Input, Select, Static
 
 from ....application.ledger.actions_common import display_decimal
 from ....application.ledger.transaction_projection import LedgerTransactionProjection
@@ -46,6 +46,25 @@ _OPTIONAL_FIELDS: Final = frozenset({"counterparty", "value_date", "taxable_base
 """Fields a blank entry clears; the rest are facts every transaction keeps."""
 _DECIMAL_FIELDS: Final = frozenset({"amount", "taxable_base", "iva_rate", "iva_amount"})
 """Fields the update carries as canonical decimal text, which drops trailing zeros."""
+_FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
+    "description": "tui.ledger.records.transaction_field.description",
+    "counterparty": "tui.ledger.records.transaction_field.counterparty",
+    "booked_date": "tui.ledger.records.transaction_field.booked_date",
+    "value_date": "tui.ledger.records.transaction_field.value_date",
+    "amount": "tui.ledger.records.transaction_field.amount",
+    "currency": "tui.ledger.records.transaction_field.currency",
+    "taxable_base": "tui.ledger.records.transaction_field.taxable_base",
+    "iva_rate": "tui.ledger.records.transaction_field.iva_rate",
+    "iva_amount": "tui.ledger.records.transaction_field.iva_amount",
+    "notes": "tui.ledger.records.transaction_field.notes",
+    "direction": "tui.ledger.records.transaction_field.direction",
+}
+"""Each correctable field's label key: the text fields and the direction."""
+_DIRECTION_LOCALE_KEYS: Final[dict[TransactionDirection, str]] = {
+    TransactionDirection.INCOMING: "tui.ledger.records.direction.incoming",
+    TransactionDirection.OUTGOING: "tui.ledger.records.direction.outgoing",
+    TransactionDirection.INTERNAL_TRANSFER: "tui.ledger.records.direction.internal_transfer",
+}
 _EDIT_CONTROLS: Final = (
     *(f"#ledger-transaction-{name.replace('_', '-')}" for name in _TEXT_FIELDS),
     "#ledger-transaction-direction",
@@ -53,11 +72,16 @@ _EDIT_CONTROLS: Final = (
 
 
 def _field_label(name: str) -> str:
-    return tr(f"tui.ledger.records.transaction_field.{name}")
+    return tr(_FIELD_LOCALE_KEYS[name])
 
 
 def _direction_label(direction: str) -> str:
-    return tr(f"tui.ledger.records.direction.{direction.lower()}")
+    """Name a direction in the operator's language, or show a token outside the vocabulary as it is."""
+    try:
+        member = TransactionDirection(direction.upper())
+    except ValueError:
+        return direction
+    return tr(_DIRECTION_LOCALE_KEYS[member])
 
 
 def _current(transaction: LedgerTransactionProjection, name: str) -> str:
@@ -117,12 +141,10 @@ class LedgerTransactionDetailScreen(LedgerWorkspaceScreen):
                 "tui.ledger.records.correct_heading",
             )
             for name in _TEXT_FIELDS:
-                key = f"tui.ledger.records.transaction_field.{name}"
+                key = _FIELD_LOCALE_KEYS[name]
                 yield localized(Static(tr(key), markup=False), key)
                 yield Input(id=f"ledger-transaction-{name.replace('_', '-')}", disabled=True)
-            yield localized(
-                Static(_field_label("direction"), markup=False), "tui.ledger.records.transaction_field.direction"
-            )
+            yield localized(Static(_field_label("direction"), markup=False), _FIELD_LOCALE_KEYS["direction"])
             yield Select[str](
                 tuple((_direction_label(item.value), item.value) for item in TransactionDirection),
                 allow_blank=False,
@@ -284,10 +306,6 @@ class LedgerTransactionDetailScreen(LedgerWorkspaceScreen):
         self.staged = None
         self.query_one("#ledger-transaction-staged", Static).update("")
         self._set_staged_controls(staged=False)
-
-    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Answer the area navigation, which keeps a pending write on this screen."""
-        self.handle_navigation_selection(event)
 
 
 __all__ = ["LedgerTransactionDetailScreen"]

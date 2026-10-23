@@ -359,10 +359,6 @@ class LedgerInvoiceImportScreen(LedgerConfirmationFlowScreen):
 
         self.refresh_after_write(reopen)
 
-    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Answer the area navigation, which is refused while the import is applied; refused rows are read-only."""
-        self.handle_navigation_selection(event)
-
 
 __all__ = [
     "LedgerInvoiceImportDoorV1",

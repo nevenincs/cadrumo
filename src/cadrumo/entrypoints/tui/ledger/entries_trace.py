@@ -13,7 +13,7 @@ from typing import ClassVar, cast, override
 
 from textual.app import ComposeResult
 from textual.containers import Horizontal
-from textual.widgets import Button, Checkbox, DataTable, Static
+from textual.widgets import Button, Checkbox, Static
 
 from ....application.ledger.history_operation import (
     LedgerHistoryProjection,
@@ -269,10 +269,6 @@ class LedgerEntryTraceScreen(LedgerWorkspaceScreen):
             self._start(self._read_typed())
         elif event.button.id == "entries-trace-full":
             self._start(self._read_full())
-
-    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Route the area navigation."""
-        self.handle_navigation_selection(event)
 
     def _clear_private_view(self) -> None:
         self.track = self.typed = self.full = None

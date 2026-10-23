@@ -43,6 +43,7 @@ from ..ledger.entries import LedgerEntriesScreen
 from ..ledger.overview import LedgerOverviewScreen
 from ..ledger.review import LedgerReviewScreen
 from ..ledger.routes import ledger_screen_factory
+from ..ledger.tests.workspace_fixtures import ledger_review_door
 from ..navigation import (
     TUI_DESTINATION_CATALOGUE,
     TuiDestinationAdmissionV1,
@@ -102,7 +103,9 @@ def _projection() -> LedgerWorkspaceProjectionV1:
 def _catalogue() -> TuiDestinationCatalogueV1:
     """Admit the whole catalogue, but give Ledger its real production factory."""
     review_action = ActionReference(action_id=lookup_action("operator.ledger.review").action_id)
-    ledger_factory = ledger_screen_factory(_projection(), review_action=review_action)
+    ledger_factory = ledger_screen_factory(
+        _projection(), review_action=review_action, review_door=ledger_review_door(_projection())
+    )
 
     def absent(context: TuiScreenContextV1) -> NoReturn:
         raise AssertionError(f"no other destination should be built by this test: {context.destination}")
@@ -155,8 +158,12 @@ async def test_enter_on_a_navigation_row_reaches_the_named_area() -> None:
 
 
 @pytest.mark.asyncio
-async def test_selecting_a_review_row_reports_the_pending_state() -> None:
-    """A selection with no consumer must say so; silence reads as a dead key."""
+async def test_selecting_a_review_row_opens_the_entry_or_says_why_not() -> None:
+    """A selection the session cannot answer must say so; silence reads as a dead key.
+
+    This workspace has no record doors, so the entry's detail cannot open and
+    the review body says that instead.
+    """
     app = _app()
     async with app.run_test() as pilot:
         app.navigate_to(_LEDGER_TARGET)
@@ -170,8 +177,11 @@ async def test_selecting_a_review_row_reports_the_pending_state() -> None:
         await pilot.pause()
         review = app.screen
         assert isinstance(review, LedgerReviewScreen)
+        await app.workers.wait_for_complete()
+        await pilot.pause()
 
         rows = cast("DataTable[str]", review.query_one("#ledger-review", DataTable))
+        assert rows.row_count == 1
         rows.focus()
         await pilot.press("enter")
         await pilot.pause()

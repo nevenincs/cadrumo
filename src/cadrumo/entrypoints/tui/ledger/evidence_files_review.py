@@ -12,7 +12,7 @@ from typing import Final, override
 
 from textual.app import ComposeResult
 from textual.containers import Horizontal
-from textual.widgets import Button, DataTable, Input, Static
+from textual.widgets import Button, Input, Static
 
 from ....application.ledger.evidence_followup_contracts import (
     LedgerEvidenceReviewSummaryProjection,
@@ -57,8 +57,13 @@ def _amount(value: PublicDecimal | None) -> str:
     return shown(None if value is None else value.decimal)
 
 
+def review_reason_label(reason: ConfirmationBlockReason) -> str:
+    """Name, in the operator's language, why a read draft cannot be confirmed yet."""
+    return tr(_REASON_LOCALE_KEYS[reason])
+
+
 def _blocker_line(reason: ConfirmationBlockReason, field: str | None) -> str:
-    return tr("tui.ledger.evidence_files.review.blocker", reason=tr(_REASON_LOCALE_KEYS[reason]), field=shown(field))
+    return tr("tui.ledger.evidence_files.review.blocker", reason=review_reason_label(reason), field=shown(field))
 
 
 def summary_lines(summary: LedgerEvidenceReviewSummaryProjection) -> tuple[str, ...]:
@@ -187,10 +192,6 @@ class LedgerEvidenceFilesReviewScreen(EvidenceFilesToolScreen):
         if self._initial_reference:
             self.start(self._read_summary)
 
-    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Answer the area navigation."""
-        self.handle_navigation_selection(event)
-
     def _request(self) -> LedgerEvidenceReviewViewRequest | None:
         reference = blank_to_none(self.query_one("#evidence-files-reference", Input).value)
         if reference is None:
@@ -252,4 +253,4 @@ class LedgerEvidenceFilesReviewScreen(EvidenceFilesToolScreen):
         self._paint_review()
 
 
-__all__ = ["LedgerEvidenceFilesReviewScreen", "summary_lines", "view_lines"]
+__all__ = ["LedgerEvidenceFilesReviewScreen", "review_reason_label", "summary_lines", "view_lines"]

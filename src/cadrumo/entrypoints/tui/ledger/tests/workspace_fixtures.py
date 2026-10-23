@@ -25,6 +25,7 @@ from .....core.identity.transaction_ids import TransactionId
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ..controller import LedgerWorkspaceController
 from ..workspace_injection import LedgerWorkspaceInjection
+from .review_door_fixtures import MemoryLedgerReviewDoor, projection_review_rows
 
 #: The two synthetic transactions every ledger fixture projection carries.
 LEDGER_TX_A = cast("TransactionId", "a" * 64)
@@ -127,11 +128,18 @@ def ledger_evidence_action() -> ActionReference:
     return ActionReference(action_id=lookup_action("operator.ledger.evidence.review.list").action_id)
 
 
+def ledger_review_door(projection: LedgerWorkspaceProjectionV1) -> MemoryLedgerReviewDoor:
+    """A review door answering the queue *projection*'s own review identities describe."""
+    return MemoryLedgerReviewDoor(projection_review_rows(projection))
+
+
 def ledger_controller(
     projection: LedgerWorkspaceProjectionV1,
     context: TuiScreenContextV1 | None = None,
 ) -> LedgerWorkspaceController:
-    """Build a ledger workspace controller over *projection*."""
+    """Build a ledger workspace controller over *projection*, its review queue read through a door."""
     return LedgerWorkspaceController(
-        context or ledger_context(), projection, LedgerWorkspaceInjection(review_action=ledger_review_action())
+        context or ledger_context(),
+        projection,
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), review_door=ledger_review_door(projection)),
     )

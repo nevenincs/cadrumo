@@ -42,7 +42,13 @@ from ..review import LedgerReviewScreen
 from ..routes import ledger_screen_factory
 from ..workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshV1
 from .test_ledger_flows import _ClassificationDoor, _classify_action
-from .workspace_fixtures import ledger_context, ledger_evidence_action, ledger_projection, ledger_review_action
+from .workspace_fixtures import (
+    ledger_context,
+    ledger_evidence_action,
+    ledger_projection,
+    ledger_review_action,
+    ledger_review_door,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -500,6 +506,7 @@ async def test_exclude_names_the_entry_withdraws_on_escape_and_writes_once_on_co
         projection,
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
+            review_door=ledger_review_door(projection),
             classify_action=_classify_action(),
             classification_submitter=_ClassificationDoor(),
             exclusion_submitter=door,
@@ -562,7 +569,7 @@ def _exclusion_controller(door: _IdentityExclusionDoor) -> LedgerWorkspaceContro
 async def test_an_identity_only_exclusion_result_settles_for_the_entry_it_names() -> None:
     controller = _exclusion_controller(_IdentityExclusionDoor())
     target = controller.projection.review_transaction_ids[0]
-    result = await controller.submit_exclusion(target)
+    result = await controller.submit_exclusion(target, listed=(target,))
     assert result == LedgerExclusionResultV1(transaction_id=target)
 
 
@@ -573,7 +580,27 @@ async def test_an_exclusion_result_for_another_entry_is_refused() -> None:
     assert first != other
     controller = _exclusion_controller(_IdentityExclusionDoor(settled=other))
     with pytest.raises(ValueError, match="identity disagrees"):
-        await controller.submit_exclusion(first)
+        await controller.submit_exclusion(first, listed=(first,))
+
+
+@pytest.mark.asyncio
+async def test_an_exclusion_of_an_entry_the_review_queue_does_not_list_is_refused_before_the_door() -> None:
+    door = _ExclusionDoor()
+    projection = ledger_projection()
+    first, other = projection.review_transaction_ids
+    controller = LedgerWorkspaceController(
+        ledger_context(),
+        projection,
+        LedgerWorkspaceInjection(
+            review_action=ledger_review_action(),
+            classify_action=_classify_action(),
+            classification_submitter=_ClassificationDoor(),
+            exclusion_submitter=door,
+        ),
+    )
+    with pytest.raises(ValueError, match="absent from the visible review list"):
+        await controller.submit_exclusion(first, listed=(other,))
+    assert not door.calls
 
 
 def test_exclude_is_not_offered_without_the_classify_authority() -> None:

@@ -183,10 +183,6 @@ class LedgerEvidenceFilesWriteScreen(LedgerConfirmationFlowScreen):
         self.query_one("#ledger-refusal", Static).update(refusal)
         self.query_one("#evidence-files-outcome", Static).update(outcome_text)
 
-    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Answer the area navigation; outcome rows are read-only."""
-        self.handle_navigation_selection(event)
-
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Confirm, cancel, page the outcome, or return to the tool."""
         match event.button.id:

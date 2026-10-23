@@ -3435,6 +3435,27 @@ tui:
         unmeasured: Nincs mérve
       records_empty: Még nincs rögzített számladokumentum.
       records_heading: Számladokumentumok ezen a gépen
+      review_queue:
+        advisories: 'Megerősítés előtt érdemes ellenőrizni: {count}'
+        advisory:
+          country_code_unassigned: A dokumentum egyik országkódja egyetlen országhoz
+            sem tartozik
+          country_code_uncatalogued: A dokumentum egyik országkódja még nem szerepel
+            az országlistában
+          party_attribution: Semmi nem erősítette meg, melyik félhez tartoznak a címek
+        blocking: 'A megerősítést akadályozó kérdések: {count}'
+        column:
+          advisories: Figyelmeztetések
+          blocking: Akadályok
+          drafted: Beolvasva
+          reference: Dokumentum
+        detail: '{reference} dokumentum, beolvasta: {extractor}, ekkor: {date}.'
+        empty: Egyetlen beolvasott dokumentum sem vár felülvizsgálatra.
+        failed: A felülvizsgálatra váró tervezeteket nem sikerült beolvasni.
+        heading: Felülvizsgálatra váró tervezetek
+        loading: A felülvizsgálatra váró tervezetek beolvasása…
+        prompt: Már beolvasott dokumentumok, amelyek tervezete még a felülvizsgálatodra
+          vár. Válassz egyet, hogy lásd, mire van szüksége.
       reviewed: Ellenőrizve
       safe_metadata: A forrásdokumentum továbbra is védett és titkosított; a belőle
         kinyert mezők ellenőrzésre jelennek meg.
@@ -4297,8 +4318,14 @@ tui:
         marad, és később újra besorolható.'
       excluded: '{entry} kizárva a bevallásból.'
       excluding: A tétel kizárása…
+      failed: A felülvizsgálati sort nem sikerült beolvasni.
       filter_all: 'Szűrő: minden felülvizsgálati állapot'
+      loading: A felülvizsgálati sor beolvasása…
       open: Felülvizsgálat megnyitása
+      page:
+        next: Következő oldal
+        position: 'Tételek: {first}-{last}, összesen {total}'
+        previous: Előző oldal
       title: 'Nyilvántartás: felülvizsgálat'
     review_status:
       excluded: Kizárva
