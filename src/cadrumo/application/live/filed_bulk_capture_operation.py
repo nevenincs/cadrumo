@@ -28,8 +28,8 @@ from .filed_history_operation import (
     require_capture_output_root,
 )
 from .filed_single_capture_operation import (
+    FiledCaptureEvidenceTallyV1,
     FiledCaptureNoticeV1,
-    FiledReconciliationV1,
     public_filed_capture_notice,
     public_filed_capture_tally,
 )
@@ -85,33 +85,17 @@ class FiledBulkSkippedCasillaV1(BaseModel):
     reason: str
 
 
-class FiledBulkCapturePublicResultV1(BaseModel):
+class FiledBulkCapturePublicResultV1(FiledCaptureEvidenceTallyV1):
     """Complete scalar accounting for a bulk or preview capture."""
 
-    model_config = _PUBLIC_CONFIG
     output_root: str
     modelos: tuple[str, ...]
     year_from: int
     year_to: int
     dry_run: bool
-    captured_count: NonNegativeInt
-    reached_count: NonNegativeInt
     pair_outcomes: tuple[FiledCapturePairOutcome, ...]
     failed_count: NonNegativeInt
     sync_run_ref: str | None
-    observation_paths: tuple[str, ...]
-    artefact_refs: tuple[str, ...]
-    justificante_metadata_count: NonNegativeInt
-    justificante_csvs: tuple[str, ...]
-    filing_evidence_stamped_count: NonNegativeInt
-    filing_record_ids: tuple[str, ...]
-    filing_evidence_conflict_count: NonNegativeInt
-    filing_evidence_conflict_record_ids: tuple[str, ...]
-    casilla_count: NonNegativeInt
-    calculation_observation_count: NonNegativeInt
-    calculation_observation_keys: tuple[str, ...]
-    evidence_notices: tuple[FiledCaptureNoticeV1, ...]
-    reconciliations: tuple[FiledReconciliationV1, ...]
     failures: tuple[FiledBulkFailureV1, ...]
     skipped_casillas: tuple[FiledBulkSkippedCasillaV1, ...]
     recapture_notices: tuple[FiledCaptureNoticeV1, ...]

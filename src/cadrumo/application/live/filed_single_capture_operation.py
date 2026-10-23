@@ -92,19 +92,13 @@ class FiledReconciliationV1(BaseModel):
     notices: tuple[FiledReconciliationNoticeV1, ...] = ()
 
 
-class FiledSingleCapturePublicResultV1(BaseModel):
-    """Safe complete accounting needed by the existing CLI filed-pull report."""
+class FiledCaptureEvidenceTallyV1(BaseModel):
+    """The public evidence tally every single, source or bulk filed capture result carries."""
 
     model_config = _PUBLIC_CONFIG
-    output_root: str
-    modelo: str
-    year: int
     captured_count: NonNegativeInt
     reached_count: NonNegativeInt
     observation_paths: tuple[str, ...]
-    #: The identifier of each stored observation, in the order of ``observation_paths``.
-    #: A later request names an observation by this identifier, never by a path.
-    observation_ids: tuple[str, ...]
     artefact_refs: tuple[str, ...]
     justificante_metadata_count: NonNegativeInt
     justificante_csvs: tuple[str, ...]
@@ -117,6 +111,17 @@ class FiledSingleCapturePublicResultV1(BaseModel):
     calculation_observation_keys: tuple[str, ...]
     evidence_notices: tuple[FiledCaptureNoticeV1, ...]
     reconciliations: tuple[FiledReconciliationV1, ...]
+
+
+class FiledSingleCapturePublicResultV1(FiledCaptureEvidenceTallyV1):
+    """Safe complete accounting needed by the existing CLI filed-pull report."""
+
+    output_root: str
+    modelo: str
+    year: int
+    #: The identifier of each stored observation, in the order of ``observation_paths``.
+    #: A later request names an observation by this identifier, never by a path.
+    observation_ids: tuple[str, ...]
 
     @model_validator(mode="after")
     def _identifier_for_every_path(self) -> FiledSingleCapturePublicResultV1:
@@ -156,7 +161,7 @@ def public_filed_reconciliation(row: FilingReconciliationResult) -> FiledReconci
 
 
 class FiledCaptureTallyFieldsV1(TypedDict):
-    """The public form of the evidence tally every filed capture result carries."""
+    """The typed constructor arguments of :class:`FiledCaptureEvidenceTallyV1`."""
 
     captured_count: int
     reached_count: int

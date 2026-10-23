@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
+from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
@@ -27,8 +27,7 @@ from .filed_history_operation import (
     require_capture_output_root,
 )
 from .filed_single_capture_operation import (
-    FiledCaptureNoticeV1,
-    FiledReconciliationV1,
+    FiledCaptureEvidenceTallyV1,
     filed_capture_tally_effect,
     public_filed_capture_tally,
 )
@@ -57,29 +56,13 @@ class FiledSourceCaptureRequest(BaseModel):
     period: str = Field(min_length=1, max_length=8)
 
 
-class FiledSourceCapturePublicResultV1(BaseModel):
+class FiledSourceCapturePublicResultV1(FiledCaptureEvidenceTallyV1):
     """Safe complete accounting for one source-dependency capture."""
 
-    model_config = _PUBLIC_CONFIG
     output_root: str
     target_modelo: str
     target_year: int
     target_period: str
-    captured_count: NonNegativeInt
-    reached_count: NonNegativeInt
-    observation_paths: tuple[str, ...]
-    artefact_refs: tuple[str, ...]
-    justificante_metadata_count: NonNegativeInt
-    justificante_csvs: tuple[str, ...]
-    filing_evidence_stamped_count: NonNegativeInt
-    filing_record_ids: tuple[str, ...]
-    filing_evidence_conflict_count: NonNegativeInt
-    filing_evidence_conflict_record_ids: tuple[str, ...]
-    casilla_count: NonNegativeInt
-    calculation_observation_count: NonNegativeInt
-    calculation_observation_keys: tuple[str, ...]
-    evidence_notices: tuple[FiledCaptureNoticeV1, ...]
-    reconciliations: tuple[FiledReconciliationV1, ...]
 
 
 def _project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
