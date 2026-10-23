@@ -5,7 +5,7 @@ tags:
 date: '2026-10-23'
 modified: '2026-10-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:9359b13115441482ad1b2c9382fffca043c6fb2efcae2b901ea1f16d7ca931b1'
+body_hash: 'sha256:ec7a6803308371d6150158c13b0c796a1a49d169be92a8af75a3b9df8e4c7706'
 related:
   - "[[2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -45,6 +45,7 @@ The owner wants to edit the ledger in the desktop window, not only in the TUI. T
 - The host owns a closed list of admitted definition ids: the `ledger.*` operations reached by `aeat app ledger` and by the TUI ledger workspace. The window names one of them together with a JSON payload. The host refuses any other id before it reaches the relay. Adding or removing an id amends this record.
 - The registered contract in the runtime validates each payload; the host does not restate it. The host bounds payload size and never splits a batch silently. A batch larger than one request is sent as several requests, and the window shows them as parts of one apply.
 - Files are chosen in native dialogs or dropped on the window, and the host gives the window opaque file tokens. The window never supplies a path. When it submits, the host substitutes the absolute path for the token. A token is valid only for the signed-in session that issued it.
+- Results reach the window naming files, not locations. Where a result names a path, such as an import source, an evidence record's source or an export's output, the host reduces it to its file name before passing the result on. This was ruled on 2026-10-24 under the owner's standing authorization, because the window names items and never holds paths (`2026-10-04-desktop-shell-adr`), and a folder can carry the person's name.
 - Secret inputs, such as an own account's IBAN or bank block, travel only in a raw request body to the host, as the password change does, and are wiped after submission.
 - A review interaction is answered only with the digest of the review document the window showed. A changed document needs a new answer. A write whose outcome is unknown is shown as unknown and is never retried automatically; the page pauses writes until it re-reads.
 - Ledger data and staged edits live only in the window's memory. They never reach the window's storage, logs, diagnostics or error messages, and they are discarded on sign-out, on a profile change and when the window closes. Presentation preferences may persist: columns, density, grouping, and the filter keys of saved views without their typed values.

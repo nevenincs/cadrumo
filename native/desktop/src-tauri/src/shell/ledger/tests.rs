@@ -294,6 +294,25 @@ fn a_request_the_relay_cannot_take_is_refused_before_it_is_written() {
     );
 }
 
+#[test]
+fn results_name_files_and_never_where_they_are() {
+    let mut result = json!({
+        "sources": [{"path": r"C:\Users\alba\Bancos\n26-2026.csv", "sha256": "ab"}],
+        "rows": [{"source_path": "/home/alba/facturas/f-019.pdf", "supplier": r"C:\Users\alba"}],
+        "output_path": r"\\server\share\ledger.xlsx",
+        "files": [r"D:\export\a.ofx", "b.ofx"],
+        "review": {"path": "lines[0].iva_amount"},
+    });
+    super::file_names(&mut result);
+    assert_eq!(result["sources"][0]["path"], "n26-2026.csv");
+    assert_eq!(result["sources"][0]["sha256"], "ab");
+    assert_eq!(result["rows"][0]["source_path"], "f-019.pdf");
+    assert_eq!(result["rows"][0]["supplier"], r"C:\Users\alba");
+    assert_eq!(result["output_path"], "ledger.xlsx");
+    assert_eq!(result["files"], json!(["a.ofx", "b.ofx"]));
+    assert_eq!(result["review"]["path"], "lines[0].iva_amount");
+}
+
 fn projection(lifecycle: &str) -> Value {
     json!({"lifecycle":lifecycle, "terminal_condition":null, "effect":"none",
         "refusal_ref":null, "failure_error_code":null, "revision":3, "cancellable_now":false,

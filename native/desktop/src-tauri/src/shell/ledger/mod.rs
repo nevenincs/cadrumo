@@ -359,6 +359,60 @@ fn substitute(
     Ok(())
 }
 
+/// Result fields that name a file the worker read or wrote.
+const RESULT_PATH_KEYS: [&str; 7] = [
+    "files",
+    "output_path",
+    "path",
+    "source_directory",
+    "source_path",
+    "source_reference",
+    "verify_source",
+];
+
+/// Reduces every absolute path a result names to its file name. The window
+/// names files and never holds where they are, and a folder can carry the
+/// person's own name.
+fn file_names(value: &mut Value) {
+    // Split on both separators: the worker's platform decides the spelling,
+    // not the host's.
+    fn named(text: &mut String) {
+        let bytes = text.as_bytes();
+        let drive = bytes.len() > 2
+            && bytes[0].is_ascii_alphabetic()
+            && bytes[1] == b':'
+            && matches!(bytes[2], b'\\' | b'/');
+        if drive || text.starts_with(['/', '\\']) {
+            let name = text
+                .rsplit(['/', '\\'])
+                .next()
+                .unwrap_or_default()
+                .to_owned();
+            *text = name;
+        }
+    }
+    match value {
+        Value::Object(fields) => {
+            for (key, field) in fields.iter_mut() {
+                match field {
+                    Value::String(text) if RESULT_PATH_KEYS.contains(&key.as_str()) => named(text),
+                    Value::Array(items) if RESULT_PATH_KEYS.contains(&key.as_str()) => {
+                        for item in items.iter_mut() {
+                            match item {
+                                Value::String(text) => named(text),
+                                other => file_names(other),
+                            }
+                        }
+                    }
+                    other => file_names(other),
+                }
+            }
+        }
+        Value::Array(items) => items.iter_mut().for_each(file_names),
+        _ => {}
+    }
+}
+
 /// The outcome a projection settles to, reading the result where there is one.
 async fn outcome(relayed: &Relayed<'_>, p: &Value, mutation: bool) -> Result<Outcome> {
     let operation_id = relayed.operation.clone();
@@ -373,7 +427,8 @@ async fn outcome(relayed: &Relayed<'_>, p: &Value, mutation: bool) -> Result<Out
                     "unavailable"
                 })
             })?;
-            let result = document["projection"].clone();
+            let mut result = document["projection"].clone();
+            file_names(&mut result);
             if !result.is_object() {
                 return Err(failure(if mutation {
                     "saved_unread"
@@ -395,7 +450,11 @@ async fn outcome(relayed: &Relayed<'_>, p: &Value, mutation: bool) -> Result<Out
                 relay::result(relayed)
                     .await
                     .ok()
-                    .map(|document| document["projection"].clone())
+                    .map(|document| {
+                        let mut detail = document["projection"].clone();
+                        file_names(&mut detail);
+                        detail
+                    })
                     .filter(Value::is_object)
             } else {
                 None
