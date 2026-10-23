@@ -319,6 +319,7 @@ async fn close_cancels_then_joins_the_actual_verifier_and_refuses_late_retries()
 #[cfg(windows)]
 #[tokio::test]
 async fn close_waits_for_the_private_helper_and_fences_later_launches() {
+    use std::{future::Future, task::Poll};
     let manager = fixture(Ok(Err("image_not_installed")));
     let held = manager.attempt.lock().await;
     let running = async {
@@ -328,6 +329,18 @@ async fn close_waits_for_the_private_helper_and_fences_later_launches() {
         drop(held);
         result
     };
+    tokio::pin!(running);
+    // Process creation completes inside the first poll and can take seconds on
+    // a loaded host; the budget below measures only close interrupting the helper.
+    std::future::poll_fn(|context| {
+        assert!(running.as_mut().poll(context).is_pending());
+        Poll::Ready(())
+    })
+    .await;
+    assert_eq!(
+        manager.diagnostics.snapshot(0).processes[0].phase,
+        ProcessPhase::Running
+    );
     let (result, ()) = tokio::time::timeout(Duration::from_secs(3), async {
         tokio::join!(running, manager.close())
     })
