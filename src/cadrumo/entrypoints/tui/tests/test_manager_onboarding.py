@@ -101,6 +101,25 @@ async def _answer(app: ProfileManagerScreen, pilot) -> str:
     return field.path
 
 
+_FILTER_BARRIER_LIMIT = 400
+"""Bounds a rebuild that never finishes; a loaded machine finishes it in a handful of pauses."""
+
+
+async def _until_filtered(app: ProfileManagerScreen, pilot, *, required_only: bool) -> None:
+    """Return once the page has taken the required-only switch and the rebuild it started has finished.
+
+    Setting the switch only posts its change; the page's handler, which starts
+    the rebuild worker, runs on a later turn. Joining the workers straight
+    after the assignment therefore joins nothing, and one pause is not a wait
+    for a rebuild that mounts every section's table in turn.
+    """
+    for _ in range(_FILTER_BARRIER_LIMIT):
+        await pilot.pause()
+        if app._required_only is required_only and all(worker.is_finished for worker in app.workers):
+            return
+    raise AssertionError(f"the page never finished filtering to required_only={required_only}")
+
+
 async def _reach_required(app: ProfileManagerScreen, pilot) -> None:
     """Start setup and explicitly skip optional import through its visible action."""
     await pilot.click("#onboarding-continue")
@@ -196,8 +215,7 @@ async def test_an_unfinished_profile_opens_on_only_its_required_answers(tmp_path
             assert app.focused is app.query_one("#onboarding-continue", Button)
 
             app.query_one("#manager-required-only", Checkbox).value = False
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await _until_filtered(app, pilot, required_only=False)
             assert len(_visible_rows(app)) == overview.total_count
             pilot.app.exit(None)
 

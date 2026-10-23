@@ -346,6 +346,7 @@ class RootNavigationMixin:
         operator on the empty root.
         """
         self._navigation_revision += 1
+        self._swap_revision = self._navigation_revision
         self.call_next(self._swap_destination, screen, return_to_home, self._navigation_revision)
 
     async def _swap_destination(
@@ -358,13 +359,21 @@ class RootNavigationMixin:
         it: Home reads a whole generation off the loop while the operator can
         still act on the page they are leaving. A refused swap drops the
         replacement and leaves that page, and its write, where they are.
+
+        Account forms are withheld from the request until the old screens are
+        gone, and offered again before the replacement is pushed, so one
+        opened from then on sits above the new destination.
         """
-        if not self._navigation_is_current(navigation_revision) or self._destination_refuses_leaving():
-            return
-        while len(self.screen_stack) > 1:
-            await self.pop_screen()
-            if not self._navigation_is_current(navigation_revision):
+        try:
+            if not self._navigation_is_current(navigation_revision) or self._destination_refuses_leaving():
                 return
+            while len(self.screen_stack) > 1:
+                await self.pop_screen()
+                if not self._navigation_is_current(navigation_revision):
+                    return
+        finally:
+            if self._swap_revision == navigation_revision:
+                self._swap_revision = None
         await self.push_screen(screen, self._on_destination_dismissed if return_to_home else None)
         self.call_after_refresh(self._record_initial_screen_ready, screen)
 

@@ -7,7 +7,11 @@ from decimal import Decimal
 
 import pytest
 from rich.cells import cell_len
+from textual.errors import NoWidget
+from textual.geometry import Region
+from textual.pilot import Pilot
 from textual.widgets import Button, Footer, Input, Static
+from textual.widgets._footer import FooterKey
 
 from ......adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ......application.modelo.calculation_actions import (
@@ -134,6 +138,70 @@ async def test_the_zero_floor_and_its_saved_income_are_explained_in_both_editor_
             assert not any(identity in explanation for identity in identities if len(identity) > 3)
 
 
+_FOOTER_BARRIER_LIMIT = 400
+"""Bounds a footer that never settles; a loaded machine settles in a handful of pauses."""
+
+
+def _footer_names_the_bindings(screen: ModeloWorkbenchScreen) -> bool:
+    """Whether the footer holds one key per shown action, as it composes them from the screen's current bindings."""
+    expected: dict[str, str] = {}
+    for active in screen.active_bindings.values():
+        if active.binding.show:
+            expected.setdefault(active.binding.action, active.binding.key)
+    shown = [key.key for key in screen.query_one(Footer).query(FooterKey) if not key.has_class("-command-palette")]
+    # An empty footer has not been described yet; this page always names its keys.
+    return bool(shown) and sorted(shown) == sorted(expected.values())
+
+
+def _footer_placed(screen: ModeloWorkbenchScreen) -> bool:
+    """Whether the screen's last layout placed every shown footer key; a key mounted since then has no place yet."""
+    for key in screen.query_one(Footer).query(FooterKey):
+        if key.display:
+            try:
+                screen.find_widget(key)
+            except NoWidget:
+                return False
+    return True
+
+
+def _footer_reading(screen: ModeloWorkbenchScreen) -> tuple[tuple[str, str, bool, Region], ...]:
+    return tuple(
+        (key.key, str(key.render()), key.display, key.region) for key in screen.query_one(Footer).query(FooterKey)
+    )
+
+
+async def _settled_footer_keys[ResultT](pilot: Pilot[ResultT], screen: ModeloWorkbenchScreen) -> list[FooterKey]:
+    """The footer's shown keys once the read has finished and the footer has caught up with it, laid out.
+
+    The footer answers a bindings change by queueing a rebuild for after the
+    next refresh, and the rebuild removes every key before it mounts the new
+    ones. A pause returns once the screen has handled what was queued when it
+    began, so on a loaded machine the rebuild can still be queued, or be
+    between its removal and its mount, when the pause returns; and a key
+    it mounted has no place on screen until the next layout. The keys are
+    read only once no worker is running, the footer names exactly the
+    screen's shown bindings, the layout has placed each of them, and a pause
+    has left every key where it was.
+    """
+    previous: tuple[tuple[str, str, bool, Region], ...] | None = None
+    for _ in range(_FOOTER_BARRIER_LIMIT):
+        await pilot.pause()
+        reading = _footer_reading(screen)
+        if (
+            all(worker.is_finished for worker in pilot.app.workers)
+            and _footer_names_the_bindings(screen)
+            and _footer_placed(screen)
+        ):
+            if reading == previous:
+                return [key for key in screen.query_one(Footer).query(FooterKey) if key.display]
+            previous = reading
+        else:
+            previous = None
+    raise AssertionError(
+        f"the footer never settled; last showing {[str(key.render()) for key in screen.query(FooterKey)]}"
+    )
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("language", tuple(OutputLanguage))
 @pytest.mark.parametrize("theme", ["cadrumo-dark", "cadrumo-light"])
@@ -145,13 +213,10 @@ async def test_blocked_small_workbench_keeps_help_reachable_and_the_hungarian_qu
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 24)) as pilot:
             app.theme = theme
-            await pilot.pause()
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            keys = await _settled_footer_keys(pilot, screen)
             assert screen.form is not None
             assert screen.form.verification is VerificationCompletenessStatus.BLOCKED
             assert blocking_count(screen.form) > 0
-            keys = [child for child in screen.query_one(Footer).query("FooterKey") if child.display]
             help_keys = [child for child in keys if tr("tui.modelo.workbench.key.help") in str(child.render())]
             assert help_keys, [str(child.render()) for child in keys]
             assert all(0 <= key.region.x < key.region.right <= 80 and key.region.bottom <= 24 for key in help_keys)

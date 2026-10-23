@@ -224,6 +224,8 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         """The row the next rebuilt Home restores; the latest request wins."""
         self._navigation_revision = 0
         self._home_navigation_revision = 0
+        self._swap_revision: int | None = None
+        """The navigation whose destination swap is requested and has not yet removed the old screens."""
         self._load_root = load_root
         """Builds the workbench root off the event loop once the shell has rendered."""
         self._refresh_destination_catalogue = refresh_destination_catalogue
@@ -695,7 +697,14 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         they would stack a second form on the first, so they stand down until
         it closes. The command palette is looked past: it is opened over the
         screen the operator is actually on.
+
+        They also stand down while the root is replacing its destination. The
+        swap removes every screen above the root shell once it runs, so a form
+        opened after it was requested -- typed ahead during startup, or while
+        Home lands -- would be removed with the destination it covered.
         """
+        if self._swap_revision is not None:
+            return False
         screen = next(
             (candidate for candidate in reversed(self.screen_stack) if not isinstance(candidate, CommandPalette)),
             None,

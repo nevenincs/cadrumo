@@ -185,7 +185,10 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
                             return
 
                         app = pilot.app
-                        await _until(pilot, lambda: app.account_session is not None)
+                        # The session is published before the first destination
+                        # is swapped in; Access is offered once that swap can no
+                        # longer remove it.
+                        await _until(pilot, lambda: app.account_action_available(AccountActionV1.ACCESS))
                         assert app.account_session is not None
                         assert app.account_session.profile_label == "Enrollment tests"
                         app.run_account_action(AccountActionV1.ACCESS)

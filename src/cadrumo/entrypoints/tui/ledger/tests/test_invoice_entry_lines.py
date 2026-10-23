@@ -7,6 +7,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from textual.pilot import Pilot
+from textual.widget import Widget
 from textual.widgets import Button, Input, Select, Static
 
 from .....core.aggregation import IntracomOperationType
@@ -113,6 +115,29 @@ def _text(screen: LedgerInvoiceEntryScreen, selector: str) -> str:
     return str(screen.query_one(selector, Static).render())
 
 
+_SETTLE_BARRIER_LIMIT = 400
+"""Bounds a screen that never settles; a loaded machine settles in a handful of pauses."""
+
+
+async def _settle(pilot: Pilot[None]) -> None:
+    """Return once every message a press posted is handled and every worker it started has finished.
+
+    ``Button.press`` only posts ``Pressed``, which bubbles from parent to
+    parent and can reach the screen after the screen has answered a pause.
+    Neither one pause nor joining the workers straight after the press waits
+    for the handler, or for the write it starts.
+    """
+    for _ in range(_SETTLE_BARRIER_LIMIT):
+        await pilot.pause()
+        screen = pilot.app.screen
+        pumps = (pilot.app, screen, *screen.walk_children(Widget))
+        if all(pump.message_queue_size == 0 for pump in pumps) and all(
+            worker.is_finished for worker in pilot.app.workers
+        ):
+            return
+    raise AssertionError("the invoice entry never settled")
+
+
 @pytest.mark.asyncio
 async def test_mixed_rate_lines_and_invoice_facts_reach_the_add_door_as_typed() -> None:
     door = _RecordingDoor()
@@ -125,7 +150,7 @@ async def test_mixed_rate_lines_and_invoice_facts_reach_the_add_door_as_typed() 
             screen.query_one("#ledger-invoice-operation-type", Select).value = IntracomOperationType.A.value
             for line in _LINES:
                 _type_line(screen, line)
-                await pilot.pause()
+                await _settle(pilot)
             listing = _text(screen, "#ledger-invoice-lines")
             assert "1. Printer paper" in listing
             assert "2. Reference book" in listing
@@ -133,7 +158,7 @@ async def test_mixed_rate_lines_and_invoice_facts_reach_the_add_door_as_typed() 
             assert not screen.query_one("#ledger-invoice-line-remove", Button).disabled
 
             screen.query_one("#ledger-invoice-review", Button).press()
-            await pilot.pause()
+            await _settle(pilot)
             assert screen.flow_state is LedgerFlowState.CONFIRMING, _text(screen, "#ledger-refusal")
             summary = _text(screen, "#ledger-invoice-summary")
             assert "Printer paper" in summary
@@ -145,9 +170,8 @@ async def test_mixed_rate_lines_and_invoice_facts_reach_the_add_door_as_typed() 
             assert not door.entries
 
             screen.query_one("#ledger-invoice-confirm", Button).press()
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
-            assert screen.flow_state is LedgerFlowState.SUCCEEDED
+            await _settle(pilot)
+            assert screen.flow_state is LedgerFlowState.SUCCEEDED, _text(screen, "#ledger-refusal")
 
     assert len(door.entries) == 1
     entry = door.entries[0]

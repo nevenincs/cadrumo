@@ -6,13 +6,16 @@ import asyncio
 from threading import Event
 
 import pytest
+from textual.screen import Screen
 from textual.widgets import Button, Static
 
 from ....application.overview.home import HomeProjectionV1
+from ....core.i18n.render import tr
 from ..account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from ..app import CadrumoTuiApp, RootBindingV1
+from ..components.account_chrome import AccountActionV1, AccountChromeScreen
 from ..home import HomeScreen
-from ..navigation import TuiFocusIdentityV1, TuiNavigationTargetV1
+from ..navigation import TuiFocusIdentityV1, TuiNavigationTargetV1, TuiScreenContextV1
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from .test_app import MarkerScreen, _account_factories, _catalogue, _settle
 
@@ -160,3 +163,73 @@ async def test_delayed_failed_home_read_cannot_change_a_newer_destination() -> N
         assert isinstance(app.screen, MarkerScreen)
         assert app._active_target == _target()
         assert app._home_refresh_refusal_code is None
+
+
+_STARTUP_BARRIER_LIMIT = 400
+"""Bounds a startup that never shows its destination; a loaded machine settles in a handful."""
+
+
+class _Destination(AccountChromeScreen):
+    """A destination the account keys act from."""
+
+    def __init__(self, context: TuiScreenContextV1) -> None:
+        super().__init__()
+        self.context = context
+
+
+@pytest.mark.asyncio
+async def test_access_requested_while_the_first_destination_opens_is_not_discarded_by_it() -> None:
+    """Access opens only once the startup swap has removed the screens it replaces.
+
+    Binding the session publishes it before the startup destination is
+    swapped in from the root's pump. Access asked for in that window opened
+    over the bare root, and the swap then removed it without a dismissal.
+    """
+    opened: list[Screen[None]] = []
+    app: CadrumoTuiApp | None = None
+
+    def destination(context: TuiScreenContextV1) -> Screen[None]:
+        # The request reaches the root's pump after the session is bound and
+        # before the swap that shows this page has run, as a palette or Home
+        # link request does when it lands while the root is opening.
+        assert app is not None
+        app.call_next(app.run_account_action, AccountActionV1.ACCESS)
+        return _Destination(context)
+
+    def open_access() -> Screen[None]:
+        screen: Screen[None] = Screen()
+        opened.append(screen)
+        return screen
+
+    factories = _account_factories()
+    object.__setattr__(factories, "access", open_access)
+
+    def load() -> RootBindingV1:
+        return RootBindingV1(
+            destination_catalogue=_catalogue([], destination_factory=destination),
+            refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+            workbench_search_service=None,
+            refresh_workbench_search=None,
+            refresh_destination_catalogue=None,
+            account_factories=factories,
+            read_account_session=None,
+            initial_destination=_target(),
+        )
+
+    app = CadrumoTuiApp(load_root=load)
+    async with app.run_test() as pilot:
+        for _ in range(_STARTUP_BARRIER_LIMIT):
+            await pilot.pause()
+            if all(worker.is_finished for worker in app.workers) and any(
+                isinstance(screen, _Destination) for screen in app.screen_stack
+            ):
+                break
+        assert any(isinstance(screen, _Destination) for screen in app.screen_stack)
+        assert all(screen in app.screen_stack for screen in opened), "the startup swap removed an open Access form"
+        # Refused where it can be read, rather than opened and then lost.
+        assert not opened
+        assert str(app.query_one("#root-account-refusal", Static).content) == tr("tui.root.account.unavailable")
+        assert app.account_action_available(AccountActionV1.ACCESS)
+        await pilot.press("f7")
+        assert opened and app.screen is opened[-1]
+        assert isinstance(app.screen_stack[-2], _Destination)
